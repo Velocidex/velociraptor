@@ -3,7 +3,7 @@ package velociraptor
 import (
 	"context"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/velocidex/glob"
+	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 
