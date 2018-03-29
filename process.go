@@ -1,17 +1,18 @@
 package velociraptor
 
 import (
-	"www.velocidex.com/golang/vfilter"
 	"github.com/shirou/gopsutil/process"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Block potentially dangerous methods.
 var _BlockedMembers = []string{"Terminate", "Kill", "Suspend", "Resume"}
 
 type _ProcessFieldImpl struct{}
+
 func (self _ProcessFieldImpl) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	_, b_ok := b.(string)
-	switch 	a.(type) {
+	switch a.(type) {
 	case process.Process, *process.Process:
 		return b_ok
 	}

@@ -20,6 +20,7 @@ func MakeScope() *vfilter.Scope {
 		MakeUsersPlugin(),
 		MakeInfoPlugin(),
 		MakeConnectionsPlugin(),
+		GlobPlugin{},
 	).AddProtocolImpl(
 		_ProcessFieldImpl{},
 	)

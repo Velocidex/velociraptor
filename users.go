@@ -1,9 +1,9 @@
 package velociraptor
 
 import (
-	"www.velocidex.com/golang/vfilter"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/net"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func MakeUsersPlugin() vfilter.GenericListPlugin {
@@ -21,7 +21,6 @@ func MakeUsersPlugin() vfilter.GenericListPlugin {
 		RowType: host.UserStat{},
 	}
 }
-
 
 func MakeConnectionsPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{

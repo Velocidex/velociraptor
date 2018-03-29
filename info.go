@@ -1,8 +1,8 @@
 package velociraptor
 
 import (
-	"www.velocidex.com/golang/vfilter"
 	"github.com/shirou/gopsutil/host"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func MakeInfoPlugin() vfilter.GenericListPlugin {
@@ -10,7 +10,7 @@ func MakeInfoPlugin() vfilter.GenericListPlugin {
 		PluginName: "info",
 		Function: func(args vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
-			if info, err := host.Info(); err ==  nil {
+			if info, err := host.Info(); err == nil {
 				result = append(result, info)
 			}
 
