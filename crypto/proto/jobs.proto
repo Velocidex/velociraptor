@@ -1,0 +1,268 @@
+// Copyright 2011 Google Inc. All Rights Reserved
+
+// These are the messages used in GRR encrypted communication protocol.
+syntax = "proto2";
+
+import "semantic.proto";
+
+package proto;
+
+// This message is sent between the client and the server.
+// Next field: 23
+message GrrMessage {
+  optional string session_id = 1 [(sem_type) = {
+      type: "FlowSessionID",
+      description: "The session id of the flow that this message belongs to."
+    }];
+
+  optional uint64 request_id = 2 [(sem_type) = {
+      description: "The message is in response to this request number "
+      "(requests increment from 1)."
+    }];
+
+  optional uint64 response_id = 3 [(sem_type) = {
+      description: "Responses for each request are also numbered from 1."
+    }];
+
+  optional string name = 4 [(sem_type) = {
+      description: "This is the name of the client action that will be "
+      "executed. It is set by the flow and is executed by the client."
+    }];
+
+  // This field contains an encoded rdfvalue.
+  optional bytes args = 5;
+
+  // Due to superceed the args field (not yet implemented). Contains the
+  // argument to the client action, or the response from the client action.
+  //  Not supported by velociraptor.
+  //  optional EmbeddedRDFValue arg = 20;
+
+  optional string source = 6  [(sem_type) = {
+      type: "RDFURN",
+      description: "Client name where the message came from "
+      "(Filled in by the frontend)."
+    }];
+
+  // A Flag to indicate if the message is authenticated. Note that the client
+  // does not get to decide this - the_server will verify the message and tag it
+  // as such. The message is then passed down the chain of components carrying
+  // this tag.
+
+  // This is done because signing is done on a group of messages as they arrive
+  // over the POST, but after decryption and unpacking, messages are queued
+  // individually and therefore need to retain their authenticated status.
+  enum AuthorizationState {
+    UNAUTHENTICATED = 0;
+    AUTHENTICATED = 1;
+
+    // This indicates that clocks are out of sync and this message may be a
+    // replay.
+    DESYNCHRONIZED = 2;
+  };
+
+  optional AuthorizationState auth_state = 7 [ default = UNAUTHENTICATED ];
+
+  enum Type {
+    MESSAGE = 0;
+    STATUS = 1;
+    ITERATOR = 2;
+  };
+
+  // The final response to a request carries this type which indicates it is a
+  // status message.
+  optional Type type = 8 [ default = MESSAGE ];
+
+  enum Priority {
+    LOW_PRIORITY = 0;
+    MEDIUM_PRIORITY = 1;
+    HIGH_PRIORITY = 2;
+  };
+
+  optional Priority priority = 9 [ default = MEDIUM_PRIORITY, (sem_type) = {
+      description: "The priority of this message - allows higher priority "
+      "messages to leap to the front of queues."
+    }];
+
+  optional uint32 ttl = 10 [default = 10, (sem_type) = {
+      description: "Time to live - each time a request is retransmitted this "
+      "decrement until it expires."
+    }];
+
+  optional bool require_fastpoll = 11 [ default = true, (sem_type) = {
+      description: "If this is true, the client will enter fast poll mode "
+      "after processing."
+    }];
+
+  optional float cpu_limit = 12 [ default = 3600, (sem_type) = {
+      description: "Maximum number of CPU seconds to be used by this action."
+    }];
+
+  optional uint64 args_age = 13 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "The age of the args rdfvalue.",
+    }];
+
+  // The rdfvalue class of the args.
+  optional string args_rdf_name = 14;
+
+  // The id of this message in the scheduler.
+  optional uint64 task_id = 15;
+
+  // The ttl used in the task scheduler.
+  optional int32 task_ttl = 16 [ default = 7 ];
+  optional string queue = 17  [(sem_type) = {
+      type: "RDFURN",
+      description: "The scheduler queue this message is in."
+    }];
+
+  optional uint64 eta = 18 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "The time when this message will become available "
+      "for leasing.",
+    }];
+
+  // Human readable info about the last process leasing this message.
+  optional string last_lease = 19;
+
+  optional uint64 network_bytes_limit = 21 [ default = 10737418240,
+      (sem_type) = {
+      description: "Maximum number of network bytes to be sent, 10G default. "
+                   "All bytes charged against the flow session ID count "
+                   "towards the limit but only during TransferBuffer is the "
+                   "limit enforced. This means we can blockfile transfers but "
+                   "still communicate after the limit is reached."
+    }];
+  optional uint64 timestamp = 22 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "An optional timestamp when this message was stored.",
+    }];
+};
+
+// This is a list of messages
+message MessageList {
+  repeated GrrMessage job = 1;
+};
+
+// This is the protobuf which is transmitted on the wire
+message PackedMessageList {
+  enum CompressionType {
+    UNCOMPRESSED = 0;
+    // Compressed using the zlib.compress() function.
+    ZCOMPRESSION = 1;
+  };
+
+  // This is a serialized MessageList for signing
+  optional bytes message_list = 1;
+
+  optional string source = 3 [(sem_type) = {
+      type: "RDFURN",
+      description: "The source where this message came from."
+    }];
+
+  // How the message_list element is compressed
+  optional CompressionType compression = 4 [ default = UNCOMPRESSED ];
+  optional uint64 timestamp = 6 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "The client sends its timestamp to prevent replay attacks."
+    }];
+};
+
+message CipherProperties {
+  optional string name = 1;
+
+  optional bytes key = 2 [(sem_type) = {
+      type: "EncryptionKey",
+    }];
+
+  // This IV is used to encrypt the cipher metadata block. Note: Both the
+  // CipherProperties() and the CipherMetadata() protobufs do not change for all
+  // messages in this session.
+  optional bytes metadata_iv = 3 [(sem_type) = {
+      type: "EncryptionKey",
+    }];
+
+  // The key used for the hmac.
+  optional bytes hmac_key = 5 [(sem_type) = {
+      type: "EncryptionKey",
+    }];
+
+  enum HMACType {
+    // Older clients use a HMAC only on the encrypted message.
+    SIMPLE_HMAC = 0;
+
+    // Newer clients also include the encrypted cipher and API version in the
+    // hmac.
+    FULL_HMAC = 1;
+  };
+
+  // The API version of the cipher.
+  optional HMACType hmac_type = 6 [default=SIMPLE_HMAC];
+
+};
+
+message CipherMetadata {
+  optional string source = 1 [(sem_type) = {
+      type: "RDFURN",
+      description: "The common name this cipher should be used to communicate with."
+    }];
+
+  // The signature of the encrypted cipher block.
+  optional bytes signature = 2;
+};
+
+// Next field: 11
+message ClientCommunication {
+  // This message is a serialized SignedMessageList() protobuf, encrypted using
+  // the session key (Encrypted inside field 2) and the per-packet IV (field 8).
+  optional bytes encrypted = 1;
+
+  // This is a CipherProperties() protobuf encrypted with the public key of the
+  // receiver. Contains the session key and iv, as well as hmac key. This IV
+  // does not change for the duration of the session. It is used to decrypt the
+  // CipherMetadata() (field 9).
+  optional bytes encrypted_cipher = 2;
+
+  // A serialized CipherMetadata() protobuf, encrypted with the session
+  // key. Contains the RSA signature of the digest of the serialized
+  // CipherProperties() above, signed with the sender's private key.
+  optional bytes encrypted_cipher_metadata = 9;
+
+  // This iv is used to encrypt the encrypted field (No. 1). This IV changes for
+  // each packet.
+  optional bytes packet_iv = 8 [(sem_type) = {
+      type: "EncryptionKey",
+    }];;
+
+  //  Not supported by velociraptor.
+  //  optional HttpRequest orig_request = 3;
+
+  // The number of messages waiting on the input queue. The client
+  // fills this in so the server can limit the number of messages
+  // issued to the client as a means of throttling it.
+  optional uint32 queue_size = 4 [default = 0];
+
+  // This status code applies for the entire communication.
+  enum Status {
+    OK = 200;
+    BAD_REQUEST = 400;
+    CIPHER_ERROR = 406;
+  };
+  optional Status status = 5 [default = OK];
+
+  optional uint32 api_version = 6;
+
+  // The choice of which hmac is used is set in the CipherProperties() protocol
+  // buffer. A full hmac is more secure and is the new default, but we can still
+  // support the old hmac for backwards compatibility.
+
+  // This is the SIMPLE_HMAC. It covers the "encrypted" field only.
+  optional bytes hmac = 7;
+
+  // This is the FULL_HMAC. It coverts:
+  // 1) the "encrypted" field,
+  // 2) The "encrypted_cipher" field.
+  // 3) The encrypted_cipher_metadata field
+  // 4) The packet iv
+  // 5) the api_version.
+  optional bytes full_hmac = 10;
+};

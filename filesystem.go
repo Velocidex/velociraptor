@@ -2,23 +2,23 @@ package velociraptor
 
 import (
 	"context"
-	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
-
 type GlobPlugin struct{}
+
 func (self GlobPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args vfilter.Dict) <- chan vfilter.Row {
+	args vfilter.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
 	// Extract the glob from the args.
 	globs, ok := scope.Associative(args, "globs")
 	if ok {
-		switch t:= globs.(type) {
+		switch t := globs.(type) {
 		case string:
 			globber.Add(t, "/")
 		case []vfilter.Any:
@@ -44,10 +44,10 @@ func (self GlobPlugin) Call(
 			ctx, "/", glob.OSFileSystemAccessor{})
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				return
 
-			case f, ok := <- file_chan:
+			case f, ok := <-file_chan:
 				if !ok {
 					return
 				}
@@ -60,14 +60,14 @@ func (self GlobPlugin) Call(
 	return output_chan
 }
 
-func (self GlobPlugin) Name() string{
+func (self GlobPlugin) Name() string {
 	return "glob"
 }
 
 func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "glob",
-		Doc: "Retrieve files based on a list of glob expressions",
+		Name:    "glob",
+		Doc:     "Retrieve files based on a list of glob expressions",
 		RowType: type_map.AddType(glob.OSFileInfo{}),
 	}
 }

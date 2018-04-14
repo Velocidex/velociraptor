@@ -2,8 +2,8 @@ package glob
 
 import (
 	"context"
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -74,7 +74,7 @@ func TestFnMatchTranslate(t *testing.T) {
 }
 
 type MockFileInfo struct {
-	name string
+	name      string
 	full_path string
 }
 
@@ -84,7 +84,7 @@ func (self MockFileInfo) Mode() os.FileMode  { return os.ModePerm }
 func (self MockFileInfo) ModTime() time.Time { return time.Time{} }
 func (self MockFileInfo) IsDir() bool        { return false }
 func (self MockFileInfo) Sys() interface{}   { return nil }
-func (self MockFileInfo) FullPath() string {return self.full_path}
+func (self MockFileInfo) FullPath() string   { return self.full_path }
 
 type MockFileSystemAccessor []string
 
@@ -163,7 +163,6 @@ var fs_accessor = MockFileSystemAccessor{
 	"/usr/bin/X11/X11/X11/diff",
 }
 
-
 func TestGlob(t *testing.T) {
 	for _, fixture := range _GlobFixture {
 		tree := NewGlobber()
@@ -199,7 +198,7 @@ func TestGlobWithContext(t *testing.T) {
 		}
 
 		output_chan := globber.ExpandWithContext(ctx, "/", fs_accessor)
-		for row:= range output_chan {
+		for row := range output_chan {
 			returned = append(returned, row.FullPath())
 		}
 		sort.Strings(returned)

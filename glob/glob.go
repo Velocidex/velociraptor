@@ -18,7 +18,6 @@ type FileInfo interface {
 	FullPath() string
 }
 
-
 type OSFileInfo struct {
 	os.FileInfo
 	full_path string
@@ -27,7 +26,6 @@ type OSFileInfo struct {
 func (self OSFileInfo) FullPath() string {
 	return self.full_path
 }
-
 
 // Interface for accessing the filesystem. Used for dependency
 // injection.
@@ -156,7 +154,7 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 // into the output channel.
 func (self Globber) ExpandWithContext(
 	ctx context.Context, path string,
-	accessor FileSystemAccessor) <- chan FileInfo {
+	accessor FileSystemAccessor) <-chan FileInfo {
 	output_chan := make(chan FileInfo)
 
 	go func() {
@@ -184,10 +182,10 @@ func (self Globber) ExpandWithContext(
 
 							for {
 								select {
-								case <- ctx.Done():
+								case <-ctx.Done():
 									return
 
-								case f, ok := <- child_chan:
+								case f, ok := <-child_chan:
 									if !ok {
 										continue search_filterers
 									}
@@ -348,7 +346,6 @@ func convert_glob_into_path_components(pattern string, path_sep string) (
 	}
 	return result, nil
 }
-
 
 type unicode []rune
 

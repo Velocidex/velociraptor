@@ -3,20 +3,20 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"fmt"
-	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/velociraptor"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"github.com/olekukonko/tablewriter"
+	"gopkg.in/alecthomas/kingpin.v2"
+	"os"
+	"www.velocidex.com/golang/velociraptor"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	query = kingpin.Command("query", "Run a VQL query")
+	query   = kingpin.Command("query", "Run a VQL query")
 	queries = query.Arg("query", "The VQL Query to run.").Required().Strings()
-	format = query.Flag("format", "Output format to use.").Default("json").Enum("text", "json")
+	format  = query.Flag("format", "Output format to use.").Default("json").Enum("text", "json")
 
-	explain = kingpin.Command("explain", "Explain the output from a plugun")
+	explain        = kingpin.Command("explain", "Explain the output from a plugun")
 	explain_plugin = explain.Arg("plugun", "Plugin to explain").Required().String()
 )
 
@@ -37,7 +37,6 @@ func outputJSON(vql *vfilter.VQL) {
 	}
 }
 
-
 func evalQuery(vql *vfilter.VQL) {
 	scope := velociraptor.MakeScope()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -50,7 +49,7 @@ func evalQuery(vql *vfilter.VQL) {
 
 	columns := vql.Columns(scope)
 	for {
-		row, ok := <- output_chan
+		row, ok := <-output_chan
 		if !ok {
 			return
 		}
@@ -82,10 +81,10 @@ func doExplain(plugin string) {
 	}
 }
 
-
 func main() {
 	switch kingpin.Parse() {
-	case "explain": doExplain(*explain_plugin)
+	case "explain":
+		doExplain(*explain_plugin)
 	case "query":
 		for _, query := range *queries {
 			vql, err := vfilter.Parse(query)
@@ -94,8 +93,10 @@ func main() {
 			}
 
 			switch *format {
-			case "text": evalQuery(vql)
-			case "json": outputJSON(vql)
+			case "text":
+				evalQuery(vql)
+			case "json":
+				outputJSON(vql)
 			}
 		}
 	}
