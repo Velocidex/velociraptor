@@ -138,6 +138,60 @@ message GrrMessage {
     }];
 };
 
+// Certificates are exchanged with this.
+message Certificate {
+  enum Type {
+    CSR = 0;
+    CRT = 1;
+    CA  = 2;
+  };
+
+  optional Type type = 1;
+  optional bytes pem = 2;
+  optional string cn = 3;
+};
+
+message CpuSeconds {
+  optional float user_cpu_time = 1 [(sem_type) = {
+      friendly_name: "User cpu seconds used",
+    }];
+  optional float system_cpu_time = 2 [(sem_type) = {
+      friendly_name: "System cpu seconds used",
+    }];
+}
+
+// This is a status response that is sent for each complete
+// transaction. It is always the last message in the transaction.
+message GrrStatus {
+  enum ReturnedStatus {
+    OK = 0;
+    IOERROR = 1;
+    RETRANSMISSION_DETECTED = 2;
+    CLIENT_KILLED = 3;
+    NETWORK_LIMIT_EXCEEDED = 4;
+
+    WORKER_STUCK = 9;
+    GENERIC_ERROR = 10;
+  };
+
+  optional ReturnedStatus status = 1 [default = OK];
+
+  optional string error_message = 2 [default = ""];
+
+  optional string backtrace = 3 [default = ""];
+
+  optional CpuSeconds cpu_time_used = 4;
+
+  optional string child_session_id = 5 [(sem_type) = {
+      type: "SessionID",
+      description: "The URN of a subflow.",
+    }];
+
+  optional uint64 network_bytes_sent = 6;
+
+  optional string nanny_status = 7;
+};
+
 // This is a list of messages
 message MessageList {
   repeated GrrMessage job = 1;

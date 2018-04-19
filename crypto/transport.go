@@ -2,6 +2,8 @@ package crypto
 
 import (
 	"bytes"
+	"encoding/pem"
+
 	"compress/zlib"
 	"crypto"
 	"crypto/aes"
@@ -12,12 +14,16 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"crypto/x509"
+	"crypto/x509/pkix"
+
 	"encoding/binary"
 	"errors"
 	"github.com/golang/protobuf/proto"
 	metrics "github.com/rcrowley/go-metrics"
 	"io/ioutil"
+	"log"
 	"strings"
+	"time"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
@@ -133,14 +139,32 @@ type CryptoManager struct {
 	input_cipher_cache *cache.LRUCache
 }
 
-func (self *CryptoManager) AddCertificate(certificate_pem []byte) error {
+func (self *CryptoManager) GetCSR() ([]byte, error) {
+	subj := pkix.Name{
+		CommonName: "aff4:/" + ClientIDFromPublicKey(
+			&self.private_key.PublicKey),
+	}
+
+	template := x509.CertificateRequest{
+		Subject: subj,
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	csrBytes, _ := x509.CreateCertificateRequest(
+		rand.Reader, &template, self.private_key)
+	return pem.EncodeToMemory(&pem.Block{
+		Type: "CERTIFICATE REQUEST",
+		Bytes: csrBytes}), nil
+}
+
+func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, error) {
 	client_cert, err := parseX509CertFromPemStr(certificate_pem)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	self.certificates[client_cert.Subject.CommonName] = client_cert
 
-	return nil
+	return &client_cert.Subject.CommonName, nil
 }
 
 func NewCryptoManager(context *context.Context, source string, pem_str []byte) (
@@ -153,6 +177,25 @@ func NewCryptoManager(context *context.Context, source string, pem_str []byte) (
 	return &CryptoManager{context: context,
 		private_key:         private_key,
 		source:              source,
+		certificates:        make(map[string]*x509.Certificate),
+		output_cipher_cache: cache.NewLRUCache(1000),
+		input_cipher_cache:  cache.NewLRUCache(1000),
+	}, nil
+}
+
+func NewClientCryptoManager(context *context.Context, client_private_key_pem []byte) (
+	*CryptoManager, error) {
+	private_key, err := parseRsaPrivateKeyFromPemStr(client_private_key_pem)
+	if err != nil {
+		return nil, err
+	}
+
+	client_id := ClientIDFromPublicKey(&private_key.PublicKey)
+	log.Printf("Starting Crypto for client %v", client_id)
+
+	return &CryptoManager{context: context,
+		private_key:         private_key,
+		source:              client_id,
 		certificates:        make(map[string]*x509.Certificate),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
@@ -403,7 +446,9 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	}
 
 	serialized_message_list := packed_message_list.MessageList
-	if *packed_message_list.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+	if packed_message_list.Compression != nil &&
+		*packed_message_list.Compression ==
+			crypto_proto.PackedMessageList_ZCOMPRESSION {
 		b := bytes.NewReader(serialized_message_list)
 		z, err := zlib.NewReader(b)
 		if err != nil {
@@ -452,6 +497,18 @@ func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (*crypto_proto
 	return result, nil
 }
 
+func (self *CryptoManager) EncryptMessageList(
+	message_list *crypto_proto.MessageList,
+	destination string) ([]byte, error) {
+	plain_text, err := proto.Marshal(message_list)
+	if err != nil {
+		return nil, err
+	}
+
+	cipher_text, err := self.Encrypt(plain_text, destination)
+	return cipher_text, err
+}
+
 func (self *CryptoManager) Encrypt(
 	plain_text []byte,
 	destination string) (
@@ -488,6 +545,8 @@ func (self *CryptoManager) Encrypt(
 	packed_message_list.Compression = crypto_proto.PackedMessageList_ZCOMPRESSION.Enum()
 	packed_message_list.MessageList = b.Bytes()
 	packed_message_list.Source = &self.source
+	now := uint64(time.Now().UnixNano())
+	packed_message_list.Timestamp = &now
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {

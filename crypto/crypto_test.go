@@ -1,12 +1,13 @@
 package crypto
 
 import (
+	"crypto/rsa"
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/context"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
@@ -27,12 +28,12 @@ func (self *TestSuite) SetupTest() {
 		t.Fatal(err)
 	}
 
-	err = self.manager.AddCertificate(
+	_, err = self.manager.AddCertificate(
 		utils.ReadFile(t, "test_data/cert.pem"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = self.manager.AddCertificate(
+	_, err = self.manager.AddCertificate(
 		utils.ReadFile(t, "test_data/server-priv.pem"))
 	if err != nil {
 		t.Fatal(err)
@@ -92,6 +93,32 @@ func (self *TestSuite) TestEncryption() {
 	c := metrics.GetOrRegisterCounter("rsa.encrypt", nil)
 	assert.Equal(t, c.Count(), int64(1))
 }
+
+func (self *TestSuite) TestClientIDFromPublicKey() {
+	t := self.T()
+
+	client_cert, err := parseX509CertFromPemStr(
+		utils.ReadFile(t, "test_data/cert.pem"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(
+		t,
+		ClientIDFromPublicKey(client_cert.PublicKey.(*rsa.PublicKey)),
+		"C.d74adcb3bef6a388")
+}
+
+func (self *TestSuite) TestCSR() {
+	t := self.T()
+	csr, err := self.manager.GetCSR()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	utils.Debug(csr)
+}
+
 
 func TestMain(t *testing.T) {
 	suite.Run(t, new(TestSuite))
