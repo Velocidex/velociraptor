@@ -3,7 +3,7 @@
 // These are the messages used in GRR encrypted communication protocol.
 syntax = "proto2";
 
-import "semantic.proto";
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 

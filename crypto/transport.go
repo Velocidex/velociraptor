@@ -545,7 +545,7 @@ func (self *CryptoManager) Encrypt(
 	packed_message_list.Compression = crypto_proto.PackedMessageList_ZCOMPRESSION.Enum()
 	packed_message_list.MessageList = b.Bytes()
 	packed_message_list.Source = &self.source
-	now := uint64(time.Now().UnixNano())
+	now := uint64(time.Now().UnixNano() / 1000)
 	packed_message_list.Timestamp = &now
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)

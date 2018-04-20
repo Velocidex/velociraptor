@@ -1,0 +1,234 @@
+// Copyright 2011 Google Inc. All Rights Reserved
+// LINT: LEGACY_NAMES
+
+// These are the messages used in client actions.
+syntax = "proto2";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+// Stores information about the GRR client itself
+message ClientInformation {
+  optional string client_name = 1;
+  optional uint32 client_version = 2;
+  optional uint64 revision = 3;
+  optional string build_time = 4;
+  optional string client_description = 5;
+  repeated string labels = 6;
+}
+
+// Ask the ListDir action to list all files in path (returns StatEntry)
+message ListDirRequest {
+  optional PathSpec pathspec = 1;
+
+// Velociraptor does not support iterators.
+//  optional Iterator iterator = 2;
+};
+
+
+// StatFS client action request
+message StatFSRequest {
+  repeated string path_list = 1[(sem_type) = {
+      description: "List of paths for statfs."
+    }];
+  optional PathSpec.PathType pathtype = 2 [(sem_type) = {
+      description: "Type of path to call statfs on.",
+    }, default=OS];
+};
+
+// A stat() record for a given path
+// Next field id: 24.
+message StatEntry {
+  // DEPRECATED
+  // optional string aff4path = 1;
+  optional uint64 st_mode = 2 [(sem_type) = {
+      type: "StatMode",
+      description: "A unix file permission mode."
+    }, default=0];
+
+  optional uint32 st_ino = 3;
+  optional uint32 st_dev = 4;
+  optional uint32 st_nlink = 5;
+  optional uint32 st_uid = 6;
+  optional uint32 st_gid = 7;
+  optional uint64 st_size = 8;
+  optional uint64 st_atime = 9 [(sem_type) = {
+      type: "RDFDatetimeSeconds",
+      description: "Last access time."
+    }];
+
+  optional uint64 st_mtime = 10 [(sem_type) = {
+      type: "RDFDatetimeSeconds",
+      description: "Last modified time."
+    }];
+
+  optional uint64 st_ctime = 11 [(sem_type) = {
+      type: "RDFDatetimeSeconds",
+      description: "Last inode change time."
+    }];
+
+  optional uint32 st_blocks = 12;
+  optional uint32 st_blksize = 13;
+  optional uint32 st_rdev = 14;
+  optional uint32 st_flags_osx = 21 [
+    (sem_type) = {
+      type: "StatExtFlagsOsx",
+      description: "extended file attributes for Mac (set by `chflags`)",
+    },
+    default = 0
+  ];
+  optional uint32 st_flags_linux = 22 [
+    (sem_type) = {
+      type: "StatExtFlagsLinux",
+      description: "extended file attributes as reported by `lsattr`",
+    },
+    default = 0
+  ];
+  optional string symlink = 15;
+
+  // These are used when mapping registry keys to the VFS
+  enum RegistryType {
+    option allow_alias = true;
+
+    REG_NONE = 0x00;
+    REG_SZ = 0x01;
+    REG_EXPAND_SZ = 0x02;
+    REG_BINARY = 0x03;
+    REG_DWORD = 0x04;
+    REG_DWORD_LITTLE_ENDIAN = 0x04;
+    REG_DWORD_BIG_ENDIAN = 0x05;
+    REG_LINK = 0x06;
+    REG_MULTI_SZ = 0x07;
+    REG_QWORD = 0x0B;
+  }
+
+  optional RegistryType registry_type = 16 [(sem_type) = {
+      description: "If this is a stat of a registry value, this field "
+      "contains the type of this value. The content will also be encoded "
+      "in residet."
+    }];
+
+ // For very small files their data is stored in this record.
+  optional bytes resident = 17;
+
+  // The pathspec which the client can use to re-reach this file.
+  optional PathSpec pathspec = 18 [(sem_type) = {
+      description: "The path specification to this file on the client."
+    }];
+
+//  optional DataBlob registry_data = 19 [(sem_type) = {
+//      description: "If this entry represents a registry value, this field will "
+//     "contain that value encoded according to the correct type.";
+//    }];
+  optional uint64 st_crtime = 20 [(sem_type) = {
+      type: "RDFDatetimeSeconds",
+      description: "Creation time."
+    }];
+
+  message ExtAttr {
+    optional string name = 1;
+    optional string value = 2;
+  }
+
+  repeated ExtAttr ext_attrs = 23;
+};
+
+
+// A message to encode a filesystem path (maybe for raw access)
+// Next field: 15
+message PathSpec {
+  enum PathType {
+    UNSET = -1;
+    OS = 0;
+    TSK = 1;
+    REGISTRY = 2;
+    MEMORY = 3 [(label) = HIDDEN];
+    TMPFILE = 4 [(label) = HIDDEN];
+  };
+  optional PathType pathtype = 1 [default = UNSET];
+
+  optional string path = 2;
+  optional string mount_point = 3 [(sem_type) = {
+      label: ADVANCED
+    }];
+
+  optional string stream_name = 11 [(sem_type) = {
+      description: "A name for the data stream. For example, an ADS name.",
+      label: ADVANCED
+    }];
+
+  optional PathSpec nested_path = 5;
+
+  // Offset for split images
+  optional uint64 offset = 6 [(sem_type) = {
+      label: ADVANCED
+    }];
+
+  enum Options {
+    CASE_INSENSITIVE = 0;
+    CASE_LITERAL = 1;
+
+    // The path component is a regular expression.
+    REGEX = 2;
+
+    // Indicates that this pathspec represents any subdirectory recursively.
+    RECURSIVE = 3;
+  };
+  optional Options path_options = 7 [(sem_type) = {
+      label: ADVANCED
+      }, default = CASE_INSENSITIVE];
+
+  optional uint64 recursion_depth = 12 [(sem_type) = {
+      label: HIDDEN,
+      description: "Recursion depth when RECURSIVE option is specified."
+    }, default=3];
+
+  // On NTFS, the sleuthkit uses the inode, type and id to uniquely identify a
+  // file - instead of the path.
+  optional uint64 inode = 8  [(sem_type) = {
+      label: ADVANCED
+    }];
+
+  enum tsk_fs_attr_type {
+    option allow_alias = true;
+
+    TSK_FS_ATTR_TYPE_DEFAULT = 0x01;        // 1
+    TSK_FS_ATTR_TYPE_NTFS_SI = 0x10;        // 16
+    TSK_FS_ATTR_TYPE_NTFS_ATTRLIST = 0x20;  // 32
+    TSK_FS_ATTR_TYPE_NTFS_FNAME = 0x30;     // 48
+    TSK_FS_ATTR_TYPE_NTFS_VVER = 0x40;      // 64 (NT)
+    TSK_FS_ATTR_TYPE_NTFS_OBJID = 0x40;     // 64 (2K)
+    TSK_FS_ATTR_TYPE_NTFS_SEC = 0x50;       // 80
+    TSK_FS_ATTR_TYPE_NTFS_VNAME = 0x60;     // 96
+    TSK_FS_ATTR_TYPE_NTFS_VINFO = 0x70;     // 112
+    TSK_FS_ATTR_TYPE_NTFS_DATA = 0x80;      // 128
+    TSK_FS_ATTR_TYPE_NTFS_IDXROOT = 0x90;   // 144
+    TSK_FS_ATTR_TYPE_NTFS_IDXALLOC = 0xA0;  // 160
+    TSK_FS_ATTR_TYPE_NTFS_BITMAP = 0xB0;    // 176
+    TSK_FS_ATTR_TYPE_NTFS_SYMLNK = 0xC0;    // 192 (NT)
+    TSK_FS_ATTR_TYPE_NTFS_REPARSE = 0xC0;   // 192 (2K)
+    TSK_FS_ATTR_TYPE_NTFS_EAINFO = 0xD0;    // 208
+    TSK_FS_ATTR_TYPE_NTFS_EA = 0xE0;        // 224
+    TSK_FS_ATTR_TYPE_NTFS_PROP = 0xF0;      // (NT)
+    TSK_FS_ATTR_TYPE_NTFS_LOG = 0x100;      // (2K)
+    TSK_FS_ATTR_TYPE_UNIX_INDIR = 0x1001;   // Indirect blocks for UFS and ExtX
+  };
+
+  optional tsk_fs_attr_type ntfs_type = 9  [(sem_type) = {
+      label: ADVANCED
+    }, default = TSK_FS_ATTR_TYPE_DEFAULT];
+  optional uint64 ntfs_id = 10  [(sem_type) = {
+      label: ADVANCED
+    }];
+
+  optional uint64 file_size_override = 13 [(sem_type) = {
+      type: "ByteSize",
+      description: "For files which are non seekable from their end "
+      "(e.g. /proc files), this is the minimum amount of bytes read.",
+    }, default=512000];
+
+  optional bool is_virtualroot = 14 [(sem_type) = {
+      description: "Indicates that this pathspec already contains a "
+      "virtual root."}];
+};

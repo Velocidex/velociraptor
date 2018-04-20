@@ -21,8 +21,9 @@ func (self *Context) Done() <- chan struct{} {
 	return self.ctx.Done()
 }
 
-
-
 func Background() Context {
-	return Context{ctx: context.Background()}
+	return Context{
+		ctx: context.Background(),
+		Config: config.GetDefaultConfig(),
+	}
 }
