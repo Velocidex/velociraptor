@@ -6,6 +6,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 
@@ -21,4 +22,5 @@ func TestClientInfo(t *testing.T) {
 		*actions_proto.ClientInformation)
 
 	assert.Equal(t, *result.ClientName, "velociraptor")
+	utils.Debug(result)
 }

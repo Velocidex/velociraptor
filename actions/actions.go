@@ -12,9 +12,10 @@ type ClientAction interface {
 		args *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage
 }
 
-
 func GetClientActionsMap() map[string]ClientAction {
 	result := make(map[string]ClientAction)
 	result["GetClientInfo"] = &GetClientInfo{}
+	result["StatFile"] = &StatFile{}
+	result["ListDirectory"] = &ListDirectory{}
 	return result
 }

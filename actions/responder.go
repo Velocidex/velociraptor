@@ -66,6 +66,10 @@ func (self *Responder) Return() []*crypto_proto.GrrMessage {
 	return self.responses
 }
 
+func (self *Responder) GetArgs() proto.Message {
+	return ExtractGrrMessagePayload(self.request)
+}
+
 
 // Unpack the GrrMessage payload. The return value should be type asserted.
 func ExtractGrrMessagePayload(message *crypto_proto.GrrMessage) proto.Message {
