@@ -11,23 +11,27 @@ import (
 
 type Responder struct {
 	request *crypto_proto.GrrMessage
+	next_id uint64
 	responses []*crypto_proto.GrrMessage
 }
 
 // NewResponder returns a new Responder.
 func NewResponder(request *crypto_proto.GrrMessage) *Responder {
-	result	:= &Responder{request: request}
+	result	:= &Responder{
+		request: request,
+		next_id: 0,
+	}
 	return result
 }
 
 func (self *Responder) AddResponse(message proto.Message) error {
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
-	response_id := uint64(len(self.responses)) + 1
+	self.next_id = self.next_id + 1
 	response := &crypto_proto.GrrMessage{
 		SessionId: self.request.SessionId,
 		RequestId: self.request.RequestId,
-		ResponseId: &response_id,
+		ResponseId: proto.Uint64(self.next_id),
 		ArgsRdfName: &rdf_name,
 	}
 
@@ -66,6 +70,27 @@ func (self *Responder) Return() []*crypto_proto.GrrMessage {
 	return self.responses
 }
 
+func (self *Responder) SendResponseToWellKnownFlow(
+	flow_name string, message proto.Message) error {
+	components := strings.Split(proto.MessageName(message), ".")
+	rdf_name := components[len(components)-1]
+	response := &crypto_proto.GrrMessage{
+		SessionId: &flow_name,
+		ResponseId: proto.Uint64(1),
+		ArgsRdfName: &rdf_name,
+	}
+
+	serialized_args, err := proto.Marshal(message)
+	if err != nil {
+		return err
+	}
+	response.Args = serialized_args
+
+	self.responses	= append(self.responses, response)
+	return nil
+}
+
+
 func (self *Responder) GetArgs() proto.Message {
 	return ExtractGrrMessagePayload(self.request)
 }
@@ -83,4 +108,22 @@ func ExtractGrrMessagePayload(message *crypto_proto.GrrMessage) proto.Message {
 		return new_message
 	}
 	return nil
+}
+
+func NewRequest(message proto.Message) (*crypto_proto.GrrMessage, error) {
+	components := strings.Split(proto.MessageName(message), ".")
+	rdf_name := components[len(components)-1]
+	response := &crypto_proto.GrrMessage{
+		SessionId: proto.String("XYZ"),
+		RequestId: proto.Uint64(1),
+		ArgsRdfName: &rdf_name,
+	}
+
+	serialized_args, err := proto.Marshal(message)
+	if err != nil {
+		return nil, err
+	}
+	response.Args = serialized_args
+
+	return response, nil
 }

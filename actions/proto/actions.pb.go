@@ -6,6 +6,8 @@ Package proto is a generated protocol buffer package.
 
 It is generated from these files:
 	actions.proto
+	fingerprint.proto
+	generic.proto
 
 It has these top-level messages:
 	ClientInformation
@@ -13,6 +15,17 @@ It has these top-level messages:
 	StatFSRequest
 	StatEntry
 	PathSpec
+	Hash
+	AuthenticodeSignedData
+	FingerprintTuple
+	FingerprintRequest
+	FingerprintResponse
+	BufferReference
+	DataBlob
+	BlobArray
+	KeyValue
+	Dict
+	EmbeddedRDFValue
 */
 package proto
 

@@ -4,6 +4,7 @@ import (
 	"syscall"
 	"os"
 	"io/ioutil"
+	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -12,30 +13,19 @@ import (
 func buildStatEntryFromFileInfo(stat os.FileInfo) *actions_proto.StatEntry {
 	sys_stat, ok := stat.Sys().(*syscall.Stat_t)
 	if ok {
-		mode := uint64(sys_stat.Mode)
-		inode := uint32(sys_stat.Ino)
-		dev := uint32(sys_stat.Dev)
-		nlink := uint32(sys_stat.Nlink)
-		atime := uint64(sys_stat.Atim.Sec)
-		mtime := uint64(sys_stat.Mtim.Sec)
-		ctime := uint64(sys_stat.Ctim.Sec)
-		size := uint64(sys_stat.Size)
-		blocks := uint32(sys_stat.Blocks)
-		blksize := uint32(sys_stat.Blksize)
-
 		stat_reply := &actions_proto.StatEntry{
-			StMode: &mode,
-			StIno: &inode,
-			StDev: &dev,
-			StNlink: &nlink,
+			StMode: proto.Uint64(uint64(sys_stat.Mode)),
+			StIno: proto.Uint32(uint32(sys_stat.Ino)),
+			StDev: proto.Uint32(uint32(sys_stat.Dev)),
+			StNlink: proto.Uint32(uint32(sys_stat.Nlink)),
 			StUid: &sys_stat.Uid,
 			StGid: &sys_stat.Gid,
-			StSize: &size,
-			StAtime: &atime,
-			StMtime: &mtime,
-			StCtime: &ctime,
-			StBlocks: &blocks,
-			StBlksize: &blksize,
+			StSize: proto.Uint64(uint64(sys_stat.Size)),
+			StAtime: proto.Uint64(uint64(sys_stat.Atim.Sec)),
+			StMtime: proto.Uint64(uint64(sys_stat.Mtim.Sec)),
+			StCtime: proto.Uint64(uint64(sys_stat.Ctim.Sec)),
+			StBlocks: proto.Uint32(uint32(sys_stat.Blocks)),
+			StBlksize: proto.Uint32(uint32(sys_stat.Blksize)),
 		}
 		return stat_reply
 	}
@@ -100,10 +90,9 @@ func (self *ListDirectory) Run(
 		if stat_reply != nil {
 			new_pathspec := CopyPathspec(arg.Pathspec)
 			last := LastPathspec(new_pathspec)
-			name := stat.Name()
 			last.NestedPath = &actions_proto.PathSpec{
 				Pathtype: actions_proto.PathSpec_OS.Enum(),
-				Path: &name,
+				Path: proto.String(stat.Name()),
 			}
 			stat_reply.Pathspec = new_pathspec
 			responder.AddResponse(stat_reply)

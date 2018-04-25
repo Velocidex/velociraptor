@@ -17,5 +17,8 @@ func GetClientActionsMap() map[string]ClientAction {
 	result["GetClientInfo"] = &GetClientInfo{}
 	result["StatFile"] = &StatFile{}
 	result["ListDirectory"] = &ListDirectory{}
+	result["HashFile"] = &HashFile{}
+	result["HashBuffer"] = &HashBuffer{}
+	result["TransferBuffer"] = &TransferBuffer{}
 	return result
 }

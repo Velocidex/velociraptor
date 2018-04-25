@@ -4,7 +4,6 @@ import (
 	"errors"
 	"path/filepath"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 /* This is a minimalistic implementation of GRR's VFSOpen.
@@ -17,10 +16,12 @@ not support the full pathspec here. The supported subset include:
   standard OS provided case sensitivity.
 */
 func GetPathFromPathSpec(pathspec *actions_proto.PathSpec) (*string, error) {
+	// TODO: handle windows pathspecs
 	components := []string{"/"}
 	i := pathspec
 	for {
-		if *i.Pathtype != *actions_proto.PathSpec_OS.Enum() {
+		if i.Pathtype == nil ||
+			*i.Pathtype != *actions_proto.PathSpec_OS.Enum() {
 			return nil, errors.New("Only supports OS paths.")
 		}
 
@@ -34,7 +35,6 @@ func GetPathFromPathSpec(pathspec *actions_proto.PathSpec) (*string, error) {
 	}
 
 	full_path := filepath.Join(components...)
-	utils.Debug(full_path)
 	return &full_path, nil
 }
 
