@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
@@ -126,7 +127,7 @@ func (self *Globber) _brace_expansion(pattern string, result *[]string) {
 		for _, item := range middle {
 			self._brace_expansion(left+item+right, result)
 		}
-	} else if !in_string(result, pattern) {
+	} else if !utils.InString(result, pattern) {
 		*result = append(*result, pattern)
 	}
 }

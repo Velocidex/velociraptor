@@ -1,4 +1,4 @@
-package velociraptor
+package vql
 
 import (
 	"github.com/shirou/gopsutil/host"

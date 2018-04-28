@@ -1,8 +1,9 @@
-package velociraptor
+package vql
 
 import (
 	"github.com/shirou/gopsutil/process"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Block potentially dangerous methods.
@@ -23,7 +24,7 @@ func (self _ProcessFieldImpl) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 	field := b.(string)
 
-	if in_string(&_BlockedMembers, field) {
+	if utils.InString(&_BlockedMembers, field) {
 		return false, true
 	}
 
@@ -35,7 +36,7 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 	var result []string
 
 	for _, item := range (vfilter.DefaultAssociative{}).GetMembers(scope, a) {
-		if !in_string(&_BlockedMembers, item) {
+		if !utils.InString(&_BlockedMembers, item) {
 			result = append(result, item)
 		}
 	}

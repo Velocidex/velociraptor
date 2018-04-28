@@ -7,7 +7,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
-	"www.velocidex.com/golang/velociraptor"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -16,12 +16,12 @@ var (
 	queries = query.Arg("query", "The VQL Query to run.").Required().Strings()
 	format  = query.Flag("format", "Output format to use.").Default("json").Enum("text", "json")
 
-	explain        = kingpin.Command("explain", "Explain the output from a plugun")
-	explain_plugin = explain.Arg("plugun", "Plugin to explain").Required().String()
+	explain        = kingpin.Command("explain", "Explain the output from a plugin")
+	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
 
 func outputJSON(vql *vfilter.VQL) {
-	scope := velociraptor.MakeScope()
+	scope := vql_subsystem.MakeScope()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -38,7 +38,7 @@ func outputJSON(vql *vfilter.VQL) {
 }
 
 func evalQuery(vql *vfilter.VQL) {
-	scope := velociraptor.MakeScope()
+	scope := vql_subsystem.MakeScope()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -74,7 +74,7 @@ func evalQuery(vql *vfilter.VQL) {
 
 func doExplain(plugin string) {
 	type_map := make(vfilter.TypeMap)
-	scope := velociraptor.MakeScope()
+	scope := vql_subsystem.MakeScope()
 	if pslist_info, pres := scope.Info(&type_map, plugin); pres {
 		vfilter.Debug(pslist_info)
 		vfilter.Debug(type_map)

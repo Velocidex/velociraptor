@@ -20,5 +20,6 @@ func GetClientActionsMap() map[string]ClientAction {
 	result["HashFile"] = &HashFile{}
 	result["HashBuffer"] = &HashBuffer{}
 	result["TransferBuffer"] = &TransferBuffer{}
+	result["VQLClientAction"] = &VQLClientAction{}
 	return result
 }

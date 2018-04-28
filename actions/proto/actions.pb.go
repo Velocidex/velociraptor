@@ -8,6 +8,7 @@ It is generated from these files:
 	actions.proto
 	fingerprint.proto
 	generic.proto
+	vql.proto
 
 It has these top-level messages:
 	ClientInformation
@@ -26,6 +27,8 @@ It has these top-level messages:
 	KeyValue
 	Dict
 	EmbeddedRDFValue
+	VQLCollectorArgs
+	VQLResponse
 */
 package proto
 

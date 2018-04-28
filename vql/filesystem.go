@@ -1,4 +1,4 @@
-package velociraptor
+package vql
 
 import (
 	"context"
