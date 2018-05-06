@@ -1,16 +1,17 @@
 package actions
 
 import (
-	"www.velocidex.com/golang/velociraptor/context"
 	"encoding/json"
-	"www.velocidex.com/golang/vfilter"
 	"github.com/golang/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type VQLClientAction struct{}
+
 func (self *VQLClientAction) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {

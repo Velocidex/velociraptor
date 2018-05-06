@@ -2,8 +2,8 @@ package vql
 
 import (
 	"github.com/shirou/gopsutil/process"
-	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Block potentially dangerous methods.

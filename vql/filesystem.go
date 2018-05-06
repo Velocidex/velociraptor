@@ -2,8 +2,10 @@ package vql
 
 import (
 	"context"
+	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
+	//	utils 	"www.velocidex.com/golang/velociraptor/testing"
 )
 
 type GlobPlugin struct{}
@@ -34,7 +36,7 @@ func (self GlobPlugin) Call(
 			vfilter.Debug("Unsupported args")
 		}
 	} else {
-		// If not args specified just glob *
+		// If no args specified just glob *
 		globber.Add("*", "/")
 	}
 
@@ -69,5 +71,22 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
 		RowType: type_map.AddType(glob.OSFileInfo{}),
+	}
+}
+
+func MakeFilesystemsPlugin() vfilter.GenericListPlugin {
+	return vfilter.GenericListPlugin{
+		PluginName: "filesystems",
+		Function: func(args vfilter.Dict) []vfilter.Row {
+			var result []vfilter.Row
+			partitions, err := disk.Partitions(true)
+			if err == nil {
+				for _, item := range partitions {
+					result = append(result, item)
+				}
+			}
+			return result
+		},
+		RowType: disk.PartitionStat{},
 	}
 }

@@ -119,7 +119,6 @@ func (self *TestSuite) TestCSR() {
 	utils.Debug(csr)
 }
 
-
 func TestMain(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

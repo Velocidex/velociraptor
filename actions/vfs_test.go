@@ -1,10 +1,10 @@
 package actions
+
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
-
 
 func TestCopy(t *testing.T) {
 	name_1 := "1"

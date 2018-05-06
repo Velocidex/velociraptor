@@ -199,7 +199,7 @@ func TestGlobWithContext(t *testing.T) {
 
 		output_chan := globber.ExpandWithContext(ctx, "/", fs_accessor)
 		for row := range output_chan {
-			returned = append(returned, row.FullPath())
+			returned = append(returned, row.FullPath)
 		}
 		sort.Strings(returned)
 		if !reflect.DeepEqual(returned, fixture.expected) {

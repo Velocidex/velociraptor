@@ -146,14 +146,14 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 	}
 
 	template := x509.CertificateRequest{
-		Subject: subj,
+		Subject:            subj,
 		SignatureAlgorithm: x509.SHA256WithRSA,
 	}
 
 	csrBytes, _ := x509.CreateCertificateRequest(
 		rand.Reader, &template, self.private_key)
 	return pem.EncodeToMemory(&pem.Block{
-		Type: "CERTIFICATE REQUEST",
+		Type:  "CERTIFICATE REQUEST",
 		Bytes: csrBytes}), nil
 }
 

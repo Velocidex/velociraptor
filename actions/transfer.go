@@ -3,15 +3,16 @@ package actions
 import (
 	"bytes"
 	"compress/zlib"
-	"os"
 	"crypto/sha256"
 	"github.com/golang/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/context"
+	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type TransferBuffer struct{}
+
 func (self *TransferBuffer) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
@@ -52,16 +53,16 @@ func (self *TransferBuffer) Run(
 	responder.SendResponseToWellKnownFlow(
 		"aff4:/flows/F:TransferStore",
 		&actions_proto.DataBlob{
-			Data: b.Bytes(),
+			Data:        b.Bytes(),
 			Compression: actions_proto.DataBlob_ZCOMPRESSION.Enum(),
 		},
 	)
 
 	hash := sha256.Sum256(buffer)
 	responder.AddResponse(&actions_proto.BufferReference{
-		Offset: arg.Offset,
-		Length: proto.Uint64(uint64(bytes_read)),
-		Data: hash[:],
+		Offset:   arg.Offset,
+		Length:   proto.Uint64(uint64(bytes_read)),
+		Data:     hash[:],
 		Pathspec: arg.Pathspec,
 	})
 

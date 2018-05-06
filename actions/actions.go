@@ -21,5 +21,8 @@ func GetClientActionsMap() map[string]ClientAction {
 	result["HashBuffer"] = &HashBuffer{}
 	result["TransferBuffer"] = &TransferBuffer{}
 	result["VQLClientAction"] = &VQLClientAction{}
+	result["GetHostname"] = &GetHostname{}
+	result["GetPlatformInfo"] = &GetPlatformInfo{}
+
 	return result
 }

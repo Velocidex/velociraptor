@@ -1,8 +1,8 @@
 package config
 
 import (
-	"io/ioutil"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
 )
 
 // Can be an array or a string in YAML but always parses to a string
@@ -28,24 +28,22 @@ func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Config struct {
-	Client_name string `yaml:"Client.name"`
+	Client_name        string `yaml:"Client.name"`
 	Client_description string `yaml:"Client.description"`
-	Client_version uint32
-	Client_build_time string
-	Client_labels StringArray `yaml:"Client.labels"`
+	Client_version     uint32
+	Client_build_time  string
+	Client_labels      StringArray `yaml:"Client.labels"`
 
-	Client_private_key string `yaml:"Client.private_key"`
+	Client_private_key string      `yaml:"Client.private_key"`
 	Client_server_urls StringArray `yaml:"Client.server_urls"`
 }
 
-
 func GetDefaultConfig() Config {
 	return Config{
-		Client_name: "velociraptor",
+		Client_name:    "velociraptor",
 		Client_version: 1,
 	}
 }
-
 
 // Load the config stored in the YAML file and returns a config object.
 func LoadConfig(filename string) (*Config, error) {

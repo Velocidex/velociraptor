@@ -20,6 +20,8 @@ func MakeScope() *vfilter.Scope {
 		MakeInfoPlugin(),
 		MakeConnectionsPlugin(),
 		GlobPlugin{},
+		MakeRegexParserPlugin(),
+		MakeFilesystemsPlugin(),
 	).AddProtocolImpl(
 		_ProcessFieldImpl{},
 	)

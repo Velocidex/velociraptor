@@ -13,18 +13,17 @@ import (
 )
 
 type Context struct {
-	ctx context.Context
+	ctx    context.Context
 	Config config.Config
 }
 
-
-func (self *Context) Done() <- chan struct{} {
+func (self *Context) Done() <-chan struct{} {
 	return self.ctx.Done()
 }
 
-func (self *Context)Deadline() (deadline time.Time, ok bool) {
+func (self *Context) Deadline() (deadline time.Time, ok bool) {
 	t, ok := self.ctx.Deadline()
-	return t,ok
+	return t, ok
 }
 
 func (self *Context) Err() error {
@@ -37,7 +36,7 @@ func (self *Context) Value(key interface{}) interface{} {
 
 func Background() Context {
 	return Context{
-		ctx: context.Background(),
+		ctx:    context.Background(),
 		Config: config.GetDefaultConfig(),
 	}
 }

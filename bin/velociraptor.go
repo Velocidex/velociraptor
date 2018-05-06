@@ -3,18 +3,13 @@ package main
 import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/context"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/http_comms"
 )
 
-var (
-	config_path = kingpin.Arg("config", "The client's config file.").Required().String()
-)
-
-
-func main() {
+func RunClient() {
 	kingpin.Parse()
 
 	ctx := context.Background()
@@ -45,5 +40,4 @@ func main() {
 	}
 
 	comm.Run()
-
 }

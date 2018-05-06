@@ -1,12 +1,11 @@
 package actions
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
-
 
 func TestResponder(t *testing.T) {
 	args := &crypto_proto.GrrMessage{}

@@ -2,13 +2,16 @@ package glob
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"www.velocidex.com/golang/velociraptor/utils"
+	//	utils_ 	"www.velocidex.com/golang/velociraptor/testing"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
@@ -16,16 +19,35 @@ import (
 
 type FileInfo interface {
 	os.FileInfo
-	FullPath() string
 }
 
 type OSFileInfo struct {
-	os.FileInfo
-	full_path string
+	FileInfo
+	FullPath string
 }
 
-func (self OSFileInfo) FullPath() string {
-	return self.full_path
+func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
+	result, err := json.Marshal(&struct {
+		FullPath string
+		Size     int64
+		Mode     os.FileMode
+		ModeStr  string
+		ModTime  time.Time
+		Sys      interface{}
+	}{
+		FullPath: self.FullPath,
+		Size:     self.Size(),
+		Mode:     self.Mode(),
+		ModeStr:  self.Mode().String(),
+		ModTime:  self.ModTime(),
+		Sys:      self.Sys(),
+	})
+
+	return result, err
+}
+
+func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
+	return nil
 }
 
 // Interface for accessing the filesystem. Used for dependency
@@ -44,7 +66,7 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		var result []FileInfo
 		for _, f := range files {
 			result = append(result,
-				OSFileInfo{f, filepath.Join(path, f.Name())})
+				&OSFileInfo{f, filepath.Join(path, f.Name())})
 		}
 		return result, nil
 	}

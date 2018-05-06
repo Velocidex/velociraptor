@@ -1,26 +1,24 @@
 package actions
 
 import (
+	"github.com/golang/protobuf/proto"
+	assert "github.com/stretchr/testify/assert"
 	"os"
 	"testing"
-	_ "github.com/stretchr/testify/assert"
-	"github.com/golang/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/context"
 )
-
 
 func TestHashFile(t *testing.T) {
 	cwd, _ := os.Getwd()
 	pathspec := &actions_proto.PathSpec{
-		Path: proto.String(cwd),
+		Path:     proto.String(cwd),
 		Pathtype: actions_proto.PathSpec_OS.Enum(),
 		NestedPath: &actions_proto.PathSpec{
-			Path: proto.String("test_data"),
+			Path:     proto.String("test_data"),
 			Pathtype: actions_proto.PathSpec_OS.Enum(),
 			NestedPath: &actions_proto.PathSpec{
-				Path: proto.String("hello.txt"),
+				Path:     proto.String("hello.txt"),
 				Pathtype: actions_proto.PathSpec_OS.Enum(),
 			},
 		},
@@ -46,5 +44,12 @@ func TestHashFile(t *testing.T) {
 		t.Fatal(err)
 	}
 	responses := hash_file.Run(&ctx, arg)
-	utils.Debug(responses)
+	assert.Equal(t, len(responses), 2)
+	response := ExtractGrrMessagePayload(responses[0]).(*actions_proto.FingerprintResponse)
+
+	assert.Equal(t, response.Hash.Sha256,
+		[]uint8([]byte{0xf5, 0x44, 0xea, 0x51, 0xaa, 0x45, 0x9, 0x89,
+			0x7, 0x1e, 0xc7, 0x95, 0xc1, 0xad, 0x45, 0x36, 0xdb,
+			0xb3, 0x7b, 0x9c, 0xcd, 0x22, 0xec, 0xaa, 0x39, 0x92,
+			0x33, 0xdb, 0xc1, 0x9d, 0xdb, 0xc0}))
 }

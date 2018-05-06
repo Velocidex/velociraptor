@@ -25,7 +25,7 @@ func GetPathFromPathSpec(pathspec *actions_proto.PathSpec) (*string, error) {
 			return nil, errors.New("Only supports OS paths.")
 		}
 
-		components	= append(components, *i.Path)
+		components = append(components, *i.Path)
 
 		if i.NestedPath == nil {
 			break
@@ -48,7 +48,6 @@ func LastPathspec(pathspec *actions_proto.PathSpec) *actions_proto.PathSpec {
 		}
 	}
 }
-
 
 func CopyPathspec(pathspec *actions_proto.PathSpec) *actions_proto.PathSpec {
 	result := *pathspec

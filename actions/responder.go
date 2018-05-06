@@ -1,23 +1,22 @@
 package actions
 
 import (
-	"reflect"
-	"strings"
-	"runtime/debug"
 	"github.com/golang/protobuf/proto"
+	"reflect"
+	"runtime/debug"
+	"strings"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
-
 type Responder struct {
-	request *crypto_proto.GrrMessage
-	next_id uint64
+	request   *crypto_proto.GrrMessage
+	next_id   uint64
 	responses []*crypto_proto.GrrMessage
 }
 
 // NewResponder returns a new Responder.
 func NewResponder(request *crypto_proto.GrrMessage) *Responder {
-	result	:= &Responder{
+	result := &Responder{
 		request: request,
 		next_id: 0,
 	}
@@ -29,9 +28,9 @@ func (self *Responder) AddResponse(message proto.Message) error {
 	rdf_name := components[len(components)-1]
 	self.next_id = self.next_id + 1
 	response := &crypto_proto.GrrMessage{
-		SessionId: self.request.SessionId,
-		RequestId: self.request.RequestId,
-		ResponseId: proto.Uint64(self.next_id),
+		SessionId:   self.request.SessionId,
+		RequestId:   self.request.RequestId,
+		ResponseId:  proto.Uint64(self.next_id),
 		ArgsRdfName: &rdf_name,
 	}
 
@@ -45,7 +44,7 @@ func (self *Responder) AddResponse(message proto.Message) error {
 		response.Type = crypto_proto.GrrMessage_STATUS.Enum()
 	}
 
-	self.responses	= append(self.responses, response)
+	self.responses = append(self.responses, response)
 
 	return nil
 }
@@ -53,9 +52,9 @@ func (self *Responder) AddResponse(message proto.Message) error {
 func (self *Responder) RaiseError(message string) []*crypto_proto.GrrMessage {
 	backtrace := string(debug.Stack())
 	status := &crypto_proto.GrrStatus{
-		Backtrace: &backtrace,
+		Backtrace:    &backtrace,
 		ErrorMessage: &message,
-		Status: crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
+		Status:       crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
 	}
 	self.AddResponse(status)
 
@@ -75,8 +74,8 @@ func (self *Responder) SendResponseToWellKnownFlow(
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
 	response := &crypto_proto.GrrMessage{
-		SessionId: &flow_name,
-		ResponseId: proto.Uint64(1),
+		SessionId:   &flow_name,
+		ResponseId:  proto.Uint64(1),
 		ArgsRdfName: &rdf_name,
 	}
 
@@ -86,15 +85,13 @@ func (self *Responder) SendResponseToWellKnownFlow(
 	}
 	response.Args = serialized_args
 
-	self.responses	= append(self.responses, response)
+	self.responses = append(self.responses, response)
 	return nil
 }
-
 
 func (self *Responder) GetArgs() proto.Message {
 	return ExtractGrrMessagePayload(self.request)
 }
-
 
 // Unpack the GrrMessage payload. The return value should be type asserted.
 func ExtractGrrMessagePayload(message *crypto_proto.GrrMessage) proto.Message {
@@ -114,8 +111,8 @@ func NewRequest(message proto.Message) (*crypto_proto.GrrMessage, error) {
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
 	response := &crypto_proto.GrrMessage{
-		SessionId: proto.String("XYZ"),
-		RequestId: proto.Uint64(1),
+		SessionId:   proto.String("XYZ"),
+		RequestId:   proto.Uint64(1),
 		ArgsRdfName: &rdf_name,
 	}
 

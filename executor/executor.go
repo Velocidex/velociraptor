@@ -1,14 +1,13 @@
 package executor
 
 import (
-	"log"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"log"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	utils "www.velocidex.com/golang/velociraptor/testing"
-
 )
 
 type Executor interface {
@@ -25,14 +24,13 @@ type Executor interface {
 	ReadResponse() *crypto_proto.GrrMessage
 }
 
-
 // A concerete implementation of a client executor.
 
 type ClientExecutor struct {
-	ctx *context.Context
+	ctx      *context.Context
 	Inbound  chan *crypto_proto.GrrMessage
 	Outbound chan *crypto_proto.GrrMessage
-	plugins map[string]actions.ClientAction
+	plugins  map[string]actions.ClientAction
 }
 
 // Blocks until a request is received from the server. Called by the
@@ -65,7 +63,7 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 	}
 	error_message := fmt.Sprintf("Client action '%v' not known", *req.Name)
 	status := &crypto_proto.GrrStatus{
-		Status: crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
+		Status:       crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
 		ErrorMessage: &error_message,
 	}
 
@@ -100,7 +98,6 @@ func (self *ClientExecutor) processRequestPlugin(
 
 	return plugin.Run(self.ctx, req)
 }
-
 
 func NewClientExecutor(ctx *context.Context) (*ClientExecutor, error) {
 	result := &ClientExecutor{}
