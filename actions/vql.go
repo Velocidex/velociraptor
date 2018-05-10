@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"github.com/golang/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -31,15 +30,9 @@ func (self *VQLClientAction) Run(
 	}
 
 	scope := vql_subsystem.MakeScope()
-	output_chan := vql.Eval(ctx, scope)
-	result := []vfilter.Row{}
-	for row := range output_chan {
-		result = append(result, row)
-	}
-
-	s, err := json.MarshalIndent(result, "", " ")
+	s, err := vfilter.OutputJSON(vql, ctx, scope)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
 	}
 
 	responder.AddResponse(&actions_proto.VQLResponse{

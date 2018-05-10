@@ -22,6 +22,7 @@ func MakeScope() *vfilter.Scope {
 		GlobPlugin{},
 		MakeRegexParserPlugin(),
 		MakeFilesystemsPlugin(),
+		MakeUploaderPlugin(),
 	).AddProtocolImpl(
 		_ProcessFieldImpl{},
 	)

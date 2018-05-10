@@ -8,9 +8,9 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"strings"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	//	utils 	"www.velocidex.com/golang/velociraptor/testing"
 )
 
 var (
@@ -30,15 +30,9 @@ func outputJSON(vql *vfilter.VQL) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	output_chan := vql.Eval(ctx, scope)
-	result := []vfilter.Row{}
-	for row := range output_chan {
-		result = append(result, row)
-	}
-
-	s, err := json.MarshalIndent(result, "", " ")
+	result, err := vfilter.OutputJSON(vql, ctx, scope)
 	if err == nil {
-		os.Stdout.Write(s)
+		os.Stdout.Write(result)
 	}
 }
 
@@ -75,9 +69,16 @@ func evalQuery(vql *vfilter.VQL) {
 			return
 		}
 		string_row := []string{}
+		if len(*columns) == 0 {
+			members := scope.GetMembers(row)
+			table.SetHeader(members)
+			columns = &members
+		}
+
 		for _, key := range *columns {
 			cell := ""
-			if value, pres := scope.Associative(row, key); pres {
+			value, pres := scope.Associative(row, key)
+			if pres && !utils.IsNil(value) {
 				switch t := value.(type) {
 				case vfilter.StringProtocol:
 					cell = t.ToString(scope)
@@ -101,11 +102,17 @@ func evalQuery(vql *vfilter.VQL) {
 }
 
 func doExplain(plugin string) {
+	result := vfilter.NewDict()
 	type_map := make(vfilter.TypeMap)
 	scope := vql_subsystem.MakeScope()
 	if pslist_info, pres := scope.Info(&type_map, plugin); pres {
-		vfilter.Debug(pslist_info)
-		vfilter.Debug(type_map)
+		result.Set(plugin+"_info", pslist_info)
+		result.Set("type_map", type_map)
+	}
+
+	s, err := json.MarshalIndent(result, "", " ")
+	if err == nil {
+		os.Stdout.Write(s)
 	}
 }
 

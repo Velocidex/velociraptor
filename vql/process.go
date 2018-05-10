@@ -34,7 +34,6 @@ func (self _ProcessFieldImpl) Associative(
 
 func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
 	var result []string
-
 	for _, item := range (vfilter.DefaultAssociative{}).GetMembers(scope, a) {
 		if !utils.InString(&_BlockedMembers, item) {
 			result = append(result, item)
@@ -47,7 +46,7 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 func MakePslistPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "pslist",
-		Function: func(args vfilter.Dict) []vfilter.Row {
+		Function: func(args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			processes, err := process.Processes()
 			if err == nil {

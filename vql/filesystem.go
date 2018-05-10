@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
+	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/vfilter"
-	//	utils 	"www.velocidex.com/golang/velociraptor/testing"
 )
 
 type GlobPlugin struct{}
@@ -13,7 +13,7 @@ type GlobPlugin struct{}
 func (self GlobPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args vfilter.Dict) <-chan vfilter.Row {
+	args *vfilter.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
@@ -29,11 +29,11 @@ func (self GlobPlugin) Call(
 				case string:
 					globber.Add(item_t, "/")
 				default:
-					vfilter.Debug("Unsupported arg type")
+					utils.Debug("Unsupported arg type")
 				}
 			}
 		default:
-			vfilter.Debug("Unsupported args")
+			utils.Debug("Unsupported args")
 		}
 	} else {
 		// If no args specified just glob *
@@ -77,7 +77,7 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 func MakeFilesystemsPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "filesystems",
-		Function: func(args vfilter.Dict) []vfilter.Row {
+		Function: func(args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			partitions, err := disk.Partitions(true)
 			if err == nil {

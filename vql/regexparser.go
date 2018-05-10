@@ -9,15 +9,15 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func _ParseFileWithRegex(args vfilter.Dict) []vfilter.Row {
+func _ParseFileWithRegex(args *vfilter.Dict) []vfilter.Row {
 	var result []vfilter.Row
-	filename, ok := vfilter.ExtractString("file", &args)
+	filename, ok := vfilter.ExtractString("file", args)
 	if !ok {
 		return result
 	}
 
 	utils.Debug(filename)
-	regexps, ok := vfilter.ExtractStringArray("regex", &args)
+	regexps, ok := vfilter.ExtractStringArray("regex", args)
 	if !ok {
 		return result
 	}

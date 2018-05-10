@@ -9,7 +9,7 @@ import (
 func MakeUsersPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "users",
-		Function: func(args vfilter.Dict) []vfilter.Row {
+		Function: func(args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			if users, err := host.Users(); err == nil {
 				for _, item := range users {
@@ -25,7 +25,7 @@ func MakeUsersPlugin() vfilter.GenericListPlugin {
 func MakeConnectionsPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "connections",
-		Function: func(args vfilter.Dict) []vfilter.Row {
+		Function: func(args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			if cons, err := net.Connections("all"); err == nil {
 				for _, item := range cons {
