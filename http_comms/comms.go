@@ -125,7 +125,6 @@ func (self *HTTPCommunicator) sendMessageList(message_list *crypto_proto.Message
 	for {
 		url := self.urls[self.current_url_idx]
 		err := self.sendToURL(url, message_list)
-
 		// Success!
 		if err == nil {
 			return
@@ -166,7 +165,6 @@ func (self *HTTPCommunicator) sendToURL(
 		}
 
 		// TODO: Verify the server pem.
-
 		// This will replace the current server_name
 		// certificate in the manager.
 		server_name, err := self.manager.AddCertificate(pem)
@@ -218,16 +216,21 @@ func (self *HTTPCommunicator) sendToURL(
 		return err
 	}
 
-	// Feed the messages to the executor.
-	if len(response_message_list.Job) > 0 {
-		// The server sent some messages, so we need to switch
-		// to fast poll mode.
-		self.current_poll_duration = self.minPoll
+	// Note: We queue requests to the executor in a go routine
+	// because the executor is typically blocked during the entire
+	// HTTP transaction.
+	go func() {
+		// Feed the messages to the executor.
+		if len(response_message_list.Job) > 0 {
+			// The server sent some messages, so we need to switch
+			// to fast poll mode.
+			self.current_poll_duration = self.minPoll
 
-		for _, msg := range response_message_list.Job {
-			self.executor.ProcessRequest(msg)
+			for _, msg := range response_message_list.Job {
+				self.executor.ProcessRequest(msg)
+			}
 		}
-	}
+	}()
 
 	return nil
 }

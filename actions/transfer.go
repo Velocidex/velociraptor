@@ -15,34 +15,41 @@ type TransferBuffer struct{}
 
 func (self *TransferBuffer) Run(
 	ctx *context.Context,
-	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(msg)
+	msg *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+	responder := NewResponder(msg, output)
 	arg, pres := responder.GetArgs().(*actions_proto.BufferReference)
 	if !pres {
-		return responder.RaiseError("Request should be of type BufferReference")
+		responder.RaiseError("Request should be of type BufferReference")
+		return
 	}
 	path, err := GetPathFromPathSpec(arg.Pathspec)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	file, err := os.Open(*path)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	_, err = file.Seek(int64(*arg.Offset), 0)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	if *arg.Length > 1000000 {
-		return responder.RaiseError("Unable to read such a large buffer.")
+		responder.RaiseError("Unable to read such a large buffer.")
+		return
 	}
 	buffer := make([]byte, *arg.Length)
 	bytes_read, err := file.Read(buffer)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	var b bytes.Buffer
@@ -66,5 +73,5 @@ func (self *TransferBuffer) Run(
 		Pathspec: arg.Pathspec,
 	})
 
-	return responder.Return()
+	responder.Return()
 }

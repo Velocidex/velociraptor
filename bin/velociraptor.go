@@ -17,14 +17,14 @@ func RunClient() {
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to load config file")
 	}
-	ctx.Config = *config
+	ctx.Config = config
 	manager, err := crypto.NewClientCryptoManager(
 		&ctx, []byte(config.Client_private_key))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}
 
-	exe, err := executor.NewClientExecutor(&ctx)
+	exe, err := executor.NewClientExecutor(config)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create executor.")
 	}

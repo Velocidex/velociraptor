@@ -38,8 +38,8 @@ type Config struct {
 	Client_server_urls StringArray `yaml:"Client.server_urls"`
 }
 
-func GetDefaultConfig() Config {
-	return Config{
+func GetDefaultConfig() *Config {
+	return &Config{
 		Client_name:    "velociraptor",
 		Client_version: 1,
 	}
@@ -54,10 +54,10 @@ func LoadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 
-	err = yaml.Unmarshal(data, &result)
+	err = yaml.Unmarshal(data, result)
 	if err != nil {
 		return nil, err
 	}
 
-	return &result, nil
+	return result, nil
 }

@@ -13,50 +13,58 @@ type StatFile struct{}
 
 func (self *StatFile) Run(
 	ctx *context.Context,
-	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(msg)
+	msg *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+	responder := NewResponder(msg, output)
 
 	arg, pres := responder.GetArgs().(*actions_proto.ListDirRequest)
 	if !pres {
-		return responder.RaiseError("Request should be of type ListDirRequest")
+		responder.RaiseError("Request should be of type ListDirRequest")
+		return
 	}
 	path, err := GetPathFromPathSpec(arg.Pathspec)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	stat, err := os.Stat(*path)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 	stat_reply := buildStatEntryFromFileInfo(stat)
 	if stat_reply != nil {
 		stat_reply.Pathspec = arg.Pathspec
 		responder.AddResponse(stat_reply)
 	}
-	return responder.Return()
+	responder.Return()
 }
 
 type ListDirectory struct{}
 
 func (self *ListDirectory) Run(
 	ctx *context.Context,
-	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(msg)
+	msg *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+	responder := NewResponder(msg, output)
 
 	arg, pres := responder.GetArgs().(*actions_proto.ListDirRequest)
 	if !pres {
-		return responder.RaiseError("Request should be of type ListDirRequest")
+		responder.RaiseError("Request should be of type ListDirRequest")
+		return
 	}
 
 	path, err := GetPathFromPathSpec(arg.Pathspec)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	files, err := ioutil.ReadDir(*path)
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 
 	for _, stat := range files {
@@ -73,5 +81,5 @@ func (self *ListDirectory) Run(
 		}
 	}
 
-	return responder.Return()
+	responder.Return()
 }

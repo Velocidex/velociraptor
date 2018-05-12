@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"log"
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	utils "www.velocidex.com/golang/velociraptor/testing"
@@ -27,7 +28,6 @@ type Executor interface {
 // A concerete implementation of a client executor.
 
 type ClientExecutor struct {
-	ctx      *context.Context
 	Inbound  chan *crypto_proto.GrrMessage
 	Outbound chan *crypto_proto.GrrMessage
 	plugins  map[string]actions.ClientAction
@@ -49,8 +49,10 @@ func (self *ClientExecutor) ProcessRequest(message *crypto_proto.GrrMessage) {
 }
 
 func (self *ClientExecutor) ReadResponse() *crypto_proto.GrrMessage {
-	msg := <-self.Outbound
-	return msg
+	if msg, ok := <-self.Outbound; ok {
+		return msg
+	}
+	return nil
 }
 
 func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
@@ -78,30 +80,47 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 }
 
 func (self *ClientExecutor) processRequestPlugin(
-	req *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
+	ctx *context.Context,
+	req *crypto_proto.GrrMessage) {
 
 	// Never serve unauthenticated requests.
 	if *req.AuthState != *crypto_proto.GrrMessage_AUTHENTICATED.Enum() {
 		log.Printf("Unauthenticated")
-		utils.Debug(req.AuthState)
-		return []*crypto_proto.GrrMessage{
-			makeUnknownActionResponse(req),
-		}
+		self.SendToServer(makeUnknownActionResponse(req))
+		return
 	}
 
 	plugin, pres := self.plugins[*req.Name]
 	if !pres {
-		return []*crypto_proto.GrrMessage{
-			makeUnknownActionResponse(req),
-		}
+		self.SendToServer(makeUnknownActionResponse(req))
+		return
 	}
 
-	return plugin.Run(self.ctx, req)
+	receive_chan := make(chan *crypto_proto.GrrMessage)
+
+	// Run the plugin in the other thread and drain its messages
+	// to send to the server.
+	go func() {
+		plugin.Run(ctx, req, receive_chan)
+		close(receive_chan)
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case msg, ok := <-receive_chan:
+			if !ok {
+				return
+			}
+			self.SendToServer(msg)
+		}
+	}
 }
 
-func NewClientExecutor(ctx *context.Context) (*ClientExecutor, error) {
+func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{}
-	result.ctx = ctx
 	result.Inbound = make(chan *crypto_proto.GrrMessage)
 	result.Outbound = make(chan *crypto_proto.GrrMessage)
 	result.plugins = actions.GetClientActionsMap()
@@ -110,13 +129,11 @@ func NewClientExecutor(ctx *context.Context) (*ClientExecutor, error) {
 			// Pump messages from input channel and just
 			// fail them on the output channel.
 			req := result.ReadFromServer()
-			utils.Debug(req)
 
-			go func() {
-				for _, msg := range result.processRequestPlugin(req) {
-					result.SendToServer(msg)
-				}
-			}()
+			// Each request has its own context.
+			ctx := context.BackgroundFromConfig(config_obj)
+			utils.Debug(req)
+			result.processRequestPlugin(ctx, req)
 		}
 	}()
 

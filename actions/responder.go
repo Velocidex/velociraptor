@@ -9,16 +9,19 @@ import (
 )
 
 type Responder struct {
-	request   *crypto_proto.GrrMessage
-	next_id   uint64
-	responses []*crypto_proto.GrrMessage
+	request *crypto_proto.GrrMessage
+	next_id uint64
+	output  chan<- *crypto_proto.GrrMessage
 }
 
 // NewResponder returns a new Responder.
-func NewResponder(request *crypto_proto.GrrMessage) *Responder {
+func NewResponder(
+	request *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
 		request: request,
 		next_id: 0,
+		output:  output,
 	}
 	return result
 }
@@ -44,12 +47,12 @@ func (self *Responder) AddResponse(message proto.Message) error {
 		response.Type = crypto_proto.GrrMessage_STATUS.Enum()
 	}
 
-	self.responses = append(self.responses, response)
+	self.output <- response
 
 	return nil
 }
 
-func (self *Responder) RaiseError(message string) []*crypto_proto.GrrMessage {
+func (self *Responder) RaiseError(message string) {
 	backtrace := string(debug.Stack())
 	status := &crypto_proto.GrrStatus{
 		Backtrace:    &backtrace,
@@ -57,16 +60,13 @@ func (self *Responder) RaiseError(message string) []*crypto_proto.GrrMessage {
 		Status:       crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
 	}
 	self.AddResponse(status)
-
-	return self.responses
 }
 
-func (self *Responder) Return() []*crypto_proto.GrrMessage {
+func (self *Responder) Return() {
 	status := &crypto_proto.GrrStatus{
 		Status: crypto_proto.GrrStatus_OK.Enum(),
 	}
 	self.AddResponse(status)
-	return self.responses
 }
 
 func (self *Responder) SendResponseToWellKnownFlow(
@@ -84,8 +84,7 @@ func (self *Responder) SendResponseToWellKnownFlow(
 		return err
 	}
 	response.Args = serialized_args
-
-	self.responses = append(self.responses, response)
+	self.output <- response
 	return nil
 }
 

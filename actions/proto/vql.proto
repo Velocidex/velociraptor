@@ -6,13 +6,14 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 package proto;
 
 message VQLCollectorArgs {
-    optional string Query = 1 [(sem_type) = {
+    repeated string Query = 1 [(sem_type) = {
             description: "The VQL query to execute on the client.",
-        }, default = "select * from client_info()"];
+        }];
 }
 
 message VQLResponse {
     optional string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
+    repeated string Columns = 2;
 }

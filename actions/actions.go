@@ -9,7 +9,8 @@ import (
 
 type ClientAction interface {
 	Run(ctx *context.Context,
-		args *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage
+		args *crypto_proto.GrrMessage,
+		output chan<- *crypto_proto.GrrMessage)
 }
 
 func GetClientActionsMap() map[string]ClientAction {

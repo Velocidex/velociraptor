@@ -10,13 +10,14 @@ type GetClientInfo struct{}
 
 func (self *GetClientInfo) Run(
 	ctx *context.Context,
-	args *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(args)
+	args *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+	responder := NewResponder(args, output)
 	info := &actions_proto.ClientInformation{
 		ClientName:    &ctx.Config.Client_name,
 		ClientVersion: &ctx.Config.Client_version,
 		Labels:        ctx.Config.Client_labels,
 	}
 	responder.AddResponse(info)
-	return responder.Return()
+	responder.Return()
 }

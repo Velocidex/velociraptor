@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Showmax/go-fqdn"
+  packages = ["."]
+  revision = "6f60894d629f2a57e5896dd1fad6e520256ee2b7"
+
+[[projects]]
   name = "github.com/StackExchange/wmi"
   packages = ["."]
   revision = "5d049714c4a64225c3c79a7cf7d02f7fb5b96338"
@@ -35,6 +41,12 @@
   name = "github.com/alecthomas/units"
   packages = ["."]
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/cevaris/ordered_map"
+  packages = ["."]
+  revision = "0efaee1733e3399a3cb88fc7d2ce340bf2e863d7"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -88,6 +100,7 @@
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
+    "disk",
     "host",
     "internal/common",
     "mem",
@@ -135,14 +148,20 @@
   version = "v2.2.6"
 
 [[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
+[[projects]]
   branch = "master"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
-  revision = "096f6e0d6ede40fc6f7f7ba63de3ef984bc1183c"
+  revision = "e0d52de13e62c81da3bb4f0396fc10edc55c58ed"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "89aff0961a2de3af59d4be9d0696f207a5f4b33d5ba3828beb2bf65e859b52a0"
+  inputs-digest = "880d6490bc65265e932d23dabe1ba03b396f1230ea70c56723e8c12d837d9467"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -15,29 +15,35 @@ type GetHostname struct{}
 
 func (self *GetHostname) Run(
 	ctx *context.Context,
-	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(msg)
+	msg *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+
+	responder := NewResponder(msg, output)
 
 	info, err := host.Info()
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 	responder.AddResponse(&actions_proto.DataBlob{
 		String_: proto.String(info.Hostname),
 	})
-	return responder.Return()
+
+	responder.Return()
 }
 
 type GetPlatformInfo struct{}
 
 func (self *GetPlatformInfo) Run(
 	ctx *context.Context,
-	msg *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
-	responder := NewResponder(msg)
+	msg *crypto_proto.GrrMessage,
+	output chan<- *crypto_proto.GrrMessage) {
+	responder := NewResponder(msg, output)
 
 	info, err := host.Info()
 	if err != nil {
-		return responder.RaiseError(err.Error())
+		responder.RaiseError(err.Error())
+		return
 	}
 	responder.AddResponse(&actions_proto.Uname{
 		System:       proto.String(strings.Title(info.OS)),
@@ -50,5 +56,5 @@ func (self *GetPlatformInfo) Run(
 			info.Platform + "_" + info.PlatformVersion),
 	})
 
-	return responder.Return()
+	responder.Return()
 }
