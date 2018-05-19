@@ -1,4 +1,4 @@
-package actions
+package responder
 
 import (
 	"github.com/stretchr/testify/assert"

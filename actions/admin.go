@@ -9,6 +9,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 type GetHostname struct{}
@@ -18,7 +19,7 @@ func (self *GetHostname) Run(
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 
-	responder := NewResponder(msg, output)
+	responder := responder.NewResponder(msg, output)
 
 	info, err := host.Info()
 	if err != nil {
@@ -38,7 +39,7 @@ func (self *GetPlatformInfo) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
-	responder := NewResponder(msg, output)
+	responder := responder.NewResponder(msg, output)
 
 	info, err := host.Info()
 	if err != nil {

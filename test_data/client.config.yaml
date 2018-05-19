@@ -1,0 +1,4 @@
+Client.server_urls:
+  - http://localhost:8080/
+
+Config.writeback:  /tmp/Client.writeback.yaml

@@ -1,4 +1,4 @@
-package actions
+package responder
 
 import (
 	"github.com/golang/protobuf/proto"
@@ -90,6 +90,10 @@ func (self *Responder) SendResponseToWellKnownFlow(
 
 func (self *Responder) GetArgs() proto.Message {
 	return ExtractGrrMessagePayload(self.request)
+}
+
+func (self *Responder) SessionId() string {
+	return *self.request.SessionId
 }
 
 // Unpack the GrrMessage payload. The return value should be type asserted.

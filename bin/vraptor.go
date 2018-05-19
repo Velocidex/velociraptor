@@ -22,7 +22,8 @@ var (
 	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 
 	client      = kingpin.Command("client", "Run the velociraptor client")
-	config_path = client.Arg("config", "The client's config file.").Required().String()
+	config_path = client.Arg("config", "The client's config file.").String()
+	show_config = client.Flag("show_config", "Display the client's configuration").Bool()
 )
 
 func outputJSON(vql *vfilter.VQL) {

@@ -8,6 +8,7 @@ It is generated from these files:
 	actions.proto
 	fingerprint.proto
 	generic.proto
+	transport.proto
 	vql.proto
 
 It has these top-level messages:
@@ -28,6 +29,7 @@ It has these top-level messages:
 	KeyValue
 	Dict
 	EmbeddedRDFValue
+	FileBuffer
 	VQLCollectorArgs
 	VQLResponse
 */

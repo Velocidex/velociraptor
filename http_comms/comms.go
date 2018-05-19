@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -35,9 +34,7 @@ type HTTPCommunicator struct {
 	// The current server name.
 	server_name string
 
-	// mutex guards pending_message_list.
-	mutex                *sync.Mutex
-	pending_message_list *crypto_proto.MessageList
+	pending_messages chan *crypto_proto.GrrMessage
 
 	last_ping_time        time.Time
 	current_poll_duration time.Duration
@@ -56,12 +53,11 @@ func (self *HTTPCommunicator) Run() {
 			msg := self.executor.ReadResponse()
 			// Executor closed the channel.
 			if msg == nil {
+				close(self.pending_messages)
 				return
 			}
-			self.mutex.Lock()
-			self.pending_message_list.Job = append(
-				self.pending_message_list.Job, msg)
-			self.mutex.Unlock()
+
+			self.pending_messages <- msg
 		}
 	}()
 
@@ -78,33 +74,23 @@ func (self *HTTPCommunicator) Run() {
 	// will switch to fast poll mode until there is no more data
 	// to send, then it will back off.
 	for {
-		self.mutex.Lock()
-		// Blocks executor while we transfer this data. This
-		// avoids overrun of internal queue for slow networks.
-		if len(self.pending_message_list.Job) > 0 {
-			// There is nothing we can do in case of
-			// failure here except just keep trying until
-			// we have to drop the packets on the floor.
-			self.sendMessageList(self.pending_message_list)
-
-			// Clear the pending_message_list for next time.
-			self.pending_message_list = &crypto_proto.MessageList{}
+		// If there is some data in the queues we send it
+		// immediately.
+		message_list := self.drainMessageQueue()
+		if len(message_list.Job) > 0 {
+			self.sendMessageList(message_list)
 		}
-		self.mutex.Unlock()
 
 		// We are due for an unsolicited poll.
 		if time.Now().After(
 			self.last_ping_time.Add(self.current_poll_duration)) {
-			self.mutex.Lock()
 			log.Printf("Sending unsolicited ping.")
 			self.current_poll_duration *= 2
 			if self.current_poll_duration > self.maxPoll {
 				self.current_poll_duration = self.maxPoll
 			}
 
-			self.sendMessageList(self.pending_message_list)
-			self.pending_message_list = &crypto_proto.MessageList{}
-			self.mutex.Unlock()
+			self.sendMessageList(message_list)
 		}
 
 		// Sleep for minPoll
@@ -117,6 +103,27 @@ func (self *HTTPCommunicator) Run() {
 			continue
 		}
 	}
+}
+
+// Pull off as many messages as we can off the channel to send. Note:
+// As we drain the channel the executor will be woken to fill it up
+// again - since the self.pending_messages channel has a buffer.
+func (self *HTTPCommunicator) drainMessageQueue() *crypto_proto.MessageList {
+	result := &crypto_proto.MessageList{}
+
+	for {
+		select {
+		case item := <-self.pending_messages:
+			result.Job = append(result.Job, item)
+
+		default:
+			// No blocking - if there is no messages
+			// available, just return
+			return result
+		}
+	}
+
+	return result
 }
 
 func (self *HTTPCommunicator) sendMessageList(message_list *crypto_proto.MessageList) {
@@ -282,8 +289,9 @@ func NewHTTPCommunicator(
 		maxPoll: time.Duration(10) * time.Second,
 		urls:    urls,
 		ctx:     &ctx}
-	result.mutex = &sync.Mutex{}
-	result.pending_message_list = &crypto_proto.MessageList{}
+
+	// Allow the executor to queue 100 messages in the same packet.
+	result.pending_messages = make(chan *crypto_proto.GrrMessage, 100)
 	result.executor = executor
 	result.current_poll_duration = result.minPoll
 	result.client = &http.Client{

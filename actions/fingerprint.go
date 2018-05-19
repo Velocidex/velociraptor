@@ -8,6 +8,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 type HashBuffer struct{}
@@ -16,7 +17,7 @@ func (self *HashBuffer) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
-	responder := NewResponder(msg, output)
+	responder := responder.NewResponder(msg, output)
 	arg, pres := responder.GetArgs().(*actions_proto.BufferReference)
 	if !pres {
 		responder.RaiseError("Request should be of type FingerprintRequest")
@@ -69,7 +70,7 @@ func (self *HashFile) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
-	responder := NewResponder(msg, output)
+	responder := responder.NewResponder(msg, output)
 
 	arg, pres := responder.GetArgs().(*actions_proto.FingerprintRequest)
 	if !pres {

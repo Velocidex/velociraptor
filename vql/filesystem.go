@@ -77,7 +77,9 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 func MakeFilesystemsPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "filesystems",
-		Function: func(args *vfilter.Dict) []vfilter.Row {
+		Function: func(
+			scope *vfilter.Scope,
+			args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			partitions, err := disk.Partitions(true)
 			if err == nil {

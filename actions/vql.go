@@ -5,6 +5,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/responder"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -15,7 +16,7 @@ func (self *VQLClientAction) Run(
 	ctx *context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
-	responder := NewResponder(msg, output)
+	responder := responder.NewResponder(msg, output)
 	arg, pres := responder.GetArgs().(*actions_proto.VQLCollectorArgs)
 	if !pres {
 		responder.RaiseError("Request should be of type VQLCollectorArgs")
@@ -27,7 +28,11 @@ func (self *VQLClientAction) Run(
 		return
 	}
 
-	scope := vql_subsystem.MakeScope()
+	// Create a new query environment and store some useful
+	// objects in there. VQL plugins may then use the environment
+	// to communicate with the server.
+	env := vfilter.NewDict().Set("responder", responder)
+	scope := vql_subsystem.MakeScope().AppendVars(env)
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
@@ -45,6 +50,7 @@ func (self *VQLClientAction) Run(
 		}
 
 		response := &actions_proto.VQLResponse{
+			Query:    proto.String(query),
 			Response: proto.String(string(s)),
 		}
 

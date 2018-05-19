@@ -1,9 +1,18 @@
 package vql
 
 import (
+	"fmt"
 	"reflect"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/vfilter"
 )
+
+// Returned as the result of the query.
+type UploadResponse struct {
+	Path   string
+	FlowId string
+	Size   uint64
+}
 
 // The upload plugin is a passthrough plugin which uploads the files
 // to the server.
@@ -15,29 +24,53 @@ import (
 
 // Example:
 //   SELECT * from upload(hits= { SELECT FullPath FROM glob(globs=['/tmp/*.txt']) })
-
 func MakeUploaderPlugin() *vfilter.GenericListPlugin {
 	plugin := &vfilter.GenericListPlugin{
 		PluginName: "upload",
-		RowType:    nil,
+		RowType:    UploadResponse{},
 	}
 
-	plugin.Function = func(args *vfilter.Dict) []vfilter.Row {
-		var result []vfilter.Row
+	plugin.Function = func(
+		scope *vfilter.Scope,
+		args *vfilter.Dict) []vfilter.Row {
+		result := []vfilter.Row{}
 
 		// Extract the glob from the args.
-		hits, ok := args.Get("hits")
+		files, ok := args.Get("files")
 		if ok {
-			hits_slice := reflect.ValueOf(hits)
+			hits_slice := reflect.ValueOf(files)
 			if hits_slice.Type().Kind() == reflect.Slice {
 				for i := 0; i < hits_slice.Len(); i++ {
 					value := hits_slice.Index(i).Interface()
-					result = append(result, value)
+					if path, ok := value.(string); ok {
+						result = append(
+							result, uploadFile(scope, path))
+					}
 				}
 			}
 		}
+		vfilter.Debug(files)
+		vfilter.Debug(result)
 		return result
 	}
 
 	return plugin
+}
+
+func uploadFile(scope *vfilter.Scope, path string) *UploadResponse {
+	responder_obj, ok := scope.Resolve("responder")
+	if ok {
+		responder := responder_obj.(*responder.Responder)
+		result := &UploadResponse{
+			Path:   path,
+			FlowId: responder.SessionId(),
+		}
+
+		fmt.Println("Uploading %s", path)
+
+		return result
+	}
+
+	return nil
+
 }

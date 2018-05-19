@@ -1,6 +1,9 @@
 package crypto
 
 import (
+	"github.com/golang/protobuf/proto"
+
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -8,6 +11,8 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
+	"www.velocidex.com/golang/velociraptor/config"
+	//	utils_ "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
@@ -63,4 +68,45 @@ func ClientIDFromPublicKey(public_key *rsa.PublicKey) string {
 	dst := make([]byte, hex.EncodedLen(8))
 	hex.Encode(dst, hashed[:8])
 	return "C." + string(dst)
+}
+
+func GeneratePrivateKey() ([]byte, error) {
+	reader := rand.Reader
+	bitSize := 2048
+
+	key, err := rsa.GenerateKey(reader, bitSize)
+	if err != nil {
+		return nil, err
+	}
+	pemdata := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PRIVATE KEY",
+			Bytes: x509.MarshalPKCS1PrivateKey(key),
+		},
+	)
+	return pemdata, nil
+}
+
+// Verify the configuration, possibly updating default settings.
+func VerifyConfig(config_obj *config.Config) error {
+	if config_obj.Client_private_key == nil {
+		pem, err := GeneratePrivateKey()
+		if err != nil {
+			return err
+		}
+		config_obj.Client_private_key = proto.String(string(pem))
+
+		if config_obj.Config_writeback != nil {
+			write_back_config := config.Config{}
+			config.LoadConfig(*config_obj.Config_writeback, &write_back_config)
+			write_back_config.Client_private_key = proto.String(string(pem))
+			err = config.WriteConfigToFile(*config_obj.Config_writeback,
+				&write_back_config)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

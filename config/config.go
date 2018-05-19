@@ -1,8 +1,10 @@
 package config
 
 import (
+	"github.com/golang/protobuf/proto"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"os"
 )
 
 // Can be an array or a string in YAML but always parses to a string
@@ -28,36 +30,64 @@ func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Config struct {
-	Client_name        string `yaml:"Client.name"`
-	Client_description string `yaml:"Client.description"`
-	Client_version     uint32
-	Client_build_time  string
-	Client_labels      StringArray `yaml:"Client.labels"`
+	Client_name        *string     `yaml:"Client.name,omitempty"`
+	Client_description *string     `yaml:"Client.description,omitempty"`
+	Client_version     *uint32     `yaml:"Client.version,omitempty"`
+	Client_build_time  *string     `yaml:"Client.build_time,omitempty"`
+	Client_labels      StringArray `yaml:"Client.labels,omitempty"`
 
-	Client_private_key string      `yaml:"Client.private_key"`
-	Client_server_urls StringArray `yaml:"Client.server_urls"`
+	Client_private_key *string     `yaml:"Client.private_key,omitempty"`
+	Client_server_urls StringArray `yaml:"Client.server_urls,omitempty"`
+
+	// We store local configuration on this file.
+	Config_writeback *string `yaml:"Config.writeback,omitempty"`
 }
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Client_name:    "velociraptor",
-		Client_version: 1,
+		Client_name:    proto.String("velociraptor"),
+		Client_version: proto.Uint32(1),
 	}
 }
 
 // Load the config stored in the YAML file and returns a config object.
-func LoadConfig(filename string) (*Config, error) {
-	result := GetDefaultConfig()
-
+func LoadConfig(filename string, config *Config) error {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = yaml.Unmarshal(data, result)
+	err = yaml.Unmarshal(data, config)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return result, nil
+	return nil
+}
+
+func ParseConfigFromString(config_string []byte, config *Config) error {
+	err := yaml.Unmarshal(config_string, config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func Encode(config *Config) ([]byte, error) {
+	res, err := yaml.Marshal(config)
+	return res, err
+}
+
+func WriteConfigToFile(filename string, config *Config) error {
+	bytes, err := Encode(config)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(filename, bytes, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

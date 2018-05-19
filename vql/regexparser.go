@@ -9,7 +9,9 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func _ParseFileWithRegex(args *vfilter.Dict) []vfilter.Row {
+func _ParseFileWithRegex(
+	scope *vfilter.Scope,
+	args *vfilter.Dict) []vfilter.Row {
 	var result []vfilter.Row
 	filename, ok := vfilter.ExtractString("file", args)
 	if !ok {

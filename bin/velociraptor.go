@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -13,18 +14,63 @@ func RunClient() {
 	kingpin.Parse()
 
 	ctx := context.Background()
-	config, err := config.LoadConfig(*config_path)
-	if err != nil {
-		kingpin.FatalIfError(err, "Unable to load config file")
+	config_obj := config.GetDefaultConfig()
+
+	// Can provide the config file on the command line OR embedded in the binary.
+	if config_path != nil && *config_path != "" {
+		err := config.LoadConfig(*config_path, config_obj)
+		if err != nil {
+			kingpin.FatalIfError(err, "Unable to load config file")
+		}
+
+	} else {
+		// Packed binaries contain their config embedded in the
+		// binary.
+
+		config_string, err := ExtractEmbeddedConfig()
+		if err != nil {
+			kingpin.FatalIfError(err, "Unable to load embedded config file")
+		}
+
+		err = config.ParseConfigFromString(config_string, config_obj)
+		if err != nil {
+			kingpin.FatalIfError(err, "Unable to load config file")
+		}
 	}
-	ctx.Config = config
+
+	// Allow the embedded config to specify a writeback
+	// location. We load that location in addition to the
+	// configuration we were provided.
+	if config_obj.Config_writeback != nil {
+		err := config.LoadConfig(*config_obj.Config_writeback, config_obj)
+		if err != nil {
+			kingpin.Errorf("Unable to load writeback file: %v", err)
+		}
+	}
+	ctx.Config = config_obj
+
+	// Make sure the config is ok.
+	err := crypto.VerifyConfig(ctx.Config)
+	if err != nil {
+		kingpin.Errorf("Invalid config: %v", err)
+	}
+
+	if show_config != nil && *show_config {
+		res, err := config.Encode(config_obj)
+		if err != nil {
+			kingpin.FatalIfError(err, "Unable to encode config.")
+		}
+		fmt.Printf("%v", string(res))
+		return
+	}
+
 	manager, err := crypto.NewClientCryptoManager(
-		&ctx, []byte(config.Client_private_key))
+		&ctx, []byte(*config_obj.Client_private_key))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}
 
-	exe, err := executor.NewClientExecutor(config)
+	exe, err := executor.NewClientExecutor(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create executor.")
 	}
@@ -33,7 +79,7 @@ func RunClient() {
 		ctx,
 		manager,
 		exe,
-		config.Client_server_urls,
+		config_obj.Client_server_urls,
 	)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")

@@ -16,4 +16,5 @@ message VQLResponse {
             description: "JSON encoded response.",
         }];
     repeated string Columns = 2;
+    optional string Query = 3;
 }

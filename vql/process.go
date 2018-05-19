@@ -46,7 +46,9 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 func MakePslistPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
 		PluginName: "pslist",
-		Function: func(args *vfilter.Dict) []vfilter.Row {
+		Function: func(
+			scope *vfilter.Scope,
+			args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			processes, err := process.Processes()
 			if err == nil {
