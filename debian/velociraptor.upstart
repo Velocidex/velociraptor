@@ -1,0 +1,23 @@
+# velociraptor linux amd64 client upstart file
+
+limit nofile 20000 20000
+
+kill timeout 300
+
+start on startup
+start on runlevel [2345]
+stop on runlevel [016]
+
+respawn
+
+env LANG=en_US.UTF-8
+
+script
+        DAEMON="/usr/sbin/velociraptor.nanny"
+        DAEMON_ARGS="/usr/sbin/velociraptor client"
+
+        [ -x "${DAEMON}" ] || exit 0
+
+        exec ${DAEMON} ${DAEMON_ARGS}
+
+end script

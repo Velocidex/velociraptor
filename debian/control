@@ -1,0 +1,13 @@
+Source: velociraptor
+Section: misc
+Priority: extra
+Maintainer: Velocidex Innovations <support@velocidex.com>
+Build-Depends: debhelper (>= 7.0.0)
+Standards-Version: 3.9.2
+Homepage: https://gitlab.com/velocidex/velociraptor
+
+Package: velociraptor
+Architecture: any
+Depends: lsb-base (>= 3.2-14)
+Description: Velociraptor Response Client
+ The Velociraptor Response Client

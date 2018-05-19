@@ -1,0 +1,39 @@
+#!/bin/sh
+
+set -e
+
+NANNY="/usr/lib/velociraptor/nanny.sh"
+DAEMON="/usr/lib/velociraptor/velociraptor"
+DAEMON_ARGS=""
+
+# This package is designed to work on systems with init.d, upstart, and systemd.
+case "$1" in
+  configure)
+    /bin/chmod +x "${NANNY}"
+
+    if [ -x /sbin/initctl ] && /sbin/initctl version | /bin/grep -q upstart; then
+      # Early versions of upstart didn't support restarting a service that
+      # wasn't already running:
+      # https://bugs.launchpad.net/ubuntu/+source/upstart/+bug/430883
+      /usr/sbin/service velociraptor stop 2>/dev/null || true
+      /usr/sbin/service velociraptor start 2>/dev/null
+    elif [ -x /bin/systemctl ]; then
+      # Systemd
+      /bin/systemctl enable velociraptor
+      /bin/systemctl restart velociraptor
+    elif [ -x "/etc/init.d/velociraptor" ]; then
+      update-rc.d velociraptor defaults >/dev/null
+      invoke-rc.d velociraptor start || exit $?
+    fi
+  ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+  ;;
+
+  *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+  ;;
+esac
+
+exit 0

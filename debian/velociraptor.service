@@ -1,0 +1,14 @@
+[Unit]
+Description=Velociraptor linux amd64
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=/usr/sbin/velociraptor client
+
+[Install]
+WantedBy=multi-user.target
