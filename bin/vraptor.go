@@ -138,5 +138,10 @@ func main() {
 				outputJSON(vql)
 			}
 		}
+	case "repack":
+		err := RepackClient(*repack_binary, *repack_config)
+		if err != nil {
+			kingpin.FatalIfError(err, "Can not repack client")
+		}
 	}
 }

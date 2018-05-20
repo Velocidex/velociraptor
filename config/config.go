@@ -7,6 +7,13 @@ import (
 	"os"
 )
 
+// Embed build time constants into here for reporting client version.
+// https://husobee.github.io/golang/compile/time/variables/2015/12/03/compile-time-const.html
+var (
+	build_time  string
+	commit_hash string
+)
+
 // Can be an array or a string in YAML but always parses to a string
 // array. GRR Config files are inconsistent in this regard so to
 // interoperate we need to support this
@@ -33,6 +40,7 @@ type Config struct {
 	Client_name        *string     `yaml:"Client.name,omitempty"`
 	Client_description *string     `yaml:"Client.description,omitempty"`
 	Client_version     *uint32     `yaml:"Client.version,omitempty"`
+	Client_commit      *string     `yaml:"Client.commit,omitempty"`
 	Client_build_time  *string     `yaml:"Client.build_time,omitempty"`
 	Client_labels      StringArray `yaml:"Client.labels,omitempty"`
 
@@ -45,8 +53,10 @@ type Config struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Client_name:    proto.String("velociraptor"),
-		Client_version: proto.Uint32(1),
+		Client_name:       proto.String("velociraptor"),
+		Client_version:    proto.Uint32(1),
+		Client_build_time: &build_time,
+		Client_commit:     &commit_hash,
 	}
 }
 
