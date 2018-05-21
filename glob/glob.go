@@ -19,11 +19,16 @@ import (
 
 type FileInfo interface {
 	os.FileInfo
+	FullPath() string
 }
 
 type OSFileInfo struct {
-	FileInfo
-	FullPath string
+	os.FileInfo
+	_full_path string
+}
+
+func (self *OSFileInfo) FullPath() string {
+	return self._full_path
 }
 
 func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
@@ -35,7 +40,7 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 		ModTime  time.Time
 		Sys      interface{}
 	}{
-		FullPath: self.FullPath,
+		FullPath: self.FullPath(),
 		Size:     self.Size(),
 		Mode:     self.Mode(),
 		ModeStr:  self.Mode().String(),

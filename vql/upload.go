@@ -66,7 +66,7 @@ func uploadFile(scope *vfilter.Scope, path string) *UploadResponse {
 			FlowId: responder.SessionId(),
 		}
 
-		fmt.Println("Uploading %s", path)
+		fmt.Println("Uploading ", path)
 
 		return result
 	}

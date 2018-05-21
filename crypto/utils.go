@@ -89,6 +89,10 @@ func GeneratePrivateKey() ([]byte, error) {
 
 // Verify the configuration, possibly updating default settings.
 func VerifyConfig(config_obj *config.Config) error {
+	if len(config_obj.Client_server_urls) == 0 {
+		return errors.New("No server URLs configured!")
+	}
+
 	if config_obj.Client_private_key == nil {
 		pem, err := GeneratePrivateKey()
 		if err != nil {

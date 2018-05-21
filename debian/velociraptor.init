@@ -38,8 +38,6 @@ elif [ -x /bin/systemctl ]; then
   exit 0
 fi
 
-# Parentheses are escaped since they confuse config_lib.InterpolateValue
-
 do_start() {
         start-stop-daemon --start \
         --quiet \
@@ -47,13 +45,6 @@ do_start() {
         --make-pidfile \
         --pidfile ${PIDFILE} \
         --startas ${DAEMON} -- ${DAEMON_ARGS} || return 1
-
-        start-stop-daemon --start \
-        --quiet \
-        --background \
-        --make-pidfile \
-        --pidfile ${PIDFILE} \
-        --startas ${DAEMON} -- ${DAEMON_ARGS} || return 2
 }
 
 do_stop() {

@@ -6,7 +6,8 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	config_obj, err := LoadConfig("test_data/server.local.yaml")
+	config_obj := GetDefaultConfig()
+	err := LoadConfig("test_data/server.local.yaml", config_obj)
 	if err != nil {
 		t.Fatal(err)
 	}

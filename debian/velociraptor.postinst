@@ -2,8 +2,8 @@
 
 set -e
 
-NANNY="/usr/lib/velociraptor/nanny.sh"
-DAEMON="/usr/lib/velociraptor/velociraptor"
+NANNY="/usr/sbin//velociraptor.nanny"
+DAEMON="/usr/sbin//velociraptor"
 DAEMON_ARGS=""
 
 # This package is designed to work on systems with init.d, upstart, and systemd.

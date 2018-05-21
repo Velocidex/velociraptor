@@ -12,19 +12,4 @@
 %:
 	dh $@
 
-override_dh_clean:
-	# Nothing to do here, directory is already wiped and set up.
-
-override_dh_build:
-	# Nothing to do here, directory is already wiped and set up.
-
-override_dh_prep:
-	# Nothing to do here, directory is already wiped and set up.
-
-override_dh_link:
-	dh_link "/usr/lib/velociraptor/velociraptor" "/usr/sbin/velociraptor"
-	dh_link "/usr/lib/velociraptor/nanny.sh" "/usr/sbin/velociraptor.nanny"
-
-override_dh_builddeb:
-	# Older distros don't support xz so we use gzip instead.
-	dh_builddeb -- -Zgzip
+override_dh_auto_test:

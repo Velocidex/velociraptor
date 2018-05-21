@@ -1,0 +1,3 @@
+output/velociraptor /usr/sbin/
+debian/velociraptor.nanny /usr/sbin/
+debian/velociraptor.config.yaml /etc/

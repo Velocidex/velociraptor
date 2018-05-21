@@ -1,12 +1,14 @@
-package actions
+package actions_test
 
 import (
 	"github.com/golang/protobuf/proto"
 	assert "github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 func TestHashFile(t *testing.T) {
@@ -38,14 +40,15 @@ func TestHashFile(t *testing.T) {
 		},
 	}
 
-	hash_file := HashFile{}
-	arg, err := NewRequest(&request)
+	hash_file := actions.HashFile{}
+	arg, err := responder.NewRequest(&request)
 	if err != nil {
 		t.Fatal(err)
 	}
-	responses := hash_file.Run(&ctx, arg)
+	responses := GetResponsesFromAction(&hash_file, &ctx, arg)
 	assert.Equal(t, len(responses), 2)
-	response := ExtractGrrMessagePayload(responses[0]).(*actions_proto.FingerprintResponse)
+	response := responder.ExtractGrrMessagePayload(
+		responses[0]).(*actions_proto.FingerprintResponse)
 
 	assert.Equal(t, response.Hash.Sha256,
 		[]uint8([]byte{0xf5, 0x44, 0xea, 0x51, 0xaa, 0x45, 0x9, 0x89,

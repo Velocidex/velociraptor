@@ -1,3 +1,5 @@
+all: build
+
 test:
 	go test ./...
 
@@ -13,6 +15,6 @@ build:
 	GOOS=linux GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
-	    -o debian/velociraptor/usr/lib/velociraptor/velociraptor ./bin/
+	    -o output/velociraptor ./bin/
 
-	zip -r templates/velociraptor_linux_amd64.zip debian/
+	#zip -r templates/velociraptor_linux_amd64.zip debian/

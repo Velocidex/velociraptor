@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
+	"regexp"
 )
 
 var (
@@ -29,19 +29,22 @@ func RepackClient(repack_binary string, repack_config string) error {
 		return err
 	}
 
-	start := []byte("# START CONFIGURATION")
+	start := regexp.MustCompile("# START C[O]NFIGURATION")
 	end := []byte("# END CONFIGURATION")
-	offset := bytes.Index(binary, start)
-	if offset == -1 {
+	match := start.FindIndex(binary)
+	if match == nil {
 		return errors.New("No magic start")
 	}
 
+	offset := match[0]
+	start_end := match[1]
+
 	fmt.Printf("Found configuration signature at offset %v bytes\n", offset)
 
-	new_binary := append(binary[:offset+len(start)], config_file...)
+	new_binary := append(binary[:start_end], config_file...)
 	new_binary = append(new_binary, end...)
 	new_binary = append(new_binary,
-		binary[offset+len(start)+len(config_file)+len(end):]...)
+		binary[start_end+len(config_file)+len(end):]...)
 
 	err = ioutil.WriteFile(repack_binary, new_binary, os.ModePerm)
 	if err != nil {

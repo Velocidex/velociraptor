@@ -26,7 +26,6 @@ func RunClient() {
 	} else {
 		// Packed binaries contain their config embedded in the
 		// binary.
-
 		config_string, err := ExtractEmbeddedConfig()
 		if err != nil {
 			kingpin.FatalIfError(err, "Unable to load embedded config file")
@@ -52,7 +51,7 @@ func RunClient() {
 	// Make sure the config is ok.
 	err := crypto.VerifyConfig(ctx.Config)
 	if err != nil {
-		kingpin.Errorf("Invalid config: %v", err)
+		kingpin.FatalIfError(err, "Invalid config")
 	}
 
 	if show_config != nil && *show_config {
