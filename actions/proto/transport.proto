@@ -1,0 +1,28 @@
+syntax = "proto2";
+
+// Protobufs for transferring bulk data.
+import "actions.proto";
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+// Velociraptor implements a slightly different file store than
+// GRR. While GRR does block level de-duplication, velociraptor does
+// not (only file level deduplication). In practice block level
+// de-duplication does not save a lot but makes storage and
+// performance a lot more complex. Velociraptor only uses file level
+// deduplication.
+
+// The Velociraptor client sends back the buffer and the filename and
+// the server saves the entire file directly in the file storage
+// filesystem. This allows easy recovery as well as data expiration
+// policies (since the filestore is just a directory on disk with
+// regular files and timestamps).
+message FileBuffer {
+    optional PathSpec pathspec = 1;
+    optional uint64 offset = 2 [(sem_type) = {
+            description: "Offset of the buffer in the file."
+        }];
+    optional bytes data = 3;
+    optional string flow_id = 4;
+}

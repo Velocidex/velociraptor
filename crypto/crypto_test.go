@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
-	"www.velocidex.com/golang/velociraptor/context"
+	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -19,9 +19,9 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	t := self.T()
 	var err error
-	ctx := context.Background()
+	config_obj := config.GetDefaultConfig()
 	self.manager, err = NewCryptoManager(
-		&ctx,
+		config_obj,
 		"GRR Test Server",
 		utils.ReadFile(t, "test_data/server-priv.pem"))
 	if err != nil {

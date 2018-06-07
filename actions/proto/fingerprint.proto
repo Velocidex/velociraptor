@@ -56,7 +56,7 @@ message FingerprintTuple {
   // The fingerprinting methods the fingerprinter can be asked to perform.
   // If none is given, all are applied.
   enum Type {
-    FPT_GENERIC = 0;
+    FPT_GENERICc = 0;
     FPT_PE_COFF = 1;
   };
   // The hash functions that a fingerprinting method may employ.

@@ -64,7 +64,7 @@ func RunClient() {
 	}
 
 	manager, err := crypto.NewClientCryptoManager(
-		&ctx, []byte(*config_obj.Client_private_key))
+		config_obj, []byte(*config_obj.Client_private_key))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}

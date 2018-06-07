@@ -1,8 +1,6 @@
 package crypto
 
 import (
-	"github.com/golang/protobuf/proto"
-
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -11,6 +9,8 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	//	utils_ "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -48,6 +48,25 @@ func parseX509CertFromPemStr(pem_str []byte) (*x509.Certificate, error) {
 			}
 
 			return cert, nil
+		}
+		pem_str = rest
+	}
+}
+
+func parseX509CSRFromPemStr(pem_str []byte) (*x509.CertificateRequest, error) {
+	for {
+		block, rest := pem.Decode(pem_str)
+		if block == nil {
+			return nil, errors.New("Unable to parse PEM")
+		}
+
+		if block.Type == "CERTIFICATE REQUEST" {
+			csr, err := x509.ParseCertificateRequest(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+
+			return csr, nil
 		}
 		pem_str = rest
 	}
@@ -94,6 +113,7 @@ func VerifyConfig(config_obj *config.Config) error {
 	}
 
 	if config_obj.Client_private_key == nil {
+		fmt.Println("Genering new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
 			return err
@@ -109,6 +129,7 @@ func VerifyConfig(config_obj *config.Config) error {
 			if err != nil {
 				return err
 			}
+			fmt.Println("Wrote new config file ", *config_obj.Config_writeback)
 		}
 	}
 

@@ -4,7 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"os"
+	"strconv"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -36,6 +36,31 @@ func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+type Integer uint64
+
+func (self *Integer) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var maybe_string string
+	var maybe_int uint64
+
+	err := unmarshal(&maybe_string)
+	if err == nil {
+		maybe_int, err = strconv.ParseUint(maybe_string, 10, 64)
+		if err != nil {
+			return err
+		}
+		*self = Integer(maybe_int)
+		return nil
+	}
+
+	err = unmarshal(&maybe_int)
+	if err != nil {
+		return err
+	}
+
+	*self = Integer(maybe_int)
+	return nil
+}
+
 type Config struct {
 	Client_name        *string     `yaml:"Client.name,omitempty"`
 	Client_description *string     `yaml:"Client.description,omitempty"`
@@ -49,14 +74,24 @@ type Config struct {
 
 	// We store local configuration on this file.
 	Config_writeback *string `yaml:"Config.writeback,omitempty"`
+
+	Frontend_bind_address *string  `yaml:"Frontend.bind_address"`
+	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port"`
+	Frontend_certificate  *string  `yaml:"Frontend.certificate"`
+
+	Frontend_private_key *string `yaml:"PrivateKeys.server_key"`
 }
 
 func GetDefaultConfig() *Config {
+	bind_port := Integer(8080)
 	return &Config{
 		Client_name:       proto.String("velociraptor"),
 		Client_version:    proto.Uint32(1),
 		Client_build_time: &build_time,
 		Client_commit:     &commit_hash,
+
+		Frontend_bind_address: proto.String(""),
+		Frontend_bind_port:    &bind_port,
 	}
 }
 
@@ -94,7 +129,8 @@ func WriteConfigToFile(filename string, config *Config) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filename, bytes, os.ModePerm)
+	// Make sure the new file is only readable by root.
+	err = ioutil.WriteFile(filename, bytes, 0600)
 	if err != nil {
 		return err
 	}

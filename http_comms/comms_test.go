@@ -21,7 +21,7 @@ func TestHTTPComms(t *testing.T) {
 	utils.Debug(ctx)
 
 	manager, err := crypto.NewClientCryptoManager(
-		&ctx, []byte(*config_obj.Client_private_key))
+		config_obj, []byte(*config_obj.Client_private_key))
 	if err != nil {
 		t.Fatal(err)
 	}

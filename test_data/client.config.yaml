@@ -1,4 +1,59 @@
-Client.server_urls:
-  - http://localhost:8080/
+CA.certificate: '-----BEGIN CERTIFICATE-----
 
-Config.writeback:  /tmp/Client.writeback.yaml
+  MIIC5DCCAcygAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
+
+  dGVzdDELMAkGA1UEBhMCVVMwHhcNMTgwNjA2MDcyMTAzWhcNMTkwNjA3MDcyMTAz
+
+  WjAXMRUwEwYDVQQDDAx2ZWxvY2lyYXB0b3IwggEiMA0GCSqGSIb3DQEBAQUAA4IB
+
+  DwAwggEKAoIBAQDFGKkxFbhzwFtHL83X6HqteDS0JhPObqqBXpWIEmwduLIv3r/G
+
+  gl9HuhZHGCgvd2+uergUzsof4ckY+M10qYuhX4CJwxmc1Q+5iIJpiZobLzWQ6szd
+
+  lxIF6XTEhNuXBm6xCCtfPGT9SH90QSl+2gN/SZhxkjgyJ0J+Ty1CLKrTsCyZTDHv
+
+  MbHB7Fkrc2lEaVlYgTI8LEZWr9lO+IxDw14e4mhOuYS/YpzPbrnOvMY1YbJDcfxz
+
+  DwAxeJGKdZBmcoKLB1Cr+Qw06S7aUzHDtUl9IkMViImJsA4xj9pnNVjQEqt5yeo5
+
+  UCjDYQy6o5gDPmjghysg+NVni4rSp0VJ2EORAgMBAAGjMjAwMA8GA1UdEwEB/wQF
+
+  MAMBAf8wHQYDVR0OBBYEFHySH7vYHqo085MmxGysQSJj1YjzMA0GCSqGSIb3DQEB
+
+  CwUAA4IBAQAqvBv8RxNT2rrvfzbz+5I4dFwwgLcWIhamLiTAm3kXlBo2rCsec26h
+
+  WmrTXkZL1Gg5cpla8fBAL9NjCKX6CPncGVB4zp56bokm8zebDWcAHGZD3xh5X+7r
+
+  rb2HxDF88Zh5hfrhSc10WzyIBhEGA051CzqXFZtpjfcpv3JLiPzV8HAn4zQq5mCF
+
+  nvEyogBVXHY640pKH/q6fBOeIezng1raA719/OYE+DTtKJkZpmfcSYGaNHpHbF7y
+
+  NMkN5xMJQhEJ790SE0gGKELaZ7iGcuGErbKzNBwOcH94uFjTJtN/yl0LfV49d1Ac
+
+  /IHM2oE3+CtnkBa2oclARfvZoPQwSb27
+
+  -----END CERTIFICATE-----
+
+  '
+Client.executable_signing_public_key: '-----BEGIN PUBLIC KEY-----
+
+  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3rMxd9NF+VEZ3IiZ4fTW
+
+  NOCTrTXh7P7FLnWu9yuvRZcFeE3FlB+5WfmKCIHM3t3f/uyLdlTO0W8V4KlnFPzk
+
+  N6HHDZyePOppVmmWQDZGsHAYbNLeL0pdU00N39+HBqlhWwb5GGbJRQFGM0r3bv3D
+
+  LORISZz2ut1j3N0O9CEnRvoEILYMzfpXUn8m4RArwfzuva5UyNRL9NBNZfL58cC1
+
+  vdT5uTpl0ZRkFsdVrmARHm2OkSUANFd0VfiyPhHh2lD8O37y9Q5PGjkO/WZKXOs0
+
+  VU8pu2EAbDDJMVLFKgYEXfIte1tmjDVGSBu74wjRdCYGkK/SLGAdO5VapPuLoP1h
+
+  EQIDAQAB
+
+  -----END PUBLIC KEY-----
+
+  '
+Client.server_urls:
+- http://localhost:8080/
+Config.writeback: /tmp/velociraptor.yaml

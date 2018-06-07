@@ -130,10 +130,14 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 			// fail them on the output channel.
 			req := result.ReadFromServer()
 
-			// Each request has its own context.
-			ctx := context.BackgroundFromConfig(config_obj)
-			utils.Debug(req)
-			result.processRequestPlugin(ctx, req)
+			// Ignore unauthenticated messages - the
+			// server should never send us those.
+			if *req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
+				// Each request has its own context.
+				ctx := context.BackgroundFromConfig(config_obj)
+				utils.Debug(req)
+				result.processRequestPlugin(ctx, req)
+			}
 		}
 	}()
 
