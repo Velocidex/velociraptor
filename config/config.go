@@ -36,6 +36,9 @@ func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	return nil
 }
 
+// GRR erroneously writes all YAML fields as strings even Integers
+//  (e.g. Frontend_bind_port: '8080' instead of Frontend_bind_port:
+//  8080), so we need to be able to handle either form.
 type Integer uint64
 
 func (self *Integer) UnmarshalYAML(unmarshal func(interface{}) error) error {
