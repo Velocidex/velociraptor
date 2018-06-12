@@ -136,6 +136,19 @@ message GrrMessage {
       type: "RDFDatetime",
       description: "An optional timestamp when this message was stored.",
     }];
+
+    // Velociraptor specific messages.
+    enum ClientType {
+        GRR = 0;
+        VELOCIRAPTOR = 1;
+    };
+
+    // This is only set by the Velociraptor client to indicate special
+    // processing by the Velociraptor server.
+    optional ClientType client_type = 6600 [ (sem_type) = {
+            description: "The type of client that generated this message."
+        }];
+
 };
 
 // Certificates are exchanged with this.
@@ -320,3 +333,15 @@ message ClientCommunication {
   // 5) the api_version.
   optional bytes full_hmac = 10;
 };
+
+
+message ClientResources {
+  optional string client_id = 1 [(sem_type) = {
+      type: "ClientURN"
+    }];
+  optional string session_id = 2 [(sem_type) = {
+      type: "SessionID"
+    }];
+  optional CpuSeconds cpu_usage = 3;
+  optional uint64 network_bytes_sent = 4;
+}

@@ -262,6 +262,7 @@ func (self *HTTPCommunicator) MaybeEnrol() {
 			SessionId:   &constants.ENROLLMENT_WELL_KNOWN_FLOW,
 			ArgsRdfName: &arg_rdf_name,
 			Priority:    crypto_proto.GrrMessage_HIGH_PRIORITY.Enum(),
+			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
 		}
 
 		serialized_csr, err := proto.Marshal(csr)

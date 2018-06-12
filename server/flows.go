@@ -7,22 +7,6 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
-func processWellKnownFlow(server *Server, message *crypto_proto.GrrMessage) bool {
-	switch *message.SessionId {
-
-	case "aff4:/flows/E:Enrol":
-		err := enroll(server, message)
-		if err != nil {
-			server.Error("Enrol Error: %s", err)
-		}
-		return true
-
-	default:
-		return false
-	}
-
-}
-
 func enroll(server *Server, message *crypto_proto.GrrMessage) error {
 	csr, pres := responder.ExtractGrrMessagePayload(
 		message).(*crypto_proto.Certificate)

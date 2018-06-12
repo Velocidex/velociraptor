@@ -62,7 +62,13 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 		RequestId:  req.RequestId,
 		ResponseId: &response,
 		Type:       crypto_proto.GrrMessage_STATUS.Enum(),
+		ClientType: crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
 	}
+
+	if req.TaskId != nil {
+		reply.TaskId = req.TaskId
+	}
+
 	error_message := fmt.Sprintf("Client action '%v' not known", *req.Name)
 	status := &crypto_proto.GrrStatus{
 		Status:       crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
@@ -84,9 +90,14 @@ func (self *ClientExecutor) processRequestPlugin(
 	req *crypto_proto.GrrMessage) {
 
 	// Never serve unauthenticated requests.
-	if *req.AuthState != *crypto_proto.GrrMessage_AUTHENTICATED.Enum() {
+	if req.AuthState != nil &&
+		*req.AuthState != *crypto_proto.GrrMessage_AUTHENTICATED.Enum() {
 		log.Printf("Unauthenticated")
 		self.SendToServer(makeUnknownActionResponse(req))
+		return
+	}
+
+	if req.Name == nil {
 		return
 	}
 

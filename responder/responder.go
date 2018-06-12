@@ -35,6 +35,11 @@ func (self *Responder) AddResponse(message proto.Message) error {
 		RequestId:   self.request.RequestId,
 		ResponseId:  proto.Uint64(self.next_id),
 		ArgsRdfName: &rdf_name,
+		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
+	}
+
+	if self.request.TaskId != nil {
+		response.TaskId = self.request.TaskId
 	}
 
 	serialized_args, err := proto.Marshal(message)
@@ -77,6 +82,11 @@ func (self *Responder) SendResponseToWellKnownFlow(
 		SessionId:   &flow_name,
 		ResponseId:  proto.Uint64(1),
 		ArgsRdfName: &rdf_name,
+		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
+	}
+
+	if self.request.TaskId != nil {
+		response.TaskId = self.request.TaskId
 	}
 
 	serialized_args, err := proto.Marshal(message)
@@ -117,6 +127,7 @@ func NewRequest(message proto.Message) (*crypto_proto.GrrMessage, error) {
 		SessionId:   proto.String("XYZ"),
 		RequestId:   proto.Uint64(1),
 		ArgsRdfName: &rdf_name,
+		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
 	}
 
 	serialized_args, err := proto.Marshal(message)

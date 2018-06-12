@@ -1,0 +1,177 @@
+// Copyright 2011 Google Inc. All Rights Reserved
+
+// These are the messages used in GRR encrypted communication protocol.
+syntax = "proto2";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
+
+package proto;
+
+message FlowReference {
+  optional string flow_id = 1 [(sem_type) = {
+      description: "The session id of the referenced flow."
+    }];
+  optional string client_id = 2 [(sem_type) = {
+      type: "ClientURN",
+      description: "The client id the referenced flow ran on."
+    }];
+}
+
+// The flow context.
+// Next field: 17
+message FlowContext {
+  optional string backtrace = 1;
+  optional ClientResources client_resources = 2;
+  optional uint64 create_time = 3 [(sem_type) = {
+      type: "RDFDatetime",
+    }];
+  optional string creator = 4;
+  optional string current_state = 5;
+  optional uint64 kill_timestamp = 6 [(sem_type) = {
+      type: "RDFDatetime",
+    }];
+  optional uint64 network_bytes_sent = 7;
+  optional uint64 next_outbound_id = 8 [default = 1];
+  optional uint64 next_processed_request = 9 [default = 1];
+    //  repeated OutputPluginState output_plugins_states = 10;
+  optional uint64 outstanding_requests = 11;
+  // DEPRECATED
+  // optional uint64 remaining_cpu_quota = 12;
+  optional string session_id = 13 [(sem_type) = {
+      type: "SessionID"
+    }];
+
+  enum State {
+    RUNNING = 0;
+    TERMINATED = 1;
+    ERROR = 3;   // Flows which raise are marked as having an error.
+
+    // A well known flow will not queue any messages and always
+    // forward messages to the worker:
+    WELL_KNOWN = 2;
+  };
+
+  optional State state = 14;
+  optional string status = 15;
+  optional bool user_notified = 16;
+}
+
+// Next field: 23
+message FlowRunnerArgs {
+  optional GrrMessage.Priority priority = 1 [(sem_type) = {
+      description: "The priority used for this flow.",
+      label: ADVANCED
+    }, default=MEDIUM_PRIORITY];
+
+  optional bool notify_to_user = 2 [(sem_type) = {
+      description: "Should a notification be sent to the initiator.",
+      friendly_name: "Notify at Completion",
+    }, default=true];
+
+  optional bool send_replies = 3 [(sem_type) = {
+      description: "Should send replies back to the parent flow or not.",
+      friendly_name: "Send Replies",
+      label: HIDDEN,
+    }, default=true];
+
+  // DEPRECATED
+  // optional string notification_event = 4;
+
+  // DEPRECATED
+  // optional string notification_urn = 14;
+
+  optional string client_id = 5 [(sem_type) = {
+      type: "ClientURN",
+      description: "The client id this flow operates on.",
+      label: HIDDEN,
+    }];
+
+  optional string queue = 6 [(sem_type) = {
+      type: "RDFURN",
+      description: "The queue to use for the flow.",
+      label: HIDDEN,
+    }, default="F"];
+
+  optional string event_id = 7 [(sem_type) = {
+      description: "A logging event id for issuing further logs."
+      label: HIDDEN,
+    }];
+
+  optional uint64 cpu_limit = 9 [(sem_type) = {
+      description: "A limit on the client cpu seconds used by this flow.",
+      label: ADVANCED,
+    }, default = 7200];
+
+  optional uint64 network_bytes_limit = 13 [(sem_type) = {
+      description: "A limit on the total traffic used by this flow.",
+      label: ADVANCED,
+    }];
+
+    /*
+  optional RequestState request_state = 10 [(sem_type) = {
+      description: "The request state of the parent flow.",
+      label: HIDDEN,
+    }];
+    */
+  optional string flow_name = 11 [(sem_type) = {
+      description: "The name of the class implementing the flow to run.",
+      label: HIDDEN,
+    }];
+
+  optional string base_session_id = 12 [(sem_type) = {
+      type: "RDFURN",
+      description: "The session id for the flow runner. "
+      "If not specified we make one.",
+      label: HIDDEN,
+    }];
+
+  optional uint64 start_time = 15 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "Do not process this flow until this time. "
+      "(Implies the flow is run asyncronously.).",
+      label: ADVANCED
+    }];
+
+  // DEPRECATED, output is now fixed.
+  //optional string output = 16 [(sem_type) = {
+  //    description: "If set, a relative URN to the client's namespace where "
+  //    "a collection will be created, and the result will be written to.",
+  //    label: ADVANCED
+  //  }, default="analysis/{p}/{u}-{t}"];
+
+  optional string logs_collection_urn = 17 [(sem_type) = {
+      type: "RDFURN",
+      description: "The logs collection to log to for the flow.",
+      label: HIDDEN,
+    }];
+
+  optional bool write_intermediate_results = 18 [(sem_type) = {
+      description: "If true, all child flow results received with sendreply"
+                   " will be written to the flow's default collection.",
+      label: ADVANCED
+    }, default=false];
+
+  optional bool require_fastpoll = 19 [ default = true, (sem_type) = {
+      description: "This value is passed to the client during CallClient, and "
+                   "by default will cause the client to enter fastpoll after"
+                   "processing the message. Users shouldn't modify this "
+                   "setting.",
+      label: ADVANCED
+    }];
+
+    /*
+  repeated OutputPluginDescriptor output_plugins = 21 [(sem_type) = {
+      description: "Output plugins used for this flow. These plugins will be "
+                   "applied to flow results as soon as the flow is completed."
+      friendly_name: "Output Plugins",
+      label: HIDDEN,
+    }];
+    */
+
+  optional FlowReference original_flow = 22 [(sem_type) = {
+      description: "If this flow is a copy of another flow, we store "
+      "a reference to the original here.",
+      label: HIDDEN
+    }];
+}

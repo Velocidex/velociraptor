@@ -83,6 +83,10 @@ type Config struct {
 	Frontend_certificate  *string  `yaml:"Frontend.certificate"`
 
 	Frontend_private_key *string `yaml:"PrivateKeys.server_key"`
+
+	// DataStore parameters.
+	Datastore_implementation *string `yaml:"Datastore.implementation"`
+	Datastore_location       *string `yaml:"Datastore.location"`
 }
 
 func GetDefaultConfig() *Config {

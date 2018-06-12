@@ -13,12 +13,22 @@ import (
 	"sync/atomic"
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/flows"
+	flow_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 var (
-	config_path = kingpin.Arg("config", "The Configuration file").
+	frontend    = kingpin.Command("frontend", "Run the frontend.")
+	config_path = kingpin.Flag("config", "The Configuration file").
+			Required().String()
+
+	flow           = kingpin.Command("flow", "Start a flow on a client.")
+	flow_client_id = flow.Arg("client_id", "The client ID to launch.").
+			Required().String()
+	flow_name = flow.Arg("flow_name", "The name of the flow to launch.").
 			Required().String()
 
 	healthy int32
@@ -33,10 +43,36 @@ func validateConfig(configuration *config.Config) error {
 }
 
 func main() {
-	kingpin.Parse()
+	switch kingpin.Parse() {
+	case "frontend":
+		start_frontend(*config_path)
+	case "flow":
+		start_flow(*config_path, *flow_client_id, *flow_name)
+	}
+}
 
+func start_flow(config_path string, client_id string, flow_name string) {
 	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(*config_path, config_obj)
+	err := config.LoadConfig(config_path, config_obj)
+	if err == nil {
+		err = validateConfig(config_obj)
+	}
+
+	flow_runner_args := &flow_proto.FlowRunnerArgs{
+		ClientId: &client_id,
+		FlowName: &flow_name,
+	}
+
+	flow_id, err := flows.StartFlow(config_obj, flow_runner_args)
+	kingpin.FatalIfError(err, "Unable to start flow")
+
+	logger := logging.NewLogger(config_obj)
+	logger.Info("Launched flow %s", *flow_id)
+}
+
+func start_frontend(config_path string) {
+	config_obj := config.GetDefaultConfig()
+	err := config.LoadConfig(config_path, config_obj)
 	if err == nil {
 		err = validateConfig(config_obj)
 	}
@@ -58,7 +94,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         listenAddr,
-		Handler:      logging(server_obj)(router),
+		Handler:      logging_handler(server_obj)(router),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
@@ -148,7 +184,7 @@ func control(server_obj *server.Server) http.Handler {
 	})
 }
 
-func logging(server_obj *server.Server) func(http.Handler) http.Handler {
+func logging_handler(server_obj *server.Server) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
