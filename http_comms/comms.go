@@ -253,16 +253,15 @@ func (self *HTTPCommunicator) MaybeEnrol() {
 		}
 
 		csr := &crypto_proto.Certificate{
-			Type: crypto_proto.Certificate_CSR.Enum(),
+			Type: crypto_proto.Certificate_CSR,
 			Pem:  csr_pem,
 		}
 
-		arg_rdf_name := "Certificate"
 		reply := &crypto_proto.GrrMessage{
-			SessionId:   &constants.ENROLLMENT_WELL_KNOWN_FLOW,
-			ArgsRdfName: &arg_rdf_name,
-			Priority:    crypto_proto.GrrMessage_HIGH_PRIORITY.Enum(),
-			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
+			SessionId:   constants.ENROLLMENT_WELL_KNOWN_FLOW,
+			ArgsRdfName: "Certificate",
+			Priority:    crypto_proto.GrrMessage_HIGH_PRIORITY,
+			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 		}
 
 		serialized_csr, err := proto.Marshal(csr)

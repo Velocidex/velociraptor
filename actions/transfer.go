@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/zlib"
 	"crypto/sha256"
-	"github.com/golang/protobuf/proto"
 	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -36,17 +35,17 @@ func (self *TransferBuffer) Run(
 		return
 	}
 
-	_, err = file.Seek(int64(*arg.Offset), 0)
+	_, err = file.Seek(int64(arg.Offset), 0)
 	if err != nil {
 		responder.RaiseError(err.Error())
 		return
 	}
 
-	if *arg.Length > 1000000 {
+	if arg.Length > 1000000 {
 		responder.RaiseError("Unable to read such a large buffer.")
 		return
 	}
-	buffer := make([]byte, *arg.Length)
+	buffer := make([]byte, arg.Length)
 	bytes_read, err := file.Read(buffer)
 	if err != nil {
 		responder.RaiseError(err.Error())
@@ -62,14 +61,14 @@ func (self *TransferBuffer) Run(
 		"aff4:/flows/F:TransferStore",
 		&actions_proto.DataBlob{
 			Data:        b.Bytes(),
-			Compression: actions_proto.DataBlob_ZCOMPRESSION.Enum(),
+			Compression: actions_proto.DataBlob_ZCOMPRESSION,
 		},
 	)
 
 	hash := sha256.Sum256(buffer)
 	responder.AddResponse(&actions_proto.BufferReference{
 		Offset:   arg.Offset,
-		Length:   proto.Uint64(uint64(bytes_read)),
+		Length:   uint64(bytes_read),
 		Data:     hash[:],
 		Pathspec: arg.Pathspec,
 	})

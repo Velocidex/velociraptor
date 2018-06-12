@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/golang/protobuf/proto"
 	"io/ioutil"
 	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -74,8 +73,8 @@ func (self *ListDirectory) Run(
 			new_pathspec := CopyPathspec(arg.Pathspec)
 			last := LastPathspec(new_pathspec)
 			last.NestedPath = &actions_proto.PathSpec{
-				Pathtype: actions_proto.PathSpec_OS.Enum(),
-				Path:     proto.String(stat.Name()),
+				Pathtype: actions_proto.PathSpec_OS,
+				Path:     stat.Name(),
 			}
 			stat_reply.Pathspec = new_pathspec
 			responder.AddResponse(stat_reply)

@@ -14,6 +14,9 @@ message SemanticDescriptor {
   // parsing this field.
   optional string dynamic_type = 5;
   optional string description = 2;
+  optional string default_string = 6;
+    optional int64 default_int = 7;
+    optional bool default_bool = 8;
 
   enum Labels {
     ADVANCED = 1;  // Field should be offered for modification by advanced users

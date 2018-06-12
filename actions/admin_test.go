@@ -47,7 +47,7 @@ func TestGetHostname(t *testing.T) {
 	response := responder.ExtractGrrMessagePayload(
 		responses[0]).(*actions_proto.DataBlob)
 	info, _ := host.Info()
-	assert.Equal(t, info.Hostname, *response.String_)
+	assert.Equal(t, info.Hostname, response.String_)
 }
 
 func TestGetPlatformInfo(t *testing.T) {
@@ -63,5 +63,5 @@ func TestGetPlatformInfo(t *testing.T) {
 	response := responder.ExtractGrrMessagePayload(
 		responses[0]).(*actions_proto.Uname)
 	info, _ := host.Info()
-	assert.Equal(t, strings.Title(info.OS), *response.System)
+	assert.Equal(t, strings.Title(info.OS), response.System)
 }

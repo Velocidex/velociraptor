@@ -45,7 +45,7 @@ func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
 
 func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	for _, message := range messages {
-		cached_flow, err := self.getFlow(*message.SessionId)
+		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
 			utils.Debug(err)
 			continue
@@ -109,17 +109,18 @@ type AFF4FlowObject struct {
 
 // Fails the flow if an error occured
 func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error {
-	if *message.Type == *crypto_proto.GrrMessage_STATUS.Enum() {
+	utils.Debug(message)
+	if message.Type == crypto_proto.GrrMessage_STATUS {
 		status, ok := responder.ExtractGrrMessagePayload(
 			message).(*crypto_proto.GrrStatus)
 		if ok {
 			utils.Debug(status)
-			self.flow_context.State = flows_proto.FlowContext_ERROR.Enum()
+			self.flow_context.State = flows_proto.FlowContext_ERROR
 			self.flow_context.Status = status.ErrorMessage
 			self.flow_context.Backtrace = status.Backtrace
 			self.dirty = true
 
-			return errors.New(*status.ErrorMessage)
+			return errors.New(status.ErrorMessage)
 		}
 	}
 	return nil
@@ -135,10 +136,10 @@ func NewAFF4FlowObject(
 	}
 
 	// Attach the implementation.
-	name := *runner_args.FlowName
-	impl, ok := GetImpl(name)
+	impl, ok := GetImpl(runner_args.FlowName)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("Unknown flow %s", name))
+		return nil, errors.New(fmt.Sprintf(
+			"Unknown flow %s", runner_args.FlowName))
 	}
 
 	result.impl = impl
@@ -245,7 +246,7 @@ func GetImpl(name string) (Flow, bool) {
 func StartFlow(
 	config_obj *config.Config,
 	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
-	if flow_runner_args.FlowName == nil {
+	if flow_runner_args.FlowName == "" {
 		return nil, errors.New("No flow name")
 	}
 

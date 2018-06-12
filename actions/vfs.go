@@ -20,12 +20,11 @@ func GetPathFromPathSpec(pathspec *actions_proto.PathSpec) (*string, error) {
 	components := []string{"/"}
 	i := pathspec
 	for {
-		if i.Pathtype == nil ||
-			*i.Pathtype != *actions_proto.PathSpec_OS.Enum() {
+		if i.Pathtype != actions_proto.PathSpec_OS {
 			return nil, errors.New("Only supports OS paths.")
 		}
 
-		components = append(components, *i.Path)
+		components = append(components, i.Path)
 
 		if i.NestedPath == nil {
 			break

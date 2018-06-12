@@ -1,5 +1,5 @@
 // These are the messages used in client actions.
-syntax = "proto2";
+syntax = "proto3";
 
 import "actions.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
@@ -8,29 +8,29 @@ package proto;
 
 
 message Hash {
-  optional bytes sha256 = 1 [(sem_type) = {
+   bytes sha256 = 1 [(sem_type) = {
       type: "HashDigest",
       description: "SHA256 binary hash digest."
       }];
-  optional bytes sha1 = 2 [(sem_type) = {
+   bytes sha1 = 2 [(sem_type) = {
       type: "HashDigest",
       description: "SHA1 binary hash digest."
       }];
-  optional bytes md5 = 3 [(sem_type) = {
+   bytes md5 = 3 [(sem_type) = {
       type: "HashDigest",
       description: "MD5 binary hash digest."
       }];
-  optional bytes pecoff_sha1 = 4 [(sem_type) = {
+   bytes pecoff_sha1 = 4 [(sem_type) = {
       type: "HashDigest",
       description: "Authenticode SHA1 hash digest for signed region of PE file."
       }];
 
-  optional bytes pecoff_md5 = 5 [(sem_type) = {
+   bytes pecoff_md5 = 5 [(sem_type) = {
       type: "HashDigest",
       description: "Authenticode MD5 hash digest for signed region of PE file."
       }];
 
-  optional bytes pecoff_sha256 = 7 [(sem_type) = {
+   bytes pecoff_sha256 = 7 [(sem_type) = {
       type: "HashDigest",
       description: "Authenticode SHA256 hash digest for signed region of PE file."
       }];
@@ -39,16 +39,16 @@ message Hash {
       description: "Signed data which may be present in PE files.",
     }];
 
-  optional uint64 num_bytes = 8 [(sem_type) = {
+   uint64 num_bytes = 8 [(sem_type) = {
       description: "The number of bytes used to create the hashes in this message."
     }];
 }
 
 
 message AuthenticodeSignedData {
-  optional uint64 revision = 1;
-  optional uint64 cert_type = 2;
-  optional bytes certificate = 3;
+   uint64 revision = 1;
+   uint64 cert_type = 2;
+   bytes certificate = 3;
 }
 
 
@@ -66,34 +66,34 @@ message FingerprintTuple {
     SHA1 = 1;
     SHA256 = 2;
   };
-  optional Type fp_type = 1;
+   Type fp_type = 1;
   repeated HashType hashers = 2;
 };
 
 // Request fingerprints for a file.
 message FingerprintRequest {
-  optional PathSpec pathspec = 1;
+   PathSpec pathspec = 1;
   repeated FingerprintTuple tuples = 2;
-  optional uint64 max_filesize = 3 [(sem_type) = {
+   uint64 max_filesize = 3 [(sem_type) = {
       description: "Maximum file size to fingerprint."
-    }, default=10737418240];  // 10GiB
+    }];  // 10GiB
 };
 
 // Response data for file hashes and signature blobs.
 message FingerprintResponse {
   repeated FingerprintTuple.Type matching_types = 1;
-  optional PathSpec pathspec = 3;
-  optional Hash hash = 4;
-  optional uint64 bytes_read = 5 [(sem_type) = {
+   PathSpec pathspec = 3;
+   Hash hash = 4;
+   uint64 bytes_read = 5 [(sem_type) = {
       description: "Total number of bytes hashed."
     }];
 };
 
 
 message BufferReference {
-  optional uint64 offset = 1 [ default = 0 ];
-  optional uint64 length = 2 [ default = 0 ];
-  optional string callback = 3;
-  optional bytes  data = 4;
-  optional PathSpec pathspec = 6;
+   uint64 offset = 1;
+   uint64 length = 2;
+   string callback = 3;
+   bytes  data = 4;
+   PathSpec pathspec = 6;
 };

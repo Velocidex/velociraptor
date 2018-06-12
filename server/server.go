@@ -62,10 +62,8 @@ func (self *Server) processVelociraptorMessages(
 	for _, message := range messages {
 		// Velociraptor clients always return their task id so
 		// we can dequeue their messages immediately.
-		if message.TaskId != nil &&
-			message.Type != nil &&
-			*message.Type == crypto_proto.GrrMessage_STATUS {
-			tasks_to_remove = append(tasks_to_remove, *message.TaskId)
+		if message.Type == crypto_proto.GrrMessage_STATUS {
+			tasks_to_remove = append(tasks_to_remove, message.TaskId)
 		}
 	}
 
@@ -89,7 +87,7 @@ func (self *Server) processUnauthenticatedMessages(
 	messages *crypto_proto.MessageList) error {
 
 	for _, message := range messages.Job {
-		switch *message.SessionId {
+		switch message.SessionId {
 
 		case "aff4:/flows/E:Enrol":
 			err := enroll(self, message)
@@ -108,8 +106,6 @@ func (self *Server) Process(ctx context.Context, request []byte) ([]byte, error)
 		return nil, err
 	}
 
-	client_id := message_info.Source
-
 	message_list := &crypto_proto.MessageList{}
 	err = proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
@@ -117,7 +113,8 @@ func (self *Server) Process(ctx context.Context, request []byte) ([]byte, error)
 	}
 
 	if !message_info.Authenticated {
-		self.processUnauthenticatedMessages(ctx, *client_id, message_list)
+		self.processUnauthenticatedMessages(
+			ctx, message_info.Source, message_list)
 		return nil, errors.New("Enrolment")
 	}
 
@@ -130,35 +127,36 @@ func (self *Server) Process(ctx context.Context, request []byte) ([]byte, error)
 
 	for _, message := range message_list.Job {
 		if message_info.Authenticated {
-			auth := crypto_proto.GrrMessage_AUTHENTICATED
-			message.AuthState = &auth
+			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
 		}
-		message.Source = client_id
-		if message.ClientType != nil &&
-			*message.ClientType == crypto_proto.GrrMessage_VELOCIRAPTOR {
+		message.Source = message_info.Source
+		if message.ClientType == crypto_proto.GrrMessage_VELOCIRAPTOR {
 			velociraptor_messages = append(velociraptor_messages, message)
 		} else {
 			grr_messages = append(grr_messages, message)
 		}
 	}
 
-	err = self.processVelociraptorMessages(ctx, *client_id, velociraptor_messages)
+	err = self.processVelociraptorMessages(
+		ctx, message_info.Source, velociraptor_messages)
 	if err != nil {
 		return nil, err
 	}
 
-	err = self.processGRRMessages(ctx, *client_id, grr_messages)
+	err = self.processGRRMessages(
+		ctx, message_info.Source, grr_messages)
 	if err != nil {
 		return nil, err
 	}
 
 	message_list = &crypto_proto.MessageList{}
-	for _, response := range self.DrainRequestsForClient(*client_id) {
+	for _, response := range self.DrainRequestsForClient(
+		message_info.Source) {
 		message_list.Job = append(message_list.Job, response)
 	}
 
 	response, err := self.manager.EncryptMessageList(
-		message_list, *message_info.Source)
+		message_list, message_info.Source)
 	if err != nil {
 		return nil, err
 	}

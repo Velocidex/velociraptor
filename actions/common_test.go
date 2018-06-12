@@ -16,10 +16,10 @@ func TestClientInfo(t *testing.T) {
 	ctx := context.Background()
 	responses := GetResponsesFromAction(&plugin, &ctx, &args)
 	assert.Equal(t, len(responses), 2)
-	assert.Equal(t, *responses[1].ArgsRdfName, "GrrStatus")
+	assert.Equal(t, responses[1].ArgsRdfName, "GrrStatus")
 
 	result := responder.ExtractGrrMessagePayload(
 		responses[0]).(*actions_proto.ClientInformation)
 
-	assert.Equal(t, *result.ClientName, "velociraptor")
+	assert.Equal(t, result.ClientName, "velociraptor")
 }

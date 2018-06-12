@@ -22,9 +22,8 @@ func GetResponsesFromChannel(c chan *crypto_proto.GrrMessage) []*crypto_proto.Gr
 
 func TestResponder(t *testing.T) {
 	args := &crypto_proto.GrrMessage{}
-	name := "My name"
 	msg := &actions_proto.ClientInformation{
-		ClientName: &name,
+		ClientName: "My name",
 	}
 	c := make(chan *crypto_proto.GrrMessage)
 	go func() {
@@ -37,14 +36,14 @@ func TestResponder(t *testing.T) {
 	response := GetResponsesFromChannel(c)
 
 	assert.Equal(t, len(response), 2)
-	assert.Equal(t, *response[0].ResponseId, uint64(1))
-	assert.Equal(t, *response[1].ResponseId, uint64(2))
+	assert.Equal(t, response[0].ResponseId, uint64(1))
+	assert.Equal(t, response[1].ResponseId, uint64(2))
 
 	// Last packet is the status.
-	assert.Equal(t, *response[1].ArgsRdfName, "GrrStatus")
+	assert.Equal(t, response[1].ArgsRdfName, "GrrStatus")
 
 	// Last packet is also marked with type status.
-	assert.Equal(t, response[1].Type, crypto_proto.GrrMessage_STATUS.Enum())
+	assert.Equal(t, response[1].Type, crypto_proto.GrrMessage_STATUS)
 }
 
 func TestResponderError(t *testing.T) {
@@ -65,6 +64,6 @@ func TestResponderError(t *testing.T) {
 
 	// Should contain a GrrStatus message.
 	status := responder.ExtractGrrMessagePayload(msg).(*crypto_proto.GrrStatus)
-	assert.Equal(t, *status.ErrorMessage, error_message)
-	assert.True(t, len(*status.ErrorMessage) > 10)
+	assert.Equal(t, status.ErrorMessage, error_message)
+	assert.True(t, len(status.ErrorMessage) > 10)
 }

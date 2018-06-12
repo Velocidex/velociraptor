@@ -2,7 +2,7 @@
 // LINT: LEGACY_NAMES
 
 // These are the messages used in client actions.
-syntax = "proto2";
+syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
@@ -10,20 +10,20 @@ package proto;
 
 // Stores information about the GRR client itself
 message ClientInformation {
-  optional string client_name = 1;
-  optional uint32 client_version = 2;
-  optional uint64 revision = 3;
-  optional string build_time = 4;
-  optional string client_description = 5;
+   string client_name = 1;
+   uint32 client_version = 2;
+   uint64 revision = 3;
+   string build_time = 4;
+   string client_description = 5;
   repeated string labels = 6;
 }
 
 // Ask the ListDir action to list all files in path (returns StatEntry)
 message ListDirRequest {
-  optional PathSpec pathspec = 1;
+   PathSpec pathspec = 1;
 
 // Velociraptor does not support iterators.
-//  optional Iterator iterator = 2;
+//   Iterator iterator = 2;
 };
 
 
@@ -32,60 +32,56 @@ message StatFSRequest {
   repeated string path_list = 1[(sem_type) = {
       description: "List of paths for statfs."
     }];
-  optional PathSpec.PathType pathtype = 2 [(sem_type) = {
+   PathSpec.PathType pathtype = 2 [(sem_type) = {
       description: "Type of path to call statfs on.",
-    }, default=OS];
+    }];
 };
 
 // A stat() record for a given path
 // Next field id: 24.
 message StatEntry {
   // DEPRECATED
-  // optional string aff4path = 1;
-  optional uint64 st_mode = 2 [(sem_type) = {
+  //  string aff4path = 1;
+   uint64 st_mode = 2 [(sem_type) = {
       type: "StatMode",
       description: "A unix file permission mode."
-    }, default=0];
+    }];
 
-  optional uint32 st_ino = 3;
-  optional uint32 st_dev = 4;
-  optional uint32 st_nlink = 5;
-  optional uint32 st_uid = 6;
-  optional uint32 st_gid = 7;
-  optional uint64 st_size = 8;
-  optional uint64 st_atime = 9 [(sem_type) = {
+   uint32 st_ino = 3;
+   uint32 st_dev = 4;
+   uint32 st_nlink = 5;
+   uint32 st_uid = 6;
+   uint32 st_gid = 7;
+   uint64 st_size = 8;
+   uint64 st_atime = 9 [(sem_type) = {
       type: "RDFDatetimeSeconds",
       description: "Last access time."
     }];
 
-  optional uint64 st_mtime = 10 [(sem_type) = {
+   uint64 st_mtime = 10 [(sem_type) = {
       type: "RDFDatetimeSeconds",
       description: "Last modified time."
     }];
 
-  optional uint64 st_ctime = 11 [(sem_type) = {
+   uint64 st_ctime = 11 [(sem_type) = {
       type: "RDFDatetimeSeconds",
       description: "Last inode change time."
     }];
 
-  optional uint32 st_blocks = 12;
-  optional uint32 st_blksize = 13;
-  optional uint32 st_rdev = 14;
-  optional uint32 st_flags_osx = 21 [
-    (sem_type) = {
-      type: "StatExtFlagsOsx",
-      description: "extended file attributes for Mac (set by `chflags`)",
-    },
-    default = 0
-  ];
-  optional uint32 st_flags_linux = 22 [
+   uint32 st_blocks = 12;
+   uint32 st_blksize = 13;
+   uint32 st_rdev = 14;
+   uint32 st_flags_osx = 21 [(sem_type) = {
+           type: "StatExtFlagsOsx",
+           description: "extended file attributes for Mac (set by `chflags`)",
+       }];
+   uint32 st_flags_linux = 22 [
     (sem_type) = {
       type: "StatExtFlagsLinux",
       description: "extended file attributes as reported by `lsattr`",
-    },
-    default = 0
+    }
   ];
-  optional string symlink = 15;
+   string symlink = 15;
 
   // These are used when mapping registry keys to the VFS
   enum RegistryType {
@@ -103,32 +99,32 @@ message StatEntry {
     REG_QWORD = 0x0B;
   }
 
-  optional RegistryType registry_type = 16 [(sem_type) = {
+   RegistryType registry_type = 16 [(sem_type) = {
       description: "If this is a stat of a registry value, this field "
       "contains the type of this value. The content will also be encoded "
       "in residet."
     }];
 
  // For very small files their data is stored in this record.
-  optional bytes resident = 17;
+   bytes resident = 17;
 
   // The pathspec which the client can use to re-reach this file.
-  optional PathSpec pathspec = 18 [(sem_type) = {
+   PathSpec pathspec = 18 [(sem_type) = {
       description: "The path specification to this file on the client."
     }];
 
-//  optional DataBlob registry_data = 19 [(sem_type) = {
+//   DataBlob registry_data = 19 [(sem_type) = {
 //      description: "If this entry represents a registry value, this field will "
 //     "contain that value encoded according to the correct type.";
 //    }];
-  optional uint64 st_crtime = 20 [(sem_type) = {
+   uint64 st_crtime = 20 [(sem_type) = {
       type: "RDFDatetimeSeconds",
       description: "Creation time."
     }];
 
   message ExtAttr {
-    optional string name = 1;
-    optional string value = 2;
+     string name = 1;
+     string value = 2;
   }
 
   repeated ExtAttr ext_attrs = 23;
@@ -139,29 +135,29 @@ message StatEntry {
 // Next field: 15
 message PathSpec {
   enum PathType {
-    UNSET = -1;
+      //    UNSET = -1;
     OS = 0;
     TSK = 1;
     REGISTRY = 2;
     MEMORY = 3 [(label) = HIDDEN];
     TMPFILE = 4 [(label) = HIDDEN];
   };
-  optional PathType pathtype = 1 [default = UNSET];
+   PathType pathtype = 1;
 
-  optional string path = 2;
-  optional string mount_point = 3 [(sem_type) = {
+   string path = 2;
+   string mount_point = 3 [(sem_type) = {
       label: ADVANCED
     }];
 
-  optional string stream_name = 11 [(sem_type) = {
+   string stream_name = 11 [(sem_type) = {
       description: "A name for the data stream. For example, an ADS name.",
       label: ADVANCED
     }];
 
-  optional PathSpec nested_path = 5;
+   PathSpec nested_path = 5;
 
   // Offset for split images
-  optional uint64 offset = 6 [(sem_type) = {
+   uint64 offset = 6 [(sem_type) = {
       label: ADVANCED
     }];
 
@@ -175,23 +171,24 @@ message PathSpec {
     // Indicates that this pathspec represents any subdirectory recursively.
     RECURSIVE = 3;
   };
-  optional Options path_options = 7 [(sem_type) = {
+   Options path_options = 7 [(sem_type) = {
       label: ADVANCED
-      }, default = CASE_INSENSITIVE];
+      }];
 
-  optional uint64 recursion_depth = 12 [(sem_type) = {
+   uint64 recursion_depth = 12 [(sem_type) = {
       label: HIDDEN,
       description: "Recursion depth when RECURSIVE option is specified."
-    }, default=3];
+    }];
 
   // On NTFS, the sleuthkit uses the inode, type and id to uniquely identify a
   // file - instead of the path.
-  optional uint64 inode = 8  [(sem_type) = {
+   uint64 inode = 8  [(sem_type) = {
       label: ADVANCED
     }];
 
   enum tsk_fs_attr_type {
     option allow_alias = true;
+      TSK_FS_UNSET = 0;
 
     TSK_FS_ATTR_TYPE_DEFAULT = 0x01;        // 1
     TSK_FS_ATTR_TYPE_NTFS_SI = 0x10;        // 16
@@ -215,20 +212,20 @@ message PathSpec {
     TSK_FS_ATTR_TYPE_UNIX_INDIR = 0x1001;   // Indirect blocks for UFS and ExtX
   };
 
-  optional tsk_fs_attr_type ntfs_type = 9  [(sem_type) = {
+   tsk_fs_attr_type ntfs_type = 9  [(sem_type) = {
       label: ADVANCED
-    }, default = TSK_FS_ATTR_TYPE_DEFAULT];
-  optional uint64 ntfs_id = 10  [(sem_type) = {
+    }];
+   uint64 ntfs_id = 10  [(sem_type) = {
       label: ADVANCED
     }];
 
-  optional uint64 file_size_override = 13 [(sem_type) = {
+   uint64 file_size_override = 13 [(sem_type) = {
       type: "ByteSize",
       description: "For files which are non seekable from their end "
       "(e.g. /proc files), this is the minimum amount of bytes read.",
-    }, default=512000];
+    }];
 
-  optional bool is_virtualroot = 14 [(sem_type) = {
+   bool is_virtualroot = 14 [(sem_type) = {
       description: "Indicates that this pathspec already contains a "
       "virtual root."}];
 };
@@ -236,44 +233,44 @@ message PathSpec {
 
 // Message to carry uname information.
 message Uname {
-  optional string system = 1 [(sem_type) = {
+   string system = 1 [(sem_type) = {
       description: "The system platform (Windows|Darwin|Linux).",
     }];
-  optional string node = 2 [(sem_type) = {
+   string node = 2 [(sem_type) = {
       description: "The hostname of this system.",
     }];
-  optional string release = 3 [(sem_type) = {
+   string release = 3 [(sem_type) = {
       description: "The OS release identifier e.g. 7, OSX, debian.",
     }];
-  optional string version = 4 [(sem_type) = {
+   string version = 4 [(sem_type) = {
       description: "The OS version ID e.g. 6.1.7601SP1, 10.9.2, 14.04.",
     }];
-  optional string machine = 5 [(sem_type) = {
+   string machine = 5 [(sem_type) = {
       description: "The system architecture e.g. AMD64, x86_64.",
     }];
-  optional string kernel = 6 [(sem_type) = {
+   string kernel = 6 [(sem_type) = {
       description: "The kernel version string e.g. 6.1.7601, 13.1.0, 3.15-rc2.",
     }];
-  optional string fqdn = 7 [(sem_type) = {
+   string fqdn = 7 [(sem_type) = {
       description: "The system's fully qualified domain name.",
     }];
 
-  optional uint64 install_date = 8 [(sem_type) = {
+   uint64 install_date = 8 [(sem_type) = {
       type: "RDFDatetime",
       description: "When system was installed."
     }];
 
-  optional string libc_ver = 9 [(sem_type) = {
+   string libc_ver = 9 [(sem_type) = {
       description: "The C library version",
     }];
 
-  optional string architecture = 10 [(sem_type) = {
+   string architecture = 10 [(sem_type) = {
       description: "The architecture of this binary. (Note this can be "
       "different from the machine architecture in the case of a 32 bit binary "
       "running on a 64 bit system)",
     }];
 
-  optional string pep425tag = 11 [(sem_type) = {
+   string pep425tag = 11 [(sem_type) = {
       description: "The unique signature of this python system (as defined by "
       "PEP425 tags).",
     }];

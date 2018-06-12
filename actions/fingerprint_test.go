@@ -1,7 +1,6 @@
 package actions_test
 
 import (
-	"github.com/golang/protobuf/proto"
 	assert "github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -14,23 +13,23 @@ import (
 func TestHashFile(t *testing.T) {
 	cwd, _ := os.Getwd()
 	pathspec := &actions_proto.PathSpec{
-		Path:     proto.String(cwd),
-		Pathtype: actions_proto.PathSpec_OS.Enum(),
+		Path:     cwd,
+		Pathtype: actions_proto.PathSpec_OS,
 		NestedPath: &actions_proto.PathSpec{
-			Path:     proto.String("test_data"),
-			Pathtype: actions_proto.PathSpec_OS.Enum(),
+			Path:     "test_data",
+			Pathtype: actions_proto.PathSpec_OS,
 			NestedPath: &actions_proto.PathSpec{
-				Path:     proto.String("hello.txt"),
-				Pathtype: actions_proto.PathSpec_OS.Enum(),
+				Path:     "hello.txt",
+				Pathtype: actions_proto.PathSpec_OS,
 			},
 		},
 	}
 	ctx := context.Background()
 	tuple := &actions_proto.FingerprintTuple{
-		FpType: actions_proto.FingerprintTuple_FPT_GENERIC.Enum(),
+		FpType: actions_proto.FingerprintTuple_FPT_GENERIC,
 		Hashers: []actions_proto.FingerprintTuple_HashType{
-			*actions_proto.FingerprintTuple_SHA1.Enum(),
-			*actions_proto.FingerprintTuple_SHA256.Enum(),
+			actions_proto.FingerprintTuple_SHA1,
+			actions_proto.FingerprintTuple_SHA256,
 		},
 	}
 	request := actions_proto.FingerprintRequest{

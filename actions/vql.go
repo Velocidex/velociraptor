@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/golang/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -50,8 +49,8 @@ func (self *VQLClientAction) Run(
 		}
 
 		response := &actions_proto.VQLResponse{
-			Query:    proto.String(query),
-			Response: proto.String(string(s)),
+			Query:    query,
+			Response: string(s),
 		}
 
 		columns := vql.Columns(scope)

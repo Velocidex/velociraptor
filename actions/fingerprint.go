@@ -3,7 +3,6 @@ package actions
 import (
 	"crypto/sha1"
 	"crypto/sha256"
-	"github.com/golang/protobuf/proto"
 	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -35,17 +34,17 @@ func (self *HashBuffer) Run(
 		return
 	}
 
-	_, err = file.Seek(int64(*arg.Offset), 0)
+	_, err = file.Seek(int64(arg.Offset), 0)
 	if err != nil {
 		responder.RaiseError(err.Error())
 		return
 	}
 
-	if *arg.Length > 1000000 {
+	if arg.Length > 1000000 {
 		responder.RaiseError("Unable to hash such a large buffer.")
 		return
 	}
-	buffer := make([]byte, *arg.Length)
+	buffer := make([]byte, arg.Length)
 	bytes_read, err := file.Read(buffer)
 	if err != nil {
 		responder.RaiseError(err.Error())
@@ -56,7 +55,7 @@ func (self *HashBuffer) Run(
 
 	responder.AddResponse(&actions_proto.BufferReference{
 		Offset:   arg.Offset,
-		Length:   proto.Uint64(uint64(bytes_read)),
+		Length:   uint64(bytes_read),
 		Data:     hash[:],
 		Pathspec: arg.Pathspec,
 	})
@@ -94,7 +93,7 @@ func (self *HashFile) Run(
 		Pathspec: arg.Pathspec,
 	}
 	for _, tuple := range arg.Tuples {
-		if *tuple.FpType == *actions_proto.FingerprintTuple_FPT_GENERIC.Enum() {
+		if tuple.FpType == actions_proto.FingerprintTuple_FPT_GENERIC {
 			sha1_hash := sha1.New()
 			sha256_hash := sha256.New()
 			hash := &actions_proto.Hash{}
@@ -109,10 +108,10 @@ func (self *HashFile) Run(
 				total += uint64(bytes_read)
 				sha1_hash.Write(buffer)
 				sha256_hash.Write(buffer)
-				if bytes_read < len(buffer) || total > *arg.MaxFilesize {
+				if bytes_read < len(buffer) || total > arg.MaxFilesize {
 					hash.Sha256 = sha256_hash.Sum(nil)
 					hash.Sha1 = sha1_hash.Sum(nil)
-					hash.NumBytes = &total
+					hash.NumBytes = total
 					response.Hash = hash
 					break
 				}

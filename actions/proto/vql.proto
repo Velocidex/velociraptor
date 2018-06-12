@@ -1,5 +1,5 @@
 // These are the messages used in client actions.
-syntax = "proto2";
+syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
@@ -12,9 +12,9 @@ message VQLCollectorArgs {
 }
 
 message VQLResponse {
-    optional string Response = 1 [(sem_type) = {
+     string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
     repeated string Columns = 2;
-    optional string Query = 3;
+     string Query = 3;
 }

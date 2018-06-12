@@ -49,13 +49,12 @@ func _NewCipher(
 	result := &_Cipher{
 		key_size: 128,
 	}
-	cipher_name := "aes_128_cbc"
 	result.cipher_properties = &crypto_proto.CipherProperties{
-		Name:       &cipher_name,
+		Name:       "aes_128_cbc",
 		Key:        make([]byte, result.key_size/8),
 		MetadataIv: make([]byte, result.key_size/8),
 		HmacKey:    make([]byte, result.key_size/8),
-		HmacType:   crypto_proto.CipherProperties_FULL_HMAC.Enum(),
+		HmacType:   crypto_proto.CipherProperties_FULL_HMAC,
 	}
 
 	_, err := rand.Read(result.cipher_properties.Key)
@@ -74,7 +73,7 @@ func _NewCipher(
 	}
 
 	result.cipher_metadata = &crypto_proto.CipherMetadata{
-		Source: &source,
+		Source: source,
 	}
 
 	serialized_cipher, err := proto.Marshal(result.cipher_properties)
@@ -266,7 +265,7 @@ func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []
 type MessageInfo struct {
 	Raw           []byte
 	Authenticated bool
-	Source        *string
+	Source        string
 }
 
 /*
@@ -304,7 +303,7 @@ func (self *CryptoManager) calcHMAC(
 	msg = append(msg, comms.PacketIv...)
 
 	temp := make([]byte, 4)
-	binary.LittleEndian.PutUint32(temp, *comms.ApiVersion)
+	binary.LittleEndian.PutUint32(temp, comms.ApiVersion)
 	msg = append(msg, temp...)
 
 	mac := hmac.New(sha1.New, cipher.HmacKey)
@@ -382,12 +381,12 @@ func (self *CryptoManager) getAuthState(
 
 	// Verify the cipher signature using the certificate known for
 	// the sender.
-	public_key, pres := self.GetPublicKey(*cipher_metadata.Source)
+	public_key, pres := self.GetPublicKey(cipher_metadata.Source)
 	if !pres {
 		// We dont know who we are talking to so we can not
 		// trust them.
 		return false, errors.New(
-			fmt.Sprintf("No cert found for %s", *cipher_metadata.Source))
+			fmt.Sprintf("No cert found for %s", cipher_metadata.Source))
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
@@ -502,9 +501,8 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	}
 
 	serialized_message_list := packed_message_list.MessageList
-	if packed_message_list.Compression != nil &&
-		*packed_message_list.Compression ==
-			crypto_proto.PackedMessageList_ZCOMPRESSION {
+	if packed_message_list.Compression ==
+		crypto_proto.PackedMessageList_ZCOMPRESSION {
 		b := bytes.NewReader(serialized_message_list)
 		z, err := zlib.NewReader(b)
 		if err != nil {
@@ -543,8 +541,7 @@ func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (*crypto_proto
 
 	for _, message := range result.Job {
 		if message_info.Authenticated {
-			auth := crypto_proto.GrrMessage_AUTHENTICATED
-			message.AuthState = &auth
+			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
 		}
 		message.Source = message_info.Source
 	}
@@ -597,23 +594,21 @@ func (self *CryptoManager) Encrypt(
 	w.Close()
 
 	packed_message_list := &crypto_proto.PackedMessageList{}
-	packed_message_list.Compression = crypto_proto.PackedMessageList_ZCOMPRESSION.Enum()
+	packed_message_list.Compression = crypto_proto.PackedMessageList_ZCOMPRESSION
 	packed_message_list.MessageList = b.Bytes()
-	packed_message_list.Source = &self.source
-	now := uint64(time.Now().UnixNano() / 1000)
-	packed_message_list.Timestamp = &now
+	packed_message_list.Source = self.source
+	packed_message_list.Timestamp = uint64(time.Now().UnixNano() / 1000)
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
 		return nil, err
 	}
 
-	var api_version uint32 = 3
 	comms := &crypto_proto.ClientCommunication{
 		EncryptedCipher:         output_cipher.encrypted_cipher,
 		EncryptedCipherMetadata: output_cipher.encrypted_cipher_metadata,
 		PacketIv:                make([]byte, output_cipher.key_size/8),
-		ApiVersion:              &api_version,
+		ApiVersion:              3,
 	}
 
 	// Each packet has a new IV.

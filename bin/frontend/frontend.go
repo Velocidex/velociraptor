@@ -59,8 +59,8 @@ func start_flow(config_path string, client_id string, flow_name string) {
 	}
 
 	flow_runner_args := &flow_proto.FlowRunnerArgs{
-		ClientId: &client_id,
-		FlowName: &flow_name,
+		ClientId: client_id,
+		FlowName: flow_name,
 	}
 
 	flow_id, err := flows.StartFlow(config_obj, flow_runner_args)

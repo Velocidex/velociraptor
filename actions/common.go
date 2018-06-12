@@ -15,8 +15,8 @@ func (self *GetClientInfo) Run(
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(args, output)
 	info := &actions_proto.ClientInformation{
-		ClientName:    ctx.Config.Client_name,
-		ClientVersion: ctx.Config.Client_version,
+		ClientName:    *ctx.Config.Client_name,
+		ClientVersion: *ctx.Config.Client_version,
 		Labels:        ctx.Config.Client_labels,
 	}
 	responder.AddResponse(info)

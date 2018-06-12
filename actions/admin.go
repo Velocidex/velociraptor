@@ -2,7 +2,6 @@ package actions
 
 import (
 	"github.com/Showmax/go-fqdn"
-	"github.com/golang/protobuf/proto"
 	"github.com/shirou/gopsutil/host"
 	"runtime"
 	"strings"
@@ -27,7 +26,7 @@ func (self *GetHostname) Run(
 		return
 	}
 	responder.AddResponse(&actions_proto.DataBlob{
-		String_: proto.String(info.Hostname),
+		String_: info.Hostname,
 	})
 
 	responder.Return()
@@ -47,14 +46,14 @@ func (self *GetPlatformInfo) Run(
 		return
 	}
 	responder.AddResponse(&actions_proto.Uname{
-		System:       proto.String(strings.Title(info.OS)),
-		Fqdn:         proto.String(fqdn.Get()),
-		Architecture: proto.String(runtime.GOARCH),
-		Release:      proto.String(info.Platform),
-		Version:      proto.String(info.PlatformVersion),
-		Kernel:       proto.String(info.KernelVersion),
-		Pep425Tag: proto.String("Golang_" + info.OS + "_" +
-			info.Platform + "_" + info.PlatformVersion),
+		System:       strings.Title(info.OS),
+		Fqdn:         fqdn.Get(),
+		Architecture: runtime.GOARCH,
+		Release:      info.Platform,
+		Version:      info.PlatformVersion,
+		Kernel:       info.KernelVersion,
+		Pep425Tag: "Golang_" + info.OS + "_" +
+			info.Platform + "_" + info.PlatformVersion,
 	})
 
 	responder.Return()

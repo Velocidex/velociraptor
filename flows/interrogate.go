@@ -21,20 +21,23 @@ type Interogate struct{}
 func (self *Interogate) Start(
 	config_obj *config.Config,
 	flow_runner_args *flow_proto.FlowRunnerArgs) (*string, error) {
-	if flow_runner_args.ClientId == nil {
+	if flow_runner_args.ClientId == "" {
 		return nil, errors.New("Client id not provided.")
 	}
-	client_id := *flow_runner_args.ClientId
-
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	flow_id := getNewFlowId(client_id)
-	vql_request := &actions_proto.VQLCollectorArgs{}
+	flow_id := getNewFlowId(flow_runner_args.ClientId)
+	vql_request := &actions_proto.VQLCollectorArgs{
+		Query: []string{
+			"select * from info",
+		},
+	}
+
 	err = db.QueueMessageForClient(
-		config_obj, client_id,
+		config_obj, flow_runner_args.ClientId,
 		flow_id,
 		"VQLClientAction",
 		vql_request, processClientInfo)

@@ -56,30 +56,25 @@ func (self *ClientExecutor) ReadResponse() *crypto_proto.GrrMessage {
 }
 
 func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
-	var response uint64 = 1
 	reply := &crypto_proto.GrrMessage{
 		SessionId:  req.SessionId,
 		RequestId:  req.RequestId,
-		ResponseId: &response,
-		Type:       crypto_proto.GrrMessage_STATUS.Enum(),
-		ClientType: crypto_proto.GrrMessage_VELOCIRAPTOR.Enum(),
+		ResponseId: 1,
+		Type:       crypto_proto.GrrMessage_STATUS,
+		ClientType: crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
-	if req.TaskId != nil {
-		reply.TaskId = req.TaskId
-	}
-
-	error_message := fmt.Sprintf("Client action '%v' not known", *req.Name)
+	reply.TaskId = req.TaskId
 	status := &crypto_proto.GrrStatus{
-		Status:       crypto_proto.GrrStatus_GENERIC_ERROR.Enum(),
-		ErrorMessage: &error_message,
+		Status: crypto_proto.GrrStatus_GENERIC_ERROR,
+		ErrorMessage: fmt.Sprintf(
+			"Client action '%v' not known", req.Name),
 	}
 
 	status_marshalled, err := proto.Marshal(status)
-	args_name := "GrrStatus"
 	if err == nil {
 		reply.Args = status_marshalled
-		reply.ArgsRdfName = &args_name
+		reply.ArgsRdfName = "GrrStatus"
 	}
 
 	return reply
@@ -90,18 +85,13 @@ func (self *ClientExecutor) processRequestPlugin(
 	req *crypto_proto.GrrMessage) {
 
 	// Never serve unauthenticated requests.
-	if req.AuthState != nil &&
-		*req.AuthState != *crypto_proto.GrrMessage_AUTHENTICATED.Enum() {
+	if req.AuthState != crypto_proto.GrrMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
 		self.SendToServer(makeUnknownActionResponse(req))
 		return
 	}
 
-	if req.Name == nil {
-		return
-	}
-
-	plugin, pres := self.plugins[*req.Name]
+	plugin, pres := self.plugins[req.Name]
 	if !pres {
 		self.SendToServer(makeUnknownActionResponse(req))
 		return
@@ -143,7 +133,7 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 
 			// Ignore unauthenticated messages - the
 			// server should never send us those.
-			if *req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
+			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
 				// Each request has its own context.
 				ctx := context.BackgroundFromConfig(config_obj)
 				utils.Debug(req)

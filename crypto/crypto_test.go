@@ -54,8 +54,8 @@ func (self *TestSuite) TestDecryption() {
 			t.Fatal(err)
 		}
 		for _, item := range result.Job {
-			assert.Equal(t, *item.Name, "OMG it's a string")
-			assert.Equal(t, *item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
+			assert.Equal(t, item.Name, "OMG it's a string")
+			assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
 		}
 	}
 
@@ -84,7 +84,7 @@ func (self *TestSuite) TestEncryption() {
 			t.Fatal(err)
 		}
 
-		assert.Equal(t, destination, *result.Source)
+		assert.Equal(t, destination, result.Source)
 		assert.Equal(t, result.Authenticated, true)
 		assert.Equal(t, result.Raw, plain_text)
 	}

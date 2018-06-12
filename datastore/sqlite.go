@@ -191,10 +191,10 @@ func (self *SqliteDataStore) QueueMessageForClient(
 		return err
 	}
 
-	req.Name = &client_action
-	req.SessionId = &flow_id
-	req.RequestId = proto.Uint64(uint64(next_state))
-	req.TaskId = proto.Uint64(uint64(now))
+	req.Name = client_action
+	req.SessionId = flow_id
+	req.RequestId = uint64(next_state)
+	req.TaskId = uint64(now)
 
 	value, err := proto.Marshal(req)
 	if err != nil {
