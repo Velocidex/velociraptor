@@ -5,16 +5,25 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
+message VQLRequest {
+    string VQL = 1;
+    string Name = 2;
+}
+
 message VQLCollectorArgs {
-    repeated string Query = 1 [(sem_type) = {
-            description: "The VQL query to execute on the client.",
+    repeated VQLRequest Query = 2 [(sem_type) = {
+            description: "The VQL queries to execute on the client.",
         }];
 }
 
 message VQLResponse {
-     string Response = 1 [(sem_type) = {
+    string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
     repeated string Columns = 2;
-     string Query = 3;
+    VQLRequest Query = 3;
+}
+
+message ClientInfo {
+    repeated VQLResponse info = 1;
 }

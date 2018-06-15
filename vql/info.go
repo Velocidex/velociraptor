@@ -1,9 +1,17 @@
 package vql
 
 import (
+	"github.com/Showmax/go-fqdn"
 	"github.com/shirou/gopsutil/host"
+	"runtime"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type InfoStat struct {
+	host.InfoStat
+	Fqdn         string
+	Architecture string
+}
 
 func MakeInfoPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{
@@ -13,11 +21,12 @@ func MakeInfoPlugin() vfilter.GenericListPlugin {
 			args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
 			if info, err := host.Info(); err == nil {
-				result = append(result, info)
+				item := InfoStat{*info, fqdn.Get(), runtime.GOARCH}
+				result = append(result, item)
 			}
 
 			return result
 		},
-		RowType: host.InfoStat{},
+		RowType: InfoStat{},
 	}
 }

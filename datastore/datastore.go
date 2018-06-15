@@ -30,7 +30,7 @@ type DataStore interface {
 		flow_id string,
 		client_action string,
 		message proto.Message,
-		next_state uint32) error
+		next_state uint64) error
 
 	// Just grab the whole data of the AFF4 object.
 	GetSubjectData(

@@ -175,7 +175,7 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	flow_id string,
 	client_action string,
 	message proto.Message,
-	next_state uint32) error {
+	next_state uint64) error {
 
 	db_path := getDBPathForClient(*config_obj.Datastore_location, client_id)
 	handle, err := self.getDB(db_path)

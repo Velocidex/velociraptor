@@ -3,6 +3,7 @@ package flows
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -50,7 +51,8 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 			utils.Debug(err)
 			continue
 		}
-		err = cached_flow.impl.ProcessMessage(cached_flow, message)
+		err = cached_flow.impl.ProcessMessage(
+			self.config, cached_flow, message)
 		if err != nil {
 			utils.Debug(err)
 		}
@@ -89,7 +91,9 @@ type Flow interface {
 		config *config.Config,
 		flow_runner_args *flows_proto.FlowRunnerArgs,
 	) (*string, error)
-	ProcessMessage(flow_obj *AFF4FlowObject,
+	ProcessMessage(
+		config *config.Config,
+		flow_obj *AFF4FlowObject,
 		message *crypto_proto.GrrMessage) error
 }
 
@@ -101,6 +105,7 @@ type AFF4FlowObject struct {
 	config       *config.Config
 	runner_args  *flows_proto.FlowRunnerArgs
 	flow_context *flows_proto.FlowContext
+	flow_state   map[string]interface{}
 
 	// The flow implementation has no internal state and uses this
 	// object to contain the flow's state.
@@ -126,6 +131,11 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 	return nil
 }
 
+func (self *AFF4FlowObject) SetState(key string, value interface{}) {
+	self.dirty = true
+	self.flow_state[key] = value
+}
+
 func NewAFF4FlowObject(
 	config *config.Config,
 	runner_args *flows_proto.FlowRunnerArgs) (*AFF4FlowObject, error) {
@@ -134,6 +144,7 @@ func NewAFF4FlowObject(
 		runner_args:  runner_args,
 		flow_context: new(flows_proto.FlowContext),
 	}
+	result.flow_state = make(map[string]interface{})
 
 	// Attach the implementation.
 	impl, ok := GetImpl(runner_args.FlowName)
@@ -175,6 +186,15 @@ func GetAFF4FlowObject(
 		return nil, err
 	}
 
+	serialized_state, pres := data[constants.FLOW_STATE]
+	if pres {
+		err := json.Unmarshal(
+			serialized_state, &result.flow_state)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return result, nil
 }
 
@@ -212,6 +232,13 @@ func SetAFF4FlowObject(
 
 	// This is used for backwards compatibility with GRR's GUI.
 	data[constants.AFF4_TYPE] = []byte("GRRFlow")
+
+	// Serialize the state into the database.
+	value, err = json.Marshal(obj.flow_state)
+	if err != nil {
+		return err
+	}
+	data[constants.FLOW_STATE] = value
 
 	err = db.SetSubjectData(config_obj, urn, data)
 	if err != nil {

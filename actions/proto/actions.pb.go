@@ -30,8 +30,10 @@ It has these top-level messages:
 	Dict
 	EmbeddedRDFValue
 	FileBuffer
+	VQLRequest
 	VQLCollectorArgs
 	VQLResponse
+	ClientInfo
 */
 package proto
 

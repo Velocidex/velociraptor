@@ -30,13 +30,14 @@ func (self *VQLClientAction) Run(
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment
 	// to communicate with the server.
-	env := vfilter.NewDict().Set("responder", responder)
+	env := vfilter.NewDict().Set("responder", responder).Set(
+		"config", ctx.Config)
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for _, query := range arg.Query {
-		vql, err := vfilter.Parse(query)
+		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			responder.RaiseError(err.Error())
 			return

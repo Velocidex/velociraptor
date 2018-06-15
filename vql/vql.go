@@ -16,6 +16,8 @@ import (
 func MakeScope() *vfilter.Scope {
 	return vfilter.NewScope().AppendPlugins(
 		MakePslistPlugin(),
+		MakeInterfacesPlugin(),
+		MakePatritionsPlugin(),
 		MakeUsersPlugin(),
 		MakeInfoPlugin(),
 		MakeConnectionsPlugin(),
