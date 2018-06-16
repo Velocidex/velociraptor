@@ -1,28 +1,9 @@
 package vql
 
 import (
-	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/net"
 	"www.velocidex.com/golang/vfilter"
 )
-
-func MakeUsersPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "users",
-		Function: func(
-			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
-			var result []vfilter.Row
-			if users, err := host.Users(); err == nil {
-				for _, item := range users {
-					result = append(result, item)
-				}
-			}
-			return result
-		},
-		RowType: host.UserStat{},
-	}
-}
 
 func MakeConnectionsPlugin() vfilter.GenericListPlugin {
 	return vfilter.GenericListPlugin{

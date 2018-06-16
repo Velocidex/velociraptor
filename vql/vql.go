@@ -27,5 +27,6 @@ func MakeScope() *vfilter.Scope {
 		MakeUploaderPlugin(),
 	).AddProtocolImpl(
 		_ProcessFieldImpl{},
+		_binaryFieldImpl{},
 	)
 }
