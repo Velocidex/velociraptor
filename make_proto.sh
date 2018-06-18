@@ -3,7 +3,14 @@
 # of the .proto files are modified.
 CWD=$PWD
 
-for i in $CWD/proto/ $CWD/crypto/proto/ $CWD/actions/proto/ $CWD/flows/proto/; do
+for i in $CWD/proto/ $CWD/crypto/proto/ $CWD/actions/proto/ \
+                     $CWD/flows/proto/ ; do
     echo Building protos in $i
     protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD --go_out=$i $i/*.proto
+done
+
+# Build GRPC servers.
+for i in  $CWD/api/proto/ ; do
+    echo Building protos in $i
+    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD $i/*.proto --go_out=plugins=grpc:$i
 done

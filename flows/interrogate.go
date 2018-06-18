@@ -32,20 +32,20 @@ func (self *VInterrogate) Start(
 		return nil, err
 	}
 
-	flow_id := getNewFlowId(flow_obj.Runner_args.ClientId)
+	flow_id := GetNewFlowIdForClient(flow_obj.Runner_args.ClientId)
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
-			"select Client_name, Client_build_time, Client_labels from config",
-			"Client Info"},
+			VQL:  "select Client_name, Client_build_time, Client_labels from config",
+			Name: "Client Info"},
 		&actions_proto.VQLRequest{
-			"select OS, Architecture, Platform, PlatformVersion, " +
+			VQL: "select OS, Architecture, Platform, PlatformVersion, " +
 				"KernelVersion, Fqdn from info()",
-			"System Info"},
+			Name: "System Info"},
 		&actions_proto.VQLRequest{
-			"select ut_type, ut_id, ut_host, ut_user, " +
+			VQL: "select ut_type, ut_id, ut_host, ut_user, " +
 				"timestamp(epoch=ut_tv.tv_sec) as login_time from " +
 				"users() where ut_type =~ 'USER'",
-			"Recent Users"},
+			Name: "Recent Users"},
 	}
 	vql_request := &actions_proto.VQLCollectorArgs{
 		Query: queries,
@@ -69,19 +69,29 @@ func (self *VInterrogate) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
-	err := flow_obj.FailIfError(message)
-	if err != nil {
-		return err
-	}
 
 	switch message.RequestId {
 	case processClientInfo:
-		if message.Type == crypto_proto.GrrMessage_STATUS {
-			self.PostProcess(config_obj, flow_obj)
-			flow_obj.Complete()
+		err := flow_obj.FailIfError(message)
+		if err != nil {
+			return err
+		}
+
+		if flow_obj.IsRequestComplete(message) {
+			defer flow_obj.Complete()
+
+			// The flow is complete - store the client
+			// info from our state into the client's AFF4
+			// object.
+			err := self.StoreClientInfo(config_obj, flow_obj)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 
+		// Retrieve the client info from the flow state and
+		// modify it by adding the response to it.
 		client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
 		defer flow_obj.SetState(client_info)
 
@@ -95,22 +105,28 @@ func (self *VInterrogate) ProcessMessage(
 	return nil
 }
 
-func (self *VInterrogate) PostProcess(
+func (self *VInterrogate) StoreClientInfo(
 	config_obj *config.Config,
-	flow_obj *AFF4FlowObject) {
+	flow_obj *AFF4FlowObject) error {
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
 
 	client_urn := "aff4:/" + flow_obj.Runner_args.ClientId
 	db, err := datastore.GetDB(config_obj)
-	if err == nil {
-		data := make(map[string][]byte)
-		encoded_client_info, err := proto.Marshal(client_info)
-		if err == nil {
-			data[constants.CLIENT_VELOCIRAPTOR_INFO] = encoded_client_info
-			db.SetSubjectData(config_obj, client_urn, data)
-		}
+	if err != nil {
+		return err
 	}
+
+	data := make(map[string][]byte)
+	encoded_client_info, err := proto.Marshal(client_info)
+	if err != nil {
+		return err
+	}
+
+	data[constants.CLIENT_VELOCIRAPTOR_INFO] = encoded_client_info
+	db.SetSubjectData(config_obj, client_urn, data)
+
+	return nil
 }
 
 func init() {

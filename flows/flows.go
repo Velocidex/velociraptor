@@ -66,8 +66,7 @@ func (self *FlowRunner) Close() {
 			continue
 		}
 
-		err := SetAFF4FlowObject(
-			self.config, cached_flow, urn)
+		err := SetAFF4FlowObject(self.config, cached_flow, urn)
 		if err != nil {
 			utils.Debug(err)
 		}
@@ -93,7 +92,11 @@ type Flow interface {
 	) (*string, error)
 
 	// Each message is processed with this method. Note that
-	// messages may be split across client POST operations.
+	// messages may be split across client POST operations. The
+	// flow runner is responsible for saving and restoring the
+	// flow's state, so if the flow requires to maintain state
+	// across POST operations, they should store this state inside
+	// the flow_obj.SetState().
 	ProcessMessage(
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
@@ -131,10 +134,12 @@ func (self *AFF4FlowObject) GetState() proto.Message {
 
 // Complete the flow.
 func (self *AFF4FlowObject) Complete() {
+	self.dirty = true
 	self.flow_context.State = flows_proto.FlowContext_TERMINATED
 }
 
-// Fails the flow if an error occured
+// Fails the flow if an error occured and copy the client's backtrace
+// to the flow.
 func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error {
 	if message.Type == crypto_proto.GrrMessage_STATUS {
 		status, ok := responder.ExtractGrrMessagePayload(
@@ -154,6 +159,11 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 		}
 	}
 	return nil
+}
+
+// Checks if the message represents the last response to the request.
+func (self *AFF4FlowObject) IsRequestComplete(message *crypto_proto.GrrMessage) bool {
+	return message.Type == crypto_proto.GrrMessage_STATUS
 }
 
 func NewAFF4FlowObject(
@@ -203,6 +213,14 @@ func GetAFF4FlowObject(
 	result, err := NewAFF4FlowObject(config_obj, flow_runner_args)
 	if err != nil {
 		return nil, err
+	}
+
+	serialized_flow_context, pres := data[constants.FLOW_CONTEXT]
+	if pres {
+		err := proto.Unmarshal(serialized_flow_context, result.flow_context)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Load the serialized flow state.
@@ -292,6 +310,9 @@ func SetAFF4FlowObject(
 		return err
 	}
 
+	// The object is not dirty any more.
+	obj.dirty = false
+
 	return nil
 }
 
@@ -333,7 +354,7 @@ func StartFlow(
 	return flow_id, nil
 }
 
-func getNewFlowId(client_id string) string {
+func GetNewFlowIdForClient(client_id string) string {
 	result := make([]byte, 8)
 	buf := make([]byte, 4)
 

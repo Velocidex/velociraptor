@@ -78,6 +78,9 @@ type Config struct {
 	// We store local configuration on this file.
 	Config_writeback *string `yaml:"Config.writeback,omitempty"`
 
+	API_bind_address *string `yaml:"API.bind_address"`
+	API_bind_port    *uint32 `yaml:"API.bind_port"`
+
 	Frontend_bind_address *string  `yaml:"Frontend.bind_address"`
 	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port"`
 	Frontend_certificate  *string  `yaml:"Frontend.certificate"`
@@ -99,6 +102,9 @@ func GetDefaultConfig() *Config {
 
 		Frontend_bind_address: proto.String(""),
 		Frontend_bind_port:    &bind_port,
+
+		API_bind_address: proto.String("localhost"),
+		API_bind_port:    proto.Uint32(8888),
 	}
 }
 

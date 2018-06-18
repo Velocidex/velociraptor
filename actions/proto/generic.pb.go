@@ -3,15 +3,21 @@
 
 package proto
 
-import proto1 "github.com/golang/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto1.Marshal
+var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type DataBlob_CompressionType int32
 
@@ -31,33 +37,57 @@ var DataBlob_CompressionType_value = map[string]int32{
 }
 
 func (x DataBlob_CompressionType) String() string {
-	return proto1.EnumName(DataBlob_CompressionType_name, int32(x))
+	return proto.EnumName(DataBlob_CompressionType_name, int32(x))
 }
-func (DataBlob_CompressionType) EnumDescriptor() ([]byte, []int) { return fileDescriptor2, []int{0, 0} }
+func (DataBlob_CompressionType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{0, 0}
+}
 
 // A generic protobuf to deliver some data
 // The data can be a single value a protobuf or a list.
 // Next field: 13
 type DataBlob struct {
-	Integer   int64             `protobuf:"varint,1,opt,name=integer" json:"integer,omitempty"`
+	Integer   int64             `protobuf:"varint,1,opt,name=integer,proto3" json:"integer,omitempty"`
 	Data      []byte            `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	String_   string            `protobuf:"bytes,3,opt,name=string" json:"string,omitempty"`
-	ProtoName string            `protobuf:"bytes,4,opt,name=proto_name,json=protoName" json:"proto_name,omitempty"`
-	None      string            `protobuf:"bytes,5,opt,name=none" json:"none,omitempty"`
-	Boolean   bool              `protobuf:"varint,6,opt,name=boolean" json:"boolean,omitempty"`
-	List      *BlobArray        `protobuf:"bytes,8,opt,name=list" json:"list,omitempty"`
-	Dict      *Dict             `protobuf:"bytes,9,opt,name=dict" json:"dict,omitempty"`
-	RdfValue  *EmbeddedRDFValue `protobuf:"bytes,10,opt,name=rdf_value,json=rdfValue" json:"rdf_value,omitempty"`
-	Float     float32           `protobuf:"fixed32,11,opt,name=float" json:"float,omitempty"`
-	Set       *BlobArray        `protobuf:"bytes,12,opt,name=set" json:"set,omitempty"`
+	String_   string            `protobuf:"bytes,3,opt,name=string,proto3" json:"string,omitempty"`
+	ProtoName string            `protobuf:"bytes,4,opt,name=proto_name,json=protoName,proto3" json:"proto_name,omitempty"`
+	None      string            `protobuf:"bytes,5,opt,name=none,proto3" json:"none,omitempty"`
+	Boolean   bool              `protobuf:"varint,6,opt,name=boolean,proto3" json:"boolean,omitempty"`
+	List      *BlobArray        `protobuf:"bytes,8,opt,name=list,proto3" json:"list,omitempty"`
+	Dict      *Dict             `protobuf:"bytes,9,opt,name=dict,proto3" json:"dict,omitempty"`
+	RdfValue  *EmbeddedRDFValue `protobuf:"bytes,10,opt,name=rdf_value,json=rdfValue,proto3" json:"rdf_value,omitempty"`
+	Float     float32           `protobuf:"fixed32,11,opt,name=float,proto3" json:"float,omitempty"`
+	Set       *BlobArray        `protobuf:"bytes,12,opt,name=set,proto3" json:"set,omitempty"`
 	// How the message_list element is compressed
-	Compression DataBlob_CompressionType `protobuf:"varint,7,opt,name=compression,enum=proto.DataBlob_CompressionType" json:"compression,omitempty"`
+	Compression          DataBlob_CompressionType `protobuf:"varint,7,opt,name=compression,proto3,enum=proto.DataBlob_CompressionType" json:"compression,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
 }
 
-func (m *DataBlob) Reset()                    { *m = DataBlob{} }
-func (m *DataBlob) String() string            { return proto1.CompactTextString(m) }
-func (*DataBlob) ProtoMessage()               {}
-func (*DataBlob) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
+func (m *DataBlob) Reset()         { *m = DataBlob{} }
+func (m *DataBlob) String() string { return proto.CompactTextString(m) }
+func (*DataBlob) ProtoMessage()    {}
+func (*DataBlob) Descriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{0}
+}
+func (m *DataBlob) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DataBlob.Unmarshal(m, b)
+}
+func (m *DataBlob) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DataBlob.Marshal(b, m, deterministic)
+}
+func (dst *DataBlob) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DataBlob.Merge(dst, src)
+}
+func (m *DataBlob) XXX_Size() int {
+	return xxx_messageInfo_DataBlob.Size(m)
+}
+func (m *DataBlob) XXX_DiscardUnknown() {
+	xxx_messageInfo_DataBlob.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DataBlob proto.InternalMessageInfo
 
 func (m *DataBlob) GetInteger() int64 {
 	if m != nil {
@@ -145,13 +175,35 @@ func (m *DataBlob) GetCompression() DataBlob_CompressionType {
 
 // A generic collection of blobs
 type BlobArray struct {
-	Content []*DataBlob `protobuf:"bytes,1,rep,name=content" json:"content,omitempty"`
+	Content              []*DataBlob `protobuf:"bytes,1,rep,name=content,proto3" json:"content,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *BlobArray) Reset()                    { *m = BlobArray{} }
-func (m *BlobArray) String() string            { return proto1.CompactTextString(m) }
-func (*BlobArray) ProtoMessage()               {}
-func (*BlobArray) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
+func (m *BlobArray) Reset()         { *m = BlobArray{} }
+func (m *BlobArray) String() string { return proto.CompactTextString(m) }
+func (*BlobArray) ProtoMessage()    {}
+func (*BlobArray) Descriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{1}
+}
+func (m *BlobArray) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BlobArray.Unmarshal(m, b)
+}
+func (m *BlobArray) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BlobArray.Marshal(b, m, deterministic)
+}
+func (dst *BlobArray) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BlobArray.Merge(dst, src)
+}
+func (m *BlobArray) XXX_Size() int {
+	return xxx_messageInfo_BlobArray.Size(m)
+}
+func (m *BlobArray) XXX_DiscardUnknown() {
+	xxx_messageInfo_BlobArray.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BlobArray proto.InternalMessageInfo
 
 func (m *BlobArray) GetContent() []*DataBlob {
 	if m != nil {
@@ -162,14 +214,36 @@ func (m *BlobArray) GetContent() []*DataBlob {
 
 // A Key Value pair
 type KeyValue struct {
-	K *DataBlob `protobuf:"bytes,1,opt,name=k" json:"k,omitempty"`
-	V *DataBlob `protobuf:"bytes,2,opt,name=v" json:"v,omitempty"`
+	K                    *DataBlob `protobuf:"bytes,1,opt,name=k,proto3" json:"k,omitempty"`
+	V                    *DataBlob `protobuf:"bytes,2,opt,name=v,proto3" json:"v,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *KeyValue) Reset()                    { *m = KeyValue{} }
-func (m *KeyValue) String() string            { return proto1.CompactTextString(m) }
-func (*KeyValue) ProtoMessage()               {}
-func (*KeyValue) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
+func (m *KeyValue) Reset()         { *m = KeyValue{} }
+func (m *KeyValue) String() string { return proto.CompactTextString(m) }
+func (*KeyValue) ProtoMessage()    {}
+func (*KeyValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{2}
+}
+func (m *KeyValue) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
+}
+func (m *KeyValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_KeyValue.Marshal(b, m, deterministic)
+}
+func (dst *KeyValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyValue.Merge(dst, src)
+}
+func (m *KeyValue) XXX_Size() int {
+	return xxx_messageInfo_KeyValue.Size(m)
+}
+func (m *KeyValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_KeyValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KeyValue proto.InternalMessageInfo
 
 func (m *KeyValue) GetK() *DataBlob {
 	if m != nil {
@@ -187,13 +261,35 @@ func (m *KeyValue) GetV() *DataBlob {
 
 // A list of Key Value pairs
 type Dict struct {
-	Dat []*KeyValue `protobuf:"bytes,1,rep,name=dat" json:"dat,omitempty"`
+	Dat                  []*KeyValue `protobuf:"bytes,1,rep,name=dat,proto3" json:"dat,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *Dict) Reset()                    { *m = Dict{} }
-func (m *Dict) String() string            { return proto1.CompactTextString(m) }
-func (*Dict) ProtoMessage()               {}
-func (*Dict) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
+func (m *Dict) Reset()         { *m = Dict{} }
+func (m *Dict) String() string { return proto.CompactTextString(m) }
+func (*Dict) ProtoMessage()    {}
+func (*Dict) Descriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{3}
+}
+func (m *Dict) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Dict.Unmarshal(m, b)
+}
+func (m *Dict) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Dict.Marshal(b, m, deterministic)
+}
+func (dst *Dict) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Dict.Merge(dst, src)
+}
+func (m *Dict) XXX_Size() int {
+	return xxx_messageInfo_Dict.Size(m)
+}
+func (m *Dict) XXX_DiscardUnknown() {
+	xxx_messageInfo_Dict.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Dict proto.InternalMessageInfo
 
 func (m *Dict) GetDat() []*KeyValue {
 	if m != nil {
@@ -204,16 +300,38 @@ func (m *Dict) GetDat() []*KeyValue {
 
 // This is a way to serialize an arbitrary RDFValue.
 type EmbeddedRDFValue struct {
-	EmbeddedAge uint64 `protobuf:"varint,1,opt,name=embedded_age,json=embeddedAge" json:"embedded_age,omitempty"`
-	Name        string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+	EmbeddedAge uint64 `protobuf:"varint,1,opt,name=embedded_age,json=embeddedAge,proto3" json:"embedded_age,omitempty"`
+	Name        string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// retrieve the class for it.
-	Data []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Data                 []byte   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *EmbeddedRDFValue) Reset()                    { *m = EmbeddedRDFValue{} }
-func (m *EmbeddedRDFValue) String() string            { return proto1.CompactTextString(m) }
-func (*EmbeddedRDFValue) ProtoMessage()               {}
-func (*EmbeddedRDFValue) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{4} }
+func (m *EmbeddedRDFValue) Reset()         { *m = EmbeddedRDFValue{} }
+func (m *EmbeddedRDFValue) String() string { return proto.CompactTextString(m) }
+func (*EmbeddedRDFValue) ProtoMessage()    {}
+func (*EmbeddedRDFValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_generic_b8ff667750b48817, []int{4}
+}
+func (m *EmbeddedRDFValue) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_EmbeddedRDFValue.Unmarshal(m, b)
+}
+func (m *EmbeddedRDFValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_EmbeddedRDFValue.Marshal(b, m, deterministic)
+}
+func (dst *EmbeddedRDFValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EmbeddedRDFValue.Merge(dst, src)
+}
+func (m *EmbeddedRDFValue) XXX_Size() int {
+	return xxx_messageInfo_EmbeddedRDFValue.Size(m)
+}
+func (m *EmbeddedRDFValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_EmbeddedRDFValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EmbeddedRDFValue proto.InternalMessageInfo
 
 func (m *EmbeddedRDFValue) GetEmbeddedAge() uint64 {
 	if m != nil {
@@ -237,17 +355,17 @@ func (m *EmbeddedRDFValue) GetData() []byte {
 }
 
 func init() {
-	proto1.RegisterType((*DataBlob)(nil), "proto.DataBlob")
-	proto1.RegisterType((*BlobArray)(nil), "proto.BlobArray")
-	proto1.RegisterType((*KeyValue)(nil), "proto.KeyValue")
-	proto1.RegisterType((*Dict)(nil), "proto.Dict")
-	proto1.RegisterType((*EmbeddedRDFValue)(nil), "proto.EmbeddedRDFValue")
-	proto1.RegisterEnum("proto.DataBlob_CompressionType", DataBlob_CompressionType_name, DataBlob_CompressionType_value)
+	proto.RegisterType((*DataBlob)(nil), "proto.DataBlob")
+	proto.RegisterType((*BlobArray)(nil), "proto.BlobArray")
+	proto.RegisterType((*KeyValue)(nil), "proto.KeyValue")
+	proto.RegisterType((*Dict)(nil), "proto.Dict")
+	proto.RegisterType((*EmbeddedRDFValue)(nil), "proto.EmbeddedRDFValue")
+	proto.RegisterEnum("proto.DataBlob_CompressionType", DataBlob_CompressionType_name, DataBlob_CompressionType_value)
 }
 
-func init() { proto1.RegisterFile("generic.proto", fileDescriptor2) }
+func init() { proto.RegisterFile("generic.proto", fileDescriptor_generic_b8ff667750b48817) }
 
-var fileDescriptor2 = []byte{
+var fileDescriptor_generic_b8ff667750b48817 = []byte{
 	// 567 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0x51, 0x6f, 0xd3, 0x3c,
 	0x14, 0xfd, 0xbc, 0x64, 0x5b, 0x7b, 0xd3, 0x8f, 0x55, 0x16, 0x1a, 0x06, 0x69, 0xcc, 0x8a, 0x86,

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package proto;
+
+message StartFlowRequest {
+    google.protobuf.Any args = 1;
+    string flow_name = 2;
+}
+
+message StartFlowResponse {
+    string flow_id = 1;
+}
+
+
+service API {
+    rpc LaunchFlow(StartFlowRequest) returns (StartFlowResponse) {}
+}

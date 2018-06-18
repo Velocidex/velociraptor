@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"sync/atomic"
 	"time"
+	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flow_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -45,19 +46,32 @@ func validateConfig(configuration *config.Config) error {
 func main() {
 	switch kingpin.Parse() {
 	case "frontend":
-		start_frontend(*config_path)
+		config_obj, err := get_config(*config_path)
+		kingpin.FatalIfError(err, "Unable to load config file")
+		go func() {
+			err := api.StartServer(config_obj)
+			kingpin.FatalIfError(err, "Unable to start API server")
+		}()
+		start_frontend(config_obj)
+
 	case "flow":
-		start_flow(*config_path, *flow_client_id, *flow_name)
+		config_obj, err := get_config(*config_path)
+		kingpin.FatalIfError(err, "Unable to load config file")
+		start_flow(config_obj, *flow_client_id, *flow_name)
 	}
 }
 
-func start_flow(config_path string, client_id string, flow_name string) {
+func get_config(config_path string) (*config.Config, error) {
 	config_obj := config.GetDefaultConfig()
 	err := config.LoadConfig(config_path, config_obj)
 	if err == nil {
 		err = validateConfig(config_obj)
 	}
 
+	return config_obj, err
+}
+
+func start_flow(config_obj *config.Config, client_id string, flow_name string) {
 	flow_runner_args := &flow_proto.FlowRunnerArgs{
 		ClientId: client_id,
 		FlowName: flow_name,
@@ -70,14 +84,7 @@ func start_flow(config_path string, client_id string, flow_name string) {
 	logger.Info("Launched flow %s", *flow_id)
 }
 
-func start_frontend(config_path string) {
-	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(config_path, config_obj)
-	if err == nil {
-		err = validateConfig(config_obj)
-	}
-
-	kingpin.FatalIfError(err, "Unable to load config file")
+func start_frontend(config_obj *config.Config) {
 	server_obj, err := server.NewServer(config_obj)
 	kingpin.FatalIfError(err, "Unable to create server")
 

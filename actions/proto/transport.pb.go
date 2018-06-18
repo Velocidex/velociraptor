@@ -3,15 +3,21 @@
 
 package proto
 
-import proto1 "github.com/golang/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto1.Marshal
+var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // The Velociraptor client sends back the buffer and the filename and
 // the server saves the entire file directly in the file storage
@@ -19,16 +25,38 @@ var _ = math.Inf
 // policies (since the filestore is just a directory on disk with
 // regular files and timestamps).
 type FileBuffer struct {
-	Pathspec *PathSpec `protobuf:"bytes,1,opt,name=pathspec" json:"pathspec,omitempty"`
-	Offset   uint64    `protobuf:"varint,2,opt,name=offset" json:"offset,omitempty"`
-	Data     []byte    `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	FlowId   string    `protobuf:"bytes,4,opt,name=flow_id,json=flowId" json:"flow_id,omitempty"`
+	Pathspec             *PathSpec `protobuf:"bytes,1,opt,name=pathspec,proto3" json:"pathspec,omitempty"`
+	Offset               uint64    `protobuf:"varint,2,opt,name=offset,proto3" json:"offset,omitempty"`
+	Data                 []byte    `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	FlowId               string    `protobuf:"bytes,4,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *FileBuffer) Reset()                    { *m = FileBuffer{} }
-func (m *FileBuffer) String() string            { return proto1.CompactTextString(m) }
-func (*FileBuffer) ProtoMessage()               {}
-func (*FileBuffer) Descriptor() ([]byte, []int) { return fileDescriptor3, []int{0} }
+func (m *FileBuffer) Reset()         { *m = FileBuffer{} }
+func (m *FileBuffer) String() string { return proto.CompactTextString(m) }
+func (*FileBuffer) ProtoMessage()    {}
+func (*FileBuffer) Descriptor() ([]byte, []int) {
+	return fileDescriptor_transport_2090015141f4474b, []int{0}
+}
+func (m *FileBuffer) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FileBuffer.Unmarshal(m, b)
+}
+func (m *FileBuffer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FileBuffer.Marshal(b, m, deterministic)
+}
+func (dst *FileBuffer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileBuffer.Merge(dst, src)
+}
+func (m *FileBuffer) XXX_Size() int {
+	return xxx_messageInfo_FileBuffer.Size(m)
+}
+func (m *FileBuffer) XXX_DiscardUnknown() {
+	xxx_messageInfo_FileBuffer.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FileBuffer proto.InternalMessageInfo
 
 func (m *FileBuffer) GetPathspec() *PathSpec {
 	if m != nil {
@@ -59,12 +87,12 @@ func (m *FileBuffer) GetFlowId() string {
 }
 
 func init() {
-	proto1.RegisterType((*FileBuffer)(nil), "proto.FileBuffer")
+	proto.RegisterType((*FileBuffer)(nil), "proto.FileBuffer")
 }
 
-func init() { proto1.RegisterFile("transport.proto", fileDescriptor3) }
+func init() { proto.RegisterFile("transport.proto", fileDescriptor_transport_2090015141f4474b) }
 
-var fileDescriptor3 = []byte{
+var fileDescriptor_transport_2090015141f4474b = []byte{
 	// 244 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x3c, 0x8e, 0x41, 0x4a, 0x2c, 0x31,
 	0x10, 0x86, 0xc9, 0x7b, 0x6d, 0xab, 0x51, 0x19, 0xc8, 0xc6, 0x66, 0x56, 0x51, 0x37, 0x2d, 0x42,

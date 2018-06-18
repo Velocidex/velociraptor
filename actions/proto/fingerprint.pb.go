@@ -3,15 +3,21 @@
 
 package proto
 
-import proto1 "github.com/golang/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto1.Marshal
+var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // The fingerprinting methods the fingerprinter can be asked to perform.
 // If none is given, all are applied.
@@ -32,9 +38,11 @@ var FingerprintTuple_Type_value = map[string]int32{
 }
 
 func (x FingerprintTuple_Type) String() string {
-	return proto1.EnumName(FingerprintTuple_Type_name, int32(x))
+	return proto.EnumName(FingerprintTuple_Type_name, int32(x))
 }
-func (FingerprintTuple_Type) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{2, 0} }
+func (FingerprintTuple_Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{2, 0}
+}
 
 // The hash functions that a fingerprinting method may employ.
 // If none is given, all applicable ones are used.
@@ -58,25 +66,49 @@ var FingerprintTuple_HashType_value = map[string]int32{
 }
 
 func (x FingerprintTuple_HashType) String() string {
-	return proto1.EnumName(FingerprintTuple_HashType_name, int32(x))
+	return proto.EnumName(FingerprintTuple_HashType_name, int32(x))
 }
-func (FingerprintTuple_HashType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{2, 1} }
+func (FingerprintTuple_HashType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{2, 1}
+}
 
 type Hash struct {
-	Sha256       []byte                    `protobuf:"bytes,1,opt,name=sha256,proto3" json:"sha256,omitempty"`
-	Sha1         []byte                    `protobuf:"bytes,2,opt,name=sha1,proto3" json:"sha1,omitempty"`
-	Md5          []byte                    `protobuf:"bytes,3,opt,name=md5,proto3" json:"md5,omitempty"`
-	PecoffSha1   []byte                    `protobuf:"bytes,4,opt,name=pecoff_sha1,json=pecoffSha1,proto3" json:"pecoff_sha1,omitempty"`
-	PecoffMd5    []byte                    `protobuf:"bytes,5,opt,name=pecoff_md5,json=pecoffMd5,proto3" json:"pecoff_md5,omitempty"`
-	PecoffSha256 []byte                    `protobuf:"bytes,7,opt,name=pecoff_sha256,json=pecoffSha256,proto3" json:"pecoff_sha256,omitempty"`
-	SignedData   []*AuthenticodeSignedData `protobuf:"bytes,6,rep,name=signed_data,json=signedData" json:"signed_data,omitempty"`
-	NumBytes     uint64                    `protobuf:"varint,8,opt,name=num_bytes,json=numBytes" json:"num_bytes,omitempty"`
+	Sha256               []byte                    `protobuf:"bytes,1,opt,name=sha256,proto3" json:"sha256,omitempty"`
+	Sha1                 []byte                    `protobuf:"bytes,2,opt,name=sha1,proto3" json:"sha1,omitempty"`
+	Md5                  []byte                    `protobuf:"bytes,3,opt,name=md5,proto3" json:"md5,omitempty"`
+	PecoffSha1           []byte                    `protobuf:"bytes,4,opt,name=pecoff_sha1,json=pecoffSha1,proto3" json:"pecoff_sha1,omitempty"`
+	PecoffMd5            []byte                    `protobuf:"bytes,5,opt,name=pecoff_md5,json=pecoffMd5,proto3" json:"pecoff_md5,omitempty"`
+	PecoffSha256         []byte                    `protobuf:"bytes,7,opt,name=pecoff_sha256,json=pecoffSha256,proto3" json:"pecoff_sha256,omitempty"`
+	SignedData           []*AuthenticodeSignedData `protobuf:"bytes,6,rep,name=signed_data,json=signedData,proto3" json:"signed_data,omitempty"`
+	NumBytes             uint64                    `protobuf:"varint,8,opt,name=num_bytes,json=numBytes,proto3" json:"num_bytes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *Hash) Reset()                    { *m = Hash{} }
-func (m *Hash) String() string            { return proto1.CompactTextString(m) }
-func (*Hash) ProtoMessage()               {}
-func (*Hash) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (m *Hash) Reset()         { *m = Hash{} }
+func (m *Hash) String() string { return proto.CompactTextString(m) }
+func (*Hash) ProtoMessage()    {}
+func (*Hash) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{0}
+}
+func (m *Hash) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Hash.Unmarshal(m, b)
+}
+func (m *Hash) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Hash.Marshal(b, m, deterministic)
+}
+func (dst *Hash) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Hash.Merge(dst, src)
+}
+func (m *Hash) XXX_Size() int {
+	return xxx_messageInfo_Hash.Size(m)
+}
+func (m *Hash) XXX_DiscardUnknown() {
+	xxx_messageInfo_Hash.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Hash proto.InternalMessageInfo
 
 func (m *Hash) GetSha256() []byte {
 	if m != nil {
@@ -135,15 +167,37 @@ func (m *Hash) GetNumBytes() uint64 {
 }
 
 type AuthenticodeSignedData struct {
-	Revision    uint64 `protobuf:"varint,1,opt,name=revision" json:"revision,omitempty"`
-	CertType    uint64 `protobuf:"varint,2,opt,name=cert_type,json=certType" json:"cert_type,omitempty"`
-	Certificate []byte `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	Revision             uint64   `protobuf:"varint,1,opt,name=revision,proto3" json:"revision,omitempty"`
+	CertType             uint64   `protobuf:"varint,2,opt,name=cert_type,json=certType,proto3" json:"cert_type,omitempty"`
+	Certificate          []byte   `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AuthenticodeSignedData) Reset()                    { *m = AuthenticodeSignedData{} }
-func (m *AuthenticodeSignedData) String() string            { return proto1.CompactTextString(m) }
-func (*AuthenticodeSignedData) ProtoMessage()               {}
-func (*AuthenticodeSignedData) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (m *AuthenticodeSignedData) Reset()         { *m = AuthenticodeSignedData{} }
+func (m *AuthenticodeSignedData) String() string { return proto.CompactTextString(m) }
+func (*AuthenticodeSignedData) ProtoMessage()    {}
+func (*AuthenticodeSignedData) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{1}
+}
+func (m *AuthenticodeSignedData) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AuthenticodeSignedData.Unmarshal(m, b)
+}
+func (m *AuthenticodeSignedData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AuthenticodeSignedData.Marshal(b, m, deterministic)
+}
+func (dst *AuthenticodeSignedData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthenticodeSignedData.Merge(dst, src)
+}
+func (m *AuthenticodeSignedData) XXX_Size() int {
+	return xxx_messageInfo_AuthenticodeSignedData.Size(m)
+}
+func (m *AuthenticodeSignedData) XXX_DiscardUnknown() {
+	xxx_messageInfo_AuthenticodeSignedData.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AuthenticodeSignedData proto.InternalMessageInfo
 
 func (m *AuthenticodeSignedData) GetRevision() uint64 {
 	if m != nil {
@@ -167,14 +221,36 @@ func (m *AuthenticodeSignedData) GetCertificate() []byte {
 }
 
 type FingerprintTuple struct {
-	FpType  FingerprintTuple_Type       `protobuf:"varint,1,opt,name=fp_type,json=fpType,enum=proto.FingerprintTuple_Type" json:"fp_type,omitempty"`
-	Hashers []FingerprintTuple_HashType `protobuf:"varint,2,rep,packed,name=hashers,enum=proto.FingerprintTuple_HashType" json:"hashers,omitempty"`
+	FpType               FingerprintTuple_Type       `protobuf:"varint,1,opt,name=fp_type,json=fpType,proto3,enum=proto.FingerprintTuple_Type" json:"fp_type,omitempty"`
+	Hashers              []FingerprintTuple_HashType `protobuf:"varint,2,rep,packed,name=hashers,proto3,enum=proto.FingerprintTuple_HashType" json:"hashers,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
 }
 
-func (m *FingerprintTuple) Reset()                    { *m = FingerprintTuple{} }
-func (m *FingerprintTuple) String() string            { return proto1.CompactTextString(m) }
-func (*FingerprintTuple) ProtoMessage()               {}
-func (*FingerprintTuple) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (m *FingerprintTuple) Reset()         { *m = FingerprintTuple{} }
+func (m *FingerprintTuple) String() string { return proto.CompactTextString(m) }
+func (*FingerprintTuple) ProtoMessage()    {}
+func (*FingerprintTuple) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{2}
+}
+func (m *FingerprintTuple) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FingerprintTuple.Unmarshal(m, b)
+}
+func (m *FingerprintTuple) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FingerprintTuple.Marshal(b, m, deterministic)
+}
+func (dst *FingerprintTuple) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintTuple.Merge(dst, src)
+}
+func (m *FingerprintTuple) XXX_Size() int {
+	return xxx_messageInfo_FingerprintTuple.Size(m)
+}
+func (m *FingerprintTuple) XXX_DiscardUnknown() {
+	xxx_messageInfo_FingerprintTuple.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FingerprintTuple proto.InternalMessageInfo
 
 func (m *FingerprintTuple) GetFpType() FingerprintTuple_Type {
 	if m != nil {
@@ -192,15 +268,37 @@ func (m *FingerprintTuple) GetHashers() []FingerprintTuple_HashType {
 
 // Request fingerprints for a file.
 type FingerprintRequest struct {
-	Pathspec    *PathSpec           `protobuf:"bytes,1,opt,name=pathspec" json:"pathspec,omitempty"`
-	Tuples      []*FingerprintTuple `protobuf:"bytes,2,rep,name=tuples" json:"tuples,omitempty"`
-	MaxFilesize uint64              `protobuf:"varint,3,opt,name=max_filesize,json=maxFilesize" json:"max_filesize,omitempty"`
+	Pathspec             *PathSpec           `protobuf:"bytes,1,opt,name=pathspec,proto3" json:"pathspec,omitempty"`
+	Tuples               []*FingerprintTuple `protobuf:"bytes,2,rep,name=tuples,proto3" json:"tuples,omitempty"`
+	MaxFilesize          uint64              `protobuf:"varint,3,opt,name=max_filesize,json=maxFilesize,proto3" json:"max_filesize,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
 }
 
-func (m *FingerprintRequest) Reset()                    { *m = FingerprintRequest{} }
-func (m *FingerprintRequest) String() string            { return proto1.CompactTextString(m) }
-func (*FingerprintRequest) ProtoMessage()               {}
-func (*FingerprintRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (m *FingerprintRequest) Reset()         { *m = FingerprintRequest{} }
+func (m *FingerprintRequest) String() string { return proto.CompactTextString(m) }
+func (*FingerprintRequest) ProtoMessage()    {}
+func (*FingerprintRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{3}
+}
+func (m *FingerprintRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FingerprintRequest.Unmarshal(m, b)
+}
+func (m *FingerprintRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FingerprintRequest.Marshal(b, m, deterministic)
+}
+func (dst *FingerprintRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintRequest.Merge(dst, src)
+}
+func (m *FingerprintRequest) XXX_Size() int {
+	return xxx_messageInfo_FingerprintRequest.Size(m)
+}
+func (m *FingerprintRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_FingerprintRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FingerprintRequest proto.InternalMessageInfo
 
 func (m *FingerprintRequest) GetPathspec() *PathSpec {
 	if m != nil {
@@ -225,16 +323,38 @@ func (m *FingerprintRequest) GetMaxFilesize() uint64 {
 
 // Response data for file hashes and signature blobs.
 type FingerprintResponse struct {
-	MatchingTypes []FingerprintTuple_Type `protobuf:"varint,1,rep,packed,name=matching_types,json=matchingTypes,enum=proto.FingerprintTuple_Type" json:"matching_types,omitempty"`
-	Pathspec      *PathSpec               `protobuf:"bytes,3,opt,name=pathspec" json:"pathspec,omitempty"`
-	Hash          *Hash                   `protobuf:"bytes,4,opt,name=hash" json:"hash,omitempty"`
-	BytesRead     uint64                  `protobuf:"varint,5,opt,name=bytes_read,json=bytesRead" json:"bytes_read,omitempty"`
+	MatchingTypes        []FingerprintTuple_Type `protobuf:"varint,1,rep,packed,name=matching_types,json=matchingTypes,proto3,enum=proto.FingerprintTuple_Type" json:"matching_types,omitempty"`
+	Pathspec             *PathSpec               `protobuf:"bytes,3,opt,name=pathspec,proto3" json:"pathspec,omitempty"`
+	Hash                 *Hash                   `protobuf:"bytes,4,opt,name=hash,proto3" json:"hash,omitempty"`
+	BytesRead            uint64                  `protobuf:"varint,5,opt,name=bytes_read,json=bytesRead,proto3" json:"bytes_read,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
+	XXX_unrecognized     []byte                  `json:"-"`
+	XXX_sizecache        int32                   `json:"-"`
 }
 
-func (m *FingerprintResponse) Reset()                    { *m = FingerprintResponse{} }
-func (m *FingerprintResponse) String() string            { return proto1.CompactTextString(m) }
-func (*FingerprintResponse) ProtoMessage()               {}
-func (*FingerprintResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (m *FingerprintResponse) Reset()         { *m = FingerprintResponse{} }
+func (m *FingerprintResponse) String() string { return proto.CompactTextString(m) }
+func (*FingerprintResponse) ProtoMessage()    {}
+func (*FingerprintResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{4}
+}
+func (m *FingerprintResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_FingerprintResponse.Unmarshal(m, b)
+}
+func (m *FingerprintResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_FingerprintResponse.Marshal(b, m, deterministic)
+}
+func (dst *FingerprintResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintResponse.Merge(dst, src)
+}
+func (m *FingerprintResponse) XXX_Size() int {
+	return xxx_messageInfo_FingerprintResponse.Size(m)
+}
+func (m *FingerprintResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_FingerprintResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FingerprintResponse proto.InternalMessageInfo
 
 func (m *FingerprintResponse) GetMatchingTypes() []FingerprintTuple_Type {
 	if m != nil {
@@ -265,17 +385,39 @@ func (m *FingerprintResponse) GetBytesRead() uint64 {
 }
 
 type BufferReference struct {
-	Offset   uint64    `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
-	Length   uint64    `protobuf:"varint,2,opt,name=length" json:"length,omitempty"`
-	Callback string    `protobuf:"bytes,3,opt,name=callback" json:"callback,omitempty"`
-	Data     []byte    `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
-	Pathspec *PathSpec `protobuf:"bytes,6,opt,name=pathspec" json:"pathspec,omitempty"`
+	Offset               uint64    `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
+	Length               uint64    `protobuf:"varint,2,opt,name=length,proto3" json:"length,omitempty"`
+	Callback             string    `protobuf:"bytes,3,opt,name=callback,proto3" json:"callback,omitempty"`
+	Data                 []byte    `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
+	Pathspec             *PathSpec `protobuf:"bytes,6,opt,name=pathspec,proto3" json:"pathspec,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *BufferReference) Reset()                    { *m = BufferReference{} }
-func (m *BufferReference) String() string            { return proto1.CompactTextString(m) }
-func (*BufferReference) ProtoMessage()               {}
-func (*BufferReference) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (m *BufferReference) Reset()         { *m = BufferReference{} }
+func (m *BufferReference) String() string { return proto.CompactTextString(m) }
+func (*BufferReference) ProtoMessage()    {}
+func (*BufferReference) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fingerprint_627c0050b1e96b56, []int{5}
+}
+func (m *BufferReference) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BufferReference.Unmarshal(m, b)
+}
+func (m *BufferReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BufferReference.Marshal(b, m, deterministic)
+}
+func (dst *BufferReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BufferReference.Merge(dst, src)
+}
+func (m *BufferReference) XXX_Size() int {
+	return xxx_messageInfo_BufferReference.Size(m)
+}
+func (m *BufferReference) XXX_DiscardUnknown() {
+	xxx_messageInfo_BufferReference.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BufferReference proto.InternalMessageInfo
 
 func (m *BufferReference) GetOffset() uint64 {
 	if m != nil {
@@ -313,19 +455,19 @@ func (m *BufferReference) GetPathspec() *PathSpec {
 }
 
 func init() {
-	proto1.RegisterType((*Hash)(nil), "proto.Hash")
-	proto1.RegisterType((*AuthenticodeSignedData)(nil), "proto.AuthenticodeSignedData")
-	proto1.RegisterType((*FingerprintTuple)(nil), "proto.FingerprintTuple")
-	proto1.RegisterType((*FingerprintRequest)(nil), "proto.FingerprintRequest")
-	proto1.RegisterType((*FingerprintResponse)(nil), "proto.FingerprintResponse")
-	proto1.RegisterType((*BufferReference)(nil), "proto.BufferReference")
-	proto1.RegisterEnum("proto.FingerprintTuple_Type", FingerprintTuple_Type_name, FingerprintTuple_Type_value)
-	proto1.RegisterEnum("proto.FingerprintTuple_HashType", FingerprintTuple_HashType_name, FingerprintTuple_HashType_value)
+	proto.RegisterType((*Hash)(nil), "proto.Hash")
+	proto.RegisterType((*AuthenticodeSignedData)(nil), "proto.AuthenticodeSignedData")
+	proto.RegisterType((*FingerprintTuple)(nil), "proto.FingerprintTuple")
+	proto.RegisterType((*FingerprintRequest)(nil), "proto.FingerprintRequest")
+	proto.RegisterType((*FingerprintResponse)(nil), "proto.FingerprintResponse")
+	proto.RegisterType((*BufferReference)(nil), "proto.BufferReference")
+	proto.RegisterEnum("proto.FingerprintTuple_Type", FingerprintTuple_Type_name, FingerprintTuple_Type_value)
+	proto.RegisterEnum("proto.FingerprintTuple_HashType", FingerprintTuple_HashType_name, FingerprintTuple_HashType_value)
 }
 
-func init() { proto1.RegisterFile("fingerprint.proto", fileDescriptor1) }
+func init() { proto.RegisterFile("fingerprint.proto", fileDescriptor_fingerprint_627c0050b1e96b56) }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor_fingerprint_627c0050b1e96b56 = []byte{
 	// 915 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x4d, 0x6f, 0xdb, 0x46,
 	0x13, 0x0e, 0x2d, 0x46, 0x96, 0x87, 0xfe, 0xd0, 0xbb, 0x2f, 0x90, 0x08, 0x6e, 0x83, 0x6c, 0x55,

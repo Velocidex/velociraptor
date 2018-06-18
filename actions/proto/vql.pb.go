@@ -3,25 +3,53 @@
 
 package proto
 
-import proto1 "github.com/golang/protobuf/proto"
+import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto1.Marshal
+var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
 type VQLRequest struct {
-	VQL  string `protobuf:"bytes,1,opt,name=VQL" json:"VQL,omitempty"`
-	Name string `protobuf:"bytes,2,opt,name=Name" json:"Name,omitempty"`
+	VQL                  string   `protobuf:"bytes,1,opt,name=VQL,proto3" json:"VQL,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *VQLRequest) Reset()                    { *m = VQLRequest{} }
-func (m *VQLRequest) String() string            { return proto1.CompactTextString(m) }
-func (*VQLRequest) ProtoMessage()               {}
-func (*VQLRequest) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{0} }
+func (m *VQLRequest) Reset()         { *m = VQLRequest{} }
+func (m *VQLRequest) String() string { return proto.CompactTextString(m) }
+func (*VQLRequest) ProtoMessage()    {}
+func (*VQLRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vql_6c540b6d40c6caac, []int{0}
+}
+func (m *VQLRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_VQLRequest.Unmarshal(m, b)
+}
+func (m *VQLRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_VQLRequest.Marshal(b, m, deterministic)
+}
+func (dst *VQLRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLRequest.Merge(dst, src)
+}
+func (m *VQLRequest) XXX_Size() int {
+	return xxx_messageInfo_VQLRequest.Size(m)
+}
+func (m *VQLRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_VQLRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VQLRequest proto.InternalMessageInfo
 
 func (m *VQLRequest) GetVQL() string {
 	if m != nil {
@@ -38,13 +66,35 @@ func (m *VQLRequest) GetName() string {
 }
 
 type VQLCollectorArgs struct {
-	Query []*VQLRequest `protobuf:"bytes,2,rep,name=Query" json:"Query,omitempty"`
+	Query                []*VQLRequest `protobuf:"bytes,2,rep,name=Query,proto3" json:"Query,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
+	XXX_unrecognized     []byte        `json:"-"`
+	XXX_sizecache        int32         `json:"-"`
 }
 
-func (m *VQLCollectorArgs) Reset()                    { *m = VQLCollectorArgs{} }
-func (m *VQLCollectorArgs) String() string            { return proto1.CompactTextString(m) }
-func (*VQLCollectorArgs) ProtoMessage()               {}
-func (*VQLCollectorArgs) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{1} }
+func (m *VQLCollectorArgs) Reset()         { *m = VQLCollectorArgs{} }
+func (m *VQLCollectorArgs) String() string { return proto.CompactTextString(m) }
+func (*VQLCollectorArgs) ProtoMessage()    {}
+func (*VQLCollectorArgs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vql_6c540b6d40c6caac, []int{1}
+}
+func (m *VQLCollectorArgs) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_VQLCollectorArgs.Unmarshal(m, b)
+}
+func (m *VQLCollectorArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_VQLCollectorArgs.Marshal(b, m, deterministic)
+}
+func (dst *VQLCollectorArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLCollectorArgs.Merge(dst, src)
+}
+func (m *VQLCollectorArgs) XXX_Size() int {
+	return xxx_messageInfo_VQLCollectorArgs.Size(m)
+}
+func (m *VQLCollectorArgs) XXX_DiscardUnknown() {
+	xxx_messageInfo_VQLCollectorArgs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VQLCollectorArgs proto.InternalMessageInfo
 
 func (m *VQLCollectorArgs) GetQuery() []*VQLRequest {
 	if m != nil {
@@ -54,15 +104,37 @@ func (m *VQLCollectorArgs) GetQuery() []*VQLRequest {
 }
 
 type VQLResponse struct {
-	Response string      `protobuf:"bytes,1,opt,name=Response" json:"Response,omitempty"`
-	Columns  []string    `protobuf:"bytes,2,rep,name=Columns" json:"Columns,omitempty"`
-	Query    *VQLRequest `protobuf:"bytes,3,opt,name=Query" json:"Query,omitempty"`
+	Response             string      `protobuf:"bytes,1,opt,name=Response,proto3" json:"Response,omitempty"`
+	Columns              []string    `protobuf:"bytes,2,rep,name=Columns,proto3" json:"Columns,omitempty"`
+	Query                *VQLRequest `protobuf:"bytes,3,opt,name=Query,proto3" json:"Query,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
+	XXX_unrecognized     []byte      `json:"-"`
+	XXX_sizecache        int32       `json:"-"`
 }
 
-func (m *VQLResponse) Reset()                    { *m = VQLResponse{} }
-func (m *VQLResponse) String() string            { return proto1.CompactTextString(m) }
-func (*VQLResponse) ProtoMessage()               {}
-func (*VQLResponse) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{2} }
+func (m *VQLResponse) Reset()         { *m = VQLResponse{} }
+func (m *VQLResponse) String() string { return proto.CompactTextString(m) }
+func (*VQLResponse) ProtoMessage()    {}
+func (*VQLResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vql_6c540b6d40c6caac, []int{2}
+}
+func (m *VQLResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_VQLResponse.Unmarshal(m, b)
+}
+func (m *VQLResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_VQLResponse.Marshal(b, m, deterministic)
+}
+func (dst *VQLResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLResponse.Merge(dst, src)
+}
+func (m *VQLResponse) XXX_Size() int {
+	return xxx_messageInfo_VQLResponse.Size(m)
+}
+func (m *VQLResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_VQLResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_VQLResponse proto.InternalMessageInfo
 
 func (m *VQLResponse) GetResponse() string {
 	if m != nil {
@@ -86,13 +158,35 @@ func (m *VQLResponse) GetQuery() *VQLRequest {
 }
 
 type ClientInfo struct {
-	Info []*VQLResponse `protobuf:"bytes,1,rep,name=info" json:"info,omitempty"`
+	Info                 []*VQLResponse `protobuf:"bytes,1,rep,name=info,proto3" json:"info,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
 }
 
-func (m *ClientInfo) Reset()                    { *m = ClientInfo{} }
-func (m *ClientInfo) String() string            { return proto1.CompactTextString(m) }
-func (*ClientInfo) ProtoMessage()               {}
-func (*ClientInfo) Descriptor() ([]byte, []int) { return fileDescriptor4, []int{3} }
+func (m *ClientInfo) Reset()         { *m = ClientInfo{} }
+func (m *ClientInfo) String() string { return proto.CompactTextString(m) }
+func (*ClientInfo) ProtoMessage()    {}
+func (*ClientInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_vql_6c540b6d40c6caac, []int{3}
+}
+func (m *ClientInfo) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ClientInfo.Unmarshal(m, b)
+}
+func (m *ClientInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ClientInfo.Marshal(b, m, deterministic)
+}
+func (dst *ClientInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientInfo.Merge(dst, src)
+}
+func (m *ClientInfo) XXX_Size() int {
+	return xxx_messageInfo_ClientInfo.Size(m)
+}
+func (m *ClientInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClientInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClientInfo proto.InternalMessageInfo
 
 func (m *ClientInfo) GetInfo() []*VQLResponse {
 	if m != nil {
@@ -102,15 +196,15 @@ func (m *ClientInfo) GetInfo() []*VQLResponse {
 }
 
 func init() {
-	proto1.RegisterType((*VQLRequest)(nil), "proto.VQLRequest")
-	proto1.RegisterType((*VQLCollectorArgs)(nil), "proto.VQLCollectorArgs")
-	proto1.RegisterType((*VQLResponse)(nil), "proto.VQLResponse")
-	proto1.RegisterType((*ClientInfo)(nil), "proto.ClientInfo")
+	proto.RegisterType((*VQLRequest)(nil), "proto.VQLRequest")
+	proto.RegisterType((*VQLCollectorArgs)(nil), "proto.VQLCollectorArgs")
+	proto.RegisterType((*VQLResponse)(nil), "proto.VQLResponse")
+	proto.RegisterType((*ClientInfo)(nil), "proto.ClientInfo")
 }
 
-func init() { proto1.RegisterFile("vql.proto", fileDescriptor4) }
+func init() { proto.RegisterFile("vql.proto", fileDescriptor_vql_6c540b6d40c6caac) }
 
-var fileDescriptor4 = []byte{
+var fileDescriptor_vql_6c540b6d40c6caac = []byte{
 	// 323 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x8f, 0xbf, 0x4e, 0xf3, 0x30,
 	0x14, 0xc5, 0x95, 0xfe, 0xf9, 0x3e, 0x7a, 0xbb, 0x14, 0x0f, 0x28, 0x62, 0x40, 0x56, 0x07, 0x28,
