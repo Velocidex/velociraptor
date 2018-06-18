@@ -3,10 +3,10 @@ package flows
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"path"
 	"strings"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -89,8 +89,11 @@ func NewFlowRunner(config *config.Config, db datastore.DataStore) *FlowRunner {
 type Flow interface {
 	Start(
 		config *config.Config,
-		flow_runner_args *flows_proto.FlowRunnerArgs,
+		flow_obj *AFF4FlowObject,
 	) (*string, error)
+
+	// Each message is processed with this method. Note that
+	// messages may be split across client POST operations.
 	ProcessMessage(
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
@@ -103,23 +106,45 @@ type AFF4FlowObject struct {
 	dirty bool
 
 	config       *config.Config
-	runner_args  *flows_proto.FlowRunnerArgs
+	Runner_args  *flows_proto.FlowRunnerArgs
 	flow_context *flows_proto.FlowContext
-	flow_state   map[string]interface{}
+
+	// An opaque place for flows to store state. If the flow wants
+	// to use the state they can set it in Start() and the runner
+	// will ensure it gets serialized and unserialized when
+	// required.
+	flow_state proto.Message
 
 	// The flow implementation has no internal state and uses this
 	// object to contain the flow's state.
 	impl Flow
 }
 
+func (self *AFF4FlowObject) SetState(value proto.Message) {
+	self.dirty = true
+	self.flow_state = value
+}
+
+func (self *AFF4FlowObject) GetState() proto.Message {
+	return self.flow_state
+}
+
+// Complete the flow.
+func (self *AFF4FlowObject) Complete() {
+	self.flow_context.State = flows_proto.FlowContext_TERMINATED
+}
+
 // Fails the flow if an error occured
 func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error {
-	utils.Debug(message)
 	if message.Type == crypto_proto.GrrMessage_STATUS {
 		status, ok := responder.ExtractGrrMessagePayload(
 			message).(*crypto_proto.GrrStatus)
 		if ok {
-			utils.Debug(status)
+			// If the status is OK then we do not fail the flow.
+			if status.Status == crypto_proto.GrrStatus_OK {
+				return nil
+			}
+
 			self.flow_context.State = flows_proto.FlowContext_ERROR
 			self.flow_context.Status = status.ErrorMessage
 			self.flow_context.Backtrace = status.Backtrace
@@ -131,20 +156,14 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 	return nil
 }
 
-func (self *AFF4FlowObject) SetState(key string, value interface{}) {
-	self.dirty = true
-	self.flow_state[key] = value
-}
-
 func NewAFF4FlowObject(
 	config *config.Config,
 	runner_args *flows_proto.FlowRunnerArgs) (*AFF4FlowObject, error) {
 	result := AFF4FlowObject{
 		config:       config,
-		runner_args:  runner_args,
+		Runner_args:  runner_args,
 		flow_context: new(flows_proto.FlowContext),
 	}
-	result.flow_state = make(map[string]interface{})
 
 	// Attach the implementation.
 	impl, ok := GetImpl(runner_args.FlowName)
@@ -186,13 +205,22 @@ func GetAFF4FlowObject(
 		return nil, err
 	}
 
+	// Load the serialized flow state.
 	serialized_state, pres := data[constants.FLOW_STATE]
 	if pres {
-		err := json.Unmarshal(
-			serialized_state, &result.flow_state)
+		tmp := &flows_proto.VelociraptorFlowState{}
+		err := proto.Unmarshal(serialized_state, tmp)
 		if err != nil {
 			return nil, err
 		}
+
+		var state ptypes.DynamicAny
+		err = ptypes.UnmarshalAny(tmp.Payload, &state)
+		if err != nil {
+			return nil, err
+		}
+
+		result.flow_state = state.Message
 	}
 
 	return result, nil
@@ -209,11 +237,11 @@ func SetAFF4FlowObject(
 	}
 
 	data := make(map[string][]byte)
-	if obj.runner_args == nil {
+	if obj.Runner_args == nil {
 		return errors.New("Flow runner must be populated.")
 	}
 
-	value, err := proto.Marshal(obj.runner_args)
+	value, err := proto.Marshal(obj.Runner_args)
 	if err != nil {
 		return err
 	}
@@ -234,11 +262,21 @@ func SetAFF4FlowObject(
 	data[constants.AFF4_TYPE] = []byte("GRRFlow")
 
 	// Serialize the state into the database.
-	value, err = json.Marshal(obj.flow_state)
-	if err != nil {
-		return err
+	if obj.flow_state != nil {
+		any_state, err := ptypes.MarshalAny(obj.flow_state)
+		if err != nil {
+			return err
+		}
+		state := &flows_proto.VelociraptorFlowState{
+			Payload: any_state,
+		}
+		value, err = proto.Marshal(state)
+		if err != nil {
+			return err
+		}
+
+		data[constants.FLOW_STATE] = value
 	}
-	data[constants.FLOW_STATE] = value
 
 	err = db.SetSubjectData(config_obj, urn, data)
 	if err != nil {
@@ -282,7 +320,7 @@ func StartFlow(
 		return nil, err
 	}
 
-	flow_id, err := flow_obj.impl.Start(config_obj, flow_obj.runner_args)
+	flow_id, err := flow_obj.impl.Start(config_obj, flow_obj)
 	if err != nil {
 		return nil, err
 	}

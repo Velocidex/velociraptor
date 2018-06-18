@@ -2,6 +2,7 @@
 
 // These are the messages used in GRR encrypted communication protocol.
 syntax = "proto3";
+import "google/protobuf/any.proto";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
@@ -177,4 +178,13 @@ message FlowRunnerArgs {
       "a reference to the original here.",
       label: HIDDEN
     }];
+}
+
+
+// This is a short lived protobuf to hold various flow state
+// information only valid between the start and end of the flow. It is
+// used to keep state over multiple client round trips.
+message VelociraptorFlowState {
+    string type = 1;
+    google.protobuf.Any payload = 2;
 }
