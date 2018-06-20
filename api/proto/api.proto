@@ -1,19 +1,47 @@
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/descriptor.proto";
+
+import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 
 package proto;
 
 message StartFlowRequest {
-    google.protobuf.Any args = 1;
-    string flow_name = 2;
+    string client_id = 1;
+
+    // Interrogate: This flow is designed to gather information about the host.
+    VInterrogateArgs interrogate = 2;
 }
 
 message StartFlowResponse {
     string flow_id = 1;
+    string error = 2;
+}
+
+message TypeDescriptor {
+    string type_name = 1;
+    google.protobuf.DescriptorProto descriptor = 2;
+}
+
+message Types {
+    repeated TypeDescriptor descriptors = 1;
 }
 
 
 service API {
-    rpc LaunchFlow(StartFlowRequest) returns (StartFlowResponse) {}
+    rpc LaunchFlow(StartFlowRequest) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/v1/LaunchFlow",
+            body: "*"
+        };
+    }
+
+    rpc DescribeLaunchFlow(google.protobuf.Empty) returns (Types) {
+        option (google.api.http) = {
+            post: "/v1/DescribeLaunchFlow",
+            body: "*"
+        };
+    }
 }

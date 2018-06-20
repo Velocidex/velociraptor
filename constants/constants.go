@@ -9,4 +9,7 @@ var (
 	AFF4_TYPE        string = "aff4:type"
 
 	CLIENT_VELOCIRAPTOR_INFO string = "aff4:velociraptor_info"
+
+	// The GUI uses this as the client index.
+	CLIENT_INDEX_URN string = "aff4:/client_index/"
 )

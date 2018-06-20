@@ -6,7 +6,10 @@ package proto
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import any "github.com/golang/protobuf/ptypes/any"
+import descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+import empty "github.com/golang/protobuf/ptypes/empty"
+import _ "google.golang.org/genproto/googleapis/api/annotations"
+import proto1 "www.velocidex.com/golang/velociraptor/flows/proto"
 
 import (
 	context "golang.org/x/net/context"
@@ -25,18 +28,19 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type StartFlowRequest struct {
-	Args                 *any.Any `protobuf:"bytes,1,opt,name=args,proto3" json:"args,omitempty"`
-	FlowName             string   `protobuf:"bytes,2,opt,name=flow_name,json=flowName,proto3" json:"flow_name,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	// Interrogate: This flow is designed to gather information about the host.
+	Interrogate          *proto1.VInterrogateArgs `protobuf:"bytes,2,opt,name=interrogate,proto3" json:"interrogate,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
 }
 
 func (m *StartFlowRequest) Reset()         { *m = StartFlowRequest{} }
 func (m *StartFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*StartFlowRequest) ProtoMessage()    {}
 func (*StartFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_c48234de4d9d29e3, []int{0}
+	return fileDescriptor_api_4f43308635ac0249, []int{0}
 }
 func (m *StartFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowRequest.Unmarshal(m, b)
@@ -56,22 +60,23 @@ func (m *StartFlowRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StartFlowRequest proto.InternalMessageInfo
 
-func (m *StartFlowRequest) GetArgs() *any.Any {
+func (m *StartFlowRequest) GetClientId() string {
 	if m != nil {
-		return m.Args
-	}
-	return nil
-}
-
-func (m *StartFlowRequest) GetFlowName() string {
-	if m != nil {
-		return m.FlowName
+		return m.ClientId
 	}
 	return ""
 }
 
+func (m *StartFlowRequest) GetInterrogate() *proto1.VInterrogateArgs {
+	if m != nil {
+		return m.Interrogate
+	}
+	return nil
+}
+
 type StartFlowResponse struct {
 	FlowId               string   `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	Error                string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -81,7 +86,7 @@ func (m *StartFlowResponse) Reset()         { *m = StartFlowResponse{} }
 func (m *StartFlowResponse) String() string { return proto.CompactTextString(m) }
 func (*StartFlowResponse) ProtoMessage()    {}
 func (*StartFlowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_c48234de4d9d29e3, []int{1}
+	return fileDescriptor_api_4f43308635ac0249, []int{1}
 }
 func (m *StartFlowResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowResponse.Unmarshal(m, b)
@@ -108,9 +113,102 @@ func (m *StartFlowResponse) GetFlowId() string {
 	return ""
 }
 
+func (m *StartFlowResponse) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
+type TypeDescriptor struct {
+	TypeName             string                      `protobuf:"bytes,1,opt,name=type_name,json=typeName,proto3" json:"type_name,omitempty"`
+	Descriptor_          *descriptor.DescriptorProto `protobuf:"bytes,2,opt,name=descriptor,proto3" json:"descriptor,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *TypeDescriptor) Reset()         { *m = TypeDescriptor{} }
+func (m *TypeDescriptor) String() string { return proto.CompactTextString(m) }
+func (*TypeDescriptor) ProtoMessage()    {}
+func (*TypeDescriptor) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_4f43308635ac0249, []int{2}
+}
+func (m *TypeDescriptor) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TypeDescriptor.Unmarshal(m, b)
+}
+func (m *TypeDescriptor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TypeDescriptor.Marshal(b, m, deterministic)
+}
+func (dst *TypeDescriptor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TypeDescriptor.Merge(dst, src)
+}
+func (m *TypeDescriptor) XXX_Size() int {
+	return xxx_messageInfo_TypeDescriptor.Size(m)
+}
+func (m *TypeDescriptor) XXX_DiscardUnknown() {
+	xxx_messageInfo_TypeDescriptor.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TypeDescriptor proto.InternalMessageInfo
+
+func (m *TypeDescriptor) GetTypeName() string {
+	if m != nil {
+		return m.TypeName
+	}
+	return ""
+}
+
+func (m *TypeDescriptor) GetDescriptor_() *descriptor.DescriptorProto {
+	if m != nil {
+		return m.Descriptor_
+	}
+	return nil
+}
+
+type Types struct {
+	Descriptors          []*TypeDescriptor `protobuf:"bytes,1,rep,name=descriptors,proto3" json:"descriptors,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *Types) Reset()         { *m = Types{} }
+func (m *Types) String() string { return proto.CompactTextString(m) }
+func (*Types) ProtoMessage()    {}
+func (*Types) Descriptor() ([]byte, []int) {
+	return fileDescriptor_api_4f43308635ac0249, []int{3}
+}
+func (m *Types) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Types.Unmarshal(m, b)
+}
+func (m *Types) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Types.Marshal(b, m, deterministic)
+}
+func (dst *Types) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Types.Merge(dst, src)
+}
+func (m *Types) XXX_Size() int {
+	return xxx_messageInfo_Types.Size(m)
+}
+func (m *Types) XXX_DiscardUnknown() {
+	xxx_messageInfo_Types.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Types proto.InternalMessageInfo
+
+func (m *Types) GetDescriptors() []*TypeDescriptor {
+	if m != nil {
+		return m.Descriptors
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*StartFlowRequest)(nil), "proto.StartFlowRequest")
 	proto.RegisterType((*StartFlowResponse)(nil), "proto.StartFlowResponse")
+	proto.RegisterType((*TypeDescriptor)(nil), "proto.TypeDescriptor")
+	proto.RegisterType((*Types)(nil), "proto.Types")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -126,6 +224,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type APIClient interface {
 	LaunchFlow(ctx context.Context, in *StartFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
+	DescribeLaunchFlow(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Types, error)
 }
 
 type aPIClient struct {
@@ -145,9 +244,19 @@ func (c *aPIClient) LaunchFlow(ctx context.Context, in *StartFlowRequest, opts .
 	return out, nil
 }
 
+func (c *aPIClient) DescribeLaunchFlow(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Types, error) {
+	out := new(Types)
+	err := c.cc.Invoke(ctx, "/proto.API/DescribeLaunchFlow", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // APIServer is the server API for API service.
 type APIServer interface {
 	LaunchFlow(context.Context, *StartFlowRequest) (*StartFlowResponse, error)
+	DescribeLaunchFlow(context.Context, *empty.Empty) (*Types, error)
 }
 
 func RegisterAPIServer(s *grpc.Server, srv APIServer) {
@@ -172,6 +281,24 @@ func _API_LaunchFlow_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_DescribeLaunchFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).DescribeLaunchFlow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/DescribeLaunchFlow",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).DescribeLaunchFlow(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _API_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "proto.API",
 	HandlerType: (*APIServer)(nil),
@@ -180,26 +307,44 @@ var _API_serviceDesc = grpc.ServiceDesc{
 			MethodName: "LaunchFlow",
 			Handler:    _API_LaunchFlow_Handler,
 		},
+		{
+			MethodName: "DescribeLaunchFlow",
+			Handler:    _API_DescribeLaunchFlow_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "api.proto",
 }
 
-func init() { proto.RegisterFile("api.proto", fileDescriptor_api_c48234de4d9d29e3) }
+func init() { proto.RegisterFile("api.proto", fileDescriptor_api_4f43308635ac0249) }
 
-var fileDescriptor_api_c48234de4d9d29e3 = []byte{
-	// 203 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4c, 0x2c, 0xc8, 0xd4,
-	0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x52, 0x92, 0xe9, 0xf9, 0xf9, 0xe9, 0x39,
-	0xa9, 0xfa, 0x60, 0x5e, 0x52, 0x69, 0x9a, 0x7e, 0x62, 0x5e, 0x25, 0x44, 0x85, 0x52, 0x24, 0x97,
-	0x40, 0x70, 0x49, 0x62, 0x51, 0x89, 0x5b, 0x4e, 0x7e, 0x79, 0x50, 0x6a, 0x61, 0x69, 0x6a, 0x71,
-	0x89, 0x90, 0x06, 0x17, 0x4b, 0x62, 0x51, 0x7a, 0xb1, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0xb7, 0x91,
-	0x88, 0x1e, 0x44, 0xb7, 0x1e, 0x4c, 0xb7, 0x9e, 0x63, 0x5e, 0x65, 0x10, 0x58, 0x85, 0x90, 0x34,
-	0x17, 0x67, 0x5a, 0x4e, 0x7e, 0x79, 0x7c, 0x5e, 0x62, 0x6e, 0xaa, 0x04, 0x93, 0x02, 0xa3, 0x06,
-	0x67, 0x10, 0x07, 0x48, 0xc0, 0x2f, 0x31, 0x37, 0x55, 0x49, 0x87, 0x4b, 0x10, 0xc9, 0xe8, 0xe2,
-	0x82, 0xfc, 0xbc, 0xe2, 0x54, 0x21, 0x71, 0x2e, 0x76, 0xb0, 0x8e, 0xcc, 0x14, 0xb0, 0xf1, 0x9c,
-	0x41, 0x6c, 0x20, 0xae, 0x67, 0x8a, 0x91, 0x07, 0x17, 0xb3, 0x63, 0x80, 0xa7, 0x90, 0x23, 0x17,
-	0x97, 0x4f, 0x62, 0x69, 0x5e, 0x72, 0x06, 0x48, 0x97, 0x90, 0x38, 0xc4, 0x52, 0x3d, 0x74, 0x27,
-	0x4a, 0x49, 0x60, 0x4a, 0x40, 0x2c, 0x50, 0x62, 0x48, 0x62, 0x03, 0x4b, 0x19, 0x03, 0x02, 0x00,
-	0x00, 0xff, 0xff, 0xdc, 0x6a, 0x24, 0x06, 0x08, 0x01, 0x00, 0x00,
+var fileDescriptor_api_4f43308635ac0249 = []byte{
+	// 422 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x52, 0xd1, 0x6e, 0xd3, 0x30,
+	0x14, 0x55, 0x36, 0x75, 0xd0, 0x5b, 0x34, 0x81, 0x81, 0xad, 0xb4, 0x3c, 0x04, 0x3f, 0x55, 0x7b,
+	0x88, 0x45, 0x79, 0x40, 0x4c, 0x42, 0xda, 0x10, 0x20, 0x55, 0x42, 0x68, 0x0a, 0x88, 0x07, 0x24,
+	0x34, 0xb9, 0xc9, 0x5d, 0x30, 0x4a, 0x6c, 0x63, 0xbb, 0x0b, 0x7d, 0xe5, 0x17, 0xf8, 0x21, 0xfe,
+	0x81, 0x5f, 0xe0, 0x43, 0x90, 0xe3, 0x94, 0x64, 0xed, 0x53, 0x72, 0xef, 0x3d, 0xf7, 0x9c, 0x73,
+	0x8f, 0x0c, 0x43, 0xae, 0x45, 0xa2, 0x8d, 0x72, 0x8a, 0x0c, 0x9a, 0xcf, 0xe4, 0x71, 0xa1, 0x54,
+	0x51, 0x22, 0xe3, 0x5a, 0x30, 0x2e, 0xa5, 0x72, 0xdc, 0x09, 0x25, 0x6d, 0x00, 0x4d, 0xa6, 0xed,
+	0xb4, 0xa9, 0x96, 0xab, 0x2b, 0x86, 0x95, 0x76, 0xeb, 0x76, 0x18, 0x6f, 0x0f, 0x73, 0xb4, 0x99,
+	0x11, 0xda, 0x29, 0xd3, 0x22, 0x5e, 0xd6, 0x75, 0x9d, 0x5c, 0x63, 0xa9, 0x32, 0x91, 0xe3, 0x8f,
+	0x24, 0x53, 0x15, 0x2b, 0x54, 0xc9, 0x65, 0xc1, 0x42, 0xd3, 0x70, 0x0f, 0x66, 0x57, 0xa5, 0xaa,
+	0x6d, 0xa0, 0x09, 0xff, 0x61, 0x9d, 0x7e, 0x83, 0xbb, 0x1f, 0x1c, 0x37, 0xee, 0x6d, 0xa9, 0xea,
+	0x14, 0xbf, 0xaf, 0xd0, 0x3a, 0x32, 0x85, 0x61, 0x56, 0x0a, 0x94, 0xee, 0x52, 0xe4, 0xe3, 0x28,
+	0x8e, 0x66, 0xc3, 0xf4, 0x76, 0x68, 0x2c, 0x72, 0xf2, 0x02, 0x46, 0x42, 0x3a, 0x34, 0x46, 0x15,
+	0xdc, 0xe1, 0x78, 0x2f, 0x8e, 0x66, 0xa3, 0xf9, 0x71, 0x60, 0x4b, 0x3e, 0x2d, 0xba, 0xd1, 0xb9,
+	0x29, 0x6c, 0xda, 0xc7, 0xd2, 0x57, 0x70, 0xaf, 0xa7, 0x65, 0xb5, 0x92, 0x16, 0xc9, 0x31, 0xdc,
+	0xf2, 0x7e, 0x3a, 0xa9, 0x03, 0x5f, 0x2e, 0x72, 0xf2, 0x00, 0x06, 0x7e, 0xd3, 0x34, 0x12, 0xc3,
+	0x34, 0x14, 0x54, 0xc1, 0xe1, 0xc7, 0xb5, 0xc6, 0xd7, 0xff, 0x63, 0xf0, 0x6e, 0xdd, 0x5a, 0xe3,
+	0xa5, 0xe4, 0x15, 0x6e, 0xdc, 0xfa, 0xc6, 0x7b, 0x5e, 0x21, 0x39, 0x03, 0xe8, 0x12, 0x6b, 0xcd,
+	0xc6, 0x49, 0x08, 0x35, 0xd9, 0x84, 0x9a, 0x74, 0x6c, 0x17, 0xbe, 0x95, 0xf6, 0x76, 0xe8, 0x19,
+	0x0c, 0xbc, 0xa0, 0x25, 0xcf, 0x61, 0xd4, 0xb5, 0xed, 0x38, 0x8a, 0xf7, 0x67, 0xa3, 0xf9, 0xc3,
+	0xf6, 0xf0, 0x9b, 0x9e, 0xd2, 0x3e, 0x72, 0xfe, 0x3b, 0x82, 0xfd, 0xf3, 0x8b, 0x05, 0xf9, 0x0c,
+	0xf0, 0x8e, 0xaf, 0x64, 0xf6, 0xd5, 0xdf, 0x4f, 0x36, 0x91, 0x6d, 0xa7, 0x3f, 0x19, 0xef, 0x0e,
+	0x42, 0x54, 0xf4, 0xd1, 0xcf, 0x3f, 0x7f, 0x7f, 0xed, 0xdd, 0xa7, 0x87, 0xec, 0xfa, 0x29, 0xeb,
+	0xa8, 0x4e, 0xa3, 0x13, 0xf2, 0x05, 0x48, 0x90, 0x5f, 0x62, 0x4f, 0xe3, 0x68, 0xe7, 0xd2, 0x37,
+	0xfe, 0x6d, 0x4d, 0xee, 0xf4, 0x5c, 0x5b, 0xfa, 0xa4, 0xa1, 0x9d, 0xd2, 0x23, 0x4f, 0xbb, 0xcb,
+	0x72, 0x1a, 0x9d, 0x2c, 0x0f, 0x1a, 0xfc, 0xb3, 0x7f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xdb, 0xce,
+	0x3c, 0xdc, 0xdc, 0x02, 0x00, 0x00,
 }

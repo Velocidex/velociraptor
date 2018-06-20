@@ -35,7 +35,11 @@ func TestStructParser(t *testing.T) {
 
 	struct_parser := NewStructParser("TestStruct", 10)
 	struct_parser.AddParser("Field1",
-		&ParseAtOffset{2, "", profile.types["unsigned long long"]})
+		&ParseAtOffset{
+			offset: 2,
+			name:   "",
+			parser: profile.types["unsigned long long"],
+		})
 
 	base_obj := BaseObject{
 		reader: reader,
@@ -64,11 +68,17 @@ func TestNestedStructParser(t *testing.T) {
 
 	struct_parser := NewStructParser("NestedStruct", 10)
 	struct_parser.AddParser("NestedField",
-		&ParseAtOffset{2, "", profile.types["unsigned short"]})
+		&ParseAtOffset{
+			offset: 2,
+			name:   "",
+			parser: profile.types["unsigned short"]})
 
 	struct_parser_2 := NewStructParser("TestStruct", 10)
 	struct_parser_2.AddParser("Field1",
-		&ParseAtOffset{2, "", struct_parser})
+		&ParseAtOffset{
+			offset: 2,
+			name:   "",
+			parser: struct_parser})
 
 	base_obj := BaseObject{
 		reader: reader,

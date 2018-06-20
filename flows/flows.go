@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"path"
-	"strings"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -89,6 +87,7 @@ type Flow interface {
 	Start(
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
+		args proto.Message,
 	) (*string, error)
 
 	// Each message is processed with this method. Note that
@@ -136,6 +135,7 @@ func (self *AFF4FlowObject) GetState() proto.Message {
 func (self *AFF4FlowObject) Complete() {
 	self.dirty = true
 	self.flow_context.State = flows_proto.FlowContext_TERMINATED
+	self.flow_state = nil
 }
 
 // Fails the flow if an error occured and copy the client's backtrace
@@ -301,15 +301,6 @@ func SetAFF4FlowObject(
 		return err
 	}
 
-	data = make(map[string][]byte)
-	dir, name := path.Split(urn)
-	index_predicate := "index:dir/" + name
-	data[index_predicate] = []byte("X")
-	err = db.SetSubjectData(config_obj, strings.TrimRight(dir, "/"), data)
-	if err != nil {
-		return err
-	}
-
 	// The object is not dirty any more.
 	obj.dirty = false
 
@@ -331,7 +322,13 @@ func GetImpl(name string) (Flow, bool) {
 
 func StartFlow(
 	config_obj *config.Config,
-	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
+	flow_runner_args *flows_proto.FlowRunnerArgs,
+	args proto.Message) (*string, error) {
+
+	if flow_runner_args.ClientId == "" {
+		return nil, errors.New("Client id not provided.")
+	}
+
 	if flow_runner_args.FlowName == "" {
 		return nil, errors.New("No flow name")
 	}
@@ -341,7 +338,7 @@ func StartFlow(
 		return nil, err
 	}
 
-	flow_id, err := flow_obj.impl.Start(config_obj, flow_obj)
+	flow_id, err := flow_obj.impl.Start(config_obj, flow_obj, args)
 	if err != nil {
 		return nil, err
 	}

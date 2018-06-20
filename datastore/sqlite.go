@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	utils "www.velocidex.com/golang/velociraptor/testing"
@@ -41,6 +42,25 @@ func (self CachedDB) Size() int {
 	return 1
 }
 
+// Ensure the Database file is properly initialized.
+func EnsureDB(handle *sql.DB) error {
+	statement, err := handle.Prepare(`CREATE TABLE IF NOT EXISTS tbl (
+              subject TEXT NOT NULL,
+              predicate TEXT NOT NULL,
+              timestamp BIG INTEGER NOT NULL,
+              value BLOB)`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (self *SqliteDataStore) getDB(db_path string) (*sql.DB, error) {
 	handle, pres := self.cache.Get(db_path)
 	if pres {
@@ -48,6 +68,10 @@ func (self *SqliteDataStore) getDB(db_path string) (*sql.DB, error) {
 
 	} else {
 		handle, err := sql.Open("sqlite3", db_path)
+		if err != nil {
+			return nil, err
+		}
+		err = EnsureDB(handle)
 		if err != nil {
 			return nil, err
 		}
@@ -75,6 +99,10 @@ func getDBPathForURN(base string, urn string) (string, error) {
 		return getDBPathForClient(base, components[1]), nil
 	}
 
+	if strings.HasPrefix(urn, constants.CLIENT_INDEX_URN) {
+		return getDBPathForClient(base, components[1]), nil
+	}
+
 	return "", errors.New("Unknown URN mapping")
 }
 
@@ -88,8 +116,8 @@ func (self *SqliteDataStore) GetClientTasks(
 	config *config.Config,
 	client_id string) ([]*crypto_proto.GrrMessage, error) {
 	var result []*crypto_proto.GrrMessage
-	now := self.clock.Now().UTC().UnixNano()
-	next_timestamp := self.clock.Now().Add(time.Second * 10).UTC().UnixNano()
+	now := self.clock.Now().UTC().UnixNano() / 1000
+	next_timestamp := self.clock.Now().Add(time.Second*10).UTC().UnixNano() / 1000
 
 	db_path := getDBPathForClient(*config.Datastore_location, client_id)
 	handle, err := self.getDB(db_path)
@@ -183,7 +211,7 @@ func (self *SqliteDataStore) QueueMessageForClient(
 		return err
 	}
 
-	now := self.clock.Now().UTC().UnixNano()
+	now := self.clock.Now().UTC().UnixNano() / 1000
 	subject := fmt.Sprintf("aff4:/%s/%s", client_id, "tasks")
 	predicate := fmt.Sprintf("task:%d", now)
 	req, err := responder.NewRequest(message)
@@ -207,6 +235,7 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	if err != nil {
 		return err
 	}
+	defer statement.Close()
 
 	_, err = statement.Exec(
 		subject, predicate, now, value)
@@ -260,8 +289,6 @@ func (self *SqliteDataStore) SetSubjectData(
 	urn string,
 	data map[string][]byte) error {
 
-	utils.Debug(urn)
-
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
 		return err
@@ -272,18 +299,59 @@ func (self *SqliteDataStore) SetSubjectData(
 		return err
 	}
 
-	now := self.clock.Now().UTC().UnixNano()
-
+	now := self.clock.Now().UTC().UnixNano() / 1000
 	statement, err := handle.Prepare(
-		`insert into tbl (subject, predicate, timestamp, value)
-                   values (?, ?, ?, ?)`)
+		`insert or replace into tbl
+                   (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}
+	defer statement.Close()
 
 	for predicate, value := range data {
 		_, err := statement.Exec(
 			urn, predicate, now, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Now update the index.
+	statement.Exec(
+		path.Dir(urn), "index:dir/"+path.Base(urn), 0, "X")
+
+	return nil
+}
+
+func (self *SqliteDataStore) SetIndex(
+	config_obj *config.Config,
+	index_urn string,
+	entity string,
+	keywords []string) error {
+
+	db_path, err := getDBPathForURN(*config_obj.Datastore_location, index_urn)
+	if err != nil {
+		return err
+	}
+	utils.Debug(db_path)
+	handle, err := self.getDB(db_path)
+	if err != nil {
+		return err
+	}
+
+	statement, err := handle.Prepare(
+		`insert or replace into tbl
+                   (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	now := self.clock.Now().UTC().UnixNano() / 1000
+	for _, keyword := range keywords {
+		_, err := statement.Exec(
+			path.Join(index_urn, strings.ToLower(keyword)),
+			"kw_index:"+entity, now, "")
 		if err != nil {
 			return err
 		}

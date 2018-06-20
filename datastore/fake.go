@@ -57,6 +57,22 @@ func (self *FakeDatastore) GetSubjectData(
 	return data, nil
 }
 
+func (self *FakeDatastore) SetIndex(
+	config_obj *config.Config,
+	index_urn string,
+	entity string,
+	keywords []string) error {
+
+	data := make(map[string][]byte)
+	data[entity] = []byte("X")
+
+	for _, keyword := range keywords {
+		self.data[index_urn+keyword] = data
+	}
+
+	return nil
+}
+
 func init() {
 	db := FakeDatastore{
 		data: make(map[string]map[string][]byte),

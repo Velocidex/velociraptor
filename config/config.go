@@ -75,21 +75,24 @@ type Config struct {
 	Client_private_key *string     `yaml:"Client.private_key,omitempty"`
 	Client_server_urls StringArray `yaml:"Client.server_urls,omitempty"`
 
-	// We store local configuration on this file.
+	// We store local configuration in this file.
 	Config_writeback *string `yaml:"Config.writeback,omitempty"`
 
-	API_bind_address *string `yaml:"API.bind_address"`
-	API_bind_port    *uint32 `yaml:"API.bind_port"`
+	// GRPC API endpoint.
+	API_bind_address       *string `yaml:"API.bind_address,omitempty"`
+	API_bind_port          *uint32 `yaml:"API.bind_port,omitempty"`
+	API_proxy_bind_address *string `yaml:"API.proxy_bind_address,omitempty"`
+	API_proxy_bind_port    *uint32 `yaml:"API.proxy_bind_port,omitempty"`
 
-	Frontend_bind_address *string  `yaml:"Frontend.bind_address"`
-	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port"`
-	Frontend_certificate  *string  `yaml:"Frontend.certificate"`
+	Frontend_bind_address *string  `yaml:"Frontend.bind_address,omitempty"`
+	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port,omitempty"`
+	Frontend_certificate  *string  `yaml:"Frontend.certificate,omitempty"`
 
-	Frontend_private_key *string `yaml:"PrivateKeys.server_key"`
+	Frontend_private_key *string `yaml:"PrivateKeys.server_key,omitempty"`
 
 	// DataStore parameters.
-	Datastore_implementation *string `yaml:"Datastore.implementation"`
-	Datastore_location       *string `yaml:"Datastore.location"`
+	Datastore_implementation *string `yaml:"Datastore.implementation,omitempty"`
+	Datastore_location       *string `yaml:"Datastore.location,omitempty"`
 }
 
 func GetDefaultConfig() *Config {
@@ -103,8 +106,10 @@ func GetDefaultConfig() *Config {
 		Frontend_bind_address: proto.String(""),
 		Frontend_bind_port:    &bind_port,
 
-		API_bind_address: proto.String("localhost"),
-		API_bind_port:    proto.Uint32(8888),
+		API_bind_address:       proto.String("localhost"),
+		API_bind_port:          proto.Uint32(8888),
+		API_proxy_bind_address: proto.String("localhost"),
+		API_proxy_bind_port:    proto.Uint32(8889),
 	}
 }
 

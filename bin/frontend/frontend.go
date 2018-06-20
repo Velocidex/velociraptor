@@ -14,9 +14,6 @@ import (
 	"time"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/flows"
-	flow_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -30,6 +27,10 @@ var (
 	flow_client_id = flow.Arg("client_id", "The client ID to launch.").
 			Required().String()
 	flow_name = flow.Arg("flow_name", "The name of the flow to launch.").
+			Required().String()
+
+	api_command   = kingpin.Command("api", "Call an API method.")
+	api_call_name = api_command.Arg("method", "The method name to call.").
 			Required().String()
 
 	healthy int32
@@ -52,12 +53,21 @@ func main() {
 			err := api.StartServer(config_obj)
 			kingpin.FatalIfError(err, "Unable to start API server")
 		}()
+		go func() {
+			err := api.StartHTTPProxy(config_obj)
+			kingpin.FatalIfError(err, "Unable to start HTTP Proxy server")
+		}()
+
 		start_frontend(config_obj)
 
 	case "flow":
 		config_obj, err := get_config(*config_path)
 		kingpin.FatalIfError(err, "Unable to load config file")
 		start_flow(config_obj, *flow_client_id, *flow_name)
+	case "api":
+		config_obj, err := get_config(*config_path)
+		kingpin.FatalIfError(err, "Unable to load config file")
+		call_api(config_obj, *api_call_name)
 	}
 }
 
@@ -72,16 +82,20 @@ func get_config(config_path string) (*config.Config, error) {
 }
 
 func start_flow(config_obj *config.Config, client_id string, flow_name string) {
-	flow_runner_args := &flow_proto.FlowRunnerArgs{
-		ClientId: client_id,
-		FlowName: flow_name,
-	}
+	/*	api_server := api.ApiServer{config_obj}
+		res, err := api_server.LaunchFlow(nil,
 
-	flow_id, err := flows.StartFlow(config_obj, flow_runner_args)
-	kingpin.FatalIfError(err, "Unable to start flow")
+		flow_runner_args := &api_proto.StartFlowRequest{
+			ClientId: client_id,
+			FlowName: flow_name,
+		}
 
-	logger := logging.NewLogger(config_obj)
-	logger.Info("Launched flow %s", *flow_id)
+		flow_id, err := flows.StartFlow(config_obj, flow_runner_args)
+		kingpin.FatalIfError(err, "Unable to start flow")
+
+		logger := logging.NewLogger(config_obj)
+		logger.Info("Launched flow %s", *flow_id)
+	*/
 }
 
 func start_frontend(config_obj *config.Config) {
@@ -205,4 +219,8 @@ func logging_handler(server_obj *server.Server) func(http.Handler) http.Handler 
 			next.ServeHTTP(w, r)
 		})
 	}
+}
+
+func call_api(config_obj *config.Config, method string) {
+
 }

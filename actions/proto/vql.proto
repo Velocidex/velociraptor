@@ -24,6 +24,34 @@ message VQLResponse {
     VQLRequest Query = 3;
 }
 
+
+// FIXME: We replicate a small subset of GRR's elaborate knowledgebase
+// protos here because the GUI API plugins use this to construct the
+// GRR APIs. When we re-implement the API plugins, refactor this into
+// a more sane structure.
+message User {
+    string username = 1;
+}
+
+message Knowledgebase {
+    repeated User users = 32;
+}
+
 message ClientInfo {
     repeated VQLResponse info = 1;
+
+    // GRR Keeps these separated so they can be searched on.
+    uint64 last_timestamp = 2;
+    string hostname = 3;
+    string fqdn = 4;
+    string system = 5;
+    string release = 6;
+    string architecture = 7;
+    string usernames = 8;
+    string mac_address = 9;
+    string ip_address = 10;
+    uint64 ping = 11;
+    string client_version = 12;
+    string client_name = 13;
+    Knowledgebase knowledgebase = 14;
 }

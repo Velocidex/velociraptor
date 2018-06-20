@@ -43,6 +43,14 @@ type DataStore interface {
 		urn string,
 		data map[string][]byte) error
 
+	// Update the posting list index. Searching for any of the
+	// keywords will return the entity urn.
+	SetIndex(
+		config_obj *config.Config,
+		index_urn string,
+		entity string,
+		keywords []string) error
+
 	// Called to close all db handles etc. Not thread safe.
 	Close()
 }

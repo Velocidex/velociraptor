@@ -70,7 +70,8 @@ type MyTestFlow struct{}
 
 func (self *MyTestFlow) Start(
 	config_obj *config.Config,
-	flow_obj *AFF4FlowObject) (*string, error) {
+	flow_obj *AFF4FlowObject,
+	args proto.Message) (*string, error) {
 
 	flow_obj.SetState(&actions_proto.ClientInfo{})
 
@@ -117,7 +118,7 @@ func TestFlowRunner(t *testing.T) {
 		FlowName: "MyTestFlow",
 		ClientId: "C.0",
 	}
-	flow_urn, err := StartFlow(config_obj, runner_args)
+	flow_urn, err := StartFlow(config_obj, runner_args, nil)
 	assert.NoError(t, err)
 
 	// Check that the flow object is stored properly in the DB.
@@ -139,9 +140,7 @@ func TestFlowRunner(t *testing.T) {
 
 	// Create a runner to receive the messages.
 	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	// Receive the first batch.
 	flow_runner := NewFlowRunner(config_obj, db)
@@ -176,9 +175,14 @@ func TestFlowRunner(t *testing.T) {
 	flow_aff4_obj, err = GetAFF4FlowObject(config_obj, *flow_urn)
 	assert.NoError(t, err)
 
+	// The magic packet should terminate this flow.
 	assert.Equal(t, flow_aff4_obj.flow_context.State, flows_proto.FlowContext_TERMINATED)
 
-	// When our flow gets an client error message it kills the flow.
+	// When our flow gets an client error message it kills the
+	// flow. NOTE: This is not necessarily always the case - some
+	// flows expect client errors. In this flow the call to
+	// FailIfError() will fail the flow in the response to this
+	// request is a client error.
 	status := &crypto_proto.GrrStatus{
 		ErrorMessage: "error",
 		Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
