@@ -174,7 +174,7 @@ func (self *VInterrogate) StoreClientInfo(
 	}
 	data["metadata:knowledge_base"] = serialized_kb
 
-	err = db.SetSubjectData(config_obj, client_urn, data)
+	err = db.SetSubjectData(config_obj, client_urn, datastore.LatestTime, data)
 	if err != nil {
 		return err
 	}

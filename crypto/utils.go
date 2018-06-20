@@ -106,6 +106,34 @@ func GeneratePrivateKey() ([]byte, error) {
 	return pemdata, nil
 }
 
+func PublicKeyToPem(key *rsa.PublicKey) []byte {
+	return pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "RSA PUBLIC KEY",
+			Bytes: x509.MarshalPKCS1PublicKey(key),
+		},
+	)
+}
+
+func PemToPublicKey(pem_str []byte) (*rsa.PublicKey, error) {
+	for {
+		block, rest := pem.Decode(pem_str)
+		if block == nil {
+			return nil, errors.New("failed to parse PEM block containing the key")
+		}
+
+		if block.Type == "RSA PUBLIC KEY" {
+			pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+
+			return pub, nil
+		}
+		pem_str = rest
+	}
+}
+
 // Verify the configuration, possibly updating default settings.
 func VerifyConfig(config_obj *config.Config) error {
 	if len(config_obj.Client_server_urls) == 0 {

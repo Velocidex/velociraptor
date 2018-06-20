@@ -19,6 +19,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
+const (
+	LatestTime = 1
+)
+
 type SqliteDataStore struct {
 	cache *cache.LRUCache
 	clock utils.Clock
@@ -42,9 +46,20 @@ func (self CachedDB) Size() int {
 	return 1
 }
 
+func runQuery(handle *sql.DB, query string) error {
+	statement, err := handle.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	statement.Exec()
+
+	return nil
+}
+
 // Ensure the Database file is properly initialized.
 func EnsureDB(handle *sql.DB) error {
-	statement, err := handle.Prepare(`CREATE TABLE IF NOT EXISTS tbl (
+	err := runQuery(handle, `CREATE TABLE IF NOT EXISTS tbl (
               subject TEXT NOT NULL,
               predicate TEXT NOT NULL,
               timestamp BIG INTEGER NOT NULL,
@@ -52,12 +67,8 @@ func EnsureDB(handle *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	defer statement.Close()
-
-	_, err = statement.Exec()
-	if err != nil {
-		return err
-	}
+	runQuery(handle,
+		`CREATE UNIQUE INDEX subject_index ON tbl(subject, predicate, timestamp)`)
 	return nil
 }
 
@@ -103,7 +114,7 @@ func getDBPathForURN(base string, urn string) (string, error) {
 		return getDBPathForClient(base, components[1]), nil
 	}
 
-	return "", errors.New("Unknown URN mapping")
+	return "", errors.New("Unknown URN mapping:" + urn)
 }
 
 // Client queues hold messages for the client. NOTE: This is a naive
@@ -246,6 +257,39 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	return nil
 }
 
+func (self *SqliteDataStore) GetSubjectAttribute(
+	config_obj *config.Config,
+	urn string, attr string) ([]byte, bool) {
+	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	if err != nil {
+		return nil, false
+	}
+	handle, err := self.getDB(db_path)
+	if err != nil {
+		return nil, false
+	}
+	rows, err := handle.Query(
+		`select value, max(timestamp) from tbl
+                 where subject = ? and predicate = ?`, urn, attr)
+	if err != nil {
+		return nil, false
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var value []byte
+		var timestamp uint64
+
+		err := rows.Scan(&value, &timestamp)
+		if err != nil {
+			return nil, false
+		}
+		return value, true
+	}
+
+	return nil, false
+}
+
 func (self *SqliteDataStore) GetSubjectData(
 	config_obj *config.Config,
 	urn string) (map[string][]byte, error) {
@@ -286,31 +330,36 @@ func (self *SqliteDataStore) GetSubjectData(
 // Just grab the whole data of the AFF4 object.
 func (self *SqliteDataStore) SetSubjectData(
 	config_obj *config.Config,
-	urn string,
+	urn string, timestamp int64,
 	data map[string][]byte) error {
 
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
+		utils.Debug(err)
 		return err
 	}
 
 	handle, err := self.getDB(db_path)
 	if err != nil {
+		utils.Debug(err)
 		return err
 	}
 
-	now := self.clock.Now().UTC().UnixNano() / 1000
+	if timestamp == LatestTime {
+		timestamp = self.clock.Now().UTC().UnixNano() / 1000
+	}
 	statement, err := handle.Prepare(
 		`insert or replace into tbl
                    (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
 	if err != nil {
+		utils.Debug(err)
 		return err
 	}
 	defer statement.Close()
 
 	for predicate, value := range data {
 		_, err := statement.Exec(
-			urn, predicate, now, value)
+			urn, predicate, timestamp, value)
 		if err != nil {
 			return err
 		}

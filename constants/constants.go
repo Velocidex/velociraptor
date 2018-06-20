@@ -12,4 +12,9 @@ var (
 
 	// The GUI uses this as the client index.
 	CLIENT_INDEX_URN string = "aff4:/client_index/"
+
+	// GRR Stores certificates but Velociraptor just stores the
+	// public key.
+	CLIENT_PUBLIC_KEY     string = "metadata:public_key"
+	CLIENT_LAST_TIMESTAMP string = "metadata:ping"
 )

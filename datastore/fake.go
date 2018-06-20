@@ -40,12 +40,24 @@ func (self *FakeDatastore) QueueMessageForClient(
 
 func (self *FakeDatastore) SetSubjectData(
 	config_obj *config.Config,
-	urn string,
+	urn string, timestamp int64,
 	data map[string][]byte) error {
 	self.data[urn] = data
 	return nil
 }
+func (self *FakeDatastore) GetSubjectAttribute(
+	config_obj *config.Config,
+	urn string, attr string) ([]byte, bool) {
+	data, pres := self.data[urn]
+	if pres {
+		value, pres := data[attr]
+		if pres {
+			return value, true
+		}
+	}
 
+	return nil, false
+}
 func (self *FakeDatastore) GetSubjectData(
 	config_obj *config.Config,
 	urn string) (map[string][]byte, error) {

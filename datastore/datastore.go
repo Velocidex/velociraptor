@@ -37,10 +37,14 @@ type DataStore interface {
 		config_obj *config.Config,
 		urn string) (map[string][]byte, error)
 
+	GetSubjectAttribute(
+		config_obj *config.Config,
+		urn string, attr string) ([]byte, bool)
+
 	// Just grab the whole data of the AFF4 object.
 	SetSubjectData(
 		config_obj *config.Config,
-		urn string,
+		urn string, timestamp int64,
 		data map[string][]byte) error
 
 	// Update the posting list index. Searching for any of the

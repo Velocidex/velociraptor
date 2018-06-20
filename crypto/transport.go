@@ -27,6 +27,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+
+	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 type _Cipher struct {
@@ -121,9 +123,10 @@ func _NewCipher(
 type CryptoManager struct {
 	config      *config.Config
 	private_key *rsa.PrivateKey
-	public_keys map[string]*rsa.PublicKey
 
 	source string
+
+	public_key_resolver publicKeyResolver
 
 	// Cache output cipher sessions for each destination. Sending
 	// to the same destination will reuse the same cipher object
@@ -163,7 +166,12 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 	}
 
 	common_name := strings.TrimPrefix(client_cert.Subject.CommonName, "aff4:/")
-	self.public_keys[common_name] = client_cert.PublicKey.(*rsa.PublicKey)
+	err = self.public_key_resolver.SetPublicKey(common_name,
+		client_cert.PublicKey.(*rsa.PublicKey))
+	if err != nil {
+		utils.Debug(err)
+		return nil, err
+	}
 
 	return &client_cert.Subject.CommonName, nil
 }
@@ -197,8 +205,12 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 	if common_name != ClientIDFromPublicKey(public_key) {
 		return nil, errors.New("Invalid CSR")
 	}
-	self.public_keys[common_name] = csr.PublicKey.(*rsa.PublicKey)
-
+	err = self.public_key_resolver.SetPublicKey(
+		common_name, csr.PublicKey.(*rsa.PublicKey))
+	if err != nil {
+		utils.Debug(err)
+		return nil, err
+	}
 	return &csr.Subject.CommonName, nil
 }
 
@@ -213,7 +225,7 @@ func NewCryptoManager(config_obj *config.Config, source string, pem_str []byte) 
 		config:              config_obj,
 		private_key:         private_key,
 		source:              source,
-		public_keys:         make(map[string]*rsa.PublicKey),
+		public_key_resolver: NewInMemoryPublicKeyResolver(),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
 	}, nil
@@ -235,7 +247,7 @@ func NewServerCryptoManager(config_obj *config.Config) (*CryptoManager, error) {
 		config:              config_obj,
 		private_key:         private_key,
 		source:              cert.Subject.CommonName,
-		public_keys:         make(map[string]*rsa.PublicKey),
+		public_key_resolver: NewServerPublicKeyResolver(config_obj),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
 	}, nil
@@ -255,7 +267,7 @@ func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []
 		config:              config_obj,
 		private_key:         private_key,
 		source:              client_id,
-		public_keys:         make(map[string]*rsa.PublicKey),
+		public_key_resolver: NewInMemoryPublicKeyResolver(),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
 	}, nil
@@ -266,28 +278,6 @@ type MessageInfo struct {
 	Raw           []byte
 	Authenticated bool
 	Source        string
-}
-
-/*
-
-  This method can be overridden by derived classes to provide a way of
-  recovering the public key of each source. We use this public key to:
-
-  1. Verify the message signature when receiving a message from a
-     particular source.
-
-  2. Encrypt the message using the public key when encrypting a
-     message destined to a particular entity.
-
-  Implementations are expected to provide a mapping between known
-  sources and their public keys.
-
-*/
-func (self *CryptoManager) GetPublicKey(subject string) (*rsa.PublicKey, bool) {
-	// GRR sometimes prefixes common names with aff4:/ so strip it first.
-	normalized_subject := strings.TrimPrefix(subject, "aff4:/")
-	result, pres := self.public_keys[normalized_subject]
-	return result, pres
 }
 
 /* Verify the HMAC protecting the cipher properties blob.
@@ -381,7 +371,7 @@ func (self *CryptoManager) getAuthState(
 
 	// Verify the cipher signature using the certificate known for
 	// the sender.
-	public_key, pres := self.GetPublicKey(cipher_metadata.Source)
+	public_key, pres := self.public_key_resolver.GetPublicKey(cipher_metadata.Source)
 	if !pres {
 		// We dont know who we are talking to so we can not
 		// trust them.
@@ -574,7 +564,7 @@ func (self *CryptoManager) Encrypt(
 	if ok {
 		output_cipher = output.(*_Cipher)
 	} else {
-		public_key, pres := self.GetPublicKey(destination)
+		public_key, pres := self.public_key_resolver.GetPublicKey(destination)
 		if !pres {
 			return nil, errors.New("No certificate found for destination")
 		}

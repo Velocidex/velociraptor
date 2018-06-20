@@ -4,8 +4,11 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/golang/protobuf/proto"
+	"time"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -70,9 +73,20 @@ func (self *Server) processVelociraptorMessages(
 	// Remove outstanding tasks.
 	self.db.RemoveTasksFromClientQueue(self.config, client_id, tasks_to_remove)
 
+	// Record some stats about the client.
+	now := time.Now().UTC().UnixNano() / 1000
+	data := make(map[string][]byte)
+	data[constants.CLIENT_LAST_TIMESTAMP] = []byte(fmt.Sprintf("%d", now))
+
+	err := self.db.SetSubjectData(self.config, "aff4:/"+client_id, 0, data)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
+// TODO: Not implemented yet.
 func (self *Server) processGRRMessages(
 	ctx context.Context,
 	client_id string,

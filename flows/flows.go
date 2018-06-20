@@ -296,7 +296,8 @@ func SetAFF4FlowObject(
 		data[constants.FLOW_STATE] = value
 	}
 
-	err = db.SetSubjectData(config_obj, urn, data)
+	// Flow object is not versioned.
+	err = db.SetSubjectData(config_obj, urn, 0, data)
 	if err != nil {
 		return err
 	}
