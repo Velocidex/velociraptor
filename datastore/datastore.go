@@ -55,6 +55,12 @@ type DataStore interface {
 		entity string,
 		keywords []string) error
 
+	SearchClients(
+		config_obj *config.Config,
+		index_urn string,
+		query string,
+		offset uint64, limit uint64) []string
+
 	// Called to close all db handles etc. Not thread safe.
 	Close()
 }

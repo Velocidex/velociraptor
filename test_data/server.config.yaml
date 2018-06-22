@@ -272,4 +272,4 @@ PrivateKeys.server_key: '-----BEGIN RSA PRIVATE KEY-----
 Server.initialized: true
 AdminUI.template_root: /home/mic/projects/velociraptor_server/velociraptor/static/templates
 
-AdminUI.use_precompiled_js: True
+AdminUI.document_root: gui/static

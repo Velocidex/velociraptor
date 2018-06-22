@@ -85,6 +85,14 @@ func (self *FakeDatastore) SetIndex(
 	return nil
 }
 
+func (self *FakeDatastore) SearchClients(
+	config_obj *config.Config,
+	index_urn string,
+	query string,
+	start uint64, end uint64) []string {
+	return []string{}
+}
+
 func init() {
 	db := FakeDatastore{
 		data: make(map[string]map[string][]byte),

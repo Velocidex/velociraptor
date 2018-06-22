@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app="grrUi.appController" ng-controller="GrrUiAppController">
+<head>
+
+<script type="text/javascript">
+</script>
+
+<link rel="stylesheet" type="text/css" href="/static/dist/third-party.bundle.css?timestamp={{.Timestamp}}" />
+<link rel="stylesheet" type="text/css" href="/static/dist/grr-ui.bundle.css?timestamp={{.Timestamp}}" />
+
+<script src="/static/dist/third-party.bundle.js?timestamp={{.Timestamp}}"></script>
+
+<script src="/static/dist/grr-ui.bundle.js?timestamp={{.Timestamp}}"></script>
+
+<!-- This makes sure templates are loaded from the JS bundle. -->
+<script>
+  goog.require('grrUi.templates.templates.templatesModule');
+</script>
+<script>
+  grrUi.templates.templates.templatesModule.value('forceCachedTemplates', true);
+</script>
+
+<link rel="shortcut icon" href="/static/images/favicon.png" />
+
+<title>GRR</title>
+
+<grr-user-desktop-notifications />
+</head>
+<body id="body">
+  <div id="ACL"></div>
+  <div class="navbar navbar-default navbar-static-top" id="header">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <a href="/"><img class="grr-logo" src="/static/images/grr_logo_real_sm.png" /></a>
+        <div class="navbar-brand">{{ .Heading }}</div>
+
+        <div class="nav pull-left">
+          <grr-user-label class="navbar-text"></grr-user-label>
+        </div>
+        <div class="pull-right navbar-form">
+          <grr-user-settings-button></grr-user-settings-button>
+        </div>
+        <div class="pull-right navbar-form">
+          <grr-user-notification-button></grr-user-notification-button>
+        </div>
+        <div id="search_container" class="pull-right navbar-form">
+          <grr-search-box></grr-search-box>
+        </div>
+        <grr-live-clock class="hidden-xs"></grr-live-clock>
+      </div>
+    </div>
+  </div>
+
+  <!-- This element contains the navigator and the main content- -->
+  <div id="content">
+    <grr-global-notifications></grr-global-notifications>
+
+    <div grr-splitter orientation="vertical" min-left-pane-size="230" max-left-pane-size="230">
+      <div grr-splitter-pane id="content_leftPane" class="leftPane">
+        <grr-navigator></grr-navigator>
+      </div>
+
+      <div grr-splitter-pane id="content_rightPane" class="rightPane">
+        <div ui-view></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="navbar navbar-default navbar-fixed-bottom" id="footer">
+    <div class="navbar-inner">
+      <a class="brand"></a>
+      <ul class="nav navbar-nav pull-left">
+        <li>
+          <div class="navbar-form">
+            <grr-loading-indicator />
+          </div>
+        </li>
+        <li>
+          <div class="navbar-form">
+            <grr-server-error-button />
+          </div>
+        </li>
+        <li class="divider-vertical"></li>
+        <li>
+          <grr-server-error-preview />
+        </li>
+      </ul>
+
+      <ul class="nav navbar-nav pull-right">
+        <li><a ui-sref="apiDocs">API</a></li>
+        <li><a href="{{ .Help_url }}" target="_blank">Help</a></li>
+        <li><a href="{{ .Report_url }}" target="_blank">Report a problem</a></li>
+        <li><span class="navbar-text">Velociraptor Version {{ .Version }}</span></li>
+      </ul>
+
+    </div>
+  </div>
+  <div id="error_action" style="display: none"></div>
+  <div id="backtrace" class="modal wide-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3>Modal header</h3>
+        </div>
+        <div class="modal-body"><pre></pre></div>
+        <div class="modal-footer">
+          <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

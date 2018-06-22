@@ -14,6 +14,8 @@ import (
 	"reflect"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -52,6 +54,34 @@ func (self *ApiServer) LaunchFlow(
 	return &api_proto.StartFlowResponse{
 		FlowId: *flow_id,
 	}, nil
+}
+
+func (self *ApiServer) ListClients(
+	ctx context.Context,
+	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {
+	utils.Debug(in)
+
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, err
+	}
+
+	limit := uint64(50)
+	if in.Limit > 0 {
+		limit = in.Limit
+	}
+
+	result := &api_proto.SearchClientsResponse{}
+	for _, client_id := range db.SearchClients(
+		self.config, constants.CLIENT_INDEX_URN,
+		in.Query, in.Offset, limit) {
+		api_client, err := GetApiClient(self.config, client_id)
+		if err == nil {
+			result.Items = append(result.Items, api_client)
+		}
+	}
+
+	return result, nil
 }
 
 func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {

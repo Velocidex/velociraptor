@@ -1,0 +1,113 @@
+<div ng-if="huntId && !controller.hunt">
+  Loading...
+</div>
+
+<div ng-if="controller.hunt">
+
+  <dl class="dl-horizontal dl-hunt">
+
+    <grr-force-refresh refresh-trigger="controller.hunt">
+
+      <div ng-if="::controller.hunt.value.internal_error">
+        <br>
+        <dt class="alert-danger danger">Error while Opening</dt>
+        <dd>{$ ::controller.hunt.value.internal_error.value $}</dd>
+        <br><br>
+      </div>
+
+      <dt>Name</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.name" /></dd>
+
+      <dt>Description</dt>
+      <dd>{$ ::controller.hunt.value.description.value $}</dd>
+
+      <dt>Hunt ID</dt>
+      <dd>{$ ::controller.huntId $}</dd>
+
+      <dt>Creator</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.creator" /></dd>
+
+      <dt>Start Time</dt>
+      <dd><grr-timestamp value="controller.hunt.value.created" /></dd>
+
+      <dt>Expiry Time</dt>
+      <dd><grr-timestamp value="controller.hunt.value.expires" /></dd>
+
+      <dt>Crash Limit</dt>
+      <dd ng-if="::!controller.hunt.value.crash_limit">-</dd>
+      <dd ng-if="::controller.hunt.value.crash_limit">
+        <grr-semantic-value value="::controller.hunt.value.crash_limit" />
+      </dd>
+
+      <dt>Client Limit</dt>
+      <dd ng-if="::!controller.hunt.value.client_limit">-</dd>
+      <dd ng-if="::controller.hunt.value.client_limit">
+        <grr-semantic-value value="::controller.hunt.value.client_limit" />
+      </dd>
+
+      <dt>Client Rate (clients/min)</dt>
+      <dd ng-if="::!controller.hunt.value.client_rate">-</dd>
+      <dd ng-if="::controller.hunt.value.client_rate">
+        <grr-semantic-value value="::controller.hunt.value.client_rate" />
+      </dd>
+      <br>
+
+
+      <dt>Status</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.state" /></dd>
+
+      <dt>Clients Queued</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.clients_queued_count" /></dd>
+
+      <dt>Clients Scheduled</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.all_clients_count" /></dd>
+
+      <dt>Clients Outstanding</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.remaining_clients_count" /></dd>
+
+      <dt>Clients Completed</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.completed_clients_count" /></dd>
+
+      <dt>Clients with Results</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.clients_with_results_count" /></dd>
+
+      <dt>Results</dt>
+      <dd><grr-semantic-value value="::controller.hunt.value.results_count" /></dd>
+
+      <dt>Total CPU Seconds Used</dt>
+      <dd>{$ ::controller.hunt.value.total_cpu_usage.value | number:2 $}s</dd>
+
+      <dt>Total Network Traffic</dt>
+      <dd>{$ ::controller.hunt.value.total_net_usage.value | number:0 $}b</dd>
+      <br>
+    </grr-force-refresh>
+
+    <!-- Don't auto-refresh hunt arguments since they can't be changed after the
+         hunt object is created. -->
+    <dt>Flow Name</dt>
+    <dd><grr-semantic-value value="::controller.hunt.value.flow_name" /></dd>
+
+    <dt>Flow Arguments</dt>
+    <dd><grr-semantic-value value="::controller.hunt.value.flow_args" /></dd>
+    <br>
+
+
+    <span ng-if="::controller.hunt.value.client_rule_set">
+      <dt>Client Rule Set</dt>
+      <dd>
+        <grr-semantic-value value="::controller.hunt.value.client_rule_set" />
+      </dd>
+    </span>
+    <br>
+
+
+    <span ng-if="::controller.hunt.value.hunt_runner_args.value.output_plugins">
+      <dt>Output Plugins</dt>
+      <dd>
+        <grr-semantic-value value="::controller.hunt.value.hunt_runner_args.value.output_plugins" />
+      </dd>
+    </span>
+
+  </dl>
+
+</div>

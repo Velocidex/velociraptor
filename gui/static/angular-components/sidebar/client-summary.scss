@@ -1,0 +1,23 @@
+grr-client-summary {
+  padding: 5px 10px;
+  display: block;
+
+  .client-name {
+    color: $color-infoline-success;
+  }
+
+  grr-client-status-icons > div {
+    text-align: left;
+    display: inline;
+  }
+
+  .client-status,
+  .client-ip-info {
+    color: $color-infoline-color;
+  }
+
+  grr-client-warnings {
+    display: block;
+    padding-top: .5em;
+  }
+}

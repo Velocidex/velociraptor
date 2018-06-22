@@ -6,6 +6,9 @@ import "google/protobuf/descriptor.proto";
 
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 
+// Files within the same directory must be imported relatively.
+import "clients.proto";
+
 package proto;
 
 message StartFlowRequest {
@@ -33,14 +36,20 @@ message Types {
 service API {
     rpc LaunchFlow(StartFlowRequest) returns (StartFlowResponse) {
         option (google.api.http) = {
-            post: "/v1/LaunchFlow",
+            post: "/api/v1/LaunchFlow",
             body: "*"
+        };
+    }
+
+    rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/SearchClients",
         };
     }
 
     rpc DescribeLaunchFlow(google.protobuf.Empty) returns (Types) {
         option (google.api.http) = {
-            post: "/v1/DescribeLaunchFlow",
+            post: "/api/v1/DescribeLaunchFlow",
             body: "*"
         };
     }

@@ -78,7 +78,11 @@ func (self *SqliteDataStore) getDB(db_path string) (*sql.DB, error) {
 		return handle.(CachedDB).handle, nil
 
 	} else {
-		handle, err := sql.Open("sqlite3", db_path)
+		// journal_mode = WAL allows other processes to open
+		// the DB at the same time.
+		handle, err := sql.Open(
+			"sqlite3", db_path+"?cache=shared&_journal_mode=WAL")
+
 		if err != nil {
 			return nil, err
 		}
@@ -407,6 +411,47 @@ func (self *SqliteDataStore) SetIndex(
 	}
 
 	return nil
+}
+
+func (self *SqliteDataStore) SearchClients(
+	config_obj *config.Config,
+	index_urn string,
+	query string,
+	offset uint64, limit uint64) []string {
+	var result []string
+
+	db_path, err := getDBPathForURN(*config_obj.Datastore_location, index_urn)
+	if err != nil {
+		return result
+	}
+
+	handle, err := self.getDB(db_path)
+	if err != nil {
+		return result
+	}
+
+	rows, err := handle.Query(
+		`select predicate from tbl
+                  where subject = ? group by predicate limit ?, ?`,
+		path.Join(index_urn, query), offset, limit)
+
+	if err != nil {
+		return result
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var client_id string
+
+		err := rows.Scan(&client_id)
+		if err != nil {
+			return result
+		}
+
+		result = append(result, strings.TrimPrefix(client_id, "kw_index:"))
+	}
+
+	return result
 }
 
 func init() {

@@ -1,0 +1,34 @@
+<div class="padded" grr-force-refresh refresh-trigger="flowId">
+
+  <div ng-if="!flowId">
+    Please select a flow to see its details here.
+  </div>
+
+  <uib-tabset ng-if="flowId" active="controller.activeTab">
+    <uib-tab heading="Flow Information" index="''">
+      <grr-flow-overview flow-id="flowId" api-base-path="apiBasePath"
+                         ng-if="controller.tabsShown['']" />
+    </uib-tab>
+
+    <uib-tab heading="Requests" index="'requests'">
+      <grr-flow-requests flow-id="flowId" api-base-path="apiBasePath"
+                         ng-if="controller.tabsShown['requests']" />
+    </uib-tab>
+
+    <uib-tab heading="Results" index="'results'">
+      <grr-flow-results flow-id="flowId" api-base-path="apiBasePath"
+                        ng-if="controller.tabsShown['results']" />
+    </uib-tab>
+
+    <uib-tab heading="Log" index="'log'">
+      <grr-flow-log flow-id="flowId" api-base-path="apiBasePath"
+                    ng-if="controller.tabsShown['log']" />
+    </uib-tab>
+
+    <uib-tab heading="API" index="'api'">
+      <grr-flow-api-helper flow-id="flowId" api-base-path="apiBasePath"
+                           ng-if="controller.tabsShown['api']" />
+    </uib-tab>
+  </uib-tabset>
+
+</div>

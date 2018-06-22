@@ -14,6 +14,7 @@ import (
 	"time"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -115,7 +116,7 @@ func start_frontend(config_obj *config.Config) {
 
 	server := &http.Server{
 		Addr:         listenAddr,
-		Handler:      logging_handler(server_obj)(router),
+		Handler:      logging.GetLoggingHandler(config_obj)(router),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
@@ -203,22 +204,6 @@ func control(server_obj *server.Server) http.Handler {
 
 		w.Write(response)
 	})
-}
-
-func logging_handler(server_obj *server.Server) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				server_obj.Info(
-					"%s %s %s %s",
-					r.Method,
-					r.URL.Path,
-					r.RemoteAddr,
-					r.UserAgent())
-			}()
-			next.ServeHTTP(w, r)
-		})
-	}
 }
 
 func call_api(config_obj *config.Config, method string) {

@@ -93,6 +93,9 @@ type Config struct {
 	// DataStore parameters.
 	Datastore_implementation *string `yaml:"Datastore.implementation,omitempty"`
 	Datastore_location       *string `yaml:"Datastore.location,omitempty"`
+
+	// The Admin UI
+	AdminUI_document_root *string `yaml:"AdminUI.document_root,omitempty"`
 }
 
 func GetDefaultConfig() *Config {

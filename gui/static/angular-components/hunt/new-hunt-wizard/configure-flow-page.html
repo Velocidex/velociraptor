@@ -1,0 +1,27 @@
+<div grr-splitter orientation="vertical" class="rightSplitterContainer" closeable-to="0">
+
+  <div grr-splitter-pane class="leftPane">
+    <grr-flow-descriptors-tree selected-descriptor="controller.flowDescriptor" />
+  </div>
+
+  <div grr-splitter-pane class="rightPane">
+
+    <div class="padded">
+      <div ng-if="flowArguments != null">
+        <legend>{$ flowName $}</legend>
+
+        <grr-form-value value="flowArguments">
+        </grr-form-value>
+
+        <br>
+        <legend>Description</legend>
+        <grr-flow-info descriptor="controller.flowDescriptor" />
+      </div>
+
+      <span ng-if="flowArguments == null">
+        Please select a flow from the tree on the left.
+      </span>
+    </div>
+
+  </div>
+</div>
