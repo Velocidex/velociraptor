@@ -15,13 +15,16 @@
       <td class="proto_value" ng-if="::item.recursiveItem === true">
         <grr-semantic-versioned-proto ng-if="::item.value !== undefined"
                                       value="::item.value"
+                                      type="::item.fieldDescriptor.type"
                                       on-field-click="onFieldClick({'fieldPath': fieldPath})"
                                       history-depth="::historyDepth - 1"
                                       history-path="::item.historyPath">
         </grr-semantic-versioned-proto>
       </td>
       <td class="proto_value" ng-if="::item.recursiveItem === false">
-        <grr-semantic-value ng-if="::item.value !== undefined" value="::item.value" />
+        <grr-semantic-value ng-if="::item.value !== undefined"
+                            type="::item.fieldDescriptor.type"
+                            value="::item.value" />
       </td>
     </tr>
   </tbody>

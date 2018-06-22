@@ -79,6 +79,10 @@ ReflectionService.prototype.getRDFValueDescriptorFromCache_ = function(
       var descriptor = this.descriptorsCache_[type];
       results[type] = descriptor;
 
+      if (angular.isUndefined(descriptor)) {
+        console.log("Unknown descriptor " + type);
+      }
+
       angular.forEach(descriptor['fields'], function(fieldDescriptor) {
         if (angular.isDefined(fieldDescriptor['type'])) {
           fillInResult(fieldDescriptor['type']);
@@ -115,7 +119,7 @@ ReflectionService.prototype.getRDFValueDescriptor = function(
     return deferred.promise;
   } else {
     if (this.requestsQueue_.length === 0) {
-      var apiPromise = this.grrApiService_.get('reflection/rdfvalue/all');
+      var apiPromise = this.grrApiService_.get('/v1/DescribeTypes');
       apiPromise.then(function(response) {
         this.descriptorsCache_ = {};
         angular.forEach(response['data']['items'], function(item) {
@@ -129,5 +133,3 @@ ReflectionService.prototype.getRDFValueDescriptor = function(
     return deferred.promise;
   }
 };
-
-

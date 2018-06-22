@@ -30,7 +30,9 @@ message VQLResponse {
 // GRR APIs. When we re-implement the API plugins, refactor this into
 // a more sane structure.
 message User {
-    string username = 1;
+    string username = 1 [(sem_type) = {
+            description: "The username of the user."
+        }];
 }
 
 message Knowledgebase {

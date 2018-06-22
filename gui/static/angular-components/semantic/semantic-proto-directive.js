@@ -112,7 +112,11 @@ exports.buildNonUnionItems = function(
   for (var i = 0; i < fieldsLength; ++i) {
     var field = descriptor['fields'][i];
     var key = field['name'];
-    var keyValue = value.value[key];
+    var keyValue = value[key];
+
+    if (angular.isUndefined(keyValue)) {
+      continue;
+    }
 
     if (opt_visibleFields && opt_visibleFields.indexOf(key) == -1) {
       continue;
@@ -211,7 +215,7 @@ SemanticProtoController.prototype.onValueChange = function(newValue, oldValue) {
   }
 
   if (angular.isObject(this.scope_['value'])) {
-    var valueType = this.scope_['value']['type'];
+    var valueType = this.scope_['type'];
     this.grrReflectionService_.getRDFValueDescriptor(valueType).then(
         function success(descriptor) {
           this.items = buildItems(this.scope_['value'],
@@ -236,6 +240,7 @@ exports.SemanticProtoDirective = function() {
   return {
     scope: {
       value: '=',
+      type: '=',
       visibleFields: '=',
       hiddenFields: '='
     },

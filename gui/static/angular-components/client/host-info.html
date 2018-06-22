@@ -59,14 +59,17 @@
       <dt>OS</dt>
       <dd>
         <div ng-if="controller.client.os_info.system">
-          <i class="fa fa-linux" ng-if="controller.client.os_info.system == 'Linux'"></i>
-          <i class="fa fa-windows" ng-if="controller.client.os_info.system == 'Windows'"></i>
-          <i class="fa fa-apple" ng-if="controller.client.os_info.system == 'Apple'"></i>
+          <i class="fa fa-linux" ng-if="controller.client.os_info.system == 'linux'"></i>
+          <i class="fa fa-windows" ng-if="controller.client.os_info.system == 'windows'"></i>
+          <i class="fa fa-apple" ng-if="controller.client.os_info.system == 'apple'"></i>
 
-          <grr-semantic-value value="controller.client.os_info.system"></grr-semantic-value>
+          <grr-semantic-value value="controller.client.os_info.system">
+          </grr-semantic-value>
           <span ng-if="controller.client.os_info.system && (controller.client.os_info.release || controller.client.os_info.version)">,</span>
-          <grr-semantic-value value="controller.client.os_info.release"></grr-semantic-value>
-          <grr-semantic-value value="controller.client.os_info.version"></grr-semantic-value>
+          <grr-semantic-value value="controller.client.os_info.release">
+          </grr-semantic-value>
+          <grr-semantic-value value="controller.client.os_info.version">
+          </grr-semantic-value>
         </div>
 
         <div ng-if="!controller.client.os_info.system">
@@ -241,10 +244,11 @@
        ng-if="controller.showDetails"
        grr-force-refresh refresh-trigger="controller.client">
     <grr-semantic-versioned-proto
-      client="::controller.client"
-      value="::controller.client"
-      on-field-click="controller.showHistoryDialog(fieldPath)"
-      history-depth="2">
+       type="'ApiClient'"
+       client="::controller.client"
+       value="::controller.client"
+       on-field-click="controller.showHistoryDialog(fieldPath)"
+       history-depth="2">
     </grr-semantic-versioned-proto>
   </div>
 </div>

@@ -10,7 +10,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 )
 
-func GetApiClient(config_obj *config.Config, client_id string) (
+func GetApiClient(
+	config_obj *config.Config, client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 	result := &api_proto.ApiClient{
 		ClientId: client_id,
@@ -34,12 +35,16 @@ func GetApiClient(config_obj *config.Config, client_id string) (
 		return nil, err
 	}
 
+	if detailed {
+		result.Info = client_info.Info
+	}
+
 	result.AgentInformation = &api_proto.AgentInformation{
 		Version: client_info.ClientVersion,
 		Name:    client_info.ClientName,
 	}
 
-	result.OsInfo = &api_proto.Uname{
+	result.OsInfo = &actions_proto.Uname{
 		System:  client_info.System,
 		Release: client_info.Release,
 		Machine: client_info.Architecture,

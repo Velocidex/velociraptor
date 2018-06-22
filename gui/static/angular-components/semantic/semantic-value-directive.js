@@ -172,19 +172,19 @@ SemanticValueController.prototype.camelCaseToDashDelimited = function(
  * @private
  */
 SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
-    value) {
+  type, value) {
   var successHandler = function(directive) {
     var element = angular.element('<span />');
 
-    element.html('<' +
+    element.html(' <' +
         this.camelCaseToDashDelimited(directive.directive_name) +
-        ' value="::value" />');
+        ' value="::value" type="::type" />');
     return this.compile_(element);
   }.bind(this);
 
   var failureHandler = function(directive) {
     var element = angular.element('<span />');
-    element.html('{$ ::value.value $}');
+    element.html('{$ ::value $}');
     return this.compile_(element);
   }.bind(this);
 
@@ -194,7 +194,7 @@ SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
   }
 
   return this.grrSemanticValueDirectivesRegistryService_.
-      findDirectiveForType(value['type'], overrides)
+      findDirectiveForType(type, overrides)
       .then(successHandler, failureHandler);
 };
 
@@ -209,7 +209,8 @@ SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
 SemanticValueController.prototype.compileRepeatedValueTemplate_ = function() {
   var element = angular.element(
       '<div ng-repeat="item in ::repeatedValue || []">' +
-          '<grr-semantic-value value="::item" /></div>');
+      ' <grr-semantic-value value="::item" ' +
+      ' type="::repeatedValueType"/></div>');
   return this.compile_(element);
 };
 
@@ -221,7 +222,7 @@ SemanticValueController.prototype.compileRepeatedValueTemplate_ = function() {
  */
 SemanticValueController.prototype.onValueChange = function() {
   var value = this.scope_.value;
-
+  var type = this.scope_.type;
   if (value == null) {
     return;
   }
@@ -232,40 +233,21 @@ SemanticValueController.prototype.onValueChange = function() {
    */
   var template;
 
-
   if (angular.isDefined(value['type'])) {
-    var handleTemplate = function(template) {
-      template(this.scope_, function(cloned, opt_scope) {
-        this.element_.html('');
-        this.element_.append(cloned);
-      }.bind(this));
-    }.bind(this);
+    type = value['type'];
+  }
 
-    // Make sure that templates for overrides do not collide with either
-    // templates for other overrides or with default templates.
-    var cacheKey = value['type'];
-    if (this.registryOverrideController) {
-      cacheKey += this.registryOverrideController.overrideKey;
-    }
-
-    template = singleValueTemplateCache[cacheKey];
-    if (angular.isUndefined(template)) {
-      this.compileSingleTypedValueTemplate_(value).then(function(tmpl) {
-        singleValueTemplateCache[cacheKey] = tmpl;
-        handleTemplate(tmpl);
-      }.bind(this));
-    } else {
-      handleTemplate(template);
-    }
-  } else if (angular.isArray(value)) {
+  if (angular.isArray(value)) {
     if (value.length > 10) {
       var continuation = value.slice(10);
       this.scope_.repeatedValue = value.slice(0, 10);
+      this.scope_.repeatedValueType = type;
       this.scope_.repeatedValue.push({
         type: '__FetchMoreLink',
         value: continuation
       });
     } else {
+      this.scope_.repeatedValueType = type;
       this.scope_.repeatedValue = value;
     }
 
@@ -278,6 +260,30 @@ SemanticValueController.prototype.onValueChange = function() {
       this.element_.html('');
       this.element_.append(cloned);
     }.bind(this));
+  } else if (angular.isDefined(type)) {
+    var handleTemplate = function(template) {
+      template(this.scope_, function(cloned, opt_scope) {
+        this.element_.html('');
+        this.element_.append(cloned);
+      }.bind(this));
+    }.bind(this);
+
+    // Make sure that templates for overrides do not collide with either
+    // templates for other overrides or with default templates.
+    var cacheKey = type;
+    if (this.registryOverrideController) {
+      cacheKey += this.registryOverrideController.overrideKey;
+    }
+
+    template = singleValueTemplateCache[cacheKey];
+    if (angular.isUndefined(template)) {
+      this.compileSingleTypedValueTemplate_(type, value).then(function(tmpl) {
+        singleValueTemplateCache[cacheKey] = tmpl;
+        handleTemplate(tmpl);
+      }.bind(this));
+    } else {
+      handleTemplate(template);
+    }
   } else {
     this.element_.text(value.toString() + ' ');
   }
@@ -294,7 +300,8 @@ SemanticValueController.prototype.onValueChange = function() {
 exports.SemanticValueDirective = function() {
   return {
     scope: {
-      value: '='
+      value: '=',
+      type: '=',
     },
     require: '?^grrSemanticValueRegistryOverride',
     restrict: 'E',

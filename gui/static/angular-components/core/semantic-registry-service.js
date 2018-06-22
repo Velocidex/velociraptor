@@ -79,7 +79,13 @@ SemanticRegistryService.prototype.registerDirective = function(
  * @export
  */
 SemanticRegistryService.prototype.findDirectiveForMro = function(
-    mro, overrides) {
+  mro, overrides) {
+  // Velociraptor does not specify an MRO.
+  // FIXME: Remove MRO from this code.
+  if (angular.isUndefined(mro)) {
+    return this.directivesByType_["RDFProtoStruct"];
+  }
+
   overrides = overrides || {};
 
   for (var i = 0; i < mro.length; ++i) {

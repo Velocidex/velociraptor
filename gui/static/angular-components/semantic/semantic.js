@@ -35,6 +35,7 @@ const {StatModeDirective} = goog.require('grrUi.semantic.statModeDirective');
 const {TimestampDirective} = goog.require('grrUi.semantic.timestampDirective');
 const {TimestampSecondsDirective} = goog.require('grrUi.semantic.timestampSecondsDirective');
 const {UrnDirective} = goog.require('grrUi.semantic.urnDirective');
+const {VQLDirective} = goog.require('grrUi.semantic.vqlDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {pseudoModule} = goog.require('grrUi.semantic.pseudo.pseudo');
 const {rekallModule} = goog.require('grrUi.semantic.rekall.rekall');
@@ -117,6 +118,8 @@ exports.semanticModule.directive(
 exports.semanticModule.directive(
     TimestampSecondsDirective.directive_name, TimestampSecondsDirective);
 exports.semanticModule.directive(UrnDirective.directive_name, UrnDirective);
+exports.semanticModule.directive(
+  VQLDirective.directive_name, VQLDirective);
 
 exports.semanticModule.service(
     SemanticRegistryService.values_service_name, SemanticRegistryService);
@@ -182,4 +185,7 @@ exports.semanticModule.run(function(grrSemanticValueDirectivesRegistryService) {
   registry.registerDirective(
       TimestampSecondsDirective.semantic_type, TimestampSecondsDirective);
   registry.registerDirective(UrnDirective.semantic_type, UrnDirective);
+
+  registry.registerDirective(
+    VQLDirective.semantic_type, VQLDirective);
 });

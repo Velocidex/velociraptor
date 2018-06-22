@@ -25,6 +25,7 @@ var SemanticVersionedProtoController = function($scope, grrReflectionService) {
   /** @export {Array<Object>} */
   this.items;
 
+  this.scope_.$watch('::type', this.onValueChange_.bind(this));
   this.scope_.$watch('::value', this.onValueChange_.bind(this));
 };
 
@@ -81,7 +82,10 @@ SemanticVersionedProtoController.prototype.onValueChange_ = function(
   }
 
   if (angular.isObject(this.scope_['value'])) {
-    var valueType = this.scope_['value']['type'];
+    var valueType = this.scope_.type;
+    if (angular.isDefined(this.scope_.value['type'])) {
+      valueType = this.scope_.value['type'];
+    };
     this.grrReflectionService_.getRDFValueDescriptor(valueType, true)
         .then(function success(descriptors) {
           var items =
@@ -106,6 +110,7 @@ exports.SemanticVersionedProtoDirective = function() {
   return {
     scope: {
       value: '=',
+      type: '=',
       onFieldClick: '&',
       historyDepth: '=',
       historyPath: '=?'

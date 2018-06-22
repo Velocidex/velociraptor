@@ -74,8 +74,7 @@ func GetAPIHandler(
 	}
 
 	reverse_proxy_mux := http.NewServeMux()
-	reverse_proxy_mux.Handle("/api/v1/LaunchFlow", grpc_proxy_mux)
-	reverse_proxy_mux.Handle("/api/v1/SearchClients", grpc_proxy_mux)
+	reverse_proxy_mux.Handle("/api/v1/", grpc_proxy_mux)
 
 	reverse_url, err := url.Parse("http://localhost:8000/")
 	if err != nil {

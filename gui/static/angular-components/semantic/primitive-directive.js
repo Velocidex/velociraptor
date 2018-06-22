@@ -18,7 +18,7 @@ exports.PrimitiveDirective = function() {
       value: '='
     },
     restrict: 'E',
-    template: '{$ ::value.value $}'
+    template: '{$ ::value $}'
   };
 };
 
@@ -39,5 +39,5 @@ exports.PrimitiveDirective.directive_name = 'grrPrimitive';
  */
 exports.PrimitiveDirective.semantic_types = [
   'RDFBool', 'bool', 'RDFInteger', 'int', 'long', 'float', 'RDFString',
-  'basestring'
+  'basestring', 'string', 'integer', 'double'
 ];

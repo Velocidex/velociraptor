@@ -1,0 +1,19 @@
+<h4>
+  <abbr title='{$ ::controller.query.VQL $}'>
+    {$ ::controller.query.Name $}
+  </abbr>
+</h4>
+<table class="table table-striped table-condensed table-hover table-bordered full-width vql-table">
+  <thead>
+    <tr>
+      <th ng-repeat="column in ::controller.columns">{$ ::column $}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in ::controller.payload">
+      <td ng-repeat="column in ::controller.columns">
+        {$ ::row[column] $}
+      </td>
+    </tr>
+  </tbody>
+</table>

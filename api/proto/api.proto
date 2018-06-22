@@ -2,8 +2,6 @@ syntax = "proto3";
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
-import "google/protobuf/descriptor.proto";
-
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 
 // Files within the same directory must be imported relatively.
@@ -23,13 +21,24 @@ message StartFlowResponse {
     string error = 2;
 }
 
+message FieldDescriptor {
+    string friendly_name = 1;
+    string name = 2;
+    bool repeated_ = 3 [json_name="repeated"];
+    string type = 4;
+    string doc = 5;
+}
+
+
 message TypeDescriptor {
-    string type_name = 1;
-    google.protobuf.DescriptorProto descriptor = 2;
+    string doc = 1;
+    repeated FieldDescriptor fields = 2;
+    string name = 3;
+    string kind = 4;
 }
 
 message Types {
-    repeated TypeDescriptor descriptors = 1;
+    repeated TypeDescriptor items = 1;
 }
 
 
@@ -47,10 +56,15 @@ service API {
         };
     }
 
-    rpc DescribeLaunchFlow(google.protobuf.Empty) returns (Types) {
+    rpc GetClient(GetClientRequest) returns (ApiClient) {
         option (google.api.http) = {
-            post: "/api/v1/DescribeLaunchFlow",
-            body: "*"
+            get: "/api/v1/GetClient",
+        };
+    }
+
+    rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
+        option (google.api.http) = {
+            get: "/api/v1/DescribeTypes",
         };
     }
 }

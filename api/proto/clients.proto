@@ -1,42 +1,11 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/actions.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 import "google/api/annotations.proto";
 
 package proto;
-
-
-// Message to carry uname information.
-message Uname {
-    string system = 1 [(sem_type) = {
-            description: "The system platform (Windows|Darwin|Linux).",
-        }];
-    string release = 3 [(sem_type) = {
-            description: "The OS release identifier e.g. 7, OSX, debian.",
-        }];
-    string version = 4 [(sem_type) = {
-            description: "The OS version ID e.g. 6.1.7601SP1, 10.9.2, 14.04.",
-        }];
-    string machine = 5 [(sem_type) = {
-            description: "The system architecture e.g. AMD64, x86_64.",
-        }];
-    string kernel = 6 [(sem_type) = {
-            description: "The kernel version string e.g. 6.1.7601, 13.1.0, 3.15-rc2.",
-        }];
-
-    string fqdn = 7 [(sem_type) = {
-            description: "The system's fully qualified domain name.",
-        }];
-
-    uint64 install_date = 11;
-
-    string architecture = 10 [(sem_type) = {
-            description: "The architecture of this binary. (Note this can be "
-            "different from the machine architecture in the case of a 32 bit binary "
-            "running on a 64 bit system)",
-        }];
-};
 
 
 // GRR uses an int for client_version which is difficult to use
@@ -51,7 +20,10 @@ message AgentInformation {
 // Describe a client. We fill in some metadata about the client but
 // this is by no means exhaustive.
 message ApiClient {
-    string client_id = 1;
+    string client_id = 1 [(sem_type) = {
+            type: "ApiClientId",
+            description: "The client id",
+        }];
     AgentInformation agent_information = 2;
     Uname os_info = 3;
     uint64 first_seen_at = 6 [(sem_type) = {
@@ -77,6 +49,8 @@ message ApiClient {
     repeated User users = 13;
 
     repeated Interface interfaces = 14;
+
+    repeated VQLResponse info = 15;
 }
 
 message Interface {
@@ -92,4 +66,8 @@ message SearchClientsRequest {
 
 message SearchClientsResponse {
     repeated ApiClient items = 1;
+}
+
+message GetClientRequest {
+    string query = 1;
 }
