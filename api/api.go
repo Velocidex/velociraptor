@@ -7,7 +7,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"net"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -101,6 +104,45 @@ func (self *ApiServer) DescribeTypes(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.Types, error) {
 	return describeTypes(), nil
+}
+
+func (self *ApiServer) GetClientFlows(
+	ctx context.Context,
+	in *api_proto.GetClientRequest) (*api_proto.GetClientFlowsResponse, error) {
+	utils.Debug(in)
+
+	// HTTP HEAD requests against this method are used by the GUI
+	// for auth checks.
+	result := &api_proto.GetClientFlowsResponse{}
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		method := md.Get("METHOD")
+		if len(method) > 0 && method[0] == "HEAD" {
+			if IsUserApprovedForClient(self.config, &md, in.Query) {
+				return result, nil
+			}
+			return nil, status.New(
+				codes.PermissionDenied, "Not authorized").Err()
+		}
+	}
+	return result, nil
+}
+
+func (self *ApiServer) GetClientApprovalForUser(
+	ctx context.Context,
+	in *api_proto.GetClientRequest) (*api_proto.ApprovalList, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		return getClientApprovalForUser(self.config, &md, in.Query), nil
+	}
+	return nil, status.New(
+		codes.PermissionDenied, "Not authorized").Err()
+}
+
+func (self *ApiServer) GetUserUITraits(
+	ctx context.Context,
+	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
+	return NewDefaultUserObject(), nil
 }
 
 func StartServer(config_obj *config.Config) error {

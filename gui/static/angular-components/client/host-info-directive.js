@@ -118,9 +118,8 @@ HostInfoController.prototype.onClientVersionChange_ = function(newValue) {
  * @private
  */
 HostInfoController.prototype.fetchClientDetails_ = function() {
-  var url = '/v1/GetClient';
-  var params = {query: this.clientId,
-                details: true};
+  var url = '/v1/GetClient/' + this.clientId;
+  var params = {details: true};
   if (this.clientVersion) {
     params['timestamp'] = this.clientVersion;
   }

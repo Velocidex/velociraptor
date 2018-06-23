@@ -39,7 +39,7 @@ DisableIfNoTraitController.prototype.onTraitNameChange_ = function(newValue) {
   if (angular.isUndefined(newValue)) {
     this.attrs_.$set('disable', false);
   } else {
-    this.grrApiService_.getCached('users/me').then(
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(
         this.onUserInfo_.bind(this));
   }
 };

@@ -50,28 +50,28 @@ ClientSummaryController.prototype.onClientChange_ = function() {
   }
 
   // Check for the last crash.
-  if (this.scope_['client']['value']['last_crash_at']){
+  if (this.scope_['client']['last_crash_at']){
     var currentTimeMs = this.grrTimeService_.getCurrentTimeMs();
-    var crashTime = this.scope_['client']['value']['last_crash_at']['value'];
+    var crashTime = this.scope_['client']['last_crash_at'];
     if (angular.isDefined(crashTime) &&
         (currentTimeMs / 1000 - crashTime / 1000000) < 60 * 60 * 24) {
       this.crashTime = crashTime;
     }
   }
 
-  var clientId = this.scope_['client']['value']['client_id']['value'];
+  var clientId = this.scope_['client']['client_id'];
   var lastIPUrl = 'clients/' + clientId + '/last-ip';
   this.grrApiService_.get(lastIPUrl).then(function(response) {
     this.lastIP = response.data;
   }.bind(this));
 
-  var approvalUrl = 'users/me/approvals/client/' + clientId;
+  var approvalUrl = 'v1/GetApprovals/' + clientId;
   this.grrApiService_.get(approvalUrl).then(function(response) {
     var approvals = response.data['items'];
     if (approvals && approvals.length) {
       // Approvals are returned from newest to oldest, so the first item
       // holds the most recent approval reason.
-      this.approvalReason = approvals[0]['value']['reason']['value'];
+      this.approvalReason = approvals[0]['reason'];
     }
   }.bind(this));
 };

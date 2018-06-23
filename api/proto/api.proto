@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
@@ -41,6 +42,92 @@ message Types {
     repeated TypeDescriptor items = 1;
 }
 
+message FlowInformation {
+    string client_id = 1;
+    string flow_id = 2;
+}
+
+message GetClientFlowsResponse {
+    repeated FlowInformation items = 1;
+}
+
+
+message Approval {
+    string reason = 1;
+}
+
+message ApprovalList {
+    repeated Approval items = 1;
+}
+
+// Next field: 4
+message GUISettings {
+    option (semantic) = {
+        description: "User GUI settings and preferences."
+    };
+
+    enum UIMode {
+        BASIC = 0;
+        ADVANCED = 1;
+        DEBUG = 2;
+    }
+
+    UIMode mode = 1 [(sem_type) = {
+            description: "User interface mode.",
+        }];
+
+    bool canary_mode = 3 [(sem_type) = {
+            description: "If true, show features that are being canaried."
+        }];
+}
+
+// These traits are used by the AdminUI Angular app to disable certain UI
+// elements.
+message ApiGrrUserInterfaceTraits {
+    bool cron_jobs_nav_item_enabled = 1;
+    bool create_cron_job_action_enabled = 2;
+
+    bool hunt_manager_nav_item_enabled = 3;
+    bool create_hunt_action_enabled = 4;
+
+    bool show_statistics_nav_item_enabled = 5;
+
+    bool server_load_nav_item_enabled = 7;
+
+    bool manage_binaries_nav_item_enabled = 9;
+    bool upload_binary_action_enabled = 10;
+
+    bool settings_nav_item_enabled = 11;
+
+    bool artifact_manager_nav_item_enabled = 12;
+    bool upload_artifact_action_enabled = 13;
+    bool search_clients_action_enabled = 14;
+    bool browse_virtual_file_system_nav_item_enabled = 15;
+    bool start_client_flow_nav_item_enabled = 16;
+    bool manage_client_flows_nav_item_enabled = 17;
+    bool modify_client_labels_action_enabled = 18;
+};
+
+message ApiGrrUser {
+    string username = 1 [(sem_type) = {
+            description: "The name of the user."
+        }];
+    GUISettings settings = 2 [(sem_type) = {
+            description: "User UI settings."
+        }];
+    ApiGrrUserInterfaceTraits interface_traits = 3 [(sem_type) = {
+            description: "User's interface traits (what they can and can't do "
+            "in the UI)."
+        }];
+
+    enum UserType {
+        USER_TYPE_NONE = 0;
+        USER_TYPE_STANDARD = 1;
+        USER_TYPE_ADMIN = 2;
+    }
+    UserType user_type = 4;
+}
+
 
 service API {
     rpc LaunchFlow(StartFlowRequest) returns (StartFlowResponse) {
@@ -58,7 +145,31 @@ service API {
 
     rpc GetClient(GetClientRequest) returns (ApiClient) {
         option (google.api.http) = {
-            get: "/api/v1/GetClient",
+            get: "/api/v1/GetClient/{query}",
+        };
+    }
+
+    rpc GetClientFlows(GetClientRequest) returns (GetClientFlowsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetClientFlows/{query}",
+            additional_bindings: {
+                custom: {
+                    kind: "HEAD",
+                    path: "/api/v1/GetClientFlows/{query}",
+                },
+            }
+        };
+    }
+
+    rpc GetClientApprovalForUser(GetClientRequest) returns (ApprovalList) {
+        option (google.api.http) = {
+            get: "/api/v1/GetApprovals/{query}",
+        };
+    }
+
+    rpc GetUserUITraits(google.protobuf.Empty) returns (ApiGrrUser) {
+        option (google.api.http) = {
+            get: "/api/v1/GetUserUITraits",
         };
     }
 

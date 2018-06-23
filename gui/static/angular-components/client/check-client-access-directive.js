@@ -45,7 +45,7 @@ CheckClientAccessController.prototype.onClientIdChange_ = function(clientId) {
   if (angular.isDefined(clientId)) {
     this.scope_['outHasAccess'] = undefined;
 
-    this.grrApiService_.head('clients/' + clientId + '/flows').then(
+    this.grrApiService_.head('v1/GetClientFlows/' + clientId).then(
         this.onClientAccessPermitted_.bind(this),
         this.onClientAccessRejected_.bind(this));
   }

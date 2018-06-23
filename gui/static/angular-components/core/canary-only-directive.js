@@ -14,13 +14,13 @@ const {ApiService} = goog.require('grrUi.core.apiService');
  * this callback when it'll be determined in background.
  */
 var getCanaryModeValue = function(grrApiService, callback) {
-  grrApiService.getCached('/users/me').then(function(response) {
+  grrApiService.getCached('v1/GetUserUITraits').then(function(response) {
     var canaryMode;
 
     try {
       canaryMode = /** @type {boolean} */ (
-          response['data']['value']['settings']
-                  ['value']['canary_mode']['value']);
+          response['data']['settings']
+                  ['value']['canary_mode']);
     } catch(err) {
       canaryMode = false;
     }

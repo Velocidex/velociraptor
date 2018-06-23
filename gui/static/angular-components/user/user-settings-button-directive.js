@@ -58,8 +58,8 @@ UserSettingsButtonController.prototype.onClick = function() {
   this.error = undefined;
 
   this.userSettings = undefined;
-  this.grrApiService_.getCached('users/me').then(function(response) {
-    this.userSettings = response['data']['value']['settings'];
+  this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+    this.userSettings = response['data']['settings'];
   }.bind(this));
 
   this.uibModal_.open({
@@ -84,7 +84,7 @@ UserSettingsButtonController.prototype.saveSettings = function() {
       settings: this.userSettings
     }
   };
-  this.grrApiService_.post('users/me', newUser, true).then(
+  this.grrApiService_.post('v1/GetUserUITraits', newUser, true).then(
       function success() {
         this.done = true;
         this.timeout_(this.window_.location.reload.bind(this.window_.location),

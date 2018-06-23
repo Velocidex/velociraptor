@@ -5,6 +5,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"html/template"
 	"net/http"
 	"net/http/httputil"
@@ -61,7 +62,18 @@ type _templateArgs struct {
 func GetAPIHandler(
 	ctx context.Context,
 	config_obj *config.Config) (http.Handler, error) {
-	grpc_proxy_mux := runtime.NewServeMux()
+
+	// We need to tell when someone uses HEAD method on our grpc
+	// proxy so we need to pass this information from the request
+	// to the gRPC server using the gRPC metadata.
+	grpc_proxy_mux := runtime.NewServeMux(
+		runtime.WithMetadata(
+			func(ctx context.Context, req *http.Request) metadata.MD {
+				return metadata.New(map[string]string{
+					"METHOD": req.Method,
+				})
+			}),
+	)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	err := api_proto.RegisterAPIHandlerFromEndpoint(
 		ctx, grpc_proxy_mux,

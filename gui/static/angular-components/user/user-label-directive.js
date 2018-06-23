@@ -28,8 +28,8 @@ const UserLabelController =
     /** @type {string} */
     this.error;
 
-    this.grrApiService_.getCached('users/me').then(function(response) {
-      this.username = response.data['value']['username']['value'];
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+      this.username = response.data['username'];
     }.bind(this), function(error) {
       if (error['status'] == 403) {
         this.error = 'Authentication Error';
@@ -37,6 +37,7 @@ const UserLabelController =
         this.error = error['statusText'] || ('Error');
       }
     }.bind(this));
+
   };
 
 
@@ -68,5 +69,3 @@ var UserLabelDirective = exports.UserLabelDirective;
  * @export
  */
 UserLabelDirective.directive_name = 'grrUserLabel';
-
-

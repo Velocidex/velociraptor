@@ -40,8 +40,8 @@ const NavigatorController = function(
   this.uiTraits;
 
   // Fetch UI traits.
-  this.grrApiService_.getCached('users/me').then(function (response) {
-    this.uiTraits = stripTypeInfo(response['data'])['interface_traits'];
+   this.grrApiService_.getCached('v1/GetUserUITraits').then(function (response) {
+    this.uiTraits = response['data']['interface_traits'];
   }.bind(this));
 
   // Subscribe to legacy grr events to be notified on client change.
@@ -80,7 +80,7 @@ NavigatorController.prototype.onClientSelectionChange_ = function(clientId) {
  * Fetches new client details.
  */
 NavigatorController.prototype.refreshClientDetails = function() {
-  var url = 'clients/' + this.clientId;
+  var url = 'v1/GetClient/' + this.clientId;
   this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
 };
 
@@ -100,7 +100,7 @@ NavigatorController.prototype.onClientDetailsFetched_ = function(response) {
  * @private
  */
 NavigatorController.prototype.checkClientAccess_ = function() {
-  this.grrApiService_.head('clients/' + this.clientId + '/flows').then(
+  this.grrApiService_.head('v1/GetClientFlows/' + this.clientId).then(
       function resolve() {
         this.hasClientAccess = true;
       }.bind(this),
