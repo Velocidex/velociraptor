@@ -55,7 +55,7 @@ ClientFlowsViewController.prototype.onRoutingParamsChange_ = function(
   this.clientId = opt_stateParams['clientId'];
   this.selectedFlowId = opt_stateParams['flowId'];
   this.tab = opt_stateParams['tab'];
-  this.flowApiBasePath = ['clients', this.clientId, 'flows'].join('/');
+  this.flowApiBasePath = 'v1/GetFlowDetails' + '/' + this.clientId;
 };
 
 /**

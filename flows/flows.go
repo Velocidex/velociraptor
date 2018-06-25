@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -107,9 +108,9 @@ type AFF4FlowObject struct {
 	// Will be set to true if the state needs to be flushed.
 	dirty bool
 
-	config       *config.Config
-	Runner_args  *flows_proto.FlowRunnerArgs
-	flow_context *flows_proto.FlowContext
+	config      *config.Config
+	RunnerArgs  *flows_proto.FlowRunnerArgs
+	FlowContext *flows_proto.FlowContext
 
 	// An opaque place for flows to store state. If the flow wants
 	// to use the state they can set it in Start() and the runner
@@ -134,7 +135,7 @@ func (self *AFF4FlowObject) GetState() proto.Message {
 // Complete the flow.
 func (self *AFF4FlowObject) Complete() {
 	self.dirty = true
-	self.flow_context.State = flows_proto.FlowContext_TERMINATED
+	self.FlowContext.State = flows_proto.FlowContext_TERMINATED
 	self.flow_state = nil
 }
 
@@ -150,9 +151,9 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 				return nil
 			}
 
-			self.flow_context.State = flows_proto.FlowContext_ERROR
-			self.flow_context.Status = status.ErrorMessage
-			self.flow_context.Backtrace = status.Backtrace
+			self.FlowContext.State = flows_proto.FlowContext_ERROR
+			self.FlowContext.Status = status.ErrorMessage
+			self.FlowContext.Backtrace = status.Backtrace
 			self.dirty = true
 
 			return errors.New(status.ErrorMessage)
@@ -170,9 +171,12 @@ func NewAFF4FlowObject(
 	config *config.Config,
 	runner_args *flows_proto.FlowRunnerArgs) (*AFF4FlowObject, error) {
 	result := AFF4FlowObject{
-		config:       config,
-		Runner_args:  runner_args,
-		flow_context: new(flows_proto.FlowContext),
+		config:     config,
+		RunnerArgs: runner_args,
+		FlowContext: &flows_proto.FlowContext{
+			State:      flows_proto.FlowContext_RUNNING,
+			CreateTime: uint64(time.Now().UnixNano() / 1000),
+		},
 	}
 
 	// Attach the implementation.
@@ -217,7 +221,7 @@ func GetAFF4FlowObject(
 
 	serialized_flow_context, pres := data[constants.FLOW_CONTEXT]
 	if pres {
-		err := proto.Unmarshal(serialized_flow_context, result.flow_context)
+		err := proto.Unmarshal(serialized_flow_context, result.FlowContext)
 		if err != nil {
 			return nil, err
 		}
@@ -255,21 +259,22 @@ func SetAFF4FlowObject(
 	}
 
 	data := make(map[string][]byte)
-	if obj.Runner_args == nil {
+	if obj.RunnerArgs == nil {
 		return errors.New("Flow runner must be populated.")
 	}
 
-	value, err := proto.Marshal(obj.Runner_args)
+	value, err := proto.Marshal(obj.RunnerArgs)
 	if err != nil {
 		return err
 	}
 	data[constants.FLOW_RUNNER_ARGS] = value
 
-	if obj.flow_context == nil {
+	if obj.FlowContext == nil {
 		return errors.New("Flow context must be populated.")
 	}
 
-	value, err = proto.Marshal(obj.flow_context)
+	obj.FlowContext.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+	value, err = proto.Marshal(obj.FlowContext)
 	if err != nil {
 		return err
 	}

@@ -1,5 +1,5 @@
 <div class="centered flow-state-icon"
-     ng-init="flowState = flow.value.state.value"
+     ng-init="flowState = flow.context.state"
      state="{$ ::flowState $}">
   <img ng-if="::flowState == 'TERMINATED'"
        title="Flow finished normally."

@@ -48,8 +48,10 @@ FlowApiHelperController.prototype.onFlowIdOrBasePathChange_ = function(
   this.result = null;
 
   if (newValues.every(angular.isDefined)) {
-    var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
-    this.grrApiService_.getV2(flowUrl).then(function(response) {
+    var flowUrl = this.scope_['apiBasePath'];
+    this.grrApiService_.getV2(
+      flowUrl, {flow_id: this.scope_['flowId']}
+    ).then(function(response) {
       var flow = {
         args: response.data['args'],
         name: response.data['name'],

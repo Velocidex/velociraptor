@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
+import "google/protobuf/any.proto";
+
+package proto;
+
+
+// Next id: 16
+message ApiFlow {
+    // Enum values here correspond to Flow.State values.
+    enum State {
+        RUNNING = 0;
+        TERMINATED = 1;
+        ERROR = 3;
+        CLIENT_CRASHED = 4;
+    };
+
+    string urn = 1 [(sem_type) = {
+            type: "SessionID",
+            description: "Flow URN."
+        }];
+    string flow_id = 12 [(sem_type) = {
+            type: "ApiFlowId",
+            description: "Flow id."
+        }];
+    string client_id = 15 [(sem_type) = {
+            type: "ApiClientId",
+            description: "Client id."
+        }];
+
+    string name = 2 [(sem_type) = {
+            description: "Flow name.",
+        }];
+
+    google.protobuf.Any args = 3 [(sem_type) = {
+            description: "Flow arguments.",
+            dynamic_type: "GetArgsClass"
+        }];
+
+    FlowRunnerArgs runner_args = 4 [(sem_type) = {
+            description: "Flow runner arguments."
+        }];
+    State state = 5 [(sem_type) = {
+            description: "Current flow state."
+        }];
+    uint64 started_at = 6 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "When flow was created."
+        }];
+    uint64 last_active_at = 7 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "When flow was last active."
+        }];
+    string creator = 8 [(sem_type) = {
+            description: "Who started the flow."
+        }];
+
+    FlowContext context = 11 [(sem_type) = {
+            description: "Current flow context."
+        }];
+
+    repeated ApiFlow nested_flows = 9 [(sem_type) = {
+            description: "Nested flows started by this flow."
+        }];
+
+    string internal_error = 14 [(sem_type) = {
+            description: "An error that happened while reading the flow. This is "
+            "not an error while executing the flow but an internal data issue."
+        }];
+}
+
+message ApiFlowRequest {
+    string client_id = 1;
+    string flow_id = 2;
+    uint64 offset = 3;
+    uint64 count = 4;
+}
+
+message ApiFlowResponse {
+    repeated ApiFlow items = 1;
+}

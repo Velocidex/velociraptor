@@ -38,7 +38,7 @@ func (self *VInterrogate) Start(
 		return nil, err
 	}
 
-	flow_id := GetNewFlowIdForClient(flow_obj.Runner_args.ClientId)
+	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
 			VQL:  "select Client_name, Client_build_time, Client_labels from config",
@@ -64,7 +64,7 @@ func (self *VInterrogate) Start(
 	}
 
 	err = db.QueueMessageForClient(
-		config_obj, flow_obj.Runner_args.ClientId,
+		config_obj, flow_obj.RunnerArgs.ClientId,
 		flow_id,
 		"VQLClientAction",
 		vql_request, processClientInfo)
@@ -134,7 +134,7 @@ func (self *VInterrogate) StoreClientInfo(
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
 
-	client_urn := "aff4:/" + flow_obj.Runner_args.ClientId
+	client_urn := "aff4:/" + flow_obj.RunnerArgs.ClientId
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -183,7 +183,7 @@ func (self *VInterrogate) StoreClientInfo(
 	// wish to be searchable in the UI here.
 	keywords := []string{
 		"", // This is used for "." search
-		flow_obj.Runner_args.ClientId,
+		flow_obj.RunnerArgs.ClientId,
 		client_info.Hostname,
 		client_info.Fqdn,
 		"host:" + client_info.Hostname,
@@ -196,7 +196,7 @@ func (self *VInterrogate) StoreClientInfo(
 
 	err = db.SetIndex(config_obj,
 		constants.CLIENT_INDEX_URN,
-		flow_obj.Runner_args.ClientId,
+		flow_obj.RunnerArgs.ClientId,
 		keywords,
 	)
 	if err != nil {

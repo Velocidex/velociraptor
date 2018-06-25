@@ -61,13 +61,14 @@ FlowOverviewController.prototype.startPolling = function() {
 
   if (angular.isDefined(this.scope_['apiBasePath']) &&
       angular.isDefined(this.scope_['flowId'])) {
-    var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
+    var flowUrl = this.scope_['apiBasePath'];
     var interval = AUTO_REFRESH_INTERVAL_MS;
 
     // It's important to assign the result of the poll() call, not the
     // result of the poll().then() call, since we need the original
     // promise to pass to cancelPoll if needed.
-    this.pollPromise_ = this.grrApiService_.poll(flowUrl, interval);
+    this.pollPromise_ = this.grrApiService_.poll(
+      flowUrl, interval, {flow_id: this.scope_['flowId']});
     this.pollPromise_.then(
         undefined,
         undefined,

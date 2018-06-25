@@ -51,12 +51,12 @@ exports.flattenFlowsList = function(flows, opt_currentDepth) {
     flow['depth'] = opt_currentDepth;
 
     result.push(flow);
-    if (angular.isDefined(flow['value']) &&
-        angular.isDefined(flow['value']['nested_flows'])) {
+    if (angular.isDefined(flow) &&
+        angular.isDefined(flow['nested_flows'])) {
       result = result.concat(exports.flattenFlowsList(
-          flow['value']['nested_flows'], opt_currentDepth + 1));
+          flow['nested_flows'], opt_currentDepth + 1));
 
-      delete flow['value']['nested_flows'];
+      delete flow['nested_flows'];
     }
   }
   return result;
@@ -200,7 +200,7 @@ const FlowsListController = function(
  * @export
  */
 FlowsListController.prototype.selectItem = function(item) {
-  this.selectedFlowId = item['value']['flow_id']['value'];
+  this.selectedFlowId = item['flow_id'];
 };
 
 
@@ -216,7 +216,7 @@ FlowsListController.prototype.transformItems = function(items) {
   var flattenedItems = flattenFlowsList(items);
 
   angular.forEach(flattenedItems, function(item, index) {
-    var components = item['value']['flow_id']['value'].split('/');
+    var components = item['flow_id'].split('/');
     item.shortId = components[components.length - 1];
     item.shown = item.depth == 0;
     if (index < flattenedItems.length - 1 &&
@@ -235,16 +235,16 @@ FlowsListController.prototype.transformItems = function(items) {
     // NOTE: It's only safe to assume that the "flow_id" attribute
     // is present.
     var state = 'BROKEN';
-    if (angular.isDefined(item['value']['state'])) {
-      state = item['value']['state']['value'];
+    if (angular.isDefined(item['state'])) {
+      state = item['state'];
     }
 
     var last_active_at = 0;
-    if (angular.isDefined(item['value']['last_active_at'])) {
-      last_active_at = item['value']['last_active_at']['value'];
+    if (angular.isDefined(item['last_active_at'])) {
+      last_active_at = item['last_active_at'];
     }
 
-    item[TABLE_KEY_NAME] = item['value']['flow_id']['value'];
+    item[TABLE_KEY_NAME] = item['flow_id'];
     item[TABLE_ROW_HASH] = [state, last_active_at];
   }.bind(this));
 

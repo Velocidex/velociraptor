@@ -52,9 +52,9 @@ func runQuery(handle *sql.DB, query string) error {
 		return err
 	}
 	defer statement.Close()
-	statement.Exec()
+	_, err = statement.Exec()
 
-	return nil
+	return err
 }
 
 // Ensure the Database file is properly initialized.
@@ -62,13 +62,13 @@ func EnsureDB(handle *sql.DB) error {
 	err := runQuery(handle, `CREATE TABLE IF NOT EXISTS tbl (
               subject TEXT NOT NULL,
               predicate TEXT NOT NULL,
-              timestamp BIG INTEGER NOT NULL,
+              timestamp BIG INTEGER,
               value BLOB)`)
 	if err != nil {
 		return err
 	}
 	runQuery(handle,
-		`CREATE UNIQUE INDEX subject_index ON tbl(subject, predicate, timestamp)`)
+		`CREATE UNIQUE INDEX subject_index ON tbl(subject, predicate)`)
 	return nil
 }
 
@@ -181,7 +181,10 @@ func (self *SqliteDataStore) GetClientTasks(
 	}
 
 	for _, predicate := range predicates {
-		update_statement.Exec(next_timestamp, predicate)
+		_, err := update_statement.Exec(next_timestamp, predicate)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return result, nil
@@ -206,7 +209,10 @@ func (self *SqliteDataStore) RemoveTasksFromClientQueue(
 	defer update_statement.Close()
 
 	for _, task_id := range task_ids {
-		update_statement.Exec(fmt.Sprintf("task:%d", task_id))
+		_, err := update_statement.Exec(fmt.Sprintf("task:%d", task_id))
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -261,37 +267,51 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	return nil
 }
 
-func (self *SqliteDataStore) GetSubjectAttribute(
+func (self *SqliteDataStore) GetSubjectAttributes(
 	config_obj *config.Config,
-	urn string, attr string) ([]byte, bool) {
+	urn string, attrs []string) (map[string][]byte, error) {
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
+
+	if len(attrs) == 0 {
+		return nil, errors.New("Must provide some attributes")
+	}
+
 	handle, err := self.getDB(db_path)
 	if err != nil {
-		return nil, false
+		return nil, err
 	}
-	rows, err := handle.Query(
-		`select value, max(timestamp) from tbl
-                 where subject = ? and predicate = ?`, urn, attr)
+	query := `select value, predicate, max(timestamp) from tbl
+                 where subject = ? and predicate in (?` +
+		strings.Repeat(",?", len(attrs)-1) + ")"
+	args := []interface{}{urn}
+	for _, item := range attrs {
+		args = append(args, item)
+	}
+	rows, err := handle.Query(query, args...)
 	if err != nil {
-		return nil, false
+		utils.Debug(err)
+		return nil, err
 	}
 	defer rows.Close()
 
+	result := make(map[string][]byte)
 	for rows.Next() {
 		var value []byte
+		var predicate string
 		var timestamp uint64
 
-		err := rows.Scan(&value, &timestamp)
+		err := rows.Scan(&value, &predicate, &timestamp)
 		if err != nil {
-			return nil, false
+			return nil, err
 		}
-		return value, true
+		result[predicate] = value
 	}
 
-	return nil, false
+	utils.Debug(result)
+	return result, nil
 }
 
 func (self *SqliteDataStore) GetSubjectData(
@@ -370,10 +390,63 @@ func (self *SqliteDataStore) SetSubjectData(
 	}
 
 	// Now update the index.
-	statement.Exec(
-		path.Dir(urn), "index:dir/"+path.Base(urn), 0, "X")
+	statement2, err := handle.Prepare(
+		`insert or replace into tbl
+                   (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
+	if err != nil {
+		utils.Debug(err)
+		return err
+	}
+	defer statement2.Close()
+
+	// Note that insert or replace will update the previous
+	// timestamp because the timestamp is not in the index.
+	now := self.clock.Now().UTC().UnixNano() / 1000
+	_, err = statement2.Exec(path.Dir(urn), "index:dir/"+path.Base(urn), now, "X")
+	if err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func (self *SqliteDataStore) ListChildren(
+	config_obj *config.Config,
+	urn string,
+	offset uint64, length uint64) ([]string, error) {
+	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	if err != nil {
+		return nil, err
+	}
+
+	handle, err := self.getDB(db_path)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := handle.Query(
+		`select predicate from tbl where
+                 subject = ? and
+                 predicate like "index:dir/%" order by timestamp desc limit ?, ? `,
+		urn, offset, length)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []string
+	for rows.Next() {
+		var predicate string
+		err := rows.Scan(&predicate)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result,
+			path.Join(urn,
+				strings.TrimPrefix(predicate, "index:dir/")))
+	}
+
+	return result, nil
 }
 
 func (self *SqliteDataStore) SetIndex(

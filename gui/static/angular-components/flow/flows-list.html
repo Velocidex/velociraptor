@@ -23,7 +23,7 @@
         trigger-update="controller.triggerTableUpdate"
         auto-refresh-interval="controller.autoRefreshInterval"
         ng-click="controller.selectItem(item)"
-        ng-class="{'row-selected': item.value.flow_id.value == controller.selectedFlowId}"
+        ng-class="{'row-selected': item.flow_id == controller.selectedFlowId}"
         ng-if="item.shown">
       <td><grr-flow-status-icon flow="::item" /></td>
       <td>
@@ -40,16 +40,16 @@
         {$ ::item.shortId $}
       </td>
       <td>
-        <grr-semantic-value value="::item.value.name" />
+        <grr-semantic-value value="::item.name" />
       </td>
       <td>
-        <grr-semantic-value value="::item.value.started_at" />
+        <grr-timestamp value="::item.context.create_time" />
       </td>
       <td>
-        <grr-semantic-value value="::item.value.last_active_at" />
+        <grr-timestamp value="::item.context.active_time" />
       </td>
       <td>
-        <grr-semantic-value value="::item.value.creator" />
+        <grr-semantic-value value="::item.creator" />
       </td>
     </tr>
 

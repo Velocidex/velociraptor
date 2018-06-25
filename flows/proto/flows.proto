@@ -21,6 +21,14 @@ message FlowReference {
     }];
 }
 
+message StartFlowRequest {
+    string client_id = 1;
+
+    VInterrogateArgs interrogate = 2 [(sem_type) = {
+            description: "This flow is designed to gather information about the host."
+        }];
+}
+
 // The flow context.
 // Next field: 17
 message FlowContext {
@@ -46,18 +54,20 @@ message FlowContext {
     }];
 
   enum State {
-    RUNNING = 0;
-    TERMINATED = 1;
-    ERROR = 3;   // Flows which raise are marked as having an error.
-
-    // A well known flow will not queue any messages and always
-    // forward messages to the worker:
-    WELL_KNOWN = 2;
+      UNSET = 0;
+      RUNNING = 1;
+      TERMINATED = 2;
+      ERROR = 3;   // Flows which raise are marked as having an error.
   };
 
    State state = 14;
    string status = 15;
    bool user_notified = 16;
+
+   uint64 active_time = 17 [(sem_type) = {
+      type: "RDFDatetime",
+    }];
+
 }
 
 // Next field: 23
@@ -180,6 +190,10 @@ message FlowRunnerArgs {
       "a reference to the original here.",
       label: HIDDEN
     }];
+
+    StartFlowRequest args = 23 [(sem_type) = {
+            description: "The request this flow was started with."
+        }];
 }
 
 

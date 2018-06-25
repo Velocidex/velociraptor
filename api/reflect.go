@@ -22,6 +22,8 @@ var (
 		"GetClientRequest",
 		"ApiClient",
 		"Types",
+		"FlowRunnerArgs",
+		"FlowContext",
 	}
 )
 
@@ -81,7 +83,7 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 				}
 
 				if sem_ext.Type != nil {
-					field_descriptor.Doc = *sem_ext.Type
+					field_descriptor.Type = *sem_ext.Type
 				}
 
 				if sem_ext.FriendlyName != nil {

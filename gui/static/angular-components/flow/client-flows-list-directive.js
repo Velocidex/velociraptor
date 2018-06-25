@@ -58,7 +58,7 @@ ClientFlowsListController.prototype.onClientIdChange_ = function(newValue) {
   if (angular.isString(newValue)) {
     var components = newValue.split('/');
     var basename = components[components.length - 1];
-    this.flowsUrl = '/clients/' + basename + '/flows';
+    this.flowsUrl = '/v1/GetClientFlows/' + basename;
   } else {
     this.flowsUrl = null;
   }
@@ -137,7 +137,7 @@ ClientFlowsListController.prototype.copyFlow = function() {
   modalScope['clientId'] = this.scope_['clientId'];
   modalScope['flowId'] = this.scope_['selectedFlowId'];
   modalScope['resolve'] = function(newFlowObj) {
-    newFlowId = newFlowObj['value']['flow_id']['value'];
+    newFlowId = newFlowObj['flow_id'];
     modalInstance.close();
   }.bind(this);
 

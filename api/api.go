@@ -3,7 +3,6 @@ package api
 import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	//	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -12,6 +11,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"net"
+	"time"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -28,7 +28,7 @@ type ApiServer struct {
 
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
-	in *api_proto.StartFlowRequest) (*api_proto.StartFlowResponse, error) {
+	in *flows_proto.StartFlowRequest) (*api_proto.StartFlowResponse, error) {
 	utils.Debug(in)
 	var flow_name string
 	var args proto.Message
@@ -42,8 +42,10 @@ func (self *ApiServer) LaunchFlow(
 	}
 
 	flow_runner_args := &flows_proto.FlowRunnerArgs{
-		ClientId: in.ClientId,
-		FlowName: flow_name,
+		ClientId:  in.ClientId,
+		FlowName:  flow_name,
+		StartTime: uint64(time.Now().UnixNano() / 1000),
+		Args:      in,
 	}
 
 	flow_id, err := flows.StartFlow(self.config, flow_runner_args, args)
@@ -108,24 +110,26 @@ func (self *ApiServer) DescribeTypes(
 
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
-	in *api_proto.GetClientRequest) (*api_proto.GetClientFlowsResponse, error) {
+	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
 	utils.Debug(in)
 
 	// HTTP HEAD requests against this method are used by the GUI
 	// for auth checks.
-	result := &api_proto.GetClientFlowsResponse{}
+	result := &api_proto.ApiFlowResponse{}
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		method := md.Get("METHOD")
 		if len(method) > 0 && method[0] == "HEAD" {
-			if IsUserApprovedForClient(self.config, &md, in.Query) {
+			if IsUserApprovedForClient(self.config, &md, in.ClientId) {
 				return result, nil
 			}
 			return nil, status.New(
 				codes.PermissionDenied, "Not authorized").Err()
 		}
 	}
-	return result, nil
+
+	result, err := getFlows(self.config, in.ClientId, in.Offset, in.Count)
+	return result, err
 }
 
 func (self *ApiServer) GetClientApprovalForUser(
@@ -143,6 +147,15 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	return NewDefaultUserObject(), nil
+}
+
+func (self *ApiServer) GetFlowDetails(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
+	utils.Debug(in)
+
+	result, err := getFlowDetails(self.config, in.ClientId, in.FlowId)
+	return result, err
 }
 
 func StartServer(config_obj *config.Config) error {

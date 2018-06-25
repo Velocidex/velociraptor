@@ -7,15 +7,9 @@ import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 
 // Files within the same directory must be imported relatively.
 import "clients.proto";
+import "flows.proto";
 
 package proto;
-
-message StartFlowRequest {
-    string client_id = 1;
-
-    // Interrogate: This flow is designed to gather information about the host.
-    VInterrogateArgs interrogate = 2;
-}
 
 message StartFlowResponse {
     string flow_id = 1;
@@ -41,16 +35,6 @@ message TypeDescriptor {
 message Types {
     repeated TypeDescriptor items = 1;
 }
-
-message FlowInformation {
-    string client_id = 1;
-    string flow_id = 2;
-}
-
-message GetClientFlowsResponse {
-    repeated FlowInformation items = 1;
-}
-
 
 message Approval {
     string reason = 1;
@@ -149,13 +133,13 @@ service API {
         };
     }
 
-    rpc GetClientFlows(GetClientRequest) returns (GetClientFlowsResponse) {
+    rpc GetClientFlows(ApiFlowRequest) returns (ApiFlowResponse) {
         option (google.api.http) = {
-            get: "/api/v1/GetClientFlows/{query}",
+            get: "/api/v1/GetClientFlows/{client_id}",
             additional_bindings: {
                 custom: {
                     kind: "HEAD",
-                    path: "/api/v1/GetClientFlows/{query}",
+                    path: "/api/v1/GetClientFlows/{client_id}",
                 },
             }
         };
@@ -170,6 +154,12 @@ service API {
     rpc GetUserUITraits(google.protobuf.Empty) returns (ApiGrrUser) {
         option (google.api.http) = {
             get: "/api/v1/GetUserUITraits",
+        };
+    }
+
+    rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
+        option (google.api.http) = {
+            get: "/api/v1/GetFlowDetails/{client_id}",
         };
     }
 

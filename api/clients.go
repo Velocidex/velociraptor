@@ -23,8 +23,13 @@ func GetApiClient(
 		return nil, err
 	}
 
-	serialized_client_info, pres := db.GetSubjectAttribute(
-		config_obj, client_urn, constants.CLIENT_VELOCIRAPTOR_INFO)
+	data, err := db.GetSubjectAttributes(
+		config_obj, client_urn, constants.ATTR_BASIC_CLIENT_INFO)
+	if err != nil {
+		return nil, err
+	}
+
+	serialized_client_info, pres := data[constants.CLIENT_VELOCIRAPTOR_INFO]
 	if !pres {
 		return nil, errors.New("Not found")
 	}

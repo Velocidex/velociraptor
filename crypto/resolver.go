@@ -66,8 +66,12 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 		return nil, false
 	}
 
-	pem, pres := db.GetSubjectAttribute(
-		self.config_obj, subject, constants.CLIENT_PUBLIC_KEY)
+	data, err := db.GetSubjectAttributes(
+		self.config_obj, subject, constants.ATTRS_CLIENT_KEYS)
+	if err != nil {
+		return nil, false
+	}
+	pem, pres := data[constants.CLIENT_PUBLIC_KEY]
 	if !pres {
 		return nil, false
 	}

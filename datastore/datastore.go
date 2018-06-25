@@ -37,15 +37,21 @@ type DataStore interface {
 		config_obj *config.Config,
 		urn string) (map[string][]byte, error)
 
-	GetSubjectAttribute(
+	GetSubjectAttributes(
 		config_obj *config.Config,
-		urn string, attr string) ([]byte, bool)
+		urn string, attrs []string) (map[string][]byte, error)
 
 	// Just grab the whole data of the AFF4 object.
 	SetSubjectData(
 		config_obj *config.Config,
 		urn string, timestamp int64,
 		data map[string][]byte) error
+
+	// Lists all the children of a URN.
+	ListChildren(
+		config_obj *config.Config,
+		urn string,
+		offset uint64, length uint64) ([]string, error)
 
 	// Update the posting list index. Searching for any of the
 	// keywords will return the entity urn.

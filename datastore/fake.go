@@ -3,6 +3,8 @@ package datastore
 
 import (
 	"github.com/golang/protobuf/proto"
+	"path"
+	"strings"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
@@ -45,18 +47,22 @@ func (self *FakeDatastore) SetSubjectData(
 	self.data[urn] = data
 	return nil
 }
-func (self *FakeDatastore) GetSubjectAttribute(
+func (self *FakeDatastore) GetSubjectAttributes(
 	config_obj *config.Config,
-	urn string, attr string) ([]byte, bool) {
+	urn string, attrs []string) (map[string][]byte, error) {
+
+	result := make(map[string][]byte)
 	data, pres := self.data[urn]
 	if pres {
-		value, pres := data[attr]
-		if pres {
-			return value, true
+		for _, attr := range attrs {
+			value, pres := data[attr]
+			if pres {
+				result[attr] = value
+			}
 		}
 	}
 
-	return nil, false
+	return result, nil
 }
 func (self *FakeDatastore) GetSubjectData(
 	config_obj *config.Config,
@@ -91,6 +97,26 @@ func (self *FakeDatastore) SearchClients(
 	query string,
 	start uint64, end uint64) []string {
 	return []string{}
+}
+
+func (self *FakeDatastore) ListChildren(
+	config_obj *config.Config,
+	urn string,
+	offset uint64, length uint64) ([]string, error) {
+	var result []string
+
+	data, err := self.GetSubjectData(config_obj, urn)
+	if err != nil {
+		return nil, err
+	}
+	for predicate, _ := range data {
+		if strings.HasPrefix(predicate, "index:") {
+			result = append(result, path.Join(
+				urn, strings.TrimPrefix(predicate, "index:dir/")))
+		}
+	}
+
+	return result, nil
 }
 
 func init() {
