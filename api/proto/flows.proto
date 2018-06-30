@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
+import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 import "google/protobuf/any.proto";
 
 package proto;
@@ -70,6 +71,14 @@ message ApiFlow {
             "not an error while executing the flow but an internal data issue."
         }];
 }
+
+// Since Velociraptor processes the responses immediately they are not
+// stored.
+message ApiFlowRequestDetails {
+    repeated GrrMessage items = 1;
+
+}
+
 
 message ApiFlowRequest {
     string client_id = 1;

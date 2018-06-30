@@ -78,7 +78,7 @@ exports.semanticModule.directive(
     HuntIdDirective.directive_name, HuntIdDirective);
 exports.semanticModule.directive(JsonDirective.directive_name, JsonDirective);
 exports.semanticModule.directive(
-    MacAddressDirective.directive_name, MacAddressDirective);
+  MacAddressDirective.directive_name, MacAddressDirective);
 exports.semanticModule.directive(
     NetworkAddressDirective.directive_name, NetworkAddressDirective);
 exports.semanticModule.directive(
@@ -123,7 +123,6 @@ exports.semanticModule.directive(
 
 exports.semanticModule.service(
     SemanticRegistryService.values_service_name, SemanticRegistryService);
-
 
 exports.semanticModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;

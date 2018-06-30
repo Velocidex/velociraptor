@@ -158,6 +158,15 @@ func (self *ApiServer) GetFlowDetails(
 	return result, err
 }
 
+func (self *ApiServer) GetFlowRequests(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
+	utils.Debug(in)
+	result, err := getFlowRequests(self.config, in.ClientId, in.FlowId,
+		in.Offset, in.Count)
+	return result, err
+}
+
 func StartServer(config_obj *config.Config) error {
 	bind_addr := fmt.Sprintf("%s:%d", *config_obj.API_bind_address,
 		*config_obj.API_bind_port)

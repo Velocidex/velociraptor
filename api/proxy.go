@@ -15,7 +15,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/logging"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func StartHTTPProxy(config_obj *config.Config) error {
@@ -113,7 +112,6 @@ func GetTemplateHandler(
 			Timestamp: time.Now().UnixNano(),
 			Heading:   "Heading",
 		}
-		utils.Debug(args)
 		err := tmpl.Execute(w, args)
 		if err != nil {
 			w.WriteHeader(500)

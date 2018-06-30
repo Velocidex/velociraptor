@@ -16,7 +16,8 @@ type DataStore interface {
 	// Retrieve all the client's tasks.
 	GetClientTasks(
 		config_obj *config.Config,
-		client_id string) ([]*crypto_proto.GrrMessage, error)
+		client_id string,
+		do_not_lease bool) ([]*crypto_proto.GrrMessage, error)
 
 	// Removes the task ids from the client queues.
 	RemoveTasksFromClientQueue(

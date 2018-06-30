@@ -364,5 +364,5 @@ func GetNewFlowIdForClient(client_id string) string {
 	rand.Read(buf)
 	hex.Encode(result, buf)
 
-	return fmt.Sprintf("aff4:/%s/flows/E:%s", client_id, string(result))
+	return fmt.Sprintf("aff4:/%s/flows/E.%s", client_id, string(result))
 }

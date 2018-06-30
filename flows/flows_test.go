@@ -56,11 +56,14 @@ func TestAFF4FlowObject(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.True(t, proto.Equal(retrieved_aff4_obj.flow_state, flow_aff4_obj.flow_state))
-	assert.True(t, proto.Equal(retrieved_aff4_obj.Runner_args, flow_aff4_obj.Runner_args))
+	assert.True(t, proto.Equal(retrieved_aff4_obj.RunnerArgs, flow_aff4_obj.RunnerArgs))
+	assert.True(t, proto.Equal(retrieved_aff4_obj.FlowContext, flow_aff4_obj.FlowContext))
 
-	retrieved_aff4_obj.Runner_args = nil
+	retrieved_aff4_obj.RunnerArgs = nil
+	retrieved_aff4_obj.FlowContext = nil
 	retrieved_aff4_obj.flow_state = nil
-	flow_aff4_obj.Runner_args = nil
+	flow_aff4_obj.RunnerArgs = nil
+	flow_aff4_obj.FlowContext = nil
 	flow_aff4_obj.flow_state = nil
 
 	assert.Equal(t, retrieved_aff4_obj, flow_aff4_obj)
@@ -75,7 +78,7 @@ func (self *MyTestFlow) Start(
 
 	flow_obj.SetState(&actions_proto.ClientInfo{})
 
-	flow_id := GetNewFlowIdForClient(flow_obj.Runner_args.ClientId)
+	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
 
 	return &flow_id, nil
 }
@@ -165,7 +168,7 @@ func TestFlowRunner(t *testing.T) {
 	assert.Equal(t, 6, len(state))
 
 	// Make sure the flow is still running.
-	assert.Equal(t, flow_aff4_obj.flow_context.State, flows_proto.FlowContext_RUNNING)
+	assert.Equal(t, flow_aff4_obj.FlowContext.State, flows_proto.FlowContext_RUNNING)
 
 	// Send the magic response packet
 	message := &crypto_proto.GrrMessage{RequestId: 1, ResponseId: 666, SessionId: *flow_urn}
@@ -176,7 +179,7 @@ func TestFlowRunner(t *testing.T) {
 	assert.NoError(t, err)
 
 	// The magic packet should terminate this flow.
-	assert.Equal(t, flow_aff4_obj.flow_context.State, flows_proto.FlowContext_TERMINATED)
+	assert.Equal(t, flow_aff4_obj.FlowContext.State, flows_proto.FlowContext_TERMINATED)
 
 	// When our flow gets an client error message it kills the
 	// flow. NOTE: This is not necessarily always the case - some
@@ -201,6 +204,6 @@ func TestFlowRunner(t *testing.T) {
 	flow_aff4_obj, err = GetAFF4FlowObject(config_obj, *flow_urn)
 	assert.NoError(t, err)
 
-	assert.Equal(t, flow_aff4_obj.flow_context.State, flows_proto.FlowContext_ERROR)
-	assert.Equal(t, flow_aff4_obj.flow_context.Status, "error")
+	assert.Equal(t, flow_aff4_obj.FlowContext.State, flows_proto.FlowContext_ERROR)
+	assert.Equal(t, flow_aff4_obj.FlowContext.Status, "error")
 }

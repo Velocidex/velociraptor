@@ -19,7 +19,8 @@ func (self *FakeDatastore) Close() {
 
 func (self *FakeDatastore) GetClientTasks(
 	config_obj *config.Config,
-	client_id string) ([]*crypto_proto.GrrMessage, error) {
+	client_id string,
+	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	return []*crypto_proto.GrrMessage{}, nil
 }
 

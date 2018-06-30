@@ -129,7 +129,8 @@ func getDBPathForURN(base string, urn string) (string, error) {
 // server at any one time.
 func (self *SqliteDataStore) GetClientTasks(
 	config *config.Config,
-	client_id string) ([]*crypto_proto.GrrMessage, error) {
+	client_id string,
+	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	var result []*crypto_proto.GrrMessage
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	next_timestamp := self.clock.Now().Add(time.Second*10).UTC().UnixNano() / 1000
@@ -180,10 +181,12 @@ func (self *SqliteDataStore) GetClientTasks(
 		predicates = append(predicates, predicate)
 	}
 
-	for _, predicate := range predicates {
-		_, err := update_statement.Exec(next_timestamp, predicate)
-		if err != nil {
-			return nil, err
+	if !do_not_lease {
+		for _, predicate := range predicates {
+			_, err := update_statement.Exec(next_timestamp, predicate)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -309,8 +312,6 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 		}
 		result[predicate] = value
 	}
-
-	utils.Debug(result)
 	return result, nil
 }
 

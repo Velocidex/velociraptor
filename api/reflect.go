@@ -21,6 +21,8 @@ var (
 		"SearchClientsResponse",
 		"GetClientRequest",
 		"ApiClient",
+		"GrrMessage",
+		"VQLCollectorArgs",
 		"Types",
 		"FlowRunnerArgs",
 		"FlowContext",
@@ -33,6 +35,8 @@ func describeTypes() *api_proto.Types {
 		Items: []*api_proto.TypeDescriptor{
 			{Name: "string", Kind: "primitive"},
 			{Name: "integer", Kind: "primitive"},
+			{Name: "ApiClientId", Kind: "primitive"},
+			{Name: "RDFDatetime", Kind: "primitive"},
 		},
 	}
 	for _, proto_name := range EXPORTED_PROTO {

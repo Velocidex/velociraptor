@@ -179,7 +179,7 @@ func (self *Server) Process(ctx context.Context, request []byte) ([]byte, error)
 }
 
 func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.GrrMessage {
-	result, err := self.db.GetClientTasks(self.config, client_id)
+	result, err := self.db.GetClientTasks(self.config, client_id, false)
 	if err == nil {
 		return result
 	}

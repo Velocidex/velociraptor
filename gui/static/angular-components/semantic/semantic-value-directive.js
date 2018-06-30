@@ -223,8 +223,22 @@ SemanticValueController.prototype.compileRepeatedValueTemplate_ = function() {
 SemanticValueController.prototype.onValueChange = function() {
   var value = this.scope_.value;
   var type = this.scope_.type;
+
   if (value == null) {
     return;
+  }
+
+  if (type == '.google.protobuf.Any') {
+    var prefix = "type.googleapis.com/proto.";
+    type = value['@type'];
+    if (type.startsWith(prefix)) {
+      type = type.slice(prefix.length);
+      this.scope_.type = type;
+    }
+  }
+
+  if (angular.isDefined(value['type'])) {
+    type = value['type'];
   }
 
   /**
@@ -232,10 +246,6 @@ SemanticValueController.prototype.onValueChange = function() {
    *     !angular.Scope=)=):Object|undefined)}
    */
   var template;
-
-  if (angular.isDefined(value['type'])) {
-    type = value['type'];
-  }
 
   if (angular.isArray(value)) {
     if (value.length > 10) {

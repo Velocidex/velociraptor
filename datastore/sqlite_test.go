@@ -26,7 +26,7 @@ func xxxxTestMain(t *testing.T) {
 		t.Fatalf("No such implementation")
 	}
 
-	messages, err := db.GetClientTasks(config_obj, "C.b4f82077e4af5ba7")
+	messages, err := db.GetClientTasks(config_obj, "C.b4f82077e4af5ba7", false)
 	if err != nil {
 		t.Fatalf(err.Error())
 	}

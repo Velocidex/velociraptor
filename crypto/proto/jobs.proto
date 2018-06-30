@@ -3,12 +3,13 @@
 // These are the messages used in GRR encrypted communication protocol.
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
 // This message is sent between the client and the server.
-// Next field: 23
+// Next field: 24
 message GrrMessage {
    string session_id = 1 [(sem_type) = {
       type: "FlowSessionID",
@@ -150,6 +151,10 @@ message GrrMessage {
             description: "The type of client that generated this message."
         }];
 
+    // Supercedes the args parameter.
+    google.protobuf.Any payload = 23 [(sem_type) = {
+            description: "The payload of this message",
+        }];
 };
 
 // Certificates are exchanged with this.
