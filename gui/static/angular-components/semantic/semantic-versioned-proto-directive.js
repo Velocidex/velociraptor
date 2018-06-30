@@ -110,7 +110,7 @@ exports.SemanticVersionedProtoDirective = function() {
   return {
     scope: {
       value: '=',
-      type: '=',
+      type: '@',
       onFieldClick: '&',
       historyDepth: '=',
       historyPath: '=?'

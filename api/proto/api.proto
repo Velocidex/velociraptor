@@ -169,6 +169,12 @@ service API {
         };
     }
 
+    rpc GetFlowResults(ApiFlowRequest) returns (ApiFlowResultDetails) {
+        option (google.api.http) = {
+            get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/results",
+        };
+    }
+
     rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
         option (google.api.http) = {
             get: "/api/v1/DescribeTypes",

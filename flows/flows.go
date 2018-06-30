@@ -109,6 +109,7 @@ type AFF4FlowObject struct {
 	dirty bool
 
 	config      *config.Config
+	Urn         string
 	RunnerArgs  *flows_proto.FlowRunnerArgs
 	FlowContext *flows_proto.FlowContext
 
@@ -199,7 +200,8 @@ func GetAFF4FlowObject(
 		return nil, err
 	}
 
-	data, err := db.GetSubjectData(config_obj, flow_urn)
+	data, err := db.GetSubjectAttributes(
+		config_obj, flow_urn, constants.ATTR_FLOW_OBJECT)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +221,7 @@ func GetAFF4FlowObject(
 		return nil, err
 	}
 
+	result.Urn = flow_urn
 	serialized_flow_context, pres := data[constants.FLOW_CONTEXT]
 	if pres {
 		err := proto.Unmarshal(serialized_flow_context, result.FlowContext)
@@ -365,4 +368,29 @@ func GetNewFlowIdForClient(client_id string) string {
 	hex.Encode(result, buf)
 
 	return fmt.Sprintf("aff4:/%s/flows/E.%s", client_id, string(result))
+}
+
+func StoreResultInFlow(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	message *crypto_proto.GrrMessage) error {
+
+	urn := fmt.Sprintf("%s/results", flow_obj.Urn)
+	data := make(map[string][]byte)
+	serialized_message, err := proto.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, message.ResponseId)
+	data[predicate] = serialized_message
+
+	now := time.Now().UTC().UnixNano() / 1000
+	db, err := datastore.GetDB(config_obj)
+	err = db.SetSubjectData(config_obj, urn, now, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

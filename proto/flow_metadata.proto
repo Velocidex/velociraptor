@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package proto;
+
+message FlowMetaData {
+    string category = 1;
+}
+
+// Flows are launched with these Args:
+extend google.protobuf.MessageOptions {
+    FlowMetaData flow_metadata = 65661;
+}

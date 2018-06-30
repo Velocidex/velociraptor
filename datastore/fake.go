@@ -67,7 +67,9 @@ func (self *FakeDatastore) GetSubjectAttributes(
 }
 func (self *FakeDatastore) GetSubjectData(
 	config_obj *config.Config,
-	urn string) (map[string][]byte, error) {
+	urn string,
+	offset uint64,
+	count uint64) (map[string][]byte, error) {
 	data, pres := self.data[urn]
 	if !pres {
 		return make(map[string][]byte), nil
@@ -106,7 +108,7 @@ func (self *FakeDatastore) ListChildren(
 	offset uint64, length uint64) ([]string, error) {
 	var result []string
 
-	data, err := self.GetSubjectData(config_obj, urn)
+	data, err := self.GetSubjectData(config_obj, urn, offset, length)
 	if err != nil {
 		return nil, err
 	}

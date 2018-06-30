@@ -286,7 +286,7 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 	if err != nil {
 		return nil, err
 	}
-	query := `select value, predicate, max(timestamp) from tbl
+	query := `select value, predicate, timestamp from tbl
                  where subject = ? and predicate in (?` +
 		strings.Repeat(",?", len(attrs)-1) + ")"
 	args := []interface{}{urn}
@@ -295,7 +295,6 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 	}
 	rows, err := handle.Query(query, args...)
 	if err != nil {
-		utils.Debug(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -317,7 +316,9 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 
 func (self *SqliteDataStore) GetSubjectData(
 	config_obj *config.Config,
-	urn string) (map[string][]byte, error) {
+	urn string,
+	offset uint64,
+	count uint64) (map[string][]byte, error) {
 
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
@@ -330,8 +331,9 @@ func (self *SqliteDataStore) GetSubjectData(
 
 	result := make(map[string][]byte)
 	rows, err := handle.Query(
-		`select predicate, value, max(timestamp) from tbl
-                 where subject = ? group by subject, predicate`, urn)
+		`select predicate, value, timestamp from tbl
+                 where subject = ? order by predicate limit ?, ?`,
+		urn, offset, count)
 	if err != nil {
 		return nil, err
 	}

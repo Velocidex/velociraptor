@@ -19,7 +19,7 @@ import (
 
 const (
 	_                        = iota
-	processClientInfo uint64 = 1
+	processClientInfo uint64 = iota
 )
 
 type VInterrogate struct{}

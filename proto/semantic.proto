@@ -1,4 +1,4 @@
-syntax = "proto2";
+syntax = "proto3";
 
 import "google/protobuf/descriptor.proto";  // for FieldOptions
 
@@ -6,80 +6,82 @@ package proto;
 
 
 message SemanticDescriptor {
-  // The semantic name of the SemanticValue contained in this field.
-  optional string type = 1;
+    // The semantic name of the SemanticValue contained in this field.
+    string type = 1;
 
-  // The type of this field can be specified dynamically. This is the name of
-  // the attribute to use to retrieve the SemanticValue class to be used for
-  // parsing this field.
-  optional string dynamic_type = 5;
-  optional string description = 2;
-  optional string default_string = 6;
-    optional int64 default_int = 7;
-    optional bool default_bool = 8;
+    // The type of this field can be specified dynamically. This is the name of
+    // the attribute to use to retrieve the SemanticValue class to be used for
+    // parsing this field.
+    string dynamic_type = 5;
+    string description = 2;
+    string default_string = 6;
+    int64 default_int = 7;
+    bool default_bool = 8;
 
-  enum Labels {
-    ADVANCED = 1;  // Field should be offered for modification by advanced users
-                   // only.
-    HIDDEN = 2;    // Field should be hidden from UIs - typically for internally
-                   // generated and used fields.
-  };
+    enum Labels {
+        DEFAULT = 0;
 
-  repeated Labels label = 3;
+        ADVANCED = 1;  // Field should be offered for modification by advanced users
+        // only.
+        HIDDEN = 2;    // Field should be hidden from UIs - typically for internally
+        // generated and used fields.
+    };
 
-  // A friendly name for this field - to be used in GUIs etc.
-  optional string friendly_name = 4;
+    Labels label = 3;
+
+    // A friendly name for this field - to be used in GUIs etc.
+    string friendly_name = 4;
 }
 
 
 message SemanticMessageDescriptor {
-  // Describe the purpose of this protobuf.
-  optional string description = 1;
+    // Describe the purpose of this protobuf.
+    string description = 1;
 
-  // Certain RDFValues have union-like semantics. I.e. they are essentially
-  // selectors of a number of other predefined RDFValues. They have a single
-  // field that identifies the type of the selected "subvalue" and
-  // nested fields corresponding to different selections. For examples:
-  //
-  // message FileFinderFilter {
-  //   option (semantic) = {
-  //     union_field: "filter_type"
-  //   };
-  //   enum Type {
-  //     MODIFICATION_TIME = 0 [(description) = "Modification time"];
-  //     ACCESS_TIME = 1 [(description) = "Access time"];
-  //   }
-  //
-  //   optional Type filter_type = 1;
-  //   optional FileFinderModificationTimeFilter modification_time = 2;
-  //   optional FileFinderAccessTimeFilter access_time = 3;
-  // }
-  //
-  // Field specified in union_field is used to determine which nested fields is
-  // actually used. Field identified by union_field has to be Enum.
-  // Corresponding nested values have to have names equal to enum values names,
-  // but in lower case.
-  //
-  // At the moment setting union_field attribute on an RDFValue only affects the
-  // UI rendering. RDFValues with union_field set are rendered with a select
-  // box that allows users to switch between different available types.
-  //
-  // TODO(user): Suggestion from bgalehouse: We can just have "is_union"
-  // boolean attribute instead of a string "union_field", because for
-  // union-like structures we can understand the type of the structure by
-  // inspecting its data fields.
-  optional string union_field = 2;
+    // Certain RDFValues have union-like semantics. I.e. they are essentially
+    // selectors of a number of other predefined RDFValues. They have a single
+    // field that identifies the type of the selected "subvalue" and
+    // nested fields corresponding to different selections. For examples:
+    //
+    // message FileFinderFilter {
+    //   option (semantic) = {
+    //     union_field: "filter_type"
+    //   };
+    //   enum Type {
+    //     MODIFICATION_TIME = 0 [(description) = "Modification time"];
+    //     ACCESS_TIME = 1 [(description) = "Access time"];
+    //   }
+    //
+    //   optional Type filter_type = 1;
+    //   optional FileFinderModificationTimeFilter modification_time = 2;
+    //   optional FileFinderAccessTimeFilter access_time = 3;
+    // }
+    //
+    // Field specified in union_field is used to determine which nested fields is
+    // actually used. Field identified by union_field has to be Enum.
+    // Corresponding nested values have to have names equal to enum values names,
+    // but in lower case.
+    //
+    // At the moment setting union_field attribute on an RDFValue only affects the
+    // UI rendering. RDFValues with union_field set are rendered with a select
+    // box that allows users to switch between different available types.
+    //
+    // TODO(user): Suggestion from bgalehouse: We can just have "is_union"
+    // boolean attribute instead of a string "union_field", because for
+    // union-like structures we can understand the type of the structure by
+    // inspecting its data fields.
+    string union_field = 2;
 }
 
 extend google.protobuf.FieldOptions {
-  optional SemanticDescriptor sem_type = 51584972;
+    SemanticDescriptor sem_type = 51584972;
 }
 
 extend google.protobuf.MessageOptions {
-  optional SemanticMessageDescriptor semantic = 51584971;
+    SemanticMessageDescriptor semantic = 51584971;
 }
 
 extend google.protobuf.EnumValueOptions {
-  optional string description = 48651165;
-  repeated SemanticDescriptor.Labels label = 48651166;
+    string description = 48651165;
+    SemanticDescriptor.Labels label = 48651166;
 }

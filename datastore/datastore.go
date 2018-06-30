@@ -36,7 +36,9 @@ type DataStore interface {
 	// Just grab the whole data of the AFF4 object.
 	GetSubjectData(
 		config_obj *config.Config,
-		urn string) (map[string][]byte, error)
+		urn string,
+		offset uint64,
+		count uint64) (map[string][]byte, error)
 
 	GetSubjectAttributes(
 		config_obj *config.Config,

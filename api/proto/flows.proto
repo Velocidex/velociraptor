@@ -79,6 +79,9 @@ message ApiFlowRequestDetails {
 
 }
 
+message ApiFlowResultDetails {
+    repeated GrrMessage items = 1;
+}
 
 message ApiFlowRequest {
     string client_id = 1;

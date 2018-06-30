@@ -129,6 +129,8 @@ const SemanticValueController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
+  this.type = $scope.type;
+
   /** @type {?} */
   this.scope_.value;
 
@@ -210,7 +212,7 @@ SemanticValueController.prototype.compileRepeatedValueTemplate_ = function() {
   var element = angular.element(
       '<div ng-repeat="item in ::repeatedValue || []">' +
       ' <grr-semantic-value value="::item" ' +
-      ' type="::repeatedValueType"/></div>');
+      ' type="{$ ::repeatedValueType $}"/></div>');
   return this.compile_(element);
 };
 
@@ -311,7 +313,7 @@ exports.SemanticValueDirective = function() {
   return {
     scope: {
       value: '=',
-      type: '=',
+      type: '@',
     },
     require: '?^grrSemanticValueRegistryOverride',
     restrict: 'E',

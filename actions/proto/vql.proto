@@ -2,6 +2,7 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
 
 package proto;
 
@@ -11,6 +12,10 @@ message VQLRequest {
 }
 
 message VQLCollectorArgs {
+    option (flow_metadata) = {
+        category: "Generic";
+    };
+
     repeated VQLRequest Query = 2 [(sem_type) = {
             description: "The VQL queries to execute on the client.",
         }];

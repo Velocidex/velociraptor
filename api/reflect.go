@@ -23,6 +23,7 @@ var (
 		"ApiClient",
 		"GrrMessage",
 		"VQLCollectorArgs",
+		"VQLResponse",
 		"Types",
 		"FlowRunnerArgs",
 		"FlowContext",
@@ -82,17 +83,11 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 		if err == nil {
 			sem_ext, ok := ext.(*semantic_proto.SemanticDescriptor)
 			if ok {
-				if sem_ext.Description != nil {
-					field_descriptor.Doc = *sem_ext.Description
+				if sem_ext.Type != "" {
+					field_descriptor.Type = sem_ext.Type
 				}
-
-				if sem_ext.Type != nil {
-					field_descriptor.Type = *sem_ext.Type
-				}
-
-				if sem_ext.FriendlyName != nil {
-					field_descriptor.FriendlyName = *sem_ext.FriendlyName
-				}
+				field_descriptor.Doc = sem_ext.Description
+				field_descriptor.FriendlyName = sem_ext.FriendlyName
 			}
 		}
 

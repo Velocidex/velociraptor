@@ -39,6 +39,9 @@ func (self *ApiServer) LaunchFlow(
 		flow_name = "VInterrogate"
 		args = in.Interrogate
 
+	} else if in.Collect != nil {
+		flow_name = "VQLCollector"
+		args = in.Collect
 	}
 
 	flow_runner_args := &flows_proto.FlowRunnerArgs{
@@ -163,6 +166,15 @@ func (self *ApiServer) GetFlowRequests(
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
 	utils.Debug(in)
 	result, err := getFlowRequests(self.config, in.ClientId, in.FlowId,
+		in.Offset, in.Count)
+	return result, err
+}
+
+func (self *ApiServer) GetFlowResults(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResultDetails, error) {
+	utils.Debug(in)
+	result, err := getFlowResults(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }

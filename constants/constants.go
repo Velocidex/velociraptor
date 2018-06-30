@@ -6,7 +6,13 @@ var (
 	FLOW_RUNNER_ARGS = "aff4:flow_runner_args"
 	FLOW_CONTEXT     = "aff4:flow_context"
 	FLOW_STATE       = "aff4:velociraptor_flow_state"
-	AFF4_TYPE        = "aff4:type"
+	ATTR_FLOW_OBJECT = []string{
+		FLOW_RUNNER_ARGS,
+		FLOW_CONTEXT,
+		FLOW_STATE,
+	}
+
+	AFF4_TYPE = "aff4:type"
 
 	CLIENT_VELOCIRAPTOR_INFO = "aff4:velociraptor_info"
 
@@ -26,5 +32,10 @@ var (
 	// Interrogate flow.
 	ATTR_BASIC_CLIENT_INFO = []string{
 		CLIENT_VELOCIRAPTOR_INFO,
+	}
+
+	FLOW_RESULT      = "aff4:result"
+	ATTR_FLOW_RESULT = []string{
+		FLOW_RESULT,
 	}
 )
