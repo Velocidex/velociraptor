@@ -3,10 +3,10 @@ package flows
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -18,8 +18,13 @@ import (
 )
 
 var (
-	implementations map[string]Flow
+	implementations map[string]FlowImplementation
 )
+
+type FlowImplementation struct {
+	flow       Flow
+	descriptor *flows_proto.FlowDescriptor
+}
 
 // The Flow runner processes a sequence of packets.
 type FlowRunner struct {
@@ -212,7 +217,7 @@ func GetAFF4FlowObject(
 		err := proto.Unmarshal(
 			serialized_flow_runner_arg, flow_runner_args)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 	}
 
@@ -226,7 +231,7 @@ func GetAFF4FlowObject(
 	if pres {
 		err := proto.Unmarshal(serialized_flow_context, result.FlowContext)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 	}
 
@@ -236,13 +241,13 @@ func GetAFF4FlowObject(
 		tmp := &flows_proto.VelociraptorFlowState{}
 		err := proto.Unmarshal(serialized_state, tmp)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		var state ptypes.DynamicAny
 		err = ptypes.UnmarshalAny(tmp.Payload, &state)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		result.flow_state = state.Message
@@ -268,7 +273,7 @@ func SetAFF4FlowObject(
 
 	value, err := proto.Marshal(obj.RunnerArgs)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	data[constants.FLOW_RUNNER_ARGS] = value
 
@@ -279,7 +284,7 @@ func SetAFF4FlowObject(
 	obj.FlowContext.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 	value, err = proto.Marshal(obj.FlowContext)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	data[constants.FLOW_CONTEXT] = value
@@ -291,14 +296,14 @@ func SetAFF4FlowObject(
 	if obj.flow_state != nil {
 		any_state, err := ptypes.MarshalAny(obj.flow_state)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		state := &flows_proto.VelociraptorFlowState{
 			Payload: any_state,
 		}
 		value, err = proto.Marshal(state)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		data[constants.FLOW_STATE] = value
@@ -312,27 +317,66 @@ func SetAFF4FlowObject(
 
 	// The object is not dirty any more.
 	obj.dirty = false
+	obj.Urn = urn
 
 	return nil
 }
 
-func RegisterImplementation(name string, impl Flow) {
+func RegisterImplementation(descriptor *flows_proto.FlowDescriptor, impl Flow) {
 	if implementations == nil {
-		implementations = make(map[string]Flow)
+		implementations = make(map[string]FlowImplementation)
 	}
 
-	implementations[name] = impl
+	if descriptor.DefaultArgs == nil {
+		panic(fmt.Sprintf("Flow %s does not specify a default arg.",
+			descriptor.Name))
+	}
+
+	implementations[descriptor.Name] = FlowImplementation{
+		flow:       impl,
+		descriptor: descriptor,
+	}
 }
 
 func GetImpl(name string) (Flow, bool) {
 	result, pres := implementations[name]
-	return result, pres
+	return result.flow, pres
+}
+
+func GetDescriptors() []*flows_proto.FlowDescriptor {
+	var result []*flows_proto.FlowDescriptor
+	for _, item := range implementations {
+		result = append(result, item.descriptor)
+	}
+
+	return result
 }
 
 func StartFlow(
 	config_obj *config.Config,
-	flow_runner_args *flows_proto.FlowRunnerArgs,
-	args proto.Message) (*string, error) {
+	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
+
+	if flow_runner_args.StartTime == 0 {
+		flow_runner_args.StartTime = uint64(time.Now().UnixNano() / 1000)
+	}
+
+	// Extract the args from the Any field.
+	var args proto.Message = nil
+	if flow_runner_args.Args == nil {
+		for _, desc := range GetDescriptors() {
+			if desc.Name == flow_runner_args.FlowName {
+				flow_runner_args.Args = desc.DefaultArgs
+				break
+			}
+		}
+	} else {
+		var tmp_args ptypes.DynamicAny
+		err := ptypes.UnmarshalAny(flow_runner_args.Args, &tmp_args)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+		args = tmp_args.Message
+	}
 
 	if flow_runner_args.ClientId == "" {
 		return nil, errors.New("Client id not provided.")
@@ -379,7 +423,7 @@ func StoreResultInFlow(
 	data := make(map[string][]byte)
 	serialized_message, err := proto.Marshal(message)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, message.ResponseId)

@@ -132,7 +132,7 @@ message GrrMessage {
                    "towards the limit but only during TransferBuffer is the "
                    "limit enforced. This means we can blockfile transfers but "
                    "still communicate after the limit is reached.",
-      default_int: 10737418240,
+      default: "10737418240",
     }];
    uint64 timestamp = 22 [(sem_type) = {
       type: "RDFDatetime",

@@ -30,7 +30,7 @@ const DatetimeFormController = function(
   this.example = moment.utc('1989-04-20T13:42:00.000Z').utc().format(
       this.format);
 
-  this.scope_.$watch('value.value',
+  this.scope_.$watch('value',
                      this.onValueChange_.bind(this));
   this.scope_.$watch('controller.valueString',
                      this.onValueStringChange_.bind(this));
@@ -72,15 +72,15 @@ DatetimeFormController.prototype.onValueChange_ = function(newValue) {
  */
 DatetimeFormController.prototype.onValueStringChange_ = function(newValue) {
   if (newValue == '') {
-    this.scope_.value.value = null;
+    this.scope_.value = null;
     this.isInvalid = false;
   } else {
     var parsed = moment.utc(newValue, this.format, true);
     if (parsed.isValid()) {
-      this.scope_.value.value = parsed.valueOf() * 1000;
+      this.scope_.value = parsed.valueOf() * 1000;
       this.isInvalid = false;
     } else {
-      this.scope_.value.value = null;
+      this.scope_.value = null;
       this.isInvalid = true;
     }
   }
@@ -92,7 +92,7 @@ DatetimeFormController.prototype.onValueStringChange_ = function(newValue) {
  * @export
  */
 DatetimeFormController.prototype.today = function() {
-  this.scope_.value.value = moment().valueOf() * 1000;
+  this.scope_.value = moment().valueOf() * 1000;
 };
 
 

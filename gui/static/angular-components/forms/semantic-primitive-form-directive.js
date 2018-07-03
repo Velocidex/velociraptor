@@ -14,55 +14,9 @@ goog.module.declareLegacyNamespace();
  * @ngInject
  */
 const SemanticPrimitiveFormController =
-    function($scope, grrReflectionService) {
+    function($scope) {
   /** @private {!angular.Scope} */
-  this.scope_ = $scope;
-
-  /** @private {!grrUi.core.reflectionService.ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
-
-  /** @export {string|undefined} */
-  this.valueType;
-
-  this.scope_.$watch('value.type', this.onValueTypeChange_.bind(this));
-};
-
-
-/**
- * Handles changes of the value type.
- *
- * @param {string|undefined} newValue
- * @private
- */
-SemanticPrimitiveFormController.prototype.onValueTypeChange_ = function(
-    newValue) {
-  // We use direct equality instead of `angular.isUndefined` because otherwise
-  // Closure Compiler is not able to infer that `newValue` passed to a method
-  // below is not `undefined`.
-  if (newValue === undefined) {
-    this.valueType = undefined;
-    return;
-  }
-
-  var descriptorHandler = function(descriptor) {
-    var allowedTypes = exports.SemanticPrimitiveFormDirective.semantic_types;
-    var typeIndex = -1;
-    angular.forEach(
-        allowedTypes, function(type) {
-          var index = descriptor['mro'].indexOf(type);
-          if (index != -1 && (typeIndex == -1 || typeIndex > index)) {
-            typeIndex = index;
-            this.valueType = type;
-          }
-        }.bind(this));
-
-    if (!this.valueType) {
-      this.valueType = 'RDFString';
-    }
-  }.bind(this);
-
-  this.grrReflectionService_.getRDFValueDescriptor(newValue)
-      .then(descriptorHandler);
+  this.scope = $scope;
 };
 
 /**
@@ -74,7 +28,8 @@ exports.SemanticPrimitiveFormDirective = function() {
   return {
     restrict: 'E',
     scope: {
-      value: '='
+      value: '=',
+      type: '@'
     },
     templateUrl: '/static/angular-components/forms/' +
         'semantic-primitive-form.html',
@@ -101,8 +56,8 @@ exports.SemanticPrimitiveFormDirective.directive_name = 'grrFormPrimitive';
  */
 exports.SemanticPrimitiveFormDirective.semantic_types = [
   'RDFBool', 'bool',                     // Boolean types.
-  'RDFInteger', 'int', 'long', 'float',  // Numeric types.
-  'RDFString', 'basestring', 'RDFURN',   // String types.
+  'RDFInteger', 'int', 'integer', 'long', 'float',  // Numeric types.
+  'RDFString', 'string', 'basestring', 'RDFURN',   // String types.
   'bytes',                               // Byte types.
   // TODO(user): check if we ever have to deal with
   // bytes type (RDFBytes is handled by grr-form-bytes).

@@ -1,8 +1,8 @@
-<div class="padded" ng-if="descriptor.value.name.value">
+<div class="padded" ng-if="descriptor.name">
 
-<h3>{$ descriptor.value.name.value $}</h3>
-<p class="preserve-linebreaks">{$ descriptor.value.doc.value $}</p>
+<h3>{$ descriptor.name $}</h3>
+<p class="preserve-linebreaks">{$ descriptor.doc $}</p>
 
 </div>
 
-<div class="padded" ng-if="!descriptor.value.name.value">No flow selected.</span>
+<div class="padded" ng-if="!descriptor.name">No flow selected.</span>

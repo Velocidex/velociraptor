@@ -22,6 +22,8 @@ const SemanticProtoFormController = function(
   /** @type {?} */
   this.scope_.value;
 
+  this.scope_.type;
+
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;
 
@@ -35,7 +37,7 @@ const SemanticProtoFormController = function(
   this.expanded = false;
 
   /** @type {Object|undefined} */
-  this.editedValue;
+  this.editedValue = {};
 
   if (angular.isDefined($attrs['hiddenFields']) &&
       angular.isDefined($attrs['visibleFields'])) {
@@ -44,12 +46,27 @@ const SemanticProtoFormController = function(
   }
 
   this.scope_.$watch('value', this.onValueChange_.bind(this));
-  this.scope_.$watch('controller.editedValue.value',
+  this.scope_.$watch('controller.editedValue',
                      this.onEditedValueChange_.bind(this),
                      true);
 
   this.boundNotExplicitlyHiddenFields =
       this.notExplicitlyHiddenFields_.bind(this);
+};
+
+SemanticProtoFormController.prototype.typeOfValue_ = function(value) {
+  var type = value['@type'];
+
+  if (angular.isDefined(type)) {
+    var prefix = "type.googleapis.com/proto.";
+    if (type.startsWith(prefix)) {
+      type = type.slice(prefix.length);
+    }
+
+    return type;
+  }
+
+  return this.scope_.type;
 };
 
 
@@ -116,12 +133,12 @@ SemanticProtoFormController.prototype.advancedFieldsOnly = function(
  */
 SemanticProtoFormController.prototype.onValueChange_ = function(
     newValue, oldValue) {
-  if (angular.isUndefined(newValue)) {
-    this.descriptors = undefined;
-    this.valueDescriptor = undefined;
-    this.editedValue = undefined;
+  if (angular.isUndefined(newValue) && angular.isUndefined(this.scope_.type)) {
+    console.log("Error - no type provided for semantic-value-form-directive.");
     return;
   }
+
+  this.scope_.type = this.typeOfValue_(newValue);
 
   /**
    * Please note that if the value bound to the 'value' binding gets replaced
@@ -136,7 +153,7 @@ SemanticProtoFormController.prototype.onValueChange_ = function(
    */
   if (newValue !== oldValue || angular.isUndefined(this.valueDescriptor)) {
     this.grrReflectionService_.getRDFValueDescriptor(
-        this.scope_.value.type, true).then(
+        this.scope_.type, true).then(
             this.onDescriptorsFetched_.bind(this));
   }
 };
@@ -154,7 +171,11 @@ SemanticProtoFormController.prototype.onValueChange_ = function(
  * @private
  */
 SemanticProtoFormController.prototype.onEditedValueChange_ = function(
-    newValue, oldValue) {
+  newValue, oldValue) {
+  if (angular.isUndefined(this.valueDescriptor)) {
+    return;
+  }
+
   if (angular.isDefined(newValue)) {
     /**
      * Only apply changes to scope_.value if oldValue is defined, i.e.
@@ -169,7 +190,7 @@ SemanticProtoFormController.prototype.onEditedValueChange_ = function(
        */
       angular.forEach(newValue, function(value, key) {
         if (!angular.equals(oldValue[key], newValue[key])) {
-          this.scope_.value.value[key] = value;
+          this.scope_.value[key] = value;
         }
       }.bind(this));
     }
@@ -181,7 +202,7 @@ SemanticProtoFormController.prototype.onEditedValueChange_ = function(
     angular.forEach(this.valueDescriptor['fields'], function(field) {
       if (this.notExplicitlyHiddenFields_(field)) {
         if (field.type &&
-            angular.equals(this.scope_.value.value[field.name],
+            angular.equals(this.scope_.value[field.name],
                            this.descriptors[field.type]['default']) &&
             /**
              * If the field has a per-field special default value that's
@@ -199,7 +220,7 @@ SemanticProtoFormController.prototype.onEditedValueChange_ = function(
             (angular.isUndefined(field['default']) ||
              angular.equals(field['default'],
                             this.descriptors[field.type]['default']))) {
-          delete this.scope_.value.value[field.name];
+          delete this.scope_.value[field.name];
         }
       }
     }.bind(this));
@@ -216,12 +237,13 @@ SemanticProtoFormController.prototype.onEditedValueChange_ = function(
  */
 SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
     descriptors) {
+  var self = this;
   this.descriptors = descriptors;
-  this.valueDescriptor = angular.copy(descriptors[this.scope_.value.type]);
+  this.valueDescriptor = angular.copy(descriptors[this.scope_.type]);
 
   this.editedValue = angular.copy(this.scope_.value);
-  if (angular.isUndefined(this.editedValue.value)) {
-    this.editedValue.value = {};
+  if (angular.isUndefined(this.editedValue)) {
+    this.editedValue = {};
   }
 
   angular.forEach(this.valueDescriptor['fields'], function(field) {
@@ -231,25 +253,26 @@ SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
       }
 
       if (field.labels.indexOf('ADVANCED') != -1) {
-        this.hasAdvancedFields = true;
+        self.hasAdvancedFields = true;
       }
     }
 
     if (field.repeated) {
       field.depth = 0;
 
-      if (angular.isUndefined(this.editedValue.value[field.name])) {
-        this.editedValue.value[field.name] = [];
+      if (angular.isUndefined(this.editedValue[field.name])) {
+        this.editedValue[field.name] = [];
       }
     } else {
       field.depth = (this.scope_.$eval('metadata.depth') || 0) + 1;
 
-      if (angular.isUndefined(this.editedValue.value[field.name])) {
+      if (angular.isUndefined(this.editedValue[field.name])) {
         if (angular.isDefined(field['default'])) {
-          this.editedValue.value[field.name] = angular.copy(field['default']);
+          this.editedValue[field.name] = angular.copy(field['default']);
         } else {
-          this.editedValue.value[field.name] = angular.copy(
-              descriptors[field.type]['default']);
+//          self.editedValue[field.name] = angular.copy(
+          //              descriptors[field.type]['default']);
+          this.editedValue[field.name] = "";
         }
       }
     }
@@ -266,6 +289,7 @@ exports.SemanticProtoFormDirective = function() {
   return {
     scope: {
       value: '=',
+      type: '@',
       metadata: '=?',
       hiddenFields: '=?',
       visibleFields: '=?'

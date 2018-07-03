@@ -7,8 +7,8 @@ import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
 package proto;
 
 message VQLRequest {
-    string VQL = 1;
     string Name = 2;
+    string VQL = 1;
 }
 
 message VQLCollectorArgs {

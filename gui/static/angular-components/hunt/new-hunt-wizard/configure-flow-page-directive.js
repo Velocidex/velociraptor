@@ -27,9 +27,9 @@ const ConfigureFlowPageController = function($scope) {
       return;
     }
 
-    this.scope_.flowName = flowDescriptor['value']['name']['value'];
+    this.scope_.flowName = flowDescriptor['name'];
     this.scope_['flowArguments'] = angular.copy(
-        flowDescriptor['value']['default_args']);
+        flowDescriptor['default_args']);
   }.bind(this));
 
   this.scope_.$watch('flowArguments',

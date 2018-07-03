@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" ng-app="grrUi.appController" ng-controller="GrrUiAppController">
 <head>
-
 <script type="text/javascript">
+  window.globals = {
+      'debug': false,
+  }
 </script>
 
 <link rel="stylesheet" type="text/css" href="/static/dist/third-party.bundle.css?timestamp={{.Timestamp}}" />
@@ -22,7 +24,7 @@
 
 <link rel="shortcut icon" href="/static/images/favicon.png" />
 
-<title>GRR</title>
+<title>Velociraptor Response and Monitoring</title>
 
 <grr-user-desktop-notifications />
 </head>
@@ -31,8 +33,8 @@
   <div class="navbar navbar-default navbar-static-top" id="header">
     <div class="navbar-inner">
       <div class="container-fluid">
-        <a href="/"><img class="grr-logo" src="/static/images/grr_logo_real_sm.png" /></a>
-        <div class="navbar-brand">{{ .Heading }}</div>
+        <a href="/"><img class="grr-logo" src="/static/images/velo.png" /></a>
+        <div class="navbar-brand">Velociraptor</div>
 
         <div class="nav pull-left">
           <grr-user-label class="navbar-text"></grr-user-label>

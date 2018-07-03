@@ -14,9 +14,10 @@ message SemanticDescriptor {
     // parsing this field.
     string dynamic_type = 5;
     string description = 2;
-    string default_string = 6;
-    int64 default_int = 7;
-    bool default_bool = 8;
+
+    // A JSON encoded default. This should be the same type as the
+    // field it describes.
+    string default = 6;
 
     enum Labels {
         DEFAULT = 0;
@@ -27,7 +28,7 @@ message SemanticDescriptor {
         // generated and used fields.
     };
 
-    Labels label = 3;
+    repeated Labels label = 3;
 
     // A friendly name for this field - to be used in GUIs etc.
     string friendly_name = 4;

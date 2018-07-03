@@ -51,9 +51,23 @@ exports.SemanticValueFormController = function(
   this.grrSemanticFormDirectivesRegistryService_ =
       grrSemanticFormDirectivesRegistryService;
 
-  this.scope_.$watch('value.type', this.onValueTypeChange_.bind(this));
+  this.scope_.$watch('value', this.onValueChange_.bind(this));
 };
 var SemanticValueFormController = exports.SemanticValueFormController;
+
+SemanticValueFormController.prototype.typeOfValue_ = function(value) {
+  if (angular.isDefined(this.scope_.type)) {
+    return this.scope_.type;
+  }
+
+  var prefix = "type.googleapis.com/proto.";
+  var type = value['@type'];
+  if (type.startsWith(prefix)) {
+    type = type.slice(prefix.length);
+  }
+
+  return type;
+};
 
 
 /**
@@ -62,7 +76,17 @@ var SemanticValueFormController = exports.SemanticValueFormController;
  * @param {?string} newValue
  * @private
  */
-SemanticValueFormController.prototype.onValueTypeChange_ = function(newValue) {
+SemanticValueFormController.prototype.onValueChange_ = function(newValue) {
+  if (angular.isUndefined(this.initialized)) {
+    this.initialized = true;
+    if (angular.isDefined(this.scope_.default)) {
+      console.log(this.scope_.default);
+      this.scope_.value = JSON.parse(this.scope_.default);
+    }
+  } else {
+    return;
+  }
+
   this.element_.html('');
 
   if (angular.isDefined(this.elementScope_)) {
@@ -72,9 +96,12 @@ SemanticValueFormController.prototype.onValueTypeChange_ = function(newValue) {
     this.elementScope_ = undefined;
   }
 
-  if (angular.isUndefined(newValue)) {
+  if (angular.isUndefined(newValue) && angular.isUndefined(this.scope_.type)) {
+    console.log("Error - no type provided for semantic-value-form-directive.");
     return;
   }
+
+  this.scope_.type = this.typeOfValue_(newValue);
 
   var updateElement = function(tmpl) {
     if (angular.isDefined(tmpl)) {
@@ -87,15 +114,16 @@ SemanticValueFormController.prototype.onValueTypeChange_ = function(newValue) {
         this.element_.append(cloned);
       }.bind(this));
     } else {
-      this.element_.text('Can\'t handle type: ' + this.value['type']);
+      this.element_.text('Can\'t handle type: ' + this.scope_.type);
     }
   }.bind(this);
 
   var value = this.scope_.value;
-  var template = templatesCache[value['type']];
+  var type = this.scope_.type;
+  var template = templatesCache[type];
   if (angular.isUndefined(template)) {
     this.compileSingleTypedValueTemplate_(value).then(function(template) {
-      templatesCache[value['type']] = template;
+      templatesCache[type] = template;
       updateElement(template);
     }.bind(this));
   } else {
@@ -130,8 +158,9 @@ SemanticValueFormController.prototype
   var successHandler = function success(directive) {
     var element = angular.element('<span />');
 
-    element.html('<' + this.camelCaseToDashDelimited(directive.directive_name) +
-        ' metadata="metadata" value="value" />');
+    element.html(' <' + this.camelCaseToDashDelimited(directive.directive_name) +
+                 ' metadata="metadata" value="controller.scope_.value" ' +
+                 ' type="{$ type $}" />');
     return this.compile_(element);
   }.bind(this);
 
@@ -139,12 +168,12 @@ SemanticValueFormController.prototype
     var element = angular.element('<span />');
 
     element.html('<p class="form-control-static">No directive ' +
-        'for type: {$ value.type $}.</p>');
+        'for type: {$ type $}.</p>');
     return this.compile_(element);
   }.bind(this);
 
   return this.grrSemanticFormDirectivesRegistryService_.
-      findDirectiveForType(value['type']).then(
+      findDirectiveForType(this.scope_.type).then(
           successHandler, failureHandler);
 };
 
@@ -160,6 +189,8 @@ exports.SemanticValueFormDirective = function() {
     restrict: 'E',
     scope: {
       value: '=',
+      default: '=',
+      type: '@',
       metadata: '=?'
     },
     controller: SemanticValueFormController,

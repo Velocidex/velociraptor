@@ -3,6 +3,8 @@ package flows
 import (
 	"fmt"
 	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	assert "github.com/stretchr/testify/assert"
 	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -112,7 +114,12 @@ func (self *MyTestFlow) ProcessMessage(
 // multiple client POST requests.
 func TestFlowRunner(t *testing.T) {
 	impl := MyTestFlow{}
-	RegisterImplementation("MyTestFlow", &impl)
+	default_args, _ := ptypes.MarshalAny(&empty.Empty{})
+	desc := &flows_proto.FlowDescriptor{
+		Name:        "MyTestFlow",
+		DefaultArgs: default_args,
+	}
+	RegisterImplementation(desc, &impl)
 
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore_implementation = proto.String("FakeDataStore")
@@ -121,7 +128,7 @@ func TestFlowRunner(t *testing.T) {
 		FlowName: "MyTestFlow",
 		ClientId: "C.0",
 	}
-	flow_urn, err := StartFlow(config_obj, runner_args, nil)
+	flow_urn, err := StartFlow(config_obj, runner_args)
 	assert.NoError(t, err)
 
 	// Check that the flow object is stored properly in the DB.

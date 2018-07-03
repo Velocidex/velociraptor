@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -11,7 +10,6 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"net"
-	"time"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -28,37 +26,17 @@ type ApiServer struct {
 
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
-	in *flows_proto.StartFlowRequest) (*api_proto.StartFlowResponse, error) {
+	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	utils.Debug(in)
-	var flow_name string
-	var args proto.Message
-
-	// This should be a oneof by currently grpc-gateway lacks
-	// support for oneof.
-	if in.Interrogate != nil {
-		flow_name = "VInterrogate"
-		args = in.Interrogate
-
-	} else if in.Collect != nil {
-		flow_name = "VQLCollector"
-		args = in.Collect
-	}
-
-	flow_runner_args := &flows_proto.FlowRunnerArgs{
-		ClientId:  in.ClientId,
-		FlowName:  flow_name,
-		StartTime: uint64(time.Now().UnixNano() / 1000),
-		Args:      in,
-	}
-
-	flow_id, err := flows.StartFlow(self.config, flow_runner_args, args)
+	result := &api_proto.StartFlowResponse{}
+	flow_id, err := flows.StartFlow(self.config, in)
 	if err != nil {
 		return nil, err
 	}
+	result.FlowId = *flow_id
+	result.RunnerArgs = in
 
-	return &api_proto.StartFlowResponse{
-		FlowId: *flow_id,
-	}, nil
+	return result, nil
 }
 
 func (self *ApiServer) ListClients(
@@ -176,6 +154,13 @@ func (self *ApiServer) GetFlowResults(
 	utils.Debug(in)
 	result, err := getFlowResults(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
+	return result, err
+}
+
+func (self *ApiServer) GetFlowDescriptors(
+	ctx context.Context,
+	in *empty.Empty) (*api_proto.FlowDescriptors, error) {
+	result, err := getFlowDescriptors()
 	return result, err
 }
 

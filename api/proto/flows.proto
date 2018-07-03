@@ -93,3 +93,7 @@ message ApiFlowRequest {
 message ApiFlowResponse {
     repeated ApiFlow items = 1;
 }
+
+message FlowDescriptors {
+    repeated FlowDescriptor items = 1;
+}

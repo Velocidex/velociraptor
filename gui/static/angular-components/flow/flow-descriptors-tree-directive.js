@@ -34,10 +34,10 @@ const FlowDescriptorsTreeController =
   this.userSettings;
 
   this.grrApiService_.get('/users/me').then(function(response) {
-    this.userSettings = response.data['value']['settings'];
+    this.userSettings = response.data['settings'];
   }.bind(this));
 
-  this.grrApiService_.get('/flows/descriptors').then(
+  this.grrApiService_.get('/v1/flows/descriptors').then(
       function(response) {
         this.flowsDescriptors = this.groupDescriptorsByCategory_(
             response['data']['items']);
@@ -63,7 +63,7 @@ FlowDescriptorsTreeController.prototype.groupDescriptorsByCategory_ =
     function(items) {
   var result = {};
   angular.forEach(items, function(item) {
-    var category = item['value']['category']['value'];
+    var category = item['category'];
     result[category] = result[category] || [];
     result[category].push(item);
   }.bind(this));
@@ -81,7 +81,7 @@ FlowDescriptorsTreeController.prototype.groupDescriptorsByCategory_ =
  */
 FlowDescriptorsTreeController.prototype.onDescriptorsOrSettingsChange_ =
     function() {
-  if (angular.isUndefined(this.flowsDescriptors) ||
+  if (angular.isUndefined(this.flowsDescriptors) &&
       angular.isUndefined(this.userSettings)) {
     return;
   }
@@ -90,7 +90,7 @@ FlowDescriptorsTreeController.prototype.onDescriptorsOrSettingsChange_ =
   // it's not set.
   // TODO(user): stuff like this should be abstracted away into a
   // dedicated service.
-  var mode = this.scope_.$eval('controller.userSettings.value.mode.value');
+  var mode = this.scope_.$eval('controller.userSettings.mode');
   if (angular.isUndefined(mode)) {
     mode = 'BASIC';
   }
@@ -125,7 +125,7 @@ FlowDescriptorsTreeController.prototype.onDescriptorsOrSettingsChange_ =
 
       // Filter out flows that don't support display mode selected by
       // the user.
-      if (mode == 'DEBUG' ||
+      if (1 || mode == 'DEBUG' ||
           strippedDescriptor['behaviours'].indexOf(mode) != -1) {
 
         categoryNode['children'].push({

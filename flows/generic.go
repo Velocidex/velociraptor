@@ -3,10 +3,12 @@ package flows
 import (
 	"errors"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
@@ -73,5 +75,15 @@ func (self *VQLCollector) ProcessMessage(
 
 func init() {
 	impl := VQLCollector{}
-	RegisterImplementation("VQLCollector", &impl)
+	default_args, _ := ptypes.MarshalAny(&actions_proto.VQLCollectorArgs{})
+	desc := &flows_proto.FlowDescriptor{
+		Name:         "VQLCollector",
+		FriendlyName: "VQL Collector",
+		Category:     "Collectors",
+		Doc:          "Issues VQL queries to the Velociraptor client and collects the results.",
+		ArgsType:     "VQLCollectorArgs",
+		DefaultArgs:  default_args,
+	}
+
+	RegisterImplementation(desc, &impl)
 }

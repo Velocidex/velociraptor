@@ -11,6 +11,9 @@ Please Select a flow to launch from the tree on the left.
 </div>
 
 <div class="padded" ng-if="descriptor">
+  <div ng-if="$root.globals.debug">
+    start-flow-form.html {{ controller.flowArguments }}
+  </div>
 
   <grr-flow-form flow-args="controller.flowArguments"
                  flow-runner-args="controller.flowRunnerArguments"
@@ -35,17 +38,18 @@ Please Select a flow to launch from the tree on the left.
 <div class="padded" ng-if="controller.requestSent">
   <div ng-if="!controller.responseData && !controller.responseError">
     <uib-progressbar class="progress-striped active" max="100" value="50">
-      Launching flow {$ descriptor['value']['name']['value'] $}...
+      Launching flow {$ descriptor['name'] $}...
     </uib-progressbar>
   </div>
 
   <div class="panel panel-default" ng-if="controller.responseData">
     <div class="panel-body">
       <p>
-        Launched Flow {$ descriptor['value']['name']['value'] $}:
+        Launched Flow {$ descriptor['name'] $}:
       </p>
       <p>
-        <grr-semantic-value value="controller.responseData"></grr-semantic-value>
+        <grr-semantic-value value="controller.responseData"
+                            type="StartFlowResponse"></grr-semantic-value>
       </p>
     </div>
   </div>

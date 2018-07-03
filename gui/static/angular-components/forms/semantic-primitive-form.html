@@ -1,20 +1,22 @@
-<span ng-if="controller.valueType">
-  <input ng-if="controller.valueType == 'RDFBool' ||
-                controller.valueType == 'bool'" class="form-control"
-         type="checkbox" ng-model="value.value" />
+<span ng-if="type">
+  <input ng-if="type == 'RDFBool' ||
+                type == 'bool'" class="form-control"
+         type="checkbox" ng-model="controller.scope.value" />
 
-  <input ng-if="controller.valueType == 'RDFInteger' ||
-                controller.valueType == 'int' ||
-                controller.valueType == 'long' ||
-                controller.valueType == 'float'" class="form-control"
-         type="number" ng-model="value.value" />
+  <input ng-if="type == 'RDFInteger' ||
+                type == 'int' ||
+                type == 'integer' ||
+                type == 'long' ||
+                type == 'float'" class="form-control"
+         type="number" ng-model="controller.scope.value" />
 
-  <input ng-if="controller.valueType == 'RDFString' ||
-                controller.valueType == 'basestring' ||
-                controller.valueType == 'RDFURN'" class="form-control"
-         type="text" ng-model="value.value" />
+  <input ng-if="type == 'RDFString' ||
+                type == 'basestring' ||
+                type == 'string' ||
+                type == 'RDFURN'" class="form-control"
+         type="text" ng-model="controller.scope.value" />
 
-  <input ng-if="controller.valueType == 'RDFBytes' ||
-                controller.valueType == 'bytes'" class="form-control"
-         type="text" ng-model="value.value" />
+  <input ng-if="type == 'RDFBytes' ||
+                type == 'bytes'" class="form-control"
+         type="text" ng-model="controller.scope.value" />
 </span>

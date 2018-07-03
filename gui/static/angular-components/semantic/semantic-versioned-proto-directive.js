@@ -19,13 +19,14 @@ var SemanticVersionedProtoController = function($scope, grrReflectionService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
+  this.scope_.type = $scope.type;
+
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;
 
   /** @export {Array<Object>} */
   this.items;
 
-  this.scope_.$watch('::type', this.onValueChange_.bind(this));
   this.scope_.$watch('::value', this.onValueChange_.bind(this));
 };
 

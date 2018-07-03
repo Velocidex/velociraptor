@@ -3,9 +3,9 @@ package flows
 
 import (
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
-
 	"errors"
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -277,5 +277,14 @@ func processClientInfoQuery(response *actions_proto.VQLResponse,
 
 func init() {
 	impl := VInterrogate{}
-	RegisterImplementation("VInterrogate", &impl)
+	default_args, _ := ptypes.MarshalAny(&flows_proto.VInterrogateArgs{})
+	desc := &flows_proto.FlowDescriptor{
+		Name:         "VInterrogate",
+		FriendlyName: "Client Interrogate",
+		Category:     "Administrative",
+		Doc:          "Discover basic facts about the client's system.",
+		ArgsType:     "VInterrogateArgs",
+		DefaultArgs:  default_args,
+	}
+	RegisterImplementation(desc, &impl)
 }

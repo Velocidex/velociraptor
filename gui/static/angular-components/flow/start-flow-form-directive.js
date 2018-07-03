@@ -31,10 +31,10 @@ const StartFlowFormController = function(
   this.grrReflectionService_ = grrReflectionService;
 
   /** @type {Object} */
-  this.flowArguments;
+  this.flowArguments = {};
 
   /** @type {Object} */
-  this.flowRunnerArguments;
+  this.flowRunnerArguments = {};
 
   /** @type {boolean} */
   this.requestSent = false;
@@ -60,13 +60,13 @@ const StartFlowFormController = function(
     this.responseData = null;
 
     if (angular.isDefined(flowDescriptor)) {
-      this.flowArguments = angular.copy(flowDescriptor['value']['default_args']);
+      this.flowArguments = angular.copy(flowDescriptor['default_args']);
 
       this.grrReflectionService_.getRDFValueDescriptor(
           'FlowRunnerArgs').then(function(descriptor) {
-            this.flowRunnerArguments = angular.copy(descriptor['default']);
-            this.flowRunnerArguments['value']['flow_name'] =
-                flowDescriptor['value']['name'];
+            this.flowRunnerArguments = {
+              'flow_name': flowDescriptor['name'],
+            };
           }.bind(this));
     }
   }.bind(this));
@@ -87,16 +87,15 @@ StartFlowFormController.prototype.startClientFlow = function() {
     clientId = clientIdComponents[0];
   }
 
-  this.grrApiService_.post('/clients/' + clientId + '/flows', {
-    flow: {
-      runner_args: stripTypeInfo(this.flowRunnerArguments),
-      args: stripTypeInfo(this.flowArguments)
-    }
-  }).then(function success(response) {
-    this.responseData = response['data'];
-  }.bind(this), function failure(response) {
-    this.responseError = response['data']['message'] || 'Unknown error';
-  }.bind(this));
+  this.flowRunnerArguments.client_id = clientId;
+  this.flowRunnerArguments.args = this.flowArguments;
+  this.grrApiService_.post(
+    'v1/LaunchFlow',
+    this.flowRunnerArguments).then(function success(response) {
+      this.responseData = response['data'];
+    }.bind(this), function failure(response) {
+      this.responseError = response['data']['error'] || 'Unknown error';
+    }.bind(this));
   this.requestSent = true;
 };
 

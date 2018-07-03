@@ -81,6 +81,8 @@ ReflectionService.prototype.getRDFValueDescriptorFromCache_ = function(
 
       if (angular.isUndefined(descriptor)) {
         console.log("Unknown descriptor " + type);
+        results[type] = {};
+        return;
       }
 
       angular.forEach(descriptor['fields'], function(fieldDescriptor) {

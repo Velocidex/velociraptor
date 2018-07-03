@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"github.com/golang/protobuf/ptypes"
 	"strings"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -27,8 +28,15 @@ func enroll(server *Server, message *crypto_proto.GrrMessage) error {
 			ClientId: client_id,
 			FlowName: "VInterrogate",
 		}
-		_, err = flows.StartFlow(server.config, flow_runner_args,
-			&flows_proto.VInterrogateArgs{})
+
+		args := &flows_proto.VInterrogateArgs{}
+		marshalled_args, err := ptypes.MarshalAny(args)
+		if err != nil {
+			return err
+		}
+		flow_runner_args.Args = marshalled_args
+
+		_, err = flows.StartFlow(server.config, flow_runner_args)
 		if err != nil {
 			return err
 		}

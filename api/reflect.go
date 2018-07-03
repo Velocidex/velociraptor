@@ -27,6 +27,7 @@ var (
 		"Types",
 		"FlowRunnerArgs",
 		"FlowContext",
+		"VInterrogateArgs",
 	}
 )
 
@@ -34,6 +35,9 @@ func describeTypes() *api_proto.Types {
 	seen := make(map[string]bool)
 	result := &api_proto.Types{
 		Items: []*api_proto.TypeDescriptor{
+			{Name: "ClientURN", Kind: "primitive"},
+			{Name: "RDFURN", Kind: "primitive"},
+			{Name: "bool", Kind: "primitive"},
 			{Name: "string", Kind: "primitive"},
 			{Name: "integer", Kind: "primitive"},
 			{Name: "ApiClientId", Kind: "primitive"},
@@ -74,7 +78,7 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 		}
 
 		if field.Label != nil {
-			field_descriptor.Repeated_ = *field.Label ==
+			field_descriptor.Repeated = *field.Label ==
 				descriptor_proto.FieldDescriptorProto_LABEL_REPEATED
 		}
 
@@ -86,8 +90,19 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 				if sem_ext.Type != "" {
 					field_descriptor.Type = sem_ext.Type
 				}
+
+				if sem_ext.Default != "" {
+					field_descriptor.Default = sem_ext.Default
+				}
+
 				field_descriptor.Doc = sem_ext.Description
 				field_descriptor.FriendlyName = sem_ext.FriendlyName
+				for _, label := range sem_ext.Label {
+					if label == semantic_proto.SemanticDescriptor_HIDDEN {
+						field_descriptor.Labels = append(
+							field_descriptor.Labels, "HIDDEN")
+					}
+				}
 			}
 		}
 
@@ -105,6 +120,9 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 func getFieldType(desc *descriptor_proto.FieldDescriptorProto) string {
 	switch *desc.Type {
+	case descriptor_proto.FieldDescriptorProto_TYPE_BOOL:
+		return "bool"
+
 	case descriptor_proto.FieldDescriptorProto_TYPE_DOUBLE:
 		return "double"
 

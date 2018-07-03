@@ -167,3 +167,12 @@ func getFlowResults(
 
 	return result, nil
 }
+
+func getFlowDescriptors() (*api_proto.FlowDescriptors, error) {
+	result := &api_proto.FlowDescriptors{}
+	for _, item := range flows.GetDescriptors() {
+		result.Items = append(result.Items, item)
+	}
+
+	return result, nil
+}

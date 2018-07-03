@@ -43,7 +43,7 @@ const FlowFormController = function(
         this.outputPluginDescriptor = descriptor;
       }.bind(this));
 
-  this.scope_.$watch('flowRunnerArgs.value.output_plugins',
+  this.scope_.$watch('flowRunnerArgs.output_plugins',
                      this.onOutputPluginsChanged_.bind(this));
 
   this.scope_.$watch(function() {
@@ -76,7 +76,7 @@ FlowFormController.prototype.onOutputPluginsChanged_ = function(newValue) {
 
   var flowRunnerArgs = this.scope_['flowRunnerArgs'];
   if (angular.isUndefined(newValue) && angular.isDefined(flowRunnerArgs)) {
-    flowRunnerArgs['value']['output_plugins'] = [];
+    flowRunnerArgs['output_plugins'] = [];
   }
 };
 

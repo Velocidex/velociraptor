@@ -116,6 +116,10 @@ exports.appControllerModule.run(function(
   // grrReflectionService loads all RDFValues definitions on first request
   // and then caches them.
   grrReflectionService.getRDFValueDescriptor('ACLToken');
+
+  // Propagate the globals to the root scope. This makes them
+  // available in templates.
+  $injector.get("$rootScope").globals = window.globals;
 });
 
 

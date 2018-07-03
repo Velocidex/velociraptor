@@ -42,6 +42,13 @@ const SemanticProtoRepeatedFieldFormController = function(
 
   this.scope_.$watchGroup(['field', 'descriptor', 'value'],
                           this.onFieldDescriptorChange_.bind(this));
+
+  console.log(this.scope_.field);
+  if (angular.isDefined(this.scope_.field['default'])) {
+    this.scope_.value = JSON.parse(this.scope_.field['default']);
+  } else {
+    this.scope_.value = [];
+  }
 };
 
 
@@ -52,21 +59,24 @@ const SemanticProtoRepeatedFieldFormController = function(
  * @private
  */
 SemanticProtoRepeatedFieldFormController.prototype.onFieldDescriptorChange_ =
-    function() {
-  if (angular.isDefined(this.scope_['field']) &&
-      angular.isDefined(this.scope_['descriptor']) &&
-      angular.isDefined(this.scope_['value'])) {
-
-    if (this.scope_['noCustomTemplate']) {
-      this.onCustomDirectiveNotFound_();
-    } else {
-      this.grrSemanticRepeatedFormDirectivesRegistryService_.
-          findDirectiveForType(this.scope_['descriptor']['mro'][0]).then(
-              this.onCustomDirectiveFound_.bind(this),
-              this.onCustomDirectiveNotFound_.bind(this));
+  function() {
+    if (angular.isUndefined(this.scope_['value'])) {
+      this.scope_.value = [];
     }
-  }
-};
+
+    if (angular.isDefined(this.scope_['field']) &&
+        angular.isDefined(this.scope_['descriptor'])) {
+
+      if (this.scope_['noCustomTemplate']) {
+        this.onCustomDirectiveNotFound_();
+      } else {
+        this.grrSemanticRepeatedFormDirectivesRegistryService_.
+          findDirectiveForType(this.scope_['field']['type']).then(
+            this.onCustomDirectiveFound_.bind(this),
+            this.onCustomDirectiveNotFound_.bind(this));
+      }
+    }
+  };
 
 
 /**
@@ -121,7 +131,7 @@ SemanticProtoRepeatedFieldFormController.prototype.onCustomDirectiveFound_ = fun
  */
 SemanticProtoRepeatedFieldFormController.prototype.addItem = function() {
   this.scope_.value.splice(0, 0,
-                           angular.copy(this.scope_['descriptor']['default']));
+                           angular.copy(this.scope_['descriptor']['default'] || {}));
 };
 
 

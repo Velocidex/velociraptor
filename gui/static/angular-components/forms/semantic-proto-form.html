@@ -14,12 +14,13 @@
     <div ng-repeat="field in controller.valueDescriptor.fields |
                     filter:controller.regularFieldsOnly |
                     filter:controller.boundNotExplicitlyHiddenFields">
-      <grr-form-proto-single-field value="controller.editedValue.value[field.name]"
+
+      <grr-form-proto-single-field value="controller.editedValue[field.name]"
                                    field="field"
                                    ng-if="!field.repeated">
       </grr-form-proto-single-field>
 
-      <grr-form-proto-repeated-field value="controller.editedValue.value[field.name]"
+      <grr-form-proto-repeated-field value="controller.editedValue[field.name]"
                                      descriptor="controller.descriptors[field.type]"
                                      field="field"
                                      ng-if="field.repeated">
@@ -44,12 +45,12 @@
         <div ng-repeat="field in controller.valueDescriptor.fields |
                         filter:controller.advancedFieldsOnly |
                         filter:controller.boundNotExplicitlyHiddenFields">
-          <grr-form-proto-single-field value="controller.editedValue.value[field.name]"
+          <grr-form-proto-single-field value="controller.editedValue[field.name]"
                                        field="field"
                                        ng-if="!field.repeated">
           </grr-form-proto-single-field>
 
-          <grr-form-proto-repeated-field value="controller.editedValue.value[field.name]"
+          <grr-form-proto-repeated-field value="controller.editedValue[field.name]"
                                          descriptor="controller.descriptors[field.type]"
                                          field="field"
                                          ng-if="field.repeated">
