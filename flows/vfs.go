@@ -42,9 +42,11 @@ func (self *VFSListDirectory) Start(
 		Query: []*actions_proto.VQLRequest{
 			{
 				Name: vfs_args.VfsPath,
-				VQL: fmt.Sprintf(
-					"SELECT IsDir, Name, Size, Mode from glob(" +
-						"globs=path + '/*')"),
+				VQL: "SELECT IsDir, Name, Size, Mode, " +
+					"timestamp(epoch=Sys.Mtim.Sec) as mtime, " +
+					"timestamp(epoch=Sys.Atim.Sec) as atime, " +
+					"timestamp(epoch=Sys.Ctim.Sec) as ctime " +
+					"from glob(globs=path + '/*')",
 			},
 		},
 	}

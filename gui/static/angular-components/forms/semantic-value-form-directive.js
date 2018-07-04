@@ -80,7 +80,6 @@ SemanticValueFormController.prototype.onValueChange_ = function(newValue) {
   if (angular.isUndefined(this.initialized)) {
     this.initialized = true;
     if (angular.isDefined(this.scope_.default)) {
-      console.log(this.scope_.default);
       this.scope_.value = JSON.parse(this.scope_.default);
     }
   } else {

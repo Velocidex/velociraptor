@@ -1,10 +1,12 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"path"
+	"strings"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -12,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows "www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/responder"
+	urns "www.velocidex.com/golang/velociraptor/urns"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
@@ -27,7 +30,7 @@ func getFlows(
 	}
 
 	flow_urns, err := db.ListChildren(
-		config_obj, fmt.Sprintf("aff4:/%s/flows", client_id),
+		config_obj, urns.BuildURN(client_id, "flows"),
 		offset, length)
 	if err != nil {
 		return nil, err
@@ -57,14 +60,18 @@ func getFlowDetails(
 	config_obj *config.Config,
 	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
 
-	flow_urn := fmt.Sprintf("aff4:/%s/flows/%s", client_id, flow_id)
-	flow_obj, err := flows.GetAFF4FlowObject(config_obj, flow_urn)
+	flow_urn, err := validateFlowId(client_id, flow_id)
+	if err != nil {
+		return nil, err
+	}
+
+	flow_obj, err := flows.GetAFF4FlowObject(config_obj, *flow_urn)
 	if err != nil {
 		return nil, err
 	}
 
 	return &api_proto.ApiFlow{
-		Urn:        flow_urn,
+		Urn:        *flow_urn,
 		ClientId:   client_id,
 		FlowId:     flow_id,
 		Name:       flow_obj.RunnerArgs.FlowName,
@@ -175,4 +182,21 @@ func getFlowDescriptors() (*api_proto.FlowDescriptors, error) {
 	}
 
 	return result, nil
+}
+
+func validateFlowId(client_id string, flow_id string) (*string, error) {
+	base_flow := path.Base(flow_id)
+	if !strings.HasPrefix(base_flow, constants.FLOW_PREFIX) {
+		return nil, errors.New(
+			"Flows must start with " + constants.FLOW_PREFIX)
+	}
+
+	rebuild_urn := urns.BuildURN(client_id, "flows", base_flow)
+	if strings.HasPrefix(flow_id, "aff4:") {
+		if flow_id != rebuild_urn {
+			return nil, errors.New("Invalid flow id.")
+		}
+	}
+
+	return &rebuild_urn, nil
 }

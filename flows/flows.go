@@ -15,6 +15,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	utils "www.velocidex.com/golang/velociraptor/testing"
+	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 var (
@@ -411,7 +412,7 @@ func GetNewFlowIdForClient(client_id string) string {
 	rand.Read(buf)
 	hex.Encode(result, buf)
 
-	return fmt.Sprintf("aff4:/%s/flows/E.%s", client_id, string(result))
+	return urns.BuildURN(client_id, "flows", constants.FLOW_PREFIX+string(result))
 }
 
 func StoreResultInFlow(

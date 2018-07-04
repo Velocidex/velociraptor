@@ -117,8 +117,24 @@ message ApiGrrUser {
 }
 
 
-service API {
+message VFSRefreshDirectoryRequest {
+    string client_id = 1 [(sem_type) = {
+            description: "The client to list",
+            type: "RDFURN",
+            label: HIDDEN,
+        }];
 
+    string vfs_path = 2 [(sem_type) = {
+            description: "The VFS Path to list files in .",
+        }];
+
+    uint64 depth = 3 [(sem_type) = {
+            description: "Depth of directory refresh",
+        }];
+}
+
+
+service API {
     rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
         option (google.api.http) = {
             post: "/api/v1/LaunchFlow",
@@ -166,6 +182,13 @@ service API {
     rpc VFSListDirectory(VFSListRequest) returns (VQLResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSListDirectory/{client_id}",
+        };
+    }
+
+    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/VFSRefreshDirectory/{client_id}",
+            body: "*",
         };
     }
 

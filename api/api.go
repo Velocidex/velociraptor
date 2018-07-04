@@ -175,6 +175,17 @@ func (self *ApiServer) VFSListDirectory(
 	return result, err
 }
 
+func (self *ApiServer) VFSRefreshDirectory(
+	ctx context.Context,
+	in *api_proto.VFSRefreshDirectoryRequest) (
+	*api_proto.StartFlowResponse, error) {
+	utils.Debug(in)
+
+	result, err := vfsRefreshDirectory(
+		self, ctx, in.ClientId, in.VfsPath, in.Depth)
+	return result, err
+}
+
 func StartServer(config_obj *config.Config) error {
 	bind_addr := fmt.Sprintf("%s:%d", *config_obj.API_bind_address,
 		*config_obj.API_bind_port)

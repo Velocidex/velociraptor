@@ -2,13 +2,16 @@ package api
 
 import (
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	context "golang.org/x/net/context"
 	"path"
 	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
@@ -32,8 +35,6 @@ func vfsListDirectory(
 
 	vfs_path = strings.TrimPrefix(vfs_path, "/fs")
 	vfs_urn := urns.BuildURN(client_id, "vfs", vfs_path)
-	utils.Debug(vfs_urn)
-
 	data, err := db.GetSubjectData(config_obj, vfs_urn, 0, 10)
 	if err != nil {
 		return nil, err
@@ -57,4 +58,34 @@ func getVirtualDirectory(vfs_path string) (*actions_proto.VQLResponse, bool) {
 	}
 
 	return nil, false
+}
+
+func vfsRefreshDirectory(
+	self *ApiServer,
+	ctx context.Context,
+	client_id string,
+	vfs_path string,
+	depth uint64) (*api_proto.StartFlowResponse, error) {
+
+	// Trim the /fs from the VFS path to get the real path.
+	vfs_path = path.Join("/", vfs_path)
+	vfs_path = strings.TrimPrefix(vfs_path, "/fs")
+
+	args := &flows_proto.FlowRunnerArgs{
+		ClientId: client_id,
+		FlowName: "VFSListDirectory",
+	}
+
+	flow_args := &flows_proto.VFSListRequest{
+		VfsPath: vfs_path,
+	}
+	any_msg, err := ptypes.MarshalAny(flow_args)
+	if err != nil {
+		return nil, err
+	}
+
+	args.Args = any_msg
+
+	result, err := self.LaunchFlow(ctx, args)
+	return result, err
 }

@@ -172,25 +172,26 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
   var clientId = this.fileContext['clientId'];
   var selectedDirPath = this.fileContext['selectedDirPath'];
 
-  var url = 'clients/' + clientId + '/vfs-refresh-operations';
-  var refreshOperation = {
-    file_path: selectedDirPath,
-    max_depth: 1,
-    notify_user: false
+  var url = 'v1/VFSRefreshDirectory/' + clientId;
+  var params = {
+    vfs_path: selectedDirPath,
+    depth: 0,
   };
 
   // Setting this.lastRefreshOperationId means that the update button
   // will get disabled immediately.
-  var operationId = this.lastRefreshOperationId = 'unknown';
-  this.grrApiService_.post(url, refreshOperation)
+  this.lastRefreshOperationId = 'unknown';
+  this.grrApiService_.post(url, params)
       .then(
           function success(response) {
-            operationId = this.lastRefreshOperationId =
-                response['data']['operation_id'];
-
+            this.lastRefreshOperationId = response.data['flow_id'];
             var pollPromise = this.grrApiService_.poll(
-                url + '/' + operationId,
-                OPERATION_POLL_INTERVAL_MS);
+              'v1/GetFlowDetails/' + clientId,
+              OPERATION_POLL_INTERVAL_MS, {
+                flow_id: this.lastRefreshOperationId,
+              }, function(response) {
+                return response.data.context.state != 'RUNNING';
+              });
             this.scope_.$on('$destroy', function() {
               this.grrApiService_.cancelPoll(pollPromise);
             }.bind(this));
@@ -200,7 +201,7 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
       .then(
           function success() {
             this.rootScope_.$broadcast(
-                REFRESH_FOLDER_EVENT, ensurePathIsFolder(selectedFolderPath));
+                REFRESH_FOLDER_EVENT, selectedDirPath);
           }.bind(this))
       .finally(function() {
         if (this.lastRefreshOperationId == operationId) {

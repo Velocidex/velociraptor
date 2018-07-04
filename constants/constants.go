@@ -6,6 +6,8 @@ var (
 	FLOW_RUNNER_ARGS = "aff4:flow_runner_args"
 	FLOW_CONTEXT     = "aff4:flow_context"
 	FLOW_STATE       = "aff4:velociraptor_flow_state"
+	FLOW_PREFIX      = "F."
+
 	ATTR_FLOW_OBJECT = []string{
 		FLOW_RUNNER_ARGS,
 		FLOW_CONTEXT,

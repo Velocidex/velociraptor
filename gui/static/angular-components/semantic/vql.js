@@ -16,8 +16,6 @@ const vqlController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  console.log(this.scope_);
-
   /** @type {?} */
   this.scope_.value;
 
@@ -49,13 +47,11 @@ vqlController.prototype.onValueChange = function(newValue) {
     }
     this.payload = JSON.parse(newValue.Response);
     this.value =  newValue;
-    console.log(newValue);
   }
 };
 
 
 vqlController.prototype.selectRow_ = function(row) {
-  console.log(row);
   this.scope_.selectedRow = row;
 };
 
