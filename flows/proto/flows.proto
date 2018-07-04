@@ -71,11 +71,6 @@ message FlowContext {
 
 // Next field: 23
 message FlowRunnerArgs {
-   GrrMessage.Priority priority = 1 [(sem_type) = {
-      description: "The priority used for this flow.",
-      label: ADVANCED
-    }];
-
    bool notify_to_user = 2 [(sem_type) = {
       description: "Should a notification be sent to the initiator.",
       friendly_name: "Notify at Completion",

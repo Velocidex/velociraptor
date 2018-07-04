@@ -109,7 +109,7 @@ func GetTemplateHandler(
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		args := _templateArgs{
-			Timestamp: time.Now().UnixNano(),
+			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			Heading:   "Heading",
 		}
 		err := tmpl.Execute(w, args)

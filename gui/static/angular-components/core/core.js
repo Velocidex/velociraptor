@@ -6,6 +6,7 @@ goog.module.declareLegacyNamespace();
 const {Aff4ObjectRepresentationDirective} = goog.require('grrUi.core.aff4ObjectRepresentationDirective');
 const {ApiItemsProviderDirective} = goog.require('grrUi.core.apiItemsProviderDirective');
 const {ApiService} = goog.require('grrUi.core.apiService');
+const {VQLService} = goog.require('grrUi.core.vqlService');
 const {BasenameFilter} = goog.require('grrUi.core.basenameFilter');
 const {BindKeyDirective} = goog.require('grrUi.core.bindKeyDirective');
 const {BytesToHexFilter} = goog.require('grrUi.core.bytesToHexFilter');

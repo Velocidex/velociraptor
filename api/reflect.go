@@ -28,6 +28,7 @@ var (
 		"FlowRunnerArgs",
 		"FlowContext",
 		"VInterrogateArgs",
+		"VFSListRequest",
 	}
 )
 

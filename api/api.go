@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"net"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -161,6 +162,16 @@ func (self *ApiServer) GetFlowDescriptors(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.FlowDescriptors, error) {
 	result, err := getFlowDescriptors()
+	return result, err
+}
+
+func (self *ApiServer) VFSListDirectory(
+	ctx context.Context,
+	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
+	utils.Debug(in)
+
+	result, err := vfsListDirectory(
+		self.config, in.ClientId, in.VfsPath)
 	return result, err
 }
 

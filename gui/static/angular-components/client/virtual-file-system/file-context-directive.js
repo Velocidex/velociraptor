@@ -20,18 +20,18 @@ exports.FileContextController = function($scope) {
   this.clientId;
 
   /** @type {string} */
-  this.selectedFilePath;
+  this.selectedDirPath;
 
   /** @type {number|undefined} */
   this.selectedFileVersion;
 
   this.scope_.$watchGroup(['clientId',
-                           'selectedFilePath',
+                           'selectedDirPath',
                            'selectedFileVersion'],
       this.onDirectiveArgumentsChange_.bind(this));
 
   this.scope_.$watchGroup(['controller.clientId',
-                           'controller.selectedFilePath',
+                           'controller.selectedDirPath',
                            'controller.selectedFileVersion'],
       this.onControllerValuesChange_.bind(this));
 };
@@ -46,7 +46,7 @@ var FileContextController = exports.FileContextController;
  */
 FileContextController.prototype.onDirectiveArgumentsChange_ = function() {
   this.clientId = this.scope_['clientId'];
-  this.selectedFilePath = this.scope_['selectedFilePath'];
+  this.selectedDirPath = this.scope_['selectedDirPath'];
   this.selectedFileVersion = this.scope_['selectedFileVersion'];
 };
 
@@ -58,7 +58,7 @@ FileContextController.prototype.onDirectiveArgumentsChange_ = function() {
  */
 FileContextController.prototype.onControllerValuesChange_ = function() {
   this.scope_['clientId'] = this.clientId;
-  this.scope_['selectedFilePath'] = this.selectedFilePath;
+  this.scope_['selectedDirPath'] = this.selectedDirPath;
   this.scope_['selectedFileVersion'] = this.selectedFileVersion;
 };
 
@@ -71,8 +71,9 @@ FileContextController.prototype.onControllerValuesChange_ = function() {
  * @export
  */
 FileContextController.prototype.selectFile = function(filePath, opt_fileVersion) {
-  this.selectedFilePath = filePath;
+  this.selectedDirPath = filePath;
   this.selectedFileVersion = opt_fileVersion || undefined;  // If opt_fileVersion is falsey, always coerce it to undefined.
+  this.selectedRow = {};
 };
 
 
@@ -85,8 +86,9 @@ exports.FileContextDirective = function() {
     restrict: 'E',
     scope: {
       clientId: '=',
-      selectedFilePath: '=',
-      selectedFileVersion: '='
+      selectedDirPath: '=',
+      selectedFileVersion: '=',
+      selectedRow: '=',
     },
     transclude: true,
     template: '<ng-transclude />',

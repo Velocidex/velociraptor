@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+message VFSListRequest {
+    string client_id = 1 [(sem_type) = {
+            description: "The client to list",
+            type: "RDFURN",
+            label: HIDDEN,
+        }];
+
+    string vfs_path = 2 [(sem_type) = {
+            description: "The VFS Path to list files in .",
+        }];
+}

@@ -16,6 +16,8 @@ const vqlController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
+  console.log(this.scope_);
+
   /** @type {?} */
   this.scope_.value;
 
@@ -41,13 +43,20 @@ const vqlController = function(
 vqlController.prototype.onValueChange = function(newValue) {
   if (angular.isDefined(newValue)) {
     this.columns = [];
-    for (var i=0; i<newValue.Columns.length; i++) {
-      this.columns.push(newValue.Columns[i]);
+
+    if (angular.isDefined(newValue.Columns)) {
+      this.columns = newValue.Columns;
     }
     this.payload = JSON.parse(newValue.Response);
-    this.query =  newValue.Query;
+    this.value =  newValue;
     console.log(newValue);
   }
+};
+
+
+vqlController.prototype.selectRow_ = function(row) {
+  console.log(row);
+  this.scope_.selectedRow = row;
 };
 
 
@@ -62,8 +71,7 @@ exports.VQLDirective = function() {
   return {
     scope: {
       value: '=',
-      payload: '=',
-      columns: '='
+      selectedRow: '=?',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/semantic/vql.html',

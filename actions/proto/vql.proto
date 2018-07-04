@@ -7,14 +7,26 @@ import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
 package proto;
 
 message VQLRequest {
-    string Name = 2;
-    string VQL = 1;
+    string Name = 2 [(sem_type) = {
+            description: "The name of this query. This should be descriptive to indicate what type of informaiton the query retrieves.",
+        }];
+    string VQL = 1 [(sem_type) = {
+            description: "The VQL query to execute on the client.",
+        }];
+}
+
+message VQLEnv {
+    string key = 1;
+    string value = 2;
 }
 
 message VQLCollectorArgs {
     option (flow_metadata) = {
         category: "Generic";
     };
+    repeated VQLEnv env = 3 [(sem_type) = {
+            description: "Environment variables to be provided for the query.",
+        }];
 
     repeated VQLRequest Query = 2 [(sem_type) = {
             description: "The VQL queries to execute on the client.",
@@ -25,8 +37,17 @@ message VQLResponse {
     string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
-    repeated string Columns = 2;
-    VQLRequest Query = 3;
+    repeated string Columns = 2 [(sem_type) = {
+            description: "A list of column headings produced by the query.",
+        }];
+    VQLRequest Query = 3 [(sem_type) = {
+            description: "The query that was executed.",
+        }];
+
+    uint64 timestamp = 4 [(sem_type) = {
+            description: "The timestamp the response was generated.",
+            type: "RDFDatetime",
+        }];
 }
 
 

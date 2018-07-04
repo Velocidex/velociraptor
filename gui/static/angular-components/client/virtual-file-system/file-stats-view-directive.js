@@ -26,36 +26,6 @@ const FileStatsViewController = function(
 
   /** @type {Object} */
   this.details;
-
-  this.scope_.$watchGroup(['controller.fileContext.clientId',
-                           'controller.fileContext.selectedFilePath',
-                           'controller.fileContext.selectedFileVersion'],
-      this.onContextChange_.bind(this));
-};
-
-
-
-/**
- * Handles changes to the clientId and filePath.
- *
- * @private
- */
-FileStatsViewController.prototype.onContextChange_ = function() {
-  var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
-  var fileVersion = this.fileContext['selectedFileVersion'];
-
-  if (angular.isDefined(clientId) && angular.isDefined(filePath)) {
-    var fileDetailsUrl = 'clients/' + clientId + '/vfs-details/' + filePath;
-    var params = {};
-    if (fileVersion) {
-      params['timestamp'] = fileVersion;
-    }
-
-    this.grrApiService_.get(fileDetailsUrl, params).then(function(response) {
-      this.details = response.data['file']['value']['details'];
-    }.bind(this));
-  }
 };
 
 

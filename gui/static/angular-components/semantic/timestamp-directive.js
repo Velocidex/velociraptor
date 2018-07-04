@@ -53,16 +53,12 @@ TimestampController.prototype.onValueChange = function(newValue) {
     if (newValue === null || newValue === 0) {
       this.formattedTimestamp = '-';
     } else {
-      var timestamp;
-      if (angular.isObject(newValue)) {
-        timestamp = newValue.value / 1000;
-      } else {
-        timestamp = newValue / 1000;
+      if (typeof newValue == 'string') {
+        newValue = parseInt(newValue);
       }
 
-      this.value = timestamp;
-
-      this.formattedTimestamp = this.timeService_.formatAsUTC(timestamp);
+      this.value = newValue / 1000;
+      this.formattedTimestamp = this.timeService_.formatAsUTC(this.value);
       this.formattedTimestampComponents = this.formattedTimestamp.split(' ');
     }
   }

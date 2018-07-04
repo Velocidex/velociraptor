@@ -38,4 +38,6 @@ var (
 	ATTR_FLOW_RESULT = []string{
 		FLOW_RESULT,
 	}
+
+	VFS_FILE_LISTING = "aff4:vfs_file_listing"
 )

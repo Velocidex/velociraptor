@@ -41,7 +41,7 @@ exports.getFileId = function(filePath) {
  * @return {string} File path.
  * @export
  */
-exports.getFilePathFromId = function(fileId) {
+exports.getDirPathFromId = function(fileId) {
   var replaceEncodedChars = function(item) {
     return item.replace(/_[0-9A-F][0-9A-F]?/g, function(encChar) {
       var charNum = parseInt(encChar.substr(1), 16);
@@ -73,7 +73,7 @@ const FileViewController = function(
   this.grrRoutingService_ = grrRoutingService;
 
   /** @type {string} */
-  this.selectedFilePath;
+  this.selectedDirPath;
 
   /** @type {string} */
   this.viewMode = 'list';
@@ -91,7 +91,7 @@ const FileViewController = function(
       this.scope_, ['clientId', 'path', 'version', 'mode', 'tab'],
       this.onUrlRoutingParamsChanged_.bind(this));
 
-  this.scope_.$watchGroup(['controller.selectedFilePath',
+  this.scope_.$watchGroup(['controller.selectedDirPath',
                            'controller.fileVersion',
                            'controller.viewMode',
                            'controller.tab'],
@@ -109,7 +109,7 @@ const FileViewController = function(
  */
 FileViewController.prototype.onUrlRoutingParamsChanged_ = function(params) {
   this.clientId = params[0];
-  this.selectedFilePath = params[1];
+  this.selectedDirPath = params[1];
   this.fileVersion = parseInt(params[2], 10) || undefined;
   this.viewMode = params[3] || 'list';
   this.tab = params[4] || 'stats';
@@ -123,7 +123,7 @@ FileViewController.prototype.onUrlRoutingParamsChanged_ = function(params) {
  */
 FileViewController.prototype.onFileContextRoutingParamsChange_ = function() {
   var params = {
-    path: this.selectedFilePath,
+    path: this.selectedDirPath,
   };
   params['version'] = this.fileVersion || undefined;
   if (!this.viewMode || this.viewMode == 'list') {

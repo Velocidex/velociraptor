@@ -1,3 +1,17 @@
 <div grr-force-refresh refresh-trigger="controller.details">
-  <grr-aff4-object-representation value="controller.details"></grr-aff4-object-representation>
+  <table class="table table-striped table-condensed table-hover
+                table-bordered full-width">
+    <thead>
+      <tr>
+        <th>Attribute</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="(key, value) in controller.fileContext.selectedRow">
+        <td>{{ key }}</td>
+        <td>{{ value }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>

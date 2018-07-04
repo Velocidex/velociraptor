@@ -38,7 +38,8 @@ const FileTableController = function(
   this.grrApiService_ = grrApiService;
 
   /** @private {string} */
-  this.selectedFilePath_;
+  this.selectedDirPath_;
+  this.selecteFilePath_;
 
   /** @type {string} */
   this.fileListUrl;
@@ -61,6 +62,8 @@ const FileTableController = function(
   /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
   this.fileContext;
 
+  this.selectedRow = {};
+
   /**
    * This variable is set to a function by the infinite-table-directive
    * and can be used to force data reload from the server.
@@ -73,7 +76,8 @@ const FileTableController = function(
   this.scope_.$on(REFRESH_FILE_EVENT, this.refreshFileList_.bind(this));
 
   this.scope_.$watch('controller.fileContext.clientId', this.refreshFileList_.bind(this));
-  this.scope_.$watch('controller.fileContext.selectedFilePath', this.onFilePathChange_.bind(this));
+  this.scope_.$watch('controller.fileContext.selectedDirPath', this.onDirPathChange_.bind(this));
+  this.scope_.$watch('controller.fileContext.selectedRow', this.onSelectedRowChange_.bind(this));
 };
 
 
@@ -92,7 +96,7 @@ FileTableController.prototype.setViewMode = function(mode) {
  *
  * @private
  */
-FileTableController.prototype.onFilePathChange_ = function(newValue, oldValue) {
+FileTableController.prototype.onDirPathChange_ = function(newValue, oldValue) {
   var newFolder = getFolderFromPath(newValue);
   var oldFolder = getFolderFromPath(oldValue);
 
@@ -104,6 +108,16 @@ FileTableController.prototype.onFilePathChange_ = function(newValue, oldValue) {
   }
 };
 
+
+FileTableController.prototype.onSelectedRowChange_ = function(newValue, oldValue) {
+  if (angular.isDefined(newValue) && angular.isDefined(newValue.Name)) {
+    if (angular.isDefined(this.fileContext.selectedDirPath)) {
+      this.fileContext.selectedFilePath = this.fileContext.selectedDirPath +
+        "/" + newValue.Name;
+    }
+  }
+};
+
 /**
  * Is triggered whenever the client id or the selected folder path changes.
  *
@@ -111,11 +125,10 @@ FileTableController.prototype.onFilePathChange_ = function(newValue, oldValue) {
  */
 FileTableController.prototype.refreshFileList_ = function() {
   var clientId = this.fileContext['clientId'];
-  var selectedFilePath = this.fileContext['selectedFilePath'] || '';
-  var selectedFolderPath = getFolderFromPath(selectedFilePath);
+  var selectedDirPath = this.fileContext['selectedDirPath'] || '';
 
   this.filter = '';
-  this.fileListUrl = 'clients/' + clientId + '/vfs-index/' + selectedFolderPath;
+  this.fileListUrl = 'clients/' + clientId + '/vfs-index/' + selectedDirPath;
 
   // Required to trigger an update even if the selectedFolderPath changes to the same value.
   if (this.triggerUpdate) {
@@ -131,7 +144,7 @@ FileTableController.prototype.refreshFileList_ = function() {
  */
 FileTableController.prototype.selectFile = function(file) {
   // Always reset the version when the file is selected.
-  this.fileContext.selectFile(file['value']['path']['value'], 0);
+  this.fileContext.selectFile(file['path'], 0);
 };
 
 /**
@@ -142,7 +155,7 @@ FileTableController.prototype.selectFile = function(file) {
  */
 FileTableController.prototype.selectFolder = function(file) {
   var clientId = this.fileContext['clientId'];
-  var filePath = file['value']['path']['value'];
+  var filePath = file['path'];
   filePath = ensurePathIsFolder(filePath);
 
   // Always reset the version if the file is selected.
@@ -157,12 +170,11 @@ FileTableController.prototype.selectFolder = function(file) {
  */
 FileTableController.prototype.startVfsRefreshOperation = function() {
   var clientId = this.fileContext['clientId'];
-  var selectedFilePath = this.fileContext['selectedFilePath'];
-  var selectedFolderPath = getFolderFromPath(selectedFilePath);
+  var selectedDirPath = this.fileContext['selectedDirPath'];
 
   var url = 'clients/' + clientId + '/vfs-refresh-operations';
   var refreshOperation = {
-    file_path: selectedFolderPath,
+    file_path: selectedDirPath,
     max_depth: 1,
     notify_user: false
   };
@@ -214,8 +226,7 @@ FileTableController.prototype.updateFilter = function() {
  */
 FileTableController.prototype.downloadTimeline = function() {
   var clientId = this.fileContext['clientId'];
-  var selectedFilePath = this.fileContext['selectedFilePath'] || '';
-  var selectedFolderPath = getFolderFromPath(selectedFilePath);
+  var selectedDirPath = this.fileContext['selectedDirPath'] || '';
 
   var url = 'clients/' + clientId + '/vfs-timeline-csv/' + selectedFolderPath;
   this.grrApiService_.downloadFile(url).then(

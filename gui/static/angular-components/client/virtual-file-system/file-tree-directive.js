@@ -6,7 +6,7 @@ goog.module.declareLegacyNamespace();
 const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ensurePathIsFolder, getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 const {getFileId} = goog.require('grrUi.client.virtualFileSystem.fileViewDirective');
-
+const {VQLService} = goog.require('grrUi.core.vqlService');
 
 /**
  * Controller for FileTreeDirective.
@@ -47,7 +47,7 @@ const FileTreeController = function(
 
   this.scope_.$watch('controller.fileContext.clientId',
       this.onClientIdChange_.bind(this));
-  this.scope_.$watch('controller.fileContext.selectedFilePath',
+  this.scope_.$watch('controller.fileContext.selectedDirPath',
       this.onSelectedFilePathChange_.bind(this));
 };
 
@@ -76,7 +76,7 @@ FileTreeController.prototype.initTree_ = function() {
       'multiple': false,
       'data' : function (node, cb) {
         if (node.id === '#') {
-          controller.getChildFiles_('').then(cb);
+          controller.getChildFiles_('/').then(cb);
         } else {
           controller.getChildFiles_(node.data.path).then(cb);
         }
@@ -94,7 +94,7 @@ FileTreeController.prototype.initTree_ = function() {
     var node = this.treeElement_.jstree('get_node', selectionId);
     var folderPath =  node.data.path;
 
-    if (getFolderFromPath(this.fileContext['selectedFilePath']) === folderPath) {
+    if (getFolderFromPath(this.fileContext['selectedDirPath']) === folderPath) {
       this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT,
                                  ensurePathIsFolder(folderPath));
     } else {
@@ -121,9 +121,9 @@ FileTreeController.prototype.initTree_ = function() {
   }.bind(this));
 
   this.treeElement_.on("loaded.jstree", function () {
-    var selectedFilePath = this.fileContext['selectedFilePath'];
-    if (selectedFilePath) {
-      this.expandToFilePath_(getFileId(getFolderFromPath(selectedFilePath)),
+    var selectedDirPath = this.fileContext['selectedDirPath'];
+    if (selectedDirPath) {
+      this.expandToFilePath_(getFileId(getFolderFromPath(selectedDirPath)),
                              true);
     }
   }.bind(this));
@@ -143,11 +143,16 @@ FileTreeController.prototype.initTree_ = function() {
  */
 FileTreeController.prototype.getChildFiles_ = function(folderPath) {
   var clientId_ = this.fileContext['clientId'];
-  var url = 'clients/' + clientId_ + '/vfs-index/' + folderPath;
-  var params = { directories_only: 1 };
+  var url = 'v1/VFSListDirectory/' + clientId_;
+  var params = { 'vfs_path': folderPath || '/' };
+
+  this.fileContext.selectedDirPathData = undefined;
+  this.fileContext.selectedRow = undefined;
 
   return this.grrApiService_.get(url, params).then(
-      this.parseFileResponse_.bind(this));
+    function(response) {
+      return this.parseFileResponse_(response, folderPath);
+    }.bind(this));
 };
 
 /**
@@ -156,21 +161,29 @@ FileTreeController.prototype.getChildFiles_ = function(folderPath) {
  * @return {Array} A list of files in a jsTree-compatible structure.
  * @private
  */
-FileTreeController.prototype.parseFileResponse_ = function(response) {
-  var files = response.data['items'];
+FileTreeController.prototype.parseFileResponse_ = function(response, folderPath) {
+  if (angular.isUndefined(response.data.Response)) {
+    return [];
+  }
 
+  this.fileContext.selectedDirPathData = response.data;
+
+  var files = JSON.parse(response.data.Response);
   var result = [];
   angular.forEach(files, function(file) {
-    var filePath = file['value']['path']['value'];
-    var fileId = getFileId(filePath);
-    result.push({
-      id: fileId,
-      text: file['value']['name']['value'],
-      data: {
-        path: filePath
-      },
-      children: true  // always set to true to show the triangle
-    });
+    if (file["IsDir"]) {
+      var filePath = file['Name'];
+      var fullFilePath = folderPath + "/" + filePath;
+      var fileId = getFileId(fullFilePath);
+      result.push({
+        id: fileId,
+        text: file['Name'],
+        data: {
+          path: fullFilePath,
+        },
+        children: true  // always set to true to show the triangle
+      });
+    }
   }.bind(this));
 
   return result;
@@ -182,7 +195,7 @@ FileTreeController.prototype.parseFileResponse_ = function(response) {
  */
 FileTreeController.prototype.onRefreshFolderEvent_ = function(e, path) {
   if (angular.isUndefined(path)) {
-    path = this.fileContext['selectedFilePath'];
+    path = this.fileContext['selectedDirPath'];
   }
 
   var nodeId = getFileId(getFolderFromPath(path));
@@ -195,10 +208,10 @@ FileTreeController.prototype.onRefreshFolderEvent_ = function(e, path) {
  * @private
  */
 FileTreeController.prototype.onSelectedFilePathChange_ = function() {
-  var selectedFilePath = this.fileContext['selectedFilePath'];
+  var selectedDirPath = this.fileContext['selectedDirPath'];
 
-  if (selectedFilePath) {
-    var selectedFolderPath = getFolderFromPath(selectedFilePath);
+  if (selectedDirPath) {
+    var selectedFolderPath = getFolderFromPath(selectedDirPath);
     this.expandToFilePath_(getFileId(selectedFolderPath), true);
   }
 };

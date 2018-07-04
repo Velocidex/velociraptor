@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -30,8 +31,13 @@ func (self *VQLClientAction) Run(
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment
 	// to communicate with the server.
-	env := vfilter.NewDict().Set("responder", responder).Set(
-		"config", ctx.Config)
+	env := vfilter.NewDict().
+		Set("responder", responder).
+		Set("config", ctx.Config)
+
+	for _, env_spec := range arg.Env {
+		env.Set(env_spec.Key, env_spec.Value)
+	}
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 
 	// All the queries will use the same scope. This allows one
@@ -50,8 +56,9 @@ func (self *VQLClientAction) Run(
 		}
 
 		response := &actions_proto.VQLResponse{
-			Query:    query,
-			Response: string(s),
+			Query:     query,
+			Response:  string(s),
+			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 		}
 
 		columns := vql.Columns(scope)
@@ -59,7 +66,6 @@ func (self *VQLClientAction) Run(
 			response.Columns = append(response.Columns, column)
 		}
 
-		vfilter.Debug(response)
 		responder.AddResponse(response)
 	}
 
