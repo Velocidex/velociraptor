@@ -27,12 +27,17 @@ func NewResponder(
 }
 
 func (self *Responder) AddResponse(message proto.Message) error {
+	return self.AddResponseToRequest(self.request.RequestId, message)
+}
+
+func (self *Responder) AddResponseToRequest(
+	request_id uint64, message proto.Message) error {
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
 	self.next_id = self.next_id + 1
 	response := &crypto_proto.GrrMessage{
 		SessionId:   self.request.SessionId,
-		RequestId:   self.request.RequestId,
+		RequestId:   request_id,
 		ResponseId:  self.next_id,
 		ArgsRdfName: rdf_name,
 		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,

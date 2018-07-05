@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"log"
+	"os"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -32,13 +34,16 @@ func (self *VQLClientAction) Run(
 	// objects in there. VQL plugins may then use the environment
 	// to communicate with the server.
 	env := vfilter.NewDict().
-		Set("responder", responder).
+		Set("$responder", responder).
+		Set("$uploader", &vql_subsystem.VelociraptorUploader{responder}).
 		Set("config", ctx.Config)
 
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)
 	}
+
 	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope.Logger = log.New(os.Stderr, "vql: ", log.Lshortfile)
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.

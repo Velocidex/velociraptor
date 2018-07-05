@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"log"
 	"os"
 	"strings"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -15,8 +16,12 @@ import (
 
 var (
 	query   = kingpin.Command("query", "Run a VQL query")
-	queries = query.Arg("query", "The VQL Query to run.").Required().Strings()
-	format  = query.Flag("format", "Output format to use.").Default("json").Enum("text", "json")
+	queries = query.Arg("query", "The VQL Query to run.").
+		Required().Strings()
+	format = query.Flag("format", "Output format to use.").
+		Default("json").Enum("text", "json")
+	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
+			Default(".").String()
 
 	explain        = kingpin.Command("explain", "Explain the output from a plugin")
 	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
@@ -26,8 +31,7 @@ var (
 	show_config = client.Flag("show_config", "Display the client's configuration").Bool()
 )
 
-func outputJSON(vql *vfilter.VQL) {
-	scope := vql_subsystem.MakeScope()
+func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -51,8 +55,7 @@ func hard_wrap(text string, colBreak int) string {
 	return wrapped
 }
 
-func evalQuery(vql *vfilter.VQL) {
-	scope := vql_subsystem.MakeScope()
+func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -125,6 +128,11 @@ func main() {
 	case "explain":
 		doExplain(*explain_plugin)
 	case "query":
+		env := vfilter.NewDict().
+			Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})
+		scope := vql_subsystem.MakeScope().AppendVars(env)
+
+		scope.Logger = log.New(os.Stderr, "vraptor: ", log.Lshortfile)
 		for _, query := range *queries {
 			vql, err := vfilter.Parse(query)
 			if err != nil {
@@ -133,9 +141,9 @@ func main() {
 
 			switch *format {
 			case "text":
-				evalQuery(vql)
+				evalQuery(scope, vql)
 			case "json":
-				outputJSON(vql)
+				outputJSON(scope, vql)
 			}
 		}
 	case "repack":

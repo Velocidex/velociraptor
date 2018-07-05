@@ -4,12 +4,15 @@ import (
 	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/responder"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -63,13 +66,36 @@ func (self *VQLCollector) ProcessMessage(
 			return nil
 		}
 
-		utils.Debug(message)
 		err = StoreResultInFlow(config_obj, flow_obj, message)
 		if err != nil {
 			return err
 		}
-	}
 
+		// Receive any file upload the client sent.
+	case vql_subsystem.TransferWellKnownFlowId:
+		payload := responder.ExtractGrrMessagePayload(message)
+		if payload != nil {
+			file_buffer, ok := payload.(*actions_proto.FileBuffer)
+			if ok {
+				file_store_factory := file_store.GetFileStore(
+					config_obj)
+				file_path := path.Join(
+					flow_obj.RunnerArgs.ClientId,
+					path.Base(message.SessionId),
+					file_buffer.Pathspec.Path)
+				fd, err := file_store_factory.WriteFile(
+					file_path)
+				if err != nil {
+					return err
+				}
+
+				defer fd.Close()
+
+				fd.Seek(int64(file_buffer.Offset), 0)
+				fd.Write(file_buffer.Data)
+			}
+		}
+	}
 	return nil
 }
 

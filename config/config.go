@@ -96,6 +96,9 @@ type Config struct {
 
 	// The Admin UI
 	AdminUI_document_root *string `yaml:"AdminUI.document_root,omitempty"`
+
+	// File Store
+	FileStore_directory *string `yaml:"FileStore.directory,omitempty"`
 }
 
 func GetDefaultConfig() *Config {

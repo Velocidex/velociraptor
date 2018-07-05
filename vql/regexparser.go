@@ -19,7 +19,7 @@ func _ParseFileWithRegex(
 	}
 
 	utils.Debug(filename)
-	regexps, ok := vfilter.ExtractStringArray("regex", args)
+	regexps, ok := vfilter.ExtractStringArray(scope, "regex", args)
 	if !ok {
 		return result
 	}
