@@ -42,4 +42,7 @@ var (
 	}
 
 	VFS_FILE_LISTING = "aff4:vfs_file_listing"
+
+	// Well known flows - Request ID:
+	LOG_SINK uint64 = 980
 )

@@ -56,6 +56,14 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 			utils.Debug(err)
 			continue
 		}
+
+		// Handle log messages automatically so flows do not
+		// need to all remember to do this.
+		if message.RequestId == constants.LOG_SINK {
+			cached_flow.Log(message)
+			continue
+		}
+
 		err = cached_flow.impl.ProcessMessage(
 			self.config, cached_flow, message)
 		if err != nil {
@@ -178,6 +186,15 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 // Checks if the message represents the last response to the request.
 func (self *AFF4FlowObject) IsRequestComplete(message *crypto_proto.GrrMessage) bool {
 	return message.Type == crypto_proto.GrrMessage_STATUS
+}
+
+func (self *AFF4FlowObject) Log(message *crypto_proto.GrrMessage) {
+	log_msg, ok := responder.ExtractGrrMessagePayload(
+		message).(*crypto_proto.LogMessage)
+	if ok {
+		self.FlowContext.Logs = append(self.FlowContext.Logs, log_msg)
+		self.dirty = true
+	}
 }
 
 func NewAFF4FlowObject(
@@ -426,6 +443,10 @@ func StoreResultInFlow(
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
+	next_result_id := flow_obj.FlowContext.TotalResults
+	flow_obj.FlowContext.TotalResults += 1
+	flow_obj.dirty = true
+
 	urn := fmt.Sprintf("%s/results", flow_obj.Urn)
 	data := make(map[string][]byte)
 	serialized_message, err := proto.Marshal(message)
@@ -433,7 +454,8 @@ func StoreResultInFlow(
 		return errors.WithStack(err)
 	}
 
-	predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, message.ResponseId)
+	// We rely on the result id to be sequential.
+	predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, next_result_id)
 	data[predicate] = serialized_message
 
 	now := time.Now().UTC().UnixNano() / 1000

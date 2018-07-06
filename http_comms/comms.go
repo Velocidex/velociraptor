@@ -79,10 +79,9 @@ func (self *HTTPCommunicator) Run() {
 		message_list := self.drainMessageQueue()
 		if len(message_list.Job) > 0 {
 			self.sendMessageList(message_list)
-		}
 
-		// We are due for an unsolicited poll.
-		if time.Now().After(
+			// We are due for an unsolicited poll.
+		} else if time.Now().After(
 			self.last_ping_time.Add(self.current_poll_duration)) {
 			log.Printf("Sending unsolicited ping.")
 			self.current_poll_duration *= 2

@@ -2,7 +2,6 @@ package actions
 
 import (
 	"log"
-	"os"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -11,6 +10,18 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type LogWriter struct {
+	responder *responder.Responder
+}
+
+func (self *LogWriter) Write(b []byte) (int, error) {
+	err := self.responder.Log("%s", string(b))
+	if err != nil {
+		return 0, err
+	}
+	return len(b), nil
+}
 
 type VQLClientAction struct{}
 
@@ -33,9 +44,12 @@ func (self *VQLClientAction) Run(
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment
 	// to communicate with the server.
+	uploader := &vql_subsystem.VelociraptorUploader{
+		Responder: responder,
+	}
 	env := vfilter.NewDict().
 		Set("$responder", responder).
-		Set("$uploader", &vql_subsystem.VelociraptorUploader{responder}).
+		Set("$uploader", uploader).
 		Set("config", ctx.Config)
 
 	for _, env_spec := range arg.Env {
@@ -43,11 +57,13 @@ func (self *VQLClientAction) Run(
 	}
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
-	scope.Logger = log.New(os.Stderr, "vql: ", log.Lshortfile)
+	scope.Logger = log.New(&LogWriter{responder},
+		"vql: ", log.Lshortfile)
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for _, query := range arg.Query {
+		now := uint64(time.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			responder.RaiseError(err.Error())
@@ -66,12 +82,15 @@ func (self *VQLClientAction) Run(
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 		}
 
-		columns := vql.Columns(scope)
-		for _, column := range *columns {
-			response.Columns = append(response.Columns, column)
-		}
+		responder.Log("Ran query %s in %v seconds.", query.Name,
+			(response.Timestamp-now)/1000000)
 
+		response.Columns = *vql.Columns(scope)
 		responder.AddResponse(response)
+	}
+
+	if uploader.Count > 0 {
+		responder.Log("Uploaded %v files.", uploader.Count)
 	}
 
 	responder.Return()

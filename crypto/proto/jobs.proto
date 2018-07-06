@@ -352,3 +352,15 @@ message ClientResources {
    CpuSeconds cpu_usage = 3;
    uint64 network_bytes_sent = 4;
 }
+
+
+message LogMessage {
+    string message = 1 [(sem_type) = {
+            description: "The message to send to the server.",
+        }];
+
+    uint64 timestamp = 2 [(sem_type) = {
+            description: "The time when the message was generated.",
+            type: "RDFDatetime",
+        }];
+}

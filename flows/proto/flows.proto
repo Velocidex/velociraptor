@@ -18,54 +18,56 @@ message StartFlowRequest {
         }];
 }
 
-message FlowReference {
-   string flow_id = 1 [(sem_type) = {
-      description: "The session id of the referenced flow."
-    }];
-   string client_id = 2 [(sem_type) = {
-      type: "ClientURN",
-      description: "The client id the referenced flow ran on."
-    }];
-}
-
 // The flow context.
-// Next field: 17
+// Next field: 19
 message FlowContext {
-   string backtrace = 1;
-   ClientResources client_resources = 2;
-   uint64 create_time = 3 [(sem_type) = {
-      type: "RDFDatetime",
-    }];
-   string creator = 4;
-   string current_state = 5;
-   uint64 kill_timestamp = 6 [(sem_type) = {
-      type: "RDFDatetime",
-    }];
-   uint64 network_bytes_sent = 7;
-   uint64 next_outbound_id = 8;
-   uint64 next_processed_request = 9;
+    string backtrace = 1;
+    ClientResources client_resources = 2;
+    uint64 create_time = 3 [(sem_type) = {
+            type: "RDFDatetime",
+        }];
+    string creator = 4;
+    string current_state = 5;
+    uint64 kill_timestamp = 6 [(sem_type) = {
+            type: "RDFDatetime",
+        }];
+    uint64 network_bytes_sent = 7;
+    uint64 next_outbound_id = 8;
+    uint64 next_processed_request = 9;
     //  repeated OutputPluginState output_plugins_states = 10;
-   uint64 outstanding_requests = 11;
-  // DEPRECATED
-  //  uint64 remaining_cpu_quota = 12;
-   string session_id = 13 [(sem_type) = {
-      type: "SessionID"
-    }];
+    uint64 outstanding_requests = 11;
 
-  enum State {
-      UNSET = 0;
-      RUNNING = 1;
-      TERMINATED = 2;
-      ERROR = 3;   // Flows which raise are marked as having an error.
-  };
+    uint64 total_results = 18 [(sem_type) = {
+            description: "The total number of results in the flow's result collection",
+        }];
 
-   State state = 14;
-   string status = 15;
-   bool user_notified = 16;
+    repeated string uploaded_files = 19 [(sem_type) = {
+            description: "A list of files uploaded as part of the flow."
+        }];
 
-   uint64 active_time = 17 [(sem_type) = {
-      type: "RDFDatetime",
-    }];
+    repeated LogMessage logs = 20 [(sem_type) = {
+            description: "List of logs.",
+            label: HIDDEN,
+        }];
+
+    string session_id = 13 [(sem_type) = {
+            type: "SessionID"
+        }];
+
+    enum State {
+        UNSET = 0;
+        RUNNING = 1;
+        TERMINATED = 2;
+        ERROR = 3;   // Flows which raise are marked as having an error.
+    };
+
+    State state = 14;
+    string status = 15;
+    bool user_notified = 16;
+
+    uint64 active_time = 17 [(sem_type) = {
+            type: "RDFDatetime",
+        }];
 
 }
 

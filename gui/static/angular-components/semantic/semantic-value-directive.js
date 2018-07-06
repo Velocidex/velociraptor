@@ -180,7 +180,7 @@ SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
 
     element.html(' <' +
         this.camelCaseToDashDelimited(directive.directive_name) +
-        ' value="::value" type="::type" />');
+        ' value="::value" type="::type" hidden-fields="::hiddenFields" />');
     return this.compile_(element);
   }.bind(this);
 
@@ -314,6 +314,7 @@ exports.SemanticValueDirective = function() {
     scope: {
       value: '=',
       type: '@',
+      hiddenFields: '=',
     },
     require: '?^grrSemanticValueRegistryOverride',
     restrict: 'E',

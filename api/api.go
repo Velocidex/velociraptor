@@ -158,6 +158,15 @@ func (self *ApiServer) GetFlowResults(
 	return result, err
 }
 
+func (self *ApiServer) GetFlowLogs(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowLogDetails, error) {
+	utils.Debug(in)
+	result, err := getFlowLog(self.config, in.ClientId, in.FlowId,
+		in.Offset, in.Count)
+	return result, err
+}
+
 func (self *ApiServer) GetFlowDescriptors(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.FlowDescriptors, error) {

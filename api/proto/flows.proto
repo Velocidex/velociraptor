@@ -83,6 +83,10 @@ message ApiFlowResultDetails {
     repeated GrrMessage items = 1;
 }
 
+message ApiFlowLogDetails {
+    repeated LogMessage items = 1;
+}
+
 message ApiFlowRequest {
     string client_id = 1;
     string flow_id = 2;

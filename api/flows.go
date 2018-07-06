@@ -15,7 +15,6 @@ import (
 	flows "www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func getFlows(
@@ -80,6 +79,36 @@ func getFlowDetails(
 	}, nil
 }
 
+func getFlowLog(
+	config_obj *config.Config,
+	client_id string, flow_id string,
+	offset uint64, length uint64) (*api_proto.ApiFlowLogDetails, error) {
+	flow_urn, err := validateFlowId(client_id, flow_id)
+	if err != nil {
+		return nil, err
+	}
+
+	flow_obj, err := flows.GetAFF4FlowObject(config_obj, *flow_urn)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &api_proto.ApiFlowLogDetails{}
+	for idx, item := range flow_obj.FlowContext.Logs {
+		if uint64(idx) < offset {
+			continue
+		}
+
+		if uint64(idx) > offset+length {
+			break
+		}
+
+		result.Items = append(result.Items, item)
+	}
+
+	return result, nil
+}
+
 func getFlowRequests(
 	config_obj *config.Config,
 	client_id string, flow_id string,
@@ -90,9 +119,7 @@ func getFlowRequests(
 	}
 	result := &api_proto.ApiFlowRequestDetails{}
 
-	session_id := fmt.Sprintf("aff4:/%s/flows/%s",
-		client_id, flow_id)
-
+	session_id := urns.BuildURN(client_id, "flows", flow_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -139,7 +166,7 @@ func getFlowResults(
 
 	result := &api_proto.ApiFlowResultDetails{}
 
-	urn := fmt.Sprintf("aff4:/%s/flows/%s/results", client_id, flow_id)
+	urn := urns.BuildURN(client_id, "flows", flow_id, "results")
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err

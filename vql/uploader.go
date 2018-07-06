@@ -65,6 +65,7 @@ func (self *FileBasedUploader) Upload(
 
 type VelociraptorUploader struct {
 	Responder *responder.Responder
+	Count     int
 }
 
 func (self *VelociraptorUploader) Upload(
@@ -75,6 +76,7 @@ func (self *VelociraptorUploader) Upload(
 	}
 
 	offset := uint64(0)
+	self.Count += 1
 	for {
 		buffer := make([]byte, 1024*1024)
 		read_bytes, err := reader.Read(buffer)

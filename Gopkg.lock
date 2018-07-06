@@ -265,7 +265,7 @@
   branch = "master"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
-  revision = "c272368a3fb9ac4bf2793626075e918ac8e50fe9"
+  revision = "1f7f47dab9bdbb5e3e8144c949b7daa4879d3915"
 
 [solve-meta]
   analyzer-name = "dep"

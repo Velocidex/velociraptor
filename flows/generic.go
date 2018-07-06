@@ -93,6 +93,14 @@ func (self *VQLCollector) ProcessMessage(
 
 				fd.Seek(int64(file_buffer.Offset), 0)
 				fd.Write(file_buffer.Data)
+
+				// Keep track of all the files we uploaded.
+				if file_buffer.Offset == 0 {
+					flow_obj.FlowContext.UploadedFiles = append(
+						flow_obj.FlowContext.UploadedFiles,
+						file_path)
+					flow_obj.dirty = true
+				}
 			}
 		}
 	}

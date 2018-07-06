@@ -1,10 +1,13 @@
 package responder
 
 import (
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"time"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -74,6 +77,15 @@ func (self *Responder) Return() {
 		Status: crypto_proto.GrrStatus_OK,
 	}
 	self.AddResponse(status)
+}
+
+// Send a log message to the server.
+func (self *Responder) Log(format string, v ...interface{}) error {
+	msg := &crypto_proto.LogMessage{
+		Message:   fmt.Sprintf(format, v...),
+		Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+	}
+	return self.AddResponseToRequest(constants.LOG_SINK, msg)
 }
 
 func (self *Responder) SendResponseToWellKnownFlow(
