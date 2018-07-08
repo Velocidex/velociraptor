@@ -34,6 +34,16 @@ message TypeDescriptor {
     repeated FieldDescriptor fields = 2;
     string name = 3;
     string kind = 4;
+
+    // The fields are all part of a single one of structure. NOTE:
+    // Currently we only support an all or nothing approach to oneof -
+    // there can be at most a single oneof group within the proto and
+    // it implies that all the fields belong to it.
+    bool oneof = 5;
+
+    string default = 6 [(sem_type) = {
+            description: "The json encoded default value for this type."
+        }];
 }
 
 message Types {

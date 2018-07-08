@@ -6,7 +6,6 @@ goog.module.declareLegacyNamespace();
 const {camelCaseToDashDelimited} = goog.require('grrUi.core.utils');
 
 
-
 /**
  * Controller for SemanticProtoRepeatedFieldFormDirective.
  *
@@ -40,7 +39,7 @@ const SemanticProtoRepeatedFieldFormController = function(
   /** @export {boolean} */
   this.hideCustomTemplateLabel;
 
-  this.scope_.$watchGroup(['field', 'descriptor', 'value'],
+  this.scope_.$watchGroup(['field', 'descriptor'],
                           this.onFieldDescriptorChange_.bind(this));
 
   if (angular.isDefined(this.scope_.field['default'])) {
@@ -129,8 +128,12 @@ SemanticProtoRepeatedFieldFormController.prototype.onCustomDirectiveFound_ = fun
  * @export
  */
 SemanticProtoRepeatedFieldFormController.prototype.addItem = function() {
-  this.scope_.value.splice(0, 0,
-                           angular.copy(this.scope_['descriptor']['default'] || {}));
+  var newItem = {};
+  if (angular.isDefined(this.scope_.descriptor.default)) {
+    newItem = JSON.parse(this.scope_.descriptor.default);
+  }
+
+  this.scope_.value.splice(0, 0, newItem);
 };
 
 

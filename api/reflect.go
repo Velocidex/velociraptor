@@ -9,7 +9,7 @@ import (
 	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	semantic_proto "www.velocidex.com/golang/velociraptor/proto"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
+	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 var (
@@ -29,6 +29,7 @@ var (
 		"FlowContext",
 		"VInterrogateArgs",
 		"VFSListRequest",
+		"FileFinderArgs",
 	}
 )
 
@@ -36,13 +37,17 @@ func describeTypes() *api_proto.Types {
 	seen := make(map[string]bool)
 	result := &api_proto.Types{
 		Items: []*api_proto.TypeDescriptor{
-			{Name: "ClientURN", Kind: "primitive"},
-			{Name: "RDFURN", Kind: "primitive"},
-			{Name: "bool", Kind: "primitive"},
-			{Name: "string", Kind: "primitive"},
-			{Name: "integer", Kind: "primitive"},
-			{Name: "ApiClientId", Kind: "primitive"},
-			{Name: "RDFDatetime", Kind: "primitive"},
+			{Name: "ByteSize", Kind: "primitive", Default: "0"},
+			{Name: "GlobExpression", Kind: "primitive", Default: "\"\""},
+			{Name: "RegularExpression", Kind: "primitive", Default: "\"\""},
+			{Name: "LiteralExpression", Kind: "primitive", Default: "\"\""},
+			{Name: "ClientURN", Kind: "primitive", Default: "\"\""},
+			{Name: "RDFURN", Kind: "primitive", Default: "\"\""},
+			{Name: "bool", Kind: "primitive", Default: "false"},
+			{Name: "string", Kind: "primitive", Default: "\"\""},
+			{Name: "integer", Kind: "primitive", Default: "0"},
+			{Name: "ApiClientId", Kind: "primitive", Default: "\"\""},
+			{Name: "RDFDatetime", Kind: "primitive", Default: "0"},
 		},
 	}
 	for _, proto_name := range EXPORTED_PROTO {
@@ -66,21 +71,32 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 	new_message := reflect.New(message_type.Elem()).Interface().(descriptor.Message)
 	_, md := descriptor.ForMessage(new_message)
-
+	if type_name == "FileFinderAction" {
+		utils.Debug(md)
+	}
 	type_desc := &api_proto.TypeDescriptor{
 		Name: type_name,
+		Kind: "struct",
 	}
+
+	if md.OneofDecl != nil {
+		type_desc.Oneof = true
+	}
+
 	result.Items = append(result.Items, type_desc)
 	seen[type_name] = true
 
 	for _, field := range md.Field {
 		field_descriptor := &api_proto.FieldDescriptor{
-			Type: getFieldType(field),
+			Type:    getFieldType(field),
+			Default: getFieldDefaults(field),
 		}
 
-		if field.Label != nil {
-			field_descriptor.Repeated = *field.Label ==
-				descriptor_proto.FieldDescriptorProto_LABEL_REPEATED
+		if field.Label != nil &&
+			*field.Label ==
+				descriptor_proto.FieldDescriptorProto_LABEL_REPEATED {
+			field_descriptor.Repeated = true
+			field_descriptor.Default = "[]"
 		}
 
 		opts := field.GetOptions()
@@ -142,5 +158,28 @@ func getFieldType(desc *descriptor_proto.FieldDescriptorProto) string {
 
 	default:
 		return "string"
+	}
+}
+
+func getFieldDefaults(desc *descriptor_proto.FieldDescriptorProto) string {
+	switch *desc.Type {
+	case descriptor_proto.FieldDescriptorProto_TYPE_BOOL:
+		return "false"
+
+	case descriptor_proto.FieldDescriptorProto_TYPE_DOUBLE:
+		return "0"
+
+	case descriptor_proto.FieldDescriptorProto_TYPE_INT64,
+		descriptor_proto.FieldDescriptorProto_TYPE_UINT64,
+		descriptor_proto.FieldDescriptorProto_TYPE_FIXED64,
+		descriptor_proto.FieldDescriptorProto_TYPE_INT32,
+		descriptor_proto.FieldDescriptorProto_TYPE_UINT32:
+		return "0"
+
+	case descriptor_proto.FieldDescriptorProto_TYPE_MESSAGE:
+		return "{}"
+
+	default:
+		return "\"\""
 	}
 }

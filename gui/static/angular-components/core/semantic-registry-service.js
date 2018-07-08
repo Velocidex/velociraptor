@@ -118,7 +118,7 @@ SemanticRegistryService.prototype.findDirectiveForMro = function(
  * @export
  */
 SemanticRegistryService.prototype.findDirectiveForType = function(
-    type, overrides) {
+  type, overrides) {
   overrides = overrides || {};
 
   // If we have an exact match with one of the overrides, no need for
@@ -138,6 +138,9 @@ SemanticRegistryService.prototype.findDirectiveForType = function(
   }
 
   var handleDescriptor = function(descriptor) {
+    if (angular.isUndefined(descriptor)) {
+      console.log("Unable to find descriptor for " + type);
+    }
     var directive = this.findDirectiveForMro(descriptor['mro'], overrides);
     if (angular.isDefined(directive)) {
       return directive;

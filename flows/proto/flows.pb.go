@@ -48,7 +48,7 @@ func (x FlowContext_State) String() string {
 	return proto.EnumName(FlowContext_State_name, int32(x))
 }
 func (FlowContext_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{1, 0}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{1, 0}
 }
 
 type StartFlowRequest struct {
@@ -63,7 +63,7 @@ func (m *StartFlowRequest) Reset()         { *m = StartFlowRequest{} }
 func (m *StartFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*StartFlowRequest) ProtoMessage()    {}
 func (*StartFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{0}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{0}
 }
 func (m *StartFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowRequest.Unmarshal(m, b)
@@ -128,7 +128,7 @@ func (m *FlowContext) Reset()         { *m = FlowContext{} }
 func (m *FlowContext) String() string { return proto.CompactTextString(m) }
 func (*FlowContext) ProtoMessage()    {}
 func (*FlowContext) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{1}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{1}
 }
 func (m *FlowContext) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowContext.Unmarshal(m, b)
@@ -295,7 +295,7 @@ func (m *FlowRunnerArgs) Reset()         { *m = FlowRunnerArgs{} }
 func (m *FlowRunnerArgs) String() string { return proto.CompactTextString(m) }
 func (*FlowRunnerArgs) ProtoMessage()    {}
 func (*FlowRunnerArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{2}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{2}
 }
 func (m *FlowRunnerArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowRunnerArgs.Unmarshal(m, b)
@@ -400,7 +400,7 @@ func (m *VelociraptorFlowState) Reset()         { *m = VelociraptorFlowState{} }
 func (m *VelociraptorFlowState) String() string { return proto.CompactTextString(m) }
 func (*VelociraptorFlowState) ProtoMessage()    {}
 func (*VelociraptorFlowState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{3}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{3}
 }
 func (m *VelociraptorFlowState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VelociraptorFlowState.Unmarshal(m, b)
@@ -451,7 +451,7 @@ func (m *FlowDescriptor) Reset()         { *m = FlowDescriptor{} }
 func (m *FlowDescriptor) String() string { return proto.CompactTextString(m) }
 func (*FlowDescriptor) ProtoMessage()    {}
 func (*FlowDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{4}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{4}
 }
 func (m *FlowDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowDescriptor.Unmarshal(m, b)
@@ -535,7 +535,7 @@ func (m *VInterrogateArgs) Reset()         { *m = VInterrogateArgs{} }
 func (m *VInterrogateArgs) String() string { return proto.CompactTextString(m) }
 func (*VInterrogateArgs) ProtoMessage()    {}
 func (*VInterrogateArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e52cd4ae95ab2280, []int{5}
+	return fileDescriptor_flows_0d78caa44e9beb4c, []int{5}
 }
 func (m *VInterrogateArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VInterrogateArgs.Unmarshal(m, b)
@@ -579,9 +579,9 @@ func init() {
 	proto.RegisterEnum("proto.FlowContext_State", FlowContext_State_name, FlowContext_State_value)
 }
 
-func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_e52cd4ae95ab2280) }
+func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_0d78caa44e9beb4c) }
 
-var fileDescriptor_flows_e52cd4ae95ab2280 = []byte{
+var fileDescriptor_flows_0d78caa44e9beb4c = []byte{
 	// 1819 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xdd, 0x6e, 0x1b, 0xc7,
 	0xf5, 0xff, 0x53, 0x9f, 0xe4, 0x50, 0x92, 0xe9, 0x91, 0xec, 0xff, 0x5a, 0x09, 0x9a, 0x09, 0x5b,

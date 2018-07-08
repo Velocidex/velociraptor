@@ -18,34 +18,34 @@ const SemanticProtoUnionFormController = function($scope) {
   /** @type {Object|undefined} */
   this.unionField;
 
-  /** @type {string|undefined} */
-  this.unionFieldValue;
-
-  $scope.$watch('descriptor', this.onDescriptorChange_.bind(this));
-  $scope.$watch('value.value[controller.unionField.name].value',
-                this.onUnionFieldValueChange_.bind(this));
+  $scope.$watch('controller.unionField',
+                this.onUnionFieldChange_.bind(this));
+//  $scope.$watch('value[controller.unionField.name]',
+//                this.onUnionFieldValueChange_.bind(this));
 };
 
 
-/**
- * Handles changes of the descriptor.
- *
- * @param {Object} newValue
- * @private
- */
-SemanticProtoUnionFormController.prototype.onDescriptorChange_ = function(
-    newValue) {
-  if (angular.isUndefined(newValue)) {
-    this.unionField = undefined;
-  } else {
-    angular.forEach(newValue['fields'], function(field) {
-      if (field.name == newValue['union_field']) {
-        this.unionField = field;
-      }
-    }.bind(this));
-  }
-};
+SemanticProtoUnionFormController.prototype.onUnionFieldChange_ = function(
+  newValue, oldValue) {
+  var value = this.scope_.value;
+  var self = this;
 
+  if (angular.isDefined(newValue)) {
+    var existing_field = this.scope_.value[newValue.name] || {};
+
+    Object.keys(value).forEach(function(key) { delete value[key]; });
+    if (angular.isUndefined(value[newValue.name])) {
+      value[newValue.name] = existing_field;
+    }
+    self.unionField = newValue;
+  } else if (angular.isDefined(value)) {
+      angular.forEach(self.scope_.field['fields'], function(field) {
+        if (angular.isDefined(value[field.name] && angular.isUndefined(self.unionField))) {
+          self.unionField = field;
+        }
+      });
+  };
+};
 
 /**
 * Handles changes of the union field value.
@@ -59,13 +59,13 @@ SemanticProtoUnionFormController.prototype.onUnionFieldValueChange_ = function(
   if (angular.isDefined(newValue)) {
     if (angular.isDefined(oldValue) &&
         oldValue !== newValue) {
-      var unionPart = this.scope_['value']['value'][this.unionFieldValue];
+      var unionPart = this.scope_['value'][this.unionFieldValue];
 
       if (angular.isObject(unionPart)) {
         // We have to make sure that we replace the object at
         // value.value[controller.unionFieldValue]
         unionPart['value'] = {};
-        this.scope_['value']['value'][this.unionFieldValue] =
+        this.scope_['value'][this.unionFieldValue] =
             angular.copy(unionPart);
       }
     }
@@ -89,7 +89,7 @@ exports.SemanticProtoUnionFormDirective = function() {
   return {
     scope: {
       value: '=',
-      descriptor: '='
+      field: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/forms/' +

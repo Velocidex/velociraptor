@@ -36,9 +36,6 @@ const SemanticProtoFormController = function(
   /** @type {boolean} */
   this.expanded = false;
 
-  /** @type {Object|undefined} */
-  this.editedValue = {};
-
   if (angular.isDefined($attrs['hiddenFields']) &&
       angular.isDefined($attrs['visibleFields'])) {
     throw new Error('Either hidden-fields or visible-fields attribute may ' +
@@ -46,15 +43,16 @@ const SemanticProtoFormController = function(
   }
 
   this.scope_.$watch('value', this.onValueChange_.bind(this));
-  this.scope_.$watch('controller.editedValue',
-                     this.onEditedValueChange_.bind(this),
-                     true);
-
   this.boundNotExplicitlyHiddenFields =
       this.notExplicitlyHiddenFields_.bind(this);
 };
 
 SemanticProtoFormController.prototype.typeOfValue_ = function(value) {
+  if (angular.isUndefined(value)) {
+    debugger;
+    return "string";
+  }
+
   var type = value['@type'];
 
   if (angular.isDefined(type)) {
@@ -141,90 +139,16 @@ SemanticProtoFormController.prototype.onValueChange_ = function(
   this.scope_.type = this.typeOfValue_(newValue);
 
   /**
-   * Please note that if the value bound to the 'value' binding gets replaced
-   * with a new object, the UI will get updated. But if one of the attributes
-   * of the value bound to 'value' binding changes, then UI won't get updated,
-   * because all the UI elements are bound to 'editedValue' which only
-   * gets updated when 'value' gets replaced.
-   *
-   * We consider this behavior OK for now, because there seems to be no
-   * legitimate use-case of changing the contents of the currently edited value
-   * from the outside.
+   * Previous versions of this code had both editedValue and value
+   * objects in order to avoid copying defaults to the value. However
+   * in proto3 there are no defaults so we actually do want to copy
+   * out defaults into the value which is sent - otherwise these
+   * defaults will not be set at all by the server.
    */
   if (newValue !== oldValue || angular.isUndefined(this.valueDescriptor)) {
     this.grrReflectionService_.getRDFValueDescriptor(
         this.scope_.type, true).then(
             this.onDescriptorsFetched_.bind(this));
-  }
-};
-
-/**
- * Handles changes in the editedValue variable. editedValue contains
- * actual data that are being edited by the form controls. When it changes,
- * the changes are propagated to the main 'value' binding. This is done
- * in order not to set all the fields to their default values in 'value':
- * editedValue is initialized with all the default values, but 'value'
- * only changes when user actually inputs something.
- *
- * @param {Object} newValue
- * @param {Object} oldValue
- * @private
- */
-SemanticProtoFormController.prototype.onEditedValueChange_ = function(
-  newValue, oldValue) {
-  if (angular.isUndefined(this.valueDescriptor)) {
-    return;
-  }
-
-  if (angular.isDefined(newValue)) {
-    /**
-     * Only apply changes to scope_.value if oldValue is defined, i.e.
-     * if the changes were actually made by the user editing the form.
-     * oldValue === null means that editedValue was just initialized
-     * from scope_.value, so no need to migrate any changes.
-     */
-    if (angular.isDefined(oldValue)) {
-      /**
-       * It's ok to traverse only the keys of newValue, because keys can't be
-       * removed, only added.
-       */
-      angular.forEach(newValue, function(value, key) {
-        if (!angular.equals(oldValue[key], newValue[key])) {
-          this.scope_.value[key] = value;
-        }
-      }.bind(this));
-    }
-
-    /**
-     *  Remove the fields that are equal to their default values (by
-     *  "default" we mean either field default or value default).
-     */
-    angular.forEach(this.valueDescriptor['fields'], function(field) {
-      if (this.notExplicitlyHiddenFields_(field)) {
-        if (field.type &&
-            angular.equals(this.scope_.value[field.name],
-                           this.descriptors[field.type]['default']) &&
-            /**
-             * If the field has a per-field special default value that's
-             * different from the field type's default value, we shouldn't erase
-             * the field (so that when the form is submitted, the special
-             * default values gets sent to the server).
-             *
-             * For example, if the field is integer and has an explicit default
-             * value 0, then the field will be erased if its current value is 0.
-             *
-             * But if the field is integer and has an explicit default of 42,
-             * then it won't get erased when its current value is 42 (nor will
-             * it get erased when its default is 0).
-             */
-            (angular.isUndefined(field['default']) ||
-             angular.equals(field['default'],
-                            this.descriptors[field.type]['default']))) {
-          delete this.scope_.value[field.name];
-        }
-      }
-    }.bind(this));
-
   }
 };
 
@@ -241,9 +165,9 @@ SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
   this.descriptors = descriptors;
   this.valueDescriptor = angular.copy(descriptors[this.scope_.type]);
 
-  this.editedValue = angular.copy(this.scope_.value);
-  if (angular.isUndefined(this.editedValue)) {
-    this.editedValue = {};
+  // Oneof fields never hold any defaults.
+  if (this.valueDescriptor.oneof) {
+    return;
   }
 
   angular.forEach(this.valueDescriptor['fields'], function(field) {
@@ -260,19 +184,26 @@ SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
     if (field.repeated) {
       field.depth = 0;
 
-      if (angular.isUndefined(this.editedValue[field.name])) {
-        this.editedValue[field.name] = [];
+      if (angular.isUndefined(this.scope_.value[field.name])) {
+        this.scope_.value[field.name] = [];
       }
     } else {
+
+      if (field.name == "mode") {
+        debugger;
+      }
+
       field.depth = (this.scope_.$eval('metadata.depth') || 0) + 1;
 
-      if (angular.isUndefined(this.editedValue[field.name])) {
+      if (angular.isUndefined(this.scope_.value[field.name])) {
         if (angular.isDefined(field['default'])) {
-          this.editedValue[field.name] = angular.copy(field['default']);
+          this.scope_.value[field.name] = JSON.parse(field['default']);
         } else {
-//          self.editedValue[field.name] = angular.copy(
-          //              descriptors[field.type]['default']);
-          this.editedValue[field.name] = "";
+          if (field.kind == 'primitive') {
+            this.scope_.value[field.name] = "";
+          } else {
+            this.scope_.value[field.name] = {};
+          }
         }
       }
     }

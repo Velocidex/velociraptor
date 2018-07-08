@@ -1,0 +1,338 @@
+// Protobufs related to the FileFinder flow.
+
+// File Finder is an easy to use GUI for essentially generating a VQL query.
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+
+// Next field ID: 7
+message FileFinderModificationTimeCondition {
+    uint64 min_last_modified_time = 5 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File must be modified after this time."
+        }];
+
+    uint64 max_last_modified_time = 6 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File must be modified before this time."
+        }];
+}
+
+// Next field ID: 7
+message FileFinderAccessTimeCondition {
+    uint64 min_last_access_time = 5 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File must be accessed after this time."
+        }];
+
+    uint64 max_last_access_time = 6 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File must be accessed before this time."
+        }];
+}
+
+// Next field ID: 7
+message FileFinderInodeChangeTimeCondition {
+    uint64 min_last_inode_change_time = 5 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File's inode must be changed after this time."
+        }];
+
+    uint64 max_last_inode_change_time = 6 [(sem_type) = {
+            type: "RDFDatetime",
+            description: "File's must be changed before this time."
+        }];
+}
+
+// Next field ID: 13
+message FileFinderSizeCondition {
+    uint64 min_file_size = 11 [(sem_type) = {
+            default: "0",
+            description: "Minimum file size in bytes."
+        }];
+
+    uint64 max_file_size = 12 [(sem_type) = {
+            description: "Maximum file size in bytes "
+            "(default=20MB).",
+            default:  "20000000"
+        }];
+
+}
+
+// Next field ID: 9
+message FileFinderContentsRegexMatchCondition {
+
+    enum Mode {
+        ALL_HITS = 0;   // Report all hits.
+        FIRST_HIT = 1;  // Stop after one hit.
+    }
+
+    string regex = 4 [(sem_type) = {
+            type: "RegularExpression",
+            description: "The regular expression which will be used to search."
+        }];
+
+    Mode mode = 6 [(sem_type) = {
+            description: "When should searching stop? Stop after one hit "
+            "or search for all?",
+            default : '"FIRST_HIT"'
+        }];
+
+    uint32 bytes_before = 7 [(sem_type) = {
+            description: "Include this many bytes before the hit.",
+            label: ADVANCED,
+        }];
+
+    uint32 bytes_after = 8 [(sem_type) = {
+            description: "Include this many bytes after the hit.",
+            label: ADVANCED,
+        }];
+
+    uint64 start_offset = 2 [(sem_type) = {
+            description: "Start searching at this file offset.",
+            label: ADVANCED,
+        }];
+
+    uint64 length = 3 [(sem_type) = {
+            description: "How far (in bytes) into the file to search.",
+            default: "20000000"
+        }];
+}
+
+// Next field ID: 11
+message FileFinderContentsLiteralMatchCondition {
+
+    enum Mode {
+        ALL_HITS = 0;   // Report all hits.
+        FIRST_HIT = 1;  // Stop after one hit.
+    }
+
+    bytes literal = 5 [(sem_type) = {
+            type: "LiteralExpression",
+            description: "Search for this literal string.",
+        }];
+
+    Mode mode = 6 [(sem_type) = {
+            description: "When should searching stop? Stop after one hit "
+            "or search for all?",
+            default : '"FIRST_HIT"'
+        }];
+
+    uint64 start_offset = 2 [(sem_type) = {
+            description: "Start searching at this file offset.",
+            label: ADVANCED,
+        }];
+
+    uint64 length = 3 [(sem_type) = {
+            description: "How far (in bytes) into the file to search.",
+            label: ADVANCED,
+            default: "20000000"
+        }];
+
+    uint32 bytes_before = 7 [(sem_type) = {
+            description: "Include this many bytes before the hit.",
+            label: ADVANCED,
+        }];
+
+    uint32 bytes_after = 8 [(sem_type) = {
+            description: "Include this many bytes after the hit.",
+            label: ADVANCED,
+        }];
+
+    uint32 xor_in_key = 9 [(sem_type) = {
+            description: "When searching memory we need to ensure we dont "
+            "hit on our own process. This allows us to obfuscate the search "
+            "string in memory to avoid us finding ourselves.",
+            label: ADVANCED
+        }];
+
+    uint32 xor_out_key = 10 [(sem_type) = {
+            description: "When searching memory we need to ensure we dont "
+            "hit on our own process. This allows us to obfuscate the search "
+            "string in memory to avoid us finding ourselves.",
+            label: ADVANCED
+        }];
+}
+
+// Next field ID: 9
+message FileFinderCondition {
+    oneof union_field {
+        FileFinderModificationTimeCondition modification_time = 2 [(sem_type) = {
+                friendly_name: "Modification time"
+            }];
+        FileFinderAccessTimeCondition access_time = 3  [(sem_type) = {
+                friendly_name: "Access time"
+            }];
+        FileFinderInodeChangeTimeCondition inode_change_time = 4  [(sem_type) = {
+                friendly_name: "Inode change time"
+            }];
+        FileFinderSizeCondition size = 5  [(sem_type) = {
+                friendly_name: "File Size"
+            }];
+        FileFinderContentsRegexMatchCondition contents_regex_match = 6  [(sem_type) = {
+                friendly_name: "Contents regex match"
+            }];
+        FileFinderContentsLiteralMatchCondition contents_literal_match = 7  [(sem_type) = {
+                friendly_name: "Contents literal match"
+            }];
+    }
+}
+
+// Next field ID: 5
+message FileFinderHashActionOptions {
+    uint64 max_size = 1 [(sem_type) = {
+            type: "ByteSize",
+            description: "The maximum size of files we will hash.",
+            label: ADVANCED,
+            default: "500000000"
+        }];  // 500 MB
+
+    enum OversizedFilePolicy {
+        SKIP = 0 [(description) = "Skip oversized files"];
+        HASH_TRUNCATED = 1 [(description) = "Hash truncated versions of "
+                            "oversized files"];
+    }
+
+    OversizedFilePolicy oversized_file_policy = 2 [(sem_type) = {
+            description: "What should GRR do with files that are larger than "
+            "max_size."
+            label: ADVANCED
+        }];
+
+    bool collect_ext_attrs = 4 [(sem_type) = {
+            friendly_name: "Collect extended attributes",
+            description: "If true, extended attributes and flags of the hashed file "
+            "are going to be collected as well."
+            label: ADVANCED,
+            default: "true",
+        }];
+}
+
+// Next field ID: 12
+message FileFinderDownloadActionOptions {
+    uint64 max_size = 5 [(sem_type) = {
+            type: "ByteSize",
+            description: "The maximum size of files we will download.",
+            label: ADVANCED,
+            default: "500000000"
+        }];
+
+    enum OversizedFilePolicy {
+        SKIP = 0 [(description) = "Skip oversized files"];
+        HASH_TRUNCATED = 1 [(description) = "Hash truncated version of the file "
+                            "(without downloading)"];
+        DOWNLOAD_TRUNCATED = 2 [(description) = "Download truncated version of "
+                                "the file"];
+    }
+    OversizedFilePolicy oversized_file_policy = 7 [(sem_type) = {
+            description: "What should GRR do with files that are larger than "
+            "max_size."
+            label: ADVANCED
+        }];
+
+    bool use_external_stores = 6 [(sem_type) = {
+            description: "If true, look in any defined external file stores for "
+            "files before downloading them, and offer any new files to external "
+            "stores. This should be true unless the external checks are misbehaving.",
+            label: ADVANCED,
+            default: "true"
+        }];
+    bool collect_ext_attrs = 9 [(sem_type) = {
+            friendly_name: "Collect extended attributes",
+            description: "If true, extended attributes and flags of the downloaded "
+            "file are going to be collected as well.",
+            label: ADVANCED,
+            default: "true",
+        }];
+
+    uint64 chunk_size = 11 [(sem_type) = {
+            friendly_name: "Chunk size",
+            description: "Number of bytes per chunk that the downloaded file is "
+            "divided into.",
+            label: HIDDEN,
+            default: "524288",
+        }];
+}
+
+message FileFinderStatActionOptions {
+    bool resolve_links = 1 [(sem_type) = {
+            description: "If true, the action will yield stat information for "
+            "link targets, if false, the stat for the link itself will "
+            "be returned."
+        }];
+    bool collect_ext_attrs = 2 [(sem_type) = {
+            friendly_name: "Collect extended attributes",
+            description: "If true, the action will also gather extended attributes.",
+            label: ADVANCED,
+            default:  "true",
+        }];
+}
+
+// Next field ID: 5
+message FileFinderAction {
+    oneof action {
+        FileFinderHashActionOptions hash = 3 [(sem_type) = {
+                description: "Take a hash of all matched files.",
+                friendly_name: "Hash",
+            }];
+        FileFinderDownloadActionOptions download = 2 [(sem_type) = {
+                friendly_name: "Download",
+                description: "Download all matched files",
+            }];
+        FileFinderStatActionOptions stat = 4 [(sem_type) = {
+                friendly_name: "Stat",
+                description: "Just Stat matching files and return file metadata.",
+            }];
+    }
+}
+
+// Next field ID: 11
+message FileFinderArgs {
+    repeated string paths = 1 [(sem_type) = {
+            description: "A glob expression that should match the path.",
+        }];
+
+    /*
+    PathSpec.PathType pathtype = 2 [(sem_type) = {
+            description: "Path type to glob in.",
+        }, default=OS];
+    */
+
+    repeated FileFinderCondition conditions = 5 [(sem_type) = {
+            description: "These conditions will be applied to all files that match"
+            " the path arguments.",
+        }];
+
+    FileFinderAction action = 6 [(sem_type) = {
+            description: "What to do with the matching files."
+        }];
+
+    bool process_non_regular_files = 7 [(sem_type) = {
+            description: "Look both into regular files and non-regular files "
+            "(devices, named pipes, sockets). NOTE: This is very dangerous and "
+            "should be used with care.",
+            label: ADVANCED,
+        }];
+
+    bool follow_links = 8 [(sem_type) = {
+            description: "Should symbolic links be followed in recursive directory"
+            " listings.",
+            label: ADVANCED,
+        }];
+
+    enum XDev {
+        NEVER = 0 [(description) = "Never cross device boundaries."];
+        ALWAYS = 1 [(description) = "Always cross device boundaries."];
+        LOCAL = 2 [(description) = "Descend into file systems on physical devices "
+                   "only."];
+    }
+
+    XDev xdev = 9 [(sem_type) = {
+            description: "Behavior when ecountering device boundaries while doing "
+            "recursive searches.",
+            label: ADVANCED,
+        }];
+}

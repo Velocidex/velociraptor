@@ -3,6 +3,7 @@
 goog.module('grrUi.core.core');
 goog.module.declareLegacyNamespace();
 
+
 const {Aff4ObjectRepresentationDirective} = goog.require('grrUi.core.aff4ObjectRepresentationDirective');
 const {ApiItemsProviderDirective} = goog.require('grrUi.core.apiItemsProviderDirective');
 const {ApiService} = goog.require('grrUi.core.apiService');

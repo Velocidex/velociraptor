@@ -1,9 +1,13 @@
-<div ng-if="controller.valueDescriptor.union_field">
-  <grr-form-proto-union value="controller.editedValue"
-                        descriptor="controller.valueDescriptor" />
+<div ng-if="$root.globals.debug">
+  semantic-proto-form.html {{value}}
 </div>
 
-<div ng-if="!controller.valueDescriptor.union_field">
+<div ng-if="controller.valueDescriptor.oneof">
+  <grr-form-proto-union value="controller.scope_.value"
+                        field="controller.valueDescriptor"/>
+</div>
+
+<div ng-if="!controller.valueDescriptor.oneof">
   <div class="form-group" ng-if="metadata.depth >= 2">
     <i class="nested-icon glyphicon" ng-click="controller.expanded = !controller.expanded"
        ng-class="{'glyphicon-plus': !controller.expanded, 'glyphicon-minus': controller.expanded}"></i>
@@ -15,12 +19,12 @@
                     filter:controller.regularFieldsOnly |
                     filter:controller.boundNotExplicitlyHiddenFields">
 
-      <grr-form-proto-single-field value="controller.editedValue[field.name]"
+      <grr-form-proto-single-field value="controller.scope_.value[field.name]"
                                    field="field"
                                    ng-if="!field.repeated">
       </grr-form-proto-single-field>
 
-      <grr-form-proto-repeated-field value="controller.editedValue[field.name]"
+      <grr-form-proto-repeated-field value="controller.scope_.value[field.name]"
                                      descriptor="controller.descriptors[field.type]"
                                      field="field"
                                      ng-if="field.repeated">
@@ -45,12 +49,12 @@
         <div ng-repeat="field in controller.valueDescriptor.fields |
                         filter:controller.advancedFieldsOnly |
                         filter:controller.boundNotExplicitlyHiddenFields">
-          <grr-form-proto-single-field value="controller.editedValue[field.name]"
+          <grr-form-proto-single-field value="controller.scope_.value[field.name]"
                                        field="field"
                                        ng-if="!field.repeated">
           </grr-form-proto-single-field>
 
-          <grr-form-proto-repeated-field value="controller.editedValue[field.name]"
+          <grr-form-proto-repeated-field value="controller.scope_.value[field.name]"
                                          descriptor="controller.descriptors[field.type]"
                                          field="field"
                                          ng-if="field.repeated">
