@@ -12,11 +12,13 @@ package proto;
 message FileFinderModificationTimeCondition {
     uint64 min_last_modified_time = 5 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Modified after",
             description: "File must be modified after this time."
         }];
 
     uint64 max_last_modified_time = 6 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Modified before",
             description: "File must be modified before this time."
         }];
 }
@@ -25,11 +27,13 @@ message FileFinderModificationTimeCondition {
 message FileFinderAccessTimeCondition {
     uint64 min_last_access_time = 5 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Accessed after",
             description: "File must be accessed after this time."
         }];
 
     uint64 max_last_access_time = 6 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Accessed before",
             description: "File must be accessed before this time."
         }];
 }
@@ -38,11 +42,13 @@ message FileFinderAccessTimeCondition {
 message FileFinderInodeChangeTimeCondition {
     uint64 min_last_inode_change_time = 5 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Inode changed after",
             description: "File's inode must be changed after this time."
         }];
 
     uint64 max_last_inode_change_time = 6 [(sem_type) = {
             type: "RDFDatetime",
+            friendly_name: "Inode changed before",
             description: "File's must be changed before this time."
         }];
 }
@@ -50,14 +56,13 @@ message FileFinderInodeChangeTimeCondition {
 // Next field ID: 13
 message FileFinderSizeCondition {
     uint64 min_file_size = 11 [(sem_type) = {
-            default: "0",
-            description: "Minimum file size in bytes."
+            friendly_name: "File larger than (bytes)",
+            description: "Minimum file size in bytes.",
         }];
 
     uint64 max_file_size = 12 [(sem_type) = {
-            description: "Maximum file size in bytes "
-            "(default=20MB).",
-            default:  "20000000"
+            friendly_name: "File smaller than (bytes)",
+            description: "Maximum file size in bytes ",
         }];
 
 }
@@ -72,23 +77,29 @@ message FileFinderContentsRegexMatchCondition {
 
     string regex = 4 [(sem_type) = {
             type: "RegularExpression",
+            friendly_name: "Regular Expression",
             description: "The regular expression which will be used to search."
         }];
 
     Mode mode = 6 [(sem_type) = {
+            friendly_name: "Reporting mode",
             description: "When should searching stop? Stop after one hit "
             "or search for all?",
             default : '"FIRST_HIT"'
         }];
 
     uint32 bytes_before = 7 [(sem_type) = {
+            friendly_name: "Before context",
             description: "Include this many bytes before the hit.",
             label: ADVANCED,
+            default: "10",
         }];
 
     uint32 bytes_after = 8 [(sem_type) = {
+            friendly_name: "After context",
             description: "Include this many bytes after the hit.",
             label: ADVANCED,
+            default: "10",
         }];
 
     uint64 start_offset = 2 [(sem_type) = {
@@ -141,24 +152,15 @@ message FileFinderContentsLiteralMatchCondition {
             description: "Include this many bytes after the hit.",
             label: ADVANCED,
         }];
-
-    uint32 xor_in_key = 9 [(sem_type) = {
-            description: "When searching memory we need to ensure we dont "
-            "hit on our own process. This allows us to obfuscate the search "
-            "string in memory to avoid us finding ourselves.",
-            label: ADVANCED
-        }];
-
-    uint32 xor_out_key = 10 [(sem_type) = {
-            description: "When searching memory we need to ensure we dont "
-            "hit on our own process. This allows us to obfuscate the search "
-            "string in memory to avoid us finding ourselves.",
-            label: ADVANCED
-        }];
 }
 
 // Next field ID: 9
 message FileFinderCondition {
+    option (semantic) = {
+        description: "Apply all these conditions to filter matching files.",
+        friendly_name: "Limit by condition",
+    };
+
     oneof union_field {
         FileFinderModificationTimeCondition modification_time = 2 [(sem_type) = {
                 friendly_name: "Modification time"
@@ -197,7 +199,7 @@ message FileFinderHashActionOptions {
     }
 
     OversizedFilePolicy oversized_file_policy = 2 [(sem_type) = {
-            description: "What should GRR do with files that are larger than "
+            description: "What should we do with files that are larger than "
             "max_size."
             label: ADVANCED
         }];
@@ -273,6 +275,11 @@ message FileFinderStatActionOptions {
 
 // Next field ID: 5
 message FileFinderAction {
+    option (semantic) = {
+        description: "What to do with the files that matched.",
+        friendly_name: "Action",
+    };
+
     oneof action {
         FileFinderHashActionOptions hash = 3 [(sem_type) = {
                 description: "Take a hash of all matched files.",
@@ -292,7 +299,9 @@ message FileFinderAction {
 // Next field ID: 11
 message FileFinderArgs {
     repeated string paths = 1 [(sem_type) = {
+            friendly_name: "Glob Expressions",
             description: "A glob expression that should match the path.",
+            default: '["*.exe"]',
         }];
 
     /*
@@ -302,12 +311,16 @@ message FileFinderArgs {
     */
 
     repeated FileFinderCondition conditions = 5 [(sem_type) = {
+            friendly_name: "File Finder Conditions.",
             description: "These conditions will be applied to all files that match"
             " the path arguments.",
+            default: "[{}]",
         }];
 
     FileFinderAction action = 6 [(sem_type) = {
-            description: "What to do with the matching files."
+            friendly_name: "Action",
+            description: "What to do with the matching files.",
+            default: '{"stat": {}}',
         }];
 
     bool process_non_regular_files = 7 [(sem_type) = {
@@ -333,6 +346,7 @@ message FileFinderArgs {
     XDev xdev = 9 [(sem_type) = {
             description: "Behavior when ecountering device boundaries while doing "
             "recursive searches.",
+            friendly_name: "Cross Devices",
             label: ADVANCED,
         }];
 }

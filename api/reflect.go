@@ -79,6 +79,16 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 		Kind: "struct",
 	}
 
+	opts := md.GetOptions()
+	ext, err := proto.GetExtension(opts, semantic_proto.E_Semantic)
+	if err == nil {
+		sem_ext, ok := ext.(*semantic_proto.SemanticMessageDescriptor)
+		if ok {
+			type_desc.Doc = sem_ext.Description
+			type_desc.FriendlyName = sem_ext.FriendlyName
+		}
+	}
+
 	if md.OneofDecl != nil {
 		type_desc.Oneof = true
 	}
@@ -126,6 +136,11 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 		if field.Name != nil {
 			field_descriptor.Name = *field.Name
 		}
+		if field.Type != nil &&
+			*field.Type == descriptor_proto.FieldDescriptorProto_TYPE_ENUM {
+			describe_enum(field, field_descriptor)
+		}
+
 		if field.TypeName != nil {
 			type_name := strings.TrimPrefix(*field.TypeName, ".proto.")
 			add_type(type_name, result, seen)
@@ -133,6 +148,30 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 		type_desc.Fields = append(type_desc.Fields, field_descriptor)
 	}
+}
+
+func describe_enum(
+	field *descriptor_proto.FieldDescriptorProto,
+	descriptor *api_proto.FieldDescriptor) {
+	if field.TypeName == nil {
+		return
+	}
+	type_name := strings.TrimPrefix(*field.TypeName, ".proto.")
+	type_name = strings.Replace(type_name, ".", "_", -1)
+	type_name = "proto." + type_name
+	message_type := proto.EnumValueMap(type_name)
+	if message_type != nil {
+		for name, value := range message_type {
+			descriptor.AllowedValues = append(
+				descriptor.AllowedValues,
+				&api_proto.EnumValue{Name: name, Value: value})
+		}
+
+		descriptor.Type = "EnumNamedValue"
+		descriptor.Default = "\"" + descriptor.AllowedValues[0].Name + "\""
+	}
+	utils.Debug(message_type)
+
 }
 
 func getFieldType(desc *descriptor_proto.FieldDescriptorProto) string {

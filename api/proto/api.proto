@@ -26,6 +26,13 @@ message FieldDescriptor {
     string doc = 5;
     repeated string labels = 6;
     string default = 7;
+
+    repeated EnumValue allowed_values = 8;
+}
+
+message EnumValue {
+    int32 value = 1;
+    string name = 2;
 }
 
 
@@ -33,6 +40,7 @@ message TypeDescriptor {
     string doc = 1;
     repeated FieldDescriptor fields = 2;
     string name = 3;
+    string friendly_name = 7;
     string kind = 4;
 
     // The fields are all part of a single one of structure. NOTE:

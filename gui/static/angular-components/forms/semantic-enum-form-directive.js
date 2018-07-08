@@ -39,7 +39,7 @@ SemanticEnumFormController.prototype.onAllowedValuesChange_ = function(
     this.allowedOptions = [];
     angular.forEach(newValue, function(option) {
       var defaultLabel = '';
-      var defaultOptionName = this.scope_.$eval('metadata.default.value');
+      var defaultOptionName = JSON.parse(this.scope_.metadata.default);
       if (defaultOptionName == option.name) {
         defaultLabel = ' (default)';
       }

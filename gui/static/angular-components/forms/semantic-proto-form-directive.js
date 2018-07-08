@@ -49,7 +49,6 @@ const SemanticProtoFormController = function(
 
 SemanticProtoFormController.prototype.typeOfValue_ = function(value) {
   if (angular.isUndefined(value)) {
-    debugger;
     return "string";
   }
 
@@ -188,11 +187,6 @@ SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
         this.scope_.value[field.name] = [];
       }
     } else {
-
-      if (field.name == "mode") {
-        debugger;
-      }
-
       field.depth = (this.scope_.$eval('metadata.depth') || 0) + 1;
 
       if (angular.isUndefined(this.scope_.value[field.name])) {
