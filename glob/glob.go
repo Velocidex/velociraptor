@@ -7,11 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 	"www.velocidex.com/golang/velociraptor/utils"
-	//	utils_ 	"www.velocidex.com/golang/velociraptor/testing"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
@@ -82,6 +82,20 @@ type _PathFilterer interface {
 	Match(f FileInfo) bool
 }
 
+// A sentinel is used to determine if we should report this file. At
+// each level of walking the Match tree we check if a _Sentinel is
+// present at this level. If it is then we need to report this.
+type _Sentinel struct{}
+
+func (self _Sentinel) Match(f FileInfo) bool {
+	return true
+}
+
+var (
+	sentinal_filter = _Sentinel{}
+	sentinal        = &Globber{sentinal_filter: nil}
+)
+
 type _RecursiveComponent struct {
 	path  string
 	depth int
@@ -134,8 +148,8 @@ func (self *Globber) Add(pattern string, pathsep string) error {
 
 func (self *Globber) _add_brace_expanded(pattern string, pathsep string) error {
 	// Convert the pattern into path components.
-	if filter, err := convert_glob_into_path_components(
-		pattern, pathsep); err == nil {
+	filter, err := convert_glob_into_path_components(pattern, pathsep)
+	if err == nil {
 		// Expand path components into alternatives
 		return self._expand_path_components(filter)
 
@@ -165,15 +179,18 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 	var current *Globber = self
 
 	for _, element := range components {
-		if next, pres := (*current)[element]; pres {
+		next, pres := (*current)[element]
+		if pres {
 			current = next
 		} else {
-			next := make(Globber)
-			(*current)[element] = &next
-			current = &next
+			next := &Globber{}
+			(*current)[element] = next
+			current = next
 		}
 	}
 
+	// Add Sentinal to ensure matches are reported here.
+	(*current)[sentinal_filter] = nil
 	return nil
 }
 
@@ -188,86 +205,75 @@ func (self Globber) ExpandWithContext(
 	go func() {
 		defer close(output_chan)
 
+		// We want to do a breadth first recursion - not a
+		// depth first recursion. This ensures that readers of
+		// the results can detect all the hits in a particular
+		// directory before processing its children.
+		children := make(map[string]*Globber)
+
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
-		if files, err := accessor.ReadDir(path); err == nil {
-			// For each file that matched, we check which component
-			// would match it.
-			for _, f := range files {
-			search_filterers:
-				for filterer, next := range self {
-					if filterer.Match(f) {
-						next_path := filepath.Join(path, f.Name())
-						// Leaf node.
-						if len(*next) == 0 {
-							output_chan <- f
+		files, err := accessor.ReadDir(path)
+		if err != nil {
+			return
+		}
 
-							// Merge results from child nodes.
-						} else {
-							child_chan := next.ExpandWithContext(
-								ctx, next_path, accessor)
+		result := []FileInfo{}
 
-							for {
-								select {
-								case <-ctx.Done():
-									return
+		// For each file that matched, we check which component
+		// would match it.
+		for _, f := range files {
+			for filterer, next := range self {
+				if !filterer.Match(f) {
+					continue
+				}
 
-								case f, ok := <-child_chan:
-									if !ok {
-										continue search_filterers
-									}
-									output_chan <- f
-								}
-							}
-						}
+				if next == nil {
+					continue
+				}
+
+				next_path := filepath.Join(path, f.Name())
+
+				_, next_has_sentinal := (*next)[sentinal_filter]
+				if next_has_sentinal {
+					result = append(result, f)
+				}
+
+				children[next_path] = next
+			}
+		}
+
+		// Sort the results alphabetically.
+		sort.Slice(result, func(i, j int) bool {
+			return -1 == strings.Compare(
+				result[i].FullPath(),
+				result[j].FullPath())
+		})
+		for _, f := range result {
+			output_chan <- f
+		}
+
+		for next_path, next := range children {
+			child_chan := next.ExpandWithContext(ctx, next_path, accessor)
+
+		search_subdir:
+			for {
+				select {
+				case <-ctx.Done():
+					return
+
+				case f, ok := <-child_chan:
+					if !ok {
+						break search_subdir
 					}
+					output_chan <- f
 				}
 			}
 		}
 	}()
 
 	return output_chan
-}
-
-// Expands the component tree by traversing the filesystem.
-func (self Globber) Expand(path string, accessor FileSystemAccessor) []string {
-	var result []string
-
-	if len(self) == 0 {
-		return append(result, path)
-	}
-
-	// Walk the filter tree. List the directory and for each file
-	// that matches a filter at this level, recurse into the next
-	// level.
-	if files, err := accessor.ReadDir(path); err == nil {
-		// Foreach file that matched, we check which component
-		// would match it.
-		for _, f := range files {
-			for filterer, next := range self {
-				if filterer.Match(f) {
-					next_path := filepath.Join(path, f.Name())
-					result = append(
-						result, next.Expand(
-							next_path, accessor)...)
-				}
-			}
-		}
-	}
-
-	// The algorithm above might select the same file as part of
-	// multiple filters - so we deduplicate the files here.
-	seen := make(map[string]bool)
-	var res []string
-	for _, element := range result {
-		if _, pres := seen[element]; !pres {
-			res = append(res, element)
-			seen[element] = true
-		}
-	}
-
-	return res
 }
 
 func (self Globber) _expand_path_components(filter []_PathFilterer) error {

@@ -2,6 +2,9 @@ package glob
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/sebdah/goldie"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -9,6 +12,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type pathComponentsTestFixtureType struct {
@@ -89,7 +93,7 @@ func (self MockFileInfo) FullPath() string   { return self.full_path }
 type MockFileSystemAccessor []string
 
 func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	seen := make(map[string]bool)
+	seen := []string{}
 	if !strings.HasSuffix(path, "/") {
 		path = path + "/"
 	}
@@ -98,58 +102,32 @@ func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		if strings.HasPrefix(mock_path, path) {
 			suffix := mock_path[len(path):]
 			mock_path_components := strings.Split(suffix, "/")
-			seen[mock_path_components[0]] = true
+			if !utils.InString(&seen, mock_path_components[0]) {
+				seen = append(seen, mock_path_components[0])
+			}
 		}
 	}
 
 	var result []FileInfo
-	for k, _ := range seen {
+	for _, k := range seen {
 		result = append(result, MockFileInfo{k, filepath.Join(path, k)})
 	}
 	return result, nil
 }
 
-type _GlobFixtureType struct {
+var _GlobFixture = []struct {
+	name     string
 	patterns []string
-	expected []string
-}
-
-var _GlobFixture = []_GlobFixtureType{
-	// Case insensitive matching.
-	{[]string{"/bin/Bash"}, []string{"/bin/bash"}},
-
-	// Range matching.
-	{[]string{"/bin/[a-b]ash"}, []string{"/bin/bash"}},
-
-	// Inverted range.
-	{[]string{"/bin/[!a-b]ash"}, []string{"/bin/dash"}},
-
-	// Brace expansion.
-	{[]string{"/bin/{b,d}ash"}, []string{
-		"/bin/bash",
-		"/bin/dash",
-	}},
-
-	// Depth of 2
-	{[]string{"/usr/**2/diff"}, []string{
-		"/usr/bin/X11/diff",
-		"/usr/bin/diff",
-	}},
-
-	// Depth of 3 (default)
-	{[]string{"/usr/**/diff"}, []string{
-		"/usr/bin/X11/X11/diff",
-		"/usr/bin/X11/diff",
-		"/usr/bin/diff",
-	}},
-
-	// Depth of 4 (default)
-	{[]string{"/usr/**4/diff"}, []string{
-		"/usr/bin/X11/X11/X11/diff",
-		"/usr/bin/X11/X11/diff",
-		"/usr/bin/X11/diff",
-		"/usr/bin/diff",
-	}},
+}{
+	{"Case insensitive", []string{"/bin/Bash"}},
+	{"Character class", []string{"/bin/[a-b]ash"}},
+	{"Inverted range", []string{"/bin/[!a-b]ash"}},
+	{"Brace expansion.", []string{"/bin/{b,d}ash"}},
+	{"Depth of 2", []string{"/usr/**2/diff"}},
+	{"Depth of 3", []string{"/usr/**/diff"}},
+	{"Depth of 4", []string{"/usr/**4/diff"}},
+	{"Breadth first traversal", []string{"/tmp/1/*", "/tmp/1/*/*"}},
+	{"Breadth first traversal", []string{"/tmp/1/**5"}},
 }
 
 var fs_accessor = MockFileSystemAccessor{
@@ -161,35 +139,29 @@ var fs_accessor = MockFileSystemAccessor{
 	"/usr/bin/X11/diff",
 	"/usr/bin/X11/X11/diff",
 	"/usr/bin/X11/X11/X11/diff",
-}
-
-func TestGlob(t *testing.T) {
-	for _, fixture := range _GlobFixture {
-		tree := NewGlobber()
-
-		for _, pattern := range fixture.patterns {
-			err := tree.Add(pattern, "/")
-			if err != nil {
-				t.Fatalf("Failed %v", err)
-			}
-		}
-
-		expanded := tree.Expand("/", fs_accessor)
-		sort.Strings(expanded)
-
-		if !reflect.DeepEqual(expanded, fixture.expected) {
-			t.Fatalf("Failed %v: %v", expanded,
-				fixture.expected)
-		}
-	}
+	"/tmp/1",
+	"/tmp/1/1.txt",
+	"/tmp/1/5",
+	"/tmp/1/4",
+	"/tmp/1/3",
+	"/tmp/1/2",
+	"/tmp/1/2/23",
+	"/tmp/1/2/21",
+	"/tmp/1/2/21/1.txt",
+	"/tmp/1/2/21/213",
+	"/tmp/1/2/21/212",
+	"/tmp/1/2/21/212/1.txt",
+	"/tmp/1/2/21/211",
+	"/tmp/1/2/20",
 }
 
 func TestGlobWithContext(t *testing.T) {
 	ctx := context.Background()
-	for _, fixture := range _GlobFixture {
+	result := make(map[string]interface{})
+	for idx, fixture := range _GlobFixture {
 		var returned []string
 
-		globber := make(Globber)
+		globber := &Globber{}
 		for _, pattern := range fixture.patterns {
 			err := globber.Add(pattern, "/")
 			if err != nil {
@@ -201,12 +173,12 @@ func TestGlobWithContext(t *testing.T) {
 		for row := range output_chan {
 			returned = append(returned, row.FullPath())
 		}
-		sort.Strings(returned)
-		if !reflect.DeepEqual(returned, fixture.expected) {
-			t.Fatalf("Failed %v: %v", returned,
-				fixture.expected)
-		}
+
+		result[fmt.Sprintf("%03d %s", idx, fixture.name)] = returned
 	}
+
+	result_json, _ := json.MarshalIndent(result, "", " ")
+	goldie.Assert(t, "TestGlobWithContext", result_json)
 }
 
 func TestBraceExpansion(t *testing.T) {

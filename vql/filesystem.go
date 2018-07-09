@@ -17,27 +17,16 @@ func (self GlobPlugin) Call(
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
-	// Extract the glob from the args.
-	globs, ok := scope.Associative(args, "globs")
-	if ok {
-		switch t := globs.(type) {
-		case string:
-			globber.Add(t, "/")
-		case []vfilter.Any:
-			for _, item := range t {
-				switch item_t := item.(type) {
-				case string:
-					globber.Add(item_t, "/")
-				default:
-					utils.Debug("Unsupported arg type")
-				}
-			}
-		default:
-			utils.Debug("Unsupported args")
-		}
-	} else {
-		// If no args specified just glob *
-		globber.Add("*", "/")
+	globs, pres := vfilter.ExtractStringArray(scope, "globs", args)
+	if !pres {
+		scope.Log("Expecting string list as 'globs' parameter")
+		close(output_chan)
+		return output_chan
+	}
+
+	for _, item := range globs {
+		utils.Debug(item)
+		globber.Add(item, "/")
 	}
 
 	go func() {
