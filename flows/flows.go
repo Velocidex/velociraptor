@@ -37,13 +37,14 @@ type FlowRunner struct {
 func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
 	cached_flow, pres := self.flow_cache[flow_urn]
 	if !pres {
-		cached_flow, err := GetAFF4FlowObject(
-			self.config, flow_urn)
+		cached_flow, err := GetAFF4FlowObject(self.config, flow_urn)
 		if err != nil {
 			return nil, err
 		}
 
 		self.flow_cache[flow_urn] = cached_flow
+		cached_flow.impl.Load(cached_flow)
+
 		return cached_flow, nil
 	}
 	return cached_flow, nil
@@ -84,13 +85,12 @@ func (self *FlowRunner) Close() {
 		if !cached_flow.dirty {
 			continue
 		}
-
+		cached_flow.impl.Save(cached_flow)
 		err := SetAFF4FlowObject(self.config, cached_flow, urn)
 		if err != nil {
 			utils.Debug(err)
 		}
 	}
-
 }
 
 func NewFlowRunner(config *config.Config, db datastore.DataStore) *FlowRunner {
@@ -102,14 +102,38 @@ func NewFlowRunner(config *config.Config, db datastore.DataStore) *FlowRunner {
 	return &result
 }
 
-// Flows are factories which have no internal state. They must be
-// thread safe and reusable multiple times.
+// Flows are factories which have no persistent internal state. They
+// must be thread safe and reusable multiple times. The flow runner
+// uses flows in a predicatable cycle:
+
+// When a set of messages arrive at the server from the client (e.g. a
+// packet sent via a POST request), the runner makes a copy of the
+// Flow object and calls it Load() method. This gives the flow an
+// opportunity to reset itself from the stored "state" object.
+
+// The runner then processes each message destined for the flow in
+// turn through thr ProcessMessage() method.
+
+// After the runner completes all the messages in this packet, the
+// runner calls Save() method and then the flow is destroyed. The flow
+// is responsible for loading and saving its internal state from
+// persistant state using the GetState() and SetState()
+// functions. Note that during the life of the flow (i.e. from Start()
+// until Complete()), the flow may receive multiple packets and
+// therefore should store its state reliably.
+
+// Some flows require no persistant state and therefore should have
+// empty Load() and Save() methods.
 type Flow interface {
 	Start(
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
 		args proto.Message,
 	) (*string, error)
+
+	// This method is called by the runner prior to processing
+	// messages.
+	Load(flow_obj *AFF4FlowObject) error
 
 	// Each message is processed with this method. Note that
 	// messages may be split across client POST operations. The
@@ -121,6 +145,10 @@ type Flow interface {
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
 		message *crypto_proto.GrrMessage) error
+
+	// This method is called by the runner after processing
+	// messages and before the flow is destroyed.
+	Save(flow_obj *AFF4FlowObject) error
 }
 
 // The AFF4 object contains the state of the flow.
@@ -157,6 +185,7 @@ func (self *AFF4FlowObject) GetState() proto.Message {
 func (self *AFF4FlowObject) Complete() {
 	self.dirty = true
 	self.FlowContext.State = flows_proto.FlowContext_TERMINATED
+	self.FlowContext.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	self.flow_state = nil
 }
 

@@ -18,7 +18,6 @@
     <div ng-repeat="field in controller.valueDescriptor.fields |
                     filter:controller.regularFieldsOnly |
                     filter:controller.boundNotExplicitlyHiddenFields">
-
       <grr-form-proto-single-field value="controller.scope_.value[field.name]"
                                    field="field"
                                    ng-if="!field.repeated">

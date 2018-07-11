@@ -87,8 +87,10 @@ type Config struct {
 	Frontend_bind_address *string  `yaml:"Frontend.bind_address,omitempty"`
 	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port,omitempty"`
 	Frontend_certificate  *string  `yaml:"Frontend.certificate,omitempty"`
+	Frontend_private_key  *string  `yaml:"PrivateKeys.server_key,omitempty"`
 
-	Frontend_private_key *string `yaml:"PrivateKeys.server_key,omitempty"`
+	// Time to lease client requests before they are retransmitted (in seconds).
+	Frontend_client_lease_time *uint32 `yaml:"Frontend.client_lease_time,omitempty"`
 
 	// DataStore parameters.
 	Datastore_implementation *string `yaml:"Datastore.implementation,omitempty"`
@@ -109,8 +111,9 @@ func GetDefaultConfig() *Config {
 		Client_build_time: &build_time,
 		Client_commit:     &commit_hash,
 
-		Frontend_bind_address: proto.String(""),
-		Frontend_bind_port:    &bind_port,
+		Frontend_bind_address:      proto.String(""),
+		Frontend_bind_port:         &bind_port,
+		Frontend_client_lease_time: proto.Uint32(600),
 
 		API_bind_address:       proto.String("localhost"),
 		API_bind_port:          proto.Uint32(8888),

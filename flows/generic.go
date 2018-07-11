@@ -22,6 +22,14 @@ const (
 
 type VQLCollector struct{}
 
+func (self *VQLCollector) Load(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
+func (self *VQLCollector) Save(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
 func (self *VQLCollector) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,

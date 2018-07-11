@@ -55,6 +55,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/dustin/go-humanize"
+  packages = ["."]
+  revision = "02af3965c54e8cacf948b97fef38925c4120652c"
+
+[[projects]]
   name = "github.com/go-ole/go-ole"
   packages = [
     ".",
@@ -125,6 +131,12 @@
   name = "github.com/rcrowley/go-metrics"
   packages = ["."]
   revision = "e2704e165165ec55d062f5919b4b29494e9fa790"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/sebdah/goldie"
+  packages = ["."]
+  revision = "8784dd1ab561dcf43d141f6678e9e41f3d0dff55"
 
 [[projects]]
   name = "github.com/shirou/gopsutil"
@@ -265,11 +277,11 @@
   branch = "master"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
-  revision = "1f7f47dab9bdbb5e3e8144c949b7daa4879d3915"
+  revision = "efb43265c0d03bc467ee5503ff0eb7fca53352ee"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a404c531b78b2882ac55336c3476e0d0f48ba665806ae6ed58265d997e1bd85"
+  inputs-digest = "7a0c6f7e7de1fde590186777b14678cd979c9d4a4e34e172e6b3704ff128c254"
   solver-name = "gps-cdcl"
   solver-version = 1

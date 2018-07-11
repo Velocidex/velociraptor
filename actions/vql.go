@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"github.com/dustin/go-humanize"
 	"log"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -62,7 +63,7 @@ func (self *VQLClientAction) Run(
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
-	for _, query := range arg.Query {
+	for query_idx, query := range arg.Query {
 		now := uint64(time.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
@@ -70,23 +71,32 @@ func (self *VQLClientAction) Run(
 			return
 		}
 
-		s, err := vfilter.OutputJSON(vql, ctx, scope)
-		if err != nil {
-			responder.RaiseError(err.Error())
-			return
+		result_chan := vfilter.GetResponseChannel(
+			vql, ctx, scope, int(arg.MaxRow))
+		for {
+			result, ok := <-result_chan
+			if !ok {
+				break
+			}
+
+			response := &actions_proto.VQLResponse{
+				Query:     query,
+				QueryId:   uint64(query_idx),
+				Part:      uint64(result.Part),
+				Response:  string(result.Payload),
+				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+			}
+
+			responder.Log("%v %s: Sending response part %d %s bytes.",
+				(response.Timestamp-now)/1000000,
+				query.Name,
+				result.Part,
+				humanize.Bytes(uint64(len(result.Payload))),
+			)
+
+			response.Columns = *vql.Columns(scope)
+			responder.AddResponse(response)
 		}
-
-		response := &actions_proto.VQLResponse{
-			Query:     query,
-			Response:  string(s),
-			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-		}
-
-		responder.Log("Ran query %s in %v seconds.", query.Name,
-			(response.Timestamp-now)/1000000)
-
-		response.Columns = *vql.Columns(scope)
-		responder.AddResponse(response)
 	}
 
 	if uploader.Count > 0 {

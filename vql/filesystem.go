@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -25,7 +24,6 @@ func (self GlobPlugin) Call(
 	}
 
 	for _, item := range globs {
-		utils.Debug(item)
 		globber.Add(item, "/")
 	}
 

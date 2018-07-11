@@ -113,14 +113,20 @@ func (self *Server) processUnauthenticatedMessages(
 	return nil
 }
 
-func (self *Server) Process(ctx context.Context, request []byte) ([]byte, error) {
+func (self *Server) Decrypt(ctx context.Context, request []byte) (
+	*crypto.MessageInfo, error) {
 	message_info, err := self.manager.Decrypt(request)
 	if err != nil {
 		return nil, err
 	}
 
+	return message_info, nil
+}
+
+func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInfo) (
+	[]byte, error) {
 	message_list := &crypto_proto.MessageList{}
-	err = proto.Unmarshal(message_info.Raw, message_list)
+	err := proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
 		return nil, err
 	}

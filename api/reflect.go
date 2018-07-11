@@ -3,13 +3,11 @@ package api
 import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
+	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"reflect"
 	"strings"
-
-	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	semantic_proto "www.velocidex.com/golang/velociraptor/proto"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 var (
@@ -71,9 +69,6 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 	new_message := reflect.New(message_type.Elem()).Interface().(descriptor.Message)
 	_, md := descriptor.ForMessage(new_message)
-	if type_name == "FileFinderAction" {
-		utils.Debug(md)
-	}
 	type_desc := &api_proto.TypeDescriptor{
 		Name: type_name,
 		Kind: "struct",
@@ -170,8 +165,6 @@ func describe_enum(
 		descriptor.Type = "EnumNamedValue"
 		descriptor.Default = "\"" + descriptor.AllowedValues[0].Name + "\""
 	}
-	utils.Debug(message_type)
-
 }
 
 func getFieldType(desc *descriptor_proto.FieldDescriptorProto) string {

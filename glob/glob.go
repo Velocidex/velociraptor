@@ -233,14 +233,16 @@ func (self Globber) ExpandWithContext(
 					continue
 				}
 
-				next_path := filepath.Join(path, f.Name())
-
 				_, next_has_sentinal := (*next)[sentinal_filter]
 				if next_has_sentinal {
 					result = append(result, f)
 				}
 
-				children[next_path] = next
+				// Only recurse into directories.
+				if f.IsDir() {
+					next_path := filepath.Join(path, f.Name())
+					children[next_path] = next
+				}
 			}
 		}
 

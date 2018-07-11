@@ -14,6 +14,14 @@ type FileFinder struct {
 	*VQLCollector
 }
 
+func (self *FileFinder) Load(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
+func (self *FileFinder) Save(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
 func (self *FileFinder) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,

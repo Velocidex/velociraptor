@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
 
@@ -14,4 +15,14 @@ message VFSListRequest {
     string vfs_path = 2 [(sem_type) = {
             description: "The VFS Path to list files in .",
         }];
+
+    uint64 recursion_depth = 3 [(sem_type) = {
+            default: "0",
+            description: "If > 0 then recurse this many directories.",
+        }];
+}
+
+message VFSListRequestState {
+    string vfs_path = 1;
+    VQLResponse current = 2;
 }

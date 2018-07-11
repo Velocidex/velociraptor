@@ -332,13 +332,19 @@ message ClientCommunication {
   // This is the SIMPLE_HMAC. It covers the "encrypted" field only.
    bytes hmac = 7;
 
-  // This is the FULL_HMAC. It coverts:
+  // This is the FULL_HMAC. It covers:
   // 1) the "encrypted" field,
   // 2) The "encrypted_cipher" field.
   // 3) The encrypted_cipher_metadata field
   // 4) The packet iv
   // 5) the api_version.
    bytes full_hmac = 10;
+
+    // While the message is being processed, we send padding
+    // periodically to the client to kep the client connection up and
+    // keep the client waiting for the message to be processed. This
+    // padding can be ignored.
+    repeated uint64 padding = 11;
 };
 
 

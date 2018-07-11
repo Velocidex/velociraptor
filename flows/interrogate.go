@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -23,6 +22,14 @@ const (
 )
 
 type VInterrogate struct{}
+
+func (self *VInterrogate) Load(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
+func (self *VInterrogate) Save(flow_obj *AFF4FlowObject) error {
+	return nil
+}
 
 func (self *VInterrogate) Start(
 	config_obj *config.Config,
@@ -216,7 +223,6 @@ func processRecentUsers(response *actions_proto.VQLResponse,
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
-		utils.Debug(err)
 		return err
 	}
 

@@ -73,6 +73,14 @@ func TestAFF4FlowObject(t *testing.T) {
 
 type MyTestFlow struct{}
 
+func (self *MyTestFlow) Load(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
+func (self *MyTestFlow) Save(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
 func (self *MyTestFlow) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,

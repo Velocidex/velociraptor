@@ -31,6 +31,13 @@ message VQLCollectorArgs {
     repeated VQLRequest Query = 2 [(sem_type) = {
             description: "The VQL queries to execute on the client.",
         }];
+
+    uint64 max_row = 4 [(sem_type) = {
+            friendly_name: "Max rows per part",
+            description: "The maximum rows per response. Responses larger than this "
+            "will be split across multiple responses.",
+            default: "1000",
+        }];
 }
 
 message VQLResponse {
@@ -39,6 +46,15 @@ message VQLResponse {
         }];
     repeated string Columns = 2 [(sem_type) = {
             description: "A list of column headings produced by the query.",
+        }];
+
+    uint64 query_id = 5 [(sem_type) = {
+            description: "Chronological order of the query we respond to."
+        }];
+
+    uint64 part = 6 [(sem_type) = {
+            description: "Large VQL responses are split across many parts. "
+            "This carries the part of this response.",
         }];
     VQLRequest Query = 3 [(sem_type) = {
             description: "The query that was executed.",

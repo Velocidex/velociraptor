@@ -8,6 +8,7 @@ import (
 // Record the status of the request so we can log it.
 type statusRecorder struct {
 	http.ResponseWriter
+	http.Flusher
 	status int
 }
 
@@ -20,7 +21,7 @@ func GetLoggingHandler(config_obj *config.Config) func(http.Handler) http.Handle
 	logger := NewLogger(config_obj)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rec := &statusRecorder{w, 200}
+			rec := &statusRecorder{w, w.(http.Flusher), 200}
 			defer func() {
 				logger.Info(
 					"%s %s %s %s %d",

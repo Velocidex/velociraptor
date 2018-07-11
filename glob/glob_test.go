@@ -86,7 +86,7 @@ func (self MockFileInfo) Name() string       { return self.name }
 func (self MockFileInfo) Size() int64        { return 0 }
 func (self MockFileInfo) Mode() os.FileMode  { return os.ModePerm }
 func (self MockFileInfo) ModTime() time.Time { return time.Time{} }
-func (self MockFileInfo) IsDir() bool        { return false }
+func (self MockFileInfo) IsDir() bool        { return true }
 func (self MockFileInfo) Sys() interface{}   { return nil }
 func (self MockFileInfo) FullPath() string   { return self.full_path }
 
