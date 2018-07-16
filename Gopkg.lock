@@ -14,6 +14,12 @@
   version = "1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/Velocidex/ahocorasick"
+  packages = ["."]
+  revision = "e1c353eeaaee536ccb6ffb0ba2e97de77134a20c"
+
+[[projects]]
   name = "github.com/alecthomas/participle"
   packages = [
     ".",
@@ -277,11 +283,11 @@
   branch = "master"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
-  revision = "efb43265c0d03bc467ee5503ff0eb7fca53352ee"
+  revision = "336c963739c0b4cbb52b50974517d1fc7578a56a"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "7a0c6f7e7de1fde590186777b14678cd979c9d4a4e34e172e6b3704ff128c254"
+  inputs-digest = "2c055e0c4b4bee7a237280f489d6610704dff84f42a1b13dbf61310dedc6d757"
   solver-name = "gps-cdcl"
   solver-version = 1

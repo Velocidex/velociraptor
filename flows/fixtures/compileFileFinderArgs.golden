@@ -1,0 +1,387 @@
+[
+ {
+  "Name": "Empty request",
+  "Error": "Invalid request: No globs specified.",
+  "Request": {},
+  "CollectorArgs": null
+ },
+ {
+  "Name": "Just glob",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00])  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Mod time",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ModificationTime": {
+       "min_last_modified_time": 5,
+       "max_last_modified_time": 10
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 5  AND  Sys.Mtim.Sec \u003c 10  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Mod time just min",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ModificationTime": {
+       "min_last_modified_time": 5
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 5  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Mod time Error",
+  "Error": "Invalid modification time condition: min \u003e max",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ModificationTime": {
+       "min_last_modified_time": 15,
+       "max_last_modified_time": 10
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": null
+ },
+ {
+  "Name": "Access time",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "AccessTime": {
+       "min_last_access_time": 5,
+       "max_last_access_time": 10
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Atim.Sec \u003e 5  AND  Sys.Atim.Sec \u003c 10  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Inode time",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "InodeChangeTime": {
+       "min_last_inode_change_time": 5,
+       "max_last_inode_change_time": 10
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Ctim.Sec \u003e 5  AND  Sys.Ctim.Sec \u003c 10  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Size",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "Size": {
+       "min_file_size": 500,
+       "max_file_size": 1000
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Size \u003e 500  AND  Size \u003c 1000  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Grep",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ContentsLiteralMatch": {
+       "literal": "aGVsbG8="
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    },
+    {
+     "key": "KW00",
+     "value": "hello"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00])  "
+    },
+    {
+     "VQL": "let files = SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Grep and simple",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ContentsLiteralMatch": {
+       "literal": "aGVsbG8="
+      }
+     }
+    },
+    {
+     "UnionField": {
+      "ModificationTime": {
+       "min_last_modified_time": 15
+      }
+     }
+    }
+   ]
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    },
+    {
+     "key": "KW00",
+     "value": "hello"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 15  "
+    },
+    {
+     "VQL": "let files = SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT * from files"
+    }
+   ]
+  }
+ },
+ {
+  "Name": "Upload simple",
+  "Error": "",
+  "Request": {
+   "paths": [
+    "/bin/*"
+   ],
+   "conditions": [
+    {
+     "UnionField": {
+      "ModificationTime": {
+       "min_last_modified_time": 15
+      }
+     }
+    }
+   ],
+   "action": {
+    "Action": {
+     "Download": {
+      "max_size": 500
+     }
+    }
+   }
+  },
+  "CollectorArgs": {
+   "env": [
+    {
+     "key": "Path00",
+     "value": "/bin/*"
+    }
+   ],
+   "Query": [
+    {
+     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 15  "
+    },
+    {
+     "VQL": "let files = SELECT * FROM _simple"
+    },
+    {
+     "Name": "File Finder Response",
+     "VQL": "SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime, upload(file=FullPath) as Upload FROM files"
+    }
+   ]
+  }
+ }
+]

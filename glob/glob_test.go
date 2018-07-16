@@ -3,8 +3,10 @@ package glob
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sebdah/goldie"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -113,6 +115,10 @@ func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		result = append(result, MockFileInfo{k, filepath.Join(path, k)})
 	}
 	return result, nil
+}
+
+func (self MockFileSystemAccessor) Open(path string) (io.Reader, error) {
+	return nil, errors.New("Not implemented")
 }
 
 var _GlobFixture = []struct {

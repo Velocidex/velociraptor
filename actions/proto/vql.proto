@@ -64,6 +64,10 @@ message VQLResponse {
             description: "The timestamp the response was generated.",
             type: "RDFDatetime",
         }];
+
+    uint64 total_rows = 7[(sem_type) = {
+            description: "Total number of rows in this response part."
+        }];
 }
 
 

@@ -166,8 +166,6 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 		flow_obj.RunnerArgs.ClientId, "vfs",
 		vfs_args.VfsPath)
 
-	fmt.Printf("Storing in urn %v", urn)
-
 	return db.SetSubjectData(config_obj, urn, 0, data)
 }
 
@@ -245,7 +243,6 @@ func (self *VFSListDirectory) flush_state(
 		flow_obj.RunnerArgs.ClientId, "vfs",
 		self.state.VfsPath)
 
-	fmt.Printf("Storing in urn %v\n", urn)
 	s, err := proto.Marshal(self.state.Current)
 	if err != nil {
 		return err

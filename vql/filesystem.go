@@ -22,7 +22,6 @@ func (self GlobPlugin) Call(
 		close(output_chan)
 		return output_chan
 	}
-
 	for _, item := range globs {
 		globber.Add(item, "/")
 	}

@@ -43,7 +43,13 @@ vqlController.prototype.onValueChange = function(newValue) {
     this.columns = [];
 
     if (angular.isDefined(newValue.Columns)) {
-      this.columns = newValue.Columns;
+      // Hide columns beginning with _ from the table.
+      for (var i = 0; i < newValue.Columns.length; i++) {
+        var column = newValue.Columns[i];
+        if (!column.startsWith("_")) {
+          this.columns.push(column);
+        }
+      }
     }
     this.payload = JSON.parse(newValue.Response);
     this.value =  newValue;

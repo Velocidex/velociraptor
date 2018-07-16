@@ -28,5 +28,8 @@ func MakeScope() *vfilter.Scope {
 	).AddProtocolImpl(
 		_ProcessFieldImpl{},
 		_binaryFieldImpl{},
+	).AppendFunctions(
+		&GrepFunction{},
+		&UploadFunction{},
 	)
 }

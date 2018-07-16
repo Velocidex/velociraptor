@@ -61,7 +61,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 		// Handle log messages automatically so flows do not
 		// need to all remember to do this.
 		if message.RequestId == constants.LOG_SINK {
-			cached_flow.Log(message)
+			cached_flow.LogMessage(message)
 			continue
 		}
 
@@ -217,7 +217,16 @@ func (self *AFF4FlowObject) IsRequestComplete(message *crypto_proto.GrrMessage) 
 	return message.Type == crypto_proto.GrrMessage_STATUS
 }
 
-func (self *AFF4FlowObject) Log(message *crypto_proto.GrrMessage) {
+func (self *AFF4FlowObject) Log(log_msg string) {
+	self.FlowContext.Logs = append(
+		self.FlowContext.Logs, &crypto_proto.LogMessage{
+			Message:   log_msg,
+			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+		})
+	self.dirty = true
+}
+
+func (self *AFF4FlowObject) LogMessage(message *crypto_proto.GrrMessage) {
 	log_msg, ok := responder.ExtractGrrMessagePayload(
 		message).(*crypto_proto.LogMessage)
 	if ok {

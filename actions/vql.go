@@ -3,6 +3,7 @@ package actions
 import (
 	"github.com/dustin/go-humanize"
 	"log"
+	"strings"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -71,14 +72,23 @@ func (self *VQLClientAction) Run(
 			return
 		}
 
+		// Use defaults for MaxRow if not defined.
+		max_rows := int(arg.MaxRow)
+		if max_rows == 0 {
+			max_rows = 10000
+		}
 		result_chan := vfilter.GetResponseChannel(
-			vql, ctx, scope, int(arg.MaxRow))
+			vql, ctx, scope, max_rows)
 		for {
 			result, ok := <-result_chan
 			if !ok {
 				break
 			}
 
+			// Skip let queries since they never produce results.
+			if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
+				continue
+			}
 			response := &actions_proto.VQLResponse{
 				Query:     query,
 				QueryId:   uint64(query_idx),
@@ -87,11 +97,12 @@ func (self *VQLClientAction) Run(
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			}
 
-			responder.Log("%v %s: Sending response part %d %s bytes.",
+			responder.Log("Time %v: %s: Sending response part %d %s bytes (%d rows).",
 				(response.Timestamp-now)/1000000,
 				query.Name,
 				result.Part,
 				humanize.Bytes(uint64(len(result.Payload))),
+				result.TotalRows,
 			)
 
 			response.Columns = *vql.Columns(scope)

@@ -3,6 +3,7 @@ package glob
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -59,6 +60,7 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 // injection.
 type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
+	Open(path string) (io.Reader, error)
 }
 
 // Real implementation.
@@ -76,6 +78,11 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		return result, nil
 	}
 	return nil, err
+}
+
+func (self OSFileSystemAccessor) Open(path string) (io.Reader, error) {
+	file, err := os.Open(path)
+	return file, err
 }
 
 type _PathFilterer interface {
