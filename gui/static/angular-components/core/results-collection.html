@@ -1,21 +1,7 @@
 <!-- "Download as" buttons -->
 <grr-download-collection-as base-url="exportedResultsUrl"
-                            ng-if="exportedResultsUrl &&
-                                   controller.resultsArePresent">
+                            ng-if="exportedResultsUrl">
 </grr-download-collection-as>
-
-<!-- "Download Files" panel -->
-<grr-download-collection-files download-url="downloadFilesUrl"
-                               export-command-url="exportCommandUrl"
-
-                               ng-if="downloadFilesUrl &&
-                                      controller.resultsAreFiles">
-
-</grr-download-collection-files>
-
-<grr-output-plugins-notes output-plugins-url="outputPluginsUrl"
-                          ng-if="outputPluginsUrl">
-</grr-output-plugins-notes>
 
 <!-- Results table -->
 <table class="table table-striped table-condensed table-bordered full-width"

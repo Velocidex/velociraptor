@@ -28,6 +28,7 @@ func StartHTTPProxy(config_obj *config.Config) error {
 		return err
 	}
 	mux.Handle("/api/", h)
+	mux.Handle("/api/v1/download/", flowResultDownloadHandler(config_obj))
 
 	// Install static file handler.
 	if config_obj.AdminUI_document_root != nil {

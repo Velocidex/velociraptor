@@ -15,11 +15,22 @@ type WriteSeekCloser interface {
 }
 
 type FileStore interface {
+	ReadFile(filename string) (io.Reader, error)
 	WriteFile(filename string) (WriteSeekCloser, error)
 }
 
 type DirectoryFileStore struct {
 	config_obj *config.Config
+}
+
+func (self *DirectoryFileStore) ReadFile(filename string) (io.Reader, error) {
+	if self.config_obj.FileStore_directory == nil {
+		return nil, errors.New("No configured file store directory.")
+	}
+
+	file_path := path.Join(*self.config_obj.FileStore_directory, filename)
+	file, err := os.Open(file_path)
+	return file, err
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {

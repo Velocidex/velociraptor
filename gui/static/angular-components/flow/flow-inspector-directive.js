@@ -66,7 +66,8 @@ exports.FlowInspectorDirective = function() {
     scope: {
       flowId: '=',
       apiBasePath: '=',
-      activeTab: '=?'
+      activeTab: '=?',
+      exportBasePath: '=',
     },
     controller: FlowInspectorController,
     controllerAs: 'controller',

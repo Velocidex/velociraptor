@@ -22,6 +22,8 @@ const FlowResultsController = function($scope) {
   /** @type {?string} */
   this.flowExportedResultsUrl;
 
+  this.exportBasePath;
+
   /** @type {?string} */
   this.outputPluginsMetadataUrl;
 
@@ -31,7 +33,7 @@ const FlowResultsController = function($scope) {
   /** @type {?string} */
   this.exportCommand;
 
-  this.scope_.$watchGroup(['flowId', 'apiBasePath'],
+  this.scope_.$watchGroup(['flowId', 'apiBasePath', 'exportBasePath'],
                           this.onFlowIdOrBasePathChange_.bind(this));
 };
 
@@ -47,13 +49,12 @@ FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
   this.flowResultsUrl = this.outputPluginsMetadataUrl =
       this.downloadFilesUrl = null;
 
+
   if (newValues.every(angular.isDefined)) {
+    this.exportedResultsUrl = this.scope_['exportBasePath'] + '/' + this.scope_['flowId'];
+
     var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
     this.flowResultsUrl = flowUrl + '/results';
-    this.flowExportedResultsUrl = flowUrl + '/exported-results';
-    this.outputPluginsUrl = flowUrl + '/output-plugins';
-    this.exportCommandUrl = flowUrl + '/results/export-command';
-    this.downloadFilesUrl = flowUrl + '/results/files-archive';
   }
 };
 
@@ -69,7 +70,8 @@ exports.FlowResultsDirective = function() {
   return {
     scope: {
       flowId: '=',
-      apiBasePath: '='
+      apiBasePath: '=',
+      exportBasePath: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/flow-results.html',

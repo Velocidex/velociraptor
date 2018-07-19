@@ -33,6 +33,8 @@ const ClientFlowsViewController = function(
   /** @type {string} */
   this.flowApiBasePath;
 
+  this.exportBasePath;
+
   this.scope_.$watchGroup(
       ['controller.selectedFlowId', 'controller.tab'],
       this.onSelectionOrTabChange_.bind(this));
@@ -56,6 +58,7 @@ ClientFlowsViewController.prototype.onRoutingParamsChange_ = function(
   this.selectedFlowId = opt_stateParams['flowId'];
   this.tab = opt_stateParams['tab'];
   this.flowApiBasePath = 'v1/GetFlowDetails' + '/' + this.clientId;
+  this.exportBasePath = "v1/download/" + this.clientId;
 };
 
 /**

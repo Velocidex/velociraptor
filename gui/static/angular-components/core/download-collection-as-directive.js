@@ -32,13 +32,11 @@ const DownloadCollectionAsController = function(
 
   /** @type {Object} */
   this.pluginToDisplayName = {
-    'csv-zip': 'CSV (Zipped)',
-    'flattened-yaml-zip': 'Flattened YAML (Zipped)',
-    'sqlite-zip': 'SQLite Scripts (Zipped)'
+    'json-zip': 'JSON + Uploads (Zipped)',
   };
 
   /** @type {string} */
-  this.selectedPlugin = 'csv-zip';
+  this.selectedPlugin = 'json-zip';
 };
 
 
@@ -49,8 +47,8 @@ const DownloadCollectionAsController = function(
  * @export
  */
 DownloadCollectionAsController.prototype.downloadAs = function(pluginName) {
-  var url = this.scope_['baseUrl'] + '/' + pluginName;
-  this.grrApiService_.downloadFile(url).then(
+  var url = this.scope_['baseUrl'];
+  this.grrApiService_.downloadFile(url, {"format": pluginName}).then(
       function success() {}.bind(this),
       function failure(response) {
         if (angular.isUndefined(response.status)) {
