@@ -15,6 +15,16 @@ var (
 		FLOW_STATE,
 	}
 
+	FOREMAN_WELL_KNOWN_FLOW = "aff4:/flows/E.Foreman"
+	HUNTS_URN               = "aff4:/hunts"
+	HUNTS_INFO_ATTR         = "aff4:hunt_details"
+	HUNTS_SUMMARY_ATTR      = "aff4:hunt_summary"
+	HUNT_PREFIX             = "H."
+	ATTR_HUNT_OBJECT        = []string{
+		HUNTS_INFO_ATTR,
+	}
+
+	// Deprecated - for compatibility with GRR only.
 	AFF4_TYPE = "aff4:type"
 
 	CLIENT_VELOCIRAPTOR_INFO = "aff4:velociraptor_info"

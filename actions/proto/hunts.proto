@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package proto;
+
+message ForemanCheckin {
+    uint64 last_hunt_timestamp = 1;
+}

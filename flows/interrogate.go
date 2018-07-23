@@ -21,14 +21,8 @@ const (
 	processClientInfo uint64 = iota
 )
 
-type VInterrogate struct{}
-
-func (self *VInterrogate) Load(flow_obj *AFF4FlowObject) error {
-	return nil
-}
-
-func (self *VInterrogate) Save(flow_obj *AFF4FlowObject) error {
-	return nil
+type VInterrogate struct {
+	BaseFlow
 }
 
 func (self *VInterrogate) Start(

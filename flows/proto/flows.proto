@@ -27,7 +27,6 @@ message FlowContext {
     uint64 create_time = 3 [(sem_type) = {
             type: "RDFDatetime",
         }];
-    string creator = 4;
     string current_state = 5;
     uint64 kill_timestamp = 6 [(sem_type) = {
             type: "RDFDatetime",
@@ -69,12 +68,15 @@ message FlowContext {
     uint64 active_time = 17 [(sem_type) = {
             type: "RDFDatetime",
         }];
-
 }
 
 // Next field: 23
 message FlowRunnerArgs {
-   bool notify_to_user = 2 [(sem_type) = {
+    string creator = 1 [(sem_type) = {
+            description: "The entity that created this flow. This can be a username or hunt id";
+        }];
+
+    bool notify_to_user = 2 [(sem_type) = {
       description: "Should a notification be sent to the initiator.",
       friendly_name: "Notify at Completion",
       default: "true",

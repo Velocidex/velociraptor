@@ -48,6 +48,14 @@ func (self *FakeDatastore) SetSubjectData(
 	self.data[urn] = data
 	return nil
 }
+
+func (self *FakeDatastore) DeleteSubject(
+	config_obj *config.Config,
+	urn string) error {
+	self.data[urn] = nil
+	return nil
+}
+
 func (self *FakeDatastore) GetSubjectAttributes(
 	config_obj *config.Config,
 	urn string, attrs []string) (map[string][]byte, error) {

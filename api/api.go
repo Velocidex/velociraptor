@@ -40,6 +40,21 @@ func (self *ApiServer) LaunchFlow(
 	return result, nil
 }
 
+func (self *ApiServer) CreateHunt(
+	ctx context.Context,
+	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
+	utils.Debug(in)
+	result := &api_proto.StartFlowResponse{}
+	hunt_id, err := flows.CreateHunt(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	result.FlowId = *hunt_id
+
+	return result, nil
+}
+
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {

@@ -58,9 +58,6 @@ func (self *Server) processVelociraptorMessages(
 	runner.ProcessMessages(messages)
 
 	var tasks_to_remove []uint64
-
-	// Remove the well known flows and keep the other
-	// messages for processing.
 	for _, message := range messages {
 		// Velociraptor clients always return their task id so
 		// we can dequeue their messages immediately.

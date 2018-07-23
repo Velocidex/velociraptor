@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+
+package proto;
+
+
+message Hunt {
+    string hunt_id = 1;
+    uint64 create_time = 2 [(sem_type) = {
+            description: "When this hunt was created."
+        }];
+
+    FlowRunnerArgs start_request = 3 [(sem_type) = {
+            description: "Launch this flow on the client if the condition is true",
+            friendly_name: "Launch Flow",
+        }];
+    VQLCollectorArgs flow_condition_query = 4 [(sem_type) = {
+            description: "A VQL query to run in order to collect information for determining if the hunt applies to this client.",
+            friendly_name: "Client Side Condition",
+            default: '{"Query": [{"VQL": "SELECT OS, Architecture, Fqdn, Platform, config.Client_labels from info()"}]}',
+        }];
+    VQLCollectorArgs server_side_condition_query = 5 [(sem_type) = {
+            description: "A VQL query which runs server side on the results of the flow_condition_query. If any rows are returned then the condition is deemed fulfilled and the hunt will be scheduled."
+            friendly_name: "Server Side Condition",
+            default: '{"Query": [{"VQL": "SELECT * from rows"}]}',
+        }];
+
+    uint64 client_limit = 6 [(sem_type) = {
+            description: "Total number of clients this hunt will run on."
+        }];
+
+    uint64 client_rate = 7 [(sem_type) = {
+            description: "Total clients per minute that will run the hunt.",
+            default: "20",
+        }];
+
+    uint64 total_clients_scheduled = 9 [(sem_type) = {
+            description: "The total number of clients currently scheduled for this hunt."
+        }];
+
+    enum State {
+        PENDING = 0;
+        RUNNING = 1;
+        STOPPED = 2;
+    };
+
+    State state = 8;
+}
+
+
+message HuntInfo {
+    string hunt_id = 1;
+    uint64 scheduled_time = 2;
+    string client_id = 3;
+    string flow_id = 5 [(sem_type) = {
+            description: "The flow that was launched for this hunt."
+        }];
+
+    FlowRunnerArgs start_request = 4 [(sem_type) = {
+            description: "The flow that will be run on the client when it is scheduled."
+        }];
+
+    Hunt.State state = 8;
+}

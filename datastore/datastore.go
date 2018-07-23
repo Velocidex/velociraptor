@@ -44,6 +44,10 @@ type DataStore interface {
 		config_obj *config.Config,
 		urn string, attrs []string) (map[string][]byte, error)
 
+	DeleteSubject(
+		config_obj *config.Config,
+		urn string) error
+
 	// Just grab the whole data of the AFF4 object.
 	SetSubjectData(
 		config_obj *config.Config,

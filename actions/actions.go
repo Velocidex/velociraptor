@@ -24,6 +24,7 @@ func GetClientActionsMap() map[string]ClientAction {
 	result["VQLClientAction"] = &VQLClientAction{}
 	result["GetHostname"] = &GetHostname{}
 	result["GetPlatformInfo"] = &GetPlatformInfo{}
+	result["UpdateForeman"] = &UpdateForeman{}
 
 	return result
 }

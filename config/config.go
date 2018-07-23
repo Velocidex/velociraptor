@@ -101,6 +101,9 @@ type Config struct {
 
 	// File Store
 	FileStore_directory *string `yaml:"FileStore.directory,omitempty"`
+
+	// Hunts
+	Hunts_last_timestamp *uint64 `yaml:"Hunts.last_timestamp,omitempty"`
 }
 
 func GetDefaultConfig() *Config {
@@ -119,6 +122,8 @@ func GetDefaultConfig() *Config {
 		API_bind_port:          proto.Uint32(8888),
 		API_proxy_bind_address: proto.String("localhost"),
 		API_proxy_bind_port:    proto.Uint32(8889),
+
+		Hunts_last_timestamp: proto.Uint64(0),
 	}
 }
 

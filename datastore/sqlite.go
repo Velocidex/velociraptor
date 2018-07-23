@@ -104,6 +104,7 @@ func getDBPathForClient(base string, client_id string) string {
 	return path.Join(base, esaped_client_id+".sqlite")
 }
 
+// Route the different URNs to their own SQLite database.
 func getDBPathForURN(base string, urn string) (string, error) {
 	components := strings.Split(urn, "/")
 	if len(components) <= 1 || components[0] != "aff4:" {
@@ -116,6 +117,10 @@ func getDBPathForURN(base string, urn string) (string, error) {
 
 	if strings.HasPrefix(urn, constants.CLIENT_INDEX_URN) {
 		return getDBPathForClient(base, components[1]), nil
+	}
+
+	if strings.HasPrefix(urn, constants.HUNTS_URN) {
+		return getDBPathForClient(base, "hunts"), nil
 	}
 
 	return "", errors.New("Unknown URN mapping:" + urn)
@@ -407,6 +412,47 @@ func (self *SqliteDataStore) SetSubjectData(
 	// timestamp because the timestamp is not in the index.
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	_, err = statement2.Exec(path.Dir(urn), "index:dir/"+path.Base(urn), now, "X")
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (self *SqliteDataStore) DeleteSubject(
+	config_obj *config.Config,
+	urn string) error {
+	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	if err != nil {
+		return err
+	}
+
+	handle, err := self.getDB(db_path)
+	if err != nil {
+		return err
+	}
+
+	statement, err := handle.Prepare(
+		"delete from tbl where subject = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	_, err = statement.Exec(urn)
+	if err != nil {
+		return err
+	}
+
+	// Also remove the directory index.
+	statement2, err := handle.Prepare(
+		"delete from tbl where subject = ? and predicate = ?")
+	if err != nil {
+		return err
+	}
+	defer statement2.Close()
+
+	_, err = statement2.Exec(path.Dir(urn), "index:dir/"+path.Base(urn))
 	if err != nil {
 		return err
 	}

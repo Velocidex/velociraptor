@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/context"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -36,8 +37,9 @@ type HTTPCommunicator struct {
 
 	pending_messages chan *crypto_proto.GrrMessage
 
-	last_ping_time        time.Time
-	current_poll_duration time.Duration
+	last_ping_time          time.Time
+	last_foreman_check_time time.Time
+	current_poll_duration   time.Duration
 
 	// Enrollment
 	last_enrollment_time time.Time
@@ -58,6 +60,12 @@ func (self *HTTPCommunicator) Run() {
 			}
 
 			self.pending_messages <- msg
+
+			if time.Now().After(
+				self.last_foreman_check_time.Add(10 * time.Second)) {
+
+			}
+
 		}
 	}()
 
@@ -205,6 +213,8 @@ func (self *HTTPCommunicator) sendToURL(
 		return nil
 	}
 
+	self.MaybeCheckForeman()
+
 	// Other errors will be propagated and retried.
 	if resp.StatusCode != 200 {
 		return errors.New(resp.Status)
@@ -272,6 +282,32 @@ func (self *HTTPCommunicator) MaybeEnrol() {
 
 		self.last_enrollment_time = time.Now()
 		log.Printf("Enrolling")
+		go func() {
+			self.executor.SendToServer(reply)
+		}()
+	}
+}
+
+func (self *HTTPCommunicator) MaybeCheckForeman() {
+	if time.Now().After(
+		self.last_foreman_check_time.Add(10 * time.Minute)) {
+		reply := &crypto_proto.GrrMessage{
+			SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
+			ArgsRdfName: "ForemanCheckin",
+			Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
+			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+		}
+
+		serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
+			LastHuntTimestamp: *self.ctx.Config.Hunts_last_timestamp,
+		})
+		if err != nil {
+			return
+		}
+		reply.Args = serialized_arg
+
+		self.last_foreman_check_time = time.Now()
+		log.Printf("Checking foreman")
 		go func() {
 			self.executor.SendToServer(reply)
 		}()

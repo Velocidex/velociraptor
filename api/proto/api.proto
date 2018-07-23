@@ -9,6 +9,7 @@ import "google/protobuf/empty.proto";
 
 // Files within the same directory must be imported relatively.
 import "clients.proto";
+import "hunts.proto";
 import "flows.proto";
 
 package proto;
@@ -156,6 +157,13 @@ service API {
     rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
         option (google.api.http) = {
             post: "/api/v1/LaunchFlow",
+            body: "*"
+        };
+    }
+
+    rpc CreateHunt(Hunt) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateHunt",
             body: "*"
         };
     }

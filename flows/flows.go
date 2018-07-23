@@ -67,7 +67,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 
 		err = cached_flow.impl.ProcessMessage(
 			self.config, cached_flow, message)
-		if err != nil {
+		if err != nil && cached_flow.FlowContext != nil {
 			cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
 			cached_flow.FlowContext.Status = err.Error()
 			cached_flow.FlowContext.Backtrace = ""
@@ -108,7 +108,7 @@ func NewFlowRunner(config *config.Config, db datastore.DataStore) *FlowRunner {
 
 // When a set of messages arrive at the server from the client (e.g. a
 // packet sent via a POST request), the runner makes a copy of the
-// Flow object and calls it Load() method. This gives the flow an
+// Flow object and calls its Load() method. This gives the flow an
 // opportunity to reset itself from the stored "state" object.
 
 // The runner then processes each message destined for the flow in
@@ -262,6 +262,18 @@ func NewAFF4FlowObject(
 func GetAFF4FlowObject(
 	config_obj *config.Config,
 	flow_urn string) (*AFF4FlowObject, error) {
+
+	// Handle well known flows. Well known flows are not
+	// serialized to the DataStore because they have no internal
+	// state or any args.
+	switch flow_urn {
+	case constants.FOREMAN_WELL_KNOWN_FLOW:
+		return &AFF4FlowObject{
+			config: config_obj,
+			impl:   &Foreman{},
+		}, nil
+	}
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -351,7 +363,8 @@ func SetAFF4FlowObject(
 
 	data[constants.FLOW_CONTEXT] = value
 
-	// This is used for backwards compatibility with GRR's GUI.
+	// Deprecate: This is used for backwards compatibility with
+	// GRR's GUI.
 	data[constants.AFF4_TYPE] = []byte("GRRFlow")
 
 	// Serialize the state into the database.
@@ -414,6 +427,25 @@ func GetDescriptors() []*flows_proto.FlowDescriptor {
 	return result
 }
 
+func GetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs) (proto.Message, error) {
+	// Return default args
+	if flow_runner_args.Args == nil {
+		for _, desc := range GetDescriptors() {
+			if desc.Name == flow_runner_args.FlowName {
+				return desc.DefaultArgs, nil
+			}
+		}
+	}
+
+	// Decode args from flow runner args.
+	var tmp_args ptypes.DynamicAny
+	err := ptypes.UnmarshalAny(flow_runner_args.Args, &tmp_args)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return tmp_args.Message, nil
+}
+
 func StartFlow(
 	config_obj *config.Config,
 	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
@@ -423,21 +455,9 @@ func StartFlow(
 	}
 
 	// Extract the args from the Any field.
-	var args proto.Message = nil
-	if flow_runner_args.Args == nil {
-		for _, desc := range GetDescriptors() {
-			if desc.Name == flow_runner_args.FlowName {
-				flow_runner_args.Args = desc.DefaultArgs
-				break
-			}
-		}
-	} else {
-		var tmp_args ptypes.DynamicAny
-		err := ptypes.UnmarshalAny(flow_runner_args.Args, &tmp_args)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		args = tmp_args.Message
+	args, err := GetFlowArgs(flow_runner_args)
+	if err != nil {
+		return nil, err
 	}
 
 	if flow_runner_args.ClientId == "" {
@@ -503,5 +523,22 @@ func StoreResultInFlow(
 		return err
 	}
 
+	return nil
+}
+
+type BaseFlow struct{}
+
+func (self *BaseFlow) Start(
+	config *config.Config,
+	flow_obj *AFF4FlowObject,
+	args proto.Message) (*string, error) {
+	return nil, errors.New("Unable to start flow directly")
+}
+
+func (self *BaseFlow) Load(flow_obj *AFF4FlowObject) error {
+	return nil
+}
+
+func (self *BaseFlow) Save(flow_obj *AFF4FlowObject) error {
 	return nil
 }

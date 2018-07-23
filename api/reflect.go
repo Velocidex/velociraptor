@@ -23,6 +23,7 @@ var (
 		"VQLCollectorArgs",
 		"VQLResponse",
 		"Types",
+		"Hunt",
 		"FlowRunnerArgs",
 		"FlowContext",
 		"VInterrogateArgs",
