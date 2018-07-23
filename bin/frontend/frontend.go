@@ -167,21 +167,30 @@ func control(server_obj *server.Server) http.Handler {
 		}
 
 		message_info, err := server_obj.Decrypt(req.Context(), body)
-		if err != nil {
-			// If we can not decrypt the message because
-			// we do not know about this client, we need
-			// to indicate to the client to start the
-			// enrolment process.
-			if err.Error() == "Enrolment" {
+
+		// Very few Unauthenticated client messages are valid
+		// - currently only enrolment requests.
+		if !message_info.Authenticated {
+			err := server_obj.ProcessUnauthenticatedMessages(
+				req.Context(), message_info)
+			if err == nil {
+				// If we can not decrypt the message
+				// because we do not know about this
+				// client, we need to indicate to the
+				// client to start the enrolment
+				// process. Since the client can not
+				// read anything from us (because we
+				// can not encrypt for it), we
+				// indicate this by providing it with
+				// an HTTP error code.
 				http.Error(
 					w,
 					"Please Enrol",
 					http.StatusNotAcceptable)
-				return
+			} else {
+				server_obj.Error("Unable to process: %s", err.Error())
+				http.Error(w, "", http.StatusServiceUnavailable)
 			}
-
-			server_obj.Error("Unable to process: %s", err.Error())
-			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
 
@@ -197,13 +206,13 @@ func control(server_obj *server.Server) http.Handler {
 
 		sync := make(chan []byte)
 		go func() {
+			defer close(sync)
 			response, err := server_obj.Process(req.Context(), message_info)
 			if err != nil {
 				server_obj.Error("Error: %s", err.Error())
 			} else {
 				sync <- response
 			}
-			close(sync)
 		}()
 
 		// Spin here on the response being ready, every few

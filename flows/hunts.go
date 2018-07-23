@@ -7,6 +7,7 @@ package flows
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"github.com/golang/protobuf/proto"
 	"sync"
 	"time"
@@ -56,14 +57,25 @@ func (self *HuntDispatcher) Update() error {
 	logger := logging.NewLogger(self.config_obj)
 	now := uint64(time.Now().UTC().UnixNano() / 1000)
 	for _, hunt := range self.hunts {
+		// If the hunt is not in the running state we do not
+		// schedule new clients for it.
+		if hunt.State != api_proto.Hunt_RUNNING {
+			continue
+		}
+
 		client_rate := hunt.ClientRate
 
 		// Default client rate is 20 per minute.
 		if client_rate == 0 {
 			client_rate = 20
 		}
-		seconds_since_creation := (now - hunt.CreateTime) / 1000000
-		expected_clients := client_rate * seconds_since_creation / 60
+		last_unpause_time := hunt.LastUnpauseTime
+		if last_unpause_time == 0 {
+			last_unpause_time = hunt.CreateTime
+		}
+		seconds_since_unpause := (now - last_unpause_time) / 1000000
+		expected_clients := (client_rate*seconds_since_unpause/60 +
+			hunt.TotalClientsWhenUnpaused)
 		pending_urn := hunt.HuntId + "/pending"
 
 		// We should be adding some more clients to the hunt.
@@ -101,9 +113,6 @@ func (self *HuntDispatcher) Update() error {
 					continue
 				}
 				summary.FlowId = *flow_id
-
-				utils.Debug(summary)
-
 				running_urn := hunt.HuntId + "/running/" + summary.ClientId
 				serialized_summary, err := proto.Marshal(summary)
 				if err != nil {
@@ -146,18 +155,25 @@ func (self *HuntDispatcher) Update() error {
 }
 
 type HuntDispatcherContainer struct {
+	refresh_mu sync.Mutex
 	mu         sync.Mutex
 	dispatcher *HuntDispatcher
 }
 
 func (self *HuntDispatcherContainer) Refresh(config_obj *config.Config) {
+	// Serialize access to Refresh() calls. While the
+	// NewHuntDispatcher() is being built, readers may access the
+	// old one freely, but new Refresh calls are blocked.
+	self.refresh_mu.Lock()
+	defer self.refresh_mu.Unlock()
 	dispatcher, err := NewHuntDispatcher(config_obj)
 	if err != nil {
 		dispatcher = &HuntDispatcher{}
 	}
 
 	// Swap the pointers under lock between the old and new hunt
-	// list. This should be very fast.
+	// list. This should be very fast minimizing reader
+	// contention.
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -177,21 +193,11 @@ func NewHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 	}
 
 	for _, hunt_urn := range hunts {
-		data, err := db.GetSubjectAttributes(
-			config_obj, hunt_urn, constants.ATTR_HUNT_OBJECT)
+		hunt_obj, err := GetAFF4HuntObject(config_obj, hunt_urn)
 		if err != nil {
 			return nil, err
 		}
-		serialized_hunt, pres := data[constants.HUNTS_INFO_ATTR]
-		if pres {
-			hunt_obj := &api_proto.Hunt{}
-			err := proto.Unmarshal(serialized_hunt, hunt_obj)
-			if err != nil {
-				continue
-			}
-
-			result.hunts = append(result.hunts, hunt_obj)
-		}
+		result.hunts = append(result.hunts, hunt_obj)
 	}
 
 	err = result.Update()
@@ -238,26 +244,142 @@ func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error
 	utils.Debug(hunt)
 	hunt.HuntId = GetNewHuntId()
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
-	hunt.State = api_proto.Hunt_PENDING
+	hunt.LastUnpauseTime = hunt.CreateTime
+	if hunt.Expires < hunt.CreateTime {
+		hunt.Expires = uint64(time.Now().Add(7*24*time.Hour).
+			UTC().UnixNano() / 1000)
+	}
+	if hunt.State == api_proto.Hunt_UNSET {
+		hunt.State = api_proto.Hunt_PAUSED
+	}
 
+	err := SetAFF4HuntObject(config_obj, hunt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &hunt.HuntId, nil
+}
+
+func ListHunts(config_obj *config.Config, in *api_proto.ListHuntsRequest) (
+	*api_proto.ListHuntsResponse, error) {
+	dispatcher, err := GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &api_proto.ListHuntsResponse{}
+	for idx, hunt := range dispatcher.GetApplicableHunts(0) {
+		if uint64(idx) < in.Offset {
+			continue
+		}
+
+		if uint64(idx) >= in.Offset+in.Count {
+			break
+		}
+		result.Items = append(result.Items, hunt)
+	}
+
+	return result, nil
+}
+
+func GetHunt(config_obj *config.Config, in *api_proto.GetHuntRequest) (
+	*api_proto.Hunt, error) {
+	dispatcher, err := GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, hunt := range dispatcher.GetApplicableHunts(0) {
+		if hunt.HuntId == in.HuntId {
+			return hunt, nil
+		}
+	}
+
+	return nil, errors.New("Not found")
+}
+
+func ModifyHunt(config_obj *config.Config, hunt *api_proto.Hunt) error {
+	// TODO: Check if the user has permission to start/stop the hunt.
+	hunt_obj, err := GetAFF4HuntObject(config_obj, hunt.HuntId)
+	if err != nil {
+		return err
+	}
+
+	modified := false
+
+	// Only some modifications are allowed. The modified fields
+	// are set int he hunt arg.
+	if hunt.State != api_proto.Hunt_UNSET {
+		hunt_obj.State = hunt.State
+		modified = true
+
+		// Hunt is being unpaused. Adjust the hunt counters to
+		// account for the unpause time. If we do not do this,
+		// then hunt will schedule all the clients which were
+		// not scheduled during the paused interval at once -
+		// exceeding the specified client rate.
+		if hunt_obj.State == api_proto.Hunt_PAUSED &&
+			hunt.State == api_proto.Hunt_RUNNING {
+			hunt_obj.LastUnpauseTime = uint64(time.Now().UTC().UnixNano() / 1000)
+			hunt_obj.TotalClientsWhenUnpaused = hunt_obj.TotalClientsScheduled
+		}
+	}
+
+	if modified {
+		err := SetAFF4HuntObject(config_obj, hunt_obj)
+		if err != nil {
+			return err
+		}
+
+		// Trigger a refresh of the hunt dispatcher. This
+		// guarantees that fresh data will be read in
+		// subsequent ListHunt() calls.
+		dispatch_container.Refresh(config_obj)
+
+		return nil
+	}
+
+	return errors.New("Modification not supported.")
+}
+
+func GetAFF4HuntObject(config_obj *config.Config, hunt_urn string) (*api_proto.Hunt, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
+	}
+
+	data, err := db.GetSubjectAttributes(
+		config_obj, hunt_urn, constants.ATTR_HUNT_OBJECT)
+	if err != nil {
+		return nil, err
+	}
+
+	hunt_obj := &api_proto.Hunt{}
+	serialized_hunt, pres := data[constants.HUNTS_INFO_ATTR]
+	if pres {
+		err := proto.Unmarshal(serialized_hunt, hunt_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return hunt_obj, nil
+}
+
+func SetAFF4HuntObject(config_obj *config.Config, hunt *api_proto.Hunt) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
 	}
 
 	data := make(map[string][]byte)
 
 	serialized_hunt_details, err := proto.Marshal(hunt)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	data[constants.HUNTS_INFO_ATTR] = serialized_hunt_details
 
-	err = db.SetSubjectData(config_obj, hunt.HuntId, 0, data)
-	if err != nil {
-		return nil, err
-	}
-
-	return &hunt.HuntId, nil
+	return db.SetSubjectData(config_obj, hunt.HuntId, 0, data)
 }

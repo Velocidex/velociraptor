@@ -1,10 +1,8 @@
-<div class="centered hunt-state-icon" state="{$ ::hunt.value.state.value $}">
-  <img ng-if="::hunt.value.state.value == 'STOPPED'"
+<div class="centered hunt-state-icon" state="{$ ::hunt.state $}">
+  <img ng-if="::hunt.state == 'STOPPED'"
        class="grr-icon grr-flow-icon" src="/static/images/stop.png" />
-  <img ng-if="::hunt.value.state.value == 'STARTED'"
+  <img ng-if="::hunt.state == 'RUNNING'"
        class="grr-icon grr-flow-icon" src="/static/images/clock.png" />
-  <img ng-if="::hunt.value.state.value == 'PAUSED'"
+  <img ng-if="::hunt.state == 'PAUSED'"
        class="grr-icon grr-flow-icon" src="/static/images/pause.png" />
-  <img ng-if="::hunt.value.state.value == 'COMPLETED'"
-       class="grr-icon grr-flow-icon" src="/static/images/stock_yes.png" />
 </div>

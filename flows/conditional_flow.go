@@ -97,7 +97,7 @@ func (self *ConditionalFlow) ProcessMessage(
 				ScheduledTime: uint64(time.Now().UnixNano() / 1000),
 				ClientId:      message.Source,
 				StartRequest:  hunt.StartRequest,
-				State:         api_proto.Hunt_PENDING,
+				State:         api_proto.HuntInfo_PENDING,
 			}
 			serialized_info, err := proto.Marshal(info)
 			if err != nil {

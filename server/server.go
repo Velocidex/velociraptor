@@ -3,7 +3,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"time"
@@ -91,12 +90,16 @@ func (self *Server) processGRRMessages(
 }
 
 // We only process some messages when the client is not authenticated.
-func (self *Server) processUnauthenticatedMessages(
+func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,
-	client_id string,
-	messages *crypto_proto.MessageList) error {
+	message_info *crypto.MessageInfo) error {
+	message_list := &crypto_proto.MessageList{}
+	err := proto.Unmarshal(message_info.Raw, message_list)
+	if err != nil {
+		return err
+	}
 
-	for _, message := range messages.Job {
+	for _, message := range message_list.Job {
 		switch message.SessionId {
 
 		case "aff4:/flows/E:Enrol":
@@ -126,12 +129,6 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 	err := proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
 		return nil, err
-	}
-
-	if !message_info.Authenticated {
-		self.processUnauthenticatedMessages(
-			ctx, message_info.Source, message_list)
-		return nil, errors.New("Enrolment")
 	}
 
 	// Here we split incoming messages from Velociraptor clients

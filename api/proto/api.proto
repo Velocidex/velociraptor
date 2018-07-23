@@ -161,9 +161,29 @@ service API {
         };
     }
 
+    // Hunts
     rpc CreateHunt(Hunt) returns (StartFlowResponse) {
         option (google.api.http) = {
             post: "/api/v1/CreateHunt",
+            body: "*"
+        };
+    }
+
+    rpc ListHunts(ListHuntsRequest) returns (ListHuntsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/ListHunts",
+        };
+    }
+
+    rpc GetHunt(GetHuntRequest) returns (Hunt) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHunt",
+        };
+    }
+
+    rpc ModifyHunt(Hunt) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/ModifyHunt",
             body: "*"
         };
     }

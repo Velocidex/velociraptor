@@ -55,6 +55,43 @@ func (self *ApiServer) CreateHunt(
 	return result, nil
 }
 
+func (self *ApiServer) ModifyHunt(
+	ctx context.Context,
+	in *api_proto.Hunt) (*empty.Empty, error) {
+	utils.Debug(in)
+	err := flows.ModifyHunt(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &empty.Empty{}
+	return result, nil
+}
+
+func (self *ApiServer) ListHunts(
+	ctx context.Context,
+	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
+	utils.Debug(in)
+	result, err := flows.ListHunts(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (self *ApiServer) GetHunt(
+	ctx context.Context,
+	in *api_proto.GetHuntRequest) (*api_proto.Hunt, error) {
+	utils.Debug(in)
+	result, err := flows.GetHunt(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {

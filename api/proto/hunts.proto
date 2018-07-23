@@ -8,9 +8,22 @@ package proto;
 
 
 message Hunt {
-    string hunt_id = 1;
+    string hunt_id = 1 [(sem_type) = {
+            friendly_name: "Hunt ID",
+        }];
     uint64 create_time = 2 [(sem_type) = {
-            description: "When this hunt was created."
+            description: "When this hunt was created.",
+            friendly_name: "Creation Time",
+            type: "RDFDatetime",
+        }];
+    uint64 expires = 10 [(sem_type) = {
+            description: "When does this hunt expire?",
+            friendly_name: "Expiry Time",
+            type: "RDFDatetime",
+        }];
+
+    string hunt_description = 11 [(sem_type) = {
+            description: "Hunt's description",
         }];
 
     FlowRunnerArgs start_request = 3 [(sem_type) = {
@@ -38,13 +51,28 @@ message Hunt {
         }];
 
     uint64 total_clients_scheduled = 9 [(sem_type) = {
-            description: "The total number of clients currently scheduled for this hunt."
+            description: "The total number of clients currently scheduled for this hunt.",
+            friendly_name: "Total Scheduled",
+        }];
+
+    // The following fields are used to calculate the client
+    // recruitment rate when the hunt is paused.
+    uint64 last_unpause_time = 12 [(sem_type) = {
+            description: "The time when the hunt was last paused or the creation time.",
+            type: "RDFDatetime",
+            label: HIDDEN,
+        }];
+
+    uint64 total_clients_when_unpaused = 13 [(sem_type) = {
+            description: "The total number of clients schduled when the hunt was paused.",
+            label: HIDDEN,
         }];
 
     enum State {
-        PENDING = 0;
-        RUNNING = 1;
-        STOPPED = 2;
+        UNSET = 0;
+        PAUSED = 1 [(description) = "Hunt will not schedule new clients but can be started."];
+        RUNNING = 2 [(description) = "Hunt is running and ready."];
+        STOPPED = 3 [(description) = "Hunt has expired."];
     };
 
     State state = 8;
@@ -63,5 +91,25 @@ message HuntInfo {
             description: "The flow that will be run on the client when it is scheduled."
         }];
 
-    Hunt.State state = 8;
+    enum State {
+        UNSET = 0;
+        PENDING = 1 [(description) = "Flow has not yet been created but it is pending."];
+        RUNNING = 2 [(description) = "Flow has been created and scheduled."];
+    }
+
+    State state = 8;
+}
+
+
+message ListHuntsRequest {
+    uint64 offset = 1;
+    uint64 count = 2;
+}
+
+message GetHuntRequest {
+    string hunt_id = 1;
+}
+
+message ListHuntsResponse {
+    repeated Hunt items = 1;
 }

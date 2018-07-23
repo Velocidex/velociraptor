@@ -44,21 +44,9 @@ const HuntsListController = function(
   /** @private {!AclDialogService} */
   this.grrAclDialogService_ = grrAclDialogService;
 
+  this.selectedHunt;
+
   // Internal state.
-
-  /**
-   * Dictionary with hunts as values and ids as keys. Used to find currently
-   * selected hunt object using selectedHuntId.
-   * @export {!Object<string, Object>}
-   */
-  this.huntsById = {};
-
-  /**
-   * If true, show hunts initiated by GRRWorker user.
-   * @export {boolean}
-   */
-  this.showRobotHunts = false;
-
   /**
    * This variable is bound to grr-infinite-table's trigger-update attribute
    * and therefore is set by that directive to a function that triggers
@@ -68,13 +56,11 @@ const HuntsListController = function(
   this.triggerUpdate;
 };
 
-
-
 /**
  * Hunts list API url.
  * @const {string}
  */
-HuntsListController.prototype.huntsUrl = '/hunts';
+HuntsListController.prototype.huntsUrl = 'v1/ListHunts';
 
 
 /**
@@ -131,7 +117,8 @@ HuntsListController.prototype.wrapApiPromise_ = function(promise, successMessage
  * @suppress {missingProperties} For items, as they crom from JSON response.
  */
 HuntsListController.prototype.selectItem = function(item) {
-  this.scope_['selectedHuntId'] = item.value.hunt_id.value;
+  this.scope_['selectedHuntId'] = item.hunt_id;
+  this.selectedHunt = item;
 };
 
 
@@ -173,17 +160,13 @@ HuntsListController.prototype.newHunt = function() {
  */
 HuntsListController.prototype.runHunt = function() {
   var modalPromise = this.grrDialogService_.openConfirmation(
-      'Run this hunt?',
-      'Are you sure you want to run this hunt?',
+    'Run this hunt?',
+    'Are you sure you want to run this hunt?',
       function() {
-        var promise = this.grrApiService_.patch(this.buildHuntUrl_(),
-                                                {state: 'STARTED'});
+        var promise = this.grrApiService_.post(
+          'v1/ModifyHunt', {state: 'RUNNING', hunt_id: this.scope_['selectedHuntId']});
         return this.wrapApiPromise_(promise, 'Hunt started successfully!');
       }.bind(this));
-
-  // TODO(user): there's no need to trigger update on dismiss.
-  // Doing so only to maintain compatibility with legacy GRR code.
-  // Remove as soon as legacy GRR code is removed.
   modalPromise.then(function resolve() {
     this.triggerUpdate();
   }.bind(this), function dismiss() {
@@ -197,20 +180,15 @@ HuntsListController.prototype.runHunt = function() {
  *
  * @export
  */
-HuntsListController.prototype.stopHunt = function() {
+HuntsListController.prototype.pauseHunt = function() {
   var modalPromise = this.grrDialogService_.openConfirmation(
-      'Stop this hunt?',
-      'Are you sure you want to stop this hunt? Once a hunt is ' +
-          'stopped, resuming it is not possible.',
+      'Pause this hunt?',
+      'Paused hunts do not schedule new clients. You can resume the hunt later.',
       function() {
-        var promise = this.grrApiService_.patch(this.buildHuntUrl_(),
-                                                {state: 'STOPPED'});
-        return this.wrapApiPromise_(promise, 'Hunt stopped successfully!');
+        var promise = this.grrApiService_.post(
+          'v1/ModifyHunt', {state: 'PAUSED', hunt_id: this.scope_['selectedHuntId']});
+        return this.wrapApiPromise_(promise, 'Hunt paused successfully!');
       }.bind(this));
-
-  // TODO(user): there's no need to trigger update on dismiss.
-  // Doing so only to maintain compatibility with legacy GRR code.
-  // Remove as soon as legacy GRR code is removed.
   modalPromise.then(function resolve() {
     this.triggerUpdate();
   }.bind(this), function dismiss() {
@@ -302,23 +280,6 @@ HuntsListController.prototype.deleteHunt = function() {
 
 
 /**
- * Fills in huntsById dictionary.
- *
- * @param {!Array<Object>} items Items to be transformed.
- * @return {!Array<Object>} Transformed items.
- * @export
- * @suppress {missingProperties} For items, as they crom from JSON response.
- */
-HuntsListController.prototype.transformItems = function(items) {
-  angular.forEach(items, function(item) {
-    this.huntsById[item['value']['hunt_id']['value']] = item;
-  }.bind(this));
-
-  return items;
-};
-
-
-/**
  * Displays a table with list of available hunts.
  *
  * @return {angular.Directive} Directive definition object.
@@ -326,7 +287,7 @@ HuntsListController.prototype.transformItems = function(items) {
 exports.HuntsListDirective = function() {
   return {
     scope: {
-      selectedHuntId: '=?'
+      selectedHuntId: '=?',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/hunt/hunts-list.html',
