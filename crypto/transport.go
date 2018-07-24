@@ -13,12 +13,11 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/binary"
 	"encoding/pem"
 	"fmt"
-
-	"encoding/binary"
-	"errors"
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	metrics "github.com/rcrowley/go-metrics"
 	"io/ioutil"
 	"log"
@@ -26,9 +25,8 @@ import (
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
-
 	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
 type _Cipher struct {
@@ -61,17 +59,17 @@ func _NewCipher(
 
 	_, err := rand.Read(result.cipher_properties.Key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	_, err = rand.Read(result.cipher_properties.MetadataIv)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	_, err = rand.Read(result.cipher_properties.HmacKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	result.cipher_metadata = &crypto_proto.CipherMetadata{
@@ -80,7 +78,7 @@ func _NewCipher(
 
 	serialized_cipher, err := proto.Marshal(result.cipher_properties)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
@@ -88,7 +86,7 @@ func _NewCipher(
 	signature, err := rsa.SignPKCS1v15(
 		rand.Reader, private_key, crypto.SHA256, hashed[:])
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	result.cipher_metadata.Signature = signature
 
@@ -98,14 +96,14 @@ func _NewCipher(
 		public_key,
 		serialized_cipher, []byte(""))
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	result.encrypted_cipher = encrypted_cipher
 
 	serialized_cipher_metadata, err := proto.Marshal(result.cipher_metadata)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	encrypted_cipher_metadata, err := encryptSymmetric(
@@ -320,7 +318,7 @@ func encryptSymmetric(
 
 	base_crypter, err := aes.NewCipher(cipher_properties.Key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	mode := cipher.NewCBCEncrypter(base_crypter, iv)
@@ -344,7 +342,7 @@ func decryptSymmetric(
 
 	base_crypter, err := aes.NewCipher(cipher_properties.Key)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	mode := cipher.NewCBCDecrypter(base_crypter, iv)
@@ -384,7 +382,7 @@ func (self *CryptoManager) getAuthState(
 	err := rsa.VerifyPKCS1v15(public_key, crypto.SHA256, hashed[:],
 		cipher_metadata.Signature)
 	if err != nil {
-		return false, err
+		return false, errors.WithStack(err)
 	}
 
 	return true, nil
@@ -397,7 +395,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	communications := &crypto_proto.ClientCommunication{}
 	err = proto.Unmarshal(cipher_text, communications)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	auth_state := false
@@ -425,13 +423,13 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 			communications.EncryptedCipher,
 			[]byte(""))
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		cipher_properties = &crypto_proto.CipherProperties{}
 		err = proto.Unmarshal(serialized_cipher, cipher_properties)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		// Check HMAC first to save checking the RSA signature for
@@ -453,7 +451,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 		cipher_metadata := &crypto_proto.CipherMetadata{}
 		err = proto.Unmarshal(serialized_metadata, cipher_metadata)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		// Verify the cipher metadata signature.
@@ -487,7 +485,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err = proto.Unmarshal(plain, packed_message_list)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	serialized_message_list := packed_message_list.MessageList
@@ -496,12 +494,12 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 		b := bytes.NewReader(serialized_message_list)
 		z, err := zlib.NewReader(b)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		defer z.Close()
 		p, err := ioutil.ReadAll(z)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 
 		serialized_message_list = p
@@ -526,7 +524,7 @@ func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (*crypto_proto
 	result := &crypto_proto.MessageList{}
 	err = proto.Unmarshal(message_info.Raw, result)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	for _, message := range result.Job {
@@ -544,7 +542,7 @@ func (self *CryptoManager) EncryptMessageList(
 	destination string) ([]byte, error) {
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	cipher_text, err := self.Encrypt(plain_text, destination)
@@ -591,7 +589,7 @@ func (self *CryptoManager) Encrypt(
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	comms := &crypto_proto.ClientCommunication{
@@ -604,7 +602,7 @@ func (self *CryptoManager) Encrypt(
 	// Each packet has a new IV.
 	_, err = rand.Read(comms.PacketIv)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	encrypted_serialized_packed_message_list, err := encryptSymmetric(
@@ -620,7 +618,7 @@ func (self *CryptoManager) Encrypt(
 
 	result, err := proto.Marshal(comms)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return result, nil

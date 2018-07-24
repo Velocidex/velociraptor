@@ -7,14 +7,18 @@ package flows
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"errors"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	"sync"
 	"time"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
@@ -70,28 +74,34 @@ func (self *HuntDispatcher) Update() error {
 			client_rate = 20
 		}
 		last_unpause_time := hunt.LastUnpauseTime
+		// Default LastUnpauseTime is hunt creation time.
 		if last_unpause_time == 0 {
 			last_unpause_time = hunt.CreateTime
 		}
 		seconds_since_unpause := (now - last_unpause_time) / 1000000
 		expected_clients := (client_rate*seconds_since_unpause/60 +
 			hunt.TotalClientsWhenUnpaused)
-		pending_urn := hunt.HuntId + "/pending"
 
-		// We should be adding some more clients to the hunt.
+		// We should be adding some more clients to the
+		// hunt. Read HuntInfo AFF4 objects from the
+		// pending queue, launch their flows and put them in
+		// the running queue.
 		if hunt.TotalClientsScheduled < expected_clients {
 			clients_to_get := expected_clients - hunt.TotalClientsScheduled
+			pending_urn := hunt.HuntId + "/pending"
 			urns, err := db.ListChildren(
 				self.config_obj, pending_urn, 0, clients_to_get)
 			if err != nil {
-				logger.Error(err.Error())
+				logger.Error("", err)
 				continue
 			}
 
 			for _, urn := range urns {
-				data, err := db.GetSubjectData(self.config_obj, urn, 0, 50)
+				data, err := db.GetSubjectAttributes(
+					self.config_obj, urn,
+					constants.ATTR_HUNT_SUMMARY_OBJECT)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
 					continue
 				}
 
@@ -100,23 +110,30 @@ func (self *HuntDispatcher) Update() error {
 					data[constants.HUNTS_SUMMARY_ATTR],
 					summary)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
 					continue
 				}
 
-				summary.StartRequest.ClientId = summary.ClientId
-				summary.StartRequest.Creator = summary.HuntId
-				flow_id, err := StartFlow(
-					self.config_obj, summary.StartRequest)
+				runner_args := &flows_proto.FlowRunnerArgs{
+					ClientId: summary.ClientId,
+					FlowName: "HuntRunnerFlow",
+				}
+				err = SetFlowArgs(runner_args, summary)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
+					continue
+				}
+
+				flow_id, err := StartFlow(self.config_obj, runner_args)
+				if err != nil {
+					logger.Error("", err)
 					continue
 				}
 				summary.FlowId = *flow_id
 				running_urn := hunt.HuntId + "/running/" + summary.ClientId
 				serialized_summary, err := proto.Marshal(summary)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
 					continue
 				}
 				data[constants.HUNTS_SUMMARY_ATTR] = serialized_summary
@@ -124,13 +141,13 @@ func (self *HuntDispatcher) Update() error {
 				err = db.SetSubjectData(
 					self.config_obj, running_urn, 0, data)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
 					continue
 				}
 
 				err = db.DeleteSubject(self.config_obj, urn)
 				if err != nil {
-					logger.Error(err.Error())
+					logger.Error("", err)
 					continue
 				}
 
@@ -139,7 +156,7 @@ func (self *HuntDispatcher) Update() error {
 
 			serialized_hunt_details, err := proto.Marshal(hunt)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 
 			data := make(map[string][]byte)
@@ -214,7 +231,7 @@ func GetHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 	if dispatch_container.dispatcher == nil {
 		dispatcher, err := NewHuntDispatcher(config_obj)
 		if err != nil {
-			logging.NewLogger(config_obj).Error(err.Error())
+			logging.NewLogger(config_obj).Error("", err)
 			return nil, err
 		}
 		dispatch_container.dispatcher = dispatcher
@@ -360,7 +377,7 @@ func GetAFF4HuntObject(config_obj *config.Config, hunt_urn string) (*api_proto.H
 	if pres {
 		err := proto.Unmarshal(serialized_hunt, hunt_obj)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 	}
 	return hunt_obj, nil
@@ -376,10 +393,135 @@ func SetAFF4HuntObject(config_obj *config.Config, hunt *api_proto.Hunt) error {
 
 	serialized_hunt_details, err := proto.Marshal(hunt)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	data[constants.HUNTS_INFO_ATTR] = serialized_hunt_details
 
 	return db.SetSubjectData(config_obj, hunt.HuntId, 0, data)
+}
+
+// A Flow which runs a delegate flow and stores the result in the
+// hunt.
+type HuntRunnerFlow struct {
+	delegate_flow_obj *AFF4FlowObject
+}
+
+func (self *HuntRunnerFlow) Start(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	args proto.Message) error {
+	hunt_summary_args, ok := args.(*api_proto.HuntInfo)
+	if !ok {
+		return errors.New("Expected args of type HuntInfo")
+	}
+	utils.Debug(hunt_summary_args)
+	delegate_flow_obj_proto := &flows_proto.AFF4FlowObject{
+		Urn:        flow_obj.Urn,
+		RunnerArgs: hunt_summary_args.StartRequest,
+	}
+	delegate_flow_obj_proto.RunnerArgs.ClientId = hunt_summary_args.ClientId
+	delegate_flow_obj_proto.RunnerArgs.Creator = hunt_summary_args.HuntId
+
+	flow_obj.SetState(delegate_flow_obj_proto)
+
+	delegate_args, err := GetFlowArgs(hunt_summary_args.StartRequest)
+	if err != nil {
+		return err
+	}
+
+	delegate_flow_obj, err := AFF4FlowObjectFromProto(delegate_flow_obj_proto)
+	if err != nil {
+		return err
+	}
+	err = delegate_flow_obj.impl.Start(
+		config_obj, delegate_flow_obj, delegate_args)
+
+	return err
+}
+
+func (self *HuntRunnerFlow) Load(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject) error {
+	delegate_flow_obj_proto, ok := flow_obj.GetState().(*flows_proto.AFF4FlowObject)
+	if ok {
+		delegate_flow_obj, err := AFF4FlowObjectFromProto(delegate_flow_obj_proto)
+		if err != nil {
+			return err
+		}
+		self.delegate_flow_obj = delegate_flow_obj
+		return self.delegate_flow_obj.impl.Load(config_obj, flow_obj)
+	}
+	return nil
+}
+
+func (self *HuntRunnerFlow) Save(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject) error {
+	// Store the delegate in our state
+	state, err := self.delegate_flow_obj.AsProto()
+	if err != nil {
+		return err
+	}
+	flow_obj.SetState(state)
+	return nil
+}
+
+func (self *HuntRunnerFlow) ProcessMessage(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	message *crypto_proto.GrrMessage) error {
+	delegate_err := self.delegate_flow_obj.impl.ProcessMessage(
+		config_obj, self.delegate_flow_obj, message)
+
+	// If the delegate flow is no longer running then write its
+	// result to the hunt complete queue.
+	if delegate_err != nil ||
+		self.delegate_flow_obj.FlowContext.State !=
+			flows_proto.FlowContext_RUNNING {
+		args, err := GetFlowArgs(flow_obj.RunnerArgs)
+		if err != nil {
+			return err
+		}
+		hunt_summary_args := args.(*api_proto.HuntInfo)
+		utils.Debug(hunt_summary_args)
+
+		urn := hunt_summary_args.HuntId + "/completed/" + hunt_summary_args.ClientId
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return err
+		}
+
+		hunt_summary_args.Result = flow_obj.FlowContext
+		serialized_hunt_summary, err := proto.Marshal(hunt_summary_args)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		data := make(map[string][]byte)
+		data[constants.HUNTS_SUMMARY_ATTR] = serialized_hunt_summary
+
+		err = db.SetSubjectData(config_obj, urn, 0, data)
+		if err != nil {
+			return err
+		}
+
+		flow_obj.Complete()
+	}
+
+	return delegate_err
+}
+
+func init() {
+	impl := HuntRunnerFlow{}
+	default_args, _ := ptypes.MarshalAny(&actions_proto.VQLCollectorArgs{})
+	desc := &flows_proto.FlowDescriptor{
+		Name:         "HuntRunnerFlow",
+		FriendlyName: "HuntRunnerFlow",
+		Category:     "Internal",
+		Doc:          "Runs a flow as part of a hunt.",
+		ArgsType:     "HuntInfo",
+		DefaultArgs:  default_args,
+	}
+
+	RegisterImplementation(desc, &impl)
 }

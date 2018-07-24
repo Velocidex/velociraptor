@@ -4,10 +4,10 @@ package datastore
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	_ "github.com/mattn/go-sqlite3"
+	errors "github.com/pkg/errors"
 	"path"
 	"strings"
 	"time"
@@ -49,7 +49,7 @@ func (self CachedDB) Size() int {
 func runQuery(handle *sql.DB, query string) error {
 	statement, err := handle.Prepare(query)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement.Close()
 	_, err = statement.Exec()
@@ -84,7 +84,7 @@ func (self *SqliteDataStore) getDB(db_path string) (*sql.DB, error) {
 			"sqlite3", db_path+"?cache=shared&_journal_mode=WAL")
 
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		err = EnsureDB(handle)
 		if err != nil {
@@ -108,7 +108,7 @@ func getDBPathForClient(base string, client_id string) string {
 func getDBPathForURN(base string, urn string) (string, error) {
 	components := strings.Split(urn, "/")
 	if len(components) <= 1 || components[0] != "aff4:" {
-		return "", errors.New("Not an AFF4 Path")
+		return "", errors.New("Not an AFF4 Path: " + urn)
 	}
 
 	if strings.HasPrefix(components[1], "C.") {
@@ -154,7 +154,7 @@ func (self *SqliteDataStore) GetClientTasks(
 	update_statement, err := handle.Prepare(
 		"update tbl set timestamp = ? where predicate = ?")
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer update_statement.Close()
 
@@ -162,7 +162,7 @@ func (self *SqliteDataStore) GetClientTasks(
 		`select subject, predicate, timestamp, value from tbl
                  where subject = ? and timestamp < ?`, tasks_urn, now)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer rows.Close()
 
@@ -176,7 +176,7 @@ func (self *SqliteDataStore) GetClientTasks(
 
 		err := rows.Scan(&subject, &predicate, &timestamp, &value)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		message := &crypto_proto.GrrMessage{}
 		err = proto.Unmarshal(value, message)
@@ -191,7 +191,7 @@ func (self *SqliteDataStore) GetClientTasks(
 		for _, predicate := range predicates {
 			_, err := update_statement.Exec(next_timestamp, predicate)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 		}
 	}
@@ -213,14 +213,14 @@ func (self *SqliteDataStore) RemoveTasksFromClientQueue(
 	update_statement, err := handle.Prepare(
 		"delete from tbl where predicate = ?")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer update_statement.Close()
 
 	for _, task_id := range task_ids {
 		_, err := update_statement.Exec(fmt.Sprintf("task:%d", task_id))
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -256,21 +256,21 @@ func (self *SqliteDataStore) QueueMessageForClient(
 
 	value, err := proto.Marshal(req)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	statement, err := handle.Prepare(
 		`insert into tbl (subject, predicate, timestamp, value)
                    values (?, ?, ?, ?)`)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(
 		subject, predicate, now, value)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -301,7 +301,7 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 	}
 	rows, err := handle.Query(query, args...)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer rows.Close()
 
@@ -313,7 +313,7 @@ func (self *SqliteDataStore) GetSubjectAttributes(
 
 		err := rows.Scan(&value, &predicate, &timestamp)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		result[predicate] = value
 	}
@@ -341,7 +341,7 @@ func (self *SqliteDataStore) GetSubjectData(
                  where subject = ? order by predicate limit ?, ?`,
 		urn, offset, count)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer rows.Close()
 
@@ -352,7 +352,7 @@ func (self *SqliteDataStore) GetSubjectData(
 
 		err := rows.Scan(&predicate, &value, &timestamp)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		result[predicate] = value
 	}
@@ -368,7 +368,6 @@ func (self *SqliteDataStore) SetSubjectData(
 
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
-		utils.Debug(err)
 		return err
 	}
 
@@ -385,8 +384,7 @@ func (self *SqliteDataStore) SetSubjectData(
 		`insert or replace into tbl
                    (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
 	if err != nil {
-		utils.Debug(err)
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement.Close()
 
@@ -394,7 +392,7 @@ func (self *SqliteDataStore) SetSubjectData(
 		_, err := statement.Exec(
 			urn, predicate, timestamp, value)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 
@@ -403,8 +401,7 @@ func (self *SqliteDataStore) SetSubjectData(
 		`insert or replace into tbl
                    (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
 	if err != nil {
-		utils.Debug(err)
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement2.Close()
 
@@ -413,7 +410,7 @@ func (self *SqliteDataStore) SetSubjectData(
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	_, err = statement2.Exec(path.Dir(urn), "index:dir/"+path.Base(urn), now, "X")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -435,26 +432,26 @@ func (self *SqliteDataStore) DeleteSubject(
 	statement, err := handle.Prepare(
 		"delete from tbl where subject = ?")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement.Close()
 
 	_, err = statement.Exec(urn)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// Also remove the directory index.
 	statement2, err := handle.Prepare(
 		"delete from tbl where subject = ? and predicate = ?")
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement2.Close()
 
 	_, err = statement2.Exec(path.Dir(urn), "index:dir/"+path.Base(urn))
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -480,7 +477,7 @@ func (self *SqliteDataStore) ListChildren(
                  predicate like "index:dir/%" order by timestamp desc limit ?, ? `,
 		urn, offset, length)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	defer rows.Close()
 
@@ -489,7 +486,7 @@ func (self *SqliteDataStore) ListChildren(
 		var predicate string
 		err := rows.Scan(&predicate)
 		if err != nil {
-			return nil, err
+			return nil, errors.WithStack(err)
 		}
 		result = append(result,
 			path.Join(urn,
@@ -519,7 +516,7 @@ func (self *SqliteDataStore) SetIndex(
 		`insert or replace into tbl
                    (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer statement.Close()
 
@@ -529,7 +526,7 @@ func (self *SqliteDataStore) SetIndex(
 			path.Join(index_urn, strings.ToLower(keyword)),
 			"kw_index:"+entity, now, "")
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 	}
 

@@ -59,7 +59,6 @@ const HuntOverviewController = function(
 };
 
 
-
 /**
  * Fetches hunt data;
  *

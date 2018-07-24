@@ -13,6 +13,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
@@ -30,8 +31,8 @@ type FlowImplementation struct {
 // The Flow runner processes a sequence of packets.
 type FlowRunner struct {
 	config     *config.Config
-	db         datastore.DataStore
 	flow_cache map[string]*AFF4FlowObject
+	logger     *logging.Logger
 }
 
 func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
@@ -43,7 +44,7 @@ func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
 		}
 
 		self.flow_cache[flow_urn] = cached_flow
-		cached_flow.impl.Load(cached_flow)
+		cached_flow.impl.Load(self.config, cached_flow)
 
 		return cached_flow, nil
 	}
@@ -54,7 +55,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	for _, message := range messages {
 		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
-			utils.Debug(err)
+			self.logger.Error("FlowRunner", err)
 			continue
 		}
 
@@ -73,7 +74,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 			cached_flow.FlowContext.Backtrace = ""
 			cached_flow.dirty = true
 
-			utils.Debug(err)
+			self.logger.Error("FlowRunner", err)
 			return
 		}
 	}
@@ -85,18 +86,18 @@ func (self *FlowRunner) Close() {
 		if !cached_flow.dirty {
 			continue
 		}
-		cached_flow.impl.Save(cached_flow)
+		cached_flow.impl.Save(self.config, cached_flow)
 		err := SetAFF4FlowObject(self.config, cached_flow, urn)
 		if err != nil {
-			utils.Debug(err)
+			self.logger.Error("FlowRunner", err)
 		}
 	}
 }
 
-func NewFlowRunner(config *config.Config, db datastore.DataStore) *FlowRunner {
+func NewFlowRunner(config *config.Config, logger *logging.Logger) *FlowRunner {
 	result := FlowRunner{
 		config:     config,
-		db:         db,
+		logger:     logger,
 		flow_cache: make(map[string]*AFF4FlowObject),
 	}
 	return &result
@@ -129,11 +130,11 @@ type Flow interface {
 		config *config.Config,
 		flow_obj *AFF4FlowObject,
 		args proto.Message,
-	) (*string, error)
+	) error
 
 	// This method is called by the runner prior to processing
 	// messages.
-	Load(flow_obj *AFF4FlowObject) error
+	Load(config_obj *config.Config, flow_obj *AFF4FlowObject) error
 
 	// Each message is processed with this method. Note that
 	// messages may be split across client POST operations. The
@@ -148,7 +149,7 @@ type Flow interface {
 
 	// This method is called by the runner after processing
 	// messages and before the flow is destroyed.
-	Save(flow_obj *AFF4FlowObject) error
+	Save(config_obj *config.Config, flow_obj *AFF4FlowObject) error
 }
 
 // The AFF4 object contains the state of the flow.
@@ -156,7 +157,6 @@ type AFF4FlowObject struct {
 	// Will be set to true if the state needs to be flushed.
 	dirty bool
 
-	config      *config.Config
 	Urn         string
 	RunnerArgs  *flows_proto.FlowRunnerArgs
 	FlowContext *flows_proto.FlowContext
@@ -179,6 +179,58 @@ func (self *AFF4FlowObject) SetState(value proto.Message) {
 
 func (self *AFF4FlowObject) GetState() proto.Message {
 	return self.flow_state
+}
+
+func (self *AFF4FlowObject) AsProto() (*flows_proto.AFF4FlowObject, error) {
+	result := &flows_proto.AFF4FlowObject{
+		Urn:         self.Urn,
+		RunnerArgs:  self.RunnerArgs,
+		FlowContext: self.FlowContext,
+	}
+
+	any_state, err := ptypes.MarshalAny(self.flow_state)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	result.FlowState = any_state
+
+	return result, nil
+}
+
+func AFF4FlowObjectFromProto(aff4_flow_obj_proto *flows_proto.AFF4FlowObject) (
+	*AFF4FlowObject, error) {
+
+	result := &AFF4FlowObject{
+		dirty:       false,
+		Urn:         aff4_flow_obj_proto.Urn,
+		RunnerArgs:  aff4_flow_obj_proto.RunnerArgs,
+		FlowContext: aff4_flow_obj_proto.FlowContext,
+	}
+
+	if result.FlowContext == nil {
+		result.FlowContext = &flows_proto.FlowContext{}
+	}
+
+	if aff4_flow_obj_proto.FlowState != nil {
+		var state ptypes.DynamicAny
+		err := ptypes.UnmarshalAny(aff4_flow_obj_proto.FlowState, &state)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		result.flow_state = state.Message
+	}
+
+	impl, ok := GetImpl(result.RunnerArgs.FlowName)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf(
+			"Unknown flow %s", result.RunnerArgs.FlowName))
+	}
+
+	result.impl = impl
+
+	return result, nil
 }
 
 // Complete the flow.
@@ -239,7 +291,7 @@ func NewAFF4FlowObject(
 	config *config.Config,
 	runner_args *flows_proto.FlowRunnerArgs) (*AFF4FlowObject, error) {
 	result := AFF4FlowObject{
-		config:     config,
+		Urn:        GetNewFlowIdForClient(runner_args.ClientId),
 		RunnerArgs: runner_args,
 		FlowContext: &flows_proto.FlowContext{
 			State:      flows_proto.FlowContext_RUNNING,
@@ -269,8 +321,7 @@ func GetAFF4FlowObject(
 	switch flow_urn {
 	case constants.FOREMAN_WELL_KNOWN_FLOW:
 		return &AFF4FlowObject{
-			config: config_obj,
-			impl:   &Foreman{},
+			impl: &Foreman{},
 		}, nil
 	}
 
@@ -305,6 +356,7 @@ func GetAFF4FlowObject(
 	if pres {
 		err := proto.Unmarshal(serialized_flow_context, result.FlowContext)
 		if err != nil {
+			utils.Debug(err)
 			return nil, errors.WithStack(err)
 		}
 	}
@@ -446,6 +498,15 @@ func GetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs) (proto.Message, e
 	return tmp_args.Message, nil
 }
 
+func SetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs, args proto.Message) error {
+	flow_args, err := ptypes.MarshalAny(args)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	flow_runner_args.Args = flow_args
+	return nil
+}
+
 func StartFlow(
 	config_obj *config.Config,
 	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
@@ -473,17 +534,17 @@ func StartFlow(
 		return nil, err
 	}
 
-	flow_id, err := flow_obj.impl.Start(config_obj, flow_obj, args)
+	err = flow_obj.impl.Start(config_obj, flow_obj, args)
 	if err != nil {
 		return nil, err
 	}
 
-	err = SetAFF4FlowObject(config_obj, flow_obj, *flow_id)
+	err = SetAFF4FlowObject(config_obj, flow_obj, flow_obj.Urn)
 	if err != nil {
 		return nil, err
 	}
 
-	return flow_id, nil
+	return &flow_obj.Urn, nil
 }
 
 func GetNewFlowIdForClient(client_id string) string {
@@ -531,14 +592,14 @@ type BaseFlow struct{}
 func (self *BaseFlow) Start(
 	config *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
-	return nil, errors.New("Unable to start flow directly")
+	args proto.Message) error {
+	return errors.New("Unable to start flow directly")
 }
 
-func (self *BaseFlow) Load(flow_obj *AFF4FlowObject) error {
+func (self *BaseFlow) Load(config_obj *config.Config, flow_obj *AFF4FlowObject) error {
 	return nil
 }
 
-func (self *BaseFlow) Save(flow_obj *AFF4FlowObject) error {
+func (self *BaseFlow) Save(config_obj *config.Config, flow_obj *AFF4FlowObject) error {
 	return nil
 }

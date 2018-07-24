@@ -1,8 +1,8 @@
 package api
 
 import (
-	"errors"
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -37,7 +37,7 @@ func GetApiClient(
 	client_info := &actions_proto.ClientInfo{}
 	err = proto.Unmarshal(serialized_client_info, client_info)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	if detailed {

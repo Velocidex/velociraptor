@@ -98,6 +98,10 @@ message HuntInfo {
     }
 
     State state = 8;
+
+    FlowContext result = 9 [(sem_type) = {
+            description: "When the flow is complete its final result is stored here."
+        }];
 }
 
 

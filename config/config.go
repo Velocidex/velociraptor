@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strconv"
@@ -27,7 +28,7 @@ func (a *StringArray) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		var single string
 		err := unmarshal(&single)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		*a = []string{single}
 	} else {
@@ -49,7 +50,7 @@ func (self *Integer) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	if err == nil {
 		maybe_int, err = strconv.ParseUint(maybe_string, 10, 64)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		*self = Integer(maybe_int)
 		return nil
@@ -57,7 +58,7 @@ func (self *Integer) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	err = unmarshal(&maybe_int)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	*self = Integer(maybe_int)
@@ -131,12 +132,12 @@ func GetDefaultConfig() *Config {
 func LoadConfig(filename string, config *Config) error {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	err = yaml.Unmarshal(data, config)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -145,7 +146,7 @@ func LoadConfig(filename string, config *Config) error {
 func ParseConfigFromString(config_string []byte, config *Config) error {
 	err := yaml.Unmarshal(config_string, config)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil
@@ -164,7 +165,7 @@ func WriteConfigToFile(filename string, config *Config) error {
 	// Make sure the new file is only readable by root.
 	err = ioutil.WriteFile(filename, bytes, 0600)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	return nil

@@ -8,8 +8,7 @@ import (
 
 func QueueMessageForClient(
 	config_obj *config.Config,
-	client_id string,
-	flow_id string,
+	flow_obj *AFF4FlowObject,
 	client_action_name string,
 	message proto.Message,
 	next_state uint64) error {
@@ -19,6 +18,7 @@ func QueueMessageForClient(
 	}
 
 	return db.QueueMessageForClient(
-		config_obj, client_id, flow_id,
+		config_obj, flow_obj.RunnerArgs.ClientId,
+		flow_obj.Urn,
 		client_action_name, message, next_state)
 }

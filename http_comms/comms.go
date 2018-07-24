@@ -175,7 +175,7 @@ func (self *HTTPCommunicator) sendToURL(
 		defer resp.Body.Close()
 		pem, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 
 		// TODO: Verify the server pem.
@@ -200,7 +200,7 @@ func (self *HTTPCommunicator) sendToURL(
 	resp, err := self.client.Post(
 		url+"control?api=3", "application/binary", reader)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	defer resp.Body.Close()
 
@@ -224,7 +224,7 @@ func (self *HTTPCommunicator) sendToURL(
 	// executor.
 	encrypted, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	response_message_list, err := self.manager.DecryptMessageList(encrypted)

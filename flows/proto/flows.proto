@@ -194,3 +194,11 @@ message VInterrogateArgs {
             default: '[{"Name": "Hostname", "VQL": "select Fqdn from info()"}]',
         }];
 }
+
+
+message AFF4FlowObject {
+    string urn = 1;
+    FlowRunnerArgs runner_args = 2;
+    FlowContext flow_context = 3;
+    google.protobuf.Any flow_state = 4;
+}

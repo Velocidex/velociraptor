@@ -24,6 +24,10 @@ var (
 		HUNTS_INFO_ATTR,
 	}
 
+	ATTR_HUNT_SUMMARY_OBJECT = []string{
+		HUNTS_SUMMARY_ATTR,
+	}
+
 	// Deprecated - for compatibility with GRR only.
 	AFF4_TYPE = "aff4:type"
 

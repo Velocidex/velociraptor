@@ -1,10 +1,10 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	"path"
 	"strings"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -13,6 +13,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows "www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
@@ -38,7 +39,9 @@ func getFlows(
 	for _, urn := range flow_urns {
 		flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
 		if err != nil {
-			return nil, err
+			// Skip flows we can not load any more.
+			logging.NewLogger(config_obj).Error("", err)
+			continue
 		}
 
 		item := &api_proto.ApiFlow{
@@ -143,7 +146,7 @@ func getFlowRequests(
 			args := responder.ExtractGrrMessagePayload(request)
 			payload, err := ptypes.MarshalAny(args)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 			request.Payload = payload
 			request.Args = nil

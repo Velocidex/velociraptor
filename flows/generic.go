@@ -8,7 +8,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -27,28 +26,21 @@ type VQLCollector struct {
 func (self *VQLCollector) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 	vql_collector_args, ok := args.(*actions_proto.VQLCollectorArgs)
 	if !ok {
-		return nil, errors.New("Expected args of type VQLCollectorArgs")
+		return errors.New("Expected args of type VQLCollectorArgs")
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
-	err = db.QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+	err := QueueMessageForClient(
+		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_collector_args, processVQLResponses)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &flow_id, nil
+	return nil
 }
 
 func (self *VQLCollector) ProcessMessage(

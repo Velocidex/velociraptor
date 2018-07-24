@@ -2,10 +2,10 @@ package flows
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -27,7 +27,9 @@ type VFSListDirectory struct {
 	rows  []map[string]interface{}
 }
 
-func (self *VFSListDirectory) Load(flow_obj *AFF4FlowObject) error {
+func (self *VFSListDirectory) Load(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject) error {
 	message := flow_obj.GetState()
 	if message == nil {
 		message = &flows_proto.VFSListRequestState{
@@ -38,10 +40,12 @@ func (self *VFSListDirectory) Load(flow_obj *AFF4FlowObject) error {
 	return json.Unmarshal([]byte(self.state.Current.Response), &self.rows)
 }
 
-func (self *VFSListDirectory) Save(flow_obj *AFF4FlowObject) error {
+func (self *VFSListDirectory) Save(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject) error {
 	s, err := json.Marshal(self.rows)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	self.state.Current.Response = string(s)
 	flow_obj.SetState(self.state)
@@ -51,11 +55,11 @@ func (self *VFSListDirectory) Save(flow_obj *AFF4FlowObject) error {
 func (self *VFSListDirectory) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 
 	vfs_args, ok := args.(*flows_proto.VFSListRequest)
 	if !ok {
-		return nil, errors.New("Expected args of type VQLCollectorArgs")
+		return errors.New("Expected args of type VQLCollectorArgs")
 	}
 
 	glob := "'/*'"
@@ -86,19 +90,12 @@ func (self *VFSListDirectory) Start(
 		MaxRow: uint64(10000),
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
-	err = db.QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+	err := QueueMessageForClient(
+		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_collector_args, next_state)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	self.state = &flows_proto.VFSListRequestState{
@@ -107,7 +104,7 @@ func (self *VFSListDirectory) Start(
 		},
 	}
 
-	return &flow_id, nil
+	return nil
 }
 
 func (self *VFSListDirectory) ProcessMessage(
@@ -136,7 +133,7 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 	var tmp_args ptypes.DynamicAny
 	err := ptypes.UnmarshalAny(flow_obj.RunnerArgs.Args, &tmp_args)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	vfs_args := tmp_args.Message.(*flows_proto.VFSListRequest)
@@ -200,7 +197,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 	var rows []map[string]interface{}
 	err := json.Unmarshal([]byte(vql_response.Response), &rows)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, row := range rows {
@@ -233,7 +230,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 func (self *VFSListDirectory) flush_state(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject) error {
-	err := self.Save(flow_obj)
+	err := self.Save(config_obj, flow_obj)
 	if err != nil {
 		return err
 	}
@@ -245,7 +242,7 @@ func (self *VFSListDirectory) flush_state(
 
 	s, err := proto.Marshal(self.state.Current)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	data := make(map[string][]byte)

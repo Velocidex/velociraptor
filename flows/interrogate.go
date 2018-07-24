@@ -3,9 +3,9 @@ package flows
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -28,18 +28,12 @@ type VInterrogate struct {
 func (self *VInterrogate) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 	interrogate_args, ok := args.(*flows_proto.VInterrogateArgs)
 	if !ok {
-		return nil, errors.New("Expected args of type VInterrogateArgs")
+		return errors.New("Expected args of type VInterrogateArgs")
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
 			VQL:  "select Client_name, Client_build_time, Client_labels from config",
@@ -64,18 +58,17 @@ func (self *VInterrogate) Start(
 		Query: queries,
 	}
 
-	err = db.QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+	err := QueueMessageForClient(
+		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_request, processClientInfo)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	flow_obj.SetState(&actions_proto.ClientInfo{})
 
-	return &flow_id, nil
+	return nil
 }
 
 func (self *VInterrogate) ProcessMessage(
@@ -144,7 +137,7 @@ func (self *VInterrogate) StoreClientInfo(
 	data := make(map[string][]byte)
 	encoded_client_info, err := proto.Marshal(client_info)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	// FIXME: GRR spreads this information over multiple
@@ -165,13 +158,13 @@ func (self *VInterrogate) StoreClientInfo(
 	}
 	serialized_client_info, err := proto.Marshal(client_information)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	data["metadata:ClientInfo"] = serialized_client_info
 
 	serialized_kb, err := proto.Marshal(client_info.Knowledgebase)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	data["metadata:knowledge_base"] = serialized_kb
 
@@ -217,7 +210,7 @@ func processRecentUsers(response *actions_proto.VQLResponse,
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	client_info.Knowledgebase = &actions_proto.Knowledgebase{}
@@ -245,7 +238,7 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 	for _, info := range result {
 		client_info.Hostname = info.Hostname
@@ -262,7 +255,7 @@ func processClientInfoQuery(response *actions_proto.VQLResponse,
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, info := range result {

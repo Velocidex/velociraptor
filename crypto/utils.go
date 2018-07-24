@@ -8,9 +8,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	//	utils_ "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -25,7 +25,7 @@ func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
 		if block.Type == "RSA PRIVATE KEY" {
 			priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			return priv, nil
@@ -44,7 +44,7 @@ func parseX509CertFromPemStr(pem_str []byte) (*x509.Certificate, error) {
 		if block.Type == "CERTIFICATE" {
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			return cert, nil
@@ -63,7 +63,7 @@ func parseX509CSRFromPemStr(pem_str []byte) (*x509.CertificateRequest, error) {
 		if block.Type == "CERTIFICATE REQUEST" {
 			csr, err := x509.ParseCertificateRequest(block.Bytes)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			return csr, nil
@@ -95,7 +95,7 @@ func GeneratePrivateKey() ([]byte, error) {
 
 	key, err := rsa.GenerateKey(reader, bitSize)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 	pemdata := pem.EncodeToMemory(
 		&pem.Block{
@@ -125,7 +125,7 @@ func PemToPublicKey(pem_str []byte) (*rsa.PublicKey, error) {
 		if block.Type == "RSA PUBLIC KEY" {
 			pub, err := x509.ParsePKCS1PublicKey(block.Bytes)
 			if err != nil {
-				return nil, err
+				return nil, errors.WithStack(err)
 			}
 
 			return pub, nil
@@ -144,7 +144,7 @@ func VerifyConfig(config_obj *config.Config) error {
 		fmt.Println("Genering new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		config_obj.Client_private_key = proto.String(string(pem))
 

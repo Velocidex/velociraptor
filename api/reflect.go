@@ -19,6 +19,7 @@ var (
 		"SearchClientsResponse",
 		"GetClientRequest",
 		"ApiClient",
+		"HuntInfo",
 		"GrrMessage",
 		"VQLCollectorArgs",
 		"VQLResponse",

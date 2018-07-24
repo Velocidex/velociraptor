@@ -17,7 +17,6 @@ package flows
 
 import (
 	"errors"
-	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -51,14 +50,13 @@ func (self *Foreman) ProcessMessage(
 		// Start a conditional flow.
 		flow_runner_args := &flows_proto.FlowRunnerArgs{
 			ClientId: message.Source,
-			FlowName: "ConditionalFlow",
+			FlowName: "CheckHuntCondition",
 		}
 
-		conditional_flow_args, err := ptypes.MarshalAny(hunt)
+		err := SetFlowArgs(flow_runner_args, hunt)
 		if err != nil {
 			return err
 		}
-		flow_runner_args.Args = conditional_flow_args
 
 		flow_id, err := StartFlow(config_obj, flow_runner_args)
 		if err != nil {

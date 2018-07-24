@@ -8,7 +8,6 @@ import (
 	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
-	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
@@ -20,38 +19,31 @@ type FileFinder struct {
 func (self *FileFinder) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 	file_finder_args, ok := args.(*flows_proto.FileFinderArgs)
 	if !ok {
-		return nil, errors.New("Expected args of type VInterrogateArgs")
+		return errors.New("Expected args of type VInterrogateArgs")
 	}
 
 	builder := file_finder_builder{args: file_finder_args}
 	vql_request, err := builder.Build()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	flow_obj.Log(fmt.Sprintf("Compiled VQL request: %s",
 		proto.MarshalTextString(vql_request)))
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
-
-	err = db.QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+	err = QueueMessageForClient(
+		config_obj,
+		flow_obj,
 		"VQLClientAction",
 		vql_request, processVQLResponses)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &flow_id, nil
+	return nil
 }
 
 type file_finder_builder struct {

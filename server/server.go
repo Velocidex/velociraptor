@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -52,7 +53,7 @@ func (self *Server) processVelociraptorMessages(
 	client_id string,
 	messages []*crypto_proto.GrrMessage) error {
 
-	runner := flows.NewFlowRunner(self.config, self.db)
+	runner := flows.NewFlowRunner(self.config, self.logger)
 	defer runner.Close()
 	runner.ProcessMessages(messages)
 
@@ -96,7 +97,7 @@ func (self *Server) ProcessUnauthenticatedMessages(
 	message_list := &crypto_proto.MessageList{}
 	err := proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
-		return err
+		return errors.WithStack(err)
 	}
 
 	for _, message := range message_list.Job {
@@ -128,7 +129,7 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 	message_list := &crypto_proto.MessageList{}
 	err := proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// Here we split incoming messages from Velociraptor clients
@@ -186,8 +187,8 @@ func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.Grr
 	return []*crypto_proto.GrrMessage{}
 }
 
-func (self *Server) Error(format string, v ...interface{}) {
-	self.logger.Error(format, v...)
+func (self *Server) Error(msg string, err error) {
+	self.logger.Error(msg, err)
 }
 
 func (self *Server) Info(format string, v ...interface{}) {

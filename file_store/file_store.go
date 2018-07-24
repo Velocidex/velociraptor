@@ -42,14 +42,14 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 	err := os.MkdirAll(path.Dir(file_path), 0700)
 	if err != nil {
 		logging.NewLogger(self.config_obj).Error(
-			"Can not create dir: %s", err.Error())
+			"Can not create dir", err)
 		return nil, err
 	}
 
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		logging.NewLogger(self.config_obj).Error(
-			"Unable to open file %s: %s", file_path, err.Error())
+			"Unable to open file "+file_path, err)
 		return nil, err
 	}
 

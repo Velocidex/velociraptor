@@ -161,7 +161,7 @@ func control(server_obj *server.Server) http.Handler {
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-			server_obj.Error("Unable to read body")
+			server_obj.Error("Unable to read body", err)
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
@@ -188,7 +188,7 @@ func control(server_obj *server.Server) http.Handler {
 					"Please Enrol",
 					http.StatusNotAcceptable)
 			} else {
-				server_obj.Error("Unable to process: %s", err.Error())
+				server_obj.Error("Unable to process", err)
 				http.Error(w, "", http.StatusServiceUnavailable)
 			}
 			return
@@ -209,7 +209,7 @@ func control(server_obj *server.Server) http.Handler {
 			defer close(sync)
 			response, err := server_obj.Process(req.Context(), message_info)
 			if err != nil {
-				server_obj.Error("Error: %s", err.Error())
+				server_obj.Error("Error:", err)
 			} else {
 				sync <- response
 			}

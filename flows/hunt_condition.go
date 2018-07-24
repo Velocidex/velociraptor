@@ -3,9 +3,9 @@ package flows
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -15,7 +15,6 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -24,44 +23,41 @@ var (
 	processUpgradeForeman uint64 = 101
 )
 
-type ConditionalFlow struct {
+type CheckHuntCondition struct {
 	*BaseFlow
 }
 
-func (self *ConditionalFlow) Start(
+func (self *CheckHuntCondition) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 	hunt_args, ok := args.(*api_proto.Hunt)
 	if !ok {
-		return nil, errors.New("Expected args of type Hunt")
+		return errors.New("Expected args of type Hunt")
 	}
 
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
 	err := QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+		config_obj, flow_obj,
 		"VQLClientAction",
 		hunt_args.FlowConditionQuery, processConditionQuery)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_id,
+		config_obj, flow_obj,
 		"UpdateForeman",
 		&actions_proto.ForemanCheckin{
 			LastHuntTimestamp: hunt_args.CreateTime,
 		}, processUpgradeForeman)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &flow_id, nil
+	return nil
 }
 
-func (self *ConditionalFlow) ProcessMessage(
+func (self *CheckHuntCondition) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
@@ -88,8 +84,9 @@ func (self *ConditionalFlow) ProcessMessage(
 			return err
 		}
 
-		utils.Debug(condition_applied)
 		if condition_applied {
+			flow_obj.Log("Condition matched. Queueing hunt on client " +
+				message.Source)
 			// Write the hunt in the pending queue.
 			info_urn := hunt.HuntId + "/pending/" + message.Source
 			info := &api_proto.HuntInfo{
@@ -101,7 +98,7 @@ func (self *ConditionalFlow) ProcessMessage(
 			}
 			serialized_info, err := proto.Marshal(info)
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 
 			data := make(map[string][]byte)
@@ -149,7 +146,7 @@ func _FilterConditionServerSide(
 	var rows []map[string]interface{}
 	err := json.Unmarshal([]byte(vql_response.Response), &rows)
 	if err != nil {
-		return false, err
+		return false, errors.WithStack(err)
 	}
 	stored_query := &_StoredQuery{rows: rows}
 	if len(stored_query.rows) == 0 {
@@ -183,13 +180,13 @@ func _FilterConditionServerSide(
 }
 
 func init() {
-	impl := ConditionalFlow{}
+	impl := CheckHuntCondition{}
 	default_args, _ := ptypes.MarshalAny(&api_proto.Hunt{})
 	desc := &flows_proto.FlowDescriptor{
-		Name:         "ConditionalFlow",
-		FriendlyName: "Conditional Flow",
-		Category:     "Collectors",
-		Doc:          "Runs a delegate flow based on VQL conditions.",
+		Name:         "CheckHuntCondition",
+		FriendlyName: "Check Hunt Condition",
+		Category:     "Internal",
+		Doc:          "Checks a VQL condition on the client for hunt membership.",
 		ArgsType:     "Hunt",
 		DefaultArgs:  default_args,
 	}
