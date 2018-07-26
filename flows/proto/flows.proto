@@ -62,7 +62,10 @@ message FlowContext {
     };
 
     State state = 14;
-    string status = 15;
+
+    string status = 15 [(sem_type) = {
+            description: "Contents of an error status sent by the client."
+        }];
     bool user_notified = 16;
 
     uint64 active_time = 17 [(sem_type) = {
@@ -172,6 +175,10 @@ message FlowDescriptor {
 
     string behaviours = 7 [(sem_type) = {
             description: "Flow behaviours."
+        }];
+
+    bool internal = 8 [(sem_type) = {
+            description: "Internal flows are not visible in the GUI."
         }];
 }
 

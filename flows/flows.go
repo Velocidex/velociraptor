@@ -177,6 +177,11 @@ func (self *AFF4FlowObject) SetState(value proto.Message) {
 	self.flow_state = value
 }
 
+func (self *AFF4FlowObject) SetContext(value *flows_proto.FlowContext) {
+	self.dirty = true
+	self.FlowContext = value
+}
+
 func (self *AFF4FlowObject) GetState() proto.Message {
 	return self.flow_state
 }
@@ -498,27 +503,19 @@ func GetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs) (proto.Message, e
 	return tmp_args.Message, nil
 }
 
-func SetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs, args proto.Message) error {
-	flow_args, err := ptypes.MarshalAny(args)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	flow_runner_args.Args = flow_args
-	return nil
-}
-
 func StartFlow(
 	config_obj *config.Config,
-	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
+	flow_runner_args *flows_proto.FlowRunnerArgs,
+	args proto.Message) (*string, error) {
+
+	flow_args, err := ptypes.MarshalAny(args)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	flow_runner_args.Args = flow_args
 
 	if flow_runner_args.StartTime == 0 {
 		flow_runner_args.StartTime = uint64(time.Now().UnixNano() / 1000)
-	}
-
-	// Extract the args from the Any field.
-	args, err := GetFlowArgs(flow_runner_args)
-	if err != nil {
-		return nil, err
 	}
 
 	if flow_runner_args.ClientId == "" {

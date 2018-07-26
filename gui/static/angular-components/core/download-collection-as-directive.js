@@ -48,7 +48,9 @@ const DownloadCollectionAsController = function(
  */
 DownloadCollectionAsController.prototype.downloadAs = function(pluginName) {
   var url = this.scope_['baseUrl'];
-  this.grrApiService_.downloadFile(url, {"format": pluginName}).then(
+  var params = this.scope_['queryParams'] || {};
+  params['format'] = pluginName;
+  this.grrApiService_.downloadFile(url, params).then(
       function success() {}.bind(this),
       function failure(response) {
         if (angular.isUndefined(response.status)) {
@@ -73,6 +75,7 @@ exports.DownloadCollectionAsDirective = function() {
   return {
     scope: {
       baseUrl: '=',
+      queryParams: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/core/download-collection-as.html',

@@ -188,6 +188,12 @@ service API {
         };
     }
 
+    rpc GetHuntResults(GetHuntResultsRequest) returns (ApiFlowResultDetails) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHuntResults",
+        };
+    }
+
     rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
         option (google.api.http) = {
             get: "/api/v1/SearchClients",

@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
+import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
@@ -53,6 +54,16 @@ message Hunt {
     uint64 total_clients_scheduled = 9 [(sem_type) = {
             description: "The total number of clients currently scheduled for this hunt.",
             friendly_name: "Total Scheduled",
+        }];
+
+    uint64 total_clients_with_results = 14 [(sem_type) = {
+            description: "Total number of clients with results.",
+            friendly_name: "Total Clients with Results",
+        }];
+
+    uint64 total_clients_with_errors = 15 [(sem_type) = {
+            description: "Total number of clients with errors.",
+            friendly_name: "Total Clients with Errors",
         }];
 
     // The following fields are used to calculate the client
@@ -112,6 +123,16 @@ message ListHuntsRequest {
 
 message GetHuntRequest {
     string hunt_id = 1;
+}
+
+message GetHuntResultsRequest {
+    uint64 offset = 1;
+    uint64 count = 2;
+    string hunt_id = 3;
+}
+
+message HuntResults {
+    repeated HuntInfo items = 1;
 }
 
 message ListHuntsResponse {

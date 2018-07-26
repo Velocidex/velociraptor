@@ -49,9 +49,9 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
   if (!angular.isString(huntId)) {
     return;
   }
-
-  this.resultsUrl = '/hunts/' + huntId + '/results';
-  this.exportedResultsUrl = '/hunts/' + huntId + '/exported-results';
+  this.queryParams = {'hunt_id': huntId};
+  this.resultsUrl = '/v1/GetHuntResults';
+  this.exportedResultsUrl = '/v1/DownloadHuntResults';
   this.downloadFilesUrl = this.resultsUrl + '/files-archive';
   this.exportCommandUrl = this.resultsUrl + '/export-command';
   this.outputPluginsUrl = '/hunts/' + huntId + '/output-plugins';

@@ -189,6 +189,7 @@ func init() {
 		Doc:          "Checks a VQL condition on the client for hunt membership.",
 		ArgsType:     "Hunt",
 		DefaultArgs:  default_args,
+		Internal:     true,
 	}
 
 	RegisterImplementation(desc, &impl)

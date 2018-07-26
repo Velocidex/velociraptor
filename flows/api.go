@@ -1,4 +1,4 @@
-package api
+package flows
 
 import (
 	"fmt"
@@ -12,13 +12,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	flows "www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
-func getFlows(
+func GetFlows(
 	config_obj *config.Config,
 	client_id string,
 	offset uint64, length uint64) (*api_proto.ApiFlowResponse, error) {
@@ -37,7 +36,7 @@ func getFlows(
 	}
 
 	for _, urn := range flow_urns {
-		flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+		flow_obj, err := GetAFF4FlowObject(config_obj, urn)
 		if err != nil {
 			// Skip flows we can not load any more.
 			logging.NewLogger(config_obj).Error("", err)
@@ -58,16 +57,16 @@ func getFlows(
 	return result, nil
 }
 
-func getFlowDetails(
+func GetFlowDetails(
 	config_obj *config.Config,
 	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
 
-	flow_urn, err := validateFlowId(client_id, flow_id)
+	flow_urn, err := ValidateFlowId(client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
 
-	flow_obj, err := flows.GetAFF4FlowObject(config_obj, *flow_urn)
+	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
 	if err != nil {
 		return nil, err
 	}
@@ -82,16 +81,16 @@ func getFlowDetails(
 	}, nil
 }
 
-func getFlowLog(
+func GetFlowLog(
 	config_obj *config.Config,
 	client_id string, flow_id string,
 	offset uint64, length uint64) (*api_proto.ApiFlowLogDetails, error) {
-	flow_urn, err := validateFlowId(client_id, flow_id)
+	flow_urn, err := ValidateFlowId(client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
 
-	flow_obj, err := flows.GetAFF4FlowObject(config_obj, *flow_urn)
+	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +111,7 @@ func getFlowLog(
 	return result, nil
 }
 
-func getFlowRequests(
+func GetFlowRequests(
 	config_obj *config.Config,
 	client_id string, flow_id string,
 	offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error) {
@@ -158,7 +157,7 @@ func getFlowRequests(
 	return result, nil
 }
 
-func getFlowResults(
+func GetFlowResults(
 	config_obj *config.Config,
 	client_id string, flow_id string,
 	offset uint64, count uint64) (*api_proto.ApiFlowResultDetails, error) {
@@ -169,7 +168,19 @@ func getFlowResults(
 
 	result := &api_proto.ApiFlowResultDetails{}
 
-	urn := urns.BuildURN(client_id, "flows", flow_id, "results")
+	// If flowId is given as a full URN, validate it.
+	urn := ""
+	if strings.HasPrefix(flow_id, "aff4:") {
+		valid_urn, err := ValidateFlowId(client_id, flow_id)
+		if err != nil {
+			return nil, err
+		}
+
+		urn = *valid_urn + "/results"
+	} else {
+		urn = urns.BuildURN(client_id, "flows", flow_id, "results")
+	}
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -205,16 +216,18 @@ func getFlowResults(
 	return result, nil
 }
 
-func getFlowDescriptors() (*api_proto.FlowDescriptors, error) {
+func GetFlowDescriptors() (*api_proto.FlowDescriptors, error) {
 	result := &api_proto.FlowDescriptors{}
-	for _, item := range flows.GetDescriptors() {
-		result.Items = append(result.Items, item)
+	for _, item := range GetDescriptors() {
+		if !item.Internal {
+			result.Items = append(result.Items, item)
+		}
 	}
 
 	return result, nil
 }
 
-func validateFlowId(client_id string, flow_id string) (*string, error) {
+func ValidateFlowId(client_id string, flow_id string) (*string, error) {
 	base_flow := path.Base(flow_id)
 	if !strings.HasPrefix(base_flow, constants.FLOW_PREFIX) {
 		return nil, errors.New(

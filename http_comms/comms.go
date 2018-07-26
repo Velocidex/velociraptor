@@ -2,7 +2,7 @@ package http_comms
 
 import (
 	"bytes"
-	"errors"
+	errors "github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"net"

@@ -48,22 +48,15 @@ func (self *Foreman) ProcessMessage(
 		foreman_checkin.LastHuntTimestamp) {
 
 		// Start a conditional flow.
-		flow_runner_args := &flows_proto.FlowRunnerArgs{
-			ClientId: message.Source,
-			FlowName: "CheckHuntCondition",
-		}
-
-		err := SetFlowArgs(flow_runner_args, hunt)
+		_, err := StartFlow(
+			config_obj,
+			&flows_proto.FlowRunnerArgs{
+				ClientId: message.Source,
+				FlowName: "CheckHuntCondition",
+			}, hunt)
 		if err != nil {
 			return err
 		}
-
-		flow_id, err := StartFlow(config_obj, flow_runner_args)
-		if err != nil {
-			return err
-		}
-
-		_ = flow_id
 	}
 	return nil
 }

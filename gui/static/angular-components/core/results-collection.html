@@ -1,5 +1,6 @@
 <!-- "Download as" buttons -->
 <grr-download-collection-as base-url="exportedResultsUrl"
+                            query-params="::queryParams"
                             ng-if="exportedResultsUrl">
 </grr-download-collection-as>
 
@@ -14,6 +15,7 @@
   <tbody>
     <tr grr-paged-filtered-table
         grr-api-items-provider url="::resultsUrl"
+        query-params="::queryParams"
         transform-items="controller.transformItems(items)"
         auto-refresh-interval="::controller.autoRefreshInterval">
       <td><grr-semantic-value value="::item" type="GrrMessage" /></td>

@@ -30,7 +30,11 @@ func (self *ApiServer) LaunchFlow(
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	utils.Debug(in)
 	result := &api_proto.StartFlowResponse{}
-	flow_id, err := flows.StartFlow(self.config, in)
+	args, err := flows.GetFlowArgs(in)
+	if err != nil {
+		return nil, err
+	}
+	flow_id, err := flows.StartFlow(self.config, in, args)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +92,19 @@ func (self *ApiServer) GetHunt(
 	if err != nil {
 		return nil, err
 	}
+
+	return result, nil
+}
+
+func (self *ApiServer) GetHuntResults(
+	ctx context.Context,
+	in *api_proto.GetHuntResultsRequest) (*api_proto.ApiFlowResultDetails, error) {
+	utils.Debug(in)
+	result, err := flows.GetHuntResults(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+	utils.Debug(result)
 
 	return result, nil
 }
@@ -162,7 +179,7 @@ func (self *ApiServer) GetClientFlows(
 		}
 	}
 
-	result, err := getFlows(self.config, in.ClientId, in.Offset, in.Count)
+	result, err := flows.GetFlows(self.config, in.ClientId, in.Offset, in.Count)
 	return result, err
 }
 
@@ -188,7 +205,7 @@ func (self *ApiServer) GetFlowDetails(
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
 	utils.Debug(in)
 
-	result, err := getFlowDetails(self.config, in.ClientId, in.FlowId)
+	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
 }
 
@@ -196,7 +213,7 @@ func (self *ApiServer) GetFlowRequests(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
 	utils.Debug(in)
-	result, err := getFlowRequests(self.config, in.ClientId, in.FlowId,
+	result, err := flows.GetFlowRequests(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }
@@ -205,7 +222,7 @@ func (self *ApiServer) GetFlowResults(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResultDetails, error) {
 	utils.Debug(in)
-	result, err := getFlowResults(self.config, in.ClientId, in.FlowId,
+	result, err := flows.GetFlowResults(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }
@@ -214,7 +231,7 @@ func (self *ApiServer) GetFlowLogs(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowLogDetails, error) {
 	utils.Debug(in)
-	result, err := getFlowLog(self.config, in.ClientId, in.FlowId,
+	result, err := flows.GetFlowLog(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }
@@ -222,7 +239,7 @@ func (self *ApiServer) GetFlowLogs(
 func (self *ApiServer) GetFlowDescriptors(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.FlowDescriptors, error) {
-	result, err := getFlowDescriptors()
+	result, err := flows.GetFlowDescriptors()
 	return result, err
 }
 

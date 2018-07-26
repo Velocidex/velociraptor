@@ -49,6 +49,8 @@ const ResultsCollectionController = function(
 
   /** @private {number} */
   this.numCheckedItems_ = 0;
+
+  this.queryParams = {};
 };
 
 /**
@@ -95,6 +97,7 @@ ResultsCollectionController.prototype.transformItems = function(items) {
 exports.ResultsCollectionDirective = function() {
   return {
     scope: {
+      queryParams: '=',
       resultsUrl: '=',
       exportedResultsUrl: '=',
       outputPluginsUrl: '=',

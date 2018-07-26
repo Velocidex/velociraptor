@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
+	"strings"
 	"sync"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -54,121 +55,168 @@ func (self *HuntDispatcher) GetApplicableHunts(last_timestamp uint64) []*api_pro
 // and the HuntManager takes clients from the pending queue and adds
 // them to the running queue at the pre-determined rate.
 func (self *HuntDispatcher) Update() error {
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
 	logger := logging.NewLogger(self.config_obj)
-	now := uint64(time.Now().UTC().UnixNano() / 1000)
 	for _, hunt := range self.hunts {
 		// If the hunt is not in the running state we do not
 		// schedule new clients for it.
 		if hunt.State != api_proto.Hunt_RUNNING {
 			continue
 		}
-
-		client_rate := hunt.ClientRate
-
-		// Default client rate is 20 per minute.
-		if client_rate == 0 {
-			client_rate = 20
+		modified, err := self._ScheduleClientsForHunt(hunt)
+		if err != nil {
+			logger.Error("_ScheduleClientsForHunt:", err)
 		}
-		last_unpause_time := hunt.LastUnpauseTime
-		// Default LastUnpauseTime is hunt creation time.
-		if last_unpause_time == 0 {
-			last_unpause_time = hunt.CreateTime
-		}
-		seconds_since_unpause := (now - last_unpause_time) / 1000000
-		expected_clients := (client_rate*seconds_since_unpause/60 +
-			hunt.TotalClientsWhenUnpaused)
 
-		// We should be adding some more clients to the
-		// hunt. Read HuntInfo AFF4 objects from the
-		// pending queue, launch their flows and put them in
-		// the running queue.
-		if hunt.TotalClientsScheduled < expected_clients {
-			clients_to_get := expected_clients - hunt.TotalClientsScheduled
-			pending_urn := hunt.HuntId + "/pending"
-			urns, err := db.ListChildren(
-				self.config_obj, pending_urn, 0, clients_to_get)
+		modified2, err := self._SortResultsForHunt(hunt)
+		if err != nil {
+			logger.Error("_SortResultsForHunt:", err)
+		}
+
+		if modified || modified2 {
+			err = SetAFF4HuntObject(self.config_obj, hunt)
+			if err != nil {
+				logger.Error("", err)
+			}
+		}
+
+	}
+	return nil
+}
+
+func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (bool, error) {
+	modified := false
+	logger := logging.NewLogger(self.config_obj)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return false, err
+	}
+
+	completed_urn := hunt.HuntId + "/completed"
+	offset := 0
+	for {
+		urns, err := db.ListChildren(
+			self.config_obj, completed_urn, uint64(offset), 100)
+		if err != nil {
+			return false, err
+		}
+		offset += len(urns)
+		if len(urns) == 0 {
+			break
+		}
+
+		for _, urn := range urns {
+			summary, err := GetHuntInfoObject(self.config_obj, urn)
+			if err != nil {
+				logger.Error("", err)
+				continue
+			}
+			defer func(urn string) {
+				err = db.DeleteSubject(self.config_obj, urn)
+				if err != nil {
+					logger.Error("", err)
+
+				}
+			}(urn)
+
+			utils.Debug(summary)
+			var destination string
+			if summary.Result.State == flows_proto.FlowContext_ERROR {
+				destination = hunt.HuntId + "/errors/" +
+					summary.ClientId
+				hunt.TotalClientsWithErrors += 1
+			} else if summary.Result.TotalResults > 0 {
+				destination = hunt.HuntId + "/results/" +
+					summary.ClientId
+				hunt.TotalClientsWithResults += 1
+			} else {
+				continue
+			}
+
+			_ = SetHuntInfoObject(self.config_obj, destination, summary)
+
+			modified = true
+		}
+
+	}
+	return modified, nil
+}
+
+// Move the required clients from the pending queue to the running
+// queue.
+func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool, error) {
+	modified := false
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return false, err
+	}
+
+	logger := logging.NewLogger(self.config_obj)
+
+	client_rate := hunt.ClientRate
+
+	// Default client rate is 20 per minute.
+	if client_rate == 0 {
+		client_rate = 20
+	}
+
+	last_unpause_time := hunt.LastUnpauseTime
+	// Default LastUnpauseTime is hunt creation time.
+	if last_unpause_time == 0 {
+		last_unpause_time = hunt.CreateTime
+	}
+	now := uint64(time.Now().UTC().UnixNano() / 1000)
+	seconds_since_unpause := (now - last_unpause_time) / 1000000
+	expected_clients := (client_rate*seconds_since_unpause/60 +
+		hunt.TotalClientsWhenUnpaused)
+
+	// We should be adding some more clients to the
+	// hunt. Read HuntInfo AFF4 objects from the
+	// pending queue, launch their flows and put them in
+	// the running queue.
+	if hunt.TotalClientsScheduled < expected_clients {
+		clients_to_get := expected_clients - hunt.TotalClientsScheduled
+		pending_urn := hunt.HuntId + "/pending"
+		urns, err := db.ListChildren(
+			self.config_obj, pending_urn, 0, clients_to_get)
+		if err != nil {
+			return false, err
+		}
+
+		for _, urn := range urns {
+			summary, err := GetHuntInfoObject(self.config_obj, urn)
+			if err != nil {
+				logger.Error("", err)
+				continue
+			}
+			flow_id, err := StartFlow(
+				self.config_obj,
+				&flows_proto.FlowRunnerArgs{
+					ClientId: summary.ClientId,
+					FlowName: "HuntRunnerFlow",
+				}, summary)
+			if err != nil {
+				logger.Error("", err)
+				continue
+			}
+			summary.FlowId = *flow_id
+			running_urn := hunt.HuntId + "/running/" + summary.ClientId
+			err = SetHuntInfoObject(self.config_obj, running_urn, summary)
+			if err != nil {
+				logger.Error("", err)
+				continue
+			}
+			err = db.DeleteSubject(self.config_obj, urn)
 			if err != nil {
 				logger.Error("", err)
 				continue
 			}
 
-			for _, urn := range urns {
-				data, err := db.GetSubjectAttributes(
-					self.config_obj, urn,
-					constants.ATTR_HUNT_SUMMARY_OBJECT)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-
-				summary := &api_proto.HuntInfo{}
-				err = proto.Unmarshal(
-					data[constants.HUNTS_SUMMARY_ATTR],
-					summary)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-
-				runner_args := &flows_proto.FlowRunnerArgs{
-					ClientId: summary.ClientId,
-					FlowName: "HuntRunnerFlow",
-				}
-				err = SetFlowArgs(runner_args, summary)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-
-				flow_id, err := StartFlow(self.config_obj, runner_args)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-				summary.FlowId = *flow_id
-				running_urn := hunt.HuntId + "/running/" + summary.ClientId
-				serialized_summary, err := proto.Marshal(summary)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-				data[constants.HUNTS_SUMMARY_ATTR] = serialized_summary
-
-				err = db.SetSubjectData(
-					self.config_obj, running_urn, 0, data)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-
-				err = db.DeleteSubject(self.config_obj, urn)
-				if err != nil {
-					logger.Error("", err)
-					continue
-				}
-
-				hunt.TotalClientsScheduled += 1
-			}
-
-			serialized_hunt_details, err := proto.Marshal(hunt)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			data := make(map[string][]byte)
-			data[constants.HUNTS_INFO_ATTR] = serialized_hunt_details
-
-			err = db.SetSubjectData(self.config_obj, hunt.HuntId, 0, data)
-			if err != nil {
-				return err
-			}
+			hunt.TotalClientsScheduled += 1
+			modified = true
 		}
 	}
-	return nil
+	return modified, nil
 }
 
 type HuntDispatcherContainer struct {
@@ -258,7 +306,6 @@ func GetNewHuntId() string {
 }
 
 func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error) {
-	utils.Debug(hunt)
 	hunt.HuntId = GetNewHuntId()
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
 	hunt.LastUnpauseTime = hunt.CreateTime
@@ -314,6 +361,108 @@ func GetHunt(config_obj *config.Config, in *api_proto.GetHuntRequest) (
 	}
 
 	return nil, errors.New("Not found")
+}
+
+func GetHuntInfos(config_obj *config.Config, in *api_proto.GetHuntResultsRequest) (
+	*api_proto.HuntResults, error) {
+	result := &api_proto.HuntResults{}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	if in.Count == 0 {
+		in.Count = 50
+	}
+	// Verify the hunt id
+	if !strings.HasPrefix(in.HuntId, "aff4:/hunts/H.") {
+		return nil, errors.New("Invalid hunt id")
+	}
+
+	// These HuntInfo are flows with at least one results.
+	client_urns, err := db.ListChildren(
+		config_obj, in.HuntId+"/results",
+		in.Offset, in.Count)
+	if err != nil {
+		return nil, err
+	}
+	for _, urn := range client_urns {
+		hunt_info, err := GetHuntInfoObject(config_obj, urn)
+		if err != nil {
+			continue
+		}
+
+		result.Items = append(result.Items, hunt_info)
+	}
+
+	return result, nil
+}
+
+func GetHuntResults(config_obj *config.Config, in *api_proto.GetHuntResultsRequest) (
+	*api_proto.ApiFlowResultDetails, error) {
+	result := &api_proto.ApiFlowResultDetails{}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	if in.Count == 0 {
+		in.Count = 50
+	}
+	// Verify the hunt id
+	if !strings.HasPrefix(in.HuntId, "aff4:/hunts/H.") {
+		return nil, errors.New("Invalid hunt id")
+	}
+
+	offset := uint64(0)
+	children_offset := uint64(0)
+	count := uint64(0)
+	for {
+		// These HuntInfo are flows with at least one results.
+		client_urns, err := db.ListChildren(
+			config_obj, in.HuntId+"/results",
+			children_offset, 50)
+		if err != nil {
+			return nil, err
+		}
+
+		if len(client_urns) == 0 {
+			break
+		}
+		children_offset += uint64(len(client_urns))
+		for _, urn := range client_urns {
+			hunt_info, err := GetHuntInfoObject(config_obj, urn)
+			if err != nil {
+				continue
+			}
+
+			// We need to skip until in.Offset. This flow's
+			// results are all prior to in.Offset so we dont need
+			// to read them.
+			if offset+hunt_info.Result.TotalResults < in.Offset {
+				offset += hunt_info.Result.TotalResults
+				continue
+			}
+
+			first_result := in.Offset - offset
+			if first_result < 0 {
+				first_result = 0
+			}
+			count = in.Count - offset
+			flow_results, err := GetFlowResults(
+				config_obj, hunt_info.ClientId, hunt_info.FlowId,
+				first_result, count)
+			if err != nil {
+				return nil, err
+			}
+			offset += uint64(len(flow_results.Items))
+			result.Items = append(result.Items, flow_results.Items...)
+
+			// We have enough items now, return them.
+			if uint64(len(result.Items)) >= in.Count {
+				return result, nil
+			}
+		}
+	}
+	return result, nil
 }
 
 func ModifyHunt(config_obj *config.Config, hunt *api_proto.Hunt) error {
@@ -415,10 +564,10 @@ func (self *HuntRunnerFlow) Start(
 	if !ok {
 		return errors.New("Expected args of type HuntInfo")
 	}
-	utils.Debug(hunt_summary_args)
 	delegate_flow_obj_proto := &flows_proto.AFF4FlowObject{
-		Urn:        flow_obj.Urn,
-		RunnerArgs: hunt_summary_args.StartRequest,
+		Urn:         flow_obj.Urn,
+		RunnerArgs:  hunt_summary_args.StartRequest,
+		FlowContext: flow_obj.FlowContext,
 	}
 	delegate_flow_obj_proto.RunnerArgs.ClientId = hunt_summary_args.ClientId
 	delegate_flow_obj_proto.RunnerArgs.Creator = hunt_summary_args.HuntId
@@ -484,31 +633,62 @@ func (self *HuntRunnerFlow) ProcessMessage(
 			return err
 		}
 		hunt_summary_args := args.(*api_proto.HuntInfo)
-		utils.Debug(hunt_summary_args)
-
+		hunt_summary_args.FlowId = flow_obj.Urn
 		urn := hunt_summary_args.HuntId + "/completed/" + hunt_summary_args.ClientId
-		db, err := datastore.GetDB(config_obj)
+		hunt_summary_args.Result = self.delegate_flow_obj.FlowContext
+
+		err = SetHuntInfoObject(config_obj, urn, hunt_summary_args)
 		if err != nil {
 			return err
 		}
-
-		hunt_summary_args.Result = flow_obj.FlowContext
-		serialized_hunt_summary, err := proto.Marshal(hunt_summary_args)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		data := make(map[string][]byte)
-		data[constants.HUNTS_SUMMARY_ATTR] = serialized_hunt_summary
-
-		err = db.SetSubjectData(config_obj, urn, 0, data)
-		if err != nil {
-			return err
-		}
-
-		flow_obj.Complete()
+		flow_obj.SetContext(self.delegate_flow_obj.FlowContext)
 	}
 
 	return delegate_err
+}
+
+func GetHuntInfoObject(
+	config_obj *config.Config,
+	urn string) (*api_proto.HuntInfo, error) {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := db.GetSubjectAttributes(
+		config_obj, urn,
+		constants.ATTR_HUNT_SUMMARY_OBJECT)
+	if err != nil {
+		return nil, err
+	}
+
+	summary := &api_proto.HuntInfo{}
+	err = proto.Unmarshal(
+		data[constants.HUNTS_SUMMARY_ATTR],
+		summary)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return summary, nil
+}
+
+func SetHuntInfoObject(
+	config_obj *config.Config,
+	urn string,
+	summary *api_proto.HuntInfo) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	serialized_summary, err := proto.Marshal(summary)
+	if err != nil {
+		return err
+	}
+	data := make(map[string][]byte)
+	data[constants.HUNTS_SUMMARY_ATTR] = serialized_summary
+	return db.SetSubjectData(config_obj, urn, 0, data)
 }
 
 func init() {
@@ -521,6 +701,7 @@ func init() {
 		Doc:          "Runs a flow as part of a hunt.",
 		ArgsType:     "HuntInfo",
 		DefaultArgs:  default_args,
+		Internal:     true,
 	}
 
 	RegisterImplementation(desc, &impl)
