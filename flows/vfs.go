@@ -9,7 +9,6 @@ import (
 	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -152,18 +151,17 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 		return nil
 	}
 
-	if message.ArgsRdfName != "VQLResponse" {
+	response, ok := responder.ExtractGrrMessagePayload(
+		message).(*actions_proto.VQLResponse)
+	if !ok {
 		return errors.New("Unexpected response type " + message.ArgsRdfName)
 	}
-
-	data := make(map[string][]byte)
-	data[constants.VFS_FILE_LISTING] = message.Args
 
 	urn := urns.BuildURN(
 		flow_obj.RunnerArgs.ClientId, "vfs",
 		vfs_args.VfsPath)
 
-	return db.SetSubjectData(config_obj, urn, 0, data)
+	return db.SetSubject(config_obj, urn, response)
 }
 
 // Handle recursive VFS traversal. NOTE: This algorithm relies on the
@@ -240,20 +238,11 @@ func (self *VFSListDirectory) flush_state(
 		flow_obj.RunnerArgs.ClientId, "vfs",
 		self.state.VfsPath)
 
-	s, err := proto.Marshal(self.state.Current)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	data := make(map[string][]byte)
-	data[constants.VFS_FILE_LISTING] = s
-
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
-
-	return db.SetSubjectData(config_obj, urn, 0, data)
+	return db.SetSubject(config_obj, urn, self.state.Current)
 }
 
 func init() {

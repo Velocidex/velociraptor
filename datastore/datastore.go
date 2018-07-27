@@ -33,26 +33,19 @@ type DataStore interface {
 		message proto.Message,
 		next_state uint64) error
 
-	// Just grab the whole data of the AFF4 object.
-	GetSubjectData(
+	GetSubject(
 		config_obj *config.Config,
 		urn string,
-		offset uint64,
-		count uint64) (map[string][]byte, error)
+		message proto.Message) error
 
-	GetSubjectAttributes(
+	SetSubject(
 		config_obj *config.Config,
-		urn string, attrs []string) (map[string][]byte, error)
+		urn string,
+		message proto.Message) error
 
 	DeleteSubject(
 		config_obj *config.Config,
 		urn string) error
-
-	// Just grab the whole data of the AFF4 object.
-	SetSubjectData(
-		config_obj *config.Config,
-		urn string, timestamp int64,
-		data map[string][]byte) error
 
 	// Lists all the children of a URN.
 	ListChildren(

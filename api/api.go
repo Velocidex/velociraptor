@@ -104,8 +104,6 @@ func (self *ApiServer) GetHuntResults(
 	if err != nil {
 		return nil, err
 	}
-	utils.Debug(result)
-
 	return result, nil
 }
 

@@ -56,6 +56,10 @@ func (self *HuntDispatcher) GetApplicableHunts(last_timestamp uint64) []*api_pro
 // them to the running queue at the pre-determined rate.
 func (self *HuntDispatcher) Update() error {
 	logger := logging.NewLogger(self.config_obj)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
 	for _, hunt := range self.hunts {
 		// If the hunt is not in the running state we do not
 		// schedule new clients for it.
@@ -73,7 +77,7 @@ func (self *HuntDispatcher) Update() error {
 		}
 
 		if modified || modified2 {
-			err = SetAFF4HuntObject(self.config_obj, hunt)
+			err = db.SetSubject(self.config_obj, hunt.HuntId, hunt)
 			if err != nil {
 				logger.Error("", err)
 			}
@@ -105,7 +109,8 @@ func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (bool, err
 		}
 
 		for _, urn := range urns {
-			summary, err := GetHuntInfoObject(self.config_obj, urn)
+			summary := &api_proto.HuntInfo{}
+			err := db.GetSubject(self.config_obj, urn, summary)
 			if err != nil {
 				logger.Error("", err)
 				continue
@@ -132,7 +137,7 @@ func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (bool, err
 				continue
 			}
 
-			_ = SetHuntInfoObject(self.config_obj, destination, summary)
+			_ = db.SetSubject(self.config_obj, destination, summary)
 
 			modified = true
 		}
@@ -145,7 +150,6 @@ func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (bool, err
 // queue.
 func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool, error) {
 	modified := false
-
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return false, err
@@ -184,7 +188,8 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 		}
 
 		for _, urn := range urns {
-			summary, err := GetHuntInfoObject(self.config_obj, urn)
+			summary := &api_proto.HuntInfo{}
+			err := db.GetSubject(self.config_obj, urn, summary)
 			if err != nil {
 				logger.Error("", err)
 				continue
@@ -201,7 +206,7 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 			}
 			summary.FlowId = *flow_id
 			running_urn := hunt.HuntId + "/running/" + summary.ClientId
-			err = SetHuntInfoObject(self.config_obj, running_urn, summary)
+			err = db.SetSubject(self.config_obj, running_urn, summary)
 			if err != nil {
 				logger.Error("", err)
 				continue
@@ -258,10 +263,12 @@ func NewHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 	}
 
 	for _, hunt_urn := range hunts {
-		hunt_obj, err := GetAFF4HuntObject(config_obj, hunt_urn)
+		hunt_obj := &api_proto.Hunt{}
+		err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
 		if err != nil {
 			return nil, err
 		}
+
 		result.hunts = append(result.hunts, hunt_obj)
 	}
 
@@ -306,6 +313,11 @@ func GetNewHuntId() string {
 }
 
 func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error) {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	hunt.HuntId = GetNewHuntId()
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
 	hunt.LastUnpauseTime = hunt.CreateTime
@@ -317,10 +329,15 @@ func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error
 		hunt.State = api_proto.Hunt_PAUSED
 	}
 
-	err := SetAFF4HuntObject(config_obj, hunt)
+	err = db.SetSubject(config_obj, hunt.HuntId, hunt)
 	if err != nil {
 		return nil, err
 	}
+
+	// Trigger a refresh of the hunt dispatcher. This
+	// guarantees that fresh data will be read in
+	// subsequent ListHunt() calls.
+	dispatch_container.Refresh(config_obj)
 
 	return &hunt.HuntId, nil
 }
@@ -386,12 +403,13 @@ func GetHuntInfos(config_obj *config.Config, in *api_proto.GetHuntResultsRequest
 		return nil, err
 	}
 	for _, urn := range client_urns {
-		hunt_info, err := GetHuntInfoObject(config_obj, urn)
+		summary := &api_proto.HuntInfo{}
+		err := db.GetSubject(config_obj, urn, summary)
 		if err != nil {
 			continue
 		}
 
-		result.Items = append(result.Items, hunt_info)
+		result.Items = append(result.Items, summary)
 	}
 
 	return result, nil
@@ -429,7 +447,8 @@ func GetHuntResults(config_obj *config.Config, in *api_proto.GetHuntResultsReque
 		}
 		children_offset += uint64(len(client_urns))
 		for _, urn := range client_urns {
-			hunt_info, err := GetHuntInfoObject(config_obj, urn)
+			hunt_info := &api_proto.HuntInfo{}
+			err := db.GetSubject(config_obj, urn, hunt_info)
 			if err != nil {
 				continue
 			}
@@ -465,19 +484,24 @@ func GetHuntResults(config_obj *config.Config, in *api_proto.GetHuntResultsReque
 	return result, nil
 }
 
-func ModifyHunt(config_obj *config.Config, hunt *api_proto.Hunt) error {
-	// TODO: Check if the user has permission to start/stop the hunt.
-	hunt_obj, err := GetAFF4HuntObject(config_obj, hunt.HuntId)
+func ModifyHunt(config_obj *config.Config, hunt_modification *api_proto.Hunt) error {
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
+	// TODO: Check if the user has permission to start/stop the hunt.
+	hunt_obj := &api_proto.Hunt{}
+	err = db.GetSubject(config_obj, hunt_modification.HuntId, hunt_obj)
+	if err != nil {
+		return err
+	}
 	modified := false
 
 	// Only some modifications are allowed. The modified fields
-	// are set int he hunt arg.
-	if hunt.State != api_proto.Hunt_UNSET {
-		hunt_obj.State = hunt.State
+	// are set in the hunt arg.
+	if hunt_modification.State != api_proto.Hunt_UNSET {
+		hunt_obj.State = hunt_modification.State
 		modified = true
 
 		// Hunt is being unpaused. Adjust the hunt counters to
@@ -486,14 +510,14 @@ func ModifyHunt(config_obj *config.Config, hunt *api_proto.Hunt) error {
 		// not scheduled during the paused interval at once -
 		// exceeding the specified client rate.
 		if hunt_obj.State == api_proto.Hunt_PAUSED &&
-			hunt.State == api_proto.Hunt_RUNNING {
+			hunt_modification.State == api_proto.Hunt_RUNNING {
 			hunt_obj.LastUnpauseTime = uint64(time.Now().UTC().UnixNano() / 1000)
 			hunt_obj.TotalClientsWhenUnpaused = hunt_obj.TotalClientsScheduled
 		}
 	}
 
 	if modified {
-		err := SetAFF4HuntObject(config_obj, hunt_obj)
+		err := db.SetSubject(config_obj, hunt_modification.HuntId, hunt_obj)
 		if err != nil {
 			return err
 		}
@@ -507,47 +531,6 @@ func ModifyHunt(config_obj *config.Config, hunt *api_proto.Hunt) error {
 	}
 
 	return errors.New("Modification not supported.")
-}
-
-func GetAFF4HuntObject(config_obj *config.Config, hunt_urn string) (*api_proto.Hunt, error) {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := db.GetSubjectAttributes(
-		config_obj, hunt_urn, constants.ATTR_HUNT_OBJECT)
-	if err != nil {
-		return nil, err
-	}
-
-	hunt_obj := &api_proto.Hunt{}
-	serialized_hunt, pres := data[constants.HUNTS_INFO_ATTR]
-	if pres {
-		err := proto.Unmarshal(serialized_hunt, hunt_obj)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-	return hunt_obj, nil
-}
-
-func SetAFF4HuntObject(config_obj *config.Config, hunt *api_proto.Hunt) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	data := make(map[string][]byte)
-
-	serialized_hunt_details, err := proto.Marshal(hunt)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	data[constants.HUNTS_INFO_ATTR] = serialized_hunt_details
-
-	return db.SetSubjectData(config_obj, hunt.HuntId, 0, data)
 }
 
 // A Flow which runs a delegate flow and stores the result in the
@@ -636,8 +619,11 @@ func (self *HuntRunnerFlow) ProcessMessage(
 		hunt_summary_args.FlowId = flow_obj.Urn
 		urn := hunt_summary_args.HuntId + "/completed/" + hunt_summary_args.ClientId
 		hunt_summary_args.Result = self.delegate_flow_obj.FlowContext
-
-		err = SetHuntInfoObject(config_obj, urn, hunt_summary_args)
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return err
+		}
+		err = db.SetSubject(config_obj, urn, hunt_summary_args)
 		if err != nil {
 			return err
 		}
@@ -645,50 +631,6 @@ func (self *HuntRunnerFlow) ProcessMessage(
 	}
 
 	return delegate_err
-}
-
-func GetHuntInfoObject(
-	config_obj *config.Config,
-	urn string) (*api_proto.HuntInfo, error) {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	data, err := db.GetSubjectAttributes(
-		config_obj, urn,
-		constants.ATTR_HUNT_SUMMARY_OBJECT)
-	if err != nil {
-		return nil, err
-	}
-
-	summary := &api_proto.HuntInfo{}
-	err = proto.Unmarshal(
-		data[constants.HUNTS_SUMMARY_ATTR],
-		summary)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return summary, nil
-}
-
-func SetHuntInfoObject(
-	config_obj *config.Config,
-	urn string,
-	summary *api_proto.HuntInfo) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	serialized_summary, err := proto.Marshal(summary)
-	if err != nil {
-		return err
-	}
-	data := make(map[string][]byte)
-	data[constants.HUNTS_SUMMARY_ATTR] = serialized_summary
-	return db.SetSubjectData(config_obj, urn, 0, data)
 }
 
 func init() {

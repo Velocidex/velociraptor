@@ -15,7 +15,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
@@ -89,12 +88,12 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 
 // Flush all the cached flows back to the DB.
 func (self *FlowRunner) Close() {
-	for urn, cached_flow := range self.flow_cache {
+	for _, cached_flow := range self.flow_cache {
 		if !cached_flow.dirty {
 			continue
 		}
 		cached_flow.impl.Save(self.config, cached_flow)
-		err := SetAFF4FlowObject(self.config, cached_flow, urn)
+		err := SetAFF4FlowObject(self.config, cached_flow)
 		if err != nil {
 			self.logger.Error("FlowRunner", err)
 		}
@@ -200,13 +199,14 @@ func (self *AFF4FlowObject) AsProto() (*flows_proto.AFF4FlowObject, error) {
 		FlowContext: self.FlowContext,
 	}
 
-	any_state, err := ptypes.MarshalAny(self.flow_state)
-	if err != nil {
-		return nil, errors.WithStack(err)
+	if self.flow_state != nil {
+		any_state, err := ptypes.MarshalAny(self.flow_state)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
+		result.FlowState = any_state
 	}
-
-	result.FlowState = any_state
-
 	return result, nil
 }
 
@@ -342,123 +342,42 @@ func GetAFF4FlowObject(
 		return nil, err
 	}
 
-	data, err := db.GetSubjectAttributes(
-		config_obj, flow_urn, constants.ATTR_FLOW_OBJECT)
+	flow_obj := &flows_proto.AFF4FlowObject{}
+	err = db.GetSubject(config_obj, flow_urn, flow_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	flow_runner_args := &flows_proto.FlowRunnerArgs{}
-	serialized_flow_runner_arg, pres := data[constants.FLOW_RUNNER_ARGS]
-	if pres {
-		err := proto.Unmarshal(
-			serialized_flow_runner_arg, flow_runner_args)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-	}
-
-	result, err := NewAFF4FlowObject(config_obj, flow_runner_args)
-	if err != nil {
-		return nil, err
-	}
-
-	result.Urn = flow_urn
-	serialized_flow_context, pres := data[constants.FLOW_CONTEXT]
-	if pres {
-		err := proto.Unmarshal(serialized_flow_context, result.FlowContext)
-		if err != nil {
-			utils.Debug(err)
-			return nil, errors.WithStack(err)
-		}
-	}
-
-	// Load the serialized flow state.
-	serialized_state, pres := data[constants.FLOW_STATE]
-	if pres {
-		tmp := &flows_proto.VelociraptorFlowState{}
-		err := proto.Unmarshal(serialized_state, tmp)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		var state ptypes.DynamicAny
-		err = ptypes.UnmarshalAny(tmp.Payload, &state)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		result.flow_state = state.Message
-	}
-
-	return result, nil
+	return AFF4FlowObjectFromProto(flow_obj)
 }
 
 func SetAFF4FlowObject(
 	config_obj *config.Config,
-	obj *AFF4FlowObject,
-	urn string) error {
+	obj *AFF4FlowObject) error {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	data := make(map[string][]byte)
 	if obj.RunnerArgs == nil {
 		return errors.New("Flow runner must be populated.")
 	}
-
-	value, err := proto.Marshal(obj.RunnerArgs)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	data[constants.FLOW_RUNNER_ARGS] = value
 
 	if obj.FlowContext == nil {
 		return errors.New("Flow context must be populated.")
 	}
 
 	obj.FlowContext.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	value, err = proto.Marshal(obj.FlowContext)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	data[constants.FLOW_CONTEXT] = value
-
-	// Deprecate: This is used for backwards compatibility with
-	// GRR's GUI.
-	data[constants.AFF4_TYPE] = []byte("GRRFlow")
-
-	// Serialize the state into the database.
-	if obj.flow_state != nil {
-		any_state, err := ptypes.MarshalAny(obj.flow_state)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		state := &flows_proto.VelociraptorFlowState{
-			Payload: any_state,
-		}
-		value, err = proto.Marshal(state)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		data[constants.FLOW_STATE] = value
-	}
-
-	// Flow object is not versioned.
-	err = db.SetSubjectData(config_obj, urn, 0, data)
+	flow_obj, err := obj.AsProto()
 	if err != nil {
 		return err
 	}
 
 	// The object is not dirty any more.
 	obj.dirty = false
-	obj.Urn = urn
 
-	return nil
+	return db.SetSubject(config_obj, flow_obj.Urn, flow_obj)
 }
 
 func RegisterImplementation(descriptor *flows_proto.FlowDescriptor, impl Flow) {
@@ -543,7 +462,7 @@ func StartFlow(
 		return nil, err
 	}
 
-	err = SetAFF4FlowObject(config_obj, flow_obj, flow_obj.Urn)
+	err = SetAFF4FlowObject(config_obj, flow_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -571,16 +490,11 @@ func StoreResultInFlow(
 	flow_obj.dirty = true
 
 	urn := fmt.Sprintf("%s/results/%d", flow_obj.Urn, next_result_id)
-	data := make(map[string][]byte)
-	serialized_message, err := proto.Marshal(message)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	data[constants.FLOW_RESULT] = serialized_message
-
-	now := time.Now().UTC().UnixNano() / 1000
 	db, err := datastore.GetDB(config_obj)
-	err = db.SetSubjectData(config_obj, urn, now, data)
+	if err != nil {
+		return err
+	}
+	err = db.SetSubject(config_obj, urn, message)
 	if err != nil {
 		return err
 	}

@@ -127,48 +127,13 @@ func (self *VInterrogate) StoreClientInfo(
 	flow_obj *AFF4FlowObject) error {
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
-
 	client_urn := "aff4:/" + flow_obj.RunnerArgs.ClientId
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	data := make(map[string][]byte)
-	encoded_client_info, err := proto.Marshal(client_info)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	// FIXME: GRR spreads this information over multiple
-	// attributes. When we refactor the GRR API handlers remove
-	// these attributes, and just read them all from the
-	// ClientInfo proto.
-	data[constants.AFF4_TYPE] = []byte("VFSGRRClient")
-	data[constants.CLIENT_VELOCIRAPTOR_INFO] = encoded_client_info
-	data["metadata:hostname"] = []byte(client_info.Hostname)
-	data["metadata:fqdn"] = []byte(client_info.Fqdn)
-	data["metadata:system"] = []byte(client_info.System)
-	data["metadata:os_version"] = []byte(client_info.System)
-	data["metadata:architecture"] = []byte(client_info.Architecture)
-	data["aff4:user_names"] = []byte(client_info.Usernames)
-	client_information := &actions_proto.ClientInformation{
-		ClientName: client_info.ClientName,
-		BuildTime:  client_info.ClientVersion,
-	}
-	serialized_client_info, err := proto.Marshal(client_information)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	data["metadata:ClientInfo"] = serialized_client_info
-
-	serialized_kb, err := proto.Marshal(client_info.Knowledgebase)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	data["metadata:knowledge_base"] = serialized_kb
-
-	err = db.SetSubjectData(config_obj, client_urn, datastore.LatestTime, data)
+	err = db.SetSubject(config_obj, client_urn, client_info)
 	if err != nil {
 		return err
 	}
@@ -176,7 +141,7 @@ func (self *VInterrogate) StoreClientInfo(
 	// Update the client index for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
 	keywords := []string{
-		"", // This is used for "." search
+		"all", // This is used for "." search
 		flow_obj.RunnerArgs.ClientId,
 		client_info.Hostname,
 		client_info.Fqdn,
@@ -188,15 +153,11 @@ func (self *VInterrogate) StoreClientInfo(
 		keywords = append(keywords, user.Username)
 	}
 
-	err = db.SetIndex(config_obj,
+	return db.SetIndex(config_obj,
 		constants.CLIENT_INDEX_URN,
 		flow_obj.RunnerArgs.ClientId,
 		keywords,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 type parseRecentUsers struct {

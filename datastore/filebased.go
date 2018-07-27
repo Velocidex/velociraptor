@@ -31,7 +31,6 @@ import (
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	datastore_proto "www.velocidex.com/golang/velociraptor/datastore/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	utils "www.velocidex.com/golang/velociraptor/testing"
@@ -68,27 +67,18 @@ func (self *FileBaseDataStore) GetClientTasks(
 		// to reflect the next_timestamp and then write it to
 		// a new next_timestamp_urn. When the client replies
 		// to this task we can remove the next_timestamp_urn.
-		serialized_task, err := readContentFromFile(config_obj, task_urn)
-		if err != nil {
-			return nil, err
-		}
 		message := &crypto_proto.GrrMessage{}
-		err = proto.Unmarshal(serialized_task, message)
-		if err == nil {
-			result = append(result, message)
+		err = self.GetSubject(config_obj, task_urn, message)
+		if err != nil {
+			continue
 		}
 
 		next_timestamp_urn := fmt.Sprintf(
 			"aff4:/%s/tasks/%d", client_id, next_timestamp)
 		message.TaskId = uint64(next_timestamp)
-		value, err := proto.Marshal(message)
+		err = self.SetSubject(config_obj, next_timestamp_urn, message)
 		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		err = writeContentToFile(config_obj, next_timestamp_urn, value)
-		if err != nil {
-			return nil, err
+			continue
 		}
 
 		err = self.DeleteSubject(config_obj, task_urn)
@@ -101,7 +91,6 @@ func (self *FileBaseDataStore) GetClientTasks(
 		// Make sure next_timestamp is unique for all messages.
 		next_timestamp += 1
 	}
-
 	return result, nil
 }
 
@@ -149,36 +138,33 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 	return writeContentToFile(config_obj, subject, value)
 }
 
-// Just grab the whole data of the AFF4 object.
-func (self *FileBaseDataStore) GetSubjectData(
+func (self *FileBaseDataStore) GetSubject(
 	config_obj *config.Config,
 	urn string,
-	offset uint64,
-	count uint64) (map[string][]byte, error) {
+	message proto.Message) error {
+
 	serialized_content, err := readContentFromFile(config_obj, urn)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	content := &datastore_proto.FileContent{}
-	err = proto.Unmarshal(serialized_content, content)
+	err = proto.Unmarshal(serialized_content, message)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	data := make(map[string][]byte)
-	for _, attr := range content.Attr {
-		data[attr.Attribute] = attr.Data
-	}
-	return data, nil
+
+	return nil
 }
 
-func (self *FileBaseDataStore) GetSubjectAttributes(
+func (self *FileBaseDataStore) SetSubject(
 	config_obj *config.Config,
-	urn string, attrs []string) (map[string][]byte, error) {
+	urn string,
+	message proto.Message) error {
+	serialized_content, err := proto.Marshal(message)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
-	// Since we store all the attributes in the same file, it is
-	// no cheaper to specify some attributes rather than all - so
-	// we just return more than we have to.
-	return self.GetSubjectData(config_obj, urn, 0, 100)
+	return writeContentToFile(config_obj, urn, serialized_content)
 }
 
 func (self *FileBaseDataStore) DeleteSubject(
@@ -199,29 +185,6 @@ func (self *FileBaseDataStore) DeleteSubject(
 	// Note: We do not currently remove empty intermediate
 	// directories.
 	return nil
-}
-
-// Just grab the whole data of the AFF4 object.
-func (self *FileBaseDataStore) SetSubjectData(
-	config_obj *config.Config,
-	urn string, timestamp int64,
-	data map[string][]byte) error {
-
-	content := &datastore_proto.FileContent{}
-	for k, v := range data {
-		content.Attr = append(content.Attr,
-			&datastore_proto.Attribute{
-				Attribute: k,
-				Data:      v,
-			})
-	}
-
-	serialized_content, err := proto.Marshal(content)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return writeContentToFile(config_obj, urn, serialized_content)
 }
 
 // Lists all the children of a URN.
@@ -292,6 +255,10 @@ func (self *FileBaseDataStore) SearchClients(
 	offset uint64, limit uint64) []string {
 	result := []string{}
 
+	if query == "." || query == "" {
+		query = "all"
+	}
+
 	children, err := self.ListChildren(
 		config_obj, path.Join(index_urn, query), offset, limit)
 	if err != nil {
@@ -299,7 +266,10 @@ func (self *FileBaseDataStore) SearchClients(
 	}
 
 	for _, child_urn := range children {
-		result = append(result, path.Base(child_urn))
+		client_id := path.Base(child_urn)
+		if strings.HasPrefix(client_id, "C.") {
+			result = append(result, client_id)
+		}
 	}
 
 	return result

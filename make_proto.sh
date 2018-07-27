@@ -4,7 +4,6 @@
 CWD=$PWD
 
 for i in $CWD/proto/ $CWD/crypto/proto/ \
-                     $CWD/datastore/proto/ \
                      $CWD/actions/proto/ \
                      $CWD/flows/proto/ ; do
     echo Building protos in $i

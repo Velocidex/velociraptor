@@ -370,3 +370,8 @@ message LogMessage {
             type: "RDFDatetime",
         }];
 }
+
+
+message PublicKey {
+    bytes pem = 1;
+}

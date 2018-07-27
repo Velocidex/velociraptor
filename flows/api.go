@@ -1,7 +1,6 @@
 package flows
 
 import (
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	"path"
@@ -190,30 +189,20 @@ func GetFlowResults(
 		return nil, err
 	}
 	for _, result_urn := range results {
-		data, err := db.GetSubjectAttributes(
-			config_obj, result_urn, constants.ATTR_FLOW_RESULT)
+		message := &crypto_proto.GrrMessage{}
+		err := db.GetSubject(config_obj, result_urn, message)
 		if err != nil {
 			return nil, err
 		}
-
-		serialized_message, pres := data[constants.FLOW_RESULT]
-		if pres {
-			message := &crypto_proto.GrrMessage{}
-			err := proto.Unmarshal(serialized_message, message)
-			if err != nil {
-				return nil, err
-			}
-
-			args := responder.ExtractGrrMessagePayload(message)
-			payload, err := ptypes.MarshalAny(args)
-			if err != nil {
-				return nil, err
-			}
-			message.Payload = payload
-			message.Args = nil
-			message.ArgsRdfName = ""
-			result.Items = append(result.Items, message)
+		args := responder.ExtractGrrMessagePayload(message)
+		payload, err := ptypes.MarshalAny(args)
+		if err != nil {
+			return nil, err
 		}
+		message.Payload = payload
+		message.Args = nil
+		message.ArgsRdfName = ""
+		result.Items = append(result.Items, message)
 	}
 
 	return result, nil

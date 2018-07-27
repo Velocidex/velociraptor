@@ -4,9 +4,8 @@ import (
 	"crypto/rsa"
 	"strings"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
@@ -66,17 +65,13 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 		return nil, false
 	}
 
-	data, err := db.GetSubjectAttributes(
-		self.config_obj, subject, constants.ATTRS_CLIENT_KEYS)
+	pem := &crypto_proto.PublicKey{}
+	err = db.GetSubject(self.config_obj, subject, pem)
 	if err != nil {
 		return nil, false
 	}
-	pem, pres := data[constants.CLIENT_PUBLIC_KEY]
-	if !pres {
-		return nil, false
-	}
 
-	key, err := PemToPublicKey(pem)
+	key, err := PemToPublicKey(pem.Pem)
 	if err != nil {
 		return nil, false
 	}
@@ -93,10 +88,10 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 		return err
 	}
 
-	data := make(map[string][]byte)
-	data[constants.CLIENT_PUBLIC_KEY] = PublicKeyToPem(key)
-
-	return db.SetSubjectData(self.config_obj, subject, 0, data)
+	pem := &crypto_proto.PublicKey{
+		Pem: PublicKeyToPem(key),
+	}
+	return db.SetSubject(self.config_obj, subject, pem)
 }
 
 func NewServerPublicKeyResolver(config_obj *config.Config) publicKeyResolver {

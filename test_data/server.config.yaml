@@ -65,8 +65,6 @@ Client.executable_signing_public_key: '-----BEGIN PUBLIC KEY-----
 Client.server_urls:
 - http://localhost:8080/
 Config.writeback: /tmp/velociraptor.yaml
-Datastore.implementation: FileBaseDataStore
-Datastore.location: /tmp/velociraptor/
 Frontend.bind_address: '127.0.0.1'
 Frontend.bind_port: 8080
 Frontend.certificate: '-----BEGIN CERTIFICATE-----
@@ -275,3 +273,6 @@ AdminUI.template_root: gui/static/templates
 AdminUI.document_root: gui/static
 
 FileStore.directory: /tmp/velociraptor/filestore/
+Datastore.implementation: FileBaseDataStore
+#Datastore.implementation: SqliteDataStore
+Datastore.location: /tmp/velociraptor/

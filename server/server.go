@@ -3,12 +3,11 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"time"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -70,16 +69,11 @@ func (self *Server) processVelociraptorMessages(
 	self.db.RemoveTasksFromClientQueue(self.config, client_id, tasks_to_remove)
 
 	// Record some stats about the client.
-	now := time.Now().UTC().UnixNano() / 1000
-	data := make(map[string][]byte)
-	data[constants.CLIENT_LAST_TIMESTAMP] = []byte(fmt.Sprintf("%d", now))
-
-	err := self.db.SetSubjectData(self.config, "aff4:/"+client_id+"/ping", 0, data)
-	if err != nil {
-		return err
+	client_info := &actions_proto.ClientInfo{
+		Ping: uint64(time.Now().UTC().UnixNano() / 1000),
 	}
 
-	return nil
+	return self.db.SetSubject(self.config, "aff4:/"+client_id+"/ping", client_info)
 }
 
 // TODO: Not implemented yet.

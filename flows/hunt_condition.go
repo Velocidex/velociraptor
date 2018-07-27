@@ -10,7 +10,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -96,22 +95,11 @@ func (self *CheckHuntCondition) ProcessMessage(
 				StartRequest:  hunt.StartRequest,
 				State:         api_proto.HuntInfo_PENDING,
 			}
-			serialized_info, err := proto.Marshal(info)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			data := make(map[string][]byte)
-			data[constants.HUNTS_SUMMARY_ATTR] = serialized_info
 			db, err := datastore.GetDB(config_obj)
 			if err != nil {
 				return err
 			}
-
-			err = db.SetSubjectData(config_obj, info_urn, 0, data)
-			if err != nil {
-				return err
-			}
+			err = db.SetSubject(config_obj, info_urn, info)
 		}
 	}
 

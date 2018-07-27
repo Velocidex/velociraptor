@@ -194,7 +194,6 @@ func huntResultDownloadHandler(
 		offset := uint64(0)
 		page_size := uint64(50)
 		for {
-			utils.Debug(offset)
 			result, err := flows.GetHuntResults(
 				config_obj,
 				&api_proto.GetHuntResultsRequest{
@@ -248,7 +247,6 @@ func huntResultDownloadHandler(
 		offset = uint64(0)
 		page_size = uint64(50)
 		for {
-			utils.Debug(offset)
 			hunt_results, err := flows.GetHuntInfos(
 				config_obj,
 				&api_proto.GetHuntResultsRequest{

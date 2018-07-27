@@ -277,95 +277,54 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	return nil
 }
 
-func (self *SqliteDataStore) GetSubjectAttributes(
-	config_obj *config.Config,
-	urn string, attrs []string) (map[string][]byte, error) {
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(attrs) == 0 {
-		return nil, errors.New("Must provide some attributes")
-	}
-
-	handle, err := self.getDB(db_path)
-	if err != nil {
-		return nil, err
-	}
-	query := `select value, predicate, timestamp from tbl
-                 where subject = ? and predicate in (?` +
-		strings.Repeat(",?", len(attrs)-1) + ")"
-	args := []interface{}{urn}
-	for _, item := range attrs {
-		args = append(args, item)
-	}
-	rows, err := handle.Query(query, args...)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	defer rows.Close()
-
-	result := make(map[string][]byte)
-	for rows.Next() {
-		var value []byte
-		var predicate string
-		var timestamp uint64
-
-		err := rows.Scan(&value, &predicate, &timestamp)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		result[predicate] = value
-	}
-	return result, nil
-}
-
-func (self *SqliteDataStore) GetSubjectData(
+func (self *SqliteDataStore) GetSubject(
 	config_obj *config.Config,
 	urn string,
-	offset uint64,
-	count uint64) (map[string][]byte, error) {
+	message proto.Message) error {
 
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	handle, err := self.getDB(db_path)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	result := make(map[string][]byte)
 	rows, err := handle.Query(
-		`select predicate, value, timestamp from tbl
-                 where subject = ? order by predicate limit ?, ?`,
-		urn, offset, count)
+		`select value, timestamp from tbl
+                 where subject = ? and predicate = ?`,
+		urn, constants.AFF4_ATTR)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return errors.WithStack(err)
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var predicate string
 		var value []byte
 		var timestamp uint64
 
-		err := rows.Scan(&predicate, &value, &timestamp)
+		err := rows.Scan(&value, &timestamp)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return errors.WithStack(err)
 		}
-		result[predicate] = value
+		err = proto.Unmarshal(value, message)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
-	return result, nil
+	return nil
 }
 
-// Just grab the whole data of the AFF4 object.
-func (self *SqliteDataStore) SetSubjectData(
+func (self *SqliteDataStore) SetSubject(
 	config_obj *config.Config,
-	urn string, timestamp int64,
-	data map[string][]byte) error {
+	urn string,
+	message proto.Message) error {
+	serialized_content, err := proto.Marshal(message)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
 	if err != nil {
@@ -378,9 +337,7 @@ func (self *SqliteDataStore) SetSubjectData(
 		return err
 	}
 
-	if timestamp == LatestTime {
-		timestamp = self.clock.Now().UTC().UnixNano() / 1000
-	}
+	timestamp := self.clock.Now().UTC().UnixNano() / 1000
 	statement, err := handle.Prepare(
 		`insert or replace into tbl
                    (subject, predicate, timestamp, value) values (?, ?, ?, ?)`)
@@ -389,12 +346,10 @@ func (self *SqliteDataStore) SetSubjectData(
 	}
 	defer statement.Close()
 
-	for predicate, value := range data {
-		_, err := statement.Exec(
-			urn, predicate, timestamp, value)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+	_, err = statement.Exec(urn, constants.AFF4_ATTR,
+		timestamp, serialized_content)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	// Now update the index.

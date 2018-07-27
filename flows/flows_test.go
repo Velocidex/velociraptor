@@ -6,22 +6,29 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	assert "github.com/stretchr/testify/assert"
+	"io/ioutil"
+	"os"
 	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
 func TestAFF4FlowObject(t *testing.T) {
+	tempdir, err := ioutil.TempDir("", "Velo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tempdir)
+
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore_implementation = proto.String("FakeDataStore")
+	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
+	config_obj.Datastore_location = proto.String(tempdir)
 
 	runner_args := &flows_proto.FlowRunnerArgs{
 		FlowName: "NoSuchFlow",
 	}
-	_, err := NewAFF4FlowObject(config_obj, runner_args)
+	_, err = NewAFF4FlowObject(config_obj, runner_args)
 	assert.Error(t, err)
 
 	runner_args = &flows_proto.FlowRunnerArgs{
@@ -50,11 +57,10 @@ func TestAFF4FlowObject(t *testing.T) {
 	assert.Equal(t, flow_aff4_obj.flow_state, some_random_protobuf)
 
 	// Now save the object in the database.
-	urn := "aff4:/somewhere/"
 	assert.NoError(t,
-		SetAFF4FlowObject(config_obj, flow_aff4_obj, urn))
+		SetAFF4FlowObject(config_obj, flow_aff4_obj))
 
-	retrieved_aff4_obj, err := GetAFF4FlowObject(config_obj, urn)
+	retrieved_aff4_obj, err := GetAFF4FlowObject(config_obj, flow_aff4_obj.Urn)
 	assert.NoError(t, err)
 
 	assert.True(t, proto.Equal(retrieved_aff4_obj.flow_state, flow_aff4_obj.flow_state))
@@ -71,26 +77,18 @@ func TestAFF4FlowObject(t *testing.T) {
 	assert.Equal(t, retrieved_aff4_obj, flow_aff4_obj)
 }
 
-type MyTestFlow struct{}
-
-func (self *MyTestFlow) Load(flow_obj *AFF4FlowObject) error {
-	return nil
-}
-
-func (self *MyTestFlow) Save(flow_obj *AFF4FlowObject) error {
-	return nil
+type MyTestFlow struct {
+	*BaseFlow
 }
 
 func (self *MyTestFlow) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
-	args proto.Message) (*string, error) {
+	args proto.Message) error {
 
 	flow_obj.SetState(&actions_proto.ClientInfo{})
 
-	flow_id := GetNewFlowIdForClient(flow_obj.RunnerArgs.ClientId)
-
-	return &flow_id, nil
+	return nil
 }
 
 func (self *MyTestFlow) ProcessMessage(
@@ -129,14 +127,19 @@ func TestFlowRunner(t *testing.T) {
 	}
 	RegisterImplementation(desc, &impl)
 
+	tempdir, err := ioutil.TempDir("", "Velo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tempdir)
+
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore_implementation = proto.String("FakeDataStore")
+	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
+	config_obj.Datastore_location = proto.String(tempdir)
 
 	runner_args := &flows_proto.FlowRunnerArgs{
 		FlowName: "MyTestFlow",
 		ClientId: "C.0",
 	}
-	flow_urn, err := StartFlow(config_obj, runner_args)
+	flow_urn, err := StartFlow(config_obj, runner_args, &empty.Empty{})
 	assert.NoError(t, err)
 
 	// Check that the flow object is stored properly in the DB.
@@ -157,11 +160,9 @@ func TestFlowRunner(t *testing.T) {
 	}
 
 	// Create a runner to receive the messages.
-	db, err := datastore.GetDB(config_obj)
-	assert.NoError(t, err)
-
 	// Receive the first batch.
-	flow_runner := NewFlowRunner(config_obj, db)
+	logger := logging.NewLogger(config_obj)
+	flow_runner := NewFlowRunner(config_obj, logger)
 	flow_runner.ProcessMessages(messages)
 	flow_runner.Close()
 
@@ -172,7 +173,7 @@ func TestFlowRunner(t *testing.T) {
 	assert.Equal(t, 3, len(state))
 
 	// A new flow runner to receive another batch of messages.
-	flow_runner = NewFlowRunner(config_obj, db)
+	flow_runner = NewFlowRunner(config_obj, logger)
 	flow_runner.ProcessMessages(messages)
 	flow_runner.Close()
 
@@ -195,28 +196,58 @@ func TestFlowRunner(t *testing.T) {
 
 	// The magic packet should terminate this flow.
 	assert.Equal(t, flow_aff4_obj.FlowContext.State, flows_proto.FlowContext_TERMINATED)
+}
+
+func TestFlowRunner2(t *testing.T) {
+	impl := MyTestFlow{}
+	default_args, _ := ptypes.MarshalAny(&empty.Empty{})
+	desc := &flows_proto.FlowDescriptor{
+		Name:        "MyTestFlow",
+		DefaultArgs: default_args,
+	}
+	RegisterImplementation(desc, &impl)
+
+	tempdir, err := ioutil.TempDir("", "Velo")
+	assert.NoError(t, err)
+	defer os.RemoveAll(tempdir)
+
+	config_obj := config.GetDefaultConfig()
+	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
+	config_obj.Datastore_location = proto.String(tempdir)
+
+	runner_args := &flows_proto.FlowRunnerArgs{
+		FlowName: "MyTestFlow",
+		ClientId: "C.0",
+	}
+	flow_urn, err := StartFlow(config_obj, runner_args, &empty.Empty{})
+	assert.NoError(t, err)
 
 	// When our flow gets an client error message it kills the
 	// flow. NOTE: This is not necessarily always the case - some
 	// flows expect client errors. In this flow the call to
-	// FailIfError() will fail the flow in the response to this
+	// FailIfError() will fail the flow if the response to this
 	// request is a client error.
 	status := &crypto_proto.GrrStatus{
 		ErrorMessage: "error",
 		Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
 	}
 
-	message.Type = crypto_proto.GrrMessage_STATUS
-	message.ArgsRdfName = "GrrStatus"
+	message := &crypto_proto.GrrMessage{
+		Type:        crypto_proto.GrrMessage_STATUS,
+		ArgsRdfName: "GrrStatus",
+		SessionId:   *flow_urn,
+	}
 	message.Args, err = proto.Marshal(status)
 	assert.NoError(t, err)
 
 	// When the flow receives a client error, it should store the
 	// error in the flow context.
+	logger := logging.NewLogger(config_obj)
+	flow_runner := NewFlowRunner(config_obj, logger)
 	flow_runner.ProcessMessages([]*crypto_proto.GrrMessage{message})
 	flow_runner.Close()
 
-	flow_aff4_obj, err = GetAFF4FlowObject(config_obj, *flow_urn)
+	flow_aff4_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
 	assert.NoError(t, err)
 
 	assert.Equal(t, flow_aff4_obj.FlowContext.State, flows_proto.FlowContext_ERROR)

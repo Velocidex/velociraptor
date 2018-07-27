@@ -1,12 +1,10 @@
 package api
 
 import (
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 )
 
@@ -23,19 +21,8 @@ func GetApiClient(
 		return nil, err
 	}
 
-	data, err := db.GetSubjectAttributes(
-		config_obj, client_urn, constants.ATTR_BASIC_CLIENT_INFO)
-	if err != nil {
-		return nil, err
-	}
-
-	serialized_client_info, pres := data[constants.CLIENT_VELOCIRAPTOR_INFO]
-	if !pres {
-		return nil, errors.New("Not found")
-	}
-
 	client_info := &actions_proto.ClientInfo{}
-	err = proto.Unmarshal(serialized_client_info, client_info)
+	err = db.GetSubject(config_obj, client_urn, client_info)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -56,8 +43,10 @@ func GetApiClient(
 		Fqdn:    client_info.Fqdn,
 	}
 
-	for _, user := range client_info.Knowledgebase.Users {
-		result.Users = append(result.Users, user)
+	if client_info.Knowledgebase != nil {
+		for _, user := range client_info.Knowledgebase.Users {
+			result.Users = append(result.Users, user)
+		}
 	}
 
 	return result, nil
