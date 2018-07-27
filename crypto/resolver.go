@@ -60,7 +60,7 @@ type serverPublicKeyResolver struct {
 
 func (self *serverPublicKeyResolver) GetPublicKey(
 	client_id string) (*rsa.PublicKey, bool) {
-	subject := "aff4:/" + client_id
+	subject := "aff4:/" + client_id + "/key"
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, false
@@ -86,7 +86,7 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 
 func (self *serverPublicKeyResolver) SetPublicKey(
 	client_id string, key *rsa.PublicKey) error {
-	subject := "aff4:/" + client_id
+	subject := "aff4:/" + client_id + "/key"
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {

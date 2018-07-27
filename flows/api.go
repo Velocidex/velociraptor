@@ -1,7 +1,6 @@
 package flows
 
 import (
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
@@ -186,14 +185,18 @@ func GetFlowResults(
 		return nil, err
 	}
 
-	data, err := db.GetSubjectData(config_obj, urn, offset, count)
+	results, err := db.ListChildren(config_obj, urn, offset, count)
 	if err != nil {
 		return nil, err
 	}
+	for _, result_urn := range results {
+		data, err := db.GetSubjectAttributes(
+			config_obj, result_urn, constants.ATTR_FLOW_RESULT)
+		if err != nil {
+			return nil, err
+		}
 
-	for i := offset; i < offset+count; i++ {
-		predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, i)
-		serialized_message, pres := data[predicate]
+		serialized_message, pres := data[constants.FLOW_RESULT]
 		if pres {
 			message := &crypto_proto.GrrMessage{}
 			err := proto.Unmarshal(serialized_message, message)

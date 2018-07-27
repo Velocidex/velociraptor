@@ -59,6 +59,13 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 			continue
 		}
 
+		// Do not feed messages to flows that are terminated,
+		// just drop these on the floor.
+		if cached_flow.FlowContext != nil &&
+			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
+			continue
+		}
+
 		// Handle log messages automatically so flows do not
 		// need to all remember to do this.
 		if message.RequestId == constants.LOG_SINK {
@@ -563,16 +570,13 @@ func StoreResultInFlow(
 	flow_obj.FlowContext.TotalResults += 1
 	flow_obj.dirty = true
 
-	urn := fmt.Sprintf("%s/results", flow_obj.Urn)
+	urn := fmt.Sprintf("%s/results/%d", flow_obj.Urn, next_result_id)
 	data := make(map[string][]byte)
 	serialized_message, err := proto.Marshal(message)
 	if err != nil {
 		return errors.WithStack(err)
 	}
-
-	// We rely on the result id to be sequential.
-	predicate := fmt.Sprintf("%s/%d", constants.FLOW_RESULT, next_result_id)
-	data[predicate] = serialized_message
+	data[constants.FLOW_RESULT] = serialized_message
 
 	now := time.Now().UTC().UnixNano() / 1000
 	db, err := datastore.GetDB(config_obj)

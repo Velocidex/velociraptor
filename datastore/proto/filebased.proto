@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package proto;
+
+message Attribute {
+    string attribute = 1;
+    bytes data = 2;
+}
+
+message FileContent {
+    repeated Attribute attr = 1;
+}

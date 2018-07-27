@@ -74,7 +74,7 @@ func (self *Server) processVelociraptorMessages(
 	data := make(map[string][]byte)
 	data[constants.CLIENT_LAST_TIMESTAMP] = []byte(fmt.Sprintf("%d", now))
 
-	err := self.db.SetSubjectData(self.config, "aff4:/"+client_id, 0, data)
+	err := self.db.SetSubjectData(self.config, "aff4:/"+client_id+"/ping", 0, data)
 	if err != nil {
 		return err
 	}

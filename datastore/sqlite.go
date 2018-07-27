@@ -139,7 +139,8 @@ func (self *SqliteDataStore) GetClientTasks(
 	var result []*crypto_proto.GrrMessage
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	next_timestamp := self.clock.Now().Add(
-		time.Second*time.Duration(*config.Frontend_client_lease_time)).UTC().UnixNano() / 1000
+		time.Second*time.Duration(*config.Frontend_client_lease_time)).
+		UTC().UnixNano() / 1000
 
 	db_path := getDBPathForClient(*config.Datastore_location, client_id)
 	handle, err := self.getDB(db_path)
@@ -506,7 +507,6 @@ func (self *SqliteDataStore) SetIndex(
 	if err != nil {
 		return err
 	}
-	utils.Debug(db_path)
 	handle, err := self.getDB(db_path)
 	if err != nil {
 		return err
