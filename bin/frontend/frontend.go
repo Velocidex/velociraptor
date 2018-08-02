@@ -167,6 +167,7 @@ func control(server_obj *server.Server) http.Handler {
 		}
 
 		message_info, err := server_obj.Decrypt(req.Context(), body)
+		message_info.RemoteAddr = req.RemoteAddr
 
 		// Very few Unauthenticated client messages are valid
 		// - currently only enrolment requests.

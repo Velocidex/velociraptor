@@ -3,7 +3,7 @@
 goog.module('grrUi.core.utils');
 goog.module.declareLegacyNamespace();
 
-var debug = true;
+var debug = false;
 
 /**
  * Regex that matches client ids.

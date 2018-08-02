@@ -16,7 +16,6 @@ const {artifactModule} = goog.require('grrUi.artifact.artifact');
 const {clientModule} = goog.require('grrUi.client.client');
 const {configModule} = goog.require('grrUi.config.config');
 const {coreModule} = goog.require('grrUi.core.core');
-const {cronModule} = goog.require('grrUi.cron.cron');
 const {docsModule} = goog.require('grrUi.docs.docs');
 const {flowModule} = goog.require('grrUi.flow.flow');
 const {formsModule} = goog.require('grrUi.forms.forms');
@@ -26,7 +25,6 @@ const {huntModule} = goog.require('grrUi.hunt.hunt');
  * plugins implementation.
  */
 const {localModule} = goog.require('grrUi.local.local');
-const {outputPluginsModule} = goog.require('grrUi.outputPlugins.outputPlugins');
 const {routingModule} = goog.require('grrUi.routing.routing');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
 const {sidebarModule} = goog.require('grrUi.sidebar.sidebar');
@@ -43,13 +41,11 @@ exports.appControllerModule = angular.module('grrUi.appController', [
   clientModule.name,
   configModule.name,
   coreModule.name,
-  cronModule.name,
   docsModule.name,
   flowModule.name,
   formsModule.name,
   huntModule.name,
   localModule.name,
-  outputPluginsModule.name,
   routingModule.name,
   semanticModule.name,
   statsModule.name,

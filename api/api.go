@@ -152,8 +152,8 @@ func (self *ApiServer) GetClient(
 	utils.Debug(in)
 	api_client, err := GetApiClient(
 		self.config,
-		in.Query,
-		true, // Detailed
+		in.ClientId,
+		!in.Lightweight, // Detailed
 	)
 	if err != nil {
 		return nil, err
@@ -197,7 +197,7 @@ func (self *ApiServer) GetClientApprovalForUser(
 	in *api_proto.GetClientRequest) (*api_proto.ApprovalList, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
-		return getClientApprovalForUser(self.config, &md, in.Query), nil
+		return getClientApprovalForUser(self.config, &md, in.ClientId), nil
 	}
 	return nil, status.New(
 		codes.PermissionDenied, "Not authorized").Err()

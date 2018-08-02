@@ -40,33 +40,6 @@
 
         <grr-r-we-owned-button class="space-right"></grr-r-we-owned-button>
 
-        <div class="btn-group" data-toggle="buttons">
-          <label class="btn btn-default"
-                 ng-class="{'active': viewMode == 'list'}"
-                 ng-click="controller.setViewMode('list')">
-            <input type="radio" name="show-client-details" checked>
-            <i class="fa fa-list"></i> File list
-          </label>
-          <label class="btn btn-default"
-                 ng-class="{'active': viewMode == 'timeline'}"
-                 ng-click="controller.setViewMode('timeline')">
-            <input type="radio" name="show-client-details">
-            <i class="fa fa-history"></i> Timeline
-          </label>
-          <button name="timelineDropdown" class="btn btn-default dropdown-toggle"
-                  data-toggle="dropdown">
-            <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a name="downloadTimeline"
-                 ng-click="controller.downloadTimeline(); $event.preventDefault()"
-                 href="#">
-                Download timeline as CSV
-              </a>
-            </li>
-          </ul>
-        </div>
       </div>
 
     </div>

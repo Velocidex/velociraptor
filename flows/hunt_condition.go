@@ -137,12 +137,14 @@ func _FilterConditionServerSide(
 		return false, errors.New("Expected VQLResponse")
 	}
 
-	var rows []map[string]interface{}
-	err := json.Unmarshal([]byte(vql_response.Response), &rows)
+	// Make a stored query from the results of the first
+	// query. This can now be queries on again server side.
+	stored_query, err := _NewStoredQuery(vql_response)
 	if err != nil {
-		return false, errors.WithStack(err)
+		return false, err
 	}
-	stored_query := &_StoredQuery{rows: rows}
+
+	// The query is empty dont bother matching.
 	if len(stored_query.rows) == 0 {
 		return false, nil
 	}
@@ -158,10 +160,16 @@ func _FilterConditionServerSide(
 	}
 
 	// Run the server side query.
+	env := vfilter.NewDict().Set("rows", stored_query)
+	for _, item := range server_side_condition_query.Env {
+		env.Set(item.Key, item.Value)
+	}
+
+	scope := vfilter.NewScope().AppendVars(env)
+
 	rule_matched := false
-	scope := vfilter.NewScope().AppendVars(
-		vfilter.NewDict().Set("rows", stored_query))
 	for _, query := range server_side_condition_query.Query {
+		_ = query
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return false, err
@@ -196,7 +204,7 @@ func init() {
 }
 
 type _StoredQuery struct {
-	rows []map[string]interface{}
+	rows []*vfilter.Dict
 }
 
 func (self *_StoredQuery) Eval(ctx context.Context) <-chan vfilter.Row {
@@ -204,6 +212,7 @@ func (self *_StoredQuery) Eval(ctx context.Context) <-chan vfilter.Row {
 
 	go func() {
 		defer close(result)
+
 		for _, row := range self.rows {
 			result <- row
 		}
@@ -214,21 +223,100 @@ func (self *_StoredQuery) Eval(ctx context.Context) <-chan vfilter.Row {
 
 func (self *_StoredQuery) Columns() *[]string {
 	result := []string{}
-	if len(self.rows) > 1 {
-		for k, _ := range self.rows[0] {
+	if len(self.rows) >= 1 {
+		for k, _ := range *self.rows[0].ToDict() {
 			result = append(result, k)
 		}
 	}
 	return &result
 }
 
+func _NewStoredQuery(vql_response *actions_proto.VQLResponse) (*_StoredQuery, error) {
+	result := &_StoredQuery{}
+	var rows []map[string]interface{}
+	err := json.Unmarshal([]byte(vql_response.Response), &rows)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	for _, row := range rows {
+		item := vfilter.NewDict()
+		for k, v := range row {
+			item.Set(k, v)
+		}
+		result.rows = append(result.rows, item)
+	}
+
+	return result, nil
+}
+
+func _getDefaultCollectorArgs() *actions_proto.VQLCollectorArgs {
+	return &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				Name: "Collect default client info",
+				VQL: "SELECT OS, Architecture, Fqdn, Platform, " +
+					"config.Client_labels from info()",
+			},
+		},
+	}
+}
+
 func _CalculateFlowConditionQuery(in *api_proto.HuntCondition) (
 	*actions_proto.VQLCollectorArgs, error) {
 
-	return in.GetGenericCondition().FlowConditionQuery, nil
+	generic_condition := in.GetGenericCondition()
+	if generic_condition != nil {
+		return generic_condition.FlowConditionQuery, nil
+	}
+
+	return _getDefaultCollectorArgs(), nil
 }
 
 func _CalculateServerSideConditionQuery(in *api_proto.HuntCondition) (
 	*actions_proto.VQLCollectorArgs, error) {
-	return in.GetGenericCondition().ServerSideConditionQuery, nil
+	generic_condition := in.GetGenericCondition()
+	if generic_condition != nil {
+		return generic_condition.ServerSideConditionQuery, nil
+	}
+
+	os_condition := in.GetOs()
+	if os_condition != nil {
+		host_expr := ""
+		switch os_condition.Os {
+		case api_proto.HuntOsCondition_WINDOWS:
+			host_expr = "windows"
+		case api_proto.HuntOsCondition_LINUX:
+			host_expr = "linux"
+		case api_proto.HuntOsCondition_OSX:
+			host_expr = "darwin"
+		default:
+			host_expr = "."
+		}
+
+		result := &actions_proto.VQLCollectorArgs{
+			Env: []*actions_proto.VQLEnv{
+				&actions_proto.VQLEnv{
+					Key:   "_OS",
+					Value: host_expr,
+				},
+			},
+			Query: []*actions_proto.VQLRequest{
+				&actions_proto.VQLRequest{
+					Name: "Check OS match",
+					VQL:  "SELECT OS from rows where OS =~ _OS",
+				},
+			},
+		}
+
+		return result, nil
+	}
+
+	return &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				VQL: "SELECT * from rows",
+			},
+		},
+	}, nil
 }

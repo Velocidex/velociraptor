@@ -200,6 +200,7 @@ service API {
         };
     }
 
+    // Clients.
     rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
         option (google.api.http) = {
             get: "/api/v1/SearchClients",
@@ -208,7 +209,7 @@ service API {
 
     rpc GetClient(GetClientRequest) returns (ApiClient) {
         option (google.api.http) = {
-            get: "/api/v1/GetClient/{query}",
+            get: "/api/v1/GetClient/{client_id}",
         };
     }
 
@@ -226,7 +227,7 @@ service API {
 
     rpc GetClientApprovalForUser(GetClientRequest) returns (ApprovalList) {
         option (google.api.http) = {
-            get: "/api/v1/GetApprovals/{query}",
+            get: "/api/v1/GetApprovals/{client_id}",
         };
     }
 

@@ -1,7 +1,8 @@
 package api
 
 import (
-	errors "github.com/pkg/errors"
+	"net"
+	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -24,7 +25,7 @@ func GetApiClient(
 	client_info := &actions_proto.ClientInfo{}
 	err = db.GetSubject(config_obj, client_urn, client_info)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, err
 	}
 
 	if detailed {
@@ -49,5 +50,37 @@ func GetApiClient(
 		}
 	}
 
+	err = db.GetSubject(config_obj, client_urn+"/ping", client_info)
+	if err != nil {
+		return nil, err
+	}
+
+	result.LastSeenAt = client_info.Ping
+	result.LastIp = client_info.IpAddress
+
+	remote_address := strings.Split(result.LastIp, ":")[0]
+	if _is_ip_in_ranges(remote_address, config_obj.Frontend_internal_cidr) {
+		result.LastIpClass = api_proto.ApiClient_INTERNAL
+	} else if _is_ip_in_ranges(remote_address, config_obj.Frontend_internal_cidr) {
+		result.LastIpClass = api_proto.ApiClient_VPN
+	} else {
+		result.LastIpClass = api_proto.ApiClient_EXTERNAL
+	}
+
 	return result, nil
+}
+
+func _is_ip_in_ranges(remote string, ranges []string) bool {
+	for _, ip_range := range ranges {
+		_, ipNet, err := net.ParseCIDR(ip_range)
+		if err != nil {
+			return false
+		}
+
+		if ipNet.Contains(net.ParseIP(remote)) {
+			return true
+		}
+	}
+
+	return false
 }

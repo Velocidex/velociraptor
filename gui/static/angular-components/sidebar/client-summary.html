@@ -1,10 +1,10 @@
 <div>
   <div class="client-name">
-    <span ng-if="client.value.os_info.value.fqdn">
-      {$ client.value.os_info.value.fqdn.value $}
+    <span ng-if="client.os_info.fqdn">
+      {$ client.os_info.fqdn $}
     </span>
-    <span ng-if="!client.value.os_info.value.fqdn">
-      {$ client.value.client_id.value $}
+    <span ng-if="!client.os_info.fqdn">
+      {$ client.client_id $}
     </span>
   </div>
   <div class="approval-reason" ng-if="controller.approvalReason">
@@ -19,7 +19,7 @@
     <grr-periodic-refresh interval="1000">
       Status:
       <grr-client-status-icons client="client"></grr-client-status-icons>
-      {$ (client.value.last_seen_at.value | grrTimeSince) $}
+      {$ (client.last_seen_at | grrTimeSince) $}
     </grr-periodic-refresh>
   </div>
   <span ng-if="controller.crashTime != null" class="last-crash">
@@ -27,11 +27,11 @@
     {$ (controller.crashTime | grrTimeSince) $}
   </span>
   <div class="client-ip-info">
-    <img ng-if="controller.lastIP.status === 'UNKNOWN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
-    <img ng-if="controller.lastIP.status === 'INTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_internal.png">
-    <img ng-if="controller.lastIP.status === 'EXTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_external.png">
-    <img ng-if="controller.lastIP.status === 'VPN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
-    {$ controller.lastIP.info $}
+    <img ng-if="client.last_ip_class === 'UNKNOWN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
+    <img ng-if="client.last_ip_class === 'INTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_internal.png">
+    <img ng-if="client.last_ip_class === 'EXTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_external.png">
+    <img ng-if="client.last_ip_class === 'VPN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
+    {$ client.last_ip $}
   </div>
 
   <grr-client-warnings client="client"></grr-client-warnings>

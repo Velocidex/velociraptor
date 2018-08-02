@@ -85,10 +85,12 @@ type Config struct {
 	API_proxy_bind_address *string `yaml:"API.proxy_bind_address,omitempty"`
 	API_proxy_bind_port    *uint32 `yaml:"API.proxy_bind_port,omitempty"`
 
-	Frontend_bind_address *string  `yaml:"Frontend.bind_address,omitempty"`
-	Frontend_bind_port    *Integer `yaml:"Frontend.bind_port,omitempty"`
-	Frontend_certificate  *string  `yaml:"Frontend.certificate,omitempty"`
-	Frontend_private_key  *string  `yaml:"PrivateKeys.server_key,omitempty"`
+	Frontend_bind_address  *string     `yaml:"Frontend.bind_address,omitempty"`
+	Frontend_bind_port     *Integer    `yaml:"Frontend.bind_port,omitempty"`
+	Frontend_certificate   *string     `yaml:"Frontend.certificate,omitempty"`
+	Frontend_private_key   *string     `yaml:"PrivateKeys.server_key,omitempty"`
+	Frontend_internal_cidr StringArray `yaml:"Frontend.internal_cidr"`
+	Frontend_vpn_cidr      StringArray `yaml:"Frontend.vpn_cidr"`
 
 	// Time to lease client requests before they are retransmitted (in seconds).
 	Frontend_client_lease_time *uint32 `yaml:"Frontend.client_lease_time,omitempty"`
@@ -118,6 +120,9 @@ func GetDefaultConfig() *Config {
 		Frontend_bind_address:      proto.String(""),
 		Frontend_bind_port:         &bind_port,
 		Frontend_client_lease_time: proto.Uint32(600),
+		Frontend_internal_cidr: []string{
+			"127.0.0.1/12", "192.168.0.0/16",
+		},
 
 		API_bind_address:       proto.String("localhost"),
 		API_bind_port:          proto.Uint32(8888),

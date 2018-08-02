@@ -46,6 +46,21 @@ message ApiClient {
             type: "RDFDatetime",
             description: "Last crash time."
         }];
+
+    string last_ip = 16 [(sem_type) = {
+            description: "The last seen remote API address"
+        }];
+
+
+    enum IPAddressClass {
+        UNKNOWN = 0;
+        INTERNAL = 1;
+        EXTERNAL = 2;
+        VPN = 3;
+    }
+
+    IPAddressClass last_ip_class = 17;
+
     repeated User users = 13;
 
     repeated Interface interfaces = 14;
@@ -69,5 +84,9 @@ message SearchClientsResponse {
 }
 
 message GetClientRequest {
-    string query = 1;
+    string client_id = 1;
+
+    bool lightweight = 2 [(sem_type) = {
+            description: "If set only collect some information.",
+        }];
 }

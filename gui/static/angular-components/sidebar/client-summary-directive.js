@@ -28,11 +28,7 @@ const ClientSummaryController =
   /** @type {string} */
   this.approvalReason;
 
-  /** @type {Object} */
-  this.lastIP;
-
-  /** @type {?number} */
-  this.crashTime;
+  this.clientInfo;
 
   this.scope_.$watch('client', this.onClientChange_.bind(this));
 };
@@ -60,10 +56,11 @@ ClientSummaryController.prototype.onClientChange_ = function() {
   }
 
   var clientId = this.scope_['client']['client_id'];
-  var lastIPUrl = 'clients/' + clientId + '/last-ip';
-  this.grrApiService_.get(lastIPUrl).then(function(response) {
-    this.lastIP = response.data;
-  }.bind(this));
+  var clientInfoUrl = 'v1/GetClient/' + clientId;
+  this.grrApiService_.get(clientInfoUrl, {'lightweight': true}).then(
+    function(response) {
+      this.clientInfo = response.data;
+    }.bind(this));
 
   var approvalUrl = 'v1/GetApprovals/' + clientId;
   this.grrApiService_.get(approvalUrl).then(function(response) {

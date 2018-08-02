@@ -8,8 +8,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"html/template"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 	"path"
 	"time"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -88,13 +86,6 @@ func GetAPIHandler(
 
 	reverse_proxy_mux := http.NewServeMux()
 	reverse_proxy_mux.Handle("/api/v1/", grpc_proxy_mux)
-
-	reverse_url, err := url.Parse("http://localhost:8000/")
-	if err != nil {
-		return nil, err
-	}
-	reverse_proxy_mux.Handle("/api/", httputil.NewSingleHostReverseProxy(
-		reverse_url))
 
 	return reverse_proxy_mux, nil
 }

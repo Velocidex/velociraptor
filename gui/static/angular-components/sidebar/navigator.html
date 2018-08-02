@@ -33,26 +33,6 @@
           disabled="!controller.uiTraits.manage_client_flows_nav_item_enabled || !controller.hasClientAccess">
         Manage launched flows
       </li>
-
-      <li id="HostAdvanced" grr-nav-dropdown title="Advanced">
-        <ul class="nav nav-list">
-          <li grr-nav-link state="client.crashes"
-              params="{clientId: controller.clientId}"
-              disabled="!controller.hasClientAccess">
-            Crashes
-          </li>
-          <li grr-nav-link state="client.debugRequests"
-              params="{clientId: controller.clientId}"
-              disabled="!controller.hasClientAccess">
-            Debug Client Requests
-          </li>
-          <li grr-nav-link state="client.loadStats"
-              params="{clientId: controller.clientId}"
-              disabled="!controller.hasClientAccess">
-            Client Load Stats
-          </li>
-        </ul>
-      </li>
     </ul>
   </section>
 
@@ -61,26 +41,9 @@
     <h1>Management</h1>
 
     <ul class="nav nav-list">
-      <li grr-nav-link state="crons"
-          disabled="!controller.uiTraits.cron_jobs_nav_item_enabled">
-        Cron Job Viewer
-      </li>
       <li grr-nav-link state="hunts"
           disabled="!controller.uiTraits.hunt_manager_nav_item_enabled">
         Hunt Manager
-      </li>
-      <li grr-nav-link state="stats"
-          disabled="!controller.uiTraits.show_statistics_nav_item_enabled">
-        Show Statistics
-      </li>
-
-      <li id="ManagementAdvanced" grr-nav-dropdown title="Advanced">
-        <ul class="nav nav-list">
-          <li grr-nav-link state="serverLoad"
-              disabled="!controller.uiTraits.server_load_nav_item_enabled">
-            Server Load
-          </li>
-        </ul>
       </li>
     </ul>
   </section>
@@ -90,10 +53,6 @@
     <h1>Configuration</h1>
 
     <ul class="nav nav-list">
-      <li grr-nav-link state="manageBinaries"
-          disabled="!controller.uiTraits.manage_binaries_nav_item_enabled">
-        Manage Binaries
-      </li>
       <li grr-nav-link state="config"
           disabled="!controller.uiTraits.settings_nav_item_enabled">
         Settings

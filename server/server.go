@@ -67,20 +67,6 @@ func (self *Server) processVelociraptorMessages(
 
 	// Remove outstanding tasks.
 	self.db.RemoveTasksFromClientQueue(self.config, client_id, tasks_to_remove)
-
-	// Record some stats about the client.
-	client_info := &actions_proto.ClientInfo{
-		Ping: uint64(time.Now().UTC().UnixNano() / 1000),
-	}
-
-	return self.db.SetSubject(self.config, "aff4:/"+client_id+"/ping", client_info)
-}
-
-// TODO: Not implemented yet.
-func (self *Server) processGRRMessages(
-	ctx context.Context,
-	client_id string,
-	messages []*crypto_proto.GrrMessage) error {
 	return nil
 }
 
@@ -151,8 +137,13 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 		return nil, err
 	}
 
-	err = self.processGRRMessages(
-		ctx, message_info.Source, grr_messages)
+	// Record some stats about the client.
+	client_info := &actions_proto.ClientInfo{
+		Ping:      uint64(time.Now().UTC().UnixNano() / 1000),
+		IpAddress: message_info.RemoteAddr,
+	}
+
+	err = self.db.SetSubject(self.config, "aff4:/"+message_info.Source+"/ping", client_info)
 	if err != nil {
 		return nil, err
 	}

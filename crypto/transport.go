@@ -276,6 +276,7 @@ type MessageInfo struct {
 	Raw           []byte
 	Authenticated bool
 	Source        string
+	RemoteAddr    string
 }
 
 /* Verify the HMAC protecting the cipher properties blob.
