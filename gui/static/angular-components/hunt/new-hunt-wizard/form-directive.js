@@ -5,14 +5,7 @@ goog.module.declareLegacyNamespace();
 
 const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
 const {ReflectionService} = goog.require('grrUi.core.reflectionService');
-
-
-/** @const {string} */
-exports.DEFAULT_PLUGIN_URL = '/config/' +
-    'AdminUI.new_hunt_wizard.default_output_plugin';
-var DEFAULT_PLUGIN_URL = exports.DEFAULT_PLUGIN_URL;
-
-
+const {debug} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for FormDirective.
@@ -37,70 +30,17 @@ const FormController =
   /** @private {!Object<string, Object>} */
   this.descriptors_ = {};
 
-  /** @private {?string} */
-  this.defaultOutputPluginName;
-
   /** @type {boolean} */
-  this.configureFlowPageHasErrors;
+      this.configureFlowPageHasErrors;
 
-  this.grrApiService_.get(DEFAULT_PLUGIN_URL).then(function(response) {
-    if (angular.isDefined(response['data']['value'])) {
-      this.defaultOutputPluginName = response['data']['value']['value'];
-    }
-
-    return this.grrReflectionService_.getRDFValueDescriptor(
-        'ApiCreateHuntArgs', true);
-  }.bind(this)).then(function(descriptors) {
-    angular.extend(this.descriptors_, descriptors);
-
-    this.scope_.$watch('createHuntArgs',
-                       this.onCreateHuntArgsChange_.bind(this));
-  }.bind(this));
+      if (angular.isUndefined(this.scope_['createHuntArgs'])) {
+        this.scope_['createHuntArgs'] = {
+          start_request: {},
+          condition: {},
+        };
+      }
 };
 
-/**
- * Called when 'genericHuntArgs' binding changes.
- *
- * @param {Object} newValue New binding value.
- * @private
- */
-FormController.prototype.onCreateHuntArgsChange_ = function(newValue) {
-  if (angular.isUndefined(newValue)) {
-    newValue = this.scope_['createHuntArgs'] =
-        angular.copy(this.descriptors_['ApiCreateHuntArgs']['default']);
-  }
-
-  if (angular.isUndefined(newValue['value']['flow_name'])) {
-    newValue['value']['flow_name'] =
-        angular.copy(this.descriptors_['RDFString']['default']);
-  }
-
-  var hra = newValue['value']['hunt_runner_args'];
-  if (angular.isUndefined(hra)) {
-    hra = newValue['value']['hunt_runner_args'] =
-        angular.copy(this.descriptors_['HuntRunnerArgs']['default']);
-  }
-
-  if (angular.isUndefined(hra['value']['output_plugins'])) {
-    if (this.defaultOutputPluginName) {
-      var defaultPluginDescriptor = angular.copy(
-          this.descriptors_['OutputPluginDescriptor']['default']);
-      defaultPluginDescriptor['value']['plugin_name'] = angular.copy(
-          this.descriptors_['RDFString']['default']);
-      defaultPluginDescriptor['value']['plugin_name']['value'] =
-          this.defaultOutputPluginName;
-
-      hra['value']['output_plugins'] = [defaultPluginDescriptor];
-    } else if (angular.isUndefined(newValue['value']['output_plugins'])) {
-      hra['value']['output_plugins'] = [];
-    }
-  }
-
-  if (angular.isUndefined(hra['value']['client_rule_set'])) {
-    hra['value']['client_rule_set'] = angular.copy(
-        this.descriptors_['ForemanClientRuleSet']['default']);
-  }
-};
 
 /**
  * Sends hunt creation request to the server.
@@ -109,8 +49,8 @@ FormController.prototype.onCreateHuntArgsChange_ = function(newValue) {
  */
 FormController.prototype.sendRequest = function() {
   this.grrApiService_.post(
-      '/hunts',
-      /** @type {Object} */ (stripTypeInfo(this.scope_['createHuntArgs'])))
+      'v1/CreateHunt',
+      /** @type {Object} */ this.scope_['createHuntArgs'])
   .then(function resolve(response) {
     this.serverResponse = response;
   }.bind(this), function reject(response) {
@@ -130,7 +70,7 @@ FormController.prototype.sendRequest = function() {
 FormController.prototype.resolve = function() {
   var onResolve = this.scope_['onResolve'];
   if (onResolve && this.serverResponse) {
-    var huntId = this.serverResponse['data']['value']['hunt_id']['value'];
+    var huntId = this.serverResponse['data']['flow_id'];
     onResolve({huntId: huntId});
   }
 };

@@ -135,7 +135,7 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 		}
 		if field.Type != nil &&
 			*field.Type == descriptor_proto.FieldDescriptorProto_TYPE_ENUM {
-			describe_enum(field, field_descriptor)
+			describe_enum(field, result, seen, field_descriptor)
 		}
 
 		if field.TypeName != nil {
@@ -149,23 +149,40 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 func describe_enum(
 	field *descriptor_proto.FieldDescriptorProto,
+	result *api_proto.Types,
+	seen map[string]bool,
 	descriptor *api_proto.FieldDescriptor) {
 	if field.TypeName == nil {
 		return
 	}
 	type_name := strings.TrimPrefix(*field.TypeName, ".proto.")
 	type_name = strings.Replace(type_name, ".", "_", -1)
-	type_name = "proto." + type_name
-	message_type := proto.EnumValueMap(type_name)
+	full_type_name := "proto." + type_name
+	message_type := proto.EnumValueMap(full_type_name)
 	if message_type != nil {
+		descriptor.Type = type_name
+
+		type_desc := &api_proto.TypeDescriptor{
+			Name: type_name,
+			Kind: "enum",
+		}
+
 		for name, value := range message_type {
-			descriptor.AllowedValues = append(
-				descriptor.AllowedValues,
+			type_desc.AllowedValues = append(
+				type_desc.AllowedValues,
 				&api_proto.EnumValue{Name: name, Value: value})
 		}
 
-		descriptor.Type = "EnumNamedValue"
-		descriptor.Default = "\"" + descriptor.AllowedValues[0].Name + "\""
+		type_desc.Name = type_name
+		type_desc.Default = "\"" + type_desc.AllowedValues[0].Name + "\""
+
+		// Prevent loops.
+		if _, pres := seen[type_name]; pres {
+			return
+		}
+		descriptor.Default = type_desc.Default
+
+		result.Items = append(result.Items, type_desc)
 	}
 }
 

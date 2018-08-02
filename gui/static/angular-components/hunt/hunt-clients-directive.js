@@ -20,7 +20,8 @@ const HuntClientsController = function($scope) {
   this.huntClientsUrl;
 
   /** @export {string} */
-  this.clientType = 'completed';
+  this.clientType = 'COMPLETED';
+  this.huntClientsParams = {};
 
   this.scope_.$watchGroup(['huntId', 'controller.clientType'],
                           this.onHuntIdOrClientTypeChange_.bind(this));
@@ -41,7 +42,8 @@ HuntClientsController.prototype.onHuntIdOrClientTypeChange_ = function() {
     return;
   }
 
-  this.huntClientsUrl = '/hunts/' + huntId + '/clients/' + this.clientType;
+  this.huntClientsParams = {'hunt_id': huntId, 'type': this.clientType};
+  this.huntClientsUrl = 'v1/ListHuntClients';
 };
 
 

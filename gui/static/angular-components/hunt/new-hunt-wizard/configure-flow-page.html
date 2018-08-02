@@ -8,9 +8,10 @@
 
     <div class="padded">
       <div ng-if="flowArguments != null">
-        <legend>{$ flowName $}</legend>
-
-        <grr-form-value value="flowArguments">
+        <legend>{$ controller.flowDescriptor.name $}</legend>
+        <grr-form-value value="flowArguments" type=".google.protobuf.Any"></grr-form-value>
+        <hr>
+        <grr-form-value value="flowStartRequest" type="FlowRunnerArgs">
         </grr-form-value>
 
         <br>

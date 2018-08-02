@@ -34,7 +34,6 @@ message FlowContext {
     uint64 network_bytes_sent = 7;
     uint64 next_outbound_id = 8;
     uint64 next_processed_request = 9;
-    //  repeated OutputPluginState output_plugins_states = 10;
     uint64 outstanding_requests = 11;
 
     uint64 total_results = 18 [(sem_type) = {
@@ -77,6 +76,7 @@ message FlowContext {
 message FlowRunnerArgs {
     string creator = 1 [(sem_type) = {
             description: "The entity that created this flow. This can be a username or hunt id";
+            label: HIDDEN,
         }];
 
     bool notify_to_user = 2 [(sem_type) = {
@@ -88,18 +88,6 @@ message FlowRunnerArgs {
    string client_id = 5 [(sem_type) = {
       type: "ClientURN",
       description: "The client id this flow operates on.",
-      label: HIDDEN,
-    }];
-
-   string queue = 6 [(sem_type) = {
-      type: "RDFURN",
-      description: "The queue to use for the flow.",
-      label: HIDDEN,
-      default: "F",
-    }];
-
-   string event_id = 7 [(sem_type) = {
-      description: "A logging event id for issuing further logs."
       label: HIDDEN,
     }];
 
@@ -122,18 +110,8 @@ message FlowRunnerArgs {
 
    uint64 start_time = 15 [(sem_type) = {
       type: "RDFDatetime",
-      description: "Do not process this flow until this time. "
-      "(Implies the flow is run asyncronously.).",
-      label: ADVANCED
-    }];
-
-   bool require_fastpoll = 19 [(sem_type) = {
-      description: "This value is passed to the client during CallClient, and "
-                   "by default will cause the client to enter fastpoll after"
-                   "processing the message. Users shouldn't modify this "
-                   "setting.",
-      label: ADVANCED,
-      default: "true",
+      description: "Do not process this flow until this time. ",
+      label: HIDDEN,
     }];
 
     google.protobuf.Any args = 24 [(sem_type) = {
@@ -151,6 +129,8 @@ message VelociraptorFlowState {
     google.protobuf.Any payload = 2;
 }
 
+// Used to describe a flow. The UI uses this information to work out
+// how to render the flow and create its form.
 message FlowDescriptor {
     string name = 1 [(sem_type) = {
             description: "Flow name as registered in GRR."

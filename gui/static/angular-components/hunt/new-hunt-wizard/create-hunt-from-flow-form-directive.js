@@ -71,16 +71,14 @@ CreateHuntFromFlowFormController.prototype.onFlowIdClientIdChange_ = function(
  */
 CreateHuntFromFlowFormController.prototype.onFlowDataFetched_ = function() {
   var huntArgs = angular.copy(this.descriptors_['ApiCreateHuntArgs']['default']);
-  huntArgs['value']['flow_name'] = angular.copy(
-      this.flow_['value']['name']);
-  huntArgs['value']['flow_args'] = angular.copy(this.flow_['value']['args']);
+  huntArgs['flow_name'] = angular.copy(
+      this.flow_['name']);
+  huntArgs['flow_args'] = angular.copy(this.flow_['args']);
 
-  huntArgs['value']['original_flow'] =
+  huntArgs['original_flow'] =
       angular.copy(this.descriptors_['FlowReference']['default']);
-  huntArgs['value']['original_flow']['value']['flow_id'] =
-      this.flow_['value']['flow_id']['value'];
-  huntArgs['value']['original_flow']['value']['client_id'] =
-      this.scope_['clientId'];
+  huntArgs['original_flow']['flow_id'] = this.flow_['flow_id'];
+  huntArgs['value']['original_flow']['client_id'] = this.scope_['clientId'];
 
   this.createHuntArgs = huntArgs;
 };

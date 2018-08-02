@@ -111,12 +111,22 @@ ReflectionService.prototype.getRDFValueDescriptorFromCache_ = function(
  *                               opt_withDeps is false, it will just return
  *                               a requested descriptor.
  */
+// FIXME: Remove with deps option.
 ReflectionService.prototype.getRDFValueDescriptor = function(
-    valueType, opt_withDeps) {
+  valueType, opt_withDeps, value) {
   var deferred = this.q_.defer();
 
+  var type = valueType;
+  if (type == '.google.protobuf.Any') {
+    type = value['@type'];
+    var prefix = "type.googleapis.com/proto.";
+    if (type.startsWith(prefix)) {
+      type = type.slice(prefix.length);
+    }
+  }
+
   if (angular.isDefined(this.descriptorsCache_)) {
-    var result = this.getRDFValueDescriptorFromCache_(valueType, opt_withDeps);
+    var result = this.getRDFValueDescriptorFromCache_(type, opt_withDeps);
     deferred.resolve(result);
     return deferred.promise;
   } else {
@@ -131,7 +141,7 @@ ReflectionService.prototype.getRDFValueDescriptor = function(
         return this.processRequestsQueue_();
       }.bind(this));
     }
-    this.requestsQueue_.push([deferred, valueType, opt_withDeps]);
+    this.requestsQueue_.push([deferred, type, opt_withDeps]);
     return deferred.promise;
   }
 };

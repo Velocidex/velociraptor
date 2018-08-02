@@ -11,69 +11,59 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $scope
  * @ngInject
  */
-const SemanticProtoUnionFormController = function($scope) {
+const SemanticProtoUnionFormController = function(
+  $scope, $attrs, grrReflectionService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
   /** @type {Object|undefined} */
   this.unionField;
 
+  this.cache = {};
+
+  /** @private {!grrUi.core.reflectionService.ReflectionService} */
+  this.grrReflectionService_ = grrReflectionService;
+
+  this.valueDescriptor;
+
   $scope.$watch('controller.unionField',
                 this.onUnionFieldChange_.bind(this));
-//  $scope.$watch('value[controller.unionField.name]',
-//                this.onUnionFieldValueChange_.bind(this));
-};
 
+  if (angular.isDefined(this.scope_.value)) {
+    var self = this;
+    angular.forEach(this.scope_.field['fields'], function(field) {
+      if (angular.isDefined(self.scope_.value[field['name']])) {
+        self.unionField = field;
+      };
+    });
+  }
+
+};
 
 SemanticProtoUnionFormController.prototype.onUnionFieldChange_ = function(
   newValue, oldValue) {
   var value = this.scope_.value;
-  var self = this;
 
-  if (angular.isDefined(newValue)) {
-    var existing_field = this.scope_.value[newValue.name] || {};
-
-    Object.keys(value).forEach(function(key) { delete value[key]; });
-    if (angular.isUndefined(value[newValue.name])) {
-      value[newValue.name] = existing_field;
-    }
-    self.unionField = newValue;
-  } else if (angular.isDefined(value)) {
-      angular.forEach(self.scope_.field['fields'], function(field) {
-        if (angular.isDefined(value[field.name] && angular.isUndefined(self.unionField))) {
-          self.unionField = field;
-        }
-      });
-  };
-};
-
-/**
-* Handles changes of the union field value.
-*
-* @param {?string} newValue
-* @param {?string} oldValue
-* @private
-*/
-SemanticProtoUnionFormController.prototype.onUnionFieldValueChange_ = function(
-    newValue, oldValue) {
-  if (angular.isDefined(newValue)) {
-    if (angular.isDefined(oldValue) &&
-        oldValue !== newValue) {
-      var unionPart = this.scope_['value'][this.unionFieldValue];
-
-      if (angular.isObject(unionPart)) {
-        // We have to make sure that we replace the object at
-        // value.value[controller.unionFieldValue]
-        unionPart['value'] = {};
-        this.scope_['value'][this.unionFieldValue] =
-            angular.copy(unionPart);
-      }
-    }
-
-    this.unionFieldValue = newValue.toLowerCase();
-  } else {
-    this.unionFieldValue = undefined;
+  if (angular.isUndefined(newValue)) {
+    return;
   }
+
+  var name = newValue.name;
+
+  var existing_field = this.cache[name];
+  if (angular.isUndefined(existing_field)) {
+    if (angular.isDefined(newValue['default'])) {
+      existing_field = JSON.parse(newValue.default);
+    } else {
+      existing_field = {};
+    }
+  }
+
+  Object.keys(value).forEach(function(key) { delete value[key]; });
+  value[name] = existing_field;
+  this.cache[newValue.name] = existing_field;
+
+  self.unionField = newValue;
 };
 
 

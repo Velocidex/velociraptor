@@ -16,6 +16,7 @@ exports.StatusPageDirective = function() {
   return {
     scope: {
       response: '=',
+      createHuntArgs: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +

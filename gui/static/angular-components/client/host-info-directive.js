@@ -43,13 +43,7 @@ const HostInfoController = function(
   this.grrDialogService_ = grrDialogService;
 
   /** @type {string} */
-  this.clientVersionUrl;
-
-  /** @type {string} */
   this.clientId;
-
-  /** @type {?number} */
-  this.clientVersion;
 
   /** @export {Object} */
   this.client;
@@ -72,8 +66,6 @@ const HostInfoController = function(
       this.onClientIdChange_.bind(this));
   this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
 
-  this.scope_.$watch('controller.clientVersion',
-      this.onClientVersionChange_.bind(this));
   // TODO(user): use grrApiService.poll for polling.
   this.scope_.$on('$destroy',
       this.stopMonitorInterrogateOperation_.bind(this));
@@ -90,7 +82,6 @@ const HostInfoController = function(
 HostInfoController.prototype.onClientIdChange_ = function(clientId) {
   if (angular.isDefined(clientId)) {
     this.clientId = clientId;
-    this.clientVersionUrl = '/clients/' + clientId + '/version-times';
     this.fetchClientDetails_();
   }
 };
@@ -120,9 +111,6 @@ HostInfoController.prototype.onClientVersionChange_ = function(newValue) {
 HostInfoController.prototype.fetchClientDetails_ = function() {
   var url = '/v1/GetClient/' + this.clientId;
   var params = {details: true};
-  if (this.clientVersion) {
-    params['timestamp'] = this.clientVersion;
-  }
 
   this.fetchDetailsRequestId += 1;
   var requestId = this.fetchDetailsRequestId;
@@ -136,7 +124,6 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
     }
 
     this.client = response.data;
-    this.clientVersion = response.data['age'];
   }.bind(this));
 };
 
@@ -155,11 +142,14 @@ HostInfoController.prototype.requestApproval = function() {
  * @export
  */
 HostInfoController.prototype.interrogate = function() {
-  var url = '/clients/' + this.clientId + '/actions/interrogate';
+  var url = '/v1/LaunchFlow';
+  var params ={'client_id': this.clientId,
+               'flow_name': 'VInterrogate',
+               'args': {'@type': 'type.googleapis.com/proto.VInterrogateArgs'}};
 
-  this.grrApiService_.post(url).then(
+  this.grrApiService_.post(url, params).then(
       function success(response) {
-        this.interrogateOperationId = response['data']['operation_id'];
+        this.interrogateOperationId = response['data']['flow_id'];
         this.monitorInterrogateOperation_();
       }.bind(this),
       function failure(response) {
@@ -184,14 +174,14 @@ HostInfoController.prototype.monitorInterrogateOperation_ = function() {
  * @private
  */
 HostInfoController.prototype.pollInterrogateOperationState_ = function() {
-  var url = 'clients/' + this.clientId + '/actions/interrogate/' + this.interrogateOperationId;
+  var url = 'v1/GetFlowDetails/' + this.clientId;
+  var param = {'flow_id': this.interrogateOperationId};
 
-  this.grrApiService_.get(url).then(
+  this.grrApiService_.get(url, param).then(
     function success(response) {
-      if (response['data']['state'] === 'FINISHED') {
+      if (response['data']['context']['state'] != 'RUNNING') {
         this.stopMonitorInterrogateOperation_();
 
-        this.clientVersion = null; // Newest.
         this.fetchClientDetails_();
       }
     }.bind(this),
@@ -208,25 +198,6 @@ HostInfoController.prototype.pollInterrogateOperationState_ = function() {
 HostInfoController.prototype.stopMonitorInterrogateOperation_ = function() {
   this.interrogateOperationId = null;
   this.interval_.cancel(this.interrogateOperationInterval_);
-};
-
-/**
- * Handles clicks on full details history buttons.
- *
- * @param {string} fieldPath Path to a value field of interest.
- * @export
- */
-HostInfoController.prototype.showHistoryDialog = function(
-    fieldPath) {
-  this.grrDialogService_.openDirectiveDialog(
-      'grrHostHistoryDialog',
-      {
-        clientId: this.clientId,
-        fieldPath: fieldPath
-      },
-      {
-        windowClass: 'high-modal'
-      });
 };
 
 /**

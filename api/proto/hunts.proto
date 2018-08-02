@@ -8,6 +8,54 @@ import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 package proto;
 
 
+message HuntConditionGeneric {
+    VQLCollectorArgs flow_condition_query = 4 [(sem_type) = {
+            description: "A VQL query to run in order to collect information for determining if the hunt applies to this client.",
+            friendly_name: "Client Side Condition",
+        }];
+    VQLCollectorArgs server_side_condition_query = 5 [(sem_type) = {
+            description: "A VQL query which runs server side on the results of the flow_condition_query. If any rows are returned then the condition is deemed fulfilled and the hunt will be scheduled."
+            friendly_name: "Server Side Condition",
+        }];
+}
+
+message HuntLabelCondition {
+    repeated string label = 1;
+}
+
+message HuntOsCondition {
+    enum OS {
+        ALL = 0;
+        WINDOWS = 1;
+        LINUX = 2;
+        OSX = 3;
+    }
+
+    OS os = 1;
+}
+
+message HuntCondition {
+    option (semantic) = {
+        description: "The condition to match hosts for this hunt.",
+    };
+
+    oneof union_field {
+        HuntConditionGeneric generic_condition = 1 [(sem_type) = {
+                friendly_name: "Generic Condition",
+                default: '{"flow_condition_query": {"Query": [{"Name": "Collect default client info", "VQL": "SELECT OS, Architecture, Fqdn, Platform, config.Client_labels from info()"}]}, "server_side_condition_query": {"Query": [{"Name": "Select client by info", "VQL": "SELECT * from rows where Fqdn =~ \'.\'"}]}}',
+            }];
+
+        HuntLabelCondition labels = 2 [(sem_type) = {
+                friendly_name: "Match by label",
+            }];
+
+        HuntOsCondition os = 3 [(sem_type) = {
+                friendly_name: "Operating System",
+            }];
+    }
+}
+
+
 message Hunt {
     string hunt_id = 1 [(sem_type) = {
             friendly_name: "Hunt ID",
@@ -31,15 +79,10 @@ message Hunt {
             description: "Launch this flow on the client if the condition is true",
             friendly_name: "Launch Flow",
         }];
-    VQLCollectorArgs flow_condition_query = 4 [(sem_type) = {
-            description: "A VQL query to run in order to collect information for determining if the hunt applies to this client.",
-            friendly_name: "Client Side Condition",
-            default: '{"Query": [{"VQL": "SELECT OS, Architecture, Fqdn, Platform, config.Client_labels from info()"}]}',
-        }];
-    VQLCollectorArgs server_side_condition_query = 5 [(sem_type) = {
-            description: "A VQL query which runs server side on the results of the flow_condition_query. If any rows are returned then the condition is deemed fulfilled and the hunt will be scheduled."
-            friendly_name: "Server Side Condition",
-            default: '{"Query": [{"VQL": "SELECT * from rows"}]}',
+
+    HuntCondition condition = 4 [(sem_type) = {
+            description: "The condition that must be satisfied for the hunt to be scheduled.",
+            friendly_name: "Hunt Condition",
         }];
 
     uint64 client_limit = 6 [(sem_type) = {
@@ -137,4 +180,21 @@ message HuntResults {
 
 message ListHuntsResponse {
     repeated Hunt items = 1;
+}
+
+message ListHuntClientsRequest {
+    enum Type {
+        PENDING = 0 [(description) = "Clients that matched the hunt condition and are waiting to be scheduled."];
+        SCHEDULED = 1 [(description) = "Clients scheduled with flows in progress"];
+        COMPLETED = 2 [(description) = "Clients with completed flows"];
+        RESULTS = 3 [(description) = "Client with non empty results"];
+    }
+
+    Type type = 1 [(sem_type) = {
+            description: "Where type of clients to display";
+        }];
+
+    string hunt_id = 2;
+    uint64 offset = 3;
+    uint64 count = 4;
 }

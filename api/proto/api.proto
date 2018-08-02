@@ -27,8 +27,6 @@ message FieldDescriptor {
     string doc = 5;
     repeated string labels = 6;
     string default = 7;
-
-    repeated EnumValue allowed_values = 8;
 }
 
 message EnumValue {
@@ -53,6 +51,8 @@ message TypeDescriptor {
     string default = 6 [(sem_type) = {
             description: "The json encoded default value for this type."
         }];
+
+    repeated EnumValue allowed_values = 8;
 }
 
 message Types {
@@ -191,6 +191,12 @@ service API {
     rpc GetHuntResults(GetHuntResultsRequest) returns (ApiFlowResultDetails) {
         option (google.api.http) = {
             get: "/api/v1/GetHuntResults",
+        };
+    }
+
+    rpc ListHuntClients(ListHuntClientsRequest) returns (HuntResults) {
+        option (google.api.http) = {
+            get: "/api/v1/ListHuntClients",
         };
     }
 

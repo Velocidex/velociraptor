@@ -107,6 +107,17 @@ func (self *ApiServer) GetHuntResults(
 	return result, nil
 }
 
+func (self *ApiServer) ListHuntClients(
+	ctx context.Context,
+	in *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
+	utils.Debug(in)
+	result, err := flows.ListHuntClients(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {

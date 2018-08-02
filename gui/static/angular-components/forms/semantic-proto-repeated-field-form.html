@@ -1,7 +1,7 @@
-<div ng-if="controller.hasCustomTemplate === false">
+<div>
   <div class="form-group">
     <label class="control-label" title="{$ field.doc $}">
-      {$ field.friendly_name || field.name $}
+      {$  field.friendly_name || field.name $}
       <a ng-if="field.context_help_url"
          ng-href="/help/{$ field.context_help_url $}" target="_blank">
         <i class="glyphicon glyphicon-question-sign"></i>
@@ -21,35 +21,11 @@
             ng-click="controller.removeItem($index)">&times;</button>
     <div class="controls">
       <div class="form-group">
-        <grr-form-value value="controller.scope_.value[$index]" metadata="field"
+        <grr-form-value value="controller.scope_.value[$index]"
+                        default="field.default"
                         type="{$ field.type $}"
                         ></grr-form-value>
       </div>
     </div>
-  </div>
-</div>
-
-<div ng-show="controller.hasCustomTemplate === true && !controller.hideCustomTemplateLabel">
-  <div class="form-group">
-    <label class="control-label" title="{$ field.doc $}">
-      {$ field.friendly_name || field.name $}
-      <a ng-if="field.context_help_url"
-         ng-href="/help/{$ field.context_help_url $}" target="_blank">
-        <i class="glyphicon glyphicon-question-sign"></i>
-      </a>
-    </label>
-  </div>
-
-  <div class="controls">
-    <div class="form-group" name="custom-template">
-      <!-- custom template will be inserted here if it's available -->
-    </div>
-  </div>
-</div>
-
-<div ng-show="controller.hasCustomTemplate === true && controller.hideCustomTemplateLabel">
-  <div class="form-group" name="custom-template-without-label">
-    <!-- custom template occupying the full form row (without a standard form label)
-         will be inserted here if it's available -->
   </div>
 </div>

@@ -27,7 +27,6 @@ const {SemanticDiffAnnotatedProtoDirective} = goog.require('grrUi.semantic.seman
 const {SemanticProtoDirective} = goog.require('grrUi.semantic.semanticProtoDirective');
 const {SemanticProtosDiffDirective} = goog.require('grrUi.semantic.semanticProtosDiffDirective');
 const {SemanticRegistryService} = goog.require('grrUi.core.semanticRegistryService');
-const {SemanticVersionedProtoDirective} = goog.require('grrUi.semantic.semanticVersionedProtoDirective');
 const {StatEntryDirective} = goog.require('grrUi.semantic.statEntryDirective');
 const {StatExtFlagsLinuxDirective} = goog.require('grrUi.semantic.statExtFlagsLinuxDirective');
 const {StatExtFlagsOsxDirective} = goog.require('grrUi.semantic.statExtFlagsOsxDirective');
@@ -102,9 +101,6 @@ exports.semanticModule.directive(
     SemanticValueDirective.directive_name, SemanticValueDirective);
 exports.semanticModule.directive(
     SemanticProtosDiffDirective.directive_name, SemanticProtosDiffDirective);
-exports.semanticModule.directive(
-    SemanticVersionedProtoDirective.directive_name,
-    SemanticVersionedProtoDirective);
 exports.semanticModule.directive(
     StatEntryDirective.directive_name, StatEntryDirective);
 exports.semanticModule.directive(

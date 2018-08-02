@@ -3,7 +3,7 @@
 goog.module('grrUi.core.utils');
 goog.module.declareLegacyNamespace();
 
-
+var debug = true;
 
 /**
  * Regex that matches client ids.
@@ -100,4 +100,12 @@ exports.stripAff4Prefix = function(input) {
 exports.getLastPathComponent = function(input) {
   var components = input.split('/');
   return components[components.length - 1];
+};
+
+
+exports.debug = function(name,  item) {
+  if (debug) {
+    console.log(name);
+    console.log(angular.copy(item));
+  }
 };

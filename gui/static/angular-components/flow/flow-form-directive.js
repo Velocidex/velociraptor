@@ -4,7 +4,7 @@ goog.module('grrUi.flow.flowFormDirective');
 goog.module.declareLegacyNamespace();
 
 const {valueHasErrors} = goog.require('grrUi.forms.utils');
-
+const {debug} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for FlowFormDirective.
@@ -23,63 +23,19 @@ const FlowFormController = function(
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;
 
-  /** @type {Object} */
-  this.outputPluginsField;
+  debug("FlowFormDirective", this.scope_.flowArgs);
 
-  /** @type {Object} */
-  this.outputPluginDescriptor;
-
-  this.grrReflectionService_.getRDFValueDescriptor('FlowRunnerArgs').then(
-      function(descriptor) {
-        angular.forEach(descriptor['fields'], function(field) {
-          if (field.name == 'output_plugins') {
-            this.outputPluginsField = field;
-          }
-        }.bind(this));
-
-        return this.grrReflectionService_.getRDFValueDescriptor(
-            'OutputPluginDescriptor');
-      }.bind(this)).then(function(descriptor) {
-        this.outputPluginDescriptor = descriptor;
-      }.bind(this));
-
-  this.scope_.$watch('flowRunnerArgs.output_plugins',
-                     this.onOutputPluginsChanged_.bind(this));
-
-  this.scope_.$watch(function() {
-    return [this.scope_['flowArgs'], this.scope_['flowRunnerArgs']];
-  }.bind(this), this.onArgsDeepChange_.bind(this), true);
+  this.scope_.$watch('flowArgs', this.onArgsDeepChange_.bind(this));
 };
 
 
 /**
  * @private
  */
-FlowFormController.prototype.onArgsDeepChange_ = function() {
-  this.scope_['hasErrors'] = valueHasErrors(this.scope_['flowArgs']) ||
-      valueHasErrors(this.scope_['flowRunnerArgs']);
+FlowFormController.prototype.onArgsDeepChange_ = function(value) {
+  this.scope_.flowArgs = value;
+  debug("FlowFormDirective onArgsDeepChange_", this.scope_.flowArgs);
 };
-
-/**
- * Handles changes in output plugins part of flow runner args binding.
- * This function ensures that if withOutputPlugins binding is true, then
- * flowRunnerArgs.value.output_plugins is always set to a defined value.
- *
- * @param {Array<Object>} newValue New output plugins value.
- *
- * @private
- */
-FlowFormController.prototype.onOutputPluginsChanged_ = function(newValue) {
-  if (!this.scope_['withOutputPlugins']) {
-    return;
-  }
-
-  var flowRunnerArgs = this.scope_['flowRunnerArgs'];
-  if (angular.isUndefined(newValue) && angular.isDefined(flowRunnerArgs)) {
-    flowRunnerArgs['output_plugins'] = [];
-  }
-};
-
 
 /**
  * Displays a form to edit the flow.
@@ -91,7 +47,6 @@ exports.FlowFormDirective = function() {
     scope: {
       flowArgs: '=',
       flowRunnerArgs: '=',
-      withOutputPlugins: '=',
       hasErrors: '=?'
     },
     restrict: 'E',

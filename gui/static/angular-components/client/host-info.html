@@ -38,217 +38,33 @@
         <input type="radio" name="show-client-details" checked> Overview
       </label>
       <label class="btn btn-default" ng-click="controller.showDetails = true">
-        <input type="radio" name="show-client-details"> Full details
+        <input type="radio" name="show-client-details"> VQL Drilldown
       </label>
     </div>
-
-    <grr-version-dropdown version="controller.clientVersion"
-                          url="controller.clientVersionUrl">
-    </grr-version-dropdown>
 
     <div class="clearfix"></div>
   </div>
 
 
   <!-- Client Details -->
-  <div class="client-overview" ng-if="!controller.showDetails"
+  <div class="client-details" ng-if="!controller.showDetails"
        grr-force-refresh refresh-trigger="controller.client">
-
-    <!-- Overview -->
-    <div class="client-info-wrapup">
-      <dt>OS</dt>
-      <dd>
-        <div ng-if="controller.client.os_info.system">
-          <i class="fa fa-linux" ng-if="controller.client.os_info.system == 'linux'"></i>
-          <i class="fa fa-windows" ng-if="controller.client.os_info.system == 'windows'"></i>
-          <i class="fa fa-apple" ng-if="controller.client.os_info.system == 'apple'"></i>
-
-          <grr-semantic-value value="controller.client.os_info.system">
-          </grr-semantic-value>
-          <span ng-if="controller.client.os_info.system && (controller.client.os_info.release || controller.client.os_info.version)">,</span>
-          <grr-semantic-value value="controller.client.os_info.release">
-          </grr-semantic-value>
-          <grr-semantic-value value="controller.client.os_info.version">
-          </grr-semantic-value>
-        </div>
-
-        <div ng-if="!controller.client.os_info.system">
-          -
-        </div>
-      </dd>
-
-      <dt>Last Local Clock</dt>
-      <dd>
-        <i class="fa fa-history"></i>
-        <div ng-if="!controller.client.last_clock">-</div>
-        <grr-semantic-value value="controller.client.last_clock"
-                            ng-if="controller.client.last_clock">
-        </grr-semantic-value>
-      </dd>
-
-      <dt>GRR Client Version</dt>
-      <dd>
-        <div ng-if="!controller.client.agent_info.client_version">-</div>
-        <grr-semantic-value value="controller.client.agent_info.client_version"
-                            ng-if="controller.client.agent_info.client_version">
-        </grr-semantic-value>
-      </dd>
-
-      <dt>Architecture</dt>
-      <dd>
-        <div ng-if="!controller.client.os_info.machine">-</div>
-        <grr-semantic-value value="controller.client.os_info.machine"
-                            ng-if="controller.client.os_info.machine">
-        </grr-semantic-value>
-      </dd>
-
-      <dt>Kernel</dt>
-      <dd>
-        <div ng-if="!controller.client.value.os_info.kernel">-</div>
-        <grr-semantic-value value="controller.client.os_info.kernel"
-                            ng-if="controller.client.os_info.kernel">
-        </grr-semantic-value>
-      </dd>
-
-      <dt>Memory Size</dt>
-      <dd>
-        <div ng-if="!controller.client.memory_size">-</div>
-        <grr-semantic-value value="controller.client.memory_size"
-                            ng-if="controller.client.memory_size">
-        </grr-semantic-value>
-      </dd>
-
-      <dt>Labels</dt>
-      <dd>
-        <span ng-if="!controller.client.labels.length">
-          No labels assigned.
-        </span>
-
-        <ul ng-if="controller.client.labels.length" class="label-list">
-          <li ng-repeat="label in controller.client.labels">
-            <span class="label label-success">{$ label.name $}</span>
-          </li>
-        </ul>
-      </dd>
-
-      <dt>Users</dt>
-      <dd>
-        <div ng-if="!controller.client.users.length">-</div>
-
-        <ul class="user-list">
-          <li ng-repeat="user in controller.client.users">
-            <i class="fa fa-user"></i> {$ ::user.full_name $} ({$ ::user.username $})
-          </li>
-        </ul>
-      </dd>
-    </div>
-
-    <!-- Info Tiles -->
-    <div class="client-info-details">
-
-      <div class="col-md-12 col-lg-6">
-
-        <section>
-          <h2><i class="fa fa-clock-o"></i> Timestamps</h2>
-
-          <table class="properties">
-            <tr>
-              <th>Installation time</th>
-              <td ng-if="controller.client.os_info.install_date">
-                <grr-semantic-value value="controller.client.os_info.install_date">
-                </grr-semantic-value>
-                <span class="time-since">{$ (controller.client.os_info.install_date | grrTimeSince) $}</span>
-              </td>
-              <td ng-if="!controller.client.os_info.install_date">
-                -
-              </td>
-            </tr>
-            <tr>
-              <th>First seen</th>
-              <td ng-if="controller.client.first_seen_at">
-                <grr-semantic-value value="controller.client.first_seen_at">
-                </grr-semantic-value>
-                <span class="time-since">{$ controller.client.first_seen_at | grrTimeSince $}</span>
-              </td>
-              <td ng-if="!controller.client.first_seen_at">
-                -
-              </td>
-            </tr>
-            <tr>
-              <th>Last booted</th>
-              <td ng-if="controller.client.last_booted_at">
-                <grr-semantic-value value="controller.client.last_booted_at">
-                </grr-semantic-value>
-                <span class="time-since">{$ controller.client.last_booted_at | grrTimeSince $}</span>
-              </td>
-              <td ng-if="!controller.client.last_booted_at">
-                -
-              </td>
-            </tr>
-            <tr>
-              <th>Last seen</th>
-              <td ng-if="controller.client.last_seen_at">
-                <grr-semantic-value value="controller.client.last_seen_at">
-                </grr-semantic-value>
-                <span class="time-since">{$ controller.client.last_seen_at | grrTimeSince $}</span>
-              </td>
-              <td ng-if="!controller.client.last_seen_at">
-                -
-              </td>
-            </tr>
-          </table>
-        </section>
-      </div>
-
-      <div class="col-md-12 col-lg-6">
-        <section>
-          <h2><i class="fa fa-exchange"></i> Interfaces</h2>
-
-          <div ng-if="!controller.client.interfaces"
-               class="no-section-info">
-            No interface information available.
-          </div>
-
-          <table ng-if="controller.client.interfaces"
-                 class="full-section-info">
-            <thead>
-              <tr>
-                <th>IF Name</th>
-                <th>Mac Address</th>
-                <th>Addresses</th>
-              </tr>
-            </thead>
-            <tr ng-repeat="interface in controller.client.interfaces">
-              <td>
-                {$ ::interface.ifname $}
-              </td>
-              <td class="mac-address">
-                <grr-semantic-value value="interface.mac_address"></grr-semantic-value>
-              </td>
-              <td class="mac-address">
-                <ul>
-                  <li ng-repeat="address in interface.addresses">
-                    <grr-semantic-value value="address"></grr-semantic-value>
-                  </li>
-                </ul>
-              </td>
-            </tr>
-          </table>
-        </section>
-      </div>
-    </div>
+    <grr-semantic-proto
+       type="ApiClient"
+       client="::controller.client"
+       value="::controller.client"
+       hidden-fields="['info']">
+    </grr-semantic-proto>
   </div>
 
   <!-- Shows the full view on the client with all properties and in full details -->
   <div class="client-details"
        ng-if="controller.showDetails"
        grr-force-refresh refresh-trigger="controller.client">
-    <grr-semantic-versioned-proto
-       type="ApiClient"
-       client="::controller.client"
-       value="::controller.client"
-       on-field-click="controller.showHistoryDialog(fieldPath)"
-       history-depth="2">
-    </grr-semantic-versioned-proto>
+    <div ng-repeat="item in ::controller.client.info">
+      <grr-vql
+         value="::item">
+      </grr-vql>
+    </div>
   </div>
 </div>

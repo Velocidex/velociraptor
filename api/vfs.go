@@ -68,7 +68,8 @@ func vfsRefreshDirectory(
 	}
 
 	flow_args := &flows_proto.VFSListRequest{
-		VfsPath: vfs_path,
+		VfsPath:        vfs_path,
+		RecursionDepth: depth,
 	}
 	any_msg, err := ptypes.MarshalAny(flow_args)
 	if err != nil {

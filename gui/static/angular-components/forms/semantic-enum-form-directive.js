@@ -13,15 +13,17 @@ goog.module.declareLegacyNamespace();
  * @ngInject
  */
 const SemanticEnumFormController = function(
-    $scope) {
+  $scope,   grrReflectionService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  /** @type {!Array<Object>} */
   this.allowedOptions = [];
+  this.valueDescriptor;
 
-  this.scope_.$watch('metadata.allowed_values',
-                     this.onAllowedValuesChange_.bind(this));
+  this.grrReflectionService_ = grrReflectionService;
+
+  this.scope_.$watch('value',
+                     this.onValueChange_.bind(this));
 };
 
 
@@ -31,30 +33,25 @@ const SemanticEnumFormController = function(
  * @param {!Array<Object>} newValue
  * @private
  */
-SemanticEnumFormController.prototype.onAllowedValuesChange_ = function(
-    newValue) {
-  this.allowedOptions = [];
-
-  if (angular.isDefined(newValue)) {
-    this.allowedOptions = [];
-    angular.forEach(newValue, function(option) {
-      var defaultLabel = '';
-      var defaultOptionName = JSON.parse(this.scope_.metadata.default);
-      if (defaultOptionName == option.name) {
-        defaultLabel = ' (default)';
-      }
-
-      var label = option.name;
-      if (option.doc) {
-        label = option.doc;
-      }
-
-      this.allowedOptions.push({
-        value: option.name,
-        label: label + defaultLabel
-      });
-    }.bind(this));
-  }
+SemanticEnumFormController.prototype.onValueChange_ = function(
+  newValue) {
+  this.grrReflectionService_.getRDFValueDescriptor(
+    this.scope_.type, false, newValue).then(
+      function(descriptor) {
+        this.valueDescriptor = descriptor;
+        if (angular.isUndefined(this.scope_.value)) {
+          if (angular.isDefined(this.scope_.default)) {
+            this.scope_.value = this.scope_.default;
+          } else {
+            this.scope_.value = JSON.parse(descriptor.default);
+          }
+        }
+        var self = this;
+        this.allowedOptions = [];
+        angular.forEach(descriptor.allowed_values, function(value) {
+          self.allowedOptions.push(value.name);
+        });
+      }.bind(this));
 };
 
 /**
@@ -67,7 +64,7 @@ exports.SemanticEnumFormDirective = function() {
     restrict: 'E',
     scope: {
       value: '=',
-      metadata: '='
+      type: '@',
     },
     templateUrl: '/static/angular-components/forms/semantic-enum-form.html',
     controller: SemanticEnumFormController,

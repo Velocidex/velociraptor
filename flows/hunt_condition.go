@@ -35,10 +35,16 @@ func (self *CheckHuntCondition) Start(
 		return errors.New("Expected args of type Hunt")
 	}
 
-	err := QueueMessageForClient(
+	flow_condition_query, err := _CalculateFlowConditionQuery(hunt_args.Condition)
+	if err != nil {
+		return err
+	}
+
+	err = QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",
-		hunt_args.FlowConditionQuery, processConditionQuery)
+		flow_condition_query,
+		processConditionQuery)
 	if err != nil {
 		return err
 	}
@@ -141,7 +147,13 @@ func _FilterConditionServerSide(
 		return false, nil
 	}
 
-	if len(args.ServerSideConditionQuery.Query) == 0 {
+	server_side_condition_query, err := _CalculateServerSideConditionQuery(
+		args.Condition)
+	if err != nil {
+		return false, err
+	}
+
+	if len(server_side_condition_query.Query) == 0 {
 		return true, nil
 	}
 
@@ -149,7 +161,7 @@ func _FilterConditionServerSide(
 	rule_matched := false
 	scope := vfilter.NewScope().AppendVars(
 		vfilter.NewDict().Set("rows", stored_query))
-	for _, query := range args.ServerSideConditionQuery.Query {
+	for _, query := range server_side_condition_query.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return false, err
@@ -208,4 +220,15 @@ func (self *_StoredQuery) Columns() *[]string {
 		}
 	}
 	return &result
+}
+
+func _CalculateFlowConditionQuery(in *api_proto.HuntCondition) (
+	*actions_proto.VQLCollectorArgs, error) {
+
+	return in.GetGenericCondition().FlowConditionQuery, nil
+}
+
+func _CalculateServerSideConditionQuery(in *api_proto.HuntCondition) (
+	*actions_proto.VQLCollectorArgs, error) {
+	return in.GetGenericCondition().ServerSideConditionQuery, nil
 }

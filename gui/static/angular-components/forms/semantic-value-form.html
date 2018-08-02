@@ -1,0 +1,21 @@
+<div ng-switch="controller.renderer">
+  <grr-form-proto ng-switch-when="grrFormProto"
+                  value="controller.scope_.value"
+                  type="{$ type $}" default="default" />
+
+  <grr-form-primitive ng-switch-when="grrFormPrimitive"
+                      value="controller.scope_.value"
+                      type="{$ type $}" default="default" />
+
+  <grr-form-enum ng-switch-when="grrFormEnum"
+                 value="controller.scope_.value"
+                 type="{$ type $}" default="default" />
+
+  <grr-form-datetime ng-switch-when="grrFormDatetime"
+                 value="controller.scope_.value"
+                 type="{$ type $}" default="default" />
+
+  <div ng-switch-default>
+    I dont know how to render {{ controller.renderer }}
+  </div>
+</div>

@@ -3,6 +3,7 @@
 goog.module('grrUi.forms.semanticProtoFormDirective');
 goog.module.declareLegacyNamespace();
 
+const {debug} = goog.require('grrUi.core.utils');
 
 
 /**
@@ -36,6 +37,10 @@ const SemanticProtoFormController = function(
   /** @type {boolean} */
   this.expanded = false;
 
+  // The descriptor of the proto we are trying to render.
+  this.valueDescriptor;
+
+
   if (angular.isDefined($attrs['hiddenFields']) &&
       angular.isDefined($attrs['visibleFields'])) {
     throw new Error('Either hidden-fields or visible-fields attribute may ' +
@@ -45,27 +50,17 @@ const SemanticProtoFormController = function(
   this.scope_.$watch('value', this.onValueChange_.bind(this));
   this.boundNotExplicitlyHiddenFields =
       this.notExplicitlyHiddenFields_.bind(this);
-};
 
-SemanticProtoFormController.prototype.typeOfValue_ = function(value) {
-  if (angular.isUndefined(value)) {
-    return "string";
-  }
+  debug("SemanticProtoFormController", this.scope_.value);
 
-  var type = value['@type'];
-
-  if (angular.isDefined(type)) {
-    var prefix = "type.googleapis.com/proto.";
-    if (type.startsWith(prefix)) {
-      type = type.slice(prefix.length);
+  if (angular.isUndefined(this.scope_.value)) {
+    if (angular.isDefined(this.scope_['default'])) {
+      this.scope_.value = JSON.parse(this.scope_['default']);
+    } else {
+      this.scope_.value = {};
     }
-
-    return type;
   }
-
-  return this.scope_.type;
 };
-
 
 /**
  * Filter function that returns true if the field wasn't explicitly mentioned
@@ -131,78 +126,24 @@ SemanticProtoFormController.prototype.advancedFieldsOnly = function(
 SemanticProtoFormController.prototype.onValueChange_ = function(
     newValue, oldValue) {
   if (angular.isUndefined(newValue) && angular.isUndefined(this.scope_.type)) {
-    console.log("Error - no type provided for semantic-value-form-directive.");
+    console.log("Error - no type provided for semantic-proto-form-directive.");
     return;
   }
-
-  this.scope_.type = this.typeOfValue_(newValue);
 
   /**
    * Previous versions of this code had both editedValue and value
    * objects in order to avoid copying defaults to the value. However
    * in proto3 there are no defaults so we actually do want to copy
-   * out defaults into the value which is sent - otherwise these
+   * our defaults into the value which is sent - otherwise these
    * defaults will not be set at all by the server.
    */
-  if (newValue !== oldValue || angular.isUndefined(this.valueDescriptor)) {
-    this.grrReflectionService_.getRDFValueDescriptor(
-        this.scope_.type, true).then(
-            this.onDescriptorsFetched_.bind(this));
-  }
+  this.grrReflectionService_.getRDFValueDescriptor(
+    this.scope_.type, false, newValue).then(
+      function(descriptor) {
+        this.valueDescriptor = descriptor;
+      }.bind(this));
 };
 
-
-/**
- * Handles fetched reflection data.
- *
- * @param {!Object<string, Object>} descriptors
- * @private
- */
-SemanticProtoFormController.prototype.onDescriptorsFetched_ = function(
-    descriptors) {
-  var self = this;
-  this.descriptors = descriptors;
-  this.valueDescriptor = angular.copy(descriptors[this.scope_.type]);
-
-  // Oneof fields never hold any defaults.
-  if (this.valueDescriptor.oneof) {
-    return;
-  }
-
-  angular.forEach(this.valueDescriptor['fields'], function(field) {
-    if (angular.isDefined(field.labels)) {
-      if (field.labels.indexOf('HIDDEN') != -1) {
-        return;
-      }
-
-      if (field.labels.indexOf('ADVANCED') != -1) {
-        self.hasAdvancedFields = true;
-      }
-    }
-
-    if (field.repeated) {
-      field.depth = 0;
-
-      if (angular.isUndefined(this.scope_.value[field.name])) {
-        this.scope_.value[field.name] = [];
-      }
-    } else {
-      field.depth = (this.scope_.$eval('metadata.depth') || 0) + 1;
-
-      if (angular.isUndefined(this.scope_.value[field.name])) {
-        if (angular.isDefined(field['default'])) {
-          this.scope_.value[field.name] = JSON.parse(field['default']);
-        } else {
-          if (field.kind == 'primitive') {
-            this.scope_.value[field.name] = "";
-          } else {
-            this.scope_.value[field.name] = {};
-          }
-        }
-      }
-    }
-  }.bind(this));
-};
 
 /**
  * SemanticProtoFormDirective renders a form corresponding to a given
@@ -215,7 +156,7 @@ exports.SemanticProtoFormDirective = function() {
     scope: {
       value: '=',
       type: '@',
-      metadata: '=?',
+      default: '=',
       hiddenFields: '=?',
       visibleFields: '=?'
     },

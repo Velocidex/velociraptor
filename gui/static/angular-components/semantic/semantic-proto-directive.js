@@ -216,12 +216,12 @@ SemanticProtoController.prototype.onValueChange = function(newValue, oldValue) {
 
   if (angular.isObject(this.scope_['value'])) {
     var valueType = this.scope_['type'];
-    this.grrReflectionService_.getRDFValueDescriptor(valueType).then(
+    this.grrReflectionService_.getRDFValueDescriptor(valueType, false, newValue).then(
         function success(descriptor) {
-          this.items = buildItems(this.scope_['value'],
-                                  descriptor,
-                                  this.scope_['visibleFields'],
-                                  this.scope_['hiddenFields']);
+          this.items = buildNonUnionItems(this.scope_['value'],
+                                          descriptor,
+                                          this.scope_['visibleFields'],
+                                          this.scope_['hiddenFields']);
         }.bind(this)); // TODO(user): Reflection failure scenario should be
                        // handled globally by reflection service.
   } else {
@@ -240,7 +240,7 @@ exports.SemanticProtoDirective = function() {
   return {
     scope: {
       value: '=',
-      type: '=',
+      type: '@',
       visibleFields: '=',
       hiddenFields: '='
     },

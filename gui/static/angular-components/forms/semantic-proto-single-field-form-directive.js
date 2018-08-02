@@ -15,6 +15,7 @@ exports.SemanticProtoSingleFieldFormDirective = function() {
   return {
     scope: {
       value: '=',
+      type: '@',
       field: '='
     },
     restrict: 'E',

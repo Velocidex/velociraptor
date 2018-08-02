@@ -141,6 +141,12 @@ SemanticRegistryService.prototype.findDirectiveForType = function(
     if (angular.isUndefined(descriptor)) {
       console.log("Unable to find descriptor for " + type);
     }
+
+    if (descriptor.kind == 'enum') {
+      return this.directivesByType_['string'];
+    }
+
+
     var directive = this.findDirectiveForMro(descriptor['mro'], overrides);
     if (angular.isDefined(directive)) {
       return directive;
@@ -152,4 +158,27 @@ SemanticRegistryService.prototype.findDirectiveForType = function(
   return this.grrReflectionService_.getRDFValueDescriptor(type).then(
       handleDescriptor);  // TODO(user): handle failure scenarios
                           // in grrReflectionService.
+};
+
+SemanticRegistryService.prototype.findDirectiveForDescriptor = function(
+  descriptor) {
+  var name = descriptor.name;
+
+  // Is there a specialized renderer for this descriptor?
+  if (angular.isDefined(this.directivesByType_[name])) {
+    return this.directivesByType_[name];
+  }
+
+  if (descriptor.kind == "struct") {
+    return this.directivesByType_["RDFProtoStruct"];
+  }
+
+  if (descriptor.kind == 'enum') {
+    return this.directivesByType_["EnumNamedValue"];
+  }
+
+  console.log(descriptor);
+  console.log("No directive known for type " + descriptor.name);
+
+  return this.directivesByType_["RDFProtoStruct"];
 };

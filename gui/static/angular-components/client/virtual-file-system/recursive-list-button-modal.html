@@ -6,7 +6,10 @@
   <h3 class="modal-title">Recursive Directory Refresh</h3>
 </div>
 <div class="modal-body">
+  refreshOperation
+  {$ controller.refreshOperation $}
   <grr-form-proto value="controller.refreshOperation"
+                  type="VFSListDirectory"
                   visible-fields="['max_depth']">
   </grr-form-proto>
 

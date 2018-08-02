@@ -315,7 +315,7 @@ func sanitizeString(component string) []rune {
 		component += "_"
 	}
 
-	result := make([]rune, len(component)*2)
+	result := make([]rune, len(component)*3)
 	result_idx := 0
 
 	for _, c := range component {

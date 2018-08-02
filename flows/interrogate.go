@@ -51,7 +51,9 @@ func (self *VInterrogate) Start(
 	}
 
 	for _, query := range interrogate_args.Queries {
-		queries = append(queries, query)
+		if query.VQL != "" {
+			queries = append(queries, query)
+		}
 	}
 
 	vql_request := &actions_proto.VQLCollectorArgs{
@@ -206,6 +208,7 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 		client_info.System = info.OS
 		client_info.Release = info.Platform + info.PlatformVersion
 		client_info.Architecture = info.Architecture
+		client_info.Fqdn = info.Fqdn
 	}
 	return nil
 }

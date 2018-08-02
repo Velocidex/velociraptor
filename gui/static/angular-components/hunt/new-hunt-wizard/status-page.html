@@ -14,16 +14,11 @@
   <div ng-if="response && !response.error" class="panel panel-default">
     <div class="panel-body">
       <p>
-        Created Hunt:
-        <grr-semantic-value value="response.data.value.hunt_id"></grr-semantic-value>
+        Created Hunt {{ response.flow_id }}
       </p>
       <p>
         Hunt arguments:<br/>
-        <grr-semantic-value value="response.data.value.hunt_args"></grr-semantic-value>
-      </p>
-      <p>
-        Runner arguments:<br/>
-        <grr-semantic-value value="response.data.value.hunt_runner_args"></grr-semantic-value>
+        <grr-semantic-value value="createHuntArgs" type="Hunt"></grr-semantic-value>
       </p>
     </div>
   </div>

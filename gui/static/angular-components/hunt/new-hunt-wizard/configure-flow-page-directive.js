@@ -27,7 +27,6 @@ const ConfigureFlowPageController = function($scope) {
       return;
     }
 
-    this.scope_.flowName = flowDescriptor['name'];
     this.scope_['flowArguments'] = angular.copy(
         flowDescriptor['default_args']);
   }.bind(this));
@@ -44,7 +43,12 @@ const ConfigureFlowPageController = function($scope) {
  * @private
  */
 ConfigureFlowPageController.prototype.onFlowArgumentsDeepChange_ = function(
-    newValue) {
+  newValue) {
+  this.scope_['flowStartRequest']['args'] = angular.copy(this.scope_['flowArguments']);
+  if (angular.isDefined(this.flowDescriptor)) {
+    this.scope_['flowStartRequest']['flow_name'] = (
+      this.flowDescriptor.friendly_name || this.flowDescriptor.name);
+  }
   this.scope_['hasErrors'] = valueHasErrors(newValue);
 };
 
@@ -58,8 +62,7 @@ ConfigureFlowPageController.prototype.onFlowArgumentsDeepChange_ = function(
 exports.ConfigureFlowPageDirective = function() {
   return {
     scope: {
-      flowName: '=',
-      flowArguments: '=',
+      flowStartRequest: '=',
       hasErrors: '=?'
     },
     restrict: 'E',

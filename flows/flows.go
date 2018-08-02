@@ -213,6 +213,12 @@ func (self *AFF4FlowObject) AsProto() (*flows_proto.AFF4FlowObject, error) {
 func AFF4FlowObjectFromProto(aff4_flow_obj_proto *flows_proto.AFF4FlowObject) (
 	*AFF4FlowObject, error) {
 
+	if aff4_flow_obj_proto.Urn == "" ||
+		aff4_flow_obj_proto.RunnerArgs == nil ||
+		aff4_flow_obj_proto.FlowContext == nil {
+		return nil, errors.New("Invalid AFF4FlowObject protobuf.")
+	}
+
 	result := &AFF4FlowObject{
 		dirty:       false,
 		Urn:         aff4_flow_obj_proto.Urn,

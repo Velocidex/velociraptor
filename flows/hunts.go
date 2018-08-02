@@ -533,6 +533,53 @@ func ModifyHunt(config_obj *config.Config, hunt_modification *api_proto.Hunt) er
 	return errors.New("Modification not supported.")
 }
 
+func ListHuntClients(config_obj *config.Config,
+	req *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	count := req.Count
+	if count == 0 {
+		count = 50
+	}
+
+	var queue string
+	switch req.Type {
+	case api_proto.ListHuntClientsRequest_PENDING:
+		queue = "/pending"
+	case api_proto.ListHuntClientsRequest_SCHEDULED:
+		queue = "/running"
+	case api_proto.ListHuntClientsRequest_COMPLETED:
+		queue = "/completed"
+	case api_proto.ListHuntClientsRequest_RESULTS:
+		queue = "/results"
+	default:
+		queue = "/pending"
+	}
+
+	children, err := db.ListChildren(
+		config_obj,
+		req.HuntId+queue, req.Offset, count)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &api_proto.HuntResults{}
+	for _, child_urn := range children {
+		hunt_info := &api_proto.HuntInfo{}
+		err = db.GetSubject(config_obj, child_urn, hunt_info)
+		if err != nil {
+			continue
+		}
+
+		result.Items = append(result.Items, hunt_info)
+	}
+
+	return result, nil
+}
+
 // A Flow which runs a delegate flow and stores the result in the
 // hunt.
 type HuntRunnerFlow struct {

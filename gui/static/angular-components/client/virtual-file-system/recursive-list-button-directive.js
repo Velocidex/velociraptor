@@ -58,8 +58,10 @@ const RecursiveListButtonController = function(
 
   /** @private {angularUi.$uibModalInstance} */
   this.modalInstance;
+  this.fileContext;
 
-  this.scope_.$watchGroup(['clientId', 'filePath'],
+  this.scope_.$watchGroup(['controller.fileContext.clientId',
+                           'controller.fileContext.selectedDirPath'],
                           this.onClientOrPathChange_.bind(this));
 };
 
@@ -91,26 +93,17 @@ RecursiveListButtonController.prototype.onClick = function() {
   this.error = null;
 
   this.grrReflectionService_.getRDFValueDescriptor(
-      'ApiCreateVfsRefreshOperationArgs', true).then(function(descriptors) {
-    this.refreshOperation = angular.copy(
-        descriptors['ApiCreateVfsRefreshOperationArgs']['default']);
+    'VFSRefreshDirectoryRequest', true).then(function(descriptors) {
+      this.refreshOperation = {
+        'vfs_path': this.fileContext['selectedDirPath'] || '',
+        'depth': RecursiveListButtonController.MAX_DEPTH};
 
-    var filePath = angular.copy(descriptors['RDFString']['default']);
-    filePath['value'] = getFolderFromPath(this.scope_['filePath']);
-    this.refreshOperation['value']['file_path'] = filePath;
-
-    var maxDepth = angular.copy(descriptors['RDFInteger']['default']);
-    maxDepth['value'] = RecursiveListButtonController.MAX_DEPTH;
-    this.refreshOperation['value']['max_depth'] = maxDepth;
-
-    this.refreshOperation['value']['notify_user'] = true;
-
-    this.modalInstance = this.uibModal_.open({
-      templateUrl: '/static/angular-components/client/virtual-file-system/' +
+      this.modalInstance = this.uibModal_.open({
+        templateUrl: '/static/angular-components/client/virtual-file-system/' +
           'recursive-list-button-modal.html',
-      scope: this.scope_
-    });
-  }.bind(this));
+        scope: this.scope_
+      });
+    }.bind(this));
 };
 
 
@@ -128,13 +121,12 @@ RecursiveListButtonController.prototype.createRefreshOperation = function() {
     clientId = clientId.substr(aff4Prefix.length);
   }
 
-  var url = 'clients/' + clientId + '/vfs-refresh-operations';
-  var refreshOperation = angular.copy(this.refreshOperation);
+  var url = 'v1/VFSRefreshDirectory/' + clientId;
 
   // Setting this.lastOperationId means that the update button will get
   // disabled immediately.
   var operationId = this.lastOperationId = 'unknown';
-  this.grrApiService_.post(url, refreshOperation, true)
+  this.grrApiService_.post(url, this.refreshOperation, true)
       .then(
           function success(response) {
             this.done = true;
@@ -144,11 +136,15 @@ RecursiveListButtonController.prototype.createRefreshOperation = function() {
             }.bind(this), 1000);
 
             operationId = this.lastOperationId =
-                response['data']['operation_id'];
+                response['data']['flow_id'];
 
             var pollPromise = this.grrApiService_.poll(
-                url + '/' + operationId,
-                OPERATION_POLL_INTERVAL_MS);
+              'v1/GetFlowDetails/' + clientId,
+              OPERATION_POLL_INTERVAL_MS, {
+                'flow_id': operationId,
+              }, function(response) {
+                return response.data.context.state != 'RUNNING';
+              });
             this.scope_.$on('$destroy', function() {
               this.grrApiService_.cancelPoll(pollPromise);
             }.bind(this));
@@ -161,7 +157,7 @@ RecursiveListButtonController.prototype.createRefreshOperation = function() {
           }.bind(this))
       .then(
           function success() {
-            var path = refreshOperation['value']['file_path']['value'];
+            var path = this.refreshOperation.vfs_path;
             this.rootScope_.$broadcast(
                 REFRESH_FOLDER_EVENT, ensurePathIsFolder(path));
           }.bind(this))
@@ -184,11 +180,15 @@ exports.RecursiveListButtonDirective = function() {
       clientId: '=',
       filePath: '='
     },
+    require: '^grrFileContext',
     restrict: 'E',
     templateUrl: '/static/angular-components/client/virtual-file-system/' +
         'recursive-list-button.html',
     controller: RecursiveListButtonController,
-    controllerAs: 'controller'
+    controllerAs: 'controller',
+    link: function(scope, element, attrs, fileContextController) {
+      scope.controller.fileContext = fileContextController;
+    }
   };
 };
 

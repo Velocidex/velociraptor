@@ -41,9 +41,6 @@ const FileTableController = function(
   this.selectedDirPath_;
   this.selecteFilePath_;
 
-  /** @type {string} */
-  this.fileListUrl;
-
   /** @type {?string} */
   this.lastRefreshOperationId;
 
@@ -128,8 +125,6 @@ FileTableController.prototype.refreshFileList_ = function() {
   var selectedDirPath = this.fileContext['selectedDirPath'] || '';
 
   this.filter = '';
-  this.fileListUrl = 'clients/' + clientId + '/vfs-index/' + selectedDirPath;
-
   // Required to trigger an update even if the selectedFolderPath changes to the same value.
   if (this.triggerUpdate) {
     this.triggerUpdate();
@@ -160,7 +155,6 @@ FileTableController.prototype.selectFolder = function(file) {
 
   // Always reset the version if the file is selected.
   this.fileContext.selectFile(filePath, 0);
-  this.fileListUrl = 'clients/' + clientId + '/vfs-index/' + filePath;
 };
 
 /**
@@ -202,12 +196,7 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
           function success() {
             this.rootScope_.$broadcast(
                 REFRESH_FOLDER_EVENT, selectedDirPath);
-          }.bind(this))
-      .finally(function() {
-        if (this.lastRefreshOperationId == operationId) {
-          this.lastRefreshOperationId = null;
-        }
-      }.bind(this));
+          }.bind(this));
 };
 
 

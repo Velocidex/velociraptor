@@ -1,7 +1,6 @@
 <div ng-if="$root.globals.debug">
   semantic-proto-form.html {{value}}
 </div>
-
 <div ng-if="controller.valueDescriptor.oneof">
   <grr-form-proto-union value="controller.scope_.value"
                         field="controller.valueDescriptor"/>
@@ -19,12 +18,13 @@
                     filter:controller.regularFieldsOnly |
                     filter:controller.boundNotExplicitlyHiddenFields">
       <grr-form-proto-single-field value="controller.scope_.value[field.name]"
+                                   type="{$ field.type $}"
                                    field="field"
                                    ng-if="!field.repeated">
       </grr-form-proto-single-field>
 
       <grr-form-proto-repeated-field value="controller.scope_.value[field.name]"
-                                     descriptor="controller.descriptors[field.type]"
+                                     type="{$ field.type $}"
                                      field="field"
                                      ng-if="field.repeated">
       </grr-form-proto-repeated-field>

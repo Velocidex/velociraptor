@@ -4,7 +4,7 @@ goog.module('grrUi.forms.semanticProtoRepeatedFieldFormDirective');
 goog.module.declareLegacyNamespace();
 
 const {camelCaseToDashDelimited} = goog.require('grrUi.core.utils');
-
+const {debug} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for SemanticProtoRepeatedFieldFormDirective.
@@ -19,7 +19,7 @@ const {camelCaseToDashDelimited} = goog.require('grrUi.core.utils');
  */
 const SemanticProtoRepeatedFieldFormController = function(
         $scope, $element, $compile,
-        grrSemanticRepeatedFormDirectivesRegistryService) {
+        grrReflectionService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
@@ -29,98 +29,41 @@ const SemanticProtoRepeatedFieldFormController = function(
   /** @private {!angular.$compile} */
   this.compile_ = $compile;
 
-  /** @private {!grrUi.core.semanticRegistryService.SemanticRegistryService} */
-  this.grrSemanticRepeatedFormDirectivesRegistryService_ =
-      grrSemanticRepeatedFormDirectivesRegistryService;
+  /** @private {!grrUi.core.reflectionService.ReflectionService} */
+  this.grrReflectionService_ = grrReflectionService;
 
-  /** @export {boolean} */
-  this.hasCustomTemplate;
+  // The descriptor of the proto we are trying to render.
+  this.valueDescriptor;
 
-  /** @export {boolean} */
-  this.hideCustomTemplateLabel;
+  this.scope_.$watch('value', this.onValueChange_.bind(this));
 
-  this.scope_.$watchGroup(['field', 'descriptor'],
-                          this.onFieldDescriptorChange_.bind(this));
-
-  if (angular.isDefined(this.scope_.field['default'])) {
-    this.scope_.value = JSON.parse(this.scope_.field['default']);
-  } else {
-    this.scope_.value = [];
-  }
-};
-
-
-
-/**
- * Handles changes in field and descriptor.
- *
- * @private
- */
-SemanticProtoRepeatedFieldFormController.prototype.onFieldDescriptorChange_ =
-  function() {
-    if (angular.isUndefined(this.scope_['value'])) {
+  if (angular.isUndefined(this.scope_.value)) {
+    if (angular.isDefined(this.scope_.field['default'])) {
+      this.scope_.value = JSON.parse(this.scope_.field['default']);
+    } else {
       this.scope_.value = [];
     }
-
-    if (angular.isDefined(this.scope_['field']) &&
-        angular.isDefined(this.scope_['descriptor'])) {
-
-      if (this.scope_['noCustomTemplate']) {
-        this.onCustomDirectiveNotFound_();
-      } else {
-        this.grrSemanticRepeatedFormDirectivesRegistryService_.
-          findDirectiveForType(this.scope_['field']['type']).then(
-            this.onCustomDirectiveFound_.bind(this),
-            this.onCustomDirectiveNotFound_.bind(this));
-      }
-    }
-  };
-
-
-/**
- * Handles cases when a custom directive that handles this type of repeated
- * values is not found.
- *
- * @private
- */
-SemanticProtoRepeatedFieldFormController.prototype.onCustomDirectiveNotFound_ = function() {
-  this.hasCustomTemplate = false;
-};
-
-
-/**
- * Handles cases when a custom directive that handles this type of repeated
- * values is found.
- *
- * @param {Object} directive Found directive.
- * @private
- */
-SemanticProtoRepeatedFieldFormController.prototype.onCustomDirectiveFound_ = function(directive) {
-  this.hasCustomTemplate = true;
-  this.hideCustomTemplateLabel = directive['hideCustomTemplateLabel'];
-
-  var element = angular.element('<span />');
-
-  element.html('<' + camelCaseToDashDelimited(directive.directive_name) +
-      ' descriptor="descriptor" value="value" field="field" />');
-  var template = this.compile_(element);
-
-  var customTemplateElement;
-  if (this.hideCustomTemplateLabel) {
-    customTemplateElement = this.element_.find(
-        'div[name="custom-template-without-label"]');
-  } else {
-    customTemplateElement = this.element_.find(
-        'div[name="custom-template"]');
   }
 
-  customTemplateElement.html('');
-
-  template(this.scope_, function(cloned, opt_scope) {
-    customTemplateElement.append(cloned);
-  }.bind(this));
+  debug("SemanticProtoRepeatedFieldFormController", this.scope_.value);
 };
 
+
+SemanticProtoRepeatedFieldFormController.prototype.onValueChange_ = function(
+    newValue, oldValue) {
+  /**
+   * Previous versions of this code had both editedValue and value
+   * objects in order to avoid copying defaults to the value. However
+   * in proto3 there are no defaults so we actually do want to copy
+   * our defaults into the value which is sent - otherwise these
+   * defaults will not be set at all by the server.
+   */
+  this.grrReflectionService_.getRDFValueDescriptor(
+    this.scope_.field['type'], false, newValue).then(
+      function(descriptor) {
+        this.valueDescriptor = descriptor;
+      }.bind(this));
+};
 
 /**
  * Handles clicks on 'Add' button.
@@ -129,8 +72,8 @@ SemanticProtoRepeatedFieldFormController.prototype.onCustomDirectiveFound_ = fun
  */
 SemanticProtoRepeatedFieldFormController.prototype.addItem = function() {
   var newItem = {};
-  if (angular.isDefined(this.scope_.descriptor.default)) {
-    newItem = JSON.parse(this.scope_.descriptor.default);
+  if (angular.isDefined(this.valueDescriptor['default'])) {
+    newItem = JSON.parse(this.valueDescriptor.default);
   }
 
   this.scope_.value.splice(0, 0, newItem);
@@ -159,7 +102,6 @@ exports.SemanticProtoRepeatedFieldFormDirective = function() {
   return {
     scope: {
       value: '=',
-      descriptor: '=',
       field: '=',
       noCustomTemplate: '='
     },

@@ -45,12 +45,6 @@ const StartFlowFormController = function(
   /** @type {?string} */
   this.responseData;
 
-  /** @type {Object} */
-  this.outputPluginsField;
-
-  /** @type {Object} */
-  this.outputPluginDescriptor;
-
   /** @type {boolean} */
   this.flowFormHasErrors;
 
@@ -62,12 +56,9 @@ const StartFlowFormController = function(
     if (angular.isDefined(flowDescriptor)) {
       this.flowArguments = angular.copy(flowDescriptor['default_args']);
 
-      this.grrReflectionService_.getRDFValueDescriptor(
-          'FlowRunnerArgs').then(function(descriptor) {
-            this.flowRunnerArguments = {
-              'flow_name': flowDescriptor['name'],
-            };
-          }.bind(this));
+      this.flowRunnerArguments = {
+        'flow_name': flowDescriptor['name'],
+      };
     }
   }.bind(this));
 };

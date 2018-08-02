@@ -15,8 +15,13 @@ goog.module.declareLegacyNamespace();
  */
 const SemanticPrimitiveFormController =
     function($scope) {
-  /** @private {!angular.Scope} */
-  this.scope = $scope;
+      /** @private {!angular.Scope} */
+      this.scope = $scope;
+
+      if (angular.isUndefined(this.scope.value) &&
+          angular.isDefined(this.scope['default'])) {
+        this.scope.value = JSON.parse(this.scope['default']);
+      }
 };
 
 /**
@@ -29,7 +34,8 @@ exports.SemanticPrimitiveFormDirective = function() {
     restrict: 'E',
     scope: {
       value: '=',
-      type: '@'
+      type: '@',
+      default: '=',
     },
     templateUrl: '/static/angular-components/forms/' +
         'semantic-primitive-form.html',
