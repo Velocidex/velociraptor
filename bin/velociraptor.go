@@ -10,7 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/http_comms"
 )
 
-func RunClient() {
+func RunClient(config_path *string) {
 	kingpin.Parse()
 
 	ctx := context.Background()

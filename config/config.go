@@ -80,10 +80,10 @@ type Config struct {
 	Config_writeback *string `yaml:"Config.writeback,omitempty"`
 
 	// GRPC API endpoint.
-	API_bind_address       *string `yaml:"API.bind_address,omitempty"`
-	API_bind_port          *uint32 `yaml:"API.bind_port,omitempty"`
-	API_proxy_bind_address *string `yaml:"API.proxy_bind_address,omitempty"`
-	API_proxy_bind_port    *uint32 `yaml:"API.proxy_bind_port,omitempty"`
+	API_bind_address *string `yaml:"API.bind_address,omitempty"`
+	API_bind_port    *uint32 `yaml:"API.bind_port,omitempty"`
+	GUI_bind_address *string `yaml:"API.proxy_bind_address,omitempty"`
+	GUI_bind_port    *uint32 `yaml:"API.proxy_bind_port,omitempty"`
 
 	Frontend_bind_address  *string     `yaml:"Frontend.bind_address,omitempty"`
 	Frontend_bind_port     *Integer    `yaml:"Frontend.bind_port,omitempty"`
@@ -100,7 +100,7 @@ type Config struct {
 	Datastore_location       *string `yaml:"Datastore.location,omitempty"`
 
 	// The Admin UI
-	AdminUI_document_root *string `yaml:"AdminUI.document_root,omitempty"`
+	//	AdminUI_document_root *string `yaml:"AdminUI.document_root,omitempty"`
 
 	// File Store
 	FileStore_directory *string `yaml:"FileStore.directory,omitempty"`
@@ -124,10 +124,10 @@ func GetDefaultConfig() *Config {
 			"127.0.0.1/12", "192.168.0.0/16",
 		},
 
-		API_bind_address:       proto.String("localhost"),
-		API_bind_port:          proto.Uint32(8888),
-		API_proxy_bind_address: proto.String("localhost"),
-		API_proxy_bind_port:    proto.Uint32(8889),
+		API_bind_address: proto.String("localhost"),
+		API_bind_port:    proto.Uint32(8888),
+		GUI_bind_address: proto.String("localhost"),
+		GUI_bind_port:    proto.Uint32(8889),
 
 		Hunts_last_timestamp: proto.Uint64(0),
 	}

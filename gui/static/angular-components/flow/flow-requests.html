@@ -7,7 +7,9 @@
     </tr>
   </thead>
   <tbody>
-    <tr grr-infinite-table grr-api-items-provider url="controller.requestsUrl">
+    <tr grr-infinite-table grr-api-items-provider
+        url="controller.requestsUrl"
+        url-params="controller.requestsParams">
       <td>{$ ::item.request_id $}</td>
       <td><grr-semantic-value value="::item" type="GrrMessage" /></td>
     </tr>

@@ -190,7 +190,9 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "trace"
+    "trace",
+    "webdav",
+    "webdav/internal/xml"
   ]
   revision = "ed29d75add3d7c4bf7ca65aac0c6df3d1420216f"
 
@@ -288,6 +290,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2c055e0c4b4bee7a237280f489d6610704dff84f42a1b13dbf61310dedc6d757"
+  inputs-digest = "fa5aec790fb7ff4e73775a4533c88d84c0204544463a2ec40a7e9e11cf0caa22"
   solver-name = "gps-cdcl"
   solver-version = 1

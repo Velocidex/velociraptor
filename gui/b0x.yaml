@@ -1,0 +1,21 @@
+pkg: static
+
+# We assume we are run from the toplevel directory:
+# fileb0x gui/b0x.yaml
+dest: "gui/assets/"
+
+fmt: false
+tags: "release"
+compression:
+    compress: true
+
+output: "ab0x.go"
+custom:
+  - files:
+      - "gui/static/images/"
+      - "gui/static/dist/"
+      - "gui/static/angular-components/"
+      - "gui/static/fonts/"
+      - "gui/static/templates/"
+
+    base: "gui/"

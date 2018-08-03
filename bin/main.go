@@ -9,12 +9,14 @@ import (
 	"log"
 	"os"
 	"strings"
+	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
+	// Command line interface for VQL commands.
 	query   = kingpin.Command("query", "Run a VQL query")
 	queries = query.Arg("query", "The VQL Query to run.").
 		Required().Strings()
@@ -26,9 +28,14 @@ var (
 	explain        = kingpin.Command("explain", "Explain the output from a plugin")
 	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 
-	client      = kingpin.Command("client", "Run the velociraptor client")
-	config_path = client.Arg("config", "The client's config file.").String()
-	show_config = client.Flag("show_config", "Display the client's configuration").Bool()
+	// Run the client.
+	client             = kingpin.Command("client", "Run the velociraptor client")
+	client_config_path = client.Arg("config", "The client's config file.").String()
+	show_config        = client.Flag("show_config", "Display the client's configuration").Bool()
+
+	// Run the server.
+	frontend       = kingpin.Command("frontend", "Run the frontend.")
+	fe_config_path = frontend.Arg("config", "The Configuration file").String()
 )
 
 func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
@@ -127,10 +134,11 @@ func doExplain(plugin string) {
 func main() {
 	switch kingpin.Parse() {
 	case "client":
-		RunClient()
+		RunClient(client_config_path)
 
 	case "explain":
 		doExplain(*explain_plugin)
+
 	case "query":
 		env := vfilter.NewDict().
 			Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})
@@ -150,10 +158,25 @@ func main() {
 				outputJSON(scope, vql)
 			}
 		}
+
 	case "repack":
 		err := RepackClient(*repack_binary, *repack_config)
 		if err != nil {
 			kingpin.FatalIfError(err, "Can not repack client")
 		}
+
+	case "frontend":
+		config_obj, err := get_config(*fe_config_path)
+		kingpin.FatalIfError(err, "Unable to load config file")
+		go func() {
+			err := api.StartServer(config_obj)
+			kingpin.FatalIfError(err, "Unable to start API server")
+		}()
+		go func() {
+			err := api.StartHTTPProxy(config_obj)
+			kingpin.FatalIfError(err, "Unable to start HTTP Proxy server")
+		}()
+
+		start_frontend(config_obj)
 	}
 }

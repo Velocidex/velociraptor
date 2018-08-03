@@ -1,5 +1,10 @@
+// +build sqlite
+
 // An SQLite datastore.  Each client has its own database to avoid
 // database contention.
+
+// This used to be the default data store but now the default is
+// FileBaseDataStore.
 package datastore
 
 import (

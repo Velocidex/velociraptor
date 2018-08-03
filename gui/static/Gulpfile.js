@@ -76,15 +76,6 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
                    config.nodeModulesDir + '/angular-ui-router/release/angular-ui-router.js',
 
-                   config.nodeModulesDir + '/firebase/firebase-app.js',
-                   config.nodeModulesDir + '/firebase/firebase-auth.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.navigate.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.pie.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.resize.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.stack.js',
-                   config.nodeModulesDir + '/Flot/jquery.flot.time.js',
-
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',

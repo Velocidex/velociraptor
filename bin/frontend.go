@@ -13,7 +13,6 @@ import (
 	"os/signal"
 	"sync/atomic"
 	"time"
-	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -21,14 +20,6 @@ import (
 )
 
 var (
-	frontend    = kingpin.Command("frontend", "Run the frontend.")
-	config_path = kingpin.Flag("config", "The Configuration file").
-			Required().String()
-
-	api_command   = kingpin.Command("api", "Call an API method.")
-	api_call_name = api_command.Arg("method", "The method name to call.").
-			Required().String()
-
 	healthy int32
 )
 
@@ -38,29 +29,6 @@ func validateConfig(configuration *config.Config) error {
 	}
 
 	return nil
-}
-
-func main() {
-	switch kingpin.Parse() {
-	case "frontend":
-		config_obj, err := get_config(*config_path)
-		kingpin.FatalIfError(err, "Unable to load config file")
-		go func() {
-			err := api.StartServer(config_obj)
-			kingpin.FatalIfError(err, "Unable to start API server")
-		}()
-		go func() {
-			err := api.StartHTTPProxy(config_obj)
-			kingpin.FatalIfError(err, "Unable to start HTTP Proxy server")
-		}()
-
-		start_frontend(config_obj)
-
-	case "api":
-		config_obj, err := get_config(*config_path)
-		kingpin.FatalIfError(err, "Unable to load config file")
-		call_api(config_obj, *api_call_name)
-	}
 }
 
 func get_config(config_path string) (*config.Config, error) {
@@ -239,8 +207,4 @@ func control(server_obj *server.Server) http.Handler {
 			}
 		}
 	})
-}
-
-func call_api(config_obj *config.Config, method string) {
-
 }
