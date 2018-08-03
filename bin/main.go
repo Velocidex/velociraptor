@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 	"www.velocidex.com/golang/velociraptor/api"
+	"www.velocidex.com/golang/velociraptor/inspect"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -36,6 +37,13 @@ var (
 	// Run the server.
 	frontend       = kingpin.Command("frontend", "Run the frontend.")
 	fe_config_path = frontend.Arg("config", "The Configuration file").String()
+
+	// Inspect the filestore
+	inspect_command     = kingpin.Command("inspect", "Inspect datastore files.")
+	inspect_config_path = inspect_command.Arg("config", "The Configuration file").
+				Required().String()
+	inspect_filename = inspect_command.Arg("filename", "The filename from the filestore").
+				Required().String()
 )
 
 func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
@@ -178,5 +186,11 @@ func main() {
 		}()
 
 		start_frontend(config_obj)
+
+	case "inspect":
+		config_obj, err := get_config(*inspect_config_path)
+		kingpin.FatalIfError(err, "Unable to load config file")
+		err = inspect.Inspect(config_obj, *inspect_filename)
+		kingpin.FatalIfError(err, "Unable to parse datastore item.")
 	}
 }

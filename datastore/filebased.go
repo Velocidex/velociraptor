@@ -431,3 +431,23 @@ func readContentFromFile(config_obj *config.Config, urn string) ([]byte, error) 
 	result, err := ioutil.ReadAll(file)
 	return result, errors.WithStack(err)
 }
+
+// Convert a file name from the data store to a urn.
+func FilenameToURN(config_obj *config.Config, filename string) (*string, error) {
+	if *config_obj.Datastore_implementation != "FileBaseDataStore" {
+		return nil, errors.New("Unsupported data store")
+	}
+
+	if !strings.HasPrefix(filename, *config_obj.Datastore_location) {
+		return nil, errors.New("Filename is not within the FileBaseDataStore location.")
+	}
+
+	components := []string{}
+	for _, component := range strings.Split(
+		strings.TrimPrefix(filename, *config_obj.Datastore_location), "/") {
+		components = append(components, unsanitizeComponent(component))
+	}
+
+	result := strings.TrimSuffix("aff4:/"+strings.Join(components, "/"), ".db")
+	return &result, nil
+}
