@@ -26,7 +26,7 @@ var classifiers = map[string]proto.Message{
 	"aff4:/C.[^/]+/key$":                          &crypto_proto.PublicKey{},
 	"aff4:/C.[^/]+/vfs/.+":                        &actions_proto.VQLResponse{},
 	"aff4:/C.[^/]+/flows/F\\.[^\\.]+":             &flows_proto.AFF4FlowObject{},
-	"aff4:/C.[^/]+/flows/F\\.[^\\.]+/results/.+$": &actions_proto.VQLResponse{},
+	"aff4:/C.[^/]+/flows/F\\.[^\\.]+/results/.+$": &crypto_proto.GrrMessage{},
 	"aff4:/C.[^/]+/tasks/[^\\.]+$":                &crypto_proto.GrrMessage{},
 	"aff4:/hunts/H.[^/]+$":                        &api_proto.Hunt{},
 	"aff4:/hunts/H.[^/]+/(results|pending|" +

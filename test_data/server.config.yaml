@@ -1,11 +1,5 @@
-AdminUI.bind: 127.0.0.1
-AdminUI.csrf_secret_key: 'e4YyBJYHfbaJLUzukYT4RlvjCFdKrvAyGZCNC5M/9ru5ZTCQieZfE6xbEjpAyqgk0EngiSPXZ8Im
-
-  8HWtmTYiXfSO7JeXeaVOf4nCdr483uN0PLEaZ/dx9c+VHzIxNqID9tS8rA==
-
-  '
-AdminUI.port: '8000'
-AdminUI.url: http://localhost:8000
+GUI.bind_address: 127.0.0.1
+GUI.bind_port: 8000
 CA.certificate: '-----BEGIN CERTIFICATE-----
 
   MIIC5DCCAcygAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
@@ -41,25 +35,6 @@ CA.certificate: '-----BEGIN CERTIFICATE-----
   /IHM2oE3+CtnkBa2oclARfvZoPQwSb27
 
   -----END CERTIFICATE-----
-
-  '
-Client.executable_signing_public_key: '-----BEGIN PUBLIC KEY-----
-
-  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3rMxd9NF+VEZ3IiZ4fTW
-
-  NOCTrTXh7P7FLnWu9yuvRZcFeE3FlB+5WfmKCIHM3t3f/uyLdlTO0W8V4KlnFPzk
-
-  N6HHDZyePOppVmmWQDZGsHAYbNLeL0pdU00N39+HBqlhWwb5GGbJRQFGM0r3bv3D
-
-  LORISZz2ut1j3N0O9CEnRvoEILYMzfpXUn8m4RArwfzuva5UyNRL9NBNZfL58cC1
-
-  vdT5uTpl0ZRkFsdVrmARHm2OkSUANFd0VfiyPhHh2lD8O37y9Q5PGjkO/WZKXOs0
-
-  VU8pu2EAbDDJMVLFKgYEXfIte1tmjDVGSBu74wjRdCYGkK/SLGAdO5VapPuLoP1h
-
-  EQIDAQAB
-
-  -----END PUBLIC KEY-----
 
   '
 Client.server_urls:
@@ -102,7 +77,7 @@ Frontend.certificate: '-----BEGIN CERTIFICATE-----
   -----END CERTIFICATE-----
 
   '
-PrivateKeys.ca_key: '-----BEGIN RSA PRIVATE KEY-----
+CA.private_key: '-----BEGIN RSA PRIVATE KEY-----
 
   MIIEpAIBAAKCAQEAxRipMRW4c8BbRy/N1+h6rXg0tCYTzm6qgV6ViBJsHbiyL96/
 
@@ -157,62 +132,7 @@ PrivateKeys.ca_key: '-----BEGIN RSA PRIVATE KEY-----
   -----END RSA PRIVATE KEY-----
 
   '
-PrivateKeys.executable_signing_private_key: '-----BEGIN RSA PRIVATE KEY-----
-
-  MIIEpAIBAAKCAQEA3rMxd9NF+VEZ3IiZ4fTWNOCTrTXh7P7FLnWu9yuvRZcFeE3F
-
-  lB+5WfmKCIHM3t3f/uyLdlTO0W8V4KlnFPzkN6HHDZyePOppVmmWQDZGsHAYbNLe
-
-  L0pdU00N39+HBqlhWwb5GGbJRQFGM0r3bv3DLORISZz2ut1j3N0O9CEnRvoEILYM
-
-  zfpXUn8m4RArwfzuva5UyNRL9NBNZfL58cC1vdT5uTpl0ZRkFsdVrmARHm2OkSUA
-
-  NFd0VfiyPhHh2lD8O37y9Q5PGjkO/WZKXOs0VU8pu2EAbDDJMVLFKgYEXfIte1tm
-
-  jDVGSBu74wjRdCYGkK/SLGAdO5VapPuLoP1hEQIDAQABAoIBAFp7Dbc0hLKWK965
-
-  NWRjuIBFWlq+kKtcm7qTn+HWwuCQSm2lk4fqF8GhrF5mdll6Zh7J9qO+M0VOT+I2
-
-  kaYqVYLw3NH/9x6i0ueEAMLYCoJ3GMVmK1WlbiOBJAj4ZYDkYqS8QYqTgGTj7qS6
-
-  aauTuK/NlD0sY+ZqOr+qpP+1VKL2AZdYQDGMs8m8+jM2eLQeyHencteENCATWIor
-
-  +99kw7w0SobZlPsVQQdTnp4Nqz01zAUIkVq67+Mw4BUuYtvViiMbXMORiwwN83P5
-
-  Qs/SkzhJaboke8OWs/LJy80taghlhSOQnfgax6R+sF/VK2ArLBD2N45XoyS0aWRu
-
-  JUW8g50CgYEA8yWp4bfBaycpnGwzWzNzAktzjo+akzb3guIq2ASJYQinGnqqYo6D
-
-  6Q3Wk3SgGPy8HJI9Z6Kn2j64wEMUWZ5fW3ksvmuxka1yTpggnoFkImVUXG5ySg2g
-
-  yfQqSrnhycOpqwJWMBmD97io5GHxqS3LvPw/AZjq2P5jO+0Bg5q/S/MCgYEA6njV
-
-  PJO/Z3V2cQtIDatRvdnh1lZinV3zA1IZge5wzc9NDca4IA9ds5wIdV87uMPRmlk8
-
-  KN4FTECQkXFUCpBB6Fwz6+HIM+L3Cg+j7CDaRZY26RImCyg/LwRqvnWhFAW1R9z2
-
-  n2aBC6bbMlq5YxUODamIH9waFHFsyRhfxdJJ8+sCgYBW8/gt1XYhKM8ztmojSmHt
-
-  xyfbKrXfwb+AGfuyZuTuQ5bm3ElEl6zK0n0THJkIdpGbMh0ti7i1TsrpTtPfPMjj
-
-  QJFkw8Sr0ThYrQS1SpaRymUB7SmIHBmNP3lEYfdCHWv20Q4bg3RzSaF0kyZGFy+O
-
-  NTMfEh2iXk8EpjxtYRDaSwKBgQCcqgHoSNwR96Uc4SnSoE6sqIFCIlQfy59M77VF
-
-  YJkUmtdkRgvOuBWmpbHtIqWXzZcmJ0uQDtDBYz51P6CkskCnTbwPdru7F4JywYKI
-
-  imbtKfIkhtDOkaSt+KiN+7CV3T6D9rr+RJIiw+kf2wiVkILkVAs1Jm5yjFrgfp23
-
-  Ysuw4wKBgQCDAgKXHTUTi24OeYv//5tz56+XINuSk7x7rN0QVzaBygLJPDqZiggU
-
-  eLLkHk7jNVL8UbFzcacuS+RweWDLKCh0LrEtqc9B49AwwNHxte0OFAywFjHM8K+3
-
-  egwwp+XqTGQYKsyQNf3jDu3C+dZ1bNpSfYfn5F3fo8Pw3be3Cfaj4Q==
-
-  -----END RSA PRIVATE KEY-----
-
-  '
-PrivateKeys.server_key: '-----BEGIN RSA PRIVATE KEY-----
+Frontend.private_key: '-----BEGIN RSA PRIVATE KEY-----
 
   MIIEowIBAAKCAQEAwU7dMli7hXBR3CUOD9pcCuUgMMp4N1VhCaCI/oI5J5v2S2w0
 
@@ -267,12 +187,15 @@ PrivateKeys.server_key: '-----BEGIN RSA PRIVATE KEY-----
   -----END RSA PRIVATE KEY-----
 
   '
-Server.initialized: true
-AdminUI.template_root: gui/static/templates
-
-AdminUI.document_root: gui/static
-
 FileStore.directory: /tmp/velociraptor/filestore/
 Datastore.implementation: FileBaseDataStore
 #Datastore.implementation: SqliteDataStore
 Datastore.location: /tmp/velociraptor/
+
+Interrogate.additional_queries:
+   Query:
+      - Name: Authorized Keys
+        VQL: >
+          select FullPath, timestamp(epoch=Sys.Mtim.Sec) as Mtime,
+          upload(file=FullPath) as Upload
+          from glob(globs='/home/*/.ssh/authorized_keys')

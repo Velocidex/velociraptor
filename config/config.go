@@ -1,11 +1,12 @@
 package config
 
 import (
+	"github.com/ghodss/yaml"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strconv"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -66,47 +67,50 @@ func (self *Integer) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 type Config struct {
-	Client_name        *string     `yaml:"Client.name,omitempty"`
-	Client_description *string     `yaml:"Client.description,omitempty"`
-	Client_version     *uint32     `yaml:"Client.version,omitempty"`
-	Client_commit      *string     `yaml:"Client.commit,omitempty"`
-	Client_build_time  *string     `yaml:"Client.build_time,omitempty"`
-	Client_labels      StringArray `yaml:"Client.labels,omitempty"`
+	Client_name        *string     `json:"Client.name,omitempty"`
+	Client_description *string     `json:"Client.description,omitempty"`
+	Client_version     *uint32     `json:"Client.version,omitempty"`
+	Client_commit      *string     `json:"Client.commit,omitempty"`
+	Client_build_time  *string     `json:"Client.build_time,omitempty"`
+	Client_labels      StringArray `json:"Client.labels,omitempty"`
 
-	Client_private_key *string     `yaml:"Client.private_key,omitempty"`
-	Client_server_urls StringArray `yaml:"Client.server_urls,omitempty"`
+	Client_private_key *string     `json:"Client.private_key,omitempty"`
+	Client_server_urls StringArray `json:"Client.server_urls,omitempty"`
 
 	// We store local configuration in this file.
-	Config_writeback *string `yaml:"Config.writeback,omitempty"`
+	Config_writeback *string `json:"Config.writeback,omitempty"`
 
 	// GRPC API endpoint.
-	API_bind_address *string `yaml:"API.bind_address,omitempty"`
-	API_bind_port    *uint32 `yaml:"API.bind_port,omitempty"`
-	GUI_bind_address *string `yaml:"API.proxy_bind_address,omitempty"`
-	GUI_bind_port    *uint32 `yaml:"API.proxy_bind_port,omitempty"`
+	API_bind_address *string `json:"API.bind_address,omitempty"`
+	API_bind_port    *uint32 `json:"API.bind_port,omitempty"`
+	GUI_bind_address *string `json:"GUI.bind_address,omitempty"`
+	GUI_bind_port    *uint32 `json:"GUI.bind_port,omitempty"`
 
-	Frontend_bind_address  *string     `yaml:"Frontend.bind_address,omitempty"`
-	Frontend_bind_port     *Integer    `yaml:"Frontend.bind_port,omitempty"`
-	Frontend_certificate   *string     `yaml:"Frontend.certificate,omitempty"`
-	Frontend_private_key   *string     `yaml:"PrivateKeys.server_key,omitempty"`
-	Frontend_internal_cidr StringArray `yaml:"Frontend.internal_cidr"`
-	Frontend_vpn_cidr      StringArray `yaml:"Frontend.vpn_cidr"`
+	// CA
+	CA_certificate *string `json:"CA.certificate,omitempty"`
+	CA_private_key *string `json:"CA.private_key,omitempty"`
+
+	Frontend_bind_address  *string     `json:"Frontend.bind_address,omitempty"`
+	Frontend_bind_port     *Integer    `json:"Frontend.bind_port,omitempty"`
+	Frontend_certificate   *string     `json:"Frontend.certificate,omitempty"`
+	Frontend_private_key   *string     `json:"Frontend.private_key,omitempty"`
+	Frontend_internal_cidr StringArray `json:"Frontend.internal_cidr"`
+	Frontend_vpn_cidr      StringArray `json:"Frontend.vpn_cidr"`
 
 	// Time to lease client requests before they are retransmitted (in seconds).
-	Frontend_client_lease_time *uint32 `yaml:"Frontend.client_lease_time,omitempty"`
+	Frontend_client_lease_time *uint32 `json:"Frontend.client_lease_time,omitempty"`
 
 	// DataStore parameters.
-	Datastore_implementation *string `yaml:"Datastore.implementation,omitempty"`
-	Datastore_location       *string `yaml:"Datastore.location,omitempty"`
-
-	// The Admin UI
-	//	AdminUI_document_root *string `yaml:"AdminUI.document_root,omitempty"`
+	Datastore_implementation *string `json:"Datastore.implementation,omitempty"`
+	Datastore_location       *string `json:"Datastore.location,omitempty"`
 
 	// File Store
-	FileStore_directory *string `yaml:"FileStore.directory,omitempty"`
+	FileStore_directory *string `json:"FileStore.directory,omitempty"`
 
 	// Hunts
-	Hunts_last_timestamp *uint64 `yaml:"Hunts.last_timestamp,omitempty"`
+	Hunts_last_timestamp *uint64 `json:"Hunts.last_timestamp,omitempty"`
+
+	Interrogate_additional_queries *actions_proto.VQLCollectorArgs `json:"Interrogate.additional_queries,omitempty"`
 }
 
 func GetDefaultConfig() *Config {

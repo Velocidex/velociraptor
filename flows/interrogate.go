@@ -14,11 +14,12 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/vql"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
-	_                        = iota
-	processClientInfo uint64 = iota
+	processClientInfo  uint64 = 1
+	processCustomQuery uint64 = 2
 )
 
 type VInterrogate struct {
@@ -34,6 +35,19 @@ func (self *VInterrogate) Start(
 		return errors.New("Expected args of type VInterrogateArgs")
 	}
 
+	// Run custom queries from the config file if present.
+	if config_obj.Interrogate_additional_queries != nil {
+		err := QueueMessageForClient(
+			config_obj, flow_obj,
+			"VQLClientAction",
+			config_obj.Interrogate_additional_queries,
+			processCustomQuery)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Run standard queries.
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
 			VQL:  "select Client_name, Client_build_time, Client_labels from config",
@@ -79,6 +93,16 @@ func (self *VInterrogate) ProcessMessage(
 	message *crypto_proto.GrrMessage) error {
 
 	switch message.RequestId {
+	case processCustomQuery:
+		client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
+		defer flow_obj.SetState(client_info)
+
+		vql_response, ok := responder.ExtractGrrMessagePayload(
+			message).(*actions_proto.VQLResponse)
+		if ok {
+			client_info.Info = append(client_info.Info, vql_response)
+		}
+
 	case processClientInfo:
 		err := flow_obj.FailIfError(message)
 		if err != nil {
@@ -119,6 +143,15 @@ func (self *VInterrogate) ProcessMessage(
 				processRecentUsers(vql_response, client_info)
 			}
 		}
+
+		// Also support receiving files in interrogate
+		// actions.
+	case vql_subsystem.TransferWellKnownFlowId:
+		delegate := &VQLCollector{}
+		err := delegate.ProcessMessage(config_obj, flow_obj, message)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -150,9 +183,11 @@ func (self *VInterrogate) StoreClientInfo(
 		"host:" + client_info.Hostname,
 	}
 
-	for _, user := range client_info.Knowledgebase.Users {
-		keywords = append(keywords, "user:"+user.Username)
-		keywords = append(keywords, user.Username)
+	if client_info.Knowledgebase != nil {
+		for _, user := range client_info.Knowledgebase.Users {
+			keywords = append(keywords, "user:"+user.Username)
+			keywords = append(keywords, user.Username)
+		}
 	}
 
 	return db.SetIndex(config_obj,

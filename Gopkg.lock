@@ -67,6 +67,12 @@
   revision = "02af3965c54e8cacf948b97fef38925c4120652c"
 
 [[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/go-ole/go-ole"
   packages = [
     ".",
@@ -290,6 +296,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fa5aec790fb7ff4e73775a4533c88d84c0204544463a2ec40a7e9e11cf0caa22"
+  inputs-digest = "4d63dba7553aecf827db94a34aad823a479bc64f2c8fd67e9b7660f22a99242a"
   solver-name = "gps-cdcl"
   solver-version = 1
