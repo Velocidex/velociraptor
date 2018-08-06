@@ -557,6 +557,12 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	// Check the nonce is correct.
+	if packed_message_list.Nonce != self.config.Client.Nonce {
+		return nil, errors.New(
+			"Client Nonce is not valid - rejecting message.")
+	}
+
 	serialized_message_list := packed_message_list.MessageList
 	if packed_message_list.Compression ==
 		crypto_proto.PackedMessageList_ZCOMPRESSION {
@@ -650,11 +656,13 @@ func (self *CryptoManager) Encrypt(
 	w.Write([]byte(plain_text))
 	w.Close()
 
-	packed_message_list := &crypto_proto.PackedMessageList{}
-	packed_message_list.Compression = crypto_proto.PackedMessageList_ZCOMPRESSION
-	packed_message_list.MessageList = b.Bytes()
-	packed_message_list.Source = self.source
-	packed_message_list.Timestamp = uint64(time.Now().UnixNano() / 1000)
+	packed_message_list := &crypto_proto.PackedMessageList{
+		Compression: crypto_proto.PackedMessageList_ZCOMPRESSION,
+		MessageList: b.Bytes(),
+		Source:      self.source,
+		Nonce:       self.config.Client.Nonce,
+		Timestamp:   uint64(time.Now().UnixNano() / 1000),
+	}
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {

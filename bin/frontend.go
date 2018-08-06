@@ -142,8 +142,8 @@ func control(server_obj *server.Server) http.Handler {
 
 		message_info, err := server_obj.Decrypt(req.Context(), body)
 		if err != nil {
-			server_obj.Error("Unable to decrypt body", err)
-			http.Error(w, "", http.StatusServiceUnavailable)
+			// Just plain reject with a 403.
+			http.Error(w, "", http.StatusForbidden)
 			return
 		}
 		message_info.RemoteAddr = req.RemoteAddr

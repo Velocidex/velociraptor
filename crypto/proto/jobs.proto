@@ -238,6 +238,10 @@ message PackedMessageList {
       type: "RDFDatetime",
       description: "The client sends its timestamp to prevent replay attacks."
     }];
+
+    string nonce = 7 [(sem_type) = {
+            description: "A shared nonce between the server and client which must be given by the client. The server uses this to ensure the client belongs to the same deployment as the server. Without this check any client may connect to any server. NOTE this is a weak check - anyone who compromises a client in this deployment may extract this nonce and connect to that server, but it makes it a little harder to join a Velociraptor deployment."
+        }];
 };
 
 message CipherProperties {

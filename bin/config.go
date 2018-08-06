@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -31,6 +33,15 @@ func doGenerateConfig() {
 	config_obj.Client.CaCertificate = ca_bundle.Cert
 	config_obj.CA.PrivateKey = ca_bundle.PrivateKey
 
+	nonce := make([]byte, 8)
+	_, err = rand.Read(nonce)
+	if err != nil {
+		logger.Error("Unable to create nonce", err)
+		return
+	}
+	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
+
+	// Generate frontend certificate.
 	frontend_cert, err := crypto.GenerateServerCert(config_obj)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)
