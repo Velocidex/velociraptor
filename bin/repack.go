@@ -3,14 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
 	"regexp"
 )
 
 var (
-	repack        = kingpin.Command("repack", "Repack a binary.")
+	repack        = app.Command("repack", "Repack a binary.")
 	repack_config = repack.Arg(
 		"config_file", "The config file to repack into the binary.").
 		Required().String()

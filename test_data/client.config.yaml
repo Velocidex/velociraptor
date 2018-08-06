@@ -1,41 +1,29 @@
 Client:
-  ca_certificate: '-----BEGIN CERTIFICATE-----
-
-  MIIC5DCCAcygAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
-
-  dGVzdDELMAkGA1UEBhMCVVMwHhcNMTgwNjA2MDcyMTAzWhcNMTkwNjA3MDcyMTAz
-
-  WjAXMRUwEwYDVQQDDAx2ZWxvY2lyYXB0b3IwggEiMA0GCSqGSIb3DQEBAQUAA4IB
-
-  DwAwggEKAoIBAQDFGKkxFbhzwFtHL83X6HqteDS0JhPObqqBXpWIEmwduLIv3r/G
-
-  gl9HuhZHGCgvd2+uergUzsof4ckY+M10qYuhX4CJwxmc1Q+5iIJpiZobLzWQ6szd
-
-  lxIF6XTEhNuXBm6xCCtfPGT9SH90QSl+2gN/SZhxkjgyJ0J+Ty1CLKrTsCyZTDHv
-
-  MbHB7Fkrc2lEaVlYgTI8LEZWr9lO+IxDw14e4mhOuYS/YpzPbrnOvMY1YbJDcfxz
-
-  DwAxeJGKdZBmcoKLB1Cr+Qw06S7aUzHDtUl9IkMViImJsA4xj9pnNVjQEqt5yeo5
-
-  UCjDYQy6o5gDPmjghysg+NVni4rSp0VJ2EORAgMBAAGjMjAwMA8GA1UdEwEB/wQF
-
-  MAMBAf8wHQYDVR0OBBYEFHySH7vYHqo085MmxGysQSJj1YjzMA0GCSqGSIb3DQEB
-
-  CwUAA4IBAQAqvBv8RxNT2rrvfzbz+5I4dFwwgLcWIhamLiTAm3kXlBo2rCsec26h
-
-  WmrTXkZL1Gg5cpla8fBAL9NjCKX6CPncGVB4zp56bokm8zebDWcAHGZD3xh5X+7r
-
-  rb2HxDF88Zh5hfrhSc10WzyIBhEGA051CzqXFZtpjfcpv3JLiPzV8HAn4zQq5mCF
-
-  nvEyogBVXHY640pKH/q6fBOeIezng1raA719/OYE+DTtKJkZpmfcSYGaNHpHbF7y
-
-  NMkN5xMJQhEJ790SE0gGKELaZ7iGcuGErbKzNBwOcH94uFjTJtN/yl0LfV49d1Ac
-
-  /IHM2oE3+CtnkBa2oclARfvZoPQwSb27
-
-  -----END CERTIFICATE-----'
-
+  build_time: "2018-08-06T22:27:52+10:00"
+  ca_certificate: |
+    -----BEGIN CERTIFICATE-----
+    MIIDITCCAgmgAwIBAgIRAKVUNVlVVE/wwla83R/ZQK4wDQYJKoZIhvcNAQELBQAw
+    GjEYMBYGA1UEChMPVmVsb2NpcmFwdG9yIENBMB4XDTE4MDgwNjEyMzAwNVoXDTE5
+    MDgwNjEyMzAwNVowGjEYMBYGA1UEChMPVmVsb2NpcmFwdG9yIENBMIIBIjANBgkq
+    hkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxfBCvPQ4KxlmtXvOzoO6KMgiOGRsFDZh
+    Oz574jOe4ZIw9YfE3FM8vxCsIwiC3A60cP/FnVSMwZAltkvfd+AfVQqeWeOq02uJ
+    5JGWx56AUmrvJllar36Ai2LEeSfoBqmWY5uI/e+ElAxnwsBO46CyL1MA4RpNHTCE
+    wc5Ubp312SFlrQdi3KscLeav5l60bVXphoSAzGelrPs4/DebG/aD5SbDm3qc/cf9
+    iGmhZEtCCU1loUEOifAWyhHCyQYVXIJATWxP+6jX2ASkKtZ+iyNMGoMjVIF4t6tD
+    IRDLNiekYPdXLkl+5L5bMANvTBwzbHuDtPx6wgPd5DtKXD8KEzSRgQIDAQABo2Iw
+    YDAOBgNVHQ8BAf8EBAMCAqQwEwYDVR0lBAwwCgYIKwYBBQUHAwEwDwYDVR0TAQH/
+    BAUwAwEB/zAoBgNVHREEITAfgh1WZWxvY2lyYXB0b3JfY2EudmVsb2NpZGV4LmNv
+    bTANBgkqhkiG9w0BAQsFAAOCAQEAf9T8OjnPzgb23lHJqCJ+TQoSk/ztoih3KJ6d
+    4jGEC1mZAhU/v2Jkxqc+Gq2J+sG9mKpUfk0KEw3fEUB4sAfTbnh0mtcIu/foKOM+
+    Vj0EKQ5tCKpjq+G7lOFlPd5QzqxVW9AOVSnrvj/GZYLt+RfXVFxXijgyriLNniFi
+    t1kjZIYxVPoPwS9W7fJKjgNLtSWOX/iEp4RUQr5E+YgFJkDcIMwuJJOOOjbUpAtp
+    CvhAfUMmZZ19wtN+37GflrcjDw7VzerTqNJ3gx6iF7Xy7AebkzvEjuyy7d7xKGdM
+    Dixe4BWrhpv6DhOBWvtc/gpeqQP+EA71GuAZdQQC6NFdfXekBQ==
+    -----END CERTIFICATE-----
+  commit: 47b7a1c7fed5c2cd69d0a49826383d77ad5f3dd4
+  name: velociraptor
   server_urls:
-    - http://localhost:8080/
-
+  - http://localhost:8000/
+  version: "0.1"
   writeback_linux: /tmp/velociraptor.yaml
+  writeback_windows: /Program Files/Velociraptor/velociraptor.writeback.yaml

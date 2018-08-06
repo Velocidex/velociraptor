@@ -36,10 +36,13 @@ func GetDefaultConfig() *Config {
 	return &Config{
 		&api_proto.Config{
 			Client: &api_proto.ClientConfig{
-				Name:      "velociraptor",
-				Version:   "0.1",
-				BuildTime: build_time,
-				Commit:    commit_hash,
+				Name:           "velociraptor",
+				Version:        "0.1",
+				BuildTime:      build_time,
+				Commit:         commit_hash,
+				WritebackLinux: "/etc/velociraptor.writeback.yaml",
+				WritebackWindows: "/Program Files/Velociraptor/" +
+					"velociraptor.writeback.yaml",
 			},
 			API: &api_proto.APIConfig{
 				// Bind port for gRPC endpoint - this should not
@@ -63,7 +66,9 @@ func GetDefaultConfig() *Config {
 				ClientLeaseTime: 600,
 			},
 			Datastore: &api_proto.DatastoreConfig{
-				Implementation: "FileBaseDataStore",
+				Implementation:     "FileBaseDataStore",
+				Location:           "/tmp/velociraptor",
+				FilestoreDirectory: "/tmp/velociraptor",
 			},
 			Flows: &api_proto.FlowsConfig{},
 		}, "",

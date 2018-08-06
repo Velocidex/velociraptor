@@ -12,6 +12,7 @@ import (
 type publicKeyResolver interface {
 	GetPublicKey(subject string) (*rsa.PublicKey, bool)
 	SetPublicKey(subject string, key *rsa.PublicKey) error
+	Clear() // Flush all internal caches.
 }
 
 type inMemoryPublicKeyResolver struct {
@@ -50,6 +51,10 @@ func (self *inMemoryPublicKeyResolver) SetPublicKey(
 	subject string, key *rsa.PublicKey) error {
 	self.public_keys[subject] = key
 	return nil
+}
+
+func (self *inMemoryPublicKeyResolver) Clear() {
+	self.public_keys = make(map[string]*rsa.PublicKey)
 }
 
 type serverPublicKeyResolver struct {
@@ -93,6 +98,8 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 	}
 	return db.SetSubject(self.config_obj, subject, pem)
 }
+
+func (self *serverPublicKeyResolver) Clear() {}
 
 func NewServerPublicKeyResolver(config_obj *config.Config) publicKeyResolver {
 	return &serverPublicKeyResolver{

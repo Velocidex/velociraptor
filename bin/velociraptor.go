@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -11,8 +10,6 @@ import (
 )
 
 func RunClient(config_path *string) {
-	kingpin.Parse()
-
 	ctx := context.Background()
 	config_obj := config.GetDefaultConfig()
 
@@ -52,15 +49,6 @@ func RunClient(config_path *string) {
 	err := crypto.VerifyConfig(ctx.Config)
 	if err != nil {
 		kingpin.FatalIfError(err, "Invalid config")
-	}
-
-	if show_config != nil && *show_config {
-		res, err := config.Encode(config_obj)
-		if err != nil {
-			kingpin.FatalIfError(err, "Unable to encode config.")
-		}
-		fmt.Printf("%v", string(res))
-		return
 	}
 
 	manager, err := crypto.NewClientCryptoManager(

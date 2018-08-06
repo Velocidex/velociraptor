@@ -11,7 +11,6 @@ import (
 	"fmt"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
-	//	utils_ "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {

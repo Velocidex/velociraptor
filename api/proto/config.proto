@@ -58,6 +58,10 @@ message ClientConfig {
     uint64 hunt_last_timestamp = 13 [(sem_type) = {
             description: "The last hunt timestamp this client ran."
         }];
+
+    uint64 last_server_serial_number = 14 [(sem_type) = {
+            description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
+        }];
 }
 
 message APIConfig {
@@ -114,6 +118,10 @@ message FrontendConfig {
 
     uint32 client_lease_time = 5 [(sem_type) = {
             description: "How long to lease client messages."
+        }];
+
+    string dns_name = 6 [(sem_type) = {
+            description: "The DNS name of the frontend."
         }];
 }
 

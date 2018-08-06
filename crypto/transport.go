@@ -20,11 +20,12 @@ import (
 	errors "github.com/pkg/errors"
 	metrics "github.com/rcrowley/go-metrics"
 	"io/ioutil"
-	"log"
+	"math/big"
 	"strings"
 	"time"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
@@ -133,6 +134,17 @@ type CryptoManager struct {
 
 	// Cache cipher objects which have been verified.
 	input_cipher_cache *cache.LRUCache
+
+	caPool *x509.CertPool
+
+	logger *logging.Logger
+}
+
+// Clear all internal caches.
+func (self *CryptoManager) Clear() {
+	self.output_cipher_cache.Clear()
+	self.input_cipher_cache.Clear()
+	self.public_key_resolver.Clear()
 }
 
 func (self *CryptoManager) GetCSR() ([]byte, error) {
@@ -153,25 +165,70 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 		Bytes: csrBytes}), nil
 }
 
+// Adds the server certificate to the crypto manager.
 func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, error) {
-	client_cert, err := parseX509CertFromPemStr(certificate_pem)
+	server_cert, err := parseX509CertFromPemStr(certificate_pem)
 	if err != nil {
 		return nil, err
 	}
 
-	if client_cert.PublicKeyAlgorithm != x509.RSA {
+	if server_cert.PublicKeyAlgorithm != x509.RSA {
 		return nil, errors.New("Not RSA algorithm")
 	}
 
-	common_name := strings.TrimPrefix(client_cert.Subject.CommonName, "aff4:/")
-	err = self.public_key_resolver.SetPublicKey(common_name,
-		client_cert.PublicKey.(*rsa.PublicKey))
+	// Verify that the certificate is signed by the CA.
+	opts := x509.VerifyOptions{
+		Roots: self.caPool,
+	}
+
+	_, err = server_cert.Verify(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check that the server's serial number is larger than the
+	// last one we saw. This prevents attackers from MITM old certs.
+	last_serial_number := big.NewInt(int64(
+		self.config.Client.LastServerSerialNumber))
+	if last_serial_number.Cmp(server_cert.SerialNumber) == 1 {
+		return nil, errors.New(
+			fmt.Sprintf("Server serial number is too old. Should be %v",
+				self.config.Client.LastServerSerialNumber))
+	}
+
+	// Server has advanced its serial number - record the new
+	// number in our config.
+	if last_serial_number.Cmp(server_cert.SerialNumber) == -1 {
+		// Clear all our internal caches because we are now
+		// re-keying.
+		self.Clear()
+		if self.config.Writeback != "" {
+			write_back_config := config.NewClientConfig()
+			config.LoadConfig(self.config.Writeback, write_back_config)
+			write_back_config.Client.LastServerSerialNumber = uint64(
+				server_cert.SerialNumber.Int64())
+			err = config.WriteConfigToFile(self.config.Writeback,
+				write_back_config)
+			if err != nil {
+				return nil, err
+			}
+			self.logger.Info(
+				"Updated server serial number in "+
+					"config file %v to %v",
+				self.config.Writeback,
+				write_back_config.Client.LastServerSerialNumber)
+		}
+	}
+
+	err = self.public_key_resolver.SetPublicKey(
+		server_cert.Subject.CommonName,
+		server_cert.PublicKey.(*rsa.PublicKey))
 	if err != nil {
 		utils.Debug(err)
 		return nil, err
 	}
 
-	return &client_cert.Subject.CommonName, nil
+	return &server_cert.Subject.CommonName, nil
 }
 
 func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error) {
@@ -226,6 +283,7 @@ func NewCryptoManager(config_obj *config.Config, source string, pem_str []byte) 
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
+		logger:              logging.NewLogger(config_obj),
 	}, nil
 }
 
@@ -248,6 +306,7 @@ func NewServerCryptoManager(config_obj *config.Config) (*CryptoManager, error) {
 		public_key_resolver: NewServerPublicKeyResolver(config_obj),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
+		logger:              logging.NewLogger(config_obj),
 	}, nil
 }
 
@@ -258,8 +317,15 @@ func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []
 		return nil, err
 	}
 
+	logger := logging.NewLogger(config_obj)
 	client_id := ClientIDFromPublicKey(&private_key.PublicKey)
-	log.Printf("Starting Crypto for client %v", client_id)
+	logger.Info("Starting Crypto for client %v", client_id)
+
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	if !ok {
+		return nil, errors.New("failed to parse root certificate")
+	}
 
 	return &CryptoManager{
 		config:              config_obj,
@@ -268,6 +334,8 @@ func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
+		caPool:              roots,
+		logger:              logger,
 	}, nil
 }
 

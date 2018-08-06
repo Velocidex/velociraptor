@@ -4,7 +4,6 @@ import (
 	"bytes"
 	errors "github.com/pkg/errors"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 type HTTPCommunicator struct {
@@ -43,11 +43,13 @@ type HTTPCommunicator struct {
 
 	// Enrollment
 	last_enrollment_time time.Time
+
+	logger *logging.Logger
 }
 
 // Run forever.
 func (self *HTTPCommunicator) Run() {
-	log.Printf("Starting HTTPCommunicator: %v", self.urls)
+	self.logger.Info("Starting HTTPCommunicator: %v", self.urls)
 
 	// Pump messages from the executor to the pending message list.
 	go func() {
@@ -91,7 +93,7 @@ func (self *HTTPCommunicator) Run() {
 			// We are due for an unsolicited poll.
 		} else if time.Now().After(
 			self.last_ping_time.Add(self.current_poll_duration)) {
-			log.Printf("Sending unsolicited ping.")
+			self.logger.Info("Sending unsolicited ping.")
 			self.current_poll_duration *= 2
 			if self.current_poll_duration > self.maxPoll {
 				self.current_poll_duration = self.maxPoll
@@ -103,7 +105,7 @@ func (self *HTTPCommunicator) Run() {
 		// Sleep for minPoll
 		select {
 		case <-self.ctx.Done():
-			log.Printf("Stopping HTTPCommunicator")
+			self.logger.Info("Stopping HTTPCommunicator")
 			return
 
 		case <-time.After(self.minPoll):
@@ -144,7 +146,7 @@ func (self *HTTPCommunicator) sendMessageList(message_list *crypto_proto.Message
 			return
 		}
 
-		log.Printf("Failed to fetch URL %v: %v", url, err)
+		self.logger.Info("Failed to fetch URL %v: %v", url, err)
 
 		select {
 		case <-self.ctx.Done():
@@ -186,7 +188,7 @@ func (self *HTTPCommunicator) sendToURL(
 			return err
 		}
 		self.server_name = *server_name
-		log.Printf("Received PEM for %v from %v", self.server_name, url)
+		self.logger.Info("Received PEM for %v from %v", self.server_name, url)
 	}
 
 	// We are now ready to communicate with the server.
@@ -204,7 +206,7 @@ func (self *HTTPCommunicator) sendToURL(
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Received response with status: %v", resp.Status)
+	self.logger.Info("Received response with status: %v", resp.Status)
 	// 406 status means we need to enrol since the server is
 	// unable to talk to us because it does not have our public
 	// key.
@@ -281,7 +283,7 @@ func (self *HTTPCommunicator) MaybeEnrol() {
 		reply.Args = serialized_csr
 
 		self.last_enrollment_time = time.Now()
-		log.Printf("Enrolling")
+		self.logger.Info("Enrolling")
 		go func() {
 			self.executor.SendToServer(reply)
 		}()
@@ -307,7 +309,7 @@ func (self *HTTPCommunicator) MaybeCheckForeman() {
 		reply.Args = serialized_arg
 
 		self.last_foreman_check_time = time.Now()
-		log.Printf("Checking foreman")
+		self.logger.Info("Checking foreman")
 		go func() {
 			self.executor.SendToServer(reply)
 		}()
@@ -323,7 +325,9 @@ func NewHTTPCommunicator(
 		minPoll: time.Duration(1) * time.Second,
 		maxPoll: time.Duration(10) * time.Second,
 		urls:    urls,
-		ctx:     &ctx}
+		ctx:     &ctx,
+		logger:  logging.NewLogger(ctx.Config),
+	}
 
 	// Allow the executor to queue 100 messages in the same packet.
 	result.pending_messages = make(chan *crypto_proto.GrrMessage, 100)

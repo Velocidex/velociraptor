@@ -23,7 +23,7 @@ var (
 	healthy int32
 )
 
-func validateConfig(configuration *config.Config) error {
+func validateServerConfig(configuration *config.Config) error {
 	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
 	}
@@ -31,13 +31,19 @@ func validateConfig(configuration *config.Config) error {
 	return nil
 }
 
-func get_config(config_path string) (*config.Config, error) {
+func get_server_config(config_path string) (*config.Config, error) {
 	config_obj := config.GetDefaultConfig()
 	err := config.LoadConfig(config_path, config_obj)
 	if err == nil {
-		err = validateConfig(config_obj)
+		err = validateServerConfig(config_obj)
 	}
 
+	return config_obj, err
+}
+
+func get_config(config_path string) (*config.Config, error) {
+	config_obj := config.GetDefaultConfig()
+	err := config.LoadConfig(config_path, config_obj)
 	return config_obj, err
 }
 
@@ -135,6 +141,11 @@ func control(server_obj *server.Server) http.Handler {
 		}
 
 		message_info, err := server_obj.Decrypt(req.Context(), body)
+		if err != nil {
+			server_obj.Error("Unable to decrypt body", err)
+			http.Error(w, "", http.StatusServiceUnavailable)
+			return
+		}
 		message_info.RemoteAddr = req.RemoteAddr
 
 		// Very few Unauthenticated client messages are valid
