@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"github.com/golang/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -17,9 +16,9 @@ func (self *GetClientInfo) Run(
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(args, output)
 	info := &actions_proto.ClientInformation{
-		ClientName:    *ctx.Config.Client_name,
-		ClientVersion: *ctx.Config.Client_version,
-		Labels:        ctx.Config.Client_labels,
+		ClientName:    ctx.Config.Client.Name,
+		ClientVersion: ctx.Config.Client.Version,
+		Labels:        ctx.Config.Client.Labels,
 	}
 	responder.AddResponse(info)
 	responder.Return()
@@ -38,13 +37,13 @@ func (self *UpdateForeman) Run(
 		return
 	}
 
-	if arg.LastHuntTimestamp > *ctx.Config.Hunts_last_timestamp {
-		ctx.Config.Hunts_last_timestamp = proto.Uint64(arg.LastHuntTimestamp)
-		write_back_config := config.Config{}
-		config.LoadConfig(*ctx.Config.Config_writeback, &write_back_config)
-		write_back_config.Hunts_last_timestamp = ctx.Config.Hunts_last_timestamp
-		err := config.WriteConfigToFile(*ctx.Config.Config_writeback,
-			&write_back_config)
+	if arg.LastHuntTimestamp > ctx.Config.Client.HuntLastTimestamp {
+		ctx.Config.Client.HuntLastTimestamp = arg.LastHuntTimestamp
+		write_back_config := config.NewClientConfig()
+		config.LoadConfig(ctx.Config.Writeback, write_back_config)
+		write_back_config.Client.HuntLastTimestamp = ctx.Config.Client.HuntLastTimestamp
+		err := config.WriteConfigToFile(ctx.Config.Writeback,
+			write_back_config)
 		if err != nil {
 			responder.RaiseError(err.Error())
 			return

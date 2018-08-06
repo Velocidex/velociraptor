@@ -1,4 +1,5 @@
-CA.certificate: '-----BEGIN CERTIFICATE-----
+Client:
+  ca_certificate: '-----BEGIN CERTIFICATE-----
 
   MIIC5DCCAcygAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
 
@@ -32,28 +33,9 @@ CA.certificate: '-----BEGIN CERTIFICATE-----
 
   /IHM2oE3+CtnkBa2oclARfvZoPQwSb27
 
-  -----END CERTIFICATE-----
+  -----END CERTIFICATE-----'
 
-  '
-Client.executable_signing_public_key: '-----BEGIN PUBLIC KEY-----
+  server_urls:
+    - http://localhost:8080/
 
-  MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3rMxd9NF+VEZ3IiZ4fTW
-
-  NOCTrTXh7P7FLnWu9yuvRZcFeE3FlB+5WfmKCIHM3t3f/uyLdlTO0W8V4KlnFPzk
-
-  N6HHDZyePOppVmmWQDZGsHAYbNLeL0pdU00N39+HBqlhWwb5GGbJRQFGM0r3bv3D
-
-  LORISZz2ut1j3N0O9CEnRvoEILYMzfpXUn8m4RArwfzuva5UyNRL9NBNZfL58cC1
-
-  vdT5uTpl0ZRkFsdVrmARHm2OkSUANFd0VfiyPhHh2lD8O37y9Q5PGjkO/WZKXOs0
-
-  VU8pu2EAbDDJMVLFKgYEXfIte1tmjDVGSBu74wjRdCYGkK/SLGAdO5VapPuLoP1h
-
-  EQIDAQAB
-
-  -----END PUBLIC KEY-----
-
-  '
-Client.server_urls:
-- http://localhost:8080/
-Config.writeback: /tmp/velociraptor.yaml
+  writeback_linux: /tmp/velociraptor.yaml

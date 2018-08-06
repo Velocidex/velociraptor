@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	//	utils_ "www.velocidex.com/golang/velociraptor/testing"
@@ -136,28 +135,28 @@ func PemToPublicKey(pem_str []byte) (*rsa.PublicKey, error) {
 
 // Verify the configuration, possibly updating default settings.
 func VerifyConfig(config_obj *config.Config) error {
-	if len(config_obj.Client_server_urls) == 0 {
+	if len(config_obj.Client.ServerUrls) == 0 {
 		return errors.New("No server URLs configured!")
 	}
 
-	if config_obj.Client_private_key == nil {
+	if config_obj.Client.PrivateKey == "" {
 		fmt.Println("Genering new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		config_obj.Client_private_key = proto.String(string(pem))
+		config_obj.Client.PrivateKey = string(pem)
 
-		if config_obj.Config_writeback != nil {
-			write_back_config := config.Config{}
-			config.LoadConfig(*config_obj.Config_writeback, &write_back_config)
-			write_back_config.Client_private_key = proto.String(string(pem))
-			err = config.WriteConfigToFile(*config_obj.Config_writeback,
-				&write_back_config)
+		if config_obj.Writeback != "" {
+			write_back_config := config.NewClientConfig()
+			config.LoadConfig(config_obj.Writeback, write_back_config)
+			write_back_config.Client.PrivateKey = string(pem)
+			err = config.WriteConfigToFile(config_obj.Writeback,
+				write_back_config)
 			if err != nil {
 				return err
 			}
-			fmt.Println("Wrote new config file ", *config_obj.Config_writeback)
+			fmt.Println("Wrote new config file ", config_obj.Writeback)
 		}
 	}
 

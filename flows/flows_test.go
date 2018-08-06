@@ -22,8 +22,8 @@ func TestAFF4FlowObject(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
-	config_obj.Datastore_location = proto.String(tempdir)
+	config_obj.Datastore.Implementation = "FileBaseDataStore"
+	config_obj.Datastore.Location = tempdir
 
 	runner_args := &flows_proto.FlowRunnerArgs{
 		FlowName: "NoSuchFlow",
@@ -132,8 +132,8 @@ func TestFlowRunner(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
-	config_obj.Datastore_location = proto.String(tempdir)
+	config_obj.Datastore.Implementation = "FileBaseDataStore"
+	config_obj.Datastore.Location = tempdir
 
 	runner_args := &flows_proto.FlowRunnerArgs{
 		FlowName: "MyTestFlow",
@@ -212,8 +212,8 @@ func TestFlowRunner2(t *testing.T) {
 	defer os.RemoveAll(tempdir)
 
 	config_obj := config.GetDefaultConfig()
-	config_obj.Datastore_implementation = proto.String("FileBaseDataStore")
-	config_obj.Datastore_location = proto.String(tempdir)
+	config_obj.Datastore.Implementation = "FileBaseDataStore"
+	config_obj.Datastore.Location = tempdir
 
 	runner_args := &flows_proto.FlowRunnerArgs{
 		FlowName: "MyTestFlow",

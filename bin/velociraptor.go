@@ -40,8 +40,8 @@ func RunClient(config_path *string) {
 	// Allow the embedded config to specify a writeback
 	// location. We load that location in addition to the
 	// configuration we were provided.
-	if config_obj.Config_writeback != nil {
-		err := config.LoadConfig(*config_obj.Config_writeback, config_obj)
+	if config_obj.Writeback != "" {
+		err := config.LoadConfig(config_obj.Writeback, config_obj)
 		if err != nil {
 			kingpin.Errorf("Unable to load writeback file: %v", err)
 		}
@@ -64,7 +64,7 @@ func RunClient(config_path *string) {
 	}
 
 	manager, err := crypto.NewClientCryptoManager(
-		config_obj, []byte(*config_obj.Client_private_key))
+		config_obj, []byte(config_obj.Client.PrivateKey))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}
@@ -78,7 +78,7 @@ func RunClient(config_path *string) {
 		ctx,
 		manager,
 		exe,
-		config_obj.Client_server_urls,
+		config_obj.Client.ServerUrls,
 	)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")

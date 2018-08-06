@@ -11,7 +11,7 @@ package proto;
 // Stores information about the GRR client itself
 message ClientInformation {
    string client_name = 1;
-   uint32 client_version = 2;
+   string client_version = 7;
    uint64 revision = 3;
    string build_time = 4;
    string client_description = 5;

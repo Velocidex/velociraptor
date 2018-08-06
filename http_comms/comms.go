@@ -299,7 +299,7 @@ func (self *HTTPCommunicator) MaybeCheckForeman() {
 		}
 
 		serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-			LastHuntTimestamp: *self.ctx.Config.Hunts_last_timestamp,
+			LastHuntTimestamp: self.ctx.Config.Client.HuntLastTimestamp,
 		})
 		if err != nil {
 			return

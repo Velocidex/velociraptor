@@ -1,0 +1,162 @@
+// These are the messages used in client actions.
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+
+package proto;
+
+message ClientConfig {
+    string name = 1 [(sem_type) = {
+            description: "The client's name."
+        }];
+
+    string description = 2 [(sem_type) = {
+            description: "The client's long description string"
+        }];
+
+    string version = 3 [(sem_type) = {
+            description: "The client's version string"
+        }];
+
+    string commit = 4 [(sem_type) = {
+            description: "The client's git commit string."
+        }];
+
+    string build_time = 5 [(sem_type) = {
+            description: "When the client was built."
+        }];
+
+    repeated string labels = 6 [(sem_type) = {
+            description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
+        }];
+
+    string private_key = 7 [(sem_type) = {
+            description: "The client's private key in PEM encoding."
+        }];
+
+    repeated string server_urls = 8 [(sem_type) = {
+            description: "A list of server URLs the client will try to connect to."
+        }];
+
+    string ca_certificate = 11 [(sem_type) = {
+            description: "The CA's certificate encoded in PEM. The client will trust any server signed with this CA."
+        }];
+
+    string nonce = 12 [(sem_type) = {
+            description: "A shared nonce the client will present. The server will reject clients which do not present this key so it must be embedded in the client's configuration."
+        }];
+
+    string writeback_linux = 9 [(sem_type) = {
+            description: "A path where linux clients will write local state."
+        }];
+
+    string writeback_windows = 10 [(sem_type) = {
+            description: "A path where windows clients will write local state."
+        }];
+
+    uint64 hunt_last_timestamp = 13 [(sem_type) = {
+            description: "The last hunt timestamp this client ran."
+        }];
+}
+
+message APIConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind gRPC endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+}
+
+message GUIConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+
+    repeated string internal_cidr = 3 [(sem_type) = {
+            description: "CIDR addresses of internal networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
+        }];
+
+    repeated string vpn_cidr = 4 [(sem_type) = {
+            description: "CIDR addresses of vpn networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
+        }];
+}
+
+message CAConfig {
+    string private_key = 1 [(sem_type) = {
+            description: "The private key of the CA encoded in PEM. This must correspond with the certificate in Client.ca_certificate."
+        }];
+}
+
+
+message FrontendConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind frontend endpoint. Clients connect to this endpoint to poll for jobs."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind to."
+        }];
+
+    string certificate = 3 [(sem_type) = {
+            description: "X509 Certificate of frontend server."
+        }];
+
+    string private_key = 4 [(sem_type) = {
+            description: "The private key of the frontend server encoded in PEM format."
+        }];
+
+    uint32 client_lease_time = 5 [(sem_type) = {
+            description: "How long to lease client messages."
+        }];
+}
+
+
+message DatastoreConfig {
+    string implementation = 1 [(sem_type) = {
+            description: "The name of the datastore implementation to use."
+            default: "FileBaseDataStore",
+        }];
+
+    string location = 2 [(sem_type) = {
+            description: "The location (or path) to the datastore.",
+        }];
+
+    string filestore_directory = 3 [(sem_type) = {
+            description: "The path to store uploaded files."
+        }];
+}
+
+
+message FlowsConfig {
+    VQLCollectorArgs interrogate_additional_queries = 1 [(sem_type) = {
+            description: "Additional queries to issue to Interrogate flows."
+        }];
+}
+
+
+message Config {
+    ClientConfig Client = 1 [(sem_type) = {
+            description: "Client configuration."
+        }];
+
+    APIConfig API = 2 [(sem_type) = {
+            description: "Configuration for gRPC API endpoint."
+    }];
+
+    GUIConfig GUI = 3;
+
+    CAConfig CA = 4;
+
+    FrontendConfig Frontend = 5;
+
+    DatastoreConfig Datastore = 6;
+
+    FlowsConfig Flows = 7;
+}

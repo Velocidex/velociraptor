@@ -16,7 +16,7 @@ import (
 )
 
 func install_mux(config_obj *config.Config, mux *http.ServeMux) {
-	logging.NewLogger(config_obj).Info("Will serve files from directory gui/static")
+	logging.NewLogger(config_obj).Info("GUI will serve files from directory gui/static")
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
 		http.Dir("gui/static"))))
 }

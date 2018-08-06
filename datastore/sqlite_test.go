@@ -1,4 +1,5 @@
-//
+// +build sqlite
+
 package datastore
 
 import (

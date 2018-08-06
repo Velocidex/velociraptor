@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -36,11 +37,11 @@ func (self *VInterrogate) Start(
 	}
 
 	// Run custom queries from the config file if present.
-	if config_obj.Interrogate_additional_queries != nil {
+	if config_obj.Flows.InterrogateAdditionalQueries != nil {
 		err := QueueMessageForClient(
 			config_obj, flow_obj,
 			"VQLClientAction",
-			config_obj.Interrogate_additional_queries,
+			config_obj.Flows.InterrogateAdditionalQueries,
 			processCustomQuery)
 		if err != nil {
 			return err
@@ -50,7 +51,7 @@ func (self *VInterrogate) Start(
 	// Run standard queries.
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
-			VQL:  "select Client_name, Client_build_time, Client_labels from config",
+			VQL:  "select Name, BuildTime, Labels from config",
 			Name: "Client Info"},
 		&actions_proto.VQLRequest{
 			VQL: "select Hostname, OS, Architecture, Platform, PlatformVersion, " +
@@ -250,7 +251,7 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 
 func processClientInfoQuery(response *actions_proto.VQLResponse,
 	client_info *actions_proto.ClientInfo) error {
-	var result []config.Config
+	var result []*api_proto.ClientConfig
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
@@ -258,11 +259,10 @@ func processClientInfoQuery(response *actions_proto.VQLResponse,
 	}
 
 	for _, info := range result {
-		if info.Client_name == nil || info.Client_build_time == nil {
-			continue
+		if info != nil {
+			client_info.ClientName = info.Name
+			client_info.ClientVersion = info.BuildTime
 		}
-		client_info.ClientName = *info.Client_name
-		client_info.ClientVersion = *info.Client_build_time
 	}
 	return nil
 }

@@ -1,4 +1,5 @@
-CA.certificate: '-----BEGIN CERTIFICATE-----
+Client:
+  ca_certificate: '-----BEGIN CERTIFICATE-----
 
   MIIC2zCCAcOgAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
 
@@ -33,8 +34,9 @@ CA.certificate: '-----BEGIN CERTIFICATE-----
   ItgybIt5e3PhIGaoCPR6
 
   -----END CERTIFICATE-----'
-Client.server_urls: http://localhost:8080/
-Client.private_key: '-----BEGIN RSA PRIVATE KEY-----
+  server_urls:
+     - http://localhost:8080/
+  private_key: '-----BEGIN RSA PRIVATE KEY-----
 
   MIIEogIBAAKCAQEAxuvw3T61UDhM6DzWGPDZ7/ER/sZOFjDwNXVX3pDqMKagjot9
 

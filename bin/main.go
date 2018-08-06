@@ -152,7 +152,7 @@ func main() {
 			Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})
 		scope := vql_subsystem.MakeScope().AppendVars(env)
 
-		scope.Logger = log.New(os.Stderr, "vraptor: ", log.Lshortfile)
+		scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 		for _, query := range *queries {
 			vql, err := vfilter.Parse(query)
 			if err != nil {

@@ -1,6 +1,9 @@
-GUI.bind_address: 127.0.0.1
-GUI.bind_port: 8000
-CA.certificate: '-----BEGIN CERTIFICATE-----
+GUI:
+   bind_address: 127.0.0.1
+   bind_port: 8000
+
+Client:
+  ca_certificate: '-----BEGIN CERTIFICATE-----
 
   MIIC5DCCAcygAwIBAgIBATANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
 
@@ -34,15 +37,16 @@ CA.certificate: '-----BEGIN CERTIFICATE-----
 
   /IHM2oE3+CtnkBa2oclARfvZoPQwSb27
 
-  -----END CERTIFICATE-----
+  -----END CERTIFICATE-----'
+  server_urls:
+    - http://localhost:8080/
 
-  '
-Client.server_urls:
-- http://localhost:8080/
-Config.writeback: /tmp/velociraptor.yaml
-Frontend.bind_address: '127.0.0.1'
-Frontend.bind_port: 8080
-Frontend.certificate: '-----BEGIN CERTIFICATE-----
+  writeback_linux: /tmp/velociraptor.yaml
+
+Frontend:
+  bind_address: '127.0.0.1'
+  bind_port: 8080
+  certificate: '-----BEGIN CERTIFICATE-----
 
   MIICwDCCAaigAwIBAgIBAjANBgkqhkiG9w0BAQsFADAgMREwDwYDVQQDDAhncnJf
 
@@ -74,65 +78,9 @@ Frontend.certificate: '-----BEGIN CERTIFICATE-----
 
   CeMPgoRG6Ejz8YJWZhwJ884vIpJip4jtJnaRsdEnBNn/3TD2
 
-  -----END CERTIFICATE-----
+  -----END CERTIFICATE-----'
 
-  '
-CA.private_key: '-----BEGIN RSA PRIVATE KEY-----
-
-  MIIEpAIBAAKCAQEAxRipMRW4c8BbRy/N1+h6rXg0tCYTzm6qgV6ViBJsHbiyL96/
-
-  xoJfR7oWRxgoL3dvrnq4FM7KH+HJGPjNdKmLoV+AicMZnNUPuYiCaYmaGy81kOrM
-
-  3ZcSBel0xITblwZusQgrXzxk/Uh/dEEpftoDf0mYcZI4MidCfk8tQiyq07AsmUwx
-
-  7zGxwexZK3NpRGlZWIEyPCxGVq/ZTviMQ8NeHuJoTrmEv2Kcz265zrzGNWGyQ3H8
-
-  cw8AMXiRinWQZnKCiwdQq/kMNOku2lMxw7VJfSJDFYiJibAOMY/aZzVY0BKrecnq
-
-  OVAow2EMuqOYAz5o4IcrIPjVZ4uK0qdFSdhDkQIDAQABAoIBAFi+Fc/n+7kCbxbK
-
-  S2BfaH0aloBWdKyJ33OIZsNxqARp2LD9FlQG92eQPd+c3NsiZ8KjtqaHxTI9sxHv
-
-  VHKmtBvgqDtfAPVAaWgcMrvaHO0IgJHTZpKPJqpKxyyEtWp2lvhWuVCUHNR+BAUQ
-
-  IeLfvptdQ6o/L9ZFHwdIFxSoj/Hnopfd67M7xLnUzTQuRifxnHA0yD4fzgTf0CbO
-
-  I7CbLWYY5D7K5Cbzx3tX6my+5Q6AiC6worTinLTmzoIGu5S6SkbkOfu7PpGxi09r
-
-  Ka63kJgmB9obB5ERMaSh9CRE2uvfpRCmlptAO8/05dpDDwZKkdTDJew332zdw/1C
-
-  oaAJS8ECgYEA5ehdlc0++YWvRdF7TcDQpnqQi1fjG+U8nUylH7iZERztO/VhUEhD
-
-  AuTdZ0BKk94rIq8neN8MO6aRnJKv1WvSWIhb2AxcibuLWHAhc5yG5ZaLtRhe+fws
-
-  n8v9Oj1PM7fOh1ndpxWaUsgL470Gp+lUONo08Z50R2dCYKaFm8WUwnUCgYEA23cC
-
-  W/4SBYnazn5FwFTasw80+icEqXLAwDPlU3/Tzg4VbRtE9EjUuhfTLCKUVAZO1Ev/
-
-  rvFrGq2kv+9u2zAEOEwuvjPHup1RO1scqzlR3LPUkWN5kfJIYPxbwRyZbL/Arhld
-
-  /RgPchtAtGXRDMD1ZTq2oVhWt0GEHeVre+T9IS0CgYEA39pO/OPaFFRBI4bjOwKp
-
-  Zd9iy/on7GpYiYQuJuOzTgFPUBkMxoGFldTHapgjxTQF5gCLO1pZ6960WrJMuE4C
-
-  gidK3eKzW3wbImITgCEBC5x4rTxshZUu0expxIIbkuy+D/XFJsGXAFE9mmHbkDRU
-
-  yAJWmIfDCh8Vd0vMPa60uF0CgYAi5aCdaiAJe2ssjI2g0J1Z/aAJ6uxl2VZm+ZmM
-
-  lnXifQDRMZXcVjxlPuaYTQNS/RHJ1i/Y7JCAVH4u+u6gsdjp7ss7+VXYCa3iB1He
-
-  tCWdN4ckezHYkDMMIPSiF18aGL+Vr3jvhsTl+wll5g7AvWoH57cknrxjNWrBqjpW
-
-  IApUHQKBgQDNG3lppI197GnAeMhWl2DpxVzSPpOLV/6/YL3by8Eyd1VD9ZJuWPda
-
-  HwU/TMatSgZiQM3JwJ3TL0DnNg5V71n5OthIbg9X2r7+6sY+4RklCz4AgqhQN/gf
-
-  JRUr3mVdygGuzZSX/soaixioDYO6ltKCJ/TYENpM+cyYqBV3b2S+aA==
-
-  -----END RSA PRIVATE KEY-----
-
-  '
-Frontend.private_key: '-----BEGIN RSA PRIVATE KEY-----
+  private_key: '-----BEGIN RSA PRIVATE KEY-----
 
   MIIEowIBAAKCAQEAwU7dMli7hXBR3CUOD9pcCuUgMMp4N1VhCaCI/oI5J5v2S2w0
 
@@ -184,15 +132,71 @@ Frontend.private_key: '-----BEGIN RSA PRIVATE KEY-----
 
   LzkzTeUqWLEfq+QBzqYnbWmCCIYYEZ6+/Jxawd7gGj7iKISuNJOC
 
-  -----END RSA PRIVATE KEY-----
+  -----END RSA PRIVATE KEY-----'
 
-  '
-FileStore.directory: /tmp/velociraptor/filestore/
-Datastore.implementation: FileBaseDataStore
-#Datastore.implementation: SqliteDataStore
-Datastore.location: /tmp/velociraptor/
 
-Interrogate.additional_queries:
+CA:
+  private_key: '-----BEGIN RSA PRIVATE KEY-----
+
+  MIIEpAIBAAKCAQEAxRipMRW4c8BbRy/N1+h6rXg0tCYTzm6qgV6ViBJsHbiyL96/
+
+  xoJfR7oWRxgoL3dvrnq4FM7KH+HJGPjNdKmLoV+AicMZnNUPuYiCaYmaGy81kOrM
+
+  3ZcSBel0xITblwZusQgrXzxk/Uh/dEEpftoDf0mYcZI4MidCfk8tQiyq07AsmUwx
+
+  7zGxwexZK3NpRGlZWIEyPCxGVq/ZTviMQ8NeHuJoTrmEv2Kcz265zrzGNWGyQ3H8
+
+  cw8AMXiRinWQZnKCiwdQq/kMNOku2lMxw7VJfSJDFYiJibAOMY/aZzVY0BKrecnq
+
+  OVAow2EMuqOYAz5o4IcrIPjVZ4uK0qdFSdhDkQIDAQABAoIBAFi+Fc/n+7kCbxbK
+
+  S2BfaH0aloBWdKyJ33OIZsNxqARp2LD9FlQG92eQPd+c3NsiZ8KjtqaHxTI9sxHv
+
+  VHKmtBvgqDtfAPVAaWgcMrvaHO0IgJHTZpKPJqpKxyyEtWp2lvhWuVCUHNR+BAUQ
+
+  IeLfvptdQ6o/L9ZFHwdIFxSoj/Hnopfd67M7xLnUzTQuRifxnHA0yD4fzgTf0CbO
+
+  I7CbLWYY5D7K5Cbzx3tX6my+5Q6AiC6worTinLTmzoIGu5S6SkbkOfu7PpGxi09r
+
+  Ka63kJgmB9obB5ERMaSh9CRE2uvfpRCmlptAO8/05dpDDwZKkdTDJew332zdw/1C
+
+  oaAJS8ECgYEA5ehdlc0++YWvRdF7TcDQpnqQi1fjG+U8nUylH7iZERztO/VhUEhD
+
+  AuTdZ0BKk94rIq8neN8MO6aRnJKv1WvSWIhb2AxcibuLWHAhc5yG5ZaLtRhe+fws
+
+  n8v9Oj1PM7fOh1ndpxWaUsgL470Gp+lUONo08Z50R2dCYKaFm8WUwnUCgYEA23cC
+
+  W/4SBYnazn5FwFTasw80+icEqXLAwDPlU3/Tzg4VbRtE9EjUuhfTLCKUVAZO1Ev/
+
+  rvFrGq2kv+9u2zAEOEwuvjPHup1RO1scqzlR3LPUkWN5kfJIYPxbwRyZbL/Arhld
+
+  /RgPchtAtGXRDMD1ZTq2oVhWt0GEHeVre+T9IS0CgYEA39pO/OPaFFRBI4bjOwKp
+
+  Zd9iy/on7GpYiYQuJuOzTgFPUBkMxoGFldTHapgjxTQF5gCLO1pZ6960WrJMuE4C
+
+  gidK3eKzW3wbImITgCEBC5x4rTxshZUu0expxIIbkuy+D/XFJsGXAFE9mmHbkDRU
+
+  yAJWmIfDCh8Vd0vMPa60uF0CgYAi5aCdaiAJe2ssjI2g0J1Z/aAJ6uxl2VZm+ZmM
+
+  lnXifQDRMZXcVjxlPuaYTQNS/RHJ1i/Y7JCAVH4u+u6gsdjp7ss7+VXYCa3iB1He
+
+  tCWdN4ckezHYkDMMIPSiF18aGL+Vr3jvhsTl+wll5g7AvWoH57cknrxjNWrBqjpW
+
+  IApUHQKBgQDNG3lppI197GnAeMhWl2DpxVzSPpOLV/6/YL3by8Eyd1VD9ZJuWPda
+
+  HwU/TMatSgZiQM3JwJ3TL0DnNg5V71n5OthIbg9X2r7+6sY+4RklCz4AgqhQN/gf
+
+  JRUr3mVdygGuzZSX/soaixioDYO6ltKCJ/TYENpM+cyYqBV3b2S+aA==
+
+  -----END RSA PRIVATE KEY-----'
+
+Datastore:
+  filestore_directory: /tmp/velociraptor/filestore/
+  implementation: FileBaseDataStore
+  location: /tmp/velociraptor/
+
+Flows:
+  interrogate_additional_queries:
    Query:
       - Name: Authorized Keys
         VQL: >

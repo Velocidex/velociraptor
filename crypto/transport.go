@@ -230,13 +230,13 @@ func NewCryptoManager(config_obj *config.Config, source string, pem_str []byte) 
 }
 
 func NewServerCryptoManager(config_obj *config.Config) (*CryptoManager, error) {
-	cert, err := parseX509CertFromPemStr([]byte(*config_obj.Frontend_certificate))
+	cert, err := parseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
 	if err != nil {
 		return nil, err
 	}
 
 	private_key, err := parseRsaPrivateKeyFromPemStr([]byte(
-		*config_obj.Frontend_private_key))
+		config_obj.Frontend.PrivateKey))
 	if err != nil {
 		return nil, err
 	}

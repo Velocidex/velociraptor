@@ -59,9 +59,9 @@ func GetApiClient(
 	result.LastIp = client_info.IpAddress
 
 	remote_address := strings.Split(result.LastIp, ":")[0]
-	if _is_ip_in_ranges(remote_address, config_obj.Frontend_internal_cidr) {
+	if _is_ip_in_ranges(remote_address, config_obj.GUI.InternalCidr) {
 		result.LastIpClass = api_proto.ApiClient_INTERNAL
-	} else if _is_ip_in_ranges(remote_address, config_obj.Frontend_internal_cidr) {
+	} else if _is_ip_in_ranges(remote_address, config_obj.GUI.InternalCidr) {
 		result.LastIpClass = api_proto.ApiClient_VPN
 	} else {
 		result.LastIpClass = api_proto.ApiClient_EXTERNAL

@@ -49,10 +49,11 @@ func (self *VQLClientAction) Run(
 	uploader := &vql_subsystem.VelociraptorUploader{
 		Responder: responder,
 	}
+
 	env := vfilter.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
-		Set("config", ctx.Config)
+		Set("config", ctx.Config.Client)
 
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)

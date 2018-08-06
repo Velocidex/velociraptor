@@ -274,8 +274,8 @@ func (self *ApiServer) VFSRefreshDirectory(
 }
 
 func StartServer(config_obj *config.Config) error {
-	bind_addr := fmt.Sprintf("%s:%d", *config_obj.API_bind_address,
-		*config_obj.API_bind_port)
+	bind_addr := fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
+		config_obj.API.BindPort)
 
 	lis, err := net.Listen("tcp", bind_addr)
 	if err != nil {
@@ -295,7 +295,7 @@ func StartServer(config_obj *config.Config) error {
 	reflection.Register(grpcServer)
 
 	logger := logging.NewLogger(config_obj)
-	logger.Info("Launched API server on %v ", bind_addr)
+	logger.Info("Launched gRPC API server on %v ", bind_addr)
 
 	err = grpcServer.Serve(lis)
 	if err != nil {

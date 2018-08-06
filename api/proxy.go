@@ -33,11 +33,13 @@ func StartHTTPProxy(config_obj *config.Config) error {
 		return err
 	}
 	mux.Handle("/index.html", h)
+	listenAddr := fmt.Sprintf("%s:%d",
+		config_obj.GUI.BindAddress,
+		config_obj.GUI.BindPort)
 
-	return http.ListenAndServe(
-		fmt.Sprintf("%s:%d",
-			*config_obj.GUI_bind_address,
-			*config_obj.GUI_bind_port),
+	logging.NewLogger(config_obj).Info(
+		"GUI is ready to handle requests at %s", listenAddr)
+	return http.ListenAndServe(listenAddr,
 		logging.GetLoggingHandler(config_obj)(mux))
 }
 
@@ -68,8 +70,8 @@ func GetAPIHandler(
 	err := api_proto.RegisterAPIHandlerFromEndpoint(
 		ctx, grpc_proxy_mux,
 		fmt.Sprintf("%s:%d",
-			*config_obj.API_bind_address,
-			*config_obj.API_bind_port),
+			config_obj.API.BindAddress,
+			config_obj.API.BindPort),
 		opts)
 	if err != nil {
 		return nil, err

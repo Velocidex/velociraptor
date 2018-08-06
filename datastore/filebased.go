@@ -49,7 +49,7 @@ func (self *FileBaseDataStore) GetClientTasks(
 	now_urn := fmt.Sprintf("aff4:/%s/tasks/%d", client_id, now)
 
 	next_timestamp := self.clock.Now().Add(
-		time.Second*time.Duration(*config_obj.Frontend_client_lease_time)).
+		time.Second*time.Duration(config_obj.Frontend.ClientLeaseTime)).
 		UTC().UnixNano() / 1000
 	tasks_urn := path.Join("aff4:/", client_id, "tasks")
 	tasks, err := self.ListChildren(config_obj, tasks_urn, 0, 100)
@@ -365,11 +365,11 @@ func unsanitizeComponent(component_str string) string {
 }
 
 func urnToFilename(config_obj *config.Config, urn string) (string, error) {
-	if config_obj.Datastore_location == nil {
+	if config_obj.Datastore.Location == "" {
 		return "", errors.New("No Datastore_location is set in the config.")
 	}
 
-	components := []string{*config_obj.Datastore_location}
+	components := []string{config_obj.Datastore.Location}
 	for idx, component := range strings.Split(urn, "/") {
 		if idx == 0 && component == "aff4:" {
 			continue
@@ -434,17 +434,17 @@ func readContentFromFile(config_obj *config.Config, urn string) ([]byte, error) 
 
 // Convert a file name from the data store to a urn.
 func FilenameToURN(config_obj *config.Config, filename string) (*string, error) {
-	if *config_obj.Datastore_implementation != "FileBaseDataStore" {
+	if config_obj.Datastore.Implementation != "FileBaseDataStore" {
 		return nil, errors.New("Unsupported data store")
 	}
 
-	if !strings.HasPrefix(filename, *config_obj.Datastore_location) {
+	if !strings.HasPrefix(filename, config_obj.Datastore.Location) {
 		return nil, errors.New("Filename is not within the FileBaseDataStore location.")
 	}
 
 	components := []string{}
 	for _, component := range strings.Split(
-		strings.TrimPrefix(filename, *config_obj.Datastore_location), "/") {
+		strings.TrimPrefix(filename, config_obj.Datastore.Location), "/") {
 		components = append(components, unsanitizeComponent(component))
 	}
 

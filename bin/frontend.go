@@ -24,7 +24,7 @@ var (
 )
 
 func validateConfig(configuration *config.Config) error {
-	if configuration.Frontend_certificate == nil {
+	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
 	}
 
@@ -53,8 +53,8 @@ func start_frontend(config_obj *config.Config) {
 
 	listenAddr := fmt.Sprintf(
 		"%s:%d",
-		*config_obj.Frontend_bind_address,
-		*config_obj.Frontend_bind_port)
+		config_obj.Frontend.BindAddress,
+		config_obj.Frontend.BindPort)
 
 	server := &http.Server{
 		Addr:        listenAddr,
@@ -85,7 +85,7 @@ func start_frontend(config_obj *config.Config) {
 		close(done)
 	}()
 
-	server_obj.Info("Server is ready to handle requests at %s", listenAddr)
+	server_obj.Info("Frontend is ready to handle client requests at %s", listenAddr)
 	atomic.StoreInt32(&healthy, 1)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		kingpin.Fatalf("Could not listen on %s: %v\n", listenAddr, err)
@@ -112,7 +112,7 @@ func server_pem(config_obj *config.Config) http.Handler {
 		flusher, _ := w.(http.Flusher)
 		flusher.Flush()
 
-		w.Write([]byte(*config_obj.Frontend_certificate))
+		w.Write([]byte(config_obj.Frontend.Certificate))
 	})
 }
 
