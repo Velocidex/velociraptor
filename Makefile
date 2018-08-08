@@ -17,6 +17,11 @@ build:
             go build \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
+windows:
+	GOOS=windows GOARCH=amd64 \
+            go build \
+            -ldflags "$(LDFLAGS)" \
+	    -o output/velociraptor.exe ./bin/
 
 # Build release binaries. The GUI will embed assets and ship with
 # everything in it.

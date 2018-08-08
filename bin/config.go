@@ -10,6 +10,21 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+var (
+	config_command = app.Command(
+		"config", "Manipulate the configuration.")
+	config_show_command = config_command.Command(
+		"show", "Show the current config.")
+	config_client_command = config_command.Command(
+		"client", "Dump the client's config file.")
+	config_generate_command = config_command.Command(
+		"generate",
+		"Generate a new config file to stdout (with new keys).")
+	config_rotate_server_key = config_command.Command(
+		"rotate_key",
+		"Generate a new config file with a rotates server key.")
+)
+
 func doShowConfig() {
 	config_obj, err := get_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
@@ -94,4 +109,26 @@ func doDumpClientConfig() {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}
 	fmt.Printf("%v", string(res))
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		switch command {
+		case "config show":
+			doShowConfig()
+
+		case "config generate":
+			doGenerateConfig()
+
+		case "config rotate_key":
+			doRotateKeyConfig()
+
+		case "config client":
+			doDumpClientConfig()
+		default:
+			return false
+		}
+
+		return true
+	})
 }

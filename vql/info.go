@@ -13,20 +13,21 @@ type InfoStat struct {
 	Architecture string
 }
 
-func MakeInfoPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "info",
-		Function: func(
-			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
-			var result []vfilter.Row
-			if info, err := host.Info(); err == nil {
-				item := InfoStat{*info, fqdn.Get(), runtime.GOARCH}
-				result = append(result, item)
-			}
+func init() {
+	exportedPlugins = append(exportedPlugins,
+		vfilter.GenericListPlugin{
+			PluginName: "info",
+			Function: func(
+				scope *vfilter.Scope,
+				args *vfilter.Dict) []vfilter.Row {
+				var result []vfilter.Row
+				if info, err := host.Info(); err == nil {
+					item := InfoStat{*info, fqdn.Get(), runtime.GOARCH}
+					result = append(result, item)
+				}
 
-			return result
-		},
-		RowType: InfoStat{},
-	}
+				return result
+			},
+			RowType: InfoStat{},
+		})
 }

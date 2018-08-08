@@ -118,9 +118,10 @@ func extractUserRecords(
 	return result
 }
 
-func MakeUsersPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "users",
-		Function:   extractUserRecords,
-	}
+func init() {
+	exportedPlugins = append(exportedPlugins,
+		vfilter.GenericListPlugin{
+			PluginName: "users",
+			Function:   extractUserRecords,
+		})
 }

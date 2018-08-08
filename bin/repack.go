@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -51,4 +52,19 @@ func RepackClient(repack_binary string, repack_config string) error {
 	}
 
 	return nil
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		switch command {
+		case repack.FullCommand():
+			err := RepackClient(*repack_binary, *repack_config)
+			if err != nil {
+				kingpin.FatalIfError(err, "Can not repack client")
+			}
+		default:
+			return false
+		}
+		return true
+	})
 }

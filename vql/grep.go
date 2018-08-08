@@ -82,3 +82,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 func (self GrepFunction) Name() string {
 	return "grep"
 }
+
+func init() {
+	exportedFunctions = append(exportedFunctions, &GrepFunction{})
+}

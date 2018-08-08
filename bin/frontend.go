@@ -1,9 +1,10 @@
-//
+// +build !windows
+
+// Frontend is not built on Windows.
 package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -13,6 +14,7 @@ import (
 	"os/signal"
 	"sync/atomic"
 	"time"
+	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -21,31 +23,10 @@ import (
 
 var (
 	healthy int32
+
+	// Run the server.
+	frontend = app.Command("frontend", "Run the frontend and GUI.")
 )
-
-func validateServerConfig(configuration *config.Config) error {
-	if configuration.Frontend.Certificate == "" {
-		return errors.New("Configuration does not specify a frontend certificate.")
-	}
-
-	return nil
-}
-
-func get_server_config(config_path string) (*config.Config, error) {
-	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(config_path, config_obj)
-	if err == nil {
-		err = validateServerConfig(config_obj)
-	}
-
-	return config_obj, err
-}
-
-func get_config(config_path string) (*config.Config, error) {
-	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(config_path, config_obj)
-	return config_obj, err
-}
 
 func start_frontend(config_obj *config.Config) {
 	server_obj, err := server.NewServer(config_obj)
@@ -217,5 +198,28 @@ func control(server_obj *server.Server) http.Handler {
 				flusher.Flush()
 			}
 		}
+	})
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		if command == frontend.FullCommand() {
+			config_obj, err := get_server_config(*config_path)
+			kingpin.FatalIfError(err, "Unable to load config file")
+			go func() {
+				err := api.StartServer(config_obj)
+				kingpin.FatalIfError(
+					err, "Unable to start API server")
+			}()
+			go func() {
+				err := api.StartHTTPProxy(config_obj)
+				kingpin.FatalIfError(
+					err, "Unable to start HTTP Proxy server")
+			}()
+
+			start_frontend(config_obj)
+			return true
+		}
+		return false
 	})
 }

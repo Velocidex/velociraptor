@@ -40,10 +40,11 @@ func _ParseFileWithRegex(
 	return result
 }
 
-func MakeRegexParserPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "parse_with_regex",
-		Function:   _ParseFileWithRegex,
-		RowType:    vfilter.Dict{},
-	}
+func init() {
+	exportedPlugins = append(exportedPlugins,
+		vfilter.GenericListPlugin{
+			PluginName: "parse_with_regex",
+			Function:   _ParseFileWithRegex,
+			RowType:    vfilter.Dict{},
+		})
 }

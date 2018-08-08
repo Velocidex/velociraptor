@@ -144,10 +144,10 @@ func (self *SqliteDataStore) GetClientTasks(
 	var result []*crypto_proto.GrrMessage
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	next_timestamp := self.clock.Now().Add(
-		time.Second*time.Duration(*config.Frontend_client_lease_time)).
+		time.Second*time.Duration(config.Frontend.ClientLeaseTime)).
 		UTC().UnixNano() / 1000
 
-	db_path := getDBPathForClient(*config.Datastore_location, client_id)
+	db_path := getDBPathForClient(config.Datastore.Location, client_id)
 	handle, err := self.getDB(db_path)
 	if err != nil {
 		return nil, err
@@ -210,7 +210,7 @@ func (self *SqliteDataStore) RemoveTasksFromClientQueue(
 	client_id string,
 	task_ids []uint64) error {
 
-	db_path := getDBPathForClient(*config_obj.Datastore_location, client_id)
+	db_path := getDBPathForClient(config_obj.Datastore.Location, client_id)
 	handle, err := self.getDB(db_path)
 	if err != nil {
 		return err
@@ -241,7 +241,7 @@ func (self *SqliteDataStore) QueueMessageForClient(
 	message proto.Message,
 	next_state uint64) error {
 
-	db_path := getDBPathForClient(*config_obj.Datastore_location, client_id)
+	db_path := getDBPathForClient(config_obj.Datastore.Location, client_id)
 	handle, err := self.getDB(db_path)
 	if err != nil {
 		return err
@@ -287,7 +287,7 @@ func (self *SqliteDataStore) GetSubject(
 	urn string,
 	message proto.Message) error {
 
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, urn)
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func (self *SqliteDataStore) SetSubject(
 		return errors.WithStack(err)
 	}
 
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, urn)
 	if err != nil {
 		return err
 	}
@@ -380,7 +380,7 @@ func (self *SqliteDataStore) SetSubject(
 func (self *SqliteDataStore) DeleteSubject(
 	config_obj *config.Config,
 	urn string) error {
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, urn)
 	if err != nil {
 		return err
 	}
@@ -422,7 +422,7 @@ func (self *SqliteDataStore) ListChildren(
 	config_obj *config.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, urn)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +463,7 @@ func (self *SqliteDataStore) SetIndex(
 	entity string,
 	keywords []string) error {
 
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, index_urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, index_urn)
 	if err != nil {
 		return err
 	}
@@ -500,7 +500,7 @@ func (self *SqliteDataStore) SearchClients(
 	offset uint64, limit uint64) []string {
 	var result []string
 
-	db_path, err := getDBPathForURN(*config_obj.Datastore_location, index_urn)
+	db_path, err := getDBPathForURN(config_obj.Datastore.Location, index_urn)
 	if err != nil {
 		return result
 	}

@@ -22,6 +22,7 @@ func (self GlobPlugin) Call(
 		close(output_chan)
 		return output_chan
 	}
+	accessor := &glob.OSFileSystemAccessor{}
 	for _, item := range globs {
 		globber.Add(item, "/")
 	}
@@ -29,7 +30,7 @@ func (self GlobPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		file_chan := globber.ExpandWithContext(
-			ctx, "/", glob.OSFileSystemAccessor{})
+			ctx, accessor.PathSep(), accessor)
 		for {
 			select {
 			case <-ctx.Done():
@@ -60,21 +61,23 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	}
 }
 
-func MakeFilesystemsPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "filesystems",
-		Function: func(
-			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
-			var result []vfilter.Row
-			partitions, err := disk.Partitions(true)
-			if err == nil {
-				for _, item := range partitions {
-					result = append(result, item)
+func init() {
+	exportedPlugins = append(exportedPlugins,
+		&GlobPlugin{},
+		vfilter.GenericListPlugin{
+			PluginName: "filesystems",
+			Function: func(
+				scope *vfilter.Scope,
+				args *vfilter.Dict) []vfilter.Row {
+				var result []vfilter.Row
+				partitions, err := disk.Partitions(true)
+				if err == nil {
+					for _, item := range partitions {
+						result = append(result, item)
+					}
 				}
-			}
-			return result
-		},
-		RowType: disk.PartitionStat{},
-	}
+				return result
+			},
+			RowType: disk.PartitionStat{},
+		})
 }

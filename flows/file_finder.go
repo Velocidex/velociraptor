@@ -9,7 +9,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FileFinder struct {
@@ -146,6 +146,7 @@ func (self *file_finder_builder) compileGlobFunction() (string, error) {
 	// Push the glob into the query environment to prevent
 	// escaping issues.
 	for idx, glob := range self.args.Paths {
+		glob = utils.Normalize_windows_path(glob)
 		glob_var := fmt.Sprintf("Path%02d", idx)
 		self.result.Env = append(self.result.Env, &actions_proto.VQLEnv{
 			Key:   glob_var,
@@ -180,9 +181,9 @@ func (self *file_finder_builder) compileSimpleQuery(
 	fields := []string{}
 	fields = append(fields, self.columns...)
 	fields = append(fields,
-		"timestamp(epoch=Sys.Mtim.Sec) as mtime",
-		"timestamp(epoch=Sys.Atim.Sec) as atime",
-		"timestamp(epoch=Sys.Ctim.Sec) as ctime",
+		"timestamp(epoch=Mtime.Sec) as mtime",
+		"timestamp(epoch=Atime.Sec) as atime",
+		"timestamp(epoch=Ctime.Sec) as ctime",
 	)
 
 	self.columns = append(self.columns, "mtime", "atime", "ctime")
@@ -243,12 +244,12 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 
 		if mod_time.MinLastModifiedTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Mtim.Sec > %d ", mod_time.MinLastModifiedTime))
+				" Mtime.Sec > %d ", mod_time.MinLastModifiedTime))
 		}
 
 		if mod_time.MaxLastModifiedTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Mtim.Sec < %d ", mod_time.MaxLastModifiedTime))
+				" Mtime.Sec < %d ", mod_time.MaxLastModifiedTime))
 		}
 	}
 
@@ -262,12 +263,12 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 
 		if access_time.MinLastAccessTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Atim.Sec > %d ", access_time.MinLastAccessTime))
+				" Atime.Sec > %d ", access_time.MinLastAccessTime))
 		}
 
 		if access_time.MaxLastAccessTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Atim.Sec < %d ", access_time.MaxLastAccessTime))
+				" Atime.Sec < %d ", access_time.MaxLastAccessTime))
 		}
 	}
 
@@ -281,12 +282,12 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 
 		if inode_time.MinLastInodeChangeTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Ctim.Sec > %d ", inode_time.MinLastInodeChangeTime))
+				" Ctime.Sec > %d ", inode_time.MinLastInodeChangeTime))
 		}
 
 		if inode_time.MaxLastInodeChangeTime != 0 {
 			result = append(result, fmt.Sprintf(
-				" Sys.Ctim.Sec < %d ", inode_time.MaxLastInodeChangeTime))
+				" Ctime.Sec < %d ", inode_time.MaxLastInodeChangeTime))
 		}
 	}
 

@@ -1,5 +1,5 @@
 // Inspect the file store and decode the stored objects.
-package inspect
+package main
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/olekukonko/tablewriter"
 	errors "github.com/pkg/errors"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"regexp"
 	"strings"
@@ -33,6 +34,15 @@ var classifiers = map[string]proto.Message{
 		"completed|running)/C.[^/]+$": &api_proto.HuntInfo{},
 }
 
+var (
+	// Inspect the filestore
+	inspect_command = app.Command(
+		"inspect", "Inspect datastore files.")
+	inspect_filename = inspect_command.Arg(
+		"filename", "The filename from the filestore").
+		Required().String()
+)
+
 func getProto(urn string) (proto.Message, error) {
 	for k, v := range classifiers {
 		m, err := regexp.MatchString(k, urn)
@@ -41,21 +51,7 @@ func getProto(urn string) (proto.Message, error) {
 		}
 	}
 
-	return nil, errors.New("Unknown URN pattern")
-}
-
-func hard_wrap(text string, colBreak int) string {
-	text = strings.TrimSpace(text)
-	wrapped := ""
-	var i int
-	for i = 0; len(text[i:]) > colBreak; i += colBreak {
-
-		wrapped += text[i:i+colBreak] + "\n"
-
-	}
-	wrapped += text[i:]
-
-	return wrapped
+	return nil, errors.New(fmt.Sprintf("Unknown URN pattern: %v", urn))
 }
 
 func renderTable(response *actions_proto.VQLResponse) error {
@@ -142,4 +138,21 @@ func Inspect(config_obj *config.Config, filename string) error {
 	}
 
 	return renderItem(item)
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		switch command {
+
+		case inspect_command.FullCommand():
+			config_obj, err := get_server_config(*config_path)
+			kingpin.FatalIfError(err, "Unable to load config file")
+			err = Inspect(config_obj, *inspect_filename)
+			kingpin.FatalIfError(err, "Unable to parse datastore item.")
+
+		default:
+			return false
+		}
+		return true
+	})
 }

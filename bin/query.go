@@ -8,10 +8,23 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
-	"strings"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	// Command line interface for VQL commands.
+	query   = app.Command("query", "Run a VQL query")
+	queries = query.Arg("queries", "The VQL Query to run.").
+		Required().Strings()
+	format = query.Flag("format", "Output format to use.").
+		Default("json").Enum("text", "json")
+	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
+			Default(".").String()
+
+	explain        = app.Command("explain", "Explain the output from a plugin")
+	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
 
 func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
@@ -26,20 +39,6 @@ func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 		}
 		os.Stdout.Write(result.Payload)
 	}
-}
-
-func hard_wrap(text string, colBreak int) string {
-	text = strings.TrimSpace(text)
-	wrapped := ""
-	var i int
-	for i = 0; len(text[i:]) > colBreak; i += colBreak {
-
-		wrapped += text[i:i+colBreak] + "\n"
-
-	}
-	wrapped += text[i:]
-
-	return wrapped
 }
 
 func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
@@ -128,4 +127,20 @@ func doExplain(plugin string) {
 	if err == nil {
 		os.Stdout.Write(s)
 	}
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		switch command {
+		case explain.FullCommand():
+			doExplain(*explain_plugin)
+
+		case query.FullCommand():
+			doQuery()
+
+		default:
+			return false
+		}
+		return true
+	})
 }

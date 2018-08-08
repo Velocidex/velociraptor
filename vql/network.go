@@ -5,22 +5,22 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func MakeInterfacesPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "interfaces",
-		Function: func(
-			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
-			var result []vfilter.Row
-			if interfaces, err := net.Interfaces(); err == nil {
-				for _, item := range interfaces {
-					result = append(result, item)
+func init() {
+	exportedPlugins = append(exportedPlugins,
+		vfilter.GenericListPlugin{
+			PluginName: "interfaces",
+			Function: func(
+				scope *vfilter.Scope,
+				args *vfilter.Dict) []vfilter.Row {
+				var result []vfilter.Row
+				if interfaces, err := net.Interfaces(); err == nil {
+					for _, item := range interfaces {
+						result = append(result, item)
+					}
 				}
-			}
 
-			return result
-		},
-		RowType: net.InterfaceStat{},
-	}
-
+				return result
+			},
+			RowType: net.InterfaceStat{},
+		})
 }

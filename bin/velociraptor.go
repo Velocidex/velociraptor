@@ -9,6 +9,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/http_comms"
 )
 
+var (
+	// Run the client.
+	client = app.Command("client", "Run the velociraptor client")
+)
+
 func RunClient(config_path *string) {
 	ctx := context.Background()
 	config_obj := config.GetDefaultConfig()
@@ -73,4 +78,14 @@ func RunClient(config_path *string) {
 	}
 
 	comm.Run()
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		if command == client.FullCommand() {
+			RunClient(config_path)
+			return true
+		}
+		return false
+	})
 }

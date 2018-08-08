@@ -43,21 +43,23 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 	return result
 }
 
-func MakePslistPlugin() vfilter.GenericListPlugin {
-	return vfilter.GenericListPlugin{
-		PluginName: "pslist",
-		Function: func(
-			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
-			var result []vfilter.Row
-			processes, err := process.Processes()
-			if err == nil {
-				for _, item := range processes {
-					result = append(result, item)
+func init() {
+	exportedProtocolImpl = append(exportedProtocolImpl, &_ProcessFieldImpl{})
+	exportedPlugins = append(exportedPlugins,
+		vfilter.GenericListPlugin{
+			PluginName: "pslist",
+			Function: func(
+				scope *vfilter.Scope,
+				args *vfilter.Dict) []vfilter.Row {
+				var result []vfilter.Row
+				processes, err := process.Processes()
+				if err == nil {
+					for _, item := range processes {
+						result = append(result, item)
+					}
 				}
-			}
-			return result
-		},
-		RowType: process.Process{},
-	}
+				return result
+			},
+			RowType: process.Process{},
+		})
 }

@@ -14,9 +14,9 @@ const TransferWellKnownFlowId = 5
 
 // Returned as the result of the query.
 type UploadResponse struct {
-	Path   string
-	FlowId string
-	Size   uint64
+	Path  string
+	Size  uint64
+	Error string
 }
 
 // Provide an uploader capable of uploading any reader object.

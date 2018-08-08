@@ -53,3 +53,7 @@ func (self _binaryFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []s
 		return []string{}
 	}
 }
+
+func init() {
+	exportedProtocolImpl = append(exportedProtocolImpl, &_binaryFieldImpl{})
+}

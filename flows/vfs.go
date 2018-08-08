@@ -14,6 +14,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -80,9 +81,9 @@ func (self *VFSListDirectory) Start(
 				Name: vfs_args.VfsPath,
 				VQL: "SELECT IsDir, FullPath as _FullPath, " +
 					"Name, Size, Mode, " +
-					"timestamp(epoch=Sys.Mtim.Sec) as mtime, " +
-					"timestamp(epoch=Sys.Atim.Sec) as atime, " +
-					"timestamp(epoch=Sys.Ctim.Sec) as ctime " +
+					"timestamp(epoch=Mtime.Sec) as mtime, " +
+					"timestamp(epoch=Atime.Sec) as atime, " +
+					"timestamp(epoch=Ctime.Sec) as ctime " +
 					"from glob(globs=path + " + glob + ")",
 			},
 		},
@@ -201,10 +202,14 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 	for _, row := range rows {
 		full_path, ok := (row["_FullPath"]).(string)
 		if ok {
+			full_path = utils.Normalize_windows_path(full_path)
 			// This row does not belong in the current
 			// collection - flush the collection and start
 			// a new one.
-			if path.Dir(full_path) != self.state.VfsPath {
+			if path.Dir(full_path) != self.state.VfsPath ||
+				// Do not let our memory footprint
+				// grow without bounds.
+				len(self.rows) > 10000 {
 				// VfsPath == "" represents the first
 				// collection before the first row is
 				// processed.
@@ -215,7 +220,9 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 					}
 				}
 				self.state.VfsPath = path.Dir(full_path)
-				self.state.Current = vql_response
+				self.state.Current = &actions_proto.VQLResponse{
+					Query: vql_response.Query,
+				}
 			}
 			self.rows = append(self.rows, row)
 		}
@@ -228,6 +235,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 func (self *VFSListDirectory) flush_state(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject) error {
+	// Save will serialize the rows into self.state.Current
 	err := self.Save(config_obj, flow_obj)
 	if err != nil {
 		return err

@@ -13,23 +13,25 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	exportedPlugins      []vfilter.PluginGeneratorInterface
+	exportedProtocolImpl []vfilter.Any
+	exportedFunctions    []vfilter.FunctionInterface
+)
+
 func MakeScope() *vfilter.Scope {
-	return vfilter.NewScope().AppendPlugins(
-		MakePslistPlugin(),
-		MakeInterfacesPlugin(),
-		MakePatritionsPlugin(),
-		MakeUsersPlugin(),
-		MakeInfoPlugin(),
-		MakeConnectionsPlugin(),
-		GlobPlugin{},
-		MakeRegexParserPlugin(),
-		MakeFilesystemsPlugin(),
-		MakeUploaderPlugin(),
-	).AddProtocolImpl(
-		_ProcessFieldImpl{},
-		_binaryFieldImpl{},
-	).AppendFunctions(
-		&GrepFunction{},
-		&UploadFunction{},
-	)
+	result := vfilter.NewScope()
+	for _, plugin := range exportedPlugins {
+		result.AppendPlugins(plugin)
+	}
+
+	for _, protocol := range exportedProtocolImpl {
+		result.AddProtocolImpl(protocol)
+	}
+
+	for _, function := range exportedFunctions {
+		result.AppendFunctions(function)
+	}
+
+	return result
 }

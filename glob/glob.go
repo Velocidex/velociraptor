@@ -2,58 +2,30 @@ package glob
 
 import (
 	"context"
-	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // The algorithm in this file is based on the Rekall algorithm here:
 // https://github.com/google/rekall/blob/master/rekall-core/rekall/plugins/response/files.py#L255
 
+type TimeVal struct {
+	Sec  int64 `json:"sec"`
+	Nsec int64 `json:"usec"`
+}
+
 type FileInfo interface {
 	os.FileInfo
 	FullPath() string
-}
-
-type OSFileInfo struct {
-	os.FileInfo
-	_full_path string
-}
-
-func (self *OSFileInfo) FullPath() string {
-	return self._full_path
-}
-
-func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-	})
-
-	return result, err
-}
-
-func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
-	return nil
+	Mtime() TimeVal
+	Ctime() TimeVal
+	Atime() TimeVal
 }
 
 // Interface for accessing the filesystem. Used for dependency
@@ -61,28 +33,7 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
 	Open(path string) (io.Reader, error)
-}
-
-// Real implementation.
-// TODO: Support windows properly.
-type OSFileSystemAccessor struct{}
-
-func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	files, err := ioutil.ReadDir(path)
-	if err == nil {
-		var result []FileInfo
-		for _, f := range files {
-			result = append(result,
-				&OSFileInfo{f, filepath.Join(path, f.Name())})
-		}
-		return result, nil
-	}
-	return nil, err
-}
-
-func (self OSFileSystemAccessor) Open(path string) (io.Reader, error) {
-	file, err := os.Open(path)
-	return file, err
+	PathSep() string
 }
 
 type _PathFilterer interface {
