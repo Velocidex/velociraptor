@@ -7,6 +7,7 @@ test:
 COMMIT := $(shell git rev-parse HEAD)
 DATE := $(shell date -Iseconds)
 LDFLAGS := \
+   -s -w \
    -X www.velocidex.com/golang/velociraptor/config.build_time=$(DATE) \
    -X www.velocidex.com/golang/velociraptor/config.commit_hash=$(COMMIT)
 

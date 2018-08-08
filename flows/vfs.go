@@ -48,6 +48,7 @@ func (self *VFSListDirectory) Save(
 		return errors.WithStack(err)
 	}
 	self.state.Current.Response = string(s)
+	self.state.Current.TotalRows = uint64(len(self.rows))
 	flow_obj.SetState(self.state)
 	return nil
 }
@@ -221,7 +222,9 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 				}
 				self.state.VfsPath = path.Dir(full_path)
 				self.state.Current = &actions_proto.VQLResponse{
-					Query: vql_response.Query,
+					Query:     vql_response.Query,
+					Columns:   vql_response.Columns,
+					Timestamp: vql_response.Timestamp,
 				}
 			}
 			self.rows = append(self.rows, row)
