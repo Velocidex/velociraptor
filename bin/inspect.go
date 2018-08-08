@@ -19,17 +19,19 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var classifiers = map[string]proto.Message{
-	"aff4:/C.[^/]+$":                              &actions_proto.ClientInfo{},
-	"aff4:/C.[^/]+/ping$":                         &actions_proto.ClientInfo{},
-	"aff4:/C.[^/]+/key$":                          &crypto_proto.PublicKey{},
-	"aff4:/C.[^/]+/vfs/.+":                        &actions_proto.VQLResponse{},
-	"aff4:/C.[^/]+/flows/F\\.[^\\.]+":             &flows_proto.AFF4FlowObject{},
-	"aff4:/C.[^/]+/flows/F\\.[^\\.]+/results/.+$": &crypto_proto.GrrMessage{},
-	"aff4:/C.[^/]+/tasks/[^\\.]+$":                &crypto_proto.GrrMessage{},
-	"aff4:/hunts/H.[^/]+$":                        &api_proto.Hunt{},
+	"aff4:/C.[^/]+$":                            &actions_proto.ClientInfo{},
+	"aff4:/C.[^/]+/ping$":                       &actions_proto.ClientInfo{},
+	"aff4:/C.[^/]+/key$":                        &crypto_proto.PublicKey{},
+	"aff4:/C.[^/]+/vfs/.+":                      &actions_proto.VQLResponse{},
+	"aff4:/C.[^/]+/flows/F\\.[^/]+$":            &flows_proto.AFF4FlowObject{},
+	"aff4:/C.[^/]+/flows/F\\.[^/]+/results/.+$": &crypto_proto.GrrMessage{},
+	"aff4:/C.[^/]+/tasks/[^/]+$":                &crypto_proto.GrrMessage{},
+	"aff4:/hunts/H.[^/]+$":                      &api_proto.Hunt{},
 	"aff4:/hunts/H.[^/]+/(results|pending|" +
 		"completed|running)/C.[^/]+$": &api_proto.HuntInfo{},
 }
@@ -51,10 +53,12 @@ func getProto(urn string) (proto.Message, error) {
 		}
 	}
 
-	return nil, errors.New(fmt.Sprintf("Unknown URN pattern: %v", urn))
+	return nil, errors.New(fmt.Sprintf(
+		"Unknown URN pattern: %v", urn))
 }
 
 func renderTable(response *actions_proto.VQLResponse) error {
+	scope := vfilter.NewScope()
 	table := tablewriter.NewWriter(os.Stdout)
 	defer table.Render()
 
@@ -73,7 +77,7 @@ func renderTable(response *actions_proto.VQLResponse) error {
 			if !pres {
 				item = ""
 			}
-			string_row = append(string_row, fmt.Sprintf("%v", item))
+			string_row = append(string_row, utils.Stringify(item, scope))
 		}
 
 		table.Append(string_row)

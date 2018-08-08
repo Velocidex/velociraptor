@@ -21,8 +21,9 @@ func install_mux(config_obj *config.Config, mux *http.ServeMux) {
 		http.Dir("gui/static"))))
 }
 
-func GetTemplateHandler(config_obj *config.Config) (http.Handler, error) {
-	tmpl, err := template.ParseFiles("gui/static/templates/index.html")
+func GetTemplateHandler(config_obj *config.Config,
+	template_name string) (http.Handler, error) {
+	tmpl, err := template.ParseFiles("gui" + template_name)
 	if err != nil {
 		return nil, err
 	}

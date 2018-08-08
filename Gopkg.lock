@@ -37,11 +37,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bd05c16ac81fa1ac0dc314e6a0af61bf97a7a3c16f57eb0fdfaa8b0117e6d3c8"
+  digest = "1:0a393c1e53be42784bf434c3385434404c3439a951aecef1858c543bf8146380"
   name = "github.com/alecthomas/repr"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f49988b46e025398b9f834f7c726afe001ec481f"
+  revision = "ead21651dde39fea129e6e4a612c675693d0f4ff"
 
 [[projects]]
   branch = "master"
@@ -84,7 +84,7 @@
   name = "github.com/dustin/go-humanize"
   packages = ["."]
   pruneopts = "UT"
-  revision = "02af3965c54e8cacf948b97fef38925c4120652c"
+  revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
 
 [[projects]]
   digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
@@ -193,7 +193,7 @@
   revision = "8784dd1ab561dcf43d141f6678e9e41f3d0dff55"
 
 [[projects]]
-  digest = "1:5e384001d36d0fd71146a1d62ee77b2262ea14626d235a1df13b675dbb8976fb"
+  digest = "1:22e4289b3741da96aceecc4d1dcbf682ae167c759d010fd88c63c65c9a2e8c72"
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
@@ -205,8 +205,8 @@
     "process",
   ]
   pruneopts = "UT"
-  revision = "4a180b209f5f494e5923cfce81ea30ba23915877"
-  version = "v2.18.06"
+  revision = "8048a2e9c5773235122027dd585cf821b2af1249"
+  version = "v2.18.07"
 
 [[projects]]
   branch = "master"
@@ -234,11 +234,11 @@
   name = "golang.org/x/exp"
   packages = ["ebnf"]
   pruneopts = "UT"
-  revision = "f9fa0fefb1e1a5b6b06f9af99b9555e6263edcf9"
+  revision = "3d87b88a115fa4e65fadcbf34e6a60e8040cec41"
 
 [[projects]]
   branch = "master"
-  digest = "1:cad085dce65c71d1bb3baa85167562bbba0cb2a3aef1f1f9f3a621e3b402e9a3"
+  digest = "1:50cbb2b6ef368f47527ed27df5d6b55aa4194a551a488115121706b94ac421ba"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -252,18 +252,18 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "ed29d75add3d7c4bf7ca65aac0c6df3d1420216f"
+  revision = "f9ce57c11b242f0f1599cf25c89d8cb02c45295a"
 
 [[projects]]
   branch = "master"
-  digest = "1:cf7989abdd9bc2fbcb2e9ee4290fcb2a7ecafae94b925b14b14cb8f64eaa86a2"
+  digest = "1:2455630696ece2771aab91b25300a375df10b948d43d1b565feda5d89afd2bde"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "151529c776cdc58ddbe7963ba9af779f3577b419"
+  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -290,17 +290,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eff11a4ed88d9d3e28dd697961c550af1c4d0d3dccdc6252715b9a65a1d541bb"
+  digest = "1:edfc7a0bed09f4d7af304129d96d563a53bcc9d8ebc8cd5443b845fda30f170b"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
     "googleapis/rpc/status",
   ]
   pruneopts = "UT"
-  revision = "ff3583edef7de132f219f0efc00e097cabcc0ec0"
+  revision = "daca94659cb50e9f37c1b834680f2e46358f10b0"
 
 [[projects]]
-  digest = "1:d51efa1a467f426c6c490a450f9e064ef27ca3181fc9cc960996664be3c1b80a"
+  digest = "1:76332e947f184a2dc091db40f22c7089ada36bbc577793074639695af85a10fd"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -316,7 +316,9 @@
     "internal",
     "internal/backoff",
     "internal/channelz",
+    "internal/envconfig",
     "internal/grpcrand",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
@@ -329,11 +331,10 @@
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = "UT"
-  revision = "168a6198bcb0ef175f7dacec0b8691fc141dc9b8"
-  version = "v1.13.0"
+  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
+  version = "v1.14.0"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -353,11 +354,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4ec4ccc0fcc448729de96897e61a91bf4df31d7865132f8d9d98bcd8967b1637"
+  digest = "1:ea14662ca9dd853eded212576bbcdea1c3987e57179d83c93b8c5f85bd4816fa"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "336c963739c0b4cbb52b50974517d1fc7578a56a"
+  revision = "f22011cd73a90dce2ace988d86060252451cb583"
 
 [solve-meta]
   analyzer-name = "dep"

@@ -442,12 +442,13 @@ func FilenameToURN(config_obj *config.Config, filename string) (*string, error) 
 		return nil, errors.New("Filename is not within the FileBaseDataStore location.")
 	}
 
+	location := strings.TrimSuffix(config_obj.Datastore.Location, "/")
 	components := []string{}
 	for _, component := range strings.Split(
-		strings.TrimPrefix(filename, config_obj.Datastore.Location), "/") {
+		strings.TrimPrefix(filename, location), "/") {
 		components = append(components, unsanitizeComponent(component))
 	}
 
-	result := strings.TrimSuffix("aff4:/"+strings.Join(components, "/"), ".db")
+	result := strings.TrimSuffix("aff4:"+strings.Join(components, "/"), ".db")
 	return &result, nil
 }

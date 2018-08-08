@@ -28,11 +28,18 @@ func StartHTTPProxy(config_obj *config.Config) error {
 
 	install_mux(config_obj, mux)
 
-	h, err = GetTemplateHandler(config_obj)
+	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
 	if err != nil {
 		return err
 	}
-	mux.Handle("/index.html", h)
+	mux.Handle("/app.html", h)
+
+	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
+	if err != nil {
+		return err
+	}
+	mux.Handle("/", h)
+
 	listenAddr := fmt.Sprintf("%s:%d",
 		config_obj.GUI.BindAddress,
 		config_obj.GUI.BindPort)

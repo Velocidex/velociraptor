@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
@@ -69,20 +68,7 @@ func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
 			cell := ""
 			value, pres := scope.Associative(row, key)
 			if pres && !utils.IsNil(value) {
-				switch t := value.(type) {
-				case vfilter.StringProtocol:
-					cell = t.ToString(scope)
-				case fmt.Stringer:
-					cell = hard_wrap(t.String(), 30)
-				case []byte:
-					cell = hard_wrap(string(t), 30)
-				case string:
-					cell = hard_wrap(t, 30)
-				default:
-					if k, err := json.Marshal(value); err == nil {
-						cell = hard_wrap(string(k), 30)
-					}
-				}
+				cell = utils.Stringify(value, scope)
 			}
 			string_row = append(string_row, cell)
 		}

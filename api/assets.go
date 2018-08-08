@@ -16,8 +16,9 @@ func install_mux(config_obj *config.Config, mux *http.ServeMux) {
 	mux.Handle(dir, http.FileServer(static.HTTP))
 }
 
-func GetTemplateHandler(config_obj *config.Config) (http.Handler, error) {
-	data, err := static.ReadFile("/static/templates/index.html")
+func GetTemplateHandler(
+	config_obj *config.Config, template_name string) (http.Handler, error) {
+	data, err := static.ReadFile(template_name)
 	if err != nil {
 		return nil, err
 	}
