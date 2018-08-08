@@ -321,9 +321,15 @@ func NewHTTPCommunicator(
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {
+
+	max_poll := ctx.Config.Client.MaxPoll
+	if max_poll == 0 {
+		max_poll = 10
+	}
+
 	result := &HTTPCommunicator{
 		minPoll: time.Duration(1) * time.Second,
-		maxPoll: time.Duration(10) * time.Second,
+		maxPoll: time.Duration(max_poll) * time.Second,
 		urls:    urls,
 		ctx:     &ctx,
 		logger:  logging.NewLogger(ctx.Config),

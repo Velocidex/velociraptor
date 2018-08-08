@@ -23,6 +23,7 @@ Client:
   commit: 47b7a1c7fed5c2cd69d0a49826383d77ad5f3dd4
   name: velociraptor
   nonce: ukqqtSpJNUw=
+  max_poll: 10
   server_urls:
   - http://localhost:8000/
   version: "0.1"

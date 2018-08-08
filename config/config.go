@@ -43,6 +43,7 @@ func GetDefaultConfig() *Config {
 				WritebackLinux: "/etc/velociraptor.writeback.yaml",
 				WritebackWindows: "/Program Files/Velociraptor/" +
 					"velociraptor.writeback.yaml",
+				MaxPoll: 600,
 			},
 			API: &api_proto.APIConfig{
 				// Bind port for gRPC endpoint - this should not
