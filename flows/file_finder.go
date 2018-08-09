@@ -83,10 +83,9 @@ func (self *file_finder_builder) getSimpleConditions() []*flows_proto.FileFinder
 
 func (self *file_finder_builder) Build() (*actions_proto.VQLCollectorArgs, error) {
 	self.columns = []string{
-		"IsDir",
 		"FullPath",
 		"Size",
-		"Mode",
+		"Mode.String As Mode",
 	}
 
 	glob_plugin, err := self.compileGlobFunction()

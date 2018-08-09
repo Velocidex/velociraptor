@@ -47,14 +47,13 @@ func (self *VQLCollector) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
+	err := flow_obj.FailIfError(message)
+	if err != nil {
+		return err
+	}
 
 	switch message.RequestId {
 	case processVQLResponses:
-		err := flow_obj.FailIfError(message)
-		if err != nil {
-			return err
-		}
-
 		if flow_obj.IsRequestComplete(message) {
 			flow_obj.Complete()
 			return nil
@@ -67,36 +66,45 @@ func (self *VQLCollector) ProcessMessage(
 
 		// Receive any file upload the client sent.
 	case vql_subsystem.TransferWellKnownFlowId:
-		payload := responder.ExtractGrrMessagePayload(message)
-		if payload != nil {
-			file_buffer, ok := payload.(*actions_proto.FileBuffer)
-			if ok {
-				file_store_factory := file_store.GetFileStore(
-					config_obj)
-				file_path := path.Join(
-					flow_obj.RunnerArgs.ClientId,
-					path.Base(message.SessionId),
-					file_buffer.Pathspec.Path)
-				fd, err := file_store_factory.WriteFile(
-					file_path)
-				if err != nil {
-					return err
-				}
+		return appendDataToFile(
+			config_obj, flow_obj,
+			path.Join(flow_obj.RunnerArgs.ClientId,
+				path.Base(message.SessionId)),
+			message)
+	}
+	return nil
+}
 
-				defer fd.Close()
+func appendDataToFile(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	base_urn string,
+	message *crypto_proto.GrrMessage) error {
+	payload := responder.ExtractGrrMessagePayload(message)
+	if payload == nil {
+		return nil
+	}
+	file_buffer, ok := payload.(*actions_proto.FileBuffer)
+	if !ok {
+		return nil
+	}
+	file_store_factory := file_store.GetFileStore(config_obj)
+	file_path := path.Join(base_urn, file_buffer.Pathspec.Path)
+	fd, err := file_store_factory.WriteFile(file_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
 
-				fd.Seek(int64(file_buffer.Offset), 0)
-				fd.Write(file_buffer.Data)
+	fd.Seek(int64(file_buffer.Offset), 0)
+	fd.Write(file_buffer.Data)
 
-				// Keep track of all the files we uploaded.
-				if file_buffer.Offset == 0 {
-					flow_obj.FlowContext.UploadedFiles = append(
-						flow_obj.FlowContext.UploadedFiles,
-						file_path)
-					flow_obj.dirty = true
-				}
-			}
-		}
+	// Keep track of all the files we uploaded.
+	if file_buffer.Offset == 0 {
+		flow_obj.FlowContext.UploadedFiles = append(
+			flow_obj.FlowContext.UploadedFiles,
+			file_path)
+		flow_obj.dirty = true
 	}
 	return nil
 }

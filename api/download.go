@@ -1,5 +1,5 @@
-// Implement flow result downloads. For now we do not use gRPC for
-// this but implement it directly in the API.
+// Implement downloads. For now we do not use gRPC for this but
+// implement it directly in the API.
 package api
 
 import (
@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/gorilla/schema"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -282,6 +284,72 @@ func huntResultDownloadHandler(
 						continue
 					}
 				}
+			}
+		}
+	})
+}
+
+type vfsFileDownloadRequest struct {
+	ClientId string `schema:"client_id,required"`
+	VfsPath  string `schema:"vfs_path,required"`
+	Offset   int64  `schema:"offset"`
+	Length   int    `schema:"length"`
+	Encoding string `schema:"encoding"`
+}
+
+// URL format: /api/v1/DownloadVFSFile
+func vfsFileDownloadHandler(
+	config_obj *config.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		request := vfsFileDownloadRequest{}
+		decoder := schema.NewDecoder()
+		err := decoder.Decode(&request, r.URL.Query())
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		file, err := file_store.GetFileStore(config_obj).
+			ReadFile(path.Join(
+				request.ClientId, "vfs_files",
+				strings.TrimPrefix(
+					path.Clean(request.VfsPath), "/fs")))
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+		defer file.Close()
+
+		if r.Method == "HEAD" {
+			returnError(w, 200, "Ok")
+			return
+		}
+
+		file.Seek(request.Offset, 0)
+
+		// From here on we sent the headers and we can not
+		// really report an error to the client.
+		w.WriteHeader(200)
+
+		length_sent := 0
+		buf := make([]byte, 64*1024)
+		for {
+			n, _ := file.Read(buf)
+			if n > 0 {
+				if request.Length != 0 {
+					length_to_send := request.Length - length_sent
+					if n > length_to_send {
+						n = length_to_send
+					}
+				}
+				_, err := w.Write(buf[:n])
+				if err != nil {
+					return
+				}
+				length_sent += n
+
+			} else {
+				return
 			}
 		}
 	})

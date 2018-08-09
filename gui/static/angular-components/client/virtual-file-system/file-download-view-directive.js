@@ -3,7 +3,7 @@
 goog.module('grrUi.client.virtualFileSystem.fileDownloadViewDirective');
 goog.module.declareLegacyNamespace();
 
-const {REFRESH_FILE_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
+const {REFRESH_FILE_EVENT, REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
 
 
@@ -49,52 +49,8 @@ const FileDownloadViewController = function(
   /** @private {boolean} */
   this.updateInProgress;
 
-  /** @type {string} */
-  this.downloadCommand;
-
-  /** @type {Object|undefined} */
-  this.fileDetails;
-
-  this.scope_.$watchGroup(['controller.fileContext.clientId',
-                           'controller.fileContext.selectedFilePath',
-                           'controller.fileContext.selectedFileVersion'],
-      this.onContextChange_.bind(this));
-
   this.scope_.$on('$destroy',
       this.stopMonitorUpdateOperation_.bind(this));
-};
-
-
-
-/**
- * Handles changes to the clientId and filePath.
- *
- * @private
- */
-FileDownloadViewController.prototype.onContextChange_ = function() {
-  var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
-  var fileVersion = this.fileContext['selectedFileVersion'];
-
-  if (angular.isDefined(clientId) && angular.isDefined(filePath)) {
-
-    var commandUrl = 'clients/' + clientId + '/vfs-download-command/' + filePath;
-    this.grrApiService_.get(commandUrl).then(function(response) {
-      this.downloadCommand = response.data['command'];
-    }.bind(this));
-
-    var detailsUrl = 'clients/' + clientId + '/vfs-details/' + filePath;
-    var params = {};
-    if (fileVersion) {
-      params['timestamp'] = fileVersion;
-    }
-
-    this.fileDetails = undefined;
-    this.grrApiService_.get(detailsUrl, params).then(function(response) {
-      this.fileDetails = response.data['file'];
-    }.bind(this));
-
-  }
 };
 
 /**
@@ -109,15 +65,20 @@ FileDownloadViewController.prototype.updateFile = function() {
 
   var clientId = this.fileContext['clientId'];
   var selectedFilePath = this.fileContext['selectedFilePath'];
-  var url = 'clients/' + clientId + '/vfs-update';
+  var url = 'v1/LaunchFlow';
   var params = {
-    file_path: selectedFilePath,
+    client_id: clientId,
+    flow_name: "VFSDownloadFile",
+    args: {
+      '@type': 'type.googleapis.com/proto.VFSDownloadFileRequest',
+      vfs_path: [selectedFilePath],
+    }
   };
 
   this.updateInProgress = true;
   this.grrApiService_.post(url, params).then(
       function success(response) {
-        this.updateOperationId = response['data']['operation_id'];
+        this.updateOperationId = response['data']['flow_id'];
         this.monitorUpdateOperation_();
       }.bind(this),
       function failure(response) {
@@ -143,12 +104,19 @@ FileDownloadViewController.prototype.monitorUpdateOperation_ = function() {
  */
 FileDownloadViewController.prototype.pollUpdateOperationState_ = function() {
   var clientId = this.fileContext['clientId'];
-  var url = 'clients/' + clientId + '/vfs-update/' + this.updateOperationId;
-
-  this.grrApiService_.get(url).then(
+  var url = 'v1/GetFlowDetails/' + clientId;
+  var params = {
+    flow_id: this.updateOperationId,
+  };
+  this.grrApiService_.get(url, params).then(
     function success(response) {
-      if (response['data']['state'] === 'FINISHED') {
+      if (response['data']['context']['state'] != 'RUNNING') {
+        this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT);
         this.rootScope_.$broadcast(REFRESH_FILE_EVENT);
+
+        // Force a refresh on the file table which is watching this
+        // parameter.
+        this.fileContext.flowId = this.updateOperationId;
         this.stopMonitorUpdateOperation_();
       }
     }.bind(this),
@@ -176,23 +144,24 @@ FileDownloadViewController.prototype.stopMonitorUpdateOperation_ = function() {
 FileDownloadViewController.prototype.downloadFile = function() {
   var clientId = this.fileContext['clientId'];
   var filePath = this.fileContext['selectedFilePath'];
-  var fileVersion = this.fileContext['selectedFileVersion'];
+  var filename = clientId + '/' + filePath;
 
-  var url = 'clients/' + clientId + '/vfs-blob/' + filePath;
-  var params = {};
-  if (fileVersion) {
-    params['timestamp'] = fileVersion;
-  }
+  // Sanitize filename for download.
+  var url = 'v1/DownloadVFSFile/' + filename.replace(/[^a-zA-Z0-9]+/g, '_');
+  var params = {
+    client_id: clientId,
+    vfs_path: filePath,
+  };
   this.grrApiService_.downloadFile(url, params).then(
-      function success() {}.bind(this),
-      function failure(response) {
-        if (angular.isUndefined(response.status)) {
-          this.rootScope_.$broadcast(
-              ERROR_EVENT_NAME, {
-                message: 'Couldn\'t download file.'
-              });
-        }
-      }.bind(this)
+    function success() {}.bind(this),
+    function failure(response) {
+      if (angular.isUndefined(response.status)) {
+        this.rootScope_.$broadcast(
+          ERROR_EVENT_NAME, {
+            message: 'Couldn\'t download file.'
+          });
+      }
+    }.bind(this)
   );
 };
 

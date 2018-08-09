@@ -19,7 +19,12 @@
     <tr ng-repeat="row in ::controller.payload"
         ng-click="controller.selectRow_(row)">
       <td ng-repeat="column in ::controller.columns">
-        {$ ::row[column] $}
+        <div ng-if="::!controller.type_map[column]">
+          {{ ::row[column] }}
+        </div>
+        <div ng-if="::controller.type_map[column]">
+          <grr-semantic-value value="::row[column]" type="{$ controller.type_map[column] $}" />
+        </div>
       </td>
     </tr>
   </tbody>

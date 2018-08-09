@@ -21,6 +21,7 @@ const vqlController = function(
 
   this.payload;
   this.columns;
+  this.type_map = {};
 
   this.query = "";
 
@@ -41,6 +42,14 @@ const vqlController = function(
 vqlController.prototype.onValueChange = function(newValue) {
   if (angular.isDefined(newValue)) {
     this.columns = [];
+    this.type_map = {};
+
+    if (angular.isDefined(newValue['types'])) {
+      for (var i = 0; i < newValue['types'].length; i++) {
+        var type = newValue.types[i];
+        this.type_map[type['column']] = type['type'];
+      }
+    }
 
     if (angular.isDefined(newValue.Columns)) {
       // Hide columns beginning with _ from the table.

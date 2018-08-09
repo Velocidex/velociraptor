@@ -40,12 +40,21 @@ message VQLCollectorArgs {
         }];
 }
 
+message VQLTypeMap {
+    string column = 1;
+    string type = 2;
+}
+
 message VQLResponse {
     string Response = 1 [(sem_type) = {
             description: "JSON encoded response.",
         }];
     repeated string Columns = 2 [(sem_type) = {
             description: "A list of column headings produced by the query.",
+        }];
+
+    repeated VQLTypeMap types = 8[(sem_type) = {
+            description: "Mapping between column names and their types.",
         }];
 
     uint64 query_id = 5 [(sem_type) = {

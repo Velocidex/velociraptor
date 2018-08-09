@@ -42,7 +42,7 @@ const FileTreeController = function(
   /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
   this.fileContext;
 
-  this.scope_.$on(REFRESH_FOLDER_EVENT,
+  this.rootScope_.$on(REFRESH_FOLDER_EVENT,
       this.onRefreshFolderEvent_.bind(this));
 
   this.scope_.$watch('controller.fileContext.clientId',
@@ -146,12 +146,12 @@ FileTreeController.prototype.getChildFiles_ = function(folderPath) {
   var url = 'v1/VFSListDirectory/' + clientId_;
   var params = { 'vfs_path': folderPath || '/' };
 
-  this.fileContext.selectedDirPathData = undefined;
-  this.fileContext.selectedRow = undefined;
-
   return this.grrApiService_.get(url, params).then(
     function(response) {
       return this.parseFileResponse_(response, folderPath);
+    }.bind(this), function(response) {
+      this.fileContext.selectedDirPathData = undefined;
+      this.fileContext.selectedRow = undefined;
     }.bind(this));
 };
 
@@ -163,6 +163,8 @@ FileTreeController.prototype.getChildFiles_ = function(folderPath) {
  */
 FileTreeController.prototype.parseFileResponse_ = function(response, folderPath) {
   if (angular.isUndefined(response.data.Response)) {
+    this.fileContext.selectedDirPathData = undefined;
+    this.fileContext.selectedRow = undefined;
     return [];
   }
 
@@ -171,7 +173,7 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
   var files = JSON.parse(response.data.Response);
   var result = [];
   angular.forEach(files, function(file) {
-    if (file["IsDir"]) {
+    if (file["Mode"][0] == "d") {
       var filePath = file['Name'];
       var fullFilePath = folderPath + "/" + filePath;
       var fileId = getFileId(fullFilePath);

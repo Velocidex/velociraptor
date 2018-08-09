@@ -68,12 +68,14 @@ const FileTableController = function(
    * @export {function()}
    */
   this.triggerUpdate;
-
-  this.scope_.$on(REFRESH_FOLDER_EVENT, this.refreshFileList_.bind(this));
-  this.scope_.$on(REFRESH_FILE_EVENT, this.refreshFileList_.bind(this));
+/*
+  this.rootScope_.$on(REFRESH_FOLDER_EVENT, this.refreshFileList_.bind(this));
+  this.rootScope_.$on(REFRESH_FILE_EVENT, this.refreshFileList_.bind(this));
 
   this.scope_.$watch('controller.fileContext.clientId', this.refreshFileList_.bind(this));
   this.scope_.$watch('controller.fileContext.selectedDirPath', this.onDirPathChange_.bind(this));
+*/
+
   this.scope_.$watch('controller.fileContext.selectedRow', this.onSelectedRowChange_.bind(this));
 };
 
@@ -184,8 +186,12 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
               OPERATION_POLL_INTERVAL_MS, {
                 flow_id: this.lastRefreshOperationId,
               }, function(response) {
-                return response.data.context.state != 'RUNNING';
-              });
+                if (response.data.context.state != 'RUNNING') {
+                  this.lastRefreshOperationId = undefined;
+                  return true;
+                };
+                return false;
+              }.bind(this));
             this.scope_.$on('$destroy', function() {
               this.grrApiService_.cancelPoll(pollPromise);
             }.bind(this));

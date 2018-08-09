@@ -27,9 +27,6 @@ const FileTextViewController = function(
   /** @type {?string} */
   this.fileContent;
 
-  /** @type {string} */
-  this.encoding = 'UTF_8';
-
   /** @export {number} */
   this.page = 1;
 
@@ -40,11 +37,9 @@ const FileTextViewController = function(
   this.chunkSize_ = 10000;
 
   this.scope_.$watchGroup(['controller.fileContext.clientId',
-                           'controller.fileContext.selectedFilePath',
-                           'controller.fileContext.selectedFileVersion'],
+                           'controller.fileContext.selectedFilePath'],
       this.onContextChange_.bind(this));
 
-  this.scope_.$watch('controller.encoding', this.onEncodingChange_.bind(this));
   this.scope_.$watch('controller.page', this.onPageChange_.bind(this));
 };
 
@@ -77,18 +72,6 @@ FileTextViewController.prototype.onPageChange_ = function(page, oldPage) {
 };
 
 /**
- * Handles page changes.
- * @param {string} encoding
- * @param {string} oldEncoding
- * @private
- */
-FileTextViewController.prototype.onEncodingChange_ = function(encoding, oldEncoding) {
-  if (this.encoding !== oldEncoding) {
-    this.fetchText_();
-  }
-};
-
-/**
  * Fetches the file content.
  *
  * @private
@@ -96,28 +79,24 @@ FileTextViewController.prototype.onEncodingChange_ = function(encoding, oldEncod
 FileTextViewController.prototype.fetchText_ = function() {
   var clientId = this.fileContext['clientId'];
   var filePath = this.fileContext['selectedFilePath'];
-  var fileVersion = this.fileContext['selectedFileVersion'];
+  var total_size = this.fileContext.selectedRow['Size'];
   var offset = (this.page - 1) * this.chunkSize_;
 
-  var url = 'clients/' + clientId + '/vfs-text/' + filePath;
-  var params = {};
-  params['encoding'] = this.encoding;
-  params['offset'] = offset;
-  params['length'] = this.chunkSize_;
-  if (fileVersion) {
-    params['timestamp'] = fileVersion;
-  }
+  var url = 'v1/DownloadVFSFile/' + clientId + '/' + filePath;
+  var params = {
+    offset: offset,
+    length: this.chunkSize_,
+    vfs_path: filePath,
+    client_id: clientId,
+  };
 
   this.grrApiService_.get(url, params).then(function(response) {
-    this.fileContent = response.data['content'];
-
-    var total_size = response.data['total_size'];
     this.pageCount = Math.ceil(total_size / this.chunkSize_);
+    this.fileContent = response.data;
   }.bind(this), function() {
     this.fileContent = null;
   }.bind(this));
 };
-
 
 /**
  * FileTextViewDirective definition.

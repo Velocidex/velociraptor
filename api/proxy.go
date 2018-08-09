@@ -24,8 +24,10 @@ func StartHTTPProxy(config_obj *config.Config) error {
 	}
 	mux.Handle("/api/", h)
 	mux.Handle("/api/v1/download/", flowResultDownloadHandler(config_obj))
-	mux.Handle("/api/v1/DownloadHuntResults", huntResultDownloadHandler(config_obj))
-
+	mux.Handle("/api/v1/DownloadHuntResults",
+		huntResultDownloadHandler(config_obj))
+	mux.Handle("/api/v1/DownloadVFSFile/",
+		vfsFileDownloadHandler(config_obj))
 	install_mux(config_obj, mux)
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")

@@ -42,7 +42,7 @@ const BreadcrumbsController = function(
  * @private
  */
 BreadcrumbsController.prototype.onDirectiveArgsChange_ = function() {
-  var pathArg = this.scope_['path'];
+  var pathArg = this.scope_['path'].replace(/\/+/g, '/');
   var stripEndingSlashArg = this.scope_['stripEndingSlash'];
 
   this.items = [];
@@ -64,7 +64,6 @@ BreadcrumbsController.prototype.onDirectiveArgsChange_ = function() {
   if (components.length < 2) {
     return;
   }
-  components = components.slice(0, -1);
 
   var currentPath = '';
   angular.forEach(components.slice(0, -1), function(component) {

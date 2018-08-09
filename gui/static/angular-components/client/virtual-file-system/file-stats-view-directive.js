@@ -23,9 +23,6 @@ const FileStatsViewController = function(
 
   /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
   this.fileContext;
-
-  /** @type {Object} */
-  this.details;
 };
 
 

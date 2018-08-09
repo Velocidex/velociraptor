@@ -37,7 +37,7 @@ const FileHexViewController = function(
   this.rows_ = 25;
 
   /** @private {number} */
-  this.columns_ = 32;
+  this.columns_ = 0x14;
 
   /** @private {number} */
   this.offset_ = 0;
@@ -90,27 +90,19 @@ FileHexViewController.prototype.onPageChange_ = function(page, oldPage) {
 FileHexViewController.prototype.fetchText_ = function() {
   var clientId = this.fileContext['clientId'];
   var filePath = this.fileContext['selectedFilePath'];
-  var fileVersion = this.fileContext['selectedFileVersion'];
+  var total_size = this.fileContext.selectedRow['Size'];
 
-  var url = 'clients/' + clientId + '/vfs-blob/' + filePath;
-  var headParams = {};
-  if (fileVersion) {
-    headParams['timestamp'] = fileVersion;
-  }
+  this.pageCount = Math.ceil(total_size / this.chunkSize_);
 
-  // We first need to get the content length via HEAD, passing no offset and no length.
-  this.grrApiService_.head(url, headParams).then(function(response) {
-    var total_size = response.headers('Content-Length');
-    this.pageCount = Math.ceil(total_size / this.chunkSize_);
+  var url = 'v1/DownloadVFSFile/' + clientId + '/' + filePath;
+  var params = {
+    offset: this.offset_,
+    length: this.chunkSize_,
+    vfs_path: filePath,
+    client_id: clientId,
+  };
 
-    var params = {};
-    params['offset'] = this.offset_;
-    params['length'] = this.chunkSize_;
-    if (fileVersion) {
-      params['timestamp'] = fileVersion;
-    }
-    return this.grrApiService_.get(url, params);
-  }.bind(this)).then(function(response) {
+  this.grrApiService_.get(url, params).then(function(response) {
     this.parseFileContentToHexRepresentation_(response.data);
   }.bind(this), function() {
     this.hexDataRows = null;
@@ -132,9 +124,18 @@ FileHexViewController.prototype.parseFileContentToHexRepresentation_ = function(
 
   for(var i = 0; i < this.rows_; i++){
     var rowOffset = this.offset_ + (i * this.columns_);
+    var data = fileContent.substr(i * this.columns_, this.columns_);
+    var data_row = [];
+    for (var j = 0; j < data.length; j++) {
+      var char = data.charCodeAt(j).toString(16);
+      data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
+    };
+
     this.hexDataRows.push({
       offset: rowOffset,
-      data: fileContent.substr(i * this.columns_, this.columns_)
+      data_row: data_row,
+      data: data,
+      safe_data: data.replace(/[^\x20-\x7f]/g, '.'),
     });
   }
 };

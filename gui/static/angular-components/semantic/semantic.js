@@ -3,6 +3,7 @@
 goog.module('grrUi.semantic.semantic');
 goog.module.declareLegacyNamespace();
 
+const {DownloadDirective} = goog.require('grrUi.client.virtualFileSystem.downloadDirective');
 const {ApiHuntResultDirective} = goog.require('grrUi.semantic.apiHuntResultDirective');
 const {ByteSizeDirective} = goog.require('grrUi.semantic.byteSizeDirective');
 const {ClientUrnDirective} = goog.require('grrUi.semantic.clientUrnDirective');
@@ -38,6 +39,8 @@ exports.semanticModule = angular.module('grrUi.semantic', [
   'ui.bootstrap'
 ]);
 
+exports.semanticModule.directive(
+  DownloadDirective.directive_name, DownloadDirective);
 exports.semanticModule.directive(
     ApiHuntResultDirective.directive_name, ApiHuntResultDirective);
 exports.semanticModule.directive(
@@ -86,6 +89,8 @@ exports.semanticModule.service(
 exports.semanticModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;
 
+  registry.registerDirective(
+    DownloadDirective.semantic_type, DownloadDirective);
   registry.registerDirective(
       ApiHuntResultDirective.semantic_type, ApiHuntResultDirective);
   registry.registerDirective(

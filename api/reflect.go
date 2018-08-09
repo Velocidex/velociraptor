@@ -30,6 +30,7 @@ var (
 		"VInterrogateArgs",
 		"VFSListRequest",
 		"FileFinderArgs",
+		"VFSDownloadFileRequest",
 	}
 )
 

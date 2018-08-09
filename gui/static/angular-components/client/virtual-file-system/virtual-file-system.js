@@ -4,7 +4,6 @@ goog.module('grrUi.client.virtualFileSystem.virtualFileSystem');
 goog.module.declareLegacyNamespace();
 
 const {BreadcrumbsDirective} = goog.require('grrUi.client.virtualFileSystem.breadcrumbsDirective');
-const {EncodingsDropdownDirective} = goog.require('grrUi.client.virtualFileSystem.encodingsDropdownDirective');
 const {FileContextDirective} = goog.require('grrUi.client.virtualFileSystem.fileContextDirective');
 const {FileDetailsDirective} = goog.require('grrUi.client.virtualFileSystem.fileDetailsDirective');
 const {FileDownloadViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileDownloadViewDirective');
@@ -31,8 +30,6 @@ exports.virtualFileSystemModule = angular.module(
 
 exports.virtualFileSystemModule.directive(
     BreadcrumbsDirective.directive_name, BreadcrumbsDirective);
-exports.virtualFileSystemModule.directive(
-    EncodingsDropdownDirective.directive_name, EncodingsDropdownDirective);
 exports.virtualFileSystemModule.directive(
     FileContextDirective.directive_name, FileContextDirective);
 exports.virtualFileSystemModule.directive(

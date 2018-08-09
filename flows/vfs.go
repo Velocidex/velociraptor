@@ -7,14 +7,17 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	"path"
+	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
+	debug "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -80,8 +83,8 @@ func (self *VFSListDirectory) Start(
 		Query: []*actions_proto.VQLRequest{
 			{
 				Name: vfs_args.VfsPath,
-				VQL: "SELECT IsDir, FullPath as _FullPath, " +
-					"Name, Size, Mode, " +
+				VQL: "SELECT FullPath as _FullPath, " +
+					"Name, Size, Mode.String AS Mode, " +
 					"timestamp(epoch=Mtime.Sec) as mtime, " +
 					"timestamp(epoch=Atime.Sec) as atime, " +
 					"timestamp(epoch=Ctime.Sec) as ctime " +
@@ -256,6 +259,91 @@ func (self *VFSListDirectory) flush_state(
 	return db.SetSubject(config_obj, urn, self.state.Current)
 }
 
+type VFSDownloadFile struct {
+	*BaseFlow
+}
+
+func (self *VFSDownloadFile) Start(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	args proto.Message) error {
+	vfs_download_args, ok := args.(*flows_proto.VFSDownloadFileRequest)
+	if !ok {
+		return errors.New("Expected args of type VFSDownloadFileRequest")
+	}
+
+	request := &actions_proto.VQLCollectorArgs{}
+	paths := []string{}
+	for _, file_path := range vfs_download_args.VfsPath {
+		file_path = path.Clean(file_path)
+		if strings.HasPrefix(file_path, "/fs/") {
+			local_path := strings.TrimPrefix(file_path, "/fs")
+			path_var := fmt.Sprintf("Path%d", len(paths))
+			paths = append(paths, path_var)
+			request.Env = append(request.Env, &actions_proto.VQLEnv{
+				Key:   path_var,
+				Value: local_path,
+			})
+		} else {
+			return errors.New(fmt.Sprintf(
+				"Fetching VFS path %s not supported "+
+					"(shoud start with '/fs/').", file_path))
+		}
+	}
+
+	if len(paths) == 0 {
+		return errors.New("Must specify some paths.")
+	}
+
+	request.Query = append(request.Query, &actions_proto.VQLRequest{
+		Name: "Upload files",
+		VQL: fmt.Sprintf("SELECT * FROM upload(files=[%s])",
+			strings.Join(paths, ", ")),
+	})
+
+	debug.Debug(request)
+	err := QueueMessageForClient(
+		config_obj, flow_obj,
+		"VQLClientAction",
+		request, processVQLResponses)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (self *VFSDownloadFile) ProcessMessage(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	message *crypto_proto.GrrMessage) error {
+	err := flow_obj.FailIfError(message)
+	if err != nil {
+		return err
+	}
+
+	switch message.RequestId {
+	case processVQLResponses:
+		if flow_obj.IsRequestComplete(message) {
+			flow_obj.Complete()
+			return nil
+		}
+
+		err = StoreResultInFlow(config_obj, flow_obj, message)
+		if err != nil {
+			return err
+		}
+
+		// Receive any file upload the client sent.
+	case vql_subsystem.TransferWellKnownFlowId:
+		return appendDataToFile(
+			config_obj, flow_obj,
+			path.Join(flow_obj.RunnerArgs.ClientId, "vfs_files"),
+			message)
+	}
+	return nil
+}
+
 func init() {
 	impl := VFSListDirectory{}
 	default_args, _ := ptypes.MarshalAny(&flows_proto.VFSListRequest{})
@@ -268,4 +356,18 @@ func init() {
 		DefaultArgs:  default_args,
 	}
 	RegisterImplementation(desc, &impl)
+
+	{
+		impl := VFSDownloadFile{}
+		default_args, _ := ptypes.MarshalAny(&flows_proto.VFSDownloadFileRequest{})
+		desc := &flows_proto.FlowDescriptor{
+			Name:         "VFSDownloadFile",
+			FriendlyName: "Download VFS Files",
+			Category:     "Collectors",
+			Doc:          "Download files into the client's virtual filesystem.",
+			ArgsType:     "VFSDownloadFileRequest",
+			DefaultArgs:  default_args,
+		}
+		RegisterImplementation(desc, &impl)
+	}
 }

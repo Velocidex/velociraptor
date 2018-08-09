@@ -26,3 +26,15 @@ message VFSListRequestState {
     string vfs_path = 1;
     VQLResponse current = 2;
 }
+
+message VFSDownloadFileRequest {
+    string client_id = 1 [(sem_type) = {
+            description: "The client id",
+            type: "RDFURN",
+            label: HIDDEN,
+        }];
+
+    repeated string vfs_path = 2 [(sem_type) = {
+            description: "The VFS Path to the file to download.",
+        }];
+}

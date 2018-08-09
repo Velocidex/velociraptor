@@ -24,16 +24,6 @@
                                       class="space-right">
         </grr-vfs-files-archive-button>
 
-        <div class="input-group large">
-          <input type="text" class="form-control file-search" placeholder="Filter Items"
-                 ng-model="controller.filterEditedValue" grr-bind-key="controller.updateFilter()">
-          <span class="input-group-btn">
-            <button class="btn btn-default" type="button" ng-click="controller.updateFilter()">
-              <i class="fa fa-filter"></i>
-            </button>
-          </span>
-        </div>
-
       </div>
 
       <div class="navbar-form pull-right">
@@ -48,16 +38,18 @@
 
   <div class="fill-parent-with-toolbar">
     <grr-breadcrumbs path="controller.fileContext.selectedDirPath"></grr-breadcrumbs>
-
-    <div grr-force-refresh refresh-trigger="controller.fileListUrl"
+    <div grr-force-refresh
+         refresh-trigger="controller.fileContext.selectedDirPathData.Response"
          ng-if="viewMode == 'list'">
 
-      <div ng-if="controller.fileContext.selectedDirPathData">
+      <div ng-if="controller.fileContext.selectedDirPathData.Response"
+           >
         <grr-vql value="controller.fileContext.selectedDirPathData"
                  selected-row="controller.fileContext.selectedRow"/>
       </div>
 
-      <div ng-if="!controller.fileContext.selectedDirPathData" class="no-content">
+      <div ng-if="!controller.fileContext.selectedDirPathData.Response"
+           class="no-content">
         No data available for directory.
         You can try to refresh this directory using the toolbar above.
       </div>

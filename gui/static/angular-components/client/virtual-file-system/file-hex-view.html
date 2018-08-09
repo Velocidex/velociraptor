@@ -15,7 +15,7 @@
       <table>
         <tr>
           <th>Offset</th>
-          <th>000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f</th>
+          <th>00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13</th>
           <th></th>
         </tr>
         <tr>
@@ -34,7 +34,9 @@
             <table class="hex-area">
               <tr ng-repeat="row in controller.hexDataRows">
                 <td>
-                  {$ ::row.data | grrBytesToHex $}
+                  <span ng-repeat="x in row.data_row track by $index">
+                    {$ ::x $}
+                  </span>
                 </td>
               </tr>
             </table>
@@ -44,7 +46,7 @@
             <table class="content-area">
               <tr ng-repeat="row in controller.hexDataRows">
                 <td class="data">
-                  {$ ::row.data $}
+                  {$ ::row.safe_data $}
                 </td>
               </tr>
             </table>
