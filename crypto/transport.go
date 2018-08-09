@@ -189,35 +189,35 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 	// Check that the server's serial number is larger than the
 	// last one we saw. This prevents attackers from MITM old certs.
 	last_serial_number := big.NewInt(int64(
-		self.config.Client.LastServerSerialNumber))
+		self.config.Writeback.LastServerSerialNumber))
 	if last_serial_number.Cmp(server_cert.SerialNumber) == 1 {
 		return nil, errors.New(
 			fmt.Sprintf("Server serial number is too old. Should be %v",
-				self.config.Client.LastServerSerialNumber))
+				self.config.Writeback.LastServerSerialNumber))
 	}
 
 	// Server has advanced its serial number - record the new
-	// number in our config.
+	// number in our writeback state. Note- serial number can only
+	// be advanced.
+
+	// last_serial_number < server_cert.SerialNumber
 	if last_serial_number.Cmp(server_cert.SerialNumber) == -1 {
 		// Clear all our internal caches because we are now
 		// re-keying.
 		self.Clear()
-		if self.config.Writeback != "" {
-			write_back_config := config.NewClientConfig()
-			config.LoadConfig(self.config.Writeback, write_back_config)
-			write_back_config.Client.LastServerSerialNumber = uint64(
-				server_cert.SerialNumber.Int64())
-			err = config.WriteConfigToFile(self.config.Writeback,
-				write_back_config)
-			if err != nil {
-				return nil, err
-			}
-			self.logger.Info(
-				"Updated server serial number in "+
-					"config file %v to %v",
-				self.config.Writeback,
-				write_back_config.Client.LastServerSerialNumber)
+
+		// Persist the number.
+		self.config.Writeback.LastServerSerialNumber = uint64(
+			server_cert.SerialNumber.Int64())
+		err := config.UpdateWriteback(self.config)
+		if err != nil {
+			return nil, err
 		}
+		self.logger.Info(
+			"Updated server serial number in "+
+				"config file %v to %v",
+			self.config.WritebackLocation(),
+			self.config.Writeback.LastServerSerialNumber)
 	}
 
 	err = self.public_key_resolver.SetPublicKey(

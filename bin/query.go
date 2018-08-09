@@ -7,6 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
+	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -78,7 +79,10 @@ func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
 }
 
 func doQuery() {
-	config_obj, _ := get_config(*config_path)
+	config_obj, err := config.LoadConfig(*config_path)
+	if err != nil {
+		config_obj = config.GetDefaultConfig()
+	}
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})

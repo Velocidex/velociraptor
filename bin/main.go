@@ -14,12 +14,6 @@ var (
 	command_handlers []func(command string) bool
 )
 
-func get_config(config_path string) (*config.Config, error) {
-	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(config_path, config_obj)
-	return config_obj, err
-}
-
 func validateServerConfig(configuration *config.Config) error {
 	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
@@ -30,7 +24,10 @@ func validateServerConfig(configuration *config.Config) error {
 
 func get_server_config(config_path string) (*config.Config, error) {
 	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig(config_path, config_obj)
+	config_obj, err := config.LoadConfig(config_path)
+	if err != nil {
+		return nil, err
+	}
 	if err == nil {
 		err = validateServerConfig(config_obj)
 	}

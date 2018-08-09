@@ -16,8 +16,8 @@ func (self *GetClientInfo) Run(
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(args, output)
 	info := &actions_proto.ClientInformation{
-		ClientName:    ctx.Config.Client.Name,
-		ClientVersion: ctx.Config.Client.Version,
+		ClientName:    ctx.Config.Version.Name,
+		ClientVersion: ctx.Config.Version.Version,
 		Labels:        ctx.Config.Client.Labels,
 	}
 	responder.AddResponse(info)
@@ -37,13 +37,9 @@ func (self *UpdateForeman) Run(
 		return
 	}
 
-	if arg.LastHuntTimestamp > ctx.Config.Client.HuntLastTimestamp {
-		ctx.Config.Client.HuntLastTimestamp = arg.LastHuntTimestamp
-		write_back_config := config.NewClientConfig()
-		config.LoadConfig(ctx.Config.Writeback, write_back_config)
-		write_back_config.Client.HuntLastTimestamp = ctx.Config.Client.HuntLastTimestamp
-		err := config.WriteConfigToFile(ctx.Config.Writeback,
-			write_back_config)
+	if arg.LastHuntTimestamp > ctx.Config.Writeback.HuntLastTimestamp {
+		ctx.Config.Writeback.HuntLastTimestamp = arg.LastHuntTimestamp
+		err := config.UpdateWriteback(ctx.Config)
 		if err != nil {
 			responder.RaiseError(err.Error())
 			return

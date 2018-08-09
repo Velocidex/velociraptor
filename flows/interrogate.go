@@ -7,7 +7,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -51,7 +50,7 @@ func (self *VInterrogate) Start(
 	// Run standard queries.
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
-			VQL:  "select Name, BuildTime, Labels from config",
+			VQL:  "select Version.Name, Version.BuildTime, Client.Labels from config",
 			Name: "Client Info"},
 		&actions_proto.VQLRequest{
 			VQL: "select Hostname, OS, Architecture, Platform, PlatformVersion, " +
@@ -251,7 +250,7 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 
 func processClientInfoQuery(response *actions_proto.VQLResponse,
 	client_info *actions_proto.ClientInfo) error {
-	var result []*api_proto.ClientConfig
+	var result []map[string]string
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
@@ -260,8 +259,8 @@ func processClientInfoQuery(response *actions_proto.VQLResponse,
 
 	for _, info := range result {
 		if info != nil {
-			client_info.ClientName = info.Name
-			client_info.ClientVersion = info.BuildTime
+			client_info.ClientName = info["Name"]
+			client_info.ClientVersion = info["BuildTime"]
 		}
 	}
 	return nil

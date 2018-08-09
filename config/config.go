@@ -17,29 +17,31 @@ var (
 
 type Config struct {
 	*api_proto.Config
-
-	// A virtual field which is calculated from
-	// Client.WritebackLinux, Client.WritebackWindows etc.
-	Writeback string `json:"-"`
 }
 
-// Get an empty client config.
-func NewClientConfig() *Config {
-	return &Config{
-		&api_proto.Config{
-			Client: &api_proto.ClientConfig{},
-		}, ""}
+// Return the location of the writeback file.
+func (self *Config) WritebackLocation() string {
+	switch runtime.GOOS {
+	case "linux":
+		return self.Client.WritebackLinux
+	case "windows":
+		return self.Client.WritebackWindows
+	default:
+		return self.Client.WritebackLinux
+	}
 }
 
 // Create a default configuration object.
 func GetDefaultConfig() *Config {
 	return &Config{
 		&api_proto.Config{
+			Version: &api_proto.Version{
+				Name:      "velociraptor",
+				Version:   "0.1",
+				BuildTime: build_time,
+				Commit:    commit_hash,
+			},
 			Client: &api_proto.ClientConfig{
-				Name:           "velociraptor",
-				Version:        "0.1",
-				BuildTime:      build_time,
-				Commit:         commit_hash,
 				WritebackLinux: "/etc/velociraptor.writeback.yaml",
 				WritebackWindows: "/Program Files/Velociraptor/" +
 					"velociraptor.writeback.yaml",
@@ -71,56 +73,78 @@ func GetDefaultConfig() *Config {
 				Location:           "/tmp/velociraptor",
 				FilestoreDirectory: "/tmp/velociraptor",
 			},
-			Flows: &api_proto.FlowsConfig{},
-		}, "",
+			Flows:     &api_proto.FlowsConfig{},
+			Writeback: &api_proto.Writeback{},
+		},
 	}
 }
 
 // Load the config stored in the YAML file and returns a config object.
-func LoadConfig(filename string, config *Config) error {
+func LoadConfig(filename string) (*Config, error) {
+	default_config := GetDefaultConfig()
+	result := GetDefaultConfig()
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
-	err = yaml.Unmarshal(data, config)
+	err = yaml.Unmarshal(data, result)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
 
-	switch runtime.GOOS {
-	case "linux":
-		config.Writeback = config.Client.WritebackLinux
-	case "windows":
-		config.Writeback = config.Client.WritebackWindows
-	default:
-		config.Writeback = config.Client.WritebackLinux
-	}
+	// TODO: Check if the config version is compatible with our
+	// version. We always set the result's version to our version.
+	result.Version = default_config.Version
 
-	return nil
+	return result, nil
 }
 
-func ParseConfigFromString(config_string []byte, config *Config) error {
-	err := yaml.Unmarshal(config_string, config)
+func LoadClientConfig(filename string) (*Config, error) {
+	client_config, err := LoadConfig(filename)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, err
 	}
 
-	return nil
-}
+	existing_writeback := &api_proto.Writeback{}
+	data, err := ioutil.ReadFile(client_config.WritebackLocation())
+	// Failing to read the file is not an error - the file may not
+	// exist yet.
+	if err == nil {
+		err = yaml.Unmarshal(data, existing_writeback)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+	}
 
-func Encode(config *Config) ([]byte, error) {
-	res, err := yaml.Marshal(config)
-	return res, err
+	// Merge the writeback with the config.
+	client_config.Writeback = existing_writeback
+	return client_config, nil
 }
 
 func WriteConfigToFile(filename string, config *Config) error {
-	bytes, err := Encode(config)
+	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
 	// Make sure the new file is only readable by root.
 	err = ioutil.WriteFile(filename, bytes, 0600)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	return nil
+}
+
+// Update the client's writeback file.
+func UpdateWriteback(config_obj *Config) error {
+	bytes, err := yaml.Marshal(config_obj.Writeback)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	// Make sure the new file is only readable by root.
+	err = ioutil.WriteFile(config_obj.WritebackLocation(), bytes, 0600)
 	if err != nil {
 		return errors.WithStack(err)
 	}

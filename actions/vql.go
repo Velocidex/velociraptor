@@ -53,7 +53,7 @@ func (self *VQLClientAction) Run(
 	env := vfilter.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
-		Set("config", ctx.Config.Client)
+		Set("config", ctx.Config)
 
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)

@@ -138,24 +138,17 @@ func VerifyConfig(config_obj *config.Config) error {
 		return errors.New("No server URLs configured!")
 	}
 
-	if config_obj.Client.PrivateKey == "" {
+	if config_obj.Writeback.PrivateKey == "" {
 		fmt.Println("Genering new private key....")
 		pem, err := GeneratePrivateKey()
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		config_obj.Client.PrivateKey = string(pem)
 
-		if config_obj.Writeback != "" {
-			write_back_config := config.NewClientConfig()
-			config.LoadConfig(config_obj.Writeback, write_back_config)
-			write_back_config.Client.PrivateKey = string(pem)
-			err = config.WriteConfigToFile(config_obj.Writeback,
-				write_back_config)
-			if err != nil {
-				return err
-			}
-			fmt.Println("Wrote new config file ", config_obj.Writeback)
+		config_obj.Writeback.PrivateKey = string(pem)
+		err = config.UpdateWriteback(config_obj)
+		if err != nil {
+			return err
 		}
 	}
 

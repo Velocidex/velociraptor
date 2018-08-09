@@ -16,48 +16,25 @@ var (
 
 func RunClient(config_path *string) {
 	ctx := context.Background()
-	config_obj := config.GetDefaultConfig()
 
-	// Can provide the config file on the command line OR embedded in the binary.
-	if config_path != nil && *config_path != "" {
-		err := config.LoadConfig(*config_path, config_obj)
-		if err != nil {
-			kingpin.FatalIfError(err, "Unable to load config file")
-		}
-
-	} else {
-		// Packed binaries contain their config embedded in the
-		// binary.
-		config_string, err := ExtractEmbeddedConfig()
-		if err != nil {
-			kingpin.FatalIfError(err, "Unable to load embedded config file")
-		}
-
-		err = config.ParseConfigFromString(config_string, config_obj)
-		if err != nil {
-			kingpin.FatalIfError(err, "Unable to load config file")
-		}
+	if config_path == nil || *config_path == "" {
+		kingpin.Fatalf("config file must be provided.")
 	}
 
-	// Allow the embedded config to specify a writeback
-	// location. We load that location in addition to the
-	// configuration we were provided.
-	if config_obj.Writeback != "" {
-		err := config.LoadConfig(config_obj.Writeback, config_obj)
-		if err != nil {
-			kingpin.Errorf("Unable to load writeback file: %v", err)
-		}
+	config_obj, err := config.LoadClientConfig(*config_path)
+	if err != nil {
+		kingpin.FatalIfError(err, "Unable to load config file")
 	}
 	ctx.Config = config_obj
 
 	// Make sure the config is ok.
-	err := crypto.VerifyConfig(ctx.Config)
+	err = crypto.VerifyConfig(ctx.Config)
 	if err != nil {
 		kingpin.FatalIfError(err, "Invalid config")
 	}
 
 	manager, err := crypto.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Client.PrivateKey))
+		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}

@@ -6,7 +6,11 @@ import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
 
-message ClientConfig {
+// Information about Velociraptor. This is a psuedo config item - it
+// will never be read from config files, but can be used in VQL
+// queries. It will be written to config files as metadata about the
+// version read from.
+message Version {
     string name = 1 [(sem_type) = {
             description: "The client's name."
         }];
@@ -16,7 +20,7 @@ message ClientConfig {
         }];
 
     string version = 3 [(sem_type) = {
-            description: "The client's version string"
+            description: "The client's version string using a semantic versioning scheme."
         }];
 
     string commit = 4 [(sem_type) = {
@@ -26,13 +30,26 @@ message ClientConfig {
     string build_time = 5 [(sem_type) = {
             description: "When the client was built."
         }];
+}
 
-    repeated string labels = 6 [(sem_type) = {
-            description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
-        }];
-
+// The client's state which are persisted in the writeback file.
+message Writeback {
     string private_key = 7 [(sem_type) = {
             description: "The client's private key in PEM encoding."
+        }];
+
+    uint64 hunt_last_timestamp = 13 [(sem_type) = {
+            description: "The last hunt timestamp this client ran."
+        }];
+
+    uint64 last_server_serial_number = 14 [(sem_type) = {
+            description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
+        }];
+}
+
+message ClientConfig {
+    repeated string labels = 6 [(sem_type) = {
+            description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
         }];
 
     repeated string server_urls = 8 [(sem_type) = {
@@ -53,14 +70,6 @@ message ClientConfig {
 
     string writeback_windows = 10 [(sem_type) = {
             description: "A path where windows clients will write local state."
-        }];
-
-    uint64 hunt_last_timestamp = 13 [(sem_type) = {
-            description: "The last hunt timestamp this client ran."
-        }];
-
-    uint64 last_server_serial_number = 14 [(sem_type) = {
-            description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
         }];
 
     uint64 max_poll = 15 [(sem_type) = {
@@ -155,6 +164,10 @@ message FlowsConfig {
 
 
 message Config {
+    Version version = 8 [(sem_type) = {
+            description: "Version information."
+        }];
+
     ClientConfig Client = 1 [(sem_type) = {
             description: "Client configuration."
         }];
@@ -172,4 +185,8 @@ message Config {
     DatastoreConfig Datastore = 6;
 
     FlowsConfig Flows = 7;
+
+    Writeback writeback = 9 [(sem_type) = {
+            description: "Contents of the client's state as stored in the writeback file."
+        }];
 }

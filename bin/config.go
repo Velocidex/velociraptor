@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/ghodss/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -26,13 +28,14 @@ var (
 )
 
 func doShowConfig() {
-	config_obj, err := get_config(*config_path)
+	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	res, err := config.Encode(config_obj)
+	res, err := yaml.Marshal(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}
+
 	fmt.Printf("%v", string(res))
 }
 
@@ -69,7 +72,7 @@ func doGenerateConfig() {
 	// Users have to updated the following fields.
 	config_obj.Client.ServerUrls = []string{"http://localhost:8000/"}
 
-	res, err := config.Encode(config_obj)
+	res, err := yaml.Marshal(config_obj)
 	if err != nil {
 		logger.Error("Unable to create CA cert", err)
 		return
@@ -78,7 +81,7 @@ func doGenerateConfig() {
 }
 
 func doRotateKeyConfig() {
-	config_obj, err := get_config(*config_path)
+	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 	logger := logging.NewLogger(config_obj)
 	frontend_cert, err := crypto.GenerateServerCert(config_obj)
@@ -90,7 +93,7 @@ func doRotateKeyConfig() {
 	config_obj.Frontend.Certificate = frontend_cert.Cert
 	config_obj.Frontend.PrivateKey = frontend_cert.PrivateKey
 
-	res, err := config.Encode(config_obj)
+	res, err := yaml.Marshal(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}
@@ -98,13 +101,15 @@ func doRotateKeyConfig() {
 }
 
 func doDumpClientConfig() {
-	config_obj, err := get_config(*config_path)
+	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	client_config := config.NewClientConfig()
-	client_config.Client = config_obj.Client
+	client_config := &api_proto.Config{
+		Version: config_obj.Version,
+		Client:  config_obj.Client,
+	}
 
-	res, err := config.Encode(client_config)
+	res, err := yaml.Marshal(client_config)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}

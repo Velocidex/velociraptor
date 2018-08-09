@@ -22,7 +22,9 @@ func init() {
 				args *vfilter.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				if info, err := host.Info(); err == nil {
-					item := InfoStat{*info, fqdn.Get(), runtime.GOARCH}
+					item := InfoStat{*info,
+						fqdn.Get(),
+						runtime.GOARCH}
 					result = append(result, item)
 				}
 
