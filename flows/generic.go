@@ -47,7 +47,7 @@ func (self *VQLCollector) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
-	err := flow_obj.FailIfError(message)
+	err := flow_obj.FailIfError(config_obj, message)
 	if err != nil {
 		return err
 	}
@@ -55,8 +55,7 @@ func (self *VQLCollector) ProcessMessage(
 	switch message.RequestId {
 	case processVQLResponses:
 		if flow_obj.IsRequestComplete(message) {
-			flow_obj.Complete()
-			return nil
+			return flow_obj.Complete(config_obj)
 		}
 
 		err = StoreResultInFlow(config_obj, flow_obj, message)

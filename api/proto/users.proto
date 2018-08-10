@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "objects.proto";
+
+package proto;
+
+message VelociraptorUser {
+    string name = 1 [(sem_type) = {
+            description: "The username"
+        }];
+
+    bytes password_hash = 2 [(sem_type) = {
+            description: "SHA256 hash of the password."
+        }];
+    bytes password_salt = 3;
+}
+
+
+// Next field: 4
+message GUISettings {
+    option (semantic) = {
+        description: "User GUI settings and preferences."
+    };
+
+    enum UIMode {
+        BASIC = 0;
+        ADVANCED = 1;
+        DEBUG = 2;
+    }
+
+    UIMode mode = 1 [(sem_type) = {
+            description: "User interface mode.",
+        }];
+
+    bool canary_mode = 3 [(sem_type) = {
+            description: "If true, show features that are being canaried."
+        }];
+}
+
+// These traits are used by the AdminUI Angular app to disable certain UI
+// elements.
+message ApiGrrUserInterfaceTraits {
+    bool cron_jobs_nav_item_enabled = 1;
+    bool create_cron_job_action_enabled = 2;
+
+    bool hunt_manager_nav_item_enabled = 3;
+    bool create_hunt_action_enabled = 4;
+
+    bool show_statistics_nav_item_enabled = 5;
+
+    bool server_load_nav_item_enabled = 7;
+
+    bool manage_binaries_nav_item_enabled = 9;
+    bool upload_binary_action_enabled = 10;
+
+    bool settings_nav_item_enabled = 11;
+
+    bool artifact_manager_nav_item_enabled = 12;
+    bool upload_artifact_action_enabled = 13;
+    bool search_clients_action_enabled = 14;
+    bool browse_virtual_file_system_nav_item_enabled = 15;
+    bool start_client_flow_nav_item_enabled = 16;
+    bool manage_client_flows_nav_item_enabled = 17;
+    bool modify_client_labels_action_enabled = 18;
+};
+
+message ApiGrrUser {
+    string username = 1 [(sem_type) = {
+            description: "The name of the user."
+        }];
+    GUISettings settings = 2 [(sem_type) = {
+            description: "User UI settings."
+        }];
+    ApiGrrUserInterfaceTraits interface_traits = 3 [(sem_type) = {
+            description: "User's interface traits (what they can and can't do "
+            "in the UI)."
+        }];
+
+    enum UserType {
+        USER_TYPE_NONE = 0;
+        USER_TYPE_STANDARD = 1;
+        USER_TYPE_ADMIN = 2;
+    }
+    UserType user_type = 4;
+}
+
+
+message UserNotificationCount {
+    uint64 count = 1;
+}
+
+message UserNotification {
+    enum Type {
+        TYPE_UNSET = 0;
+        TYPE_CLIENT_INTERROGATED = 1;
+        TYPE_CLIENT_APPROVAL_REQUESTED = 2;
+        TYPE_HUNT_APPROVAL_REQUESTED = 3;
+        TYPE_CRON_JOB_APPROVAL_REQUESTED = 4;
+        TYPE_CLIENT_APPROVAL_GRANTED = 5;
+        TYPE_HUNT_APPROVAL_GRANTED = 6;
+        TYPE_CRON_JOB_APPROVAL_GRANTED = 7;
+        TYPE_VFS_FILE_COLLECTED = 8;
+        TYPE_VFS_FILE_COLLECTION_FAILED = 9;
+        TYPE_HUNT_STOPPED = 10;
+        TYPE_FILE_ARCHIVE_GENERATED = 11;
+        TYPE_FILE_ARCHIVE_GENERATION_FAILED = 12;
+        TYPE_FLOW_RUN_COMPLETED = 13;
+        TYPE_FLOW_RUN_FAILED = 14;
+        TYPE_VFS_LIST_DIRECTORY_COMPLETED = 15;
+        TYPE_VFS_RECURSIVE_LIST_DIRECTORY_COMPLETED = 16;
+    }
+
+    enum State {
+        STATE_UNSET = 0;
+        STATE_PENDING = 1;
+        STATE_NOT_PENDING = 2;
+    }
+
+    string username = 1;
+    Type notification_type = 2;
+    State state = 3;
+    uint64 timestamp = 4 [(sem_type) = {
+            type: "RDFDatetime"
+        }];
+
+    string message = 5;
+    ObjectReference reference = 6;
+}
+
+message GetUserNotificationsResponse {
+    repeated UserNotification items = 1;
+}
+
+message GetUserNotificationsRequest {
+    bool clear_pending = 1 [(sem_type) = {
+            description: "If set, clears pending notifications."
+        }];
+}

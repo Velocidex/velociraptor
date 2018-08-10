@@ -3,7 +3,6 @@
 var gulp = require('gulp');
 var gulpAngularTemplateCache = require('gulp-angular-templatecache');
 var gulpClosureCompiler = require('gulp-closure-compiler');
-var gulpClosureDeps = require('gulp-closure-deps');
 var gulpConcat = require('gulp-concat');
 var gulpInsert = require('gulp-insert');
 var gulpLess = require('gulp-less');
@@ -230,19 +229,6 @@ gulp.task('compile-grr-ui-tests', function() {
 });
 
 
-gulp.task('compile-grr-closure-ui-deps', function() {
-  return gulp.src(['angular-components/**/*.js',
-                   '!angular-components/**/*_test.js'])
-      .pipe(gulpNewer(config.distDir + '/grr-ui.deps.js'))
-      .pipe(gulpClosureDeps({
-        fileName: 'grr-ui.deps.js',
-        prefix: '../static',
-        baseDir: './'
-      }))
-     .pipe(gulp.dest(config.distDir));
-});
-
-
 gulp.task('compile-grr-legacy-ui-js', function() {
   return gulp.src(['javascript/**/*.js', '!javascript/**/*_test.js'])
       .pipe(gulpConcat('grr-ui-legacy.bundle.js'))
@@ -251,8 +237,8 @@ gulp.task('compile-grr-legacy-ui-js', function() {
 
 
 gulp.task('compile-grr-ui-js', ['compile-grr-closure-ui-js',
-                                'compile-grr-closure-ui-deps',
-                                'compile-grr-legacy-ui-js']);
+                               // 'compile-grr-legacy-ui-js',
+                               ]);
 
 
 gulp.task('compile-grr-ui-css', function() {
@@ -288,7 +274,9 @@ gulp.task('compile-grr-ui', ['compile-grr-ui-js',
                              'compile-grr-ui-css']);
 gulp.task(
     'compile',
-    ['compile-third-party', 'compile-grr-ui', 'compile-grr-ui-tests']);
+  ['compile-third-party', 'compile-grr-ui',
+  // 'compile-grr-ui-tests',
+  ]);
 
 /**
  * "Watch" tasks useful for development.

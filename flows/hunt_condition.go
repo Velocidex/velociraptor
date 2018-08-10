@@ -69,14 +69,13 @@ func (self *CheckHuntCondition) ProcessMessage(
 
 	switch message.RequestId {
 	case processConditionQuery:
-		err := flow_obj.FailIfError(message)
+		err := flow_obj.FailIfError(config_obj, message)
 		if err != nil {
 			return err
 		}
 
 		if flow_obj.IsRequestComplete(message) {
-			flow_obj.Complete()
-			return nil
+			return flow_obj.Complete(config_obj)
 		}
 
 		hunt, err := _ExtractHuntArgs(flow_obj)

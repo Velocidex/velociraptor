@@ -7,7 +7,9 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
+	"path"
 	"time"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -16,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
+	users "www.velocidex.com/golang/velociraptor/users"
 )
 
 var (
@@ -119,7 +122,7 @@ func NewFlowRunner(config *config.Config, logger *logging.Logger) *FlowRunner {
 // opportunity to reset itself from the stored "state" object.
 
 // The runner then processes each message destined for the flow in
-// turn through thr ProcessMessage() method.
+// turn through the ProcessMessage() method.
 
 // After the runner completes all the messages in this packet, the
 // runner calls Save() method and then the flow is destroyed. The flow
@@ -130,7 +133,8 @@ func NewFlowRunner(config *config.Config, logger *logging.Logger) *FlowRunner {
 // therefore should store its state reliably.
 
 // Some flows require no persistant state and therefore should have
-// empty Load() and Save() methods.
+// empty Load() and Save() methods. These flows will run faster and be
+// more efficient. You can get that by embedding the BaseFlow type.
 type Flow interface {
 	Start(
 		config *config.Config,
@@ -252,16 +256,45 @@ func AFF4FlowObjectFromProto(aff4_flow_obj_proto *flows_proto.AFF4FlowObject) (
 }
 
 // Complete the flow.
-func (self *AFF4FlowObject) Complete() {
+func (self *AFF4FlowObject) Complete(config_obj *config.Config) error {
 	self.dirty = true
 	self.FlowContext.State = flows_proto.FlowContext_TERMINATED
 	self.FlowContext.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	self.flow_state = nil
+
+	// Notify to our user if we need to.
+	if self.RunnerArgs.NotifyToUser && self.RunnerArgs.Creator != "" {
+		err := users.Notify(
+			config_obj,
+			&api_proto.UserNotification{
+				Username: self.RunnerArgs.Creator,
+				NotificationType: api_proto.
+					UserNotification_TYPE_FLOW_RUN_COMPLETED,
+				State:     api_proto.UserNotification_STATE_PENDING,
+				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+				Message: fmt.Sprintf("Flow %s completed successfully.",
+					self.RunnerArgs.FlowName),
+				Reference: &api_proto.ObjectReference{
+					Union: &api_proto.ObjectReference_Flow{
+						Flow: &api_proto.FlowReference{
+							FlowId:   path.Base(self.Urn),
+							ClientId: self.RunnerArgs.ClientId,
+						},
+					},
+				},
+			})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Fails the flow if an error occured and copy the client's backtrace
 // to the flow.
-func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error {
+func (self *AFF4FlowObject) FailIfError(
+	config_obj *config.Config,
+	message *crypto_proto.GrrMessage) error {
 	if message.Type == crypto_proto.GrrMessage_STATUS {
 		status, ok := responder.ExtractGrrMessagePayload(
 			message).(*crypto_proto.GrrStatus)
@@ -279,6 +312,33 @@ func (self *AFF4FlowObject) FailIfError(message *crypto_proto.GrrMessage) error 
 			return errors.New(status.ErrorMessage)
 		}
 	}
+
+	// Notify to our user if we need to.
+	if self.RunnerArgs.NotifyToUser && self.RunnerArgs.Creator != "" {
+		err := users.Notify(
+			config_obj,
+			&api_proto.UserNotification{
+				Username: self.RunnerArgs.Creator,
+				NotificationType: api_proto.
+					UserNotification_TYPE_FLOW_RUN_FAILED,
+				State:     api_proto.UserNotification_STATE_PENDING,
+				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+				Message: fmt.Sprintf("Flow %s failed!.",
+					self.RunnerArgs.FlowName),
+				Reference: &api_proto.ObjectReference{
+					Union: &api_proto.ObjectReference_Flow{
+						Flow: &api_proto.FlowReference{
+							FlowId:   path.Base(self.Urn),
+							ClientId: self.RunnerArgs.ClientId,
+						},
+					},
+				},
+			})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

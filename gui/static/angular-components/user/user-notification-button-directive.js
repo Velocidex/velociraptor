@@ -44,7 +44,7 @@ const UserNotificationButtonController =
   this.fetchNotificationCount_();
 
   // Refetch pending notification count every FETCH_INTERVAL ms.
-  this.interval_(this.fetchNotificationCount_.bind(this), FETCH_INTERVAL);
+    this.interval_(this.fetchNotificationCount_.bind(this), FETCH_INTERVAL);
 };
 
 
@@ -55,8 +55,8 @@ const UserNotificationButtonController =
  * @private
  */
 UserNotificationButtonController.prototype.fetchNotificationCount_ = function() {
-  this.grrApiService_.get('users/me/notifications/pending/count').then(function(response){
-    this.notificationCount = response.data['count'];
+  this.grrApiService_.get('v1/GetUserNotificationCount').then(function(response){
+    this.notificationCount = response.data['count'] || 0;
   }.bind(this));
 };
 
@@ -115,5 +115,3 @@ UserNotificationButtonDirective.directive_name = 'grrUserNotificationButton';
  * @export
  */
 UserNotificationButtonDirective.fetch_interval = FETCH_INTERVAL;
-
-

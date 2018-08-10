@@ -18,11 +18,16 @@ const SemanticPrimitiveFormController =
       /** @private {!angular.Scope} */
       this.scope = $scope;
 
-      if (angular.isUndefined(this.scope.value) &&
-          angular.isDefined(this.scope['default'])) {
-        this.scope.value = JSON.parse(this.scope['default']);
-      }
+      $scope.$watch('value', this.onValueChange_.bind(this));
 };
+
+SemanticPrimitiveFormController.prototype.onValueChange_ = function(
+  newValue, oldValue) {
+  if (angular.isUndefined(newValue) &&
+      angular.isDefined(this.scope['default'])) {
+    this.scope.value = JSON.parse(this.scope['default']);
+  }
+}
 
 /**
  * SemanticPrimitiveFormDirective renders a form for a boolean value.

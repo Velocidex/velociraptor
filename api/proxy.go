@@ -22,19 +22,22 @@ func StartHTTPProxy(config_obj *config.Config) error {
 	if err != nil {
 		return err
 	}
-	mux.Handle("/api/", h)
-	mux.Handle("/api/v1/download/", flowResultDownloadHandler(config_obj))
-	mux.Handle("/api/v1/DownloadHuntResults",
-		huntResultDownloadHandler(config_obj))
-	mux.Handle("/api/v1/DownloadVFSFile/",
-		vfsFileDownloadHandler(config_obj))
+	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
+	mux.Handle("/api/v1/download/", checkUserCredentialsHandler(
+		config_obj, flowResultDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/DownloadHuntResults", checkUserCredentialsHandler(
+		config_obj, huntResultDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/DownloadVFSFile/", checkUserCredentialsHandler(
+		config_obj, vfsFileDownloadHandler(config_obj)))
+
+	// Assets etc do not need auth.
 	install_mux(config_obj, mux)
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
 	if err != nil {
 		return err
 	}
-	mux.Handle("/app.html", h)
+	mux.Handle("/app.html", checkUserCredentialsHandler(config_obj, h))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
 	if err != nil {
@@ -70,9 +73,15 @@ func GetAPIHandler(
 	grpc_proxy_mux := runtime.NewServeMux(
 		runtime.WithMetadata(
 			func(ctx context.Context, req *http.Request) metadata.MD {
-				return metadata.New(map[string]string{
+				md := map[string]string{
 					"METHOD": req.Method,
-				})
+				}
+				username, ok := req.Context().Value("USER").(string)
+				if ok {
+					md["USER"] = username
+				}
+
+				return metadata.New(md)
 			}),
 	)
 	opts := []grpc.DialOption{grpc.WithInsecure()}

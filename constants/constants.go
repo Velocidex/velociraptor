@@ -14,6 +14,8 @@ var (
 	// The GUI uses this as the client index.
 	CLIENT_INDEX_URN = "aff4:/client_index/"
 
+	USER_URN = "aff4:/users/"
+
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
 )

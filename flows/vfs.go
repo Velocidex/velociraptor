@@ -141,7 +141,7 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 	}
 
 	vfs_args := tmp_args.Message.(*flows_proto.VFSListRequest)
-	err = flow_obj.FailIfError(message)
+	err = flow_obj.FailIfError(config_obj, message)
 	if err != nil {
 		return err
 	}
@@ -152,8 +152,7 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 	}
 
 	if flow_obj.IsRequestComplete(message) {
-		flow_obj.Complete()
-		return nil
+		return flow_obj.Complete(config_obj)
 	}
 
 	response, ok := responder.ExtractGrrMessagePayload(
@@ -185,8 +184,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 		if err != nil {
 			return err
 		}
-		flow_obj.Complete()
-		return nil
+		return flow_obj.Complete(config_obj)
 	}
 
 	vql_response, ok := responder.ExtractGrrMessagePayload(
@@ -297,7 +295,7 @@ func (self *VFSDownloadFile) Start(
 
 	request.Query = append(request.Query, &actions_proto.VQLRequest{
 		Name: "Upload files",
-		VQL: fmt.Sprintf("SELECT * FROM upload(files=[%s])",
+		VQL: fmt.Sprintf("SELECT Path, Size, Error FROM upload(files=[%s])",
 			strings.Join(paths, ", ")),
 	})
 
@@ -317,7 +315,7 @@ func (self *VFSDownloadFile) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
-	err := flow_obj.FailIfError(message)
+	err := flow_obj.FailIfError(config_obj, message)
 	if err != nil {
 		return err
 	}
@@ -325,8 +323,7 @@ func (self *VFSDownloadFile) ProcessMessage(
 	switch message.RequestId {
 	case processVQLResponses:
 		if flow_obj.IsRequestComplete(message) {
-			flow_obj.Complete()
-			return nil
+			return flow_obj.Complete(config_obj)
 		}
 
 		err = StoreResultInFlow(config_obj, flow_obj, message)

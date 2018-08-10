@@ -18,7 +18,10 @@ const UserNotificationDialogController =
   this.scope_ = $scope;
 
   /** @type {string} */
-  this.notificationUrl = 'users/me/notifications';
+    this.notificationUrl = 'v1/GetUserNotifications';
+    this.notificationParams = {
+      clear_pending: true,
+    };
 };
 
 

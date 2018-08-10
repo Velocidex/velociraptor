@@ -104,14 +104,12 @@ func (self *VInterrogate) ProcessMessage(
 		}
 
 	case processClientInfo:
-		err := flow_obj.FailIfError(message)
+		err := flow_obj.FailIfError(config_obj, message)
 		if err != nil {
 			return err
 		}
 
 		if flow_obj.IsRequestComplete(message) {
-			defer flow_obj.Complete()
-
 			// The flow is complete - store the client
 			// info from our state into the client's AFF4
 			// object.
@@ -119,7 +117,7 @@ func (self *VInterrogate) ProcessMessage(
 			if err != nil {
 				return err
 			}
-			return nil
+			return flow_obj.Complete(config_obj)
 		}
 
 		// Retrieve the client info from the flow state and

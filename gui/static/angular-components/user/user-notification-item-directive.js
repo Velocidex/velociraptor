@@ -32,12 +32,8 @@ var openReference = exports.openReference;
  * @param {Object} notification
  */
 exports.annotateApiNotification = function(notification) {
-  notification['isPending'] = notification['value']['is_pending']['value'];
-
-  if (angular.isDefined(notification['value']['reference'])) {
+  if (angular.isDefined(notification['reference'])) {
     notification['link'] = getLink_(notification);
-    notification['refType'] =
-        notification['value']['reference']['value']['type']['value'];
   }
 };
 var annotateApiNotification = exports.annotateApiNotification;
@@ -53,60 +49,36 @@ var annotateApiNotification = exports.annotateApiNotification;
  */
 var getLink_ = function(notification) {
   var strippedNotification = stripTypeInfo(notification);
-  if (!strippedNotification['reference'] ||
-      !strippedNotification['reference']['type']){
+  if (!strippedNotification['reference']){
     return null;
   }
 
   var reference = strippedNotification['reference'];
-  var referenceType = reference['type'];
-  var referenceDetails = reference[referenceType.toLowerCase()];
   var urlParameters = {};
 
-  if (referenceType === 'DISCOVERY') {
-    return ['clients',
-            stripAff4Prefix(referenceDetails['client_id'])].join('/');
-  } else if (referenceType === 'HUNT') {
-    var huntId = getLastPathComponent(referenceDetails['hunt_urn']);
+  if (angular.isDefined(reference.hunt)) {
+    var huntId = getLastPathComponent(reference.hunt['hunt_urn']);
     return ['hunts',
             huntId].join('/');
-  } else if (referenceType === 'CRON') {
-    var cronJobName = getLastPathComponent(referenceDetails['cron_job_urn']);
-    return ['crons',
-            cronJobName].join('/');
-  } else if (referenceType === 'VFS') {
+  } else if (angular.isDefined(reference.vfs_file)) {
     return ['clients',
-            stripAff4Prefix(referenceDetails['client_id']),
+            stripAff4Prefix(reference.vfs_file['client_id']),
             'vfs',
-            encodeUrlPath(stripAff4Prefix(referenceDetails['vfs_path']))].join('/');
-  } else if (referenceType == 'FLOW') {
-    var flowId = referenceDetails['flow_id'];
+            encodeUrlPath(stripAff4Prefix(reference.vfs_file['vfs_path']))].join('/');
+  } else if (angular.isDefined(reference.flow)) {
+    var flowId = reference.flow['flow_id'];
     return ['clients',
-            stripAff4Prefix(referenceDetails['client_id']),
+            stripAff4Prefix(reference.flow['client_id']),
             'flows',
             flowId].join('/');
-  } else if (referenceType === 'CLIENT_APPROVAL') {
-    var clientId = stripAff4Prefix(referenceDetails['client_id']);
+  } else if (angular.isDefined(reference.approval_request)) {
+    var clientId = stripAff4Prefix(reference.approval_request['client_id']);
     return ['users',
-            referenceDetails['username'],
+            reference.approval_request['username'],
             'approvals',
             'client',
             clientId,
-            referenceDetails['approval_id']].join('/');
-  } else if (referenceType === 'HUNT_APPROVAL') {
-    return ['users',
-            referenceDetails['username'],
-            'approvals',
-            'hunt',
-            referenceDetails['hunt_id'],
-            referenceDetails['approval_id']].join('/');
-  } else if (referenceType === 'CRON_JOB_APPROVAL') {
-    return ['users',
-            referenceDetails['username'],
-            'approvals',
-            'cron-job',
-            referenceDetails['cron_job_id'],
-            referenceDetails['approval_id']].join('/');
+            reference.approval_request['approval_id']].join('/');
   }
 
   return null;
