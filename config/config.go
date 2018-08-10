@@ -138,6 +138,10 @@ func WriteConfigToFile(filename string, config *Config) error {
 
 // Update the client's writeback file.
 func UpdateWriteback(config_obj *Config) error {
+	if config_obj.WritebackLocation() == "" {
+		return nil
+	}
+
 	bytes, err := yaml.Marshal(config_obj.Writeback)
 	if err != nil {
 		return errors.WithStack(err)

@@ -12,8 +12,7 @@ import (
 
 func TestHTTPComms(t *testing.T) {
 	ctx := context.Background()
-	config_obj := config.GetDefaultConfig()
-	err := config.LoadConfig("test_data/client.config.yaml", config_obj)
+	config_obj, err := config.LoadConfig("test_data/client.config.yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -21,7 +20,7 @@ func TestHTTPComms(t *testing.T) {
 	utils.Debug(ctx)
 
 	manager, err := crypto.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Client.PrivateKey))
+		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
 		t.Fatal(err)
 	}

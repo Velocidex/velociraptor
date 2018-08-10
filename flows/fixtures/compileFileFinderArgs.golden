@@ -22,7 +22,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00])  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00])  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -61,7 +61,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 5  AND  Sys.Mtim.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 5  AND  Mtime.Sec \u003c 10  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -99,7 +99,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 5  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 5  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -158,7 +158,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Atim.Sec \u003e 5  AND  Sys.Atim.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Atime.Sec \u003e 5  AND  Atime.Sec \u003c 10  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -197,7 +197,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Ctim.Sec \u003e 5  AND  Sys.Ctim.Sec \u003c 10  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Ctime.Sec \u003e 5  AND  Ctime.Sec \u003c 10  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -236,7 +236,7 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Size \u003e 500  AND  Size \u003c 1000  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Size \u003e 500  AND  Size \u003c 1000  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
@@ -278,10 +278,10 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00])  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00])  "
     },
     {
-     "VQL": "let files = SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
+     "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
     },
     {
      "Name": "File Finder Response",
@@ -327,10 +327,10 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 15  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 15  "
     },
     {
-     "VQL": "let files = SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
+     "VQL": "let files = SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime , grep(keywords=[KW00], path=FullPath) as GrepHit from _simple WHERE GrepHit "
     },
     {
      "Name": "File Finder Response",
@@ -372,14 +372,14 @@
    ],
    "Query": [
     {
-     "VQL": "let _simple = SELECT IsDir , FullPath , Size , Mode , timestamp(epoch=Sys.Mtim.Sec) as mtime , timestamp(epoch=Sys.Atim.Sec) as atime , timestamp(epoch=Sys.Ctim.Sec) as ctime from glob(globs=[Path00]) WHERE  Sys.Mtim.Sec \u003e 15  "
+     "VQL": "let _simple = SELECT FullPath , Size , Mode.String As Mode , timestamp(epoch=Mtime.Sec) as mtime , timestamp(epoch=Atime.Sec) as atime , timestamp(epoch=Ctime.Sec) as ctime from glob(globs=[Path00]) WHERE  Mtime.Sec \u003e 15  "
     },
     {
      "VQL": "let files = SELECT * FROM _simple"
     },
     {
      "Name": "File Finder Response",
-     "VQL": "SELECT IsDir , FullPath , Size , Mode , mtime , atime , ctime, upload(file=FullPath) as Upload FROM files"
+     "VQL": "SELECT FullPath , Size , Mode.String As Mode , mtime , atime , ctime, upload(file=FullPath) as Upload FROM files"
     }
    ]
   }

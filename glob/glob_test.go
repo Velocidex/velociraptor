@@ -91,8 +91,13 @@ func (self MockFileInfo) ModTime() time.Time { return time.Time{} }
 func (self MockFileInfo) IsDir() bool        { return true }
 func (self MockFileInfo) Sys() interface{}   { return nil }
 func (self MockFileInfo) FullPath() string   { return self.full_path }
+func (self MockFileInfo) Mtime() TimeVal     { return TimeVal{} }
+func (self MockFileInfo) Atime() TimeVal     { return TimeVal{} }
+func (self MockFileInfo) Ctime() TimeVal     { return TimeVal{} }
 
 type MockFileSystemAccessor []string
+
+func (self MockFileSystemAccessor) PathSep() string { return "/" }
 
 func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	seen := []string{}

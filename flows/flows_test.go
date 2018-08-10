@@ -96,14 +96,13 @@ func (self *MyTestFlow) ProcessMessage(
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
-	err := flow_obj.FailIfError(message)
+	err := flow_obj.FailIfError(config_obj, message)
 	if err != nil {
 		return err
 	}
 
 	if message.ResponseId == 666 {
-		flow_obj.Complete()
-		return nil
+		return flow_obj.Complete(config_obj)
 	}
 
 	state := flow_obj.GetState().(*actions_proto.ClientInfo)
