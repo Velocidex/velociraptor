@@ -42,6 +42,10 @@ const BreadcrumbsController = function(
  * @private
  */
 BreadcrumbsController.prototype.onDirectiveArgsChange_ = function() {
+  if (angular.isUndefined(this.scope_['path'])) {
+    return;
+  }
+
   var pathArg = this.scope_['path'].replace(/\/+/g, '/');
   var stripEndingSlashArg = this.scope_['stripEndingSlash'];
 

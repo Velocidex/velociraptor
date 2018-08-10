@@ -11,11 +11,24 @@ compression:
 
 output: "ab0x.go"
 custom:
+  # All the JS code is compiled into a bundle in dist already.
+  - files:
+      - "gui/static/dist/"
+    base: "gui/"
+    exclude:
+      - "**/*~"
+
+  # We need to bring the template so just HTML, no JS code will be
+  # used.
   - files:
       - "gui/static/images/"
-      - "gui/static/dist/"
-      - "gui/static/angular-components/"
-      - "gui/static/fonts/"
+      - "gui/static/angular-components/**/*.html"
       - "gui/static/templates/"
+      - "gui/static/fonts/*.woff2"
+      - "gui/static/fonts/*.ttf"
 
     base: "gui/"
+    exclude:
+      - "**/*~"
+      - "**/*.js"
+      - "**/*.scss"

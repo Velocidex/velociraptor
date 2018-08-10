@@ -19,7 +19,6 @@ const {HostInfoDirective} = goog.require('grrUi.client.hostInfoDirective');
 const {RemoveClientsLabelsDialogDirective} = goog.require('grrUi.client.removeClientsLabelsDialogDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
-const {statsModule} = goog.require('grrUi.stats.stats');
 const {virtualFileSystemModule} = goog.require('grrUi.client.virtualFileSystem.virtualFileSystem');
 
 
@@ -27,8 +26,7 @@ const {virtualFileSystemModule} = goog.require('grrUi.client.virtualFileSystem.v
  * Angular module for clients-related UI.
  */
 exports.clientModule = angular.module('grrUi.client', [
-  virtualFileSystemModule.name, coreModule.name, semanticModule.name,
-  statsModule.name
+  virtualFileSystemModule.name, coreModule.name, semanticModule.name
 ]);
 
 exports.clientModule.directive(

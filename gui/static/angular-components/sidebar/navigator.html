@@ -5,6 +5,7 @@
   </section>
 
   <!-- Client overview and links for client navigation -->
+  {{clientId}}
   <section ng-if="controller.client">
     <!-- Client overview-->
     <grr-periodic-refresh interval="30000"
@@ -53,10 +54,6 @@
     <h1>Configuration</h1>
 
     <ul class="nav nav-list">
-      <li grr-nav-link state="config"
-          disabled="!controller.uiTraits.settings_nav_item_enabled">
-        Settings
-      </li>
       <li grr-nav-link state="artifacts"
           disabled="!controller.uiTraits.artifact_manager_nav_item_enabled">
         Artifact Manager

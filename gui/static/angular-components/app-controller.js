@@ -16,7 +16,6 @@ const {artifactModule} = goog.require('grrUi.artifact.artifact');
 const {clientModule} = goog.require('grrUi.client.client');
 const {configModule} = goog.require('grrUi.config.config');
 const {coreModule} = goog.require('grrUi.core.core');
-const {docsModule} = goog.require('grrUi.docs.docs');
 const {flowModule} = goog.require('grrUi.flow.flow');
 const {formsModule} = goog.require('grrUi.forms.forms');
 const {huntModule} = goog.require('grrUi.hunt.hunt');
@@ -28,7 +27,6 @@ const {localModule} = goog.require('grrUi.local.local');
 const {routingModule} = goog.require('grrUi.routing.routing');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
 const {sidebarModule} = goog.require('grrUi.sidebar.sidebar');
-const {statsModule} = goog.require('grrUi.stats.stats');
 const {userModule} = goog.require('grrUi.user.user');
 
 
@@ -41,14 +39,12 @@ exports.appControllerModule = angular.module('grrUi.appController', [
   clientModule.name,
   configModule.name,
   coreModule.name,
-  docsModule.name,
   flowModule.name,
   formsModule.name,
   huntModule.name,
   localModule.name,
   routingModule.name,
   semanticModule.name,
-  statsModule.name,
   sidebarModule.name,
   templatesModule.name,
   userModule.name,

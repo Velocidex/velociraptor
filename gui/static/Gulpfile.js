@@ -99,8 +99,7 @@ gulp.task('copy-fontawesome-fonts', function() {
       .pipe(gulp.dest('fonts')); // TODO(user): should be copied to 'dist' folder.
 });
 
-gulp.task('copy-third-party-resources', ['copy-jquery-ui-images',
-                                         'copy-fontawesome-fonts'], function() {
+gulp.task('copy-third-party-resources', function() {
   return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/*.gif',
                    config.nodeModulesDir + '/jstree/dist/themes/default/*.png',
                    config.nodeModulesDir + '/bootstrap/fonts/glyphicons-halflings-regular.*'])
@@ -121,14 +120,13 @@ gulp.task('compile-third-party-bootstrap-css', function() {
 });
 
 
-gulp.task('compile-third-party-css', ['copy-third-party-resources',
-                                      'compile-third-party-bootstrap-css'], function() {
+gulp.task('compile-third-party-css', function() {
   return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/style.css',
                    config.nodeModulesDir + '/bootstrap/dist/css/bootstrap.css',
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-csp.css',
                    config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
-                   config.nodeModulesDir + '/jquery-ui-dist/jquery-ui-theme.css',
+                   config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
 
                    config.tempDir + '/grr-bootstrap.css',
 
@@ -159,7 +157,7 @@ gulp.task('compile-grr-angular-template-cache', function() {
 
 
 gulp.task(
-    'compile-grr-closure-ui-js', ['compile-grr-angular-template-cache'],
+    'compile-grr-closure-ui-js',
     function() {
       return gulp
           .src([
@@ -229,17 +227,9 @@ gulp.task('compile-grr-ui-tests', function() {
 });
 
 
-gulp.task('compile-grr-legacy-ui-js', function() {
-  return gulp.src(['javascript/**/*.js', '!javascript/**/*_test.js'])
-      .pipe(gulpConcat('grr-ui-legacy.bundle.js'))
-      .pipe(gulp.dest(config.distDir));
-});
-
-
-gulp.task('compile-grr-ui-js', ['compile-grr-closure-ui-js',
-                               // 'compile-grr-legacy-ui-js',
-                               ]);
-
+gulp.task('compile-grr-ui-js',
+          gulp.series('compile-grr-closure-ui-js',
+                      'compile-grr-angular-template-cache'));
 
 gulp.task('compile-grr-ui-css', function() {
   return gulp.src(['css/base.scss'])
@@ -267,16 +257,20 @@ gulp.task('compile-grr-ui-css', function() {
 /**
  * Combined compile tasks.
  */
-gulp.task('compile-third-party', ['compile-third-party-js',
-                                  'compile-third-party-css',
-                                  'compile-third-party-bootstrap-css']);
-gulp.task('compile-grr-ui', ['compile-grr-ui-js',
-                             'compile-grr-ui-css']);
-gulp.task(
-    'compile',
-  ['compile-third-party', 'compile-grr-ui',
-  // 'compile-grr-ui-tests',
-  ]);
+gulp.task('compile-third-party',
+          gulp.series('compile-third-party-js',
+                      'compile-third-party-css',
+                      'copy-third-party-resources',
+                      'copy-jquery-ui-images',
+                      'copy-fontawesome-fonts',
+                      'compile-third-party-bootstrap-css',
+                      'compile-third-party-bootstrap-css'));
+
+gulp.task('compile-grr-ui',
+          gulp.series('compile-grr-ui-js', 'compile-grr-ui-css'));
+
+gulp.task('compile',
+          gulp.series('compile-third-party', 'compile-grr-ui'));
 
 /**
  * "Watch" tasks useful for development.
@@ -286,13 +280,13 @@ gulp.task('watch', function() {
   isWatching = true;
 
   gulp.watch(['javascript/**/*.js', 'angular-components/**/*.js'],
-             ['compile-grr-ui-js']);
+             gulp.series('compile-grr-ui-js'));
   gulp.watch(['css/**/*.css', 'css/**/*.scss', 'angular-components/**/*.scss'],
-             ['compile-grr-ui-css']);
+             gulp.series('compile-grr-ui-css'));
 });
 
 
-gulp.task('test', ['compile'], function(done) {
+gulp.task('test', gulp.series('compile', function(done) {
   let config = {
     configFile: __dirname + '/karma.conf.js',
     browsers: ['ChromeHeadlessNoSandbox'],
@@ -300,14 +294,14 @@ gulp.task('test', ['compile'], function(done) {
   };
 
   new karma.Server(config, done).start();
-});
+}));
 
 
-gulp.task('test-debug', ['compile'], function(done) {
+gulp.task('test-debug', gulp.series('compile', function(done) {
   let config = {
     configFile: __dirname + '/karma.conf.js',
     browsers: ['Chrome'],
   };
 
   new karma.Server(config, done).start();
-});
+}));

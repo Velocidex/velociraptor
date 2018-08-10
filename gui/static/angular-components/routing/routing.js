@@ -249,7 +249,7 @@ exports.routingModule
           curState = curState.parent;
         }
 
-        breadcrumbs.splice(0, 0, 'GRR');
+        breadcrumbs.splice(0, 0, 'Velociraptor');
         $document[0].title = breadcrumbs.join(' | ');
       };
 

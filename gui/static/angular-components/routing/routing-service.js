@@ -59,7 +59,7 @@ RoutingService.prototype.href = function(targetState, opt_params) {
 RoutingService.prototype.go = function(targetState, opt_params) {
   var currentState = this.state_.current.name;
   return this.state_.go(targetState, opt_params,
-                        {notify: currentState !== targetState});
+                         {notify: currentState !== targetState});
 };
 
 /**
@@ -135,5 +135,3 @@ RoutingService.prototype.onStateChange = function(scope, callback) {
     callback(state.name, params);
   }.bind(this));
 };
-
-
