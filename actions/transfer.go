@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"compress/zlib"
 	"crypto/sha256"
-	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
@@ -29,11 +29,13 @@ func (self *TransferBuffer) Run(
 		return
 	}
 
-	file, err := os.Open(*path)
+	accessor := glob.OSFileSystemAccessor{}
+	file, err := accessor.Open(*path)
 	if err != nil {
 		responder.RaiseError(err.Error())
 		return
 	}
+	defer file.Close()
 
 	_, err = file.Seek(int64(arg.Offset), 0)
 	if err != nil {

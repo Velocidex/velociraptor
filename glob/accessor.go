@@ -4,7 +4,6 @@ package glob
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -92,7 +91,7 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return nil, err
 }
 
-func (self OSFileSystemAccessor) Open(path string) (io.Reader, error) {
+func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	file, err := os.Open(path)
 	return file, err
 }

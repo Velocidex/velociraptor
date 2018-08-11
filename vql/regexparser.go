@@ -3,8 +3,8 @@ package vql
 import (
 	"bufio"
 	"fmt"
-	"os"
 	_ "regexp"
+	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -26,7 +26,8 @@ func _ParseFileWithRegex(
 
 	utils.Debug(regexps)
 
-	file, err := os.Open(*filename)
+	accessor := glob.OSFileSystemAccessor{}
+	file, err := accessor.Open(*filename)
 	if err != nil {
 		return result
 	}

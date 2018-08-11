@@ -28,11 +28,16 @@ type FileInfo interface {
 	Atime() TimeVal
 }
 
+type ReadSeekCloser interface {
+	io.ReadSeeker
+	io.Closer
+}
+
 // Interface for accessing the filesystem. Used for dependency
 // injection.
 type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
-	Open(path string) (io.Reader, error)
+	Open(path string) (ReadSeekCloser, error)
 	PathSep() string
 }
 

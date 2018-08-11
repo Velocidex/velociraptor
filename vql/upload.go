@@ -2,7 +2,7 @@ package vql
 
 import (
 	"context"
-	"os"
+	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -42,7 +42,8 @@ func (self *UploadFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		file, err := os.Open(*filename)
+		accessor := glob.OSFileSystemAccessor{}
+		file, err := accessor.Open(*filename)
 		if err != nil {
 			scope.Log("upload: Unable to open %s: %s",
 				filename, err.Error())
@@ -50,6 +51,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 				Error: err.Error(),
 			}
 		}
+		defer file.Close()
 
 		upload_response, err := uploader.Upload(
 			scope, *filename, file)
@@ -96,12 +98,14 @@ func uploadPluginFunc(scope *vfilter.Scope, args *vfilter.Dict) []vfilter.Row {
 		}
 
 		for _, filename := range files {
-			file, err := os.Open(filename)
+			accessor := glob.OSFileSystemAccessor{}
+			file, err := accessor.Open(filename)
 			if err != nil {
 				scope.Log("upload: Unable to open %s: %s",
 					filename, err.Error())
 				continue
 			}
+			defer file.Close()
 
 			upload_response, err := uploader.Upload(
 				scope, filename, file)

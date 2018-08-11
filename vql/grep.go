@@ -38,11 +38,11 @@ func (self *GrepFunction) Call(ctx context.Context,
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 	fs := glob.OSFileSystemAccessor{}
-
 	file, err := fs.Open(*path)
 	if err != nil {
 		return false
 	}
+	defer file.Close()
 
 	hits := []*vfilter.Dict{}
 

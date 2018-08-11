@@ -7,7 +7,6 @@ package glob
 import (
 	"encoding/json"
 	"github.com/shirou/gopsutil/disk"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -147,6 +146,7 @@ type OSFileSystemAccessor struct{}
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	var result []FileInfo
+	path = normalize_path(path)
 	if path == "\\" {
 		drives, err := getAvailableDrives()
 		if err != nil {
@@ -171,11 +171,20 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return nil, err
 }
 
-func (self OSFileSystemAccessor) Open(path string) (io.Reader, error) {
+func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+	path = strings.TrimPrefix(normalize_path(path), "\\")
+	// Strip leading \\ so \\c:\\windows -> c:\\windows
 	file, err := os.Open(path)
 	return file, err
 }
 
 func (self *OSFileSystemAccessor) PathSep() string {
 	return "\\"
+}
+
+// Glob sends us paths in normal form which we need to convert to
+// windows form. Normal form uses / instead of \ and always has a
+// leading /.
+func normalize_path(path string) string {
+	return strings.Replace(path, "/", "\\", -1)
 }
