@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"runtime"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -37,7 +38,7 @@ func GetDefaultConfig() *Config {
 		&api_proto.Config{
 			Version: &api_proto.Version{
 				Name:      "velociraptor",
-				Version:   "0.1",
+				Version:   constants.VERSION,
 				BuildTime: build_time,
 				Commit:    commit_hash,
 			},
