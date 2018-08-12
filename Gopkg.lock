@@ -370,11 +370,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ea14662ca9dd853eded212576bbcdea1c3987e57179d83c93b8c5f85bd4816fa"
+  digest = "1:9fa9e9e226ea9338d38daa657d596dfe55b2c74d93b8ba916b5b00a4909cd04a"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f22011cd73a90dce2ace988d86060252451cb583"
+  revision = "2c027e858760100b285584e95d0a71786dbe2403"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -417,6 +417,7 @@
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/status",
     "gopkg.in/alecthomas/kingpin.v2",
+    "gopkg.in/yaml.v2",
     "www.velocidex.com/golang/vfilter",
   ]
   solver-name = "gps-cdcl"

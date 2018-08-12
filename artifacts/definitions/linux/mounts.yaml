@@ -1,0 +1,14 @@
+name: Linux.Mounts
+description: List mounted filesystems by reading /proc/mounts
+parameters:
+  - name: ProcMounts
+    default: /proc/mounts
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'linux'
+    queries:
+      - SELECT Device, Mount, FSType, split(string=Opts, sep=",") As Options
+        FROM parse_with_regex(
+           file=ProcMounts,
+           regex='(?m)^(?P<Device>[^ ]+) (?P<Mount>[^ ]+) (?P<FSType>[^ ]+) '+
+                 '(?P<Opts>[^ ]+)')

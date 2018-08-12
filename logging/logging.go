@@ -18,6 +18,19 @@ type Logger struct {
 	info_log  *log.Logger
 }
 
+type logWriter struct {
+	logger *Logger
+}
+
+func (self *logWriter) Write(b []byte) (int, error) {
+	self.logger.Info("%s", string(b))
+	return len(b), nil
+}
+
+func NewPlainLogger(config *config.Config) *log.Logger {
+	return log.New(&logWriter{NewLogger(config)}, "", log.Lshortfile)
+}
+
 func NewLogger(config *config.Config) *Logger {
 	result := Logger{
 		config: config,

@@ -41,13 +41,12 @@ func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 	}
 }
 
-func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
+func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	output_chan := vql.Eval(ctx, scope)
 	table := tablewriter.NewWriter(os.Stdout)
-	defer table.Render()
 
 	columns := vql.Columns(scope)
 	table.SetHeader(*columns)
@@ -56,7 +55,7 @@ func evalQuery(scope *vfilter.Scope, vql *vfilter.VQL) {
 	for {
 		row, ok := <-output_chan
 		if !ok {
-			return
+			return table
 		}
 		string_row := []string{}
 		if len(*columns) == 0 {
@@ -97,7 +96,8 @@ func doQuery() {
 
 		switch *format {
 		case "text":
-			evalQuery(scope, vql)
+			table := evalQueryToTable(scope, vql)
+			table.Render()
 		case "json":
 			outputJSON(scope, vql)
 		}

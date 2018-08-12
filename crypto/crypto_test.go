@@ -4,6 +4,7 @@ import (
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"strings"
 	"testing"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -25,11 +26,14 @@ func (self *TestSuite) SetupTest() {
 	self.config_obj = config_obj
 	self.config_obj.Client.WritebackLinux = ""
 	self.config_obj.Client.WritebackWindows = ""
+	key, _ := GeneratePrivateKey()
+	self.config_obj.Writeback.PrivateKey = string(key)
 
 	// Configure the client manager.
 	self.client_manager, err = NewClientCryptoManager(
 		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
 	assert.NoError(t, err)
+
 	_, err = self.client_manager.AddCertificate(
 		[]byte(self.config_obj.Frontend.Certificate))
 	assert.NoError(t, err)
@@ -144,8 +148,8 @@ func (self *TestSuite) TestClientIDFromPublicKey() {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, ClientIDFromPublicKey(&client_private_key.PublicKey),
-		"C.5416094c54e066be")
+	client_id := ClientIDFromPublicKey(&client_private_key.PublicKey)
+	assert.True(t, strings.HasPrefix(client_id, "C."))
 }
 
 func TestMain(t *testing.T) {

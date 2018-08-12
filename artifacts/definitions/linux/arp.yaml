@@ -1,0 +1,18 @@
+name: Linux.Proc.Arp
+description: ARP table via /proc/net/arp.
+parameters:
+  - name: ProcNetArp
+    default: /proc/net/arp
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'linux'
+
+    # Table's first row is the headers so we filter them out.
+    queries:
+      - SELECT IPAddress, HWType, Flags, HWAddress, Mask, Device
+        FROM parse_with_regex(
+            file=ProcNetArp,
+            regex='(?m)^(?P<IPAddress>[^\\s]+)\\s+(?P<HWType>[^\\s]+)\\s+' +
+                  '(?P<Flags>[^\\s]+)\\s+(?P<HWAddress>[^\\s]+)\\s+' +
+                  '(?P<Mask>[^\\s]+)\\s+(?P<Device>[^\\s]+)')
+        WHERE NOT "IP" in IPAddress

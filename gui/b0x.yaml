@@ -18,7 +18,7 @@ custom:
     exclude:
       - "**/*~"
 
-  # We need to bring the template so just HTML, no JS code will be
+  # We need to bring the templates so just HTML, no JS code will be
   # used.
   - files:
       - "gui/static/images/"
@@ -32,3 +32,6 @@ custom:
       - "**/*~"
       - "**/*.js"
       - "**/*.scss"
+
+  - files:
+      - "artifacts/definitions/**/*.yaml"

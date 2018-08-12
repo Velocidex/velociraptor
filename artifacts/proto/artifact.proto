@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+message ArtifactParameter {
+    option (semantic) = {
+        description: "Artifacts may accept parameters which are added to the "
+        "scope prior to execution. NOTE: all parameters are strings - if you "
+        "need something else the query can unpack e.g. from JSON using the "
+        "JSONParse() VQL function."
+    };
+    string name = 1;
+    string default = 2;
+    string description = 3;
+}
+
+message ArtifactSource {
+    option (semantic) = {
+        description: "Where the artifact gets its data."
+    };
+
+    string precondition = 1 [(sem_type) = {
+            description: "A VQL expression to be evaluated prior to using "
+            "this source."
+        }];
+
+    repeated string queries = 2 [(sem_type) = {
+            description: "Queries that will run in order. Only output from "
+            "the last query will be collected."
+        }];
+}
+
+message Artifact {
+    option (semantic) = {
+        description: "An artifact wraps a VQL query in reusable, documented way."
+        "Artifacts are all about collecting things not analyzing them."
+    };
+
+    string name = 1 [(sem_type) = {
+            description: "The name of the artifact. Should be unique and may "
+            "contain dots. A useful scheme is to break categories with dot e.g. "
+            "Linux.Browsers.ChromeHistory";
+        }];
+
+    string description = 2 [(sem_type) = {
+            description: "What the artifact is trying to collect."
+        }];
+
+    string reference = 5 [(sem_type) = {
+            description: "A reference for this artifact."
+        }];
+
+    repeated ArtifactParameter parameters = 3 [(sem_type) = {
+            description: "Parameters to be provided to the artifact."
+        }];
+
+    repeated ArtifactSource sources = 4 [(sem_type) = {
+            description: "Where the artifact gets its data."
+        }];
+}

@@ -40,6 +40,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	fs := glob.OSFileSystemAccessor{}
 	file, err := fs.Open(*path)
 	if err != nil {
+		scope.Log(err.Error())
 		return false
 	}
 	defer file.Close()
@@ -47,36 +48,42 @@ func (self *GrepFunction) Call(ctx context.Context,
 	hits := []*vfilter.Dict{}
 
 	for {
-		n, err := file.Read(buf)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return false
-		}
+		select {
+		case <-ctx.Done():
+			return vfilter.Null{}
 
-		for _, hit := range ah_matcher.Match(buf[:n]) {
-			min_bound := offset + hit - 10
-			if min_bound < 0 {
-				min_bound = 0
+		default:
+			n, err := file.Read(buf)
+			if err == io.EOF {
+				return hits
+
+			} else if err != nil {
+				scope.Log(err.Error())
+				return false
 			}
 
-			max_bound := offset + hit + 10
-			if max_bound > n {
-				max_bound = n
+			for _, hit := range ah_matcher.Match(buf[:n]) {
+				min_bound := offset + hit - 10
+				if min_bound < 0 {
+					min_bound = 0
+				}
+
+				max_bound := offset + hit + 10
+				if max_bound > n {
+					max_bound = n
+				}
+
+				hits = append(hits, vfilter.NewDict().
+					Set("type", "GrepHit").
+					Set("offset", offset+hit).
+					Set("min_bound", min_bound).
+					Set("max_bound", max_bound).
+					Set("context", buf[min_bound:max_bound]))
 			}
 
-			hits = append(hits, vfilter.NewDict().
-				Set("type", "GrepHit").
-				Set("offset", offset+hit).
-				Set("min_bound", min_bound).
-				Set("max_bound", max_bound).
-				Set("context", buf[min_bound:max_bound]))
+			offset += n
 		}
-
-		offset += n
 	}
-
-	return hits
 }
 
 func (self GrepFunction) Name() string {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sebdah/goldie"
-	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -122,7 +121,7 @@ func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return result, nil
 }
 
-func (self MockFileSystemAccessor) Open(path string) (io.Reader, error) {
+func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
 }
 

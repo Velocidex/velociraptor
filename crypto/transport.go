@@ -324,7 +324,7 @@ func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
 	if !ok {
-		return nil, errors.New("failed to parse root certificate")
+		return nil, errors.New("failed to parse CA certificate")
 	}
 
 	return &CryptoManager{
