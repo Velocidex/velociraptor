@@ -16,7 +16,6 @@ const {formsModule} = goog.require('grrUi.forms.forms');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
 
 
-
 /**
  * Module with artifact-related directives.
  */
@@ -45,8 +44,8 @@ exports.artifactModule.service(
     ArtifactDialogService.service_name, ArtifactDialogService);
 
 exports.artifactModule.run(function(
-    grrSemanticRepeatedFormDirectivesRegistryService) {
-  var registry = grrSemanticRepeatedFormDirectivesRegistryService;
+    grrSemanticFormDirectivesRegistryService) {
+  var registry = grrSemanticFormDirectivesRegistryService;
 
   registry.registerDirective(
       ArtifactsListFormDirective.semantic_type, ArtifactsListFormDirective);

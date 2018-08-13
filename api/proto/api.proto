@@ -1,5 +1,6 @@
 syntax = "proto3";
 
+import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
@@ -231,6 +232,13 @@ service API {
     rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
         option (google.api.http) = {
             get: "/api/v1/DescribeTypes",
+        };
+    }
+
+    // Artifacts
+    rpc GetArtifacts(google.protobuf.Empty) returns (ArtifactDescriptors) {
+        option (google.api.http) = {
+            get: "/api/v1/GetArtifacts",
         };
     }
 }

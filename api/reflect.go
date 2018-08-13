@@ -31,6 +31,8 @@ var (
 		"VFSListRequest",
 		"FileFinderArgs",
 		"VFSDownloadFileRequest",
+		"ArtifactCollectorArgs",
+		"Artifacts",
 	}
 )
 

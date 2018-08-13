@@ -38,16 +38,11 @@ func (self *VQLCollector) Start(
 	if err != nil {
 		return err
 	}
-	repository.PopulateVQLCollectorArgs(vql_collector_args)
-	err = QueueMessageForClient(
+	repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	return QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_collector_args, processVQLResponses)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (self *VQLCollector) ProcessMessage(

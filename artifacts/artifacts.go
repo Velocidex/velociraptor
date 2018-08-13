@@ -97,7 +97,8 @@ func (self *Repository) GetQueryDependencies(query string) []string {
 	return result
 }
 
-func (self *Repository) PopulateVQLCollectorArgs(request *actions_proto.VQLCollectorArgs) {
+func (self *Repository) PopulateArtifactsVQLCollectorArgs(
+	request *actions_proto.VQLCollectorArgs) {
 	dependencies := make(map[string]bool)
 	for _, query := range request.Query {
 		for _, dep := range self.GetQueryDependencies(query.VQL) {

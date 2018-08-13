@@ -40,20 +40,20 @@
           </td>
         </tr>
         <tr ng-repeat="descriptor in controller.descriptorsList |
-                       orderBy:'value.artifact.value.name.value' |
+                       orderBy:'name' |
                        filter:controller.searchFilterRef |
                        filter:controller.platformFilterRef"
-            ng-class="{'row-selected': descriptor.value.artifact.value.name ==
+            ng-class="{'row-selected': descriptor.name ==
                       controller.selectedName}">
           <td style="cursor: pointer; border: none"
-              ng-dblclick="controller.add(descriptor.value.artifact.value.name)"
-              ng-click="controller.selectedName = descriptor.value.artifact.value.name">
+              ng-dblclick="controller.add(descriptor.name)"
+              ng-click="controller.selectedName = descriptor.name">
             <div style="display:block" class="full-width-height"
-                 ng-class="::{'custom-artifact': descriptor.value.is_custom.value === true}">
-              {$ ::descriptor.value.artifact.value.name.value $}
+                 ng-class="::{'custom-artifact': descriptor.is_custom === true}">
+              {$ ::descriptor.name $}
 
               <span title="Custom Uploaded Artifact"
-                    ng-if="::descriptor.value.is_custom.value === true">
+                    ng-if="::descriptor.is_custom === true">
                 <i class="fa fa-user fa-1" aria-hidden="true"></i>
               </span>
             </div>
@@ -84,18 +84,18 @@
       </colgroup>
 
       <tbody>
-        <tr ng-if="value.length > 0"
-            ng-repeat="name in value | orderBy:'value'"
+        <tr ng-if="value.names.length > 0"
+            ng-repeat="name in value.names | orderBy:'value'"
             ng-class="{'row-selected': name == controller.selectedName}">
           <td style="cursor: pointer; border: none"
               ng-dblclick="controller.remove(name)"
               ng-click="controller.selectedName = name"
               ng-class="{'row-selected': name == controller.selectedName}">
             <div style="display:block" class="full-width-height">
-              <strong>{$ ::name.value $}</strong>
+              <strong>{$ ::name $}</strong>
 
               <span title="Custom Uploaded Artifact"
-                    ng-if="::controller.descriptors[name.value].value.is_custom.value === true">
+                    ng-if="::controller.descriptors[name].is_custom === true">
                 <i class="fa fa-user fa-1" aria-hidden="true"></i>
               </span>
             </div>
@@ -127,8 +127,8 @@
 </div>
 
 <div name="ArtifactInfo" class="col-md-7"
-     grr-force-refresh refresh-trigger="controller.selectedName.value">
-  <grr-semantic-value value="controller.descriptors[controller.selectedName.value]" />
+     grr-force-refresh refresh-trigger="controller.selectedName">
+  <grr-artifact-descriptor value="controller.descriptors[controller.selectedName]" />
 </div>
 
 </div>

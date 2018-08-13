@@ -15,7 +15,7 @@ sources:
                    'Source:\\s(?P<Source>.+)',
                    'Architecture:\\s(?P<Architecture>.+)']) as Record
         FROM parse_with_regex(
-            file='/var/lib/dpkg/status',
+            file=linuxDpkgStatus,
             regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
       - SELECT Record.Package as Package,
                Record.InstalledSize as InstalledSize,

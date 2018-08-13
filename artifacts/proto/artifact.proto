@@ -60,3 +60,7 @@ message Artifact {
             description: "Where the artifact gets its data."
         }];
 }
+
+message ArtifactDescriptors {
+    repeated Artifact items = 1;
+}

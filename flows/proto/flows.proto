@@ -189,3 +189,13 @@ message AFF4FlowObject {
     FlowContext flow_context = 3;
     google.protobuf.Any flow_state = 4;
 }
+
+
+message VQLNameTags {
+    string name = 1;
+    string tag = 2;
+}
+
+message VQLNameTagsState {
+    repeated VQLNameTags tags = 1;
+}

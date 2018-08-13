@@ -14,7 +14,6 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
-	debug "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -299,7 +298,6 @@ func (self *VFSDownloadFile) Start(
 			strings.Join(paths, ", ")),
 	})
 
-	debug.Debug(request)
 	err := QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",

@@ -12,6 +12,8 @@ import (
 	"net"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -293,6 +295,25 @@ func (self *ApiServer) VFSRefreshDirectory(
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)
 	return result, err
+}
+
+func (self *ApiServer) GetArtifacts(
+	ctx context.Context,
+	in *empty.Empty) (
+	*artifacts_proto.ArtifactDescriptors, error) {
+	result := &artifacts_proto.ArtifactDescriptors{}
+
+	repository, err := artifacts.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range repository.List() {
+		artifact, pres := repository.Get(name)
+		if pres {
+			result.Items = append(result.Items, artifact)
+		}
+	}
+	return result, nil
 }
 
 func StartServer(config_obj *config.Config) error {

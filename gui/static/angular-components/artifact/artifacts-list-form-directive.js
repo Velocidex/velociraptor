@@ -56,6 +56,7 @@ const ArtifactsListFormController =
                      this.onDescriptorsOrValueChange_.bind(this));
   this.scope_.$watchCollection('value',
                                this.onDescriptorsOrValueChange_.bind(this));
+  this.scope_.value = {names:[]};
 };
 
 
@@ -69,7 +70,7 @@ const ArtifactsListFormController =
  */
 ArtifactsListFormController.prototype.searchFilter = function(descriptor) {
   return !this.search ||
-      descriptor.value.artifact.value.name.value
+      descriptor.name
       .toLowerCase().indexOf(this.search.toLowerCase()) != -1;
 };
 
@@ -86,25 +87,17 @@ ArtifactsListFormController.prototype.platformFilter = function(descriptor) {
     return true;
   }
 
-  var checkOsList = function(osList) {
-    for (var i in osList) {
-      var os = osList[i];
-      if (os.value == this.selectedPlatform) {
-        return true;
-      }
-    }
-    return false;
+  var checkOsList = function(precondition) {
+    // This is really dumb right now - just look for the OS in the
+    // precondition.
+    return precondition.toLowerCase().indexOf(
+      this.selectedPlatform.toLowerCase()) != -1;
   }.bind(this);
 
-  if (checkOsList(
-          descriptor['value']['artifact']['value']['supported_os'] || [])) {
-    return true;
-  }
-
-  var sourceList = descriptor['value']['artifact']['value']['sources'] || [];
+  var sourceList = descriptor['sources'] || [];
   for (var index in sourceList) {
     var source = sourceList[index];
-    if (checkOsList(source['value']['supported_os'] || [])) {
+    if (checkOsList(source['precondition'] || [])) {
       return true;
     }
   }
@@ -146,14 +139,14 @@ ArtifactsListFormController.prototype.onArtifactsRequestFailure_ = function(
  */
 ArtifactsListFormController.prototype.add = function(name) {
   var index = -1;
-  for (var i = 0; i < this.scope_.value.length; ++i) {
-    if (this.scope_.value[i]['value'] == name['value']) {
+  for (var i = 0; i < this.scope_.value.names.length; ++i) {
+    if (this.scope_.value.names[i] == name) {
       index = i;
       break;
     }
   }
   if (index == -1) {
-    this.scope_.value.push(name);
+    this.scope_.value.names.push(name);
   }
 };
 
@@ -168,15 +161,15 @@ ArtifactsListFormController.prototype.add = function(name) {
  */
 ArtifactsListFormController.prototype.remove = function(name) {
   var index = -1;
-  for (var i = 0; i < this.scope_.value.length; ++i) {
-    if (this.scope_.value[i]['value'] == name['value']) {
+  for (var i = 0; i < this.scope_.value.names.length; ++i) {
+    if (this.scope_.value.names[i] == name) {
       index = i;
       break;
     }
   }
 
   if (index != -1) {
-    this.scope_.value.splice(index, 1);
+    this.scope_.value.names.splice(index, 1);
   }
 };
 
@@ -186,7 +179,7 @@ ArtifactsListFormController.prototype.remove = function(name) {
  * @export
  */
 ArtifactsListFormController.prototype.clear = function() {
-  angular.forEach(angular.copy(this.scope_.value), function(name) {
+  angular.forEach(angular.copy(this.scope_.value.names), function(name) {
     this.remove(name);
   }.bind(this));
 };
@@ -203,12 +196,12 @@ ArtifactsListFormController.prototype.clear = function() {
  **/
 ArtifactsListFormController.prototype.onDescriptorsOrValueChange_ = function() {
   if (angular.isDefined(this.descriptors) &&
-      angular.isDefined(this.scope_.value)) {
+      angular.isDefined(this.scope_.value.names)) {
     this.descriptorsList = [];
     angular.forEach(this.descriptors, function(descriptor, name) {
       var index = -1;
-      for (var i = 0; i < this.scope_.value.length; ++i) {
-        if (this.scope_.value[i]['value'] == name) {
+      for (var i = 0; i < this.scope_.value.names.length; ++i) {
+        if (this.scope_.value.names[i] == name) {
           index = i;
           break;
         }
@@ -256,4 +249,5 @@ exports.ArtifactsListFormDirective.directive_name = 'grrArtifactsListForm';
  * @const
  * @export
  */
-exports.ArtifactsListFormDirective.semantic_type = 'ArtifactName';
+//exports.ArtifactsListFormDirective.semantic_type = 'ArtifactName';
+exports.ArtifactsListFormDirective.semantic_type = 'Artifacts';

@@ -47,12 +47,11 @@ ArtifactDescriptorsService.prototype.fillCacheIfNeeded_ = function() {
   var deferred = this.q_.defer();
 
   if (!angular.isObject(this.descriptorsCache_)) {
-    this.grrApiService_.get('/artifacts').then(
+    this.grrApiService_.get('/v1/GetArtifacts').then(
         function success(response) {
           this.descriptorsCache_ = {};
           angular.forEach(response['data']['items'], function(descriptor) {
-            var name =
-                descriptor['value']['artifact']['value']['name']['value'];
+            var name = descriptor['name'];
             this.descriptorsCache_[name] = descriptor;
           }.bind(this));
 
@@ -118,5 +117,3 @@ ArtifactDescriptorsService.prototype.clearCache = function() {
  * Name of the service in Angular.
  */
 ArtifactDescriptorsService.service_name = 'grrArtifactDescriptorsService';
-
-
