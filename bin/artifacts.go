@@ -16,9 +16,6 @@ import (
 var (
 	artifact_command = app.Command(
 		"artifacts", "Process artifact definitions.")
-	artifact_command_definitions_dir = artifact_command.Flag(
-		"definitions", "A directory containing artifact definitions").
-		Default("artifacts/definitions/").String()
 
 	artifact_command_list = artifact_command.Command(
 		"list", "Print all artifacts")
@@ -41,9 +38,9 @@ var (
 )
 
 func collectArtifact(
+	config_obj *config.Config,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
-	config_obj := config.GetDefaultConfig()
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("$uploader", &vql_subsystem.FileBasedUploader{
@@ -71,11 +68,22 @@ func collectArtifact(
 	}
 }
 
-func doArtifactCollect() {
-	repository := artifacts.NewRepository()
-	err := repository.LoadDirectory(*artifact_command_definitions_dir)
-	kingpin.FatalIfError(err, "Artifact LoadDirectory:")
+func getRepository(config_obj *config.Config) *artifacts.Repository {
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+	if *artifact_definitions_dir != "" {
+		err := repository.LoadDirectory(*artifact_definitions_dir)
+		if err != nil {
+			logging.NewLogger(config_obj).Error("Artifact LoadDirectory", err)
+		}
+	}
 
+	return repository
+}
+
+func doArtifactCollect() {
+	config_obj := get_config_or_default()
+	repository := getRepository(config_obj)
 	var name_regex *regexp.Regexp
 	if *artifact_command_collect_name != "" {
 		re, err := regexp.Compile(*artifact_command_collect_name)
@@ -99,14 +107,13 @@ func doArtifactCollect() {
 		err := artifacts.Compile(artifact, request)
 		kingpin.FatalIfError(err, "Unable to compile artifact.")
 
-		collectArtifact(name, request)
+		collectArtifact(config_obj, name, request)
 	}
 }
 
 func doArtifactList() {
-	repository := artifacts.NewRepository()
-	err := repository.LoadDirectory(*artifact_command_definitions_dir)
-	kingpin.FatalIfError(err, "Artifact LoadDirectory:")
+	config_obj := get_config_or_default()
+	repository := getRepository(config_obj)
 
 	var name_regex *regexp.Regexp
 	if *artifact_command_list_name != "" {

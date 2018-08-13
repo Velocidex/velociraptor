@@ -1,4 +1,4 @@
-pkg: static
+pkg: assets
 
 # We assume we are run from the toplevel directory:
 # fileb0x gui/b0x.yaml

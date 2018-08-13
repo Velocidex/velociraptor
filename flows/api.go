@@ -113,7 +113,6 @@ func GetFlowRequests(
 	config_obj *config.Config,
 	client_id string, flow_id string,
 	offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error) {
-
 	if count == 0 {
 		count = 50
 	}

@@ -73,19 +73,20 @@ func (self *FileBaseDataStore) GetClientTasks(
 			continue
 		}
 
-		next_timestamp_urn := fmt.Sprintf(
-			"aff4:/%s/tasks/%d", client_id, next_timestamp)
-		message.TaskId = uint64(next_timestamp)
-		err = self.SetSubject(config_obj, next_timestamp_urn, message)
-		if err != nil {
-			continue
-		}
+		if !do_not_lease {
+			next_timestamp_urn := fmt.Sprintf(
+				"aff4:/%s/tasks/%d", client_id, next_timestamp)
+			message.TaskId = uint64(next_timestamp)
+			err = self.SetSubject(config_obj, next_timestamp_urn, message)
+			if err != nil {
+				continue
+			}
 
-		err = self.DeleteSubject(config_obj, task_urn)
-		if err != nil {
-			return nil, err
+			err = self.DeleteSubject(config_obj, task_urn)
+			if err != nil {
+				return nil, err
+			}
 		}
-
 		result = append(result, message)
 
 		// Make sure next_timestamp is unique for all messages.

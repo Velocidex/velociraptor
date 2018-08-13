@@ -35,8 +35,9 @@ const FlowRequestsController = function($scope) {
 FlowRequestsController.prototype.onFlowIdOrBasePathChange_ = function(
     newValues) {
   if (newValues.every(angular.isDefined)) {
-    this.requestsUrl = this.scope_['apiBasePath'];
-    this.requestsParams = {'flow_id': this.scope_['flowId']};
+    this.requestsUrl = this.scope_['apiBasePath'] + '/' +
+        this.scope_['flowId'] + '/requests';
+    this.requestsParams = {};
   }
 };
 

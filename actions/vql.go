@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -59,7 +60,13 @@ func (self *VQLClientAction) Run(
 		env.Set(env_spec.Key, env_spec.Value)
 	}
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	// Clients do not have a copy of artifacts so they need to be
+	// sent all artifacts from the server.
+	repository := artifacts.NewRepository()
+	for _, artifact := range arg.Artifacts {
+		repository.Set(artifact)
+	}
+	scope := artifacts.MakeScope(repository).AppendVars(env)
 	scope.Logger = log.New(&LogWriter{responder},
 		"vql: ", log.Lshortfile)
 
@@ -106,7 +113,7 @@ func (self *VQLClientAction) Run(
 				result.TotalRows,
 			)
 
-			response.Columns = *vql.Columns(scope)
+			response.Columns = result.Columns
 			responder.AddResponse(response)
 		}
 	}

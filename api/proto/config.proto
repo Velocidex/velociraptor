@@ -137,6 +137,10 @@ message FrontendConfig {
     string dns_name = 6 [(sem_type) = {
             description: "The DNS name of the frontend."
         }];
+
+    string artifacts_path = 7 [(sem_type) = {
+            description: "Path to additional artifacts to load",
+        }];
 }
 
 

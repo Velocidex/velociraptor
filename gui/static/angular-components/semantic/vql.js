@@ -51,16 +51,26 @@ vqlController.prototype.onValueChange = function(newValue) {
       }
     }
 
+    this.payload = JSON.parse(newValue.Response);
+
+    var columns = [];
     if (angular.isDefined(newValue.Columns)) {
-      // Hide columns beginning with _ from the table.
-      for (var i = 0; i < newValue.Columns.length; i++) {
-        var column = newValue.Columns[i];
-        if (!column.startsWith("_")) {
-          this.columns.push(column);
-        }
+      columns = newValue.Columns;
+    }
+
+    if (columns.length == 0 && this.payload.length > 0) {
+      // Sorting to get some stable order.
+      columns = Object.keys(this.payload[0]).sort();
+    }
+
+    // Hide columns beginning with _ from the table.
+    for (var i = 0; i < columns.length; i++) {
+      var column = columns[i];
+      if (!column.startsWith("_")) {
+        this.columns.push(column);
       }
     }
-    this.payload = JSON.parse(newValue.Response);
+
     this.value =  newValue;
   }
 };

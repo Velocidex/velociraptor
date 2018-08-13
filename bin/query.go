@@ -7,6 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -82,10 +83,14 @@ func doQuery() {
 	if err != nil {
 		config_obj = config.GetDefaultConfig()
 	}
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
+	repository.LoadDirectory(*artifact_definitions_dir)
+
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := artifacts.MakeScope(repository).AppendVars(env)
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	for _, query := range *queries {

@@ -13,12 +13,12 @@ import (
 
 func install_mux(config_obj *config.Config, mux *http.ServeMux) {
 	dir := "/static/"
-	mux.Handle(dir, http.FileServer(static.HTTP))
+	mux.Handle(dir, http.FileServer(assets.HTTP))
 }
 
 func GetTemplateHandler(
 	config_obj *config.Config, template_name string) (http.Handler, error) {
-	data, err := static.ReadFile(template_name)
+	data, err := assets.ReadFile(template_name)
 	if err != nil {
 		return nil, err
 	}

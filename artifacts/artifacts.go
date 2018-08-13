@@ -9,21 +9,35 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	//	debug "www.velocidex.com/golang/velociraptor/testing"
+	config "www.velocidex.com/golang/velociraptor/config"
+	logging "www.velocidex.com/golang/velociraptor/logging"
+	utils "www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	artifact_in_query_regex = regexp.MustCompile("Artifact\\.([^\\s\\(]+)\\(")
+	global_repository       = NewRepository()
+	mu                      sync.Mutex
 )
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	data map[string]*artifacts_proto.Artifact
+	data        map[string]*artifacts_proto.Artifact
+	loaded_dirs []string
 }
 
 func (self *Repository) LoadDirectory(dirname string) error {
+	if utils.InString(&self.loaded_dirs, dirname) {
+		return nil
+	}
+	self.loaded_dirs = append(self.loaded_dirs, dirname)
 	return filepath.Walk(dirname,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				return err
+				return errors.WithStack(err)
 			}
 
 			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
@@ -38,9 +52,23 @@ func (self *Repository) LoadDirectory(dirname string) error {
 		})
 }
 
+func (self *Repository) LoadYaml(data string) error {
+	artifact := &artifacts_proto.Artifact{}
+	err := yaml.UnmarshalStrict([]byte(data), artifact)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	self.data[artifact.Name] = artifact
+	return nil
+}
+
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 	res, pres := self.data[name]
 	return res, pres
+}
+
+func (self *Repository) Set(artifact *artifacts_proto.Artifact) {
+	self.data[artifact.Name] = artifact
 }
 
 func (self *Repository) List() []string {
@@ -51,8 +79,50 @@ func (self *Repository) List() []string {
 	return result
 }
 
+// Parse the query and determine if it requires any artifacts. If any
+// artifacts are found, then recursive determine their dependencies
+// etc.
+func (self *Repository) GetQueryDependencies(query string) []string {
+	// For now this is really dumb - just search for something
+	// that looks like an artifact.
+	result := []string{}
+	for _, hit := range artifact_in_query_regex.FindAllStringSubmatch(
+		query, -1) {
+		_, pres := self.data[hit[1]]
+		if pres {
+			result = append(result, hit[1])
+		}
+	}
+
+	return result
+}
+
+func (self *Repository) PopulateVQLCollectorArgs(request *actions_proto.VQLCollectorArgs) {
+	dependencies := make(map[string]bool)
+	for _, query := range request.Query {
+		for _, dep := range self.GetQueryDependencies(query.VQL) {
+			dependencies[dep] = true
+		}
+	}
+	for k, _ := range dependencies {
+		artifact, pres := self.Get(k)
+		if pres {
+			// Deliberately make a copy of the artifact -
+			// we do not want to give away metadata to the
+			// client.
+			request.Artifacts = append(request.Artifacts,
+				&artifacts_proto.Artifact{
+					Name:       artifact.Name,
+					Parameters: artifact.Parameters,
+					Sources:    artifact.Sources,
+				})
+		}
+	}
+}
+
 func NewRepository() *Repository {
-	return &Repository{make(map[string]*artifacts_proto.Artifact)}
+	return &Repository{
+		data: make(map[string]*artifacts_proto.Artifact)}
 }
 
 func Parse(filename string) (*artifacts_proto.Artifact, error) {
@@ -129,4 +199,19 @@ func Compile(artifact *artifacts_proto.Artifact,
 
 func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
+}
+
+func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	logger := logging.NewLogger(config_obj)
+	if config_obj.Frontend.ArtifactsPath != "" {
+		logger.Info("Loading artifacts from %s", config_obj.Frontend.ArtifactsPath)
+		err := global_repository.LoadDirectory(config_obj.Frontend.ArtifactsPath)
+		if err != nil {
+			logger.Info("Unable to load artifacts: %v", err)
+		}
+	}
+	return global_repository, nil
 }

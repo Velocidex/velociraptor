@@ -3,6 +3,7 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
+import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 
 package proto;
 
@@ -37,6 +38,10 @@ message VQLCollectorArgs {
             description: "The maximum rows per response. Responses larger than this "
             "will be split across multiple responses.",
             default: "1000",
+        }];
+
+    repeated Artifact artifacts = 5 [(sem_type) = {
+            description: "Artifacts sent from the server to help with this query."
         }];
 }
 

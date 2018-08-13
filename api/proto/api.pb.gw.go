@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
-	proto_3 "www.velocidex.com/golang/velociraptor/flows/proto"
+	proto_4 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
 var _ codes.Code
@@ -31,7 +31,7 @@ var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
 func request_API_LaunchFlow_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.FlowRunnerArgs
+	var protoReq proto_4.FlowRunnerArgs
 	var metadata runtime.ServerMetadata
 
 	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
@@ -330,7 +330,7 @@ var (
 )
 
 func request_API_VFSListDirectory_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.VFSListRequest
+	var protoReq proto_4.VFSListRequest
 	var metadata runtime.ServerMetadata
 
 	var (

@@ -27,6 +27,7 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
+// A log compatible logger.
 func NewPlainLogger(config *config.Config) *log.Logger {
 	return log.New(&logWriter{NewLogger(config)}, "", log.Lshortfile)
 }

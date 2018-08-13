@@ -117,6 +117,7 @@ Frontend:
     sCqds60YfB/yGLeT49cOyvAfAJLJ9mjo+XpEqhlasvjsqY1r67oxkVrJkeldsg/5
     gfG/wcdMZnRjq9sMpOuTJGVRP3cCkUpGTw70F8C+Jyk/U5tP
     -----END RSA PRIVATE KEY-----
+  artifacts_path: artifacts/definitions/
 GUI:
   bind_address: 127.0.0.1
   bind_port: 8889

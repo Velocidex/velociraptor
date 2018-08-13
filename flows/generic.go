@@ -6,6 +6,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -32,7 +33,13 @@ func (self *VQLCollector) Start(
 		return errors.New("Expected args of type VQLCollectorArgs")
 	}
 
-	err := QueueMessageForClient(
+	// Add any required artifacts to the request.
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+	repository.PopulateVQLCollectorArgs(vql_collector_args)
+	err = QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_collector_args, processVQLResponses)
