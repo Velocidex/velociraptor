@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -35,15 +36,15 @@ func (self *Repository) LoadDirectory(dirname string) error {
 	}
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
 	return filepath.Walk(dirname,
-		func(path string, info os.FileInfo, err error) error {
+		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
 			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
-				artifact, err := Parse(path)
+				artifact, err := Parse(file_path)
 				if err != nil {
-					return err
+					return errors.Wrap(err, path.Join(dirname, info.Name()))
 				}
 
 				self.data[artifact.Name] = artifact
@@ -210,8 +211,17 @@ func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
 	if config_obj.Frontend.ArtifactsPath != "" {
 		logger.Info("Loading artifacts from %s", config_obj.Frontend.ArtifactsPath)
 		err := global_repository.LoadDirectory(config_obj.Frontend.ArtifactsPath)
-		if err != nil {
-			logger.Info("Unable to load artifacts: %v", err)
+		switch errors.Cause(err).(type) {
+		// PathError is not fatal - it means we just cant load the directory.
+		case *os.PathError:
+			logger.Info("Unable to load artifacts from directory "+
+				"%s (skipping): %v", config_obj.Frontend.ArtifactsPath, err)
+		case nil:
+			break
+		default:
+			// Other errors are fatal - they mean we cant
+			// parse the artifacts themselves.
+			return nil, err
 		}
 	}
 	return global_repository, nil

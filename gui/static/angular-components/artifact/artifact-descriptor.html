@@ -26,7 +26,22 @@
     <tr>
       <td class="col-md-12">
         <div ng-repeat="item in ::value.sources track by $index">
-          <grr-semantic-value value="::item" type="ArtifactSource" />
+          <table class="table table-bordered table-condensed">
+            <tr><td>Precodition</td></tr>
+            <tr>
+              <td>
+                <grr-syntax-highlight language="SQL" code="::item.precondition">
+                </grr-syntax-highlight>
+              </td>
+            </tr>
+            <tr><td>Queries</td></tr>
+            <tr ng-repeat="query in ::item.queries track by $index">
+              <td>
+                <grr-syntax-highlight language="SQL" code="::query">
+                </grr-syntax-highlight>
+              </td>
+            </tr>
+          </table>
         </div>
       </td>
     </tr>

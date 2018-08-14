@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 	"www.velocidex.com/golang/velociraptor/api"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -206,6 +207,11 @@ func init() {
 		if command == frontend.FullCommand() {
 			config_obj, err := get_server_config(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
+
+			// Part the artifacts database to detect errors early.
+			_, err = artifacts.GetGlobalRepository(config_obj)
+			kingpin.FatalIfError(err, "Unable to load artifact database")
+
 			go func() {
 				err := api.StartServer(config_obj)
 				kingpin.FatalIfError(

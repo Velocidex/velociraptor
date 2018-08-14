@@ -9,7 +9,8 @@ sources:
 
     # Table's first row is the headers so we filter them out.
     queries:
-      - SELECT IPAddress, HWType, Flags, HWAddress, Mask, Device
+      - |
+        SELECT IPAddress, HWType, Flags, HWAddress, Mask, Device
         FROM parse_with_regex(
             file=ProcNetArp,
             regex='(?m)^(?P<IPAddress>[^\\s]+)\\s+(?P<HWType>[^\\s]+)\\s+' +

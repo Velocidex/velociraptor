@@ -78,6 +78,7 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
+                   config.nodeModulesDir + '/highlightjs/highlight.pack.js',
                    config.nodeModulesDir + '/marked/lib/marked.js',
 
                    'third-party/jquery.splitter.js'])
@@ -127,9 +128,8 @@ gulp.task('compile-third-party-css', function() {
                    config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
-
+                   config.nodeModulesDir + '/highlightjs/styles/atom-one-light.css',
                    config.tempDir + '/grr-bootstrap.css',
-
                    'third-party/splitter.css'])
       .pipe(gulpNewer(config.distDir + '/third-party.bundle.css'))
       .pipe(gulpConcat('third-party.bundle.css'))

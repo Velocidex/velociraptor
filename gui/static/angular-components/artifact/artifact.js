@@ -11,10 +11,10 @@ const {ArtifactNameDirective} = goog.require('grrUi.artifact.artifactNameDirecti
 const {ArtifactsListFormDirective} = goog.require('grrUi.artifact.artifactsListFormDirective');
 const {DeleteArtifactsDialogDirective} = goog.require('grrUi.artifact.deleteArtifactsDialogDirective');
 const {UploadArtifactDialogDirective} = goog.require('grrUi.artifact.uploadArtifactDialogDirective');
+const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
-
 
 /**
  * Module with artifact-related directives.
@@ -37,6 +37,10 @@ exports.artifactModule.directive(
 exports.artifactModule.directive(
     UploadArtifactDialogDirective.directive_name,
     UploadArtifactDialogDirective);
+
+exports.artifactModule.directive(
+  SyntaxHighlightDirective.directive_name,
+  SyntaxHighlightDirective);
 
 exports.artifactModule.service(
     ArtifactDescriptorsService.service_name, ArtifactDescriptorsService);

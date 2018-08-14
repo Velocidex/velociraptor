@@ -8,6 +8,8 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     queries:
-      - LET hashes = SELECT Name, Size, hash(path=FullPath) as Hash
-        FROM glob(globs=kLinuxACPIPath + '/*')
-      - SELECT Name, Size, Hash.MD5, Hash.SHA1, Hash.SHA256 from hashes
+      - |
+        LET hashes = SELECT Name, Size, hash(path=FullPath) as Hash
+                     FROM glob(globs=kLinuxACPIPath + '/*')
+      - |
+        SELECT Name, Size, Hash.MD5, Hash.SHA1, Hash.SHA256 from hashes

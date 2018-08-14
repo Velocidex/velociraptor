@@ -8,9 +8,10 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     queries:
-      - SELECT User, Desc, Uid, Gid, Homedir, Shell
-        FROM parse_with_regex(
-          file=PasswordFile,
-          regex='(?m)^(?P<User>[^:]+):([^:]+):' +
-                '(?P<Uid>[^:]+):(?P<Gid>[^:]+):(?P<Desc>[^:]*):' +
-                '(?P<Homedir>[^:]+):(?P<Shell>[^:\\s]+)')
+      - |
+        SELECT User, Desc, Uid, Gid, Homedir, Shell
+          FROM parse_with_regex(
+            file=PasswordFile,
+            regex='(?m)^(?P<User>[^:]+):([^:]+):' +
+                  '(?P<Uid>[^:]+):(?P<Gid>[^:]+):(?P<Desc>[^:]*):' +
+                  '(?P<Homedir>[^:]+):(?P<Shell>[^:\\s]+)')

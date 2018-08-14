@@ -7,8 +7,9 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     queries:
-      - SELECT Device, Mount, FSType, split(string=Opts, sep=",") As Options
-        FROM parse_with_regex(
-           file=ProcMounts,
-           regex='(?m)^(?P<Device>[^ ]+) (?P<Mount>[^ ]+) (?P<FSType>[^ ]+) '+
-                 '(?P<Opts>[^ ]+)')
+      - |
+        SELECT Device, Mount, FSType, split(string=Opts, sep=",") As Options
+               FROM parse_with_regex(
+                   file=ProcMounts,
+                   regex='(?m)^(?P<Device>[^ ]+) (?P<Mount>[^ ]+) (?P<FSType>[^ ]+) '+
+                         '(?P<Opts>[^ ]+)')
