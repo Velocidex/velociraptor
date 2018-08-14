@@ -79,5 +79,26 @@ func init() {
 				return result
 			},
 			RowType: disk.PartitionStat{},
+		},
+		vfilter.GenericListPlugin{
+			PluginName: "stat",
+			Function: func(
+				scope *vfilter.Scope,
+				args *vfilter.Dict) []vfilter.Row {
+				var result []vfilter.Row
+				file, pres := vfilter.ExtractString("file", args)
+				if !pres {
+					scope.Log("Expecting string as 'file' parameter")
+					return result
+				}
+
+				accessor := &glob.OSFileSystemAccessor{}
+				f, err := accessor.Lstat(*file)
+				if err == nil {
+					result = append(result, f)
+				}
+				return result
+			},
+			RowType: &glob.OSFileInfo{},
 		})
 }

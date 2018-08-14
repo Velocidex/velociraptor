@@ -7,7 +7,6 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
 
-    # Table's first row is the headers so we filter them out.
     queries:
       - |
         SELECT IPAddress, HWType, Flags, HWAddress, Mask, Device
@@ -16,4 +15,5 @@ sources:
             regex='(?m)^(?P<IPAddress>[^\\s]+)\\s+(?P<HWType>[^\\s]+)\\s+' +
                   '(?P<Flags>[^\\s]+)\\s+(?P<HWAddress>[^\\s]+)\\s+' +
                   '(?P<Mask>[^\\s]+)\\s+(?P<Device>[^\\s]+)')
+        /* First row is table headers so we filter it out */
         WHERE NOT "IP" in IPAddress

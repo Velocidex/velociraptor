@@ -39,6 +39,7 @@ type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
 	Open(path string) (ReadSeekCloser, error)
 	PathSep() string
+	Lstat(filename string) (FileInfo, error)
 }
 
 type _PathFilterer interface {

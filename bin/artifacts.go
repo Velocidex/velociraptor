@@ -105,7 +105,8 @@ func doArtifactCollect() {
 
 		request := &actions_proto.VQLCollectorArgs{}
 		err := artifacts.Compile(artifact, request)
-		kingpin.FatalIfError(err, "Unable to compile artifact.")
+		kingpin.FatalIfError(
+			err, fmt.Sprintf("Unable to compile artifact %s.", name))
 
 		collectArtifact(config_obj, name, request)
 	}

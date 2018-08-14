@@ -78,6 +78,15 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct{}
 
+func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
+	lstat, err := os.Lstat(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return &OSFileInfo{lstat, filename}, nil
+}
+
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	files, err := ioutil.ReadDir(path)
 	if err == nil {

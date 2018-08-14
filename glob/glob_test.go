@@ -96,6 +96,9 @@ func (self MockFileInfo) Ctime() TimeVal     { return TimeVal{} }
 
 type MockFileSystemAccessor []string
 
+func (self MockFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
+	return nil, errors.New("Not implemented")
+}
 func (self MockFileSystemAccessor) PathSep() string { return "/" }
 
 func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {

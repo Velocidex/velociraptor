@@ -16,6 +16,7 @@ import (
 	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -162,14 +163,35 @@ func Compile(artifact *artifacts_proto.Artifact,
 		})
 
 		queries := []string{}
+		// The artifact format requires all queries to be LET
+		// queries except for the last one.
 		for idx2, query := range source.Queries {
+			// Verify the query's syntax.
+			vql, err := vfilter.Parse(query)
+			if err != nil {
+				return err
+			}
+
 			query_name := fmt.Sprintf("%s_%d", prefix, idx2)
-			if strings.HasPrefix(query, "LET") {
+			if idx2 < len(source.Queries)-1 {
+				if vql.Let == "" {
+					return errors.New(
+						"Invalid artifact: All Queries in a source " +
+							"must be LET queries, except for the " +
+							"final one.")
+				}
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: query,
 					})
 			} else {
+				if vql.Let != "" {
+					return errors.New(
+						"Invalid artifact: All Queries in a source " +
+							"must be LET queries, except for the " +
+							"final one.")
+				}
+
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: "LET " + query_name +
@@ -178,15 +200,6 @@ func Compile(artifact *artifacts_proto.Artifact,
 				queries = append(queries, query_name)
 			}
 			source_result = query_name
-		}
-
-		if len(queries) > 1 {
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: fmt.Sprintf(
-					"LET "+source_result+" = SELECT * FROM chain(%s)",
-					strings.Join(queries, ", ")),
-			})
-			source_result = "Result_" + prefix
 		}
 
 		result.Query = append(result.Query, &actions_proto.VQLRequest{

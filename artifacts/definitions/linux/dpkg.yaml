@@ -8,6 +8,11 @@ sources:
       SELECT OS From info() where OS = 'linux'
     queries:
       - |
+        /* First pass - split file into records start with
+           Package and end with \n\n.
+
+           Then parse each record using multiple RegExs.
+        */
         LET packages = SELECT parse_string_with_regex(
             string=Record,
             regex=['Package:\\s(?P<Package>.+)',
