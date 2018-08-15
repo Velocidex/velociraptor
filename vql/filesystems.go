@@ -24,6 +24,10 @@ func (self ExtendedFileSystemInfo) SerialNumber() string {
 }
 */
 
+type PartitionsArgs struct {
+	All bool `vfilter:"optional,field=all"`
+}
+
 func init() {
 	exportedPlugins = append(exportedPlugins,
 		vfilter.GenericListPlugin{
@@ -32,10 +36,15 @@ func init() {
 				scope *vfilter.Scope,
 				args *vfilter.Dict) []vfilter.Row {
 				var result []vfilter.Row
-				var all bool = false
-				_, all = args.Get("all")
 
-				if partitions, err := disk.Partitions(all); err == nil {
+				arg := &PartitionsArgs{}
+				err := vfilter.ExtractArgs(scope, args, arg)
+				if err != nil {
+					scope.Log("%s: %s", "partitions", err.Error())
+					return result
+				}
+
+				if partitions, err := disk.Partitions(arg.All); err == nil {
 					for _, item := range partitions {
 						extended_info := ExtendedFileSystemInfo{item}
 						result = append(result, extended_info)

@@ -7,6 +7,10 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type GlobPluginArgs struct {
+	Globs []string `vfilter:"required,field=globs"`
+}
+
 type GlobPlugin struct{}
 
 func (self GlobPlugin) Call(
@@ -15,15 +19,16 @@ func (self GlobPlugin) Call(
 	args *vfilter.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
-
-	globs, pres := vfilter.ExtractStringArray(scope, "globs", args)
-	if !pres {
-		scope.Log("Expecting string list as 'globs' parameter")
+	arg := &GlobPluginArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
 		close(output_chan)
 		return output_chan
 	}
+
 	accessor := &glob.OSFileSystemAccessor{}
-	for _, item := range globs {
+	for _, item := range arg.Globs {
 		globber.Add(item, "/")
 	}
 
@@ -40,7 +45,6 @@ func (self GlobPlugin) Call(
 				if !ok {
 					return
 				}
-
 				output_chan <- f
 			}
 		}
@@ -59,6 +63,10 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 		Doc:     "Retrieve files based on a list of glob expressions",
 		RowType: type_map.AddType(glob.OSFileInfo{}),
 	}
+}
+
+type StatArgs struct {
+	Filename string `vfilter:"required,field=filename"`
 }
 
 func init() {
@@ -86,14 +94,16 @@ func init() {
 				scope *vfilter.Scope,
 				args *vfilter.Dict) []vfilter.Row {
 				var result []vfilter.Row
-				file, pres := vfilter.ExtractString("file", args)
-				if !pres {
-					scope.Log("Expecting string as 'file' parameter")
+
+				arg := &StatArgs{}
+				err := vfilter.ExtractArgs(scope, args, arg)
+				if err != nil {
+					scope.Log("%s: %s", "stat", err.Error())
 					return result
 				}
 
 				accessor := &glob.OSFileSystemAccessor{}
-				f, err := accessor.Lstat(*file)
+				f, err := accessor.Lstat(arg.Filename)
 				if err == nil {
 					result = append(result, f)
 				}

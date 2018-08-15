@@ -1,6 +1,6 @@
 name: Linux.Debian.AptSources
 description: |
-  Parse Debian\'s apt sources.
+  Parse Debian apt sources.
 
   We first search for *.list files which contain lines of the form
 
@@ -81,7 +81,7 @@ sources:
          LET add_stat_to_parsed_cache_file = SELECT * from foreach(
            query={
              SELECT FullPath, Mtime, Ctime, Atime, Record, Type,
-               Name, Arch, URL, Source from stat(file=cache_file)
+               Name, Arch, URL, Source from stat(filename=cache_file)
            }, row=parsed_cache_files)
 
        - |
@@ -93,7 +93,7 @@ sources:
          */
          LET parse_cache_or_pass = SELECT * from if(
            condition={
-              SELECT * from stat(file=cache_file)
+              SELECT * from stat(filename=cache_file)
            },
            query=add_stat_to_parsed_cache_file,
            else={

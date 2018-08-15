@@ -21,6 +21,10 @@ type HashResult struct {
 	sha256 hash.Hash
 }
 
+type HashFunctionArgs struct {
+	Path string `vfilter:"required,field=path"`
+}
+
 // The hash fuction calculates a hash of a file. It may be expensive
 // so we make it cancelllable.
 type HashFunction struct{}
@@ -28,15 +32,16 @@ type HashFunction struct{}
 func (self *HashFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	path, pres := vfilter.ExtractString("path", args)
-	if !pres {
-		scope.Log("Arg path not specified")
+	arg := &HashFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
 		return false
 	}
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 	fs := glob.OSFileSystemAccessor{}
-	file, err := fs.Open(*path)
+	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log(err.Error())
 		return false

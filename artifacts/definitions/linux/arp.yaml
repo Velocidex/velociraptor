@@ -9,11 +9,7 @@ sources:
 
     queries:
       - |
-        SELECT IPAddress, HWType, Flags, HWAddress, Mask, Device
-        FROM parse_with_regex(
-            file=ProcNetArp,
-            regex='(?m)^(?P<IPAddress>[^\\s]+)\\s+(?P<HWType>[^\\s]+)\\s+' +
-                  '(?P<Flags>[^\\s]+)\\s+(?P<HWAddress>[^\\s]+)\\s+' +
-                  '(?P<Mask>[^\\s]+)\\s+(?P<Device>[^\\s]+)')
-        /* First row is table headers so we filter it out */
-        WHERE NOT "IP" in IPAddress
+        SELECT * from split_records(
+           filenames=ProcNetArp,
+           regex='\\s{3,20}',
+           first_row_is_headers=true)

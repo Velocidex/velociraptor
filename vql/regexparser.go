@@ -9,12 +9,18 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type _ParseFileWithRegexArgs struct {
+	Filenames       []string `vfilter:"required,field=file"`
+	Regex           []string `vfilter:"required,field=regex"`
+	compiled_regexs []*regexp.Regexp
+	capture_vars    []string
+}
+
 type _ParseFileWithRegex struct{}
 
 func _ParseFile(filename string,
 	scope *vfilter.Scope,
-	capture_vars []string,
-	compiled_regexs []*regexp.Regexp,
+	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
 	accessor := glob.OSFileSystemAccessor{}
 	file, err := accessor.Open(filename)
@@ -31,14 +37,14 @@ func _ParseFile(filename string,
 			return
 		}
 
-		for _, r := range compiled_regexs {
+		for _, r := range arg.compiled_regexs {
 			match := r.FindAllSubmatch(buffer[:n], -1)
 			if match != nil {
 				names := r.SubexpNames()
 				for _, hit := range match {
 					row := vfilter.NewDict().Set(
 						"FullPath", filename)
-					for _, name := range capture_vars {
+					for _, name := range arg.capture_vars {
 						if name != "" {
 							row.Set(name, "")
 						}
@@ -69,38 +75,29 @@ func (self _ParseFileWithRegex) Call(
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-
-	filenames, ok := vfilter.ExtractStringArray(scope, "file", args)
-	if !ok {
-		scope.Log("Expecting string array as 'file' parameter")
+	arg := &_ParseFileWithRegexArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
 		close(output_chan)
 		return output_chan
 	}
 
-	regexps, ok := vfilter.ExtractStringArray(scope, "regex", args)
-	if !ok {
-		scope.Log("Expecting string list as 'regex' parameter")
-		close(output_chan)
-		return output_chan
-	}
-
-	capture_vars := []string{}
-	var compiled_regexs []*regexp.Regexp
-	for _, regex := range regexps {
+	for _, regex := range arg.Regex {
 		r, err := regexp.Compile(regex)
 		if err != nil {
 			scope.Log("Unable to compile regex %s", regex)
 			close(output_chan)
 			return output_chan
 		}
-		compiled_regexs = append(compiled_regexs, r)
+		arg.compiled_regexs = append(arg.compiled_regexs, r)
 
 		// Collect all the capture vars from all the regex. We
 		// make sure the result row has something in each
 		// position to avoid errors.
 		for _, x := range r.SubexpNames() {
-			if !utils.InString(&capture_vars, x) && x != "" {
-				capture_vars = append(capture_vars, x)
+			if !utils.InString(&arg.capture_vars, x) && x != "" {
+				arg.capture_vars = append(arg.capture_vars, x)
 			}
 		}
 	}
@@ -108,12 +105,8 @@ func (self _ParseFileWithRegex) Call(
 	go func() {
 		defer close(output_chan)
 
-		for _, filename := range filenames {
-			_ParseFile(filename,
-				scope,
-				capture_vars,
-				compiled_regexs,
-				output_chan)
+		for _, filename := range arg.Filenames {
+			_ParseFile(filename, scope, arg, output_chan)
 		}
 	}()
 
@@ -131,33 +124,32 @@ func (self _ParseFileWithRegex) Info(type_map *vfilter.TypeMap) *vfilter.PluginI
 	}
 }
 
+type _ParseStringWithRegexFunctionArgs struct {
+	String string   `vfilter:"required,field=string"`
+	Regex  []string `vfilter:"required,field=regex"`
+}
+
 type _ParseStringWithRegexFunction struct{}
 
 func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) (result vfilter.Any) {
-	data, ok := vfilter.ExtractString("string", args)
-	if !ok {
-		scope.Log("Expecting string as 'string' parameter")
+	arg := &_ParseStringWithRegexFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
 		return vfilter.Null{}
 	}
-
-	regexes, ok := vfilter.ExtractStringArray(scope, "regex", args)
-	if !ok {
-		scope.Log("Expecting string array as 'regex' parameter")
-		return vfilter.Null{}
-	}
-
 	row := vfilter.NewDict()
 	merged_names := []string{}
-	for _, regex := range regexes {
+	for _, regex := range arg.Regex {
 		r, err := regexp.Compile(regex)
 		if err != nil {
 			scope.Log("Unable to compile regex %s", regex)
 			return vfilter.Null{}
 		}
 
-		match := r.FindAllStringSubmatch(*data, -1)
+		match := r.FindAllStringSubmatch(arg.String, -1)
 		if match != nil {
 			names := r.SubexpNames()
 			for _, x := range names {

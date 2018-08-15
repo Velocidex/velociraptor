@@ -8,27 +8,31 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type GrepFunctionArgs struct {
+	Path     string   `vfilter:"required,field=path"`
+	Keywords []string `vfilter:"required,field=keywords"`
+	Context  int      `vfilter:"optional,field=context"`
+}
+
 type GrepFunction struct{}
 
 // The Grep VQL function searches for a literal or regex match inside the file
 func (self *GrepFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-
-	path, pres := vfilter.ExtractString("path", args)
-	if !pres {
-		scope.Log("Arg path not specified")
+	arg := &GrepFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
 		return false
 	}
 
-	keywords_str, pres := vfilter.ExtractStringArray(scope, "keywords", args)
-	if !pres {
-		scope.Log("Arg keywords not specified")
-		return false
+	if arg.Context == 0 {
+		arg.Context = 10
 	}
 
 	var keywords [][]byte
-	for _, item := range keywords_str {
+	for _, item := range arg.Keywords {
 		// TODO: Add extra encodings like UTF16
 		keywords = append(keywords, []byte(item))
 	}
@@ -38,7 +42,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 	fs := glob.OSFileSystemAccessor{}
-	file, err := fs.Open(*path)
+	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log(err.Error())
 		return false
@@ -63,12 +67,12 @@ func (self *GrepFunction) Call(ctx context.Context,
 			}
 
 			for _, hit := range ah_matcher.Match(buf[:n]) {
-				min_bound := offset + hit - 10
+				min_bound := offset + hit - arg.Context
 				if min_bound < 0 {
 					min_bound = 0
 				}
 
-				max_bound := offset + hit + 10
+				max_bound := offset + hit + arg.Context
 				if max_bound > n {
 					max_bound = n
 				}
@@ -78,7 +82,8 @@ func (self *GrepFunction) Call(ctx context.Context,
 					Set("offset", offset+hit).
 					Set("min_bound", min_bound).
 					Set("max_bound", max_bound).
-					Set("context", buf[min_bound:max_bound]))
+					Set("context", string(
+						buf[min_bound:max_bound])))
 			}
 
 			offset += n
