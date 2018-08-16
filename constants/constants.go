@@ -20,3 +20,5 @@ var (
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
 )
+
+const TransferWellKnownFlowId = 5

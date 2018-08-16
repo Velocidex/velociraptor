@@ -19,6 +19,18 @@ var (
 	exportedFunctions    []vfilter.FunctionInterface
 )
 
+func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
+	exportedPlugins = append(exportedPlugins, plugin)
+}
+
+func RegisterFunction(plugin vfilter.FunctionInterface) {
+	exportedFunctions = append(exportedFunctions, plugin)
+}
+
+func RegisterProtocol(plugin vfilter.Any) {
+	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
+}
+
 func MakeScope() *vfilter.Scope {
 	result := vfilter.NewScope()
 	for _, plugin := range exportedPlugins {

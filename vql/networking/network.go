@@ -1,13 +1,14 @@
-package vql
+package networking
 
 import (
 	"github.com/shirou/gopsutil/net"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 func init() {
-	exportedPlugins = append(exportedPlugins,
-		vfilter.GenericListPlugin{
+	vql_subsystem.RegisterPlugin(
+		&vfilter.GenericListPlugin{
 			PluginName: "interfaces",
 			Function: func(
 				scope *vfilter.Scope,

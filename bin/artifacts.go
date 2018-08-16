@@ -9,7 +9,7 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -44,7 +44,7 @@ func collectArtifact(
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
-		Set("$uploader", &vql_subsystem.FileBasedUploader{
+		Set("$uploader", &vql_networking.FileBasedUploader{
 			*artifact_command_collect_dump_dir})
 
 	for _, request_env := range request.Env {

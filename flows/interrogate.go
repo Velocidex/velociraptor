@@ -8,13 +8,12 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/vql"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -144,7 +143,7 @@ func (self *VInterrogate) ProcessMessage(
 
 		// Also support receiving files in interrogate
 		// actions.
-	case vql_subsystem.TransferWellKnownFlowId:
+	case constants.TransferWellKnownFlowId:
 		delegate := &VQLCollector{}
 		err := delegate.ProcessMessage(config_obj, flow_obj, message)
 		if err != nil {

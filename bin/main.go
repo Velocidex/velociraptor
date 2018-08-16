@@ -5,6 +5,9 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"os"
 	"www.velocidex.com/golang/velociraptor/config"
+
+	// Import all vql plugins.
+	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
 var (

@@ -8,11 +8,11 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -66,7 +66,7 @@ func (self *VQLCollector) ProcessMessage(
 		}
 
 		// Receive any file upload the client sent.
-	case vql_subsystem.TransferWellKnownFlowId:
+	case constants.TransferWellKnownFlowId:
 		return appendDataToFile(
 			config_obj, flow_obj,
 			path.Join(flow_obj.RunnerArgs.ClientId,

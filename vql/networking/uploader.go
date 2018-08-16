@@ -1,4 +1,4 @@
-package vql
+package networking
 
 import (
 	"errors"
@@ -6,11 +6,10 @@ import (
 	"os"
 	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/vfilter"
 )
-
-const TransferWellKnownFlowId = 5
 
 // Returned as the result of the query.
 type UploadResponse struct {
@@ -102,6 +101,6 @@ func (self *VelociraptorUploader) Upload(
 
 		// Send the packet to the server.
 		self.Responder.AddResponseToRequest(
-			TransferWellKnownFlowId, packet)
+			constants.TransferWellKnownFlowId, packet)
 	}
 }

@@ -1,8 +1,9 @@
-package vql
+package networking
 
 import (
 	"context"
 	"www.velocidex.com/golang/velociraptor/glob"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -116,20 +117,19 @@ func uploadPluginFunc(scope *vfilter.Scope, args *vfilter.Dict) []vfilter.Row {
 				if err != nil {
 					continue
 				}
+				result = append(result, upload_response)
 			}
-			result = append(result, upload_response)
 		}
 	}
 	return result
 }
 
 func init() {
-	plugin := &vfilter.GenericListPlugin{
-		PluginName: "upload",
-		RowType:    UploadResponse{},
-	}
-
-	plugin.Function = uploadPluginFunc
-	exportedPlugins = append(exportedPlugins, plugin)
-	exportedFunctions = append(exportedFunctions, &UploadFunction{})
+	vql_subsystem.RegisterPlugin(
+		&vfilter.GenericListPlugin{
+			PluginName: "upload",
+			RowType:    UploadResponse{},
+			Function:   uploadPluginFunc,
+		})
+	vql_subsystem.RegisterFunction(&UploadFunction{})
 }

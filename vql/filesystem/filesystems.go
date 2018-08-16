@@ -1,7 +1,8 @@
-package vql
+package filesystem
 
 import (
 	"github.com/shirou/gopsutil/disk"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -29,8 +30,8 @@ type PartitionsArgs struct {
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins,
-		vfilter.GenericListPlugin{
+	vql_subsystem.RegisterPlugin(
+		&vfilter.GenericListPlugin{
 			PluginName: "partitions",
 			Function: func(
 				scope *vfilter.Scope,

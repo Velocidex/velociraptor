@@ -1,10 +1,11 @@
-package vql
+package filesystem
 
 import (
 	"context"
 	"github.com/Velocidex/ahocorasick"
 	"io"
 	"www.velocidex.com/golang/velociraptor/glob"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -96,5 +97,5 @@ func (self GrepFunction) Name() string {
 }
 
 func init() {
-	exportedFunctions = append(exportedFunctions, &GrepFunction{})
+	vql_subsystem.RegisterFunction(&GrepFunction{})
 }

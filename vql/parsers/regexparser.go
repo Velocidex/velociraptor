@@ -1,4 +1,4 @@
-package vql
+package parsers
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -219,9 +220,7 @@ func (self _RegexReplace) Name() string {
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins, &_ParseFileWithRegex{})
-	exportedFunctions = append(exportedFunctions,
-		&_ParseStringWithRegexFunction{})
-	exportedFunctions = append(exportedFunctions,
-		&_RegexReplace{})
+	vql_subsystem.RegisterPlugin(&_ParseFileWithRegex{})
+	vql_subsystem.RegisterFunction(&_ParseStringWithRegexFunction{})
+	vql_subsystem.RegisterFunction(&_RegexReplace{})
 }

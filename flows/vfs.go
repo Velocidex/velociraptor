@@ -10,13 +10,13 @@ import (
 	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 const (
@@ -330,7 +330,7 @@ func (self *VFSDownloadFile) ProcessMessage(
 		}
 
 		// Receive any file upload the client sent.
-	case vql_subsystem.TransferWellKnownFlowId:
+	case constants.TransferWellKnownFlowId:
 		return appendDataToFile(
 			config_obj, flow_obj,
 			path.Join(flow_obj.RunnerArgs.ClientId, "vfs_files"),

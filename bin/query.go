@@ -11,6 +11,7 @@ import (
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,7 +90,7 @@ func doQuery() {
 
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
-		Set("$uploader", &vql_subsystem.FileBasedUploader{*dump_dir})
+		Set("$uploader", &vql_networking.FileBasedUploader{*dump_dir})
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)

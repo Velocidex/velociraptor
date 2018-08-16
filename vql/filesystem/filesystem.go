@@ -1,9 +1,10 @@
-package vql
+package filesystem
 
 import (
 	"context"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -167,9 +168,9 @@ type StatArgs struct {
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins,
-		&GlobPlugin{},
-		&ReadFilePlugin{},
+	vql_subsystem.RegisterPlugin(&GlobPlugin{})
+	vql_subsystem.RegisterPlugin(&ReadFilePlugin{})
+	vql_subsystem.RegisterPlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "filesystems",
 			Function: func(
@@ -185,7 +186,9 @@ func init() {
 				return result
 			},
 			RowType: disk.PartitionStat{},
-		},
+		})
+
+	vql_subsystem.RegisterPlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "stat",
 			Function: func(

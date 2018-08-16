@@ -1,7 +1,7 @@
 // A simple line based file parser with common separator. This could
 // be done with "parse_with_regex" but its easier to have a dedicated
 // parser.
-package vql
+package parsers
 
 import (
 	"bufio"
@@ -10,6 +10,7 @@ import (
 	"regexp"
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -140,6 +141,6 @@ func (self _SplitRecordParser) Info(type_map *vfilter.TypeMap) *vfilter.PluginIn
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins, &_SplitRecordParser{})
+	vql_subsystem.RegisterPlugin(&_SplitRecordParser{})
 
 }
