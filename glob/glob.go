@@ -31,6 +31,8 @@ type FileInfo interface {
 type ReadSeekCloser interface {
 	io.ReadSeeker
 	io.Closer
+
+	Stat() (os.FileInfo, error)
 }
 
 // Interface for accessing the filesystem. Used for dependency

@@ -1,5 +1,16 @@
-name: Applications.Chrome.Extensions
-description: Fetch Chrome extensions.
+name: Linux.Applications.Chrome.Extensions
+description: |
+  Fetch Chrome extensions.
+
+  Chrome extensions are installed into the user's home directory.  We
+  search for manifest.json files in a known path within each system
+  user's home directory. We then parse the manifest file as JSON.
+
+  Many extensions use locale packs to resolve strings like name and
+  description. In this case we detect the default locale and load
+  those locale files. We then resolve the extension's name and
+  description from there.
+
 parameters:
   - name: extensionGlobs
     default: /.config/google-chrome/*/Extensions/*/*/manifest.json
@@ -37,7 +48,7 @@ sources:
                         ManifestFilename,
                         parse_json(data=Data) AS LocaleManifest
                  FROM read_file(
-                         // Munge the filename to get the messages.json path.
+                         -- Munge the filename to get the messages.json path.
                          filenames=regex_replace(
                            source=ManifestFilename,
                            replace="/_locales/" + Manifest.default_locale +
@@ -45,7 +56,7 @@ sources:
                            re="/manifest.json$"))
               },
               else={
-                  // Just fill in empty Locale results.
+                  -- Just fill in empty Locale results.
                   SELECT Manifest,
                          Uid, User,
                          "" AS LocaleFilename,

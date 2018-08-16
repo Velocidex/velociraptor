@@ -39,6 +39,7 @@ var (
 
 func collectArtifact(
 	config_obj *config.Config,
+	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
@@ -49,7 +50,8 @@ func collectArtifact(
 	for _, request_env := range request.Env {
 		env.Set(request_env.Key, request_env.Value)
 	}
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+
+	scope := artifacts.MakeScope(repository).AppendVars(env)
 	scope.Logger = logging.NewPlainLogger(config_obj)
 	for _, query := range request.Query {
 		vql, err := vfilter.Parse(query.VQL)
@@ -108,7 +110,7 @@ func doArtifactCollect() {
 		kingpin.FatalIfError(
 			err, fmt.Sprintf("Unable to compile artifact %s.", name))
 
-		collectArtifact(config_obj, name, request)
+		collectArtifact(config_obj, repository, name, request)
 	}
 }
 

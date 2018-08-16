@@ -53,15 +53,17 @@ func (self *UploadFunction) Call(ctx context.Context,
 		}
 		defer file.Close()
 
-		upload_response, err := uploader.Upload(
-			scope, *filename, file)
-		if err != nil {
-			return &UploadResponse{
-				Error: err.Error(),
+		stat, err := file.Stat()
+		if err == nil && !stat.IsDir() {
+			upload_response, err := uploader.Upload(
+				scope, *filename, file)
+			if err != nil {
+				return &UploadResponse{
+					Error: err.Error(),
+				}
 			}
+			return upload_response
 		}
-
-		return upload_response
 	}
 	return vfilter.Null{}
 
@@ -107,10 +109,13 @@ func uploadPluginFunc(scope *vfilter.Scope, args *vfilter.Dict) []vfilter.Row {
 			}
 			defer file.Close()
 
-			upload_response, err := uploader.Upload(
-				scope, filename, file)
-			if err != nil {
-				continue
+			stat, err := file.Stat()
+			if err == nil && !stat.IsDir() {
+				upload_response, err := uploader.Upload(
+					scope, filename, file)
+				if err != nil {
+					continue
+				}
 			}
 			result = append(result, upload_response)
 		}
