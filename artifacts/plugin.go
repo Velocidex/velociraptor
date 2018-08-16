@@ -45,7 +45,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 	request := &actions_proto.VQLCollectorArgs{}
 	err := Compile(self.leaf, request)
 	if err != nil {
-		scope.Log("Artifact %s invalid", strings.Join(self.prefix, "."))
+		scope.Log("Artifact %s invalid: %s",
+			strings.Join(self.prefix, "."), err.Error())
 		close(output_chan)
 		return output_chan
 	}
@@ -69,7 +70,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
 				scope.Log("Artifact %s invalid: %s",
-					strings.Join(self.prefix, "."), err.Error())
+					strings.Join(self.prefix, "."),
+					err.Error())
 				return
 			}
 

@@ -187,37 +187,31 @@ func (self _ParseStringWithRegexFunction) Name() string {
 	return "parse_string_with_regex"
 }
 
+type _RegexReplaceArg struct {
+	Source  string `vfilter:"required,field=source"`
+	Replace string `vfilter:"required,field=replace"`
+	Re      string `vfilter:"required,field=re"`
+}
+
 type _RegexReplace struct{}
 
 func (self _RegexReplace) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	source, pres := vfilter.ExtractString("source", args)
-	if !pres {
-		scope.Log("Expected arg 'source' as string")
-		return false
-	}
-
-	replace, pres := vfilter.ExtractString("replace", args)
-	if !pres {
-		scope.Log("Expected arg 'replace' as string")
-		return false
-	}
-
-	regex, pres := vfilter.ExtractString("re", args)
-	if !pres {
-		scope.Log("Expected arg 're' as string")
-		return false
-	}
-
-	re, err := regexp.Compile(*regex)
+	arg := &_RegexReplaceArg{}
+	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("Unable to compile regex %s", *regex)
+		scope.Log("%s: %s", self.Name(), err.Error())
+		return vfilter.Null{}
+	}
+	re, err := regexp.Compile(arg.Re)
+	if err != nil {
+		scope.Log("Unable to compile regex %s", arg.Re)
 		return vfilter.Null{}
 	}
 
-	return re.ReplaceAllString(*source, *replace)
+	return re.ReplaceAllString(arg.Source, arg.Replace)
 }
 
 func (self _RegexReplace) Name() string {

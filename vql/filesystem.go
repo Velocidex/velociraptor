@@ -65,6 +65,103 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	}
 }
 
+type ReadFileArgs struct {
+	Chunk     int      `vfilter:"optional,field=chunk"`
+	MaxLength int      `vfilter:"optional,field=max_length"`
+	Filenames []string `vfilter:"required,field=filenames"`
+}
+
+type ReadFileResponse struct {
+	Data     string
+	Offset   int64
+	Filename string
+}
+
+type ReadFilePlugin struct{}
+
+func (self ReadFilePlugin) processFile(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	arg *ReadFileArgs,
+	file string,
+	output_chan chan vfilter.Row) {
+	total_len := int64(0)
+	accessor := &glob.OSFileSystemAccessor{}
+	fd, err := accessor.Open(file)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
+		return
+	}
+	defer fd.Close()
+
+	buf := make([]byte, arg.Chunk)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		default:
+			n, err := fd.Read(buf)
+			if err != nil || n == 0 {
+				return
+			}
+
+			response := &ReadFileResponse{
+				Data:     string(buf[:n]),
+				Offset:   total_len,
+				Filename: file,
+			}
+			output_chan <- response
+			total_len += int64(n)
+		}
+		if arg.MaxLength > 0 &&
+			total_len > int64(arg.MaxLength) {
+			break
+		}
+	}
+
+}
+
+func (self ReadFilePlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	arg := &ReadFileArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
+		close(output_chan)
+		return output_chan
+	}
+
+	if arg.Chunk == 0 {
+		arg.Chunk = 4 * 1024 * 1024
+	}
+
+	go func() {
+		defer close(output_chan)
+		for _, file := range arg.Filenames {
+			self.processFile(ctx, scope, arg, file, output_chan)
+		}
+	}()
+
+	return output_chan
+}
+
+func (self ReadFilePlugin) Name() string {
+	return "read_file"
+}
+
+func (self ReadFilePlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "read_file",
+		Doc:     "Read files in chunks.",
+		RowType: type_map.AddType(ReadFileResponse{}),
+	}
+}
+
 type StatArgs struct {
 	Filename string `vfilter:"required,field=filename"`
 }
@@ -72,6 +169,7 @@ type StatArgs struct {
 func init() {
 	exportedPlugins = append(exportedPlugins,
 		&GlobPlugin{},
+		&ReadFilePlugin{},
 		vfilter.GenericListPlugin{
 			PluginName: "filesystems",
 			Function: func(

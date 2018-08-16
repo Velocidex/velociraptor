@@ -169,7 +169,10 @@ func Compile(artifact *artifacts_proto.Artifact,
 			// Verify the query's syntax.
 			vql, err := vfilter.Parse(query)
 			if err != nil {
-				return err
+				return errors.Wrap(
+					err, fmt.Sprintf(
+						"While parsing source query %d",
+						idx2))
 			}
 
 			query_name := fmt.Sprintf("%s_%d", prefix, idx2)
