@@ -6,6 +6,7 @@ package plugins
 
 import (
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
+	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )

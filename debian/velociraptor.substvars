@@ -1,3 +1,0 @@
-misc:Depends=lsb-base (>= 4.1+Debian11ubuntu7)
-shlibs:Depends=libc6 (>= 2.3.2)
-misc:Pre-Depends=

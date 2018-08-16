@@ -35,5 +35,9 @@ release:
 	    -o output/velociraptor ./bin/
 	strip output/velociraptor
 
+install: release
+	install -D output/velociraptor \
+                $(DESTDIR)$(prefix)/usr/bin/velociraptor
+
 clean:
 	rm -f gui/assets/ab0x.go

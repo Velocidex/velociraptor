@@ -28,6 +28,9 @@ var (
 )
 
 func doShowConfig() {
+	if *config_path == "" {
+		kingpin.Fatalf("Config file must be specified.")
+	}
 	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 

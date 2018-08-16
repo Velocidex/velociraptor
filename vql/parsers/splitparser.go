@@ -24,6 +24,7 @@ type _SplitRecordParserArgs struct {
 	compiled_regex       *regexp.Regexp
 	Columns              []string `vfilter:"optional,field=columns"`
 	First_row_is_headers bool     `vfilter:"optional,field=first_row_is_headers"`
+	Count                int      `vfilter:"optional,field=count"`
 }
 
 type _SplitRecordParser struct{}
@@ -52,7 +53,10 @@ func processFile(
 				return
 			}
 
-			items := arg.compiled_regex.Split(line, -1)
+			if arg.Count == 0 {
+				arg.Count = -1
+			}
+			items := arg.compiled_regex.Split(line, arg.Count)
 			// Need to make new columns.
 			if len(arg.Columns) == 0 {
 				if arg.First_row_is_headers {

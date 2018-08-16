@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -28,6 +29,53 @@ type _HttpPluginResponse struct {
 
 type _HttpPlugin struct{}
 
+func getHttpClient(arg *_HttpPluginRequest) *http.Client {
+	result := &http.Client{}
+	// It is a unix domain socket.
+	if strings.HasPrefix(arg.Url, "/") {
+		components := strings.Split(arg.Url, ":")
+		if len(components) == 1 {
+			components = append(components, "/")
+		}
+		result.Transport = &http.Transport{
+			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", components[0])
+			},
+		}
+		arg.Url = "http://unix" + components[1]
+	}
+	return result
+}
+
+func encodeParams(arg *_HttpPluginRequest, scope *vfilter.Scope) *url.Values {
+	data := url.Values{}
+	if arg.Params != nil {
+		for _, member := range scope.GetMembers(arg.Params) {
+			value, pres := scope.Associative(arg.Params, member)
+			if pres {
+				slice := reflect.ValueOf(value)
+				if slice.Type().Kind() == reflect.Slice {
+					for i := 0; i < slice.Len(); i++ {
+						value := slice.Index(i).Interface()
+						item, ok := value.(string)
+						if ok {
+							data.Add(member, item)
+							continue
+						}
+					}
+				}
+				switch value.(type) {
+				case vfilter.Null, *vfilter.Null:
+					continue
+				default:
+					data.Add(member, fmt.Sprintf("%v", value))
+				}
+			}
+		}
+	}
+	return &data
+}
+
 func (self *_HttpPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
@@ -49,35 +97,11 @@ func (self *_HttpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
-
-		data := url.Values{}
-		if arg.Params != nil {
-			for _, member := range scope.GetMembers(arg.Params) {
-				value, pres := scope.Associative(arg.Params, member)
-				if pres {
-					slice := reflect.ValueOf(value)
-					if slice.Type().Kind() == reflect.Slice {
-						for i := 0; i < slice.Len(); i++ {
-							value := slice.Index(i).Interface()
-							item, ok := value.(string)
-							if ok {
-								data.Add(member, item)
-								continue
-							}
-						}
-					}
-					switch value.(type) {
-					case vfilter.Null, *vfilter.Null:
-						continue
-					default:
-						data.Add(member, fmt.Sprintf("%v", value))
-					}
-				}
-			}
-		}
-		client := &http.Client{}
+		params := encodeParams(arg, scope)
+		client := getHttpClient(arg)
 		req, err := http.NewRequest(
-			arg.Method, arg.Url, strings.NewReader(data.Encode()))
+			arg.Method, arg.Url,
+			strings.NewReader(params.Encode()))
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return

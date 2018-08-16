@@ -31,12 +31,13 @@ type Repository struct {
 	loaded_dirs []string
 }
 
-func (self *Repository) LoadDirectory(dirname string) error {
+func (self *Repository) LoadDirectory(dirname string) (*int, error) {
+	count := 0
 	if utils.InString(&self.loaded_dirs, dirname) {
-		return nil
+		return &count, nil
 	}
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
-	return filepath.Walk(dirname,
+	return &count, filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return errors.WithStack(err)
@@ -49,6 +50,7 @@ func (self *Repository) LoadDirectory(dirname string) error {
 				}
 
 				self.data[artifact.Name] = artifact
+				count += 1
 			}
 			return nil
 		})
@@ -225,10 +227,12 @@ func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
 
 	logger := logging.NewLogger(config_obj)
 	if config_obj.Frontend.ArtifactsPath != "" {
-		logger.Info("Loading artifacts from %s", config_obj.Frontend.ArtifactsPath)
-		err := global_repository.LoadDirectory(config_obj.Frontend.ArtifactsPath)
+		count, err := global_repository.LoadDirectory(
+			config_obj.Frontend.ArtifactsPath)
 		switch errors.Cause(err).(type) {
-		// PathError is not fatal - it means we just cant load the directory.
+
+		// PathError is not fatal - it means we just
+		// cant load the directory.
 		case *os.PathError:
 			logger.Info("Unable to load artifacts from directory "+
 				"%s (skipping): %v", config_obj.Frontend.ArtifactsPath, err)
@@ -239,6 +243,8 @@ func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
 			// parse the artifacts themselves.
 			return nil, err
 		}
+		logger.Info("Loaded %d artifacts from %s",
+			*count, config_obj.Frontend.ArtifactsPath)
 	}
 	return global_repository, nil
 }

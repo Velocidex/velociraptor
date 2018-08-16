@@ -5,6 +5,7 @@ import (
 	"github.com/ghodss/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"regexp"
+	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -21,7 +22,12 @@ var (
 		"list", "Print all artifacts")
 
 	artifact_command_list_name = artifact_command_list.Arg(
-		"regex", "Regex of names to match.").String()
+		"regex", "Regex of names to match.").
+		HintAction(listArtifacts).String()
+
+	artifact_command_list_verbose_count = artifact_command_list.Flag(
+		"verbose", "Show more details (Use -v -vv for even more)").
+		Short('v').Counter()
 
 	artifact_command_collect = artifact_command.Command(
 		"collect", "Collect all artifacts")
@@ -36,6 +42,25 @@ var (
 		"regex", "Regex of artifact names to collect.").
 		Required().String()
 )
+
+func listArtifacts() []string {
+	result := []string{}
+	config_obj := get_config_or_default()
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return result
+	}
+	for _, name := range repository.List() {
+		result = append(result, name)
+	}
+	return result
+}
+
+func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
+	pattern = strings.Replace(pattern, "*", ".*", -1)
+	pattern = "^" + pattern + "$"
+	return regexp.Compile(pattern)
+}
 
 func collectArtifact(
 	config_obj *config.Config,
@@ -74,7 +99,7 @@ func getRepository(config_obj *config.Config) *artifacts.Repository {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {
-		err := repository.LoadDirectory(*artifact_definitions_dir)
+		_, err := repository.LoadDirectory(*artifact_definitions_dir)
 		if err != nil {
 			logging.NewLogger(config_obj).Error("Artifact LoadDirectory", err)
 		}
@@ -88,7 +113,7 @@ func doArtifactCollect() {
 	repository := getRepository(config_obj)
 	var name_regex *regexp.Regexp
 	if *artifact_command_collect_name != "" {
-		re, err := regexp.Compile(*artifact_command_collect_name)
+		re, err := getFilterRegEx(*artifact_command_collect_name)
 		kingpin.FatalIfError(err, "Artifact name regex not valid")
 
 		name_regex = re
@@ -120,7 +145,7 @@ func doArtifactList() {
 
 	var name_regex *regexp.Regexp
 	if *artifact_command_list_name != "" {
-		re, err := regexp.Compile(*artifact_command_list_name)
+		re, err := getFilterRegEx(*artifact_command_list_name)
 		kingpin.FatalIfError(err, "Artifact name regex not valid")
 
 		name_regex = re
@@ -129,6 +154,11 @@ func doArtifactList() {
 	for _, name := range repository.List() {
 		// Skip artifacts that do not match.
 		if name_regex != nil && name_regex.FindString(name) == "" {
+			continue
+		}
+
+		if *artifact_command_list_verbose_count == 0 {
+			fmt.Println(name)
 			continue
 		}
 
@@ -142,6 +172,10 @@ func doArtifactList() {
 
 		fmt.Printf("Definition %s:\n***********\n%v\n",
 			artifact.Name, string(res))
+
+		if *artifact_command_list_verbose_count <= 1 {
+			continue
+		}
 
 		request := &actions_proto.VQLCollectorArgs{}
 		err = artifacts.Compile(artifact, request)

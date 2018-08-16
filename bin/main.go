@@ -11,8 +11,10 @@ import (
 )
 
 var (
-	app         = kingpin.New("velociraptor", "An advanced incident response agent.")
-	config_path = app.Flag("config", "The configuration file.").String()
+	app = kingpin.New("velociraptor",
+		"An advanced incident response and monitoring agent.")
+	config_path = app.Flag("config", "The configuration file.").Short('c').
+			Envar("VELOCIRAPTOR_CONFIG").String()
 
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
@@ -50,6 +52,8 @@ func get_config_or_default() *config.Config {
 }
 
 func main() {
+	app.HelpFlag.Short('h')
+	app.UsageTemplate(kingpin.CompactUsageTemplate)
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	for _, command_handler := range command_handlers {

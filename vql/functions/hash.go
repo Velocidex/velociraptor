@@ -1,4 +1,4 @@
-package vql
+package functions
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"hash"
 	"io"
 	glob "www.velocidex.com/golang/velociraptor/glob"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,5 +90,5 @@ func (self HashFunction) Name() string {
 }
 
 func init() {
-	exportedFunctions = append(exportedFunctions, &HashFunction{})
+	vql_subsystem.RegisterFunction(&HashFunction{})
 }
