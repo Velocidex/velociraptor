@@ -2,10 +2,10 @@
 package vql
 
 import (
-	"bytes"
+	_ "bytes"
+	"context"
 	"os"
 	"www.velocidex.com/golang/velociraptor/binary"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -75,53 +75,94 @@ var (
 `
 )
 
-func extractUserRecords(
+type _UsersPluginArg struct {
+	File string `vfilter:"optional,field=file"`
+}
+
+type _UsersPlugin struct{}
+
+func (self _UsersPlugin) Call(
+	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) []vfilter.Row {
-	var result []vfilter.Row
-	filename := "/var/log/wtmp"
-	arg, pres := args.Get("filename")
-	if pres {
-		filename, _ = arg.(string)
-	}
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
 
-	file, err := os.Open(filename)
+	arg := &_UsersPluginArg{}
+	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		return result
-	}
-	defer file.Close()
-
-	profile := binary.NewProfile()
-	binary.AddModel(profile)
-
-	err = profile.ParseStructDefinitions(UTMP_PROFILE)
-	if err != nil {
-		return result
+		scope.Log("%s: %s", "users", err.Error())
+		close(output_chan)
+		return output_chan
 	}
 
-	// We make a copy of the data to avoid race
-	// conditions. Otherwise we might close the file before
-	// VFilter finishes analyzing the returned object and might
-	// require a new read. This only works because there are no
-	// free pointers.
-	for {
-		buf := make([]byte, profile.StructSize("utmp", 0, file))
-		_, err := file.Read(buf)
+	// Default location.
+	if arg.File == "" {
+		arg.File = "/var/log/wtmp"
+	}
+
+	go func() {
+		defer close(output_chan)
+		file, err := os.Open(arg.File)
 		if err != nil {
-			break
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return
 		}
-		reader := bytes.NewReader(buf)
-		obj := profile.Create("utmp", 0, reader)
-		result = append(result, obj)
-	}
 
-	return result
+		// Only close the file when the context (and the VQL
+		// query) is fully done because we are releasing
+		// objects which may reference the file. These objects
+		// may participate in WHERE clause and so will be
+		// referenced after the plugin is terminated.
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					file.Close()
+					return
+				}
+			}
+		}()
+
+		profile := binary.NewProfile()
+		binary.AddModel(profile)
+
+		err = profile.ParseStructDefinitions(UTMP_PROFILE)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return
+		}
+
+		options := make(map[string]interface{})
+		options["Target"] = "utmp"
+		array, err := profile.Create("Array", 0, file, options)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return
+		}
+		for {
+			value := array.Next()
+			if !value.IsValid() {
+				break
+			}
+
+			output_chan <- value
+		}
+	}()
+
+	return output_chan
+}
+
+func (self _UsersPlugin) Name() string {
+	return "users"
+}
+
+func (self _UsersPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "users",
+		Doc:  "List last logged in users based on wtmp records.",
+	}
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins,
-		vfilter.GenericListPlugin{
-			PluginName: "users",
-			Function:   extractUserRecords,
-		})
+	RegisterPlugin(&_UsersPlugin{})
 }

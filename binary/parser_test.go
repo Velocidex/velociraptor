@@ -6,7 +6,6 @@ import (
 	"fmt"
 	assert "github.com/stretchr/testify/assert"
 	"testing"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 var (
@@ -24,7 +23,6 @@ func TestIntegerParser(t *testing.T) {
 		offset: 0,
 		parser: profile.types["unsigned long long"],
 	}
-
 	assert.Equal(t, uint64(0x0807060504030201), base_obj.AsInteger())
 }
 
@@ -116,7 +114,9 @@ func TestUnpacking(t *testing.T) {
 		t.Fatalf(err.Error())
 	}
 
-	test_struct := profile.Create("TestStruct", 2, reader)
+	test_struct, err := profile.Create("TestStruct", 2, reader, nil)
+	assert.NoError(t, err)
+
 	assert.Equal(t, uint64(0x0c0b0a0908070605),
 		test_struct.Get("Field1").AsInteger())
 

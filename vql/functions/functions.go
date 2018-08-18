@@ -2,10 +2,37 @@ package functions
 
 import (
 	"context"
+	"encoding/base64"
 	"strconv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
+
+type _Base64Decode struct {
+	String string `vfilter:"required,field=string"`
+}
+
+func (self _Base64Decode) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_Base64Decode{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("%s: %s", self.Name(), err.Error())
+		return vfilter.Null{}
+	}
+
+	result, err := base64.StdEncoding.DecodeString(arg.String)
+	if err != nil {
+		return vfilter.Null{}
+	}
+	return string(result)
+}
+
+func (self _Base64Decode) Name() string {
+	return "base64decode"
+}
 
 type _ToIntArgs struct {
 	String string `vfilter:"required,field=string"`

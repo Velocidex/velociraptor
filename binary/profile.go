@@ -3,9 +3,9 @@ package binary
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	//utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 type _Fields map[string][]*json.RawMessage
@@ -86,40 +86,62 @@ func (self *Profile) ParseStructDefinitions(definitions string) error {
 				return err
 			}
 
+			// When we parse the JSON definition we place
+			// a delayed reference ParseAtOffset object as
+			// an intermediate. The struct will
+			// dereference its fields through the psuedo
+			// parser which will fetch the real parser
+			// dynamically.
 			parser := &ParseAtOffset{
 				offset:    offset,
 				name:      field_name,
 				profile:   self,
-				type_name: parser_name}
+				type_name: parser_name,
+			}
 
 			parser.SetName(field_name)
 			if len(params) == 2 {
-				err := parser.ParseArgs(&params[1])
-				if err != nil {
-					return err
-				}
+				parser.ParseArgs(&params[1])
 			}
 
-			struct_parser.AddParser(
-				field_name,
-				parser)
+			struct_parser.AddParser(field_name, parser)
 		}
 	}
 
 	return nil
 }
 
-func (self *Profile) Create(type_name string, offset int64, reader io.ReaderAt) Object {
-	parser, pres := self.types[type_name]
+// Create a new object of the specified type. For example:
+// type_name = "Array"
+// options = { "Target": "int"}
+func (self *Profile) Create(type_name string, offset int64,
+	reader io.ReaderAt, options map[string]interface{}) (Object, error) {
+	var parser Parser
+
+	profile_parser, pres := self.types[type_name]
 	if !pres {
-		return &ErrorObject{
-			fmt.Sprintf("Type name %s is not known.", type_name)}
+		return nil, errors.New(
+			fmt.Sprintf("Type name %s is not known.", type_name))
 	}
+
+	// We need a new copy of the parser since the params might be
+	// unique.
+	parser = profile_parser.Copy()
+
+	// Convert the options map into json.RawMessage so we can make
+	// the parser parse it.
+	message, err := json.Marshal(options)
+	if err != nil {
+		return nil, err
+	}
+	raw_message := json.RawMessage(message)
+	parser.ParseArgs(&raw_message)
 
 	return &BaseObject{
 		offset:    offset,
 		reader:    reader,
 		type_name: type_name,
 		name:      type_name,
-		parser:    parser}
+		parser:    parser,
+	}, nil
 }

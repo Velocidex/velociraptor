@@ -1,0 +1,15 @@
+name: Linux.Proc.Modules
+description: Module listing via /proc/modules.
+parameters:
+  - name: ProcModules
+    default: /proc/modules
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'linux'
+
+    queries:
+      - |
+        SELECT * from split_records(
+           filenames=ProcModules,
+           regex='\\s+',
+           columns=['Name', 'Size', 'UseCount', 'UsedBy', 'Status', 'Address'])

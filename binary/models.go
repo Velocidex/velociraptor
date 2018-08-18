@@ -6,44 +6,32 @@ import (
 )
 
 func AddModel(profile *Profile) {
-	profile.types["unsigned long long"] = &IntParser{
-		name: "unsigned long long",
-		converter: func(buf []byte) uint64 {
-			return uint64(binary.LittleEndian.Uint64(buf))
-		},
-	}
-	profile.types["unsigned short"] = &IntParser{
-		name: "unsigned short",
-		converter: func(buf []byte) uint64 {
-			return uint64(binary.LittleEndian.Uint16(buf))
-		},
-	}
-	profile.types["int8"] = &IntParser{
-		name: "int8",
-		converter: func(buf []byte) uint64 {
-			return uint64(buf[0])
-		},
-	}
-	profile.types["int16"] = &IntParser{
-		name: "int16",
-		converter: func(buf []byte) uint64 {
-			return uint64(binary.LittleEndian.Uint16(buf))
-		},
-	}
-	profile.types["int32"] = &IntParser{
-		name: "int32",
-		converter: func(buf []byte) uint64 {
-			return uint64(binary.LittleEndian.Uint32(buf))
-		},
-	}
-	profile.types["String"] = &StringParser{
-		type_name: "string",
-	}
 
-	profile.types["Enumeration"] = &Enumeration{
-		profile:   profile,
-		type_name: "Enumeration",
-	}
+	profile.types["unsigned long long"] = NewIntParser(
+		"unsigned long long",
+		func(buf []byte) uint64 {
+			return uint64(binary.LittleEndian.Uint64(buf))
+		})
+	profile.types["unsigned short"] = NewIntParser(
+		"unsigned short", func(buf []byte) uint64 {
+			return uint64(binary.LittleEndian.Uint16(buf))
+		})
+	profile.types["int8"] = NewIntParser(
+		"int8", func(buf []byte) uint64 {
+			return uint64(buf[0])
+		})
+	profile.types["int16"] = NewIntParser(
+		"int16", func(buf []byte) uint64 {
+			return uint64(binary.LittleEndian.Uint16(buf))
+		})
+	profile.types["int32"] = NewIntParser(
+		"int32", func(buf []byte) uint64 {
+			return uint64(binary.LittleEndian.Uint32(buf))
+		})
+	profile.types["String"] = NewStringParser("string")
+	profile.types["Enumeration"] = NewEnumeration("Enumeration", profile)
+
+	profile.types["Array"] = NewArrayParser("Array", "", profile, nil)
 
 	// Aliases
 	profile.types["int"] = profile.types["int32"]

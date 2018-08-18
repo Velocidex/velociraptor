@@ -8,8 +8,21 @@ import (
 	"io"
 	"sort"
 	"strings"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
+
+// Parsers are objects which know how to parse a particular
+// type. Parsers are instantiated once and reused many times. They act
+// upon an Object which represents a particular instance of a parser
+// in a particular offset.
+
+// Here is an example: A struct foo may have 3 members. There is a
+// Struct parser instantiated once which knows how to parse struct foo
+// (i.e. all its fiels and their offsets). Once instantiated and
+// stored in the Profile, the parser may be reused multiple times to
+// parse multiple foo structs - each time, it produces an Object.
+
+// The Object struct contains the offset, and the parser that is used
+// to parse it.
 
 type Parser interface {
 	SetName(name string)
@@ -34,7 +47,13 @@ type Getter interface {
 	Fields() []string
 }
 
+type Iterator interface {
+	Value(base Object) Object
+	Next(base Object) Object
+}
+
 type Object interface {
+	Name() string
 	AsInteger() uint64
 	AsString() string
 	Get(field string) Object
@@ -45,6 +64,7 @@ type Object interface {
 	IsValid() bool
 	Value() interface{}
 	Fields() []string
+	Next() Object
 }
 
 type BaseObject struct {
@@ -53,6 +73,10 @@ type BaseObject struct {
 	name      string
 	type_name string
 	parser    Parser
+}
+
+func (self *BaseObject) Name() string {
+	return self.name
 }
 
 func (self *BaseObject) Reader() io.ReaderAt {
@@ -92,11 +116,20 @@ func (self *BaseObject) Get(field string) Object {
 		return result
 	}
 
-	switch self.parser.(type) {
+	switch t := self.parser.(type) {
 	case Getter:
-		return self.parser.(Getter).Get(self, field)
+		return t.Get(self, field)
 	default:
-		return NewErrorObject("Parser does not support Get")
+		return NewErrorObject("Parser does not support Get for " + field)
+	}
+}
+
+func (self *BaseObject) Next() Object {
+	switch t := self.parser.(type) {
+	case Iterator:
+		return t.Next(self)
+	default:
+		return NewErrorObject("Parser does not support iteration")
 	}
 }
 
@@ -109,21 +142,17 @@ func (self *BaseObject) Size() int64 {
 }
 
 func (self *BaseObject) IsValid() bool {
-	buf := make([]byte, 8)
-	_, err := self.reader.ReadAt(buf, self.offset+self.Size())
-	if err != nil {
-		return false
-	}
-
-	return true
+	return self.parser.IsValid(self.offset, self.reader)
 }
 
 func (self *BaseObject) Value() interface{} {
-	switch self.parser.(type) {
+	switch t := self.parser.(type) {
 	case Stringer:
 		return self.AsString()
 	case Integerer:
 		return self.AsInteger()
+	case Iterator:
+		return t.Value(self)
 	default:
 		return self
 	}
@@ -147,12 +176,22 @@ func (self *BaseObject) MarshalJSON() ([]byte, error) {
 	return buf, err
 }
 
+// When an operation fails we return an error object. The error object
+// can continue to be used in all operations and it will just carry
+// itself over safely. This means that callers do not need to check
+// for errors all the time:
+
+// a.Get("field").Next().Get("field") -> ErrorObject
 type ErrorObject struct {
 	message string
 }
 
 func NewErrorObject(message string) *ErrorObject {
 	return &ErrorObject{message}
+}
+
+func (self *ErrorObject) Name() string {
+	return "Error: " + self.message
 }
 
 func (self *ErrorObject) Reader() io.ReaderAt {
@@ -164,6 +203,10 @@ func (self *ErrorObject) Offset() int64 {
 }
 
 func (self *ErrorObject) Get(field string) Object {
+	return self
+}
+
+func (self *ErrorObject) Next() Object {
 	return self
 }
 
@@ -195,31 +238,51 @@ func (self *ErrorObject) Fields() []string {
 	return []string{}
 }
 
-type IntParser struct {
-	type_name string
-	name      string
+// Baseclass for parsers.
+type BaseParser struct {
+	Name      string
 	size      int64
+	type_name string
+}
+
+func (self *BaseParser) SetName(name string) {
+	self.Name = name
+}
+
+func (self *BaseParser) DebugString(offset int64, reader io.ReaderAt) string {
+	return fmt.Sprintf("[%s] @ %#0x", self.type_name, offset)
+}
+
+func (self *BaseParser) ShortDebugString(offset int64, reader io.ReaderAt) string {
+	return fmt.Sprintf("[%s] @ %#0x", self.type_name, offset)
+}
+
+func (self *BaseParser) Size(offset int64, reader io.ReaderAt) int64 {
+	return self.size
+}
+
+func (self *BaseParser) IsValid(offset int64, reader io.ReaderAt) bool {
+	buf := make([]byte, self.size)
+	_, err := reader.ReadAt(buf, offset)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+// If a derived parser takes args. process them here.
+func (self *BaseParser) ParseArgs(args *json.RawMessage) error {
+	return nil
+}
+
+// Parse various sizes of ints.
+type IntParser struct {
+	*BaseParser
 	converter func(buf []byte) uint64
 }
 
-func (self *IntParser) Copy() Parser {
-	result := *self
-	return &result
-}
-
-func (self *IntParser) SetName(name string) {
-	self.name = name
-}
-
-func (self *IntParser) AsInteger(offset int64, reader io.ReaderAt) uint64 {
-	buf := make([]byte, 8)
-
-	_, err := reader.ReadAt(buf, offset)
-	if err != nil {
-		return 0
-	}
-
-	return self.converter(buf)
+func (self IntParser) Copy() Parser {
+	return &self
 }
 
 func (self *IntParser) DebugString(offset int64, reader io.ReaderAt) string {
@@ -231,39 +294,38 @@ func (self *IntParser) ShortDebugString(offset int64, reader io.ReaderAt) string
 	return fmt.Sprintf("%#0x", self.AsInteger(offset, reader))
 }
 
-func (self *IntParser) Size(offset int64, reader io.ReaderAt) int64 {
-	return self.size
-}
-
-func (self *IntParser) IsValid(offset int64, reader io.ReaderAt) bool {
+func (self *IntParser) AsInteger(offset int64, reader io.ReaderAt) uint64 {
 	buf := make([]byte, 8)
 
-	_, err := reader.ReadAt(buf, offset)
-	if err != nil {
-		return false
+	n, err := reader.ReadAt(buf, offset)
+	if n == 0 || err != nil {
+		return 0
 	}
-	return true
+	return self.converter(buf)
 }
 
-func (self *IntParser) ParseArgs(args *json.RawMessage) error {
-	return nil
+func NewIntParser(type_name string, converter func(buf []byte) uint64) *IntParser {
+	return &IntParser{&BaseParser{
+		type_name: type_name,
+	}, converter}
+}
+
+// Parses strings.
+type StringParserOptions struct {
+	Length int64
 }
 
 type StringParser struct {
-	type_name string
-	Name      string
-	options   struct {
-		Length int64
-	}
+	*BaseParser
+	options *StringParserOptions
 }
 
-func (self *StringParser) Copy() Parser {
-	result := *self
-	return &result
+func NewStringParser(type_name string) *StringParser {
+	return &StringParser{&BaseParser{type_name: type_name}, &StringParserOptions{}}
 }
 
-func (self *StringParser) SetName(name string) {
-	self.Name = name
+func (self StringParser) Copy() Parser {
+	return &self
 }
 
 func (self *StringParser) AsString(offset int64, reader io.ReaderAt) string {
@@ -287,18 +349,8 @@ func (self *StringParser) Size(offset int64, reader io.ReaderAt) int64 {
 	return int64(len(self.AsString(offset, reader)))
 }
 
-func (self *StringParser) IsValid(offset int64, reader io.ReaderAt) bool {
-	buf := make([]byte, 8)
-
-	_, err := reader.ReadAt(buf, offset)
-	if err != nil {
-		return false
-	}
-	return true
-}
-
 func (self *StringParser) DebugString(offset int64, reader io.ReaderAt) string {
-	return self.AsString(offset, reader)
+	return "[string '" + self.AsString(offset, reader) + "']"
 }
 
 func (self *StringParser) ShortDebugString(offset int64, reader io.ReaderAt) string {
@@ -306,53 +358,25 @@ func (self *StringParser) ShortDebugString(offset int64, reader io.ReaderAt) str
 }
 
 func (self *StringParser) ParseArgs(args *json.RawMessage) error {
-	err := json.Unmarshal(*args, &self.options)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal(*args, &self.options)
 }
 
 type StructParser struct {
-	size      int64
-	type_name string
-	Name      string
-	fields    map[string]Parser
+	*BaseParser
+	fields map[string]*ParseAtOffset
 }
 
-func (self *StructParser) Copy() Parser {
-	result := *self
-	return &result
-}
-
-func (self *StructParser) SetName(name string) {
-	self.Name = name
+func (self StructParser) Copy() Parser {
+	return &self
 }
 
 func (self *StructParser) Get(base Object, field string) Object {
 	parser, pres := self.fields[field]
 	if pres {
-		getter, ok := parser.(Getter)
-		if ok {
-			return getter.Get(base, field)
-		}
+		return parser.Get(base, field)
 	}
 
-	return NewErrorObject("Field not known.")
-}
-
-func (self *StructParser) Size(offset int64, reader io.ReaderAt) int64 {
-	return self.size
-}
-
-func (self *StructParser) IsValid(offset int64, reader io.ReaderAt) bool {
-	buf := make([]byte, 8)
-	_, err := reader.ReadAt(buf, offset+self.size)
-	if err != nil {
-		return false
-	}
-
-	return true
+	return NewErrorObject("Field " + field + " not known.")
 }
 
 func (self *StructParser) Fields() []string {
@@ -388,36 +412,33 @@ func (self *StructParser) ShortDebugString(offset int64, reader io.ReaderAt) str
 	return fmt.Sprintf("[%s] @ %#0x\n", self.type_name, offset)
 }
 
-func (self *StructParser) AddParser(field string, parser Parser) {
+func (self *StructParser) AddParser(field string, parser *ParseAtOffset) {
 	self.fields[field] = parser
 }
 
-func (self *StructParser) ParseArgs(args *json.RawMessage) error {
-	return nil
-}
-
 func NewStructParser(type_name string, size int64) *StructParser {
-	result := StructParser{
-		size:      size,
-		Name:      type_name,
-		type_name: type_name,
-		fields:    make(map[string]Parser)}
+	result := &StructParser{
+		&BaseParser{type_name: type_name, size: size},
+		make(map[string]*ParseAtOffset),
+	}
 
-	return &result
+	return result
 }
 
 type ParseAtOffset struct {
-	offset    int64
-	name      string
-	type_name string
-	profile   *Profile
-	parser    Parser
-	args      *json.RawMessage
-}
+	// Field offset within the struct.
+	offset int64
+	name   string
 
-func (self *ParseAtOffset) Copy() Parser {
-	result := *self
-	return &result
+	// The name of the parser to use and the params - will be
+	// dynamically resolved on first access.
+	type_name string
+	params    *json.RawMessage
+
+	profile *Profile
+
+	// A local cache of the resolved parser for this field.
+	parser Parser
 }
 
 func (self *ParseAtOffset) Get(base Object, field string) Object {
@@ -426,10 +447,14 @@ func (self *ParseAtOffset) Get(base Object, field string) Object {
 		return &ErrorObject{"Type not found"}
 	}
 
-	return &BaseObject{
-		offset: base.Offset() + self.offset,
-		reader: base.Reader(),
-		parser: parser}
+	result := &BaseObject{
+		name:      field,
+		type_name: self.type_name,
+		offset:    base.Offset() + self.offset,
+		reader:    base.Reader(),
+		parser:    parser,
+	}
+	return result
 }
 
 func (self *ParseAtOffset) Fields() []string {
@@ -447,12 +472,11 @@ func (self *ParseAtOffset) Fields() []string {
 func (self *ParseAtOffset) DebugString(offset int64, reader io.ReaderAt) string {
 	parser, pres := self.getParser(self.type_name)
 	if !pres {
-		return "Type not found"
+		return self.name + ": Type " + self.type_name + " not found"
 	}
-
 	return fmt.Sprintf(
 		"%#03x  %s  %s", self.offset, self.name,
-		parser.ShortDebugString(self.offset+offset, reader))
+		parser.DebugString(self.offset+offset, reader))
 }
 
 func (self *ParseAtOffset) ShortDebugString(offset int64, reader io.ReaderAt) string {
@@ -497,36 +521,37 @@ func (self *ParseAtOffset) getParser(name string) (Parser, bool) {
 		return nil, false
 	}
 
+	// Prepare a new parser based on the params.
 	self.parser = parser.Copy()
+	self.parser.ParseArgs(self.params)
+
 	return self.parser, true
 }
 
-func (self *ParseAtOffset) ParseArgs(args *json.RawMessage) error {
-	parser, ok := self.getParser(self.type_name)
-	if ok {
-		return parser.ParseArgs(args)
-	}
-	return nil
+func (self *ParseAtOffset) ParseArgs(args *json.RawMessage) {
+	self.params = args
+}
+
+type EnumerationOptions struct {
+	Choices map[string]string
+	Target  string
 }
 
 type Enumeration struct {
-	type_name string
-	Name      string
-	profile   *Profile
-	parser    Parser
-	options   struct {
-		Choices map[string]string
-		Target  string
-	}
+	*BaseParser
+	profile *Profile
+	parser  Parser
+	options *EnumerationOptions
 }
 
-func (self *Enumeration) Copy() Parser {
-	result := *self
-	return &result
+func NewEnumeration(type_name string, profile *Profile) *Enumeration {
+	return &Enumeration{&BaseParser{
+		type_name: type_name,
+	}, profile, nil, &EnumerationOptions{}}
 }
 
-func (self *Enumeration) SetName(name string) {
-	self.Name = name
+func (self Enumeration) Copy() Parser {
+	return &self
 }
 
 func (self *Enumeration) getParser() (Parser, bool) {
@@ -540,7 +565,7 @@ func (self *Enumeration) getParser() (Parser, bool) {
 		return nil, false
 	}
 
-	self.parser = parser.Copy()
+	self.parser = parser
 	return self.parser, true
 }
 
@@ -590,9 +615,5 @@ func (self *Enumeration) IsValid(offset int64, reader io.ReaderAt) bool {
 }
 
 func (self *Enumeration) ParseArgs(args *json.RawMessage) error {
-	err := json.Unmarshal(*args, &self.options)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal(*args, &self.options)
 }
