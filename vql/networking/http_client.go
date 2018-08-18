@@ -154,6 +154,7 @@ func (self _HttpPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 		Name:    "http_client",
 		Doc:     "Make a http request.",
 		RowType: type_map.AddType(&_HttpPluginResponse{}),
+		ArgType: type_map.AddType(&_HttpPluginRequest{}),
 	}
 }
 

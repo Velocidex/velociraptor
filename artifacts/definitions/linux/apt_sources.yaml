@@ -37,7 +37,7 @@ sources:
             Contains URL, base_uri and components.
          */
          LET deb_sources = SELECT *
-           FROM parse_with_regex(
+           FROM parse_records_with_regex(
              file=files.FullPath,
              regex="(?m)^ *(?P<Type>deb(-src)?) (?:\\[arch=(?P<Arch>[^\\]]+)\\] )?" +
                   "(?P<URL>https?://(?P<base_uri>[^ ]+))" +
@@ -74,7 +74,7 @@ sources:
                        "Origin: (?P<Maintainer>[^\\s]+)",
                        "Architectures: (?P<Architectures>[^\\s]+)",
                        "Components: (?P<Components>[^\\s]+)"]) as Record
-           FROM parse_with_regex(file=cache_file, regex="(?sm)(?P<Record>.+)")
+           FROM parse_records_with_regex(file=cache_file, regex="(?sm)(?P<Record>.+)")
 
        - |
          // Foreach row in the parsed cache file, collect the FileInfo too.

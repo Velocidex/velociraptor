@@ -9,9 +9,11 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     queries:
-      - LET data = SELECT parse_json(data=Content) as JSON
+      - |
+        LET data = SELECT parse_json(data=Content) as JSON
         FROM http_client(url=dockerSocket + ":unix/version")
-      - SELECT JSON.Version as Version,
+      - |
+        SELECT JSON.Version as Version,
                JSON.ApiVersion as ApiVersion,
                JSON.MinAPIVersion as MinAPIVersion,
                JSON.GitCommit as GitCommit,

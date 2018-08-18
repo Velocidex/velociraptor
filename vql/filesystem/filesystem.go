@@ -23,7 +23,7 @@ func (self GlobPlugin) Call(
 	arg := &GlobPluginArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("glob: %s", err.Error())
 		close(output_chan)
 		return output_chan
 	}
@@ -54,15 +54,12 @@ func (self GlobPlugin) Call(
 	return output_chan
 }
 
-func (self GlobPlugin) Name() string {
-	return "glob"
-}
-
 func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
 		RowType: type_map.AddType(glob.OSFileInfo{}),
+		ArgType: type_map.AddType(&GlobPluginArgs{}),
 	}
 }
 
@@ -160,6 +157,7 @@ func (self ReadFilePlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 		Name:    "read_file",
 		Doc:     "Read files in chunks.",
 		RowType: type_map.AddType(ReadFileResponse{}),
+		ArgType: type_map.AddType(&ReadFileArgs{}),
 	}
 }
 
@@ -211,5 +209,7 @@ func init() {
 				return result
 			},
 			RowType: &glob.OSFileInfo{},
+			ArgType: &StatArgs{},
+			Doc:     "Get file information. Unlike glob() this does not support wildcards.",
 		})
 }

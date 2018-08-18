@@ -112,9 +112,10 @@ func doQuery() {
 
 func doExplain(plugin string) {
 	result := vfilter.NewDict()
-	type_map := make(vfilter.TypeMap)
+	type_map := vfilter.NewTypeMap()
 	scope := vql_subsystem.MakeScope()
-	if pslist_info, pres := scope.Info(&type_map, plugin); pres {
+	pslist_info, pres := scope.Info(type_map, plugin)
+	if pres {
 		result.Set(plugin+"_info", pslist_info)
 		result.Set("type_map", type_map)
 	}

@@ -55,5 +55,7 @@ func init() {
 				return result
 			},
 			RowType: ExtendedFileSystemInfo{},
+			ArgType: &PartitionsArgs{},
+			Doc:     "List all partititions",
 		})
 }

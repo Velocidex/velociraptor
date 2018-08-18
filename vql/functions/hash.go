@@ -36,7 +36,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	arg := &HashFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("hash: %s", err.Error())
 		return false
 	}
 
@@ -85,8 +85,12 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 }
 
-func (self HashFunction) Name() string {
-	return "hash"
+func (self HashFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "hash",
+		Doc:     "Calculate the hash of a file.",
+		ArgType: type_map.AddType(&HashFunctionArgs{}),
+	}
 }
 
 func init() {

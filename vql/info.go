@@ -31,5 +31,6 @@ func init() {
 				return result
 			},
 			RowType: InfoStat{},
+			Doc:     "Get information about the running host.",
 		})
 }

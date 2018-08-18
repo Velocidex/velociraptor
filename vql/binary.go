@@ -147,8 +147,9 @@ func (self _BinaryParserPlugin) Name() string {
 
 func (self _BinaryParserPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "binary_parse",
-		Doc:  "List last logged in users based on wtmp records.",
+		Name:    "binary_parse",
+		Doc:     "List last logged in users based on wtmp records.",
+		ArgType: type_map.AddType(&_BinaryParserPluginArg{}),
 	}
 }
 

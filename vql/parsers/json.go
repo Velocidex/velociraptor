@@ -1,30 +1,40 @@
-package vql
+package parsers
 
 import (
 	"context"
 	"encoding/json"
 	"strings"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
+type ParseJsonFunctionArg struct {
+	Data string `vfilter:"required,field=data"`
+}
 type ParseJsonFunction struct{}
 
-func (self ParseJsonFunction) Name() string {
-	return "parse_json"
+func (self ParseJsonFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "parse_json",
+		Doc:     "Parse a JSON string into an object.",
+		ArgType: type_map.AddType(&ParseJsonFunctionArg{}),
+	}
 }
 
 func (self ParseJsonFunction) Call(
 	ctx context.Context, scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	data, ok := vfilter.ExtractString("data", args)
-	if !ok {
-		scope.Log("parse_json: Expecting a string 'data' arg")
+	arg := &ParseJsonFunctionArg{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("parse_json: %v", err)
 		return &vfilter.Null{}
 	}
+
 	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(*data), &result)
+	err = json.Unmarshal([]byte(arg.Data), &result)
 	if err != nil {
-		scope.Log("parse_json: %s", err.Error())
+		scope.Log("parse_json: %v", err)
 		return &vfilter.Null{}
 	}
 	return result
@@ -77,6 +87,6 @@ func (self _MapInterfaceAssociativeProtocol) GetMembers(
 }
 
 func init() {
-	exportedFunctions = append(exportedFunctions, &ParseJsonFunction{})
-	exportedProtocolImpl = append(exportedProtocolImpl, &_MapInterfaceAssociativeProtocol{})
+	vql_subsystem.RegisterFunction(&ParseJsonFunction{})
+	vql_subsystem.RegisterProtocol(&_MapInterfaceAssociativeProtocol{})
 }

@@ -79,7 +79,7 @@ func (self _ParseFileWithRegex) Call(
 	arg := &_ParseFileWithRegexArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("parse_records_with_regex: %s", err.Error())
 		close(output_chan)
 		return output_chan
 	}
@@ -114,14 +114,11 @@ func (self _ParseFileWithRegex) Call(
 	return output_chan
 }
 
-func (self _ParseFileWithRegex) Name() string {
-	return "parse_with_regex"
-}
-
 func (self _ParseFileWithRegex) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "parse_with_regex",
-		Doc:  "Parses a file with a set of regexp and yields matches",
+		Name:    "parse_records_with_regex",
+		Doc:     "Parses a file with a set of regexp and yields matches as records.",
+		ArgType: type_map.AddType(&_ParseFileWithRegexArgs{}),
 	}
 }
 
@@ -138,7 +135,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	arg := &_ParseStringWithRegexFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("parse_string_with_regex: %s", err.Error())
 		return vfilter.Null{}
 	}
 	row := vfilter.NewDict()
@@ -184,8 +181,13 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	return row
 }
 
-func (self _ParseStringWithRegexFunction) Name() string {
-	return "parse_string_with_regex"
+func (self _ParseStringWithRegexFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "parse_string_with_regex",
+		Doc: "Parse a string with a set of regex and extract fields. Returns " +
+			"a dict with fields populated from all regex capture variables.",
+		ArgType: type_map.AddType(&_ParseStringWithRegexFunctionArgs{}),
+	}
 }
 
 type _RegexReplaceArg struct {
@@ -203,7 +205,7 @@ func (self _RegexReplace) Call(
 	arg := &_RegexReplaceArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("regex_replace: %s", err.Error())
 		return vfilter.Null{}
 	}
 	re, err := regexp.Compile(arg.Re)
@@ -215,8 +217,12 @@ func (self _RegexReplace) Call(
 	return re.ReplaceAllString(arg.Source, arg.Replace)
 }
 
-func (self _RegexReplace) Name() string {
-	return "regex_replace"
+func (self _RegexReplace) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "regex_replace",
+		Doc:     "Search and replace a string with a regexp.",
+		ArgType: type_map.AddType(&_RegexReplaceArg{}),
+	}
 }
 
 func init() {

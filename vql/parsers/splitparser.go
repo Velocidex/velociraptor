@@ -139,8 +139,9 @@ func (self _SplitRecordParser) Name() string {
 
 func (self _SplitRecordParser) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "split_records",
-		Doc:  "Parses files by splitting lines into records.",
+		Name:    "split_records",
+		Doc:     "Parses files by splitting lines into records.",
+		ArgType: type_map.AddType(&_SplitRecordParserArgs{}),
 	}
 }
 

@@ -29,10 +29,10 @@ sources:
                  "(?P<Command>.+)$"]) as Record
 
             /* Read lines from the file and filter ones that start with "#" */
-        FROM split_records(
-           filenames=FullPath,
-           regex="\n", columns=["data"]) WHERE not data =~ "^\\s*#"
-        }) WHERE Record.Command
+            FROM split_records(
+               filenames=FullPath,
+               regex="\n", columns=["data"]) WHERE not data =~ "^\\s*#"
+            }) WHERE Record.Command
 
       - |
         SELECT Record.Event AS Event,

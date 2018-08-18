@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -80,6 +81,7 @@ func (self *Repository) List() []string {
 	for k, _ := range self.data {
 		result = append(result, k)
 	}
+	sort.Strings(result)
 	return result
 }
 
@@ -221,9 +223,20 @@ func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
 }
 
+type init_function func(*config.Config) error
+
+var init_registry []init_function
+
 func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
 	mu.Lock()
 	defer mu.Unlock()
+
+	for _, function := range init_registry {
+		err := function(config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	logger := logging.NewLogger(config_obj)
 	if config_obj.Frontend.ArtifactsPath != "" {

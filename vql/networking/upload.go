@@ -22,6 +22,9 @@ import (
 
 // let files = select * from glob(globs="/bin/*") where Size > 100
 // select upload(files=FullPath) from files
+type UploadFunctionArgs struct {
+	File string `vfilter:"required,field=file"`
+}
 type UploadFunction struct{}
 
 func (self *UploadFunction) Call(ctx context.Context,
@@ -33,21 +36,20 @@ func (self *UploadFunction) Call(ctx context.Context,
 		scope.Log("upload: Uploader not configured.")
 		return vfilter.Null{}
 	}
-
 	uploader, ok := uploader_obj.(Uploader)
 	if ok {
-		// Extract the glob from the args.
-		filename, ok := vfilter.ExtractString("file", args)
-		if !ok || filename == nil {
-			scope.Log("upload: Expecting a 'file' arg")
+
+		arg := &UploadFunctionArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("upload: %s", err.Error())
 			return vfilter.Null{}
 		}
-
 		accessor := glob.OSFileSystemAccessor{}
-		file, err := accessor.Open(*filename)
+		file, err := accessor.Open(arg.File)
 		if err != nil {
 			scope.Log("upload: Unable to open %s: %s",
-				filename, err.Error())
+				arg.File, err.Error())
 			return &UploadResponse{
 				Error: err.Error(),
 			}
@@ -57,7 +59,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		stat, err := file.Stat()
 		if err == nil && !stat.IsDir() {
 			upload_response, err := uploader.Upload(
-				scope, *filename, file)
+				scope, arg.File, file)
 			if err != nil {
 				return &UploadResponse{
 					Error: err.Error(),
@@ -70,66 +72,16 @@ func (self *UploadFunction) Call(ctx context.Context,
 
 }
 
-func (self UploadFunction) Name() string {
-	return "upload"
-}
-
-// The upload plugin uploads the files to the server using the
-// configured uploader.
-
-// Args:
-//   - files: A series of filenames to upload.
-
-// Example:
-//   SELECT * from upload(files= { SELECT FullPath FROM glob(globs=['/tmp/*.txt']) })
-func uploadPluginFunc(scope *vfilter.Scope, args *vfilter.Dict) []vfilter.Row {
-	result := []vfilter.Row{}
-	uploader_obj, ok := scope.Resolve("$uploader")
-	if !ok {
-		scope.Log("upload: Uploader not configured.")
-		return result
+func (self UploadFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "upload",
+		Doc: "Upload a file to the upload service. For a Velociraptor " +
+			"client this will upload the file into the flow and store " +
+			"it in the server's file store.",
+		ArgType: type_map.AddType(&UploadFunctionArgs{}),
 	}
-
-	uploader, ok := uploader_obj.(Uploader)
-	if ok {
-		// Extract the glob from the args.
-		files, ok := vfilter.ExtractStringArray(
-			scope, "files", args)
-		if !ok {
-			scope.Log("upload: Expecting a 'files' arg")
-			return result
-		}
-
-		for _, filename := range files {
-			accessor := glob.OSFileSystemAccessor{}
-			file, err := accessor.Open(filename)
-			if err != nil {
-				scope.Log("upload: Unable to open %s: %s",
-					filename, err.Error())
-				continue
-			}
-			defer file.Close()
-
-			stat, err := file.Stat()
-			if err == nil && !stat.IsDir() {
-				upload_response, err := uploader.Upload(
-					scope, filename, file)
-				if err != nil {
-					continue
-				}
-				result = append(result, upload_response)
-			}
-		}
-	}
-	return result
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(
-		&vfilter.GenericListPlugin{
-			PluginName: "upload",
-			RowType:    UploadResponse{},
-			Function:   uploadPluginFunc,
-		})
 	vql_subsystem.RegisterFunction(&UploadFunction{})
 }

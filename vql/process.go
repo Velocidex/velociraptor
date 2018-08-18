@@ -61,5 +61,6 @@ func init() {
 				return result
 			},
 			RowType: process.Process{},
+			Doc:     "List processes",
 		})
 }

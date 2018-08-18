@@ -24,7 +24,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	arg := &GrepFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("grep: %s", err.Error())
 		return false
 	}
 
@@ -92,8 +92,12 @@ func (self *GrepFunction) Call(ctx context.Context,
 	}
 }
 
-func (self GrepFunction) Name() string {
-	return "grep"
+func (self GrepFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "grep",
+		Doc:     "Search a file for keywords.",
+		ArgType: type_map.AddType(&GrepFunctionArgs{}),
+	}
 }
 
 func init() {

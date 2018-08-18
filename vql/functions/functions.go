@@ -8,18 +8,20 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-type _Base64Decode struct {
+type _Base64DecodeArgs struct {
 	String string `vfilter:"required,field=string"`
 }
+
+type _Base64Decode struct{}
 
 func (self _Base64Decode) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	arg := &_Base64Decode{}
+	arg := &_Base64DecodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("base64decode: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -30,8 +32,11 @@ func (self _Base64Decode) Call(
 	return string(result)
 }
 
-func (self _Base64Decode) Name() string {
-	return "base64decode"
+func (self _Base64Decode) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "base64decode",
+		ArgType: type_map.AddType(&_Base64DecodeArgs{}),
+	}
 }
 
 type _ToIntArgs struct {
@@ -47,7 +52,7 @@ func (self _ToInt) Call(
 	arg := &_ToIntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Log("atoi: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -55,8 +60,12 @@ func (self _ToInt) Call(
 	return result
 }
 
-func (self _ToInt) Name() string {
-	return "atoi"
+func (self _ToInt) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "atoi",
+		Doc:     "Convert a string to an int.",
+		ArgType: type_map.AddType(&_ToIntArgs{}),
+	}
 }
 
 func init() {

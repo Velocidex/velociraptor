@@ -20,7 +20,7 @@ sources:
                    'Version:\\s(?P<Version>.+)',
                    'Source:\\s(?P<Source>.+)',
                    'Architecture:\\s(?P<Architecture>.+)']) as Record
-            FROM parse_with_regex(
+            FROM parse_records_with_regex(
                    file=linuxDpkgStatus,
                    regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
       - |

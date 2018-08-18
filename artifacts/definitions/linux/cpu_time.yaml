@@ -9,14 +9,16 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     queries:
-      - LET raw = SELECT * FROM split_records(
+      - |
+        LET raw = SELECT * FROM split_records(
            filenames=procStat,
            regex=' +',
            columns=['core', 'user', 'nice', 'system',
                     'idle', 'iowait', 'irq', 'softirq',
                     'steal', 'guest', 'guest_nice'])
         WHERE core =~ 'cpu.+'
-      - SELECT core AS Core,
+      - |
+        SELECT core AS Core,
                atoi(string=user) as User,
                atoi(string=nice) as Nice,
                atoi(string=system) as System,

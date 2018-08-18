@@ -23,5 +23,6 @@ func init() {
 				return result
 			},
 			RowType: net.InterfaceStat{},
+			Doc:     "List all active interfaces.",
 		})
 }
