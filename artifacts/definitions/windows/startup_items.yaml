@@ -38,23 +38,26 @@ sources:
 
       - |
         LET registry_runners = SELECT Name, FullPath, Data as Command, if(
-             condition={
-                  SELECT Enabled from approved
-                  WHERE Name = ApprovedName
-             },
-             then="enabled", else="disabled") as Enabled
-        from glob(
-           globs=split(string=runKeyGlobs, sep="[, ]+"), accessor="reg")
+           condition={
+                SELECT Enabled from approved
+                WHERE Name = ApprovedName
+           },
+           then="enabled", else="disabled") as Enabled
+        FROM glob(
+           globs=split(string=runKeyGlobs, sep="[, ]+"),
+           accessor="reg")
 
       - |
         LET file_runners = SELECT * FROM foreach(
-        row={
-           SELECT Name, FullPath
-           FROM glob(globs=split(string=startupFolderDirectories, sep=",\\s*"))
-        }, query={
-           SELECT Name, FullPath, "enable" as Enabled,
+           row={
+              SELECT Name, FullPath
+              FROM glob(
+                 globs=split(string=startupFolderDirectories,
+                 sep=",\\s*"))
+           }, query={
+              SELECT Name, FullPath, "enable" as Enabled,
                   encode(string=Data, type='utf16') as Command
-           FROM read_file(filenames=FullPath)
-        })
-      - |
-        SELECT * from chain(first=registry_runners, second=file_runners)
+              FROM read_file(filenames=FullPath)
+           })
+
+      - SELECT * from chain(first=registry_runners, second=file_runners)

@@ -8,7 +8,7 @@ sources:
       SELECT OS From info() where OS = 'linux'
     queries:
       - |
-        // For each user on the system, search for authorized_keys files.
+        // For each user on the system, search for known_hosts files.
         LET authorized_keys = SELECT * from foreach(
           row={
              SELECT Uid, User, Homedir from Artifact.Linux.Sys.Users()
@@ -18,8 +18,7 @@ sources:
                globs=Homedir + '/' + sshKnownHostsFiles)
           })
       - |
-        // For each authorized keys file, extract each line on a different row.
-        // Note: This duplicates the path, user and uid on each key line.
+        // For each known_hosts file, extract each line on a different row.
         SELECT * from foreach(
           row=authorized_keys,
           query={
