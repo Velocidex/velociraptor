@@ -1,0 +1,14 @@
+pkg: assets
+
+# We assume we are run from the toplevel directory:
+# fileb0x gui/b0x.yaml
+dest: "artifacts/assets/"
+
+fmt: false
+compression:
+    compress: true
+
+output: "ab0x.go"
+custom:
+  - files:
+      - "artifacts/definitions/**/*.yaml"

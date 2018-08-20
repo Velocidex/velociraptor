@@ -272,11 +272,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2455630696ece2771aab91b25300a375df10b948d43d1b565feda5d89afd2bde"
+  digest = "1:9b868d732810ef51c9e4cdc12178961a969ef1be671180777e7736279105d613"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
+    "windows/registry",
   ]
   pruneopts = "UT"
   revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
@@ -409,6 +410,7 @@
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
     "golang.org/x/net/webdav",
+    "golang.org/x/sys/windows/registry",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",

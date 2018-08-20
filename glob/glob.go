@@ -35,15 +35,6 @@ type ReadSeekCloser interface {
 	Stat() (os.FileInfo, error)
 }
 
-// Interface for accessing the filesystem. Used for dependency
-// injection.
-type FileSystemAccessor interface {
-	ReadDir(path string) ([]FileInfo, error)
-	Open(path string) (ReadSeekCloser, error)
-	PathSep() string
-	Lstat(filename string) (FileInfo, error)
-}
-
 type _PathFilterer interface {
 	Match(f FileInfo) bool
 }
@@ -98,7 +89,7 @@ func NewGlobber() Globber {
 }
 
 // Add a new pattern to the filter tree.
-func (self *Globber) Add(pattern string, pathsep string) error {
+func (self *Globber) Add(pattern string, pathsep *regexp.Regexp) error {
 	var brace_expanded []string
 	self._brace_expansion(pattern, &brace_expanded)
 
@@ -112,7 +103,7 @@ func (self *Globber) Add(pattern string, pathsep string) error {
 	return nil
 }
 
-func (self *Globber) _add_brace_expanded(pattern string, pathsep string) error {
+func (self *Globber) _add_brace_expanded(pattern string, pathsep *regexp.Regexp) error {
 	// Convert the pattern into path components.
 	filter, err := convert_glob_into_path_components(pattern, pathsep)
 	if err == nil {
@@ -307,11 +298,11 @@ var (
 // /home/test**/*exe -> [{path: 'home', type: "LITERAL",
 //                       {path: 'test.*\\Z(?ms)', type: "RECURSIVE",
 // 			 {path: '.*exe\\Z(?ms)', type="REGEX"}]]
-func convert_glob_into_path_components(pattern string, path_sep string) (
+func convert_glob_into_path_components(pattern string, path_sep *regexp.Regexp) (
 	[]_PathFilterer, error) {
 	var result []_PathFilterer
 
-	for _, path_component := range strings.Split(pattern, path_sep) {
+	for _, path_component := range path_sep.Split(pattern, -1) {
 		if len(path_component) == 0 {
 			continue
 		}

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"testing"
@@ -45,7 +46,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 func TestConvertToPathComponent(t *testing.T) {
 	for _, fixture := range pathComponentsTestFixture {
 		if components, err := convert_glob_into_path_components(
-			fixture.pattern, "/"); err == nil {
+			fixture.pattern, regexp.MustCompile("/")); err == nil {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
 			}
@@ -99,7 +100,6 @@ type MockFileSystemAccessor []string
 func (self MockFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
-func (self MockFileSystemAccessor) PathSep() string { return "/" }
 
 func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	seen := []string{}
@@ -126,6 +126,10 @@ func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 
 func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
+}
+
+func (self MockFileSystemAccessor) PathSep() *regexp.Regexp {
+	return regexp.MustCompile("/")
 }
 
 var _GlobFixture = []struct {
@@ -176,13 +180,14 @@ func TestGlobWithContext(t *testing.T) {
 
 		globber := &Globber{}
 		for _, pattern := range fixture.patterns {
-			err := globber.Add(pattern, "/")
+			err := globber.Add(pattern, regexp.MustCompile("/"))
 			if err != nil {
 				t.Fatalf("Failed %v", err)
 			}
 		}
 
-		output_chan := globber.ExpandWithContext(ctx, "/", fs_accessor)
+		output_chan := globber.ExpandWithContext(
+			ctx, "/", fs_accessor)
 		for row := range output_chan {
 			returned = append(returned, row.FullPath())
 		}

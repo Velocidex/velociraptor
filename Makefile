@@ -11,14 +11,19 @@ LDFLAGS := \
    -X www.velocidex.com/golang/velociraptor/config.build_time=$(DATE) \
    -X www.velocidex.com/golang/velociraptor/config.commit_hash=$(COMMIT)
 
+# Devel tag means we read everything from the local filesystem. We
+# assume the devel binary is run from the source tree.
+
 # Just regular binaries for local testing. The GUI will be serving
 # files from the filesystem.
 build:
 	GOOS=linux GOARCH=amd64 \
             go build \
+            -tags devel \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
 windows:
+	fileb0x artifacts/b0x.yaml
 	GOOS=windows GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
@@ -27,7 +32,7 @@ windows:
 # Build release binaries. The GUI will embed assets and ship with
 # everything in it.
 release:
-	fileb0x gui/b0x.yaml
+	fileb0x gui/b0x.yaml artifacts/b0x.yaml
 	GOOS=linux GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \

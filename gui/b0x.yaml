@@ -32,6 +32,3 @@ custom:
       - "**/*~"
       - "**/*.js"
       - "**/*.scss"
-
-  - files:
-      - "artifacts/definitions/**/*.yaml"

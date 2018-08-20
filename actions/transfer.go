@@ -29,7 +29,13 @@ func (self *TransferBuffer) Run(
 		return
 	}
 
-	accessor := glob.OSFileSystemAccessor{}
+	scheme, err := GetSchemeFromPathSpec(arg.Pathspec)
+	if err != nil {
+		responder.RaiseError(err.Error())
+		return
+	}
+
+	accessor := glob.GetAccessor(scheme)
 	file, err := accessor.Open(*path)
 	if err != nil {
 		responder.RaiseError(err.Error())

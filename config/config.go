@@ -68,7 +68,6 @@ func GetDefaultConfig() *Config {
 				BindAddress:     "127.0.0.1",
 				BindPort:        8000,
 				ClientLeaseTime: 600,
-				ArtifactsPath:   "artifacts/definitions",
 			},
 			Datastore: &api_proto.DatastoreConfig{
 				Implementation:     "FileBaseDataStore",

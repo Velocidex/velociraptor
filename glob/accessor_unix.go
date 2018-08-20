@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"syscall"
 	"time"
 )
@@ -105,6 +106,10 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return file, err
 }
 
-func (self *OSFileSystemAccessor) PathSep() string {
-	return "/"
+func (self OSFileSystemAccessor) PathSep() *regexp.Regexp {
+	return regexp.MustCompile("/")
+}
+
+func init() {
+	Register("file", &OSFileSystemAccessor{})
 }

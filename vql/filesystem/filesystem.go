@@ -9,7 +9,8 @@ import (
 )
 
 type GlobPluginArgs struct {
-	Globs []string `vfilter:"required,field=globs"`
+	Globs    []string `vfilter:"required,field=globs"`
+	Accessor string   `vfilter:"optional,field=accessor"`
 }
 
 type GlobPlugin struct{}
@@ -28,15 +29,15 @@ func (self GlobPlugin) Call(
 		return output_chan
 	}
 
-	accessor := &glob.OSFileSystemAccessor{}
+	accessor := glob.GetAccessor(arg.Accessor)
 	for _, item := range arg.Globs {
-		globber.Add(item, "/")
+		globber.Add(item, accessor.PathSep())
 	}
 
 	go func() {
 		defer close(output_chan)
 		file_chan := globber.ExpandWithContext(
-			ctx, accessor.PathSep(), accessor)
+			ctx, "/", accessor)
 		for {
 			select {
 			case <-ctx.Done():

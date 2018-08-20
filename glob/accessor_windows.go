@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -178,8 +179,13 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return file, err
 }
 
-func (self *OSFileSystemAccessor) PathSep() string {
-	return "\\"
+func (self *OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
+	return &DrivePath{"\\"}, nil
+}
+
+// We accept both / and \ as a path separator
+func (self *OSFileSystemAccessor) PathSep() *regexp.Regexp {
+	return regexp.MustCompile("[\\\\/]")
 }
 
 // Glob sends us paths in normal form which we need to convert to
@@ -187,4 +193,8 @@ func (self *OSFileSystemAccessor) PathSep() string {
 // leading /.
 func normalize_path(path string) string {
 	return strings.Replace(path, "/", "\\", -1)
+}
+
+func init() {
+	Register("file", &OSFileSystemAccessor{})
 }

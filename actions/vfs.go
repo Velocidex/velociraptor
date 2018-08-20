@@ -37,6 +37,18 @@ func GetPathFromPathSpec(pathspec *actions_proto.PathSpec) (*string, error) {
 	return &full_path, nil
 }
 
+func GetSchemeFromPathSpec(pathspec *actions_proto.PathSpec) (string, error) {
+	switch pathspec.Pathtype {
+	case actions_proto.PathSpec_OS:
+		return "file", nil
+	case actions_proto.PathSpec_REGISTRY:
+		return "reg", nil
+	default:
+		return "", errors.New("Unknown pathspec")
+	}
+
+}
+
 func LastPathspec(pathspec *actions_proto.PathSpec) *actions_proto.PathSpec {
 	i := pathspec
 	for {

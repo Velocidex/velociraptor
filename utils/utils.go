@@ -37,6 +37,7 @@ func Normalize_windows_path(filename string) string {
 
 func hard_wrap(text string, colBreak int) string {
 	text = strings.TrimSpace(text)
+	text = strings.Replace(text, "\r\n", "\n", -1)
 	wrapped := ""
 	var i int
 	for i = 0; len(text[i:]) > colBreak; i += colBreak {

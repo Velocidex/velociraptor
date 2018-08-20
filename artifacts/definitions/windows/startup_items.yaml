@@ -1,0 +1,60 @@
+name: Windows.Sys.StartupItems
+description: Applications that will be started up from the various run key locations.
+reference: |
+  https://docs.microsoft.com/en-us/windows/desktop/setupapi/run-and-runonce-registry-keys
+parameters:
+  - name: runKeyGlobs
+    default: >
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
+      HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
+      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
+      HKEY_USERS\*\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
+      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
+  - name: startupApprovedGlobs
+    default: >-
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**,
+      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**
+  - name: startupFolderDirectories
+    default: >
+      C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/**,
+      C:/Users/*/AppData/Roaming/Microsoft/Windows/StartMenu/Programs/Startup/**
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        /* We need to search this multiple times so we materialize it
+           into a variable (using the <= operator)
+         */
+        LET approved <=
+           SELECT Name as ApprovedName,
+                  encode(string=Data, type="hex") as Enabled
+           FROM glob(globs=split(
+                     string=startupApprovedGlobs, sep="[, ]+"),
+                     accessor="reg")
+           WHERE Enabled =~ "^0[0-9]0+$"
+
+      - |
+        LET registry_runners = SELECT Name, FullPath, Data as Command, if(
+             condition={
+                  SELECT Enabled from approved
+                  WHERE Name = ApprovedName
+             },
+             then="enabled", else="disabled") as Enabled
+        from glob(
+           globs=split(string=runKeyGlobs, sep="[, ]+"), accessor="reg")
+
+      - |
+        LET file_runners = SELECT * FROM foreach(
+        row={
+           SELECT Name, FullPath
+           FROM glob(globs=split(string=startupFolderDirectories, sep=",\\s*"))
+        }, query={
+           SELECT Name, FullPath, "enable" as Enabled,
+                  encode(string=Data, type='utf16') as Command
+           FROM read_file(filenames=FullPath)
+        })
+      - |
+        SELECT * from chain(first=registry_runners, second=file_runners)

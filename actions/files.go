@@ -1,11 +1,10 @@
 package actions
 
 import (
-	"io/ioutil"
-	"os"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	glob "www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
@@ -28,7 +27,14 @@ func (self *StatFile) Run(
 		return
 	}
 
-	stat, err := os.Stat(*path)
+	scheme, err := GetSchemeFromPathSpec(arg.Pathspec)
+	if err != nil {
+		responder.RaiseError(err.Error())
+		return
+	}
+
+	accessor := glob.GetAccessor(scheme)
+	stat, err := accessor.Lstat(*path)
 	if err != nil {
 		responder.RaiseError(err.Error())
 		return
@@ -60,8 +66,14 @@ func (self *ListDirectory) Run(
 		responder.RaiseError(err.Error())
 		return
 	}
+	scheme, err := GetSchemeFromPathSpec(arg.Pathspec)
+	if err != nil {
+		responder.RaiseError(err.Error())
+		return
+	}
 
-	files, err := ioutil.ReadDir(*path)
+	accessor := glob.GetAccessor(scheme)
+	files, err := accessor.ReadDir(*path)
 	if err != nil {
 		responder.RaiseError(err.Error())
 		return

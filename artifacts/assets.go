@@ -1,11 +1,9 @@
-// +build release
-
 package artifacts
 
 import (
 	"strings"
+	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	config "www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/gui/assets"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
