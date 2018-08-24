@@ -1,4 +1,4 @@
-// +build !windows
+// +build darwin
 
 package glob
 
@@ -23,22 +23,22 @@ func (self *OSFileInfo) FullPath() string {
 
 func (self *OSFileInfo) Mtime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Mtim.Sec,
-		Nsec: self.sys().Mtim.Nsec,
+		Sec:  self.sys().Mtimespec.Sec,
+		Nsec: self.sys().Mtimespec.Nsec,
 	}
 }
 
 func (self *OSFileInfo) Ctime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Ctim.Sec,
-		Nsec: self.sys().Ctim.Nsec,
+		Sec:  self.sys().Ctimespec.Sec,
+		Nsec: self.sys().Ctimespec.Nsec,
 	}
 }
 
 func (self *OSFileInfo) Atime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Atim.Sec,
-		Nsec: self.sys().Atim.Nsec,
+		Sec:  self.sys().Atimespec.Sec,
+		Nsec: self.sys().Atimespec.Nsec,
 	}
 }
 

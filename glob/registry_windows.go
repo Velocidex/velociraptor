@@ -97,7 +97,7 @@ func (self *RegKeyInfo) MarshalJSON() ([]byte, error) {
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
-		Type:     "key",
+		Type:     self.Type,
 	})
 
 	return result, err
@@ -206,6 +206,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 			_name:      subkey_name,
 			_modtime:   stat.ModTime(),
 			_full_path: "\\" + path + "\\" + subkey_name,
+			Type:       "key",
 		})
 	}
 

@@ -22,12 +22,21 @@ build:
             -tags devel \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
+
 windows:
 	fileb0x artifacts/b0x.yaml
 	GOOS=windows GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor.exe ./bin/
+
+darwin:
+	fileb0x gui/b0x.yaml artifacts/b0x.yaml
+	GOOS=darwin GOARCH=amd64 \
+            go build \
+            -tags release \
+            -ldflags "$(LDFLAGS)" \
+	    -o output/velociraptor.darwin ./bin/
 
 # Build release binaries. The GUI will embed assets and ship with
 # everything in it.

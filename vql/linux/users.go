@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"www.velocidex.com/golang/velociraptor/binary"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -165,5 +166,5 @@ func (self _UsersPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 }
 
 func init() {
-	RegisterPlugin(&_UsersPlugin{})
+	vql_subsystem.RegisterPlugin(&_UsersPlugin{})
 }

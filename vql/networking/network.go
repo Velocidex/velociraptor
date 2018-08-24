@@ -1,7 +1,7 @@
 package networking
 
 import (
-	"github.com/shirou/gopsutil/net"
+	"net"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -16,13 +16,14 @@ func init() {
 				var result []vfilter.Row
 				if interfaces, err := net.Interfaces(); err == nil {
 					for _, item := range interfaces {
-						result = append(result, item)
+						local_item := item
+						result = append(result, &local_item)
 					}
 				}
 
 				return result
 			},
-			RowType: net.InterfaceStat{},
+			RowType: net.Interface{},
 			Doc:     "List all active interfaces.",
 		})
 }
