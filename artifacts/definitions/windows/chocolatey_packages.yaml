@@ -1,0 +1,36 @@
+name: Windows.Applications.ChocolateyPackages
+description: Chocolatey packages installed in a system.
+parameters:
+  - name: ChocolateyInstall
+    default: ""
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        LET files =
+          SELECT FullPath, parse_xml(file=FullPath) AS Metadata
+          -- Use the ChocolateyInstall parameter if it is set.
+          FROM glob(globs=if(
+             condition=ChocolateyInstall,
+             then=ChocolateyInstall,
+             -- Otherwise just use the environment.
+             else=environ(var='ChocolateyInstall')) + '/lib/*/*.nuspec')
+      - |
+        SELECT * FROM if(
+        condition={
+            SELECT * FROM if(
+               condition=ChocolateyInstall,
+               then=ChocolateyInstall,
+               else=environ(var="ChocolateyInstall"))
+          },
+        then={
+            SELECT FullPath,
+                   Metadata.package.metadata.id as Name,
+                   Metadata.package.metadata.version as Version,
+                   Metadata.package.metadata.summary as Summary,
+                   Metadata.package.metadata.authors as Authors,
+                   Metadata.package.metadata.licenseUrl as License
+            FROM files
+        })

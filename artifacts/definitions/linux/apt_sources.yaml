@@ -95,7 +95,7 @@ sources:
            condition={
               SELECT * from stat(filename=cache_file)
            },
-           query=add_stat_to_parsed_cache_file,
+           then=add_stat_to_parsed_cache_file,
            else={
              SELECT Source, dict() as Mtime, dict() as Ctime,
                dict() as Atime, Type,

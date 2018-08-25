@@ -212,7 +212,7 @@ func Compile(artifact *artifacts_proto.Artifact,
 		result.Query = append(result.Query, &actions_proto.VQLRequest{
 			Name: "Artifact " + artifact.Name,
 			VQL: fmt.Sprintf(
-				"SELECT * FROM if(query=%s, condition=%s)",
+				"SELECT * FROM if(then=%s, condition=%s)",
 				source_result, source_precondition),
 		})
 	}

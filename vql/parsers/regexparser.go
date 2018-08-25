@@ -13,6 +13,7 @@ import (
 type _ParseFileWithRegexArgs struct {
 	Filenames       []string `vfilter:"required,field=file"`
 	Regex           []string `vfilter:"required,field=regex"`
+	Accessor        string   `vfilter:"optional,field=accessor"`
 	compiled_regexs []*regexp.Regexp
 	capture_vars    []string
 }
@@ -23,7 +24,7 @@ func _ParseFile(filename string,
 	scope *vfilter.Scope,
 	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
-	accessor := glob.OSFileSystemAccessor{}
+	accessor := glob.GetAccessor(arg.Accessor)
 	file, err := accessor.Open(filename)
 	if err != nil {
 		scope.Log("Unable to open file %s", filename)

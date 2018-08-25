@@ -71,6 +71,14 @@
   revision = "0efaee1733e3399a3cb88fc7d2ce340bf2e863d7"
 
 [[projects]]
+  digest = "1:e29f613831a4999edf68593fbbba9c57290f921a04490fa72cb759577f971abb"
+  name = "github.com/clbanning/mxj"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "82051832829e23b1986f479cf92a7e3ba6cca7b6"
+  version = "v1.8.1"
+
+[[projects]]
   digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -143,6 +151,14 @@
   pruneopts = "UT"
   revision = "92583770e3f01b09a0d3e9bdf64321d8bebd48f2"
   version = "v1.4.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:f734c43ec01de1063c0e281153c85c1a1897614aca08bd68477b7eaa8569a7fa"
+  name = "github.com/mattn/go-pointer"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
 
 [[projects]]
   digest = "1:e2d1d410fb367567c2b53ed9e2d719d3c1f0891397bb2fa49afd747cfbf1e8e4"
@@ -283,17 +299,23 @@
   revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
 
 [[projects]]
-  digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
+  digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
   name = "golang.org/x/text"
   packages = [
     "collate",
     "collate/build",
+    "encoding",
+    "encoding/internal",
+    "encoding/internal/identifier",
+    "encoding/unicode",
     "internal/colltab",
     "internal/gen",
     "internal/tag",
     "internal/triegen",
     "internal/ucd",
+    "internal/utf8internal",
     "language",
+    "runes",
     "secure/bidirule",
     "transform",
     "unicode/bidi",
@@ -371,11 +393,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:acb5757a2e5c7c11493b30540ef8bd8c257c85e2ab406eae78e072a5240def44"
+  digest = "1:89ad2cb32ca91fd3f1911dcb9f34f496bbba71155c913f779114fdbce286e4fe"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "94cf040e4b627c01f49555010f6347612e56b60d"
+  revision = "2a6d5d4c6f35ee83775cb8210830dd5e1b44c429"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -383,6 +405,7 @@
   input-imports = [
     "github.com/Showmax/go-fqdn",
     "github.com/Velocidex/ahocorasick",
+    "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",
     "github.com/dustin/go-humanize",
     "github.com/ghodss/yaml",
@@ -398,6 +421,7 @@
     "github.com/gorilla/schema",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/mattn/go-pointer",
     "github.com/mattn/go-sqlite3",
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",

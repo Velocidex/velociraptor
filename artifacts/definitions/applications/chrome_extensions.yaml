@@ -41,7 +41,7 @@ sources:
               condition={
                  select * from scope() where Manifest.default_locale
               },
-              query={
+              then={
                  SELECT Manifest,
                         Uid, User,
                         Filename as LocaleFilename,
