@@ -25,7 +25,7 @@ build:
 
 windows:
 	fileb0x artifacts/b0x.yaml
-	GOOS=windows GOARCH=amd64 \
+	CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor.exe ./bin/
