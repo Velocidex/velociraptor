@@ -11,8 +11,15 @@ LDFLAGS := \
    -X www.velocidex.com/golang/velociraptor/config.build_time=$(DATE) \
    -X www.velocidex.com/golang/velociraptor/config.commit_hash=$(COMMIT)
 
-# Devel tag means we read everything from the local filesystem. We
-# assume the devel binary is run from the source tree.
+# Check if MINGW_CC cross compiler exists - if it does then enable CGO
+# build. Not having the cross compiler will just disable VQL plugins
+# which require CGO.
+MINGW_CC := x86_64-w64-mingw32-gcc
+MINGW_EXISTS := $(shell $(MINGW_CC) --help 2> /dev/null)
+ifneq ("$(MINGW_EXISTS)", "")
+	CC = "$(MINGW_CC)"
+	CGO_ENABLED = 1
+endif
 
 # Just regular binaries for local testing. The GUI will be serving
 # files from the filesystem.
@@ -24,8 +31,12 @@ build:
 	    -o output/velociraptor ./bin/
 
 windows:
+ifeq ("$(MINGW_EXISTS)", "")
+	@echo Disabling cgo modules. To enable install $(MINGW_CC)
+endif
 	fileb0x artifacts/b0x.yaml
-	CC=x86_64-w64-mingw32-gcc CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
+	GOOS=windows GOARCH=amd64 \
+        CC=$(CC) CGO_ENABLED=$(CGO_ENABLED) \
             go build \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor.exe ./bin/
@@ -54,4 +65,5 @@ install: release
                 $(DESTDIR)$(prefix)/usr/bin/velociraptor
 
 clean:
-	rm -f gui/assets/ab0x.go
+	rm -f gui/assets/ab0x.go \
+              artifacts/assets/ab0x.go
