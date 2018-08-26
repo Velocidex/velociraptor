@@ -393,11 +393,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:89ad2cb32ca91fd3f1911dcb9f34f496bbba71155c913f779114fdbce286e4fe"
+  digest = "1:1eb38db21461c4cbdcb4f933e49a8e0f26d4d5cc4c392544871800ea45379a15"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2a6d5d4c6f35ee83775cb8210830dd5e1b44c429"
+  revision = "a6380dafb96e17feb1325db8acbac2f389036d85"
 
 [solve-meta]
   analyzer-name = "dep"

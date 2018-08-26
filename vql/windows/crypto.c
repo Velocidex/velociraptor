@@ -1,3 +1,5 @@
+// +build windows
+
 // References: Example C Program: Listing the Certificates in a Store
 // https://docs.microsoft.com/en-us/windows/desktop/seccrypto/example-c-program-listing-the-certificates-in-a-store
 // https://github.com/facebook/osquery/blob/master/osquery/tables/system/windows/certificates.cpp

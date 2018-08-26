@@ -1,3 +1,5 @@
+// +build windows
+
 // VQL plugins handy for registry parsing.
 package windows
 

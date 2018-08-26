@@ -1,0 +1,38 @@
+name: Windows.Sys.Users
+description: |
+  List User accounts. We combine two data sources - the output from
+  the NetUserEnum() call and the list of SIDs in the registry.
+
+parameters:
+  - name: remoteRegKey
+    default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        LET roaming_users <=
+           SELECT "" as Uid, "" as Gid,
+               lookupSID(
+                 sid=basename(path=Key.FullPath)
+               ) as Name,
+               Key.FullPath as Description,
+               ProfileImagePath as Directory,
+               basename(path=Key.FullPath) as UUID, "roaming" as Type
+           FROM read_reg_key(globs=remoteRegKey, accessor="reg")
+      - |
+        LET local_users <= select User_id as Uid, Primary_group_id as Gid, Name,
+               Comment as Description, {
+                 SELECT Directory from roaming_users WHERE User_sid = UUID
+               } as Directory, User_sid as UUID, "local" AS Type
+        FROM users()
+
+      - |
+        SELECT * from chain(
+         q1=local_users,
+         q2={
+           -- Only show users not already shown in the local_users above.
+           SELECT * from roaming_users
+           where not UUID in local_users.UUID
+         })

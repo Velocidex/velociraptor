@@ -67,3 +67,7 @@ install: release
 clean:
 	rm -f gui/assets/ab0x.go \
               artifacts/assets/ab0x.go
+
+
+generate:
+	go generate ./vql/windows/win32_windows.go
