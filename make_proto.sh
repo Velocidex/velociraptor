@@ -1,7 +1,14 @@
 #!/bin/bash
 # Used to regenrate proto bindings. This script should be run if any
 # of the .proto files are modified.
+
+# This script requires protoc 3.6 +
+
 CWD=$PWD
+
+if [ -z "$GOPATH"]; then
+    GOPATH="$HOME/go"
+fi
 
 for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/artifacts/proto/ \

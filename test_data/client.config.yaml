@@ -1,5 +1,4 @@
 Client:
-  build_time: "2018-08-06T22:27:52+10:00"
   ca_certificate: |
     -----BEGIN CERTIFICATE-----
     MIIDITCCAgmgAwIBAgIRAKVUNVlVVE/wwla83R/ZQK4wDQYJKoZIhvcNAQELBQAw
@@ -20,12 +19,17 @@ Client:
     CvhAfUMmZZ19wtN+37GflrcjDw7VzerTqNJ3gx6iF7Xy7AebkzvEjuyy7d7xKGdM
     Dixe4BWrhpv6DhOBWvtc/gpeqQP+EA71GuAZdQQC6NFdfXekBQ==
     -----END CERTIFICATE-----
-  commit: 47b7a1c7fed5c2cd69d0a49826383d77ad5f3dd4
-  name: velociraptor
+  max_poll: 600
   nonce: ukqqtSpJNUw=
-  max_poll: 10
   server_urls:
   - http://localhost:8000/
-  version: "0.1"
+  windows_installer:
+    install_path: $ProgramFiles\Velociraptor\Velociraptor.exe
+    service_name: Velociraptor
   writeback_linux: /tmp/velociraptor.yaml
-  writeback_windows: /Program Files/Velociraptor/velociraptor.writeback.yaml
+  writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
+version:
+  build_time: "2018-08-28T16:06:59+10:00"
+  commit: 0c145ac342cbb0f510ac90d59d5ea3edf7e8fca2
+  name: velociraptor
+  version: 0.2.2

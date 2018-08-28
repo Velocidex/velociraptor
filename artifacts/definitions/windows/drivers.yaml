@@ -1,0 +1,10 @@
+name: Windows.Sys.Drivers
+description: Details for in-use Windows device drivers. This does not display installed but unused drivers.
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        SELECT * from wmi(
+            query="select * from Win32_PnPSignedDriver",
+            namespace="ROOT\\CIMV2")

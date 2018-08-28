@@ -33,7 +33,7 @@ func (m *VFSListRequest) Reset()         { *m = VFSListRequest{} }
 func (m *VFSListRequest) String() string { return proto.CompactTextString(m) }
 func (*VFSListRequest) ProtoMessage()    {}
 func (*VFSListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_baab8bc88cbe0e32, []int{0}
+	return fileDescriptor_vfs_35e0b0ba85f171f4, []int{0}
 }
 func (m *VFSListRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSListRequest.Unmarshal(m, b)
@@ -86,7 +86,7 @@ func (m *VFSListRequestState) Reset()         { *m = VFSListRequestState{} }
 func (m *VFSListRequestState) String() string { return proto.CompactTextString(m) }
 func (*VFSListRequestState) ProtoMessage()    {}
 func (*VFSListRequestState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_baab8bc88cbe0e32, []int{1}
+	return fileDescriptor_vfs_35e0b0ba85f171f4, []int{1}
 }
 func (m *VFSListRequestState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSListRequestState.Unmarshal(m, b)
@@ -132,7 +132,7 @@ func (m *VFSDownloadFileRequest) Reset()         { *m = VFSDownloadFileRequest{}
 func (m *VFSDownloadFileRequest) String() string { return proto.CompactTextString(m) }
 func (*VFSDownloadFileRequest) ProtoMessage()    {}
 func (*VFSDownloadFileRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_baab8bc88cbe0e32, []int{2}
+	return fileDescriptor_vfs_35e0b0ba85f171f4, []int{2}
 }
 func (m *VFSDownloadFileRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSDownloadFileRequest.Unmarshal(m, b)
@@ -172,9 +172,9 @@ func init() {
 	proto.RegisterType((*VFSDownloadFileRequest)(nil), "proto.VFSDownloadFileRequest")
 }
 
-func init() { proto.RegisterFile("vfs.proto", fileDescriptor_vfs_baab8bc88cbe0e32) }
+func init() { proto.RegisterFile("vfs.proto", fileDescriptor_vfs_35e0b0ba85f171f4) }
 
-var fileDescriptor_vfs_baab8bc88cbe0e32 = []byte{
+var fileDescriptor_vfs_35e0b0ba85f171f4 = []byte{
 	// 418 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0xd1, 0x6a, 0x13, 0x41,
 	0x18, 0x85, 0xd9, 0x56, 0xdb, 0x66, 0xc4, 0x0a, 0x23, 0x48, 0xcc, 0x4d, 0x7f, 0x03, 0xa5, 0x41,

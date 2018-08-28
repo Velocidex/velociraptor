@@ -1,0 +1,14 @@
+pkg: config
+
+# We assume we are run from the toplevel directory:
+# fileb0x gui/b0x.yaml
+dest: "config/"
+
+fmt: false
+compression:
+    compress: false
+
+output: "ab0x.go"
+custom:
+  - files:
+      - "config/default.yaml"

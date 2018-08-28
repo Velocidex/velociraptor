@@ -41,7 +41,7 @@ func (m *StartFlowResponse) Reset()         { *m = StartFlowResponse{} }
 func (m *StartFlowResponse) String() string { return proto.CompactTextString(m) }
 func (*StartFlowResponse) ProtoMessage()    {}
 func (*StartFlowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{0}
+	return fileDescriptor_api_1f7eca262a301da8, []int{0}
 }
 func (m *StartFlowResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowResponse.Unmarshal(m, b)
@@ -92,7 +92,7 @@ func (m *FieldDescriptor) Reset()         { *m = FieldDescriptor{} }
 func (m *FieldDescriptor) String() string { return proto.CompactTextString(m) }
 func (*FieldDescriptor) ProtoMessage()    {}
 func (*FieldDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{1}
+	return fileDescriptor_api_1f7eca262a301da8, []int{1}
 }
 func (m *FieldDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FieldDescriptor.Unmarshal(m, b)
@@ -173,7 +173,7 @@ func (m *EnumValue) Reset()         { *m = EnumValue{} }
 func (m *EnumValue) String() string { return proto.CompactTextString(m) }
 func (*EnumValue) ProtoMessage()    {}
 func (*EnumValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{2}
+	return fileDescriptor_api_1f7eca262a301da8, []int{2}
 }
 func (m *EnumValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EnumValue.Unmarshal(m, b)
@@ -229,7 +229,7 @@ func (m *TypeDescriptor) Reset()         { *m = TypeDescriptor{} }
 func (m *TypeDescriptor) String() string { return proto.CompactTextString(m) }
 func (*TypeDescriptor) ProtoMessage()    {}
 func (*TypeDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{3}
+	return fileDescriptor_api_1f7eca262a301da8, []int{3}
 }
 func (m *TypeDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TypeDescriptor.Unmarshal(m, b)
@@ -316,7 +316,7 @@ func (m *Types) Reset()         { *m = Types{} }
 func (m *Types) String() string { return proto.CompactTextString(m) }
 func (*Types) ProtoMessage()    {}
 func (*Types) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{4}
+	return fileDescriptor_api_1f7eca262a301da8, []int{4}
 }
 func (m *Types) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Types.Unmarshal(m, b)
@@ -354,7 +354,7 @@ func (m *Approval) Reset()         { *m = Approval{} }
 func (m *Approval) String() string { return proto.CompactTextString(m) }
 func (*Approval) ProtoMessage()    {}
 func (*Approval) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{5}
+	return fileDescriptor_api_1f7eca262a301da8, []int{5}
 }
 func (m *Approval) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Approval.Unmarshal(m, b)
@@ -392,7 +392,7 @@ func (m *ApprovalList) Reset()         { *m = ApprovalList{} }
 func (m *ApprovalList) String() string { return proto.CompactTextString(m) }
 func (*ApprovalList) ProtoMessage()    {}
 func (*ApprovalList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{6}
+	return fileDescriptor_api_1f7eca262a301da8, []int{6}
 }
 func (m *ApprovalList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApprovalList.Unmarshal(m, b)
@@ -432,7 +432,7 @@ func (m *VFSRefreshDirectoryRequest) Reset()         { *m = VFSRefreshDirectoryR
 func (m *VFSRefreshDirectoryRequest) String() string { return proto.CompactTextString(m) }
 func (*VFSRefreshDirectoryRequest) ProtoMessage()    {}
 func (*VFSRefreshDirectoryRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_550dc6cad316bd9d, []int{7}
+	return fileDescriptor_api_1f7eca262a301da8, []int{7}
 }
 func (m *VFSRefreshDirectoryRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSRefreshDirectoryRequest.Unmarshal(m, b)
@@ -1294,9 +1294,9 @@ var _API_serviceDesc = grpc.ServiceDesc{
 	Metadata: "api.proto",
 }
 
-func init() { proto.RegisterFile("api.proto", fileDescriptor_api_550dc6cad316bd9d) }
+func init() { proto.RegisterFile("api.proto", fileDescriptor_api_1f7eca262a301da8) }
 
-var fileDescriptor_api_550dc6cad316bd9d = []byte{
+var fileDescriptor_api_1f7eca262a301da8 = []byte{
 	// 1449 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0x5b, 0x6f, 0x1b, 0x45,
 	0x14, 0xd6, 0xe6, 0x9e, 0x71, 0xae, 0x93, 0xd6, 0xd9, 0xba, 0x2e, 0xd9, 0x6c, 0x5b, 0x1a, 0x95,

@@ -36,7 +36,7 @@ func (m *ObjectReference) Reset()         { *m = ObjectReference{} }
 func (m *ObjectReference) String() string { return proto.CompactTextString(m) }
 func (*ObjectReference) ProtoMessage()    {}
 func (*ObjectReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{0}
+	return fileDescriptor_objects_0cda918952fe2088, []int{0}
 }
 func (m *ObjectReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ObjectReference.Unmarshal(m, b)
@@ -63,23 +63,31 @@ type isObjectReference_Union interface {
 type ObjectReference_Client struct {
 	Client *ClientReference `protobuf:"bytes,2,opt,name=client,proto3,oneof"`
 }
+
 type ObjectReference_Hunt struct {
 	Hunt *HuntReference `protobuf:"bytes,3,opt,name=hunt,proto3,oneof"`
 }
+
 type ObjectReference_Flow struct {
 	Flow *FlowReference `protobuf:"bytes,4,opt,name=flow,proto3,oneof"`
 }
+
 type ObjectReference_VfsFile struct {
 	VfsFile *VfsFileReference `protobuf:"bytes,6,opt,name=vfs_file,json=vfsFile,proto3,oneof"`
 }
+
 type ObjectReference_ApprovalRequest struct {
 	ApprovalRequest *ApprovalRequestReference `protobuf:"bytes,7,opt,name=approval_request,json=approvalRequest,proto3,oneof"`
 }
 
-func (*ObjectReference_Client) isObjectReference_Union()          {}
-func (*ObjectReference_Hunt) isObjectReference_Union()            {}
-func (*ObjectReference_Flow) isObjectReference_Union()            {}
-func (*ObjectReference_VfsFile) isObjectReference_Union()         {}
+func (*ObjectReference_Client) isObjectReference_Union() {}
+
+func (*ObjectReference_Hunt) isObjectReference_Union() {}
+
+func (*ObjectReference_Flow) isObjectReference_Union() {}
+
+func (*ObjectReference_VfsFile) isObjectReference_Union() {}
+
 func (*ObjectReference_ApprovalRequest) isObjectReference_Union() {}
 
 func (m *ObjectReference) GetUnion() isObjectReference_Union {
@@ -266,7 +274,7 @@ func (m *ClientReference) Reset()         { *m = ClientReference{} }
 func (m *ClientReference) String() string { return proto.CompactTextString(m) }
 func (*ClientReference) ProtoMessage()    {}
 func (*ClientReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{1}
+	return fileDescriptor_objects_0cda918952fe2088, []int{1}
 }
 func (m *ClientReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientReference.Unmarshal(m, b)
@@ -304,7 +312,7 @@ func (m *HuntReference) Reset()         { *m = HuntReference{} }
 func (m *HuntReference) String() string { return proto.CompactTextString(m) }
 func (*HuntReference) ProtoMessage()    {}
 func (*HuntReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{2}
+	return fileDescriptor_objects_0cda918952fe2088, []int{2}
 }
 func (m *HuntReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntReference.Unmarshal(m, b)
@@ -343,7 +351,7 @@ func (m *FlowReference) Reset()         { *m = FlowReference{} }
 func (m *FlowReference) String() string { return proto.CompactTextString(m) }
 func (*FlowReference) ProtoMessage()    {}
 func (*FlowReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{3}
+	return fileDescriptor_objects_0cda918952fe2088, []int{3}
 }
 func (m *FlowReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowReference.Unmarshal(m, b)
@@ -389,7 +397,7 @@ func (m *VfsFileReference) Reset()         { *m = VfsFileReference{} }
 func (m *VfsFileReference) String() string { return proto.CompactTextString(m) }
 func (*VfsFileReference) ProtoMessage()    {}
 func (*VfsFileReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{4}
+	return fileDescriptor_objects_0cda918952fe2088, []int{4}
 }
 func (m *VfsFileReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VfsFileReference.Unmarshal(m, b)
@@ -436,7 +444,7 @@ func (m *ApprovalRequestReference) Reset()         { *m = ApprovalRequestReferen
 func (m *ApprovalRequestReference) String() string { return proto.CompactTextString(m) }
 func (*ApprovalRequestReference) ProtoMessage()    {}
 func (*ApprovalRequestReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_objects_992ff9aeba418b8d, []int{5}
+	return fileDescriptor_objects_0cda918952fe2088, []int{5}
 }
 func (m *ApprovalRequestReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApprovalRequestReference.Unmarshal(m, b)
@@ -479,9 +487,9 @@ func init() {
 	proto.RegisterType((*ApprovalRequestReference)(nil), "proto.ApprovalRequestReference")
 }
 
-func init() { proto.RegisterFile("objects.proto", fileDescriptor_objects_992ff9aeba418b8d) }
+func init() { proto.RegisterFile("objects.proto", fileDescriptor_objects_0cda918952fe2088) }
 
-var fileDescriptor_objects_992ff9aeba418b8d = []byte{
+var fileDescriptor_objects_0cda918952fe2088 = []byte{
 	// 467 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0x41, 0x6e, 0xd4, 0x30,
 	0x18, 0x85, 0x99, 0x99, 0x36, 0x69, 0xfe, 0x6a, 0x34, 0xc5, 0x20, 0x1a, 0x81, 0x50, 0xad, 0x2c,

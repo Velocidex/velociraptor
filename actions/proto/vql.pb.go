@@ -32,7 +32,7 @@ func (m *VQLRequest) Reset()         { *m = VQLRequest{} }
 func (m *VQLRequest) String() string { return proto.CompactTextString(m) }
 func (*VQLRequest) ProtoMessage()    {}
 func (*VQLRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{0}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{0}
 }
 func (m *VQLRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLRequest.Unmarshal(m, b)
@@ -78,7 +78,7 @@ func (m *VQLEnv) Reset()         { *m = VQLEnv{} }
 func (m *VQLEnv) String() string { return proto.CompactTextString(m) }
 func (*VQLEnv) ProtoMessage()    {}
 func (*VQLEnv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{1}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{1}
 }
 func (m *VQLEnv) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLEnv.Unmarshal(m, b)
@@ -126,7 +126,7 @@ func (m *VQLCollectorArgs) Reset()         { *m = VQLCollectorArgs{} }
 func (m *VQLCollectorArgs) String() string { return proto.CompactTextString(m) }
 func (*VQLCollectorArgs) ProtoMessage()    {}
 func (*VQLCollectorArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{2}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{2}
 }
 func (m *VQLCollectorArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLCollectorArgs.Unmarshal(m, b)
@@ -186,7 +186,7 @@ func (m *VQLTypeMap) Reset()         { *m = VQLTypeMap{} }
 func (m *VQLTypeMap) String() string { return proto.CompactTextString(m) }
 func (*VQLTypeMap) ProtoMessage()    {}
 func (*VQLTypeMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{3}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{3}
 }
 func (m *VQLTypeMap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLTypeMap.Unmarshal(m, b)
@@ -238,7 +238,7 @@ func (m *VQLResponse) Reset()         { *m = VQLResponse{} }
 func (m *VQLResponse) String() string { return proto.CompactTextString(m) }
 func (*VQLResponse) ProtoMessage()    {}
 func (*VQLResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{4}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{4}
 }
 func (m *VQLResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLResponse.Unmarshal(m, b)
@@ -329,7 +329,7 @@ func (m *User) Reset()         { *m = User{} }
 func (m *User) String() string { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()    {}
 func (*User) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{5}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{5}
 }
 func (m *User) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_User.Unmarshal(m, b)
@@ -367,7 +367,7 @@ func (m *Knowledgebase) Reset()         { *m = Knowledgebase{} }
 func (m *Knowledgebase) String() string { return proto.CompactTextString(m) }
 func (*Knowledgebase) ProtoMessage()    {}
 func (*Knowledgebase) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{6}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{6}
 }
 func (m *Knowledgebase) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Knowledgebase.Unmarshal(m, b)
@@ -419,7 +419,7 @@ func (m *ClientInfo) Reset()         { *m = ClientInfo{} }
 func (m *ClientInfo) String() string { return proto.CompactTextString(m) }
 func (*ClientInfo) ProtoMessage()    {}
 func (*ClientInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_a27d344eb0488f19, []int{7}
+	return fileDescriptor_vql_5dad4e751ba946bc, []int{7}
 }
 func (m *ClientInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientInfo.Unmarshal(m, b)
@@ -548,9 +548,9 @@ func init() {
 	proto.RegisterType((*ClientInfo)(nil), "proto.ClientInfo")
 }
 
-func init() { proto.RegisterFile("vql.proto", fileDescriptor_vql_a27d344eb0488f19) }
+func init() { proto.RegisterFile("vql.proto", fileDescriptor_vql_5dad4e751ba946bc) }
 
-var fileDescriptor_vql_a27d344eb0488f19 = []byte{
+var fileDescriptor_vql_5dad4e751ba946bc = []byte{
 	// 1240 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xdd, 0x6e, 0x1b, 0x45,
 	0x14, 0x96, 0x6b, 0x3b, 0x89, 0x27, 0x75, 0x69, 0x47, 0x55, 0xb5, 0x94, 0x52, 0xa6, 0x16, 0x3f,

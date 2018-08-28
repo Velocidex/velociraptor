@@ -52,6 +52,7 @@ func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table
 	columns := vql.Columns(scope)
 	table.SetHeader(*columns)
 	table.SetCaption(true, vql.ToString(scope))
+	table.SetAutoFormatHeaders(false)
 
 	for {
 		row, ok := <-output_chan

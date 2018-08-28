@@ -64,7 +64,7 @@ func (x StatEntry_RegistryType) String() string {
 	return proto.EnumName(StatEntry_RegistryType_name, int32(x))
 }
 func (StatEntry_RegistryType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{3, 0}
+	return fileDescriptor_actions_24484b62c889479d, []int{3, 0}
 }
 
 type PathSpec_PathType int32
@@ -97,7 +97,7 @@ func (x PathSpec_PathType) String() string {
 	return proto.EnumName(PathSpec_PathType_name, int32(x))
 }
 func (PathSpec_PathType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{4, 0}
+	return fileDescriptor_actions_24484b62c889479d, []int{4, 0}
 }
 
 type PathSpec_Options int32
@@ -128,7 +128,7 @@ func (x PathSpec_Options) String() string {
 	return proto.EnumName(PathSpec_Options_name, int32(x))
 }
 func (PathSpec_Options) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{4, 1}
+	return fileDescriptor_actions_24484b62c889479d, []int{4, 1}
 }
 
 type PathSpecTskFsAttrType int32
@@ -208,7 +208,7 @@ func (x PathSpecTskFsAttrType) String() string {
 	return proto.EnumName(PathSpecTskFsAttrType_name, int32(x))
 }
 func (PathSpecTskFsAttrType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{4, 2}
+	return fileDescriptor_actions_24484b62c889479d, []int{4, 2}
 }
 
 // Stores information about the GRR client itself
@@ -228,7 +228,7 @@ func (m *ClientInformation) Reset()         { *m = ClientInformation{} }
 func (m *ClientInformation) String() string { return proto.CompactTextString(m) }
 func (*ClientInformation) ProtoMessage()    {}
 func (*ClientInformation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{0}
+	return fileDescriptor_actions_24484b62c889479d, []int{0}
 }
 func (m *ClientInformation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientInformation.Unmarshal(m, b)
@@ -302,7 +302,7 @@ func (m *ListDirRequest) Reset()         { *m = ListDirRequest{} }
 func (m *ListDirRequest) String() string { return proto.CompactTextString(m) }
 func (*ListDirRequest) ProtoMessage()    {}
 func (*ListDirRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{1}
+	return fileDescriptor_actions_24484b62c889479d, []int{1}
 }
 func (m *ListDirRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListDirRequest.Unmarshal(m, b)
@@ -342,7 +342,7 @@ func (m *StatFSRequest) Reset()         { *m = StatFSRequest{} }
 func (m *StatFSRequest) String() string { return proto.CompactTextString(m) }
 func (*StatFSRequest) ProtoMessage()    {}
 func (*StatFSRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{2}
+	return fileDescriptor_actions_24484b62c889479d, []int{2}
 }
 func (m *StatFSRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatFSRequest.Unmarshal(m, b)
@@ -417,7 +417,7 @@ func (m *StatEntry) Reset()         { *m = StatEntry{} }
 func (m *StatEntry) String() string { return proto.CompactTextString(m) }
 func (*StatEntry) ProtoMessage()    {}
 func (*StatEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{3}
+	return fileDescriptor_actions_24484b62c889479d, []int{3}
 }
 func (m *StatEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatEntry.Unmarshal(m, b)
@@ -596,7 +596,7 @@ func (m *StatEntry_ExtAttr) Reset()         { *m = StatEntry_ExtAttr{} }
 func (m *StatEntry_ExtAttr) String() string { return proto.CompactTextString(m) }
 func (*StatEntry_ExtAttr) ProtoMessage()    {}
 func (*StatEntry_ExtAttr) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{3, 0}
+	return fileDescriptor_actions_24484b62c889479d, []int{3, 0}
 }
 func (m *StatEntry_ExtAttr) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatEntry_ExtAttr.Unmarshal(m, b)
@@ -658,7 +658,7 @@ func (m *PathSpec) Reset()         { *m = PathSpec{} }
 func (m *PathSpec) String() string { return proto.CompactTextString(m) }
 func (*PathSpec) ProtoMessage()    {}
 func (*PathSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{4}
+	return fileDescriptor_actions_24484b62c889479d, []int{4}
 }
 func (m *PathSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathSpec.Unmarshal(m, b)
@@ -791,7 +791,7 @@ func (m *Uname) Reset()         { *m = Uname{} }
 func (m *Uname) String() string { return proto.CompactTextString(m) }
 func (*Uname) ProtoMessage()    {}
 func (*Uname) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_49c466f5dd5aeefa, []int{5}
+	return fileDescriptor_actions_24484b62c889479d, []int{5}
 }
 func (m *Uname) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Uname.Unmarshal(m, b)
@@ -902,9 +902,9 @@ func init() {
 	proto.RegisterEnum("proto.PathSpecTskFsAttrType", PathSpecTskFsAttrType_name, PathSpecTskFsAttrType_value)
 }
 
-func init() { proto.RegisterFile("actions.proto", fileDescriptor_actions_49c466f5dd5aeefa) }
+func init() { proto.RegisterFile("actions.proto", fileDescriptor_actions_24484b62c889479d) }
 
-var fileDescriptor_actions_49c466f5dd5aeefa = []byte{
+var fileDescriptor_actions_24484b62c889479d = []byte{
 	// 2513 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x58, 0x4b, 0x6f, 0x23, 0xc7,
 	0xb5, 0x76, 0xeb, 0xc1, 0x47, 0xe9, 0x31, 0x3d, 0xe5, 0xb1, 0x87, 0xd6, 0xbc, 0x6a, 0x74, 0x7d,

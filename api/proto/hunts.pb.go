@@ -48,7 +48,7 @@ func (x HuntOsCondition_OS) String() string {
 	return proto.EnumName(HuntOsCondition_OS_name, int32(x))
 }
 func (HuntOsCondition_OS) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{2, 0}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{2, 0}
 }
 
 type Hunt_State int32
@@ -77,7 +77,7 @@ func (x Hunt_State) String() string {
 	return proto.EnumName(Hunt_State_name, int32(x))
 }
 func (Hunt_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{4, 0}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{4, 0}
 }
 
 type HuntInfo_State int32
@@ -103,7 +103,7 @@ func (x HuntInfo_State) String() string {
 	return proto.EnumName(HuntInfo_State_name, int32(x))
 }
 func (HuntInfo_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{5, 0}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{5, 0}
 }
 
 type ListHuntClientsRequest_Type int32
@@ -132,7 +132,7 @@ func (x ListHuntClientsRequest_Type) String() string {
 	return proto.EnumName(ListHuntClientsRequest_Type_name, int32(x))
 }
 func (ListHuntClientsRequest_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{11, 0}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{11, 0}
 }
 
 type HuntConditionGeneric struct {
@@ -147,7 +147,7 @@ func (m *HuntConditionGeneric) Reset()         { *m = HuntConditionGeneric{} }
 func (m *HuntConditionGeneric) String() string { return proto.CompactTextString(m) }
 func (*HuntConditionGeneric) ProtoMessage()    {}
 func (*HuntConditionGeneric) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{0}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{0}
 }
 func (m *HuntConditionGeneric) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntConditionGeneric.Unmarshal(m, b)
@@ -192,7 +192,7 @@ func (m *HuntLabelCondition) Reset()         { *m = HuntLabelCondition{} }
 func (m *HuntLabelCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntLabelCondition) ProtoMessage()    {}
 func (*HuntLabelCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{1}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{1}
 }
 func (m *HuntLabelCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntLabelCondition.Unmarshal(m, b)
@@ -230,7 +230,7 @@ func (m *HuntOsCondition) Reset()         { *m = HuntOsCondition{} }
 func (m *HuntOsCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntOsCondition) ProtoMessage()    {}
 func (*HuntOsCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{2}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{2}
 }
 func (m *HuntOsCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntOsCondition.Unmarshal(m, b)
@@ -272,7 +272,7 @@ func (m *HuntCondition) Reset()         { *m = HuntCondition{} }
 func (m *HuntCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntCondition) ProtoMessage()    {}
 func (*HuntCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{3}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{3}
 }
 func (m *HuntCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntCondition.Unmarshal(m, b)
@@ -299,16 +299,20 @@ type isHuntCondition_UnionField interface {
 type HuntCondition_GenericCondition struct {
 	GenericCondition *HuntConditionGeneric `protobuf:"bytes,1,opt,name=generic_condition,json=genericCondition,proto3,oneof"`
 }
+
 type HuntCondition_Labels struct {
 	Labels *HuntLabelCondition `protobuf:"bytes,2,opt,name=labels,proto3,oneof"`
 }
+
 type HuntCondition_Os struct {
 	Os *HuntOsCondition `protobuf:"bytes,3,opt,name=os,proto3,oneof"`
 }
 
 func (*HuntCondition_GenericCondition) isHuntCondition_UnionField() {}
-func (*HuntCondition_Labels) isHuntCondition_UnionField()           {}
-func (*HuntCondition_Os) isHuntCondition_UnionField()               {}
+
+func (*HuntCondition_Labels) isHuntCondition_UnionField() {}
+
+func (*HuntCondition_Os) isHuntCondition_UnionField() {}
 
 func (m *HuntCondition) GetUnionField() isHuntCondition_UnionField {
 	if m != nil {
@@ -457,7 +461,7 @@ func (m *Hunt) Reset()         { *m = Hunt{} }
 func (m *Hunt) String() string { return proto.CompactTextString(m) }
 func (*Hunt) ProtoMessage()    {}
 func (*Hunt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{4}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{4}
 }
 func (m *Hunt) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Hunt.Unmarshal(m, b)
@@ -592,7 +596,7 @@ func (m *HuntInfo) Reset()         { *m = HuntInfo{} }
 func (m *HuntInfo) String() string { return proto.CompactTextString(m) }
 func (*HuntInfo) ProtoMessage()    {}
 func (*HuntInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{5}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{5}
 }
 func (m *HuntInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntInfo.Unmarshal(m, b)
@@ -673,7 +677,7 @@ func (m *ListHuntsRequest) Reset()         { *m = ListHuntsRequest{} }
 func (m *ListHuntsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListHuntsRequest) ProtoMessage()    {}
 func (*ListHuntsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{6}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{6}
 }
 func (m *ListHuntsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListHuntsRequest.Unmarshal(m, b)
@@ -718,7 +722,7 @@ func (m *GetHuntRequest) Reset()         { *m = GetHuntRequest{} }
 func (m *GetHuntRequest) String() string { return proto.CompactTextString(m) }
 func (*GetHuntRequest) ProtoMessage()    {}
 func (*GetHuntRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{7}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{7}
 }
 func (m *GetHuntRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetHuntRequest.Unmarshal(m, b)
@@ -758,7 +762,7 @@ func (m *GetHuntResultsRequest) Reset()         { *m = GetHuntResultsRequest{} }
 func (m *GetHuntResultsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetHuntResultsRequest) ProtoMessage()    {}
 func (*GetHuntResultsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{8}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{8}
 }
 func (m *GetHuntResultsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetHuntResultsRequest.Unmarshal(m, b)
@@ -810,7 +814,7 @@ func (m *HuntResults) Reset()         { *m = HuntResults{} }
 func (m *HuntResults) String() string { return proto.CompactTextString(m) }
 func (*HuntResults) ProtoMessage()    {}
 func (*HuntResults) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{9}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{9}
 }
 func (m *HuntResults) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntResults.Unmarshal(m, b)
@@ -848,7 +852,7 @@ func (m *ListHuntsResponse) Reset()         { *m = ListHuntsResponse{} }
 func (m *ListHuntsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListHuntsResponse) ProtoMessage()    {}
 func (*ListHuntsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{10}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{10}
 }
 func (m *ListHuntsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListHuntsResponse.Unmarshal(m, b)
@@ -889,7 +893,7 @@ func (m *ListHuntClientsRequest) Reset()         { *m = ListHuntClientsRequest{}
 func (m *ListHuntClientsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListHuntClientsRequest) ProtoMessage()    {}
 func (*ListHuntClientsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_hunts_71df82c3dc889e43, []int{11}
+	return fileDescriptor_hunts_e287b5d8b06cc6d7, []int{11}
 }
 func (m *ListHuntClientsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListHuntClientsRequest.Unmarshal(m, b)
@@ -956,9 +960,9 @@ func init() {
 	proto.RegisterEnum("proto.ListHuntClientsRequest_Type", ListHuntClientsRequest_Type_name, ListHuntClientsRequest_Type_value)
 }
 
-func init() { proto.RegisterFile("hunts.proto", fileDescriptor_hunts_71df82c3dc889e43) }
+func init() { proto.RegisterFile("hunts.proto", fileDescriptor_hunts_e287b5d8b06cc6d7) }
 
-var fileDescriptor_hunts_71df82c3dc889e43 = []byte{
+var fileDescriptor_hunts_e287b5d8b06cc6d7 = []byte{
 	// 2124 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x58, 0x4b, 0x8c, 0x1b, 0x49,
 	0x19, 0x9e, 0xf6, 0x78, 0xc6, 0x71, 0x39, 0x33, 0xe3, 0x29, 0x65, 0x12, 0xc7, 0x01, 0xa9, 0x68,

@@ -49,7 +49,7 @@ func (x ApiFlow_State) String() string {
 	return proto.EnumName(ApiFlow_State_name, int32(x))
 }
 func (ApiFlow_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{0, 0}
+	return fileDescriptor_flows_06a16f162104c604, []int{0, 0}
 }
 
 // Next id: 16
@@ -76,7 +76,7 @@ func (m *ApiFlow) Reset()         { *m = ApiFlow{} }
 func (m *ApiFlow) String() string { return proto.CompactTextString(m) }
 func (*ApiFlow) ProtoMessage()    {}
 func (*ApiFlow) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{0}
+	return fileDescriptor_flows_06a16f162104c604, []int{0}
 }
 func (m *ApiFlow) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlow.Unmarshal(m, b)
@@ -200,7 +200,7 @@ func (m *ApiFlowRequestDetails) Reset()         { *m = ApiFlowRequestDetails{} }
 func (m *ApiFlowRequestDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowRequestDetails) ProtoMessage()    {}
 func (*ApiFlowRequestDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{1}
+	return fileDescriptor_flows_06a16f162104c604, []int{1}
 }
 func (m *ApiFlowRequestDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowRequestDetails.Unmarshal(m, b)
@@ -238,7 +238,7 @@ func (m *ApiFlowResultDetails) Reset()         { *m = ApiFlowResultDetails{} }
 func (m *ApiFlowResultDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowResultDetails) ProtoMessage()    {}
 func (*ApiFlowResultDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{2}
+	return fileDescriptor_flows_06a16f162104c604, []int{2}
 }
 func (m *ApiFlowResultDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowResultDetails.Unmarshal(m, b)
@@ -276,7 +276,7 @@ func (m *ApiFlowLogDetails) Reset()         { *m = ApiFlowLogDetails{} }
 func (m *ApiFlowLogDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowLogDetails) ProtoMessage()    {}
 func (*ApiFlowLogDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{3}
+	return fileDescriptor_flows_06a16f162104c604, []int{3}
 }
 func (m *ApiFlowLogDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowLogDetails.Unmarshal(m, b)
@@ -317,7 +317,7 @@ func (m *ApiFlowRequest) Reset()         { *m = ApiFlowRequest{} }
 func (m *ApiFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowRequest) ProtoMessage()    {}
 func (*ApiFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{4}
+	return fileDescriptor_flows_06a16f162104c604, []int{4}
 }
 func (m *ApiFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowRequest.Unmarshal(m, b)
@@ -376,7 +376,7 @@ func (m *ApiFlowResponse) Reset()         { *m = ApiFlowResponse{} }
 func (m *ApiFlowResponse) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowResponse) ProtoMessage()    {}
 func (*ApiFlowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{5}
+	return fileDescriptor_flows_06a16f162104c604, []int{5}
 }
 func (m *ApiFlowResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowResponse.Unmarshal(m, b)
@@ -414,7 +414,7 @@ func (m *FlowDescriptors) Reset()         { *m = FlowDescriptors{} }
 func (m *FlowDescriptors) String() string { return proto.CompactTextString(m) }
 func (*FlowDescriptors) ProtoMessage()    {}
 func (*FlowDescriptors) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_e8a2962d3dd5340e, []int{6}
+	return fileDescriptor_flows_06a16f162104c604, []int{6}
 }
 func (m *FlowDescriptors) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowDescriptors.Unmarshal(m, b)
@@ -452,9 +452,9 @@ func init() {
 	proto.RegisterEnum("proto.ApiFlow_State", ApiFlow_State_name, ApiFlow_State_value)
 }
 
-func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_e8a2962d3dd5340e) }
+func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_06a16f162104c604) }
 
-var fileDescriptor_flows_e8a2962d3dd5340e = []byte{
+var fileDescriptor_flows_06a16f162104c604 = []byte{
 	// 904 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xdd, 0x6e, 0x1b, 0x45,
 	0x14, 0xc7, 0x59, 0x62, 0xc7, 0xf1, 0x38, 0x38, 0xe9, 0x90, 0xa4, 0xdb, 0x14, 0xe8, 0xc8, 0x6a,

@@ -47,7 +47,7 @@ func (x ApiClient_IPAddressClass) String() string {
 	return proto.EnumName(ApiClient_IPAddressClass_name, int32(x))
 }
 func (ApiClient_IPAddressClass) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{1, 0}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{1, 0}
 }
 
 // GRR uses an int for client_version which is difficult to use
@@ -66,7 +66,7 @@ func (m *AgentInformation) Reset()         { *m = AgentInformation{} }
 func (m *AgentInformation) String() string { return proto.CompactTextString(m) }
 func (*AgentInformation) ProtoMessage()    {}
 func (*AgentInformation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{0}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{0}
 }
 func (m *AgentInformation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AgentInformation.Unmarshal(m, b)
@@ -132,7 +132,7 @@ func (m *ApiClient) Reset()         { *m = ApiClient{} }
 func (m *ApiClient) String() string { return proto.CompactTextString(m) }
 func (*ApiClient) ProtoMessage()    {}
 func (*ApiClient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{1}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{1}
 }
 func (m *ApiClient) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiClient.Unmarshal(m, b)
@@ -254,7 +254,7 @@ func (m *Interface) Reset()         { *m = Interface{} }
 func (m *Interface) String() string { return proto.CompactTextString(m) }
 func (*Interface) ProtoMessage()    {}
 func (*Interface) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{2}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{2}
 }
 func (m *Interface) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Interface.Unmarshal(m, b)
@@ -294,7 +294,7 @@ func (m *SearchClientsRequest) Reset()         { *m = SearchClientsRequest{} }
 func (m *SearchClientsRequest) String() string { return proto.CompactTextString(m) }
 func (*SearchClientsRequest) ProtoMessage()    {}
 func (*SearchClientsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{3}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{3}
 }
 func (m *SearchClientsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchClientsRequest.Unmarshal(m, b)
@@ -346,7 +346,7 @@ func (m *SearchClientsResponse) Reset()         { *m = SearchClientsResponse{} }
 func (m *SearchClientsResponse) String() string { return proto.CompactTextString(m) }
 func (*SearchClientsResponse) ProtoMessage()    {}
 func (*SearchClientsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{4}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{4}
 }
 func (m *SearchClientsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchClientsResponse.Unmarshal(m, b)
@@ -385,7 +385,7 @@ func (m *GetClientRequest) Reset()         { *m = GetClientRequest{} }
 func (m *GetClientRequest) String() string { return proto.CompactTextString(m) }
 func (*GetClientRequest) ProtoMessage()    {}
 func (*GetClientRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_clients_e0d40aa3a861f896, []int{5}
+	return fileDescriptor_clients_d7683e1d2b270e23, []int{5}
 }
 func (m *GetClientRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetClientRequest.Unmarshal(m, b)
@@ -429,9 +429,9 @@ func init() {
 	proto.RegisterEnum("proto.ApiClient_IPAddressClass", ApiClient_IPAddressClass_name, ApiClient_IPAddressClass_value)
 }
 
-func init() { proto.RegisterFile("clients.proto", fileDescriptor_clients_e0d40aa3a861f896) }
+func init() { proto.RegisterFile("clients.proto", fileDescriptor_clients_d7683e1d2b270e23) }
 
-var fileDescriptor_clients_e0d40aa3a861f896 = []byte{
+var fileDescriptor_clients_d7683e1d2b270e23 = []byte{
 	// 861 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x94, 0x6d, 0x6f, 0x1b, 0x45,
 	0x10, 0xc7, 0x71, 0xe3, 0xd8, 0xf1, 0x5c, 0x9c, 0xba, 0xab, 0x52, 0x4e, 0xa5, 0x90, 0xad, 0x45,

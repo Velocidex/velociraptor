@@ -48,7 +48,7 @@ func (x GrrMessage_AuthorizationState) String() string {
 	return proto.EnumName(GrrMessage_AuthorizationState_name, int32(x))
 }
 func (GrrMessage_AuthorizationState) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{0, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{0, 0}
 }
 
 type GrrMessage_Type int32
@@ -74,7 +74,7 @@ func (x GrrMessage_Type) String() string {
 	return proto.EnumName(GrrMessage_Type_name, int32(x))
 }
 func (GrrMessage_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{0, 1}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{0, 1}
 }
 
 type GrrMessage_Priority int32
@@ -100,7 +100,7 @@ func (x GrrMessage_Priority) String() string {
 	return proto.EnumName(GrrMessage_Priority_name, int32(x))
 }
 func (GrrMessage_Priority) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{0, 2}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{0, 2}
 }
 
 // Velociraptor specific messages.
@@ -124,7 +124,7 @@ func (x GrrMessage_ClientType) String() string {
 	return proto.EnumName(GrrMessage_ClientType_name, int32(x))
 }
 func (GrrMessage_ClientType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{0, 3}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{0, 3}
 }
 
 type Certificate_Type int32
@@ -150,7 +150,7 @@ func (x Certificate_Type) String() string {
 	return proto.EnumName(Certificate_Type_name, int32(x))
 }
 func (Certificate_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{1, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{1, 0}
 }
 
 type GrrStatus_ReturnedStatus int32
@@ -188,7 +188,7 @@ func (x GrrStatus_ReturnedStatus) String() string {
 	return proto.EnumName(GrrStatus_ReturnedStatus_name, int32(x))
 }
 func (GrrStatus_ReturnedStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{3, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{3, 0}
 }
 
 type PackedMessageList_CompressionType int32
@@ -212,7 +212,7 @@ func (x PackedMessageList_CompressionType) String() string {
 	return proto.EnumName(PackedMessageList_CompressionType_name, int32(x))
 }
 func (PackedMessageList_CompressionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{5, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{5, 0}
 }
 
 type CipherProperties_HMACType int32
@@ -238,7 +238,7 @@ func (x CipherProperties_HMACType) String() string {
 	return proto.EnumName(CipherProperties_HMACType_name, int32(x))
 }
 func (CipherProperties_HMACType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{6, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{6, 0}
 }
 
 // This status code applies for the entire communication.
@@ -268,7 +268,7 @@ func (x ClientCommunication_Status) String() string {
 	return proto.EnumName(ClientCommunication_Status_name, int32(x))
 }
 func (ClientCommunication_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{8, 0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{8, 0}
 }
 
 // This message is sent between the client and the server.
@@ -316,7 +316,7 @@ func (m *GrrMessage) Reset()         { *m = GrrMessage{} }
 func (m *GrrMessage) String() string { return proto.CompactTextString(m) }
 func (*GrrMessage) ProtoMessage()    {}
 func (*GrrMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{0}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{0}
 }
 func (m *GrrMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GrrMessage.Unmarshal(m, b)
@@ -511,7 +511,7 @@ func (m *Certificate) Reset()         { *m = Certificate{} }
 func (m *Certificate) String() string { return proto.CompactTextString(m) }
 func (*Certificate) ProtoMessage()    {}
 func (*Certificate) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{1}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{1}
 }
 func (m *Certificate) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Certificate.Unmarshal(m, b)
@@ -564,7 +564,7 @@ func (m *CpuSeconds) Reset()         { *m = CpuSeconds{} }
 func (m *CpuSeconds) String() string { return proto.CompactTextString(m) }
 func (*CpuSeconds) ProtoMessage()    {}
 func (*CpuSeconds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{2}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{2}
 }
 func (m *CpuSeconds) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CpuSeconds.Unmarshal(m, b)
@@ -617,7 +617,7 @@ func (m *GrrStatus) Reset()         { *m = GrrStatus{} }
 func (m *GrrStatus) String() string { return proto.CompactTextString(m) }
 func (*GrrStatus) ProtoMessage()    {}
 func (*GrrStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{3}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{3}
 }
 func (m *GrrStatus) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GrrStatus.Unmarshal(m, b)
@@ -698,7 +698,7 @@ func (m *MessageList) Reset()         { *m = MessageList{} }
 func (m *MessageList) String() string { return proto.CompactTextString(m) }
 func (*MessageList) ProtoMessage()    {}
 func (*MessageList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{4}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{4}
 }
 func (m *MessageList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MessageList.Unmarshal(m, b)
@@ -743,7 +743,7 @@ func (m *PackedMessageList) Reset()         { *m = PackedMessageList{} }
 func (m *PackedMessageList) String() string { return proto.CompactTextString(m) }
 func (*PackedMessageList) ProtoMessage()    {}
 func (*PackedMessageList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{5}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{5}
 }
 func (m *PackedMessageList) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PackedMessageList.Unmarshal(m, b)
@@ -818,7 +818,7 @@ func (m *CipherProperties) Reset()         { *m = CipherProperties{} }
 func (m *CipherProperties) String() string { return proto.CompactTextString(m) }
 func (*CipherProperties) ProtoMessage()    {}
 func (*CipherProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{6}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{6}
 }
 func (m *CipherProperties) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CipherProperties.Unmarshal(m, b)
@@ -886,7 +886,7 @@ func (m *CipherMetadata) Reset()         { *m = CipherMetadata{} }
 func (m *CipherMetadata) String() string { return proto.CompactTextString(m) }
 func (*CipherMetadata) ProtoMessage()    {}
 func (*CipherMetadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{7}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{7}
 }
 func (m *CipherMetadata) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_CipherMetadata.Unmarshal(m, b)
@@ -966,7 +966,7 @@ func (m *ClientCommunication) Reset()         { *m = ClientCommunication{} }
 func (m *ClientCommunication) String() string { return proto.CompactTextString(m) }
 func (*ClientCommunication) ProtoMessage()    {}
 func (*ClientCommunication) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{8}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{8}
 }
 func (m *ClientCommunication) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientCommunication.Unmarshal(m, b)
@@ -1070,7 +1070,7 @@ func (m *ClientResources) Reset()         { *m = ClientResources{} }
 func (m *ClientResources) String() string { return proto.CompactTextString(m) }
 func (*ClientResources) ProtoMessage()    {}
 func (*ClientResources) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{9}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{9}
 }
 func (m *ClientResources) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientResources.Unmarshal(m, b)
@@ -1130,7 +1130,7 @@ func (m *LogMessage) Reset()         { *m = LogMessage{} }
 func (m *LogMessage) String() string { return proto.CompactTextString(m) }
 func (*LogMessage) ProtoMessage()    {}
 func (*LogMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{10}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{10}
 }
 func (m *LogMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LogMessage.Unmarshal(m, b)
@@ -1175,7 +1175,7 @@ func (m *PublicKey) Reset()         { *m = PublicKey{} }
 func (m *PublicKey) String() string { return proto.CompactTextString(m) }
 func (*PublicKey) ProtoMessage()    {}
 func (*PublicKey) Descriptor() ([]byte, []int) {
-	return fileDescriptor_jobs_7c66029bb0e0b094, []int{11}
+	return fileDescriptor_jobs_db3b76b8aa860933, []int{11}
 }
 func (m *PublicKey) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PublicKey.Unmarshal(m, b)
@@ -1226,9 +1226,9 @@ func init() {
 	proto.RegisterEnum("proto.ClientCommunication_Status", ClientCommunication_Status_name, ClientCommunication_Status_value)
 }
 
-func init() { proto.RegisterFile("jobs.proto", fileDescriptor_jobs_7c66029bb0e0b094) }
+func init() { proto.RegisterFile("jobs.proto", fileDescriptor_jobs_db3b76b8aa860933) }
 
-var fileDescriptor_jobs_7c66029bb0e0b094 = []byte{
+var fileDescriptor_jobs_db3b76b8aa860933 = []byte{
 	// 2871 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x58, 0xcb, 0x8f, 0xdb, 0xc6,
 	0x19, 0xb7, 0xa4, 0x7d, 0x69, 0xb4, 0x0f, 0x79, 0x5c, 0xc7, 0xb2, 0x63, 0x23, 0x13, 0x25, 0x40,

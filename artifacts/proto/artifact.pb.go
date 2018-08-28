@@ -32,7 +32,7 @@ func (m *ArtifactParameter) Reset()         { *m = ArtifactParameter{} }
 func (m *ArtifactParameter) String() string { return proto.CompactTextString(m) }
 func (*ArtifactParameter) ProtoMessage()    {}
 func (*ArtifactParameter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_19052601a90eb349, []int{0}
+	return fileDescriptor_artifact_ce75a1df3152403a, []int{0}
 }
 func (m *ArtifactParameter) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactParameter.Unmarshal(m, b)
@@ -85,7 +85,7 @@ func (m *ArtifactSource) Reset()         { *m = ArtifactSource{} }
 func (m *ArtifactSource) String() string { return proto.CompactTextString(m) }
 func (*ArtifactSource) ProtoMessage()    {}
 func (*ArtifactSource) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_19052601a90eb349, []int{1}
+	return fileDescriptor_artifact_ce75a1df3152403a, []int{1}
 }
 func (m *ArtifactSource) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactSource.Unmarshal(m, b)
@@ -134,7 +134,7 @@ func (m *Artifact) Reset()         { *m = Artifact{} }
 func (m *Artifact) String() string { return proto.CompactTextString(m) }
 func (*Artifact) ProtoMessage()    {}
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_19052601a90eb349, []int{2}
+	return fileDescriptor_artifact_ce75a1df3152403a, []int{2}
 }
 func (m *Artifact) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifact.Unmarshal(m, b)
@@ -200,7 +200,7 @@ func (m *ArtifactDescriptors) Reset()         { *m = ArtifactDescriptors{} }
 func (m *ArtifactDescriptors) String() string { return proto.CompactTextString(m) }
 func (*ArtifactDescriptors) ProtoMessage()    {}
 func (*ArtifactDescriptors) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_19052601a90eb349, []int{3}
+	return fileDescriptor_artifact_ce75a1df3152403a, []int{3}
 }
 func (m *ArtifactDescriptors) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactDescriptors.Unmarshal(m, b)
@@ -234,9 +234,9 @@ func init() {
 	proto.RegisterType((*ArtifactDescriptors)(nil), "proto.ArtifactDescriptors")
 }
 
-func init() { proto.RegisterFile("artifact.proto", fileDescriptor_artifact_19052601a90eb349) }
+func init() { proto.RegisterFile("artifact.proto", fileDescriptor_artifact_ce75a1df3152403a) }
 
-var fileDescriptor_artifact_19052601a90eb349 = []byte{
+var fileDescriptor_artifact_ce75a1df3152403a = []byte{
 	// 820 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x54, 0xcd, 0x6a, 0x64, 0x45,
 	0x14, 0xe6, 0x26, 0x13, 0x63, 0x6a, 0x64, 0xc4, 0x12, 0xe1, 0xe2, 0x42, 0x8e, 0x19, 0xd4, 0x44,

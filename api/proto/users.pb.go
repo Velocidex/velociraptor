@@ -42,7 +42,7 @@ func (x GUISettings_UIMode) String() string {
 	return proto.EnumName(GUISettings_UIMode_name, int32(x))
 }
 func (GUISettings_UIMode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{1, 0}
+	return fileDescriptor_users_13fe84ac4690970e, []int{1, 0}
 }
 
 type ApiGrrUser_UserType int32
@@ -68,7 +68,7 @@ func (x ApiGrrUser_UserType) String() string {
 	return proto.EnumName(ApiGrrUser_UserType_name, int32(x))
 }
 func (ApiGrrUser_UserType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{3, 0}
+	return fileDescriptor_users_13fe84ac4690970e, []int{3, 0}
 }
 
 type UserNotification_Type int32
@@ -136,7 +136,7 @@ func (x UserNotification_Type) String() string {
 	return proto.EnumName(UserNotification_Type_name, int32(x))
 }
 func (UserNotification_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{5, 0}
+	return fileDescriptor_users_13fe84ac4690970e, []int{5, 0}
 }
 
 type UserNotification_State int32
@@ -162,7 +162,7 @@ func (x UserNotification_State) String() string {
 	return proto.EnumName(UserNotification_State_name, int32(x))
 }
 func (UserNotification_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{5, 1}
+	return fileDescriptor_users_13fe84ac4690970e, []int{5, 1}
 }
 
 type VelociraptorUser struct {
@@ -178,7 +178,7 @@ func (m *VelociraptorUser) Reset()         { *m = VelociraptorUser{} }
 func (m *VelociraptorUser) String() string { return proto.CompactTextString(m) }
 func (*VelociraptorUser) ProtoMessage()    {}
 func (*VelociraptorUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{0}
+	return fileDescriptor_users_13fe84ac4690970e, []int{0}
 }
 func (m *VelociraptorUser) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VelociraptorUser.Unmarshal(m, b)
@@ -232,7 +232,7 @@ func (m *GUISettings) Reset()         { *m = GUISettings{} }
 func (m *GUISettings) String() string { return proto.CompactTextString(m) }
 func (*GUISettings) ProtoMessage()    {}
 func (*GUISettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{1}
+	return fileDescriptor_users_13fe84ac4690970e, []int{1}
 }
 func (m *GUISettings) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GUISettings.Unmarshal(m, b)
@@ -294,7 +294,7 @@ func (m *ApiGrrUserInterfaceTraits) Reset()         { *m = ApiGrrUserInterfaceTr
 func (m *ApiGrrUserInterfaceTraits) String() string { return proto.CompactTextString(m) }
 func (*ApiGrrUserInterfaceTraits) ProtoMessage()    {}
 func (*ApiGrrUserInterfaceTraits) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{2}
+	return fileDescriptor_users_13fe84ac4690970e, []int{2}
 }
 func (m *ApiGrrUserInterfaceTraits) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiGrrUserInterfaceTraits.Unmarshal(m, b)
@@ -440,7 +440,7 @@ func (m *ApiGrrUser) Reset()         { *m = ApiGrrUser{} }
 func (m *ApiGrrUser) String() string { return proto.CompactTextString(m) }
 func (*ApiGrrUser) ProtoMessage()    {}
 func (*ApiGrrUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{3}
+	return fileDescriptor_users_13fe84ac4690970e, []int{3}
 }
 func (m *ApiGrrUser) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiGrrUser.Unmarshal(m, b)
@@ -499,7 +499,7 @@ func (m *UserNotificationCount) Reset()         { *m = UserNotificationCount{} }
 func (m *UserNotificationCount) String() string { return proto.CompactTextString(m) }
 func (*UserNotificationCount) ProtoMessage()    {}
 func (*UserNotificationCount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{4}
+	return fileDescriptor_users_13fe84ac4690970e, []int{4}
 }
 func (m *UserNotificationCount) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserNotificationCount.Unmarshal(m, b)
@@ -542,7 +542,7 @@ func (m *UserNotification) Reset()         { *m = UserNotification{} }
 func (m *UserNotification) String() string { return proto.CompactTextString(m) }
 func (*UserNotification) ProtoMessage()    {}
 func (*UserNotification) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{5}
+	return fileDescriptor_users_13fe84ac4690970e, []int{5}
 }
 func (m *UserNotification) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserNotification.Unmarshal(m, b)
@@ -615,7 +615,7 @@ func (m *GetUserNotificationsResponse) Reset()         { *m = GetUserNotificatio
 func (m *GetUserNotificationsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetUserNotificationsResponse) ProtoMessage()    {}
 func (*GetUserNotificationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{6}
+	return fileDescriptor_users_13fe84ac4690970e, []int{6}
 }
 func (m *GetUserNotificationsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetUserNotificationsResponse.Unmarshal(m, b)
@@ -653,7 +653,7 @@ func (m *GetUserNotificationsRequest) Reset()         { *m = GetUserNotification
 func (m *GetUserNotificationsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetUserNotificationsRequest) ProtoMessage()    {}
 func (*GetUserNotificationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_4b6e75e697befb42, []int{7}
+	return fileDescriptor_users_13fe84ac4690970e, []int{7}
 }
 func (m *GetUserNotificationsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetUserNotificationsRequest.Unmarshal(m, b)
@@ -695,9 +695,9 @@ func init() {
 	proto.RegisterEnum("proto.UserNotification_State", UserNotification_State_name, UserNotification_State_value)
 }
 
-func init() { proto.RegisterFile("users.proto", fileDescriptor_users_4b6e75e697befb42) }
+func init() { proto.RegisterFile("users.proto", fileDescriptor_users_13fe84ac4690970e) }
 
-var fileDescriptor_users_4b6e75e697befb42 = []byte{
+var fileDescriptor_users_13fe84ac4690970e = []byte{
 	// 1545 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x96, 0xdd, 0x72, 0x22, 0xc7,
 	0x15, 0xc7, 0x17, 0xad, 0xb4, 0x2b, 0x1d, 0xf4, 0x81, 0x7a, 0xbf, 0x90, 0x16, 0x69, 0xc7, 0xec,

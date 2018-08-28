@@ -6,3 +6,4 @@ emacs.desktop
 /debian/files
 /debian/velociraptor.debhelper.log
 *.debhelper
+ab0x.go

@@ -52,21 +52,20 @@ Client:
     CvhAfUMmZZ19wtN+37GflrcjDw7VzerTqNJ3gx6iF7Xy7AebkzvEjuyy7d7xKGdM
     Dixe4BWrhpv6DhOBWvtc/gpeqQP+EA71GuAZdQQC6NFdfXekBQ==
     -----END CERTIFICATE-----
-  commit: 47b7a1c7fed5c2cd69d0a49826383d77ad5f3dd4
   name: velociraptor
   nonce: ukqqtSpJNUw=
   server_urls:
   - http://localhost:8000/
   version: "0.1"
   writeback_linux: /tmp/velociraptor.yaml
-  writeback_windows: /Program Files/Velociraptor/velociraptor.writeback.yaml
+  writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
 Datastore:
   filestore_directory: /tmp/velociraptor
   implementation: FileBaseDataStore
   location: /tmp/velociraptor
 Flows: {}
 Frontend:
-  bind_address: 127.0.0.1
+  bind_address: 0.0.0.0
   bind_port: 8000
   certificate: |
     -----BEGIN CERTIFICATE-----
@@ -117,10 +116,14 @@ Frontend:
     sCqds60YfB/yGLeT49cOyvAfAJLJ9mjo+XpEqhlasvjsqY1r67oxkVrJkeldsg/5
     gfG/wcdMZnRjq9sMpOuTJGVRP3cCkUpGTw70F8C+Jyk/U5tP
     -----END RSA PRIVATE KEY-----
-  artifacts_path: artifacts/definitions/
 GUI:
   bind_address: 127.0.0.1
   bind_port: 8889
   internal_cidr:
   - 127.0.0.1/12
   - 192.168.0.0/16
+version:
+  build_time: "2018-08-28T16:06:59+10:00"
+  commit: 0c145ac342cbb0f510ac90d59d5ea3edf7e8fca2
+  name: velociraptor
+  version: 0.2.2

@@ -39,7 +39,7 @@ func (x FileFinderContentsRegexMatchCondition_Mode) String() string {
 	return proto.EnumName(FileFinderContentsRegexMatchCondition_Mode_name, int32(x))
 }
 func (FileFinderContentsRegexMatchCondition_Mode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{4, 0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{4, 0}
 }
 
 type FileFinderContentsLiteralMatchCondition_Mode int32
@@ -62,7 +62,7 @@ func (x FileFinderContentsLiteralMatchCondition_Mode) String() string {
 	return proto.EnumName(FileFinderContentsLiteralMatchCondition_Mode_name, int32(x))
 }
 func (FileFinderContentsLiteralMatchCondition_Mode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{5, 0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{5, 0}
 }
 
 type FileFinderHashActionOptions_OversizedFilePolicy int32
@@ -85,7 +85,7 @@ func (x FileFinderHashActionOptions_OversizedFilePolicy) String() string {
 	return proto.EnumName(FileFinderHashActionOptions_OversizedFilePolicy_name, int32(x))
 }
 func (FileFinderHashActionOptions_OversizedFilePolicy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{7, 0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{7, 0}
 }
 
 type FileFinderDownloadActionOptions_OversizedFilePolicy int32
@@ -111,7 +111,7 @@ func (x FileFinderDownloadActionOptions_OversizedFilePolicy) String() string {
 	return proto.EnumName(FileFinderDownloadActionOptions_OversizedFilePolicy_name, int32(x))
 }
 func (FileFinderDownloadActionOptions_OversizedFilePolicy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{8, 0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{8, 0}
 }
 
 type FileFinderArgs_XDev int32
@@ -137,7 +137,7 @@ func (x FileFinderArgs_XDev) String() string {
 	return proto.EnumName(FileFinderArgs_XDev_name, int32(x))
 }
 func (FileFinderArgs_XDev) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{11, 0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{11, 0}
 }
 
 // Next field ID: 7
@@ -153,7 +153,7 @@ func (m *FileFinderModificationTimeCondition) Reset()         { *m = FileFinderM
 func (m *FileFinderModificationTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderModificationTimeCondition) ProtoMessage()    {}
 func (*FileFinderModificationTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{0}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{0}
 }
 func (m *FileFinderModificationTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderModificationTimeCondition.Unmarshal(m, b)
@@ -200,7 +200,7 @@ func (m *FileFinderAccessTimeCondition) Reset()         { *m = FileFinderAccessT
 func (m *FileFinderAccessTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderAccessTimeCondition) ProtoMessage()    {}
 func (*FileFinderAccessTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{1}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{1}
 }
 func (m *FileFinderAccessTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderAccessTimeCondition.Unmarshal(m, b)
@@ -247,7 +247,7 @@ func (m *FileFinderInodeChangeTimeCondition) Reset()         { *m = FileFinderIn
 func (m *FileFinderInodeChangeTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderInodeChangeTimeCondition) ProtoMessage()    {}
 func (*FileFinderInodeChangeTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{2}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{2}
 }
 func (m *FileFinderInodeChangeTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderInodeChangeTimeCondition.Unmarshal(m, b)
@@ -294,7 +294,7 @@ func (m *FileFinderSizeCondition) Reset()         { *m = FileFinderSizeCondition
 func (m *FileFinderSizeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderSizeCondition) ProtoMessage()    {}
 func (*FileFinderSizeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{3}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{3}
 }
 func (m *FileFinderSizeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderSizeCondition.Unmarshal(m, b)
@@ -345,7 +345,7 @@ func (m *FileFinderContentsRegexMatchCondition) Reset()         { *m = FileFinde
 func (m *FileFinderContentsRegexMatchCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderContentsRegexMatchCondition) ProtoMessage()    {}
 func (*FileFinderContentsRegexMatchCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{4}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{4}
 }
 func (m *FileFinderContentsRegexMatchCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderContentsRegexMatchCondition.Unmarshal(m, b)
@@ -426,7 +426,7 @@ func (m *FileFinderContentsLiteralMatchCondition) Reset() {
 func (m *FileFinderContentsLiteralMatchCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderContentsLiteralMatchCondition) ProtoMessage()    {}
 func (*FileFinderContentsLiteralMatchCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{5}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{5}
 }
 func (m *FileFinderContentsLiteralMatchCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Unmarshal(m, b)
@@ -507,7 +507,7 @@ func (m *FileFinderCondition) Reset()         { *m = FileFinderCondition{} }
 func (m *FileFinderCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderCondition) ProtoMessage()    {}
 func (*FileFinderCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{6}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{6}
 }
 func (m *FileFinderCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderCondition.Unmarshal(m, b)
@@ -534,27 +534,37 @@ type isFileFinderCondition_UnionField interface {
 type FileFinderCondition_ModificationTime struct {
 	ModificationTime *FileFinderModificationTimeCondition `protobuf:"bytes,2,opt,name=modification_time,json=modificationTime,proto3,oneof"`
 }
+
 type FileFinderCondition_AccessTime struct {
 	AccessTime *FileFinderAccessTimeCondition `protobuf:"bytes,3,opt,name=access_time,json=accessTime,proto3,oneof"`
 }
+
 type FileFinderCondition_InodeChangeTime struct {
 	InodeChangeTime *FileFinderInodeChangeTimeCondition `protobuf:"bytes,4,opt,name=inode_change_time,json=inodeChangeTime,proto3,oneof"`
 }
+
 type FileFinderCondition_Size struct {
 	Size *FileFinderSizeCondition `protobuf:"bytes,5,opt,name=size,proto3,oneof"`
 }
+
 type FileFinderCondition_ContentsRegexMatch struct {
 	ContentsRegexMatch *FileFinderContentsRegexMatchCondition `protobuf:"bytes,6,opt,name=contents_regex_match,json=contentsRegexMatch,proto3,oneof"`
 }
+
 type FileFinderCondition_ContentsLiteralMatch struct {
 	ContentsLiteralMatch *FileFinderContentsLiteralMatchCondition `protobuf:"bytes,7,opt,name=contents_literal_match,json=contentsLiteralMatch,proto3,oneof"`
 }
 
-func (*FileFinderCondition_ModificationTime) isFileFinderCondition_UnionField()     {}
-func (*FileFinderCondition_AccessTime) isFileFinderCondition_UnionField()           {}
-func (*FileFinderCondition_InodeChangeTime) isFileFinderCondition_UnionField()      {}
-func (*FileFinderCondition_Size) isFileFinderCondition_UnionField()                 {}
-func (*FileFinderCondition_ContentsRegexMatch) isFileFinderCondition_UnionField()   {}
+func (*FileFinderCondition_ModificationTime) isFileFinderCondition_UnionField() {}
+
+func (*FileFinderCondition_AccessTime) isFileFinderCondition_UnionField() {}
+
+func (*FileFinderCondition_InodeChangeTime) isFileFinderCondition_UnionField() {}
+
+func (*FileFinderCondition_Size) isFileFinderCondition_UnionField() {}
+
+func (*FileFinderCondition_ContentsRegexMatch) isFileFinderCondition_UnionField() {}
+
 func (*FileFinderCondition_ContentsLiteralMatch) isFileFinderCondition_UnionField() {}
 
 func (m *FileFinderCondition) GetUnionField() isFileFinderCondition_UnionField {
@@ -770,7 +780,7 @@ func (m *FileFinderHashActionOptions) Reset()         { *m = FileFinderHashActio
 func (m *FileFinderHashActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderHashActionOptions) ProtoMessage()    {}
 func (*FileFinderHashActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{7}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{7}
 }
 func (m *FileFinderHashActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderHashActionOptions.Unmarshal(m, b)
@@ -825,7 +835,7 @@ func (m *FileFinderDownloadActionOptions) Reset()         { *m = FileFinderDownl
 func (m *FileFinderDownloadActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderDownloadActionOptions) ProtoMessage()    {}
 func (*FileFinderDownloadActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{8}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{8}
 }
 func (m *FileFinderDownloadActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderDownloadActionOptions.Unmarshal(m, b)
@@ -878,7 +888,7 @@ func (m *FileFinderStatActionOptions) Reset()         { *m = FileFinderStatActio
 func (m *FileFinderStatActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderStatActionOptions) ProtoMessage()    {}
 func (*FileFinderStatActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{9}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{9}
 }
 func (m *FileFinderStatActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderStatActionOptions.Unmarshal(m, b)
@@ -928,7 +938,7 @@ func (m *FileFinderAction) Reset()         { *m = FileFinderAction{} }
 func (m *FileFinderAction) String() string { return proto.CompactTextString(m) }
 func (*FileFinderAction) ProtoMessage()    {}
 func (*FileFinderAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{10}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{10}
 }
 func (m *FileFinderAction) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderAction.Unmarshal(m, b)
@@ -955,16 +965,20 @@ type isFileFinderAction_Action interface {
 type FileFinderAction_Hash struct {
 	Hash *FileFinderHashActionOptions `protobuf:"bytes,3,opt,name=hash,proto3,oneof"`
 }
+
 type FileFinderAction_Download struct {
 	Download *FileFinderDownloadActionOptions `protobuf:"bytes,2,opt,name=download,proto3,oneof"`
 }
+
 type FileFinderAction_Stat struct {
 	Stat *FileFinderStatActionOptions `protobuf:"bytes,4,opt,name=stat,proto3,oneof"`
 }
 
-func (*FileFinderAction_Hash) isFileFinderAction_Action()     {}
+func (*FileFinderAction_Hash) isFileFinderAction_Action() {}
+
 func (*FileFinderAction_Download) isFileFinderAction_Action() {}
-func (*FileFinderAction_Stat) isFileFinderAction_Action()     {}
+
+func (*FileFinderAction_Stat) isFileFinderAction_Action() {}
 
 func (m *FileFinderAction) GetAction() isFileFinderAction_Action {
 	if m != nil {
@@ -1104,7 +1118,7 @@ func (m *FileFinderArgs) Reset()         { *m = FileFinderArgs{} }
 func (m *FileFinderArgs) String() string { return proto.CompactTextString(m) }
 func (*FileFinderArgs) ProtoMessage()    {}
 func (*FileFinderArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_65582a9e29347fb1, []int{11}
+	return fileDescriptor_file_finder_3181670a2b2b951c, []int{11}
 }
 func (m *FileFinderArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderArgs.Unmarshal(m, b)
@@ -1186,9 +1200,9 @@ func init() {
 	proto.RegisterEnum("proto.FileFinderArgs_XDev", FileFinderArgs_XDev_name, FileFinderArgs_XDev_value)
 }
 
-func init() { proto.RegisterFile("file_finder.proto", fileDescriptor_file_finder_65582a9e29347fb1) }
+func init() { proto.RegisterFile("file_finder.proto", fileDescriptor_file_finder_3181670a2b2b951c) }
 
-var fileDescriptor_file_finder_65582a9e29347fb1 = []byte{
+var fileDescriptor_file_finder_3181670a2b2b951c = []byte{
 	// 2593 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0x4f, 0x6c, 0x24, 0xc5,
 	0xd5, 0x77, 0x7b, 0xc7, 0xde, 0x71, 0x8d, 0x6d, 0xec, 0xf2, 0x7e, 0xc6, 0xcc, 0x7e, 0x1f, 0xd4,

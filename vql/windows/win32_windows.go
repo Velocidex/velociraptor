@@ -22,17 +22,6 @@ type (
 	LPCWSTR        *uint16
 	NET_API_STATUS DWORD
 
-	USER_INFO_1 struct {
-		Name         LPWSTR
-		Password     LPWSTR
-		Password_age DWORD
-		Priv         DWORD
-		Home_dir     LPWSTR
-		Comment      LPWSTR
-		Flags        DWORD
-		ScriptPath   LPWSTR
-	}
-
 	USER_INFO_3 struct {
 		Name             LPWSTR
 		Password         LPWSTR
@@ -63,14 +52,6 @@ type (
 		Profile          LPWSTR
 		Home_dir_drive   LPWSTR
 		Password_expired DWORD
-	}
-
-	GROUP_USERS_INFO_0 struct {
-		Grui0_name LPWSTR
-	}
-
-	USER_INFO_1003 struct {
-		Usri1003_password LPWSTR
 	}
 )
 
@@ -150,6 +131,8 @@ const (
 //sys NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintptr, prefmaxlen uint32, entriesread *uint32, totalentries *uint32, resume_handle *uint32) (status NET_API_STATUS) = netapi32.NetUserEnum
 //sys NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) = netapi32.NetUserGetGroups
 
+// Converts a pointer to a wide string to a regular go string. The
+// underlying buffer may be freed afterwards by the Windows API.
 func LPWSTRToString(ptr LPWSTR) string {
 	p := (*[0xffff]uint16)(unsafe.Pointer(ptr))
 	if p == nil {
@@ -159,6 +142,9 @@ func LPWSTRToString(ptr LPWSTR) string {
 	return windows.UTF16ToString(p[:])
 }
 
+// Convert a pointer to buffer and a length into a Go string. NOTE:
+// This does not copy the buffer so it should not be kept around after
+// the Windows API frees the underlying buffer.
 func PointerToString(ptr uintptr, len int) string {
 	var s string
 	hdr := (*reflect.StringHeader)(unsafe.Pointer(&s))

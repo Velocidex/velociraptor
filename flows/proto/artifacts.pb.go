@@ -30,7 +30,7 @@ func (m *Artifacts) Reset()         { *m = Artifacts{} }
 func (m *Artifacts) String() string { return proto.CompactTextString(m) }
 func (*Artifacts) ProtoMessage()    {}
 func (*Artifacts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifacts_e5fe0829db5ff8b7, []int{0}
+	return fileDescriptor_artifacts_382238d2a2b379e1, []int{0}
 }
 func (m *Artifacts) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifacts.Unmarshal(m, b)
@@ -68,7 +68,7 @@ func (m *ArtifactCollectorArgs) Reset()         { *m = ArtifactCollectorArgs{} }
 func (m *ArtifactCollectorArgs) String() string { return proto.CompactTextString(m) }
 func (*ArtifactCollectorArgs) ProtoMessage()    {}
 func (*ArtifactCollectorArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifacts_e5fe0829db5ff8b7, []int{1}
+	return fileDescriptor_artifacts_382238d2a2b379e1, []int{1}
 }
 func (m *ArtifactCollectorArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactCollectorArgs.Unmarshal(m, b)
@@ -100,9 +100,9 @@ func init() {
 	proto.RegisterType((*ArtifactCollectorArgs)(nil), "proto.ArtifactCollectorArgs")
 }
 
-func init() { proto.RegisterFile("artifacts.proto", fileDescriptor_artifacts_e5fe0829db5ff8b7) }
+func init() { proto.RegisterFile("artifacts.proto", fileDescriptor_artifacts_382238d2a2b379e1) }
 
-var fileDescriptor_artifacts_e5fe0829db5ff8b7 = []byte{
+var fileDescriptor_artifacts_382238d2a2b379e1 = []byte{
 	// 211 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4f, 0x2c, 0x2a, 0xc9,
 	0x4c, 0x4b, 0x4c, 0x2e, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x52,

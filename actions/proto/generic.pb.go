@@ -40,7 +40,7 @@ func (x DataBlob_CompressionType) String() string {
 	return proto.EnumName(DataBlob_CompressionType_name, int32(x))
 }
 func (DataBlob_CompressionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{0, 0}
+	return fileDescriptor_generic_018f560c608305e4, []int{0, 0}
 }
 
 // A generic protobuf to deliver some data
@@ -69,7 +69,7 @@ func (m *DataBlob) Reset()         { *m = DataBlob{} }
 func (m *DataBlob) String() string { return proto.CompactTextString(m) }
 func (*DataBlob) ProtoMessage()    {}
 func (*DataBlob) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{0}
+	return fileDescriptor_generic_018f560c608305e4, []int{0}
 }
 func (m *DataBlob) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DataBlob.Unmarshal(m, b)
@@ -185,7 +185,7 @@ func (m *BlobArray) Reset()         { *m = BlobArray{} }
 func (m *BlobArray) String() string { return proto.CompactTextString(m) }
 func (*BlobArray) ProtoMessage()    {}
 func (*BlobArray) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{1}
+	return fileDescriptor_generic_018f560c608305e4, []int{1}
 }
 func (m *BlobArray) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BlobArray.Unmarshal(m, b)
@@ -225,7 +225,7 @@ func (m *KeyValue) Reset()         { *m = KeyValue{} }
 func (m *KeyValue) String() string { return proto.CompactTextString(m) }
 func (*KeyValue) ProtoMessage()    {}
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{2}
+	return fileDescriptor_generic_018f560c608305e4, []int{2}
 }
 func (m *KeyValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
@@ -271,7 +271,7 @@ func (m *Dict) Reset()         { *m = Dict{} }
 func (m *Dict) String() string { return proto.CompactTextString(m) }
 func (*Dict) ProtoMessage()    {}
 func (*Dict) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{3}
+	return fileDescriptor_generic_018f560c608305e4, []int{3}
 }
 func (m *Dict) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Dict.Unmarshal(m, b)
@@ -313,7 +313,7 @@ func (m *EmbeddedRDFValue) Reset()         { *m = EmbeddedRDFValue{} }
 func (m *EmbeddedRDFValue) String() string { return proto.CompactTextString(m) }
 func (*EmbeddedRDFValue) ProtoMessage()    {}
 func (*EmbeddedRDFValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_b8ff667750b48817, []int{4}
+	return fileDescriptor_generic_018f560c608305e4, []int{4}
 }
 func (m *EmbeddedRDFValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EmbeddedRDFValue.Unmarshal(m, b)
@@ -363,9 +363,9 @@ func init() {
 	proto.RegisterEnum("proto.DataBlob_CompressionType", DataBlob_CompressionType_name, DataBlob_CompressionType_value)
 }
 
-func init() { proto.RegisterFile("generic.proto", fileDescriptor_generic_b8ff667750b48817) }
+func init() { proto.RegisterFile("generic.proto", fileDescriptor_generic_018f560c608305e4) }
 
-var fileDescriptor_generic_b8ff667750b48817 = []byte{
+var fileDescriptor_generic_018f560c608305e4 = []byte{
 	// 567 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0x51, 0x6f, 0xd3, 0x3c,
 	0x14, 0xfd, 0xbc, 0x64, 0x5b, 0x7b, 0xd3, 0x8f, 0x55, 0x16, 0x1a, 0x06, 0x69, 0xcc, 0x8a, 0x86,

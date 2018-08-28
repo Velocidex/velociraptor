@@ -45,6 +45,9 @@ type HTTPCommunicator struct {
 	last_enrollment_time time.Time
 
 	logger *logging.Logger
+
+	// Can be set to true to pause comms.
+	IsPaused bool
 }
 
 // Run forever.
@@ -72,34 +75,36 @@ func (self *HTTPCommunicator) Run() {
 	}()
 
 	// Check the pending message list for messages every poll_min.
-	// A note about timing: This loops is quantized to
-	// self.minPoll which means that polls can never occur more
-	// frequently than that. The minPoll duration allows the
-	// client enough time to queue up several messages in the same
-	// POST operation. When there is nothing to send, the poll
-	// interval will grow gradually to maxPoll.
+	// A note about timing: This loop is quantized to self.minPoll
+	// which means that polls can never occur more frequently than
+	// that. The minPoll duration allows the client enough time to
+	// queue up several messages in the same POST operation. When
+	// there is nothing to send, the poll interval will grow
+	// gradually to maxPoll.
 
 	// If an error occurs, the client will retry at maxPoll until
 	// the URL is successful. If there is data to send the client
 	// will switch to fast poll mode until there is no more data
 	// to send, then it will back off.
 	for {
-		// If there is some data in the queues we send it
-		// immediately.
-		message_list := self.drainMessageQueue()
-		if len(message_list.Job) > 0 {
-			self.sendMessageList(message_list)
+		if !self.IsPaused {
+			// If there is some data in the queues we send it
+			// immediately.
+			message_list := self.drainMessageQueue()
+			if len(message_list.Job) > 0 {
+				self.sendMessageList(message_list)
 
-			// We are due for an unsolicited poll.
-		} else if time.Now().After(
-			self.last_ping_time.Add(self.current_poll_duration)) {
-			self.logger.Info("Sending unsolicited ping.")
-			self.current_poll_duration *= 2
-			if self.current_poll_duration > self.maxPoll {
-				self.current_poll_duration = self.maxPoll
+				// We are due for an unsolicited poll.
+			} else if time.Now().After(
+				self.last_ping_time.Add(self.current_poll_duration)) {
+				self.logger.Info("Sending unsolicited ping.")
+				self.current_poll_duration *= 2
+				if self.current_poll_duration > self.maxPoll {
+					self.current_poll_duration = self.maxPoll
+				}
+
+				self.sendMessageList(message_list)
 			}
-
-			self.sendMessageList(message_list)
 		}
 
 		// Sleep for minPoll

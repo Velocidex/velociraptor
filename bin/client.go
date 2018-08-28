@@ -16,11 +16,6 @@ var (
 
 func RunClient(config_path *string) {
 	ctx := context.Background()
-
-	if config_path == nil || *config_path == "" {
-		kingpin.Fatalf("config file must be provided.")
-	}
-
 	config_obj, err := config.LoadClientConfig(*config_path)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to load config file")

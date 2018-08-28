@@ -47,6 +47,18 @@ message Writeback {
         }];
 }
 
+// Configuration for the windows installer.
+message WindowsInstallerConfig {
+    string service_name = 1 [(sem_type) = {
+            description: "The name of the service to create."
+        }];
+    string install_path = 2 [(sem_type) = {
+            description: "Where should the binary be installed? The install command "
+            "copies the binary to this location and installs the service.",
+        }];
+}
+
+
 message ClientConfig {
     repeated string labels = 6 [(sem_type) = {
             description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
@@ -75,6 +87,10 @@ message ClientConfig {
     uint64 max_poll = 15 [(sem_type) = {
             description: "The maximum number of seconds between server polls."
             default: "600",
+        }];
+
+    WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
+            description: "Configuration of the windows installer.",
         }];
 }
 
