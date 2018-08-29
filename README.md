@@ -46,8 +46,7 @@ To learn more about Velociraptor, read about it on our blog:
    server config you made before - it contains no secrets and can be
    installed on clients.):
     ```bash
-    $ velociraptor --config /etc/velociraptor.config.yaml config \
-       client > client.conf.yaml
+    $ velociraptor --config /etc/velociraptor.config.yaml config client > client.conf.yaml
     ```
 
 8. Launch the client on any system with this client config file.
@@ -58,8 +57,18 @@ To learn more about Velociraptor, read about it on our blog:
 9. You should be able to search for the client in the GUI, browse VFS,
    download files etc.
 
-NOTE: You may omit the --config flag if you include the location to
-the config file in the VELOCIRAPTOR_CONFIG environment variable.
+NOTE: You may omit the --config flag in the following cases:
+
+ * If the VELOCIRAPTOR_CONFIG environment variable exists, Velociraptor 
+   will read its configuration from there.
+ * If you embed the configuration into the binary (using velociraptor 
+   config repack as below), Velociraptor will magically know its own 
+   configuration without reading it from a file at all. 
+
+NOTE: If you embed the server's config into the binary then the binary 
+will have key material in it - this could pose a security issue if the 
+binary itself is leaked. It's OK to embed client config in the client because
+client configs have no secrets.
 
 To create a windows executable:
 
@@ -67,13 +76,15 @@ To create a windows executable:
    contained for your particular installation. It is therefore very
    easy to install:
     ```bash
-    $ velociraptor config repack --exe velociraptor_windows.exe \
-      client.config.yaml my_velociraptor.exe
+    $ velociraptor config repack --exe velociraptor_windows.exe client.config.yaml my_velociraptor.exe
     ```
-
    Where velociraptor_windows.exe is the Windows binary release for
    Velociraptor.
-
+   
+2. If you need to sign the binary, now is the time. The signature will cover 
+   the embedded configuration as well. It is possible to update the embedded 
+   config but this will invalidate the signature.
+   
 2. On a windows system you can now install the service:
     ```bash
     $ my_velociraptor.exe service install
