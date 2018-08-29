@@ -163,7 +163,7 @@ func (self ReadFilePlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 }
 
 type StatArgs struct {
-	Filename string `vfilter:"required,field=filename"`
+	Filename []string `vfilter:"required,field=filename"`
 }
 
 func init() {
@@ -203,9 +203,11 @@ func init() {
 				}
 
 				accessor := &glob.OSFileSystemAccessor{}
-				f, err := accessor.Lstat(arg.Filename)
-				if err == nil {
-					result = append(result, f)
+				for _, filename := range arg.Filename {
+					f, err := accessor.Lstat(filename)
+					if err == nil {
+						result = append(result, f)
+					}
 				}
 				return result
 			},

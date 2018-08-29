@@ -66,22 +66,22 @@ To create a windows executable:
 1. Embed the client config in the binary. This makes the binary self
    contained for your particular installation. It is therefore very
    easy to install:
-   ```bash
-   $ velociraptor config repack --exe velociraptor_windows.exe \
+    ```bash
+    $ velociraptor config repack --exe velociraptor_windows.exe \
       client.config.yaml my_velociraptor.exe
-   ```
+    ```
 
    Where velociraptor_windows.exe is the Windows binary release for
    Velociraptor.
 
 2. On a windows system you can now install the service:
-   ```bash
-   $ my_velociraptor.exe service install
-   INFO:2018/08/28 00:18:19 Stopped service Velociraptor
-   INFO:2018/08/28 00:18:20 Copied binary to C:\Program Files\Velociraptor\Velociraptor.exe
-   INFO:2018/08/28 00:18:20 Installed service Velociraptor
-   INFO:2018/08/28 00:18:21 Started service Velociraptor
-   ```
+    ```bash
+    $ my_velociraptor.exe service install
+    INFO:2018/08/28 00:18:19 Stopped service Velociraptor
+    INFO:2018/08/28 00:18:20 Copied binary to C:\Program Files\Velociraptor\Velociraptor.exe
+    INFO:2018/08/28 00:18:20 Installed service Velociraptor
+    INFO:2018/08/28 00:18:21 Started service Velociraptor
+    ```
 
 This will copy the binary into the install_dir specified in the config
 file, create and start the service.
@@ -93,22 +93,22 @@ might find Velociraptor's artifacts especially useful for quickly
 capturing important information about a running system. You can
 collect artifacts by using the "artifacts collect" command:
 
-   ```bash
-   $ velociraptor artifacts list
-   INFO:2018/08/20 22:28:56 Loaded 18 built in artifacts
-   INFO:2018/08/20 22:28:56 Loaded 18 artifacts from artifacts/definitions/
-   Linux.Applications.Chrome.Extensions
-   Linux.Applications.Chrome.Extensions.Upload
-   Linux.Applications.Docker.Info
-   Linux.Applications.Docker.Version
-   Linux.Debian.AptSources
+    ```bash
+    $ velociraptor artifacts list
+    INFO:2018/08/20 22:28:56 Loaded 18 built in artifacts
+    INFO:2018/08/20 22:28:56 Loaded 18 artifacts from artifacts/definitions/
+    Linux.Applications.Chrome.Extensions
+    Linux.Applications.Chrome.Extensions.Upload
+    Linux.Applications.Docker.Info
+    Linux.Applications.Docker.Version
+    Linux.Debian.AptSources
 
-   $ velociraptor artifacts list -v Linux.Debian.AptSources
-   .... displays the artifacts
+    $ velociraptor artifacts list -v Linux.Debian.AptSources
+    .... displays the artifacts
 
-   $ velociraptor artifacts collect Linux.Debian.AptSources
-   ... Collects all the named artifacts
-   ```
+    $ velociraptor artifacts collect Linux.Debian.AptSources
+    ... Collects all the named artifacts
+    ```
 
 Explore more of Velociraptor's options using the -h flag.
 

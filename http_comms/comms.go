@@ -2,13 +2,13 @@ package http_comms
 
 import (
 	"bytes"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"runtime/debug"
 	"time"
-
-	"github.com/golang/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -172,6 +172,11 @@ func (self *HTTPCommunicator) sendMessageList(message_list *crypto_proto.Message
 func (self *HTTPCommunicator) sendToURL(
 	url string,
 	message_list *crypto_proto.MessageList) error {
+
+	// We need to make sure our memory footprint is as small as
+	// possible. The Velociraptor client prioritizes low memory
+	// footprint over performance.
+	defer debug.FreeOSMemory()
 
 	if self.server_name == "" {
 		// Try to fetch the server pem.

@@ -17,9 +17,8 @@ var (
 func RunClient(config_path *string) {
 	ctx := context.Background()
 	config_obj, err := config.LoadClientConfig(*config_path)
-	if err != nil {
-		kingpin.FatalIfError(err, "Unable to load config file")
-	}
+	kingpin.FatalIfError(err, "Unable to load config file")
+
 	ctx.Config = config_obj
 
 	// Make sure the config is ok.

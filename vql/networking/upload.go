@@ -82,6 +82,69 @@ func (self UploadFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo
 	}
 }
 
+type UploadPluginArgs struct {
+	Files    []string `vfilter:"required,field=files"`
+	Accessor string   `vfilter:"optional,field=accessor"`
+}
+
+type UploadPlugin struct{}
+
+func (self *UploadPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	arg := &UploadPluginArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("upload: %s", err.Error())
+		close(output_chan)
+		return output_chan
+	}
+
+	uploader_obj, _ := scope.Resolve("$uploader")
+	uploader, ok := uploader_obj.(Uploader)
+	if !ok {
+		scope.Log("upload: Uploader not configured.")
+		close(output_chan)
+		return output_chan
+	}
+
+	go func() {
+		defer close(output_chan)
+
+		accessor := glob.GetAccessor(arg.Accessor)
+		for _, filename := range arg.Files {
+			file, err := accessor.Open(filename)
+			if err != nil {
+				scope.Log("upload: Unable to open %s: %s",
+					filename, err.Error())
+				continue
+			}
+
+			upload_response, err := uploader.Upload(
+				scope, filename, file)
+			if err != nil {
+				scope.Log("upload: Failed to upload %s: %s",
+					filename, err.Error())
+				continue
+			}
+			output_chan <- upload_response
+		}
+	}()
+	return output_chan
+}
+
+func (self UploadPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "upload",
+		Doc:     "Upload files to the server.",
+		RowType: type_map.AddType(&UploadResponse{}),
+		ArgType: type_map.AddType(&UploadPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&UploadFunction{})
+	vql_subsystem.RegisterPlugin(&UploadPlugin{})
 }

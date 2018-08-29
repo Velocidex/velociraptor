@@ -10,6 +10,8 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
+type CommandHandler func(command string) bool
+
 var (
 	app = kingpin.New("velociraptor",
 		"An advanced incident response and monitoring agent.")
@@ -19,7 +21,7 @@ var (
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
 
-	command_handlers []func(command string) bool
+	command_handlers []CommandHandler
 )
 
 func validateServerConfig(configuration *config.Config) error {

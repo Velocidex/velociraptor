@@ -21,31 +21,33 @@ ifneq ("$(MINGW_EXISTS)", "")
 	CGO_ENABLED = 1
 endif
 
-ASSETS := artifacts/b0x.yaml config/b0x.yaml
+required_assets:
+	fileb0x artifacts/b0x.yaml
+	fileb0x config/b0x.yaml
+
+gui_assets:
+	fileb0x gui/b0x.yaml
 
 # Just regular binaries for local testing. The GUI will be serving
 # files from the filesystem.
-build:
-	fileb0x $(ASSETS)
+build: required_assets
 	GOOS=linux GOARCH=amd64 \
             go build \
             -tags devel \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
 
-windows:
+windows: required_assets
 ifeq ("$(MINGW_EXISTS)", "")
 	@echo Disabling cgo modules. To enable install $(MINGW_CC)
 endif
-	fileb0x $(ASSETS)
 	GOOS=windows GOARCH=amd64 \
         CC=$(CC) CGO_ENABLED=$(CGO_ENABLED) \
             go build \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor.exe ./bin/
 
-darwin:
-	fileb0x gui/b0x.yaml $(ASSETS)
+darwin: required_assets gui_assets
 	GOOS=darwin GOARCH=amd64 \
             go build \
             -tags release \
@@ -54,8 +56,7 @@ darwin:
 
 # Build release binaries. The GUI will embed assets and ship with
 # everything in it.
-release:
-	fileb0x gui/b0x.yaml $(ASSETS)
+release: required_assets gui_assets
 	GOOS=linux GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
@@ -69,7 +70,8 @@ install: release
 
 clean:
 	rm -f gui/assets/ab0x.go \
-              $(ASSETS)
+        artifacts/assets/ab0x.go \
+        config/ab0x.go
 
 
 generate:
