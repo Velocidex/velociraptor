@@ -3,9 +3,13 @@ package server
 
 import (
 	"context"
+	"fmt"
+	"net"
+	"sync"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
-	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -15,11 +19,90 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+type NotificationPool struct {
+	mu      sync.Mutex
+	clients map[string]chan bool
+}
+
+func NewNotificationPool() *NotificationPool {
+	return &NotificationPool{
+		clients: make(map[string]chan bool),
+	}
+}
+
+func (self *NotificationPool) Listen(client_id string) chan bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Close any old channels and make a new one.
+	c, pres := self.clients[client_id]
+	if pres {
+		close(c)
+	}
+
+	c = make(chan bool)
+	self.clients[client_id] = c
+
+	return c
+}
+
+func (self *NotificationPool) Notify(client_id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	c, pres := self.clients[client_id]
+	if pres {
+		close(c)
+		delete(self.clients, client_id)
+	}
+}
+
+func (self *NotificationPool) Shutdown() {
+	fmt.Printf("NotificationPool Shutdown\n")
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Send all the readers the quit signal and shut down the
+	// pool.
+	for _, c := range self.clients {
+		c <- true
+		close(c)
+	}
+
+	self.clients = make(map[string]chan bool)
+}
+
 type Server struct {
-	config  *config.Config
-	manager *crypto.CryptoManager
-	logger  *logging.Logger
-	db      datastore.DataStore
+	config           *config.Config
+	manager          *crypto.CryptoManager
+	logger           *logging.Logger
+	db               datastore.DataStore
+	NotificationPool *NotificationPool
+
+	mu       sync.Mutex
+	RawConns map[string]net.Conn
+}
+
+func (self *Server) SetConn(key string, c net.Conn) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.RawConns[key] = c
+}
+
+func (self *Server) DelConn(key string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.RawConns, key)
+}
+
+func (self *Server) GetConn(key string) (net.Conn, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	c, pres := self.RawConns[key]
+	return c, pres
 }
 
 func (self *Server) Close() {
@@ -38,10 +121,12 @@ func NewServer(config_obj *config.Config) (*Server, error) {
 	}
 
 	result := Server{
-		config:  config_obj,
-		manager: manager,
-		db:      db,
-		logger:  logging.NewLogger(config_obj),
+		config:           config_obj,
+		manager:          manager,
+		db:               db,
+		NotificationPool: NewNotificationPool(),
+		logger:           logging.NewLogger(config_obj),
+		RawConns:         make(map[string]net.Conn),
 	}
 	return &result, nil
 }
@@ -105,11 +190,11 @@ func (self *Server) Decrypt(ctx context.Context, request []byte) (
 }
 
 func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInfo) (
-	[]byte, error) {
+	[]byte, int, error) {
 	message_list := &crypto_proto.MessageList{}
 	err := proto.Unmarshal(message_info.Raw, message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, 0, errors.WithStack(err)
 	}
 
 	// Here we split incoming messages from Velociraptor clients
@@ -134,7 +219,7 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 	err = self.processVelociraptorMessages(
 		ctx, message_info.Source, velociraptor_messages)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	// Record some stats about the client.
@@ -145,7 +230,7 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 
 	err = self.db.SetSubject(self.config, "aff4:/"+message_info.Source+"/ping", client_info)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	message_list = &crypto_proto.MessageList{}
@@ -157,10 +242,10 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 	response, err := self.manager.EncryptMessageList(
 		message_list, message_info.Source)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return response, nil
+	return response, len(message_list.Job), nil
 }
 
 func (self *Server) DrainRequestsForClient(client_id string) []*crypto_proto.GrrMessage {

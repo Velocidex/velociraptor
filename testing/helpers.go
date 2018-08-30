@@ -4,7 +4,6 @@
 package testing
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -16,10 +15,6 @@ func ReadFile(t *testing.T, filename string) []byte {
 		t.Fatalf("Failed reading file: %v", err)
 	}
 	return result
-}
-
-func Debug(arg interface{}) {
-	spew.Dump(arg)
 }
 
 type Clock interface {

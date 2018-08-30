@@ -16,13 +16,17 @@
 package flows
 
 import (
-	"errors"
+	"context"
+
+	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 type Foreman struct {
@@ -48,12 +52,21 @@ func (self *Foreman) ProcessMessage(
 		foreman_checkin.LastHuntTimestamp) {
 
 		// Start a conditional flow.
-		_, err := StartFlow(
-			config_obj,
-			&flows_proto.FlowRunnerArgs{
-				ClientId: message.Source,
-				FlowName: "CheckHuntCondition",
-			}, hunt)
+		channel := grpc_client.GetChannel(config_obj)
+		defer channel.Close()
+
+		flow_runner_args := &flows_proto.FlowRunnerArgs{
+			ClientId: message.Source,
+			FlowName: "CheckHuntCondition",
+		}
+		flow_args, err := ptypes.MarshalAny(hunt)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		flow_runner_args.Args = flow_args
+
+		client := api_proto.NewAPIClient(channel)
+		_, err = client.LaunchFlow(context.Background(), flow_runner_args)
 		if err != nil {
 			return err
 		}

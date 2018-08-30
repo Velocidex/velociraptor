@@ -134,6 +134,12 @@ service API {
     }
 
     // Clients.
+    rpc NotifyClients(GetClientRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            get: "/api/v1/NotifyClient/{client_id}",
+        };
+    }
+
     rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
         option (google.api.http) = {
             get: "/api/v1/SearchClients",

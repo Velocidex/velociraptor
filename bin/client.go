@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
+
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/context"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -15,14 +16,11 @@ var (
 )
 
 func RunClient(config_path *string) {
-	ctx := context.Background()
 	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	ctx.Config = config_obj
-
 	// Make sure the config is ok.
-	err = crypto.VerifyConfig(ctx.Config)
+	err = crypto.VerifyConfig(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Invalid config")
 	}
@@ -39,7 +37,7 @@ func RunClient(config_path *string) {
 	}
 
 	comm, err := http_comms.NewHTTPCommunicator(
-		ctx,
+		config_obj,
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
@@ -48,7 +46,8 @@ func RunClient(config_path *string) {
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 	}
 
-	comm.Run()
+	ctx := context.Background()
+	comm.Run(ctx)
 }
 
 func init() {

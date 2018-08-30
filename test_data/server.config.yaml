@@ -54,6 +54,7 @@ Client:
     -----END CERTIFICATE-----
   name: velociraptor
   nonce: ukqqtSpJNUw=
+  max_poll: 600
   server_urls:
   - http://localhost:8000/
   version: "0.1"

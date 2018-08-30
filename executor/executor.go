@@ -2,13 +2,14 @@ package executor
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"log"
+
+	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Executor interface {
@@ -22,7 +23,7 @@ type Executor interface {
 	ProcessRequest(message *crypto_proto.GrrMessage)
 
 	// Read a single response from the executor to be sent to the server.
-	ReadResponse() *crypto_proto.GrrMessage
+	ReadResponse() <-chan *crypto_proto.GrrMessage
 }
 
 // A concerete implementation of a client executor.
@@ -48,11 +49,8 @@ func (self *ClientExecutor) ProcessRequest(message *crypto_proto.GrrMessage) {
 	self.Inbound <- message
 }
 
-func (self *ClientExecutor) ReadResponse() *crypto_proto.GrrMessage {
-	if msg, ok := <-self.Outbound; ok {
-		return msg
-	}
-	return nil
+func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
+	return self.Outbound
 }
 
 func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {

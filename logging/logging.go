@@ -1,11 +1,12 @@
 package logging
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"os"
+
+	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type stackTracer interface {

@@ -2,6 +2,8 @@ package api
 
 import (
 	"fmt"
+	"net"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -9,7 +11,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"net"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -19,31 +20,43 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	debug "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/server"
 	users "www.velocidex.com/golang/velociraptor/users"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ApiServer struct {
-	config *config.Config
+	config     *config.Config
+	server_obj *server.Server
 }
 
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result := &api_proto.StartFlowResponse{}
-	args, err := flows.GetFlowArgs(in)
-	if err != nil {
-		return nil, err
-	}
 	in.Creator = getUsername(ctx)
-	flow_id, err := flows.StartFlow(self.config, in, args)
+	flow_id, err := flows.StartFlow(self.config, in)
 	if err != nil {
 		return nil, err
 	}
 	result.FlowId = *flow_id
 	result.RunnerArgs = in
+
+	// Notify the client if it is listenning.
+	channel := grpc_client.GetChannel(self.config)
+	defer channel.Close()
+
+	client := api_proto.NewAPIClient(channel)
+	_, err = client.NotifyClients(ctx, &api_proto.GetClientRequest{
+		ClientId: in.ClientId,
+	})
+	if err != nil {
+		fmt.Printf("Cant connect: %v\n", err)
+		return nil, err
+	}
 
 	return result, nil
 }
@@ -51,7 +64,7 @@ func (self *ApiServer) LaunchFlow(
 func (self *ApiServer) CreateHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result := &api_proto.StartFlowResponse{}
 	hunt_id, err := flows.CreateHunt(self.config, in)
 	if err != nil {
@@ -66,7 +79,7 @@ func (self *ApiServer) CreateHunt(
 func (self *ApiServer) ModifyHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*empty.Empty, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	err := flows.ModifyHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -79,7 +92,7 @@ func (self *ApiServer) ModifyHunt(
 func (self *ApiServer) ListHunts(
 	ctx context.Context,
 	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.ListHunts(self.config, in)
 	if err != nil {
 		return nil, err
@@ -91,7 +104,7 @@ func (self *ApiServer) ListHunts(
 func (self *ApiServer) GetHunt(
 	ctx context.Context,
 	in *api_proto.GetHuntRequest) (*api_proto.Hunt, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.GetHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -103,7 +116,7 @@ func (self *ApiServer) GetHunt(
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.ApiFlowResultDetails, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.GetHuntResults(self.config, in)
 	if err != nil {
 		return nil, err
@@ -114,7 +127,7 @@ func (self *ApiServer) GetHuntResults(
 func (self *ApiServer) ListHuntClients(
 	ctx context.Context,
 	in *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.ListHuntClients(self.config, in)
 	if err != nil {
 		return nil, err
@@ -125,7 +138,7 @@ func (self *ApiServer) ListHuntClients(
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
@@ -150,10 +163,22 @@ func (self *ApiServer) ListClients(
 	return result, nil
 }
 
+func (self *ApiServer) NotifyClients(
+	ctx context.Context,
+	in *api_proto.GetClientRequest) (*empty.Empty, error) {
+	utils.Debug(in)
+
+	logger := logging.NewLogger(self.config)
+	logger.Info("Sending notification to %s", in.ClientId)
+	self.server_obj.NotificationPool.Notify(in.ClientId)
+
+	return &empty.Empty{}, nil
+}
+
 func (self *ApiServer) GetClient(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	api_client, err := GetApiClient(
 		self.config,
 		in.ClientId,
@@ -175,7 +200,7 @@ func (self *ApiServer) DescribeTypes(
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 
 	// HTTP HEAD requests against this method are used by the GUI
 	// for auth checks.
@@ -218,7 +243,7 @@ func (self *ApiServer) GetUserUITraits(
 func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 
 	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
@@ -227,7 +252,7 @@ func (self *ApiServer) GetFlowDetails(
 func (self *ApiServer) GetFlowRequests(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.GetFlowRequests(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -236,7 +261,7 @@ func (self *ApiServer) GetFlowRequests(
 func (self *ApiServer) GetFlowResults(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResultDetails, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.GetFlowResults(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -246,7 +271,7 @@ func (self *ApiServer) GetUserNotifications(
 	ctx context.Context,
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := users.GetUserNotifications(
 		self.config, getUsername(ctx), in.ClearPending)
 	return result, err
@@ -255,7 +280,7 @@ func (self *ApiServer) GetUserNotifications(
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	n, err := users.GetUserNotificationCount(self.config, getUsername(ctx))
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
@@ -263,7 +288,7 @@ func (self *ApiServer) GetUserNotificationCount(
 func (self *ApiServer) GetFlowLogs(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowLogDetails, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 	result, err := flows.GetFlowLog(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -279,7 +304,7 @@ func (self *ApiServer) GetFlowDescriptors(
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 
 	result, err := vfsListDirectory(
 		self.config, in.ClientId, in.VfsPath)
@@ -290,7 +315,7 @@ func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*api_proto.StartFlowResponse, error) {
-	debug.Debug(in)
+	utils.Debug(in)
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)
@@ -316,7 +341,7 @@ func (self *ApiServer) GetArtifacts(
 	return result, nil
 }
 
-func StartServer(config_obj *config.Config) error {
+func StartServer(config_obj *config.Config, server_obj *server.Server) error {
 	bind_addr := fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
 		config_obj.API.BindPort)
 
@@ -331,7 +356,8 @@ func StartServer(config_obj *config.Config) error {
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
-			config: config_obj,
+			config:     config_obj,
+			server_obj: server_obj,
 		},
 	)
 	// Register reflection service.

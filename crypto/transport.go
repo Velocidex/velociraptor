@@ -16,18 +16,19 @@ import (
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	errors "github.com/pkg/errors"
-	metrics "github.com/rcrowley/go-metrics"
 	"io/ioutil"
 	"math/big"
 	"strings"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
+	metrics "github.com/rcrowley/go-metrics"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type _Cipher struct {

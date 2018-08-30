@@ -5,20 +5,21 @@ package api
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/gorilla/schema"
 	"io"
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/gorilla/schema"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {

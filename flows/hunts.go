@@ -5,14 +5,16 @@
 package flows
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
-	errors "github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -20,9 +22,10 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	utils "www.velocidex.com/golang/velociraptor/testing"
 	urns "www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -194,17 +197,27 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 				logger.Error("", err)
 				continue
 			}
-			flow_id, err := StartFlow(
-				self.config_obj,
-				&flows_proto.FlowRunnerArgs{
-					ClientId: summary.ClientId,
-					FlowName: "HuntRunnerFlow",
-				}, summary)
+			flow_runner_args := &flows_proto.FlowRunnerArgs{
+				ClientId: summary.ClientId,
+				FlowName: "HuntRunnerFlow",
+			}
+			flow_args, err := ptypes.MarshalAny(summary)
 			if err != nil {
 				logger.Error("", err)
 				continue
 			}
-			summary.FlowId = *flow_id
+			flow_runner_args.Args = flow_args
+
+			channel := grpc_client.GetChannel(self.config_obj)
+			defer channel.Close()
+
+			client := api_proto.NewAPIClient(channel)
+			response, err := client.LaunchFlow(context.Background(), flow_runner_args)
+			if err != nil {
+				logger.Error("", err)
+				continue
+			}
+			summary.FlowId = response.FlowId
 			running_urn := hunt.HuntId + "/running/" + summary.ClientId
 			err = db.SetSubject(self.config_obj, running_urn, summary)
 			if err != nil {

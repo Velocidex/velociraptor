@@ -4,11 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"path"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
-	"path"
-	"time"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -497,15 +498,7 @@ func GetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs) (proto.Message, e
 
 func StartFlow(
 	config_obj *config.Config,
-	flow_runner_args *flows_proto.FlowRunnerArgs,
-	args proto.Message) (*string, error) {
-
-	flow_args, err := ptypes.MarshalAny(args)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	flow_runner_args.Args = flow_args
-
+	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
 	if flow_runner_args.StartTime == 0 {
 		flow_runner_args.StartTime = uint64(time.Now().UnixNano() / 1000)
 	}
@@ -519,6 +512,11 @@ func StartFlow(
 	}
 
 	flow_obj, err := NewAFF4FlowObject(config_obj, flow_runner_args)
+	if err != nil {
+		return nil, err
+	}
+
+	args, err := GetFlowArgs(flow_runner_args)
 	if err != nil {
 		return nil, err
 	}

@@ -4,17 +4,19 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"context"
+
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
-	"path/filepath"
-	"time"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/context"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -320,7 +322,7 @@ func (self *VelociraptorService) Execute(args []string,
 	changes <- svc.Status{State: svc.StartPending}
 
 	// Start running and tell the SCM about it.
-	self.comms.IsPaused = false
+	self.comms.SetPause(false)
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
 loop:
@@ -334,12 +336,12 @@ loop:
 				break loop
 			case svc.Pause:
 				changes <- svc.Status{State: svc.Paused, Accepts: cmdsAccepted}
-				self.comms.IsPaused = true
+				self.comms.SetPause(true)
 				self.elog.Info(1, "Service Paused")
 
 			case svc.Continue:
 				changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
-				self.comms.IsPaused = false
+				self.comms.SetPause(false)
 				self.elog.Info(1, "Service Resumed")
 
 			default:
@@ -359,9 +361,6 @@ func NewVelociraptorService(config_obj *config.Config, elog debug.Log) (
 		elog: elog,
 	}
 
-	result.ctx = context.Background()
-	result.ctx.Config = config_obj
-
 	manager, err := crypto.NewClientCryptoManager(
 		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {
@@ -374,7 +373,7 @@ func NewVelociraptorService(config_obj *config.Config, elog debug.Log) (
 	}
 
 	comm, err := http_comms.NewHTTPCommunicator(
-		result.ctx,
+		config_obj,
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
@@ -387,10 +386,11 @@ func NewVelociraptorService(config_obj *config.Config, elog debug.Log) (
 
 	// Dont actually do anything until the service manager tells
 	// us to start.
-	result.comms.IsPaused = true
+	result.comms.SetPause(true)
 
 	go func() {
-		comm.Run()
+		ctx := context.Background()
+		comm.Run(ctx)
 	}()
 
 	return result, nil
