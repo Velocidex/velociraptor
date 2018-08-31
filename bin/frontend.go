@@ -261,6 +261,10 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		notification := server_obj.NotificationPool.Listen(source)
 
+		// Remove the notification from the pool when we exit
+		// here.
+		defer server_obj.NotificationPool.Notify(source)
+
 		// Check for any requests outstanding now.
 		response, count, err := server_obj.Process(req.Context(), message_info)
 		if err != nil {
@@ -278,7 +282,6 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 			return
 		}
 
-		defer server_obj.NotificationPool.Notify(source)
 		for {
 			select {
 			case quit := <-notification:
@@ -333,7 +336,7 @@ func init() {
 			server_obj, err := server.NewServer(config_obj)
 			kingpin.FatalIfError(err, "Unable to create server")
 
-			// Part the artifacts database to detect errors early.
+			// Parse the artifacts database to detect errors early.
 			_, err = artifacts.GetGlobalRepository(config_obj)
 			kingpin.FatalIfError(err, "Unable to load artifact database")
 

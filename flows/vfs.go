@@ -3,11 +3,12 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
+	"path"
+	"strings"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
-	"path"
-	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -23,6 +24,34 @@ const (
 	_VFSListDirectory_ListDir          uint64 = 1
 	_VFSListDirectory_RecursiveListDir uint64 = 2
 )
+
+// Split the vfs path into a client path and an accessor. We only
+// support certain well defined prefixes which control the type of
+// accessor to use.
+func getClientPath(vfs_path string) (client_path string, accessor string) {
+	vfs_path = path.Clean(vfs_path)
+	if strings.HasPrefix(vfs_path, "/fs") {
+		return strings.TrimPrefix(vfs_path, "/fs"), "file"
+	}
+
+	if strings.HasPrefix(vfs_path, "/registry") {
+		return strings.TrimPrefix(vfs_path, "/registry"), "reg"
+	}
+
+	// This should not happen - try to get it using file accessor.
+	return vfs_path, "file"
+}
+
+// The inverse of getClientPath()
+func getVfsPath(client_path string, accessor string) string {
+	prefix := "/fs"
+	switch accessor {
+	case "reg":
+		prefix = "/registry"
+	}
+
+	return prefix + utils.Normalize_windows_path(client_path)
+}
 
 type VFSListDirectory struct {
 	state *flows_proto.VFSListRequestState
@@ -65,29 +94,32 @@ func (self *VFSListDirectory) Start(
 		return errors.New("Expected args of type VQLCollectorArgs")
 	}
 
-	glob := "'/*'"
+	glob := "/*"
 	next_state := _VFSListDirectory_ListDir
 	if vfs_args.RecursionDepth > 0 {
-		glob = fmt.Sprintf("'/**%d'", vfs_args.RecursionDepth)
+		glob = fmt.Sprintf("/**%d", vfs_args.RecursionDepth)
 		next_state = _VFSListDirectory_RecursiveListDir
 	}
 
+	client_path, accessor := getClientPath(vfs_args.VfsPath)
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
 		// Injecting the path in the environment avoids the
 		// need to escape it within the query itself and it is
 		// therefore more robust.
 		Env: []*actions_proto.VQLEnv{
-			{Key: "path", Value: path.Join("/", vfs_args.VfsPath)},
+			{Key: "path", Value: client_path + glob},
+			{Key: "accessor", Value: accessor},
 		},
 		Query: []*actions_proto.VQLRequest{
 			{
 				Name: vfs_args.VfsPath,
 				VQL: "SELECT FullPath as _FullPath, " +
+					"Data as _Data, " +
 					"Name, Size, Mode.String AS Mode, " +
 					"timestamp(epoch=Mtime.Sec) as mtime, " +
 					"timestamp(epoch=Atime.Sec) as atime, " +
 					"timestamp(epoch=Ctime.Sec) as ctime " +
-					"from glob(globs=path + " + glob + ")",
+					"from glob(globs=path, accessor=accessor)",
 			},
 		},
 		MaxRow: uint64(10000),
@@ -102,10 +134,12 @@ func (self *VFSListDirectory) Start(
 	}
 
 	self.state = &flows_proto.VFSListRequestState{
+		Accessor: accessor,
 		Current: &actions_proto.VQLResponse{
 			Query: vql_collector_args.Query[0],
 		},
 	}
+	flow_obj.SetState(self.state)
 
 	return nil
 }
@@ -203,11 +237,11 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 	for _, row := range rows {
 		full_path, ok := (row["_FullPath"]).(string)
 		if ok {
-			full_path = utils.Normalize_windows_path(full_path)
+			vfs_path := getVfsPath(full_path, self.state.Accessor)
 			// This row does not belong in the current
 			// collection - flush the collection and start
 			// a new one.
-			if path.Dir(full_path) != self.state.VfsPath ||
+			if path.Dir(vfs_path) != self.state.VfsPath ||
 				// Do not let our memory footprint
 				// grow without bounds.
 				len(self.rows) > 10000 {
@@ -220,7 +254,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 						return err
 					}
 				}
-				self.state.VfsPath = path.Dir(full_path)
+				self.state.VfsPath = path.Dir(vfs_path)
 				self.state.Current = &actions_proto.VQLResponse{
 					Query:     vql_response.Query,
 					Columns:   vql_response.Columns,
@@ -271,22 +305,27 @@ func (self *VFSDownloadFile) Start(
 
 	request := &actions_proto.VQLCollectorArgs{}
 	paths := []string{}
-	for _, file_path := range vfs_download_args.VfsPath {
-		file_path = path.Clean(file_path)
-		if strings.HasPrefix(file_path, "/fs/") {
-			local_path := strings.TrimPrefix(file_path, "/fs")
-			path_var := fmt.Sprintf("Path%d", len(paths))
-			paths = append(paths, path_var)
-			request.Env = append(request.Env, &actions_proto.VQLEnv{
-				Key:   path_var,
-				Value: local_path,
-			})
-		} else {
-			return errors.New(fmt.Sprintf(
-				"Fetching VFS path %s not supported "+
-					"(shoud start with '/fs/').", file_path))
+	accessor := ""
+	for _, vfs_path := range vfs_download_args.VfsPath {
+		client_path, path_accessor := getClientPath(vfs_path)
+		if accessor != "" && path_accessor != accessor {
+			return errors.New(
+				"Can not mix VFS path types in the same request.")
 		}
+
+		path_var := fmt.Sprintf("Path%d", len(paths))
+		paths = append(paths, path_var)
+		request.Env = append(request.Env,
+			&actions_proto.VQLEnv{
+				Key:   path_var,
+				Value: client_path,
+			},
+		)
 	}
+
+	request.Env = append(request.Env, &actions_proto.VQLEnv{
+		Key: "accessor", Value: accessor,
+	})
 
 	if len(paths) == 0 {
 		return errors.New("Must specify some paths.")
@@ -294,7 +333,9 @@ func (self *VFSDownloadFile) Start(
 
 	request.Query = append(request.Query, &actions_proto.VQLRequest{
 		Name: "Upload files",
-		VQL: fmt.Sprintf("SELECT Path, Size, Error FROM upload(files=[%s])",
+		VQL: fmt.Sprintf(
+			`SELECT Path, Size, Error
+                         FROM upload(files=[%s], accessor=accessor)`,
 			strings.Join(paths, ", ")),
 	})
 

@@ -259,7 +259,7 @@ func doRemove() {
 	if err != nil {
 		logger.Info("Could not stop service %s: %v", service_name, err)
 	} else {
-		logger.Info("Stopped service %v", err)
+		logger.Info("Stopped service %s", service_name)
 	}
 
 	err = removeService(service_name)

@@ -10,12 +10,14 @@ package glob
 import (
 	"encoding/json"
 	"fmt"
-	errors "github.com/pkg/errors"
-	"golang.org/x/sys/windows/registry"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	errors "github.com/pkg/errors"
+	"golang.org/x/sys/windows/registry"
 )
 
 var (
@@ -109,8 +111,9 @@ func (u *RegKeyInfo) UnmarshalJSON(data []byte) error {
 
 type RegValueInfo struct {
 	RegKeyInfo
-	Data interface{}
-	Type string
+	Data  interface{}
+	Type  string
+	_size int64
 }
 
 func (self *RegValueInfo) Sys() interface{} {
@@ -119,6 +122,14 @@ func (self *RegValueInfo) Sys() interface{} {
 
 func (self *RegValueInfo) IsDir() bool {
 	return true
+}
+
+func (self *RegValueInfo) Mode() os.FileMode {
+	return 0755
+}
+
+func (self *RegValueInfo) Size() int64 {
+	return self._size
 }
 
 func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
@@ -156,8 +167,8 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	}
 
 	// Add a final \ to turn path into a directory path.
+	path = filepath.Clean(path)
 	path = strings.TrimPrefix(path, "\\")
-	path = strings.TrimSuffix(path, "\\")
 	components := strings.Split(path, "\\")
 
 	hive, pres := root_keys[components[0]]
@@ -216,16 +227,39 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		return nil, err
 	}
 
+	var key_modtime time.Time
+	key_stat, err := key.Stat()
+	if err == nil {
+		key_modtime = key_stat.ModTime()
+	}
+
 	for _, value_name := range values {
-		value_info := &RegValueInfo{RegKeyInfo{
-			_full_path: "\\" + path + "\\" + value_name,
-			_name:      value_name,
-		}, nil, ""}
+		// Represent the default value as different from the
+		// actual key name.
+		value_info_name := value_name
+		if value_name == "" {
+			value_info_name = "@"
+		}
+
+		value_info := &RegValueInfo{
+			RegKeyInfo: RegKeyInfo{
+				// Values do not carry their own
+				// timestamp - the key they are in
+				// gets its timestamp updated whenever
+				// any of the values does so we just
+				// copy the key's timestamp to each
+				// value.
+				_modtime:   key_modtime,
+				_full_path: "\\" + path + "\\" + value_info_name,
+				_name:      value_info_name,
+			}}
 
 		buf_size, value_type, err := key.GetValue(value_name, nil)
 		if err != nil {
 			continue
 		}
+
+		value_info._size = int64(buf_size)
 
 		switch value_type {
 		case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:

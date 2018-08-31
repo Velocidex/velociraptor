@@ -24,6 +24,7 @@ message VFSListRequest {
 
 message VFSListRequestState {
     string vfs_path = 1;
+    string accessor = 3;
     VQLResponse current = 2;
 }
 

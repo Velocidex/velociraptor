@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/golang/protobuf/ptypes"
-	context "golang.org/x/net/context"
 	"os"
 	"path"
-	"strings"
+
+	"github.com/golang/protobuf/ptypes"
+	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -33,14 +33,15 @@ func vfsListDirectory(
 		return nil, err
 	}
 
+	// If the vfs_path refers to the root directory return the
+	// hard coded virtual root.
 	virtual_dir_response, pres := getVirtualDirectory(vfs_path)
 	if pres {
 		return virtual_dir_response, nil
 	}
 
-	client_path := strings.TrimPrefix(vfs_path, "/fs")
-	vfs_urn := urns.BuildURN(client_id, "vfs", client_path)
-	filestore_urn := path.Join(client_id, "vfs_files", client_path)
+	vfs_urn := urns.BuildURN(client_id, "vfs", vfs_path)
+	filestore_urn := path.Join(client_id, "vfs_files", vfs_path)
 	downloaded_items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
 
@@ -118,7 +119,11 @@ func vfsListDirectory(
 func getVirtualDirectory(vfs_path string) (*actions_proto.VQLResponse, bool) {
 	if vfs_path == "" || vfs_path == "/" {
 		return &actions_proto.VQLResponse{
-			Response: "[{\"Mode\": \"drwxrwxrwx\", \"Name\": \"fs\"}]",
+			Response: `
+   [
+    {"Mode": "drwxrwxrwx", "Name": "fs"},
+    {"Mode": "drwxrwxrwx", "Name": "registry"}
+   ]`,
 		}, true
 	}
 
@@ -134,8 +139,6 @@ func vfsRefreshDirectory(
 
 	// Trim the /fs from the VFS path to get the real path.
 	vfs_path = path.Join("/", vfs_path)
-	vfs_path = strings.TrimPrefix(vfs_path, "/fs")
-
 	args := &flows_proto.FlowRunnerArgs{
 		ClientId: client_id,
 		FlowName: "VFSListDirectory",

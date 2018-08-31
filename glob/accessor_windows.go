@@ -6,7 +6,6 @@ package glob
 
 import (
 	"encoding/json"
-	"github.com/shirou/gopsutil/disk"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -14,10 +13,16 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/shirou/gopsutil/disk"
 )
 
 type OSFileInfo struct {
 	os.FileInfo
+
+	// Empty for files but may contain data for registry and
+	// resident NTFS.
+	Data       string
 	_full_path string
 }
 
@@ -165,7 +170,10 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	if err == nil {
 		for _, f := range files {
 			result = append(result,
-				&OSFileInfo{f, filepath.Join(path, f.Name())})
+				&OSFileInfo{
+					FileInfo:   f,
+					_full_path: filepath.Join(path, f.Name()),
+				})
 		}
 		return result, nil
 	}
