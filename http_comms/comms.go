@@ -35,11 +35,15 @@ type Enroller struct {
 	last_foreman_check_time time.Time
 }
 
+// TODO: This is a hold over from GRR - do we need it?  GRR's
+// enrollments are very slow and launching flows very expensive so it
+// makes sense to delay this. Velociraptor's enrollments are very
+// cheap so perhaps we dont need to worry about it here?
 func (self *Enroller) MaybeEnrol() {
-	// Only send an enrolment request at most every 10 minutes so
-	// as not to overwhelm the server if it can not keep up.
+	// Only send an enrolment request at most every minute so as
+	// not to overwhelm the server if it can not keep up.
 	if time.Now().After(
-		self.last_enrollment_time.Add(10 * time.Minute)) {
+		self.last_enrollment_time.Add(1 * time.Minute)) {
 		csr_pem, err := self.manager.GetCSR()
 		if err != nil {
 			return
@@ -72,37 +76,37 @@ func (self *Enroller) MaybeEnrol() {
 	}
 }
 
-func (self *Enroller) MaybeCheckForeman() {
-	if time.Now().After(
-		self.last_foreman_check_time.Add(10 * time.Minute)) {
-		reply := &crypto_proto.GrrMessage{
-			SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
-			ArgsRdfName: "ForemanCheckin",
-			Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
-			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
-		}
-
-		serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-			LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
-		})
-		if err != nil {
-			return
-		}
-		reply.Args = serialized_arg
-
-		self.last_foreman_check_time = time.Now()
-		self.logger.Info("Checking foreman")
-		self.executor.SendToServer(reply)
-
+// Velociraptor's foreman is very quick (since we just compare the
+// last hunt timestamp the client provides to the server's last hunt
+// timestamp) so it is ok to send a foreman message in every receiver.
+func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
+	reply := &crypto_proto.GrrMessage{
+		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
+		ArgsRdfName: "ForemanCheckin",
+		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
+		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
+
+	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
+		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
+	})
+	if err != nil {
+		return &crypto_proto.MessageList{}
+	}
+	reply.Args = serialized_arg
+
+	result := &crypto_proto.MessageList{}
+	result.Job = append(result.Job, reply)
+
+	return result
 }
 
-// Responsible for use HTTP to talk with the end point.
+// Responsible for using HTTP to talk with the end point.
 type HTTPConnector struct {
 	// The Crypto Manager for communicating with the current
 	// URL. Note, when the URL is changed, the CryptoManager is
-	// replaced. The CryptoManager is initialized by a successful
-	// connection to the URL's server.pem endpoint.
+	// initialized by a successful connection to the URL's
+	// server.pem endpoint.
 	manager *crypto.CryptoManager
 	logger  *logging.Logger
 
@@ -200,6 +204,13 @@ func (self *HTTPConnector) ReKeyNextServer() {
 			continue
 		}
 	}
+}
+
+func (self *HTTPConnector) ServerName() string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.server_name
 }
 
 func (self *HTTPConnector) rekeyNextServer() error {
@@ -309,7 +320,7 @@ func (self *NotificationReader) sendMessageList(
 func (self *NotificationReader) sendToURL(
 	ctx context.Context, message_list *crypto_proto.MessageList) error {
 
-	if self.connector.server_name == "" {
+	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
 	}
 
@@ -317,7 +328,7 @@ func (self *NotificationReader) sendToURL(
 		self.connector.GetCurrentUrl()+self.handler)
 
 	cipher_text, err := self.manager.EncryptMessageList(
-		message_list, self.connector.server_name)
+		message_list, self.connector.ServerName())
 	if err != nil {
 		return err
 	}
@@ -361,17 +372,11 @@ process_response:
 				break process_response
 			}
 
-			if len(encrypted) > 0 {
-				self.logger.Info("%s: heartbeat received: %d bytes total",
-					self.name, len(encrypted))
-			}
-
 			encrypted = append(encrypted, buf[:n]...)
 		}
 	}
 
-	response_message_list, err := self.manager.
-		DecryptMessageList(encrypted)
+	response_message_list, err := self.manager.DecryptMessageList(encrypted)
 	if err != nil {
 		return err
 	}
@@ -398,7 +403,7 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			// The Reader does not send any server bound
 			// messages - it is blocked reading server
 			// responses.
-			self.sendMessageList(ctx, &crypto_proto.MessageList{})
+			self.sendMessageList(ctx, self.GetMessageList())
 
 			select {
 			case <-ctx.Done():
@@ -409,6 +414,32 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+// Velociraptor's foreman is very quick (since it is just an int
+// comparison between the client's last hunt timestamp and the
+// server's last hunt timestamp). It is therefore ok to send a foreman
+// message in every reader message to improve hunt latency.
+func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
+	reply := &crypto_proto.GrrMessage{
+		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
+		ArgsRdfName: "ForemanCheckin",
+		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
+		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+	}
+
+	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
+		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
+	})
+	if err != nil {
+		return &crypto_proto.MessageList{}
+	}
+	reply.Args = serialized_arg
+
+	result := &crypto_proto.MessageList{}
+	result.Job = append(result.Job, reply)
+
+	return result
 }
 
 type Sender struct {
@@ -454,8 +485,6 @@ func (self *Sender) Start(ctx context.Context) {
 	go func() {
 		for {
 			if atomic.LoadInt32(&self.IsPaused) == 0 {
-				self.enroller.MaybeCheckForeman()
-
 				// If there is some data in the queues we send
 				// it immediately. If there is no data pending
 				// we send nothing.
@@ -463,11 +492,16 @@ func (self *Sender) Start(ctx context.Context) {
 				if len(message_list.Job) > 0 {
 					self.sendMessageList(ctx, message_list)
 
-					// We need to make sure our memory
-					// footprint is as small as
-					// possible. The Velociraptor client
-					// prioritizes low memory footprint
-					// over performance.
+					// We need to make sure our
+					// memory footprint is as
+					// small as possible. The
+					// Velociraptor client
+					// prioritizes low memory
+					// footprint over latency. We
+					// just sent data to the
+					// server and we wont need
+					// that for a while so we can
+					// free our memory to the OS.
 					debug.FreeOSMemory()
 				}
 			}

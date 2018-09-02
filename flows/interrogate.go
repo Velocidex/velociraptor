@@ -3,6 +3,7 @@ package flows
 
 import (
 	"encoding/json"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
@@ -23,6 +24,10 @@ const (
 
 type VInterrogate struct {
 	BaseFlow
+}
+
+func (self *VInterrogate) New() Flow {
+	return &VInterrogate{BaseFlow{}}
 }
 
 func (self *VInterrogate) Start(

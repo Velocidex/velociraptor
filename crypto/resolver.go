@@ -3,6 +3,8 @@ package crypto
 import (
 	"crypto/rsa"
 	"strings"
+	"sync"
+
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -16,6 +18,7 @@ type publicKeyResolver interface {
 }
 
 type inMemoryPublicKeyResolver struct {
+	mu          sync.Mutex
 	public_keys map[string]*rsa.PublicKey
 }
 
@@ -41,6 +44,9 @@ func NewInMemoryPublicKeyResolver() publicKeyResolver {
 
 */
 func (self *inMemoryPublicKeyResolver) GetPublicKey(subject string) (*rsa.PublicKey, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// GRR sometimes prefixes common names with aff4:/ so strip it first.
 	normalized_subject := strings.TrimPrefix(subject, "aff4:/")
 	result, pres := self.public_keys[normalized_subject]
@@ -49,6 +55,9 @@ func (self *inMemoryPublicKeyResolver) GetPublicKey(subject string) (*rsa.Public
 
 func (self *inMemoryPublicKeyResolver) SetPublicKey(
 	subject string, key *rsa.PublicKey) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.public_keys[subject] = key
 	return nil
 }

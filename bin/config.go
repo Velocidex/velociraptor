@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"regexp"
+
 	"github.com/ghodss/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -30,6 +32,14 @@ var (
 func doShowConfig() {
 	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
+
+	// Dump out the embedded config as is.
+	if *config_path == "" {
+		content := string(config.FileConfigDefaultYaml)
+		content = regexp.MustCompile("##[^\\n]+\\n").ReplaceAllString(content, "")
+		fmt.Printf("%v", content)
+		return
+	}
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {

@@ -2,8 +2,6 @@ package artifacts
 
 import (
 	"fmt"
-	errors "github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path"
@@ -12,6 +10,9 @@ import (
 	"sort"
 	"strings"
 	"sync"
+
+	errors "github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -22,7 +23,7 @@ import (
 
 var (
 	artifact_in_query_regex = regexp.MustCompile("Artifact\\.([^\\s\\(]+)\\(")
-	global_repository       = NewRepository()
+	global_repository       *Repository
 	mu                      sync.Mutex
 )
 
@@ -231,6 +232,12 @@ var init_registry []init_function
 func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
 	mu.Lock()
 	defer mu.Unlock()
+
+	if global_repository != nil {
+		return global_repository, nil
+	}
+
+	global_repository = NewRepository()
 
 	for _, function := range init_registry {
 		err := function(config_obj)

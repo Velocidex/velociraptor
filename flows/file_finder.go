@@ -3,9 +3,10 @@ package flows
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -13,7 +14,11 @@ import (
 )
 
 type FileFinder struct {
-	VQLCollector
+	*VQLCollector
+}
+
+func (self *FileFinder) New() Flow {
+	return &FileFinder{&VQLCollector{}}
 }
 
 func (self *FileFinder) Start(

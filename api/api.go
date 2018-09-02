@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net"
 
@@ -50,7 +51,7 @@ func (self *ApiServer) LaunchFlow(
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	_, err = client.NotifyClients(ctx, &api_proto.GetClientRequest{
+	_, err = client.NotifyClients(ctx, &api_proto.NotificationRequest{
 		ClientId: in.ClientId,
 	})
 	if err != nil {
@@ -165,13 +166,18 @@ func (self *ApiServer) ListClients(
 
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
-	in *api_proto.GetClientRequest) (*empty.Empty, error) {
+	in *api_proto.NotificationRequest) (*empty.Empty, error) {
 	utils.Debug(in)
 
-	logger := logging.NewLogger(self.config)
-	logger.Info("Sending notification to %s", in.ClientId)
-	self.server_obj.NotificationPool.Notify(in.ClientId)
-
+	if in.NotifyAll {
+		self.server_obj.Info("Sending notification to everyone")
+		self.server_obj.NotificationPool.NotifyAll()
+	} else if in.ClientId != "" {
+		self.server_obj.Info("Sending notification to %s", in.ClientId)
+		self.server_obj.NotificationPool.Notify(in.ClientId)
+	} else {
+		return nil, errors.New("Client id should be specified.")
+	}
 	return &empty.Empty{}, nil
 }
 

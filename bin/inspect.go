@@ -4,14 +4,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"github.com/olekukonko/tablewriter"
 	errors "github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
-	"regexp"
-	"strings"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -32,7 +33,7 @@ var classifiers = map[string]proto.Message{
 	"aff4:/C.[^/]+/flows/F\\.[^/]+/results/.+$": &crypto_proto.GrrMessage{},
 	"aff4:/C.[^/]+/tasks/[^/]+$":                &crypto_proto.GrrMessage{},
 	"aff4:/hunts/H.[^/]+$":                      &api_proto.Hunt{},
-	"aff4:/hunts/H.[^/]+/(results|pending|" +
+	"aff4:/hunts/H.[^/]+/(results|pending|no_results|errors|" +
 		"completed|running)/C.[^/]+$": &api_proto.HuntInfo{},
 	"aff4:/users/[^/]+$":                  &api_proto.VelociraptorUser{},
 	"aff4:/users/[^/]+/notifications/.+$": &api_proto.UserNotification{},

@@ -33,6 +33,10 @@ type Foreman struct {
 	BaseFlow
 }
 
+func (self *Foreman) New() Flow {
+	return &Foreman{BaseFlow{}}
+}
+
 func (self *Foreman) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,

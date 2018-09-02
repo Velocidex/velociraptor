@@ -3,6 +3,7 @@ package logging
 import (
 	"log"
 	"os"
+	"sync"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -14,6 +15,7 @@ type stackTracer interface {
 }
 
 type Logger struct {
+	mu        sync.Mutex
 	config    *config.Config
 	error_log *log.Logger
 	info_log  *log.Logger
@@ -42,6 +44,9 @@ func NewLogger(config *config.Config) *Logger {
 }
 
 func (self *Logger) _Error(format string, v ...interface{}) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.error_log == nil {
 		self.error_log = log.New(os.Stderr, "ERR:", log.LstdFlags)
 	}
@@ -61,6 +66,9 @@ func (self *Logger) Error(msg string, err error) {
 }
 
 func (self *Logger) Info(format string, v ...interface{}) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.info_log == nil {
 		self.info_log = log.New(os.Stderr, "INFO:", log.LstdFlags)
 	}

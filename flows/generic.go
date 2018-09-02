@@ -2,9 +2,10 @@ package flows
 
 import (
 	"errors"
+	"path"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"path"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -22,6 +23,10 @@ const (
 
 type VQLCollector struct {
 	*BaseFlow
+}
+
+func (self *VQLCollector) New() Flow {
+	return &VQLCollector{&BaseFlow{}}
 }
 
 func (self *VQLCollector) Start(

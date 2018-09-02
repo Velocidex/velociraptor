@@ -2,6 +2,7 @@ package flows
 
 import (
 	"errors"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -12,6 +13,10 @@ import (
 
 type ArtifactCollector struct {
 	*VQLCollector
+}
+
+func (self *ArtifactCollector) New() Flow {
+	return &ArtifactCollector{&VQLCollector{}}
 }
 
 func (self *ArtifactCollector) Start(

@@ -58,6 +58,10 @@ type VFSListDirectory struct {
 	rows  []map[string]interface{}
 }
 
+func (self *VFSListDirectory) New() Flow {
+	return &VFSListDirectory{}
+}
+
 func (self *VFSListDirectory) Load(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject) error {
@@ -292,6 +296,10 @@ func (self *VFSListDirectory) flush_state(
 
 type VFSDownloadFile struct {
 	*BaseFlow
+}
+
+func (self *VFSDownloadFile) New() Flow {
+	return &VFSDownloadFile{&BaseFlow{}}
 }
 
 func (self *VFSDownloadFile) Start(

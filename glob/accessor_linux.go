@@ -4,12 +4,13 @@ package glob
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"syscall"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OSFileInfo struct {
@@ -89,13 +90,14 @@ func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	files, err := ioutil.ReadDir(path)
-	if err == nil {
+	files, err := utils.ReadDir(path)
+	if files != nil {
 		var result []FileInfo
 		for _, f := range files {
 			result = append(result,
 				&OSFileInfo{f, filepath.Join(path, f.Name())})
 		}
+
 		return result, nil
 	}
 	return nil, err

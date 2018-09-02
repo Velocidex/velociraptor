@@ -46,8 +46,7 @@ ConfigureFlowPageController.prototype.onFlowArgumentsDeepChange_ = function(
   newValue) {
   this.scope_['flowStartRequest']['args'] = angular.copy(this.scope_['flowArguments']);
   if (angular.isDefined(this.flowDescriptor)) {
-    this.scope_['flowStartRequest']['flow_name'] = (
-      this.flowDescriptor.friendly_name || this.flowDescriptor.name);
+    this.scope_['flowStartRequest']['flow_name'] = this.flowDescriptor.name;
   }
   this.scope_['hasErrors'] = valueHasErrors(newValue);
 };

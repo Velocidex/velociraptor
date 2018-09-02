@@ -616,6 +616,7 @@ func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (*crypto_proto
 func (self *CryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
 	destination string) ([]byte, error) {
+
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
 		return nil, errors.WithStack(err)

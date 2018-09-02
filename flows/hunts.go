@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -25,7 +26,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	urns "www.velocidex.com/golang/velociraptor/urns"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -74,12 +74,23 @@ func (self *HuntDispatcher) Update() error {
 			logger.Error("_ScheduleClientsForHunt:", err)
 		}
 
-		modified2, err := self._SortResultsForHunt(hunt)
-		if err != nil {
-			logger.Error("_SortResultsForHunt:", err)
+		// Spin here until all the results are processed for this hunt.
+		for {
+			modified2, result_count, err := self._SortResultsForHunt(hunt)
+			if err != nil {
+				logger.Error("_SortResultsForHunt:", err)
+			}
+
+			if result_count == 0 {
+				break
+			}
+
+			if modified2 {
+				modified = true
+			}
 		}
 
-		if modified || modified2 {
+		if modified {
 			err = db.SetSubject(self.config_obj, hunt.HuntId, hunt)
 			if err != nil {
 				logger.Error("", err)
@@ -90,69 +101,75 @@ func (self *HuntDispatcher) Update() error {
 	return nil
 }
 
-func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (bool, error) {
-	modified := false
-	logger := logging.NewLogger(self.config_obj)
+func (self *HuntDispatcher) _SortResultsForHunt(hunt *api_proto.Hunt) (
+	modified bool, result_count int, err error) {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
 	completed_urn := hunt.HuntId + "/completed"
-	offset := 0
-	for {
-		urns, err := db.ListChildren(
-			self.config_obj, completed_urn, uint64(offset), 100)
-		if err != nil {
-			return false, err
-		}
-		offset += len(urns)
-		if len(urns) == 0 {
-			break
-		}
-
-		for _, urn := range urns {
-			summary := &api_proto.HuntInfo{}
-			err := db.GetSubject(self.config_obj, urn, summary)
-			if err != nil {
-				logger.Error("", err)
-				continue
-			}
-			defer func(urn string) {
-				err = db.DeleteSubject(self.config_obj, urn)
-				if err != nil {
-					logger.Error("", err)
-
-				}
-			}(urn)
-
-			utils.Debug(summary)
-			var destination string
-			if summary.Result.State == flows_proto.FlowContext_ERROR {
-				destination = hunt.HuntId + "/errors/" +
-					summary.ClientId
-				hunt.TotalClientsWithErrors += 1
-			} else if summary.Result.TotalResults > 0 {
-				destination = hunt.HuntId + "/results/" +
-					summary.ClientId
-				hunt.TotalClientsWithResults += 1
-			} else {
-				continue
-			}
-
-			_ = db.SetSubject(self.config_obj, destination, summary)
-
-			modified = true
-		}
-
+	// Take the first 100 urns off the list. They will be
+	// removed below.
+	urns, err := db.ListChildren(
+		self.config_obj, completed_urn, 0, 100)
+	if err != nil {
+		return false, 0, err
 	}
-	return modified, nil
+
+	// Nothing to do here.
+	if len(urns) == 0 {
+		return false, 0, nil
+	}
+
+	// Whatever happens we remove these ones.
+	defer func() {
+		for _, urn := range urns {
+			derr := db.DeleteSubject(self.config_obj, urn)
+			if derr != nil {
+				err = derr
+			}
+		}
+	}()
+
+	for _, urn := range urns {
+		summary := &api_proto.HuntInfo{}
+		derr := db.GetSubject(self.config_obj, urn, summary)
+		var destination string
+		if derr != nil || summary.Result == nil ||
+			summary.Result.State == flows_proto.FlowContext_ERROR {
+			destination = hunt.HuntId + "/errors/" +
+				summary.ClientId
+			hunt.TotalClientsWithErrors += 1
+			err = derr
+		} else if summary.Result.TotalResults > 0 {
+			destination = hunt.HuntId + "/results/" +
+				summary.ClientId
+			hunt.TotalClientsWithResults += 1
+		} else if summary.Result.TotalResults == 0 {
+			destination = hunt.HuntId + "/no_results/" +
+				summary.ClientId
+			hunt.TotalClientsWithoutResults += 1
+		} else {
+			continue
+		}
+
+		derr = db.SetSubject(self.config_obj, destination, summary)
+		if derr != nil {
+			err = derr
+		}
+
+		modified = true
+		result_count += 1
+	}
+
+	return
 }
 
 // Move the required clients from the pending queue to the running
-// queue.
-func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool, error) {
-	modified := false
+// queue. We only move clients which are due to be scheduled.
+func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (
+	modified bool, err error) {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return false, err
@@ -182,6 +199,9 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 	// pending queue, launch their flows and put them in
 	// the running queue.
 	if hunt.TotalClientsScheduled < expected_clients {
+
+		// Only get as many clients as we need from the
+		// pending queue and not more.
 		clients_to_get := expected_clients - hunt.TotalClientsScheduled
 		pending_urn := hunt.HuntId + "/pending"
 		urns, err := db.ListChildren(
@@ -190,7 +210,29 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 			return false, err
 		}
 
+		// No clients in the pending queue - nothing to do.
+		if len(urns) == 0 {
+			return false, nil
+		}
+
+		// Regardless what happens below we really need to
+		// remove the urns from the pending queue.
+		defer func() {
+			for _, urn := range urns {
+				derr := db.DeleteSubject(self.config_obj, urn)
+				if derr != nil {
+					err = derr
+				}
+			}
+		}()
+
+		// We need to launch the flow by calling our gRPC
+		// endpoint API.
+		channel := grpc_client.GetChannel(self.config_obj)
+		defer channel.Close()
+
 		for _, urn := range urns {
+			// Get the summary and launch the flow.
 			summary := &api_proto.HuntInfo{}
 			err := db.GetSubject(self.config_obj, urn, summary)
 			if err != nil {
@@ -208,33 +250,39 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (bool,
 			}
 			flow_runner_args.Args = flow_args
 
-			channel := grpc_client.GetChannel(self.config_obj)
-			defer channel.Close()
-
 			client := api_proto.NewAPIClient(channel)
-			response, err := client.LaunchFlow(context.Background(), flow_runner_args)
+			response, err := client.LaunchFlow(
+				context.Background(), flow_runner_args)
 			if err != nil {
-				logger.Error("", err)
+				// If we can not launch the flow we
+				// need to store the summary in the
+				// error queue.
+				logger.Error("Cant launch hunt flow", err)
+				summary.State = api_proto.HuntInfo_ERROR
+				summary.Result = &flows_proto.FlowContext{
+					CreateTime: uint64(time.Now().UnixNano() / 1000),
+					Backtrace:  fmt.Sprintf("HuntDispatcher: %v", err),
+				}
+
+				hunt.TotalClientsWithErrors += 1
+				modified = true
+
+				error_urn := hunt.HuntId + "/errors/" + summary.ClientId
+				err = db.SetSubject(self.config_obj, error_urn, summary)
+
 				continue
 			}
+
+			// Store the summary in the running queue.
 			summary.FlowId = response.FlowId
 			running_urn := hunt.HuntId + "/running/" + summary.ClientId
 			err = db.SetSubject(self.config_obj, running_urn, summary)
-			if err != nil {
-				logger.Error("", err)
-				continue
-			}
-			err = db.DeleteSubject(self.config_obj, urn)
-			if err != nil {
-				logger.Error("", err)
-				continue
-			}
 
 			hunt.TotalClientsScheduled += 1
 			modified = true
 		}
 	}
-	return modified, nil
+	return
 }
 
 type HuntDispatcherContainer struct {
@@ -296,6 +344,7 @@ func NewHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 func GetHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 	dispatch_container.mu.Lock()
 	defer dispatch_container.mu.Unlock()
+
 	if dispatch_container.dispatcher == nil {
 		dispatcher, err := NewHuntDispatcher(config_obj)
 		if err != nil {
@@ -351,6 +400,18 @@ func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error
 	// guarantees that fresh data will be read in
 	// subsequent ListHunt() calls.
 	dispatch_container.Refresh(config_obj)
+
+	// Notify all the clients about the new hunt. New hunts are
+	// not that common so notifying all the clients at once is
+	// probably ok.
+	channel := grpc_client.GetChannel(config_obj)
+	defer channel.Close()
+
+	client := api_proto.NewAPIClient(channel)
+	client.NotifyClients(
+		context.Background(), &api_proto.NotificationRequest{
+			NotifyAll: true,
+		})
 
 	return &hunt.HuntId, nil
 }
@@ -597,6 +658,10 @@ func ListHuntClients(config_obj *config.Config,
 // hunt.
 type HuntRunnerFlow struct {
 	delegate_flow_obj *AFF4FlowObject
+}
+
+func (self *HuntRunnerFlow) New() Flow {
+	return &HuntRunnerFlow{}
 }
 
 func (self *HuntRunnerFlow) Start(

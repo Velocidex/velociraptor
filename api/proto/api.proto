@@ -86,6 +86,13 @@ message VFSRefreshDirectoryRequest {
 }
 
 
+message NotificationRequest {
+    string client_id = 1;
+
+    bool notify_all = 2;
+}
+
+
 service API {
     rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
         option (google.api.http) = {
@@ -134,9 +141,10 @@ service API {
     }
 
     // Clients.
-    rpc NotifyClients(GetClientRequest) returns (google.protobuf.Empty) {
+    rpc NotifyClients(NotificationRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
-            get: "/api/v1/NotifyClient/{client_id}",
+            post: "/api/v1/NotifyClient",
+            body: "*"
         };
     }
 

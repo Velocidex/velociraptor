@@ -58,7 +58,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	for _, message := range messages {
 		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
-			self.logger.Error("FlowRunner", err)
+			self.logger.Error(fmt.Sprintf("FlowRunner %v: ", message), err)
 			continue
 		}
 
@@ -161,6 +161,9 @@ type Flow interface {
 	// This method is called by the runner after processing
 	// messages and before the flow is destroyed.
 	Save(config_obj *config.Config, flow_obj *AFF4FlowObject) error
+
+	// Create a new flow of this type.
+	New() Flow
 }
 
 // The AFF4 object contains the state of the flow.
@@ -221,7 +224,9 @@ func AFF4FlowObjectFromProto(aff4_flow_obj_proto *flows_proto.AFF4FlowObject) (
 	if aff4_flow_obj_proto.Urn == "" ||
 		aff4_flow_obj_proto.RunnerArgs == nil ||
 		aff4_flow_obj_proto.FlowContext == nil {
-		return nil, errors.New("Invalid AFF4FlowObject protobuf.")
+		return nil, errors.New(
+			fmt.Sprintf("Invalid AFF4FlowObject protobuf (%v).",
+				aff4_flow_obj_proto))
 	}
 
 	result := &AFF4FlowObject{
@@ -465,7 +470,7 @@ func RegisterImplementation(descriptor *flows_proto.FlowDescriptor, impl Flow) {
 
 func GetImpl(name string) (Flow, bool) {
 	result, pres := implementations[name]
-	return result.flow, pres
+	return result.flow.New(), pres
 }
 
 func GetDescriptors() []*flows_proto.FlowDescriptor {

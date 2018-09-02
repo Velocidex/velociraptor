@@ -2,6 +2,8 @@ package glob
 
 import (
 	"regexp"
+
+	errors "github.com/pkg/errors"
 )
 
 var (
@@ -18,6 +20,24 @@ type FileSystemAccessor interface {
 	PathSep() *regexp.Regexp
 }
 
+type NullFileSystemAccessor struct{}
+
+func (self NullFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
+	return nil, errors.New("Not supported")
+}
+
+func (self NullFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+	return nil, errors.New("Not supported")
+}
+
+func (self NullFileSystemAccessor) Lstat(path string) (FileInfo, error) {
+	return nil, errors.New("Not supported")
+}
+
+func (self NullFileSystemAccessor) PathSep() *regexp.Regexp {
+	return regexp.MustCompile("/")
+}
+
 func GetAccessor(scheme string) FileSystemAccessor {
 	handler, pres := handlers[scheme]
 	if pres {
@@ -27,12 +47,14 @@ func GetAccessor(scheme string) FileSystemAccessor {
 	// Fallback to the file handler - this should work
 	// because there needs to be at least a file handler
 	// registered.
-	handler, pres = handlers["file"]
-	if pres {
-		return handler
+	if scheme == "" {
+		handler, pres = handlers["file"]
+		if pres {
+			return handler
+		}
 	}
 
-	panic("There must be at least a file handler registered")
+	return NullFileSystemAccessor{}
 }
 
 func Register(scheme string, accessor FileSystemAccessor) {

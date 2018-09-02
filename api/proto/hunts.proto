@@ -104,6 +104,11 @@ message Hunt {
             friendly_name: "Total Clients with Results",
         }];
 
+    uint64 total_clients_without_results = 16 [(sem_type) = {
+            description: "Total number of clients with out results.",
+            friendly_name: "Total Clients without Results",
+        }];
+
     uint64 total_clients_with_errors = 15 [(sem_type) = {
             description: "Total number of clients with errors.",
             friendly_name: "Total Clients with Errors",
@@ -149,6 +154,7 @@ message HuntInfo {
         UNSET = 0;
         PENDING = 1 [(description) = "Flow has not yet been created but it is pending."];
         RUNNING = 2 [(description) = "Flow has been created and scheduled."];
+        ERROR = 3 [(description) = "We tried to start the flow but it errored."];
     }
 
     State state = 8;

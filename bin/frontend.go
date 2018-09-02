@@ -20,6 +20,7 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 )
@@ -84,6 +85,9 @@ func start_frontend(config_obj *config.Config, server_obj *server.Server) {
 		close(done)
 	}()
 
+	// Start the hunt dispatcher.
+	_, err := flows.GetHuntDispatcher(config_obj)
+	kingpin.FatalIfError(err, "Hunt dispatcher")
 	server_obj.Info("Frontend is ready to handle client requests at %s", listenAddr)
 	atomic.StoreInt32(&healthy, 1)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -178,7 +182,10 @@ func control(server_obj *server.Server) http.Handler {
 		sync := make(chan []byte)
 		go func() {
 			defer close(sync)
-			response, _, err := server_obj.Process(req.Context(), message_info)
+			response, _, err := server_obj.Process(
+				req.Context(), message_info,
+				false, // drain_requests_for_client
+			)
 			if err != nil {
 				server_obj.Error("Error:", err)
 			} else {
@@ -246,6 +253,13 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 			return
 		}
 
+		// Deadlines are designed to ensure that connections
+		// are not blocked for too long (maybe several
+		// minutes). This helps to expire connections when the
+		// client drops off completely or is behind a proxy
+		// which caches the heartbeats. After the deadline we
+		// close the connection and expect the client to
+		// reconnect again.
 		deadline := time.After(time.Duration(
 			config_obj.Client.MaxPoll) * time.Second)
 
@@ -266,7 +280,10 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 		defer server_obj.NotificationPool.Notify(source)
 
 		// Check for any requests outstanding now.
-		response, count, err := server_obj.Process(req.Context(), message_info)
+		response, count, err := server_obj.Process(
+			req.Context(), message_info,
+			true, // drain_requests_for_client
+		)
 		if err != nil {
 			server_obj.Error("Error:", err)
 			return
@@ -292,7 +309,10 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 
 				logger.Info("reader: notification received.")
 				response, _, err := server_obj.Process(
-					req.Context(), message_info)
+					req.Context(),
+					message_info,
+					true, // drain_requests_for_client
+				)
 				if err != nil {
 					server_obj.Error("Error:", err)
 					return
@@ -305,23 +325,27 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 					logger.Info("reader: Error %v", err)
 				}
 
+				flusher.Flush()
 				return
 
 			case <-deadline:
+				// Notify ourselves, this will trigger
+				// an empty response to be written and
+				// the connection to be terminated
+				// (case above).
 				server_obj.NotificationPool.Notify(source)
 				logger.Info("reader: Deadline exceeded")
 
 				// Write a pad message every 3 seconds
 				// to keep the conenction alive.
 			case <-time.After(10 * time.Second):
-				n, err := w.Write(serialized_pad)
+				_, err := w.Write(serialized_pad)
 				if err != nil {
 					logger.Info("reader: Error %v", err)
 					return
 				}
 
 				flusher.Flush()
-				logger.Info("reader: heartbeat %d", n)
 			}
 		}
 	})

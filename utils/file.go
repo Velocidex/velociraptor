@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	errors "github.com/pkg/errors"
 	"io"
 	"os"
+
+	errors "github.com/pkg/errors"
 )
 
 // https://stackoverflow.com/questions/21060945/simple-way-to-copy-a-file-in-golang

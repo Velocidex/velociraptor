@@ -3,16 +3,18 @@ package flows
 import (
 	"context"
 	"encoding/json"
+	"time"
+
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
-	"time"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -24,6 +26,10 @@ var (
 
 type CheckHuntCondition struct {
 	*BaseFlow
+}
+
+func (self *CheckHuntCondition) New() Flow {
+	return &CheckHuntCondition{&BaseFlow{}}
 }
 
 func (self *CheckHuntCondition) Start(
@@ -58,6 +64,16 @@ func (self *CheckHuntCondition) Start(
 	if err != nil {
 		return err
 	}
+
+	// Notify the client that it has new messages now.
+	channel := grpc_client.GetChannel(config_obj)
+	defer channel.Close()
+
+	client := api_proto.NewAPIClient(channel)
+	client.NotifyClients(context.Background(),
+		&api_proto.NotificationRequest{
+			ClientId: flow_obj.RunnerArgs.ClientId,
+		})
 
 	return nil
 }

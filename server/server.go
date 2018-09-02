@@ -3,7 +3,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -58,7 +57,6 @@ func (self *NotificationPool) Notify(client_id string) {
 }
 
 func (self *NotificationPool) Shutdown() {
-	fmt.Printf("NotificationPool Shutdown\n")
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -66,6 +64,17 @@ func (self *NotificationPool) Shutdown() {
 	// pool.
 	for _, c := range self.clients {
 		c <- true
+		close(c)
+	}
+
+	self.clients = make(map[string]chan bool)
+}
+
+func (self *NotificationPool) NotifyAll() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, c := range self.clients {
 		close(c)
 	}
 
@@ -189,7 +198,10 @@ func (self *Server) Decrypt(ctx context.Context, request []byte) (
 	return message_info, nil
 }
 
-func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInfo) (
+func (self *Server) Process(
+	ctx context.Context,
+	message_info *crypto.MessageInfo,
+	drain_requests_for_client bool) (
 	[]byte, int, error) {
 	message_list := &crypto_proto.MessageList{}
 	err := proto.Unmarshal(message_info.Raw, message_list)
@@ -234,9 +246,11 @@ func (self *Server) Process(ctx context.Context, message_info *crypto.MessageInf
 	}
 
 	message_list = &crypto_proto.MessageList{}
-	for _, response := range self.DrainRequestsForClient(
-		message_info.Source) {
-		message_list.Job = append(message_list.Job, response)
+	if drain_requests_for_client {
+		for _, response := range self.DrainRequestsForClient(
+			message_info.Source) {
+			message_list.Job = append(message_list.Job, response)
+		}
 	}
 
 	response, err := self.manager.EncryptMessageList(
