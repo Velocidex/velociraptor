@@ -311,10 +311,8 @@ func vfsFileDownloadHandler(
 		}
 
 		file, err := file_store.GetFileStore(config_obj).
-			ReadFile(path.Join(
-				request.ClientId, "vfs_files",
-				strings.TrimPrefix(
-					path.Clean(request.VfsPath), "/fs")))
+			ReadFile(path.Join("clients", request.ClientId, "vfs_files",
+				path.Clean(request.VfsPath)))
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return

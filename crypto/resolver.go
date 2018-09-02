@@ -9,6 +9,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/urns"
 )
 
 type publicKeyResolver interface {
@@ -73,7 +74,7 @@ type serverPublicKeyResolver struct {
 
 func (self *serverPublicKeyResolver) GetPublicKey(
 	client_id string) (*rsa.PublicKey, bool) {
-	subject := "aff4:/" + client_id + "/key"
+	subject := urns.BuildURN("clients", client_id, "key")
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, false
@@ -95,8 +96,7 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 
 func (self *serverPublicKeyResolver) SetPublicKey(
 	client_id string, key *rsa.PublicKey) error {
-	subject := "aff4:/" + client_id + "/key"
-
+	subject := urns.BuildURN("clients", client_id, "key")
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err

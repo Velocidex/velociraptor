@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/urns"
 )
 
 type NotificationPool struct {
@@ -240,7 +241,10 @@ func (self *Server) Process(
 		IpAddress: message_info.RemoteAddr,
 	}
 
-	err = self.db.SetSubject(self.config, "aff4:/"+message_info.Source+"/ping", client_info)
+	err = self.db.SetSubject(
+		self.config, urns.BuildURN("clients",
+			message_info.Source, "ping"),
+		client_info)
 	if err != nil {
 		return nil, 0, err
 	}

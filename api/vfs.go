@@ -40,8 +40,8 @@ func vfsListDirectory(
 		return virtual_dir_response, nil
 	}
 
-	vfs_urn := urns.BuildURN(client_id, "vfs", vfs_path)
-	filestore_urn := path.Join(client_id, "vfs_files", vfs_path)
+	vfs_urn := urns.BuildURN("clients", client_id, "vfs", vfs_path)
+	filestore_urn := path.Join("clients", client_id, "vfs_files", vfs_path)
 	downloaded_items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
 

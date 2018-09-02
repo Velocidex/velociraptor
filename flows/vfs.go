@@ -199,7 +199,7 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 	}
 
 	urn := urns.BuildURN(
-		flow_obj.RunnerArgs.ClientId, "vfs",
+		"clients", flow_obj.RunnerArgs.ClientId, "vfs",
 		vfs_args.VfsPath)
 
 	return db.SetSubject(config_obj, urn, response)
@@ -284,6 +284,7 @@ func (self *VFSListDirectory) flush_state(
 	self.rows = nil
 
 	urn := urns.BuildURN(
+		"clients",
 		flow_obj.RunnerArgs.ClientId, "vfs",
 		self.state.VfsPath)
 
@@ -355,6 +356,10 @@ func (self *VFSDownloadFile) Start(
 		return err
 	}
 
+	flow_obj.SetState(&flows_proto.VFSListRequestState{
+		Accessor: accessor,
+	})
+
 	return nil
 }
 
@@ -380,9 +385,12 @@ func (self *VFSDownloadFile) ProcessMessage(
 
 		// Receive any file upload the client sent.
 	case constants.TransferWellKnownFlowId:
+		state := flow_obj.GetState().(*flows_proto.VFSListRequestState)
+		vfs_path := getVfsPath("", state.Accessor)
 		return appendDataToFile(
 			config_obj, flow_obj,
-			path.Join(flow_obj.RunnerArgs.ClientId, "vfs_files"),
+			path.Join("clients", flow_obj.RunnerArgs.ClientId,
+				"vfs_files", vfs_path),
 			message)
 	}
 	return nil

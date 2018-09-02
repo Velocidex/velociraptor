@@ -1,10 +1,11 @@
 package flows
 
 import (
-	"github.com/golang/protobuf/ptypes"
-	errors "github.com/pkg/errors"
 	"path"
 	"strings"
+
+	"github.com/golang/protobuf/ptypes"
+	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -27,7 +28,8 @@ func GetFlows(
 	}
 
 	flow_urns, err := db.ListChildren(
-		config_obj, urns.BuildURN(client_id, "flows"),
+		config_obj, urns.BuildURN(
+			"clients", client_id, "flows"),
 		offset, length)
 	if err != nil {
 		return nil, err
@@ -58,7 +60,6 @@ func GetFlows(
 func GetFlowDetails(
 	config_obj *config.Config,
 	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
-
 	flow_urn, err := ValidateFlowId(client_id, flow_id)
 	if err != nil {
 		return nil, err
@@ -118,7 +119,7 @@ func GetFlowRequests(
 	}
 	result := &api_proto.ApiFlowRequestDetails{}
 
-	session_id := urns.BuildURN(client_id, "flows", flow_id)
+	session_id := urns.BuildURN("clients", client_id, "flows", flow_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -128,7 +129,6 @@ func GetFlowRequests(
 	if err != nil {
 		return nil, err
 	}
-
 	for idx, request := range requests {
 		if idx < int(offset) {
 			continue
@@ -175,7 +175,9 @@ func GetFlowResults(
 
 		urn = *valid_urn + "/results"
 	} else {
-		urn = urns.BuildURN(client_id, "flows", flow_id, "results")
+		urn = urns.BuildURN(
+			"clients", client_id,
+			"flows", flow_id, "results")
 	}
 
 	db, err := datastore.GetDB(config_obj)
@@ -225,12 +227,6 @@ func ValidateFlowId(client_id string, flow_id string) (*string, error) {
 			"Flows must start with " + constants.FLOW_PREFIX)
 	}
 
-	rebuild_urn := urns.BuildURN(client_id, "flows", base_flow)
-	if strings.HasPrefix(flow_id, "aff4:") {
-		if flow_id != rebuild_urn {
-			return nil, errors.New("Invalid flow id.")
-		}
-	}
-
+	rebuild_urn := urns.BuildURN("clients", client_id, "flows", base_flow)
 	return &rebuild_urn, nil
 }

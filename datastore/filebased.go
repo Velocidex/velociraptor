@@ -21,23 +21,25 @@ package datastore
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
-	errors "github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/testing"
+	"www.velocidex.com/golang/velociraptor/urns"
 )
 
 type FileBaseDataStore struct {
-	clock utils.Clock
+	clock testing.Clock
 }
 
 func (self *FileBaseDataStore) GetClientTasks(
@@ -46,12 +48,13 @@ func (self *FileBaseDataStore) GetClientTasks(
 	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	result := []*crypto_proto.GrrMessage{}
 	now := self.clock.Now().UTC().UnixNano() / 1000
-	now_urn := fmt.Sprintf("aff4:/%s/tasks/%d", client_id, now)
+	tasks_urn := urns.BuildURN("clients", client_id, "tasks")
+	now_urn := tasks_urn + fmt.Sprintf("/%d", now)
 
 	next_timestamp := self.clock.Now().Add(
 		time.Second*time.Duration(config_obj.Frontend.ClientLeaseTime)).
 		UTC().UnixNano() / 1000
-	tasks_urn := path.Join("aff4:/", client_id, "tasks")
+
 	tasks, err := self.ListChildren(config_obj, tasks_urn, 0, 100)
 	if err != nil {
 		return nil, err
@@ -74,8 +77,9 @@ func (self *FileBaseDataStore) GetClientTasks(
 		}
 
 		if !do_not_lease {
-			next_timestamp_urn := fmt.Sprintf(
-				"aff4:/%s/tasks/%d", client_id, next_timestamp)
+			next_timestamp_urn := tasks_urn + fmt.Sprintf(
+				"/%d", next_timestamp)
+
 			message.TaskId = uint64(next_timestamp)
 			err = self.SetSubject(config_obj, next_timestamp_urn, message)
 			if err != nil {
@@ -101,7 +105,8 @@ func (self *FileBaseDataStore) RemoveTasksFromClientQueue(
 	client_id string,
 	task_ids []uint64) error {
 	for _, task_id := range task_ids {
-		urn := fmt.Sprintf("aff4:/%s/tasks/%d", client_id, task_id)
+		urn := urns.BuildURN("clients", client_id, "tasks",
+			fmt.Sprintf("/%d", task_id))
 		err := self.DeleteSubject(config_obj, urn)
 		if err != nil {
 			return err
@@ -120,7 +125,9 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 	next_state uint64) error {
 
 	now := self.clock.Now().UTC().UnixNano() / 1000
-	subject := fmt.Sprintf("aff4:/%s/tasks/%d", client_id, now)
+	subject := urns.BuildURN("clients", client_id, "tasks",
+		fmt.Sprintf("/%d", now))
+
 	req, err := responder.NewRequest(message)
 	if err != nil {
 		return err
@@ -217,7 +224,7 @@ func (self *FileBaseDataStore) ListChildren(
 			break
 		}
 		component := strings.TrimSuffix(
-			unsanitizeComponent(children[i].Name()), ".db")
+			UnsanitizeComponent(children[i].Name()), ".db")
 
 		// If there is both a file and directory refering to
 		// the same component we will have it twice so skip
@@ -281,7 +288,7 @@ func (self *FileBaseDataStore) Close() {}
 
 func init() {
 	db := FileBaseDataStore{
-		clock: utils.RealClock{},
+		clock: testing.RealClock{},
 	}
 
 	RegisterImplementation("FileBaseDataStore", &db)
@@ -303,7 +310,7 @@ func shouldEscape(c rune) bool {
 	return true
 }
 
-func sanitizeString(component string) []rune {
+func SanitizeString(component string) []rune {
 	if component == "." {
 		return []rune("%2E")
 	} else if component == ".." {
@@ -345,7 +352,7 @@ func unhex(c rune) rune {
 	return 0
 }
 
-func unsanitizeComponent(component_str string) string {
+func UnsanitizeComponent(component_str string) string {
 	component := []rune(component_str)
 	result := ""
 	i := 0
@@ -376,7 +383,7 @@ func urnToFilename(config_obj *config.Config, urn string) (string, error) {
 			continue
 		}
 
-		components = append(components, string(sanitizeString(component)))
+		components = append(components, string(SanitizeString(component)))
 	}
 
 	// Files all end with .db. Note a component can never have
@@ -447,7 +454,7 @@ func FilenameToURN(config_obj *config.Config, filename string) (*string, error) 
 	components := []string{}
 	for _, component := range strings.Split(
 		strings.TrimPrefix(filename, location), "/") {
-		components = append(components, unsanitizeComponent(component))
+		components = append(components, UnsanitizeComponent(component))
 	}
 
 	result := strings.TrimSuffix("aff4:"+strings.Join(components, "/"), ".db")

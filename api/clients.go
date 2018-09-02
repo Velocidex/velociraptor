@@ -3,10 +3,12 @@ package api
 import (
 	"net"
 	"strings"
+
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 func GetApiClient(
@@ -16,7 +18,7 @@ func GetApiClient(
 		ClientId: client_id,
 	}
 
-	client_urn := "aff4:/" + client_id
+	client_urn := urns.BuildURN("clients", client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -50,7 +52,10 @@ func GetApiClient(
 		}
 	}
 
-	err = db.GetSubject(config_obj, client_urn+"/ping", client_info)
+	err = db.GetSubject(
+		config_obj,
+		urns.BuildURN(client_urn, "ping"),
+		client_info)
 	if err != nil {
 		return nil, err
 	}

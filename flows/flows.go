@@ -546,7 +546,9 @@ func GetNewFlowIdForClient(client_id string) string {
 	rand.Read(buf)
 	hex.Encode(result, buf)
 
-	return urns.BuildURN(client_id, "flows", constants.FLOW_PREFIX+string(result))
+	return urns.BuildURN(
+		"clients", client_id,
+		"flows", constants.FLOW_PREFIX+string(result))
 }
 
 func StoreResultInFlow(

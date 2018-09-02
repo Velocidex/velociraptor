@@ -74,7 +74,9 @@ func (self *VQLCollector) ProcessMessage(
 	case constants.TransferWellKnownFlowId:
 		return appendDataToFile(
 			config_obj, flow_obj,
-			path.Join(flow_obj.RunnerArgs.ClientId,
+			path.Join("clients",
+				flow_obj.RunnerArgs.ClientId,
+				"uploads",
 				path.Base(message.SessionId)),
 			message)
 	}

@@ -164,7 +164,7 @@ func (self *VInterrogate) StoreClientInfo(
 	flow_obj *AFF4FlowObject) error {
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
-	client_urn := "aff4:/" + flow_obj.RunnerArgs.ClientId
+	client_urn := "aff4:/clients/" + flow_obj.RunnerArgs.ClientId
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

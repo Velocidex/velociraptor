@@ -2,11 +2,16 @@ package file_store
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
+
 	config "www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -32,31 +37,28 @@ type DirectoryFileStore struct {
 
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	[]os.FileInfo, error) {
-	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return nil, errors.New("No configured file store directory.")
+	file_path, err := self.FilenameToFileStorePath(dirname)
+	if err != nil {
+		return nil, err
 	}
-
-	file_path := path.Join(self.config_obj.Datastore.FilestoreDirectory, dirname)
 	return ioutil.ReadDir(file_path)
 }
 
 func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
-	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return nil, errors.New("No configured file store directory.")
+	file_path, err := self.FilenameToFileStorePath(filename)
+	if err != nil {
+		return nil, err
 	}
-
-	file_path := path.Join(self.config_obj.Datastore.FilestoreDirectory, filename)
 	file, err := os.Open(file_path)
 	return file, err
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
-	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return nil, errors.New("No configured file store directory.")
+	file_path, err := self.FilenameToFileStorePath(filename)
+	if err != nil {
+		return nil, err
 	}
-
-	file_path := path.Join(self.config_obj.Datastore.FilestoreDirectory, filename)
-	err := os.MkdirAll(path.Dir(file_path), 0700)
+	err = os.MkdirAll(path.Dir(file_path), 0700)
 	if err != nil {
 		logging.NewLogger(self.config_obj).Error(
 			"Can not create dir", err)
@@ -71,6 +73,23 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 	}
 
 	return file, nil
+}
+
+func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
+	string, error) {
+	if self.config_obj.Datastore.FilestoreDirectory == "" {
+		return "", errors.New("No configured file store directory.")
+	}
+
+	components := []string{self.config_obj.Datastore.FilestoreDirectory}
+	for _, component := range strings.Split(filename, "/") {
+		components = append(components,
+			string(datastore.SanitizeString(component)))
+	}
+
+	fmt.Printf("FilestoreDirectory: %s %s\n", filename, filepath.Join(components...))
+
+	return filepath.Join(components...), nil
 }
 
 // Currently we only support a DirectoryFileStore.
