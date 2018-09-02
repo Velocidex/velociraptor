@@ -143,7 +143,6 @@ func (self *VFSListDirectory) Start(
 			Query: vql_collector_args.Query[0],
 		},
 	}
-	flow_obj.SetState(self.state)
 
 	return nil
 }

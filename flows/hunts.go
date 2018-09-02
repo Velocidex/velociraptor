@@ -680,8 +680,6 @@ func (self *HuntRunnerFlow) Start(
 	delegate_flow_obj_proto.RunnerArgs.ClientId = hunt_summary_args.ClientId
 	delegate_flow_obj_proto.RunnerArgs.Creator = hunt_summary_args.HuntId
 
-	flow_obj.SetState(delegate_flow_obj_proto)
-
 	delegate_args, err := GetFlowArgs(hunt_summary_args.StartRequest)
 	if err != nil {
 		return err
@@ -691,10 +689,10 @@ func (self *HuntRunnerFlow) Start(
 	if err != nil {
 		return err
 	}
-	err = delegate_flow_obj.impl.Start(
-		config_obj, delegate_flow_obj, delegate_args)
+	self.delegate_flow_obj = delegate_flow_obj
 
-	return err
+	return self.delegate_flow_obj.impl.Start(
+		config_obj, delegate_flow_obj, delegate_args)
 }
 
 func (self *HuntRunnerFlow) Load(

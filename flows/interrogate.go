@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
+	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -164,7 +165,7 @@ func (self *VInterrogate) StoreClientInfo(
 	flow_obj *AFF4FlowObject) error {
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
-	client_urn := "aff4:/clients/" + flow_obj.RunnerArgs.ClientId
+	client_urn := urns.BuildURN("clients", flow_obj.RunnerArgs.ClientId)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

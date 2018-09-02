@@ -55,7 +55,18 @@ func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
 }
 
 func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
-	for _, message := range messages {
+	var message *crypto_proto.GrrMessage
+
+	defer func() {
+		if r := recover(); r != nil {
+			self.logger.Error(
+				fmt.Sprintf(
+					"%v, during processing of message %v",
+					r, message), errors.New("Panic"))
+		}
+	}()
+
+	for _, message = range messages {
 		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("FlowRunner %v: ", message), err)
@@ -527,6 +538,11 @@ func StartFlow(
 	}
 
 	err = flow_obj.impl.Start(config_obj, flow_obj, args)
+	if err != nil {
+		return nil, err
+	}
+
+	err = flow_obj.impl.Save(config_obj, flow_obj)
 	if err != nil {
 		return nil, err
 	}
