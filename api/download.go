@@ -19,7 +19,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
-	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -150,6 +150,8 @@ func flowResultDownloadHandler(
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
 	config_obj *config.Config) http.Handler {
+	logger := logging.NewLogger(config_obj)
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hunt_id, pres := r.URL.Query()["hunt_id"]
 		if !pres || len(hunt_id) == 0 {
@@ -258,7 +260,7 @@ func huntResultDownloadHandler(
 					Count:  page_size,
 				})
 			if err != nil {
-				utils.Debug(err)
+				logger.Error("huntResultDownloadHandler: ", err)
 				break
 			}
 			if len(hunt_results.Items) == 0 {
@@ -267,7 +269,6 @@ func huntResultDownloadHandler(
 			offset += uint64(len(hunt_results.Items))
 
 			for _, hunt_info := range hunt_results.Items {
-				utils.Debug(hunt_info)
 				// Get all file uploads
 				for _, upload_name := range hunt_info.Result.UploadedFiles {
 					reader, err := file_store_factory.ReadFile(upload_name)

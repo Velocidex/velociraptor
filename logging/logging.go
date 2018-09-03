@@ -7,7 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type stackTracer interface {
@@ -55,7 +54,6 @@ func (self *Logger) _Error(format string, v ...interface{}) {
 }
 
 func (self *Logger) Error(msg string, err error) {
-	utils.Debug(err)
 	s_err, ok := err.(stackTracer)
 	if ok {
 		st := s_err.StackTrace()

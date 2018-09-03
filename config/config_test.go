@@ -2,7 +2,8 @@ package config
 
 import (
 	"testing"
-	utils "www.velocidex.com/golang/velociraptor/testing"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func TestConfig(t *testing.T) {

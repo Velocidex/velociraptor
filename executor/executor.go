@@ -9,7 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 type Executor interface {
@@ -123,10 +123,11 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 	result.Inbound = make(chan *crypto_proto.GrrMessage)
 	result.Outbound = make(chan *crypto_proto.GrrMessage)
 	result.plugins = actions.GetClientActionsMap()
+	logger := logging.NewLogger(config_obj)
 	go func() {
 		for {
-			// Pump messages from input channel and just
-			// fail them on the output channel.
+			// Pump messages from input channel and
+			// process each request.
 			req := result.ReadFromServer()
 
 			// Ignore unauthenticated messages - the
@@ -134,7 +135,7 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
 				// Each request has its own context.
 				ctx := context.BackgroundFromConfig(config_obj)
-				utils.Debug(req)
+				logger.Info("Received request: %v", req)
 				result.processRequestPlugin(ctx, req)
 			}
 		}

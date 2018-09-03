@@ -384,10 +384,6 @@ func NewVelociraptorService(config_obj *config.Config, elog debug.Log) (
 
 	result.comms = comm
 
-	// Dont actually do anything until the service manager tells
-	// us to start.
-	result.comms.SetPause(true)
-
 	go func() {
 		ctx := context.Background()
 		comm.Run(ctx)

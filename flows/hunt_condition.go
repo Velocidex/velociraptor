@@ -2,7 +2,6 @@ package flows
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -16,6 +15,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -103,7 +103,6 @@ func (self *CheckHuntCondition) ProcessMessage(
 		if err != nil {
 			return err
 		}
-
 		if condition_applied {
 			flow_obj.Log("Condition matched. Queueing hunt on client " +
 				message.Source)
@@ -154,13 +153,13 @@ func _FilterConditionServerSide(
 
 	// Make a stored query from the results of the first
 	// query. This can now be queries on again server side.
-	stored_query, err := _NewStoredQuery(vql_response)
+	rows, err := vql_subsystem.ExtractRows(vql_response)
 	if err != nil {
 		return false, err
 	}
 
 	// The query is empty dont bother matching.
-	if len(stored_query.rows) == 0 {
+	if len(rows) == 0 {
 		return false, nil
 	}
 
@@ -175,7 +174,7 @@ func _FilterConditionServerSide(
 	}
 
 	// Run the server side query.
-	env := vfilter.NewDict().Set("rows", stored_query)
+	env := vfilter.NewDict().Set("rows", rows)
 	for _, item := range server_side_condition_query.Env {
 		env.Set(item.Key, item.Value)
 	}
@@ -184,7 +183,6 @@ func _FilterConditionServerSide(
 
 	rule_matched := false
 	for _, query := range server_side_condition_query.Query {
-		_ = query
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return false, err
@@ -216,53 +214,6 @@ func init() {
 	}
 
 	RegisterImplementation(desc, &impl)
-}
-
-type _StoredQuery struct {
-	rows []*vfilter.Dict
-}
-
-func (self *_StoredQuery) Eval(ctx context.Context) <-chan vfilter.Row {
-	result := make(chan vfilter.Row)
-
-	go func() {
-		defer close(result)
-
-		for _, row := range self.rows {
-			result <- row
-		}
-	}()
-
-	return result
-}
-
-func (self *_StoredQuery) Columns() *[]string {
-	result := []string{}
-	if len(self.rows) >= 1 {
-		for k, _ := range *self.rows[0].ToDict() {
-			result = append(result, k)
-		}
-	}
-	return &result
-}
-
-func _NewStoredQuery(vql_response *actions_proto.VQLResponse) (*_StoredQuery, error) {
-	result := &_StoredQuery{}
-	var rows []map[string]interface{}
-	err := json.Unmarshal([]byte(vql_response.Response), &rows)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	for _, row := range rows {
-		item := vfilter.NewDict()
-		for k, v := range row {
-			item.Set(k, v)
-		}
-		result.rows = append(result.rows, item)
-	}
-
-	return result, nil
 }
 
 func _getDefaultCollectorArgs() *actions_proto.VQLCollectorArgs {

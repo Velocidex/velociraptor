@@ -1,10 +1,11 @@
 package actions
 
 import (
-	"github.com/dustin/go-humanize"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/context"
@@ -105,7 +106,7 @@ func (self *VQLClientAction) Run(
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			}
 
-			responder.Log("Time %v: %s: Sending response part %d %s bytes (%d rows).",
+			responder.Log("Time %v: %s: Sending response part %d %s (%d rows).",
 				(response.Timestamp-now)/1000000,
 				query.Name,
 				result.Part,

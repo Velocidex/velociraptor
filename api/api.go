@@ -25,7 +25,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	users "www.velocidex.com/golang/velociraptor/users"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ApiServer struct {
@@ -36,7 +35,6 @@ type ApiServer struct {
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
-	utils.Debug(in)
 	result := &api_proto.StartFlowResponse{}
 	in.Creator = getUsername(ctx)
 	flow_id, err := flows.StartFlow(self.config, in)
@@ -65,7 +63,6 @@ func (self *ApiServer) LaunchFlow(
 func (self *ApiServer) CreateHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
-	utils.Debug(in)
 	result := &api_proto.StartFlowResponse{}
 	hunt_id, err := flows.CreateHunt(self.config, in)
 	if err != nil {
@@ -80,7 +77,6 @@ func (self *ApiServer) CreateHunt(
 func (self *ApiServer) ModifyHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*empty.Empty, error) {
-	utils.Debug(in)
 	err := flows.ModifyHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -93,7 +89,6 @@ func (self *ApiServer) ModifyHunt(
 func (self *ApiServer) ListHunts(
 	ctx context.Context,
 	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
-	utils.Debug(in)
 	result, err := flows.ListHunts(self.config, in)
 	if err != nil {
 		return nil, err
@@ -105,7 +100,6 @@ func (self *ApiServer) ListHunts(
 func (self *ApiServer) GetHunt(
 	ctx context.Context,
 	in *api_proto.GetHuntRequest) (*api_proto.Hunt, error) {
-	utils.Debug(in)
 	result, err := flows.GetHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -117,7 +111,6 @@ func (self *ApiServer) GetHunt(
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.ApiFlowResultDetails, error) {
-	utils.Debug(in)
 	result, err := flows.GetHuntResults(self.config, in)
 	if err != nil {
 		return nil, err
@@ -128,7 +121,6 @@ func (self *ApiServer) GetHuntResults(
 func (self *ApiServer) ListHuntClients(
 	ctx context.Context,
 	in *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
-	utils.Debug(in)
 	result, err := flows.ListHuntClients(self.config, in)
 	if err != nil {
 		return nil, err
@@ -139,8 +131,6 @@ func (self *ApiServer) ListHuntClients(
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {
-	utils.Debug(in)
-
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
@@ -167,8 +157,6 @@ func (self *ApiServer) ListClients(
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
 	in *api_proto.NotificationRequest) (*empty.Empty, error) {
-	utils.Debug(in)
-
 	if in.NotifyAll {
 		self.server_obj.Info("Sending notification to everyone")
 		self.server_obj.NotificationPool.NotifyAll()
@@ -184,7 +172,6 @@ func (self *ApiServer) NotifyClients(
 func (self *ApiServer) GetClient(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
-	utils.Debug(in)
 	api_client, err := GetApiClient(
 		self.config,
 		in.ClientId,
@@ -206,7 +193,6 @@ func (self *ApiServer) DescribeTypes(
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
-	utils.Debug(in)
 
 	// HTTP HEAD requests against this method are used by the GUI
 	// for auth checks.
@@ -249,7 +235,6 @@ func (self *ApiServer) GetUserUITraits(
 func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
-	utils.Debug(in)
 
 	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
@@ -258,7 +243,6 @@ func (self *ApiServer) GetFlowDetails(
 func (self *ApiServer) GetFlowRequests(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
-	utils.Debug(in)
 	result, err := flows.GetFlowRequests(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -267,7 +251,6 @@ func (self *ApiServer) GetFlowRequests(
 func (self *ApiServer) GetFlowResults(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResultDetails, error) {
-	utils.Debug(in)
 	result, err := flows.GetFlowResults(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -277,7 +260,6 @@ func (self *ApiServer) GetUserNotifications(
 	ctx context.Context,
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
-	utils.Debug(in)
 	result, err := users.GetUserNotifications(
 		self.config, getUsername(ctx), in.ClearPending)
 	return result, err
@@ -286,7 +268,6 @@ func (self *ApiServer) GetUserNotifications(
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	utils.Debug(in)
 	n, err := users.GetUserNotificationCount(self.config, getUsername(ctx))
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
@@ -294,7 +275,6 @@ func (self *ApiServer) GetUserNotificationCount(
 func (self *ApiServer) GetFlowLogs(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowLogDetails, error) {
-	utils.Debug(in)
 	result, err := flows.GetFlowLog(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -310,7 +290,6 @@ func (self *ApiServer) GetFlowDescriptors(
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
-	utils.Debug(in)
 
 	result, err := vfsListDirectory(
 		self.config, in.ClientId, in.VfsPath)
@@ -321,7 +300,6 @@ func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*api_proto.StartFlowResponse, error) {
-	utils.Debug(in)
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)

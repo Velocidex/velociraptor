@@ -41,7 +41,7 @@
   name = "github.com/alecthomas/repr"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ead21651dde39fea129e6e4a612c675693d0f4ff"
+  revision = "117648cd9897bc621d6d52cd05727b9abdd5528a"
 
 [[projects]]
   branch = "master"
@@ -79,12 +79,12 @@
   version = "v1.8.1"
 
 [[projects]]
-  digest = "1:a2c1d0e43bd3baaa071d1b9ed72c27d78169b2b269f71c105ac4ba34b1be4a39"
+  digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "UT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
@@ -114,7 +114,7 @@
   version = "v1.2.1"
 
 [[projects]]
-  digest = "1:47d40e635401dbfbc2112851a895566a702357ac746e3a96059a6310099628d0"
+  digest = "1:e057d549345b1b84d0815242a1393b73b8944a8eccf0f1e142c4f4f65ee44b33"
   name = "github.com/golang/protobuf"
   packages = [
     "descriptor",
@@ -129,8 +129,8 @@
     "ptypes/timestamp",
   ]
   pruneopts = "UT"
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:f7463b67871bf7fe475e2c69fb0d21ead07de5188b8d7f8abf8fc961965ed841"
@@ -161,12 +161,12 @@
   revision = "49522c3f37914a12a6813caf41f4a9e84d39ca0a"
 
 [[projects]]
-  digest = "1:e2d1d410fb367567c2b53ed9e2d719d3c1f0891397bb2fa49afd747cfbf1e8e4"
+  digest = "1:cdb899c199f907ac9fb50495ec71212c95cb5b0e0a8ee0800da0238036091033"
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
   pruneopts = "UT"
-  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
-  version = "v0.0.2"
+  revision = "ce7b0b5c7b45a81508558cd1dba6bb1e4ddb51bb"
+  version = "v0.0.3"
 
 [[projects]]
   digest = "1:3cafc6a5a1b8269605d9df4c6956d43d8011fc57f266ca6b9d04da6c09dee548"
@@ -258,7 +258,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+  revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
 
 [[projects]]
   branch = "master"
@@ -270,7 +270,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:50cbb2b6ef368f47527ed27df5d6b55aa4194a551a488115121706b94ac421ba"
+  digest = "1:1131cc9a412071491f965c2c05d09bd11ad769445fa4102316e6d26f02cef292"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -284,19 +284,23 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "f9ce57c11b242f0f1599cf25c89d8cb02c45295a"
+  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
 
 [[projects]]
   branch = "master"
-  digest = "1:9b868d732810ef51c9e4cdc12178961a969ef1be671180777e7736279105d613"
+  digest = "1:34081cb0ab804b0cfe57af8c8489c1162b2c0de2bf1c3a80bb223eb75d7eab0e"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
     "windows/registry",
+    "windows/svc",
+    "windows/svc/debug",
+    "windows/svc/eventlog",
+    "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "acbc56fc7007d2a01796d5bde54f39e3b3e95945"
+  revision = "fa5fdf94c78965f1aa8423f0cc50b8b8d728b05a"
 
 [[projects]]
   digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
@@ -329,14 +333,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:edfc7a0bed09f4d7af304129d96d563a53bcc9d8ebc8cd5443b845fda30f170b"
+  digest = "1:6c6b70cf6d2788d9f7dc6589bc88e0e1c7edc40612294431ebb7d09536d12240"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
     "googleapis/rpc/status",
   ]
   pruneopts = "UT"
-  revision = "daca94659cb50e9f37c1b834680f2e46358f10b0"
+  revision = "11092d34479b07829b72e10713b159248caf5dad"
 
 [[projects]]
   digest = "1:76332e947f184a2dc091db40f22c7089ada36bbc577793074639695af85a10fd"
@@ -438,6 +442,10 @@
     "golang.org/x/net/webdav",
     "golang.org/x/sys/windows",
     "golang.org/x/sys/windows/registry",
+    "golang.org/x/sys/windows/svc",
+    "golang.org/x/sys/windows/svc/debug",
+    "golang.org/x/sys/windows/svc/eventlog",
+    "golang.org/x/sys/windows/svc/mgr",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",

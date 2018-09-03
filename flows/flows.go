@@ -481,6 +481,10 @@ func RegisterImplementation(descriptor *flows_proto.FlowDescriptor, impl Flow) {
 
 func GetImpl(name string) (Flow, bool) {
 	result, pres := implementations[name]
+	if !pres {
+		return nil, false
+
+	}
 	return result.flow.New(), pres
 }
 

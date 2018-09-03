@@ -2,13 +2,14 @@ package flows
 
 import (
 	"fmt"
+	"io/ioutil"
+	"os"
+	"testing"
+
 	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	assert "github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"os"
-	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -81,6 +82,10 @@ type MyTestFlow struct {
 	*BaseFlow
 }
 
+func (self *MyTestFlow) New() Flow {
+	return &MyTestFlow{&BaseFlow{}}
+}
+
 func (self *MyTestFlow) Start(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
@@ -138,7 +143,11 @@ func TestFlowRunner(t *testing.T) {
 		FlowName: "MyTestFlow",
 		ClientId: "C.0",
 	}
-	flow_urn, err := StartFlow(config_obj, runner_args, &empty.Empty{})
+	flow_args, err := ptypes.MarshalAny(&empty.Empty{})
+	assert.NoError(t, err)
+	runner_args.Args = flow_args
+
+	flow_urn, err := StartFlow(config_obj, runner_args)
 	assert.NoError(t, err)
 
 	// Check that the flow object is stored properly in the DB.
@@ -218,7 +227,11 @@ func TestFlowRunner2(t *testing.T) {
 		FlowName: "MyTestFlow",
 		ClientId: "C.0",
 	}
-	flow_urn, err := StartFlow(config_obj, runner_args, &empty.Empty{})
+	flow_args, err := ptypes.MarshalAny(&empty.Empty{})
+	assert.NoError(t, err)
+	runner_args.Args = flow_args
+
+	flow_urn, err := StartFlow(config_obj, runner_args)
 	assert.NoError(t, err)
 
 	// When our flow gets an client error message it kills the

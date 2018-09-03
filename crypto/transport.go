@@ -28,7 +28,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type _Cipher struct {
@@ -225,7 +224,6 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 		server_cert.Subject.CommonName,
 		server_cert.PublicKey.(*rsa.PublicKey))
 	if err != nil {
-		utils.Debug(err)
 		return nil, err
 	}
 
@@ -264,7 +262,6 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 	err = self.public_key_resolver.SetPublicKey(
 		common_name, csr.PublicKey.(*rsa.PublicKey))
 	if err != nil {
-		utils.Debug(err)
 		return nil, err
 	}
 	return &csr.Subject.CommonName, nil
