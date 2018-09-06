@@ -51,5 +51,15 @@
   "/tmp/1/2/21/212",
   "/tmp/1/2/21/213",
   "/tmp/1/2/21/212/1.txt"
+ ],
+ "009 Recursive matches zero or more": [
+  "/usr/bin/X11/diff",
+  "/usr/bin/X11/X11/diff",
+  "/usr/bin/X11/X11/X11/diff"
+ ],
+ "010 Recursive matches none at end": null,
+ "011 Match masked by two matches": [
+  "/usr/bin",
+  "/usr/bin/diff"
  ]
 }

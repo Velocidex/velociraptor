@@ -28,6 +28,11 @@ func AddModel(profile *Profile) {
 		"int32", func(buf []byte) uint64 {
 			return uint64(binary.LittleEndian.Uint32(buf))
 		})
+	profile.types["int64"] = NewIntParser(
+		"int64", func(buf []byte) uint64 {
+			return uint64(binary.LittleEndian.Uint64(buf))
+		})
+
 	profile.types["String"] = NewStringParser("string")
 	profile.types["Enumeration"] = NewEnumeration("Enumeration", profile)
 

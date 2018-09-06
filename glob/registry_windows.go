@@ -121,7 +121,7 @@ func (self *RegValueInfo) Sys() interface{} {
 }
 
 func (self *RegValueInfo) IsDir() bool {
-	return true
+	return false
 }
 
 func (self *RegValueInfo) Mode() os.FileMode {
@@ -158,7 +158,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	var result []FileInfo
 	path = normalize_path(path)
 
-	if path == "\\" {
+	if path == "" {
 		for k, _ := range root_keys {
 			result = append(result, &DrivePath{k})
 		}
@@ -166,11 +166,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		return result, nil
 	}
 
-	// Add a final \ to turn path into a directory path.
-	path = filepath.Clean(path)
-	path = strings.TrimPrefix(path, "\\")
 	components := strings.Split(path, "\\")
-
 	hive, pres := root_keys[components[0]]
 	if !pres {
 		// Not a real hive
@@ -179,6 +175,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 
 	key_path := ""
 	// e.g. HKEY_PERFORMANCE_DATA
+	// Add a final \ to turn path into a directory path.
 	if len(components) > 1 {
 		key_path = strings.Join(components[1:], "\\")
 	}
@@ -208,17 +205,12 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		}
 		defer subkey.Close()
 
-		stat, err := subkey.Stat()
+		key_info, err := getKeyInfo(
+			subkey, filepath.Join(key_path, subkey_name))
 		if err != nil {
 			continue
 		}
-
-		result = append(result, &RegKeyInfo{
-			_name:      subkey_name,
-			_modtime:   stat.ModTime(),
-			_full_path: "\\" + path + "\\" + subkey_name,
-			Type:       "key",
-		})
+		result = append(result, key_info)
 	}
 
 	// Now enumerate the values.
@@ -227,115 +219,14 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		return nil, err
 	}
 
-	var key_modtime time.Time
-	key_stat, err := key.Stat()
-	if err == nil {
-		key_modtime = key_stat.ModTime()
-	}
-
 	for _, value_name := range values {
-		// Represent the default value as different from the
-		// actual key name.
-		value_info_name := value_name
-		if value_name == "" {
-			value_info_name = "@"
-		}
-
-		value_info := &RegValueInfo{
-			RegKeyInfo: RegKeyInfo{
-				// Values do not carry their own
-				// timestamp - the key they are in
-				// gets its timestamp updated whenever
-				// any of the values does so we just
-				// copy the key's timestamp to each
-				// value.
-				_modtime:   key_modtime,
-				_full_path: "\\" + path + "\\" + value_info_name,
-				_name:      value_info_name,
-			}}
-
-		buf_size, value_type, err := key.GetValue(value_name, nil)
+		value_info, err := getValueInfo(key, key_path, value_name)
 		if err != nil {
 			continue
 		}
-
-		value_info._size = int64(buf_size)
-
-		switch value_type {
-		case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
-			data, _, err := key.GetIntegerValue(value_name)
-			if err != nil {
-				continue
-			}
-
-			switch value_type {
-			case registry.DWORD_BIG_ENDIAN:
-				value_info.Type = "DWORD_BIG_ENDIAN"
-			case registry.DWORD:
-				value_info.Type = "DWORD"
-			case registry.QWORD:
-				value_info.Type = "QWORD"
-			}
-
-			value_info.Data = data
-
-		case registry.BINARY:
-			if buf_size < MAX_EMBEDDED_REG_VALUE {
-				data, _, err := key.GetBinaryValue(value_name)
-				if err != nil {
-					continue
-				}
-
-				value_info.Data = data
-			}
-			value_info.Type = "BINARY"
-
-		case registry.MULTI_SZ:
-			if buf_size < MAX_EMBEDDED_REG_VALUE {
-				values, _, err := key.GetStringsValue(value_name)
-				if err != nil {
-					continue
-				}
-
-				value_info.Data = values
-			}
-			value_info.Type = "MULTI_SZ"
-
-		case registry.SZ, registry.EXPAND_SZ:
-			switch value_type {
-			case registry.SZ:
-				value_info.Type = "SZ"
-			case registry.EXPAND_SZ:
-				value_info.Type = "EXPAND_SZ"
-			}
-
-			if buf_size < MAX_EMBEDDED_REG_VALUE {
-				data, _, err := key.GetStringValue(value_name)
-				if err != nil {
-					continue
-				}
-
-				// We do not expand the key because
-				// this will depend on the agent's own
-				// environment strings.
-				value_info.Data = data
-			}
-
-		default:
-			value_info.Type = fmt.Sprintf("%d", value_type)
-			if buf_size < MAX_EMBEDDED_REG_VALUE {
-				buf := make([]byte, buf_size)
-				_, _, err := key.GetValue(value_name, buf)
-				if err != nil {
-					continue
-				}
-
-				value_info.Data = buf
-			}
-		}
-
 		result = append(result, value_info)
 	}
+
 	return result, nil
 }
 
@@ -351,7 +242,165 @@ func (self RegFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 }
 
 func (self *RegFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	return &DrivePath{"\\"}, nil
+	path := normalize_path(filename)
+	components := strings.Split(path, "\\")
+	if len(components) == 0 {
+		return nil, errors.New("No filename given")
+	}
+
+	hive, pres := root_keys[components[0]]
+	if !pres {
+		// Not a real hive
+		return nil, errors.New("Unknown hive")
+	}
+
+	key_path := ""
+	// e.g. HKEY_PERFORMANCE_DATA
+	// Add a final \ to turn path into a directory path.
+	if len(components) > 1 {
+		key_path = strings.Join(components[1:], "\\")
+	}
+
+	key, err := registry.OpenKey(hive, key_path,
+		registry.READ|registry.WOW64_64KEY)
+	if err != nil {
+		// Maybe its a value then.
+		containing_key_name, value_name := filepath.Split(key_path)
+		key, err := registry.OpenKey(hive, containing_key_name,
+			registry.READ|registry.WOW64_64KEY)
+		if err != nil {
+			return nil, err
+		}
+		defer key.Close()
+
+		return getValueInfo(key, containing_key_name, value_name)
+	}
+	defer key.Close()
+
+	return getKeyInfo(key, key_path)
+}
+
+func getKeyInfo(key registry.Key, key_path string) (*RegKeyInfo, error) {
+	stat, err := key.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	return &RegKeyInfo{
+		_name:      filepath.Base(key_path),
+		_modtime:   stat.ModTime(),
+		_full_path: key_path,
+		Type:       "key",
+	}, nil
+}
+
+func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo, error) {
+	// Represent the default value as different from the
+	// actual key name.
+	value_info_name := value_name
+	if value_name == "" {
+		value_info_name = "@"
+	}
+
+	var key_modtime time.Time
+	key_stat, err := key.Stat()
+	if err == nil {
+		key_modtime = key_stat.ModTime()
+	}
+
+	value_info := &RegValueInfo{
+		RegKeyInfo: RegKeyInfo{
+			// Values do not carry their own
+			// timestamp - the key they are in
+			// gets its timestamp updated whenever
+			// any of the values does so we just
+			// copy the key's timestamp to each
+			// value.
+			_modtime:   key_modtime,
+			_full_path: key_path + "\\" + value_info_name,
+			_name:      value_info_name,
+		}}
+
+	buf_size, value_type, err := key.GetValue(value_name, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	value_info._size = int64(buf_size)
+
+	switch value_type {
+	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
+		data, _, err := key.GetIntegerValue(value_name)
+		if err != nil {
+			return nil, err
+		}
+
+		switch value_type {
+		case registry.DWORD_BIG_ENDIAN:
+			value_info.Type = "DWORD_BIG_ENDIAN"
+		case registry.DWORD:
+			value_info.Type = "DWORD"
+		case registry.QWORD:
+			value_info.Type = "QWORD"
+		}
+
+		value_info.Data = data
+
+	case registry.BINARY:
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			data, _, err := key.GetBinaryValue(value_name)
+			if err != nil {
+				return nil, err
+			}
+
+			value_info.Data = data
+		}
+		value_info.Type = "BINARY"
+
+	case registry.MULTI_SZ:
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			values, _, err := key.GetStringsValue(value_name)
+			if err != nil {
+				return nil, err
+			}
+
+			value_info.Data = values
+		}
+		value_info.Type = "MULTI_SZ"
+
+	case registry.SZ, registry.EXPAND_SZ:
+		switch value_type {
+		case registry.SZ:
+			value_info.Type = "SZ"
+		case registry.EXPAND_SZ:
+			value_info.Type = "EXPAND_SZ"
+		}
+
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			data, _, err := key.GetStringValue(value_name)
+			if err != nil {
+				return nil, err
+			}
+
+			// We do not expand the key because
+			// this will depend on the agent's own
+			// environment strings.
+			value_info.Data = data
+		}
+
+	default:
+		value_info.Type = fmt.Sprintf("%d", value_type)
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			buf := make([]byte, buf_size)
+			_, _, err := key.GetValue(value_name, buf)
+			if err != nil {
+				return nil, err
+			}
+
+			value_info.Data = buf
+		}
+	}
+	return value_info, nil
 }
 
 // We accept both / and \ as a path separator

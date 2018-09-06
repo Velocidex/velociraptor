@@ -444,7 +444,8 @@ type ParseAtOffset struct {
 func (self *ParseAtOffset) Get(base Object, field string) Object {
 	parser, pres := self.getParser(self.type_name)
 	if !pres {
-		return &ErrorObject{"Type not found"}
+		return &ErrorObject{fmt.Sprintf(
+			"Type '%s' not found", self.type_name)}
 	}
 
 	result := &BaseObject{
@@ -472,7 +473,8 @@ func (self *ParseAtOffset) Fields() []string {
 func (self *ParseAtOffset) DebugString(offset int64, reader io.ReaderAt) string {
 	parser, pres := self.getParser(self.type_name)
 	if !pres {
-		return self.name + ": Type " + self.type_name + " not found"
+		return fmt.Sprintf("%s: Type '%s' not found.",
+			self.name, self.type_name)
 	}
 	return fmt.Sprintf(
 		"%#03x  %s  %s", self.offset, self.name,
@@ -482,7 +484,7 @@ func (self *ParseAtOffset) DebugString(offset int64, reader io.ReaderAt) string 
 func (self *ParseAtOffset) ShortDebugString(offset int64, reader io.ReaderAt) string {
 	parser, pres := self.getParser(self.type_name)
 	if !pres {
-		return "Type not found"
+		return fmt.Sprintf("Type '%s' not found", self.type_name)
 	}
 
 	return parser.ShortDebugString(self.offset+offset, reader)

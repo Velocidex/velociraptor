@@ -1,0 +1,58 @@
+name: Windows.Sys.PhysicalMemoryRanges
+description: List Windows physical memory ranges.
+reference: |
+  https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_cm_resource_list
+parameters:
+  - name: physicalMemoryKey
+    default: HKEY_LOCAL_MACHINE\HARDWARE\RESOURCEMAP\System Resources\Physical Memory\.Translated
+
+  - name: Profile
+    default: |
+      {
+        "CM_RESOURCE_LIST": [0, {
+          "Count": [0, ["uint32"]],
+          "List": [4, ["CM_FULL_RESOURCE_DESCRIPTOR"]]
+         }],
+         "CM_FULL_RESOURCE_DESCRIPTOR": [0, {
+           "PartialResourceList": [8, ["CM_PARTIAL_RESOURCE_LIST"]]
+         }],
+
+         "CM_PARTIAL_RESOURCE_LIST": [0, {
+           "Version": [0, ["uint16"]],
+           "Revision": [2, ["uint16"]],
+           "Count": [4, ["uint32"]],
+           "PartialDescriptors": [8, ["Array", {
+              "Target": "CM_PARTIAL_RESOURCE_DESCRIPTOR"
+           }]]
+         }],
+
+         "CM_PARTIAL_RESOURCE_DESCRIPTOR": [20, {
+           "Type": [0, ["char"]],
+           "ShareDisposition": [1, ["char"]],
+           "Flags": [2, ["uint16"]],
+           "Start": [4, ["int64"]],
+           "Length": [12, ["int32"]]
+         }]
+      }
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        SELECT Type,
+               format(format="%#0x", args=Start) as Start,
+               format(format="%#0x", args=Length) as Length
+        FROM foreach(
+          row={
+            SELECT Data
+              FROM stat(filename=physicalMemoryKey, accessor='reg')
+          },
+          query={
+            SELECT * FROM binary_parse(
+              string=Data,
+              profile=Profile,
+              target="CM_RESOURCE_LIST",
+              start="List.PartialResourceList.PartialDescriptors")
+            WHERE Type = 3
+          })

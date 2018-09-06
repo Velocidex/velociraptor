@@ -2,6 +2,7 @@ package binary
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // A parser that holds a logical array of elements.
@@ -34,7 +35,9 @@ func (self *ArrayParser) Next(base Object) Object {
 func (self *ArrayParser) Value(base Object) Object {
 	parser, pres := self.profile.getParser(self.options.Target)
 	if !pres {
-		return &ErrorObject{"Type not found"}
+		return &ErrorObject{
+			fmt.Sprintf("ArrayParser: Type %s not found",
+				self.options.Target)}
 	}
 
 	return &BaseObject{

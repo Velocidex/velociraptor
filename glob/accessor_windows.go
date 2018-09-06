@@ -200,7 +200,9 @@ func (self *OSFileSystemAccessor) PathSep() *regexp.Regexp {
 // windows form. Normal form uses / instead of \ and always has a
 // leading /.
 func normalize_path(path string) string {
-	return strings.Replace(path, "/", "\\", -1)
+	path = filepath.Clean(strings.Replace(path, "/", "\\", -1))
+	return strings.TrimPrefix(path, "\\")
+
 }
 
 func init() {

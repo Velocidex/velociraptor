@@ -86,7 +86,7 @@ sources:
             FROM binary_parse(
                    file=FullPath,
                    profile=wtmpProfile,
-                   iterator="Array",
-                   Target="wtmp"
+                   target="Array",
+                   args=dict(Target="utmp")
                  )
           })

@@ -2,6 +2,7 @@ package glob
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -48,6 +50,10 @@ func (self _Sentinel) Match(f FileInfo) bool {
 	return true
 }
 
+func (self _Sentinel) String() string {
+	return "Sentinel"
+}
+
 var (
 	sentinal_filter = _Sentinel{}
 	sentinal        = &Globber{sentinal_filter: nil}
@@ -71,8 +77,16 @@ func (self _RegexComponent) Match(f FileInfo) bool {
 	return re.MatchString(f.Name())
 }
 
+func (self _RegexComponent) String() string {
+	return "re:" + self.regexp
+}
+
 type _LiteralComponent struct {
 	path string
+}
+
+func (self _LiteralComponent) String() string {
+	return self.path
 }
 
 func (self _LiteralComponent) Match(f FileInfo) bool {
@@ -86,6 +100,25 @@ type Globber map[_PathFilterer]*Globber
 // any patterns and call Expand() using a suitable FileSystemAccessor.
 func NewGlobber() Globber {
 	return make(Globber)
+}
+
+func (self Globber) DebugString() string {
+	return self._DebugString("")
+}
+
+func (self Globber) _DebugString(indent string) string {
+	re := regexp.MustCompile("^")
+
+	result := []string{}
+	for k, v := range self {
+		if v == nil {
+			continue
+		}
+		subtree := re.ReplaceAllString(v._DebugString(indent+"  "), indent)
+		result = append(result, fmt.Sprintf("%s: %s\n", k, subtree))
+	}
+
+	return strings.Join(result, "\n")
 }
 
 // Add a new pattern to the filter tree.
@@ -108,7 +141,7 @@ func (self *Globber) _add_brace_expanded(pattern string, pathsep *regexp.Regexp)
 	filter, err := convert_glob_into_path_components(pattern, pathsep)
 	if err == nil {
 		// Expand path components into alternatives
-		return self._expand_path_components(filter)
+		return self._expand_path_components(filter, 0)
 
 	} else {
 		return err
@@ -166,7 +199,7 @@ func (self Globber) ExpandWithContext(
 		// depth first recursion. This ensures that readers of
 		// the results can detect all the hits in a particular
 		// directory before processing its children.
-		children := make(map[string]*Globber)
+		children := make(map[string][]*Globber)
 
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
@@ -185,11 +218,9 @@ func (self Globber) ExpandWithContext(
 				if !filterer.Match(f) {
 					continue
 				}
-
 				if next == nil {
 					continue
 				}
-
 				_, next_has_sentinal := (*next)[sentinal_filter]
 				if next_has_sentinal {
 					result = append(result, f)
@@ -198,7 +229,12 @@ func (self Globber) ExpandWithContext(
 				// Only recurse into directories.
 				if f.IsDir() {
 					next_path := filepath.Join(path, f.Name())
-					children[next_path] = next
+					item := []*Globber{next}
+					prev_item, pres := children[next_path]
+					if pres {
+						item = append(prev_item, next)
+					}
+					children[next_path] = item
 				}
 			}
 		}
@@ -213,20 +249,22 @@ func (self Globber) ExpandWithContext(
 			output_chan <- f
 		}
 
-		for next_path, next := range children {
-			child_chan := next.ExpandWithContext(ctx, next_path, accessor)
+		for next_path, nexts := range children {
+			for _, next := range nexts {
+				child_chan := next.ExpandWithContext(ctx, next_path, accessor)
 
-		search_subdir:
-			for {
-				select {
-				case <-ctx.Done():
-					return
+			search_subdir:
+				for {
+					select {
+					case <-ctx.Done():
+						return
 
-				case f, ok := <-child_chan:
-					if !ok {
-						break search_subdir
+					case f, ok := <-child_chan:
+						if !ok {
+							break search_subdir
+						}
+						output_chan <- f
 					}
-					output_chan <- f
 				}
 			}
 		}
@@ -235,13 +273,15 @@ func (self Globber) ExpandWithContext(
 	return output_chan
 }
 
-func (self Globber) _expand_path_components(filter []_PathFilterer) error {
+func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) error {
 	// Create a new filter with simplified elements.
 	var new_filter []_PathFilterer
 	for idx, item := range filter {
-		// Convert a recursive path component into a
-		// series of regex components.
-		// e.g.  /foo/**3/bar  -> {"foo/*/bar",
+		// Convert a recursive path component into a series of
+		// regex components. Note ** also matches zero
+		// intermediate paths.
+		// e.g.  /foo/**3/bar  -> {"foo/bar",
+		//                         "foo/*/bar",
 		//                         "foo/*/*/bar",
 		//                         "foo/*/*/*/bar"}
 		if t, pres := item.(_RecursiveComponent); pres {
@@ -249,16 +289,26 @@ func (self Globber) _expand_path_components(filter []_PathFilterer) error {
 			right := filter[idx+1:]
 			var middle []_PathFilterer
 
-			for i := 0; i < t.depth; i++ {
-				middle = append(middle, _RegexComponent{".*"})
+			for i := 0; i <= t.depth; i++ {
 				new_filter := append(left, middle...)
 				new_filter = append(new_filter, right...)
 
-				// Expand each component further.
-				err := self._expand_path_components(new_filter)
-				if err != nil {
-					return err
+				// Only add the zero match if there is
+				// anything to our right. This
+				// prevents /foo/** matching /foo but
+				// allows /foo/**/bar matching
+				// /foo/bar
+				if (len(middle) == 0 && len(right) > 0) ||
+					len(middle) > 0 {
+					// Expand each component further.
+					err := self._expand_path_components(new_filter, depth+1)
+					if err != nil {
+						return err
+					}
 				}
+				middle = append(middle, _RegexComponent{
+					regexp: fnmatch_translate("*"),
+				})
 			}
 
 			return nil

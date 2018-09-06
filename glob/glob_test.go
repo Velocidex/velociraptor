@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sebdah/goldie"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -145,6 +146,9 @@ var _GlobFixture = []struct {
 	{"Depth of 4", []string{"/usr/**4/diff"}},
 	{"Breadth first traversal", []string{"/tmp/1/*", "/tmp/1/*/*"}},
 	{"Breadth first traversal", []string{"/tmp/1/**5"}},
+	{"Recursive matches zero or more", []string{"/usr/bin/X11/**/diff"}},
+	{"Recursive matches none at end", []string{"/bin/bash/**"}},
+	{"Match masked by two matches", []string{"/usr/bin", "/usr/*/diff"}},
 }
 
 var fs_accessor = MockFileSystemAccessor{
