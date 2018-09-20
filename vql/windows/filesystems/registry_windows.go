@@ -5,9 +5,10 @@
 // 2. Map the root path to a virtual directory containing all the root keys.
 // 3. Normalized paths contain / for directory separators.
 // 4. Normalized paths have reg: prefix.
-package glob
+package filesystems
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -18,6 +19,7 @@ import (
 
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
+	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 var (
@@ -40,11 +42,15 @@ type RegKeyInfo struct {
 	_full_path string
 	_name      string
 	Type       string
-	Data       string
+	_data      interface{}
 }
 
 func (self *RegKeyInfo) IsDir() bool {
 	return true
+}
+
+func (self *RegKeyInfo) Data() interface{} {
+	return self._data
 }
 
 func (self *RegKeyInfo) Size() int64 {
@@ -71,19 +77,19 @@ func (self *RegKeyInfo) ModTime() time.Time {
 	return self._modtime
 }
 
-func (self *RegKeyInfo) Mtime() TimeVal {
+func (self *RegKeyInfo) Mtime() glob.TimeVal {
 	nsec := self.ModTime().UnixNano()
-	return TimeVal{
+	return glob.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *RegKeyInfo) Ctime() TimeVal {
+func (self *RegKeyInfo) Ctime() glob.TimeVal {
 	return self.Mtime()
 }
 
-func (self *RegKeyInfo) Atime() TimeVal {
+func (self *RegKeyInfo) Atime() glob.TimeVal {
 	return self.Mtime()
 }
 
@@ -91,9 +97,9 @@ func (self *RegKeyInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string
 		Type     string
-		Mtime    TimeVal
-		Ctime    TimeVal
-		Atime    TimeVal
+		Mtime    glob.TimeVal
+		Ctime    glob.TimeVal
+		Atime    glob.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Mtime:    self.Mtime(),
@@ -111,7 +117,6 @@ func (u *RegKeyInfo) UnmarshalJSON(data []byte) error {
 
 type RegValueInfo struct {
 	RegKeyInfo
-	Data  interface{}
 	Type  string
 	_size int64
 }
@@ -137,9 +142,9 @@ func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
 		FullPath string
 		Type     string
 		Data     interface{}
-		Mtime    TimeVal
-		Ctime    TimeVal
-		Atime    TimeVal
+		Mtime    glob.TimeVal
+		Ctime    glob.TimeVal
+		Atime    glob.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Mtime:    self.Mtime(),
@@ -154,20 +159,26 @@ func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
 
 type RegFileSystemAccessor struct{}
 
-func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	var result []FileInfo
+func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
+	return self
+}
+
+func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+	var result []glob.FileInfo
 	path = normalize_path(path)
 
 	if path == "" {
 		for k, _ := range root_keys {
-			result = append(result, &DrivePath{k})
+			result = append(result,
+				glob.NewVirtualDirectoryPath(k, nil))
 		}
 
 		return result, nil
 	}
 
 	components := strings.Split(path, "\\")
-	hive, pres := root_keys[components[0]]
+	hive_name := components[0]
+	hive, pres := root_keys[hive_name]
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
@@ -206,7 +217,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		defer subkey.Close()
 
 		key_info, err := getKeyInfo(
-			subkey, filepath.Join(key_path, subkey_name))
+			subkey, filepath.Join(hive_name, key_path, subkey_name))
 		if err != nil {
 			continue
 		}
@@ -220,7 +231,10 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	}
 
 	for _, value_name := range values {
-		value_info, err := getValueInfo(key, key_path, value_name)
+		value_info, err := getValueInfo(
+			key,
+			filepath.Join(hive_name, key_path),
+			value_name)
 		if err != nil {
 			continue
 		}
@@ -234,14 +248,14 @@ func (self RegFileSystemAccessor) GetRoot(path string) string {
 	return "/"
 }
 
-func (self RegFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	path = strings.TrimPrefix(normalize_path(path), "\\")
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
 	file, err := os.Open(path)
 	return file, err
 }
 
-func (self *RegFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
+func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
 	path := normalize_path(filename)
 	components := strings.Split(path, "\\")
 	if len(components) == 0 {
@@ -344,7 +358,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			value_info.Type = "QWORD"
 		}
 
-		value_info.Data = data
+		value_info._data = data
 
 	case registry.BINARY:
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
@@ -353,7 +367,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info.Data = data
+			value_info._data = data
 		}
 		value_info.Type = "BINARY"
 
@@ -364,7 +378,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info.Data = values
+			value_info._data = values
 		}
 		value_info.Type = "MULTI_SZ"
 
@@ -385,7 +399,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			// We do not expand the key because
 			// this will depend on the agent's own
 			// environment strings.
-			value_info.Data = data
+			value_info._data = data
 		}
 
 	default:
@@ -397,7 +411,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info.Data = buf
+			value_info._data = buf
 		}
 	}
 	return value_info, nil
@@ -409,5 +423,5 @@ func (self *RegFileSystemAccessor) PathSep() *regexp.Regexp {
 }
 
 func init() {
-	Register("reg", &RegFileSystemAccessor{})
+	glob.Register("reg", &RegFileSystemAccessor{})
 }

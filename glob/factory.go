@@ -1,6 +1,7 @@
 package glob
 
 import (
+	"context"
 	"regexp"
 
 	errors "github.com/pkg/errors"
@@ -18,9 +19,16 @@ type FileSystemAccessor interface {
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
 	PathSep() *regexp.Regexp
+
+	// A factory for new accessors
+	New(ctx context.Context) FileSystemAccessor
 }
 
 type NullFileSystemAccessor struct{}
+
+func (self NullFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+	return self
+}
 
 func (self NullFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	return nil, errors.New("Not supported")
@@ -38,10 +46,10 @@ func (self NullFileSystemAccessor) PathSep() *regexp.Regexp {
 	return regexp.MustCompile("/")
 }
 
-func GetAccessor(scheme string) FileSystemAccessor {
+func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {
 	handler, pres := handlers[scheme]
 	if pres {
-		return handler
+		return handler.New(ctx)
 	}
 
 	// Fallback to the file handler - this should work
@@ -50,7 +58,7 @@ func GetAccessor(scheme string) FileSystemAccessor {
 	if scheme == "" {
 		handler, pres = handlers["file"]
 		if pres {
-			return handler
+			return handler.New(ctx)
 		}
 	}
 

@@ -2,6 +2,7 @@ package flows
 
 import (
 	"errors"
+	"fmt"
 	"path"
 
 	"github.com/golang/protobuf/proto"
@@ -97,9 +98,12 @@ func appendDataToFile(
 		return nil
 	}
 	file_store_factory := file_store.GetFileStore(config_obj)
-	file_path := path.Join(base_urn, file_buffer.Pathspec.Path)
+	file_path := path.Join(base_urn, file_buffer.Pathspec.Accessor,
+		file_buffer.Pathspec.Path)
+
 	fd, err := file_store_factory.WriteFile(file_path)
 	if err != nil {
+		fmt.Printf("Error: %v\n", err)
 		return err
 	}
 	defer fd.Close()

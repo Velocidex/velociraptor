@@ -179,9 +179,10 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
       var fileId = getFileId(fullFilePath);
       result.push({
         id: fileId,
-        text: file['Name'],
+        text: file['Name'].replace(/%5c/g, "\\").replace(/%2f/g, "/"),
         data: {
-          path: fullFilePath,
+            name: file['Name'],
+            path: fullFilePath,
         },
         children: true  // always set to true to show the triangle
       });
@@ -273,7 +274,7 @@ exports.FileTreeDirective = function() {
     controller: FileTreeController,
     controllerAs: 'controller',
     link: function(scope, element, attrs, fileContextController) {
-      scope.controller.fileContext = fileContextController;
+        scope.controller.fileContext = fileContextController;
     }
   };
 };

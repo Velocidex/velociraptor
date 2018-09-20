@@ -290,7 +290,6 @@ func (self *ApiServer) GetFlowDescriptors(
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
-
 	result, err := vfsListDirectory(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err

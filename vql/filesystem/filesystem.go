@@ -12,6 +12,7 @@ import (
 type GlobPluginArgs struct {
 	Globs    []string `vfilter:"required,field=globs"`
 	Accessor string   `vfilter:"optional,field=accessor"`
+	Root     string   `vfilter:"optional,field=root"`
 }
 
 type GlobPlugin struct{}
@@ -30,15 +31,19 @@ func (self GlobPlugin) Call(
 		return output_chan
 	}
 
-	accessor := glob.GetAccessor(arg.Accessor)
+	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	for _, item := range arg.Globs {
 		globber.Add(item, accessor.PathSep())
+	}
+
+	if arg.Root == "" {
+		arg.Root = "/"
 	}
 
 	go func() {
 		defer close(output_chan)
 		file_chan := globber.ExpandWithContext(
-			ctx, "/", accessor)
+			ctx, arg.Root, accessor)
 		for {
 			select {
 			case <-ctx.Done():
@@ -60,7 +65,7 @@ func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
-		RowType: type_map.AddType(glob.OSFileInfo{}),
+		RowType: type_map.AddType(glob.NewVirtualDirectoryPath("", nil)),
 		ArgType: type_map.AddType(&GlobPluginArgs{}),
 	}
 }
@@ -69,6 +74,7 @@ type ReadFileArgs struct {
 	Chunk     int      `vfilter:"optional,field=chunk"`
 	MaxLength int      `vfilter:"optional,field=max_length"`
 	Filenames []string `vfilter:"required,field=filenames"`
+	Accessor  string   `vfilter:"optional,field=accessor"`
 }
 
 type ReadFileResponse struct {
@@ -86,7 +92,7 @@ func (self ReadFilePlugin) processFile(
 	file string,
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
-	accessor := &glob.OSFileSystemAccessor{}
+	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	fd, err := accessor.Open(file)
 	if err != nil {
 		scope.Log("%s: %s", self.Name(), err.Error())
@@ -168,6 +174,48 @@ type StatArgs struct {
 	Accessor string   `vfilter:"optional,field=accessor"`
 }
 
+type StatPlugin struct{}
+
+func (self *StatPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &StatArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("%s: %s", "stat", err.Error())
+			return
+		}
+
+		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		for _, filename := range arg.Filename {
+			f, err := accessor.Lstat(filename)
+			if err == nil {
+				output_chan <- f
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self StatPlugin) Name() string {
+	return "stat"
+}
+
+func (self StatPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "stat",
+		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
+		ArgType: "StatArgs",
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&GlobPlugin{})
 	vql_subsystem.RegisterPlugin(&ReadFilePlugin{})
@@ -188,33 +236,5 @@ func init() {
 			},
 			RowType: disk.PartitionStat{},
 		})
-
-	vql_subsystem.RegisterPlugin(
-		vfilter.GenericListPlugin{
-			PluginName: "stat",
-			Function: func(
-				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				arg := &StatArgs{}
-				err := vfilter.ExtractArgs(scope, args, arg)
-				if err != nil {
-					scope.Log("%s: %s", "stat", err.Error())
-					return result
-				}
-
-				accessor := glob.GetAccessor(arg.Accessor)
-				for _, filename := range arg.Filename {
-					f, err := accessor.Lstat(filename)
-					if err == nil {
-						result = append(result, f)
-					}
-				}
-				return result
-			},
-			RowType: &glob.OSFileInfo{},
-			ArgType: &StatArgs{},
-			Doc:     "Get file information. Unlike glob() this does not support wildcards.",
-		})
+	vql_subsystem.RegisterPlugin(&StatPlugin{})
 }

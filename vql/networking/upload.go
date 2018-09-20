@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -23,7 +24,8 @@ import (
 // let files = select * from glob(globs="/bin/*") where Size > 100
 // select upload(files=FullPath) from files
 type UploadFunctionArgs struct {
-	File string `vfilter:"required,field=file"`
+	File     string `vfilter:"required,field=file"`
+	Accessor string `vfilter:"optional,field=accessor"`
 }
 type UploadFunction struct{}
 
@@ -38,14 +40,13 @@ func (self *UploadFunction) Call(ctx context.Context,
 	}
 	uploader, ok := uploader_obj.(Uploader)
 	if ok {
-
 		arg := &UploadFunctionArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("upload: %s", err.Error())
 			return vfilter.Null{}
 		}
-		accessor := glob.OSFileSystemAccessor{}
+		accessor := glob.GetAccessor(arg.Accessor, ctx)
 		file, err := accessor.Open(arg.File)
 		if err != nil {
 			scope.Log("upload: Unable to open %s: %s",
@@ -59,7 +60,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		stat, err := file.Stat()
 		if err == nil && !stat.IsDir() {
 			upload_response, err := uploader.Upload(
-				scope, arg.File, file)
+				scope, arg.File, arg.Accessor, file)
 			if err != nil {
 				return &UploadResponse{
 					Error: err.Error(),
@@ -113,7 +114,7 @@ func (self *UploadPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		accessor := glob.GetAccessor(arg.Accessor)
+		accessor := glob.GetAccessor(arg.Accessor, ctx)
 		for _, filename := range arg.Files {
 			file, err := accessor.Open(filename)
 			if err != nil {
@@ -123,7 +124,7 @@ func (self *UploadPlugin) Call(
 			}
 
 			upload_response, err := uploader.Upload(
-				scope, filename, file)
+				scope, filename, arg.Accessor, file)
 			if err != nil {
 				scope.Log("upload: Failed to upload %s: %s",
 					filename, err.Error())

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -20,6 +21,7 @@ var (
 
 type _SplitRecordParserArgs struct {
 	Filenames            []string `vfilter:"required,field=filenames"`
+	Accessor             string   `vfilter:"optional,field=accessor"`
 	Regex                string   `vfilter:"required,field=regex"`
 	compiled_regex       *regexp.Regexp
 	Columns              []string `vfilter:"optional,field=columns"`
@@ -34,7 +36,7 @@ func processFile(
 	file string, arg *_SplitRecordParserArgs,
 	output_chan chan vfilter.Row) {
 
-	accessor := glob.OSFileSystemAccessor{}
+	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	fd, err := accessor.Open(file)
 	if err != nil {
 		return

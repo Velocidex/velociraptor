@@ -5,6 +5,7 @@ package windows
 
 import (
 	"context"
+
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -36,7 +37,7 @@ func (self ReadKeyValues) Call(
 		accessor_name = "reg"
 	}
 
-	accessor := glob.GetAccessor(accessor_name)
+	accessor := glob.GetAccessor(accessor_name, ctx)
 	for _, item := range arg.Globs {
 		globber.Add(item, accessor.PathSep())
 	}
@@ -53,7 +54,6 @@ func (self ReadKeyValues) Call(
 				if !ok {
 					return
 				}
-
 				if f.IsDir() {
 					res := vfilter.NewDict().
 						SetDefault(&vfilter.Null{}).
@@ -65,9 +65,9 @@ func (self ReadKeyValues) Call(
 					}
 
 					for _, item := range values {
-						value_info, ok := item.(*glob.RegValueInfo)
+						value_info, ok := item.(glob.FileInfo)
 						if ok {
-							res.Set(item.Name(), value_info.Data)
+							res.Set(item.Name(), value_info.Data())
 						}
 					}
 					output_chan <- res

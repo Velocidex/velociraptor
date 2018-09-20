@@ -54,12 +54,17 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
+	fmt.Printf("Writing file %s\n", filename)
+
 	file_path, err := self.FilenameToFileStorePath(filename)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Writing file %s\n", file_path)
 	err = os.MkdirAll(path.Dir(file_path), 0700)
 	if err != nil {
+		fmt.Printf("Writing Error %v\n", err)
 		logging.NewLogger(self.config_obj).Error(
 			"Can not create dir", err)
 		return nil, err
@@ -88,7 +93,6 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 	}
 
 	fmt.Printf("FilestoreDirectory: %s %s\n", filename, filepath.Join(components...))
-
 	return filepath.Join(components...), nil
 }
 

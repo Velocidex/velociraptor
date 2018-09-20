@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
+
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -20,8 +21,10 @@ type UploadResponse struct {
 
 // Provide an uploader capable of uploading any reader object.
 type Uploader interface {
-	Upload(scope *vfilter.Scope, filename string, reader io.Reader) (
-		*UploadResponse, error)
+	Upload(scope *vfilter.Scope,
+		filename string,
+		accessor string,
+		reader io.Reader) (*UploadResponse, error)
 }
 
 type FileBasedUploader struct {
@@ -29,7 +32,10 @@ type FileBasedUploader struct {
 }
 
 func (self *FileBasedUploader) Upload(
-	scope *vfilter.Scope, filename string, reader io.Reader) (
+	scope *vfilter.Scope,
+	filename string,
+	accessor string,
+	reader io.Reader) (
 	*UploadResponse, error) {
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")
@@ -68,7 +74,8 @@ type VelociraptorUploader struct {
 }
 
 func (self *VelociraptorUploader) Upload(
-	scope *vfilter.Scope, filename string, reader io.Reader) (
+	scope *vfilter.Scope, filename string,
+	accessor string, reader io.Reader) (
 	*UploadResponse, error) {
 	result := &UploadResponse{
 		Path: filename,
@@ -82,11 +89,15 @@ func (self *VelociraptorUploader) Upload(
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
 				Path:     filename,
-				Pathtype: actions_proto.PathSpec_OS,
+				Accessor: accessor,
 			},
 			Offset: offset,
 			Data:   buffer[:read_bytes],
 		}
+		// Send the packet to the server.
+		self.Responder.AddResponseToRequest(
+			constants.TransferWellKnownFlowId, packet)
+
 		offset += uint64(read_bytes)
 
 		if err != nil {
@@ -98,9 +109,5 @@ func (self *VelociraptorUploader) Upload(
 			// Other error - relay it back.
 			return nil, err
 		}
-
-		// Send the packet to the server.
-		self.Responder.AddResponseToRequest(
-			constants.TransferWellKnownFlowId, packet)
 	}
 }

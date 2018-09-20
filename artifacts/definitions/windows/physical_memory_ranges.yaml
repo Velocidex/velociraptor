@@ -41,8 +41,8 @@ sources:
     queries:
       - |
         SELECT Type,
-               format(format="%#0x", args=Start) as Start,
-               format(format="%#0x", args=Length) as Length
+               format(format="%#0x", args=Start.AsInteger) as Start,
+               format(format="%#0x", args=Length.AsInteger) as Length
         FROM foreach(
           row={
             SELECT Data
@@ -54,5 +54,4 @@ sources:
               profile=Profile,
               target="CM_RESOURCE_LIST",
               start="List.PartialResourceList.PartialDescriptors")
-            WHERE Type = 3
           })

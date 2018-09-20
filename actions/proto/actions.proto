@@ -27,16 +27,6 @@ message ListDirRequest {
 };
 
 
-// StatFS client action request
-message StatFSRequest {
-  repeated string path_list = 1[(sem_type) = {
-      description: "List of paths for statfs."
-    }];
-   PathSpec.PathType pathtype = 2 [(sem_type) = {
-      description: "Type of path to call statfs on.",
-    }];
-};
-
 // A stat() record for a given path
 // Next field id: 24.
 message StatEntry {
@@ -134,100 +124,14 @@ message StatEntry {
 // A message to encode a filesystem path (maybe for raw access)
 // Next field: 15
 message PathSpec {
-  enum PathType {
-      //    UNSET = -1;
-    OS = 0;
-    TSK = 1;
-    REGISTRY = 2;
-    MEMORY = 3 [(label) = HIDDEN];
-    TMPFILE = 4 [(label) = HIDDEN];
-  };
-   PathType pathtype = 1;
+    string path = 2 [(sem_type) = {
+            description: "The path passed to the Filesystem accessor. "
+            "This value is interpreted by the accessor in its own way.",
+        }];
 
-   string path = 2;
-   string mount_point = 3 [(sem_type) = {
-      label: ADVANCED
-    }];
-
-   string stream_name = 11 [(sem_type) = {
-      description: "A name for the data stream. For example, an ADS name.",
-      label: ADVANCED
-    }];
-
-   PathSpec nested_path = 5;
-
-  // Offset for split images
-   uint64 offset = 6 [(sem_type) = {
-      label: ADVANCED
-    }];
-
-  enum Options {
-    CASE_INSENSITIVE = 0;
-    CASE_LITERAL = 1;
-
-    // The path component is a regular expression.
-    REGEX = 2;
-
-    // Indicates that this pathspec represents any subdirectory recursively.
-    RECURSIVE = 3;
-  };
-   Options path_options = 7 [(sem_type) = {
-      label: ADVANCED
-      }];
-
-   uint64 recursion_depth = 12 [(sem_type) = {
-      label: HIDDEN,
-      description: "Recursion depth when RECURSIVE option is specified."
-    }];
-
-  // On NTFS, the sleuthkit uses the inode, type and id to uniquely identify a
-  // file - instead of the path.
-   uint64 inode = 8  [(sem_type) = {
-      label: ADVANCED
-    }];
-
-  enum tsk_fs_attr_type {
-    option allow_alias = true;
-      TSK_FS_UNSET = 0;
-
-    TSK_FS_ATTR_TYPE_DEFAULT = 0x01;        // 1
-    TSK_FS_ATTR_TYPE_NTFS_SI = 0x10;        // 16
-    TSK_FS_ATTR_TYPE_NTFS_ATTRLIST = 0x20;  // 32
-    TSK_FS_ATTR_TYPE_NTFS_FNAME = 0x30;     // 48
-    TSK_FS_ATTR_TYPE_NTFS_VVER = 0x40;      // 64 (NT)
-    TSK_FS_ATTR_TYPE_NTFS_OBJID = 0x40;     // 64 (2K)
-    TSK_FS_ATTR_TYPE_NTFS_SEC = 0x50;       // 80
-    TSK_FS_ATTR_TYPE_NTFS_VNAME = 0x60;     // 96
-    TSK_FS_ATTR_TYPE_NTFS_VINFO = 0x70;     // 112
-    TSK_FS_ATTR_TYPE_NTFS_DATA = 0x80;      // 128
-    TSK_FS_ATTR_TYPE_NTFS_IDXROOT = 0x90;   // 144
-    TSK_FS_ATTR_TYPE_NTFS_IDXALLOC = 0xA0;  // 160
-    TSK_FS_ATTR_TYPE_NTFS_BITMAP = 0xB0;    // 176
-    TSK_FS_ATTR_TYPE_NTFS_SYMLNK = 0xC0;    // 192 (NT)
-    TSK_FS_ATTR_TYPE_NTFS_REPARSE = 0xC0;   // 192 (2K)
-    TSK_FS_ATTR_TYPE_NTFS_EAINFO = 0xD0;    // 208
-    TSK_FS_ATTR_TYPE_NTFS_EA = 0xE0;        // 224
-    TSK_FS_ATTR_TYPE_NTFS_PROP = 0xF0;      // (NT)
-    TSK_FS_ATTR_TYPE_NTFS_LOG = 0x100;      // (2K)
-    TSK_FS_ATTR_TYPE_UNIX_INDIR = 0x1001;   // Indirect blocks for UFS and ExtX
-  };
-
-   tsk_fs_attr_type ntfs_type = 9  [(sem_type) = {
-      label: ADVANCED
-    }];
-   uint64 ntfs_id = 10  [(sem_type) = {
-      label: ADVANCED
-    }];
-
-   uint64 file_size_override = 13 [(sem_type) = {
-      type: "ByteSize",
-      description: "For files which are non seekable from their end "
-      "(e.g. /proc files), this is the minimum amount of bytes read.",
-    }];
-
-   bool is_virtualroot = 14 [(sem_type) = {
-      description: "Indicates that this pathspec already contains a "
-      "virtual root."}];
+    string accessor = 3 [(sem_type) = {
+            description: "The accessor used to retrieve the file.",
+        }];
 };
 
 

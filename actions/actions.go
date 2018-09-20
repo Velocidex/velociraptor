@@ -16,11 +16,6 @@ type ClientAction interface {
 func GetClientActionsMap() map[string]ClientAction {
 	result := make(map[string]ClientAction)
 	result["GetClientInfo"] = &GetClientInfo{}
-	result["StatFile"] = &StatFile{}
-	result["ListDirectory"] = &ListDirectory{}
-	result["HashFile"] = &HashFile{}
-	result["HashBuffer"] = &HashBuffer{}
-	result["TransferBuffer"] = &TransferBuffer{}
 	result["VQLClientAction"] = &VQLClientAction{}
 	result["GetHostname"] = &GetHostname{}
 	result["GetPlatformInfo"] = &GetPlatformInfo{}

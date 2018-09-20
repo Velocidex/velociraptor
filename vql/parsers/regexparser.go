@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -20,11 +21,13 @@ type _ParseFileWithRegexArgs struct {
 
 type _ParseFileWithRegex struct{}
 
-func _ParseFile(filename string,
+func _ParseFile(
+	ctx context.Context,
+	filename string,
 	scope *vfilter.Scope,
 	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
-	accessor := glob.GetAccessor(arg.Accessor)
+	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	file, err := accessor.Open(filename)
 	if err != nil {
 		scope.Log("Unable to open file %s", filename)
@@ -108,7 +111,7 @@ func (self _ParseFileWithRegex) Call(
 		defer close(output_chan)
 
 		for _, filename := range arg.Filenames {
-			_ParseFile(filename, scope, arg, output_chan)
+			_ParseFile(ctx, filename, scope, arg, output_chan)
 		}
 	}()
 

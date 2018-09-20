@@ -28,14 +28,23 @@ const (
 // Split the vfs path into a client path and an accessor. We only
 // support certain well defined prefixes which control the type of
 // accessor to use.
+
+// The GUI uses a VFS path but the client does not know about how the
+// GUI organizes files. In the GUI, files are organized in a tree,
+// where the top level directory is the accessor, the rest of the path
+// is passed to the accessor directly.
 func getClientPath(vfs_path string) (client_path string, accessor string) {
 	vfs_path = path.Clean(vfs_path)
-	if strings.HasPrefix(vfs_path, "/fs") {
-		return strings.TrimPrefix(vfs_path, "/fs"), "file"
+	if strings.HasPrefix(vfs_path, "/file") {
+		return strings.TrimPrefix(vfs_path, "/file"), "file"
 	}
 
 	if strings.HasPrefix(vfs_path, "/registry") {
 		return strings.TrimPrefix(vfs_path, "/registry"), "reg"
+	}
+
+	if strings.HasPrefix(vfs_path, "/ntfs") {
+		return strings.TrimPrefix(vfs_path, "/ntfs"), "ntfs"
 	}
 
 	// This should not happen - try to get it using file accessor.
@@ -44,10 +53,12 @@ func getClientPath(vfs_path string) (client_path string, accessor string) {
 
 // The inverse of getClientPath()
 func getVfsPath(client_path string, accessor string) string {
-	prefix := "/fs"
+	prefix := "/file"
 	switch accessor {
 	case "reg":
 		prefix = "/registry"
+	case "ntfs":
+		prefix = "/ntfs"
 	}
 
 	return prefix + utils.Normalize_windows_path(client_path)
@@ -320,6 +331,7 @@ func (self *VFSDownloadFile) Start(
 			return errors.New(
 				"Can not mix VFS path types in the same request.")
 		}
+		accessor = path_accessor
 
 		path_var := fmt.Sprintf("Path%d", len(paths))
 		paths = append(paths, path_var)
@@ -355,10 +367,6 @@ func (self *VFSDownloadFile) Start(
 		return err
 	}
 
-	flow_obj.SetState(&flows_proto.VFSListRequestState{
-		Accessor: accessor,
-	})
-
 	return nil
 }
 
@@ -370,7 +378,6 @@ func (self *VFSDownloadFile) ProcessMessage(
 	if err != nil {
 		return err
 	}
-
 	switch message.RequestId {
 	case processVQLResponses:
 		if flow_obj.IsRequestComplete(message) {
@@ -384,12 +391,10 @@ func (self *VFSDownloadFile) ProcessMessage(
 
 		// Receive any file upload the client sent.
 	case constants.TransferWellKnownFlowId:
-		state := flow_obj.GetState().(*flows_proto.VFSListRequestState)
-		vfs_path := getVfsPath("", state.Accessor)
 		return appendDataToFile(
 			config_obj, flow_obj,
 			path.Join("clients", flow_obj.RunnerArgs.ClientId,
-				"vfs_files", vfs_path),
+				"vfs_files"),
 			message)
 	}
 	return nil

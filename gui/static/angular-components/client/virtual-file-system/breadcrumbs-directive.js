@@ -46,7 +46,7 @@ BreadcrumbsController.prototype.onDirectiveArgsChange_ = function() {
     return;
   }
 
-  var pathArg = this.scope_['path'].replace(/\/+/g, '/');
+  var pathArg = this.scope_['path'].replace(/\/+/g, '/').replace(/%5c/g, "\\");
   var stripEndingSlashArg = this.scope_['stripEndingSlash'];
 
   this.items = [];

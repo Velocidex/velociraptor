@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
-	"www.velocidex.com/golang/velociraptor/binary"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vtypes"
 )
 
 type _binaryFieldImpl struct{}
@@ -16,7 +16,7 @@ type _binaryFieldImpl struct{}
 func (self _binaryFieldImpl) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	_, b_ok := b.(string)
 	switch a.(type) {
-	case binary.BaseObject, *binary.BaseObject:
+	case vtypes.BaseObject, *vtypes.BaseObject:
 		return b_ok
 	}
 	return false
@@ -26,12 +26,12 @@ func (self _binaryFieldImpl) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 	field := b.(string)
 
-	var res binary.Object
+	var res vtypes.Object
 
 	switch t := a.(type) {
-	case binary.BaseObject:
+	case vtypes.BaseObject:
 		res = t.Get(field)
-	case *binary.BaseObject:
+	case *vtypes.BaseObject:
 		res = t.Get(field)
 	default:
 		return nil, false
@@ -39,19 +39,21 @@ func (self _binaryFieldImpl) Associative(
 
 	// If the resolving returns an error object we have not
 	// properly resolved the field.
-	_, ok := res.(*binary.ErrorObject)
+	_, ok := res.(*vtypes.ErrorObject)
 	if ok {
-		return nil, false
+		// Try to resolve using the default associative for
+		// methods.
+		return vfilter.DefaultAssociative{}.Associative(scope, a, b)
 	}
 
-	return res.Value(), true
+	return res, true
 }
 
 func (self _binaryFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
 	switch t := a.(type) {
-	case binary.BaseObject:
+	case vtypes.BaseObject:
 		return t.Fields()
-	case *binary.BaseObject:
+	case *vtypes.BaseObject:
 		return t.Fields()
 	default:
 		return []string{}
@@ -105,7 +107,7 @@ func (self _BinaryParserPlugin) Call(
 			if accessor == "" {
 				accessor = "file"
 			}
-			file_handle, err := glob.GetAccessor(accessor).Open(arg.File)
+			file_handle, err := glob.GetAccessor(accessor, ctx).Open(arg.File)
 			if err != nil {
 				scope.Log("%s: %s", self.Name(), err.Error())
 				return
@@ -141,8 +143,8 @@ func (self _BinaryParserPlugin) Call(
 			}
 		}()
 
-		profile := binary.NewProfile()
-		binary.AddModel(profile)
+		profile := vtypes.NewProfile()
+		vtypes.AddModel(profile)
 
 		err = profile.ParseStructDefinitions(arg.Profile)
 		if err != nil {
@@ -226,8 +228,8 @@ func (self *_BinaryParserFunction) Call(ctx context.Context,
 		}
 	}
 
-	profile := binary.NewProfile()
-	binary.AddModel(profile)
+	profile := vtypes.NewProfile()
+	vtypes.AddModel(profile)
 
 	err = profile.ParseStructDefinitions(arg.Profile)
 	if err != nil {

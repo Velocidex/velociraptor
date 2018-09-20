@@ -5,9 +5,10 @@ import (
 	_ "bytes"
 	"context"
 	"os"
-	"www.velocidex.com/golang/velociraptor/binary"
+
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vtypes"
 )
 
 var (
@@ -124,8 +125,8 @@ func (self _UsersPlugin) Call(
 			}
 		}()
 
-		profile := binary.NewProfile()
-		binary.AddModel(profile)
+		profile := vtypes.NewProfile()
+		vtypes.AddModel(profile)
 
 		err = profile.ParseStructDefinitions(UTMP_PROFILE)
 		if err != nil {

@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"context"
+
 	"github.com/clbanning/mxj"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -25,7 +26,7 @@ func (self _ParseXMLFunction) Call(
 		return vfilter.Null{}
 	}
 
-	accessor := glob.GetAccessor(arg.Accessor)
+	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	file, err := accessor.Open(arg.File)
 	if err != nil {
 		scope.Log("Unable to open file %s", arg.File)

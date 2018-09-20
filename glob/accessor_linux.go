@@ -3,6 +3,7 @@
 package glob
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -16,6 +17,11 @@ import (
 type OSFileInfo struct {
 	os.FileInfo
 	_full_path string
+	_data      interface{}
+}
+
+func (self *OSFileInfo) Data() interface{} {
+	return self._data
 }
 
 func (self *OSFileInfo) FullPath() string {
@@ -78,7 +84,28 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 }
 
 // Real implementation for non windows OSs:
-type OSFileSystemAccessor struct{}
+type OSFileSystemAccessor struct {
+	fd_cache map[string]*os.File
+}
+
+func (self OSFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+	result := &OSFileSystemAccessor{
+		fd_cache: make(map[string]*os.File),
+	}
+
+	// When the context is done, close all the files. The files
+	// must remain open until the entire VQL query is done.
+	go func() {
+		select {
+		case <-ctx.Done():
+			for _, v := range result.fd_cache {
+				v.Close()
+			}
+		}
+	}()
+
+	return result
+}
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 	lstat, err := os.Lstat(filename)
@@ -86,7 +113,7 @@ func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 		return nil, err
 	}
 
-	return &OSFileInfo{lstat, filename}, nil
+	return &OSFileInfo{lstat, filename, nil}, nil
 }
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
@@ -95,7 +122,7 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 		var result []FileInfo
 		for _, f := range files {
 			result = append(result,
-				&OSFileInfo{f, filepath.Join(path, f.Name())})
+				&OSFileInfo{f, filepath.Join(path, f.Name()), nil})
 		}
 
 		return result, nil
@@ -104,8 +131,19 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
+	fd, pres := self.fd_cache[path]
+	if pres {
+		return fd, nil
+	}
+
 	file, err := os.Open(path)
-	return file, err
+	if err != nil {
+		return nil, err
+	}
+
+	self.fd_cache[path] = file
+
+	return file, nil
 }
 
 func (self OSFileSystemAccessor) PathSep() *regexp.Regexp {

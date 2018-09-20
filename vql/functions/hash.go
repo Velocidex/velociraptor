@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"hash"
 	"io"
+
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -23,7 +24,8 @@ type HashResult struct {
 }
 
 type HashFunctionArgs struct {
-	Path string `vfilter:"required,field=path"`
+	Path     string `vfilter:"required,field=path"`
+	Accessor string `vfilter:"optional,field=accessor"`
 }
 
 // The hash fuction calculates a hash of a file. It may be expensive
@@ -41,7 +43,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
-	fs := glob.OSFileSystemAccessor{}
+	fs := glob.GetAccessor(arg.Accessor, ctx)
 	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log(err.Error())

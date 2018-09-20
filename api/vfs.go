@@ -121,7 +121,8 @@ func getVirtualDirectory(vfs_path string) (*actions_proto.VQLResponse, bool) {
 		return &actions_proto.VQLResponse{
 			Response: `
    [
-    {"Mode": "drwxrwxrwx", "Name": "fs"},
+    {"Mode": "drwxrwxrwx", "Name": "file"},
+    {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"}
    ]`,
 		}, true
@@ -137,7 +138,6 @@ func vfsRefreshDirectory(
 	vfs_path string,
 	depth uint64) (*api_proto.StartFlowResponse, error) {
 
-	// Trim the /fs from the VFS path to get the real path.
 	vfs_path = path.Join("/", vfs_path)
 	args := &flows_proto.FlowRunnerArgs{
 		ClientId: client_id,

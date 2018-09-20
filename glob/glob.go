@@ -28,6 +28,7 @@ type FileInfo interface {
 	Mtime() TimeVal
 	Ctime() TimeVal
 	Atime() TimeVal
+	Data() interface{}
 }
 
 type ReadSeekCloser interface {
@@ -251,6 +252,12 @@ func (self Globber) ExpandWithContext(
 
 		for next_path, nexts := range children {
 			for _, next := range nexts {
+				// There is no point expanding this
+				// node if it is just a sentinal -
+				// special case it for efficiency.
+				if is_sentinal(next) {
+					continue
+				}
 				child_chan := next.ExpandWithContext(ctx, next_path, accessor)
 
 			search_subdir:
@@ -271,6 +278,20 @@ func (self Globber) ExpandWithContext(
 	}()
 
 	return output_chan
+}
+
+func is_sentinal(globber *Globber) bool {
+	if len(*globber) != 1 {
+		return false
+	}
+
+	for k, v := range *globber {
+		if k == sentinal_filter && v == nil {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) error {

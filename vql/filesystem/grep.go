@@ -2,8 +2,9 @@ package filesystem
 
 import (
 	"context"
-	"github.com/Velocidex/ahocorasick"
 	"io"
+
+	"github.com/Velocidex/ahocorasick"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -11,6 +12,7 @@ import (
 
 type GrepFunctionArgs struct {
 	Path     string   `vfilter:"required,field=path"`
+	Accessor string   `vfilter:"optional,field=accessor"`
 	Keywords []string `vfilter:"required,field=keywords"`
 	Context  int      `vfilter:"optional,field=context"`
 }
@@ -42,7 +44,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	offset := 0
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
-	fs := glob.OSFileSystemAccessor{}
+	fs := glob.GetAccessor(arg.Accessor, ctx)
 	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log(err.Error())
