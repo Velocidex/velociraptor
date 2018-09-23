@@ -20,6 +20,7 @@ import (
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -41,8 +42,7 @@ type RegKeyInfo struct {
 	_modtime   time.Time
 	_full_path string
 	_name      string
-	Type       string
-	_data      interface{}
+	_data      *vfilter.Dict
 }
 
 func (self *RegKeyInfo) IsDir() bool {
@@ -96,7 +96,7 @@ func (self *RegKeyInfo) Atime() glob.TimeVal {
 func (self *RegKeyInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string
-		Type     string
+		Data     interface{}
 		Mtime    glob.TimeVal
 		Ctime    glob.TimeVal
 		Atime    glob.TimeVal
@@ -105,7 +105,7 @@ func (self *RegKeyInfo) MarshalJSON() ([]byte, error) {
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
-		Type:     self.Type,
+		Data:     self.Data(),
 	})
 
 	return result, err
@@ -172,7 +172,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 			result = append(result,
 				glob.NewVirtualDirectoryPath(k, nil))
 		}
-
 		return result, nil
 	}
 
@@ -244,10 +243,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	return result, nil
 }
 
-func (self RegFileSystemAccessor) GetRoot(path string) string {
-	return "/"
-}
-
 func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	path = strings.TrimPrefix(normalize_path(path), "\\")
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
@@ -304,7 +299,7 @@ func getKeyInfo(key registry.Key, key_path string) (*RegKeyInfo, error) {
 		_name:      filepath.Base(key_path),
 		_modtime:   stat.ModTime(),
 		_full_path: key_path,
-		Type:       "key",
+		_data:      vfilter.NewDict().Set("type", "key"),
 	}, nil
 }
 
@@ -358,7 +353,9 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			value_info.Type = "QWORD"
 		}
 
-		value_info._data = data
+		value_info._data = vfilter.NewDict().
+			Set("type", value_info.Type).
+			Set("value", data)
 
 	case registry.BINARY:
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
@@ -367,7 +364,9 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info._data = data
+			value_info._data = vfilter.NewDict().
+				Set("type", "BINARY").
+				Set("value", data)
 		}
 		value_info.Type = "BINARY"
 
@@ -378,7 +377,9 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info._data = values
+			value_info._data = vfilter.NewDict().
+				Set("type", "MULTI_SZ").
+				Set("value", values)
 		}
 		value_info.Type = "MULTI_SZ"
 
@@ -399,7 +400,9 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			// We do not expand the key because
 			// this will depend on the agent's own
 			// environment strings.
-			value_info._data = data
+			value_info._data = vfilter.NewDict().
+				Set("type", value_info.Type).
+				Set("value", data)
 		}
 
 	default:
@@ -411,15 +414,32 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 				return nil, err
 			}
 
-			value_info._data = buf
+			value_info._data = vfilter.NewDict().
+				Set("type", value_info.Type).
+				Set("value", buf)
 		}
 	}
 	return value_info, nil
 }
 
+func (self *RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	path = normalize_path(path)
+	components := strings.Split(path, "\\")
+	_, pres := root_keys[components[0]]
+	if pres {
+		return components[0], strings.Join(components[1:], "\\"), nil
+	}
+
+	return "/", path, errors.New("Unknown hive")
+}
+
 // We accept both / and \ as a path separator
-func (self *RegFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self *RegFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("[\\\\/]")
+}
+
+func (self *RegFileSystemAccessor) PathSep() string {
+	return "\\"
 }
 
 func init() {

@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/olekukonko/tablewriter"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
+
+	"github.com/olekukonko/tablewriter"
+	"gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -53,6 +54,7 @@ func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table
 	table.SetHeader(*columns)
 	table.SetCaption(true, vql.ToString(scope))
 	table.SetAutoFormatHeaders(false)
+	table.SetAutoWrapText(false)
 
 	for {
 		row, ok := <-output_chan

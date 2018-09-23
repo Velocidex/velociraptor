@@ -85,6 +85,7 @@ type MockFileInfo struct {
 	full_path string
 }
 
+func (self MockFileInfo) Data() interface{}  { return nil }
 func (self MockFileInfo) Name() string       { return self.name }
 func (self MockFileInfo) Size() int64        { return 0 }
 func (self MockFileInfo) Mode() os.FileMode  { return os.ModePerm }
@@ -97,6 +98,10 @@ func (self MockFileInfo) Atime() TimeVal     { return TimeVal{} }
 func (self MockFileInfo) Ctime() TimeVal     { return TimeVal{} }
 
 type MockFileSystemAccessor []string
+
+func (self MockFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+	return self
+}
 
 func (self MockFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 	return nil, errors.New("Not implemented")

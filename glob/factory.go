@@ -18,7 +18,24 @@ type FileSystemAccessor interface {
 	ReadDir(path string) ([]FileInfo, error)
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
-	PathSep() *regexp.Regexp
+
+	// Produce a regex which can be used to split the path into
+	// components.
+	PathSplit() *regexp.Regexp
+
+	// The most natural way to join paths together.
+	PathSep() string
+
+	// Split a path into a glob root and a sub path
+	// component. This is required when the accessor uses a prefix
+	// which contains path separators but should not be considered
+	// as part of the glob. For example, the ntfs accessor uses a
+	// device path as the root, which already contains path
+	// separators:
+	// \\.\c:\Windows\System32\notepad.exe ->
+	// root = \\.\c:
+	// path = \Windows\System32\notepad.exe
+	GetRoot(path string) (root, subpath string, err error)
 
 	// A factory for new accessors
 	New(ctx context.Context) FileSystemAccessor
@@ -42,8 +59,16 @@ func (self NullFileSystemAccessor) Lstat(path string) (FileInfo, error) {
 	return nil, errors.New("Not supported")
 }
 
-func (self NullFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self NullFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	return "/", path, nil
+}
+
+func (self NullFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("/")
+}
+
+func (self NullFileSystemAccessor) PathSep() string {
+	return "/"
 }
 
 func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {

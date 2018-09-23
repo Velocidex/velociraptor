@@ -24,37 +24,31 @@ import (
 )
 
 var (
+	deviceDriveRegex = regexp.MustCompile(
+		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-z]:)(.*)")
 	deviceDirectoryRegex = regexp.MustCompile(
-		"(?i)(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
+		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
 )
 
 type NTFSFileInfo struct {
-	// Empty for files but may contain data for registry and
-	// resident NTFS.
-	_data      interface{}
-	_mtime     glob.TimeVal
-	_atime     glob.TimeVal
-	_ctime     glob.TimeVal
-	_name      string
+	info       *ntfs.FileInfo
 	_full_path string
-	_isdir     bool
-	_size      int64
 }
 
 func (self *NTFSFileInfo) IsDir() bool {
-	return self._isdir
+	return self.info.IsDir
 }
 
 func (self *NTFSFileInfo) Size() int64 {
-	return self._size
+	return self.info.Size
 }
 
 func (self *NTFSFileInfo) Data() interface{} {
-	return self._data
+	return vfilter.NewDict().Set("mft", self.info.MFTId)
 }
 
 func (self *NTFSFileInfo) Name() string {
-	return self._name
+	return self.info.Name
 }
 
 func (self *NTFSFileInfo) Sys() interface{} {
@@ -78,15 +72,21 @@ func (self *NTFSFileInfo) FullPath() string {
 }
 
 func (self *NTFSFileInfo) Mtime() glob.TimeVal {
-	return self._mtime
+	return glob.TimeVal{
+		Sec: self.info.Mtime.Unix(),
+	}
 }
 
 func (self *NTFSFileInfo) Ctime() glob.TimeVal {
-	return self._ctime
+	return glob.TimeVal{
+		Sec: self.info.Ctime.Unix(),
+	}
 }
 
 func (self *NTFSFileInfo) Atime() glob.TimeVal {
-	return self._atime
+	return glob.TimeVal{
+		Sec: self.info.Atime.Unix(),
+	}
 }
 
 func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
@@ -141,11 +141,8 @@ func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 	return result
 }
 
-func (self *NTFSFileSystemAccessor) getMFTEntry(path string) (
+func (self *NTFSFileSystemAccessor) getRootMFTEntry(device string) (
 	*ntfs.MFT_ENTRY, error) {
-	components := strings.Split(path, "\\")
-	device := unescape(components[0])
-
 	fd, pres := self.fd_cache[device]
 	if !pres {
 		var err error
@@ -169,18 +166,7 @@ func (self *NTFSFileSystemAccessor) getMFTEntry(path string) (
 	}
 
 	// Get the root directory.
-	root, err := mft.MFTEntry(5)
-	if err != nil {
-		return nil, err
-	}
-
-	// Open the device path from the root.
-	dir, err := root.Open(strings.Join(components[1:], "/"))
-	if err != nil {
-		return nil, err
-	}
-
-	return dir, err
+	return mft.MFTEntry(5)
 }
 
 func discoverVSS() ([]glob.FileInfo, error) {
@@ -197,7 +183,7 @@ func discoverVSS() ([]glob.FileInfo, error) {
 				device_name, ok := k.(string)
 				if ok {
 					virtual_directory := glob.NewVirtualDirectoryPath(
-						escape(device_name), row)
+						device_name, row)
 					result = append(result, virtual_directory)
 				}
 			}
@@ -222,7 +208,7 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 				device_name, ok := k.(string)
 				if ok {
 					virtual_directory := glob.NewVirtualDirectoryPath(
-						escape("\\\\.\\"+device_name), row)
+						"\\\\.\\"+device_name, row)
 					result = append(result, virtual_directory)
 				}
 			}
@@ -235,10 +221,10 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	result := []glob.FileInfo{}
 
-	path = normalize_path(path)
-
-	// No device part, so list all devices.
-	if path == "" {
+	// The path must start with a valid device, otherwise we list
+	// the devices.
+	device, subpath, err := self.GetRoot(path)
+	if err != nil {
 		vss, err := discoverVSS()
 		if err == nil {
 			result = append(result, vss...)
@@ -252,41 +238,25 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 		return result, nil
 	}
 
-	dir, err := self.getMFTEntry(path)
+	root, err := self.getRootMFTEntry(device)
+	if err != nil {
+		return nil, err
+	}
+
+	// Open the device path from the root.
+	dir, err := root.Open(subpath)
 	if err != nil {
 		return nil, err
 	}
 
 	// List the directory.
-	for _, node := range dir.Dir() {
-		node_mft_id := node.Get("mftReference").AsInteger()
-		node_mft, err := dir.MFTEntry(node_mft_id)
-		if err != nil {
-			continue
-		}
-
-		file_name := &ntfs.FILE_NAME{node.Get("file")}
-
-		// Skip the mft itself.
-		name := file_name.Name()
-		if name == "." {
+	for _, info := range ntfs.ListDir(dir) {
+		if info.Name == "" {
 			continue
 		}
 		result = append(result, &NTFSFileInfo{
-			_name:  name,
-			_isdir: node_mft.IsDir(),
-			_mtime: glob.TimeVal{
-				Sec: file_name.Get("file_modified").AsInteger(),
-			},
-			_atime: glob.TimeVal{
-				Sec: file_name.Get("file_accessed").AsInteger(),
-			},
-			_ctime: glob.TimeVal{
-				Sec: file_name.Get("created").AsInteger(),
-			},
-			_size:      file_name.Get("size").AsInteger(),
-			_data:      vfilter.NewDict().Set("mft", node_mft_id),
-			_full_path: filepath.Join(path, file_name.Name()),
+			info:       info,
+			_full_path: device + subpath + "\\" + info.Name,
 		})
 	}
 	return result, nil
@@ -318,40 +288,55 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 }
 
 func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	path = normalize_path(path)
-	if path == "" {
+	// The path must start with a valid device, otherwise we list
+	// the devices.
+	device, subpath, err := self.GetRoot(path)
+	if err != nil {
 		return nil, errors.New("Unable to open raw device")
 	}
 
-	mft_entry, err := self.getMFTEntry(path)
+	root, err := self.getRootMFTEntry(device)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO Support ADS properly.
-	for _, data := range mft_entry.Data() {
-		return &readAdapter{reader: data.Data()}, nil
+	data, err := ntfs.GetDataForPath(subpath, root)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.New("File not found")
+	return &readAdapter{reader: data}, nil
 }
 
 func (self *NTFSFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
 	return glob.NewVirtualDirectoryPath("\\", nil), nil
 }
 
+func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	// Make sure not to run filepath.Clean() because it will
+	// collapse multiple slashes (and prevent device names from
+	// being recognized).
+	path = strings.Replace(path, "/", "\\", -1)
+	m := deviceDriveRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		return m[1], filepath.Clean(m[2]), nil
+	}
+
+	m = deviceDirectoryRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		return m[1], filepath.Clean(m[2]), nil
+	}
+
+	return "/", path, errors.New("Unsupported device type")
+}
+
 // We accept both / and \ as a path separator
-func (self *NTFSFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self *NTFSFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("[\\\\/]")
 }
 
-// Glob sends us paths in normal form which we need to convert to
-// windows form. Normal form uses / instead of \ and always has a
-// leading /.
-func normalize_path(path string) string {
-	path = filepath.Clean(strings.Replace(path, "/", "\\", -1))
-	return strings.TrimPrefix(path, "\\")
-
+func (self *NTFSFileSystemAccessor) PathSep() string {
+	return "\\"
 }
 
 // We want to show the entire device as one name so we need to escape

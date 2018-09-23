@@ -39,7 +39,7 @@ func (self ReadKeyValues) Call(
 
 	accessor := glob.GetAccessor(accessor_name, ctx)
 	for _, item := range arg.Globs {
-		globber.Add(item, accessor.PathSep())
+		globber.Add(item, accessor.PathSplit())
 	}
 	go func() {
 		defer close(output_chan)

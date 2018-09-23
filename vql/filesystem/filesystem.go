@@ -12,7 +12,6 @@ import (
 type GlobPluginArgs struct {
 	Globs    []string `vfilter:"required,field=globs"`
 	Accessor string   `vfilter:"optional,field=accessor"`
-	Root     string   `vfilter:"optional,field=root"`
 }
 
 type GlobPlugin struct{}
@@ -32,18 +31,22 @@ func (self GlobPlugin) Call(
 	}
 
 	accessor := glob.GetAccessor(arg.Accessor, ctx)
+	root := ""
 	for _, item := range arg.Globs {
-		globber.Add(item, accessor.PathSep())
-	}
-
-	if arg.Root == "" {
-		arg.Root = "/"
+		item_root, item_path, _ := accessor.GetRoot(item)
+		if root != "" && root != item_root {
+			scope.Log("glob: %s: Must use the same root for "+
+				"all globs. Skipping.", item)
+			continue
+		}
+		root = item_root
+		globber.Add(item_path, accessor.PathSplit())
 	}
 
 	go func() {
 		defer close(output_chan)
 		file_chan := globber.ExpandWithContext(
-			ctx, arg.Root, accessor)
+			ctx, root, accessor)
 		for {
 			select {
 			case <-ctx.Done():

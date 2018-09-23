@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -52,20 +53,37 @@ func hard_wrap(text string, colBreak int) string {
 
 func Stringify(value interface{}, scope *vfilter.Scope) string {
 	switch t := value.(type) {
+
+	case *vfilter.Dict:
+		result := []string{}
+		iter := t.IterFunc()
+		for kv, ok := iter(); ok; kv, ok = iter() {
+			result = append(result, fmt.Sprintf("%v: %v", kv.Key, kv.Value))
+		}
+		return strings.Join(result, "\n")
+
 	case vfilter.StringProtocol:
 		return t.ToString(scope)
-	case fmt.Stringer:
-		return hard_wrap(t.String(), 30)
+
 	case []byte:
 		return hard_wrap(string(t), 30)
+
 	case string:
 		return hard_wrap(t, 30)
-	default:
+
+	case json.Marshaler:
 		if k, err := json.Marshal(value); err == nil {
+			if len(k) > 0 && k[0] == '"' && k[len(k)-1] == '"' {
+				k = k[1 : len(k)-1]
+			}
+
 			return hard_wrap(string(k), 30)
 		}
+		return ""
+
+	default:
+		return hard_wrap(fmt.Sprintf("%v", value), 30)
 	}
-	return ""
 }
 
 func SlicesEqual(a []string, b []string) bool {

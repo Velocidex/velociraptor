@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -189,7 +188,7 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 // version uses a context to allow cancellation. We write the FileInfo
 // into the output channel.
 func (self Globber) ExpandWithContext(
-	ctx context.Context, path string,
+	ctx context.Context, root string,
 	accessor FileSystemAccessor) <-chan FileInfo {
 	output_chan := make(chan FileInfo)
 
@@ -205,7 +204,7 @@ func (self Globber) ExpandWithContext(
 		// Walk the filter tree. List the directory and for each file
 		// that matches a filter at this level, recurse into the next
 		// level.
-		files, err := accessor.ReadDir(path)
+		files, err := accessor.ReadDir(root)
 		if err != nil {
 			return
 		}
@@ -229,7 +228,7 @@ func (self Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if f.IsDir() {
-					next_path := filepath.Join(path, f.Name())
+					next_path := root + accessor.PathSep() + f.Name()
 					item := []*Globber{next}
 					prev_item, pres := children[next_path]
 					if pres {

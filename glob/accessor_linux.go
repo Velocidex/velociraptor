@@ -146,8 +146,16 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return file, nil
 }
 
-func (self OSFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self OSFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("/")
+}
+
+func (self *OSFileSystemAccessor) PathSep() string {
+	return "/"
+}
+
+func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	return "/", path, nil
 }
 
 func init() {

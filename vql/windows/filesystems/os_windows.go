@@ -194,9 +194,29 @@ func (self *OSFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) 
 	return glob.NewVirtualDirectoryPath("\\", nil), nil
 }
 
+func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	return "/", path, nil
+}
+
 // We accept both / and \ as a path separator
-func (self *OSFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self *OSFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("[\\\\/]")
+}
+
+func (self *OSFileSystemAccessor) PathSep() string {
+	return "\\"
+}
+
+// Glob sends us paths in normal form which we need to convert to
+// windows form. Normal form uses / instead of \ and always has a
+// leading /.
+func normalize_path(path string) string {
+	path = filepath.Clean(strings.Replace(path, "/", "\\", -1))
+	path = strings.TrimPrefix(path, "\\")
+	if path == "." {
+		return ""
+	}
+	return path
 }
 
 func init() {
