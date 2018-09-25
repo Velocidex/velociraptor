@@ -33,7 +33,7 @@ gui_assets:
 build: required_assets
 	GOOS=linux GOARCH=amd64 \
             go build \
-            -tags devel \
+            -tags "devel yara_static" \
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
 
@@ -60,7 +60,7 @@ release: required_assets gui_assets
 	GOOS=linux GOARCH=amd64 \
             go build \
             -ldflags "$(LDFLAGS)" \
-            -tags release \
+            -tags "release yara_static" \
 	    -o output/velociraptor ./bin/
 	strip output/velociraptor
 

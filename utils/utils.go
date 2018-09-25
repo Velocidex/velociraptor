@@ -58,6 +58,19 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 			reflect.ValueOf(value)).Interface(), scope)
 	}
 
+	if reflect.TypeOf(value).Kind() == reflect.Slice {
+		result := []string{}
+		a_value := reflect.ValueOf(value)
+
+		for i := 0; i < a_value.Len(); i++ {
+			result = append(
+				result, Stringify(
+					a_value.Index(i).Interface(), scope))
+		}
+
+		return strings.Join(result, "\n")
+	}
+
 	json_marshall := func(value interface{}) string {
 		if k, err := json.Marshal(value); err == nil {
 			if len(k) > 0 && k[0] == '"' && k[len(k)-1] == '"' {
@@ -75,6 +88,13 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 		iter := t.IterFunc()
 		for kv, ok := iter(); ok; kv, ok = iter() {
 			result = append(result, fmt.Sprintf("%v: %v", kv.Key, kv.Value))
+		}
+		return strings.Join(result, "\n")
+
+	case map[string]interface{}:
+		result := []string{}
+		for k, v := range t {
+			result = append(result, fmt.Sprintf("%v: %v", k, v))
 		}
 		return strings.Join(result, "\n")
 
