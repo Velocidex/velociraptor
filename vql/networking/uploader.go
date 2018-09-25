@@ -4,7 +4,8 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
+	"regexp"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -31,6 +32,19 @@ type FileBasedUploader struct {
 	UploadDir string
 }
 
+// Turn the path which may have a device name into something which can
+// be created as a directory.
+func sanitize_path(path string) string {
+	// Strip any leading devices, and make sure the device name
+	// consists of valid chars.
+	path = regexp.MustCompile(
+		"\\\\\\\\[\\\\.\\\\?]\\\\([{}a-zA-Z0-9]+).*?\\\\").
+		ReplaceAllString(path, "$1\\")
+
+	path = filepath.Clean(path)
+	return path
+}
+
 func (self *FileBasedUploader) Upload(
 	scope *vfilter.Scope,
 	filename string,
@@ -42,8 +56,9 @@ func (self *FileBasedUploader) Upload(
 		return nil, errors.New("UploadDir not set")
 	}
 
-	file_path := path.Join(self.UploadDir, filename)
-	err := os.MkdirAll(path.Dir(file_path), 0700)
+	file_path := filepath.Join(self.UploadDir,
+		sanitize_path(filename))
+	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		scope.Log("Can not create dir: %s", err.Error())
 		return nil, err
@@ -56,15 +71,21 @@ func (self *FileBasedUploader) Upload(
 	}
 	defer file.Close()
 
-	written, err := io.Copy(file, reader)
-	if err != nil {
-		scope.Log("Failed to copy file %s: %s", file_path, err.Error())
-		return nil, err
+	buf := make([]byte, 1024*1024)
+	offset := int64(0)
+	for {
+		n, _ := reader.Read(buf)
+		if n == 0 {
+			break
+		}
+		file.Write(buf[:n])
+		offset += int64(n)
 	}
-	scope.Log("Uploaded %v (%v bytes)", file_path, written)
+
+	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
 	return &UploadResponse{
 		Path: file_path,
-		Size: uint64(written),
+		Size: uint64(offset),
 	}, nil
 }
 

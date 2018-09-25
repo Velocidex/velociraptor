@@ -44,7 +44,9 @@ func (self *NTFSFileInfo) Size() int64 {
 }
 
 func (self *NTFSFileInfo) Data() interface{} {
-	return vfilter.NewDict().Set("mft", self.info.MFTId)
+	return vfilter.NewDict().
+		Set("mft", self.info.MFTId).
+		Set("name_type", self.info.NameType)
 }
 
 func (self *NTFSFileInfo) Name() string {
@@ -52,7 +54,7 @@ func (self *NTFSFileInfo) Name() string {
 }
 
 func (self *NTFSFileInfo) Sys() interface{} {
-	return nil
+	return self.Data()
 }
 
 func (self *NTFSFileInfo) Mode() os.FileMode {
@@ -263,6 +265,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 }
 
 type readAdapter struct {
+	info   *NTFSFileInfo
 	reader io.ReaderAt
 	pos    int64
 }
@@ -279,7 +282,7 @@ func (self *readAdapter) Close() error {
 }
 
 func (self *readAdapter) Stat() (os.FileInfo, error) {
-	return nil, errors.New("Not implementated")
+	return self.info, nil
 }
 
 func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
@@ -295,6 +298,8 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, errors.New("Unable to open raw device")
 	}
 
+	components := self.PathSplit().Split(subpath, -1)
+
 	root, err := self.getRootMFTEntry(device)
 	if err != nil {
 		return nil, err
@@ -305,7 +310,25 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, err
 	}
 
-	return &readAdapter{reader: data}, nil
+	dir, err := root.Open(strings.Join(
+		components[:len(components)-1], self.PathSep()))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, info := range ntfs.ListDir(dir) {
+		if info.Name == components[len(components)-1] {
+			return &readAdapter{
+				info: &NTFSFileInfo{
+					info:       info,
+					_full_path: device + subpath + "\\" + info.Name,
+				},
+				reader: data,
+			}, nil
+		}
+	}
+
+	return nil, errors.New("File not found")
 }
 
 func (self *NTFSFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {

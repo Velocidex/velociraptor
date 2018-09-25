@@ -52,9 +52,25 @@ func hard_wrap(text string, colBreak int) string {
 }
 
 func Stringify(value interface{}, scope *vfilter.Scope) string {
-	switch t := value.(type) {
+	// Deal with pointers to things as those things.
+	if reflect.TypeOf(value).Kind() == reflect.Ptr {
+		return Stringify(reflect.Indirect(
+			reflect.ValueOf(value)).Interface(), scope)
+	}
 
-	case *vfilter.Dict:
+	json_marshall := func(value interface{}) string {
+		if k, err := json.Marshal(value); err == nil {
+			if len(k) > 0 && k[0] == '"' && k[len(k)-1] == '"' {
+				k = k[1 : len(k)-1]
+			}
+
+			return hard_wrap(string(k), 30)
+		}
+		return ""
+	}
+
+	switch t := value.(type) {
+	case vfilter.Dict:
 		result := []string{}
 		iter := t.IterFunc()
 		for kv, ok := iter(); ok; kv, ok = iter() {
@@ -72,16 +88,14 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 		return hard_wrap(t, 30)
 
 	case json.Marshaler:
-		if k, err := json.Marshal(value); err == nil {
-			if len(k) > 0 && k[0] == '"' && k[len(k)-1] == '"' {
-				k = k[1 : len(k)-1]
-			}
-
-			return hard_wrap(string(k), 30)
-		}
-		return ""
-
+		return json_marshall(value)
 	default:
+		// For normal structs json is a pretty good encoder.
+		if reflect.TypeOf(value).Kind() == reflect.Struct {
+			return json_marshall(value)
+		}
+
+		// Anything else we output something useful.
 		return hard_wrap(fmt.Sprintf("%v", value), 30)
 	}
 }

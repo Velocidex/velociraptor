@@ -3,6 +3,7 @@
 package glob
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -42,6 +43,10 @@ func (self *OSFileInfo) Atime() TimeVal {
 	}
 }
 
+func (self *OSFileInfo) Data() interface{} {
+	return nil
+}
+
 func (self *OSFileInfo) sys() *syscall.Stat_t {
 	return self.Sys().(*syscall.Stat_t)
 }
@@ -77,7 +82,28 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 }
 
 // Real implementation for non windows OSs:
-type OSFileSystemAccessor struct{}
+type OSFileSystemAccessor struct {
+	fd_cache map[string]*os.File
+}
+
+func (self OSFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+	result := &OSFileSystemAccessor{
+		fd_cache: make(map[string]*os.File),
+	}
+
+	// When the context is done, close all the files. The files
+	// must remain open until the entire VQL query is done.
+	go func() {
+		select {
+		case <-ctx.Done():
+			for _, v := range result.fd_cache {
+				v.Close()
+			}
+		}
+	}()
+
+	return result
+}
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 	lstat, err := os.Lstat(filename)
@@ -106,8 +132,16 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return file, err
 }
 
-func (self OSFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self OSFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("/")
+}
+
+func (self OSFileSystemAccessor) PathSep() string {
+	return "/"
+}
+
+func (self OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
+	return "/", path, nil
 }
 
 func init() {

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -49,6 +50,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		accessor := glob.GetAccessor(arg.Accessor, ctx)
 		file, err := accessor.Open(arg.File)
 		if err != nil {
+			utils.Debug(err)
 			scope.Log("upload: Unable to open %s: %s",
 				arg.File, err.Error())
 			return &UploadResponse{
@@ -58,7 +60,10 @@ func (self *UploadFunction) Call(ctx context.Context,
 		defer file.Close()
 
 		stat, err := file.Stat()
-		if err == nil && !stat.IsDir() {
+		if err != nil {
+			scope.Log("upload: Unable to stat %s: %v",
+				arg.File, err)
+		} else if !stat.IsDir() {
 			upload_response, err := uploader.Upload(
 				scope, arg.File, arg.Accessor, file)
 			if err != nil {

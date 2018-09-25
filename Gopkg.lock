@@ -37,11 +37,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0a393c1e53be42784bf434c3385434404c3439a951aecef1858c543bf8146380"
+  digest = "1:13cc33bc34c6a536e47bba907ca0567198aa43dd4696797fa48d4fcb01069705"
   name = "github.com/alecthomas/repr"
   packages = ["."]
   pruneopts = "UT"
-  revision = "117648cd9897bc621d6d52cd05727b9abdd5528a"
+  revision = "7ed41413b4775c49ef579a96f38890b6cd5bb39d"
 
 [[projects]]
   branch = "master"
@@ -71,12 +71,12 @@
   revision = "0efaee1733e3399a3cb88fc7d2ce340bf2e863d7"
 
 [[projects]]
-  digest = "1:e29f613831a4999edf68593fbbba9c57290f921a04490fa72cb759577f971abb"
+  digest = "1:ed1cddb8ae270d904004f7d38ec1d5605d1d67d2e427f65e81c51556142c24b0"
   name = "github.com/clbanning/mxj"
   packages = ["."]
   pruneopts = "UT"
-  revision = "82051832829e23b1986f479cf92a7e3ba6cca7b6"
-  version = "v1.8.1"
+  revision = "be7b154d093db491c61285049f46770a9075bc15"
+  version = "v1.8.2"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -141,7 +141,7 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:6a06217fc753e65aea71446b777393009ef6797dadc0086c4f75bd16590be04d"
+  digest = "1:ee73ed01fc93b8aa38a7f25543afed400df661992eeb7d3b250100b8b8f989b9"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "runtime",
@@ -149,8 +149,19 @@
     "utilities",
   ]
   pruneopts = "UT"
-  revision = "92583770e3f01b09a0d3e9bdf64321d8bebd48f2"
-  version = "v1.4.1"
+  revision = "8558711daa6c2853489043207b563dceacbc19cf"
+  version = "v1.5.0"
+
+[[projects]]
+  digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru",
+  ]
+  pruneopts = "UT"
+  revision = "20f1fb78b0740ba8c3cb143a61e86ba5c8669768"
+  version = "v0.5.0"
 
 [[projects]]
   branch = "master"
@@ -178,11 +189,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4daa045e1e1f3e23f4b07db6880cdf9f259dab65312dfe244a878e6070faaf77"
+  digest = "1:f611266e3ac01ab4adb6f1d67f6c1be82998d02f452faff450596658712d860b"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "d4647c9c7a84d847478d890b816b7d8b62b0b279"
+  revision = "be2c049b30ccd4d3fd795d6bf7dce74e42eeedaa"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
@@ -258,7 +269,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "182538f80094b6a8efaade63a8fd8e0d9d5843dd"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
@@ -266,7 +277,7 @@
   name = "golang.org/x/exp"
   packages = ["ebnf"]
   pruneopts = "UT"
-  revision = "3d87b88a115fa4e65fadcbf34e6a60e8040cec41"
+  revision = "e88728d35e99800368f4acc0969018db6b0d3dd5"
 
 [[projects]]
   branch = "master"
@@ -284,11 +295,11 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
+  revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
 
 [[projects]]
   branch = "master"
-  digest = "1:34081cb0ab804b0cfe57af8c8489c1162b2c0de2bf1c3a80bb223eb75d7eab0e"
+  digest = "1:0e57ec8729f7275a8efd3acb5d5aedccf53b9011b8db0cc868a794a325024433"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -300,7 +311,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "fa5fdf94c78965f1aa8423f0cc50b8b8d728b05a"
+  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
 
 [[projects]]
   digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
@@ -333,17 +344,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6c6b70cf6d2788d9f7dc6589bc88e0e1c7edc40612294431ebb7d09536d12240"
+  digest = "1:ec1919b8b80839559effbe3eabcebf92238d12d3dd9182e51deb5da3ed12e5e9"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
     "googleapis/rpc/status",
   ]
   pruneopts = "UT"
-  revision = "11092d34479b07829b72e10713b159248caf5dad"
+  revision = "221a8d4f74948678f06caaa13c9d41d22e069ae8"
 
 [[projects]]
-  digest = "1:76332e947f184a2dc091db40f22c7089ada36bbc577793074639695af85a10fd"
+  digest = "1:dc0c170b110c22d9a4eccf08ab58490608053eac450bf456f3aaf9b30a668781"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -376,8 +387,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
-  version = "v1.14.0"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -397,11 +408,27 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:d318b6e417c3607549bfb62d2b06bee5618846330dfd712efe3ac64df6829b0c"
+  name = "www.velocidex.com/golang/go-ntfs"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f31ff6a38049b251d08b38da44492860f6d83bce"
+
+[[projects]]
+  branch = "master"
   digest = "1:1eb38db21461c4cbdcb4f933e49a8e0f26d4d5cc4c392544871800ea45379a15"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
   revision = "a6380dafb96e17feb1325db8acbac2f389036d85"
+
+[[projects]]
+  branch = "master"
+  digest = "1:12948302ca43270704ba7b814214a382384652d1d4bf06fe5842e77b6fd9dfc0"
+  name = "www.velocidex.com/golang/vtypes"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b0d509f8925b7b09358f87e60d8560ea9e8ebcd4"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -455,7 +482,9 @@
     "google.golang.org/grpc/status",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/yaml.v2",
+    "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/vfilter",
+    "www.velocidex.com/golang/vtypes",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

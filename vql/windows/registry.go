@@ -38,13 +38,21 @@ func (self ReadKeyValues) Call(
 	}
 
 	accessor := glob.GetAccessor(accessor_name, ctx)
+	root := ""
 	for _, item := range arg.Globs {
-		globber.Add(item, accessor.PathSplit())
+		item_root, item_path, _ := accessor.GetRoot(item)
+		if root != "" && root != item_root {
+			scope.Log("glob: %s: Must use the same root for "+
+				"all globs. Skipping.", item)
+			continue
+		}
+		root = item_root
+		globber.Add(item_path, accessor.PathSplit())
 	}
 	go func() {
 		defer close(output_chan)
 		file_chan := globber.ExpandWithContext(
-			ctx, "/", accessor)
+			ctx, root, accessor)
 		for {
 			select {
 			case <-ctx.Done():

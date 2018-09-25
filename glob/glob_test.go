@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 	"reflect"
 	"regexp"
 	"sort"
@@ -107,15 +107,16 @@ func (self MockFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
+func (self MockFileSystemAccessor) ReadDir(filepath string) ([]FileInfo, error) {
 	seen := []string{}
-	if !strings.HasSuffix(path, "/") {
-		path = path + "/"
+	_, subpath, _ := self.GetRoot(filepath)
+	if !strings.HasSuffix(subpath, "/") {
+		subpath = subpath + "/"
 	}
 
 	for _, mock_path := range self {
-		if strings.HasPrefix(mock_path, path) {
-			suffix := mock_path[len(path):]
+		if strings.HasPrefix(mock_path, subpath) {
+			suffix := mock_path[len(subpath):]
 			mock_path_components := strings.Split(suffix, "/")
 			if !utils.InString(&seen, mock_path_components[0]) {
 				seen = append(seen, mock_path_components[0])
@@ -125,7 +126,10 @@ func (self MockFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 
 	var result []FileInfo
 	for _, k := range seen {
-		result = append(result, MockFileInfo{k, filepath.Join(path, k)})
+		result = append(result, MockFileInfo{
+			name:      k,
+			full_path: path.Join(subpath, k),
+		})
 	}
 	return result, nil
 }
@@ -134,8 +138,16 @@ func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self MockFileSystemAccessor) PathSep() *regexp.Regexp {
+func (self MockFileSystemAccessor) PathSplit() *regexp.Regexp {
 	return regexp.MustCompile("/")
+}
+
+func (self MockFileSystemAccessor) PathSep() string {
+	return "/"
+}
+
+func (self MockFileSystemAccessor) GetRoot(filepath string) (string, string, error) {
+	return "/", path.Clean(filepath), nil
 }
 
 var _GlobFixture = []struct {
