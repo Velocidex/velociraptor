@@ -1,15 +1,18 @@
 package networking
 
 import (
+	"encoding/hex"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -34,6 +37,8 @@ type FileBasedUploader struct {
 
 // Turn the path which may have a device name into something which can
 // be created as a directory.
+var sanitize_re = regexp.MustCompile("[^a-zA-Z0-9_@\\(\\) \\-=\\{\\}\\[\\]]")
+
 func sanitize_path(path string) string {
 	// Strip any leading devices, and make sure the device name
 	// consists of valid chars.
@@ -41,8 +46,25 @@ func sanitize_path(path string) string {
 		"\\\\\\\\[\\\\.\\\\?]\\\\([{}a-zA-Z0-9]+).*?\\\\").
 		ReplaceAllString(path, "$1\\")
 
-	path = filepath.Clean(path)
-	return path
+	// Split the path into components and escape any non valid
+	// chars.
+	res := []string{}
+	components := utils.SplitComponents(path)
+	for _, component := range components {
+		if len(component) > 0 {
+			res = append(
+				res,
+				sanitize_re.ReplaceAllStringFunc(
+					component, func(x string) string {
+						result := make([]byte, 2)
+						hex.Encode(result, []byte(x))
+						return "%" + string(result)
+					}))
+		}
+	}
+
+	result := strings.Join(res, "/")
+	return result
 }
 
 func (self *FileBasedUploader) Upload(

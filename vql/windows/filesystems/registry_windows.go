@@ -11,6 +11,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,6 +21,7 @@ import (
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -157,6 +159,26 @@ func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
+type ValueBuffer struct {
+	io.ReadSeeker
+	info glob.FileInfo
+}
+
+func (self *ValueBuffer) Stat() (os.FileInfo, error) {
+	return self.info, nil
+}
+
+func (self *ValueBuffer) Close() error {
+	return nil
+}
+
+func NewValueBuffer(buf string, stat glob.FileInfo) *ValueBuffer {
+	return &ValueBuffer{
+		strings.NewReader(buf),
+		stat,
+	}
+}
+
 type RegFileSystemAccessor struct{}
 
 func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
@@ -165,9 +187,8 @@ func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 
 func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
-	path = normalize_path(path)
-
-	if path == "" {
+	components := utils.SplitComponents(path)
+	if len(components) == 0 {
 		for k, _ := range root_keys {
 			result = append(result,
 				glob.NewVirtualDirectoryPath(k, nil))
@@ -175,7 +196,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		return result, nil
 	}
 
-	components := strings.Split(path, "\\")
 	hive_name := components[0]
 	hive, pres := root_keys[hive_name]
 	if !pres {
@@ -244,15 +264,25 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 }
 
 func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	path = strings.TrimPrefix(normalize_path(path), "\\")
-	// Strip leading \\ so \\c:\\windows -> c:\\windows
-	file, err := os.Open(path)
-	return file, err
+	stat, err := self.Lstat(path)
+	if err != nil {
+		fmt.Printf("Stat error: %v\n", err)
+		return nil, err
+	}
+
+	value, pres := stat.Data().(*vfilter.Dict).Get("value")
+	if pres {
+		value_buf, ok := value.(string)
+		if ok {
+			return NewValueBuffer(value_buf, stat), nil
+		}
+	}
+
+	return NewValueBuffer("", stat), nil
 }
 
 func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
-	path := normalize_path(filename)
-	components := strings.Split(path, "\\")
+	components := utils.SplitComponents(filename)
 	if len(components) == 0 {
 		return nil, errors.New("No filename given")
 	}
@@ -272,9 +302,10 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 
 	key, err := registry.OpenKey(hive, key_path,
 		registry.READ|registry.WOW64_64KEY)
-	if err != nil {
+	if err != nil && len(components) > 1 {
 		// Maybe its a value then.
-		containing_key_name, value_name := filepath.Split(key_path)
+		containing_key_name := strings.Join(components[1:len(components)-1], "\\")
+		value_name := components[len(components)-1]
 		key, err := registry.OpenKey(hive, containing_key_name,
 			registry.READ|registry.WOW64_64KEY)
 		if err != nil {
@@ -315,6 +346,13 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 	key_stat, err := key.Stat()
 	if err == nil {
 		key_modtime = key_stat.ModTime()
+	}
+
+	// Value names sometimes contain pathsep characters. We need
+	// to escape the entire name so the rest of the code would
+	// treat the name as a single unit and not try to break it up.
+	if strings.Contains(value_info_name, "\\") {
+		value_info_name = "\"" + value_info_name + "\""
 	}
 
 	value_info := &RegValueInfo{
@@ -423,8 +461,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 }
 
 func (self *RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	path = normalize_path(path)
-	components := strings.Split(path, "\\")
+	components := utils.SplitComponents(path)
 	_, pres := root_keys[components[0]]
 	if pres {
 		return components[0], strings.Join(components[1:], "\\"), nil
