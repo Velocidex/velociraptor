@@ -111,7 +111,8 @@ func (self *UploadPlugin) Call(
 	uploader_obj, _ := scope.Resolve("$uploader")
 	uploader, ok := uploader_obj.(Uploader)
 	if !ok {
-		scope.Log("upload: Uploader not configured.")
+		// If the uploader is not configured, we need to do
+		// nothing.
 		close(output_chan)
 		return output_chan
 	}

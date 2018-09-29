@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"regexp"
 	"strings"
+
+	"github.com/ghodss/yaml"
+	"gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
@@ -34,7 +35,7 @@ var (
 
 	artifact_command_collect_dump_dir = artifact_command_collect.Flag(
 		"dump_dir", "Directory to dump output files.").
-		Default(".").String()
+		Default("").String()
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
 		Default("text").Enum("text", "json")
@@ -68,9 +69,12 @@ func collectArtifact(
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
-		Set("config", config_obj.Client).
-		Set("$uploader", &vql_networking.FileBasedUploader{
+		Set("config", config_obj.Client)
+
+	if *artifact_command_collect_dump_dir != "" {
+		env.Set("$uploader", &vql_networking.FileBasedUploader{
 			*artifact_command_collect_dump_dir})
+	}
 
 	for _, request_env := range request.Env {
 		env.Set(request_env.Key, request_env.Value)
@@ -99,6 +103,8 @@ func getRepository(config_obj *config.Config) *artifacts.Repository {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {
+		logging.NewLogger(config_obj).Info("Loading artifacts from %s",
+			*artifact_definitions_dir)
 		_, err := repository.LoadDirectory(*artifact_definitions_dir)
 		if err != nil {
 			logging.NewLogger(config_obj).Error("Artifact LoadDirectory", err)

@@ -17,7 +17,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -361,8 +360,7 @@ func init() {
 			kingpin.FatalIfError(err, "Unable to create server")
 
 			// Parse the artifacts database to detect errors early.
-			_, err = artifacts.GetGlobalRepository(config_obj)
-			kingpin.FatalIfError(err, "Unable to load artifact database")
+			getRepository(config_obj)
 
 			go func() {
 				err := api.StartServer(config_obj, server_obj)

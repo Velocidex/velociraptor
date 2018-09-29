@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"encoding/hex"
+	"os"
 	"strings"
 	"time"
 
@@ -28,15 +29,17 @@ type YaraResult struct {
 	Meta    map[string]interface{}
 	Tags    []string
 	Strings []*YaraHit
+	File    os.FileInfo
 }
 
 type YaraScanPluginArgs struct {
-	Rules    string   `vfilter:"required,field=rules"`
-	Files    []string `vfilter:"required,field=files"`
-	Accessor string   `vfilter:"optional,field=accessor"`
-	Context  int      `vfilter:"optional,field=context"`
-	Start    int64    `vfilter:"optional,field=start"`
-	End      uint64   `vfilter:"optional,field=end"`
+	Rules        string   `vfilter:"required,field=rules"`
+	Files        []string `vfilter:"required,field=files"`
+	Accessor     string   `vfilter:"optional,field=accessor"`
+	Context      int      `vfilter:"optional,field=context"`
+	Start        int64    `vfilter:"optional,field=start"`
+	End          uint64   `vfilter:"optional,field=end"`
+	NumberOfHits int64    `vfilter:"optional,field=number"`
 }
 
 type YaraScanPlugin struct{}
@@ -61,6 +64,10 @@ func (self YaraScanPlugin) Call(
 			arg.End = 1024 * 1024 * 100
 		}
 
+		if arg.NumberOfHits == 0 {
+			arg.NumberOfHits = 1
+		}
+
 		variables := make(map[string]interface{})
 		rules, err := yara.Compile(arg.Rules, variables)
 		if err != nil {
@@ -69,6 +76,7 @@ func (self YaraScanPlugin) Call(
 		}
 
 		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		number_of_hits := int64(0)
 		buf := make([]byte, BUFFSIZE)
 		for _, filename := range arg.Files {
 			f, err := accessor.Open(filename)
@@ -98,14 +106,15 @@ func (self YaraScanPlugin) Call(
 						rule = match.Namespace + ":" + rule
 					}
 
+					stat, _ := f.Stat()
 					res := &YaraResult{
 						Rule: rule,
 						Tags: match.Tags,
 						Meta: match.Meta,
+						File: stat,
 					}
 
 					for _, match_string := range match.Strings {
-
 						start := int(match_string.Offset) -
 							arg.Context
 						if start < 0 {
@@ -120,7 +129,6 @@ func (self YaraScanPlugin) Call(
 						}
 
 						data := buf[start:end]
-
 						res.Strings = append(
 							res.Strings, &YaraHit{
 								Name: match_string.Name,
@@ -131,7 +139,11 @@ func (self YaraScanPlugin) Call(
 									hex.Dump(data), "\n"),
 							})
 					}
-
+					number_of_hits += 1
+					if number_of_hits > arg.NumberOfHits {
+						f.Close()
+						return
+					}
 					output_chan <- res
 				}
 

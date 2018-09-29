@@ -26,12 +26,11 @@
   revision = "e1c353eeaaee536ccb6ffb0ba2e97de77134a20c"
 
 [[projects]]
-  digest = "1:7eb4fdedc36c5ce400296a0726ffcde3bcb452daa74ab5675d19274f24799ad9"
+  digest = "1:1b29f9dbf218e7e2a9da91081b2412d74ae245306728f3843bcea35d6ca399ff"
   name = "github.com/Velocidex/go-yara"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f8d161aea90fd4496c0d4b4502282617eaec4265"
-  version = "v1.1.9"
+  revision = "a41bdc2151065783bff8afc1202496e6225725d1"
 
 [[projects]]
   digest = "1:6b46e03f170b172c78b6f8b01510d927e510ff1c70b82c1567f2526a49ce2a84"

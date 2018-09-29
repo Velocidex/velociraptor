@@ -25,7 +25,7 @@ import (
 
 var (
 	deviceDriveRegex = regexp.MustCompile(
-		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-z]:)(.*)")
+		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-zA-Z]:)(.*)")
 	deviceDirectoryRegex = regexp.MustCompile(
 		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
 )
@@ -66,7 +66,7 @@ func (self *NTFSFileInfo) Mode() os.FileMode {
 }
 
 func (self *NTFSFileInfo) ModTime() time.Time {
-	return time.Time{}
+	return self.info.Mtime
 }
 
 func (self *NTFSFileInfo) FullPath() string {
@@ -310,18 +310,19 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, err
 	}
 
-	dir, err := root.Open(strings.Join(
-		components[:len(components)-1], self.PathSep()))
+	dirname := strings.Join(components[:len(components)-1], self.PathSep())
+	dir, err := root.Open(dirname)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, info := range ntfs.ListDir(dir) {
-		if info.Name == components[len(components)-1] {
+		if strings.ToLower(info.Name) == strings.ToLower(
+			components[len(components)-1]) {
 			return &readAdapter{
 				info: &NTFSFileInfo{
 					info:       info,
-					_full_path: device + subpath + "\\" + info.Name,
+					_full_path: device + dirname + "\\" + info.Name,
 				},
 				reader: data,
 			}, nil
@@ -331,8 +332,37 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 	return nil, errors.New("File not found")
 }
 
-func (self *NTFSFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
-	return glob.NewVirtualDirectoryPath("\\", nil), nil
+func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
+	// The path must start with a valid device, otherwise we list
+	// the devices.
+	device, subpath, err := self.GetRoot(path)
+	if err != nil {
+		return nil, errors.New("Unable to open raw device")
+	}
+
+	components := self.PathSplit().Split(subpath, -1)
+
+	root, err := self.getRootMFTEntry(device)
+	if err != nil {
+		return nil, err
+	}
+
+	dirname := strings.Join(components[:len(components)-1], self.PathSep())
+	dir, err := root.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	for _, info := range ntfs.ListDir(dir) {
+		if strings.ToLower(info.Name) == strings.ToLower(
+			components[len(components)-1]) {
+			return &NTFSFileInfo{
+				info:       info,
+				_full_path: device + dirname + "\\" + info.Name,
+			}, nil
+		}
+	}
+
+	return nil, errors.New("File not found")
 }
 
 func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error) {

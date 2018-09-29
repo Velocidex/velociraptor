@@ -95,7 +95,7 @@ func (self *RegKeyInfo) Atime() glob.TimeVal {
 	return self.Mtime()
 }
 
-func (self *RegKeyInfo) MarshalJSON() ([]byte, error) {
+func (self RegKeyInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string
 		Data     interface{}
@@ -139,7 +139,7 @@ func (self *RegValueInfo) Size() int64 {
 	return self._size
 }
 
-func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
+func (self RegValueInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string
 		Type     string
@@ -153,7 +153,7 @@ func (self *RegValueInfo) MarshalJSON() ([]byte, error) {
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
 		Type:     self.Type,
-		Data:     self.Data,
+		Data:     self.Data(),
 	})
 
 	return result, err
@@ -187,8 +187,8 @@ func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 
 func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
-	components := utils.SplitComponents(path)
-	if len(components) == 0 {
+
+	if path == "/" || path == "\\" || path == "" {
 		for k, _ := range root_keys {
 			result = append(result,
 				glob.NewVirtualDirectoryPath(k, nil))
@@ -196,6 +196,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		return result, nil
 	}
 
+	components := utils.SplitComponents(path)
 	hive_name := components[0]
 	hive, pres := root_keys[hive_name]
 	if !pres {
@@ -287,7 +288,8 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 		return nil, errors.New("No filename given")
 	}
 
-	hive, pres := root_keys[components[0]]
+	hive_name := components[0]
+	hive, pres := root_keys[hive_name]
 	if !pres {
 		// Not a real hive
 		return nil, errors.New("Unknown hive")
@@ -313,7 +315,8 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 		}
 		defer key.Close()
 
-		return getValueInfo(key, containing_key_name, value_name)
+		return getValueInfo(
+			key, hive_name+"\\"+containing_key_name, value_name)
 	}
 	defer key.Close()
 
