@@ -1,7 +1,7 @@
 package constants
 
 var (
-	VERSION                    = "0.2.3"
+	VERSION                    = "0.2.4"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 
 	// Temporary attribute

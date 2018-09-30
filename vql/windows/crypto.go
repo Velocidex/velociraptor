@@ -12,10 +12,11 @@ import (
 	"crypto/sha1"
 	"crypto/x509"
 	"encoding/hex"
-	"github.com/mattn/go-pointer"
 	"strings"
 	"unicode/utf16"
 	"unsafe"
+
+	"github.com/mattn/go-pointer"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -41,7 +42,7 @@ func cert_walker(cert *C.char, len C.int,
 	// Make a copy of the slice so windows may free its own copy.
 	der_cert := append(
 		[]byte{},
-		(*[1 << 30]byte)(unsafe.Pointer(cert))[0:len]...)
+		(*[1 << 10]byte)(unsafe.Pointer(cert))[0:len]...)
 
 	certificates, err := x509.ParseCertificates(der_cert)
 	if err != nil {
@@ -49,7 +50,7 @@ func cert_walker(cert *C.char, len C.int,
 	}
 
 	store_name := append([]uint16{},
-		(*[1 << 30]uint16)(unsafe.Pointer(store))[0:store_len]...)
+		(*[1 << 10]uint16)(unsafe.Pointer(store))[0:store_len]...)
 
 	result := pointer.Restore(unsafe.Pointer(ctx)).(*certContext)
 	for _, c := range certificates {

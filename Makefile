@@ -47,12 +47,13 @@ endif
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor.exe ./bin/
 
-darwin: required_assets gui_assets
-	GOOS=darwin GOARCH=amd64 \
-            go build \
+# Build using xgo for all supported platforms.
+xgo: required_assets gui_assets
+	xgo -out velociraptor-v0.2.4 -v \
+            --targets='windows/*,darwin/*,linux/*' \
             -tags release \
             -ldflags "$(LDFLAGS)" \
-	    -o output/velociraptor.darwin ./bin/
+	    ./bin/
 
 # Build release binaries. The GUI will embed assets and ship with
 # everything in it.

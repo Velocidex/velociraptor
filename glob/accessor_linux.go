@@ -30,22 +30,22 @@ func (self *OSFileInfo) FullPath() string {
 
 func (self *OSFileInfo) Mtime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Mtim.Sec,
-		Nsec: self.sys().Mtim.Nsec,
+		Sec:  int64(self.sys().Mtim.Sec),
+		Nsec: int64(self.sys().Mtim.Nsec),
 	}
 }
 
 func (self *OSFileInfo) Ctime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Ctim.Sec,
-		Nsec: self.sys().Ctim.Nsec,
+		Sec:  int64(self.sys().Ctim.Sec),
+		Nsec: int64(self.sys().Ctim.Nsec),
 	}
 }
 
 func (self *OSFileInfo) Atime() TimeVal {
 	return TimeVal{
-		Sec:  self.sys().Atim.Sec,
-		Nsec: self.sys().Atim.Nsec,
+		Sec:  int64(self.sys().Atim.Sec),
+		Nsec: int64(self.sys().Atim.Nsec),
 	}
 }
 
