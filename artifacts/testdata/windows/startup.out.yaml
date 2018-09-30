@@ -1,0 +1,26 @@
+SELECT * FROM Artifact.Windows.Sys.StartupItems()[
+ {
+  "Command": {
+   "type": "SZ",
+   "value": "Hello"
+  },
+  "Enabled": "disabled",
+  "FullPath": "HKEY_USERS\\S-1-5-21-2195900957-2730782454-3917332813-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
+  "Name": "\"c:\\windows\\system32\\msht.exe\""
+ },
+ {
+  "Command": {
+   "type": "SZ",
+   "value": "powershell -File \"C:\\Program Files\\AppVeyor\\BuildAgent\\update-appveyor-agent.ps1\""
+  },
+  "Enabled": "disabled",
+  "FullPath": "HKEY_USERS\\S-1-5-21-2195900957-2730782454-3917332813-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AppVeyor.BuildAgent",
+  "Name": "AppVeyor.BuildAgent"
+ },
+ {
+  "Command": "\r\n[.ShellClassInfo]\r\nLocalizedResourceName=@%SystemRoot%\\system32\\shell32.dll,-21787\r\n",
+  "Enabled": "enable",
+  "FullPath": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp\\desktop.ini",
+  "Name": "desktop.ini"
+ }
+]

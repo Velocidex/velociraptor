@@ -253,7 +253,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 
 	// List the directory.
 	for _, info := range ntfs.ListDir(dir) {
-		if info.Name == "" {
+		if info.Name == "" || info.Name == "." {
 			continue
 		}
 		result = append(result, &NTFSFileInfo{
@@ -365,6 +365,15 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 	return nil, errors.New("File not found")
 }
 
+func clean(path string) string {
+	result := filepath.Clean(path)
+	if result == "." {
+		result = ""
+	}
+
+	return result
+}
+
 func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 	// Make sure not to run filepath.Clean() because it will
 	// collapse multiple slashes (and prevent device names from
@@ -372,12 +381,12 @@ func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error)
 	path = strings.Replace(path, "/", "\\", -1)
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], filepath.Clean(m[2]), nil
+		return m[1], clean(m[2]), nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
-		return m[1], filepath.Clean(m[2]), nil
+		return m[1], clean(m[2]), nil
 	}
 
 	return "/", path, errors.New("Unsupported device type")

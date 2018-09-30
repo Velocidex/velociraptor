@@ -1,0 +1,5 @@
+Queries:
+  - SELECT FullPath FROM glob(globs="/*", accessor="ntfs")
+  - SELECT FullPath FROM glob(globs="\\*", accessor="ntfs")
+  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs")
+    WHERE Name = "pagefile.sys"

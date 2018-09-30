@@ -74,4 +74,15 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
  }
+]SELECT FullPath FROM glob( globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*", accessor="reg")[
+ {
+  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\""
+ },
+ {
+  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AppVeyor.BuildAgent"
+ }
+]SELECT FullPath FROM stat( filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"", accessor="reg")[
+ {
+  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\""
+ }
 ]

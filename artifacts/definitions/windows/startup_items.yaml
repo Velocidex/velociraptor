@@ -8,6 +8,8 @@ parameters:
       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
+  - name: runKeyGlobsUser
+    default: >
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_USERS\*\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
@@ -48,6 +50,18 @@ sources:
            accessor="reg")
 
       - |
+        // This is not very reliable: It will only find users currently logged in.
+        LET users_registry_runners = SELECT Name, FullPath, Data as Command, if(
+           condition={
+                SELECT Enabled from approved
+                WHERE Name = ApprovedName
+           },
+           then="enabled", else="disabled") as Enabled
+        FROM glob(
+           globs=split(string=runKeyGlobsUser, sep="[, ]+"),
+           accessor="reg")
+
+      - |
         LET file_runners = SELECT * FROM foreach(
            row={
               SELECT Name, FullPath
@@ -60,4 +74,7 @@ sources:
               FROM read_file(filenames=FullPath)
            })
 
-      - SELECT * from chain(first=registry_runners, second=file_runners)
+      - SELECT * from chain(
+           first=registry_runners,
+           second=users_registry_runners,
+           third=file_runners)

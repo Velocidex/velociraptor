@@ -1,0 +1,2 @@
+Queries:
+  - SELECT * FROM Artifact.Windows.Sys.StartupItems()

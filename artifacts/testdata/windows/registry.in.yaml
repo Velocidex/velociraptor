@@ -6,3 +6,12 @@ Queries:
 
   # No leading \\
   - SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")
+
+  # A value with path seperators in it. Should return FullPath with
+  # value name quoted.
+  - SELECT FullPath FROM glob(
+       globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*",
+       accessor="reg")
+  - SELECT FullPath FROM stat(
+       filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
+       accessor="reg")

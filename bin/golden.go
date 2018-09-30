@@ -104,12 +104,12 @@ func doGolden() {
 			outfile,
 			[]byte(result), 0666)
 		kingpin.FatalIfError(err, "Unable to write golden file")
+	}
 
-		if len(failures) > 0 {
-			kingpin.Fatalf(
-				"Failed! Some golden files did not match:%s\n",
-				failures)
-		}
+	if len(failures) > 0 {
+		kingpin.Fatalf(
+			"Failed! Some golden files did not match:%s\n",
+			failures)
 	}
 }
 

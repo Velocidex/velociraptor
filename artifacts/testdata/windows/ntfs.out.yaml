@@ -1,0 +1,13 @@
+SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\*", accessor="ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs") WHERE Name = "pagefile.sys"[
+ {
+  "FullPath": "\\\\.\\c:\\pagefile.sys"
+ }
+]
