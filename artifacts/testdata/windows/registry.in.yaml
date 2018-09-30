@@ -1,0 +1,8 @@
+Queries:
+  # Test some edge cases of the registry filesystem accessor.
+  - SELECT FullPath FROM glob(globs="/*", accessor="reg")
+  - SELECT FullPath FROM glob(globs="\\*", accessor="reg")
+  - SELECT FullPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="reg")
+
+  # No leading \\
+  - SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")

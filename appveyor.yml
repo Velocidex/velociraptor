@@ -1,0 +1,28 @@
+version: 1.0.{build}
+clone_depth: 1
+clone_folder: c:\gopath\src\www.velocidex.com\golang\velociraptor
+environment:
+  GOPATH: c:\gopath
+  PATH: C:\msys64\mingw64\bin;%GOPATH%\bin;%PATH%
+install:
+- cmd: |
+    echo %PATH%
+    echo %GOPATH%
+    go version
+    go env
+    go get github.com/UnnoTed/fileb0x
+    go install github.com/UnnoTed/fileb0x
+    fileb0x artifacts/b0x.yaml
+    fileb0x config/b0x.yaml
+    go get github.com/golang/dep
+    go get -u github.com/golang/dep/cmd/dep
+    dep ensure
+build_script:
+- cmd: |
+    regedit /S artifacts/testdata/windows/init.reg
+    go build -o buildOutput\velociraptor.exe -i ./bin/
+test_script:
+- cmd: buildOutput\velociraptor.exe golden artifacts\testdata\windows\
+artifacts:
+- path: artifacts/testdata/windows/*.yaml
+  name: test_data

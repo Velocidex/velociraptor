@@ -1,0 +1,10 @@
+Select * from Artifact.Linux.Sys.Users() WHERE User = "root"[
+ {
+  "Description": "root",
+  "Gid": "0",
+  "Homedir": "/root",
+  "Shell": "/bin/bash",
+  "Uid": "0",
+  "User": "root"
+ }
+]

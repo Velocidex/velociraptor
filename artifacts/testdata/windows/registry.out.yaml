@@ -1,0 +1,77 @@
+SELECT FullPath FROM glob(globs="/*", accessor="reg")[
+ {
+  "FullPath": "HKEY_CLASSES_ROOT"
+ },
+ {
+  "FullPath": "HKEY_CURRENT_CONFIG"
+ },
+ {
+  "FullPath": "HKEY_CURRENT_USER"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE"
+ },
+ {
+  "FullPath": "HKEY_PERFORMANCE_DATA"
+ },
+ {
+  "FullPath": "HKEY_USERS"
+ }
+]SELECT FullPath FROM glob(globs="\\*", accessor="reg")[
+ {
+  "FullPath": "HKEY_CLASSES_ROOT"
+ },
+ {
+  "FullPath": "HKEY_CURRENT_CONFIG"
+ },
+ {
+  "FullPath": "HKEY_CURRENT_USER"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE"
+ },
+ {
+  "FullPath": "HKEY_PERFORMANCE_DATA"
+ },
+ {
+  "FullPath": "HKEY_USERS"
+ }
+]SELECT FullPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="reg")[
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SAM"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SOFTWARE"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
+ }
+]SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")[
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SAM"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SOFTWARE"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
+ }
+]

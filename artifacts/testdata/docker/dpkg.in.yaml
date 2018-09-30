@@ -1,0 +1,3 @@
+Queries:
+  - SELECT * FROM Artifact.Linux.Debian.Packages() WHERE Package =~ "apt"
+  - SELECT * FROM Artifact.Linux.Debian.AptSources()

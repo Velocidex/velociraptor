@@ -235,6 +235,14 @@
   revision = "8784dd1ab561dcf43d141f6678e9e41f3d0dff55"
 
 [[projects]]
+  digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
+  pruneopts = "UT"
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:22e4289b3741da96aceecc4d1dcbf682ae167c759d010fd88c63c65c9a2e8c72"
   name = "github.com/shirou/gopsutil"
   packages = [
@@ -423,11 +431,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1eb38db21461c4cbdcb4f933e49a8e0f26d4d5cc4c392544871800ea45379a15"
+  digest = "1:952ec02d5e74f558381778183da0d0273c7b56a1d1f1702211eec20176a928cb"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "a6380dafb96e17feb1325db8acbac2f389036d85"
+  revision = "dc2f47922a776d76ed5adce339db766808bc9942"
 
 [[projects]]
   branch = "master"
@@ -466,6 +474,7 @@
     "github.com/pkg/errors",
     "github.com/rcrowley/go-metrics",
     "github.com/sebdah/goldie",
+    "github.com/sergi/go-diff/diffmatchpatch",
     "github.com/shirou/gopsutil/disk",
     "github.com/shirou/gopsutil/host",
     "github.com/shirou/gopsutil/net",

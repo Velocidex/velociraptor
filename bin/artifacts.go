@@ -73,7 +73,8 @@ func collectArtifact(
 
 	if *artifact_command_collect_dump_dir != "" {
 		env.Set("$uploader", &vql_networking.FileBasedUploader{
-			*artifact_command_collect_dump_dir})
+			UploadDir: *artifact_command_collect_dump_dir,
+		})
 	}
 
 	for _, request_env := range request.Env {

@@ -92,7 +92,9 @@ func doQuery() {
 
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
-		Set("$uploader", &vql_networking.FileBasedUploader{*dump_dir})
+		Set("$uploader", &vql_networking.FileBasedUploader{
+			UploadDir: *dump_dir,
+		})
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)

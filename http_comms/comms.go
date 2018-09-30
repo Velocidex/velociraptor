@@ -537,8 +537,6 @@ func (self *Sender) drainMessageQueue() *crypto_proto.MessageList {
 			return result
 		}
 	}
-
-	return result
 }
 
 func NewSender(

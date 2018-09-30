@@ -1,0 +1,14 @@
+Select Core from Artifact.Linux.Sys.CPUTime()[
+ {
+  "Core": "cpu0"
+ },
+ {
+  "Core": "cpu1"
+ },
+ {
+  "Core": "cpu2"
+ },
+ {
+  "Core": "cpu3"
+ }
+]

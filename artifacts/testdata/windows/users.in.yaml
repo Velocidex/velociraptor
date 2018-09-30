@@ -1,0 +1,4 @@
+Queries:
+  # Only show a few accounts. Omit the UUID in case the system changes.
+  - Select Name, Uid, Gid, Directory, Type  from Artifact.Windows.Sys.Users()
+    WHERE Name in ("appveyor", "Administrator", "Guest")

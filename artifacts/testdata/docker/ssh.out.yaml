@@ -1,0 +1,8 @@
+SELECT * FROM Artifact.Linux.Ssh.AuthorizedKeys()[
+ {
+  "FullPath": "/root/.ssh/authorized_keys",
+  "Key": "ssh-rsa AAAAB3NzaC1yc2... mic@localhost",
+  "Uid": "0",
+  "User": "root"
+ }
+]

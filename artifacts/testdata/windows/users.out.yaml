@@ -1,0 +1,22 @@
+Select Name, Uid, Gid, Directory, Type  from Artifact.Windows.Sys.Users() WHERE Name in ("appveyor", "Administrator", "Guest")[
+ {
+  "Directory": "C:\\Users\\Administrator",
+  "Gid": 513,
+  "Name": "Administrator",
+  "Type": "local",
+  "Uid": 500
+ },
+ {
+  "Directory": "C:\\Users\\appveyor",
+  "Gid": 513,
+  "Name": "appveyor",
+  "Type": "local",
+  "Uid": 1001
+ },
+ {
+  "Gid": 513,
+  "Name": "Guest",
+  "Type": "local",
+  "Uid": 501
+ }
+]

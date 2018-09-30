@@ -85,7 +85,9 @@ func doCp(path string, dump_dir string) {
 	env := vfilter.NewDict().
 		Set("accessor", *fs_command_accessor).
 		Set("path", path).
-		Set("$uploader", &vql_networking.FileBasedUploader{dump_dir})
+		Set("$uploader", &vql_networking.FileBasedUploader{
+			UploadDir: dump_dir,
+		})
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)

@@ -1,0 +1,160 @@
+SELECT * FROM Artifact.Linux.Debian.Packages() WHERE Package =~ "apt"[
+ {
+  "Architecture": "amd64",
+  "InstalledSize": "2792",
+  "Package": "libapt-pkg5.0",
+  "Source": "apt",
+  "Version": "1.2.27"
+ },
+ {
+  "Architecture": "amd64",
+  "InstalledSize": "3349",
+  "Package": "apt",
+  "Source": null,
+  "Version": "1.2.27"
+ }
+]SELECT * FROM Artifact.Linux.Debian.AptSources()[
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial main restricted",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial-updates main restricted",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb-src",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial-updates universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial-updates universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb-src",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial multiverse",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial-updates multiverse",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "archive.ubuntu.com/ubuntu/ xenial-backports main restricted universe multiverse",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://archive.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "security.ubuntu.com/ubuntu/ xenial-security main restricted",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://security.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "security.ubuntu.com/ubuntu/ xenial-security universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://security.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "security.ubuntu.com/ubuntu/ xenial-security universe",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb-src",
+  "URL": "http://security.ubuntu.com/ubuntu/"
+ },
+ {
+  "Arch": "",
+  "Atime": {},
+  "Ctime": {},
+  "Mtime": {},
+  "Name": "security.ubuntu.com/ubuntu/ xenial-security multiverse",
+  "Record": {},
+  "Source": "/etc/apt/sources.list",
+  "Type": "deb",
+  "URL": "http://security.ubuntu.com/ubuntu/"
+ }
+]

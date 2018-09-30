@@ -1,0 +1,3 @@
+Name: Authorized keys
+Queries:
+  - SELECT * FROM Artifact.Linux.Ssh.AuthorizedKeys()

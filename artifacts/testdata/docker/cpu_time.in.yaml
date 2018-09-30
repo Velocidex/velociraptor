@@ -1,0 +1,2 @@
+Queries:
+  - Select Core from Artifact.Linux.Sys.CPUTime()
