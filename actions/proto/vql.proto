@@ -40,6 +40,12 @@ message VQLCollectorArgs {
             default: "1000",
         }];
 
+    uint64 max_wait = 6 [(sem_type) = {
+            friendly_name: "Batch requests that take this long.",
+            description: "For long queries we return partial results after this long. This is required for event listeners which never really complete.",
+            default: "10",
+        }];
+
     repeated Artifact artifacts = 5 [(sem_type) = {
             description: "Artifacts sent from the server to help with this query."
         }];

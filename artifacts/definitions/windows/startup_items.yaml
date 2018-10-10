@@ -7,14 +7,12 @@ parameters:
     default: >
       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
-      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
-  - name: runKeyGlobsUser
-    default: >
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
       HKEY_USERS\*\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
-      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*,
+      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*
   - name: startupApprovedGlobs
-    default: >-
+    default: >
       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**,
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**
   - name: startupFolderDirectories
@@ -39,26 +37,16 @@ sources:
            WHERE Enabled =~ "^0[0-9]0+$"
 
       - |
-        LET registry_runners = SELECT Name, FullPath, Data as Command, if(
+        LET registry_runners = SELECT Name,
+          FullPath, Data.value as Command,
+          if(
            condition={
                 SELECT Enabled from approved
                 WHERE Name = ApprovedName
            },
            then="enabled", else="disabled") as Enabled
-        FROM glob(
+          FROM glob(
            globs=split(string=runKeyGlobs, sep="[, ]+"),
-           accessor="reg")
-
-      - |
-        // This is not very reliable: It will only find users currently logged in.
-        LET users_registry_runners = SELECT Name, FullPath, Data as Command, if(
-           condition={
-                SELECT Enabled from approved
-                WHERE Name = ApprovedName
-           },
-           then="enabled", else="disabled") as Enabled
-        FROM glob(
-           globs=split(string=runKeyGlobsUser, sep="[, ]+"),
            accessor="reg")
 
       - |
@@ -76,5 +64,4 @@ sources:
 
       - SELECT * from chain(
            first=registry_runners,
-           second=users_registry_runners,
-           third=file_runners)
+           second=file_runners)

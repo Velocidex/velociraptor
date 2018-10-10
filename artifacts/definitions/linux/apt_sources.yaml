@@ -2,9 +2,11 @@ name: Linux.Debian.AptSources
 description: |
   Parse Debian apt sources.
 
-  We first search for *.list files which contain lines of the form
+  We first search for \*.list files which contain lines of the form
 
-  deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
+  .. code:: console
+
+     deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
 
   For each line we construct the cache file by spliting off the
   section (last component) and replacing / and " " with _.

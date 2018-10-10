@@ -2,6 +2,7 @@ package logging
 
 import (
 	"net/http"
+
 	"www.velocidex.com/golang/velociraptor/config"
 )
 
@@ -9,6 +10,7 @@ import (
 type statusRecorder struct {
 	http.ResponseWriter
 	http.Flusher
+	http.CloseNotifier
 	status int
 }
 
@@ -21,7 +23,11 @@ func GetLoggingHandler(config_obj *config.Config) func(http.Handler) http.Handle
 	logger := NewLogger(config_obj)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rec := &statusRecorder{w, w.(http.Flusher), 200}
+			rec := &statusRecorder{
+				w,
+				w.(http.Flusher),
+				w.(http.CloseNotifier),
+				200}
 			defer func() {
 				logger.Info(
 					"%s %s %s %s %d",

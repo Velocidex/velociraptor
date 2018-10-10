@@ -18,7 +18,7 @@ import (
 
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/vql/windows"
+	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 )
 
 type OSFileInfo struct {
@@ -136,7 +136,7 @@ func (self OSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccesso
 func discoverDriveLetters() ([]glob.FileInfo, error) {
 	result := []glob.FileInfo{}
 
-	shadow_volumes, err := windows.Query(
+	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
 			"Size, SystemName, VolumeSerialNumber "+
 			"from Win32_LogicalDisk",

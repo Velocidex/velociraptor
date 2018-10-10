@@ -6,7 +6,7 @@
 
 CWD=$PWD
 
-if [ -z "$GOPATH"]; then
+if [ -z "$GOPATH" ]; then
     GOPATH="$HOME/go"
 fi
 

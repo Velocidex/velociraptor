@@ -136,7 +136,9 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 				// Each request has its own context.
 				ctx := context.BackgroundFromConfig(config_obj)
 				logger.Info("Received request: %v", req)
-				result.processRequestPlugin(ctx, req)
+
+				// Process the request asynchronously.
+				go result.processRequestPlugin(ctx, req)
 			}
 		}
 	}()

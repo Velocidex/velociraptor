@@ -30,20 +30,30 @@ func NewNotificationPool() *NotificationPool {
 	}
 }
 
-func (self *NotificationPool) Listen(client_id string) chan bool {
+func (self *NotificationPool) Listen(client_id string) (chan bool, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Close any old channels and make a new one.
 	c, pres := self.clients[client_id]
 	if pres {
+		// This could happen because the client was connected,
+		// but the connection is dropped and the HTTP receiver
+		// is still blocked. This unblocks the old connection
+		// and returns an error on the new connection at the
+		// same time. If the old client is still connected, it
+		// will reconnect immediately but the new client will
+		// wait the full max poll to retry.
 		close(c)
+		delete(self.clients, client_id)
+
+		return nil, errors.New("Only one listener may exist.")
 	}
 
 	c = make(chan bool)
 	self.clients[client_id] = c
 
-	return c
+	return c, nil
 }
 
 func (self *NotificationPool) Notify(client_id string) {

@@ -6,7 +6,7 @@ extracting the OLE data to a Go struct but we really need it in a
 vfilter.Dict().
 */
 
-package windows
+package wmi
 
 import (
 	"errors"
@@ -34,6 +34,10 @@ func Query(query string, namespace string) ([]*vfilter.Dict, error) {
 	defer lock.Unlock()
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
+
+	if namespace == "" {
+		namespace = "ROOT/CIMV2"
+	}
 
 	err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
 	if err != nil {
@@ -168,7 +172,7 @@ func runWMIQuery(scope *vfilter.Scope,
 func init() {
 	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
 		PluginName: "wmi",
-		Doc:        "Execute WMI queryies.",
+		Doc:        "Execute simple WMI queries synchronously.",
 		Function:   runWMIQuery,
 		ArgType:    &WMIQueryArgs{},
 	})

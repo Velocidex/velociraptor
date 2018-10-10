@@ -40,6 +40,18 @@ func (self *VQLClientAction) Run(
 		return
 	}
 
+	if arg.MaxWait == 0 {
+		arg.MaxWait = 10
+	}
+
+	self._Run(ctx, responder, arg, output)
+}
+
+func (self *VQLClientAction) _Run(
+	ctx *context.Context,
+	responder *responder.Responder,
+	arg *actions_proto.VQLCollectorArgs,
+	output chan<- *crypto_proto.GrrMessage) {
 	if arg.Query == nil {
 		responder.RaiseError("Query should be specified.")
 		return
@@ -87,7 +99,7 @@ func (self *VQLClientAction) Run(
 			max_rows = 10000
 		}
 		result_chan := vfilter.GetResponseChannel(
-			vql, ctx, scope, max_rows)
+			vql, ctx, scope, max_rows, int(arg.MaxWait))
 		for {
 			result, ok := <-result_chan
 			if !ok {
@@ -113,7 +125,6 @@ func (self *VQLClientAction) Run(
 				humanize.Bytes(uint64(len(result.Payload))),
 				result.TotalRows,
 			)
-
 			response.Columns = result.Columns
 			responder.AddResponse(response)
 		}

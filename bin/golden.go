@@ -52,7 +52,7 @@ func runTest(fixture *testFixture) (string, error) {
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, context.Background(), scope, 1000)
+			vql, context.Background(), scope, 1000, 100)
 		for {
 			query_result, ok := <-result_chan
 			if !ok {

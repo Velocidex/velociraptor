@@ -252,6 +252,18 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 			return
 		}
 
+		// Get a notification for this client from the pool -
+		// Must be before the Process() call to prevent race.
+		source := message_info.Source
+		notification, err := server_obj.NotificationPool.Listen(source)
+		if err != nil {
+			http.Error(w, "Another Client connection exists. "+
+				"Only a single instance of the client is "+
+				"allowed to connect at the same time.",
+				http.StatusConflict)
+			return
+		}
+
 		// Deadlines are designed to ensure that connections
 		// are not blocked for too long (maybe several
 		// minutes). This helps to expire connections when the
@@ -267,12 +279,6 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
-
-		source := message_info.Source
-
-		// Get a notification for this client from the pool -
-		// Must be before the Process() call to prevent race.
-		notification := server_obj.NotificationPool.Listen(source)
 
 		// Remove the notification from the pool when we exit
 		// here.
@@ -298,8 +304,15 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 			return
 		}
 
+		// Figure out when the client drops the connection so
+		// we can exit.
+		close_notify := w.(http.CloseNotifier).CloseNotify()
+
 		for {
 			select {
+			case <-close_notify:
+				return
+
 			case quit := <-notification:
 				if quit {
 					logger.Info("reader: quit.")

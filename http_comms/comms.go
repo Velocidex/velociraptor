@@ -368,7 +368,7 @@ process_response:
 			if err != nil && err != io.EOF {
 				return errors.WithStack(err)
 			}
-			if n == 0 {
+			if n == 0 || err == io.EOF {
 				break process_response
 			}
 

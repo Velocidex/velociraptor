@@ -1,18 +1,12 @@
-SELECT * FROM Artifact.Windows.Sys.StartupItems()[
+SELECT * FROM Artifact.Windows.Sys.StartupItems() ORDER BY Name[
  {
-  "Command": {
-   "type": "SZ",
-   "value": "Hello"
-  },
+  "Command": "Hello",
   "Enabled": "disabled",
   "FullPath": "HKEY_USERS\\S-1-5-21-2195900957-2730782454-3917332813-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
   "Name": "\"c:\\windows\\system32\\msht.exe\""
  },
  {
-  "Command": {
-   "type": "SZ",
-   "value": "powershell -File \"C:\\Program Files\\AppVeyor\\BuildAgent\\update-appveyor-agent.ps1\""
-  },
+  "Command": "powershell -File \"C:\\Program Files\\AppVeyor\\BuildAgent\\update-appveyor-agent.ps1\"",
   "Enabled": "disabled",
   "FullPath": "HKEY_USERS\\S-1-5-21-2195900957-2730782454-3917332813-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AppVeyor.BuildAgent",
   "Name": "AppVeyor.BuildAgent"

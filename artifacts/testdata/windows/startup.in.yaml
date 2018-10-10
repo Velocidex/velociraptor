@@ -1,2 +1,2 @@
 Queries:
-  - SELECT * FROM Artifact.Windows.Sys.StartupItems()
+  - SELECT * FROM Artifact.Windows.Sys.StartupItems() ORDER BY Name

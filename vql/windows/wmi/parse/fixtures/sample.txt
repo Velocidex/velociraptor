@@ -1,0 +1,50 @@
+instance of __InstanceCreationEvent
+{
+        TargetInstance =
+instance of Win32_Process
+{
+        Caption = "notepad.exe";
+        CommandLine = "notepad";
+        CreationClassName = "Win32_Process";
+        CreationDate = "20181007201847.788310-420";
+        CSCreationClassName = "Win32_ComputerSystem";
+        CSName = "DESKTOP-IOME2K5";
+        Description = "notepad.exe";
+        ExecutablePath = "C:\\Windows\\system32\\notepad.exe";
+        Handle = "984";
+        HandleCount = 236;
+        KernelModeTime = "468750";
+        MaximumWorkingSetSize = 1380;
+        MinimumWorkingSetSize = 200;
+        Name = "notepad.exe";
+        OSCreationClassName = "Win32_OperatingSystem";
+        OSName = "Microsoft Windows 10 Pro N|C:\\WINDOWS|\\Device\\Harddisk0\\Partition2";
+        OtherOperationCount = "151";
+        OtherTransferCount = "2558";
+        PageFaults = 3939;
+        PageFileUsage = 2968;
+        ParentProcessId = 2424;
+        PeakPageFileUsage = 2968;
+        PeakVirtualSize = "2203498274816";
+        PeakWorkingSetSize = 15196;
+        Priority = 8;
+        PrivatePageCount = "3039232";
+        ProcessId = 984;
+        QuotaNonPagedPoolUsage = 14;
+        QuotaPagedPoolUsage = 256;
+        QuotaPeakNonPagedPoolUsage = 15;
+        QuotaPeakPagedPoolUsage = 257;
+        ReadOperationCount = "2";
+        ReadTransferCount = "9672";
+        SessionId = 1;
+        ThreadCount = 6;
+        UserModeTime = "156250";
+        VirtualSize = "2203498270720";
+        WindowsVersion = "10.0.17134";
+        WorkingSetSize = "15560704";
+        WriteOperationCount = "0";
+        WriteTransferCount = "0";
+        Foo = {1, 2, 3, 4};
+};
+        TIME_CREATED = "131834423287753198";
+};

@@ -18,7 +18,7 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/vql/windows"
+	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
 )
@@ -174,7 +174,7 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(device string) (
 func discoverVSS() ([]glob.FileInfo, error) {
 	result := []glob.FileInfo{}
 
-	shadow_volumes, err := windows.Query(
+	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceObject, VolumeName, InstallDate, "+
 			"OriginatingMachine from Win32_ShadowCopy",
 		"ROOT\\CIMV2")
@@ -198,7 +198,7 @@ func discoverVSS() ([]glob.FileInfo, error) {
 func discoverLogicalDisks() ([]glob.FileInfo, error) {
 	result := []glob.FileInfo{}
 
-	shadow_volumes, err := windows.Query(
+	shadow_volumes, err := wmi.Query(
 		"SELECT DeviceID, Description, VolumeName, FreeSpace, "+
 			"Size, SystemName, VolumeSerialNumber "+
 			"from Win32_LogicalDisk WHERE FileSystem = 'NTFS'",

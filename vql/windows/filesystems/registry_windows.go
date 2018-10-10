@@ -465,12 +465,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 
 func (self *RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
 	components := utils.SplitComponents(path)
-	_, pres := root_keys[components[0]]
-	if pres {
-		return components[0], strings.Join(components[1:], "\\"), nil
-	}
-
-	return "/", path, errors.New("Unknown hive")
+	return "", strings.Join(components, "\\"), nil
 }
 
 // We accept both / and \ as a path separator

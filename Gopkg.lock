@@ -431,11 +431,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:952ec02d5e74f558381778183da0d0273c7b56a1d1f1702211eec20176a928cb"
+  digest = "1:0bc41b203d48ac1a593ad1dd597a74900c9f34245c923f587a5c98ab587f09a1"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "dc2f47922a776d76ed5adce339db766808bc9942"
+  revision = "bbd587a6bd0b03f2e7b4331d2c08e7edc4b07aeb"
 
 [[projects]]
   branch = "master"
@@ -452,6 +452,8 @@
     "github.com/Showmax/go-fqdn",
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/go-yara",
+    "github.com/alecthomas/participle",
+    "github.com/alecthomas/participle/lexer",
     "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",
     "github.com/dustin/go-humanize",

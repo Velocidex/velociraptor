@@ -465,6 +465,12 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 		return nil, errors.WithStack(err)
 	}
 
+	// An empty message is not an error but we cant figure out the
+	// source.
+	if len(communications.EncryptedCipher) == 0 {
+		return &MessageInfo{}, nil
+	}
+
 	auth_state := false
 	var cipher_properties *crypto_proto.CipherProperties
 
@@ -588,7 +594,8 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 // GRR usually encodes a MessageList protobuf inside the encrypted
 // payload. This convenience method parses that type of payload after
 // decrypting it.
-func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (*crypto_proto.MessageList, error) {
+func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (
+	*crypto_proto.MessageList, error) {
 	message_info, err := self.Decrypt(cipher_text)
 	if err != nil {
 		return nil, err

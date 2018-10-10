@@ -33,7 +33,7 @@ var (
 func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10)
+	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, 100)
 	for {
 		result, ok := <-result_chan
 		if !ok {
