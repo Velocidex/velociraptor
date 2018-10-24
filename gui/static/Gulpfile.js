@@ -103,7 +103,7 @@ gulp.task('copy-fontawesome-fonts', function() {
 gulp.task('copy-third-party-resources', function() {
   return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/*.gif',
                    config.nodeModulesDir + '/jstree/dist/themes/default/*.png',
-                   config.nodeModulesDir + '/bootstrap/fonts/glyphicons-halflings-regular.*'])
+                   config.nodeModulesDir + '/bootstrap-sass/assets/fonts/bootstrap/glyphicons-halflings-regular.*'])
       .pipe(gulp.dest(config.distDir));
 });
 
@@ -113,7 +113,7 @@ gulp.task('compile-third-party-bootstrap-css', function() {
       .pipe(gulpNewer(config.tempDir + '/grr-bootstrap.css'))
       .pipe(gulpLess({
         paths: [
-          config.nodeModulesDir + '/bootstrap/less'
+          config.nodeModulesDir + '/bootstrap-less/bootstrap'
         ]
       }))
       .pipe(gulpConcat('grr-bootstrap.css'))
@@ -228,8 +228,9 @@ gulp.task('compile-grr-ui-tests', function() {
 
 
 gulp.task('compile-grr-ui-js',
-          gulp.series('compile-grr-closure-ui-js',
-                      'compile-grr-angular-template-cache'));
+          gulp.series(
+              'compile-grr-angular-template-cache',
+              'compile-grr-closure-ui-js'));
 
 gulp.task('compile-grr-ui-css', function() {
   return gulp.src(['css/base.scss'])
@@ -259,6 +260,7 @@ gulp.task('compile-grr-ui-css', function() {
  */
 gulp.task('compile-third-party',
           gulp.series('compile-third-party-js',
+                      'compile-third-party-bootstrap-css',
                       'compile-third-party-css',
                       'copy-third-party-resources',
                       'copy-jquery-ui-images',

@@ -18,7 +18,7 @@ sources:
                  sid=basename(path=Key.FullPath)
                ) as Name,
                Key.FullPath as Description,
-               ProfileImagePath.value as Directory,
+               ProfileImagePath as Directory,
                basename(path=Key.FullPath) as UUID, "roaming" as Type
            FROM read_reg_key(globs=remoteRegKey, accessor="reg")
       - |

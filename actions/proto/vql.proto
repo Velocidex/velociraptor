@@ -101,6 +101,18 @@ message User {
         }];
 }
 
+
+message VQLEventTable {
+    repeated VQLCollectorArgs event = 1 [(sem_type) = {
+            description: "A set of event queries to run.",
+        }];
+
+    uint64 version = 2 [(sem_type) = {
+            description: "The version of this event table."
+        }];
+}
+
+
 message Knowledgebase {
     repeated User users = 32;
 }

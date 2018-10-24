@@ -311,9 +311,16 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		file, err := file_store.GetFileStore(config_obj).
-			ReadFile(path.Join("clients", request.ClientId, "vfs_files",
-				path.Clean(request.VfsPath)))
+		vfs_path := path.Clean(request.VfsPath)
+		if strings.HasPrefix(vfs_path, "/monitoring/") {
+			vfs_path = path.Join(
+				"clients", request.ClientId, vfs_path)
+		} else {
+			vfs_path = path.Join(
+				"clients", request.ClientId, "vfs_files", vfs_path)
+		}
+
+		file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return

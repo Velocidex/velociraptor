@@ -75,7 +75,13 @@ func (self ReadKeyValues) Call(
 					for _, item := range values {
 						value_info, ok := item.(glob.FileInfo)
 						if ok {
-							res.Set(item.Name(), value_info.Data())
+							value_data, ok := value_info.Data().(*vfilter.Dict)
+							if ok {
+								value, pres := value_data.Get("value")
+								if pres {
+									res.Set(item.Name(), value)
+								}
+							}
 						}
 					}
 					output_chan <- res

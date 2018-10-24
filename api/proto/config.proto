@@ -182,6 +182,18 @@ message FlowsConfig {
         }];
 }
 
+// Event generators for the client. Note: These are sent from the
+// server to the client and are not embedded in the client.
+message ClientEvents {
+    repeated string artifacts = 1 [(sem_type) = {
+            description: "Events will be collected from the client using these artifacts."
+        }];
+
+    uint64 version = 2 [(sem_type) = {
+            description: "An incrementing version of collection requests.",
+        }];
+}
+
 
 message Config {
     Version version = 8 [(sem_type) = {
@@ -190,6 +202,10 @@ message Config {
 
     ClientConfig Client = 1 [(sem_type) = {
             description: "Client configuration."
+        }];
+
+    ClientEvents Events = 10 [(sem_type) = {
+            description: "Events to collect from clients."
         }];
 
     APIConfig API = 2 [(sem_type) = {

@@ -296,7 +296,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1131cc9a412071491f965c2c05d09bd11ad769445fa4102316e6d26f02cef292"
+  digest = "1:deafe4ab271911fec7de5b693d7faae3f38796d9eb8622e2b9e7df42bb3dfea9"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -306,8 +306,6 @@
     "idna",
     "internal/timeseries",
     "trace",
-    "webdav",
-    "webdav/internal/xml",
   ]
   pruneopts = "UT"
   revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
@@ -485,7 +483,6 @@
     "github.com/stretchr/testify/suite",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
-    "golang.org/x/net/webdav",
     "golang.org/x/sys/windows",
     "golang.org/x/sys/windows/registry",
     "golang.org/x/sys/windows/svc",

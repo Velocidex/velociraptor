@@ -1,12 +1,14 @@
 package actions
 
 import (
-	"github.com/Showmax/go-fqdn"
-	"github.com/shirou/gopsutil/host"
+	"context"
 	"runtime"
 	"strings"
+
+	"github.com/Showmax/go-fqdn"
+	"github.com/shirou/gopsutil/host"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/context"
+	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
@@ -14,7 +16,8 @@ import (
 type GetHostname struct{}
 
 func (self *GetHostname) Run(
-	ctx *context.Context,
+	config *config.Config,
+	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 
@@ -35,7 +38,8 @@ func (self *GetHostname) Run(
 type GetPlatformInfo struct{}
 
 func (self *GetPlatformInfo) Run(
-	ctx *context.Context,
+	config *config.Config,
+	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(msg, output)

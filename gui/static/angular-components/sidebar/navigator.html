@@ -13,7 +13,7 @@
     <grr-client-summary client="controller.client"></grr-client-summary>
 
     <!-- Client links -->
-    <ul class="nav nav-list">
+    <ul class="nav nav-pills">
       <li grr-nav-link state="client.hostInfo"
           params="{clientId: controller.clientId}">
         Host Information
@@ -40,7 +40,7 @@
   <section>
     <h1>Management</h1>
 
-    <ul class="nav nav-list">
+    <ul class="nav nav-pills">
       <li grr-nav-link state="hunts"
           disabled="!controller.uiTraits.hunt_manager_nav_item_enabled">
         Hunt Manager
@@ -49,6 +49,7 @@
   </section>
 
   <!-- Configuration links -->
+  <!-- Not used any more - configuration happens on the server.
   <section>
     <h1>Configuration</h1>
 
@@ -59,4 +60,5 @@
       </li>
     </ul>
   </section>
+  -->
 </div>

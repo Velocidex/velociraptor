@@ -1,11 +1,12 @@
 package config
 
 import (
-	"github.com/ghodss/yaml"
-	errors "github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"runtime"
+
+	"github.com/ghodss/yaml"
+	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 )
@@ -90,6 +91,10 @@ func GetDefaultConfig() *Config {
 			},
 			Flows:     &api_proto.FlowsConfig{},
 			Writeback: &api_proto.Writeback{},
+			Events: &api_proto.ClientEvents{
+				Artifacts: []string{"Generic.Client.Stats"},
+				Version:   1,
+			},
 		},
 	}
 }

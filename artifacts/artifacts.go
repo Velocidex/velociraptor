@@ -157,15 +157,17 @@ func Compile(artifact *artifacts_proto.Artifact,
 			Value: value,
 		})
 	}
-
+	source_precondition := ""
 	for idx, source := range artifact.Sources {
 		prefix := fmt.Sprintf("%s_%d", escape_name(artifact.Name), idx)
 		source_result := ""
-		source_precondition := "precondition_" + prefix
-		result.Query = append(result.Query, &actions_proto.VQLRequest{
-			VQL: "LET " + source_precondition + " = " +
-				source.Precondition,
-		})
+		if source.Precondition != "" {
+			source_precondition = "precondition_" + prefix
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: "LET " + source_precondition + " = " +
+					source.Precondition,
+			})
+		}
 
 		queries := []string{}
 		// The artifact format requires all queries to be LET
@@ -210,12 +212,19 @@ func Compile(artifact *artifacts_proto.Artifact,
 			source_result = query_name
 		}
 
-		result.Query = append(result.Query, &actions_proto.VQLRequest{
-			Name: "Artifact " + artifact.Name,
-			VQL: fmt.Sprintf(
-				"SELECT * FROM if(then=%s, condition=%s)",
-				source_result, source_precondition),
-		})
+		if source.Precondition != "" {
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				Name: "Artifact " + artifact.Name,
+				VQL: fmt.Sprintf(
+					"SELECT * FROM if(then=%s, condition=%s)",
+					source_result, source_precondition),
+			})
+		} else {
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				Name: "Artifact " + artifact.Name,
+				VQL:  "SELECT * FROM " + source_result,
+			})
+		}
 	}
 
 	return nil

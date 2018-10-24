@@ -1,13 +1,13 @@
 package executor
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -79,7 +79,8 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 }
 
 func (self *ClientExecutor) processRequestPlugin(
-	ctx *context.Context,
+	config_obj *config.Config,
+	ctx context.Context,
 	req *crypto_proto.GrrMessage) {
 
 	// Never serve unauthenticated requests.
@@ -100,7 +101,7 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Run the plugin in the other thread and drain its messages
 	// to send to the server.
 	go func() {
-		plugin.Run(ctx, req, receive_chan)
+		plugin.Run(config_obj, ctx, req, receive_chan)
 		close(receive_chan)
 	}()
 
@@ -134,11 +135,11 @@ func NewClientExecutor(config_obj *config.Config) (*ClientExecutor, error) {
 			// server should never send us those.
 			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
 				// Each request has its own context.
-				ctx := context.BackgroundFromConfig(config_obj)
+				ctx := context.Background()
 				logger.Info("Received request: %v", req)
 
 				// Process the request asynchronously.
-				go result.processRequestPlugin(ctx, req)
+				go result.processRequestPlugin(config_obj, ctx, req)
 			}
 		}
 	}()

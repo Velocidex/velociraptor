@@ -80,9 +80,9 @@ sources:
             SELECT FullPath from glob(globs=split(string=wtmpGlobs, sep=","))
           },
           query={
-            SELECT ut_type, ut_id, ut_host as Host,
-                   ut_user as User,
-                  timestamp(epoch=ut_tv.tv_sec) as login_time
+            SELECT ut_type, ut_id, ut_host.AsString as Host,
+                   ut_user.AsString as User,
+                   timestamp(epoch=ut_tv.tv_sec.AsInteger) as login_time
             FROM binary_parse(
                    file=FullPath,
                    profile=wtmpProfile,

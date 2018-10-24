@@ -3,6 +3,7 @@ package http_comms
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -19,8 +20,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/events"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -80,6 +83,8 @@ func (self *Enroller) MaybeEnrol() {
 // last hunt timestamp the client provides to the server's last hunt
 // timestamp) so it is ok to send a foreman message in every receiver.
 func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
+	result := &crypto_proto.MessageList{}
+
 	reply := &crypto_proto.GrrMessage{
 		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
 		ArgsRdfName: "ForemanCheckin",
@@ -91,11 +96,10 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
 	})
 	if err != nil {
-		return &crypto_proto.MessageList{}
+		return result
 	}
-	reply.Args = serialized_arg
 
-	result := &crypto_proto.MessageList{}
+	reply.Args = serialized_arg
 	result.Job = append(result.Job, reply)
 
 	return result
@@ -366,9 +370,10 @@ process_response:
 		default:
 			n, err := resp.Body.Read(buf)
 			if err != nil && err != io.EOF {
+				fmt.Printf("Error: %v\n", err)
 				return errors.WithStack(err)
 			}
-			if n == 0 || err == io.EOF {
+			if n == 0 {
 				break process_response
 			}
 
@@ -376,12 +381,15 @@ process_response:
 		}
 	}
 
+	fmt.Printf("Received %v bytes\n", len(encrypted))
+
 	response_message_list, err := self.manager.DecryptMessageList(encrypted)
 	if err != nil {
 		return err
 	}
 
 	for _, msg := range response_message_list.Job {
+		utils.Debug(msg)
 		self.executor.ProcessRequest(msg)
 	}
 
@@ -421,6 +429,7 @@ func (self *NotificationReader) Start(ctx context.Context) {
 // server's last hunt timestamp). It is therefore ok to send a foreman
 // message in every reader message to improve hunt latency.
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
+	result := &crypto_proto.MessageList{}
 	reply := &crypto_proto.GrrMessage{
 		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
 		ArgsRdfName: "ForemanCheckin",
@@ -429,14 +438,14 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	}
 
 	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
+		LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
+		LastEventTableVersion: events.GlobalEventTable.Version,
 	})
 	if err != nil {
-		return &crypto_proto.MessageList{}
+		return result
 	}
-	reply.Args = serialized_arg
 
-	result := &crypto_proto.MessageList{}
+	reply.Args = serialized_arg
 	result.Job = append(result.Job, reply)
 
 	return result

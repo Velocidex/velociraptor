@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -8,7 +9,7 @@ import (
 	"github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/context"
+	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -30,7 +31,8 @@ func (self *LogWriter) Write(b []byte) (int, error) {
 type VQLClientAction struct{}
 
 func (self *VQLClientAction) Run(
-	ctx *context.Context,
+	config_obj *config.Config,
+	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(msg, output)
@@ -44,14 +46,14 @@ func (self *VQLClientAction) Run(
 		arg.MaxWait = 10
 	}
 
-	self._Run(ctx, responder, arg, output)
+	self.StartQuery(config_obj, ctx, responder, arg)
 }
 
-func (self *VQLClientAction) _Run(
-	ctx *context.Context,
+func (self *VQLClientAction) StartQuery(
+	config_obj *config.Config,
+	ctx context.Context,
 	responder *responder.Responder,
-	arg *actions_proto.VQLCollectorArgs,
-	output chan<- *crypto_proto.GrrMessage) {
+	arg *actions_proto.VQLCollectorArgs) {
 	if arg.Query == nil {
 		responder.RaiseError("Query should be specified.")
 		return
@@ -67,7 +69,7 @@ func (self *VQLClientAction) _Run(
 	env := vfilter.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
-		Set("config", ctx.Config)
+		Set("config", config_obj)
 
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)
@@ -98,8 +100,16 @@ func (self *VQLClientAction) _Run(
 		if max_rows == 0 {
 			max_rows = 10000
 		}
+
+		max_wait := int(arg.MaxWait)
+		if max_wait == 0 {
+			// Start to send data after at most 100
+			// seconds.
+			max_wait = 10
+		}
+
 		result_chan := vfilter.GetResponseChannel(
-			vql, ctx, scope, max_rows, int(arg.MaxWait))
+			vql, ctx, scope, max_rows, max_wait)
 		for {
 			result, ok := <-result_chan
 			if !ok {

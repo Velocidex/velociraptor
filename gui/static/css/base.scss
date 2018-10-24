@@ -138,8 +138,13 @@ label.btn {
 //
 //
 
+.navbar-inner {
+    width: 100%;
+}
+
 .navbar {
   margin-bottom: 0; // Bootstrap tweaks
+  padding: 0px;
 
   .space-right {
     margin-right: 10px;
@@ -199,7 +204,7 @@ div[ui-view] {
 #content {
   position: absolute;
   left: 0;
-  top: 40px;
+  top: 51px;
   bottom: 40px;
   right: 0;
   min-width: 1024px;

@@ -39,3 +39,13 @@ message VFSDownloadFileRequest {
             description: "The VFS Path to the file to download.",
         }];
 }
+
+message ClientMonitoringState {
+    uint64 version = 1 [(sem_type) = {
+            description: "The client's reported version.",
+        }];
+
+    uint64 last_update_timestamp = 2 [(sem_type) = {
+            description: "The last time we updated the client."
+        }];
+}

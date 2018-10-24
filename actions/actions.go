@@ -3,12 +3,16 @@
 package actions
 
 import (
-	"www.velocidex.com/golang/velociraptor/context"
+	"context"
+
+	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type ClientAction interface {
-	Run(ctx *context.Context,
+	Run(
+		config *config.Config,
+		ctx context.Context,
 		args *crypto_proto.GrrMessage,
 		output chan<- *crypto_proto.GrrMessage)
 }
@@ -20,6 +24,7 @@ func GetClientActionsMap() map[string]ClientAction {
 	result["GetHostname"] = &GetHostname{}
 	result["GetPlatformInfo"] = &GetPlatformInfo{}
 	result["UpdateForeman"] = &UpdateForeman{}
+	result["UpdateEventTable"] = &UpdateEventTable{}
 
 	return result
 }

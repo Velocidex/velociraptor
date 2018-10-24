@@ -1,9 +1,10 @@
 package actions
 
 import (
+	"context"
+
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
@@ -11,14 +12,15 @@ import (
 type GetClientInfo struct{}
 
 func (self *GetClientInfo) Run(
-	ctx *context.Context,
+	config *config.Config,
+	ctx context.Context,
 	args *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(args, output)
 	info := &actions_proto.ClientInformation{
-		ClientName:    ctx.Config.Version.Name,
-		ClientVersion: ctx.Config.Version.Version,
-		Labels:        ctx.Config.Client.Labels,
+		ClientName:    config.Version.Name,
+		ClientVersion: config.Version.Version,
+		Labels:        config.Client.Labels,
 	}
 	responder.AddResponse(info)
 	responder.Return()
@@ -27,7 +29,8 @@ func (self *GetClientInfo) Run(
 type UpdateForeman struct{}
 
 func (self *UpdateForeman) Run(
-	ctx *context.Context,
+	config_obj *config.Config,
+	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
 	responder := responder.NewResponder(msg, output)
@@ -37,9 +40,9 @@ func (self *UpdateForeman) Run(
 		return
 	}
 
-	if arg.LastHuntTimestamp > ctx.Config.Writeback.HuntLastTimestamp {
-		ctx.Config.Writeback.HuntLastTimestamp = arg.LastHuntTimestamp
-		err := config.UpdateWriteback(ctx.Config)
+	if arg.LastHuntTimestamp > config_obj.Writeback.HuntLastTimestamp {
+		config_obj.Writeback.HuntLastTimestamp = arg.LastHuntTimestamp
+		err := config.UpdateWriteback(config_obj)
 		if err != nil {
 			responder.RaiseError(err.Error())
 			return

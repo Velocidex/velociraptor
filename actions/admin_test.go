@@ -1,20 +1,21 @@
 package actions_test
 
 import (
-	"github.com/shirou/gopsutil/host"
-	assert "github.com/stretchr/testify/assert"
+	"context"
 	"strings"
 	"testing"
+
+	"github.com/shirou/gopsutil/host"
+	assert "github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/context"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 func GetResponsesFromAction(
 	action actions.ClientAction,
-	ctx *context.Context,
+	ctx context.Context,
 	args *crypto_proto.GrrMessage) []*crypto_proto.GrrMessage {
 	c := make(chan *crypto_proto.GrrMessage)
 	result := []*crypto_proto.GrrMessage{}

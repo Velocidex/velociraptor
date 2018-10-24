@@ -89,12 +89,13 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 
 		err = cached_flow.impl.ProcessMessage(
 			self.config, cached_flow, message)
-		if err != nil && cached_flow.FlowContext != nil {
-			cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
-			cached_flow.FlowContext.Status = err.Error()
-			cached_flow.FlowContext.Backtrace = ""
-			cached_flow.dirty = true
-
+		if err != nil {
+			if cached_flow.FlowContext != nil {
+				cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
+				cached_flow.FlowContext.Status = err.Error()
+				cached_flow.FlowContext.Backtrace = ""
+				cached_flow.dirty = true
+			}
 			self.logger.Error("FlowRunner", err)
 			return
 		}

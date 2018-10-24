@@ -1,9 +1,19 @@
+/*
+
+The Virtual Filesystem is a convenient place to collect a lot of
+information about the client.  The implementation of the VFS depends
+on what kind of information is stored within it.
+
+We select the correct VFS driver based on the first path component.
+
+*/
 package api
 
 import (
 	"encoding/json"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes"
 	context "golang.org/x/net/context"
@@ -22,22 +32,29 @@ type DownloadInfo struct {
 	Mtime   int64  `json:"mtime"`
 }
 
-func vfsListDirectory(
+// Render the root level psuedo directory. This provides anchor points
+// for the other drivers in the navigation.
+func renderRootVFS() *actions_proto.VQLResponse {
+	return &actions_proto.VQLResponse{
+		Response: `
+   [
+    {"Mode": "drwxrwxrwx", "Name": "file"},
+    {"Mode": "drwxrwxrwx", "Name": "ntfs"},
+    {"Mode": "drwxrwxrwx", "Name": "registry"},
+    {"Mode": "drwxrwxrwx", "Name": "monitoring"}
+   ]`,
+	}
+}
+
+// Render VFS nodes with VQL collection + uploads.
+func renderDBVFS(
 	config_obj *config.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
-	vfs_path = path.Join("/", vfs_path)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
-	}
-
-	// If the vfs_path refers to the root directory return the
-	// hard coded virtual root.
-	virtual_dir_response, pres := getVirtualDirectory(vfs_path)
-	if pres {
-		return virtual_dir_response, nil
 	}
 
 	vfs_urn := urns.BuildURN("clients", client_id, "vfs", vfs_path)
@@ -116,19 +133,76 @@ func vfsListDirectory(
 	return result, nil
 }
 
-func getVirtualDirectory(vfs_path string) (*actions_proto.VQLResponse, bool) {
-	if vfs_path == "" || vfs_path == "/" {
-		return &actions_proto.VQLResponse{
-			Response: `
-   [
-    {"Mode": "drwxrwxrwx", "Name": "file"},
-    {"Mode": "drwxrwxrwx", "Name": "ntfs"},
-    {"Mode": "drwxrwxrwx", "Name": "registry"}
-   ]`,
-		}, true
+// Render VFS nodes from the filestore.
+func renderFileStore(
+	config_obj *config.Config,
+	client_id string,
+	vfs_path string) (*actions_proto.VQLResponse, error) {
+
+	filestore_urn := path.Join("clients", client_id, vfs_path)
+	items, err := file_store.GetFileStore(config_obj).
+		ListDirectory(filestore_urn)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, false
+	var rows []map[string]interface{}
+	for _, item := range items {
+		row := map[string]interface{}{
+			"Name":      item.Name(),
+			"Timestamp": item.ModTime().String(),
+		}
+
+		if item.IsDir() {
+			row["Mode"] = "dr-xr-xr-x"
+		} else {
+			row["Mode"] = "-r--r--r--"
+			row["Download"]= &DownloadInfo{
+				VfsPath: path.Join(vfs_path, item.Name()),
+				Size:    item.Size(),
+				Mtime:   item.ModTime().UnixNano() / 1000,
+			}
+		}
+		
+		rows = append(rows, row)
+	}
+
+	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	if err != nil {
+		return nil, err
+	}
+
+	result := &actions_proto.VQLResponse{
+		Columns: []string{
+			"Download", "Name", "Mode", "Timestamp",
+		},
+		Response: string(encoded_rows),
+		Types: []*actions_proto.VQLTypeMap{
+			&actions_proto.VQLTypeMap{
+				Column: "Download",
+				Type:   "Download",
+			},
+		},
+	}
+
+	return result, nil
+}
+
+func vfsListDirectory(
+	config_obj *config.Config,
+	client_id string,
+	vfs_path string) (*actions_proto.VQLResponse, error) {
+	vfs_path = path.Join("/", vfs_path)
+
+	if vfs_path == "" || vfs_path == "/" {
+		return renderRootVFS(), nil
+	}
+
+	if strings.HasPrefix(vfs_path, "/monitoring") {
+		return renderFileStore(config_obj, client_id, vfs_path)
+	}
+
+	return renderDBVFS(config_obj, client_id, vfs_path)
 }
 
 func vfsRefreshDirectory(

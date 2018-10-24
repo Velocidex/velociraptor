@@ -31,6 +31,14 @@ type FileStore interface {
 	ListDirectory(dirname string) ([]os.FileInfo, error)
 }
 
+type FileStoreFileInfo struct {
+	os.FileInfo
+}
+
+func (self FileStoreFileInfo) Name() string {
+	return datastore.UnsanitizeComponent(self.FileInfo.Name())
+}
+
 type DirectoryFileStore struct {
 	config_obj *config.Config
 }
@@ -41,7 +49,17 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	if err != nil {
 		return nil, err
 	}
-	return ioutil.ReadDir(file_path)
+	files, err := ioutil.ReadDir(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []os.FileInfo
+	for _, fileinfo := range files {
+		result = append(result, FileStoreFileInfo{fileinfo})
+	}
+
+	return result, nil
 }
 
 func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {

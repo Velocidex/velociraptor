@@ -293,7 +293,6 @@ func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
 			server_obj.Error("Error:", err)
 			return
 		}
-
 		if count > 0 {
 			// Send the new messages to the client
 			// and finish the request off.

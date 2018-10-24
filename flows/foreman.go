@@ -22,6 +22,7 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -37,6 +38,60 @@ func (self *Foreman) New() Flow {
 	return &Foreman{BaseFlow{}}
 }
 
+func (self *Foreman) ProcessEventTables(
+	config_obj *config.Config,
+	flow_obj *AFF4FlowObject,
+	source string,
+	arg *actions_proto.ForemanCheckin) error {
+
+	// Need to update client's event table.
+	if arg.LastEventTableVersion < config_obj.Events.Version {
+		repository, err := artifacts.GetGlobalRepository(config_obj)
+		if err != nil {
+			return err
+		}
+
+		event_table := &actions_proto.VQLEventTable{
+			Version: config_obj.Events.Version,
+		}
+		for _, name := range config_obj.Events.Artifacts {
+			vql_collector_args := &actions_proto.VQLCollectorArgs{}
+			artifact, pres := repository.Get(name)
+			if !pres {
+				return errors.New("Unknown artifact " + name)
+			}
+
+			err := artifacts.Compile(artifact, vql_collector_args)
+			if err != nil {
+				return err
+			}
+			// Add any artifact dependencies.
+			repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			event_table.Event = append(event_table.Event, vql_collector_args)
+		}
+
+		channel := grpc_client.GetChannel(config_obj)
+		defer channel.Close()
+
+		flow_runner_args := &flows_proto.FlowRunnerArgs{
+			ClientId: source,
+			FlowName: "MonitoringFlow",
+		}
+		flow_args, err := ptypes.MarshalAny(event_table)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		flow_runner_args.Args = flow_args
+		client := api_proto.NewAPIClient(channel)
+		_, err = client.LaunchFlow(context.Background(), flow_runner_args)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (self *Foreman) ProcessMessage(
 	config_obj *config.Config,
 	flow_obj *AFF4FlowObject,
@@ -45,6 +100,12 @@ func (self *Foreman) ProcessMessage(
 		message).(*actions_proto.ForemanCheckin)
 	if !ok {
 		return errors.New("Expected args of type ForemanCheckin")
+	}
+
+	err := self.ProcessEventTables(config_obj, flow_obj, message.Source,
+		foreman_checkin)
+	if err != nil {
+		return err
 	}
 
 	hunts_dispatcher, err := GetHuntDispatcher(config_obj)
