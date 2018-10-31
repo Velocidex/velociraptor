@@ -36,6 +36,7 @@ func (self *UpdateEventTable) Run(
 
 	// Make a context for the VQL query.
 	new_ctx, cancel := context.WithCancel(context.Background())
+
 	// Cancel the context when the cancel channel is closed.
 	go func() {
 		select {
@@ -51,12 +52,12 @@ func (self *UpdateEventTable) Run(
 	wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
-		go func() {
+		go func(event *actions_proto.VQLCollectorArgs) {
 			defer wg.Done()
 
 			action_obj.StartQuery(
 				config, new_ctx, responder, event)
-		}()
+		}(event)
 	}
 
 	// Wait here for all queries to finish - this forces the

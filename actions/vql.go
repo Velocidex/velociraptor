@@ -103,7 +103,7 @@ func (self *VQLClientAction) StartQuery(
 
 		max_wait := int(arg.MaxWait)
 		if max_wait == 0 {
-			// Start to send data after at most 100
+			// Start to send data after at most 10
 			// seconds.
 			max_wait = 10
 		}
@@ -115,7 +115,6 @@ func (self *VQLClientAction) StartQuery(
 			if !ok {
 				break
 			}
-
 			// Skip let queries since they never produce results.
 			if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
 				continue

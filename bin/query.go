@@ -26,7 +26,7 @@ var (
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
 
-	max_wait = query.Flag("max_wait", "Maximum time to queue results.").
+	max_wait = app.Flag("max_wait", "Maximum time to queue results.").
 			Default("10").Int()
 
 	explain        = app.Command("explain", "Explain the output from a plugin")

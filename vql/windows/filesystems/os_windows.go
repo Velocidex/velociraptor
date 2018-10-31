@@ -190,8 +190,14 @@ func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) 
 	return file, err
 }
 
-func (self *OSFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
-	return glob.NewVirtualDirectoryPath("\\", nil), nil
+func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
+	path = strings.TrimPrefix(normalize_path(path), "\\")
+	// Strip leading \\ so \\c:\\windows -> c:\\windows
+	stat, err := os.Lstat(path)
+	return &OSFileInfo{
+		FileInfo:   stat,
+		_full_path: path,
+	}, err
 }
 
 func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
