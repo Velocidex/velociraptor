@@ -26,6 +26,9 @@ var (
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
 
+	max_wait = query.Flag("max_wait", "Maximum time to queue results.").
+			Default("10").Int()
+
 	explain        = app.Command("explain", "Explain the output from a plugin")
 	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
@@ -33,7 +36,7 @@ var (
 func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, 100)
+	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
 	for {
 		result, ok := <-result_chan
 		if !ok {
@@ -92,6 +95,7 @@ func doQuery() {
 
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
+		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: *dump_dir,
 		})

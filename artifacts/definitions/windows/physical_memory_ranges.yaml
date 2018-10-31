@@ -31,7 +31,7 @@ parameters:
            "ShareDisposition": [1, ["char"]],
            "Flags": [2, ["uint16"]],
            "Start": [4, ["int64"]],
-           "Length": [12, ["int32"]]
+           "Length": [12, ["uint32"]]
          }]
       }
 
@@ -40,7 +40,7 @@ sources:
       SELECT OS From info() where OS = 'windows'
     queries:
       - |
-        SELECT Type,
+        SELECT Type.AsInteger as Type,
                format(format="%#0x", args=Start.AsInteger) as Start,
                format(format="%#0x", args=Length.AsInteger) as Length
         FROM foreach(
@@ -49,8 +49,8 @@ sources:
               FROM stat(filename=physicalMemoryKey, accessor='reg')
           },
           query={
-            SELECT * FROM binary_parse(
-              string=Data,
+            SELECT Type, Start, Length, Data FROM binary_parse(
+              string=Data.value,
               profile=Profile,
               target="CM_RESOURCE_LIST",
               start="List.PartialResourceList.PartialDescriptors")

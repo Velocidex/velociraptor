@@ -10,4 +10,5 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
+	_ "www.velocidex.com/golang/velociraptor/vql/server"
 )

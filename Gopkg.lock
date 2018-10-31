@@ -2,6 +2,26 @@
 
 
 [[projects]]
+  digest = "1:54bcfb06c1b456bed329aa04b06c91feb0fe83d993b3d315969c9c7b806b918d"
+  name = "github.com/0xrawsec/golang-evtx"
+  packages = ["evtx"]
+  pruneopts = "UT"
+  revision = "5e33e64ffcd64c074e825f525cec77751eb8920a"
+  version = "v1.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:83d40c83cc1123880034ec597f112da80389dbd4f16fe357f009e359e559e3f0"
+  name = "github.com/0xrawsec/golang-utils"
+  packages = [
+    "datastructs",
+    "encoding",
+    "log",
+  ]
+  pruneopts = "UT"
+  revision = "6fd13441e4a064d0bead661fdb8e7f7dc79bc821"
+
+[[projects]]
   branch = "master"
   digest = "1:f3be0a119925fc5abcf38ee2dad9fa17c2735090b54e503cd8bb8ea93b3d0668"
   name = "github.com/Showmax/go-fqdn"
@@ -296,7 +316,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:deafe4ab271911fec7de5b693d7faae3f38796d9eb8622e2b9e7df42bb3dfea9"
+  digest = "1:1131cc9a412071491f965c2c05d09bd11ad769445fa4102316e6d26f02cef292"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -306,6 +326,8 @@
     "idna",
     "internal/timeseries",
     "trace",
+    "webdav",
+    "webdav/internal/xml",
   ]
   pruneopts = "UT"
   revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
@@ -447,6 +469,8 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/0xrawsec/golang-evtx/evtx",
+    "github.com/0xrawsec/golang-utils/encoding",
     "github.com/Showmax/go-fqdn",
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/go-yara",
@@ -483,6 +507,7 @@
     "github.com/stretchr/testify/suite",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
+    "golang.org/x/net/webdav",
     "golang.org/x/sys/windows",
     "golang.org/x/sys/windows/registry",
     "golang.org/x/sys/windows/svc",
