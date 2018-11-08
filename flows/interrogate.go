@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -19,8 +20,7 @@ import (
 )
 
 const (
-	processClientInfo  uint64 = 1
-	processCustomQuery uint64 = 2
+	processClientInfo uint64 = 1
 )
 
 type VInterrogate struct {
@@ -40,16 +40,15 @@ func (self *VInterrogate) Start(
 		return errors.New("Expected args of type VInterrogateArgs")
 	}
 
+	vql_request := &actions_proto.VQLCollectorArgs{}
+
+	for _, q := range interrogate_args.Queries {
+		vql_request.Query = append(vql_request.Query, q)
+	}
+
 	// Run custom queries from the config file if present.
-	if config_obj.Flows.InterrogateAdditionalQueries != nil {
-		err := QueueMessageForClient(
-			config_obj, flow_obj,
-			"VQLClientAction",
-			config_obj.Flows.InterrogateAdditionalQueries,
-			processCustomQuery)
-		if err != nil {
-			return err
-		}
+	for _, q := range config_obj.Flows.InterrogateAdditionalQueries {
+		vql_request.Query = append(vql_request.Query, q)
 	}
 
 	// Run standard queries.
@@ -69,17 +68,18 @@ func (self *VInterrogate) Start(
 			Name: "Recent Users"},
 	}
 
-	for _, query := range interrogate_args.Queries {
-		if query.VQL != "" {
-			queries = append(queries, query)
-		}
+	for _, query := range queries {
+		vql_request.Query = append(vql_request.Query, query)
 	}
 
-	vql_request := &actions_proto.VQLCollectorArgs{
-		Query: queries,
+	// Add any required artifacts to the request.
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
 	}
+	repository.PopulateArtifactsVQLCollectorArgs(vql_request)
 
-	err := QueueMessageForClient(
+	err = QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",
 		vql_request, processClientInfo)
@@ -98,15 +98,6 @@ func (self *VInterrogate) ProcessMessage(
 	message *crypto_proto.GrrMessage) error {
 
 	switch message.RequestId {
-	case processCustomQuery:
-		client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
-		defer flow_obj.SetState(client_info)
-
-		vql_response, ok := responder.ExtractGrrMessagePayload(
-			message).(*actions_proto.VQLResponse)
-		if ok {
-			client_info.Info = append(client_info.Info, vql_response)
-		}
 
 	case processClientInfo:
 		err := flow_obj.FailIfError(config_obj, message)

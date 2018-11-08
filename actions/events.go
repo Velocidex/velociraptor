@@ -2,13 +2,13 @@ package actions
 
 import (
 	"context"
-	"log"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/events"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
@@ -26,12 +26,10 @@ func (self *UpdateEventTable) Run(
 		return
 	}
 
-	logger := log.New(&LogWriter{responder}, "", log.Lshortfile)
-
 	// Make a new table.
 	table, err := events.Update(responder, arg)
 	if err != nil {
-		logger.Printf("Error updating global event table: %v", err)
+		responder.Log("Error updating global event table: %v", err)
 	}
 
 	// Make a context for the VQL query.
@@ -45,9 +43,10 @@ func (self *UpdateEventTable) Run(
 		}
 	}()
 
+	logger := logging.NewLogger(config)
+
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
-
 	var wg sync.WaitGroup
 	wg.Add(len(table.Events))
 
@@ -55,10 +54,24 @@ func (self *UpdateEventTable) Run(
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer wg.Done()
 
+			name := ""
+			for _, q := range event.Query {
+				if q.Name != "" {
+					name = q.Name
+				}
+			}
+
+			logger.Info("Starting %s\n", name)
 			action_obj.StartQuery(
 				config, new_ctx, responder, event)
+
+			logger.Info("Finished %s\n", name)
 		}(event)
 	}
+
+	// Return an OK status. This is needed to make sure the
+	// request is de-queued.
+	responder.Return()
 
 	// Wait here for all queries to finish - this forces the
 	// output channel to be open and allows us to write results to

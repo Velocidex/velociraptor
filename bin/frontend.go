@@ -1,5 +1,3 @@
-// +build !windows
-
 // Frontend is not built on Windows.
 package main
 

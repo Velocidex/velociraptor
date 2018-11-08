@@ -23,7 +23,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/events"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -381,15 +380,12 @@ process_response:
 		}
 	}
 
-	fmt.Printf("Received %v bytes\n", len(encrypted))
-
 	response_message_list, err := self.manager.DecryptMessageList(encrypted)
 	if err != nil {
 		return err
 	}
 
 	for _, msg := range response_message_list.Job {
-		utils.Debug(msg)
 		self.executor.ProcessRequest(msg)
 	}
 

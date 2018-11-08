@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -30,16 +32,17 @@ func (m *Artifacts) Reset()         { *m = Artifacts{} }
 func (m *Artifacts) String() string { return proto.CompactTextString(m) }
 func (*Artifacts) ProtoMessage()    {}
 func (*Artifacts) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifacts_382238d2a2b379e1, []int{0}
+	return fileDescriptor_a56fa9fd5f0eb7ff, []int{0}
 }
+
 func (m *Artifacts) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifacts.Unmarshal(m, b)
 }
 func (m *Artifacts) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Artifacts.Marshal(b, m, deterministic)
 }
-func (dst *Artifacts) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Artifacts.Merge(dst, src)
+func (m *Artifacts) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Artifacts.Merge(m, src)
 }
 func (m *Artifacts) XXX_Size() int {
 	return xxx_messageInfo_Artifacts.Size(m)
@@ -68,16 +71,17 @@ func (m *ArtifactCollectorArgs) Reset()         { *m = ArtifactCollectorArgs{} }
 func (m *ArtifactCollectorArgs) String() string { return proto.CompactTextString(m) }
 func (*ArtifactCollectorArgs) ProtoMessage()    {}
 func (*ArtifactCollectorArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifacts_382238d2a2b379e1, []int{1}
+	return fileDescriptor_a56fa9fd5f0eb7ff, []int{1}
 }
+
 func (m *ArtifactCollectorArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactCollectorArgs.Unmarshal(m, b)
 }
 func (m *ArtifactCollectorArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ArtifactCollectorArgs.Marshal(b, m, deterministic)
 }
-func (dst *ArtifactCollectorArgs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ArtifactCollectorArgs.Merge(dst, src)
+func (m *ArtifactCollectorArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtifactCollectorArgs.Merge(m, src)
 }
 func (m *ArtifactCollectorArgs) XXX_Size() int {
 	return xxx_messageInfo_ArtifactCollectorArgs.Size(m)
@@ -100,9 +104,9 @@ func init() {
 	proto.RegisterType((*ArtifactCollectorArgs)(nil), "proto.ArtifactCollectorArgs")
 }
 
-func init() { proto.RegisterFile("artifacts.proto", fileDescriptor_artifacts_382238d2a2b379e1) }
+func init() { proto.RegisterFile("artifacts.proto", fileDescriptor_a56fa9fd5f0eb7ff) }
 
-var fileDescriptor_artifacts_382238d2a2b379e1 = []byte{
+var fileDescriptor_a56fa9fd5f0eb7ff = []byte{
 	// 211 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4f, 0x2c, 0x2a, 0xc9,
 	0x4c, 0x4b, 0x4c, 0x2e, 0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x52,

@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -32,6 +34,7 @@ var GUISettings_UIMode_name = map[int32]string{
 	1: "ADVANCED",
 	2: "DEBUG",
 }
+
 var GUISettings_UIMode_value = map[string]int32{
 	"BASIC":    0,
 	"ADVANCED": 1,
@@ -41,8 +44,9 @@ var GUISettings_UIMode_value = map[string]int32{
 func (x GUISettings_UIMode) String() string {
 	return proto.EnumName(GUISettings_UIMode_name, int32(x))
 }
+
 func (GUISettings_UIMode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{1, 0}
+	return fileDescriptor_030765f334c86cea, []int{1, 0}
 }
 
 type ApiGrrUser_UserType int32
@@ -58,6 +62,7 @@ var ApiGrrUser_UserType_name = map[int32]string{
 	1: "USER_TYPE_STANDARD",
 	2: "USER_TYPE_ADMIN",
 }
+
 var ApiGrrUser_UserType_value = map[string]int32{
 	"USER_TYPE_NONE":     0,
 	"USER_TYPE_STANDARD": 1,
@@ -67,8 +72,9 @@ var ApiGrrUser_UserType_value = map[string]int32{
 func (x ApiGrrUser_UserType) String() string {
 	return proto.EnumName(ApiGrrUser_UserType_name, int32(x))
 }
+
 func (ApiGrrUser_UserType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{3, 0}
+	return fileDescriptor_030765f334c86cea, []int{3, 0}
 }
 
 type UserNotification_Type int32
@@ -112,6 +118,7 @@ var UserNotification_Type_name = map[int32]string{
 	15: "TYPE_VFS_LIST_DIRECTORY_COMPLETED",
 	16: "TYPE_VFS_RECURSIVE_LIST_DIRECTORY_COMPLETED",
 }
+
 var UserNotification_Type_value = map[string]int32{
 	"TYPE_UNSET":                                  0,
 	"TYPE_CLIENT_INTERROGATED":                    1,
@@ -135,8 +142,9 @@ var UserNotification_Type_value = map[string]int32{
 func (x UserNotification_Type) String() string {
 	return proto.EnumName(UserNotification_Type_name, int32(x))
 }
+
 func (UserNotification_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{5, 0}
+	return fileDescriptor_030765f334c86cea, []int{5, 0}
 }
 
 type UserNotification_State int32
@@ -152,6 +160,7 @@ var UserNotification_State_name = map[int32]string{
 	1: "STATE_PENDING",
 	2: "STATE_NOT_PENDING",
 }
+
 var UserNotification_State_value = map[string]int32{
 	"STATE_UNSET":       0,
 	"STATE_PENDING":     1,
@@ -161,8 +170,9 @@ var UserNotification_State_value = map[string]int32{
 func (x UserNotification_State) String() string {
 	return proto.EnumName(UserNotification_State_name, int32(x))
 }
+
 func (UserNotification_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{5, 1}
+	return fileDescriptor_030765f334c86cea, []int{5, 1}
 }
 
 type VelociraptorUser struct {
@@ -178,16 +188,17 @@ func (m *VelociraptorUser) Reset()         { *m = VelociraptorUser{} }
 func (m *VelociraptorUser) String() string { return proto.CompactTextString(m) }
 func (*VelociraptorUser) ProtoMessage()    {}
 func (*VelociraptorUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{0}
+	return fileDescriptor_030765f334c86cea, []int{0}
 }
+
 func (m *VelociraptorUser) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VelociraptorUser.Unmarshal(m, b)
 }
 func (m *VelociraptorUser) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VelociraptorUser.Marshal(b, m, deterministic)
 }
-func (dst *VelociraptorUser) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VelociraptorUser.Merge(dst, src)
+func (m *VelociraptorUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VelociraptorUser.Merge(m, src)
 }
 func (m *VelociraptorUser) XXX_Size() int {
 	return xxx_messageInfo_VelociraptorUser.Size(m)
@@ -232,16 +243,17 @@ func (m *GUISettings) Reset()         { *m = GUISettings{} }
 func (m *GUISettings) String() string { return proto.CompactTextString(m) }
 func (*GUISettings) ProtoMessage()    {}
 func (*GUISettings) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{1}
+	return fileDescriptor_030765f334c86cea, []int{1}
 }
+
 func (m *GUISettings) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GUISettings.Unmarshal(m, b)
 }
 func (m *GUISettings) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GUISettings.Marshal(b, m, deterministic)
 }
-func (dst *GUISettings) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GUISettings.Merge(dst, src)
+func (m *GUISettings) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GUISettings.Merge(m, src)
 }
 func (m *GUISettings) XXX_Size() int {
 	return xxx_messageInfo_GUISettings.Size(m)
@@ -294,16 +306,17 @@ func (m *ApiGrrUserInterfaceTraits) Reset()         { *m = ApiGrrUserInterfaceTr
 func (m *ApiGrrUserInterfaceTraits) String() string { return proto.CompactTextString(m) }
 func (*ApiGrrUserInterfaceTraits) ProtoMessage()    {}
 func (*ApiGrrUserInterfaceTraits) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{2}
+	return fileDescriptor_030765f334c86cea, []int{2}
 }
+
 func (m *ApiGrrUserInterfaceTraits) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiGrrUserInterfaceTraits.Unmarshal(m, b)
 }
 func (m *ApiGrrUserInterfaceTraits) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiGrrUserInterfaceTraits.Marshal(b, m, deterministic)
 }
-func (dst *ApiGrrUserInterfaceTraits) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiGrrUserInterfaceTraits.Merge(dst, src)
+func (m *ApiGrrUserInterfaceTraits) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiGrrUserInterfaceTraits.Merge(m, src)
 }
 func (m *ApiGrrUserInterfaceTraits) XXX_Size() int {
 	return xxx_messageInfo_ApiGrrUserInterfaceTraits.Size(m)
@@ -440,16 +453,17 @@ func (m *ApiGrrUser) Reset()         { *m = ApiGrrUser{} }
 func (m *ApiGrrUser) String() string { return proto.CompactTextString(m) }
 func (*ApiGrrUser) ProtoMessage()    {}
 func (*ApiGrrUser) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{3}
+	return fileDescriptor_030765f334c86cea, []int{3}
 }
+
 func (m *ApiGrrUser) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiGrrUser.Unmarshal(m, b)
 }
 func (m *ApiGrrUser) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiGrrUser.Marshal(b, m, deterministic)
 }
-func (dst *ApiGrrUser) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiGrrUser.Merge(dst, src)
+func (m *ApiGrrUser) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiGrrUser.Merge(m, src)
 }
 func (m *ApiGrrUser) XXX_Size() int {
 	return xxx_messageInfo_ApiGrrUser.Size(m)
@@ -499,16 +513,17 @@ func (m *UserNotificationCount) Reset()         { *m = UserNotificationCount{} }
 func (m *UserNotificationCount) String() string { return proto.CompactTextString(m) }
 func (*UserNotificationCount) ProtoMessage()    {}
 func (*UserNotificationCount) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{4}
+	return fileDescriptor_030765f334c86cea, []int{4}
 }
+
 func (m *UserNotificationCount) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserNotificationCount.Unmarshal(m, b)
 }
 func (m *UserNotificationCount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserNotificationCount.Marshal(b, m, deterministic)
 }
-func (dst *UserNotificationCount) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserNotificationCount.Merge(dst, src)
+func (m *UserNotificationCount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserNotificationCount.Merge(m, src)
 }
 func (m *UserNotificationCount) XXX_Size() int {
 	return xxx_messageInfo_UserNotificationCount.Size(m)
@@ -542,16 +557,17 @@ func (m *UserNotification) Reset()         { *m = UserNotification{} }
 func (m *UserNotification) String() string { return proto.CompactTextString(m) }
 func (*UserNotification) ProtoMessage()    {}
 func (*UserNotification) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{5}
+	return fileDescriptor_030765f334c86cea, []int{5}
 }
+
 func (m *UserNotification) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserNotification.Unmarshal(m, b)
 }
 func (m *UserNotification) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_UserNotification.Marshal(b, m, deterministic)
 }
-func (dst *UserNotification) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_UserNotification.Merge(dst, src)
+func (m *UserNotification) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserNotification.Merge(m, src)
 }
 func (m *UserNotification) XXX_Size() int {
 	return xxx_messageInfo_UserNotification.Size(m)
@@ -615,16 +631,17 @@ func (m *GetUserNotificationsResponse) Reset()         { *m = GetUserNotificatio
 func (m *GetUserNotificationsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetUserNotificationsResponse) ProtoMessage()    {}
 func (*GetUserNotificationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{6}
+	return fileDescriptor_030765f334c86cea, []int{6}
 }
+
 func (m *GetUserNotificationsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetUserNotificationsResponse.Unmarshal(m, b)
 }
 func (m *GetUserNotificationsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetUserNotificationsResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetUserNotificationsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetUserNotificationsResponse.Merge(dst, src)
+func (m *GetUserNotificationsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetUserNotificationsResponse.Merge(m, src)
 }
 func (m *GetUserNotificationsResponse) XXX_Size() int {
 	return xxx_messageInfo_GetUserNotificationsResponse.Size(m)
@@ -653,16 +670,17 @@ func (m *GetUserNotificationsRequest) Reset()         { *m = GetUserNotification
 func (m *GetUserNotificationsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetUserNotificationsRequest) ProtoMessage()    {}
 func (*GetUserNotificationsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_users_13fe84ac4690970e, []int{7}
+	return fileDescriptor_030765f334c86cea, []int{7}
 }
+
 func (m *GetUserNotificationsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetUserNotificationsRequest.Unmarshal(m, b)
 }
 func (m *GetUserNotificationsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetUserNotificationsRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetUserNotificationsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetUserNotificationsRequest.Merge(dst, src)
+func (m *GetUserNotificationsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetUserNotificationsRequest.Merge(m, src)
 }
 func (m *GetUserNotificationsRequest) XXX_Size() int {
 	return xxx_messageInfo_GetUserNotificationsRequest.Size(m)
@@ -681,6 +699,10 @@ func (m *GetUserNotificationsRequest) GetClearPending() bool {
 }
 
 func init() {
+	proto.RegisterEnum("proto.GUISettings_UIMode", GUISettings_UIMode_name, GUISettings_UIMode_value)
+	proto.RegisterEnum("proto.ApiGrrUser_UserType", ApiGrrUser_UserType_name, ApiGrrUser_UserType_value)
+	proto.RegisterEnum("proto.UserNotification_Type", UserNotification_Type_name, UserNotification_Type_value)
+	proto.RegisterEnum("proto.UserNotification_State", UserNotification_State_name, UserNotification_State_value)
 	proto.RegisterType((*VelociraptorUser)(nil), "proto.VelociraptorUser")
 	proto.RegisterType((*GUISettings)(nil), "proto.GUISettings")
 	proto.RegisterType((*ApiGrrUserInterfaceTraits)(nil), "proto.ApiGrrUserInterfaceTraits")
@@ -689,15 +711,11 @@ func init() {
 	proto.RegisterType((*UserNotification)(nil), "proto.UserNotification")
 	proto.RegisterType((*GetUserNotificationsResponse)(nil), "proto.GetUserNotificationsResponse")
 	proto.RegisterType((*GetUserNotificationsRequest)(nil), "proto.GetUserNotificationsRequest")
-	proto.RegisterEnum("proto.GUISettings_UIMode", GUISettings_UIMode_name, GUISettings_UIMode_value)
-	proto.RegisterEnum("proto.ApiGrrUser_UserType", ApiGrrUser_UserType_name, ApiGrrUser_UserType_value)
-	proto.RegisterEnum("proto.UserNotification_Type", UserNotification_Type_name, UserNotification_Type_value)
-	proto.RegisterEnum("proto.UserNotification_State", UserNotification_State_name, UserNotification_State_value)
 }
 
-func init() { proto.RegisterFile("users.proto", fileDescriptor_users_13fe84ac4690970e) }
+func init() { proto.RegisterFile("users.proto", fileDescriptor_030765f334c86cea) }
 
-var fileDescriptor_users_13fe84ac4690970e = []byte{
+var fileDescriptor_030765f334c86cea = []byte{
 	// 1545 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x96, 0xdd, 0x72, 0x22, 0xc7,
 	0x15, 0xc7, 0x17, 0xad, 0xb4, 0x2b, 0x1d, 0xf4, 0x81, 0x7a, 0xbf, 0x90, 0x16, 0x69, 0xc7, 0xec,

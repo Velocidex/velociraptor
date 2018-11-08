@@ -3,11 +3,13 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -32,16 +34,17 @@ func (m *VQLRequest) Reset()         { *m = VQLRequest{} }
 func (m *VQLRequest) String() string { return proto.CompactTextString(m) }
 func (*VQLRequest) ProtoMessage()    {}
 func (*VQLRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{0}
+	return fileDescriptor_3e14263f319df14a, []int{0}
 }
+
 func (m *VQLRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLRequest.Unmarshal(m, b)
 }
 func (m *VQLRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLRequest.Marshal(b, m, deterministic)
 }
-func (dst *VQLRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLRequest.Merge(dst, src)
+func (m *VQLRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLRequest.Merge(m, src)
 }
 func (m *VQLRequest) XXX_Size() int {
 	return xxx_messageInfo_VQLRequest.Size(m)
@@ -78,16 +81,17 @@ func (m *VQLEnv) Reset()         { *m = VQLEnv{} }
 func (m *VQLEnv) String() string { return proto.CompactTextString(m) }
 func (*VQLEnv) ProtoMessage()    {}
 func (*VQLEnv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{1}
+	return fileDescriptor_3e14263f319df14a, []int{1}
 }
+
 func (m *VQLEnv) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLEnv.Unmarshal(m, b)
 }
 func (m *VQLEnv) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLEnv.Marshal(b, m, deterministic)
 }
-func (dst *VQLEnv) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLEnv.Merge(dst, src)
+func (m *VQLEnv) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLEnv.Merge(m, src)
 }
 func (m *VQLEnv) XXX_Size() int {
 	return xxx_messageInfo_VQLEnv.Size(m)
@@ -127,16 +131,17 @@ func (m *VQLCollectorArgs) Reset()         { *m = VQLCollectorArgs{} }
 func (m *VQLCollectorArgs) String() string { return proto.CompactTextString(m) }
 func (*VQLCollectorArgs) ProtoMessage()    {}
 func (*VQLCollectorArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{2}
+	return fileDescriptor_3e14263f319df14a, []int{2}
 }
+
 func (m *VQLCollectorArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLCollectorArgs.Unmarshal(m, b)
 }
 func (m *VQLCollectorArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLCollectorArgs.Marshal(b, m, deterministic)
 }
-func (dst *VQLCollectorArgs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLCollectorArgs.Merge(dst, src)
+func (m *VQLCollectorArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLCollectorArgs.Merge(m, src)
 }
 func (m *VQLCollectorArgs) XXX_Size() int {
 	return xxx_messageInfo_VQLCollectorArgs.Size(m)
@@ -194,16 +199,17 @@ func (m *VQLTypeMap) Reset()         { *m = VQLTypeMap{} }
 func (m *VQLTypeMap) String() string { return proto.CompactTextString(m) }
 func (*VQLTypeMap) ProtoMessage()    {}
 func (*VQLTypeMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{3}
+	return fileDescriptor_3e14263f319df14a, []int{3}
 }
+
 func (m *VQLTypeMap) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLTypeMap.Unmarshal(m, b)
 }
 func (m *VQLTypeMap) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLTypeMap.Marshal(b, m, deterministic)
 }
-func (dst *VQLTypeMap) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLTypeMap.Merge(dst, src)
+func (m *VQLTypeMap) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLTypeMap.Merge(m, src)
 }
 func (m *VQLTypeMap) XXX_Size() int {
 	return xxx_messageInfo_VQLTypeMap.Size(m)
@@ -246,16 +252,17 @@ func (m *VQLResponse) Reset()         { *m = VQLResponse{} }
 func (m *VQLResponse) String() string { return proto.CompactTextString(m) }
 func (*VQLResponse) ProtoMessage()    {}
 func (*VQLResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{4}
+	return fileDescriptor_3e14263f319df14a, []int{4}
 }
+
 func (m *VQLResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLResponse.Unmarshal(m, b)
 }
 func (m *VQLResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLResponse.Marshal(b, m, deterministic)
 }
-func (dst *VQLResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLResponse.Merge(dst, src)
+func (m *VQLResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLResponse.Merge(m, src)
 }
 func (m *VQLResponse) XXX_Size() int {
 	return xxx_messageInfo_VQLResponse.Size(m)
@@ -337,16 +344,17 @@ func (m *User) Reset()         { *m = User{} }
 func (m *User) String() string { return proto.CompactTextString(m) }
 func (*User) ProtoMessage()    {}
 func (*User) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{5}
+	return fileDescriptor_3e14263f319df14a, []int{5}
 }
+
 func (m *User) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_User.Unmarshal(m, b)
 }
 func (m *User) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_User.Marshal(b, m, deterministic)
 }
-func (dst *User) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_User.Merge(dst, src)
+func (m *User) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_User.Merge(m, src)
 }
 func (m *User) XXX_Size() int {
 	return xxx_messageInfo_User.Size(m)
@@ -376,16 +384,17 @@ func (m *VQLEventTable) Reset()         { *m = VQLEventTable{} }
 func (m *VQLEventTable) String() string { return proto.CompactTextString(m) }
 func (*VQLEventTable) ProtoMessage()    {}
 func (*VQLEventTable) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{6}
+	return fileDescriptor_3e14263f319df14a, []int{6}
 }
+
 func (m *VQLEventTable) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLEventTable.Unmarshal(m, b)
 }
 func (m *VQLEventTable) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLEventTable.Marshal(b, m, deterministic)
 }
-func (dst *VQLEventTable) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLEventTable.Merge(dst, src)
+func (m *VQLEventTable) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLEventTable.Merge(m, src)
 }
 func (m *VQLEventTable) XXX_Size() int {
 	return xxx_messageInfo_VQLEventTable.Size(m)
@@ -421,16 +430,17 @@ func (m *Knowledgebase) Reset()         { *m = Knowledgebase{} }
 func (m *Knowledgebase) String() string { return proto.CompactTextString(m) }
 func (*Knowledgebase) ProtoMessage()    {}
 func (*Knowledgebase) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{7}
+	return fileDescriptor_3e14263f319df14a, []int{7}
 }
+
 func (m *Knowledgebase) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Knowledgebase.Unmarshal(m, b)
 }
 func (m *Knowledgebase) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Knowledgebase.Marshal(b, m, deterministic)
 }
-func (dst *Knowledgebase) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Knowledgebase.Merge(dst, src)
+func (m *Knowledgebase) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Knowledgebase.Merge(m, src)
 }
 func (m *Knowledgebase) XXX_Size() int {
 	return xxx_messageInfo_Knowledgebase.Size(m)
@@ -473,16 +483,17 @@ func (m *ClientInfo) Reset()         { *m = ClientInfo{} }
 func (m *ClientInfo) String() string { return proto.CompactTextString(m) }
 func (*ClientInfo) ProtoMessage()    {}
 func (*ClientInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vql_e69f9af8226e8156, []int{8}
+	return fileDescriptor_3e14263f319df14a, []int{8}
 }
+
 func (m *ClientInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientInfo.Unmarshal(m, b)
 }
 func (m *ClientInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClientInfo.Marshal(b, m, deterministic)
 }
-func (dst *ClientInfo) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientInfo.Merge(dst, src)
+func (m *ClientInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientInfo.Merge(m, src)
 }
 func (m *ClientInfo) XXX_Size() int {
 	return xxx_messageInfo_ClientInfo.Size(m)
@@ -603,9 +614,9 @@ func init() {
 	proto.RegisterType((*ClientInfo)(nil), "proto.ClientInfo")
 }
 
-func init() { proto.RegisterFile("vql.proto", fileDescriptor_vql_e69f9af8226e8156) }
+func init() { proto.RegisterFile("vql.proto", fileDescriptor_3e14263f319df14a) }
 
-var fileDescriptor_vql_e69f9af8226e8156 = []byte{
+var fileDescriptor_3e14263f319df14a = []byte{
 	// 1435 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xcd, 0x6e, 0x1c, 0xc5,
 	0x16, 0xd6, 0x64, 0x66, 0x6c, 0x4f, 0x39, 0x93, 0x9b, 0x94, 0xa2, 0xdc, 0xbe, 0xb9, 0xb9, 0xb9,

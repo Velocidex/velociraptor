@@ -37,7 +37,7 @@ build: required_assets
             -ldflags "$(LDFLAGS)" \
 	    -o output/velociraptor ./bin/
 
-windows: required_assets
+windows: required_assets gui_assets
 ifeq ("$(MINGW_EXISTS)", "")
 	@echo Disabling cgo modules. To enable install $(MINGW_CC)
 endif
@@ -45,6 +45,7 @@ endif
         CC=$(CC) CGO_ENABLED=$(CGO_ENABLED) \
             go build \
             -ldflags "$(LDFLAGS)" \
+            -tags release \
 	    -o output/velociraptor.exe ./bin/
 
 # Build using xgo for all supported platforms.

@@ -177,7 +177,7 @@ message DatastoreConfig {
 
 
 message FlowsConfig {
-    VQLCollectorArgs interrogate_additional_queries = 1 [(sem_type) = {
+    repeated VQLRequest interrogate_additional_queries = 1 [(sem_type) = {
             description: "Additional queries to issue to Interrogate flows."
         }];
 }

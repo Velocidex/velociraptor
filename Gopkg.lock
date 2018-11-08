@@ -472,6 +472,7 @@
     "github.com/0xrawsec/golang-evtx/evtx",
     "github.com/0xrawsec/golang-utils/encoding",
     "github.com/Showmax/go-fqdn",
+    "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/go-yara",
     "github.com/alecthomas/participle",

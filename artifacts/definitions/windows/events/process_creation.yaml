@@ -13,7 +13,9 @@ sources:
       SELECT OS From info() where OS = 'windows'
     queries:
       - |
-        SELECT Parse.ParentProcessID as PPID,
+        // Convert the timestamp from WinFileTime to Epoch.
+        SELECT timestamp(epoch=atoi(string=Parse.TIME_CREATED) / 10000000 - 11644473600 ) as Timestamp,
+               Parse.ParentProcessID as PPID,
                Parse.ProcessID as PID,
                Parse.ProcessName as Name, {
                  SELECT CommandLine
@@ -24,5 +26,5 @@ sources:
                } AS CommandLine
         FROM wmi_events(
            query=eventQuery,
-           wait=500,
+           wait=5000000,   // Do not time out.
            namespace="ROOT/CIMV2")

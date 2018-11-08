@@ -5,12 +5,13 @@ package windows
 import (
 	"encoding/binary"
 	"fmt"
-	errors "github.com/pkg/errors"
-	"golang.org/x/sys/windows"
 	"net"
 	"syscall"
 	"time"
 	"unsafe"
+
+	errors "github.com/pkg/errors"
+	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -52,15 +53,14 @@ type Addr struct {
 }
 
 type ConnectionStat struct {
-	Fd        uint32    `json:"fd"`
-	Family    uint32    `json:"family"`
-	Type      uint32    `json:"type"`
-	Laddr     Addr      `json:"localaddr"`
-	Raddr     Addr      `json:"remoteaddr"`
-	Status    string    `json:"status"`
-	Uids      []int32   `json:"uids"`
-	Pid       int32     `json:"pid"`
-	Timestamp time.Time `json:"timestamp"`
+	Fd        uint32
+	Family    uint32
+	Type      uint32
+	Laddr     Addr
+	Raddr     Addr
+	Status    string
+	Pid       int32
+	Timestamp time.Time
 }
 
 func (self *ConnectionStat) FamilyString() string {

@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -30,16 +32,17 @@ func (m *FlowMetaData) Reset()         { *m = FlowMetaData{} }
 func (m *FlowMetaData) String() string { return proto.CompactTextString(m) }
 func (*FlowMetaData) ProtoMessage()    {}
 func (*FlowMetaData) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flow_metadata_85e77f70a1ce4aee, []int{0}
+	return fileDescriptor_7d647932a59e69d5, []int{0}
 }
+
 func (m *FlowMetaData) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowMetaData.Unmarshal(m, b)
 }
 func (m *FlowMetaData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowMetaData.Marshal(b, m, deterministic)
 }
-func (dst *FlowMetaData) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowMetaData.Merge(dst, src)
+func (m *FlowMetaData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowMetaData.Merge(m, src)
 }
 func (m *FlowMetaData) XXX_Size() int {
 	return xxx_messageInfo_FlowMetaData.Size(m)
@@ -62,7 +65,7 @@ var E_FlowMetadata = &proto.ExtensionDesc{
 	ExtensionType: (*FlowMetaData)(nil),
 	Field:         65661,
 	Name:          "proto.flow_metadata",
-	Tag:           "bytes,65661,opt,name=flow_metadata,json=flowMetadata",
+	Tag:           "bytes,65661,opt,name=flow_metadata",
 	Filename:      "flow_metadata.proto",
 }
 
@@ -71,9 +74,9 @@ func init() {
 	proto.RegisterExtension(E_FlowMetadata)
 }
 
-func init() { proto.RegisterFile("flow_metadata.proto", fileDescriptor_flow_metadata_85e77f70a1ce4aee) }
+func init() { proto.RegisterFile("flow_metadata.proto", fileDescriptor_7d647932a59e69d5) }
 
-var fileDescriptor_flow_metadata_85e77f70a1ce4aee = []byte{
+var fileDescriptor_7d647932a59e69d5 = []byte{
 	// 169 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x4e, 0xcb, 0xc9, 0x2f,
 	0x8f, 0xcf, 0x4d, 0x2d, 0x49, 0x4c, 0x49, 0x2c, 0x49, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17,

@@ -3,13 +3,15 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import any "github.com/golang/protobuf/ptypes/any"
-import proto2 "www.velocidex.com/golang/velociraptor/actions/proto"
-import proto1 "www.velocidex.com/golang/velociraptor/crypto/proto"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	any "github.com/golang/protobuf/ptypes/any"
+	math "math"
+	proto2 "www.velocidex.com/golang/velociraptor/actions/proto"
+	proto1 "www.velocidex.com/golang/velociraptor/crypto/proto"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -37,6 +39,7 @@ var FlowContext_State_name = map[int32]string{
 	2: "TERMINATED",
 	3: "ERROR",
 }
+
 var FlowContext_State_value = map[string]int32{
 	"UNSET":      0,
 	"RUNNING":    1,
@@ -47,8 +50,9 @@ var FlowContext_State_value = map[string]int32{
 func (x FlowContext_State) String() string {
 	return proto.EnumName(FlowContext_State_name, int32(x))
 }
+
 func (FlowContext_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{1, 0}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{1, 0}
 }
 
 type StartFlowRequest struct {
@@ -63,16 +67,17 @@ func (m *StartFlowRequest) Reset()         { *m = StartFlowRequest{} }
 func (m *StartFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*StartFlowRequest) ProtoMessage()    {}
 func (*StartFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{0}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{0}
 }
+
 func (m *StartFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowRequest.Unmarshal(m, b)
 }
 func (m *StartFlowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_StartFlowRequest.Marshal(b, m, deterministic)
 }
-func (dst *StartFlowRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StartFlowRequest.Merge(dst, src)
+func (m *StartFlowRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StartFlowRequest.Merge(m, src)
 }
 func (m *StartFlowRequest) XXX_Size() int {
 	return xxx_messageInfo_StartFlowRequest.Size(m)
@@ -126,16 +131,17 @@ func (m *FlowContext) Reset()         { *m = FlowContext{} }
 func (m *FlowContext) String() string { return proto.CompactTextString(m) }
 func (*FlowContext) ProtoMessage()    {}
 func (*FlowContext) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{1}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{1}
 }
+
 func (m *FlowContext) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowContext.Unmarshal(m, b)
 }
 func (m *FlowContext) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowContext.Marshal(b, m, deterministic)
 }
-func (dst *FlowContext) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowContext.Merge(dst, src)
+func (m *FlowContext) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowContext.Merge(m, src)
 }
 func (m *FlowContext) XXX_Size() int {
 	return xxx_messageInfo_FlowContext.Size(m)
@@ -284,16 +290,17 @@ func (m *FlowRunnerArgs) Reset()         { *m = FlowRunnerArgs{} }
 func (m *FlowRunnerArgs) String() string { return proto.CompactTextString(m) }
 func (*FlowRunnerArgs) ProtoMessage()    {}
 func (*FlowRunnerArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{2}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{2}
 }
+
 func (m *FlowRunnerArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowRunnerArgs.Unmarshal(m, b)
 }
 func (m *FlowRunnerArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowRunnerArgs.Marshal(b, m, deterministic)
 }
-func (dst *FlowRunnerArgs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowRunnerArgs.Merge(dst, src)
+func (m *FlowRunnerArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowRunnerArgs.Merge(m, src)
 }
 func (m *FlowRunnerArgs) XXX_Size() int {
 	return xxx_messageInfo_FlowRunnerArgs.Size(m)
@@ -375,16 +382,17 @@ func (m *VelociraptorFlowState) Reset()         { *m = VelociraptorFlowState{} }
 func (m *VelociraptorFlowState) String() string { return proto.CompactTextString(m) }
 func (*VelociraptorFlowState) ProtoMessage()    {}
 func (*VelociraptorFlowState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{3}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{3}
 }
+
 func (m *VelociraptorFlowState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VelociraptorFlowState.Unmarshal(m, b)
 }
 func (m *VelociraptorFlowState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VelociraptorFlowState.Marshal(b, m, deterministic)
 }
-func (dst *VelociraptorFlowState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VelociraptorFlowState.Merge(dst, src)
+func (m *VelociraptorFlowState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VelociraptorFlowState.Merge(m, src)
 }
 func (m *VelociraptorFlowState) XXX_Size() int {
 	return xxx_messageInfo_VelociraptorFlowState.Size(m)
@@ -429,16 +437,17 @@ func (m *FlowDescriptor) Reset()         { *m = FlowDescriptor{} }
 func (m *FlowDescriptor) String() string { return proto.CompactTextString(m) }
 func (*FlowDescriptor) ProtoMessage()    {}
 func (*FlowDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{4}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{4}
 }
+
 func (m *FlowDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowDescriptor.Unmarshal(m, b)
 }
 func (m *FlowDescriptor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowDescriptor.Marshal(b, m, deterministic)
 }
-func (dst *FlowDescriptor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowDescriptor.Merge(dst, src)
+func (m *FlowDescriptor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowDescriptor.Merge(m, src)
 }
 func (m *FlowDescriptor) XXX_Size() int {
 	return xxx_messageInfo_FlowDescriptor.Size(m)
@@ -520,16 +529,17 @@ func (m *VInterrogateArgs) Reset()         { *m = VInterrogateArgs{} }
 func (m *VInterrogateArgs) String() string { return proto.CompactTextString(m) }
 func (*VInterrogateArgs) ProtoMessage()    {}
 func (*VInterrogateArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{5}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{5}
 }
+
 func (m *VInterrogateArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VInterrogateArgs.Unmarshal(m, b)
 }
 func (m *VInterrogateArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VInterrogateArgs.Marshal(b, m, deterministic)
 }
-func (dst *VInterrogateArgs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VInterrogateArgs.Merge(dst, src)
+func (m *VInterrogateArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VInterrogateArgs.Merge(m, src)
 }
 func (m *VInterrogateArgs) XXX_Size() int {
 	return xxx_messageInfo_VInterrogateArgs.Size(m)
@@ -568,16 +578,17 @@ func (m *AFF4FlowObject) Reset()         { *m = AFF4FlowObject{} }
 func (m *AFF4FlowObject) String() string { return proto.CompactTextString(m) }
 func (*AFF4FlowObject) ProtoMessage()    {}
 func (*AFF4FlowObject) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{6}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{6}
 }
+
 func (m *AFF4FlowObject) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AFF4FlowObject.Unmarshal(m, b)
 }
 func (m *AFF4FlowObject) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AFF4FlowObject.Marshal(b, m, deterministic)
 }
-func (dst *AFF4FlowObject) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AFF4FlowObject.Merge(dst, src)
+func (m *AFF4FlowObject) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AFF4FlowObject.Merge(m, src)
 }
 func (m *AFF4FlowObject) XXX_Size() int {
 	return xxx_messageInfo_AFF4FlowObject.Size(m)
@@ -628,16 +639,17 @@ func (m *VQLNameTags) Reset()         { *m = VQLNameTags{} }
 func (m *VQLNameTags) String() string { return proto.CompactTextString(m) }
 func (*VQLNameTags) ProtoMessage()    {}
 func (*VQLNameTags) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{7}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{7}
 }
+
 func (m *VQLNameTags) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLNameTags.Unmarshal(m, b)
 }
 func (m *VQLNameTags) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLNameTags.Marshal(b, m, deterministic)
 }
-func (dst *VQLNameTags) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLNameTags.Merge(dst, src)
+func (m *VQLNameTags) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLNameTags.Merge(m, src)
 }
 func (m *VQLNameTags) XXX_Size() int {
 	return xxx_messageInfo_VQLNameTags.Size(m)
@@ -673,16 +685,17 @@ func (m *VQLNameTagsState) Reset()         { *m = VQLNameTagsState{} }
 func (m *VQLNameTagsState) String() string { return proto.CompactTextString(m) }
 func (*VQLNameTagsState) ProtoMessage()    {}
 func (*VQLNameTagsState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_bb384fe8cd32ec3a, []int{8}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{8}
 }
+
 func (m *VQLNameTagsState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLNameTagsState.Unmarshal(m, b)
 }
 func (m *VQLNameTagsState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VQLNameTagsState.Marshal(b, m, deterministic)
 }
-func (dst *VQLNameTagsState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VQLNameTagsState.Merge(dst, src)
+func (m *VQLNameTagsState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VQLNameTagsState.Merge(m, src)
 }
 func (m *VQLNameTagsState) XXX_Size() int {
 	return xxx_messageInfo_VQLNameTagsState.Size(m)
@@ -701,6 +714,7 @@ func (m *VQLNameTagsState) GetTags() []*VQLNameTags {
 }
 
 func init() {
+	proto.RegisterEnum("proto.FlowContext_State", FlowContext_State_name, FlowContext_State_value)
 	proto.RegisterType((*StartFlowRequest)(nil), "proto.StartFlowRequest")
 	proto.RegisterType((*FlowContext)(nil), "proto.FlowContext")
 	proto.RegisterType((*FlowRunnerArgs)(nil), "proto.FlowRunnerArgs")
@@ -710,12 +724,11 @@ func init() {
 	proto.RegisterType((*AFF4FlowObject)(nil), "proto.AFF4FlowObject")
 	proto.RegisterType((*VQLNameTags)(nil), "proto.VQLNameTags")
 	proto.RegisterType((*VQLNameTagsState)(nil), "proto.VQLNameTagsState")
-	proto.RegisterEnum("proto.FlowContext_State", FlowContext_State_name, FlowContext_State_value)
 }
 
-func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_bb384fe8cd32ec3a) }
+func init() { proto.RegisterFile("flows.proto", fileDescriptor_b6bd6ebccf1a7f18) }
 
-var fileDescriptor_flows_bb384fe8cd32ec3a = []byte{
+var fileDescriptor_b6bd6ebccf1a7f18 = []byte{
 	// 1809 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0xdd, 0x72, 0x1b, 0xb7,
 	0xf5, 0xff, 0x53, 0xa2, 0x6d, 0x12, 0x94, 0x68, 0x1a, 0x92, 0xfd, 0xa7, 0x95, 0xcc, 0x04, 0x61,

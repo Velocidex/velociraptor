@@ -59,14 +59,14 @@ To learn more about Velociraptor, read about it on our blog:
 
 NOTE: You may omit the --config flag in the following cases:
 
- * If the VELOCIRAPTOR_CONFIG environment variable exists, Velociraptor 
+ * If the VELOCIRAPTOR_CONFIG environment variable exists, Velociraptor
    will read its configuration from there.
- * If you embed the configuration into the binary (using velociraptor 
-   config repack as below), Velociraptor will magically know its own 
-   configuration without reading it from a file at all. 
+ * If you embed the configuration into the binary (using velociraptor
+   config repack as below), Velociraptor will magically know its own
+   configuration without reading it from a file at all.
 
-NOTE: If you embed the server's config into the binary then the binary 
-will have key material in it - this could pose a security issue if the 
+NOTE: If you embed the server's config into the binary then the binary
+will have key material in it - this could pose a security issue if the
 binary itself is leaked. It's OK to embed client config in the client because
 client configs have no secrets.
 
@@ -80,11 +80,11 @@ To create a windows executable:
     ```
    Where velociraptor_windows.exe is the Windows binary release for
    Velociraptor.
-   
-2. If you need to sign the binary, now is the time. The signature will cover 
-   the embedded configuration as well. It is possible to update the embedded 
+
+2. If you need to sign the binary, now is the time. The signature will cover
+   the embedded configuration as well. It is possible to update the embedded
    config but this will invalidate the signature.
-   
+
 2. On a windows system you can now install the service:
     ```bash
     $ my_velociraptor.exe service install
@@ -145,6 +145,21 @@ To build from source, make sure you have a recent Golang installed:
     $ make release
     $ make windows
     ```
+
+If you want to rebuild the protobuf you will need to install protobuf compiler:
+
+   ```
+   $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
+   $ unzip protoc-3.6.1-linux-x86_64.zip
+   $ sudo mv include/google/ /usr/include/
+   $ sudo mv bin/protoc /usr/bin/
+   $ go get github.com/golang/protobuf/protoc-gen-go/
+   $ go install github.com/golang/protobuf/protoc-gen-go/
+   $ go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+   $ go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+   $ ./make_proto.sh
+   ```
+
 
 ## Getting help
 

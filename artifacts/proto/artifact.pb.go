@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -32,16 +34,17 @@ func (m *ArtifactParameter) Reset()         { *m = ArtifactParameter{} }
 func (m *ArtifactParameter) String() string { return proto.CompactTextString(m) }
 func (*ArtifactParameter) ProtoMessage()    {}
 func (*ArtifactParameter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_ce75a1df3152403a, []int{0}
+	return fileDescriptor_a1932e98ed811590, []int{0}
 }
+
 func (m *ArtifactParameter) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactParameter.Unmarshal(m, b)
 }
 func (m *ArtifactParameter) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ArtifactParameter.Marshal(b, m, deterministic)
 }
-func (dst *ArtifactParameter) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ArtifactParameter.Merge(dst, src)
+func (m *ArtifactParameter) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtifactParameter.Merge(m, src)
 }
 func (m *ArtifactParameter) XXX_Size() int {
 	return xxx_messageInfo_ArtifactParameter.Size(m)
@@ -85,16 +88,17 @@ func (m *ArtifactSource) Reset()         { *m = ArtifactSource{} }
 func (m *ArtifactSource) String() string { return proto.CompactTextString(m) }
 func (*ArtifactSource) ProtoMessage()    {}
 func (*ArtifactSource) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_ce75a1df3152403a, []int{1}
+	return fileDescriptor_a1932e98ed811590, []int{1}
 }
+
 func (m *ArtifactSource) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactSource.Unmarshal(m, b)
 }
 func (m *ArtifactSource) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ArtifactSource.Marshal(b, m, deterministic)
 }
-func (dst *ArtifactSource) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ArtifactSource.Merge(dst, src)
+func (m *ArtifactSource) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtifactSource.Merge(m, src)
 }
 func (m *ArtifactSource) XXX_Size() int {
 	return xxx_messageInfo_ArtifactSource.Size(m)
@@ -134,16 +138,17 @@ func (m *Artifact) Reset()         { *m = Artifact{} }
 func (m *Artifact) String() string { return proto.CompactTextString(m) }
 func (*Artifact) ProtoMessage()    {}
 func (*Artifact) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_ce75a1df3152403a, []int{2}
+	return fileDescriptor_a1932e98ed811590, []int{2}
 }
+
 func (m *Artifact) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Artifact.Unmarshal(m, b)
 }
 func (m *Artifact) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Artifact.Marshal(b, m, deterministic)
 }
-func (dst *Artifact) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Artifact.Merge(dst, src)
+func (m *Artifact) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Artifact.Merge(m, src)
 }
 func (m *Artifact) XXX_Size() int {
 	return xxx_messageInfo_Artifact.Size(m)
@@ -200,16 +205,17 @@ func (m *ArtifactDescriptors) Reset()         { *m = ArtifactDescriptors{} }
 func (m *ArtifactDescriptors) String() string { return proto.CompactTextString(m) }
 func (*ArtifactDescriptors) ProtoMessage()    {}
 func (*ArtifactDescriptors) Descriptor() ([]byte, []int) {
-	return fileDescriptor_artifact_ce75a1df3152403a, []int{3}
+	return fileDescriptor_a1932e98ed811590, []int{3}
 }
+
 func (m *ArtifactDescriptors) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArtifactDescriptors.Unmarshal(m, b)
 }
 func (m *ArtifactDescriptors) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ArtifactDescriptors.Marshal(b, m, deterministic)
 }
-func (dst *ArtifactDescriptors) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ArtifactDescriptors.Merge(dst, src)
+func (m *ArtifactDescriptors) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtifactDescriptors.Merge(m, src)
 }
 func (m *ArtifactDescriptors) XXX_Size() int {
 	return xxx_messageInfo_ArtifactDescriptors.Size(m)
@@ -234,9 +240,9 @@ func init() {
 	proto.RegisterType((*ArtifactDescriptors)(nil), "proto.ArtifactDescriptors")
 }
 
-func init() { proto.RegisterFile("artifact.proto", fileDescriptor_artifact_ce75a1df3152403a) }
+func init() { proto.RegisterFile("artifact.proto", fileDescriptor_a1932e98ed811590) }
 
-var fileDescriptor_artifact_ce75a1df3152403a = []byte{
+var fileDescriptor_a1932e98ed811590 = []byte{
 	// 820 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x54, 0xcd, 0x6a, 0x64, 0x45,
 	0x14, 0xe6, 0x26, 0x13, 0x63, 0x6a, 0x64, 0xc4, 0x12, 0xe1, 0xe2, 0x42, 0x8e, 0x19, 0xd4, 0x44,

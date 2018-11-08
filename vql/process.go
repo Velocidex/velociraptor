@@ -1,3 +1,7 @@
+// +build !windows
+
+// This module is built on gopsutils but this is too slow and
+// inefficient. Eventually we will remove it from the codebase.
 package vql
 
 import (

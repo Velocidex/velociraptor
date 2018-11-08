@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -31,6 +33,7 @@ var DataBlob_CompressionType_name = map[int32]string{
 	0: "UNCOMPRESSED",
 	1: "ZCOMPRESSION",
 }
+
 var DataBlob_CompressionType_value = map[string]int32{
 	"UNCOMPRESSED": 0,
 	"ZCOMPRESSION": 1,
@@ -39,8 +42,9 @@ var DataBlob_CompressionType_value = map[string]int32{
 func (x DataBlob_CompressionType) String() string {
 	return proto.EnumName(DataBlob_CompressionType_name, int32(x))
 }
+
 func (DataBlob_CompressionType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{0, 0}
+	return fileDescriptor_4c692b03a02b431c, []int{0, 0}
 }
 
 // A generic protobuf to deliver some data
@@ -69,16 +73,17 @@ func (m *DataBlob) Reset()         { *m = DataBlob{} }
 func (m *DataBlob) String() string { return proto.CompactTextString(m) }
 func (*DataBlob) ProtoMessage()    {}
 func (*DataBlob) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{0}
+	return fileDescriptor_4c692b03a02b431c, []int{0}
 }
+
 func (m *DataBlob) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DataBlob.Unmarshal(m, b)
 }
 func (m *DataBlob) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_DataBlob.Marshal(b, m, deterministic)
 }
-func (dst *DataBlob) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DataBlob.Merge(dst, src)
+func (m *DataBlob) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DataBlob.Merge(m, src)
 }
 func (m *DataBlob) XXX_Size() int {
 	return xxx_messageInfo_DataBlob.Size(m)
@@ -185,16 +190,17 @@ func (m *BlobArray) Reset()         { *m = BlobArray{} }
 func (m *BlobArray) String() string { return proto.CompactTextString(m) }
 func (*BlobArray) ProtoMessage()    {}
 func (*BlobArray) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{1}
+	return fileDescriptor_4c692b03a02b431c, []int{1}
 }
+
 func (m *BlobArray) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BlobArray.Unmarshal(m, b)
 }
 func (m *BlobArray) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BlobArray.Marshal(b, m, deterministic)
 }
-func (dst *BlobArray) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BlobArray.Merge(dst, src)
+func (m *BlobArray) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BlobArray.Merge(m, src)
 }
 func (m *BlobArray) XXX_Size() int {
 	return xxx_messageInfo_BlobArray.Size(m)
@@ -225,16 +231,17 @@ func (m *KeyValue) Reset()         { *m = KeyValue{} }
 func (m *KeyValue) String() string { return proto.CompactTextString(m) }
 func (*KeyValue) ProtoMessage()    {}
 func (*KeyValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{2}
+	return fileDescriptor_4c692b03a02b431c, []int{2}
 }
+
 func (m *KeyValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_KeyValue.Unmarshal(m, b)
 }
 func (m *KeyValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_KeyValue.Marshal(b, m, deterministic)
 }
-func (dst *KeyValue) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KeyValue.Merge(dst, src)
+func (m *KeyValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KeyValue.Merge(m, src)
 }
 func (m *KeyValue) XXX_Size() int {
 	return xxx_messageInfo_KeyValue.Size(m)
@@ -271,16 +278,17 @@ func (m *Dict) Reset()         { *m = Dict{} }
 func (m *Dict) String() string { return proto.CompactTextString(m) }
 func (*Dict) ProtoMessage()    {}
 func (*Dict) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{3}
+	return fileDescriptor_4c692b03a02b431c, []int{3}
 }
+
 func (m *Dict) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Dict.Unmarshal(m, b)
 }
 func (m *Dict) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Dict.Marshal(b, m, deterministic)
 }
-func (dst *Dict) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Dict.Merge(dst, src)
+func (m *Dict) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Dict.Merge(m, src)
 }
 func (m *Dict) XXX_Size() int {
 	return xxx_messageInfo_Dict.Size(m)
@@ -313,16 +321,17 @@ func (m *EmbeddedRDFValue) Reset()         { *m = EmbeddedRDFValue{} }
 func (m *EmbeddedRDFValue) String() string { return proto.CompactTextString(m) }
 func (*EmbeddedRDFValue) ProtoMessage()    {}
 func (*EmbeddedRDFValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_generic_018f560c608305e4, []int{4}
+	return fileDescriptor_4c692b03a02b431c, []int{4}
 }
+
 func (m *EmbeddedRDFValue) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EmbeddedRDFValue.Unmarshal(m, b)
 }
 func (m *EmbeddedRDFValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_EmbeddedRDFValue.Marshal(b, m, deterministic)
 }
-func (dst *EmbeddedRDFValue) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EmbeddedRDFValue.Merge(dst, src)
+func (m *EmbeddedRDFValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EmbeddedRDFValue.Merge(m, src)
 }
 func (m *EmbeddedRDFValue) XXX_Size() int {
 	return xxx_messageInfo_EmbeddedRDFValue.Size(m)
@@ -355,17 +364,17 @@ func (m *EmbeddedRDFValue) GetData() []byte {
 }
 
 func init() {
+	proto.RegisterEnum("proto.DataBlob_CompressionType", DataBlob_CompressionType_name, DataBlob_CompressionType_value)
 	proto.RegisterType((*DataBlob)(nil), "proto.DataBlob")
 	proto.RegisterType((*BlobArray)(nil), "proto.BlobArray")
 	proto.RegisterType((*KeyValue)(nil), "proto.KeyValue")
 	proto.RegisterType((*Dict)(nil), "proto.Dict")
 	proto.RegisterType((*EmbeddedRDFValue)(nil), "proto.EmbeddedRDFValue")
-	proto.RegisterEnum("proto.DataBlob_CompressionType", DataBlob_CompressionType_name, DataBlob_CompressionType_value)
 }
 
-func init() { proto.RegisterFile("generic.proto", fileDescriptor_generic_018f560c608305e4) }
+func init() { proto.RegisterFile("generic.proto", fileDescriptor_4c692b03a02b431c) }
 
-var fileDescriptor_generic_018f560c608305e4 = []byte{
+var fileDescriptor_4c692b03a02b431c = []byte{
 	// 567 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0x51, 0x6f, 0xd3, 0x3c,
 	0x14, 0xfd, 0xbc, 0x64, 0x5b, 0x7b, 0xd3, 0x8f, 0x55, 0x16, 0x1a, 0x06, 0x69, 0xcc, 0x8a, 0x86,

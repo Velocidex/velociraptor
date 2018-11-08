@@ -52,6 +52,8 @@ func flowResultDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
+		w.Header().Set("Content-Disposition", "attachment; filename='"+flow_id+".zip'")
+		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
 		marshaler := &jsonpb.Marshaler{Indent: " "}
@@ -174,6 +176,8 @@ func huntResultDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
+		w.Header().Set("Content-Disposition", "attachment; filename='"+hunt_id[0]+".zip'")
+		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
 		marshaler := &jsonpb.Marshaler{Indent: " "}
@@ -336,6 +340,9 @@ func vfsFileDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
+		filename := strings.Replace(path.Dir(vfs_path), "\"", "_", -1)
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
 		length_sent := 0

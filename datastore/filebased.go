@@ -311,10 +311,10 @@ func shouldEscape(c rune) bool {
 }
 
 func SanitizeString(component string) []rune {
-	if component == "." {
-		return []rune("%2E")
-	} else if component == ".." {
-		return []rune("%2E%2E")
+	// Escape components that start with . - these are illegal on
+	// windows.
+	if len(component) > 0 && component[0:1] == "." {
+		return []rune("%2E" + component[1:])
 	}
 
 	// Prevent components from creating names for files that are

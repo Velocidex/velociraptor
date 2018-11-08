@@ -13,7 +13,7 @@ sources:
             SELECT Pid AS PortPid, Laddr.Port AS Port,
                    TypeString as Protocol, FamilyString as Family,
                    Laddr.IP as Address
-            FROM netstat()
+            FROM netstat() where Status = 'LISTEN'
           },
           query={
             SELECT Pid, Name, Port, Protocol, Family, Address
