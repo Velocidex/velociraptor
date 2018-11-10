@@ -65,7 +65,7 @@ type _BinaryParserPluginArg struct {
 	File       string      `vfilter:"optional,field=file"`
 	String     string      `vfilter:"optional,field=string"`
 	Accessor   string      `vfilter:"optional,field=accessor"`
-	Profile    string      `vfilter:"required,field=profile"`
+	Profile    string      `vfilter:"optional,field=profile"`
 	Target     string      `vfilter:"required,field=target"`
 	Args       vfilter.Any `vfilter:"optional,field=args"`
 	StartField string      `vfilter:"optional,field=start"`
@@ -199,8 +199,9 @@ func (self _BinaryParserPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginI
 type _BinaryParserFunctionArg struct {
 	Offset   int64  `vfilter:"optional,field=offset"`
 	String   string `vfilter:"required,field=string"`
-	Profile  string `vfilter:"required,field=profile"`
-	Iterator string `vfilter:"required,field=iterator"`
+	Profile  string `vfilter:"optional,field=profile"`
+	Iterator string `vfilter:"optional,field=iterator"`
+	Target   string `vfilter:"optional,field=target"`
 	Accessor string `vfilter:"optional,field=accessor"`
 }
 
@@ -210,6 +211,7 @@ func (self *_BinaryParserFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
 	result := []vfilter.Row{}
+
 	arg := &_BinaryParserFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -221,7 +223,7 @@ func (self *_BinaryParserFunction) Call(ctx context.Context,
 	options := make(map[string]interface{})
 	for k, v := range *args.ToDict() {
 		switch k {
-		case "offset", "string", "profile", "iterator", "accessor":
+		case "offset", "string", "profile", "iterator", "accessor", "target":
 			continue
 		default:
 			options[k] = v
@@ -231,29 +233,44 @@ func (self *_BinaryParserFunction) Call(ctx context.Context,
 	profile := vtypes.NewProfile()
 	vtypes.AddModel(profile)
 
-	err = profile.ParseStructDefinitions(arg.Profile)
-	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
-		return result
+	if arg.Profile != "" {
+		err = profile.ParseStructDefinitions(arg.Profile)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return result
+		}
 	}
-
 	reader := strings.NewReader(arg.String)
-	array, err := profile.Create(
-		arg.Iterator, arg.Offset, reader, options)
-	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+	if arg.Iterator != "" {
+		array, err := profile.Create(
+			arg.Iterator, arg.Offset, reader, options)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return result
+		}
+		for {
+			value := array.Next()
+			if !value.IsValid() {
+				break
+			}
+
+			result = append(result, value)
+		}
 		return result
-	}
-	for {
-		value := array.Next()
-		if !value.IsValid() {
-			break
+
+	} else if arg.Target != "" {
+		target, err := profile.Create(
+			arg.Target, arg.Offset, reader, options)
+
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return result
 		}
 
-		result = append(result, value)
+		return target
 	}
 
-	return result
+	return vfilter.Null{}
 }
 
 func (self _BinaryParserFunction) Name() string {

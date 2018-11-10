@@ -28,6 +28,7 @@ type Uploader interface {
 	Upload(scope *vfilter.Scope,
 		filename string,
 		accessor string,
+		store_as_name string,
 		reader io.Reader) (*UploadResponse, error)
 }
 
@@ -71,6 +72,7 @@ func (self *FileBasedUploader) Upload(
 	scope *vfilter.Scope,
 	filename string,
 	accessor string,
+	store_as_name string,
 	reader io.Reader) (
 	*UploadResponse, error) {
 	if self.UploadDir == "" {
@@ -78,8 +80,11 @@ func (self *FileBasedUploader) Upload(
 		return nil, errors.New("UploadDir not set")
 	}
 
-	file_path := filepath.Join(self.UploadDir,
-		sanitize_path(filename))
+	if store_as_name == "" {
+		store_as_name = sanitize_path(filename)
+	}
+
+	file_path := filepath.Join(self.UploadDir, store_as_name)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		scope.Log("Can not create dir: %s", err.Error())
@@ -117,11 +122,18 @@ type VelociraptorUploader struct {
 }
 
 func (self *VelociraptorUploader) Upload(
-	scope *vfilter.Scope, filename string,
-	accessor string, reader io.Reader) (
+	scope *vfilter.Scope,
+	filename string,
+	accessor string,
+	store_as_name string,
+	reader io.Reader) (
 	*UploadResponse, error) {
 	result := &UploadResponse{
 		Path: filename,
+	}
+
+	if store_as_name == "" {
+		store_as_name = filename
 	}
 
 	offset := uint64(0)
@@ -131,7 +143,7 @@ func (self *VelociraptorUploader) Upload(
 		read_bytes, err := reader.Read(buffer)
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
-				Path:     filename,
+				Path:     store_as_name,
 				Accessor: accessor,
 			},
 			Offset: offset,

@@ -26,6 +26,7 @@ import (
 // select upload(files=FullPath) from files
 type UploadFunctionArgs struct {
 	File     string `vfilter:"required,field=file"`
+	Name     string `vfilter:"optional,field=name"`
 	Accessor string `vfilter:"optional,field=accessor"`
 }
 type UploadFunction struct{}
@@ -65,7 +66,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 				arg.File, err)
 		} else if !stat.IsDir() {
 			upload_response, err := uploader.Upload(
-				scope, arg.File, arg.Accessor, file)
+				scope, arg.File, arg.Accessor, arg.Name, file)
 			if err != nil {
 				return &UploadResponse{
 					Error: err.Error(),
@@ -130,7 +131,7 @@ func (self *UploadPlugin) Call(
 			}
 
 			upload_response, err := uploader.Upload(
-				scope, filename, arg.Accessor, file)
+				scope, filename, arg.Accessor, filename, file)
 			if err != nil {
 				scope.Log("upload: Failed to upload %s: %s",
 					filename, err.Error())
