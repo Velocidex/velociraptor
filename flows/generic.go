@@ -93,6 +93,7 @@ func appendDataToFile(
 	if payload == nil {
 		return nil
 	}
+
 	file_buffer, ok := payload.(*actions_proto.FileBuffer)
 	if !ok {
 		return nil
@@ -100,7 +101,6 @@ func appendDataToFile(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	file_path := path.Join(base_urn, file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)
-
 	fd, err := file_store_factory.WriteFile(file_path)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)

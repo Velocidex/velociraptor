@@ -48,18 +48,23 @@ func _WriteEvents(
 	}
 
 	last_event = first_event
-	for i := uint16(0); i < header.ChunkCount; i++ {
+
+	for i := int64(0); ; i++ {
 		offsetChunk := int64(header.ChunkDataOffset) +
-			int64(evtx.ChunkSize)*int64(i)
+			int64(evtx.ChunkSize)*i
 
 		chunk := evtx.NewChunk()
 		chunk.Offset = offsetChunk
 		chunk.Data = make([]byte, evtx.ChunkSize)
 
-		file.Seek(offsetChunk, os.SEEK_SET)
-		n, _ := file.Read(chunk.Data)
+		offset, err := file.Seek(offsetChunk, os.SEEK_SET)
+		if offset != offsetChunk || err != nil {
+			return last_event, nil
+		}
+
+		n, err := file.Read(chunk.Data)
 		if n != len(chunk.Data) || err != nil {
-			return
+			return last_event, nil
 		}
 
 		chunk_reader := bytes.NewReader(chunk.Data)

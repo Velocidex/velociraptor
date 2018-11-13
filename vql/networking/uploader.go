@@ -141,6 +141,10 @@ func (self *VelociraptorUploader) Upload(
 	for {
 		buffer := make([]byte, 1024*1024)
 		read_bytes, err := reader.Read(buffer)
+		if read_bytes == 0 {
+			return result, nil
+		}
+
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
 				Path:     store_as_name,

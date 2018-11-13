@@ -1,2 +1,2 @@
 Queries:
-  - SELECT * FROM Artifact.Windows.Sys.StartupItems() ORDER BY Name
+  - SELECT * FROM Artifact.Windows.Sys.StartupItems() WHERE Name = 'AppVeyor.BuildAgent' ORDER BY Name

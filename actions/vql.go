@@ -11,16 +11,19 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type LogWriter struct {
-	responder *responder.Responder
+	config_obj *config.Config
+	responder  *responder.Responder
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
+	logging.NewLogger(self.config_obj).Info(string(b))
 	err := self.responder.Log("%s", string(b))
 	if err != nil {
 		return 0, err
@@ -82,7 +85,7 @@ func (self *VQLClientAction) StartQuery(
 		repository.Set(artifact)
 	}
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = log.New(&LogWriter{responder},
+	scope.Logger = log.New(&LogWriter{config_obj, responder},
 		"vql: ", log.Lshortfile)
 
 	// All the queries will use the same scope. This allows one

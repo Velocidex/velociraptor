@@ -48,6 +48,11 @@ func (self *UploadFunction) Call(ctx context.Context,
 			scope.Log("upload: %s", err.Error())
 			return vfilter.Null{}
 		}
+
+		if arg.File == "" {
+			return vfilter.Null{}
+		}
+
 		accessor := glob.GetAccessor(arg.Accessor, ctx)
 		file, err := accessor.Open(arg.File)
 		if err != nil {

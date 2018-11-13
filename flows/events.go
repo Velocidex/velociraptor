@@ -64,65 +64,76 @@ func (self *MonitoringFlow) ProcessMessage(
 		return err
 	}
 
-	payload := responder.ExtractGrrMessagePayload(message)
-	if payload == nil {
-		return nil
-	}
+	switch message.RequestId {
+	case constants.TransferWellKnownFlowId:
+		return appendDataToFile(
+			config_obj, flow_obj,
+			path.Join("clients",
+				flow_obj.RunnerArgs.ClientId,
+				"uploads",
+				path.Base(message.SessionId)),
+			message)
 
-	response, ok := payload.(*actions_proto.VQLResponse)
-	if !ok {
-		return nil
-	}
-
-	// Store the event log in the client's VFS.
-	if response.Query.Name != "" {
-		file_store_factory := file_store.GetFileStore(config_obj)
-
-		now := time.Now()
-		log_path := path.Join(
-			"clients", flow_obj.RunnerArgs.ClientId,
-			"monitoring", response.Query.Name,
-			fmt.Sprintf("%d-%02d-%02d", now.Year(),
-				now.Month(), now.Day()))
-		fd, err := file_store_factory.WriteFile(log_path)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return err
-		}
-		defer fd.Close()
-
-		// Seek to the end of the file.
-		length, err := fd.Seek(0, os.SEEK_END)
-		w := csv.NewWriter(fd)
-		defer w.Flush()
-
-		// A new file, write the headings.
-		if err == nil && length == 0 {
-			w.Write(response.Columns)
+	case processVQLResponses:
+		payload := responder.ExtractGrrMessagePayload(message)
+		if payload == nil {
+			return nil
 		}
 
-		var rows []map[string]json.RawMessage
-		err = json.Unmarshal([]byte(response.Response), &rows)
-		if err != nil {
-			return errors.WithStack(err)
+		response, ok := payload.(*actions_proto.VQLResponse)
+		if !ok {
+			return nil
 		}
 
-		for _, row := range rows {
-			csv_row := []string{}
+		// Store the event log in the client's VFS.
+		if response.Query.Name != "" {
+			file_store_factory := file_store.GetFileStore(config_obj)
 
-			for _, column := range response.Columns {
-				item, pres := row[column]
-				if !pres {
-					csv_row = append(csv_row, "-")
-				} else {
-					csv_row = append(csv_row, string(item))
-				}
+			now := time.Now()
+			log_path := path.Join(
+				"clients", flow_obj.RunnerArgs.ClientId,
+				"monitoring", response.Query.Name,
+				fmt.Sprintf("%d-%02d-%02d", now.Year(),
+					now.Month(), now.Day()))
+			fd, err := file_store_factory.WriteFile(log_path)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return err
+			}
+			defer fd.Close()
+
+			// Seek to the end of the file.
+			length, err := fd.Seek(0, os.SEEK_END)
+			w := csv.NewWriter(fd)
+			defer w.Flush()
+
+			// A new file, write the headings.
+			if err == nil && length == 0 {
+				w.Write(response.Columns)
 			}
 
-			w.Write(csv_row)
+			var rows []map[string]json.RawMessage
+			err = json.Unmarshal([]byte(response.Response), &rows)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+
+			for _, row := range rows {
+				csv_row := []string{}
+
+				for _, column := range response.Columns {
+					item, pres := row[column]
+					if !pres {
+						csv_row = append(csv_row, "-")
+					} else {
+						csv_row = append(csv_row, string(item))
+					}
+				}
+
+				w.Write(csv_row)
+			}
 		}
 	}
-
 	return nil
 }
 

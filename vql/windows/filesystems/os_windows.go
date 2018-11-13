@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/disk"
+	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 )
@@ -160,14 +161,19 @@ func discoverDriveLetters() ([]glob.FileInfo, error) {
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
-	path = normalize_path(path)
 
 	// No drive part, so list all drives.
 	if path == "" {
 		return discoverDriveLetters()
 	}
 
+	expanded_path, err := registry.ExpandString(path)
+	if err == nil {
+		path = expanded_path
+	}
+
 	// Add a final \ to turn path into a directory path.
+	path = normalize_path(path)
 	path = strings.TrimPrefix(path, "\\") + "\\"
 	files, err := ioutil.ReadDir(path)
 	if err == nil {
@@ -184,15 +190,25 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	path = strings.TrimPrefix(normalize_path(path), "\\")
+	expanded_path, err := registry.ExpandString(path)
+	if err == nil {
+		path = expanded_path
+	}
+
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
+	path = strings.TrimPrefix(normalize_path(path), "\\")
 	file, err := os.Open(path)
 	return file, err
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
-	path = strings.TrimPrefix(normalize_path(path), "\\")
+	expanded_path, err := registry.ExpandString(path)
+	if err == nil {
+		path = expanded_path
+	}
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
+	path = strings.TrimPrefix(normalize_path(path), "\\")
+
 	stat, err := os.Lstat(path)
 	return &OSFileInfo{
 		FileInfo:   stat,
