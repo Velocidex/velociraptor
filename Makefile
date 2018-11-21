@@ -50,7 +50,7 @@ endif
 
 # Build using xgo for all supported platforms.
 xgo: required_assets gui_assets
-	xgo -out velociraptor-v0.2.4 -v \
+	xgo -out velociraptor-v0.2.5 -v \
             --targets='windows/*,darwin/*,linux/*' \
             -tags release \
             -ldflags "$(LDFLAGS)" \

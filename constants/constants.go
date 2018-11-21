@@ -1,7 +1,7 @@
 package constants
 
 var (
-	VERSION                    = "0.2.4"
+	VERSION                    = "0.2.5"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 

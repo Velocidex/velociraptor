@@ -111,6 +111,19 @@ func getAvailableDrives() ([]string, error) {
 	return result, nil
 }
 
+func getPath(path string) string {
+	expanded_path, err := registry.ExpandString(path)
+	if err == nil {
+		path = expanded_path
+	}
+
+	// Add a final \ to turn path into a directory path.
+	path = normalize_path(path)
+
+	// Strip leading \\ so \\c:\\windows -> c:\\windows
+	return strings.TrimPrefix(path, "\\")
+}
+
 type OSFileSystemAccessor struct {
 	fd_cache map[string]io.ReadCloser
 }
@@ -163,18 +176,12 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
 
 	// No drive part, so list all drives.
-	if path == "" {
+	if path == "/" {
 		return discoverDriveLetters()
 	}
 
-	expanded_path, err := registry.ExpandString(path)
-	if err == nil {
-		path = expanded_path
-	}
-
 	// Add a final \ to turn path into a directory path.
-	path = normalize_path(path)
-	path = strings.TrimPrefix(path, "\\") + "\\"
+	path = getPath(path) + "\\"
 	files, err := ioutil.ReadDir(path)
 	if err == nil {
 		for _, f := range files {
@@ -190,26 +197,14 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	expanded_path, err := registry.ExpandString(path)
-	if err == nil {
-		path = expanded_path
-	}
-
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
-	path = strings.TrimPrefix(normalize_path(path), "\\")
+	path = getPath(path)
 	file, err := os.Open(path)
 	return file, err
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
-	expanded_path, err := registry.ExpandString(path)
-	if err == nil {
-		path = expanded_path
-	}
-	// Strip leading \\ so \\c:\\windows -> c:\\windows
-	path = strings.TrimPrefix(normalize_path(path), "\\")
-
-	stat, err := os.Lstat(path)
+	stat, err := os.Lstat(getPath(path))
 	return &OSFileInfo{
 		FileInfo:   stat,
 		_full_path: path,

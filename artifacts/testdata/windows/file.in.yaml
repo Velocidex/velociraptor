@@ -1,0 +1,7 @@
+Queries:
+  - SELECT FullPath FROM glob(globs="/*", accessor="file")
+    WHERE Name =~ "C"
+  - SELECT FullPath FROM glob(globs="\\*", accessor="file")
+    WHERE Name =~ "C"
+  - SELECT FullPath FROM glob(globs="c:\\*", accessor="file")
+    WHERE Name =~ "pagefile.sys"
