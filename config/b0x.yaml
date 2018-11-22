@@ -12,3 +12,4 @@ output: "ab0x.go"
 custom:
   - files:
       - "config/default.yaml"
+init: Init

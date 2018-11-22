@@ -8,4 +8,13 @@ parameters:
 sources:
   - queries:
       - |
-        SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+        SELECT * from foreach(
+         row={
+           SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+         },
+         query={
+           SELECT UnixNano / 1000000000 as Timestamp,
+                  Times.user + Times.system as CPU,
+                  MemoryInfo.RSS as RSS
+           FROM pslist(pid=getpid())
+         })

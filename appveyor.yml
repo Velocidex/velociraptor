@@ -10,18 +10,14 @@ install:
     echo %GOPATH%
     go version
     go env
-    go get github.com/UnnoTed/fileb0x
-    go install github.com/UnnoTed/fileb0x
-    fileb0x artifacts/b0x.yaml
-    fileb0x config/b0x.yaml
     go get github.com/golang/dep
     go get -u github.com/golang/dep/cmd/dep
     dep ensure
 build_script:
 - cmd: |
     regedit /S artifacts/testdata/windows/init.reg
-    go build -o buildOutput\velociraptor.exe -i ./bin/
+    go run make.go -v windows
 test_script:
-- cmd: buildOutput\velociraptor.exe golden artifacts\testdata\windows\
+- cmd: output\velociraptor.exe golden artifacts\testdata\windows\
 on_finish:
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }

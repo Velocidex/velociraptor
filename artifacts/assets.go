@@ -2,12 +2,14 @@ package artifacts
 
 import (
 	"strings"
+
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
 func register(config_obj *config.Config) error {
+	assets.Init()
 	files, err := assets.WalkDirs("", false)
 	if err != nil {
 		return err

@@ -12,3 +12,4 @@ output: "ab0x.go"
 custom:
   - files:
       - "artifacts/definitions/**/*.yaml"
+init: Init

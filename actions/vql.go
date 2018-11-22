@@ -110,7 +110,6 @@ func (self *VQLClientAction) StartQuery(
 			// seconds.
 			max_wait = 100
 		}
-
 		result_chan := vfilter.GetResponseChannel(
 			vql, ctx, scope, max_rows, max_wait)
 		for {
@@ -129,7 +128,6 @@ func (self *VQLClientAction) StartQuery(
 				Response:  string(result.Payload),
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			}
-
 			responder.Log("Time %v: %s: Sending response part %d %s (%d rows).",
 				(response.Timestamp-now)/1000000,
 				query.Name,

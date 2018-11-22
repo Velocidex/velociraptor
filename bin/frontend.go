@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 )
@@ -85,6 +86,7 @@ func start_frontend(config_obj *config.Config, server_obj *server.Server) {
 	// Start the hunt dispatcher.
 	_, err := flows.GetHuntDispatcher(config_obj)
 	kingpin.FatalIfError(err, "Hunt dispatcher")
+
 	server_obj.Info("Frontend is ready to handle client requests at %s", listenAddr)
 	atomic.StoreInt32(&healthy, 1)
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -371,6 +373,9 @@ func init() {
 
 			// Parse the artifacts database to detect errors early.
 			getRepository(config_obj)
+
+			// Load the assets into memory.
+			assets.Init()
 
 			go func() {
 				err := api.StartServer(config_obj, server_obj)

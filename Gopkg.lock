@@ -191,6 +191,17 @@
   version = "v0.5.0"
 
 [[projects]]
+  digest = "1:2d0b44ee6208d256e29f55764db1fa41e3ae33fac6cef138acae6a79c3bd748e"
+  name = "github.com/magefile/mage"
+  packages = [
+    "mg",
+    "sh",
+  ]
+  pruneopts = "UT"
+  revision = "11d15918ff3aa6f75cd6d3340a9507bb5309c679"
+  version = "v1.7.1"
+
+[[projects]]
   branch = "master"
   digest = "1:f734c43ec01de1063c0e281153c85c1a1897614aca08bd68477b7eaa8569a7fa"
   name = "github.com/mattn/go-pointer"
@@ -451,11 +462,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a512cfb477c5b565401a79035ab672d6cbc35a0595a965ad9c0e3b7cbf27f4d3"
+  digest = "1:6dbfb28a0a2de48e8f2294e866abe42c672e2c44075f21ae0ad62c5d7d7b0638"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1deafa3d454251987ea02f44017b615d307537f5"
+  revision = "631be74455e94a552837983b511bdcf6a1741d8b"
 
 [[projects]]
   branch = "master"
@@ -493,6 +504,8 @@
     "github.com/gorilla/schema",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/magefile/mage/mg",
+    "github.com/magefile/mage/sh",
     "github.com/mattn/go-pointer",
     "github.com/mattn/go-sqlite3",
     "github.com/olekukonko/tablewriter",

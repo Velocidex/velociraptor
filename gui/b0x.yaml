@@ -32,3 +32,4 @@ custom:
       - "**/*~"
       - "**/*.js"
       - "**/*.scss"
+init: Init

@@ -8,10 +8,13 @@ import (
 	"time"
 
 	"github.com/StackExchange/wmi"
-	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
+
+type PslistArgs struct {
+	Pid int64 `vfilter:"optional,field=pid"`
+}
 
 type Win32_Process struct {
 	Name                  string
@@ -105,42 +108,14 @@ func (self Win32_Process) Cmdline() string {
 	return ""
 }
 
-type SYSTEM_TIMES struct {
-	CreateTime syscall.Filetime
-	ExitTime   syscall.Filetime
-	KernelTime syscall.Filetime
-	UserTime   syscall.Filetime
-}
-
-func getProcessCPUTimes(pid int32) (SYSTEM_TIMES, error) {
-	var times SYSTEM_TIMES
-
-	// PROCESS_QUERY_LIMITED_INFORMATION is 0x1000
-	h, err := windows.OpenProcess(0x1000, false, uint32(pid))
-	if err != nil {
-		return times, err
-	}
-	defer windows.CloseHandle(h)
-
-	err = syscall.GetProcessTimes(
-		syscall.Handle(h),
-		&times.CreateTime,
-		&times.ExitTime,
-		&times.KernelTime,
-		&times.UserTime,
-	)
-
-	return times, err
-}
-
 func (self Win32_Process) CreateTime() int64 {
 	return self.CreationDate.UnixNano() / 10000
 }
 
 func (self Win32_Process) Times() *TimesStat {
 	return &TimesStat{
-		User:   float64(self.UserModeTime) / 1000000,
-		System: float64(self.KernelModeTime) / 1000000,
+		User:   float64(self.UserModeTime) / 10000000,
+		System: float64(self.KernelModeTime) / 10000000,
 	}
 }
 
@@ -168,9 +143,15 @@ func (self Win32_Process) Username() (string, error) {
 	return domain + "\\" + user, err
 }
 
-func GetWin32Proc() ([]Win32_Process, error) {
+func GetWin32Proc(pid int64) ([]Win32_Process, error) {
 	var dst []Win32_Process
-	q := wmi.CreateQuery(&dst, "")
+
+	query := ""
+	if pid != 0 {
+		query += fmt.Sprintf(" WHERE ProcessID = %v ", pid)
+	}
+
+	q := wmi.CreateQuery(&dst, query)
 	err := wmi.Query(q, &dst)
 	if err != nil {
 		return []Win32_Process{}, fmt.Errorf("could not get win32Proc: %s", err)
@@ -192,7 +173,15 @@ func init() {
 			scope *vfilter.Scope,
 			args *vfilter.Dict) []vfilter.Row {
 			var result []vfilter.Row
-			processes, err := GetWin32Proc()
+
+			arg := &PslistArgs{}
+			err := vfilter.ExtractArgs(scope, args, arg)
+			if err != nil {
+				scope.Log("pslist: %s", err.Error())
+				return result
+			}
+
+			processes, err := GetWin32Proc(arg.Pid)
 			if err == nil {
 				for _, item := range processes {
 					result = append(result, item)
