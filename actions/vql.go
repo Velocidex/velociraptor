@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"log"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -61,6 +62,14 @@ func (self *VQLClientAction) StartQuery(
 		responder.RaiseError("Query should be specified.")
 		return
 	}
+
+	// If we panic we need to recover and report this to the
+	// server.
+	defer func() {
+		if r := recover(); r != nil {
+			responder.RaiseError(string(debug.Stack()))
+		}
+	}()
 
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment

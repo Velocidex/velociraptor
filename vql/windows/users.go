@@ -6,6 +6,7 @@ import (
 	"context"
 	"syscall"
 	"unsafe"
+
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -97,18 +98,21 @@ func getUsers(scope *vfilter.Scope,
 			&buffer,
 			uint32(0xFFFFFFFF),
 			&entriesread, &totalentries, &resume_handle)
+		defer NetApiBufferFree(buffer)
 
 		if res == 0 {
 			pos := buffer
 			for i := uint32(0); i < entriesread; i++ {
 				encoded_user_record := (*USER_INFO_3)(unsafe.Pointer(pos))
+				if encoded_user_record == nil {
+					scope.Log("Access denied when calling NetUserEnum.")
+					break
+				}
 				user_record := ParseUserRecord(encoded_user_record)
 				result = append(result, user_record)
-				pos = pos + 0xb8
+				pos = pos + unsafe.Sizeof(*encoded_user_record)
 			}
 		}
-
-		NetApiBufferFree(buffer)
 
 		if res != ERROR_MORE_DATA {
 			break
