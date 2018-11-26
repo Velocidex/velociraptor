@@ -151,8 +151,8 @@ If you want to rebuild the protobuf you will need to install protobuf compiler:
    ```
    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
    $ unzip protoc-3.6.1-linux-x86_64.zip
-   $ sudo mv include/google/ /usr/include/
-   $ sudo mv bin/protoc /usr/bin/
+   $ sudo mv include/google/ /usr/local/include/
+   $ sudo mv bin/protoc /usr/local/bin/
    $ go get github.com/golang/protobuf/protoc-gen-go/
    $ go install github.com/golang/protobuf/protoc-gen-go/
    $ go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway

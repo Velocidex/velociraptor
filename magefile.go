@@ -23,7 +23,17 @@ var (
 
 	mingw_xcompiler = "x86_64-w64-mingw32-gcc"
 	name            = "velociraptor"
+	version         = "v0.2.5"
 )
+
+func Xgo() error {
+	return sh.RunV(
+		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
+		"--targets", "windows/*,darwin/*,linux/*",
+		"-tags", "release",
+		"-ldflags=-s -w "+flags(),
+		"./bin/")
+}
 
 func Linux() error {
 	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {

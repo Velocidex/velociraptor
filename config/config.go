@@ -57,6 +57,11 @@ func GetDefaultConfig() *Config {
 					InstallPath: "$ProgramFiles\\Velociraptor\\" +
 						"Velociraptor.exe",
 				},
+
+				// If set to true this will stop
+				// arbitrary code execution on the
+				// client.
+				PreventExecve: false,
 			},
 			API: &api_proto.APIConfig{
 				// Bind port for gRPC endpoint - this should not

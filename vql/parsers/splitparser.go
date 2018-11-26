@@ -86,6 +86,8 @@ func processFile(
 			for idx, column := range arg.Columns {
 				if idx < len(items) {
 					result.Set(column, items[idx])
+				} else {
+					result.Set(column, vfilter.Null{})
 				}
 			}
 			output_chan <- result

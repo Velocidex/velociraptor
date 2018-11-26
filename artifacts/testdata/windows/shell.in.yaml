@@ -1,0 +1,9 @@
+Queries:
+  # Default buffer length should capture all the output in one row.
+  - SELECT * FROM execve(argv=['cmd.exe', '/?'])
+
+  # Smaller buffer length should split the output into multiple rows.
+  - SELECT * FROM execve(argv=['cmd.exe', '/?'], length=10) LIMIT 5
+
+  # Check to make sure the data accessor is able to read the Stdout field.
+  - SELECT Stdout, hash(path=Stdout, accessor='data') as Hash FROM execve(argv=['cmd.exe', '/?'])

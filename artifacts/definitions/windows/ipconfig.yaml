@@ -1,0 +1,31 @@
+name: Windows.Sys.Interfaces
+description: |
+  Report information about the systems interfaces. This artifact
+  simply parses the output from ipconfig /all.
+
+sources:
+ - precondition:
+     SELECT OS from info() where OS = "windows"
+   queries:
+   - |
+     // Run ipconfig to get all information about interfaces.
+     LET ipconfig = SELECT * FROM execve(argv=['ipconfig', '/all'])
+   - |
+     // This produces a single row per interface.
+     LET interfaces = SELECT Name, Data FROM parse_records_with_regex(
+        file=ipconfig.Stdout,
+        accessor='data',      // This makes the data appear as a file.
+        regex='(?s)Ethernet adapter (?P<Name>[^:]+?):\r\n\r\n(?P<Data>.+?)\r\n(\r\n|$)')
+   - |
+     // Now extract interesting things from each interface definition.
+     SELECT Name, parse_string_with_regex(
+        string=Data,
+        regex=[
+          "Description[^:]+: (?P<Description>.+)\r\n",
+          "Physical Address[^:]+: (?P<MAC>.+)\r\n",
+          "IPv4 Address[^:]+: (?P<IP>[0-9.]+)",
+          "Default Gateway[^:]+: (?P<Gateway>.+)\r\n",
+          "DNS Servers[^:]+: (?P<DNS>.+)\r\n",
+          "DHCP Server[^:]+: (?P<DHCP>.+)\r\n"
+        ]
+     ) As Details FROM interfaces

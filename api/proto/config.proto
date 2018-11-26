@@ -92,6 +92,10 @@ message ClientConfig {
     WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
             description: "Configuration of the windows installer.",
         }];
+
+    bool prevent_execve = 17 [(sem_type) = {
+            description: "If this is set, prevent arbitrary code execution on clients."
+        }];
 }
 
 message APIConfig {
