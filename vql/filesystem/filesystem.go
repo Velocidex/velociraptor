@@ -64,12 +64,12 @@ func (self GlobPlugin) Call(
 	return output_chan
 }
 
-func (self GlobPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self GlobPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
-		RowType: type_map.AddType(glob.NewVirtualDirectoryPath("", nil)),
-		ArgType: type_map.AddType(&GlobPluginArgs{}),
+		RowType: type_map.AddType(scope, glob.NewVirtualDirectoryPath("", nil)),
+		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
 	}
 }
 
@@ -163,12 +163,12 @@ func (self ReadFilePlugin) Name() string {
 	return "read_file"
 }
 
-func (self ReadFilePlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ReadFilePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "read_file",
 		Doc:     "Read files in chunks.",
-		RowType: type_map.AddType(ReadFileResponse{}),
-		ArgType: type_map.AddType(&ReadFileArgs{}),
+		RowType: type_map.AddType(scope, ReadFileResponse{}),
+		ArgType: type_map.AddType(scope, &ReadFileArgs{}),
 	}
 }
 
@@ -211,7 +211,7 @@ func (self StatPlugin) Name() string {
 	return "stat"
 }
 
-func (self StatPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self StatPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "stat",
 		Doc:     "Get file information. Unlike glob() this does not support wildcards.",

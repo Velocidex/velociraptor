@@ -118,11 +118,11 @@ func (self _ParseFileWithRegex) Call(
 	return output_chan
 }
 
-func (self _ParseFileWithRegex) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _ParseFileWithRegex) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_records_with_regex",
 		Doc:     "Parses a file with a set of regexp and yields matches as records.",
-		ArgType: type_map.AddType(&_ParseFileWithRegexArgs{}),
+		ArgType: type_map.AddType(scope, &_ParseFileWithRegexArgs{}),
 	}
 }
 
@@ -185,12 +185,12 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	return row
 }
 
-func (self _ParseStringWithRegexFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ParseStringWithRegexFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "parse_string_with_regex",
 		Doc: "Parse a string with a set of regex and extract fields. Returns " +
 			"a dict with fields populated from all regex capture variables.",
-		ArgType: type_map.AddType(&_ParseStringWithRegexFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &_ParseStringWithRegexFunctionArgs{}),
 	}
 }
 
@@ -221,11 +221,11 @@ func (self _RegexReplace) Call(
 	return re.ReplaceAllString(arg.Source, arg.Replace)
 }
 
-func (self _RegexReplace) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _RegexReplace) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "regex_replace",
 		Doc:     "Search and replace a string with a regexp.",
-		ArgType: type_map.AddType(&_RegexReplaceArg{}),
+		ArgType: type_map.AddType(scope, &_RegexReplaceArg{}),
 	}
 }
 

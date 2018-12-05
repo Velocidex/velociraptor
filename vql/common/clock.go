@@ -54,7 +54,7 @@ func (self ClockPlugin) Call(
 	return output_chan
 }
 
-func (self ClockPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ClockPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "clock",
 		Doc: "Generate a timestamp periodically. This is mostly " +

@@ -1,0 +1,77 @@
+SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
+ {
+  "ClientId": "C.c916a7e445eb0868",
+  "Hostname": "DESKTOP-IOME2K5",
+  "LastSeen": 1541049785.896051
+ },
+ {
+  "ClientId": "C.11a3013cca8f826e",
+  "Hostname": "TestComputer",
+  "LastSeen": 1542151833.433916
+ },
+ {
+  "ClientId": "C.952156a4b022ddee",
+  "Hostname": "trek",
+  "LastSeen": 1540368672.777812
+ }
+]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer')[
+ {
+  "ClientId": "C.11a3013cca8f826e",
+  "Hostname": "TestComputer",
+  "System": "windows"
+ }
+]SELECT * from clients()[
+ {
+  "client_id": "C.11a3013cca8f826e",
+  "agent_information": {},
+  "os_info": {
+   "system": "windows",
+   "release": "Microsoft Windows 10 Pro N10.0.15063 Build 15063",
+   "machine": "amd64",
+   "fqdn": "TestComputer"
+  },
+  "last_seen_at": 1542151833433916,
+  "last_ip": "192.168.0.11:51087",
+  "last_ip_class": 1
+ },
+ {
+  "client_id": "C.952156a4b022ddee",
+  "agent_information": {},
+  "os_info": {
+   "system": "linux",
+   "release": "ubuntu18.10",
+   "machine": "amd64",
+   "fqdn": "trek"
+  },
+  "last_seen_at": 1540368672777812,
+  "last_ip": "192.168.0.5:33510",
+  "last_ip_class": 1
+ },
+ {
+  "client_id": "C.c916a7e445eb0868",
+  "agent_information": {},
+  "os_info": {
+   "system": "windows",
+   "release": "Microsoft Windows 10 Pro N10.0.17134 Build 17134",
+   "machine": "amd64",
+   "fqdn": "DESKTOP-IOME2K5"
+  },
+  "last_seen_at": 1541049785896051,
+  "last_ip": "192.168.0.18:49749",
+  "last_ip_class": 1
+ }
+]SELECT client_id, context.create_time as CreateTime,
+       runner_args.args.artifacts.names as Artifacts,
+       runner_args.flow_name as Flow
+FROM flows(client_id='C.11a3013cca8f826e')
+WHERE Flow = 'ArtifactCollector'[
+ {
+  "Artifacts": [
+   "Windows.Applications.ChocolateyPackages",
+   "Windows.Applications.Chrome.Extensions"
+  ],
+  "CreateTime": 1541550146808437,
+  "Flow": "ArtifactCollector",
+  "client_id": "C.11a3013cca8f826e"
+ }
+]

@@ -44,11 +44,11 @@ func (self _ParseXMLFunction) Call(
 	return result.Old()
 }
 
-func (self _ParseXMLFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ParseXMLFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "parse_xml",
 		Doc:     "Parse an XML document into a map.",
-		ArgType: type_map.AddType(&_ParseXMLFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &_ParseXMLFunctionArgs{}),
 	}
 }
 

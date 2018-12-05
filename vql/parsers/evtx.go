@@ -148,11 +148,11 @@ func (self _ParseEvtxPlugin) Call(
 	return output_chan
 }
 
-func (self _ParseEvtxPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _ParseEvtxPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_evtx",
 		Doc:     "Parses events from an EVTX file.",
-		ArgType: type_map.AddType(&_ParseEvtxPluginArgs{}),
+		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
 	}
 }
 
@@ -206,12 +206,12 @@ func (self _WatchEvtxPlugin) Call(
 	return output_chan
 }
 
-func (self _WatchEvtxPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _WatchEvtxPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "watch_evtx",
 		Doc: "Watch an EVTX file and stream events from it. " +
 			"Note: This is an event plugin which does not complete.",
-		ArgType: type_map.AddType(&_ParseEvtxPluginArgs{}),
+		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
 	}
 }
 

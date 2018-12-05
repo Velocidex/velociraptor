@@ -69,17 +69,17 @@ func (self ClientsPlugin) Call(
 	return output_chan
 }
 
-func (self ClientsPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ClientsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "clients",
 		Doc:     "Retrieve the list of clients.",
-		RowType: type_map.AddType(&api_proto.ApiClient{}),
-		ArgType: type_map.AddType(&ClientsPluginArgs{}),
+		RowType: type_map.AddType(scope, &api_proto.ApiClient{}),
+		ArgType: type_map.AddType(scope, &ClientsPluginArgs{}),
 	}
 }
 
 type FlowsPluginArgs struct {
-	ClientId string `vfilter:"required,field=client_id"`
+	ClientId []string `vfilter:"required,field=client_id"`
 }
 
 type FlowsPlugin struct{}
@@ -112,41 +112,45 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		flow_urns, err := db.ListChildren(
-			config_obj, urns.BuildURN(
-				"clients", arg.ClientId, "flows"),
-			0, 10000)
-		if err != nil {
-			return
-		}
-
-		for _, urn := range flow_urns {
-			flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+		for _, client_id := range arg.ClientId {
+			flow_urns, err := db.ListChildren(
+				config_obj, urns.BuildURN(
+					"clients", client_id, "flows"),
+				0, 10000)
 			if err != nil {
-				continue
+				return
 			}
 
-			output_chan <- &api_proto.ApiFlow{
-				Urn:        urn,
-				ClientId:   arg.ClientId,
-				FlowId:     path.Base(urn),
-				Name:       flow_obj.RunnerArgs.FlowName,
-				RunnerArgs: flow_obj.RunnerArgs,
-				Context:    flow_obj.FlowContext,
-			}
+			for _, urn := range flow_urns {
+				flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+				if err != nil {
+					continue
+				}
 
+				item := &api_proto.ApiFlow{
+					Urn:        urn,
+					ClientId:   client_id,
+					FlowId:     path.Base(urn),
+					Name:       flow_obj.RunnerArgs.FlowName,
+					RunnerArgs: flow_obj.RunnerArgs,
+					Context:    flow_obj.FlowContext,
+				}
+
+				output_chan <- item
+
+			}
 		}
 	}()
 
 	return output_chan
 }
 
-func (self FlowsPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self FlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "flows",
 		Doc:     "Retrieve the flows launched on each client.",
-		RowType: type_map.AddType(&api_proto.ApiFlow{}),
-		ArgType: type_map.AddType(&FlowsPluginArgs{}),
+		RowType: type_map.AddType(scope, &api_proto.ApiFlow{}),
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
 	}
 }
 

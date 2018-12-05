@@ -87,11 +87,11 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 }
 
-func (self HashFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self HashFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "hash",
 		Doc:     "Calculate the hash of a file.",
-		ArgType: type_map.AddType(&HashFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &HashFunctionArgs{}),
 	}
 }
 

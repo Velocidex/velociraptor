@@ -32,11 +32,11 @@ func (self *DirnameFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self DirnameFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self DirnameFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "dirname",
 		Doc:     "Return the directory path.",
-		ArgType: type_map.AddType(&DirnameArgs{}),
+		ArgType: type_map.AddType(scope, &DirnameArgs{}),
 	}
 }
 
@@ -60,11 +60,11 @@ func (self *BasenameFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self BasenameFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self BasenameFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "basename",
 		Doc:     "Return the basename of the path.",
-		ArgType: type_map.AddType(&DirnameArgs{}),
+		ArgType: type_map.AddType(scope, &DirnameArgs{}),
 	}
 }
 

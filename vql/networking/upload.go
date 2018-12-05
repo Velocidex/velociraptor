@@ -84,13 +84,13 @@ func (self *UploadFunction) Call(ctx context.Context,
 
 }
 
-func (self UploadFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self UploadFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "upload",
 		Doc: "Upload a file to the upload service. For a Velociraptor " +
 			"client this will upload the file into the flow and store " +
 			"it in the server's file store.",
-		ArgType: type_map.AddType(&UploadFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &UploadFunctionArgs{}),
 	}
 }
 
@@ -148,12 +148,12 @@ func (self *UploadPlugin) Call(
 	return output_chan
 }
 
-func (self UploadPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self UploadPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "upload",
 		Doc:     "Upload files to the server.",
-		RowType: type_map.AddType(&UploadResponse{}),
-		ArgType: type_map.AddType(&UploadPluginArgs{}),
+		RowType: type_map.AddType(scope, &UploadResponse{}),
+		ArgType: type_map.AddType(scope, &UploadPluginArgs{}),
 	}
 }
 

@@ -159,11 +159,11 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 	return syscall.UTF16ToString(name)
 }
 
-func (self *LookupSidFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self *LookupSidFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "lookupSID",
 		Doc:     "Get information about the SID.",
-		ArgType: type_map.AddType(&LookupSidFunction{}),
+		ArgType: type_map.AddType(scope, &LookupSidFunction{}),
 	}
 }
 

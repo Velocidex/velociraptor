@@ -3,6 +3,7 @@ package filesystem
 import (
 	"context"
 	"regexp"
+
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -33,11 +34,11 @@ func (self _Basename) Call(
 	return "/"
 }
 
-func (self _Basename) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Basename) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "basename",
 		Doc:     "Splits the path on separator and return the basename.",
-		ArgType: type_map.AddType(&_BasenameArgs{}),
+		ArgType: type_map.AddType(scope, &_BasenameArgs{}),
 	}
 }
 

@@ -93,13 +93,13 @@ func (self ReadKeyValues) Call(
 	return output_chan
 }
 
-func (self ReadKeyValues) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ReadKeyValues) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: "read_reg_key",
 		Doc: "This is a convenience function for reading the entire " +
 			"registry key matching the globs. Emits dicts with keys " +
 			"being the value names and the values being the value data.",
-		ArgType: type_map.AddType(&ReadKeyValuesArgs{}),
+		ArgType: type_map.AddType(scope, &ReadKeyValuesArgs{}),
 	}
 }
 

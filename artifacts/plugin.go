@@ -14,7 +14,7 @@ import (
 
 type ArtifactRepositoryPlugin struct {
 	repository *Repository
-	children   map[string]*ArtifactRepositoryPlugin
+	children   map[string]vfilter.PluginGeneratorInterface
 	prefix     []string
 	leaf       *artifacts_proto.Artifact
 }
@@ -27,7 +27,7 @@ func (self *ArtifactRepositoryPlugin) Print() {
 	fmt.Printf("prefix '%v', Children %v, Leaf %v\n",
 		self.prefix, children, self.leaf != nil)
 	for _, v := range self.children {
-		v.Print()
+		v.(*ArtifactRepositoryPlugin).Print()
 	}
 }
 
@@ -97,9 +97,10 @@ func (self *ArtifactRepositoryPlugin) Name() string {
 }
 
 func (self *ArtifactRepositoryPlugin) Info(
-	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name: self.Name(),
+		Doc:  "A pseudo plugin for accessing the artifacts repository from VQL.",
 	}
 }
 
@@ -161,10 +162,10 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 }
 
 func NewArtifactRepositoryPlugin(
-	repository *Repository, prefix []string) *ArtifactRepositoryPlugin {
+	repository *Repository, prefix []string) vfilter.PluginGeneratorInterface {
 	result := &ArtifactRepositoryPlugin{
 		repository: repository,
-		children:   make(map[string]*ArtifactRepositoryPlugin),
+		children:   make(map[string]vfilter.PluginGeneratorInterface),
 		prefix:     prefix,
 	}
 

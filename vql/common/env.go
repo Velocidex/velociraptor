@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"strings"
+
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -31,11 +32,11 @@ func (self *EnvFunction) Call(ctx context.Context,
 	return os.Getenv(arg.Var)
 }
 
-func (self *EnvFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self *EnvFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "environ",
 		Doc:     "Get an environment variable.",
-		ArgType: type_map.AddType(&EnvFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &EnvFunctionArgs{}),
 	}
 }
 

@@ -1,0 +1,15 @@
+Queries:
+  # Just get a list of all clients and their hostnames.
+  - SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname
+
+  # Check that the clients plugin allows searching by indexes.
+  - SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer')
+
+  - SELECT * from clients()
+
+  - |
+    SELECT client_id, context.create_time as CreateTime,
+           runner_args.args.artifacts.names as Artifacts,
+           runner_args.flow_name as Flow
+    FROM flows(client_id='C.11a3013cca8f826e')
+    WHERE Flow = 'ArtifactCollector'

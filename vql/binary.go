@@ -188,11 +188,11 @@ func (self _BinaryParserPlugin) Name() string {
 	return "binary_parse"
 }
 
-func (self _BinaryParserPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _BinaryParserPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "binary_parse",
 		Doc:     "Parse binary files using a profile.",
-		ArgType: type_map.AddType(&_BinaryParserPluginArg{}),
+		ArgType: type_map.AddType(scope, &_BinaryParserPluginArg{}),
 	}
 }
 
@@ -277,11 +277,11 @@ func (self _BinaryParserFunction) Name() string {
 	return "binary_parse"
 }
 
-func (self _BinaryParserFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _BinaryParserFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "binary_parse",
 		Doc:     "Parse a binary string with profile based parser.",
-		ArgType: type_map.AddType(&_BinaryParserFunctionArg{}),
+		ArgType: type_map.AddType(scope, &_BinaryParserFunctionArg{}),
 	}
 }
 

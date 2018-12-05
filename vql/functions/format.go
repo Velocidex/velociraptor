@@ -42,11 +42,11 @@ func (self *FormatFunction) Call(ctx context.Context,
 	return fmt.Sprintf(arg.Format, format_args...)
 }
 
-func (self FormatFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self FormatFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "format",
 		Doc:     "Format one or more items according to a format string.",
-		ArgType: type_map.AddType(&FormatArgs{}),
+		ArgType: type_map.AddType(scope, &FormatArgs{}),
 	}
 }
 

@@ -33,11 +33,11 @@ func (self WatchPlugin) Call(
 	return output_chan
 }
 
-func (self WatchPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WatchPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "watch",
 		Doc:     "Run query periodically and watch for changes in output.",
-		ArgType: type_map.AddType(&WatchPluginArgs{}),
+		ArgType: type_map.AddType(scope, &WatchPluginArgs{}),
 	}
 }
 

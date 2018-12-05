@@ -161,7 +161,7 @@ func (self YaraScanPlugin) Call(
 	return output_chan
 }
 
-func (self YaraScanPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self YaraScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "yara",
 		Doc:     "Scan files using yara rules.",
@@ -177,7 +177,7 @@ type YaraProcPluginArgs struct {
 
 type YaraProcPlugin struct{}
 
-func (self YaraProcPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self YaraProcPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "proc_yara",
 		Doc:     "Scan processes using yara rules.",

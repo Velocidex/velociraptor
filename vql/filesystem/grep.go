@@ -94,11 +94,11 @@ func (self *GrepFunction) Call(ctx context.Context,
 	}
 }
 
-func (self GrepFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GrepFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "grep",
 		Doc:     "Search a file for keywords.",
-		ArgType: type_map.AddType(&GrepFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &GrepFunctionArgs{}),
 	}
 }
 

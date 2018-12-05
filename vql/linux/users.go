@@ -158,11 +158,11 @@ func (self _UsersPlugin) Name() string {
 	return "users"
 }
 
-func (self _UsersPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self _UsersPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "users",
 		Doc:     "List last logged in users based on wtmp records.",
-		ArgType: type_map.AddType(&_UsersPluginArg{}),
+		ArgType: type_map.AddType(scope, &_UsersPluginArg{}),
 	}
 }
 

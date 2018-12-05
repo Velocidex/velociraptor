@@ -191,10 +191,12 @@
   version = "v0.5.0"
 
 [[projects]]
-  digest = "1:2d0b44ee6208d256e29f55764db1fa41e3ae33fac6cef138acae6a79c3bd748e"
+  digest = "1:19776767e34ab4def5b55714b3d67ac45d8f9a0d1cf6fa50b3b5920b3b38ff5c"
   name = "github.com/magefile/mage"
   packages = [
+    "mage",
     "mg",
+    "parse",
     "sh",
   ]
   pruneopts = "UT"
@@ -462,11 +464,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6dbfb28a0a2de48e8f2294e866abe42c672e2c44075f21ae0ad62c5d7d7b0638"
+  digest = "1:e573bc0d45af106ee57474da52a53067607e68b4ca4c887e24cfa6f190009c36"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "631be74455e94a552837983b511bdcf6a1741d8b"
+  revision = "91bde9702984fac025d984b355bf457281d4a084"
 
 [[projects]]
   branch = "master"
@@ -504,6 +506,7 @@
     "github.com/gorilla/schema",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/magefile/mage/mage",
     "github.com/magefile/mage/mg",
     "github.com/magefile/mage/sh",
     "github.com/mattn/go-pointer",

@@ -148,11 +148,11 @@ func (self WmiEventPlugin) Call(
 	return output_chan
 }
 
-func (self WmiEventPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WmiEventPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "wmi_events",
 		Doc:     "Executes an evented WMI queries asynchronously.",
-		ArgType: type_map.AddType(&WmiEventPluginArgs{}),
+		ArgType: type_map.AddType(scope, &WmiEventPluginArgs{}),
 	}
 }
 

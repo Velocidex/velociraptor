@@ -32,11 +32,11 @@ func (self *HumanizeFunction) Call(ctx context.Context,
 	return fmt.Sprintf("%v", arg.Bytes)
 }
 
-func (self HumanizeFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self HumanizeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "humanize",
 		Doc:     "Format items in human readable way.",
-		ArgType: type_map.AddType(&HumanizeArgs{}),
+		ArgType: type_map.AddType(scope, &HumanizeArgs{}),
 	}
 }
 

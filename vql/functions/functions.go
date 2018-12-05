@@ -34,10 +34,10 @@ func (self _Base64Decode) Call(
 	return string(result)
 }
 
-func (self _Base64Decode) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Base64Decode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "base64decode",
-		ArgType: type_map.AddType(&_Base64DecodeArgs{}),
+		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
 	}
 }
 
@@ -62,11 +62,11 @@ func (self _ToInt) Call(
 	return result
 }
 
-func (self _ToInt) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _ToInt) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "atoi",
 		Doc:     "Convert a string to an int.",
-		ArgType: type_map.AddType(&_ToIntArgs{}),
+		ArgType: type_map.AddType(scope, &_ToIntArgs{}),
 	}
 }
 
@@ -79,11 +79,11 @@ func (self _Now) Call(
 	return time.Now().Unix()
 }
 
-func (self _Now) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self _Now) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "now",
 		Doc:     "Returns current time in seconds since epoch.",
-		ArgType: type_map.AddType(&_ToIntArgs{}),
+		ArgType: type_map.AddType(scope, &_ToIntArgs{}),
 	}
 }
 

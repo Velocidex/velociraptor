@@ -124,7 +124,7 @@ func (self ShellPlugin) Call(
 	return output_chan
 }
 
-func (self ShellPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ShellPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "execve",
 		Doc:     "Execute the commands given by argv.",

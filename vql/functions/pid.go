@@ -17,7 +17,7 @@ func (self *GetPidFunction) Call(ctx context.Context,
 	return os.Getpid()
 }
 
-func (self GetPidFunction) Info(type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GetPidFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "getpid",
 		Doc:  "Returns the current pid of the process.",

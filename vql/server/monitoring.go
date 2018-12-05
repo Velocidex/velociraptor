@@ -90,11 +90,11 @@ func (self MonitoringPlugin) Call(
 	return output_chan
 }
 
-func (self MonitoringPlugin) Info(type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self MonitoringPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "monitoring",
 		Doc:     "Extract monitoring log from a client.",
-		ArgType: type_map.AddType(&MonitoringPluginArgs{}),
+		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
 	}
 }
 
