@@ -1,0 +1,3035 @@
+
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service"""
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service"""
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver"""
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver"""
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver"""
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3978"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:45:09Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3980"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:46:33Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3983"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:48:00Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4062"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""7504""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T04:10:05Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4071"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:16:22Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4073"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:24:25Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3978"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:45:09Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3980"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:46:33Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3983"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:48:00Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4062"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""7504""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T04:10:05Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4071"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:16:22Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4073"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:24:25Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4075"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""7544""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:27:59Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4076"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2444""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:33:36Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4077"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:37:34Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3978"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:45:09Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3980"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:46:33Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""3983"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""4584""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T02:48:00Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4062"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""7504""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T04:10:05Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4071"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:16:22Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4073"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:24:25Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4075"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""7544""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:27:59Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4076"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2444""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:33:36Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4077"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""2320""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T05:37:34Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4081"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""5284""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T06:47:00Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }","{
+   ""Channel"": ""System"",
+   ""Computer"": ""DESKTOP-IOME2K5"",
+   ""Correlation"": {},
+   ""EventID"": {
+    ""Qualifiers"": ""16384"",
+    ""Value"": ""7045""
+   },
+   ""EventRecordID"": ""4082"",
+   ""Execution"": {
+    ""ProcessID"": ""760"",
+    ""ThreadID"": ""5284""
+   },
+   ""Keywords"": ""0x8080000000000000"",
+   ""Level"": ""4"",
+   ""Opcode"": ""0"",
+   ""Provider"": {
+    ""EventSourceName"": ""Service Control Manager"",
+    ""Guid"": ""{555908d1-a6d7-4695-8e1e-26931d2012f4}"",
+    ""Name"": ""Service Control Manager""
+   },
+   ""Security"": {
+    ""UserID"": ""S-1-5-21-546003962-2713609280-610790815-1001""
+   },
+   ""Task"": ""0"",
+   ""TimeCreated"": {
+    ""SystemTime"": ""2018-10-31T06:47:59Z""
+   },
+   ""Version"": ""0""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T12:20:45Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T02:45:09Z""","""7045""","""c:\\Windows\\notepad.exe""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:46:33Z""","""7045""","""c:\\Windows\\notepad.exe -h""","""testservice""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""c:\\Windows\\notepad.exe -h"",
+   ""ServiceName"": ""testservice"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T02:48:00Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeAE10.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T04:10:05Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme958D.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:16:22Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pmeA69B.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:24:25Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme12D0.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T05:27:59Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:33:36Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T05:37:34Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:00Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T06:47:59Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme126C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T06:57:11Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme8DFE.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:15:42Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme7DD7.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:16:21Z""","""7045""","""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp""","""pmem""","""kernel mode driver""","{
+   ""AccountName"": """",
+   ""ImagePath"": ""C:\\Users\\test\\AppData\\Local\\Temp\\pme140C.tmp"",
+   ""ServiceName"": ""pmem"",
+   ""ServiceType"": ""kernel mode driver"",
+   ""StartType"": ""demand start""
+  }"
+"""2018-10-31T10:20:47Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"
+"""2018-10-31T12:20:45Z""","""7045""","""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run""","""Velociraptor""","""user mode service""","{
+   ""AccountName"": ""LocalSystem"",
+   ""ImagePath"": ""\""C:\\Program Files\\Velociraptor\\Velociraptor.exe\"" service run"",
+   ""ServiceName"": ""Velociraptor"",
+   ""ServiceType"": ""user mode service"",
+   ""StartType"": ""auto start""
+  }"

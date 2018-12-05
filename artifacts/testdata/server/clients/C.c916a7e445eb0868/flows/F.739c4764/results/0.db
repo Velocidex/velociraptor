@@ -1,0 +1,11 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.739c4764*Ž
+[
+ {
+  "Error": "",
+  "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1/Python37/LICENSE.txt",
+  "Size": 30189
+ }
+]PathSizeErroro
+_SELECT Path, Size, Error
+                         FROM upload(files=[Path0], accessor=accessor)Upload files ãƒ¬·ÄžÞ2C.c916a7e445eb08688rVQLResponsexù•žÕÆžÞÀœ

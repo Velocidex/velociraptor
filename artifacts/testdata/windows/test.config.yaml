@@ -1,0 +1,3 @@
+Datastore:
+  filestore_directory: artifacts/testdata/server/
+  location: artifacts/testdata/server/

@@ -1,0 +1,199 @@
+
+ï([
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "DLLs",
+  "Size": 176,
+  "_Data": {
+   "mft": "11643-144-5",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\DLLs",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Doc",
+  "Size": 272,
+  "_Data": {
+   "mft": "14100-144-1",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\Doc",
+  "atime": "2018-10-01T07:20:09-07:00",
+  "ctime": "2018-10-01T07:20:09-07:00",
+  "mtime": "2018-10-01T07:20:09-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "LICENSE.txt",
+  "Size": 30189,
+  "_Data": {
+   "mft": "11640-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\LICENSE.txt",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Lib",
+  "Size": 56,
+  "_Data": {
+   "mft": "11657-144-6",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\Lib",
+  "atime": "2018-10-01T07:19:56-07:00",
+  "ctime": "2018-10-01T07:19:56-07:00",
+  "mtime": "2018-10-01T07:19:56-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "NEWS.txt",
+  "Size": 608911,
+  "_Data": {
+   "mft": "11642-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\NEWS.txt",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Tools",
+  "Size": 528,
+  "_Data": {
+   "mft": "14107-144-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\Tools",
+  "atime": "2018-10-01T07:20:11-07:00",
+  "ctime": "2018-10-01T07:20:11-07:00",
+  "mtime": "2018-10-01T07:20:11-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "VCRUNT~1.DLL",
+  "Size": 89752,
+  "_Data": {
+   "mft": "11650-128-4",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\VCRUNT~1.DLL",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "include",
+  "Size": 56,
+  "_Data": {
+   "mft": "11522-144-6",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\include",
+  "atime": "2018-10-01T07:19:49-07:00",
+  "ctime": "2018-10-01T07:19:49-07:00",
+  "mtime": "2018-10-01T07:19:49-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "libs",
+  "Size": 592,
+  "_Data": {
+   "mft": "11630-144-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\libs",
+  "atime": "2018-10-01T07:19:49-07:00",
+  "ctime": "2018-10-01T07:19:49-07:00",
+  "mtime": "2018-10-01T07:19:49-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "python.exe",
+  "Size": 99992,
+  "_Data": {
+   "mft": "11647-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\python.exe",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "python3.dll",
+  "Size": 59032,
+  "_Data": {
+   "mft": "11518-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\python3.dll",
+  "atime": "2018-10-01T07:19:47-07:00",
+  "ctime": "2018-10-01T07:19:47-07:00",
+  "mtime": "2018-10-01T07:19:47-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "python37.dll",
+  "Size": 3844760,
+  "_Data": {
+   "mft": "11517-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\python37.dll",
+  "atime": "2018-10-01T07:19:47-07:00",
+  "ctime": "2018-10-01T07:19:47-07:00",
+  "mtime": "2018-10-01T07:19:47-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "pythonw.exe",
+  "Size": 98456,
+  "_Data": {
+   "mft": "11648-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\pythonw.exe",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "tcl",
+  "Size": 56,
+  "_Data": {
+   "mft": "14483-144-5",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\tcl",
+  "atime": "2018-10-01T07:20:19-07:00",
+  "ctime": "2018-10-01T07:20:19-07:00",
+  "mtime": "2018-10-01T07:20:19-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "vcruntime140.dll",
+  "Size": 89752,
+  "_Data": {
+   "mft": "11650-128-4",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37\\vcruntime140.dll",
+  "atime": "2018-10-01T07:19:50-07:00",
+  "ctime": "2018-10-01T07:19:50-07:00",
+  "mtime": "2018-10-01T07:19:50-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectime§
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)>/ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1/Python37 ™êı¡Ş

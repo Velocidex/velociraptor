@@ -1,0 +1,58 @@
+
+¶[
+ {
+  "Mode": "d---------",
+  "Name": "C:",
+  "Size": 0,
+  "_Data": {
+   "Description": "Local Fixed Disk",
+   "DeviceID": "C:",
+   "FreeSpace": "9316438016",
+   "Size": "33833349120",
+   "SystemName": "TESTCOMPUTER",
+   "VolumeName": "",
+   "VolumeSerialNumber": "9459F443"
+  },
+  "_FullPath": "C:",
+  "atime": null,
+  "ctime": null,
+  "mtime": null
+ },
+ {
+  "Mode": "d---------",
+  "Name": "D:",
+  "Size": 0,
+  "_Data": {
+   "Description": "CD-ROM Disc",
+   "DeviceID": "D:",
+   "FreeSpace": "0",
+   "Size": "573913088",
+   "SystemName": "TESTCOMPUTER",
+   "VolumeName": "sysrcd-5.3.1",
+   "VolumeSerialNumber": "90D5F33F"
+  },
+  "_FullPath": "D:",
+  "atime": null,
+  "ctime": null,
+  "mtime": null
+ },
+ {
+  "Mode": "d---------",
+  "Name": "F:",
+  "Size": 0,
+  "_Data": {
+   "Description": "Network Connection",
+   "DeviceID": "F:",
+   "FreeSpace": "2355621154816",
+   "Size": "3936908984320",
+   "SystemName": "TESTCOMPUTER",
+   "VolumeName": "VBOX_shared",
+   "VolumeSerialNumber": "0000FD00"
+  },
+  "_FullPath": "F:",
+  "atime": null,
+  "ctime": null,
+  "mtime": null
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeî
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file ä¿ñœˆÁÞ

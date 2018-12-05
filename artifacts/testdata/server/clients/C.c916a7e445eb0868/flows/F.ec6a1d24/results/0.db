@@ -1,0 +1,11 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.ec6a1d24*‘
+E[
+ {
+  "Error": "",
+  "Path": "/D:/runasroot.sh",
+  "Size": 4821
+ }
+]PathSizeErroro
+_SELECT Path, Size, Error
+                         FROM upload(files=[Path0], accessor=accessor)Upload files æÚ∞ÚÎûﬁ2C.c916a7e445eb08688rVQLResponsexÁ·ÊêÓûﬁ¿ú

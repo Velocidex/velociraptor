@@ -1,0 +1,1104 @@
+
+‘Ó[
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "AppReadiness",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\AppReadiness",
+  "atime": "2018-10-23T00:41:42-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-10-23T00:41:42-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "BitLockerDiscoveryVolumeContents",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\BitLockerDiscoveryVolumeContents",
+  "atime": "2018-09-28T03:33:34-07:00",
+  "ctime": "2018-04-12T02:20:15-07:00",
+  "mtime": "2018-04-12T02:20:16-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Boot",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Boot",
+  "atime": "2018-09-28T03:33:35-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Branding",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Branding",
+  "atime": "2018-09-28T03:33:42-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "CSC",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\CSC",
+  "atime": "2018-09-28T03:33:42-07:00",
+  "ctime": "2017-10-04T08:26:37-07:00",
+  "mtime": "2017-10-04T08:26:37-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "CbsTemp",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\CbsTemp",
+  "atime": "2018-10-21T01:22:48-07:00",
+  "ctime": "2018-04-11T16:30:02-07:00",
+  "mtime": "2018-10-21T01:22:48-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Containers",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Containers",
+  "atime": "2018-09-28T03:33:42-07:00",
+  "ctime": "2018-04-12T02:35:27-07:00",
+  "mtime": "2018-09-03T17:43:42-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Cursors",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Cursors",
+  "atime": "2018-09-28T03:33:42-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:16-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "DigitalLocker",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\DigitalLocker",
+  "atime": "2018-09-28T03:33:53-07:00",
+  "ctime": "2018-04-12T02:15:44-07:00",
+  "mtime": "2018-04-12T02:15:44-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Downloaded Program Files",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Downloaded Program Files",
+  "atime": "2018-09-28T03:33:53-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:16-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "DtcInstall.log",
+  "Size": 4179,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\DtcInstall.log",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-04-11T16:40:17-07:00",
+  "mtime": "2018-09-03T02:52:17-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ELAMBKUP",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ELAMBKUP",
+  "atime": "2018-09-28T03:33:53-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:16-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Fonts",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Fonts",
+  "atime": "2018-10-23T18:44:05-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T17:43:47-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "GameBarPresenceWriter",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\GameBarPresenceWriter",
+  "atime": "2018-09-28T03:33:58-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Globalization",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Globalization",
+  "atime": "2018-09-28T03:33:58-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Help",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Help",
+  "atime": "2018-09-28T03:33:59-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-12T02:15:44-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "HelpPane.exe",
+  "Size": 1054720,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\HelpPane.exe",
+  "atime": "2018-09-16T06:47:21-07:00",
+  "ctime": "2018-09-03T07:48:10-07:00",
+  "mtime": "2018-06-15T10:30:55-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "IME",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\IME",
+  "atime": "2018-09-28T03:34:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-12T02:15:44-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "INF",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\INF",
+  "atime": "2018-10-23T05:50:23-07:00",
+  "ctime": "2018-04-11T16:36:39-07:00",
+  "mtime": "2018-10-23T04:39:37-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "IdentityCRL",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\IdentityCRL",
+  "atime": "2018-09-28T03:34:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:16-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "ImmersiveControlPanel",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ImmersiveControlPanel",
+  "atime": "2018-10-23T18:44:33-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-27T23:55:25-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "InfusedApps",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\InfusedApps",
+  "atime": "2018-09-28T03:34:22-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "InputMethod",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\InputMethod",
+  "atime": "2018-09-28T03:34:35-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Installer",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Installer",
+  "atime": "2018-10-02T19:03:03-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-10-01T07:20:26-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "L2Schemas",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\L2Schemas",
+  "atime": "2018-09-28T03:42:20-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:16-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "LanguageOverlayCache",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\LanguageOverlayCache",
+  "atime": "2018-09-28T03:42:21-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "LastGood.Tmp",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\LastGood.Tmp",
+  "atime": "2018-10-23T04:39:41-07:00",
+  "ctime": "2018-10-23T04:39:29-07:00",
+  "mtime": "2018-10-23T04:39:41-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "LiveKernelReports",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\LiveKernelReports",
+  "atime": "2018-09-28T03:42:21-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-28T02:38:57-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Logs",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs",
+  "atime": "2018-10-21T01:37:58-07:00",
+  "ctime": "2018-04-11T14:04:39-07:00",
+  "mtime": "2018-10-19T10:36:17-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Microsoft.NET",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Microsoft.NET",
+  "atime": "2018-10-23T00:27:44-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-10-21T01:37:44-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Migration",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Migration",
+  "atime": "2018-09-28T03:42:51-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ModemLogs",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ModemLogs",
+  "atime": "2018-09-28T03:42:51-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "OCR",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\OCR",
+  "atime": "2018-09-28T03:42:51-07:00",
+  "ctime": "2018-04-12T02:19:14-07:00",
+  "mtime": "2018-04-12T02:19:14-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Offline Web Pages",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Offline Web Pages",
+  "atime": "2018-09-28T03:42:51-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:18-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "PFRO.log",
+  "Size": 29326,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\PFRO.log",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2017-10-05T23:17:16-07:00",
+  "mtime": "2018-09-28T17:18:59-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "PLA",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\PLA",
+  "atime": "2018-09-28T03:42:56-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Panther",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Panther",
+  "atime": "2018-10-21T01:38:42-07:00",
+  "ctime": "2018-08-31T01:18:54-07:00",
+  "mtime": "2018-09-03T03:15:29-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Performance",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Performance",
+  "atime": "2018-09-28T03:42:56-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "PolicyDefinitions",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\PolicyDefinitions",
+  "atime": "2018-09-28T03:42:57-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-27T23:55:25-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Prefetch",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Prefetch",
+  "atime": "2018-10-23T19:59:29-07:00",
+  "ctime": "2018-09-03T02:50:05-07:00",
+  "mtime": "2018-10-23T18:54:40-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "PrintDialog",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\PrintDialog",
+  "atime": "2018-09-28T03:43:08-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T17:43:48-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "ProfessionalN.xml",
+  "Size": 36562,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ProfessionalN.xml",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-04-12T02:20:40-07:00",
+  "mtime": "2018-04-11T16:33:46-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Provisioning",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Provisioning",
+  "atime": "2018-10-21T01:37:52-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T17:43:48-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Registration",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Registration",
+  "atime": "2018-09-28T03:43:12-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T02:58:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "RemotePackages",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\RemotePackages",
+  "atime": "2018-09-28T03:43:12-07:00",
+  "ctime": "2018-04-12T02:20:15-07:00",
+  "mtime": "2018-04-12T02:20:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Resources",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Resources",
+  "atime": "2018-09-28T03:43:14-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SKB",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SKB",
+  "atime": "2018-09-28T03:45:01-07:00",
+  "ctime": "2018-04-12T02:16:26-07:00",
+  "mtime": "2018-04-12T02:16:26-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "SMSS-PFRO15aa.tmp",
+  "Size": 302360,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SMSS-PFRO15aa.tmp",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-20T04:19:26-07:00",
+  "mtime": "2018-04-20T04:19:26-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "SMSS-PFRO3eae.tmp",
+  "Size": 302360,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SMSS-PFRO3eae.tmp",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-20T04:19:26-07:00",
+  "mtime": "2018-04-20T04:19:26-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "SMSS-PFRO41bc.tmp",
+  "Size": 302360,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SMSS-PFRO41bc.tmp",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-20T04:19:26-07:00",
+  "mtime": "2018-04-20T04:19:26-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SchCache",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SchCache",
+  "atime": "2018-09-28T03:43:14-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ServiceProfiles",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ServiceProfiles",
+  "atime": "2018-10-23T18:44:04-07:00",
+  "ctime": "2018-09-03T03:43:20-07:00",
+  "mtime": "2018-09-03T03:44:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ServiceState",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ServiceState",
+  "atime": "2018-09-28T03:43:18-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Setup",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Setup",
+  "atime": "2018-09-28T03:45:00-07:00",
+  "ctime": "2018-04-11T16:40:54-07:00",
+  "mtime": "2018-09-03T03:48:09-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ShellComponents",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ShellComponents",
+  "atime": "2018-09-28T03:45:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:18-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ShellExperiences",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\ShellExperiences",
+  "atime": "2018-09-28T03:45:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T17:43:48-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SoftwareDistribution",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SoftwareDistribution",
+  "atime": "2018-10-23T18:44:40-07:00",
+  "ctime": "2017-10-04T08:26:05-07:00",
+  "mtime": "2018-09-03T02:59:35-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Speech",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Speech",
+  "atime": "2018-09-28T03:51:45-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Speech_OneCore",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Speech_OneCore",
+  "atime": "2018-09-28T03:51:46-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SysWOW64",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SysWOW64",
+  "atime": "2018-10-24T11:44:02-07:00",
+  "ctime": "2018-04-11T14:04:41-07:00",
+  "mtime": "2018-10-23T04:39:41-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "System",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\System",
+  "atime": "2018-10-06T10:28:54-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "System32",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\System32",
+  "atime": "2018-10-23T19:46:01-07:00",
+  "ctime": "2018-04-11T14:04:33-07:00",
+  "mtime": "2018-10-24T11:44:02-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SystemApps",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SystemApps",
+  "atime": "2018-10-23T18:44:39-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-12T02:20:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SystemResources",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\SystemResources",
+  "atime": "2018-10-21T01:24:27-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "TAPI",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\TAPI",
+  "atime": "2018-09-28T03:58:41-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Tasks",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Tasks",
+  "atime": "2018-10-24T11:44:02-07:00",
+  "ctime": "2017-03-18T14:02:03-07:00",
+  "mtime": "2018-09-03T02:59:16-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Temp",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Temp",
+  "atime": "2018-10-23T19:58:16-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-10-23T19:58:16-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "TextInput",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\TextInput",
+  "atime": "2018-10-10T04:08:20-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-10-10T04:08:20-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "UpdateAssistant",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\UpdateAssistant",
+  "atime": "2018-10-23T03:32:28-07:00",
+  "ctime": "2018-08-09T16:07:17-07:00",
+  "mtime": "2018-08-26T10:24:45-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "UpdateAssistantV2",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\UpdateAssistantV2",
+  "atime": "2018-09-28T03:58:42-07:00",
+  "ctime": "2017-12-13T10:16:34-08:00",
+  "mtime": "2018-09-03T03:29:05-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Vss",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Vss",
+  "atime": "2018-09-28T03:58:42-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "WaaS",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\WaaS",
+  "atime": "2018-09-28T03:58:43-07:00",
+  "ctime": "2018-04-11T14:04:37-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Web",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Web",
+  "atime": "2018-09-29T23:59:08-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "WinSxS",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\WinSxS",
+  "atime": "2018-10-19T10:25:21-07:00",
+  "ctime": "2018-04-11T14:04:33-07:00",
+  "mtime": "2018-10-19T10:25:21-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "WindowsShell.Manifest",
+  "Size": 670,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\WindowsShell.Manifest",
+  "atime": "2018-10-23T19:58:31-07:00",
+  "ctime": "2018-04-11T16:34:28-07:00",
+  "mtime": "2018-04-11T16:34:28-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "WindowsUpdate.log",
+  "Size": 276,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\WindowsUpdate.log",
+  "atime": "2018-10-23T18:44:08-07:00",
+  "ctime": "2017-10-04T08:26:06-07:00",
+  "mtime": "2018-10-23T18:44:08-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "addins",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\addins",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "appcompat",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\appcompat",
+  "atime": "2018-10-23T03:31:44-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-04T03:28:28-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "apppatch",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\apppatch",
+  "atime": "2018-09-28T03:33:15-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-27T23:55:25-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "assembly",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\assembly",
+  "atime": "2018-10-19T10:18:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T02:52:07-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "bcastdvr",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\bcastdvr",
+  "atime": "2018-10-10T04:08:19-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-10-10T04:08:19-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "bfsvc.exe",
+  "Size": 67072,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\bfsvc.exe",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-04-11T16:33:55-07:00",
+  "mtime": "2018-04-11T16:33:55-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "bootstat.dat",
+  "Size": 67584,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\bootstat.dat",
+  "atime": "2018-10-23T19:58:16-07:00",
+  "ctime": "2018-09-03T03:43:43-07:00",
+  "mtime": "2018-10-23T19:58:16-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "comsetup.log",
+  "Size": 17533,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\comsetup.log",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-09-03T02:54:04-07:00",
+  "mtime": "2018-09-03T02:58:08-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "debug",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\debug",
+  "atime": "2018-10-10T03:02:36-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-16T03:58:15-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "diagerr.xml",
+  "Size": 7623,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\diagerr.xml",
+  "atime": "2018-10-21T01:40:28-07:00",
+  "ctime": "2018-09-03T02:58:45-07:00",
+  "mtime": "2018-09-03T02:59:11-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "diagnostics",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\diagnostics",
+  "atime": "2018-09-28T03:33:45-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "diagwrn.xml",
+  "Size": 7623,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\diagwrn.xml",
+  "atime": "2018-10-21T01:40:28-07:00",
+  "ctime": "2018-09-03T02:58:45-07:00",
+  "mtime": "2018-09-03T02:59:11-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "en-US",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\en-US",
+  "atime": "2018-09-28T03:33:53-07:00",
+  "ctime": "2018-04-12T02:15:44-07:00",
+  "mtime": "2018-04-12T02:15:44-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "explorer.exe",
+  "Size": 3932672,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\explorer.exe",
+  "atime": "2018-10-23T18:44:32-07:00",
+  "ctime": "2018-09-03T07:48:55-07:00",
+  "mtime": "2018-07-06T07:17:10-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "hh.exe",
+  "Size": 17920,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\hh.exe",
+  "atime": "2018-10-21T01:38:50-07:00",
+  "ctime": "2018-04-11T16:34:18-07:00",
+  "mtime": "2018-04-11T16:34:18-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "media",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\media",
+  "atime": "2018-09-28T03:42:27-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-09-03T02:55:34-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "mib.bin",
+  "Size": 43131,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\mib.bin",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-04-11T16:34:27-07:00",
+  "mtime": "2018-04-11T16:34:27-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "notepad.exe",
+  "Size": 245760,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\notepad.exe",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-09-03T03:39:43-07:00",
+  "mtime": "2018-09-03T03:39:43-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "progress.ini",
+  "Size": 36,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\progress.ini",
+  "atime": "2018-10-21T01:40:28-07:00",
+  "ctime": "2018-08-26T20:29:43-07:00",
+  "mtime": "2018-08-26T20:36:19-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "regedit.exe",
+  "Size": 336384,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\regedit.exe",
+  "atime": "2018-10-10T03:03:45-07:00",
+  "ctime": "2018-04-11T16:34:26-07:00",
+  "mtime": "2018-04-11T16:34:26-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "rescache",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\rescache",
+  "atime": "2018-09-28T03:43:12-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "schemas",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\schemas",
+  "atime": "2018-09-28T03:43:14-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-12T02:20:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "security",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\security",
+  "atime": "2018-10-24T11:44:00-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-12T02:20:15-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "servicing",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\servicing",
+  "atime": "2018-09-28T04:36:51-07:00",
+  "ctime": "2018-04-11T14:04:33-07:00",
+  "mtime": "2018-04-12T02:15:44-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "setupact.log",
+  "Size": 20877,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\setupact.log",
+  "atime": "2018-09-28T03:33:13-07:00",
+  "ctime": "2018-09-03T02:50:21-07:00",
+  "mtime": "2018-09-27T23:56:50-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "setuperr.log",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\setuperr.log",
+  "atime": "2018-09-03T02:50:21-07:00",
+  "ctime": "2018-09-03T02:50:21-07:00",
+  "mtime": "2018-09-03T02:50:21-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "splwow64.exe",
+  "Size": 130560,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\splwow64.exe",
+  "atime": "2018-10-10T03:03:51-07:00",
+  "ctime": "2018-04-11T16:34:33-07:00",
+  "mtime": "2018-04-11T16:34:33-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "system.ini",
+  "Size": 219,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\system.ini",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2017-03-18T14:02:05-07:00",
+  "mtime": "2017-03-18T13:59:50-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "tracing",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\tracing",
+  "atime": "2018-09-28T03:58:42-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:13-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "twain_32",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\twain_32",
+  "atime": "2018-09-28T03:58:42-07:00",
+  "ctime": "2018-04-11T16:38:13-07:00",
+  "mtime": "2018-04-11T16:38:27-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "twain_32.dll",
+  "Size": 65536,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\twain_32.dll",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-11T16:34:46-07:00",
+  "mtime": "2018-04-11T16:34:46-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "win.ini",
+  "Size": 92,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\win.ini",
+  "atime": "2018-10-09T23:36:25-07:00",
+  "ctime": "2017-03-18T14:02:05-07:00",
+  "mtime": "2017-03-18T13:59:50-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "winhlp32.exe",
+  "Size": 11776,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\winhlp32.exe",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-11T16:34:45-07:00",
+  "mtime": "2018-04-11T16:34:45-07:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "write.exe",
+  "Size": 11264,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\write.exe",
+  "atime": "2018-09-28T03:33:14-07:00",
+  "ctime": "2018-04-11T16:34:11-07:00",
+  "mtime": "2018-04-11T16:34:11-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeù
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file/C:/Windows ÌÃ¥òŒžÞ

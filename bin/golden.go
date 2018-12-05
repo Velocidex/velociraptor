@@ -34,7 +34,8 @@ func runTest(fixture *testFixture) (string, error) {
 	repository := getRepository(config_obj)
 
 	env := vfilter.NewDict().
-		Set("config", config_obj.Client)
+		Set("config", config_obj.Client).
+		Set("server_config", config_obj)
 
 	for k, v := range fixture.Parameters {
 		env.Set(k, v)

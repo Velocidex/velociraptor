@@ -1,0 +1,131 @@
+Timestamp,PPID,PID,Name,CommandLine
+"""2018-10-31T07:00:12-07:00""",1192,2332,"""GoogleUpdate.exe""",null
+"""2018-10-31T07:11:03-07:00""",760,1572,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T07:27:56-07:00""",900,428,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe18_ Global\\UsGthrCtrlFltPipeMssGthrPipe18 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T07:27:56-07:00""",900,1632,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 752 756 764 8192 760 """
+"""2018-10-31T07:42:49-07:00""",900,5840,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe19_ Global\\UsGthrCtrlFltPipeMssGthrPipe19 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T07:42:49-07:00""",900,7108,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 752 756 764 8192 760 """
+"""2018-10-31T07:54:51-07:00""",1192,7388,"""taskhostw.exe""",null
+"""2018-10-31T07:54:51-07:00""",760,6064,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k netsvcs -p -s Browser"""
+"""2018-10-31T07:54:51-07:00""",760,3148,"""sppsvc.exe""",null
+"""2018-10-31T07:54:52-07:00""",932,640,"""SppExtComObj.Exe""","""C:\\WINDOWS\\system32\\SppExtComObj.exe -Embedding"""
+"""2018-10-31T07:54:52-07:00""",1192,5940,"""taskhostw.exe""",null
+"""2018-10-31T07:54:52-07:00""",1192,5880,"""wermgr.exe""",null
+"""2018-10-31T07:54:52-07:00""",640,3880,"""slui.exe""","""\""C:\\WINDOWS\\System32\\SLUI.exe\"" RuleId=31e71c49-8da7-4a2f-ad92-45d98a1c79ba;Action=AutoActivate;AppId=55c92734-d682-4d71-983e-d6ec3f16059f;SkuId=9fbaf5d6-4d83-4422-870d-fdda6e5858aa;NotificationInterval=1440;Trigger=NetworkAvailable"""
+"""2018-10-31T07:54:52-07:00""",760,5356,"""svchost.exe""",null
+"""2018-10-31T07:54:52-07:00""",1192,3208,"""taskhostw.exe""",null
+"""2018-10-31T07:54:53-07:00""",640,8148,"""slui.exe""","""\""C:\\WINDOWS\\System32\\SLUI.exe\"" RuleId=31e71c49-8da7-4a2f-ad92-45d98a1c79ba;Action=AutoActivate;AppId=55c92734-d682-4d71-983e-d6ec3f16059f;SkuId=9fbaf5d6-4d83-4422-870d-fdda6e5858aa;NotificationInterval=1440;Trigger=NetworkAvailable"""
+"""2018-10-31T07:54:54-07:00""",932,1044,"""slui.exe""","""C:\\WINDOWS\\System32\\slui.exe -Embedding"""
+"""2018-10-31T07:59:47-07:00""",1192,1648,"""GoogleUpdate.exe""","""\""C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe\"" /ua /installsource scheduler"""
+"""2018-10-31T07:59:48-07:00""",1192,7148,"""GoogleUpdate.exe""","""\""C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe\"" /c"""
+"""2018-10-31T07:59:48-07:00""",7148,7628,"""GoogleCrashHandler.exe""",null
+"""2018-10-31T07:59:48-07:00""",7148,4080,"""GoogleCrashHandler64.exe""",null
+"""2018-10-31T07:59:48-07:00""",7148,7480,"""GoogleUpdate.exe""",null
+"""2018-10-31T08:00:17-07:00""",760,1224,"""GoogleUpdate.exe""","""\""C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe\"" /svc"""
+"""2018-10-31T08:27:32-07:00""",900,2824,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe20_ Global\\UsGthrCtrlFltPipeMssGthrPipe20 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T08:27:33-07:00""",900,2404,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 752 756 764 8192 760 """
+"""2018-10-31T09:00:28-07:00""",1192,4080,"""GoogleUpdate.exe""",null
+"""2018-10-31T17:42:39-07:00""",768,7924,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+"""2018-10-31T17:42:41-07:00""",944,7984,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-10-31T17:44:43-07:00""",1204,8128,"""taskhostw.exe""","""taskhostw.exe -RegisterDevice -ProtectionStateChanged -FreeNetworkOnly"""
+"""2018-10-31T17:44:43-07:00""",768,8176,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+"""2018-10-31T17:44:43-07:00""",944,7276,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+"""2018-10-31T17:44:43-07:00""",944,7188,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+"""2018-10-31T17:54:06-07:00""",6700,3784,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe2_ Global\\UsGthrCtrlFltPipeMssGthrPipe2 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T17:54:06-07:00""",6700,7784,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T17:54:35-07:00""",1204,816,"""taskhostw.exe""",null
+"""2018-10-31T17:56:02-07:00""",944,8020,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXsqpbawq1jx69hhfyy1dr9y35whgstkrr.mca"""
+"""2018-10-31T17:56:02-07:00""",768,8016,"""svchost.exe""",null
+"""2018-10-31T18:00:02-07:00""",1204,4856,"""wsqmcons.exe""",null
+"""2018-10-31T18:06:34-07:00""",1204,2360,"""sc.exe""",null
+"""2018-10-31T18:06:34-07:00""",2360,3148,"""conhost.exe""",null
+"""2018-10-31T18:08:59-07:00""",6700,7236,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe3_ Global\\UsGthrCtrlFltPipeMssGthrPipe3 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T18:08:59-07:00""",6700,8164,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T18:09:30-07:00""",1204,6524,"""rundll32.exe""",null
+"""2018-10-31T18:09:30-07:00""",1204,5000,"""GoogleUpdate.exe""",null
+"""2018-10-31T18:09:30-07:00""",1204,5276,"""taskhostw.exe""",null
+"""2018-10-31T18:09:30-07:00""",944,6188,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+"""2018-10-31T18:09:31-07:00""",768,5716,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s wlidsvc"""
+"""2018-10-31T18:23:53-07:00""",6700,7252,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe4_ Global\\UsGthrCtrlFltPipeMssGthrPipe4 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T18:23:54-07:00""",6700,2904,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T18:38:48-07:00""",6700,3460,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe5_ Global\\UsGthrCtrlFltPipeMssGthrPipe5 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T18:38:48-07:00""",6700,4252,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T18:39:34-07:00""",768,6836,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T19:07:24-07:00""",1204,1944,"""sc.exe""",null
+"""2018-10-31T19:07:24-07:00""",1944,3008,"""conhost.exe""",null
+"""2018-10-31T19:09:07-07:00""",1204,3136,"""GoogleUpdate.exe""",null
+"""2018-10-31T19:09:29-07:00""",768,1456,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T19:37:26-07:00""",1204,8164,"""taskhostw.exe""",null
+"""2018-10-31T19:37:26-07:00""",1204,7516,"""UsoClient.exe""",null
+"""2018-10-31T19:37:26-07:00""",768,6736,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -s LxpSvc"""
+"""2018-10-31T19:37:26-07:00""",768,5428,"""svchost.exe""",null
+"""2018-10-31T19:37:26-07:00""",768,920,"""TrustedInstaller.exe""","""C:\\WINDOWS\\servicing\\TrustedInstaller.exe"""
+"""2018-10-31T19:37:27-07:00""",944,8084,"""TiWorker.exe""","""C:\\WINDOWS\\winsxs\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.17134.281_none_eada712a1d8142be\\TiWorker.exe -Embedding"""
+"""2018-10-31T19:37:27-07:00""",768,1512,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s wlidsvc"""
+"""2018-10-31T19:37:30-07:00""",768,1760,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+"""2018-10-31T19:38:24-07:00""",6700,7240,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe6_ Global\\UsGthrCtrlFltPipeMssGthrPipe6 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T19:38:24-07:00""",6700,2332,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T20:01:16-07:00""",1204,7844,"""GoogleUpdate.exe""",null
+"""2018-10-31T20:09:11-07:00""",768,7192,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T20:38:35-07:00""",768,7996,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T21:08:20-07:00""",1204,8184,"""GoogleUpdate.exe""","""\""C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe\"" /ua /installsource scheduler"""
+"""2018-10-31T21:08:20-07:00""",944,6832,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+"""2018-10-31T21:08:20-07:00""",768,3648,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-10-31T21:09:05-07:00""",768,5852,"""GoogleUpdate.exe""","""\""C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe\"" /svc"""
+"""2018-10-31T21:23:15-07:00""",944,1180,"""HxTsr.exe""","""\""C:\\Program Files\\WindowsApps\\microsoft.windowscommunicationsapps_16005.10827.20186.0_x64__8wekyb3d8bbwe\\HxTsr.exe\"" -ServerName:Hx.IPC.Server"""
+"""2018-10-31T21:23:15-07:00""",768,5244,"""svchost.exe""",null
+"""2018-10-31T21:23:15-07:00""",944,2804,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-10-31T21:23:16-07:00""",768,7180,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-10-31T21:36:41-07:00""",1204,868,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" -IdleTask -TaskName WdVerification"""
+"""2018-10-31T21:36:41-07:00""",868,2472,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:36:41-07:00""",1204,3092,"""taskhostw.exe""",null
+"""2018-10-31T21:36:41-07:00""",1204,8020,"""dstokenclean.exe""","""C:\\WINDOWS\\system32\\dstokenclean.exe"""
+"""2018-10-31T21:36:41-07:00""",8020,7772,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:36:41-07:00""",1204,7484,"""sc.exe""",null
+"""2018-10-31T21:36:41-07:00""",768,5532,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localsystemnetworkrestricted -p -s DsSvc"""
+"""2018-10-31T21:36:41-07:00""",7484,6364,"""conhost.exe""",null
+"""2018-10-31T21:36:41-07:00""",1204,4912,"""dmclient.exe""",null
+"""2018-10-31T21:36:42-07:00""",768,8000,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localservice -s W32Time"""
+"""2018-10-31T21:36:42-07:00""",1204,5048,"""taskhostw.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,7368,"""taskhostw.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,1976,"""taskhostw.exe""",null
+"""2018-10-31T21:36:42-07:00""",768,4428,"""svchost.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,1404,"""taskhostw.exe""",null
+"""2018-10-31T21:36:42-07:00""",4912,456,"""conhost.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,3928,"""DiskSnapshot.exe""",null
+"""2018-10-31T21:36:42-07:00""",3928,2108,"""conhost.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,7648,"""AppHostRegistrationVerifier.exe""",null
+"""2018-10-31T21:36:42-07:00""",1204,6812,"""taskhostw.exe""","""taskhostw.exe /RuntimeWide"""
+"""2018-10-31T21:36:43-07:00""",1204,7980,"""taskhostw.exe""","""taskhostw.exe"""
+"""2018-10-31T21:36:43-07:00""",1204,5440,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\compattelrunner.exe -maintenance"""
+"""2018-10-31T21:36:43-07:00""",768,2744,"""VSSVC.exe""","""C:\\WINDOWS\\system32\\vssvc.exe"""
+"""2018-10-31T21:36:43-07:00""",5440,3544,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:36:43-07:00""",768,5276,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k swprv"""
+"""2018-10-31T21:36:45-07:00""",5440,4940,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\CompatTelRunner.exe -m:invagent.dll -f:RunUpdate -cv:e5bBRlQ9e02660si.5"""
+"""2018-10-31T21:36:46-07:00""",6812,1928,"""ngentask.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\NGenTask.exe\"" /RuntimeWide /StopEvent:880"""
+"""2018-10-31T21:36:46-07:00""",6812,5932,"""ngentask.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\NGenTask.exe\"" /RuntimeWide /StopEvent:480"""
+"""2018-10-31T21:36:48-07:00""",5932,6224,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:36:48-07:00""",3672,752,"""DismHost.exe""","""C:\\WINDOWS\\TEMP\\0F9EEBD1-57A8-4EBE-9CDA-B1826E937055\\dismhost.exe {4FFE1ED0-1095-4A03-BD97-00125232A1ED}"""
+"""2018-10-31T21:36:48-07:00""",5932,6248,"""ngen.exe""",null
+"""2018-10-31T21:36:49-07:00""",5932,8188,"""ngen.exe""",null
+"""2018-10-31T21:36:49-07:00""",768,4588,"""TrustedInstaller.exe""","""C:\\WINDOWS\\servicing\\TrustedInstaller.exe"""
+"""2018-10-31T21:36:50-07:00""",944,2368,"""TiWorker.exe""","""C:\\WINDOWS\\winsxs\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.17134.281_none_eada712a1d8142be\\TiWorker.exe -Embedding"""
+"""2018-10-31T21:36:50-07:00""",1928,2100,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:36:51-07:00""",1928,5428,"""ngen.exe""",null
+"""2018-10-31T21:36:51-07:00""",1928,4712,"""ngen.exe""",null
+"""2018-10-31T21:36:54-07:00""",1928,7316,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe\"" install \""System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-10-31T21:36:54-07:00""",5932,444,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-10-31T21:36:54-07:00""",7316,7908,"""mscorsvw.exe""",null
+"""2018-10-31T21:36:57-07:00""",444,7204,"""mscorsvw.exe""",null
+"""2018-10-31T21:37:01-07:00""",1928,1332,"""ngentask.exe""",null
+"""2018-10-31T21:37:01-07:00""",1332,1780,"""conhost.exe""",null
+"""2018-10-31T21:37:04-07:00""",5932,360,"""ngentask.exe""",null
+"""2018-10-31T21:37:04-07:00""",360,2076,"""conhost.exe""",null
+"""2018-10-31T21:37:50-07:00""",6700,4344,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe7_ Global\\UsGthrCtrlFltPipeMssGthrPipe7 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T21:37:50-07:00""",2368,8152,"""SrTasks.exe""","""C:\\WINDOWS\\system32\\srtasks.exe ExecuteScopeRestorePoint /WaitForRestorePoint:32"""
+"""2018-10-31T21:37:50-07:00""",6700,7228,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T21:37:50-07:00""",8152,88,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-10-31T21:58:18-07:00""",6700,2772,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe8_ Global\\UsGthrCtrlFltPipeMssGthrPipe8 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-10-31T21:58:19-07:00""",6700,4992,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+"""2018-10-31T22:00:30-07:00""",1204,7648,"""GoogleUpdate.exe""",null
+"""2018-10-31T22:08:35-07:00""",768,6188,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""

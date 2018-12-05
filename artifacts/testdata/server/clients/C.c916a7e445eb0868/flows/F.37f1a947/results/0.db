@@ -1,0 +1,11 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.37f1a947*ä
+{[
+ {
+  "Error": "",
+  "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1/Python37/NEWS.txt",
+  "Size": 7124
+ }
+]PathSizeErroro
+_SELECT Path, Size, Error
+                         FROM upload(files=[Path0], accessor=accessor)Upload files ®ö€¡’ûﬁ2C.c916a7e445eb08688rVQLResponsexÎà†ﬂ◊ûﬁ¿ú

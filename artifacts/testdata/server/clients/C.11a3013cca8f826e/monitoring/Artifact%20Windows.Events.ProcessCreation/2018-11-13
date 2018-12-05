@@ -1,0 +1,402 @@
+Timestamp,PPID,PID,Name,CommandLine
+"""2018-11-12T18:58:50-08:00""",2624,7984,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe26_ Global\\UsGthrCtrlFltPipeMssGthrPipe26 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T18:58:50-08:00""",2624,7304,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T19:00:15-08:00""",5064,3204,"""winpmem.exe""",null
+"""2018-11-12T19:03:03-08:00""",876,3236,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+"""2018-11-12T19:03:03-08:00""",708,224,"""svchost.exe""",null
+"""2018-11-12T19:03:04-08:00""",876,7632,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T19:08:13-08:00""",876,6944,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-12T19:27:27-08:00""",5064,7076,"""winpmem.exe""",null
+"""2018-11-12T19:27:33-08:00""",5064,4984,"""winpmem.exe""",null
+"""2018-11-12T19:29:55-08:00""",5064,7476,"""winpmem.exe""",null
+"""2018-11-12T19:44:37-08:00""",5064,1292,"""winpmem.exe""",null
+"""2018-11-12T19:44:45-08:00""",5064,4340,"""eventvwr.exe""",null
+"""2018-11-12T19:44:45-08:00""",4340,6840,"""mmc.exe""","""\""C:\\WINDOWS\\system32\\mmc.exe\"" \""C:\\WINDOWS\\system32\\eventvwr.msc\"""""
+"""2018-11-12T19:58:22-08:00""",876,7764,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-12T19:58:39-08:00""",5064,7868,"""winpmem.exe""",null
+"""2018-11-12T19:58:50-08:00""",2624,3136,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe28_ Global\\UsGthrCtrlFltPipeMssGthrPipe28 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T19:58:50-08:00""",2624,4296,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T19:59:40-08:00""",5064,3316,"""winpmem.exe""",null
+"""2018-11-12T20:10:35-08:00""",5064,676,"""winpmem.exe""",null
+"""2018-11-12T20:11:04-08:00""",708,7768,"""WmiApSrv.exe""",null
+"""2018-11-12T20:11:05-08:00""",708,5528,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+"""2018-11-12T20:13:08-08:00""",2176,6812,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x3e8"""
+"""2018-11-12T20:13:22-08:00""",5064,3332,"""winpmem.exe""",null
+"""2018-11-12T20:18:03-08:00""",876,8024,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+"""2018-11-12T20:18:03-08:00""",708,604,"""svchost.exe""",null
+"""2018-11-12T20:18:04-08:00""",876,3152,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T20:18:05-08:00""",876,2396,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T20:18:05-08:00""",876,5724,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T20:18:05-08:00""",1160,5636,"""taskhostw.exe""",null
+"""2018-11-12T20:18:06-08:00""",708,7928,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T20:30:04-08:00""",708,1888,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T20:43:50-08:00""",2624,5284,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe29_ Global\\UsGthrCtrlFltPipeMssGthrPipe29 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T20:43:50-08:00""",2624,7972,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T20:45:03-08:00""",708,6980,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T20:59:06-08:00""",708,3764,"""upfc.exe""",null
+"""2018-11-12T20:59:08-08:00""",1160,4960,"""dstokenclean.exe""",null
+"""2018-11-12T20:59:08-08:00""",4960,6804,"""conhost.exe""",null
+"""2018-11-12T20:59:08-08:00""",1160,2460,"""taskhostw.exe""",null
+"""2018-11-12T20:59:08-08:00""",1160,4628,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" -IdleTask -TaskName WdVerification"""
+"""2018-11-12T20:59:08-08:00""",4628,7904,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:08-08:00""",1160,1140,"""dmclient.exe""",null
+"""2018-11-12T20:59:09-08:00""",1140,5404,"""conhost.exe""",null
+"""2018-11-12T20:59:09-08:00""",1160,5240,"""taskhostw.exe""","""taskhostw.exe"""
+"""2018-11-12T20:59:09-08:00""",1160,128,"""taskhostw.exe""",null
+"""2018-11-12T20:59:09-08:00""",708,4680,"""svchost.exe""",null
+"""2018-11-12T20:59:09-08:00""",1160,7504,"""taskhostw.exe""",null
+"""2018-11-12T20:59:09-08:00""",2832,6196,"""MpCmdRun.exe""",null
+"""2018-11-12T20:59:09-08:00""",1160,1056,"""sc.exe""",null
+"""2018-11-12T20:59:09-08:00""",1160,6792,"""AppHostRegistrationVerifier.exe""",null
+"""2018-11-12T20:59:09-08:00""",1056,240,"""conhost.exe""",null
+"""2018-11-12T20:59:09-08:00""",1160,1588,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" -IdleTask -TaskName WdCacheMaintenance"""
+"""2018-11-12T20:59:09-08:00""",708,5768,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalService -s W32Time"""
+"""2018-11-12T20:59:09-08:00""",1588,232,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:09-08:00""",1160,7636,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" -IdleTask -TaskName WdCleanup"""
+"""2018-11-12T20:59:09-08:00""",7636,2936,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:09-08:00""",1160,224,"""MpCmdRun.exe""",null
+"""2018-11-12T20:59:09-08:00""",2832,5472,"""DismHost.exe""","""C:\\WINDOWS\\TEMP\\8726FF8D-1184-41E3-971D-EA5D953AE858\\dismhost.exe {B7CC05EB-4DED-4B5B-93C2-6DDA69441E34}"""
+"""2018-11-12T20:59:10-08:00""",1160,6844,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\compattelrunner.exe -maintenance"""
+"""2018-11-12T20:59:10-08:00""",224,6388,"""conhost.exe""",null
+"""2018-11-12T20:59:10-08:00""",708,636,"""VSSVC.exe""","""C:\\WINDOWS\\system32\\vssvc.exe"""
+"""2018-11-12T20:59:10-08:00""",708,1972,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k netsvcs -p -s Browser"""
+"""2018-11-12T20:59:10-08:00""",1160,1232,"""DiskSnapshot.exe""",null
+"""2018-11-12T20:59:10-08:00""",6844,7164,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:10-08:00""",708,6708,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k swprv"""
+"""2018-11-12T20:59:11-08:00""",6844,1748,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\CompatTelRunner.exe -m:invagent.dll -f:RunUpdate -cv:BPlH3obD3UOmyD1D.5"""
+"""2018-11-12T20:59:11-08:00""",1232,5528,"""conhost.exe""",null
+"""2018-11-12T20:59:11-08:00""",1160,6676,"""taskhostw.exe""","""taskhostw.exe /RuntimeWide"""
+"""2018-11-12T20:59:11-08:00""",6676,964,"""ngentask.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\NGenTask.exe\"" /RuntimeWide /StopEvent:468"""
+"""2018-11-12T20:59:11-08:00""",6676,320,"""ngentask.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\NGenTask.exe\"" /RuntimeWide /StopEvent:472"""
+"""2018-11-12T20:59:11-08:00""",964,5916,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:11-08:00""",320,7264,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T20:59:12-08:00""",964,4676,"""ngen.exe""",null
+"""2018-11-12T20:59:12-08:00""",320,936,"""ngen.exe""",null
+"""2018-11-12T20:59:12-08:00""",964,2960,"""ngen.exe""",null
+"""2018-11-12T20:59:12-08:00""",320,7860,"""ngen.exe""",null
+"""2018-11-12T20:59:13-08:00""",964,3344,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe\"" install \""System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:13-08:00""",320,5088,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.PowerShell.ConsoleHost, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:13-08:00""",5088,4240,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:13-08:00""",708,236,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+"""2018-11-12T20:59:14-08:00""",5088,1364,"""mscorsvw.exe""","""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 278 -InterruptEvent 0 -NGENProcess 290 -Pipe 27c -Comment \""NGen Worker Process\"""""
+"""2018-11-12T20:59:15-08:00""",876,3060,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T20:59:16-08:00""",876,7376,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T20:59:16-08:00""",708,4688,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T20:59:16-08:00""",320,6792,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:17-08:00""",3344,1168,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:18-08:00""",3344,672,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:19-08:00""",1160,1616,"""taskhostw.exe""",null
+"""2018-11-12T20:59:20-08:00""",6792,1384,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:20-08:00""",964,3776,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework\\v4.0.30319\\ngen.exe\"" install \""System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:20-08:00""",6792,936,"""mscorsvw.exe""","""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 274 -InterruptEvent 0 -NGENProcess 260 -Pipe 270 -Comment \""NGen Worker Process\"""""
+"""2018-11-12T20:59:29-08:00""",1160,5832,"""taskhostw.exe""",null
+"""2018-11-12T20:59:29-08:00""",708,1616,"""sppsvc.exe""",null
+"""2018-11-12T20:59:29-08:00""",876,3616,"""SppExtComObj.Exe""","""C:\\WINDOWS\\system32\\SppExtComObj.exe -Embedding"""
+"""2018-11-12T20:59:29-08:00""",3616,7884,"""slui.exe""","""\""C:\\WINDOWS\\System32\\SLUI.exe\"" RuleId=31e71c49-8da7-4a2f-ad92-45d98a1c79ba;Action=AutoActivate;AppId=55c92734-d682-4d71-983e-d6ec3f16059f;SkuId=9fbaf5d6-4d83-4422-870d-fdda6e5858aa;NotificationInterval=1440;Trigger=NetworkAvailable"""
+"""2018-11-12T20:59:30-08:00""",1160,4484,"""wermgr.exe""",null
+"""2018-11-12T20:59:30-08:00""",1160,7620,"""taskhostw.exe""",null
+"""2018-11-12T20:59:31-08:00""",1160,3924,"""taskhostw.exe""",null
+"""2018-11-12T20:59:31-08:00""",3616,7632,"""slui.exe""","""\""C:\\WINDOWS\\System32\\SLUI.exe\"" RuleId=31e71c49-8da7-4a2f-ad92-45d98a1c79ba;Action=AutoActivate;AppId=55c92734-d682-4d71-983e-d6ec3f16059f;SkuId=9fbaf5d6-4d83-4422-870d-fdda6e5858aa;NotificationInterval=1440;Trigger=NetworkAvailable"""
+"""2018-11-12T20:59:32-08:00""",876,3764,"""slui.exe""","""C:\\WINDOWS\\System32\\slui.exe -Embedding"""
+"""2018-11-12T20:59:56-08:00""",320,2072,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:57-08:00""",3776,2008,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:57-08:00""",964,3720,"""ngentask.exe""",null
+"""2018-11-12T20:59:57-08:00""",2072,7616,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:57-08:00""",3720,2792,"""conhost.exe""",null
+"""2018-11-12T20:59:57-08:00""",2072,7184,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:58-08:00""",320,1996,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.DirectoryServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T20:59:58-08:00""",1996,7884,"""mscorsvw.exe""",null
+"""2018-11-12T20:59:58-08:00""",1996,5804,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:00-08:00""",320,4676,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.PowerShell.Security, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:00-08:00""",4676,936,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:00-08:00""",4676,568,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:01-08:00""",320,2224,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.Transactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:01-08:00""",2224,6916,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:01-08:00""",2224,5572,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:03-08:00""",320,5644,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.CSharp, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:03-08:00""",5644,2456,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:03-08:00""",5644,6828,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:05-08:00""",320,4164,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.PowerShell.Commands.Utility, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:05-08:00""",4164,728,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:06-08:00""",4164,7252,"""mscorsvw.exe""","""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 274 -InterruptEvent 0 -NGENProcess 260 -Pipe 270 -Comment \""NGen Worker Process\"""""
+"""2018-11-12T21:00:14-08:00""",320,4016,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.Configuration.Install, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:14-08:00""",4016,1168,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:15-08:00""",4016,4216,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:15-08:00""",320,4888,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.PowerShell.Commands.Management, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:15-08:00""",4888,6056,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:15-08:00""",4888,1532,"""mscorsvw.exe""","""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 27c -InterruptEvent 0 -NGENProcess 270 -Pipe 278 -Comment \""NGen Worker Process\"""""
+"""2018-11-12T21:00:18-08:00""",320,5136,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""System.ServiceProcess, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:18-08:00""",5136,960,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:19-08:00""",5136,3764,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:19-08:00""",320,7944,"""ngen.exe""",null
+"""2018-11-12T21:00:19-08:00""",7944,5004,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:19-08:00""",7944,7736,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:20-08:00""",320,8140,"""ngen.exe""",null
+"""2018-11-12T21:00:20-08:00""",8140,4956,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:20-08:00""",8140,6784,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:20-08:00""",320,5800,"""ngen.exe""",null
+"""2018-11-12T21:00:20-08:00""",5800,4628,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:21-08:00""",5800,3552,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:21-08:00""",320,7000,"""ngen.exe""",null
+"""2018-11-12T21:00:21-08:00""",7000,3848,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:21-08:00""",7000,6352,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:22-08:00""",320,2008,"""ngen.exe""",null
+"""2018-11-12T21:00:22-08:00""",2008,5372,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:22-08:00""",2008,568,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:22-08:00""",320,4968,"""ngen.exe""",null
+"""2018-11-12T21:00:22-08:00""",4968,3796,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:23-08:00""",4968,4840,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:23-08:00""",320,7804,"""ngen.exe""",null
+"""2018-11-12T21:00:23-08:00""",7804,7812,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:23-08:00""",7804,2560,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:24-08:00""",320,5980,"""ngen.exe""",null
+"""2018-11-12T21:00:24-08:00""",5980,808,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:24-08:00""",5980,7536,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:24-08:00""",320,7944,"""ngen.exe""",null
+"""2018-11-12T21:00:24-08:00""",7944,2304,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:25-08:00""",7944,7904,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:25-08:00""",320,6784,"""ngen.exe""",null
+"""2018-11-12T21:00:25-08:00""",6784,3160,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:25-08:00""",6784,2196,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:25-08:00""",320,6224,"""ngen.exe""",null
+"""2018-11-12T21:00:25-08:00""",6224,3552,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:26-08:00""",6224,8068,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:26-08:00""",320,4732,"""ngen.exe""",null
+"""2018-11-12T21:00:26-08:00""",4732,5292,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:26-08:00""",4732,1168,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:27-08:00""",320,4996,"""ngen.exe""",null
+"""2018-11-12T21:00:27-08:00""",4996,7388,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:27-08:00""",4996,7228,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:27-08:00""",320,6684,"""ngen.exe""",null
+"""2018-11-12T21:00:27-08:00""",6684,3112,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:27-08:00""",6684,2792,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:28-08:00""",320,3972,"""ngen.exe""","""\""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\"" install \""Microsoft.WSMan.Management, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35\"" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"""
+"""2018-11-12T21:00:28-08:00""",3972,3060,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:28-08:00""",3972,2236,"""mscorsvw.exe""","""C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 274 -InterruptEvent 0 -NGENProcess 260 -Pipe 270 -Comment \""NGen Worker Process\"""""
+"""2018-11-12T21:00:29-08:00""",320,7320,"""ngen.exe""",null
+"""2018-11-12T21:00:29-08:00""",7320,5136,"""mscorsvw.exe""",null
+"""2018-11-12T21:00:30-08:00""",320,2156,"""ngen.exe""",null
+"""2018-11-12T21:00:30-08:00""",320,5972,"""ngentask.exe""",null
+"""2018-11-12T21:00:30-08:00""",5972,5644,"""conhost.exe""",null
+"""2018-11-12T21:09:07-08:00""",1160,5588,"""taskhostw.exe""",null
+"""2018-11-12T21:09:07-08:00""",876,5956,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+"""2018-11-12T21:09:07-08:00""",876,6708,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.192.0920.0015_1\\FileCoAuth.exe -Embedding"""
+"""2018-11-12T21:09:07-08:00""",876,3336,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+"""2018-11-12T21:09:46-08:00""",2832,3752,"""MpCmdRun.exe""",null
+"""2018-11-12T21:09:46-08:00""",3752,636,"""conhost.exe""",null
+"""2018-11-12T21:09:46-08:00""",2832,2008,"""MpCmdRun.exe""",null
+"""2018-11-12T21:09:46-08:00""",2008,3112,"""conhost.exe""",null
+"""2018-11-12T21:09:46-08:00""",3752,1520,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges -Reinvoke"""
+"""2018-11-12T21:09:46-08:00""",2008,6976,"""MpCmdRun.exe""",null
+"""2018-11-12T21:09:46-08:00""",2832,8032,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignaturesUpdateService -ScheduleJob -UnmanagedUpdate"""
+"""2018-11-12T21:09:46-08:00""",8032,7376,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-12T21:09:48-08:00""",876,3332,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+"""2018-11-12T21:11:22-08:00""",3964,7384,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+"""2018-11-12T21:11:24-08:00""",7384,6876,"""AM_Engine.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Engine.exe\"" /LastPackage"""
+"""2018-11-12T21:11:25-08:00""",6876,2588,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.1.15400.5 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Engine.exe /LastPackage"""
+"""2018-11-12T21:12:25-08:00""",7384,4968,"""AM_Base.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Base.exe\"" """
+"""2018-11-12T21:12:26-08:00""",4968,4884,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.281.0.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Base.exe"""
+"""2018-11-12T21:12:35-08:00""",7384,3112,"""AM_Delta.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta.exe\"" WD /q"""
+"""2018-11-12T21:14:19-08:00""",876,5980,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T21:14:19-08:00""",708,5992,"""svchost.exe""",null
+"""2018-11-12T21:14:20-08:00""",876,2224,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T21:14:20-08:00""",708,4872,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T21:28:50-08:00""",2624,2228,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe30_ Global\\UsGthrCtrlFltPipeMssGthrPipe30 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T21:28:50-08:00""",2624,4620,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T21:32:43-08:00""",876,2936,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T21:32:43-08:00""",708,3344,"""svchost.exe""",null
+"""2018-11-12T21:32:44-08:00""",876,188,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T21:32:44-08:00""",708,4968,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T21:34:52-08:00""",1160,6980,"""OneDriveStandaloneUpdater.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\OneDriveStandaloneUpdater.exe"""
+"""2018-11-12T21:34:53-08:00""",708,2988,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s BITS"""
+"""2018-11-12T21:41:38-08:00""",876,5112,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+"""2018-11-12T21:43:49-08:00""",2624,5684,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe31_ Global\\UsGthrCtrlFltPipeMssGthrPipe31 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T21:43:50-08:00""",2624,5740,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T21:58:50-08:00""",2624,6696,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe32_ Global\\UsGthrCtrlFltPipeMssGthrPipe32 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T21:58:50-08:00""",2624,3820,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T21:59:07-08:00""",876,4320,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T21:59:07-08:00""",708,7380,"""svchost.exe""",null
+"""2018-11-12T21:59:07-08:00""",876,4144,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T21:59:08-08:00""",708,692,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T22:08:07-08:00""",876,1708,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T22:08:07-08:00""",708,2556,"""svchost.exe""",null
+"""2018-11-12T22:08:08-08:00""",876,5908,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T22:08:08-08:00""",708,828,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T22:13:50-08:00""",2624,1384,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe33_ Global\\UsGthrCtrlFltPipeMssGthrPipe33 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T22:13:51-08:00""",2624,5800,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-12T22:14:14-08:00""",708,3720,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-11-12T22:29:07-08:00""",876,128,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T22:29:07-08:00""",708,5484,"""svchost.exe""",null
+"""2018-11-12T22:29:08-08:00""",876,1892,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T22:29:08-08:00""",708,440,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T22:30:01-08:00""",1160,7544,"""UpdateAssistant.exe""",null
+"""2018-11-12T22:30:01-08:00""",876,6160,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T22:30:01-08:00""",876,7380,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T22:56:53-08:00""",876,6232,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+"""2018-11-12T22:56:53-08:00""",708,7988,"""svchost.exe""",null
+"""2018-11-12T22:56:54-08:00""",876,4608,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T22:57:33-08:00""",5064,3848,"""winpmem.exe""",null
+"""2018-11-12T22:58:46-08:00""",5064,4288,"""winpmem.exe""",null
+"""2018-11-12T22:59:07-08:00""",876,2564,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+"""2018-11-12T22:59:07-08:00""",876,6792,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T22:59:20-08:00""",1160,7960,"""taskhostw.exe""",null
+"""2018-11-12T22:59:20-08:00""",708,7900,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -s LxpSvc"""
+"""2018-11-12T23:01:17-08:00""",708,6912,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+"""2018-11-12T23:01:19-08:00""",876,7380,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-12T23:01:26-08:00""",5064,3836,"""winpmem.exe""",null
+"""2018-11-12T23:09:56-08:00""",876,7384,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-12T23:10:13-08:00""",5064,5944,"""winpmem.exe""",null
+"""2018-11-12T23:11:56-08:00""",5064,4304,"""notepad.exe""","""notepad"""
+"""2018-11-12T23:14:08-08:00""",876,3496,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+"""2018-11-12T23:14:08-08:00""",708,4424,"""svchost.exe""",null
+"""2018-11-12T23:14:08-08:00""",876,2236,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T23:16:20-08:00""",2176,4560,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x300"""
+"""2018-11-12T23:16:29-08:00""",5064,3184,"""winpmem.exe""","""winpmem.exe  -o test.aff4 -d -d"""
+"""2018-11-12T23:19:35-08:00""",708,556,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+"""2018-11-12T23:19:38-08:00""",876,8072,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-12T23:19:49-08:00""",5064,5516,"""winpmem.exe""",null
+"""2018-11-12T23:19:59-08:00""",5064,1292,"""winpmem.exe""",null
+"""2018-11-12T23:20:05-08:00""",5064,7004,"""winpmem.exe""","""winpmem.exe  -o test.aff4 -d -d -t"""
+"""2018-11-12T23:21:56-08:00""",708,3096,"""WmiApSrv.exe""",null
+"""2018-11-12T23:21:57-08:00""",708,3772,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+"""2018-11-12T23:26:48-08:00""",876,7788,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T23:26:48-08:00""",708,1084,"""svchost.exe""",null
+"""2018-11-12T23:26:48-08:00""",876,4296,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T23:26:49-08:00""",708,5008,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T23:27:08-08:00""",876,2980,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T23:44:07-08:00""",876,1188,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T23:44:07-08:00""",708,6336,"""svchost.exe""",null
+"""2018-11-12T23:44:08-08:00""",876,2612,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T23:44:08-08:00""",708,3928,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T23:55:08-08:00""",876,7924,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-12T23:55:08-08:00""",708,5336,"""svchost.exe""",null
+"""2018-11-12T23:55:08-08:00""",876,1768,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-12T23:55:09-08:00""",708,2772,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-12T23:58:50-08:00""",2624,2516,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe34_ Global\\UsGthrCtrlFltPipeMssGthrPipe34 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-12T23:58:52-08:00""",2624,3380,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T00:00:01-08:00""",1160,4744,"""wsqmcons.exe""",null
+"""2018-11-13T00:13:50-08:00""",2624,6176,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe35_ Global\\UsGthrCtrlFltPipeMssGthrPipe35 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T00:13:51-08:00""",2624,8116,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T00:23:08-08:00""",876,5636,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T00:23:08-08:00""",708,1008,"""svchost.exe""",null
+"""2018-11-13T00:23:08-08:00""",876,4836,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T00:23:09-08:00""",708,4260,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T00:44:08-08:00""",876,4988,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+"""2018-11-13T00:44:08-08:00""",708,2084,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T00:51:08-08:00""",876,2588,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T00:51:08-08:00""",708,4988,"""svchost.exe""",null
+"""2018-11-13T00:51:08-08:00""",876,8040,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T00:51:09-08:00""",708,6232,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T00:53:36-08:00""",1160,3476,"""UsoClient.exe""",null
+"""2018-11-13T00:53:36-08:00""",708,4852,"""svchost.exe""",null
+"""2018-11-13T00:53:36-08:00""",1160,7904,"""MusNotification.exe""","""C:\\WINDOWS\\system32\\MusNotification.exe Display"""
+"""2018-11-13T00:53:36-08:00""",3964,7784,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:53:37-08:00""",708,2396,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+"""2018-11-13T00:53:39-08:00""",3964,6060,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:53:42-08:00""",876,5112,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+"""2018-11-13T00:53:42-08:00""",708,5764,"""sppsvc.exe""",null
+"""2018-11-13T00:53:47-08:00""",3964,8008,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:53:52-08:00""",3964,7092,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:53:52-08:00""",3964,5284,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+"""2018-11-13T00:53:53-08:00""",5284,1892,"""AM_Delta_Patch_1.281.19.0.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.281.19.0.exe\"" WD /q"""
+"""2018-11-13T00:53:53-08:00""",1892,7756,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.281.27.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.281.19.0.exe WD /q"""
+"""2018-11-13T00:53:53-08:00""",1160,3996,"""UsoClient.exe""",null
+"""2018-11-13T00:54:15-08:00""",3964,2528,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:54:15-08:00""",3964,7140,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:57:17-08:00""",2624,4916,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe36_ Global\\UsGthrCtrlFltPipeMssGthrPipe36 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T00:57:18-08:00""",2624,7140,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T00:59:13-08:00""",3964,7784,"""MusNotifyIcon.exe""",null
+"""2018-11-13T00:59:13-08:00""",3964,4228,"""MusNotifyIcon.exe""","""%systemroot%\\system32\\MusNotifyIcon.exe NotifyTrayIcon 10"""
+"""2018-11-13T00:59:13-08:00""",3964,7480,"""MusNotifyIcon.exe""","""%systemroot%\\system32\\MusNotifyIcon.exe NotifyTrayIcon 10"""
+"""2018-11-13T00:59:13-08:00""",1160,5804,"""MusNotification.exe""","""C:\\WINDOWS\\system32\\MusNotification.exe Display"""
+"""2018-11-13T00:59:15-08:00""",3964,2476,"""MusNotifyIcon.exe""",null
+"""2018-11-13T01:13:50-08:00""",2624,3596,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe37_ Global\\UsGthrCtrlFltPipeMssGthrPipe37 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T01:13:51-08:00""",2624,8120,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T01:14:08-08:00""",876,3896,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T01:14:08-08:00""",708,2212,"""svchost.exe""",null
+"""2018-11-13T01:14:08-08:00""",876,7404,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T01:14:09-08:00""",708,7640,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T01:19:07-08:00""",876,3320,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T01:19:08-08:00""",876,8100,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T01:28:50-08:00""",2624,4056,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe38_ Global\\UsGthrCtrlFltPipeMssGthrPipe38 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T01:28:51-08:00""",2624,7092,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T01:44:07-08:00""",708,852,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T01:47:08-08:00""",876,8060,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T01:47:08-08:00""",708,5112,"""svchost.exe""",null
+"""2018-11-13T01:47:08-08:00""",876,816,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T02:11:48-08:00""",708,5488,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-11-13T02:14:08-08:00""",876,7824,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T02:14:08-08:00""",708,3804,"""svchost.exe""",null
+"""2018-11-13T02:14:08-08:00""",876,6188,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T02:14:09-08:00""",708,1296,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T02:29:07-08:00""",876,8108,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T02:29:07-08:00""",708,5364,"""svchost.exe""",null
+"""2018-11-13T02:29:08-08:00""",876,7996,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T02:29:08-08:00""",708,7304,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T02:33:54-08:00""",1160,4004,"""SpeechModelDownload.exe""","""C:\\WINDOWS\\system32\\speech_onecore\\common\\SpeechModelDownload.exe"""
+"""2018-11-13T02:33:55-08:00""",708,3936,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s BITS"""
+"""2018-11-13T02:42:07-08:00""",876,3864,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T02:42:07-08:00""",708,2144,"""svchost.exe""",null
+"""2018-11-13T02:42:08-08:00""",876,7668,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T02:42:08-08:00""",708,3764,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T02:59:07-08:00""",876,3236,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T02:59:07-08:00""",708,8048,"""svchost.exe""",null
+"""2018-11-13T02:59:08-08:00""",876,5928,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T02:59:08-08:00""",708,6236,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T03:07:38-08:00""",1160,5816,"""MusNotification.exe""","""C:\\WINDOWS\\system32\\MusNotification.exe Display"""
+"""2018-11-13T03:07:38-08:00""",3964,4984,"""MusNotifyIcon.exe""",null
+"""2018-11-13T03:10:07-08:00""",876,5492,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T03:10:07-08:00""",708,4616,"""svchost.exe""",null
+"""2018-11-13T03:10:08-08:00""",876,3760,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T03:10:08-08:00""",708,5320,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T03:27:38-08:00""",1160,4672,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\compattelrunner.exe"""
+"""2018-11-13T03:27:38-08:00""",4672,332,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-13T03:27:38-08:00""",4672,7852,"""CompatTelRunner.exe""","""C:\\WINDOWS\\system32\\CompatTelRunner.exe -m:appraiser.dll -f:DoScheduledTelemetryRun -cv:LAoos5Yec0GlW9rO.1"""
+"""2018-11-13T03:27:48-08:00""",7852,5284,"""CompatTelRunner.exe""",null
+"""2018-11-13T03:27:48-08:00""",708,2588,"""sppsvc.exe""",null
+"""2018-11-13T03:27:48-08:00""",708,2876,"""svchost.exe""",null
+"""2018-11-13T03:28:09-08:00""",708,7100,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p -s WdiSystemHost"""
+"""2018-11-13T03:28:26-08:00""",4672,3296,"""CompatTelRunner.exe""",null
+"""2018-11-13T03:29:08-08:00""",876,5124,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T03:29:08-08:00""",708,6584,"""svchost.exe""",null
+"""2018-11-13T03:29:08-08:00""",876,5132,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T03:29:09-08:00""",708,3156,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T03:38:08-08:00""",876,3944,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T03:38:08-08:00""",708,7380,"""svchost.exe""",null
+"""2018-11-13T03:38:08-08:00""",876,2700,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T03:38:09-08:00""",708,4948,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T03:44:08-08:00""",876,7880,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+"""2018-11-13T03:49:23-08:00""",1160,7636,"""DeviceCensus.exe""","""C:\\WINDOWS\\system32\\devicecensus.exe"""
+"""2018-11-13T03:49:23-08:00""",7636,4916,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+"""2018-11-13T03:49:23-08:00""",876,7744,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+"""2018-11-13T03:49:24-08:00""",708,7980,"""sppsvc.exe""",null
+"""2018-11-13T03:49:26-08:00""",7636,1296,"""DeviceCensus.exe""",null
+"""2018-11-13T03:49:26-08:00""",1296,1768,"""conhost.exe""",null
+"""2018-11-13T03:59:08-08:00""",708,7872,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T04:06:07-08:00""",876,3596,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T04:06:07-08:00""",708,828,"""svchost.exe""",null
+"""2018-11-13T04:06:08-08:00""",876,3380,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T04:06:09-08:00""",708,632,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T04:13:50-08:00""",2624,8096,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe39_ Global\\UsGthrCtrlFltPipeMssGthrPipe39 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T04:13:51-08:00""",2624,808,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T04:29:08-08:00""",708,1316,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T04:34:07-08:00""",876,7532,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T04:34:07-08:00""",708,2220,"""svchost.exe""",null
+"""2018-11-13T04:34:08-08:00""",876,6808,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T04:34:09-08:00""",708,5220,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T04:45:41-08:00""",1160,6904,"""SIHClient.exe""","""C:\\WINDOWS\\System32\\sihclient.exe"""
+"""2018-11-13T04:59:08-08:00""",876,3772,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T04:59:08-08:00""",708,7160,"""svchost.exe""",null
+"""2018-11-13T04:59:08-08:00""",876,1032,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T04:59:09-08:00""",708,2528,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T04:59:15-08:00""",1160,7780,"""taskhostw.exe""",null
+"""2018-11-13T04:59:20-08:00""",1160,5864,"""taskhostw.exe""",null
+"""2018-11-13T05:28:51-08:00""",2624,7928,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe40_ Global\\UsGthrCtrlFltPipeMssGthrPipe40 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+"""2018-11-13T05:28:52-08:00""",2624,6360,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 760 764 772 8192 768 """
+"""2018-11-13T05:29:08-08:00""",708,2216,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T05:44:07-08:00""",876,7868,"""Microsoft.Photos.exe""","""\""C:\\Program Files\\WindowsApps\\Microsoft.Windows.Photos_2018.18091.16610.0_x64__8wekyb3d8bbwe\\Microsoft.Photos.exe\"" -ServerName:App.AppXzst44mncqdg84v7sv6p7yznqwssy6f7f.mca"""
+"""2018-11-13T05:44:07-08:00""",708,2552,"""svchost.exe""",null
+"""2018-11-13T05:44:08-08:00""",876,3324,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+"""2018-11-13T05:44:08-08:00""",708,6784,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+"""2018-11-13T05:44:14-08:00""",708,3720,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s WinHttpAutoProxySvc"""
+"""2018-11-13T05:57:08-08:00""",708,6892,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""

@@ -1,0 +1,8 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.94fbb9f9š
+mic*C.c916a7e445eb0868ZVFSListDirectoryxªÿ³§şŞÂc
+(type.googleapis.com/proto.VFSListRequest75/ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1“¹ÿ³§şŞ0¶íÅ§şŞpˆ©îÅ§şŞ¢r
+gTime 0: /ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1: Sending response part 0 12 kB (36 rows).ãš•§şŞ"â
+-type.googleapis.com/proto.VFSListRequestState°§
+null
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)5/ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1ntfs

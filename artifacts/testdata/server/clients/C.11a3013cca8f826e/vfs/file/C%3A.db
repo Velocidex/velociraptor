@@ -1,0 +1,164 @@
+
+”[
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "$GetCurrent",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\$GetCurrent",
+  "atime": "2018-11-05T00:21:44-08:00",
+  "ctime": "2018-11-01T11:02:52-07:00",
+  "mtime": "2018-11-05T00:29:51-08:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "$Recycle.Bin",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\$Recycle.Bin",
+  "atime": "2017-10-17T01:05:38-07:00",
+  "ctime": "2017-03-18T14:02:02-07:00",
+  "mtime": "2017-10-17T01:05:38-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "$WINDOWS.~BT",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\$WINDOWS.~BT",
+  "atime": "2018-11-05T03:14:01-08:00",
+  "ctime": "2018-04-12T03:07:50-07:00",
+  "mtime": "2018-11-05T03:14:01-08:00"
+ },
+ {
+  "Mode": "Lrw-rw-rw-",
+  "Name": "Documents and Settings",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Documents and Settings",
+  "atime": "2017-10-04T08:23:36-07:00",
+  "ctime": "2017-10-04T08:23:36-07:00",
+  "mtime": "2017-10-04T08:23:36-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "PerfLogs",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\PerfLogs",
+  "atime": "2018-05-23T09:39:59-07:00",
+  "ctime": "2017-03-18T14:02:02-07:00",
+  "mtime": "2018-05-23T09:39:59-07:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Program Files",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Program Files",
+  "atime": "2018-11-05T16:40:10-08:00",
+  "ctime": "2017-03-18T14:02:02-07:00",
+  "mtime": "2018-11-05T16:40:10-08:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Program Files (x86)",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Program Files (x86)",
+  "atime": "2017-12-14T19:17:56-08:00",
+  "ctime": "2017-03-18T14:02:02-07:00",
+  "mtime": "2017-12-14T19:17:56-08:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "ProgramData",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\ProgramData",
+  "atime": "2017-12-14T19:12:04-08:00",
+  "ctime": "2017-03-18T14:02:02-07:00",
+  "mtime": "2017-12-14T19:12:04-08:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Python27",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Python27",
+  "atime": "2017-11-01T11:42:27-07:00",
+  "ctime": "2017-11-01T11:39:43-07:00",
+  "mtime": "2017-11-01T11:42:27-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Recovery",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Recovery",
+  "atime": "2017-10-04T08:24:53-07:00",
+  "ctime": "2017-10-04T08:24:53-07:00",
+  "mtime": "2017-10-04T08:24:53-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "System Volume Information",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\System Volume Information",
+  "atime": "2018-11-03T08:17:33-07:00",
+  "ctime": "2017-10-04T08:17:05-07:00",
+  "mtime": "2018-01-09T22:38:54-08:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "Users",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Users",
+  "atime": "2018-11-03T08:18:01-07:00",
+  "ctime": "2017-03-18T04:40:20-07:00",
+  "mtime": "2017-10-04T12:24:47-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Windows",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows",
+  "atime": "2018-11-05T23:39:51-08:00",
+  "ctime": "2017-03-18T04:40:20-07:00",
+  "mtime": "2018-11-05T23:39:51-08:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "Windows10Upgrade",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows10Upgrade",
+  "atime": "2018-11-05T00:29:43-08:00",
+  "ctime": "2018-11-01T07:01:59-07:00",
+  "mtime": "2018-11-05T00:29:43-08:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "pagefile.sys",
+  "Size": 738197504,
+  "_Data": "",
+  "_FullPath": "C:\\pagefile.sys",
+  "atime": "2018-11-03T07:52:33-07:00",
+  "ctime": "2018-11-03T07:52:33-07:00",
+  "mtime": "2018-11-05T02:53:21-08:00"
+ },
+ {
+  "Mode": "-rw-rw-rw-",
+  "Name": "swapfile.sys",
+  "Size": 268435456,
+  "_Data": "",
+  "_FullPath": "C:\\swapfile.sys",
+  "atime": "2018-11-03T07:52:33-07:00",
+  "ctime": "2018-11-03T07:52:33-07:00",
+  "mtime": "2018-11-05T02:53:21-08:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeñ
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file/C: Îìû ˆÁÞ

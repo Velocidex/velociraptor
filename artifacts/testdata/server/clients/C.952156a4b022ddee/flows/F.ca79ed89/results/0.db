@@ -1,0 +1,11 @@
+
+1aff4:/clients/C.952156a4b022ddee/flows/F.ca79ed89*–
+A[
+ {
+  "Error": "",
+  "Path": "/bin/bash",
+  "Size": 1121696
+ }
+]PathSizeErroro
+_SELECT Path, Size, Error
+                         FROM upload(files=[Path0], accessor=accessor)Upload files ‰∞Ëò˘ùﬁ2C.952156a4b022ddee8rVQLResponsexåµÌ∂˚ùﬁ¿ú

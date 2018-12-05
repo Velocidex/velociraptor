@@ -1,0 +1,265 @@
+PPID,PID,Name,CommandLine
+2536,7688,"""WMIADAP.exe""",null
+2536,7688,"""WMIADAP.exe""",null
+1044,468,"""taskhostw.exe""",null
+1044,4076,"""wsqmcons.exe""",null
+1044,7480,"""sc.exe""",null
+1044,7660,"""UsoClient.exe""",null
+7480,1288,"""conhost.exe""",null
+668,376,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s PushToInstall"""
+668,2136,"""svchost.exe""",null
+1868,8160,"""MusNotifyIcon.exe""",null
+1044,8136,"""MusNotification.exe""",null
+668,4032,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+1868,1464,"""MusNotifyIcon.exe""",null
+1044,1660,"""MusNotification.exe""","""C:\\WINDOWS\\system32\\MusNotification.exe Display"""
+1044,468,"""taskhostw.exe""",null
+1044,4076,"""wsqmcons.exe""",null
+1044,7480,"""sc.exe""",null
+1044,7660,"""UsoClient.exe""",null
+7480,1288,"""conhost.exe""",null
+668,376,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s PushToInstall"""
+668,2136,"""svchost.exe""",null
+1868,8160,"""MusNotifyIcon.exe""",null
+1044,8136,"""MusNotification.exe""",null
+668,4032,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+1868,1464,"""MusNotifyIcon.exe""",null
+1044,1660,"""MusNotification.exe""",null
+844,6136,"""HxTsr.exe""","""\""C:\\Program Files\\WindowsApps\\microsoft.windowscommunicationsapps_16005.10827.20186.0_x64__8wekyb3d8bbwe\\HxTsr.exe\"" -ServerName:Hx.IPC.Server"""
+668,3948,"""svchost.exe""",null
+844,6752,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+668,5400,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+844,6136,"""HxTsr.exe""","""\""C:\\Program Files\\WindowsApps\\microsoft.windowscommunicationsapps_16005.10827.20186.0_x64__8wekyb3d8bbwe\\HxTsr.exe\"" -ServerName:Hx.IPC.Server"""
+668,3948,"""svchost.exe""",null
+844,6752,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+668,5400,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+844,7000,"""WinStore.App.exe""",null
+844,7000,"""WinStore.App.exe""",null
+844,988,"""SystemSettings.exe""","""\""C:\\Windows\\ImmersiveControlPanel\\SystemSettings.exe\"" -ServerName:microsoft.windows.immersivecontrolpanel"""
+844,7460,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+844,8088,"""SpeechRuntime.exe""","""C:\\Windows\\System32\\Speech_OneCore\\Common\\SpeechRuntime.exe -Embedding"""
+668,7116,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k wbiosvcgroup -s WbioSrvc"""
+1836,572,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x518"""
+844,988,"""SystemSettings.exe""","""\""C:\\Windows\\ImmersiveControlPanel\\SystemSettings.exe\"" -ServerName:microsoft.windows.immersivecontrolpanel"""
+844,7460,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+844,8088,"""SpeechRuntime.exe""","""C:\\Windows\\System32\\Speech_OneCore\\Common\\SpeechRuntime.exe -Embedding"""
+668,7116,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k wbiosvcgroup -s WbioSrvc"""
+1836,572,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x518"""
+1044,4384,"""taskhostw.exe""","""taskhostw.exe -RegisterDevice -ProtectionStateChanged -FreeNetworkOnly"""
+668,156,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+844,4092,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+844,4124,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+844,5960,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+1044,4384,"""taskhostw.exe""","""taskhostw.exe -RegisterDevice -ProtectionStateChanged -FreeNetworkOnly"""
+668,156,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+844,4092,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+844,4124,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+844,5960,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+2788,7464,"""MpCmdRun.exe""",null
+7464,7656,"""conhost.exe""",null
+7464,4304,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges -Reinvoke"""
+2788,1280,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignaturesUpdateService -ScheduleJob -UnmanagedUpdate"""
+1280,7448,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+844,7276,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+668,2848,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p -s DoSvc"""
+844,8108,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{AA65DD7C-83AC-48C0-A6FD-9B61FEBF8800}"""
+668,2516,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localsystemnetworkrestricted -p -s StorSvc"""
+668,3968,"""svchost.exe""",null
+1868,7856,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+7856,1504,"""AM_Delta_Patch_1.279.351.0.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.351.0.exe\"" WD /q"""
+1504,2028,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.279.390.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.351.0.exe WD /q"""
+2788,7464,"""MpCmdRun.exe""",null
+7464,7656,"""conhost.exe""",null
+7464,4304,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges -Reinvoke"""
+2788,1280,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignaturesUpdateService -ScheduleJob -UnmanagedUpdate"""
+1280,7448,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+844,7276,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+668,2848,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p -s DoSvc"""
+844,8108,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{AA65DD7C-83AC-48C0-A6FD-9B61FEBF8800}"""
+668,2516,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localsystemnetworkrestricted -p -s StorSvc"""
+668,3968,"""svchost.exe""",null
+1868,7856,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+7856,1504,"""AM_Delta_Patch_1.279.351.0.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.351.0.exe\"" WD /q"""
+1504,2028,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.279.390.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.351.0.exe WD /q"""
+668,3024,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,4660,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+668,3024,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,4660,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+7180,6076,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe6_ Global\\UsGthrCtrlFltPipeMssGthrPipe6 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+7180,6892,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+7180,6076,"""SearchProtocolHost.exe""","""\""C:\\WINDOWS\\system32\\SearchProtocolHost.exe\"" Global\\UsGthrFltPipeMssGthrPipe6_ Global\\UsGthrCtrlFltPipeMssGthrPipe6 1 -2147483646 \""Software\\Microsoft\\Windows Search\"" \""Mozilla/4.0 (compatible; MSIE 6.0; Windows NT; MS Search 4.0 Robot)\"" \""C:\\ProgramData\\Microsoft\\Search\\Data\\Temp\\usgthrsvc\"" \""DownLevelDaemon\"" """
+7180,6892,"""SearchFilterHost.exe""","""\""C:\\WINDOWS\\system32\\SearchFilterHost.exe\"" 0 748 752 760 8192 756 """
+1688,7536,"""my_velociraptor.exe""","""my_velociraptor.exe  artifacts list"""
+668,6904,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s BITS"""
+668,6524,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,2360,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+1688,7536,"""my_velociraptor.exe""","""my_velociraptor.exe  artifacts list"""
+668,6904,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s BITS"""
+668,6524,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,2360,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+1688,1736,"""my_velociraptor.exe""",null
+1688,1736,"""my_velociraptor.exe""",null
+3472,1820,"""my_velociraptor.exe""","""my_velociraptor.exe  client"""
+3472,1820,"""my_velociraptor.exe""","""my_velociraptor.exe  client"""
+4620,4860,"""notepad.exe""","""\""C:\\WINDOWS\\system32\\notepad.exe\"" """
+844,6896,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+5160,7736,"""my_velociraptor.exe""","""my_velociraptor.exe  artifacts collect Windows.Events.ProcessCreation --format json"""
+4620,6348,"""notepad.exe""","""\""C:\\WINDOWS\\system32\\notepad.exe\"" """
+4620,4860,"""notepad.exe""","""\""C:\\WINDOWS\\system32\\notepad.exe\"" """
+844,6896,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+5160,7736,"""my_velociraptor.exe""","""my_velociraptor.exe  artifacts collect Windows.Events.ProcessCreation --format json"""
+4620,6348,"""notepad.exe""","""\""C:\\WINDOWS\\system32\\notepad.exe\"" """
+668,772,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,5424,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+668,772,"""WmiApSrv.exe""","""C:\\WINDOWS\\system32\\wbem\\WmiApSrv.exe"""
+844,5424,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+1044,3484,"""taskhostw.exe""",null
+1044,7732,"""wermgr.exe""",null
+1044,1544,"""taskhostw.exe""",null
+1044,3484,"""taskhostw.exe""",null
+1044,7732,"""wermgr.exe""",null
+1044,1544,"""taskhostw.exe""",null
+3472,8100,"""my_velociraptor.exe""","""my_velociraptor.exe  client"""
+3472,8100,"""my_velociraptor.exe""","""my_velociraptor.exe  client"""
+928,2668,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+928,2668,"""WmiPrvSE.exe""","""C:\\WINDOWS\\system32\\wbem\\wmiprvse.exe"""
+752,7716,"""GoogleUpdate.exe""",null
+752,4800,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p"""
+7716,6896,"""GoogleUpdate.exe""",null
+6896,7912,"""GoogleCrashHandler.exe""",null
+6896,7892,"""GoogleCrashHandler64.exe""",null
+752,5476,"""SgrmBroker.exe""",null
+752,7456,"""sppsvc.exe""",null
+752,4616,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localservicenetworkrestricted -p -s wscsvc"""
+752,6476,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k unistacksvcgroup"""
+752,7716,"""GoogleUpdate.exe""",null
+752,4800,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p"""
+7716,6896,"""GoogleUpdate.exe""",null
+6896,7912,"""GoogleCrashHandler.exe""",null
+6896,7892,"""GoogleCrashHandler64.exe""",null
+752,5476,"""SgrmBroker.exe""",null
+752,7456,"""sppsvc.exe""",null
+752,4616,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localservicenetworkrestricted -p -s wscsvc"""
+752,6476,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k unistacksvcgroup"""
+1288,4032,"""wsqmcons.exe""",null
+1288,1136,"""sc.exe""","""C:\\WINDOWS\\system32\\sc.exe start pushtoinstall registration"""
+1288,7564,"""UsoClient.exe""","""C:\\WINDOWS\\system32\\usoclient.exe StartScan"""
+1136,5376,"""conhost.exe""",null
+752,7744,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s PushToInstall"""
+752,5552,"""svchost.exe""",null
+752,6988,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+928,404,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+752,7004,"""sppsvc.exe""",null
+752,6924,"""TrustedInstaller.exe""","""C:\\WINDOWS\\servicing\\TrustedInstaller.exe"""
+928,6868,"""TiWorker.exe""","""C:\\WINDOWS\\winsxs\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.17134.281_none_eada712a1d8142be\\TiWorker.exe -Embedding"""
+1288,4032,"""wsqmcons.exe""",null
+1288,1136,"""sc.exe""","""C:\\WINDOWS\\system32\\sc.exe start pushtoinstall registration"""
+1288,7564,"""UsoClient.exe""","""C:\\WINDOWS\\system32\\usoclient.exe StartScan"""
+1136,5376,"""conhost.exe""",null
+752,7744,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s PushToInstall"""
+752,5552,"""svchost.exe""",null
+752,6988,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k netsvcs -p -s wisvc"""
+928,404,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+752,7004,"""sppsvc.exe""",null
+752,6924,"""TrustedInstaller.exe""","""C:\\WINDOWS\\servicing\\TrustedInstaller.exe"""
+928,6868,"""TiWorker.exe""","""C:\\WINDOWS\\winsxs\\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.17134.281_none_eada712a1d8142be\\TiWorker.exe -Embedding"""
+2920,5464,"""WMIADAP.exe""",null
+2920,5464,"""WMIADAP.exe""",null
+928,1192,"""HxTsr.exe""","""\""C:\\Program Files\\WindowsApps\\microsoft.windowscommunicationsapps_16005.10827.20186.0_x64__8wekyb3d8bbwe\\HxTsr.exe\"" -ServerName:Hx.IPC.Server"""
+752,5756,"""svchost.exe""",null
+928,7864,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+752,1948,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+928,1192,"""HxTsr.exe""","""\""C:\\Program Files\\WindowsApps\\microsoft.windowscommunicationsapps_16005.10827.20186.0_x64__8wekyb3d8bbwe\\HxTsr.exe\"" -ServerName:Hx.IPC.Server"""
+752,5756,"""svchost.exe""",null
+928,7864,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+752,1948,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+1288,6980,"""taskhostw.exe""",null
+1288,6980,"""taskhostw.exe""",null
+1288,3220,"""taskhostw.exe""",null
+752,7184,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+928,8004,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+928,5688,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+928,4868,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+3084,4764,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges"""
+3084,1992,"""MpCmdRun.exe""",null
+4764,3132,"""conhost.exe""",null
+4764,7232,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges -Reinvoke"""
+3084,8044,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignaturesUpdateService -ScheduleJob -UnmanagedUpdate"""
+8044,1528,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+928,6856,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+752,7796,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p -s DoSvc"""
+928,6924,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{AA65DD7C-83AC-48C0-A6FD-9B61FEBF8800}"""
+752,4320,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localsystemnetworkrestricted -p -s StorSvc"""
+752,532,"""svchost.exe""",null
+1288,3220,"""taskhostw.exe""","""taskhostw.exe -RegisterDevice -ProtectionStateChanged -FreeNetworkOnly"""
+752,7184,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p -s gpsvc"""
+928,8004,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+928,5688,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+928,4868,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+3084,4764,"""MpCmdRun.exe""",null
+3084,1992,"""MpCmdRun.exe""",null
+4764,3132,"""conhost.exe""",null
+4764,7232,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignatureUpdate -ScheduleJob -RestrictPrivileges -Reinvoke"""
+3084,8044,"""MpCmdRun.exe""","""\""C:\\ProgramData\\Microsoft\\Windows Defender\\platform\\4.18.1810.5-0\\MpCmdRun.exe\"" SignaturesUpdateService -ScheduleJob -UnmanagedUpdate"""
+8044,1528,"""conhost.exe""","""\\??\\C:\\WINDOWS\\system32\\conhost.exe 0x4"""
+928,6856,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+752,7796,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k NetworkService -p -s DoSvc"""
+928,6924,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{AA65DD7C-83AC-48C0-A6FD-9B61FEBF8800}"""
+752,4320,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k localsystemnetworkrestricted -p -s StorSvc"""
+752,532,"""svchost.exe""",null
+1288,4828,"""taskhostw.exe""",null
+2584,6892,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+6892,1580,"""AM_Delta_Patch_1.279.390.0.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.390.0.exe\"" WD /q"""
+1580,7900,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.279.410.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.390.0.exe WD /q"""
+1288,4828,"""taskhostw.exe""",null
+2584,6892,"""wuauclt.exe""","""\""C:\\WINDOWS\\system32\\wuauclt.exe\"" /RunHandlerComServer"""
+6892,1580,"""AM_Delta_Patch_1.279.390.0.exe""","""\""C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.390.0.exe\"" WD /q"""
+1580,7900,"""MpSigStub.exe""","""C:\\WINDOWS\\system32\\MpSigStub.exe /stub 1.1.15400.2 /payload 1.279.410.0 /MpWUStub /program C:\\WINDOWS\\SoftwareDistribution\\Download\\Install\\AM_Delta_Patch_1.279.390.0.exe WD /q"""
+928,5984,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+752,6948,"""svchost.exe""",null
+928,7584,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+928,5984,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:App.AppXemn3t55segp7q92mwd35v2a5rk5mvwyz.mca"""
+752,6948,"""svchost.exe""",null
+928,7584,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+928,6916,"""MicrosoftEdge.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdge.exe\"" -ServerName:MicrosoftEdge.AppXdnhjhccw3zf0j06tkg3jtqr00qdm0khc.mca"""
+928,4104,"""browser_broker.exe""","""C:\\WINDOWS\\system32\\browser_broker.exe -Embedding"""
+752,3140,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k LocalServiceNetworkRestricted"""
+3140,188,"""Windows.WARP.JITService.exe""","""C:\\WINDOWS\\system32\\Windows.WARP.JITService.exe be78bf01-293d-4c3a-bc37-fd01c795b419 S-1-15-2-3624051433-2125758914-1423191267-1740899205-1073925389-3782572162-737981194 S-1-5-21-546003962-2713609280-610790815-1001 536"""
+928,284,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+928,6024,"""MicrosoftEdgeCP.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdgeCP.exe\"" -ServerName:ContentProcess.AppX6z3cwk4fvgady6zya12j1cw28d228a7k.mca"""
+928,1140,"""MicrosoftEdgeCP.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdgeCP.exe\"" -ServerName:ContentProcess.AppX6z3cwk4fvgady6zya12j1cw28d228a7k.mca"""
+928,6916,"""MicrosoftEdge.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdge.exe\"" -ServerName:MicrosoftEdge.AppXdnhjhccw3zf0j06tkg3jtqr00qdm0khc.mca"""
+928,4104,"""browser_broker.exe""","""C:\\WINDOWS\\system32\\browser_broker.exe -Embedding"""
+752,3140,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k LocalServiceNetworkRestricted"""
+3140,188,"""Windows.WARP.JITService.exe""","""C:\\WINDOWS\\system32\\Windows.WARP.JITService.exe be78bf01-293d-4c3a-bc37-fd01c795b419 S-1-15-2-3624051433-2125758914-1423191267-1740899205-1073925389-3782572162-737981194 S-1-5-21-546003962-2713609280-610790815-1001 536"""
+928,284,"""RuntimeBroker.exe""","""C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"""
+928,6024,"""MicrosoftEdgeCP.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdgeCP.exe\"" -ServerName:ContentProcess.AppX6z3cwk4fvgady6zya12j1cw28d228a7k.mca"""
+928,1140,"""MicrosoftEdgeCP.exe""","""\""C:\\Windows\\SystemApps\\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\\MicrosoftEdgeCP.exe\"" -ServerName:ContentProcess.AppX6z3cwk4fvgady6zya12j1cw28d228a7k.mca"""
+928,4792,"""SystemSettings.exe""","""\""C:\\Windows\\ImmersiveControlPanel\\SystemSettings.exe\"" -ServerName:microsoft.windows.immersivecontrolpanel"""
+928,5720,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+752,7068,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+928,5468,"""SpeechRuntime.exe""","""C:\\Windows\\System32\\Speech_OneCore\\Common\\SpeechRuntime.exe -Embedding"""
+752,5348,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k wbiosvcgroup -s WbioSrvc"""
+2224,5524,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x26c"""
+928,4792,"""SystemSettings.exe""","""\""C:\\Windows\\ImmersiveControlPanel\\SystemSettings.exe\"" -ServerName:microsoft.windows.immersivecontrolpanel"""
+928,5720,"""backgroundTaskHost.exe""","""\""C:\\WINDOWS\\system32\\backgroundTaskHost.exe\"" -ServerName:CortanaUI.AppXy7vb4pc2dr3kc93kfc509b1d0arkfb2x.mca"""
+752,7068,"""svchost.exe""","""C:\\WINDOWS\\system32\\svchost.exe -k appmodel -p -s camsvc"""
+928,5468,"""SpeechRuntime.exe""","""C:\\Windows\\System32\\Speech_OneCore\\Common\\SpeechRuntime.exe -Embedding"""
+752,5348,"""svchost.exe""","""c:\\windows\\system32\\svchost.exe -k wbiosvcgroup -s WbioSrvc"""
+2224,5524,"""audiodg.exe""","""C:\\WINDOWS\\system32\\AUDIODG.EXE 0x26c"""
+1288,4464,"""taskhostw.exe""","""taskhostw.exe"""
+752,5024,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k netsvcs -p"""
+1288,7792,"""taskhostw.exe""",null
+928,6544,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+1288,4464,"""taskhostw.exe""","""taskhostw.exe"""
+752,5024,"""svchost.exe""","""C:\\WINDOWS\\System32\\svchost.exe -k netsvcs -p"""
+1288,7792,"""taskhostw.exe""",null
+928,6544,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{E10F6C3A-F1AE-4ADC-AA9D-2FE65525666E}"""
+1288,3216,"""taskhostw.exe""",null
+928,5420,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+928,4388,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+928,5952,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""
+1288,3216,"""taskhostw.exe""",null
+928,5420,"""dllhost.exe""","""C:\\WINDOWS\\system32\\DllHost.exe /Processid:{4FE95D37-3459-4ECC-AC3E-F7ABBE4E8AED}"""
+928,4388,"""FileCoAuth.exe""","""C:\\Users\\test\\AppData\\Local\\Microsoft\\OneDrive\\18.172.0826.0010\\FileCoAuth.exe -Embedding"""
+928,5952,"""smartscreen.exe""","""C:\\Windows\\System32\\smartscreen.exe -Embedding"""

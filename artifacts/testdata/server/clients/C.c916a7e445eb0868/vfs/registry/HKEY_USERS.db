@@ -1,0 +1,76 @@
+
+´[
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": ".DEFAULT",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\.DEFAULT",
+  "atime": "2018-10-21T01:30:59-07:00",
+  "ctime": "2018-10-21T01:30:59-07:00",
+  "mtime": "2018-10-21T01:30:59-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "S-1-5-18",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\S-1-5-18",
+  "atime": "2018-10-21T01:30:59-07:00",
+  "ctime": "2018-10-21T01:30:59-07:00",
+  "mtime": "2018-10-21T01:30:59-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "S-1-5-19",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\S-1-5-19",
+  "atime": "2018-09-03T02:48:53-07:00",
+  "ctime": "2018-09-03T02:48:53-07:00",
+  "mtime": "2018-09-03T02:48:53-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "S-1-5-20",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\S-1-5-20",
+  "atime": "2018-09-03T02:48:47-07:00",
+  "ctime": "2018-09-03T02:48:47-07:00",
+  "mtime": "2018-09-03T02:48:47-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "S-1-5-21-546003962-2713609280-610790815-1001",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\S-1-5-21-546003962-2713609280-610790815-1001",
+  "atime": "2018-10-24T01:32:18-07:00",
+  "ctime": "2018-10-24T01:32:18-07:00",
+  "mtime": "2018-10-24T01:32:18-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "S-1-5-21-546003962-2713609280-610790815-1001_Classes",
+  "Size": 0,
+  "_Data": {
+   "type": "key"
+  },
+  "_FullPath": "HKEY_USERS\\S-1-5-21-546003962-2713609280-610790815-1001_Classes",
+  "atime": "2018-10-21T01:31:05-07:00",
+  "ctime": "2018-10-21T01:31:05-07:00",
+  "mtime": "2018-10-21T01:31:05-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeý
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/registry/HKEY_USERS ¦©©­ÜžÞ

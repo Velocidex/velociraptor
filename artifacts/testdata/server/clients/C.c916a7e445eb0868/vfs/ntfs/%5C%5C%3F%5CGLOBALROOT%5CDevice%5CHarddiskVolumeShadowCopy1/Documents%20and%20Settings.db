@@ -1,0 +1,3 @@
+
+[]	_FullPath_DataNameSizeModemtimeatimectimeµ
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)L/ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1/Documents and Settings Ÿï’´˛ùﬁ

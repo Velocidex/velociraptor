@@ -1,0 +1,8 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.59071f0cy
+mic*C.c916a7e445eb0868ZVFSListDirectoryx³ç®­ÜžÞÂB
+(type.googleapis.com/proto.VFSListRequest/registry/HKEY_USERSrÄç®­ÜžÞ0Å†Æ­ÜžÞpˆÆ‡Æ­ÜžÞ¢Q
+FTime 0: /registry/HKEY_USERS: Sending response part 0 1.7 kB (6 rows).¦©©­ÜžÞ"À
+-type.googleapis.com/proto.VFSListRequestStateŽ†
+nullý
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/registry/HKEY_USERSreg

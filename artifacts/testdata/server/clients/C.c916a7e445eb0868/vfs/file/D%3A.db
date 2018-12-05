@@ -1,0 +1,124 @@
+
+¢[
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "32Bit",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "D:\\32Bit",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:33:14-07:00",
+  "mtime": "2018-10-15T07:33:14-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "64Bit",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "D:\\64Bit",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:33:14-07:00",
+  "mtime": "2018-10-15T07:33:14-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "AUTORUN.INF",
+  "Size": 763,
+  "_Data": "",
+  "_FullPath": "D:\\AUTORUN.INF",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2017-11-28T01:50:48-08:00",
+  "mtime": "2017-11-28T01:50:48-08:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "OS2",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "D:\\OS2",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:33:14-07:00",
+  "mtime": "2018-10-15T07:33:14-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "VBoxLinuxAdditions.run",
+  "Size": 7331277,
+  "_Data": "",
+  "_FullPath": "D:\\VBoxLinuxAdditions.run",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:26:06-07:00",
+  "mtime": "2018-10-15T07:26:06-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "VBoxSolarisAdditions.pkg",
+  "Size": 16453632,
+  "_Data": "",
+  "_FullPath": "D:\\VBoxSolarisAdditions.pkg",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:27:31-07:00",
+  "mtime": "2018-10-15T07:27:31-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "VBoxWindowsAdditions-amd64.exe",
+  "Size": 16514272,
+  "_Data": "",
+  "_FullPath": "D:\\VBoxWindowsAdditions-amd64.exe",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:32:57-07:00",
+  "mtime": "2018-10-15T07:32:57-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "VBoxWindowsAdditions-x86.exe",
+  "Size": 10318304,
+  "_Data": "",
+  "_FullPath": "D:\\VBoxWindowsAdditions-x86.exe",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:27:09-07:00",
+  "mtime": "2018-10-15T07:27:09-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "VBoxWindowsAdditions.exe",
+  "Size": 268496,
+  "_Data": "",
+  "_FullPath": "D:\\VBoxWindowsAdditions.exe",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:25:50-07:00",
+  "mtime": "2018-10-15T07:25:50-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "autorun.sh",
+  "Size": 6384,
+  "_Data": "",
+  "_FullPath": "D:\\autorun.sh",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:26:07-07:00",
+  "mtime": "2018-10-15T07:26:07-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "cert",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "D:\\cert",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:33:14-07:00",
+  "mtime": "2018-10-15T07:33:14-07:00"
+ },
+ {
+  "Mode": "-r--r--r--",
+  "Name": "runasroot.sh",
+  "Size": 4821,
+  "_Data": "",
+  "_FullPath": "D:\\runasroot.sh",
+  "atime": "2185-07-21T15:34:33-08:00",
+  "ctime": "2018-10-15T07:26:07-07:00",
+  "mtime": "2018-10-15T07:26:07-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeÒ
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file/D: –„≈ÌÎûﬁ

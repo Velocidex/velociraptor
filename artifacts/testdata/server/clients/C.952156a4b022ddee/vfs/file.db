@@ -1,0 +1,265 @@
+
+»/[
+ {
+  "Mode": "drwx------",
+  "Name": ".cache",
+  "Size": 4096,
+  "_FullPath": "/.cache",
+  "atime": "2018-10-23T17:30:59+10:00",
+  "ctime": "2018-10-23T17:30:59+10:00",
+  "mtime": "2018-10-23T17:30:59+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "bin",
+  "Size": 4096,
+  "_FullPath": "/bin",
+  "atime": "2018-10-23T17:37:16+10:00",
+  "ctime": "2018-10-23T17:30:07+10:00",
+  "mtime": "2018-10-23T17:30:07+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "boot",
+  "Size": 4096,
+  "_FullPath": "/boot",
+  "atime": "2018-10-23T18:10:29+10:00",
+  "ctime": "2018-10-23T17:34:40+10:00",
+  "mtime": "2018-10-23T17:34:40+10:00"
+ },
+ {
+  "Mode": "-rw-------",
+  "Name": "core",
+  "Size": 3596288,
+  "_FullPath": "/core",
+  "atime": "2018-10-23T18:29:10+10:00",
+  "ctime": "2018-10-23T18:29:10+10:00",
+  "mtime": "2018-10-23T18:29:10+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "data",
+  "Size": 4096,
+  "_FullPath": "/data",
+  "atime": "2018-10-24T10:01:36+10:00",
+  "ctime": "2018-10-24T10:01:17+10:00",
+  "mtime": "2018-10-24T10:01:17+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "dev",
+  "Size": 4820,
+  "_FullPath": "/dev",
+  "atime": "2018-10-24T07:57:55+10:00",
+  "ctime": "2018-10-24T07:57:50+10:00",
+  "mtime": "2018-10-24T07:57:50+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "etc",
+  "Size": 12288,
+  "_FullPath": "/etc",
+  "atime": "2018-10-23T23:01:13+10:00",
+  "ctime": "2018-10-24T08:42:30+10:00",
+  "mtime": "2018-10-24T08:42:30+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "home",
+  "Size": 4096,
+  "_FullPath": "/home",
+  "atime": "2018-10-23T22:03:54+10:00",
+  "ctime": "2018-10-23T17:34:15+10:00",
+  "mtime": "2018-10-23T17:34:15+10:00"
+ },
+ {
+  "Mode": "Lrwxrwxrwx",
+  "Name": "initrd.img",
+  "Size": 33,
+  "_FullPath": "/initrd.img",
+  "atime": "2018-10-23T16:44:06+10:00",
+  "ctime": "2018-10-23T16:44:05+10:00",
+  "mtime": "2018-10-23T16:44:05+10:00"
+ },
+ {
+  "Mode": "Lrwxrwxrwx",
+  "Name": "initrd.img.old",
+  "Size": 33,
+  "_FullPath": "/initrd.img.old",
+  "atime": "2018-10-23T17:34:12+10:00",
+  "ctime": "2018-10-23T16:44:05+10:00",
+  "mtime": "2018-10-23T16:44:05+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "lib",
+  "Size": 4096,
+  "_FullPath": "/lib",
+  "atime": "2018-10-23T17:32:34+10:00",
+  "ctime": "2018-10-23T17:30:52+10:00",
+  "mtime": "2018-10-23T17:30:52+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "lib64",
+  "Size": 4096,
+  "_FullPath": "/lib64",
+  "atime": "2018-10-23T16:40:45+10:00",
+  "ctime": "2018-10-23T16:40:46+10:00",
+  "mtime": "2018-10-23T16:40:46+10:00"
+ },
+ {
+  "Mode": "drwx------",
+  "Name": "lost+found",
+  "Size": 16384,
+  "_FullPath": "/lost+found",
+  "atime": "2018-10-23T16:29:13+10:00",
+  "ctime": "2018-10-23T16:29:13+10:00",
+  "mtime": "2018-10-23T16:29:13+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "media",
+  "Size": 4096,
+  "_FullPath": "/media",
+  "atime": "2018-10-23T16:29:16+10:00",
+  "ctime": "2018-10-23T16:29:16+10:00",
+  "mtime": "2018-10-23T16:29:16+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "mnt",
+  "Size": 4096,
+  "_FullPath": "/mnt",
+  "atime": "2018-10-23T16:40:40+10:00",
+  "ctime": "2018-10-23T16:40:40+10:00",
+  "mtime": "2018-10-23T16:40:40+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "opt",
+  "Size": 4096,
+  "_FullPath": "/opt",
+  "atime": "2018-10-23T16:40:40+10:00",
+  "ctime": "2018-10-23T17:38:27+10:00",
+  "mtime": "2018-10-23T17:38:27+10:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "proc",
+  "Size": 0,
+  "_FullPath": "/proc",
+  "atime": "2018-10-24T07:54:55+10:00",
+  "ctime": "2018-10-24T07:54:55+10:00",
+  "mtime": "2018-10-24T07:54:55+10:00"
+ },
+ {
+  "Mode": "drwx------",
+  "Name": "root",
+  "Size": 4096,
+  "_FullPath": "/root",
+  "atime": "2018-10-16T03:10:34+10:00",
+  "ctime": "2018-10-23T17:36:21+10:00",
+  "mtime": "2018-10-23T17:36:21+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "run",
+  "Size": 960,
+  "_FullPath": "/run",
+  "atime": "2018-10-24T07:55:02+10:00",
+  "ctime": "2018-10-24T08:40:24+10:00",
+  "mtime": "2018-10-24T08:40:24+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "sbin",
+  "Size": 12288,
+  "_FullPath": "/sbin",
+  "atime": "2018-10-23T19:41:43+10:00",
+  "ctime": "2018-10-23T19:39:44+10:00",
+  "mtime": "2018-10-23T19:39:44+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "snap",
+  "Size": 4096,
+  "_FullPath": "/snap",
+  "atime": "2018-10-23T17:27:15+10:00",
+  "ctime": "2018-10-23T17:36:22+10:00",
+  "mtime": "2018-10-23T17:36:22+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "srv",
+  "Size": 4096,
+  "_FullPath": "/srv",
+  "atime": "2018-10-23T16:40:40+10:00",
+  "ctime": "2018-10-23T16:40:40+10:00",
+  "mtime": "2018-10-23T16:40:40+10:00"
+ },
+ {
+  "Mode": "-rw-------",
+  "Name": "swapfile",
+  "Size": 2147483648,
+  "_FullPath": "/swapfile",
+  "atime": "2018-10-23T17:36:17+10:00",
+  "ctime": "2018-10-23T16:29:16+10:00",
+  "mtime": "2018-10-23T16:29:16+10:00"
+ },
+ {
+  "Mode": "dr-xr-xr-x",
+  "Name": "sys",
+  "Size": 0,
+  "_FullPath": "/sys",
+  "atime": "2018-10-24T07:54:59+10:00",
+  "ctime": "2018-10-24T07:54:59+10:00",
+  "mtime": "2018-10-24T07:54:59+10:00"
+ },
+ {
+  "Mode": "dtrwxrwxrwx",
+  "Name": "tmp",
+  "Size": 4096,
+  "_FullPath": "/tmp",
+  "atime": "2018-10-24T08:02:02+10:00",
+  "ctime": "2018-10-24T11:03:40+10:00",
+  "mtime": "2018-10-24T11:03:40+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "usr",
+  "Size": 4096,
+  "_FullPath": "/usr",
+  "atime": "2018-10-24T07:51:57+10:00",
+  "ctime": "2018-10-23T20:43:16+10:00",
+  "mtime": "2018-10-23T20:43:16+10:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "var",
+  "Size": 4096,
+  "_FullPath": "/var",
+  "atime": "2018-10-23T22:01:18+10:00",
+  "ctime": "2018-10-23T19:41:09+10:00",
+  "mtime": "2018-10-23T19:41:09+10:00"
+ },
+ {
+  "Mode": "Lrwxrwxrwx",
+  "Name": "vmlinuz",
+  "Size": 30,
+  "_FullPath": "/vmlinuz",
+  "atime": "2018-10-23T17:34:12+10:00",
+  "ctime": "2018-10-23T16:44:05+10:00",
+  "mtime": "2018-10-23T16:44:05+10:00"
+ },
+ {
+  "Mode": "Lrwxrwxrwx",
+  "Name": "vmlinuz.old",
+  "Size": 30,
+  "_FullPath": "/vmlinuz.old",
+  "atime": "2018-10-23T17:34:12+10:00",
+  "ctime": "2018-10-23T16:44:05+10:00",
+  "mtime": "2018-10-23T16:44:05+10:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeÓ
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file §è’˜ùﬁ

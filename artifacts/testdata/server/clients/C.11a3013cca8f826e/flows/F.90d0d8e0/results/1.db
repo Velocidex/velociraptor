@@ -1,0 +1,14 @@
+
+1aff4:/clients/C.11a3013cca8f826e/flows/F.90d0d8e0*í
+[]Û
+Ø/* For each user on the system, search for extension manifests
+   in their home directory. */
+LET extension_manifests = SELECT * from foreach(
+  row={
+     SELECT Uid, Name AS User, Directory from Artifact.Windows.Sys.Users()
+  },
+  query={
+     SELECT FullPath, Mtime, Ctime, User, Uid from glob(
+       globs=Directory + extensionGlobs)
+  })
+ —½‰º‚ÁÞ(2C.11a3013cca8f826e8rVQLResponsex¦Ê®Ø„ÁÞÀœ

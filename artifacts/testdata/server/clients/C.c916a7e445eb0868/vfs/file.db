@@ -1,0 +1,59 @@
+
+ë
+[
+ {
+  "Mode": "d---------",
+  "Name": "C:",
+  "Size": 0,
+  "_Data": {
+   "Description": "Local Fixed Disk",
+   "DeviceID": "C:",
+   "FreeSpace": "11901755392",
+   "Size": "33833349120",
+   "SystemName": "DESKTOP-IOME2K5",
+   "VolumeName": "",
+   "VolumeSerialNumber": "9459F443"
+  },
+  "_FullPath": "C:",
+  "atime": "1969-12-31T16:00:00-08:00",
+  "ctime": "1969-12-31T16:00:00-08:00",
+  "mtime": "1969-12-31T16:00:00-08:00"
+ },
+ {
+  "Mode": "d---------",
+  "Name": "D:",
+  "Size": 0,
+  "_Data": {
+   "Description": "CD-ROM Disc",
+   "DeviceID": "D:",
+   "FreeSpace": "0",
+   "Size": "58013696",
+   "SystemName": "DESKTOP-IOME2K5",
+   "VolumeName": "VBox_GAs_5.2.20",
+   "VolumeSerialNumber": "BBA50061"
+  },
+  "_FullPath": "D:",
+  "atime": "1969-12-31T16:00:00-08:00",
+  "ctime": "1969-12-31T16:00:00-08:00",
+  "mtime": "1969-12-31T16:00:00-08:00"
+ },
+ {
+  "Mode": "d---------",
+  "Name": "F:",
+  "Size": 0,
+  "_Data": {
+   "Description": "Network Connection",
+   "DeviceID": "F:",
+   "FreeSpace": "3365888864256",
+   "Size": "3936908984320",
+   "SystemName": "DESKTOP-IOME2K5",
+   "VolumeName": "VBOX_shared",
+   "VolumeSerialNumber": "0000FD00"
+  },
+  "_FullPath": "F:",
+  "atime": "1969-12-31T16:00:00-08:00",
+  "ctime": "1969-12-31T16:00:00-08:00",
+  "mtime": "1969-12-31T16:00:00-08:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeÓ
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file ÑıÄ°˛ùﬁ

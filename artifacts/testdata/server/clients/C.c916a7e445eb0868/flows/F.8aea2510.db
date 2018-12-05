@@ -1,0 +1,8 @@
+
+1aff4:/clients/C.c916a7e445eb0868/flows/F.8aea2510z
+mic*C.c916a7e445eb0868ZVFSListDirectoryx∑ôºÅçûﬁ¬C
+(type.googleapis.com/proto.VFSListRequest/file/C:/Windows/Logss«ôºÅçûﬁ0©Á˘Åçûﬁpà°Ë˘Åçûﬁ¢R
+GTime 0: /file/C:/Windows/Logs: Sending response part 0 2.0 kB (8 rows).ï“ŒÅçûﬁ"¬
+-type.googleapis.com/proto.VFSListRequestStateêá
+null˛
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file/C:/Windows/Logsfile

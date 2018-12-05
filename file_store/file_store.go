@@ -2,7 +2,6 @@ package file_store
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -71,8 +70,6 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
-	fmt.Printf("Writing file %s\n", filename)
-
 	file_path, err := self.FilenameToFileStorePath(filename)
 	if err != nil {
 		return nil, err
@@ -107,7 +104,6 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 			string(datastore.SanitizeString(component)))
 	}
 
-	fmt.Printf("FilestoreDirectory: %s %s\n", filename, filepath.Join(components...))
 	return filepath.Join(components...), nil
 }
 

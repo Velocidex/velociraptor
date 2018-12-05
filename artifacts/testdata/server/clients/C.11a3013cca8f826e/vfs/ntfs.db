@@ -1,0 +1,22 @@
+
+ò[
+ {
+  "Mode": "d---------",
+  "Name": "\\\\.\\C:",
+  "Size": 0,
+  "_Data": {
+   "Description": "Local Fixed Disk",
+   "DeviceID": "C:",
+   "FreeSpace": "9209790464",
+   "Size": "33344032768",
+   "SystemName": "TESTCOMPUTER",
+   "VolumeName": "",
+   "VolumeSerialNumber": "9459F443"
+  },
+  "_FullPath": "\\\\.\\C:",
+  "atime": null,
+  "ctime": null,
+  "mtime": null
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeî
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/ntfs ¸ü£Ó®ÐÞ

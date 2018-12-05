@@ -1,0 +1,84 @@
+
+û[
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "CBS",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\CBS",
+  "atime": "2018-10-23T14:40:53-07:00",
+  "ctime": "2018-04-11T14:04:39-07:00",
+  "mtime": "2018-10-23T00:26:47-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "DISM",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\DISM",
+  "atime": "2018-10-23T00:26:46-07:00",
+  "ctime": "2018-09-03T03:27:52-07:00",
+  "mtime": "2018-09-03T03:27:52-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "DPX",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\DPX",
+  "atime": "2018-10-21T01:38:01-07:00",
+  "ctime": "2018-10-10T02:48:13-07:00",
+  "mtime": "2018-10-19T10:24:23-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "MeasuredBoot",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\MeasuredBoot",
+  "atime": "2018-10-21T01:38:01-07:00",
+  "ctime": "2018-04-11T16:38:12-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "MoSetup",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\MoSetup",
+  "atime": "2018-10-21T01:38:01-07:00",
+  "ctime": "2018-10-10T02:48:13-07:00",
+  "mtime": "2018-10-19T10:24:23-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "SIH",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\SIH",
+  "atime": "2018-10-23T14:40:58-07:00",
+  "ctime": "2018-09-03T09:03:33-07:00",
+  "mtime": "2018-10-23T14:40:56-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "WindowsUpdate",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\WindowsUpdate",
+  "atime": "2018-10-23T18:54:25-07:00",
+  "ctime": "2018-09-03T02:59:31-07:00",
+  "mtime": "2018-10-23T18:54:22-07:00"
+ },
+ {
+  "Mode": "drwxrwxrwx",
+  "Name": "waasmedic",
+  "Size": 0,
+  "_Data": "",
+  "_FullPath": "C:\\Windows\\Logs\\waasmedic",
+  "atime": "2018-10-23T18:49:06-07:00",
+  "ctime": "2018-09-03T03:00:54-07:00",
+  "mtime": "2018-10-23T04:45:17-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectime˛
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/file/C:/Windows/Logs ï“ŒÅçûﬁ

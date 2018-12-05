@@ -1,0 +1,472 @@
+
+‚_[
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$AttrDef",
+  "Size": 2560,
+  "_Data": {
+   "mft": "4-128-4",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$AttrDef",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$BadClus",
+  "Size": 0,
+  "_Data": {
+   "mft": "8-128-2",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$BadClus",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$BadClus:$Bad",
+  "Size": 33833349120,
+  "_Data": {
+   "mft": "8-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$BadClus:$Bad",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$Bitmap",
+  "Size": 1032512,
+  "_Data": {
+   "mft": "6-128-4",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Bitmap",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$Boot",
+  "Size": 8192,
+  "_Data": {
+   "mft": "7-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Boot",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "$Extend",
+  "Size": 656,
+  "_Data": {
+   "mft": "11-144-4",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Extend",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$LogFile",
+  "Size": 45973504,
+  "_Data": {
+   "mft": "2-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$LogFile",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$MFT",
+  "Size": 412090368,
+  "_Data": {
+   "mft": "0-128-6",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$MFT",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$MFTMirr",
+  "Size": 4096,
+  "_Data": {
+   "mft": "1-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$MFTMirr",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "$Recycle.Bin",
+  "Size": 712,
+  "_Data": {
+   "mft": "58-144-1",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Recycle.Bin",
+  "atime": "2017-10-04T09:10:56-07:00",
+  "ctime": "2017-10-04T09:10:56-07:00",
+  "mtime": "2017-10-04T09:10:56-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "$Secure:$SDH",
+  "Size": 56,
+  "_Data": {
+   "mft": "9-144-17",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Secure:$SDH",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$Secure:$SDS",
+  "Size": 3475476,
+  "_Data": {
+   "mft": "9-128-0",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Secure:$SDS",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "$Secure:$SII",
+  "Size": 56,
+  "_Data": {
+   "mft": "9-144-16",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Secure:$SII",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$UpCase",
+  "Size": 131072,
+  "_Data": {
+   "mft": "10-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$UpCase",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$UpCase:$Info",
+  "Size": 32,
+  "_Data": {
+   "mft": "10-128-4",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$UpCase:$Info",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "$Volume",
+  "Size": 0,
+  "_Data": {
+   "mft": "3-128-3",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\$Volume",
+  "atime": "2017-10-04T09:10:52-07:00",
+  "ctime": "2017-10-04T09:10:52-07:00",
+  "mtime": "2017-10-04T09:10:52-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "DOCUME~1",
+  "Size": 48,
+  "_Data": {
+   "mft": "82003-144-1",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\DOCUME~1",
+  "atime": "2017-10-04T08:23:36-07:00",
+  "ctime": "2017-10-04T08:23:36-07:00",
+  "mtime": "2017-10-04T08:23:36-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Documents and Settings",
+  "Size": 48,
+  "_Data": {
+   "mft": "82003-144-1",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Documents and Settings",
+  "atime": "2017-10-04T08:23:36-07:00",
+  "ctime": "2017-10-04T08:23:36-07:00",
+  "mtime": "2017-10-04T08:23:36-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "Logfile.log",
+  "Size": 30,
+  "_Data": {
+   "mft": "24672-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Logfile.log",
+  "atime": "2018-10-06T05:19:56-07:00",
+  "ctime": "2018-10-06T05:19:56-07:00",
+  "mtime": "2018-10-06T05:19:56-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "PROGRA~1",
+  "Size": 56,
+  "_Data": {
+   "mft": "29476-144-6",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\PROGRA~1",
+  "atime": "2018-09-03T03:44:18-07:00",
+  "ctime": "2018-09-03T03:44:18-07:00",
+  "mtime": "2018-09-03T03:44:18-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "PROGRA~2",
+  "Size": 176,
+  "_Data": {
+   "mft": "30558-144-6",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\PROGRA~2",
+  "atime": "2018-09-03T03:44:19-07:00",
+  "ctime": "2018-09-03T03:44:19-07:00",
+  "mtime": "2018-09-03T03:44:19-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "PROGRA~3",
+  "Size": 56,
+  "_Data": {
+   "mft": "30660-144-6",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\PROGRA~3",
+  "atime": "2018-09-03T03:44:23-07:00",
+  "ctime": "2018-09-03T03:44:23-07:00",
+  "mtime": "2018-09-03T03:44:23-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "PerfLogs",
+  "Size": 48,
+  "_Data": {
+   "mft": "29475-144-1",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\PerfLogs",
+  "atime": "2018-04-11T16:38:12-07:00",
+  "ctime": "2018-09-03T03:38:43-07:00",
+  "mtime": "2018-04-11T16:38:12-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Program Files",
+  "Size": 56,
+  "_Data": {
+   "mft": "29476-144-6",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Program Files",
+  "atime": "2018-09-03T03:44:18-07:00",
+  "ctime": "2018-09-03T03:44:18-07:00",
+  "mtime": "2018-09-03T03:44:18-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Program Files (x86)",
+  "Size": 176,
+  "_Data": {
+   "mft": "30558-144-6",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Program Files (x86)",
+  "atime": "2018-09-03T03:44:19-07:00",
+  "ctime": "2018-09-03T03:44:19-07:00",
+  "mtime": "2018-09-03T03:44:19-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "ProgramData",
+  "Size": 56,
+  "_Data": {
+   "mft": "30660-144-6",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\ProgramData",
+  "atime": "2018-09-03T03:44:23-07:00",
+  "ctime": "2018-09-03T03:44:23-07:00",
+  "mtime": "2018-09-03T03:44:23-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Python37",
+  "Size": 56,
+  "_Data": {
+   "mft": "11516-144-5",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Python37",
+  "atime": "2018-10-01T07:19:47-07:00",
+  "ctime": "2018-10-01T07:19:47-07:00",
+  "mtime": "2018-10-01T07:19:47-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Recovery",
+  "Size": 256,
+  "_Data": {
+   "mft": "82187-144-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Recovery",
+  "atime": "2017-10-04T08:24:53-07:00",
+  "ctime": "2017-10-04T08:24:53-07:00",
+  "mtime": "2017-10-04T08:24:53-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "SYSTEM~1",
+  "Size": 56,
+  "_Data": {
+   "mft": "49637-144-6",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\SYSTEM~1",
+  "atime": "2017-10-04T08:17:05-07:00",
+  "ctime": "2017-10-04T08:17:05-07:00",
+  "mtime": "2017-10-04T08:17:05-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "System Volume Information",
+  "Size": 56,
+  "_Data": {
+   "mft": "49637-144-6",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\System Volume Information",
+  "atime": "2017-10-04T08:17:05-07:00",
+  "ctime": "2017-10-04T08:17:05-07:00",
+  "mtime": "2017-10-04T08:17:05-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Users",
+  "Size": 56,
+  "_Data": {
+   "mft": "31210-144-5",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Users",
+  "atime": "2018-09-03T03:43:16-07:00",
+  "ctime": "2018-09-03T03:38:44-07:00",
+  "mtime": "2018-04-11T16:44:05-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "WINDOW~1",
+  "Size": 176,
+  "_Data": {
+   "mft": "33013-144-6",
+   "name_type": "DOS"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\WINDOW~1",
+  "atime": "2018-08-07T06:10:35-07:00",
+  "ctime": "2018-08-07T06:10:35-07:00",
+  "mtime": "2018-08-07T06:10:35-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Windows",
+  "Size": 608,
+  "_Data": {
+   "mft": "31313-144-0",
+   "name_type": "POSIX"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows",
+  "atime": "2018-09-03T03:44:31-07:00",
+  "ctime": "2018-09-03T03:44:31-07:00",
+  "mtime": "2018-09-03T03:44:31-07:00"
+ },
+ {
+  "Mode": "drwxr-xr-x",
+  "Name": "Windows10Upgrade",
+  "Size": 176,
+  "_Data": {
+   "mft": "33013-144-6",
+   "name_type": "Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows10Upgrade",
+  "atime": "2018-08-07T06:10:35-07:00",
+  "ctime": "2018-08-07T06:10:35-07:00",
+  "mtime": "2018-08-07T06:10:35-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "pagefile.sys",
+  "Size": 671088640,
+  "_Data": {
+   "mft": "19398-128-0",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\pagefile.sys",
+  "atime": "2018-09-03T02:48:38-07:00",
+  "ctime": "2018-09-03T02:48:38-07:00",
+  "mtime": "2018-09-03T02:48:38-07:00"
+ },
+ {
+  "Mode": "-rwxr-xr-x",
+  "Name": "swapfile.sys",
+  "Size": 268435456,
+  "_Data": {
+   "mft": "27336-128-1",
+   "name_type": "DOS+Win32"
+  },
+  "_FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\swapfile.sys",
+  "atime": "2018-09-03T02:48:39-07:00",
+  "ctime": "2018-09-03T02:48:39-07:00",
+  "mtime": "2018-09-03T02:48:39-07:00"
+ }
+]	_FullPath_DataNameSizeModemtimeatimectimeû
+‰SELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)5/ntfs/\\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1 „öïß˛ùﬁ

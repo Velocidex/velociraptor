@@ -1,0 +1,8 @@
+
+1aff4:/clients/C.952156a4b022ddee/flows/F.87b91b63j
+mic*C.952156a4b022ddeeZVFSListDirectoryxûûÓ÷ğŞÂ3
+(type.googleapis.com/proto.VFSListRequest/filedüÓ÷ğŞ0¯ºøğŞpˆ»øğŞ¢C
+8Time 0: /file: Sending response part 0 6.1 kB (29 rows).ˆ’Õ÷ğŞ"²
+-type.googleapis.com/proto.VFSListRequestState€÷
+nullî
+äSELECT FullPath as _FullPath, Data as _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) as mtime, timestamp(epoch=Atime.Sec) as atime, timestamp(epoch=Ctime.Sec) as ctime from glob(globs=path, accessor=accessor)/filefile
