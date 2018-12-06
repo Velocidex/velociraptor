@@ -125,30 +125,40 @@ Explore more of Velociraptor's options using the -h flag.
 
 ## Building from source.
 
-To build from source, make sure you have a recent Golang installed:
+To build from source, make sure you have a recent Golang installed
+from https://golang.org/dl/:
+
     ```bash
     $ go get -u www.velocidex.com/golang/velociraptor
+    $ go get -u github.com/golang/dep/cmd/dep
     $ cd $GO_PATH/go/src/www.velocidex.com/golang/velociraptor/
 
     # This will download go dependencies.
     $ dep ensure
 
-    # This will build the GUI elements:
+    # This will build the GUI elements. You will need to have node
+    # installed first. For example on Windows get it from
+    # https://nodejs.org/en/download/ . You also need to have JAVA
+    # installed from https://www.java.com because the js compiler
+    # needs it.
     $ cd gui/static/
     $ npm install
+
+    # If gulp is not on your path you need to run it using node:
+    # node node_modules\gulp\bin\gulp.js compile
     $ gulp compile
     $ cd -
 
     # This builds a release (i.e. it will embed the GUI files in the
     # binary). If you dont care about the GUI a simple "make" will
     # build a bare binary.
-    $ make release
-    $ make windows
+    $ go run make.go -v dev
+    $ go run make.go -v windows
     ```
 
 If you want to rebuild the protobuf you will need to install protobuf compiler:
 
-   ```
+   ```bash
    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
    $ unzip protoc-3.6.1-linux-x86_64.zip
    $ sudo mv include/google/ /usr/local/include/

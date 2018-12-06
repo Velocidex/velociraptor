@@ -105,7 +105,8 @@ func Windows() error {
 		env["CC"] = mingw_xcompiler
 		env["CGO_ENABLED"] = "1"
 	} else {
-		fmt.Printf("Windows cross compiler %v not found. Disabling cgo modules.")
+		fmt.Printf("Windows cross compiler not found. Disabling cgo modules.")
+		env["CGO_ENABLED"] = "0"
 	}
 
 	env["GOOS"] = "windows"
