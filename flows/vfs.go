@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
@@ -78,7 +78,7 @@ func (self *VFSListDirectory) New() Flow {
 }
 
 func (self *VFSListDirectory) Load(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 	message := flow_obj.GetState()
 	if message == nil {
@@ -91,7 +91,7 @@ func (self *VFSListDirectory) Load(
 }
 
 func (self *VFSListDirectory) Save(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 	s, err := json.Marshal(self.rows)
 	if err != nil {
@@ -104,7 +104,7 @@ func (self *VFSListDirectory) Save(
 }
 
 func (self *VFSListDirectory) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 
@@ -163,7 +163,7 @@ func (self *VFSListDirectory) Start(
 }
 
 func (self *VFSListDirectory) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -181,7 +181,7 @@ func (self *VFSListDirectory) ProcessMessage(
 }
 
 func (self *VFSListDirectory) processSingleDirectoryListing(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -226,7 +226,7 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 // directory. When we see a file which belongs in another directory,
 // we can flush the current collection and start a new one.
 func (self *VFSListDirectory) processRecursiveDirectoryListing(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -288,7 +288,7 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 
 // Flush the current state into the database and clear it for the next directory.
 func (self *VFSListDirectory) flush_state(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 	// Save will serialize the rows into self.state.Current
 	err := self.Save(config_obj, flow_obj)
@@ -318,7 +318,7 @@ func (self *VFSDownloadFile) New() Flow {
 }
 
 func (self *VFSDownloadFile) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	vfs_download_args, ok := args.(*flows_proto.VFSDownloadFileRequest)
@@ -375,7 +375,7 @@ func (self *VFSDownloadFile) Start(
 }
 
 func (self *VFSDownloadFile) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 	err := flow_obj.FailIfError(config_obj, message)

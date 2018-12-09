@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
@@ -68,7 +68,7 @@ func (self *inMemoryPublicKeyResolver) Clear() {
 }
 
 type serverPublicKeyResolver struct {
-	config_obj *config.Config
+	config_obj *api_proto.Config
 	cache      *cache.LRUCache
 }
 
@@ -110,7 +110,7 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 
 func (self *serverPublicKeyResolver) Clear() {}
 
-func NewServerPublicKeyResolver(config_obj *config.Config) publicKeyResolver {
+func NewServerPublicKeyResolver(config_obj *api_proto.Config) publicKeyResolver {
 	return &serverPublicKeyResolver{
 		config_obj: config_obj,
 		cache:      cache.NewLRUCache(1000),

@@ -8,7 +8,7 @@ import (
 	"github.com/Showmax/go-fqdn"
 	"github.com/shirou/gopsutil/host"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
@@ -16,7 +16,7 @@ import (
 type GetHostname struct{}
 
 func (self *GetHostname) Run(
-	config *config.Config,
+	config *api_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
@@ -38,7 +38,7 @@ func (self *GetHostname) Run(
 type GetPlatformInfo struct{}
 
 func (self *GetPlatformInfo) Run(
-	config *config.Config,
+	config *api_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {

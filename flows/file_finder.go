@@ -8,7 +8,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -22,7 +22,7 @@ func (self *FileFinder) New() Flow {
 }
 
 func (self *FileFinder) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	file_finder_args, ok := args.(*flows_proto.FileFinderArgs)

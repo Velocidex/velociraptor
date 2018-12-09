@@ -9,17 +9,21 @@ import (
 )
 
 var (
-	mofLexer = lexer.Unquote(lexer.Upper(lexer.Must(lexer.Regexp(
-		`(?ms)`+
-			`(\s+)`+
-			`|(?i)(?P<Instance>INSTANCE OF)`+
-			`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)`+
-			`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)`+
-			`|(?P<String>'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)")`+
+	mofLexer = lexer.Must(lexer.Regexp(
+		`(?ms)` +
+			`(\s+)` +
+			`|(?i)(?P<Instance>INSTANCE OF)` +
+			`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
+			`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
+			`|(?P<String>'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)")` +
 			`|(?P<Operators><>|!=|<=|>=|=~|[-;+*/%,.()=<>{}\[\]])`,
-	)), "Keyword"), "String")
+	))
 
-	mofParser = participle.MustBuild(&MOF{}, mofLexer)
+	mofParser = participle.MustBuild(
+		&MOF{},
+		participle.Lexer(mofLexer),
+		participle.Unquote("String"),
+	)
 )
 
 func Parse(expression string) (*MOF, error) {

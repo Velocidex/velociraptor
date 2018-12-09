@@ -18,12 +18,8 @@ var (
 	commit_hash string
 )
 
-type Config struct {
-	*api_proto.Config
-}
-
 // Return the location of the writeback file.
-func (self *Config) WritebackLocation() string {
+func WritebackLocation(self *api_proto.Config) string {
 	switch runtime.GOOS {
 	case "linux":
 		return os.ExpandEnv(self.Client.WritebackLinux)
@@ -35,76 +31,74 @@ func (self *Config) WritebackLocation() string {
 }
 
 // Create a default configuration object.
-func GetDefaultConfig() *Config {
-	return &Config{
-		&api_proto.Config{
-			Version: &api_proto.Version{
-				Name:      "velociraptor",
-				Version:   constants.VERSION,
-				BuildTime: build_time,
-				Commit:    commit_hash,
-			},
-			Client: &api_proto.ClientConfig{
-				WritebackLinux: "/etc/velociraptor.writeback.yaml",
-				WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
-					"velociraptor.writeback.yaml",
-				MaxPoll: 600,
+func GetDefaultConfig() *api_proto.Config {
+	return &api_proto.Config{
+		Version: &api_proto.Version{
+			Name:      "velociraptor",
+			Version:   constants.VERSION,
+			BuildTime: build_time,
+			Commit:    commit_hash,
+		},
+		Client: &api_proto.ClientConfig{
+			WritebackLinux: "/etc/velociraptor.writeback.yaml",
+			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
+				"velociraptor.writeback.yaml",
+			MaxPoll: 600,
 
-				// Specific instructions for the
-				// windows service installer.
-				WindowsInstaller: &api_proto.WindowsInstallerConfig{
-					ServiceName: "Velociraptor",
-					InstallPath: "$ProgramFiles\\Velociraptor\\" +
-						"Velociraptor.exe",
-				},
+			// Specific instructions for the
+			// windows service installer.
+			WindowsInstaller: &api_proto.WindowsInstallerConfig{
+				ServiceName: "Velociraptor",
+				InstallPath: "$ProgramFiles\\Velociraptor\\" +
+					"Velociraptor.exe",
+			},
 
-				// If set to true this will stop
-				// arbitrary code execution on the
-				// client.
-				PreventExecve: false,
+			// If set to true this will stop
+			// arbitrary code execution on the
+			// client.
+			PreventExecve: false,
+		},
+		API: &api_proto.APIConfig{
+			// Bind port for gRPC endpoint - this should not
+			// normally be exposed.
+			BindAddress: "127.0.0.1",
+			BindPort:    8888,
+		},
+		GUI: &api_proto.GUIConfig{
+			// Bind port for GUI. If you expose this on a
+			// reachable IP address you must enable TLS!
+			BindAddress: "127.0.0.1",
+			BindPort:    8889,
+			InternalCidr: []string{
+				"127.0.0.1/12", "192.168.0.0/16",
 			},
-			API: &api_proto.APIConfig{
-				// Bind port for gRPC endpoint - this should not
-				// normally be exposed.
-				BindAddress: "127.0.0.1",
-				BindPort:    8888,
-			},
-			GUI: &api_proto.GUIConfig{
-				// Bind port for GUI. If you expose this on a
-				// reachable IP address you must enable TLS!
-				BindAddress: "127.0.0.1",
-				BindPort:    8889,
-				InternalCidr: []string{
-					"127.0.0.1/12", "192.168.0.0/16",
-				},
-			},
-			CA: &api_proto.CAConfig{},
-			Frontend: &api_proto.FrontendConfig{
-				// A public interface for clients to
-				// connect to.
-				BindAddress:     "0.0.0.0",
-				BindPort:        8000,
-				ClientLeaseTime: 600,
-			},
-			Datastore: &api_proto.DatastoreConfig{
-				Implementation: "FileBaseDataStore",
+		},
+		CA: &api_proto.CAConfig{},
+		Frontend: &api_proto.FrontendConfig{
+			// A public interface for clients to
+			// connect to.
+			BindAddress:     "0.0.0.0",
+			BindPort:        8000,
+			ClientLeaseTime: 600,
+		},
+		Datastore: &api_proto.DatastoreConfig{
+			Implementation: "FileBaseDataStore",
 
-				// Users would probably need to change
-				// this to something more permanent.
-				Location:           "/tmp/velociraptor",
-				FilestoreDirectory: "/tmp/velociraptor",
-			},
-			Flows:     &api_proto.FlowsConfig{},
-			Writeback: &api_proto.Writeback{},
-			Events: &api_proto.ClientEvents{
-				Artifacts: []string{"Generic.Client.Stats"},
-				Version:   1,
-			},
+			// Users would probably need to change
+			// this to something more permanent.
+			Location:           "/tmp/velociraptor",
+			FilestoreDirectory: "/tmp/velociraptor",
+		},
+		Flows:     &api_proto.FlowsConfig{},
+		Writeback: &api_proto.Writeback{},
+		Events: &api_proto.ClientEvents{
+			Artifacts: []string{"Generic.Client.Stats"},
+			Version:   1,
 		},
 	}
 }
 
-func maybeReadEmbeddedConfig() *Config {
+func maybeReadEmbeddedConfig() *api_proto.Config {
 	result := GetDefaultConfig()
 	err := yaml.Unmarshal(FileConfigDefaultYaml, result)
 	if err != nil {
@@ -115,7 +109,7 @@ func maybeReadEmbeddedConfig() *Config {
 }
 
 // Load the config stored in the YAML file and returns a config object.
-func LoadConfig(filename string) (*Config, error) {
+func LoadConfig(filename string) (*api_proto.Config, error) {
 	default_config := GetDefaultConfig()
 	result := GetDefaultConfig()
 
@@ -131,6 +125,7 @@ func LoadConfig(filename string) (*Config, error) {
 			// TODO: Check if the config version is compatible with our
 			// version. We always set the result's version to our version.
 			result.Version = default_config.Version
+			result.Client.Version = default_config.Version
 
 			return result, nil
 
@@ -149,14 +144,14 @@ func LoadConfig(filename string) (*Config, error) {
 	return embedded_config, nil
 }
 
-func LoadClientConfig(filename string) (*Config, error) {
+func LoadClientConfig(filename string) (*api_proto.Config, error) {
 	client_config, err := LoadConfig(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	existing_writeback := &api_proto.Writeback{}
-	data, err := ioutil.ReadFile(client_config.WritebackLocation())
+	data, err := ioutil.ReadFile(WritebackLocation(client_config))
 	// Failing to read the file is not an error - the file may not
 	// exist yet.
 	if err == nil {
@@ -171,7 +166,7 @@ func LoadClientConfig(filename string) (*Config, error) {
 	return client_config, nil
 }
 
-func WriteConfigToFile(filename string, config *Config) error {
+func WriteConfigToFile(filename string, config *api_proto.Config) error {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		return err
@@ -186,8 +181,8 @@ func WriteConfigToFile(filename string, config *Config) error {
 }
 
 // Update the client's writeback file.
-func UpdateWriteback(config_obj *Config) error {
-	if config_obj.WritebackLocation() == "" {
+func UpdateWriteback(config_obj *api_proto.Config) error {
+	if WritebackLocation(config_obj) == "" {
 		return nil
 	}
 
@@ -197,7 +192,7 @@ func UpdateWriteback(config_obj *Config) error {
 	}
 
 	// Make sure the new file is only readable by root.
-	err = ioutil.WriteFile(config_obj.WritebackLocation(), bytes, 0600)
+	err = ioutil.WriteFile(WritebackLocation(config_obj), bytes, 0600)
 	if err != nil {
 		return errors.WithStack(err)
 	}

@@ -3,7 +3,7 @@ package logging
 import (
 	"net/http"
 
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 // Record the status of the request so we can log it.
@@ -19,7 +19,7 @@ func (rec *statusRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
-func GetLoggingHandler(config_obj *config.Config) func(http.Handler) http.Handler {
+func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Handler {
 	logger := NewLogger(config_obj)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

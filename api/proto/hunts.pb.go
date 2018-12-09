@@ -22,7 +22,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type HuntOsCondition_OS int32
 
@@ -359,97 +359,13 @@ func (m *HuntCondition) GetOs() *HuntOsCondition {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*HuntCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _HuntCondition_OneofMarshaler, _HuntCondition_OneofUnmarshaler, _HuntCondition_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*HuntCondition) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*HuntCondition_GenericCondition)(nil),
 		(*HuntCondition_Labels)(nil),
 		(*HuntCondition_Os)(nil),
 	}
-}
-
-func _HuntCondition_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*HuntCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *HuntCondition_GenericCondition:
-		b.EncodeVarint(1<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.GenericCondition); err != nil {
-			return err
-		}
-	case *HuntCondition_Labels:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Labels); err != nil {
-			return err
-		}
-	case *HuntCondition_Os:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Os); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("HuntCondition.UnionField has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _HuntCondition_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*HuntCondition)
-	switch tag {
-	case 1: // union_field.generic_condition
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(HuntConditionGeneric)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &HuntCondition_GenericCondition{msg}
-		return true, err
-	case 2: // union_field.labels
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(HuntLabelCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &HuntCondition_Labels{msg}
-		return true, err
-	case 3: // union_field.os
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(HuntOsCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &HuntCondition_Os{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _HuntCondition_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*HuntCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *HuntCondition_GenericCondition:
-		s := proto.Size(x.GenericCondition)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *HuntCondition_Labels:
-		s := proto.Size(x.Labels)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *HuntCondition_Os:
-		s := proto.Size(x.Os)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type Hunt struct {

@@ -47,6 +47,10 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 	return result
 }
 
+type PslistArgs struct {
+	Pid int64 `vfilter:"optional,field=pid"`
+}
+
 func init() {
 	exportedProtocolImpl = append(exportedProtocolImpl, &_ProcessFieldImpl{})
 	exportedPlugins = append(exportedPlugins,
@@ -56,6 +60,24 @@ func init() {
 				scope *vfilter.Scope,
 				args *vfilter.Dict) []vfilter.Row {
 				var result []vfilter.Row
+
+				arg := &PslistArgs{}
+				err := vfilter.ExtractArgs(scope, args, arg)
+				if err != nil {
+					scope.Log("pslist: %s", err.Error())
+					return result
+				}
+
+				// If the user asked for one process
+				// just return that one.
+				if arg.Pid != 0 {
+					process_obj, err := process.NewProcess(int32(arg.Pid))
+					if err == nil {
+						result = append(result, process_obj)
+					}
+					return result
+				}
+
 				processes, err := process.Processes()
 				if err == nil {
 					for _, item := range processes {

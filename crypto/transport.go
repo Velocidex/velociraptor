@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	metrics "github.com/rcrowley/go-metrics"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -120,7 +121,7 @@ func _NewCipher(
 }
 
 type CryptoManager struct {
-	config      *config.Config
+	config      *api_proto.Config
 	private_key *rsa.PrivateKey
 
 	source string
@@ -216,7 +217,7 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 		self.logger.Info(
 			"Updated server serial number in "+
 				"config file %v to %v",
-			self.config.WritebackLocation(),
+			config.WritebackLocation(self.config),
 			self.config.Writeback.LastServerSerialNumber)
 	}
 
@@ -267,7 +268,7 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 	return &csr.Subject.CommonName, nil
 }
 
-func NewCryptoManager(config_obj *config.Config, source string, pem_str []byte) (
+func NewCryptoManager(config_obj *api_proto.Config, source string, pem_str []byte) (
 	*CryptoManager, error) {
 	private_key, err := parseRsaPrivateKeyFromPemStr(pem_str)
 	if err != nil {
@@ -285,7 +286,7 @@ func NewCryptoManager(config_obj *config.Config, source string, pem_str []byte) 
 	}, nil
 }
 
-func NewServerCryptoManager(config_obj *config.Config) (*CryptoManager, error) {
+func NewServerCryptoManager(config_obj *api_proto.Config) (*CryptoManager, error) {
 	cert, err := parseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
 	if err != nil {
 		return nil, err
@@ -308,7 +309,7 @@ func NewServerCryptoManager(config_obj *config.Config) (*CryptoManager, error) {
 	}, nil
 }
 
-func NewClientCryptoManager(config_obj *config.Config, client_private_key_pem []byte) (
+func NewClientCryptoManager(config_obj *api_proto.Config, client_private_key_pem []byte) (
 	*CryptoManager, error) {
 	private_key, err := parseRsaPrivateKeyFromPemStr(client_private_key_pem)
 	if err != nil {

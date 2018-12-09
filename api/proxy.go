@@ -2,17 +2,17 @@ package api
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-	"net/http"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func StartHTTPProxy(config_obj *config.Config) error {
+func StartHTTPProxy(config_obj *api_proto.Config) error {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -65,7 +65,7 @@ type _templateArgs struct {
 
 func GetAPIHandler(
 	ctx context.Context,
-	config_obj *config.Config) (http.Handler, error) {
+	config_obj *api_proto.Config) (http.Handler, error) {
 
 	// We need to tell when someone uses HEAD method on our grpc
 	// proxy so we need to pass this information from the request

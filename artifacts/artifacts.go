@@ -14,8 +14,8 @@ import (
 	errors "github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -234,11 +234,11 @@ func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
 }
 
-type init_function func(*config.Config) error
+type init_function func(*api_proto.Config) error
 
 var init_registry []init_function
 
-func GetGlobalRepository(config_obj *config.Config) (*Repository, error) {
+func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 	mu.Lock()
 	defer mu.Unlock()
 

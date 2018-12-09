@@ -7,17 +7,18 @@ import (
 	"html/template"
 	"net/http"
 	"time"
-	config "www.velocidex.com/golang/velociraptor/config"
+
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 )
 
-func install_mux(config_obj *config.Config, mux *http.ServeMux) {
+func install_mux(config_obj *api_proto.Config, mux *http.ServeMux) {
 	dir := "/static/"
 	mux.Handle(dir, http.FileServer(assets.HTTP))
 }
 
 func GetTemplateHandler(
-	config_obj *config.Config, template_name string) (http.Handler, error) {
+	config_obj *api_proto.Config, template_name string) (http.Handler, error) {
 	data, err := assets.ReadFile(template_name)
 	if err != nil {
 		return nil, err

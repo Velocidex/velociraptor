@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -38,7 +38,7 @@ func (self CollectedArtifactsPlugin) Call(
 		}
 
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*config.Config)
+		config_obj, ok := any_config_obj.(*api_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

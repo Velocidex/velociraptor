@@ -9,7 +9,6 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -33,7 +32,7 @@ func (self *CheckHuntCondition) New() Flow {
 }
 
 func (self *CheckHuntCondition) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	hunt_args, ok := args.(*api_proto.Hunt)
@@ -79,7 +78,7 @@ func (self *CheckHuntCondition) Start(
 }
 
 func (self *CheckHuntCondition) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 

@@ -3,12 +3,12 @@ package artifacts
 import (
 	"strings"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
-	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
-func register(config_obj *config.Config) error {
+func register(config_obj *api_proto.Config) error {
 	assets.Init()
 	files, err := assets.WalkDirs("", false)
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	"gopkg.in/alecthomas/kingpin.v2"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -309,7 +310,7 @@ func doRun() {
 }
 
 type VelociraptorService struct {
-	config_obj *config.Config
+	config_obj *api_proto.Config
 	ctx        context.Context
 	comms      *http_comms.HTTPCommunicator
 	elog       debug.Log
@@ -355,7 +356,7 @@ loop:
 	return
 }
 
-func NewVelociraptorService(config_obj *config.Config, elog debug.Log) (
+func NewVelociraptorService(config_obj *api_proto.Config, elog debug.Log) (
 	*VelociraptorService, error) {
 	result := &VelociraptorService{
 		elog: elog,

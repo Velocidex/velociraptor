@@ -16,7 +16,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -28,7 +27,7 @@ import (
 )
 
 type ApiServer struct {
-	config     *config.Config
+	config     *api_proto.Config
 	server_obj *server.Server
 }
 
@@ -324,7 +323,7 @@ func (self *ApiServer) GetArtifacts(
 	return result, nil
 }
 
-func StartServer(config_obj *config.Config, server_obj *server.Server) error {
+func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
 	bind_addr := fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
 		config_obj.API.BindPort)
 

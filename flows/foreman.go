@@ -23,7 +23,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -39,7 +38,7 @@ func (self *Foreman) New() Flow {
 }
 
 func (self *Foreman) ProcessEventTables(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	source string,
 	arg *actions_proto.ForemanCheckin) error {
@@ -93,7 +92,7 @@ func (self *Foreman) ProcessEventTables(
 }
 
 func (self *Foreman) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 	foreman_checkin, ok := responder.ExtractGrrMessagePayload(

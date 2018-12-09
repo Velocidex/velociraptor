@@ -19,7 +19,6 @@ import (
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -48,7 +47,7 @@ func renderRootVFS() *actions_proto.VQLResponse {
 
 // Render VFS nodes with VQL collection + uploads.
 func renderDBVFS(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 
@@ -135,7 +134,7 @@ func renderDBVFS(
 
 // Render VFS nodes from the filestore.
 func renderFileStore(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 
@@ -157,13 +156,13 @@ func renderFileStore(
 			row["Mode"] = "dr-xr-xr-x"
 		} else {
 			row["Mode"] = "-r--r--r--"
-			row["Download"]= &DownloadInfo{
+			row["Download"] = &DownloadInfo{
 				VfsPath: path.Join(vfs_path, item.Name()),
 				Size:    item.Size(),
 				Mtime:   item.ModTime().UnixNano() / 1000,
 			}
 		}
-		
+
 		rows = append(rows, row)
 	}
 
@@ -189,7 +188,7 @@ func renderFileStore(
 }
 
 func vfsListDirectory(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 	vfs_path = path.Join("/", vfs_path)

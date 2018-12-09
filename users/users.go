@@ -5,11 +5,11 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
-	errors "github.com/pkg/errors"
 	"regexp"
 	"strings"
+
+	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 )
@@ -40,7 +40,7 @@ func (self *UserRecord) VerifyPassword(password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func SetUser(config_obj *config.Config, user_record *UserRecord) error {
+func SetUser(config_obj *api_proto.Config, user_record *UserRecord) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
@@ -52,7 +52,7 @@ func SetUser(config_obj *config.Config, user_record *UserRecord) error {
 		constants.USER_URN+user_record.Name, user_record)
 }
 
-func GetUser(config_obj *config.Config, username string) (*UserRecord, error) {
+func GetUser(config_obj *api_proto.Config, username string) (*UserRecord, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")
 	}
@@ -69,7 +69,7 @@ func GetUser(config_obj *config.Config, username string) (*UserRecord, error) {
 
 }
 
-func GetUserNotificationCount(config_obj *config.Config, username string) (uint64, error) {
+func GetUserNotificationCount(config_obj *api_proto.Config, username string) (uint64, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return 0, err
@@ -84,7 +84,7 @@ func GetUserNotificationCount(config_obj *config.Config, username string) (uint6
 	return uint64(len(result)), nil
 }
 
-func GetUserNotifications(config_obj *config.Config, username string, clear_pending bool) (
+func GetUserNotifications(config_obj *api_proto.Config, username string, clear_pending bool) (
 	*api_proto.GetUserNotificationsResponse, error) {
 	result := &api_proto.GetUserNotificationsResponse{}
 	db, err := datastore.GetDB(config_obj)
@@ -146,7 +146,7 @@ func GetUserNotifications(config_obj *config.Config, username string, clear_pend
 	return result, nil
 }
 
-func Notify(config_obj *config.Config, notification *api_proto.UserNotification) error {
+func Notify(config_obj *api_proto.Config, notification *api_proto.UserNotification) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

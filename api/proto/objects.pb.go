@@ -19,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type ObjectReference struct {
 	// Types that are valid to be assigned to Union:
@@ -135,135 +135,15 @@ func (m *ObjectReference) GetApprovalRequest() *ApprovalRequestReference {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*ObjectReference) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _ObjectReference_OneofMarshaler, _ObjectReference_OneofUnmarshaler, _ObjectReference_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*ObjectReference) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*ObjectReference_Client)(nil),
 		(*ObjectReference_Hunt)(nil),
 		(*ObjectReference_Flow)(nil),
 		(*ObjectReference_VfsFile)(nil),
 		(*ObjectReference_ApprovalRequest)(nil),
 	}
-}
-
-func _ObjectReference_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*ObjectReference)
-	// union
-	switch x := m.Union.(type) {
-	case *ObjectReference_Client:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Client); err != nil {
-			return err
-		}
-	case *ObjectReference_Hunt:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Hunt); err != nil {
-			return err
-		}
-	case *ObjectReference_Flow:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Flow); err != nil {
-			return err
-		}
-	case *ObjectReference_VfsFile:
-		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.VfsFile); err != nil {
-			return err
-		}
-	case *ObjectReference_ApprovalRequest:
-		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ApprovalRequest); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("ObjectReference.Union has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _ObjectReference_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*ObjectReference)
-	switch tag {
-	case 2: // union.client
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(ClientReference)
-		err := b.DecodeMessage(msg)
-		m.Union = &ObjectReference_Client{msg}
-		return true, err
-	case 3: // union.hunt
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(HuntReference)
-		err := b.DecodeMessage(msg)
-		m.Union = &ObjectReference_Hunt{msg}
-		return true, err
-	case 4: // union.flow
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FlowReference)
-		err := b.DecodeMessage(msg)
-		m.Union = &ObjectReference_Flow{msg}
-		return true, err
-	case 6: // union.vfs_file
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(VfsFileReference)
-		err := b.DecodeMessage(msg)
-		m.Union = &ObjectReference_VfsFile{msg}
-		return true, err
-	case 7: // union.approval_request
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(ApprovalRequestReference)
-		err := b.DecodeMessage(msg)
-		m.Union = &ObjectReference_ApprovalRequest{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _ObjectReference_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*ObjectReference)
-	// union
-	switch x := m.Union.(type) {
-	case *ObjectReference_Client:
-		s := proto.Size(x.Client)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *ObjectReference_Hunt:
-		s := proto.Size(x.Hunt)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *ObjectReference_Flow:
-		s := proto.Size(x.Flow)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *ObjectReference_VfsFile:
-		s := proto.Size(x.VfsFile)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *ObjectReference_ApprovalRequest:
-		s := proto.Size(x.ApprovalRequest)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 type ClientReference struct {

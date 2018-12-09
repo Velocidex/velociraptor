@@ -11,17 +11,18 @@ import (
 	"html/template"
 	"net/http"
 	"time"
-	config "www.velocidex.com/golang/velociraptor/config"
+
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func install_mux(config_obj *config.Config, mux *http.ServeMux) {
+func install_mux(config_obj *api_proto.Config, mux *http.ServeMux) {
 	logging.NewLogger(config_obj).Info("GUI will serve files from directory gui/static")
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
 		http.Dir("gui/static"))))
 }
 
-func GetTemplateHandler(config_obj *config.Config,
+func GetTemplateHandler(config_obj *api_proto.Config,
 	template_name string) (http.Handler, error) {
 	tmpl, err := template.ParseFiles("gui" + template_name)
 	if err != nil {

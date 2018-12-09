@@ -3,8 +3,9 @@ package datastore
 
 import (
 	"errors"
+
 	"github.com/golang/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -15,18 +16,18 @@ var (
 type DataStore interface {
 	// Retrieve all the client's tasks.
 	GetClientTasks(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		client_id string,
 		do_not_lease bool) ([]*crypto_proto.GrrMessage, error)
 
 	// Removes the task ids from the client queues.
 	RemoveTasksFromClientQueue(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		client_id string,
 		task_ids []uint64) error
 
 	QueueMessageForClient(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		client_id string,
 		flow_id string,
 		client_action string,
@@ -34,35 +35,35 @@ type DataStore interface {
 		next_state uint64) error
 
 	GetSubject(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		urn string,
 		message proto.Message) error
 
 	SetSubject(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		urn string,
 		message proto.Message) error
 
 	DeleteSubject(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		urn string) error
 
 	// Lists all the children of a URN.
 	ListChildren(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		urn string,
 		offset uint64, length uint64) ([]string, error)
 
 	// Update the posting list index. Searching for any of the
 	// keywords will return the entity urn.
 	SetIndex(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		index_urn string,
 		entity string,
 		keywords []string) error
 
 	SearchClients(
-		config_obj *config.Config,
+		config_obj *api_proto.Config,
 		index_urn string,
 		query string,
 		offset uint64, limit uint64) []string
@@ -84,7 +85,7 @@ func GetImpl(name string) (DataStore, bool) {
 	return result, pres
 }
 
-func GetDB(config_obj *config.Config) (DataStore, error) {
+func GetDB(config_obj *api_proto.Config) (DataStore, error) {
 	db, pres := GetImpl(config_obj.Datastore.Implementation)
 	if !pres {
 		return nil, errors.New("No datastore implementation")

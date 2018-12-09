@@ -8,8 +8,8 @@ import (
 	"github.com/ghodss/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -64,7 +64,7 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func collectArtifact(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
@@ -100,7 +100,7 @@ func collectArtifact(
 	}
 }
 
-func getRepository(config_obj *config.Config) *artifacts.Repository {
+func getRepository(config_obj *api_proto.Config) *artifacts.Repository {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {

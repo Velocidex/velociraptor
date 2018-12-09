@@ -11,7 +11,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -33,7 +32,7 @@ type FlowImplementation struct {
 
 // The Flow runner processes a sequence of packets.
 type FlowRunner struct {
-	config     *config.Config
+	config     *api_proto.Config
 	flow_cache map[string]*AFF4FlowObject
 	logger     *logging.Logger
 }
@@ -116,7 +115,7 @@ func (self *FlowRunner) Close() {
 	}
 }
 
-func NewFlowRunner(config *config.Config, logger *logging.Logger) *FlowRunner {
+func NewFlowRunner(config *api_proto.Config, logger *logging.Logger) *FlowRunner {
 	result := FlowRunner{
 		config:     config,
 		logger:     logger,
@@ -150,14 +149,14 @@ func NewFlowRunner(config *config.Config, logger *logging.Logger) *FlowRunner {
 // more efficient. You can get that by embedding the BaseFlow type.
 type Flow interface {
 	Start(
-		config *config.Config,
+		config *api_proto.Config,
 		flow_obj *AFF4FlowObject,
 		args proto.Message,
 	) error
 
 	// This method is called by the runner prior to processing
 	// messages.
-	Load(config_obj *config.Config, flow_obj *AFF4FlowObject) error
+	Load(config_obj *api_proto.Config, flow_obj *AFF4FlowObject) error
 
 	// Each message is processed with this method. Note that
 	// messages may be split across client POST operations. The
@@ -166,13 +165,13 @@ type Flow interface {
 	// across POST operations, they should store this state inside
 	// the flow_obj.SetState().
 	ProcessMessage(
-		config *config.Config,
+		config *api_proto.Config,
 		flow_obj *AFF4FlowObject,
 		message *crypto_proto.GrrMessage) error
 
 	// This method is called by the runner after processing
 	// messages and before the flow is destroyed.
-	Save(config_obj *config.Config, flow_obj *AFF4FlowObject) error
+	Save(config_obj *api_proto.Config, flow_obj *AFF4FlowObject) error
 
 	// Create a new flow of this type.
 	New() Flow
@@ -274,7 +273,7 @@ func AFF4FlowObjectFromProto(aff4_flow_obj_proto *flows_proto.AFF4FlowObject) (
 }
 
 // Complete the flow.
-func (self *AFF4FlowObject) Complete(config_obj *config.Config) error {
+func (self *AFF4FlowObject) Complete(config_obj *api_proto.Config) error {
 	self.dirty = true
 	self.FlowContext.State = flows_proto.FlowContext_TERMINATED
 	self.FlowContext.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
@@ -311,7 +310,7 @@ func (self *AFF4FlowObject) Complete(config_obj *config.Config) error {
 // Fails the flow if an error occured and copy the client's backtrace
 // to the flow.
 func (self *AFF4FlowObject) FailIfError(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	message *crypto_proto.GrrMessage) error {
 	if message.Type == crypto_proto.GrrMessage_STATUS {
 		status, ok := responder.ExtractGrrMessagePayload(
@@ -384,7 +383,7 @@ func (self *AFF4FlowObject) LogMessage(message *crypto_proto.GrrMessage) {
 }
 
 func NewAFF4FlowObject(
-	config *config.Config,
+	config *api_proto.Config,
 	runner_args *flows_proto.FlowRunnerArgs) (*AFF4FlowObject, error) {
 	result := AFF4FlowObject{
 		Urn:        GetNewFlowIdForClient(runner_args.ClientId),
@@ -408,7 +407,7 @@ func NewAFF4FlowObject(
 }
 
 func GetAFF4FlowObject(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_urn string) (*AFF4FlowObject, error) {
 
 	// Handle well known flows. Well known flows are not
@@ -436,7 +435,7 @@ func GetAFF4FlowObject(
 }
 
 func SetAFF4FlowObject(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	obj *AFF4FlowObject) error {
 
 	db, err := datastore.GetDB(config_obj)
@@ -518,7 +517,7 @@ func GetFlowArgs(flow_runner_args *flows_proto.FlowRunnerArgs) (proto.Message, e
 }
 
 func StartFlow(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_runner_args *flows_proto.FlowRunnerArgs) (*string, error) {
 	if flow_runner_args.StartTime == 0 {
 		flow_runner_args.StartTime = uint64(time.Now().UnixNano() / 1000)
@@ -573,7 +572,7 @@ func GetNewFlowIdForClient(client_id string) string {
 }
 
 func StoreResultInFlow(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -597,16 +596,16 @@ func StoreResultInFlow(
 type BaseFlow struct{}
 
 func (self *BaseFlow) Start(
-	config *config.Config,
+	config *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	return errors.New("Unable to start flow directly")
 }
 
-func (self *BaseFlow) Load(config_obj *config.Config, flow_obj *AFF4FlowObject) error {
+func (self *BaseFlow) Load(config_obj *api_proto.Config, flow_obj *AFF4FlowObject) error {
 	return nil
 }
 
-func (self *BaseFlow) Save(config_obj *config.Config, flow_obj *AFF4FlowObject) error {
+func (self *BaseFlow) Save(config_obj *api_proto.Config, flow_obj *AFF4FlowObject) error {
 	return nil
 }

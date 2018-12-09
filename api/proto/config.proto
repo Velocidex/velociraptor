@@ -96,6 +96,10 @@ message ClientConfig {
     bool prevent_execve = 17 [(sem_type) = {
             description: "If this is set, prevent arbitrary code execution on clients."
         }];
+
+    Version version = 18 [(sem_type) = {
+            description: "The version information for this client.",
+        }];
 }
 
 message APIConfig {

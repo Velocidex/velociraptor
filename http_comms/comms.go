@@ -16,7 +16,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -29,7 +29,7 @@ import (
 // be done too frequently and should only be done in response for the
 // 406 HTTP codes.
 type Enroller struct {
-	config_obj              *config.Config
+	config_obj              *api_proto.Config
 	manager                 *crypto.CryptoManager
 	executor                executor.Executor
 	logger                  *logging.Logger
@@ -127,7 +127,7 @@ type HTTPConnector struct {
 }
 
 func NewHTTPConnector(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	manager *crypto.CryptoManager,
 	logger *logging.Logger) *HTTPConnector {
 
@@ -248,7 +248,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
-	config_obj *config.Config
+	config_obj *api_proto.Config
 	connector  *HTTPConnector
 	manager    *crypto.CryptoManager
 	executor   executor.Executor
@@ -263,7 +263,7 @@ type NotificationReader struct {
 }
 
 func NewNotificationReader(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	connector *HTTPConnector,
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
@@ -545,7 +545,7 @@ func (self *Sender) drainMessageQueue() *crypto_proto.MessageList {
 }
 
 func NewSender(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	connector *HTTPConnector,
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
@@ -566,7 +566,7 @@ func NewSender(
 }
 
 type HTTPCommunicator struct {
-	config_obj *config.Config
+	config_obj *api_proto.Config
 
 	logger *logging.Logger
 
@@ -603,7 +603,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 }
 
 func NewHTTPCommunicator(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {

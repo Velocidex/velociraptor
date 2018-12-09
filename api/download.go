@@ -15,7 +15,6 @@ import (
 	"github.com/gorilla/schema"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -29,7 +28,7 @@ func returnError(w http.ResponseWriter, code int, message string) {
 
 // URL format: /api/v1/download/<client_id>/<flow_id>
 func flowResultDownloadHandler(
-	config_obj *config.Config) http.Handler {
+	config_obj *api_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		components := strings.Split(r.URL.Path, "/")
 		if len(components) < 2 {
@@ -151,7 +150,7 @@ func flowResultDownloadHandler(
 
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
-	config_obj *config.Config) http.Handler {
+	config_obj *api_proto.Config) http.Handler {
 	logger := logging.NewLogger(config_obj)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +304,7 @@ type vfsFileDownloadRequest struct {
 
 // URL format: /api/v1/DownloadVFSFile
 func vfsFileDownloadHandler(
-	config_obj *config.Config) http.Handler {
+	config_obj *api_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := vfsFileDownloadRequest{}
 		decoder := schema.NewDecoder()

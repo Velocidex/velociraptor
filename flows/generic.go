@@ -8,8 +8,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -31,7 +31,7 @@ func (self *VQLCollector) New() Flow {
 }
 
 func (self *VQLCollector) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	vql_collector_args, ok := args.(*actions_proto.VQLCollectorArgs)
@@ -52,7 +52,7 @@ func (self *VQLCollector) Start(
 }
 
 func (self *VQLCollector) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 	err := flow_obj.FailIfError(config_obj, message)
@@ -85,7 +85,7 @@ func (self *VQLCollector) ProcessMessage(
 }
 
 func appendDataToFile(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	base_urn string,
 	message *crypto_proto.GrrMessage) error {

@@ -2,12 +2,12 @@ package flows
 
 import (
 	"github.com/golang/protobuf/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 )
 
 func QueueMessageForClient(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	client_action_name string,
 	message proto.Message,

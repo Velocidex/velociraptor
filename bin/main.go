@@ -1,9 +1,11 @@
 package main
 
 import (
+	"os"
+
 	errors "github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"os"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 
 	// Import all vql plugins.
@@ -24,7 +26,7 @@ var (
 	command_handlers []CommandHandler
 )
 
-func validateServerConfig(configuration *config.Config) error {
+func validateServerConfig(configuration *api_proto.Config) error {
 	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
 	}
@@ -32,7 +34,7 @@ func validateServerConfig(configuration *config.Config) error {
 	return nil
 }
 
-func get_server_config(config_path string) (*config.Config, error) {
+func get_server_config(config_path string) (*api_proto.Config, error) {
 	config_obj, err := config.LoadConfig(config_path)
 	if err != nil {
 		return nil, err
@@ -44,7 +46,7 @@ func get_server_config(config_path string) (*config.Config, error) {
 	return config_obj, err
 }
 
-func get_config_or_default() *config.Config {
+func get_config_or_default() *api_proto.Config {
 	config_obj, err := config.LoadConfig(*config_path)
 	if err != nil {
 		config_obj = config.GetDefaultConfig()

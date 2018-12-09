@@ -15,7 +15,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
@@ -30,7 +30,7 @@ var (
 	frontend = app.Command("frontend", "Run the frontend and GUI.")
 )
 
-func start_frontend(config_obj *config.Config, server_obj *server.Server) {
+func start_frontend(config_obj *api_proto.Config, server_obj *server.Server) {
 	router := http.NewServeMux()
 	router.Handle("/healthz", healthz())
 	router.Handle("/server.pem", server_pem(config_obj))
@@ -107,7 +107,7 @@ func healthz() http.Handler {
 	})
 }
 
-func server_pem(config_obj *config.Config) http.Handler {
+func server_pem(config_obj *api_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -217,7 +217,7 @@ func control(server_obj *server.Server) http.Handler {
 	})
 }
 
-func reader(config_obj *config.Config, server_obj *server.Server) http.Handler {
+func reader(config_obj *api_proto.Config, server_obj *server.Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)

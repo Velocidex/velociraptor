@@ -7,10 +7,11 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	errors "github.com/pkg/errors"
 	"math/big"
 	"time"
-	config "www.velocidex.com/golang/velociraptor/config"
+
+	errors "github.com/pkg/errors"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -75,7 +76,7 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 	}, nil
 }
 
-func GenerateServerCert(config_obj *config.Config) (*CertBundle, error) {
+func GenerateServerCert(config_obj *api_proto.Config) (*CertBundle, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err

@@ -5,13 +5,13 @@ package actions
 import (
 	"context"
 
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type ClientAction interface {
 	Run(
-		config *config.Config,
+		config *api_proto.Config,
 		ctx context.Context,
 		args *crypto_proto.GrrMessage,
 		output chan<- *crypto_proto.GrrMessage)

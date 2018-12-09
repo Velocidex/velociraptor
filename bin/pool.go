@@ -46,7 +46,7 @@ func doPoolClient() {
 		client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 
 		existing_writeback := &api_proto.Writeback{}
-		data, err := ioutil.ReadFile(client_config.WritebackLocation())
+		data, err := ioutil.ReadFile(config.WritebackLocation(client_config))
 
 		// Failing to read the file is not an error - the file may not
 		// exist yet.

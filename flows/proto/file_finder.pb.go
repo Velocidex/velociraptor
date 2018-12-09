@@ -19,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type FileFinderContentsRegexMatchCondition_Mode int32
 
@@ -635,9 +635,9 @@ func (m *FileFinderCondition) GetContentsLiteralMatch() *FileFinderContentsLiter
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileFinderCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileFinderCondition_OneofMarshaler, _FileFinderCondition_OneofUnmarshaler, _FileFinderCondition_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileFinderCondition) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileFinderCondition_ModificationTime)(nil),
 		(*FileFinderCondition_AccessTime)(nil),
 		(*FileFinderCondition_InodeChangeTime)(nil),
@@ -645,144 +645,6 @@ func (*FileFinderCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.B
 		(*FileFinderCondition_ContentsRegexMatch)(nil),
 		(*FileFinderCondition_ContentsLiteralMatch)(nil),
 	}
-}
-
-func _FileFinderCondition_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileFinderCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *FileFinderCondition_ModificationTime:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ModificationTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_AccessTime:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.AccessTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_InodeChangeTime:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.InodeChangeTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_Size:
-		b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Size); err != nil {
-			return err
-		}
-	case *FileFinderCondition_ContentsRegexMatch:
-		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ContentsRegexMatch); err != nil {
-			return err
-		}
-	case *FileFinderCondition_ContentsLiteralMatch:
-		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ContentsLiteralMatch); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileFinderCondition.UnionField has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileFinderCondition_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileFinderCondition)
-	switch tag {
-	case 2: // union_field.modification_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderModificationTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ModificationTime{msg}
-		return true, err
-	case 3: // union_field.access_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderAccessTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_AccessTime{msg}
-		return true, err
-	case 4: // union_field.inode_change_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderInodeChangeTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_InodeChangeTime{msg}
-		return true, err
-	case 5: // union_field.size
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderSizeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_Size{msg}
-		return true, err
-	case 6: // union_field.contents_regex_match
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderContentsRegexMatchCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ContentsRegexMatch{msg}
-		return true, err
-	case 7: // union_field.contents_literal_match
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderContentsLiteralMatchCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ContentsLiteralMatch{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileFinderCondition_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileFinderCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *FileFinderCondition_ModificationTime:
-		s := proto.Size(x.ModificationTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_AccessTime:
-		s := proto.Size(x.AccessTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_InodeChangeTime:
-		s := proto.Size(x.InodeChangeTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_Size:
-		s := proto.Size(x.Size)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_ContentsRegexMatch:
-		s := proto.Size(x.ContentsRegexMatch)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_ContentsLiteralMatch:
-		s := proto.Size(x.ContentsLiteralMatch)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Next field ID: 5
@@ -1031,97 +893,13 @@ func (m *FileFinderAction) GetStat() *FileFinderStatActionOptions {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileFinderAction) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileFinderAction_OneofMarshaler, _FileFinderAction_OneofUnmarshaler, _FileFinderAction_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileFinderAction) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileFinderAction_Hash)(nil),
 		(*FileFinderAction_Download)(nil),
 		(*FileFinderAction_Stat)(nil),
 	}
-}
-
-func _FileFinderAction_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileFinderAction)
-	// action
-	switch x := m.Action.(type) {
-	case *FileFinderAction_Hash:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Hash); err != nil {
-			return err
-		}
-	case *FileFinderAction_Download:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Download); err != nil {
-			return err
-		}
-	case *FileFinderAction_Stat:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Stat); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileFinderAction.Action has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileFinderAction_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileFinderAction)
-	switch tag {
-	case 3: // action.hash
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderHashActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Hash{msg}
-		return true, err
-	case 2: // action.download
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderDownloadActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Download{msg}
-		return true, err
-	case 4: // action.stat
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderStatActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Stat{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileFinderAction_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileFinderAction)
-	// action
-	switch x := m.Action.(type) {
-	case *FileFinderAction_Hash:
-		s := proto.Size(x.Hash)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderAction_Download:
-		s := proto.Size(x.Download)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderAction_Stat:
-		s := proto.Size(x.Stat)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Next field ID: 11

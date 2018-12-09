@@ -6,13 +6,12 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 func GetApiClient(
-	config_obj *config.Config, client_id string, detailed bool) (
+	config_obj *api_proto.Config, client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 	result := &api_proto.ApiClient{
 		ClientId: client_id,

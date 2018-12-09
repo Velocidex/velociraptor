@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 // TODO- Return a cluster dialer.
-func GetChannel(config_obj *config.Config) *grpc.ClientConn {
+func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
 	address := fmt.Sprintf("%s:%d", config_obj.API.BindAddress, config_obj.API.BindPort)
 	con, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {

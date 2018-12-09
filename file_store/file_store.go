@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	config "www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
@@ -38,7 +38,7 @@ func (self FileStoreFileInfo) Name() string {
 }
 
 type DirectoryFileStore struct {
-	config_obj *config.Config
+	config_obj *api_proto.Config
 }
 
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
@@ -108,6 +108,6 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 }
 
 // Currently we only support a DirectoryFileStore.
-func GetFileStore(config_obj *config.Config) FileStore {
+func GetFileStore(config_obj *api_proto.Config) FileStore {
 	return &DirectoryFileStore{config_obj}
 }

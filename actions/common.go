@@ -4,6 +4,7 @@ import (
 	"context"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -12,7 +13,7 @@ import (
 type GetClientInfo struct{}
 
 func (self *GetClientInfo) Run(
-	config *config.Config,
+	config *api_proto.Config,
 	ctx context.Context,
 	args *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
@@ -29,7 +30,7 @@ func (self *GetClientInfo) Run(
 type UpdateForeman struct{}
 
 func (self *UpdateForeman) Run(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {

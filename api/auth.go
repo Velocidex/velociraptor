@@ -2,15 +2,15 @@ package api
 
 import (
 	"context"
-	"google.golang.org/grpc/metadata"
 	"net/http"
+
+	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
 func checkUserCredentialsHandler(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
@@ -41,14 +41,14 @@ func checkUserCredentialsHandler(
 
 // TODO: Implement this properly.
 func IsUserApprovedForClient(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	md *metadata.MD,
 	client_id string) bool {
 	return true
 }
 
 func getClientApprovalForUser(
-	config *config.Config,
+	config *api_proto.Config,
 	md *metadata.MD,
 	client_id string) *api_proto.ApprovalList {
 	result := api_proto.ApprovalList{

@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -93,7 +93,7 @@ func (self *NotificationPool) NotifyAll() {
 }
 
 type Server struct {
-	config           *config.Config
+	config           *api_proto.Config
 	manager          *crypto.CryptoManager
 	logger           *logging.Logger
 	db               datastore.DataStore
@@ -129,7 +129,7 @@ func (self *Server) Close() {
 	self.db.Close()
 }
 
-func NewServer(config_obj *config.Config) (*Server, error) {
+func NewServer(config_obj *api_proto.Config) (*Server, error) {
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err

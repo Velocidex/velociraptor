@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/config"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 type stackTracer interface {
@@ -15,7 +15,7 @@ type stackTracer interface {
 
 type Logger struct {
 	mu        sync.Mutex
-	config    *config.Config
+	config    *api_proto.Config
 	error_log *log.Logger
 	info_log  *log.Logger
 }
@@ -30,11 +30,11 @@ func (self *logWriter) Write(b []byte) (int, error) {
 }
 
 // A log compatible logger.
-func NewPlainLogger(config *config.Config) *log.Logger {
+func NewPlainLogger(config *api_proto.Config) *log.Logger {
 	return log.New(&logWriter{NewLogger(config)}, "", log.Lshortfile)
 }
 
-func NewLogger(config *config.Config) *Logger {
+func NewLogger(config *api_proto.Config) *Logger {
 	result := Logger{
 		config: config,
 	}

@@ -18,7 +18,6 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -33,7 +32,7 @@ var (
 )
 
 type HuntDispatcher struct {
-	config_obj     *config.Config
+	config_obj     *api_proto.Config
 	last_timestamp uint64
 	hunts          []*api_proto.Hunt
 }
@@ -291,7 +290,7 @@ type HuntDispatcherContainer struct {
 	dispatcher *HuntDispatcher
 }
 
-func (self *HuntDispatcherContainer) Refresh(config_obj *config.Config) {
+func (self *HuntDispatcherContainer) Refresh(config_obj *api_proto.Config) {
 	// Serialize access to Refresh() calls. While the
 	// NewHuntDispatcher() is being built, readers may access the
 	// old one freely, but new Refresh calls are blocked.
@@ -311,7 +310,7 @@ func (self *HuntDispatcherContainer) Refresh(config_obj *config.Config) {
 	self.dispatcher = dispatcher
 }
 
-func NewHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
+func NewHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) {
 	result := &HuntDispatcher{config_obj: config_obj}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -341,7 +340,7 @@ func NewHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
 	return result, nil
 }
 
-func GetHuntDispatcher(config_obj *config.Config) (*HuntDispatcher, error) {
+func GetHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) {
 	dispatch_container.mu.Lock()
 	defer dispatch_container.mu.Unlock()
 
@@ -374,7 +373,7 @@ func GetNewHuntId() string {
 	return urns.BuildURN("hunts", constants.HUNT_PREFIX+string(result))
 }
 
-func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error) {
+func CreateHunt(config_obj *api_proto.Config, hunt *api_proto.Hunt) (*string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -416,7 +415,7 @@ func CreateHunt(config_obj *config.Config, hunt *api_proto.Hunt) (*string, error
 	return &hunt.HuntId, nil
 }
 
-func ListHunts(config_obj *config.Config, in *api_proto.ListHuntsRequest) (
+func ListHunts(config_obj *api_proto.Config, in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 	dispatcher, err := GetHuntDispatcher(config_obj)
 	if err != nil {
@@ -438,7 +437,7 @@ func ListHunts(config_obj *config.Config, in *api_proto.ListHuntsRequest) (
 	return result, nil
 }
 
-func GetHunt(config_obj *config.Config, in *api_proto.GetHuntRequest) (
+func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 	*api_proto.Hunt, error) {
 	dispatcher, err := GetHuntDispatcher(config_obj)
 	if err != nil {
@@ -454,7 +453,7 @@ func GetHunt(config_obj *config.Config, in *api_proto.GetHuntRequest) (
 	return nil, errors.New("Not found")
 }
 
-func GetHuntInfos(config_obj *config.Config, in *api_proto.GetHuntResultsRequest) (
+func GetHuntInfos(config_obj *api_proto.Config, in *api_proto.GetHuntResultsRequest) (
 	*api_proto.HuntResults, error) {
 	result := &api_proto.HuntResults{}
 	db, err := datastore.GetDB(config_obj)
@@ -489,7 +488,7 @@ func GetHuntInfos(config_obj *config.Config, in *api_proto.GetHuntResultsRequest
 	return result, nil
 }
 
-func GetHuntResults(config_obj *config.Config, in *api_proto.GetHuntResultsRequest) (
+func GetHuntResults(config_obj *api_proto.Config, in *api_proto.GetHuntResultsRequest) (
 	*api_proto.ApiFlowResultDetails, error) {
 	result := &api_proto.ApiFlowResultDetails{}
 	db, err := datastore.GetDB(config_obj)
@@ -558,7 +557,7 @@ func GetHuntResults(config_obj *config.Config, in *api_proto.GetHuntResultsReque
 	return result, nil
 }
 
-func ModifyHunt(config_obj *config.Config, hunt_modification *api_proto.Hunt) error {
+func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -607,7 +606,7 @@ func ModifyHunt(config_obj *config.Config, hunt_modification *api_proto.Hunt) er
 	return errors.New("Modification not supported.")
 }
 
-func ListHuntClients(config_obj *config.Config,
+func ListHuntClients(config_obj *api_proto.Config,
 	req *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -665,7 +664,7 @@ func (self *HuntRunnerFlow) New() Flow {
 }
 
 func (self *HuntRunnerFlow) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	hunt_summary_args, ok := args.(*api_proto.HuntInfo)
@@ -696,7 +695,7 @@ func (self *HuntRunnerFlow) Start(
 }
 
 func (self *HuntRunnerFlow) Load(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 	delegate_flow_obj_proto, ok := flow_obj.GetState().(*flows_proto.AFF4FlowObject)
 	if ok {
@@ -711,7 +710,7 @@ func (self *HuntRunnerFlow) Load(
 }
 
 func (self *HuntRunnerFlow) Save(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 	// Store the delegate in our state
 	state, err := self.delegate_flow_obj.AsProto()
@@ -723,7 +722,7 @@ func (self *HuntRunnerFlow) Save(
 }
 
 func (self *HuntRunnerFlow) ProcessMessage(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 	delegate_err := self.delegate_flow_obj.impl.ProcessMessage(

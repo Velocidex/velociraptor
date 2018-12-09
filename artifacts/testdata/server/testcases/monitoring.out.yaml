@@ -4,6 +4,8 @@ SELECT * from monitoring(client_id='C.11a3013cca8f826e', artifact='Windows.Event
   "Name": "\"PSEXESVC.exe\"",
   "PID": "7660",
   "PPID": "616",
-  "Timestamp": "\"2018-11-05T23:20:07-08:00\""
+  "Timestamp": "\"2018-11-05T23:20:07-08:00\"",
+  "artifact": "Windows.Events.ProcessCreation",
+  "client_id": "C.11a3013cca8f826e"
  }
 ]

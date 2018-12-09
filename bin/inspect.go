@@ -15,7 +15,6 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -118,7 +117,7 @@ func renderItem(item proto.Message) error {
 	return nil
 }
 
-func Inspect(config_obj *config.Config, filename string) error {
+func Inspect(config_obj *api_proto.Config, filename string) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

@@ -6,8 +6,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
@@ -20,7 +20,7 @@ func (self *ArtifactCollector) New() Flow {
 }
 
 func (self *ArtifactCollector) Start(
-	config_obj *config.Config,
+	config_obj *api_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	collector_args, ok := args.(*flows_proto.ArtifactCollectorArgs)
