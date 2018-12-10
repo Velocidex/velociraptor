@@ -100,6 +100,10 @@ message ClientConfig {
     Version version = 18 [(sem_type) = {
             description: "The version information for this client.",
         }];
+
+    uint64 default_max_wait = 19 [(sem_type) = {
+            description: "The default max time to wait before we send partial VQL results.",
+        }];
 }
 
 message APIConfig {

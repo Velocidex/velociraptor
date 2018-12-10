@@ -117,6 +117,10 @@ func (self *VQLClientAction) StartQuery(
 		if max_wait == 0 {
 			// Start to send data after at most 100
 			// seconds.
+			max_wait = int(config_obj.Client.DefaultMaxWait)
+		}
+
+		if max_wait == 0 {
 			max_wait = 100
 		}
 		result_chan := vfilter.GetResponseChannel(

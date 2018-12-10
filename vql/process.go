@@ -86,7 +86,7 @@ func init() {
 				}
 				return result
 			},
-			RowType: process.Process{},
+			RowType: &process.Process{},
 			Doc:     "List processes",
 		})
 }

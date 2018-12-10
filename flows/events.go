@@ -21,6 +21,104 @@ import (
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
+var (
+	gJournalWriter = NewJournalWriter()
+)
+
+type Event struct {
+	Config    *api_proto.Config
+	Timestamp time.Time
+	ClientId  string
+	QueryName string
+	Response  string
+	Columns   []string
+}
+
+// The journal is a common CSV file which collects events from all
+// clients. It is not meant to be kept for a long time so we dont care
+// how large it grows. The main purpose for the journal is to be able
+// to see all events from all clients at the same time. Server side
+// VQL queries can watch the journal to determine when an event occurs
+// on any client.
+//
+// Note that we write both the journal and the per client monitoring
+// log.
+//
+// TODO: Add the pid into the journal filename to ensure that multiple
+// writer processes dont collide. Within the same process there is a
+// global writer so it can be used asyncronously.
+type JournalWriter struct {
+	Channel chan *Event
+}
+
+func NewJournalWriter() *JournalWriter {
+	result := &JournalWriter{
+		Channel: make(chan *Event, 10),
+	}
+
+	go func() {
+		for {
+			event, ok := <-result.Channel
+			if !ok {
+				return
+			}
+			result.WriteEvent(event)
+		}
+	}()
+
+	return result
+}
+
+func (self *JournalWriter) WriteEvent(event *Event) error {
+	file_store_factory := file_store.GetFileStore(event.Config)
+
+	now := time.Now()
+	log_path := path.Join(
+		"journals", event.QueryName,
+		fmt.Sprintf("%d-%02d-%02d", now.Year(),
+			now.Month(), now.Day()))
+
+	fd, err := file_store_factory.WriteFile(log_path)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return err
+	}
+	defer fd.Close()
+
+	// Seek to the end of the file.
+	length, err := fd.Seek(0, os.SEEK_END)
+	w := csv.NewWriter(fd)
+	defer w.Flush()
+
+	// A new file, write the headings.
+	if err == nil && length == 0 {
+		columns := append([]string{"ClientId"}, event.Columns...)
+		w.Write(columns)
+	}
+
+	var rows []map[string]json.RawMessage
+	err = json.Unmarshal([]byte(event.Response), &rows)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	for _, row := range rows {
+		csv_row := []string{event.ClientId}
+
+		for _, column := range event.Columns {
+			item, pres := row[column]
+			if !pres {
+				csv_row = append(csv_row, "-")
+			} else {
+				csv_row = append(csv_row, string(item))
+			}
+		}
+		w.Write(csv_row)
+	}
+
+	return nil
+}
+
 type MonitoringFlow struct {
 	*BaseFlow
 }
@@ -83,6 +181,16 @@ func (self *MonitoringFlow) ProcessMessage(
 		response, ok := payload.(*actions_proto.VQLResponse)
 		if !ok {
 			return nil
+		}
+
+		// Write the response on the journal.
+		gJournalWriter.Channel <- &Event{
+			Config:    config_obj,
+			Timestamp: time.Now(),
+			ClientId:  flow_obj.RunnerArgs.ClientId,
+			QueryName: response.Query.Name,
+			Response:  response.Response,
+			Columns:   response.Columns,
 		}
 
 		// Store the event log in the client's VFS.

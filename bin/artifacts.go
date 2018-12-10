@@ -69,7 +69,8 @@ func collectArtifact(
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
-		Set("config", config_obj.Client)
+		Set("config", config_obj.Client).
+		Set("server_config", config_obj)
 
 	if *artifact_command_collect_dump_dir != "" {
 		env.Set("$uploader", &vql_networking.FileBasedUploader{

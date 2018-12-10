@@ -53,6 +53,7 @@ func (self MailPlugin) Call(
 			scope.Log("mail: Send too fast, suppressing.")
 			return
 		}
+		last_mail = time.Now()
 
 		if len(arg.To) == 0 {
 			scope.Log("mail: no recipient.")
