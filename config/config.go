@@ -95,6 +95,7 @@ func GetDefaultConfig() *api_proto.Config {
 			Artifacts: []string{"Generic.Client.Stats"},
 			Version:   1,
 		},
+		Mail: &api_proto.MailConfig{},
 	}
 }
 

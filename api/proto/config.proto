@@ -202,6 +202,28 @@ message ClientEvents {
         }];
 }
 
+// Configuration for the mail server.
+message MailConfig {
+    string from = 1 [(sem_type) = {
+            description: "Where the email should be sent from. If not set we use the auth_username.",
+        }];
+
+    string server = 2 [(sem_type) = {
+            description: "Address of the SMTP server.",
+        }];
+
+    uint64 server_port = 3 [(sem_type) = {
+            description: "Port of the SMTP server",
+        }];
+
+    string auth_username = 4 [(sem_type) = {
+            description: "Name to authenticate under.",
+        }];
+
+    string auth_password = 5 [(sem_type) = {
+            description: "password to authenticate with.",
+        }];
+}
 
 message Config {
     Version version = 8 [(sem_type) = {
@@ -233,4 +255,6 @@ message Config {
     Writeback writeback = 9 [(sem_type) = {
             description: "Contents of the client's state as stored in the writeback file."
         }];
+
+    MailConfig Mail = 11;
 }
