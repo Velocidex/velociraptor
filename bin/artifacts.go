@@ -36,9 +36,11 @@ var (
 	artifact_command_collect_dump_dir = artifact_command_collect.Flag(
 		"dump_dir", "Directory to dump output files.").
 		Default("").String()
+
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
 		Default("text").Enum("text", "json")
+
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"regex", "Regex of artifact names to collect.").
 		Required().String()

@@ -7,8 +7,8 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/server/csv"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -102,7 +102,7 @@ func (self MonitoringPlugin) ScanLog(
 				Set("ClientId", client_id).
 				Set("Artifact", artifact)
 
-			row_data, err := csv_reader.Read()
+			row_data, err := csv_reader.ReadAny()
 			if err != nil {
 				break process_file
 			}
@@ -214,14 +214,16 @@ func (self WatchMonitoringPlugin) Call(
 				log_path := path.Join(
 					"journals",
 					"Artifact "+arg.Artifact)
-				self.ScanLog(config_obj, scope, dir_state, output_chan,
+				self.ScanLog(ctx, config_obj, scope,
+					dir_state, output_chan,
 					log_path, "", arg.Artifact)
 
 			} else {
 				// Scan all clients and their watched path.
 				for idx, client_id := range arg.ClientId {
 					log_path := watched_paths[idx]
-					self.ScanLog(config_obj, scope, dir_state, output_chan,
+					self.ScanLog(ctx, config_obj,
+						scope, dir_state, output_chan,
 						log_path, client_id, arg.Artifact)
 				}
 			}
@@ -243,6 +245,7 @@ func (self WatchMonitoringPlugin) Call(
 }
 
 func (self WatchMonitoringPlugin) ScanLog(
+	ctx context.Context,
 	config_obj *api_proto.Config,
 	scope *vfilter.Scope,
 	dir_state state,
@@ -291,23 +294,29 @@ func (self WatchMonitoringPlugin) ScanLog(
 
 	process_file:
 		for {
-			row := vfilter.NewDict().
-				Set("ClientId", client_id).
-				Set("Artifact", artifact)
+			select {
+			case <-ctx.Done():
+				return
 
-			row_data, err := csv_reader.Read()
-			if err != nil {
-				break process_file
-			}
+			default:
+				row := vfilter.NewDict().
+					Set("ClientId", client_id).
+					Set("Artifact", artifact)
 
-			for idx, row_item := range row_data {
-				if idx > len(headers) {
-					break
+				row_data, err := csv_reader.ReadAny()
+				if err != nil {
+					break process_file
 				}
-				row.Set(headers[idx], row_item)
-			}
 
-			output_chan <- row
+				for idx, row_item := range row_data {
+					if idx > len(headers) {
+						break
+					}
+					row.Set(headers[idx], row_item)
+				}
+
+				output_chan <- row
+			}
 		}
 
 		// Save the current offset for next time.

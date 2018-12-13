@@ -22,9 +22,9 @@
     "lazy-debug-legacy": "0.0.1",
     "marked": "^0.3.19",
     "moment": "^2.22",
-    "node": "^10.14.0",
     "node-sass": "^4.9.4",
-    "npm": "^6.4.1"
+    "npm": "^6.4.1",
+    "verbose": "^0.2.3"
   },
   "devDependencies": {
     "angular-mocks": "^1.7.5",

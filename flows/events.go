@@ -1,7 +1,6 @@
 package flows
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -16,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
@@ -96,24 +96,24 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 		w.Write(columns)
 	}
 
-	var rows []map[string]json.RawMessage
+	var rows []map[string]interface{}
 	err = json.Unmarshal([]byte(event.Response), &rows)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
 	for _, row := range rows {
-		csv_row := []string{event.ClientId}
+		csv_row := []interface{}{event.ClientId}
 
 		for _, column := range event.Columns {
 			item, pres := row[column]
 			if !pres {
 				csv_row = append(csv_row, "-")
 			} else {
-				csv_row = append(csv_row, string(item))
+				csv_row = append(csv_row, item)
 			}
 		}
-		w.Write(csv_row)
+		w.WriteAny(csv_row)
 	}
 
 	return nil
@@ -220,25 +220,25 @@ func (self *MonitoringFlow) ProcessMessage(
 				w.Write(response.Columns)
 			}
 
-			var rows []map[string]json.RawMessage
+			var rows []map[string]interface{}
 			err = json.Unmarshal([]byte(response.Response), &rows)
 			if err != nil {
 				return errors.WithStack(err)
 			}
 
 			for _, row := range rows {
-				csv_row := []string{}
+				csv_row := []interface{}{}
 
 				for _, column := range response.Columns {
 					item, pres := row[column]
 					if !pres {
 						csv_row = append(csv_row, "-")
 					} else {
-						csv_row = append(csv_row, string(item))
+						csv_row = append(csv_row, item)
 					}
 				}
 
-				w.Write(csv_row)
+				w.WriteAny(csv_row)
 			}
 		}
 	}

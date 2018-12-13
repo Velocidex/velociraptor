@@ -139,9 +139,7 @@ func get_responses(ctx context.Context,
 	print_value := func(row vfilter.Row, field string) {
 		value, ok := scope.Associative(row, field)
 		if ok {
-			decoded := ""
-			json.Unmarshal([]byte(value.(string)), &decoded)
-			fmt.Println(decoded)
+			fmt.Printf("%v\n", value)
 		}
 	}
 

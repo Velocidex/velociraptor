@@ -23,7 +23,7 @@ var (
 
 	mingw_xcompiler = "x86_64-w64-mingw32-gcc"
 	name            = "velociraptor"
-	version         = "v0.2.5"
+	version         = "v0.2.6"
 )
 
 func Xgo() error {

@@ -57,7 +57,7 @@ func get_config_or_default() *api_proto.Config {
 
 func main() {
 	app.HelpFlag.Short('h')
-	app.UsageTemplate(kingpin.CompactUsageTemplate)
+	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	for _, command_handler := range command_handlers {

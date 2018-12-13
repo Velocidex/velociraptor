@@ -15,7 +15,10 @@ parameters:
       C:/Windows/System32/Winevt/Logs/System.evtx
 
 sources:
-  - queries:
+ - precondition:
+     SELECT OS from info() where OS = "windows"
+
+   queries:
       - |
         SELECT System.TimeCreated.SystemTime as Timestamp,
                System.EventID.Value as EventID,
