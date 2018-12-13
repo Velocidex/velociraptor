@@ -12,6 +12,8 @@
 
   <input ng-if="type == 'RDFString' ||
                 type == 'basestring' ||
+                type == 'RegularExpression' ||
+                type == 'LiteralExpression' ||
                 type == 'string' ||
                 type == 'RDFURN'" class="form-control"
          type="text" ng-model="controller.scope.value" />

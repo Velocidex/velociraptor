@@ -68,7 +68,8 @@ exports.SemanticPrimitiveFormDirective.directive_name = 'grrFormPrimitive';
 exports.SemanticPrimitiveFormDirective.semantic_types = [
   'RDFBool', 'bool',                     // Boolean types.
   'RDFInteger', 'int', 'integer', 'long', 'float',  // Numeric types.
-  'RDFString', 'string', 'basestring', 'RDFURN',   // String types.
+    'RDFString', 'string', 'basestring', 'RDFURN', 'LiteralExpression',
+    'RegularExpression',   // String types.
   'bytes',                               // Byte types.
   // TODO(user): check if we ever have to deal with
   // bytes type (RDFBytes is handled by grr-form-bytes).
