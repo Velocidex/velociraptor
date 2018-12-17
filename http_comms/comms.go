@@ -218,7 +218,7 @@ func (self *HTTPConnector) ServerName() string {
 
 func (self *HTTPConnector) rekeyNextServer() error {
 	// Advance the current URL to the next one in line.
-	if self.server_name != "" {
+	if self.server_name == "" {
 		self.current_url_idx = ((self.current_url_idx + 1) % len(self.urls))
 	}
 

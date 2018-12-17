@@ -261,4 +261,20 @@ message Config {
         }];
 
     MailConfig Mail = 11;
+
+    bool verbose = 20 [(sem_type) = {
+            description: "Enable verbose logging output.",
+        }];
+
+    string autocert_domain = 21 [(sem_type) = {
+            description: "Domain to use for autocerts (letsencrypt). "
+            "This must be resolvable to the frontend via DNS."
+            "NOTE: When this is set, both the GUI and frontend will "
+            "use ports 80 and 443 - the client.server_urls must be of the form "
+            " https://autocert_domain/",
+        }];
+
+    string autocert_cert_cache = 22 [(sem_type) = {
+            description: "Path to store autocert certificates.",
+        }];
 }

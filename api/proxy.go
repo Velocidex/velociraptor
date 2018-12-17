@@ -12,12 +12,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func StartHTTPProxy(config_obj *api_proto.Config) error {
+// Prepares a mux by adding handler required for the GUI.
+func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	mux := http.NewServeMux()
 	h, err := GetAPIHandler(ctx, config_obj)
 	if err != nil {
 		return err
@@ -45,12 +42,27 @@ func StartHTTPProxy(config_obj *api_proto.Config) error {
 	}
 	mux.Handle("/", h)
 
+	return nil
+}
+
+// Starts a HTTP Server (non encrypted) using the passed in mux. It is
+// not recommended to export the HTTP port to an external interface
+// since it is not encrypted. If you want to use HTTP you should
+// listen on localhost and port forward over ssh.
+func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
+	logger := logging.NewLogger(config_obj)
+
+	if config_obj.GUI.BindAddress != "127.0.0.1" {
+		logger.Info("GUI is not encrypted and listening on public interfact. " +
+			"This is not secure. Please enable TLS.")
+	}
+
 	listenAddr := fmt.Sprintf("%s:%d",
 		config_obj.GUI.BindAddress,
 		config_obj.GUI.BindPort)
 
-	logging.NewLogger(config_obj).Info(
-		"GUI is ready to handle requests at %s", listenAddr)
+	logger.Info("GUI is ready to handle requests at %s", listenAddr)
+
 	return http.ListenAndServe(listenAddr,
 		logging.GetLoggingHandler(config_obj)(mux))
 }

@@ -3,7 +3,6 @@ package server
 
 import (
 	"context"
-	"net"
 	"sync"
 	"time"
 
@@ -99,34 +98,12 @@ type Server struct {
 	db               datastore.DataStore
 	NotificationPool *NotificationPool
 
-	mu       sync.Mutex
-	RawConns map[string]net.Conn
-}
-
-func (self *Server) SetConn(key string, c net.Conn) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.RawConns[key] = c
-}
-
-func (self *Server) DelConn(key string) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	delete(self.RawConns, key)
-}
-
-func (self *Server) GetConn(key string) (net.Conn, bool) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	c, pres := self.RawConns[key]
-	return c, pres
+	mu sync.Mutex
 }
 
 func (self *Server) Close() {
 	self.db.Close()
+	self.NotificationPool.Shutdown()
 }
 
 func NewServer(config_obj *api_proto.Config) (*Server, error) {
@@ -146,7 +123,6 @@ func NewServer(config_obj *api_proto.Config) (*Server, error) {
 		db:               db,
 		NotificationPool: NewNotificationPool(),
 		logger:           logging.NewLogger(config_obj),
-		RawConns:         make(map[string]net.Conn),
 	}
 	return &result, nil
 }
