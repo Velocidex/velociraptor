@@ -21,6 +21,8 @@ var (
 // Return the location of the writeback file.
 func WritebackLocation(self *api_proto.Config) string {
 	switch runtime.GOOS {
+	case "darwin":
+		return os.ExpandEnv(self.Client.WritebackDarwin)
 	case "linux":
 		return os.ExpandEnv(self.Client.WritebackLinux)
 	case "windows":
@@ -40,7 +42,8 @@ func GetDefaultConfig() *api_proto.Config {
 			Commit:    commit_hash,
 		},
 		Client: &api_proto.ClientConfig{
-			WritebackLinux: "/etc/velociraptor.writeback.yaml",
+			WritebackDarwin: "/etc/velociraptor.writeback.yaml",
+			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
 			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
 				"velociraptor.writeback.yaml",
 			MaxPoll: 600,
@@ -51,6 +54,11 @@ func GetDefaultConfig() *api_proto.Config {
 				ServiceName: "Velociraptor",
 				InstallPath: "$ProgramFiles\\Velociraptor\\" +
 					"Velociraptor.exe",
+			},
+
+			DarwinInstaller: &api_proto.DarwinInstallerConfig{
+				ServiceName: "com.velocidex.velociraptor",
+				InstallPath: "/usr/local/sbin/velociraptor",
 			},
 
 			// If set to true this will stop

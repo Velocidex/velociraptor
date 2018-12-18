@@ -59,6 +59,16 @@ message WindowsInstallerConfig {
 }
 
 
+message DarwinInstallerConfig {
+    string service_name = 1 [(sem_type) = {
+            description: "The name of the service to create."
+        }];
+    string install_path = 2 [(sem_type) = {
+            description: "Where should the binary be installed? The install command "
+            "copies the binary to this location and installs the service.",
+        }];
+}
+
 message ClientConfig {
     repeated string labels = 6 [(sem_type) = {
             description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
@@ -76,6 +86,10 @@ message ClientConfig {
             description: "A shared nonce the client will present. The server will reject clients which do not present this key so it must be embedded in the client's configuration."
         }];
 
+    string writeback_darwin = 20 [(sem_type) = {
+            description: "A path where darwin clients will write local state."
+        }];
+
     string writeback_linux = 9 [(sem_type) = {
             description: "A path where linux clients will write local state."
         }];
@@ -90,6 +104,10 @@ message ClientConfig {
         }];
 
     WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
+            description: "Configuration of the windows installer.",
+        }];
+
+    DarwinInstallerConfig darwin_installer = 21 [(sem_type) = {
             description: "Configuration of the windows installer.",
         }];
 

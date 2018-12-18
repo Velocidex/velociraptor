@@ -26,6 +26,7 @@ type ReadSeekCloser interface {
 type FileStore interface {
 	ReadFile(filename string) (ReadSeekCloser, error)
 	WriteFile(filename string) (WriteSeekCloser, error)
+	StatFile(filename string) (*FileStoreFileInfo, error)
 	ListDirectory(dirname string) ([]os.FileInfo, error)
 }
 
@@ -54,7 +55,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 
 	var result []os.FileInfo
 	for _, fileinfo := range files {
-		result = append(result, FileStoreFileInfo{fileinfo})
+		result = append(result, &FileStoreFileInfo{fileinfo})
 	}
 
 	return result, nil
@@ -67,6 +68,19 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 	}
 	file, err := os.Open(file_path)
 	return file, err
+}
+
+func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {
+	file_path, err := self.FilenameToFileStorePath(filename)
+	if err != nil {
+		return nil, err
+	}
+	file, err := os.Stat(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileStoreFileInfo{file}, nil
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
@@ -99,7 +113,11 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 	}
 
 	components := []string{self.config_obj.Datastore.FilestoreDirectory}
-	for _, component := range strings.Split(filename, "/") {
+	for idx, component := range strings.Split(filename, "/") {
+		if idx == 0 && component == "aff4:" {
+			continue
+		}
+
 		components = append(components,
 			string(datastore.SanitizeString(component)))
 	}

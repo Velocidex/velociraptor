@@ -18,6 +18,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -56,7 +57,7 @@ func StartFrontendHttp(
 	}
 
 	wg := &sync.WaitGroup{}
-	InstallSignalHandler(config_obj, server, wg)
+	InstallSignalHandler(config_obj, server_obj, server, wg)
 	server_obj.Info("Frontend is ready to handle client requests at %s", listenAddr)
 
 	err := server.ListenAndServe()
@@ -73,6 +74,7 @@ func StartFrontendHttp(
 // Install a signal handler which will shutdown the server gracefully.
 func InstallSignalHandler(
 	config_obj *api_proto.Config,
+	server_obj *Server,
 	server *http.Server,
 	wg *sync.WaitGroup) {
 
@@ -90,27 +92,30 @@ func InstallSignalHandler(
 			return
 		}
 
-		/*
-			manager, err := services.StartHuntManager(config_obj)
-			if err != nil {
-				return
-			}
-			defer manager.Close()
-		*/
+		manager, err := services.StartHuntManager(config_obj)
+		if err != nil {
+			return
+		}
+		defer manager.Close()
+
 		// Wait for the signal on this channel.
 		<-quit
 
 		logger := logging.NewLogger(config_obj)
-		logger.Info("Server is shutting down...")
 		atomic.StoreInt32(&healthy, 0)
 
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
+		logger.Info("Server is shutting down...")
+
+		// Notify all the currently connected clients we need
+		// to shut down.
+		server_obj.NotificationPool.NotifyAll()
 		err = server.Shutdown(ctx)
 		if err != nil {
-			logger.Error("Could not gracefully shutdown the server: %v\n", err)
+			logger.Error("Could not gracefully shutdown the server: ", err)
 		}
 	}()
 
@@ -164,7 +169,7 @@ func StartTLSServer(
 	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
 
 	wg := &sync.WaitGroup{}
-	InstallSignalHandler(config_obj, server, wg)
+	InstallSignalHandler(config_obj, server_obj, server, wg)
 
 	server_obj.Info("Frontend is ready to handle client requests using HTTPS")
 	err := server.ListenAndServeTLS("", "")

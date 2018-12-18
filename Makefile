@@ -7,6 +7,9 @@ test:
 release:
 	go run make.go -v linux
 
+darwin:
+	go run make.go -v darwin
+
 windows:
 	go run make.go -v windows
 

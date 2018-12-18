@@ -88,6 +88,7 @@ func (self FlowsPlugin) Call(
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 
@@ -126,17 +127,18 @@ func (self FlowsPlugin) Call(
 					continue
 				}
 
-				item := &api_proto.ApiFlow{
-					Urn:        urn,
-					ClientId:   client_id,
-					FlowId:     path.Base(urn),
-					Name:       flow_obj.RunnerArgs.FlowName,
-					RunnerArgs: flow_obj.RunnerArgs,
-					Context:    flow_obj.FlowContext,
+				if flow_obj.RunnerArgs != nil {
+					item := &api_proto.ApiFlow{
+						Urn:        urn,
+						ClientId:   client_id,
+						FlowId:     path.Base(urn),
+						Name:       flow_obj.RunnerArgs.FlowName,
+						RunnerArgs: flow_obj.RunnerArgs,
+						Context:    flow_obj.FlowContext,
+					}
+
+					output_chan <- item
 				}
-
-				output_chan <- item
-
 			}
 		}
 	}()

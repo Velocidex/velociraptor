@@ -21,6 +21,9 @@ var (
 		`^(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)$`)
 	integer_regex = regexp.MustCompile(
 		"^[+-]?[0-9]+$")
+
+	protected_prefix = regexp.MustCompile(
+		"^( |\\{|\\[|true|false|base64:)")
 )
 
 // A Writer writes records to a CSV encoded file.
@@ -56,7 +59,7 @@ func (w *Writer) WriteAny(record []interface{}) error {
 		case float64, float32:
 			value = fmt.Sprintf("%f", item)
 
-		case int, int16, int32, int64, uint16, uint32, uint64:
+		case int, int16, int32, int64, uint16, uint32, uint64, bool:
 			value = fmt.Sprintf("%v", item)
 
 		case []byte:
@@ -69,10 +72,7 @@ func (w *Writer) WriteAny(record []interface{}) error {
 			// strings which look like a number and
 			// numbers.
 			if number_regex.MatchString(t) ||
-				strings.HasPrefix(t, "{") ||
-				strings.HasPrefix(t, "base64:") ||
-				strings.HasPrefix(t, " ") ||
-				strings.HasPrefix(t, "[") {
+				protected_prefix.MatchString(t) {
 				value = " " + t
 			} else {
 				value = t

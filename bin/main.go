@@ -7,6 +7,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/logging"
 
 	// Import all vql plugins.
 	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
@@ -22,6 +23,10 @@ var (
 
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
+
+	verbose_flag = app.Flag(
+		"verbose", "Enabled verbose logging for client.").Short('v').
+		Default("false").Bool()
 
 	command_handlers []CommandHandler
 )
@@ -59,6 +64,10 @@ func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	if !*verbose_flag {
+		logging.SuppressLogging = true
+	}
 
 	for _, command_handler := range command_handlers {
 		if command_handler(command) {

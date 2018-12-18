@@ -42,16 +42,17 @@ func GetFlows(
 			continue
 		}
 
-		item := &api_proto.ApiFlow{
-			Urn:        urn,
-			ClientId:   client_id,
-			FlowId:     path.Base(urn),
-			Name:       flow_obj.RunnerArgs.FlowName,
-			RunnerArgs: flow_obj.RunnerArgs,
-			Context:    flow_obj.FlowContext,
+		if flow_obj.RunnerArgs != nil {
+			item := &api_proto.ApiFlow{
+				Urn:        urn,
+				ClientId:   client_id,
+				FlowId:     path.Base(urn),
+				Name:       flow_obj.RunnerArgs.FlowName,
+				RunnerArgs: flow_obj.RunnerArgs,
+				Context:    flow_obj.FlowContext,
+			}
+			result.Items = append(result.Items, item)
 		}
-
-		result.Items = append(result.Items, item)
 	}
 	return result, nil
 }

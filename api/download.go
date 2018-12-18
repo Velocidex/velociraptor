@@ -315,7 +315,8 @@ func vfsFileDownloadHandler(
 		}
 
 		vfs_path := path.Clean(request.VfsPath)
-		if strings.HasPrefix(vfs_path, "/monitoring/") {
+		if strings.HasPrefix(vfs_path, "/monitoring/") ||
+			strings.HasPrefix(vfs_path, "/artifacts/") {
 			vfs_path = path.Join(
 				"clients", request.ClientId, vfs_path)
 		} else {

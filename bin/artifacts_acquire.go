@@ -48,26 +48,6 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 
 	logger.Info("Collecting artifact %v into subdir %v\n", name, subdir)
 
-	now := time.Now()
-	fd, err := os.OpenFile(
-		filepath.Join(subdir,
-			fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
-				now.Month(), now.Day())),
-		os.O_RDWR|os.O_CREATE, 0600)
-	if err != nil {
-		return err
-	}
-
-	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
-	if err != nil {
-		return err
-	}
-	headers_written := length > 0
-
-	w := csv.NewWriter(fd)
-	defer w.Flush()
-
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
@@ -89,49 +69,38 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	scope.Logger = logging.NewPlainLogger(config_obj)
 
+	now := time.Now()
+	fd, err := os.OpenFile(
+		filepath.Join(subdir,
+			fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
+				now.Month(), now.Day())),
+		os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	writer, err := csv.GetCSVWriter(scope, fd)
+	defer writer.Close()
+
 	for _, query := range request.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return err
 		}
 
-		columns := []string{}
 		row_chan := vql.Eval(ctx, scope)
-
 	run_query:
 		for {
 			select {
 			case <-ctx.Done():
 				return nil
 
-			case <-time.After(5 * time.Second):
-				w.Flush()
-
 			case row, ok := <-row_chan:
 				if !ok {
 					break run_query
 				}
-				// First row should be the column names
-				if len(columns) == 0 {
-					columns = scope.GetMembers(row)
-				}
-
-				if !headers_written {
-					w.Write(columns)
-					headers_written = true
-				}
-
-				// We write a csv row with each cell
-				// json encoded - This ensures all
-				// special chars are properly escaped
-				// and we can follow the csv file
-				// safely.
-				csv_row := []interface{}{}
-				for _, column := range columns {
-					item, _ := scope.Associative(row, column)
-					csv_row = append(csv_row, item)
-				}
-				w.WriteAny(csv_row)
+				writer.Write(row)
 			}
 		}
 	}

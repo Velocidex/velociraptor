@@ -23,10 +23,12 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
+	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 type Foreman struct {
@@ -115,25 +117,57 @@ func (self *Foreman) ProcessMessage(
 	for _, hunt := range hunts_dispatcher.GetApplicableHunts(
 		foreman_checkin.LastHuntTimestamp) {
 
-		// Start a conditional flow.
-		channel := grpc_client.GetChannel(config_obj)
-		defer channel.Close()
-
-		flow_runner_args := &flows_proto.FlowRunnerArgs{
-			ClientId: message.Source,
-			FlowName: "CheckHuntCondition",
-		}
-		flow_args, err := ptypes.MarshalAny(hunt)
+		flow_condition_query, err := calculateFlowConditionQuery(hunt)
 		if err != nil {
-			return errors.WithStack(err)
+			return err
 		}
-		flow_runner_args.Args = flow_args
 
-		client := api_proto.NewAPIClient(channel)
-		_, err = client.LaunchFlow(context.Background(), flow_runner_args)
+		urn := urns.BuildURN(
+			"clients", message.Source,
+			"flows", constants.MONITORING_WELL_KNOWN_FLOW)
+
+		err = QueueAndNotifyClient(
+			config_obj, message.Source, urn,
+			"VQLClientAction",
+			flow_condition_query,
+			processVQLResponses)
+		if err != nil {
+			return err
+		}
+
+		err = QueueAndNotifyClient(
+			config_obj, message.Source, urn,
+			"UpdateForeman",
+			&actions_proto.ForemanCheckin{
+				LastHuntTimestamp: hunt.CreateTime,
+			}, processUpgradeForeman)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func calculateFlowConditionQuery(hunt *api_proto.Hunt) (
+	*actions_proto.VQLCollectorArgs, error) {
+
+	return getDefaultCollectorArgs(hunt.HuntId), nil
+}
+
+func getDefaultCollectorArgs(hunt_id string) *actions_proto.VQLCollectorArgs {
+	return &actions_proto.VQLCollectorArgs{
+		Env: []*actions_proto.VQLEnv{
+			&actions_proto.VQLEnv{
+				Key:   "HuntId",
+				Value: hunt_id,
+			},
+		},
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				Name: "Artifact System.Hunt.Participation",
+				VQL: "SELECT now() as Timestamp, HuntId, " +
+					"true as Participate from info()",
+			},
+		},
+	}
 }

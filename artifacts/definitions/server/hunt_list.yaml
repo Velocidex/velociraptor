@@ -1,0 +1,15 @@
+name: Server.Hunts.List
+description: |
+  List Hunts currently scheduled on the server.
+
+sources:
+  - precondition:
+      SELECT * from server_config
+
+    queries:
+      - |
+        SELECT HuntId, timestamp(epoch=create_time/1000000) as Created,
+               start_request.Args.artifacts.names  as Artifact,
+               State
+        FROM hunts()
+        WHERE start_request.flow_name = 'ArtifactCollector'

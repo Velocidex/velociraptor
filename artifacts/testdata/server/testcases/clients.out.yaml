@@ -67,6 +67,14 @@ FROM flows(client_id='C.11a3013cca8f826e')
 WHERE Flow = 'ArtifactCollector'[
  {
   "Artifacts": [
+   "Windows.Applications.ChocolateyPackages"
+  ],
+  "CreateTime": 1544876976531608,
+  "Flow": "ArtifactCollector",
+  "client_id": "C.11a3013cca8f826e"
+ },
+ {
+  "Artifacts": [
    "Windows.Applications.ChocolateyPackages",
    "Windows.Applications.Chrome.Extensions"
   ],

@@ -27,8 +27,8 @@ var (
 		HintAction(listArtifacts).String()
 
 	artifact_command_list_verbose_count = artifact_command_list.Flag(
-		"verbose", "Show more details (Use -v -vv for even more)").
-		Short('v').Counter()
+		"details", "Show more details (Use -d -dd for even more)").
+		Short('d').Counter()
 
 	artifact_command_collect = artifact_command.Command(
 		"collect", "Collect all artifacts")

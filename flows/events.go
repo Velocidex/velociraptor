@@ -3,7 +3,6 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path"
 	"time"
 
@@ -19,6 +18,8 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -85,17 +86,10 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	}
 	defer fd.Close()
 
-	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
-	w := csv.NewWriter(fd)
-	defer w.Flush()
+	writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+	defer writer.Close()
 
-	// A new file, write the headings.
-	if err == nil && length == 0 {
-		columns := append([]string{"ClientId"}, event.Columns...)
-		w.Write(columns)
-	}
-
+	// Decode the VQLResponse and write into the CSV file.
 	var rows []map[string]interface{}
 	err = json.Unmarshal([]byte(event.Response), &rows)
 	if err != nil {
@@ -103,17 +97,14 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	}
 
 	for _, row := range rows {
-		csv_row := []interface{}{event.ClientId}
+		csv_row := vfilter.NewDict().
+			Set("ClientId", event.ClientId)
 
 		for _, column := range event.Columns {
-			item, pres := row[column]
-			if !pres {
-				csv_row = append(csv_row, "-")
-			} else {
-				csv_row = append(csv_row, item)
-			}
+			item, _ := row[column]
+			csv_row.Set(column, item)
 		}
-		w.WriteAny(csv_row)
+		writer.Write(csv_row)
 	}
 
 	return nil
@@ -187,7 +178,7 @@ func (self *MonitoringFlow) ProcessMessage(
 		gJournalWriter.Channel <- &Event{
 			Config:    config_obj,
 			Timestamp: time.Now(),
-			ClientId:  flow_obj.RunnerArgs.ClientId,
+			ClientId:  message.Source,
 			QueryName: response.Query.Name,
 			Response:  response.Response,
 			Columns:   response.Columns,
@@ -199,7 +190,7 @@ func (self *MonitoringFlow) ProcessMessage(
 
 			now := time.Now()
 			log_path := path.Join(
-				"clients", flow_obj.RunnerArgs.ClientId,
+				"clients", message.Source,
 				"monitoring", response.Query.Name,
 				fmt.Sprintf("%d-%02d-%02d", now.Year(),
 					now.Month(), now.Day()))
@@ -210,15 +201,8 @@ func (self *MonitoringFlow) ProcessMessage(
 			}
 			defer fd.Close()
 
-			// Seek to the end of the file.
-			length, err := fd.Seek(0, os.SEEK_END)
-			w := csv.NewWriter(fd)
-			defer w.Flush()
-
-			// A new file, write the headings.
-			if err == nil && length == 0 {
-				w.Write(response.Columns)
-			}
+			writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+			defer writer.Close()
 
 			var rows []map[string]interface{}
 			err = json.Unmarshal([]byte(response.Response), &rows)
@@ -227,18 +211,13 @@ func (self *MonitoringFlow) ProcessMessage(
 			}
 
 			for _, row := range rows {
-				csv_row := []interface{}{}
-
+				csv_row := vfilter.NewDict()
 				for _, column := range response.Columns {
-					item, pres := row[column]
-					if !pres {
-						csv_row = append(csv_row, "-")
-					} else {
-						csv_row = append(csv_row, item)
-					}
+					item, _ := row[column]
+					csv_row.Set(column, item)
 				}
 
-				w.WriteAny(csv_row)
+				writer.Write(csv_row)
 			}
 		}
 	}

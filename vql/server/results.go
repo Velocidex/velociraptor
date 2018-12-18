@@ -2,15 +2,11 @@ package server
 
 import (
 	"context"
-	"encoding/json"
+	"path"
 
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -27,6 +23,7 @@ func (self CollectedArtifactsPlugin) Call(
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 
@@ -44,75 +41,35 @@ func (self CollectedArtifactsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
-		}
-
 		for _, client_id := range arg.ClientId {
-			flow_urns, err := db.ListChildren(
-				config_obj, urns.BuildURN(
-					"clients", client_id, "flows"),
-				0, 10000)
+			log_path := path.Join(
+				"clients", client_id, "artifacts",
+				"Artifact "+arg.Artifact)
+
+			file_store_factory := file_store.GetFileStore(config_obj)
+			listing, err := file_store_factory.ListDirectory(log_path)
 			if err != nil {
 				return
 			}
 
-			for _, urn := range flow_urns {
-				flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+			for _, item := range listing {
+				file_path := path.Join(log_path, item.Name())
+				fd, err := file_store_factory.ReadFile(file_path)
 				if err != nil {
+					scope.Log("Error %v: %v\n", err, file_path)
 					continue
 				}
 
-				if flow_obj.RunnerArgs.FlowName != "ArtifactCollector" {
-					continue
-				}
-
-				result_urns, err := db.ListChildren(
-					config_obj, urns.BuildURN(urn, "results"), 0, 10000)
-				if err != nil {
-					return
-				}
-
-				for _, result_urn := range result_urns {
-					message := &crypto_proto.GrrMessage{}
-					err := db.GetSubject(config_obj, result_urn, message)
-					if err != nil || message.ArgsRdfName != "VQLResponse" {
-						continue
-					}
-
-					payload := responder.ExtractGrrMessagePayload(
-						message).(*actions_proto.VQLResponse)
-					if payload.Query.Name != "Artifact "+arg.Artifact {
-						continue
-					}
-
-					data := []map[string]interface{}{}
-					err = json.Unmarshal([]byte(payload.Response), &data)
-					if err != nil {
-						continue
-					}
-
-					for _, row := range data {
-						new_row := vfilter.NewDict().
-							Set("ClientId", client_id).
-							Set("CollectedTime", payload.Timestamp)
-
-						for _, k := range payload.Columns {
-							item, pres := row[k]
-							if !pres {
-								item = vfilter.Null{}
-							}
-							new_row.Set(k, item)
-						}
-
-						output_chan <- new_row
-					}
+				// Read each CSV file and emit it with
+				// some extra columns for context.
+				for row := range csv.GetCSVReader(fd) {
+					output_chan <- row.
+						Set("CollectedTime",
+							item.ModTime().UnixNano()/1000).
+						Set("ClientId", client_id)
 				}
 			}
 		}
-
 	}()
 
 	return output_chan

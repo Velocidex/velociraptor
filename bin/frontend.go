@@ -31,6 +31,10 @@ func init() {
 			// Load the assets into memory.
 			assets.Init()
 
+			// Increase resource limits.
+			server.IncreaseLimits(config_obj)
+
+			// Start the gRPC API server.
 			go func() {
 				err := api.StartServer(config_obj, server_obj)
 				kingpin.FatalIfError(
@@ -38,24 +42,32 @@ func init() {
 			}()
 
 			if config_obj.AutocertDomain == "" {
+				// For non TLS we separate the GUI and
+				// frontend ports because the frontend
+				// must be publically accessible but
+				// the GUI must only be accessed over
+				// 127.0.0.1 without TLS.
 				go func() {
 					router := http.NewServeMux()
 					err := api.PrepareMux(config_obj, router)
 					kingpin.FatalIfError(
 						err, "Unable to start API server")
 
+					// Start the GUI separately on
+					// a different port.
 					err = api.StartHTTPProxy(config_obj, router)
 					kingpin.FatalIfError(
 						err, "Unable to start GUI server")
 				}()
 
+				// Add Frontend Comms handlers.
 				router := http.NewServeMux()
-
-				// Add Comms handlers.
 				server.PrepareFrontendMux(config_obj, server_obj, router)
 
+				// Start comms over http.
 				err = server.StartFrontendHttp(config_obj, server_obj, router)
 				kingpin.FatalIfError(err, "StartFrontendHttp")
+
 			} else {
 				// For autocert we combine the GUI and
 				// frontends on the same port. The

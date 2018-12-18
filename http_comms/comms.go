@@ -202,9 +202,14 @@ func (self *HTTPConnector) ReKeyNextServer() {
 			return
 		}
 
-		select {
-		case <-time.After(self.maxPoll):
-			continue
+		// Only wait once we go round the list a full time.
+		if self.current_url_idx == 0 {
+			self.logger.Info("Waiting for a reachable server: %v",
+				self.maxPoll)
+			select {
+			case <-time.After(self.maxPoll):
+				continue
+			}
 		}
 	}
 }
@@ -226,6 +231,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	url := self.urls[self.current_url_idx]
 	resp, err := self.client.Get(url + "server.pem")
 	if err != nil {
+		self.logger.Info("While getting %v: %v", url, err)
 		return err
 	}
 	defer resp.Body.Close()

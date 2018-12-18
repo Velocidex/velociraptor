@@ -40,7 +40,7 @@ def main():
         deb_package = os.path.abspath(args.deb_package)
 
         subprocess.check_call(
-            "ar p " + deb_package + " control.tar.gz | tar -xz",
+            "ar p " + deb_package + " control.tar.xz | tar -xJ",
             shell=True, cwd=temp_dir_name)
 
         with open(os.path.join(temp_dir_name, "postinst")) as fd:
@@ -55,13 +55,13 @@ def main():
         with open(os.path.join(temp_dir_name, "postinst"), "wt") as fd:
             fd.write("".join(new_postinst))
 
-        subprocess.check_call("tar czf control.tar.gz *[!z]",
+        subprocess.check_call("tar cJf control.tar.xz *[!z]",
                               shell=True, cwd=temp_dir_name)
 
         subprocess.check_call(["cp", deb_package, deb_package + "_repacked.deb"],
                               cwd=temp_dir_name)
 
-        subprocess.check_call(["ar", "r", deb_package + "_repacked.deb", "control.tar.gz"],
+        subprocess.check_call(["ar", "r", deb_package + "_repacked.deb", "control.tar.xz"],
                               cwd=temp_dir_name)
 
 

@@ -96,7 +96,7 @@ func _WriteEvents(
 					event, err := Normalize(item)
 					if err == nil {
 						event_details, pres := event["Event"]
-						if pres {
+						if pres && output_chan != nil {
 							output_chan <- event_details
 						}
 					}
@@ -174,11 +174,32 @@ func (self _WatchEvtxPlugin) Call(
 			return
 		}
 
+		accessor := glob.GetAccessor(arg.Accessor, ctx)
 		event_counts := make(map[string]int64)
+
+		// Parse the files once to get the last event
+		// id. After this we will watch for new events added
+		// to the file.
+		for _, filename := range arg.Filenames {
+			func() {
+				file, err := accessor.Open(filename)
+				if err != nil {
+					return
+				}
+				defer file.Close()
+
+				last_event, err := _WriteEvents(
+					scope, file, nil, 0)
+
+				if err == nil {
+					event_counts[filename] = last_event
+				}
+			}()
+		}
+
 		for {
 			for _, filename := range arg.Filenames {
 				func() {
-					accessor := glob.GetAccessor(arg.Accessor, ctx)
 					file, err := accessor.Open(filename)
 					if err != nil {
 						scope.Log("Unable to open file %s: %v",

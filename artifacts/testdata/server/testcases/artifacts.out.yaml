@@ -1,8 +1,7 @@
-SELECT * FROM collected_artifact( client_id='C.11a3013cca8f826e', artifact='Windows.Applications.ChocolateyPackages')[
+SELECT Authors, ClientId, FullPath, License, Name, Summary, Version FROM collected_artifact( client_id='C.11a3013cca8f826e', artifact='Windows.Applications.ChocolateyPackages')[
  {
   "Authors": "Facebook",
   "ClientId": "C.11a3013cca8f826e",
-  "CollectedTime": 1541550320539410,
   "FullPath": "C:\\ProgramData\\chocolatey\\lib\\osquery\\osquery.nuspec",
   "License": "https://github.com/facebook/osquery/blob/master/LICENSE",
   "Name": "osquery",

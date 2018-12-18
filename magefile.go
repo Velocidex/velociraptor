@@ -127,6 +127,36 @@ func Windows() error {
 	return err
 }
 
+// Cross compile the windows binary using mingw
+func Darwin() error {
+	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
+		return fmt.Errorf("failed to create output: %v", err)
+	}
+
+	err := ensure_assets()
+	if err != nil {
+		return err
+	}
+
+	env := make(map[string]string)
+	env["GOOS"] = "darwin"
+	env["GOARCH"] = "amd64"
+
+	err = sh.RunWith(
+		env,
+		mg.GoCmd(), "build",
+		"-o", filepath.Join("output", name+".mach"),
+		"-tags", "release",
+		"-ldflags=-s -w "+flags(),
+		"./bin/")
+
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 func Clean() error {
 	for _, target := range assets {
 		err := sh.Rm(target)

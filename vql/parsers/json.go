@@ -130,6 +130,10 @@ func (self _ProtobufAssociativeProtocol) Associative(
 		return nil, false
 	}
 
+	if reflect.ValueOf(a).IsNil() {
+		return nil, false
+	}
+
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
 

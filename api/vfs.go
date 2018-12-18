@@ -40,6 +40,7 @@ func renderRootVFS() *actions_proto.VQLResponse {
     {"Mode": "drwxrwxrwx", "Name": "file"},
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"},
+    {"Mode": "drwxrwxrwx", "Name": "artifacts"},
     {"Mode": "drwxrwxrwx", "Name": "monitoring"}
    ]`,
 	}
@@ -137,18 +138,19 @@ func renderFileStore(
 	config_obj *api_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
+	var rows []map[string]interface{}
 
 	filestore_urn := path.Join("clients", client_id, vfs_path)
 	items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
 	if err != nil {
-		return nil, err
+		return &actions_proto.VQLResponse{}, nil
 	}
 
-	var rows []map[string]interface{}
 	for _, item := range items {
 		row := map[string]interface{}{
 			"Name":      item.Name(),
+			"Size":      item.Size(),
 			"Timestamp": item.ModTime().String(),
 		}
 
@@ -173,7 +175,7 @@ func renderFileStore(
 
 	result := &actions_proto.VQLResponse{
 		Columns: []string{
-			"Download", "Name", "Mode", "Timestamp",
+			"Download", "Name", "Size", "Mode", "Timestamp",
 		},
 		Response: string(encoded_rows),
 		Types: []*actions_proto.VQLTypeMap{
@@ -197,7 +199,8 @@ func vfsListDirectory(
 		return renderRootVFS(), nil
 	}
 
-	if strings.HasPrefix(vfs_path, "/monitoring") {
+	if strings.HasPrefix(vfs_path, "/monitoring") ||
+		strings.HasPrefix(vfs_path, "/artifacts") {
 		return renderFileStore(config_obj, client_id, vfs_path)
 	}
 

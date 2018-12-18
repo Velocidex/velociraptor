@@ -331,7 +331,8 @@ func (self *AFF4FlowObject) FailIfError(
 	}
 
 	// Notify to our user if we need to.
-	if self.RunnerArgs.NotifyToUser && self.RunnerArgs.Creator != "" {
+	if self.RunnerArgs != nil && self.RunnerArgs.NotifyToUser &&
+		self.RunnerArgs.Creator != "" {
 		err := users.Notify(
 			config_obj,
 			&api_proto.UserNotification{
@@ -376,7 +377,7 @@ func (self *AFF4FlowObject) Log(log_msg string) {
 func (self *AFF4FlowObject) LogMessage(message *crypto_proto.GrrMessage) {
 	log_msg, ok := responder.ExtractGrrMessagePayload(
 		message).(*crypto_proto.LogMessage)
-	if ok {
+	if ok && self.FlowContext != nil {
 		self.FlowContext.Logs = append(self.FlowContext.Logs, log_msg)
 		self.dirty = true
 	}
@@ -417,6 +418,12 @@ func GetAFF4FlowObject(
 	case constants.FOREMAN_WELL_KNOWN_FLOW:
 		return &AFF4FlowObject{
 			impl: &Foreman{},
+		}, nil
+	}
+
+	if path.Base(flow_urn) == "F.Monitoring" {
+		return &AFF4FlowObject{
+			impl: &MonitoringFlow{&BaseFlow{}},
 		}, nil
 	}
 

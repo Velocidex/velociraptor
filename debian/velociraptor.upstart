@@ -14,7 +14,7 @@ env LANG=en_US.UTF-8
 
 script
         DAEMON="/usr/sbin/velociraptor.nanny"
-        DAEMON_ARGS="/usr/sbin/velociraptor client"
+        DAEMON_ARGS="/usr/sbin/velociraptor --config /etc/velociraptor.config.yaml client"
 
         [ -x "${DAEMON}" ] || exit 0
 

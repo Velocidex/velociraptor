@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
 
@@ -15,5 +16,9 @@ message ArtifactCollectorArgs {
     Artifacts artifacts = 1 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Artifacts To Launch",
+        }];
+
+    repeated VQLEnv env = 3 [(sem_type) = {
+            description: "Environment variables to be provided for the query.",
         }];
 }

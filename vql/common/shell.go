@@ -6,6 +6,7 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"sync"
 	"syscall"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -95,8 +96,16 @@ func (self ShellPlugin) Call(
 		// copy of the response because we will continue
 		// modifying it.
 		response := ShellResult{}
+		wg := sync.WaitGroup{}
 
-		read_from_pipe := func(pipe io.ReadCloser, output_member *string) {
+		read_from_pipe := func(
+			pipe io.ReadCloser,
+			output_member *string,
+			wg *sync.WaitGroup) {
+
+			wg.Add(1)
+			defer wg.Done()
+
 			// Read as much as possible into the buffer
 			// filling the full length - even if we have
 			// to wait on the pipe.
@@ -151,8 +160,11 @@ func (self ShellPlugin) Call(
 		}
 
 		// Read asyncronously.
-		go read_from_pipe(stdout_pipe, &response.Stdout)
-		go read_from_pipe(stderr_pipe, &response.Stderr)
+		go read_from_pipe(stdout_pipe, &response.Stdout, &wg)
+		go read_from_pipe(stderr_pipe, &response.Stderr, &wg)
+
+		// We need to wait here until the readers are done.
+		wg.Wait()
 
 		// Get the command status and combine with the last response.
 		err = command.Wait()

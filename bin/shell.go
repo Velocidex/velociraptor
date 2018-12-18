@@ -16,7 +16,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
-	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/urns"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -52,9 +52,6 @@ func shell_executor(config_obj *api_proto.Config,
 
 	fmt.Printf("Running %v on %v\n", t, *shell_client)
 
-	db, err := datastore.GetDB(config_obj)
-	kingpin.FatalIfError(err, "Getting database ")
-
 	// Query environment is a string and we need to send an array
 	// - we json marshal it and unpack it in VQL.
 	encoded_argv, err := json.Marshal(&map[string]interface{}{"Argv": argv})
@@ -81,17 +78,11 @@ func shell_executor(config_obj *api_proto.Config,
 		"clients", *shell_client,
 		"flows", constants.MONITORING_WELL_KNOWN_FLOW)
 
-	err = db.QueueMessageForClient(
+	err = flows.QueueAndNotifyClient(
 		config_obj, *shell_client,
-		urn, "VQLClientAction", vql_request, processVQLResponses)
+		urn, "VQLClientAction",
+		vql_request, processVQLResponses)
 
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
-	client.NotifyClients(context.Background(), &api_proto.NotificationRequest{
-		ClientId: *shell_client,
-	})
 	kingpin.FatalIfError(err, "Sending client message ")
 
 	// Wait until the response arrives. The client may not be

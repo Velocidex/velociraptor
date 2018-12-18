@@ -231,7 +231,13 @@ func (r *Reader) ReadAny() ([]interface{}, error) {
 	}
 
 	for _, item := range result {
-		if strings.HasPrefix(item, "base64:") {
+		if item == "true" {
+			record = append(record, true)
+
+		} else if item == "false" {
+			record = append(record, false)
+
+		} else if strings.HasPrefix(item, "base64:") {
 			value, err := base64.StdEncoding.DecodeString(item[7:])
 			if err != nil {
 				return nil, err

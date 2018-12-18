@@ -17,7 +17,7 @@ var (
 		"accessor", "The FS accessor to use").Default("file").Enum(
 		"file", "ntfs", "reg")
 	fs_command_verbose = fs_command.Flag(
-		"verbose", "Show more verbose info").Short('v').
+		"details", "Show more verbose info").Short('d').
 		Default("false").Bool()
 	fs_command_format = fs_command.Flag("format", "Output format to use.").
 				Default("text").Enum("text", "json")

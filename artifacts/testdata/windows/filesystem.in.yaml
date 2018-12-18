@@ -1,0 +1,2 @@
+Queries:
+  - select Data from read_file(filenames=tempfile(data='hello'))
