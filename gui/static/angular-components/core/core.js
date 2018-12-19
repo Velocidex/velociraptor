@@ -13,6 +13,7 @@ const {BindKeyDirective} = goog.require('grrUi.core.bindKeyDirective');
 const {BytesToHexFilter} = goog.require('grrUi.core.bytesToHexFilter');
 const {CanaryOnlyDirective, NonCanaryOnlyDirective} = goog.require('grrUi.core.canaryOnlyDirective');
 const {ClockDirective} = goog.require('grrUi.core.clockDirective');
+const {CsvViewerDirective} = goog.require('grrUi.core.csvViewerDirective');
 const {ConfirmationDialogDirective} = goog.require('grrUi.core.confirmationDialogDirective');
 const {DialogService} = goog.require('grrUi.core.dialogService');
 const {DisableIfNoTraitDirective} = goog.require('grrUi.core.disableIfNoTraitDirective');
@@ -53,7 +54,7 @@ const {WizardFormPageDirective} = goog.require('grrUi.core.wizardFormPageDirecti
  * Angular module for core GRR UI components.
  */
 exports.coreModule =
-    angular.module('grrUi.core', ['ngCookies', 'ui.bootstrap']);
+    angular.module('grrUi.core', ['ngCookies', 'ui.bootstrap', 'datatables']);
 
 
 exports.coreModule.directive(
@@ -91,6 +92,8 @@ exports.coreModule.directive(
 exports.coreModule.directive(
     SplitterPaneDirective.directive_name, SplitterPaneDirective);
 exports.coreModule.directive(ClockDirective.directive_name, ClockDirective);
+exports.coreModule.directive(
+    CsvViewerDirective.directive_name, CsvViewerDirective);
 exports.coreModule.directive(
     DownloadCollectionAsDirective.directive_name,
     DownloadCollectionAsDirective);

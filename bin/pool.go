@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
+	"www.velocidex.com/golang/velociraptor/server"
 )
 
 var (
@@ -28,6 +29,9 @@ var (
 )
 
 func doPoolClient() {
+	client_config, err := config.LoadConfig(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config file")
+	server.IncreaseLimits(client_config)
 
 	ctx := context.Background()
 	number_of_clients := *pool_client_number

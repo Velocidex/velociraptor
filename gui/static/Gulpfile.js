@@ -74,6 +74,8 @@ gulp.task('compile-third-party-js', function() {
 
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
                    config.nodeModulesDir + '/angular-ui-router/release/angular-ui-router.js',
+                   config.nodeModulesDir + '/datatables/media/js/jquery.dataTables.js',
+                   config.nodeModulesDir + '/angular-datatables/dist/angular-datatables.js',
 
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
@@ -127,6 +129,8 @@ gulp.task('compile-third-party-css', function() {
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-csp.css',
                    config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
+                   config.nodeModulesDir + '/angular-datatables/dist/css/angular-datatables.css',
+                   config.nodeModulesDir + '/datatables/media/css/jquery.dataTables.css',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
                    config.nodeModulesDir + '/highlightjs/styles/atom-one-light.css',
                    config.tempDir + '/grr-bootstrap.css',

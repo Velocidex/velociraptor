@@ -1,0 +1,16 @@
+<table datatable="ng"
+       ng-if='controller.pageData.columns'
+       dt-instance="controller.dtInstance"
+       dt-disable-deep-watchers="true"
+       class="row-border hover dtable">
+  <thead>
+    <tr>
+      <th ng-repeat="column in ::controller.pageData.columns track by $index">{$ column $}</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in ::controller.pageData.rows track by $index">
+      <td ng-repeat="cell in ::row.cell track by $index">{$ cell $}</td>
+    </tr>
+  </tbody>
+</table>

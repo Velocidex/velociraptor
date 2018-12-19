@@ -13,6 +13,7 @@ import "clients.proto";
 import "hunts.proto";
 import "flows.proto";
 import "users.proto";
+import "csv.proto";
 
 package proto;
 
@@ -209,6 +210,12 @@ service API {
         option (google.api.http) = {
             post: "/api/v1/VFSRefreshDirectory/{client_id}",
             body: "*",
+        };
+    }
+
+    rpc GetTable(GetTableRequest) returns (GetTableResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetTable",
         };
     }
 

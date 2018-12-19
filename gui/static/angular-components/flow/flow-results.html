@@ -1,5 +1,23 @@
-<grr-results-collection
-   results-url="controller.flowResultsUrl"
-   exported-results-url="controller.exportedResultsUrl"
 
-  ng-if= "controller.flowResultsUrl" />
+<div ng-if='artifactNames.length > 0'>
+  <div>
+    <select class="form-control pull-left"
+            ng-options="artifact for artifact in artifactNames"
+            ng-model="controller.selectedArtifact"
+            id="plugin-select">
+    </select>
+  </div>
+
+  <div>
+    <grr-csv-viewer vfs_path='controller.getPath()'
+                    client_id='clientId'
+                    />
+  </div>
+</div>
+
+<div ng-if='artifactNames == null'>
+  <grr-results-collection
+    results-url="controller.flowResultsUrl"
+    exported-results-url="controller.exportedResultsUrl"
+    ng-if= "controller.flowResultsUrl" />
+</div>

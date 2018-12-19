@@ -4,6 +4,18 @@ goog.module('grrUi.flow.flowInspectorDirective');
 goog.module.declareLegacyNamespace();
 
 
+/** @type {number} */
+let AUTO_REFRESH_INTERVAL_MS = 15 * 1000;
+
+/**
+ * Sets the delay between automatic refreshes of the flow overview.
+ *
+ * @param {number} millis Interval value in milliseconds.
+ * @export
+ */
+exports.setAutoRefreshInterval = function(millis) {
+  AUTO_REFRESH_INTERVAL_MS = millis;
+};
 
 /**
  * Controller for FlowInspectorDirective.
@@ -12,20 +24,64 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $scope
  * @ngInject
  */
-const FlowInspectorController = function($scope) {
+const FlowInspectorController = function($scope, grrApiService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
   /** @type {string} */
   this.activeTab = '';
 
+  /** @private {!grrUi.core.apiService.ApiService} */
+  this.grrApiService_ = grrApiService;
+
   /** type {Object<string, boolean>} */
   this.tabsShown = {};
 
   this.scope_.$watch('activeTab', this.onDirectiveArgumentsChange_.bind(this));
-  this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
+    this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
+
+  this.scope_.$watchGroup(['flowId', 'apiBasePath'],
+                          this.startPolling.bind(this));
+
+  /** @export {Object} */
+  this.flow;
+
+  /** @private {!angular.$q.Promise|undefined} */
+  this.pollPromise_;
+
+  this.scope_.$on('$destroy', function() {
+    this.grrApiService_.cancelPoll(this.pollPromise_);
+  }.bind(this));
 };
 
+
+/**
+ * Start polling for flow data.
+ *
+ * @export
+ */
+FlowInspectorController.prototype.startPolling = function() {
+  this.grrApiService_.cancelPoll(this.pollPromise_);
+  this.pollPromise_ = undefined;
+
+  if (angular.isDefined(this.scope_['apiBasePath']) &&
+      angular.isDefined(this.scope_['flowId'])) {
+    var flowUrl = this.scope_['apiBasePath'];
+    var interval = AUTO_REFRESH_INTERVAL_MS;
+
+    // It's important to assign the result of the poll() call, not the
+    // result of the poll().then() call, since we need the original
+    // promise to pass to cancelPoll if needed.
+    this.pollPromise_ = this.grrApiService_.poll(
+      flowUrl, interval, {flow_id: this.scope_['flowId']});
+    this.pollPromise_.then(
+        undefined,
+        undefined,
+        function notify(response) {
+          this.flow = response['data'];
+        }.bind(this));
+  }
+};
 
 
 /**

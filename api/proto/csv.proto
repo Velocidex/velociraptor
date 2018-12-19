@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+message GetTableRequest {
+    string path = 1 [(sem_type) = {
+            description: "The path within the client's VFS "
+            "that contains CSV file to read."
+        }];
+
+    uint64 rows = 2 [(sem_type) = {
+            description: "How many rows to fetch."
+        }];
+
+    uint64 start_row = 3 [(sem_type) = {
+            description: "First row to fetch."
+        }];
+
+    string client_id = 4;
+}
+
+message Row {
+    repeated string cell = 1;
+}
+
+message GetTableResponse {
+    repeated string columns = 1 [(sem_type) = {
+            description: "The columns",
+        }];
+
+    repeated Row rows = 2;
+}

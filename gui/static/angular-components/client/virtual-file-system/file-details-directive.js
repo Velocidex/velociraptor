@@ -58,6 +58,14 @@ FileDetailsController.prototype.onControllerTabChange_ = function(newValue, oldV
   }
 };
 
+
+FileDetailsController.prototype.fileIsNotCSV = function() {
+    return false;
+    return !this.fileContext.selectedFilePath.endsWith(".csv");
+};
+
+
+
 /**
  * FileDetailsDirective definition.
  *

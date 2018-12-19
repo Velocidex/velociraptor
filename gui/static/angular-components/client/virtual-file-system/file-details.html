@@ -1,5 +1,4 @@
 <div>
-
   <div ng-if="!controller.fileContext.selectedFilePath" class="padded">
     Please select a file or a folder to see its details here.
   </div>
@@ -39,6 +38,16 @@
                disable="controller.fileIsDirectory">
         <div ng-if="controller.currentTab === 'hexview'">
           <grr-file-hex-view></grr-file-hex-view>
+        </div>
+      </uib-tab>
+
+      <uib-tab heading="CSVView" index="'csvview'"
+               disable="controller.fileIsNotCSV()">
+        <div ng-if="controller.currentTab === 'csvview'">
+          <grr-csv-viewer
+            vfs_path='controller.fileContext.selectedFilePath'
+            client_id='controller.fileContext.clientId'
+            />
         </div>
       </uib-tab>
 

@@ -31,9 +31,11 @@ const FlowResultsController = function($scope) {
   this.downloadFilesUrl;
 
   /** @type {?string} */
-  this.exportCommand;
+    this.exportCommand;
 
-  this.scope_.$watchGroup(['flowId', 'apiBasePath', 'exportBasePath'],
+    this.selectedArtifact;
+
+    this.scope_.$watchGroup(['artifactNames', 'flowId', 'apiBasePath', 'exportBasePath'],
                           this.onFlowIdOrBasePathChange_.bind(this));
 };
 
@@ -45,18 +47,35 @@ const FlowResultsController = function($scope) {
  * @private
  */
 FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
-    newValues) {
-  this.flowResultsUrl = this.outputPluginsMetadataUrl =
-      this.downloadFilesUrl = null;
+    newValues, oldValues) {
 
+    if (newValues != oldValues) {
+        this.flowResultsUrl = this.outputPluginsMetadataUrl =
+            this.downloadFilesUrl = null;
 
-  if (newValues.every(angular.isDefined)) {
-    this.exportedResultsUrl = this.scope_['exportBasePath'] + '/' + this.scope_['flowId'];
+        if (newValues.every(angular.isDefined)) {
+            this.exportedResultsUrl = this.scope_['exportBasePath'] + '/' + this.scope_['flowId'];
 
-    var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
-    this.flowResultsUrl = flowUrl + '/results';
-  }
+            var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
+            this.flowResultsUrl = flowUrl + '/results';
+
+            if (angular.isDefined(this.scope_.artifactNames) &&
+                this.scope_.artifactNames.length > 0 &&
+                this.selectedArtifact == null) {
+                this.selectedArtifact = this.scope_.artifactNames[0];
+            }
+        }
+    }
 };
+
+FlowResultsController.prototype.getPath = function() {
+    if (angular.isDefined(this.selectedArtifact) &&
+        this.selectedArtifact != null) {
+        return '/artifacts/Artifact ' + this.selectedArtifact +
+            '/' + this.scope_.flowId + '.csv';
+    }
+    return '';
+}
 
 
 /**
@@ -69,9 +88,11 @@ FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
 exports.FlowResultsDirective = function() {
   return {
     scope: {
-      flowId: '=',
-      apiBasePath: '=',
-      exportBasePath: '=',
+        artifactNames: '=',
+        flowId: '=',
+        clientId: '=',
+        apiBasePath: '=',
+        exportBasePath: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/flow-results.html',

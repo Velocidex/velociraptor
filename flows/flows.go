@@ -423,6 +423,13 @@ func GetAFF4FlowObject(
 
 	if path.Base(flow_urn) == "F.Monitoring" {
 		return &AFF4FlowObject{
+			RunnerArgs: &flows_proto.FlowRunnerArgs{
+				FlowName: "Monitoring",
+				Creator:  "System",
+			},
+			FlowContext: &flows_proto.FlowContext{
+				State: flows_proto.FlowContext_RUNNING,
+			},
 			impl: &MonitoringFlow{&BaseFlow{}},
 		}, nil
 	}

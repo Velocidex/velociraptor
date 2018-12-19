@@ -304,6 +304,13 @@ func (self *ApiServer) VFSRefreshDirectory(
 	return result, err
 }
 
+func (self *ApiServer) GetTable(
+	ctx context.Context,
+	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+	result, err := getTable(self.config, in)
+	return result, err
+}
+
 func (self *ApiServer) GetArtifacts(
 	ctx context.Context,
 	in *empty.Empty) (

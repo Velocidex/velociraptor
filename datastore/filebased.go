@@ -263,6 +263,7 @@ func (self *FileBaseDataStore) SearchClients(
 	offset uint64, limit uint64) []string {
 	result := []string{}
 
+	query = strings.ToLower(query)
 	if query == "." || query == "" {
 		query = "all"
 	}

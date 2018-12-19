@@ -38,6 +38,9 @@ const ResultsCollectionController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
+  /** @export {Object} */
+  this.flow;
+
   /** @type {boolean} */
   this.resultsArePresent;
 
