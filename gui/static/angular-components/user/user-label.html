@@ -1,6 +1,17 @@
-<p ng-if="!controller.error">
-  User: {$ controller.username $}
-</p>
-<p ng-if="controller.error">
-  User: <span class="text-danger"><em>{$ controller.error $}</em></span>
-</p>
+<div ng-if="controller.auth_using_google" class="">
+  <p ng-if="!controller.error">
+    <div class="btn-group" role="group" aria-label="left align">
+      <a href="/auth/google/login" class="btn btn-primary" role="button">
+          <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+      </a>
+        <button type="button" class="btn btn-default" >
+          User: {$ controller.username $}
+        </button>
+    </div>
+  </p>
+
+  <p ng-if="controller.error">
+    User: <span class="text-danger"><em>{$ controller.error $}</em></span>
+  </p>
+
+</div>

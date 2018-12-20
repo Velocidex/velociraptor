@@ -226,7 +226,7 @@ func (self *ApiServer) GetClientApprovalForUser(
 func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
-	result := NewDefaultUserObject()
+	result := NewDefaultUserObject(self.config)
 	result.Username = getUsername(ctx)
 	return result, nil
 }

@@ -63,6 +63,8 @@ message ApiGrrUserInterfaceTraits {
     bool start_client_flow_nav_item_enabled = 16;
     bool manage_client_flows_nav_item_enabled = 17;
     bool modify_client_labels_action_enabled = 18;
+
+    bool auth_using_google = 19;
 };
 
 message ApiGrrUser {

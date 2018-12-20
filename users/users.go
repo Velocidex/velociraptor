@@ -19,7 +19,7 @@ type UserRecord struct {
 }
 
 func NewUserRecord(name string) (*UserRecord, error) {
-	if !regexp.MustCompile("^[a-zA-Z0-9]+$").MatchString(name) {
+	if !regexp.MustCompile("^[a-zA-Z0-9@.-]+$").MatchString(name) {
 		return nil, errors.New("Unacceptable username")
 	}
 	return &UserRecord{&api_proto.VelociraptorUser{Name: name}}, nil

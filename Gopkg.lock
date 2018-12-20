@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:5ad08b0e14866764a6d7475eb11c9cf05cad9a52c442593bdfa544703ff77f61"
+  name = "cloud.google.com/go"
+  packages = ["compute/metadata"]
+  pruneopts = "UT"
+  revision = "0ebda48a7f143b1cce9eb37a8c1106ac762a3430"
+  version = "v0.34.0"
+
+[[projects]]
   digest = "1:54bcfb06c1b456bed329aa04b06c91feb0fe83d993b3d315969c9c7b806b918d"
   name = "github.com/0xrawsec/golang-evtx"
   packages = ["evtx"]
@@ -122,6 +130,14 @@
   pruneopts = "UT"
   revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
   version = "v1.1.1"
+
+[[projects]]
+  digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
 
 [[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
@@ -378,10 +394,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d372a329a083253442b7aa6c8e08877dbb37d0c7e03d1caa6caf95d75d4bdd35"
+  digest = "1:0cb33da180bf2a498bdfc8eb6216233c845d9d8b6d00a793e559ef34cee80bbd"
   name = "golang.org/x/net"
   packages = [
     "context",
+    "context/ctxhttp",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -393,6 +410,20 @@
   ]
   pruneopts = "UT"
   revision = "610586996380ceef02dd726cc09df7e00a3f8e56"
+
+[[projects]]
+  branch = "master"
+  digest = "1:23443edff0740e348959763085df98400dcfd85528d7771bb0ce9f5f2754ff4a"
+  name = "golang.org/x/oauth2"
+  packages = [
+    ".",
+    "google",
+    "internal",
+    "jws",
+    "jwt",
+  ]
+  pruneopts = "UT"
+  revision = "d668ce993890a79bda886613ee587a69dd5da7a6"
 
 [[projects]]
   branch = "master"
@@ -438,6 +469,25 @@
   pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
+
+[[projects]]
+  digest = "1:d2a8db567a76203e3b41c1f632d86485ffd57f8e650a0d1b19d240671c2fddd7"
+  name = "google.golang.org/appengine"
+  packages = [
+    ".",
+    "internal",
+    "internal/app_identity",
+    "internal/base",
+    "internal/datastore",
+    "internal/log",
+    "internal/modules",
+    "internal/remote_api",
+    "internal/urlfetch",
+    "urlfetch",
+  ]
+  pruneopts = "UT"
+  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
+  version = "v1.3.0"
 
 [[projects]]
   digest = "1:0ff5d79ff7df5c47800f11c139615b2e485efd0014b74257c1f46cb6cb3bb84d"
@@ -563,6 +613,7 @@
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",
+    "github.com/dgrijalva/jwt-go",
     "github.com/dustin/go-humanize",
     "github.com/ghodss/yaml",
     "github.com/go-ole/go-ole",
@@ -598,6 +649,8 @@
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
     "golang.org/x/net/webdav",
+    "golang.org/x/oauth2",
+    "golang.org/x/oauth2/google",
     "golang.org/x/sys/windows",
     "golang.org/x/sys/windows/registry",
     "golang.org/x/sys/windows/svc",

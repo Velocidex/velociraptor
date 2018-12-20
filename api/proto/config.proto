@@ -150,6 +150,18 @@ message GUIConfig {
     repeated string vpn_cidr = 4 [(sem_type) = {
             description: "CIDR addresses of vpn networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
         }];
+
+    string google_oauth_client_id = 5 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+
+    string google_oauth_client_secret = 6 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+
+    string public_url = 7 [(sem_type) = {
+            description: "The public URL of this server.",
+        }];
 }
 
 message CAConfig {

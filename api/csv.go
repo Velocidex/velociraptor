@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io"
 	"path"
 
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -22,6 +23,9 @@ func getTable(config_obj *api_proto.Config, in *api_proto.GetTableRequest) (
 	csv_reader := csv.NewReader(fd)
 	headers, err := csv_reader.Read()
 	if err != nil {
+		if err == io.EOF {
+			return &api_proto.GetTableResponse{}, nil
+		}
 		return nil, err
 	}
 

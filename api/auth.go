@@ -12,6 +12,13 @@ import (
 func checkUserCredentialsHandler(
 	config_obj *api_proto.Config,
 	parent http.Handler) http.Handler {
+
+	// We are supposed to do the oauth thing.
+	if config_obj.GUI.GoogleOauthClientId != "" &&
+		config_obj.GUI.GoogleOauthClientSecret != "" {
+		return authenticateOAUTHCookie(config_obj, parent)
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 
@@ -71,8 +78,8 @@ func getUsername(ctx context.Context) string {
 	return ""
 }
 
-func NewDefaultUserObject() *api_proto.ApiGrrUser {
-	return &api_proto.ApiGrrUser{
+func NewDefaultUserObject(config_obj *api_proto.Config) *api_proto.ApiGrrUser {
+	result := &api_proto.ApiGrrUser{
 		InterfaceTraits: &api_proto.ApiGrrUserInterfaceTraits{
 			CronJobsNavItemEnabled:                true,
 			CreateCronJobActionEnabled:            true,
@@ -90,7 +97,9 @@ func NewDefaultUserObject() *api_proto.ApiGrrUser {
 			StartClientFlowNavItemEnabled:         true,
 			ManageClientFlowsNavItemEnabled:       true,
 			ModifyClientLabelsActionEnabled:       true,
+			AuthUsingGoogle:                       config_obj.GUI.GoogleOauthClientId != "",
 		},
 		UserType: api_proto.ApiGrrUser_USER_TYPE_ADMIN,
 	}
+	return result
 }

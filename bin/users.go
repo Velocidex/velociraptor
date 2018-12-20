@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"fmt"
 	"os"
 
@@ -28,7 +29,17 @@ func doAddUser() {
 		kingpin.FatalIfError(err, "add user:")
 	}
 
-	if *user_add_password == "" {
+	if config_obj.GUI.GoogleOauthClientId != "" {
+		fmt.Printf("Authentication will occur via Google - " +
+			"therefore no password needs to be set.")
+
+		password := make([]byte, 100)
+		_, err = rand.Read(password)
+		kingpin.FatalIfError(err, "rand")
+		password_str := string(password)
+		user_add_password = &password_str
+
+	} else if *user_add_password == "" {
 		fmt.Printf("Enter user's password: ")
 		password, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {

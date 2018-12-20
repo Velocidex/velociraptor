@@ -1,0 +1,225 @@
+package api
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	context "golang.org/x/net/context"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	users "www.velocidex.com/golang/velociraptor/users"
+)
+
+const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
+
+type UserInfo struct {
+	Id            string
+	Email         string
+	VerifiedEmail bool
+	Name          string
+	Picture       string
+}
+
+func MaybeAddOAuthHandlers(config_obj *api_proto.Config, mux *http.ServeMux) error {
+	if config_obj.GUI.GoogleOauthClientId != "" &&
+		config_obj.GUI.GoogleOauthClientSecret != "" {
+		mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
+		mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
+	}
+
+	return nil
+}
+
+func oauthGoogleLogin(config_obj *api_proto.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var googleOauthConfig = &oauth2.Config{
+			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
+			ClientID:     config_obj.GUI.GoogleOauthClientId,
+			ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
+			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+			Endpoint:     google.Endpoint,
+		}
+
+		// Create oauthState cookie
+		oauthState := generateStateOauthCookie(w)
+		u := googleOauthConfig.AuthCodeURL(oauthState)
+		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+	})
+}
+
+func generateStateOauthCookie(w http.ResponseWriter) string {
+	var expiration = time.Now().Add(365 * 24 * time.Hour)
+
+	b := make([]byte, 16)
+	rand.Read(b)
+	state := base64.URLEncoding.EncodeToString(b)
+	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
+	http.SetCookie(w, &cookie)
+
+	return state
+}
+
+func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Read oauthState from Cookie
+		oauthState, _ := r.Cookie("oauthstate")
+
+		if r.FormValue("state") != oauthState.Value {
+			log.Println("invalid oauth google state")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		data, err := getUserDataFromGoogle(config_obj, r.FormValue("code"))
+		if err != nil {
+			log.Println(err.Error())
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		user_info := &UserInfo{}
+		err = json.Unmarshal(data, &user_info)
+		if err != nil {
+			log.Println(err.Error())
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		// Create a new token object, specifying signing method and the claims
+		// you would like it to contain.
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"user_id": user_info.Id,
+			"user":    user_info.Email,
+			"expires": time.Now().Unix() + 3600,
+		})
+
+		// Sign and get the complete encoded token as a string using the secret
+		tokenString, err := token.SignedString(
+			[]byte(config_obj.Frontend.PrivateKey))
+		fmt.Println(tokenString, err)
+
+		// Set the cookie and redirect.
+		cookie := &http.Cookie{
+			Name:    "VelociraptorAuth",
+			Value:   tokenString,
+			Path:    "/",
+			Expires: time.Now().AddDate(0, 0, 1),
+		}
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	})
+}
+
+func getUserDataFromGoogle(config_obj *api_proto.Config, code string) ([]byte, error) {
+	// Use code to get token and get user info from Google.
+	var googleOauthConfig = &oauth2.Config{
+		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
+		ClientID:     config_obj.GUI.GoogleOauthClientId,
+		ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
+
+	token, err := googleOauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
+	}
+	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed read response: %s", err.Error())
+	}
+	return contents, nil
+}
+
+func authenticateOAUTHCookie(
+	config_obj *api_proto.Config,
+	parent http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		reject := func(err error) {
+			// Not authorized - redirect to logon screen.
+			http.Redirect(w, r, "/auth/google/login",
+				http.StatusTemporaryRedirect)
+			return
+		}
+
+		auth_cookie, err := r.Cookie("VelociraptorAuth")
+		if err != nil {
+			reject(err)
+			return
+		}
+
+		// Parse the JWT.
+		token, err := jwt.Parse(
+			auth_cookie.Value,
+			func(token *jwt.Token) (interface{}, error) {
+				_, ok := token.Method.(*jwt.SigningMethodHMAC)
+				if !ok {
+					return nil, errors.New("Invalid signing method")
+				}
+				return []byte(config_obj.Frontend.PrivateKey), nil
+			})
+		if err != nil {
+			reject(err)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			reject(errors.New("Token not valid"))
+			return
+		}
+
+		// Record the username for handlers lower in the
+		// stack.
+		username_any, pres := claims["user"]
+		if !pres {
+			reject(errors.New("Username not present"))
+			return
+		}
+
+		username, ok := username_any.(string)
+		if !ok {
+			reject(errors.New("Username not present"))
+			return
+		}
+
+		// Now check if the user is allowed to log in.
+		user_record, err := users.GetUser(config_obj, username)
+		if err != nil || user_record.Name != username {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			fmt.Fprintf(w, `
+<html><body>
+Authorization failed. You are not registered on this system as %v.
+Contact your system administrator to get an account, or click here
+to log in again:
+
+      <a href="/auth/google/login" style="text-transform:none">
+        Login with Google
+      </a>
+</body></html>
+`, username)
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		// Checking is successfull - user authorized.
+		ctx := context.WithValue(
+			r.Context(), "USER", username)
+		parent.ServeHTTP(w, r.WithContext(ctx))
+	})
+}

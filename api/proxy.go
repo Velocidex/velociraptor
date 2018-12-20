@@ -42,7 +42,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	}
 	mux.Handle("/", h)
 
-	return nil
+	return MaybeAddOAuthHandlers(config_obj, mux)
 }
 
 // Starts a HTTP Server (non encrypted) using the passed in mux. It is
