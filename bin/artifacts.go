@@ -85,7 +85,8 @@ func collectArtifact(
 	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = logging.NewPlainLogger(config_obj)
+	scope.Logger = logging.NewPlainLogger(config_obj,
+		&logging.ToolComponent)
 	for _, query := range request.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		kingpin.FatalIfError(err, "Parse VQL")
@@ -107,11 +108,13 @@ func getRepository(config_obj *api_proto.Config) *artifacts.Repository {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {
-		logging.NewLogger(config_obj).Info("Loading artifacts from %s",
-			*artifact_definitions_dir)
+		logging.GetLogger(config_obj, &logging.ToolComponent).
+			Info("Loading artifacts from %s",
+				*artifact_definitions_dir)
 		_, err := repository.LoadDirectory(*artifact_definitions_dir)
 		if err != nil {
-			logging.NewLogger(config_obj).Error("Artifact LoadDirectory", err)
+			logging.GetLogger(config_obj, &logging.ToolComponent).
+				Error("Artifact LoadDirectory", err)
 		}
 	}
 

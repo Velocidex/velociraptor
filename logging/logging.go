@@ -1,32 +1,160 @@
 package logging
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
-	"github.com/pkg/errors"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 var (
 	SuppressLogging = false
+
+	GenericComponent  = "Velociraptor"
+	FrontendComponent = "VelociraptorFrontend"
+	ClientComponent   = "VelociraptorClient"
+	GUIComponent      = "VelociraptorGUI"
+	ToolComponent     = "Velociraptor"
+
+	Manager *LogManager
 )
 
-type stackTracer interface {
-	StackTrace() errors.StackTrace
+type LogContext struct {
+	*logrus.Logger
 }
 
-type Logger struct {
-	mu        sync.Mutex
-	config    *api_proto.Config
-	error_log *log.Logger
-	info_log  *log.Logger
+func (self *LogContext) Info(format string, v ...interface{}) {
+	self.Logger.Info(fmt.Sprintf(format, v...))
+}
+
+type LogManager struct {
+	mu       sync.Mutex
+	contexts map[*string]*LogContext
+}
+
+// Get the logger from cache - creating it if it needs to.
+func (self *LogManager) GetLogger(
+	config_obj *api_proto.Config,
+	component *string) *LogContext {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if !config_obj.Logging.SeparateLogsPerComponent {
+		component = &GenericComponent
+	}
+
+	ctx, pres := self.contexts[component]
+	if !pres {
+		// Add a new context.
+		switch component {
+		case &GenericComponent,
+			&FrontendComponent,
+			&ClientComponent, &GUIComponent:
+
+			logger := self.makeNewComponent(config_obj, component)
+			if config_obj.Logging.SeparateLogsPerComponent {
+				self.contexts[component] = logger
+				return logger
+			} else {
+				self.contexts[&GenericComponent] = logger
+				return logger
+			}
+
+		default:
+			panic("Unsupported component!")
+		}
+	}
+	return ctx
+}
+
+func getRotator(base_path string) *rotatelogs.RotateLogs {
+	result, err := rotatelogs.New(
+		base_path+".%Y%m%d%H%M",
+		rotatelogs.WithLinkName(base_path),
+		// 1 day.
+		rotatelogs.WithMaxAge(time.Duration(86400)*time.Second),
+		// 7 days.
+		rotatelogs.WithRotationTime(time.Duration(604800)*time.Second),
+	)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return result
+}
+
+func (self *LogManager) makeNewComponent(
+	config_obj *api_proto.Config,
+	component *string) *LogContext {
+
+	Log := logrus.New()
+	Log.Out = ioutil.Discard
+	Log.Level = logrus.DebugLevel
+
+	if config_obj.Logging.OutputDirectory != "" {
+		base_filename := filepath.Join(
+			config_obj.Logging.OutputDirectory,
+			*component)
+
+		fmt.Printf("Making %s\n", base_filename)
+
+		pathMap := lfshook.WriterMap{
+			logrus.DebugLevel: getRotator(base_filename + "_debug.log"),
+			logrus.InfoLevel:  getRotator(base_filename + "_info.log"),
+			logrus.ErrorLevel: getRotator(base_filename + "_error.log"),
+		}
+
+		hook := lfshook.NewHook(
+			pathMap,
+			&logrus.JSONFormatter{},
+		)
+		Log.Hooks.Add(hook)
+	}
+
+	stderr_map := lfshook.WriterMap{
+		logrus.ErrorLevel: os.Stderr,
+	}
+
+	if !SuppressLogging {
+		stderr_map[logrus.DebugLevel] = os.Stderr
+		stderr_map[logrus.InfoLevel] = os.Stderr
+	}
+
+	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{}))
+
+	return &LogContext{Log}
+}
+
+type Formatter struct{}
+
+func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
+	b := &bytes.Buffer{}
+
+	levelText := strings.ToUpper(entry.Level.String())
+	fmt.Fprintf(b, "[%s] %v %s ", levelText, entry.Time.Format(time.RFC3339),
+		entry.Message)
+
+	serialized, _ := json.Marshal(entry.Data)
+
+	fmt.Fprintf(b, "%s\n", serialized)
+
+	return b.Bytes(), nil
 }
 
 type logWriter struct {
-	logger *Logger
+	logger *LogContext
 }
 
 func (self *logWriter) Write(b []byte) (int, error) {
@@ -35,63 +163,22 @@ func (self *logWriter) Write(b []byte) (int, error) {
 }
 
 // A log compatible logger.
-func NewPlainLogger(config *api_proto.Config) *log.Logger {
+func NewPlainLogger(
+	config *api_proto.Config,
+	component *string) *log.Logger {
 	if !SuppressLogging {
-		return log.New(&logWriter{NewLogger(config)}, "", log.Lshortfile)
+		return log.New(&logWriter{GetLogger(config, component)}, "", log.Lshortfile)
 	}
 
 	return log.New(ioutil.Discard, "", log.Lshortfile)
 }
 
-func NewLogger(config *api_proto.Config) *Logger {
-	result := Logger{}
-
-	if !SuppressLogging {
-		result.config = config
-	}
-
-	return &result
+func GetLogger(config_obj *api_proto.Config, component *string) *LogContext {
+	return Manager.GetLogger(config_obj, component)
 }
 
-func (self *Logger) _Error(format string, v ...interface{}) {
-	if self.config == nil {
-		return
+func init() {
+	Manager = &LogManager{
+		contexts: make(map[*string]*LogContext),
 	}
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	if self.error_log == nil {
-		self.error_log = log.New(os.Stderr, "ERR:", log.LstdFlags)
-	}
-
-	self.error_log.Printf(format, v...)
-}
-
-func (self *Logger) Error(msg string, err error) {
-	if self.config == nil {
-		return
-	}
-
-	s_err, ok := err.(stackTracer)
-	if ok {
-		st := s_err.StackTrace()
-		self._Error("ERR: %s %s %+v", msg, err.Error(), st)
-	} else {
-		self._Error("ERR: %s %s", msg, err.Error())
-	}
-}
-
-func (self *Logger) Info(format string, v ...interface{}) {
-	if self.config == nil {
-		return
-	}
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	if self.info_log == nil {
-		self.info_log = log.New(os.Stderr, "INFO:", log.LstdFlags)
-	}
-	self.info_log.Printf(format, v...)
 }

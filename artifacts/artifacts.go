@@ -255,7 +255,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		}
 	}
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	if config_obj.Frontend.ArtifactsPath != "" {
 		count, err := global_repository.LoadDirectory(
 			config_obj.Frontend.ArtifactsPath)

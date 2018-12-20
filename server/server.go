@@ -94,7 +94,7 @@ func (self *NotificationPool) NotifyAll() {
 type Server struct {
 	config           *api_proto.Config
 	manager          *crypto.CryptoManager
-	logger           *logging.Logger
+	logger           *logging.LogContext
 	db               datastore.DataStore
 	NotificationPool *NotificationPool
 
@@ -122,7 +122,8 @@ func NewServer(config_obj *api_proto.Config) (*Server, error) {
 		manager:          manager,
 		db:               db,
 		NotificationPool: NewNotificationPool(),
-		logger:           logging.NewLogger(config_obj),
+		logger: logging.GetLogger(config_obj,
+			&logging.FrontendComponent),
 	}
 	return &result, nil
 }

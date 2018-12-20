@@ -138,7 +138,7 @@ type CryptoManager struct {
 
 	caPool *x509.CertPool
 
-	logger *logging.Logger
+	logger *logging.LogContext
 }
 
 // Clear all internal caches.
@@ -282,7 +282,8 @@ func NewCryptoManager(config_obj *api_proto.Config, source string, pem_str []byt
 		public_key_resolver: NewInMemoryPublicKeyResolver(),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
-		logger:              logging.NewLogger(config_obj),
+		logger: logging.GetLogger(
+			config_obj, &logging.ClientComponent),
 	}, nil
 }
 
@@ -305,7 +306,8 @@ func NewServerCryptoManager(config_obj *api_proto.Config) (*CryptoManager, error
 		public_key_resolver: NewServerPublicKeyResolver(config_obj),
 		output_cipher_cache: cache.NewLRUCache(1000),
 		input_cipher_cache:  cache.NewLRUCache(1000),
-		logger:              logging.NewLogger(config_obj),
+		logger: logging.GetLogger(config_obj,
+			&logging.FrontendComponent),
 	}, nil
 }
 
@@ -316,7 +318,7 @@ func NewClientCryptoManager(config_obj *api_proto.Config, client_private_key_pem
 		return nil, err
 	}
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	client_id := ClientIDFromPublicKey(&private_key.PublicKey)
 	logger.Info("Starting Crypto for client %v", client_id)
 

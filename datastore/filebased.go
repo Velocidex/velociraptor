@@ -407,7 +407,7 @@ func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) e
 		file, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
 	}
 	if err != nil {
-		logging.NewLogger(config_obj).Error(
+		logging.GetLogger(config_obj, &logging.FrontendComponent).Error(
 			"Unable to open file "+filename, err)
 		return errors.WithStack(err)
 	}

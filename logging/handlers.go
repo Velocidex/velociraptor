@@ -1,8 +1,10 @@
 package logging
 
 import (
+	"context"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
@@ -19,8 +21,16 @@ func (rec *statusRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
+func GetUsername(ctx context.Context) string {
+	username := ctx.Value("USER")
+	if username != nil {
+		return username.(string)
+	}
+	return ""
+}
+
 func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Handler {
-	logger := NewLogger(config_obj)
+	logger := GetLogger(config_obj, &GUIComponent)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rec := &statusRecorder{
@@ -29,13 +39,15 @@ func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Han
 				w.(http.CloseNotifier),
 				200}
 			defer func() {
-				logger.Info(
-					"%s %s %s %s %d",
-					r.Method,
-					r.URL.Path,
-					r.RemoteAddr,
-					r.UserAgent(),
-					rec.status)
+				logger.WithFields(
+					logrus.Fields{
+						"method":     r.Method,
+						"url":        r.URL.Path,
+						"remote":     r.RemoteAddr,
+						"user-agent": r.UserAgent(),
+						"status":     rec.status,
+						"user":       GetUsername(r.Context()),
+					}).Info("")
 			}()
 			next.ServeHTTP(rec, r)
 		})

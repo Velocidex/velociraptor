@@ -20,7 +20,8 @@ import (
 func IncreaseLimits(config_obj *api_proto.Config) {
 	var rLimit syscall.Rlimit
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj,
+		&logging.FrontendComponent)
 
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {

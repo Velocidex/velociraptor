@@ -35,7 +35,7 @@ func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	result := &api_proto.StartFlowResponse{}
-	in.Creator = getUsername(ctx)
+	in.Creator = GetUsername(ctx)
 	flow_id, err := flows.StartFlow(self.config, in)
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
-	result.Username = getUsername(ctx)
+	result.Username = GetUsername(ctx)
 	return result, nil
 }
 
@@ -260,14 +260,14 @@ func (self *ApiServer) GetUserNotifications(
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
 	result, err := users.GetUserNotifications(
-		self.config, getUsername(ctx), in.ClearPending)
+		self.config, GetUsername(ctx), in.ClearPending)
 	return result, err
 }
 
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	n, err := users.GetUserNotificationCount(self.config, getUsername(ctx))
+	n, err := users.GetUserNotificationCount(self.config, GetUsername(ctx))
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
 
@@ -352,7 +352,7 @@ func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error 
 	// Register reflection service.
 	reflection.Register(grpcServer)
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Launched gRPC API server on %v ", bind_addr)
 
 	err = grpcServer.Serve(lis)

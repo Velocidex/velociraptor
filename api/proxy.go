@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -19,6 +20,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	if err != nil {
 		return err
 	}
+
 	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
 	mux.Handle("/api/v1/download/", checkUserCredentialsHandler(
 		config_obj, flowResultDownloadHandler(config_obj)))
@@ -28,7 +30,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 		config_obj, vfsFileDownloadHandler(config_obj)))
 
 	// Assets etc do not need auth.
-	install_mux(config_obj, mux)
+	install_static_assets(config_obj, mux)
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
 	if err != nil {
@@ -40,6 +42,8 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	if err != nil {
 		return err
 	}
+
+	// No Auth on / which is a redirect to app.html anyway.
 	mux.Handle("/", h)
 
 	return MaybeAddOAuthHandlers(config_obj, mux)
@@ -50,8 +54,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 // since it is not encrypted. If you want to use HTTP you should
 // listen on localhost and port forward over ssh.
 func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
-	logger := logging.NewLogger(config_obj)
-
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 	if config_obj.GUI.BindAddress != "127.0.0.1" {
 		logger.Info("GUI is not encrypted and listening on public interfact. " +
 			"This is not secure. Please enable TLS.")
@@ -61,10 +64,12 @@ func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
 		config_obj.GUI.BindAddress,
 		config_obj.GUI.BindPort)
 
-	logger.Info("GUI is ready to handle requests at %s", listenAddr)
+	logger.WithFields(
+		logrus.Fields{
+			"listenAddr": listenAddr,
+		}).Info("GUI is ready to handle requests")
 
-	return http.ListenAndServe(listenAddr,
-		logging.GetLoggingHandler(config_obj)(mux))
+	return http.ListenAndServe(listenAddr, mux)
 }
 
 type _templateArgs struct {

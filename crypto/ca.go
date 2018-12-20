@@ -90,7 +90,7 @@ func GenerateServerCert(config_obj *api_proto.Config) (*CertBundle, error) {
 		config_obj.Frontend.Certificate))
 	if err == nil {
 		serial_number.Add(serial_number, old_cert.SerialNumber)
-		logging.NewLogger(config_obj).Info(
+		logging.GetLogger(config_obj, &logging.FrontendComponent).Info(
 			"Incremented server serial number to %v", serial_number)
 	}
 

@@ -32,7 +32,7 @@ type Enroller struct {
 	config_obj              *api_proto.Config
 	manager                 *crypto.CryptoManager
 	executor                executor.Executor
-	logger                  *logging.Logger
+	logger                  *logging.LogContext
 	last_enrollment_time    time.Time
 	last_foreman_check_time time.Time
 }
@@ -111,7 +111,7 @@ type HTTPConnector struct {
 	// initialized by a successful connection to the URL's
 	// server.pem endpoint.
 	manager *crypto.CryptoManager
-	logger  *logging.Logger
+	logger  *logging.LogContext
 
 	minPoll, maxPoll time.Duration
 
@@ -129,7 +129,7 @@ type HTTPConnector struct {
 func NewHTTPConnector(
 	config_obj *api_proto.Config,
 	manager *crypto.CryptoManager,
-	logger *logging.Logger) *HTTPConnector {
+	logger *logging.LogContext) *HTTPConnector {
 
 	max_poll := config_obj.Client.MaxPoll
 	if max_poll == 0 {
@@ -260,7 +260,7 @@ type NotificationReader struct {
 	executor   executor.Executor
 	enroller   *Enroller
 	handler    string
-	logger     *logging.Logger
+	logger     *logging.LogContext
 	name       string
 
 	minPoll, maxPoll      time.Duration
@@ -274,7 +274,7 @@ func NewNotificationReader(
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
 	enroller *Enroller,
-	logger *logging.Logger,
+	logger *logging.LogContext,
 	name string,
 	handler string) *NotificationReader {
 	return &NotificationReader{
@@ -556,7 +556,7 @@ func NewSender(
 	manager *crypto.CryptoManager,
 	executor executor.Executor,
 	enroller *Enroller,
-	logger *logging.Logger,
+	logger *logging.LogContext,
 	name string,
 	handler string) *Sender {
 	result := &Sender{
@@ -574,7 +574,7 @@ func NewSender(
 type HTTPCommunicator struct {
 	config_obj *api_proto.Config
 
-	logger *logging.Logger
+	logger *logging.LogContext
 
 	// Read jobs from the servers notification channel.
 	receiver *NotificationReader
@@ -614,7 +614,7 @@ func NewHTTPCommunicator(
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	enroller := &Enroller{
 		config_obj: config_obj,
 		manager:    manager,

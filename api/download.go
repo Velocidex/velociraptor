@@ -151,7 +151,7 @@ func flowResultDownloadHandler(
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
 	config_obj *api_proto.Config) http.Handler {
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hunt_id, pres := r.URL.Query()["hunt_id"]

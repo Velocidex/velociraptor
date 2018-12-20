@@ -38,7 +38,9 @@ func GetFlows(
 		flow_obj, err := GetAFF4FlowObject(config_obj, urn)
 		if err != nil {
 			// Skip flows we can not load any more.
-			logging.NewLogger(config_obj).Error("", err)
+			logging.GetLogger(
+				config_obj, &logging.FrontendComponent).
+				Error("", err)
 			continue
 		}
 

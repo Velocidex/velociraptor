@@ -6,6 +6,7 @@ import (
 
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -42,7 +43,11 @@ func checkUserCredentialsHandler(
 
 		// Record the username for handlers lower in the stack.
 		ctx := context.WithValue(r.Context(), "USER", username)
-		parent.ServeHTTP(w, r.WithContext(ctx))
+
+		// Need to call logging after auth so it can access
+		// the USER value in the context.
+		logging.GetLoggingHandler(config_obj)(parent).ServeHTTP(
+			w, r.WithContext(ctx))
 	})
 }
 
@@ -67,7 +72,7 @@ func getClientApprovalForUser(
 	return &result
 }
 
-func getUsername(ctx context.Context) string {
+func GetUsername(ctx context.Context) string {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		username := md.Get("USER")

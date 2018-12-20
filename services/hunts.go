@@ -35,7 +35,7 @@ type HuntManager struct {
 }
 
 func (self *HuntManager) Start() error {
-	logger := logging.NewLogger(self.config_obj)
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting hunt manager.")
 
 	env := vfilter.NewDict().
@@ -47,7 +47,8 @@ func (self *HuntManager) Start() error {
 		return err
 	}
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = logging.NewPlainLogger(self.config_obj)
+	scope.Logger = logging.NewPlainLogger(self.config_obj,
+		&logging.FrontendComponent)
 
 	vql, err := vfilter.Parse("select HuntId, ClientId, Participate FROM " +
 		"watch_monitoring(artifact='System.Hunt.Participation')")

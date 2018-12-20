@@ -124,7 +124,7 @@ func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
 	result.Inbound = make(chan *crypto_proto.GrrMessage)
 	result.Outbound = make(chan *crypto_proto.GrrMessage)
 	result.plugins = actions.GetClientActionsMap()
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	go func() {
 		for {
 			// Pump messages from input channel and

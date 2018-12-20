@@ -16,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -220,6 +221,10 @@ to log in again:
 		// Checking is successfull - user authorized.
 		ctx := context.WithValue(
 			r.Context(), "USER", username)
-		parent.ServeHTTP(w, r.WithContext(ctx))
+
+		// Need to call logging after auth so it can access
+		// the USER value in the context.
+		logging.GetLoggingHandler(config_obj)(parent).ServeHTTP(
+			w, r.WithContext(ctx))
 	})
 }

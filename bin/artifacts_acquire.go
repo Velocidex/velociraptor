@@ -38,7 +38,7 @@ var (
 
 func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 	name string, request *actions_proto.VQLCollectorArgs) error {
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	subdir := filepath.Join(*artifact_command_acquire_dump_dir, name)
 
 	err := os.MkdirAll(subdir, 0700)
@@ -46,7 +46,7 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 		return errors.Wrap(err, "Create output directory")
 	}
 
-	logger.Info("Collecting artifact %v into subdir %v\n", name, subdir)
+	logger.Info("Collecting artifact %v into subdir %v", name, subdir)
 
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
@@ -67,7 +67,8 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 
 	repository := getRepository(config_obj)
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = logging.NewPlainLogger(config_obj)
+	scope.Logger = logging.NewPlainLogger(
+		config_obj, &logging.ToolComponent)
 
 	now := time.Now()
 	fd, err := os.OpenFile(
@@ -114,7 +115,7 @@ func doArtifactsAcquire() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	var wg sync.WaitGroup
 

@@ -43,7 +43,7 @@ func (self *UpdateEventTable) Run(
 		}
 	}()
 
-	logger := logging.NewLogger(config)
+	logger := logging.GetLogger(config, &logging.ClientComponent)
 
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
@@ -61,11 +61,11 @@ func (self *UpdateEventTable) Run(
 				}
 			}
 
-			logger.Info("Starting %s\n", name)
+			logger.Info("Starting %s", name)
 			action_obj.StartQuery(
 				config, new_ctx, responder, event)
 
-			logger.Info("Finished %s\n", name)
+			logger.Info("Finished %s", name)
 		}(event)
 	}
 

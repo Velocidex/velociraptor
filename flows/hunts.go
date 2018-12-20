@@ -57,7 +57,7 @@ func (self *HuntDispatcher) GetApplicableHunts(last_timestamp uint64) []*api_pro
 // and the HuntManager takes clients from the pending queue and adds
 // them to the running queue at the pre-determined rate.
 func (self *HuntDispatcher) Update() error {
-	logger := logging.NewLogger(self.config_obj)
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -174,7 +174,7 @@ func (self *HuntDispatcher) _ScheduleClientsForHunt(hunt *api_proto.Hunt) (
 		return false, err
 	}
 
-	logger := logging.NewLogger(self.config_obj)
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
 	client_rate := hunt.ClientRate
 
@@ -347,7 +347,8 @@ func GetHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) {
 	if dispatch_container.dispatcher == nil {
 		dispatcher, err := NewHuntDispatcher(config_obj)
 		if err != nil {
-			logging.NewLogger(config_obj).Error("", err)
+			logging.GetLogger(config_obj, &logging.FrontendComponent).
+				Error("", err)
 			return nil, err
 		}
 		dispatch_container.dispatcher = dispatcher

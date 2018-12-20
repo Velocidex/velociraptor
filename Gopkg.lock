@@ -228,6 +228,33 @@
   version = "v0.5.0"
 
 [[projects]]
+  digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:8f5579a88f14ca4029f38f7491f12f578e38d942d9343e63aaa68f14c31df053"
+  name = "github.com/lestrrat-go/file-rotatelogs"
+  packages = [
+    ".",
+    "internal/option",
+  ]
+  pruneopts = "UT"
+  revision = "3b4f34a036f374c18d604e1b8006d9fbb9593c06"
+  version = "v2.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8654122ef85f2bc03859b0a7ea2d36c9965888689cdac7640cceaa6edb11cff6"
+  name = "github.com/lestrrat-go/strftime"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8b31f9c59b0feb56c456ce49a7b3d2b2e93a6f18"
+
+[[projects]]
   digest = "1:19776767e34ab4def5b55714b3d67ac45d8f9a0d1cf6fa50b3b5920b3b38ff5c"
   name = "github.com/magefile/mage"
   packages = [
@@ -329,6 +356,14 @@
   revision = "3113b8401b8a98917cde58f8bbd42a1b1c03b1fd"
 
 [[projects]]
+  digest = "1:1a23fdd843129ef761ffe7651bc5fe7c5b09fbe933e92783ab06cc11c37b7b37"
+  name = "github.com/rifflock/lfshook"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b9218ef580f59a2e72dad1aa33d660150445d05a"
+  version = "v2.4"
+
+[[projects]]
   branch = "master"
   digest = "1:b450e7e26884b4aea569d00db31e6309a236ebbcec07e8ad1d869a37be66ee37"
   name = "github.com/sebdah/goldie"
@@ -367,6 +402,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
+
+[[projects]]
+  digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:5110e3d4f130772fd39e6ce8208ad1955b242ccfcc8ad9d158857250579c82f4"
@@ -629,6 +672,7 @@
     "github.com/gorilla/schema",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/lestrrat-go/file-rotatelogs",
     "github.com/magefile/mage/mage",
     "github.com/magefile/mage/mg",
     "github.com/magefile/mage/sh",
@@ -637,12 +681,14 @@
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/rcrowley/go-metrics",
+    "github.com/rifflock/lfshook",
     "github.com/sebdah/goldie",
     "github.com/sergi/go-diff/diffmatchpatch",
     "github.com/shirou/gopsutil/disk",
     "github.com/shirou/gopsutil/host",
     "github.com/shirou/gopsutil/net",
     "github.com/shirou/gopsutil/process",
+    "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/suite",
     "golang.org/x/crypto/acme/autocert",

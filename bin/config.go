@@ -51,7 +51,7 @@ func doShowConfig() {
 
 func doGenerateConfig() {
 	config_obj := config.GetDefaultConfig()
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	ca_bundle, err := crypto.GenerateCACert(2048)
 	if err != nil {
 		logger.Error("Unable to create CA cert", err)
@@ -93,7 +93,7 @@ func doGenerateConfig() {
 func doRotateKeyConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	frontend_cert, err := crypto.GenerateServerCert(config_obj)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)

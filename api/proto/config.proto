@@ -259,6 +259,17 @@ message MailConfig {
         }];
 }
 
+message LoggingConfig {
+    string output_directory = 1 [(sem_type) = {
+            description: "The location to write log files. "
+            "If not set we write no log files.",
+        }];
+
+    bool separate_logs_per_component = 2 [(sem_type) = {
+            description: "If set, each component will log to a separate file.",
+        }];
+}
+
 message Config {
     Version version = 8 [(sem_type) = {
             description: "Version information."
@@ -291,6 +302,8 @@ message Config {
         }];
 
     MailConfig Mail = 11;
+
+    LoggingConfig Logging = 23;
 
     bool verbose = 20 [(sem_type) = {
             description: "Enable verbose logging output.",

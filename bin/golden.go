@@ -42,7 +42,8 @@ func runTest(fixture *testFixture) (string, error) {
 	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = logging.NewPlainLogger(config_obj)
+	scope.Logger = logging.NewPlainLogger(config_obj,
+		&logging.ToolComponent)
 
 	result := ""
 	for _, query := range fixture.Queries {

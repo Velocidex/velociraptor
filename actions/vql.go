@@ -24,7 +24,7 @@ type LogWriter struct {
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
-	logging.NewLogger(self.config_obj).Info(string(b))
+	logging.GetLogger(self.config_obj, &logging.FrontendComponent).Info(string(b))
 	err := self.responder.Log("%s", string(b))
 	if err != nil {
 		return 0, err

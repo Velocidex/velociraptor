@@ -16,8 +16,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func install_mux(config_obj *api_proto.Config, mux *http.ServeMux) {
-	logging.NewLogger(config_obj).Info("GUI will serve files from directory gui/static")
+func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
+	logging.GetLogger(config_obj, &logging.FrontendComponent).
+		Info("GUI will serve files from directory gui/static")
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
 		http.Dir("gui/static"))))
 }

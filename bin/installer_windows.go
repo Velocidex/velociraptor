@@ -57,7 +57,7 @@ func doInstall() error {
 	}
 
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 	target_path := os.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
 
@@ -147,7 +147,8 @@ func checkServiceExists(name string) (bool, error) {
 	return false, nil
 }
 
-func installService(name string, executable string, logger *logging.Logger) error {
+func installService(name string, executable string,
+	logger *logging.LogContext) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
@@ -252,7 +253,7 @@ func doRemove() {
 		kingpin.FatalIfError(err, "Unable to load config file")
 	}
 
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 
 	// Ensure the service is stopped first.

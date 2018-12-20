@@ -16,7 +16,7 @@ func register(config_obj *api_proto.Config) error {
 	}
 
 	count := 0
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, file := range files {
 		if strings.HasPrefix(file, "artifacts/definitions") &&
 			strings.HasSuffix(file, "yaml") {

@@ -169,7 +169,7 @@ func TestFlowRunner(t *testing.T) {
 
 	// Create a runner to receive the messages.
 	// Receive the first batch.
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	flow_runner := NewFlowRunner(config_obj, logger)
 	flow_runner.ProcessMessages(messages)
 	flow_runner.Close()
@@ -254,7 +254,7 @@ func TestFlowRunner2(t *testing.T) {
 
 	// When the flow receives a client error, it should store the
 	// error in the flow context.
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	flow_runner := NewFlowRunner(config_obj, logger)
 	flow_runner.ProcessMessages([]*crypto_proto.GrrMessage{message})
 	flow_runner.Close()

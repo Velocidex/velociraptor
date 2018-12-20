@@ -34,7 +34,7 @@ func doInstall() error {
 	kingpin.FatalIfError(err, "Can't get executable path")
 
 	service_name := config_obj.Client.DarwinInstaller.ServiceName
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	target_path := os.ExpandEnv(config_obj.Client.DarwinInstaller.InstallPath)
 
 	// Try to copy the executable to the target_path.

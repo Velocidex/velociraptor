@@ -48,7 +48,7 @@ func StartFrontendHttp(
 
 	server := &http.Server{
 		Addr:    listenAddr,
-		Handler: logging.GetLoggingHandler(config_obj)(router),
+		Handler: router,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  5 * time.Second,
@@ -101,7 +101,8 @@ func InstallSignalHandler(
 		// Wait for the signal on this channel.
 		<-quit
 
-		logger := logging.NewLogger(config_obj)
+		logger := logging.Manager.GetLogger(
+			config_obj, &logging.GUIComponent)
 		atomic.StoreInt32(&healthy, 0)
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -126,7 +127,7 @@ func StartTLSServer(
 	config_obj *api_proto.Config,
 	server_obj *Server,
 	mux *http.ServeMux) error {
-	logger := logging.NewLogger(config_obj)
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	if config_obj.GUI.BindPort != 443 {
 		logger.Info("Autocert specified - will listen on ports 443 and 80. "+
@@ -154,7 +155,7 @@ func StartTLSServer(
 	server := &http.Server{
 		// ACME protocol requires TLS be served over port 443.
 		Addr:    ":https",
-		Handler: logging.GetLoggingHandler(config_obj)(mux),
+		Handler: mux,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  5 * time.Second,
@@ -306,7 +307,7 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)
-	logger := logging.NewLogger(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		flusher, ok := w.(http.Flusher)

@@ -34,7 +34,7 @@ type FlowImplementation struct {
 type FlowRunner struct {
 	config     *api_proto.Config
 	flow_cache map[string]*AFF4FlowObject
-	logger     *logging.Logger
+	logger     *logging.LogContext
 }
 
 func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
@@ -115,7 +115,7 @@ func (self *FlowRunner) Close() {
 	}
 }
 
-func NewFlowRunner(config *api_proto.Config, logger *logging.Logger) *FlowRunner {
+func NewFlowRunner(config *api_proto.Config, logger *logging.LogContext) *FlowRunner {
 	result := FlowRunner{
 		config:     config,
 		logger:     logger,

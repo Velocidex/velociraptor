@@ -12,7 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 )
 
-func install_mux(config_obj *api_proto.Config, mux *http.ServeMux) {
+func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
 	dir := "/static/"
 	mux.Handle(dir, http.FileServer(assets.HTTP))
 }
