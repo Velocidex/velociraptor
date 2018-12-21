@@ -12,6 +12,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -21,14 +22,6 @@ import (
 )
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
-
-type UserInfo struct {
-	Id            string
-	Email         string
-	VerifiedEmail bool
-	Name          string
-	Picture       string
-}
 
 func MaybeAddOAuthHandlers(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	if config_obj.GUI.GoogleOauthClientId != "" &&
@@ -87,7 +80,7 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 			return
 		}
 
-		user_info := &UserInfo{}
+		user_info := &api_proto.VelociraptorUser{}
 		err = json.Unmarshal(data, &user_info)
 		if err != nil {
 			log.Println(err.Error())
@@ -98,15 +91,15 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 		// Create a new token object, specifying signing method and the claims
 		// you would like it to contain.
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id": user_info.Id,
-			"user":    user_info.Email,
-			"expires": time.Now().Unix() + 3600,
+			"user": user_info.Email,
+			// Required re-auth after one day.
+			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
+			"picture": user_info.Picture,
 		})
 
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := token.SignedString(
 			[]byte(config_obj.Frontend.PrivateKey))
-		fmt.Println(tokenString, err)
 
 		// Set the cookie and redirect.
 		cookie := &http.Cookie{
@@ -187,17 +180,25 @@ func authenticateOAUTHCookie(
 
 		// Record the username for handlers lower in the
 		// stack.
-		username_any, pres := claims["user"]
+		username, pres := claims["user"].(string)
 		if !pres {
 			reject(errors.New("Username not present"))
 			return
 		}
 
-		username, ok := username_any.(string)
-		if !ok {
-			reject(errors.New("Username not present"))
+		// Check if the claim is too old.
+		expires, pres := claims["expires"].(float64)
+		if !pres {
+			reject(errors.New("Expires field not present in JWT"))
 			return
 		}
+
+		if expires < float64(time.Now().Unix()) {
+			reject(errors.New("JWT expired - reauthenticate."))
+			return
+		}
+
+		picture, _ := claims["picture"].(string)
 
 		// Now check if the user is allowed to log in.
 		user_record, err := users.GetUser(config_obj, username)
@@ -215,15 +216,31 @@ to log in again:
 </body></html>
 `, username)
 			http.Error(w, "", http.StatusUnauthorized)
+			logging.GetLogger(config_obj, &logging.Audit).
+				WithFields(logrus.Fields{
+					"user":   username,
+					"remote": r.RemoteAddr,
+					"method": r.Method,
+				}).Error("User rejected by GUI")
 			return
 		}
 
-		// Checking is successfull - user authorized.
+		// Checking is successfull - user authorized. Here we
+		// build a token to pass to the underlying GRPC
+		// service with metadata about the user.
+		user_info := &api_proto.VelociraptorUser{
+			Name:    username,
+			Picture: picture,
+		}
+
+		// Must use json encoding because grpc can not handle
+		// binary data in metadata.
+		serialized, _ := json.Marshal(user_info)
 		ctx := context.WithValue(
-			r.Context(), "USER", username)
+			r.Context(), "USER", string(serialized))
 
 		// Need to call logging after auth so it can access
-		// the USER value in the context.
+		// the contextKeyUser value in the context.
 		logging.GetLoggingHandler(config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
 	})

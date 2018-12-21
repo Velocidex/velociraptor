@@ -2,6 +2,7 @@ package logging
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -21,12 +22,20 @@ func (rec *statusRecorder) WriteHeader(code int) {
 	rec.ResponseWriter.WriteHeader(code)
 }
 
-func GetUsername(ctx context.Context) string {
-	username := ctx.Value("USER")
-	if username != nil {
-		return username.(string)
+func GetUserInfo(ctx context.Context,
+	config_obj *api_proto.Config) *api_proto.VelociraptorUser {
+	result := &api_proto.VelociraptorUser{}
+
+	userinfo, ok := ctx.Value("USER").(string)
+	if ok {
+		data := []byte(userinfo)
+		err := json.Unmarshal(data, result)
+		if err != nil {
+			GetLogger(config_obj, &GUIComponent).Error(
+				"Unable to Unmarshal USER Token")
+		}
 	}
-	return ""
+	return result
 }
 
 func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Handler {
@@ -46,7 +55,8 @@ func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Han
 						"remote":     r.RemoteAddr,
 						"user-agent": r.UserAgent(),
 						"status":     rec.status,
-						"user":       GetUsername(r.Context()),
+						"user": GetUserInfo(
+							r.Context(), config_obj).Name,
 					}).Info("")
 			}()
 			next.ServeHTTP(rec, r)

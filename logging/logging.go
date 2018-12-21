@@ -27,6 +27,9 @@ var (
 	GUIComponent      = "VelociraptorGUI"
 	ToolComponent     = "Velociraptor"
 
+	// Used for high value audit related events.
+	Audit = "VelociraptorAudit"
+
 	Manager *LogManager
 )
 
@@ -59,7 +62,7 @@ func (self *LogManager) GetLogger(
 		// Add a new context.
 		switch component {
 		case &GenericComponent,
-			&FrontendComponent, &ToolComponent,
+			&FrontendComponent, &ToolComponent, &Audit,
 			&ClientComponent, &GUIComponent:
 
 			logger := self.makeNewComponent(config_obj, component)
@@ -108,8 +111,6 @@ func (self *LogManager) makeNewComponent(
 			config_obj.Logging.OutputDirectory,
 			*component)
 
-		fmt.Printf("Making %s\n", base_filename)
-
 		pathMap := lfshook.WriterMap{
 			logrus.DebugLevel: getRotator(base_filename + "_debug.log"),
 			logrus.InfoLevel:  getRotator(base_filename + "_info.log"),
@@ -146,11 +147,12 @@ func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	fmt.Fprintf(b, "[%s] %v %s ", levelText, entry.Time.Format(time.RFC3339),
 		entry.Message)
 
-	serialized, _ := json.Marshal(entry.Data)
+	if len(entry.Data) > 0 {
+		serialized, _ := json.Marshal(entry.Data)
+		fmt.Fprintf(b, "%s", serialized)
+	}
 
-	fmt.Fprintf(b, "%s\n", serialized)
-
-	return b.Bytes(), nil
+	return append(b.Bytes(), '\n'), nil
 }
 
 type logWriter struct {

@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -36,7 +37,7 @@ func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	result := &api_proto.StartFlowResponse{}
-	in.Creator = GetUsername(ctx)
+	in.Creator = GetGRPCUserInfo(ctx).Name
 	flow_id, err := flows.StartFlow(self.config, in)
 	if err != nil {
 		return nil, err
@@ -57,6 +58,15 @@ func (self *ApiServer) LaunchFlow(
 		return nil, err
 	}
 
+	// Log this event as and Audit event.
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    in.Creator,
+			"client":  in.ClientId,
+			"flow_id": flow_id,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("LaunchFlow")
+
 	return result, nil
 }
 
@@ -70,6 +80,14 @@ func (self *ApiServer) CreateHunt(
 	}
 
 	result.FlowId = *hunt_id
+
+	// Log this event as and Audit event.
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    GetGRPCUserInfo(ctx).Name,
+			"hunt_id": *hunt_id,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("CreateHunt")
 
 	return result, nil
 }
@@ -234,7 +252,11 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
-	result.Username = GetUsername(ctx)
+	user_info := GetGRPCUserInfo(ctx)
+
+	result.Username = user_info.Name
+	result.InterfaceTraits.Picture = user_info.Picture
+
 	return result, nil
 }
 
@@ -267,14 +289,14 @@ func (self *ApiServer) GetUserNotifications(
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
 	result, err := users.GetUserNotifications(
-		self.config, GetUsername(ctx), in.ClearPending)
+		self.config, GetGRPCUserInfo(ctx).Name, in.ClearPending)
 	return result, err
 }
 
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	n, err := users.GetUserNotificationCount(self.config, GetUsername(ctx))
+	n, err := users.GetUserNotificationCount(self.config, GetGRPCUserInfo(ctx).Name)
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
 

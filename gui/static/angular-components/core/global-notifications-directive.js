@@ -36,12 +36,12 @@ const GlobalNotificationsController =
   this.intervalPromise_;
 
   // Immediately fetch global notifications.
-  this.fetchGlobalNotifications_();
+//  this.fetchGlobalNotifications_();
 
   // Refetch pending notification count every FETCH_INTERVAL ms.
-  this.intervalPromise_ = this.interval_(
-    this.fetchGlobalNotifications_.bind(this), FETCH_INTERVAL);
-  this.scope_.$on('$destroy', this.stopPollingGlobalNotifications_.bind(this));
+ // this.intervalPromise_ = this.interval_(
+ //   this.fetchGlobalNotifications_.bind(this), FETCH_INTERVAL);
+//  this.scope_.$on('$destroy', this.stopPollingGlobalNotifications_.bind(this));
 };
 
 
@@ -118,4 +118,3 @@ GlobalNotificationsDirective.directive_name = 'grrGlobalNotifications';
  * @export
  */
 GlobalNotificationsDirective.fetch_interval = FETCH_INTERVAL;
-

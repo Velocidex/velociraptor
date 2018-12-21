@@ -120,6 +120,28 @@ HuntInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
 
 
 /**
+ * Downloades the file.
+ *
+ * @export
+ */
+HuntInspectorController.prototype.downloadFile = function() {
+    var url = 'v1/DownloadHuntResults';
+    var params = {hunt_id: this.scope_["huntId"]};
+    this.grrApiService_.downloadFile(url, params).then(
+        function success() {}.bind(this),
+        function failure(response) {
+            if (angular.isUndefined(response.status)) {
+                this.rootScope_.$broadcast(
+                    ERROR_EVENT_NAME, {
+                        message: 'Couldn\'t download file.'
+                    });
+            }
+        }.bind(this)
+    );
+};
+
+
+/**
  * HuntInspectorDirective definition.
 
  * @return {angular.Directive} Directive definition object.

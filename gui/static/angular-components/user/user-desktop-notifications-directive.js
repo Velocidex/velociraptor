@@ -63,7 +63,7 @@ const UserDesktopNotificationsController =
   this.lastTimestamp_ = this.timeService_.getCurrentTimeMs() * 1000;
 
   // Refetch pending notifications every FETCH_INTERVAL ms.
-  this.interval_(this.fetchPendingNotifications_.bind(this), FETCH_INTERVAL);
+//  this.interval_(this.fetchPendingNotifications_.bind(this), FETCH_INTERVAL);
 };
 
 

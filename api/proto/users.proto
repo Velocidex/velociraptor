@@ -14,6 +14,10 @@ message VelociraptorUser {
             description: "SHA256 hash of the password."
         }];
     bytes password_salt = 3;
+
+    string email = 4;
+    string picture = 5;
+    bool verified_email = 6;
 }
 
 
@@ -65,6 +69,7 @@ message ApiGrrUserInterfaceTraits {
     bool modify_client_labels_action_enabled = 18;
 
     bool auth_using_google = 19;
+    string picture = 20;
 };
 
 message ApiGrrUser {

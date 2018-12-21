@@ -11,6 +11,22 @@
                          ng-if="controller.tabsShown['']" />
     </uib-tab>
 
+    <uib-tab heading="Download" index="'download'">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Download</h4>
+
+          <p class="card-text">
+            Click the link below to download the flow as a zip file.
+          </p>
+          <button class="btn btn-default"
+                  ng-click="controller.downloadFile()">
+            Download
+          </button>
+        </div>
+      </div>
+    </uib-tab>
+
     <uib-tab heading="Requests" index="'requests'">
       <grr-flow-requests
         flow="controller.flow"

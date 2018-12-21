@@ -4,19 +4,17 @@ package api
 
 import (
 	"archive/zip"
-	"fmt"
 	"io"
 	"net/http"
 	"path"
 	"strings"
 
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/gorilla/schema"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -24,6 +22,64 @@ import (
 func returnError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
 	w.Write([]byte(message))
+}
+
+func downloadFlowToZip(
+	config_obj *api_proto.Config,
+	client_id string,
+	flow_id string,
+	zip_writer *zip.Writer) error {
+
+	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
+	if err != nil {
+		return err
+	}
+
+	// This basically copies the CSV files from the
+	// filestore into the zip. We do not need to do any
+	// processing - just give the user the files as they
+	// are. Users can do their own post processing.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	for _, artifact := range flow_details.Context.Artifacts {
+		file_path := path.Join(
+			"clients", client_id,
+			"artifacts", "Artifact "+artifact,
+			path.Base(flow_id)+".csv")
+
+		fd, err := file_store_factory.ReadFile(file_path)
+		if err != nil {
+			continue
+		}
+
+		zh, err := zip_writer.Create(file_path)
+		if err != nil {
+			continue
+		}
+
+		_, err = io.Copy(zh, fd)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Get all file uploads
+	for _, upload_name := range flow_details.Context.UploadedFiles {
+		reader, err := file_store_factory.ReadFile(upload_name)
+		if err != nil {
+			continue
+		}
+
+		f, err := zip_writer.Create(upload_name)
+		if err != nil {
+			continue
+		}
+
+		_, err = io.Copy(f, reader)
+		if err != nil {
+			continue
+		}
+	}
+	return err
 }
 
 // URL format: /api/v1/download/<client_id>/<flow_id>
@@ -49,11 +105,27 @@ func flowResultDownloadHandler(
 			return
 		}
 
-		// From here on we sent the headers and we can not
-		// really report an error to the client.
+		// From here on we already sent the headers and we can
+		// not really report an error to the client.
 		w.Header().Set("Content-Disposition", "attachment; filename='"+flow_id+".zip'")
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
+
+		// Log an audit event.
+		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+
+		// This should never happen!
+		if userinfo.Name == "" {
+			panic("Unauthenticated access.")
+		}
+
+		logging.GetLogger(config_obj, &logging.Audit).
+			WithFields(logrus.Fields{
+				"user":      userinfo.Name,
+				"flow_id":   flow_id,
+				"client_id": client_id,
+				"remote":    r.RemoteAddr,
+			}).Info("DownloadFlowResults")
 
 		marshaler := &jsonpb.Marshaler{Indent: " "}
 		flow_details_json, err := marshaler.MarshalToString(flow_details)
@@ -74,94 +146,25 @@ func flowResultDownloadHandler(
 			return
 		}
 
-		// Serialize all flow results.
-		offset := uint64(0)
-		page_size := uint64(50)
-		for {
-			result, err := flows.GetFlowResults(
-				config_obj, client_id, flow_id,
-				offset, page_size)
-			if err != nil {
-				return
-			}
-
-			var idx int = 0
-			var item *crypto_proto.GrrMessage
-			for idx, item = range result.Items {
-				var tmp ptypes.DynamicAny
-				err := ptypes.UnmarshalAny(item.Payload, &tmp)
-				if err != nil {
-					continue
-				}
-
-				payload := tmp.Message
-				vql_response, pres := payload.(*actions_proto.VQLResponse)
-				if pres {
-					path := fmt.Sprintf(
-						"result/request-%03d/response-%03d/part-%03d",
-						item.RequestId,
-						item.ResponseId,
-						vql_response.Part)
-					result_json, err := marshaler.MarshalToString(vql_response)
-					if err != nil {
-						continue
-					}
-
-					f, err := zip_writer.Create(path)
-					if err != nil {
-						return
-					}
-
-					_, err = f.Write([]byte(result_json))
-					if err != nil {
-						return
-					}
-				}
-
-			}
-
-			if uint64(idx) < page_size {
-				break
-			}
-			offset += uint64(idx)
-		}
-
-		file_store_factory := file_store.GetFileStore(config_obj)
-
-		// Get all file uploads
-		for _, upload_name := range flow_details.Context.UploadedFiles {
-			reader, err := file_store_factory.ReadFile(upload_name)
-			if err != nil {
-				continue
-			}
-
-			f, err := zip_writer.Create(upload_name)
-			if err != nil {
-				continue
-			}
-
-			_, err = io.Copy(f, reader)
-			if err != nil {
-				continue
-			}
-		}
+		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
 	})
 }
 
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
 	config_obj *api_proto.Config) http.Handler {
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hunt_id, pres := r.URL.Query()["hunt_id"]
-		if !pres || len(hunt_id) == 0 {
+		hunt_ids, pres := r.URL.Query()["hunt_id"]
+		if !pres || len(hunt_ids) == 0 {
 			returnError(w, 404, "Hunt id should be specified.")
 			return
 		}
+		hunt_id := path.Base(hunt_ids[0])
+
 		hunt_details, err := flows.GetHunt(
 			config_obj,
-			&api_proto.GetHuntRequest{HuntId: hunt_id[0]})
+			&api_proto.GetHuntRequest{HuntId: hunt_id})
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -175,9 +178,23 @@ func huntResultDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename='"+hunt_id[0]+".zip'")
+		w.Header().Set("Content-Disposition", "attachment; filename='"+hunt_id+".zip'")
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
+
+		// Log an audit event.
+		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+		logging.GetLogger(config_obj, &logging.Audit).
+			WithFields(logrus.Fields{
+				"user":    userinfo.Name,
+				"hunt_id": hunt_id,
+				"remote":  r.RemoteAddr,
+			}).Info("DownloadHuntResults")
+
+		// This should never happen!
+		if userinfo.Name == "" {
+			panic("Unauthenticated access.")
+		}
 
 		marshaler := &jsonpb.Marshaler{Indent: " "}
 		hunt_details_json, err := marshaler.MarshalToString(hunt_details)
@@ -198,97 +215,33 @@ func huntResultDownloadHandler(
 			return
 		}
 
-		// Serialize all flow results.
-		offset := uint64(0)
-		page_size := uint64(50)
-		for {
-			result, err := flows.GetHuntResults(
+		file_store_factory := file_store.GetFileStore(config_obj)
+		file_path := path.Join("hunts", hunt_id+".csv")
+		fd, err := file_store_factory.ReadFile(file_path)
+		if err != nil {
+			return
+		}
+		defer fd.Close()
+
+		for row := range csv.GetCSVReader(fd) {
+			flow_id_any, _ := row.Get("FlowId")
+			flow_id, ok := flow_id_any.(string)
+			if !ok {
+				continue
+			}
+			client_id_any, _ := row.Get("ClientId")
+			client_id, ok := client_id_any.(string)
+			if !ok {
+				continue
+			}
+
+			err := downloadFlowToZip(
 				config_obj,
-				&api_proto.GetHuntResultsRequest{
-					HuntId: hunt_id[0],
-					Offset: offset,
-					Count:  page_size,
-				})
+				client_id,
+				flow_id,
+				zip_writer)
 			if err != nil {
 				return
-			}
-			if len(result.Items) == 0 {
-				break
-			}
-			offset += uint64(len(result.Items))
-			for _, item := range result.Items {
-				var tmp ptypes.DynamicAny
-				err := ptypes.UnmarshalAny(item.Payload, &tmp)
-				if err != nil {
-					continue
-				}
-
-				payload := tmp.Message
-				vql_response, pres := payload.(*actions_proto.VQLResponse)
-				if pres {
-					path := fmt.Sprintf(
-						"result/client-%s/request-%03d/response-%03d/part-%03d",
-						item.Source,
-						item.RequestId,
-						item.ResponseId,
-						vql_response.Part)
-					result_json, err := marshaler.MarshalToString(vql_response)
-					if err != nil {
-						continue
-					}
-
-					f, err := zip_writer.Create(path)
-					if err != nil {
-						return
-					}
-
-					_, err = f.Write([]byte(result_json))
-					if err != nil {
-						return
-					}
-				}
-
-			}
-		}
-
-		file_store_factory := file_store.GetFileStore(config_obj)
-		offset = uint64(0)
-		page_size = uint64(50)
-		for {
-			hunt_results, err := flows.GetHuntInfos(
-				config_obj,
-				&api_proto.GetHuntResultsRequest{
-					HuntId: hunt_id[0],
-					Offset: offset,
-					Count:  page_size,
-				})
-			if err != nil {
-				logger.Error("huntResultDownloadHandler: ", err)
-				break
-			}
-			if len(hunt_results.Items) == 0 {
-				break
-			}
-			offset += uint64(len(hunt_results.Items))
-
-			for _, hunt_info := range hunt_results.Items {
-				// Get all file uploads
-				for _, upload_name := range hunt_info.Result.UploadedFiles {
-					reader, err := file_store_factory.ReadFile(upload_name)
-					if err != nil {
-						continue
-					}
-
-					f, err := zip_writer.Create(upload_name)
-					if err != nil {
-						continue
-					}
-
-					_, err = io.Copy(f, reader)
-					if err != nil {
-						continue
-					}
-				}
 			}
 		}
 	})

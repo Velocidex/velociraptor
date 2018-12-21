@@ -25,13 +25,15 @@ const UserLabelController =
     /** @type {string} */
     this.username;
     this.auth_using_google = false;
+      this.user_picture;
 
     /** @type {string} */
     this.error;
 
       this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
           this.username = response.data['username'];
-        this.auth_using_google = response.data.interface_traits['auth_using_google'];
+          this.auth_using_google = response.data.interface_traits['auth_using_google'];
+          this.picture = response.data.interface_traits['picture'];
     }.bind(this), function(error) {
       if (error['status'] == 403) {
         this.error = 'Authentication Error';

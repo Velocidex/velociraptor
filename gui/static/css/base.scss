@@ -166,6 +166,11 @@ label.btn {
   height: 50px;
 }
 
+.XXnavbar-text {
+    padding: 15px;
+    height: 40px;
+}
+
 .grr-logo {
   max-height: 41px;
   position: absolute;
@@ -610,6 +615,28 @@ tr.tree_hidden {
   position: absolute;
   right: 0;
   width: 300px
+}
+
+.toolbar-buttons {
+    height: 40px;
+    vertical-align: middle;
+    padding: 5px;
+}
+
+.toolbar-notification-button {
+    vertical-align: middle;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 0px;
+}
+
+img.toolbar-buttons {
+    padding: 0;
+    border: black;
+}
+
+.toolbar-buttons span {
+    vertical-align: middle;
 }
 
 .form-horizontal .form-group {

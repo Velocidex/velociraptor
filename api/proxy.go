@@ -93,7 +93,8 @@ func GetAPIHandler(
 				md := map[string]string{
 					"METHOD": req.Method,
 				}
-				username, ok := req.Context().Value("USER").(string)
+				username, ok := req.Context().Value(
+					contextKeyUser).(string)
 				if ok {
 					md["USER"] = username
 				}

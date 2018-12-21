@@ -2,12 +2,17 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
+)
+
+var (
+	contextKeyUser = "USER"
 )
 
 func checkUserCredentialsHandler(
@@ -41,8 +46,18 @@ func checkUserCredentialsHandler(
 			return
 		}
 
-		// Record the username for handlers lower in the stack.
-		ctx := context.WithValue(r.Context(), "USER", username)
+		// Checking is successfull - user authorized. Here we
+		// build a token to pass to the underlying GRPC
+		// service with metadata about the user.
+		user_info := &api_proto.VelociraptorUser{
+			Name: username,
+		}
+
+		// Must use json encoding because grpc can not handle
+		// binary data in metadata.
+		serialized, _ := json.Marshal(user_info)
+		ctx := context.WithValue(
+			r.Context(), "USER", string(serialized))
 
 		// Need to call logging after auth so it can access
 		// the USER value in the context.
@@ -72,15 +87,19 @@ func getClientApprovalForUser(
 	return &result
 }
 
-func GetUsername(ctx context.Context) string {
+func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
+	result := &api_proto.VelociraptorUser{}
+
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
-		username := md.Get("USER")
-		if len(username) > 0 {
-			return username[0]
+		userinfo := md.Get("USER")
+		if len(userinfo) > 0 {
+			data := []byte(userinfo[0])
+			json.Unmarshal(data, result)
 		}
 	}
-	return ""
+
+	return result
 }
 
 func NewDefaultUserObject(config_obj *api_proto.Config) *api_proto.ApiGrrUser {

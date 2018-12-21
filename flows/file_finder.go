@@ -132,7 +132,7 @@ func (self *file_finder_builder) Build() (*actions_proto.VQLCollectorArgs, error
 
 		self.result.Query = append(self.result.Query, &actions_proto.VQLRequest{
 			VQL:  query,
-			Name: "File Finder Response",
+			Name: "Artifact " + constants.FileFinderArtifactName,
 		})
 		return &self.result, nil
 	}

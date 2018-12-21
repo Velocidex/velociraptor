@@ -38,16 +38,12 @@
         <a href="/"><img class="grr-logo" src="/static/images/velo.png" /></a>
         <div class="navbar-brand">Velociraptor</div>
 
-        <div class="nav pull-left">
-          <grr-user-label class="navbar-text"></grr-user-label>
-        </div>
-        <div class="pull-right navbar-form">
-          <grr-user-notification-button></grr-user-notification-button>
-        </div>
-        <div id="search_container" class="pull-right navbar-form">
+        <div class="pull-left navbar-form toolbar-buttons">
           <grr-search-box></grr-search-box>
         </div>
-        <grr-live-clock class="hidden-xs"></grr-live-clock>
+        <div class="nav pull-right">
+          <grr-user-label class="navbar-text"></grr-user-label>
+        </div>
       </div>
     </div>
   </div>
@@ -86,15 +82,11 @@
           <grr-server-error-preview />
         </li>
       </ul>
-  <!--
       <ul class="nav navbar-nav pull-right">
-        <li><a ui-sref="apiDocs">API</a></li>
-        <li><a href="{{ .Help_url }}" target="_blank">Help</a></li>
-        <li><a href="{{ .Report_url }}" target="_blank">Report a problem</a></li>
-        <li><span class="navbar-text">Velociraptor Version {{ .Version }}</span></li>
+        <li >
+          <grr-live-clock class="hidden-xs"></grr-live-clock>
+        </li>
       </ul>
-  -->
-
     </div>
   </div>
   <div id="error_action" style="display: none"></div>
