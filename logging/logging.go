@@ -59,7 +59,7 @@ func (self *LogManager) GetLogger(
 		// Add a new context.
 		switch component {
 		case &GenericComponent,
-			&FrontendComponent,
+			&FrontendComponent, &ToolComponent,
 			&ClientComponent, &GUIComponent:
 
 			logger := self.makeNewComponent(config_obj, component)

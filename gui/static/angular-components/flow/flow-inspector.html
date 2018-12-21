@@ -20,10 +20,9 @@
 
     <uib-tab heading="Results" index="'results'">
       <grr-flow-results
-        artifact-names="controller.flow.runner_args.args.artifacts.names"
+        artifact-names="controller.flow.context.artifacts || controller.flow.runner_args.args.artifacts.names"
         client-id="controller.flow.runner_args.client_id"
-        flow-id="controller.flow.flow_id" api-base-path="apiBasePath"
-        export-base-path="exportBasePath"
+        flow-id="flowId"
         ng-if="controller.tabsShown['results']" />
     </uib-tab>
 

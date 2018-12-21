@@ -40,7 +40,7 @@ const FlowInspectorController = function($scope, grrApiService) {
   this.scope_.$watch('activeTab', this.onDirectiveArgumentsChange_.bind(this));
     this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
 
-  this.scope_.$watchGroup(['flowId', 'apiBasePath'],
+  this.scope_.$watchGroup(['flowId'],
                           this.startPolling.bind(this));
 
   /** @export {Object} */
@@ -60,14 +60,16 @@ const FlowInspectorController = function($scope, grrApiService) {
  *
  * @export
  */
-FlowInspectorController.prototype.startPolling = function() {
-  this.grrApiService_.cancelPoll(this.pollPromise_);
-  this.pollPromise_ = undefined;
+FlowInspectorController.prototype.startPolling = function(newValues, oldValues) {
+    this.grrApiService_.cancelPoll(this.pollPromise_);
+    this.pollPromise_ = undefined;
 
   if (angular.isDefined(this.scope_['apiBasePath']) &&
       angular.isDefined(this.scope_['flowId'])) {
     var flowUrl = this.scope_['apiBasePath'];
     var interval = AUTO_REFRESH_INTERVAL_MS;
+
+      this.flow = null;
 
     // It's important to assign the result of the poll() call, not the
     // result of the poll().then() call, since we need the original

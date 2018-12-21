@@ -45,8 +45,8 @@
                disable="controller.fileIsNotCSV()">
         <div ng-if="controller.currentTab === 'csvview'">
           <grr-csv-viewer
-            vfs_path='controller.fileContext.selectedFilePath'
-            client_id='controller.fileContext.clientId'
+            base-url='"v1/GetTable"'
+            params='controller.params'
             />
         </div>
       </uib-tab>

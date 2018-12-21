@@ -1,6 +1,6 @@
 package constants
 
-var (
+const (
 	VERSION                    = "0.2.5"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
@@ -20,6 +20,9 @@ var (
 
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
-)
 
-const TransferWellKnownFlowId = 5
+	TransferWellKnownFlowId = 5
+
+	// Some special built in artifacts.
+	FileFinderArtifactName = "System.Flow.FileFinder"
+)

@@ -9,9 +9,10 @@
   </div>
 
   <div>
-    <grr-csv-viewer vfs_path='controller.getPath()'
-                    client_id='clientId'
-                    />
+    <grr-csv-viewer
+      base-url='"v1/GetTable"'
+      params='controller.queryParams'
+      />
   </div>
 </div>
 

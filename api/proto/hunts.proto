@@ -135,6 +135,10 @@ message Hunt {
     };
 
     State state = 8;
+
+    repeated string artifacts = 17 [(sem_type) = {
+            description: "A list of artifacts this hunt produces.",
+        }];
 }
 
 
@@ -178,6 +182,7 @@ message GetHuntResultsRequest {
     uint64 offset = 1;
     uint64 count = 2;
     string hunt_id = 3;
+    string artifact = 4;
 }
 
 message HuntResults {

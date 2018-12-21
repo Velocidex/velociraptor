@@ -3,11 +3,6 @@
 goog.module('grrUi.hunt.huntResultsDirective');
 goog.module.declareLegacyNamespace();
 
-const {downloadableVfsRoots, getPathSpecFromValue, makeValueDownloadable, pathSpecToAff4Path} = goog.require('grrUi.core.fileDownloadUtils');
-const {stripAff4Prefix} = goog.require('grrUi.core.utils');
-
-
-
 /**
  * Controller for HuntResultsDirective.
  *
@@ -26,7 +21,11 @@ const HuntResultsController = function(
   /** @export {string} */
   this.exportedResultsUrl;
 
-  $scope.$watch('huntId', this.onHuntIdChange.bind(this));
+    this.artifactNames;
+
+    this.selectedArtifact;
+
+  $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));
 };
 
 
@@ -37,12 +36,19 @@ const HuntResultsController = function(
  * @export
  */
 HuntResultsController.prototype.onHuntIdChange = function(huntId) {
-  if (!angular.isString(huntId)) {
-    return;
-  }
-  this.queryParams = {'hunt_id': huntId};
-  this.resultsUrl = '/v1/GetHuntResults';
-  this.exportedResultsUrl = '/v1/DownloadHuntResults';
+    if (!angular.isString(huntId)) {
+        return;
+    }
+    this.artifactNames = this.scope_.hunt.artifacts;
+
+    if (angular.isDefined(this.artifactNames) &&
+        this.artifactNames.length > 0) {
+        this.selectedArtifact = this.artifactNames[0];
+    }
+    this.queryParams = {'hunt_id': this.scope_.huntId,
+                        artifact: this.selectedArtifact};
+    this.resultsUrl = '/v1/GetHuntResults';
+    this.exportedResultsUrl = '/v1/DownloadHuntResults';
 };
 
 /**
@@ -55,7 +61,8 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
 exports.HuntResultsDirective = function() {
   return {
     scope: {
-      huntId: '='
+        hunt: '=',
+        huntId: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/hunt/hunt-results.html',

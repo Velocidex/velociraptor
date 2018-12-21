@@ -129,13 +129,13 @@ service API {
         };
     }
 
-    rpc GetHuntResults(GetHuntResultsRequest) returns (ApiFlowResultDetails) {
+    rpc GetHuntResults(GetHuntResultsRequest) returns (GetTableResponse) {
         option (google.api.http) = {
             get: "/api/v1/GetHuntResults",
         };
     }
 
-    rpc ListHuntClients(ListHuntClientsRequest) returns (HuntResults) {
+    rpc ListHuntClients(ListHuntClientsRequest) returns (GetTableResponse) {
         option (google.api.http) = {
             get: "/api/v1/ListHuntClients",
         };

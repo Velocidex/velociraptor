@@ -27,6 +27,10 @@ const FileDetailsController = function(
   /** @type {string} */
   this.currentTab = 'stats';
 
+    this.params;
+
+    this.scope_.$watch('controller.fileContext.selectedFilePath',
+                       this.onFilePathChange_.bind(this));
   this.scope_.$watch('currentTab', this.onDirectiveTabChange_.bind(this));
   this.scope_.$watch('controller.currentTab', this.onControllerTabChange_.bind(this));
 };
@@ -43,6 +47,13 @@ FileDetailsController.prototype.onDirectiveTabChange_ = function(newValue) {
   if (angular.isString(newValue)) {
     this.currentTab = newValue;
   }
+}
+
+FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
+    this.params = {
+        path: this.fileContext.selectedFilePath,
+        client_id: this.fileContext.clientId,
+    };
 };
 
 /**

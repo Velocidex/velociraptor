@@ -3,6 +3,18 @@
 goog.module('grrUi.hunt.huntInspectorDirective');
 goog.module.declareLegacyNamespace();
 
+/** @type {number} */
+let AUTO_REFRESH_INTERVAL_MS = 15 * 1000;
+
+/**
+ * Sets the delay between automatic refreshes.
+ *
+ * @param {number} millis Interval value in milliseconds.
+ * @export
+ */
+exports.setAutoRefreshInterval = function(millis) {
+  AUTO_REFRESH_INTERVAL_MS = millis;
+};
 
 
 /**
@@ -12,7 +24,8 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $scope
  * @ngInject
  */
-const HuntInspectorController = function($scope) {
+const HuntInspectorController = function(
+    $scope, grrApiService, grrRoutingService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
@@ -25,11 +38,60 @@ const HuntInspectorController = function($scope) {
   /** type {Object<string, boolean>} */
   this.tabsShown = {};
 
-  this.scope_.$watchGroup(['huntId', 'activeTab'], this.onDirectiveArgumentsChange_.bind(this));
-  this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
+    this.scope_.$watchGroup(['huntId', 'activeTab'],
+                            this.onDirectiveArgumentsChange_.bind(this));
+
+    this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
+
+  /** @private {!grrUi.core.apiService.ApiService} */
+  this.grrApiService_ = grrApiService;
+
+  /** @private {!grrUi.routing.routingService.RoutingService} */
+  this.grrRoutingService_ = grrRoutingService;
+
+  /** @export {string} */
+  this.huntId;
+
+  /** @export {Object} */
+  this.hunt;
+
+  /** @private {!angular.$q.Promise|undefined} */
+  this.pollPromise_;
+
+  this.scope_.$on('$destroy', function() {
+    this.grrApiService_.cancelPoll(this.pollPromise_);
+  }.bind(this));
+
+  this.scope_.$watch('huntId', this.startPolling_.bind(this));
 };
 
+/**
+ * Fetches hunt data;
+ *
+ * @private
+ */
+HuntInspectorController.prototype.startPolling_ = function() {
+  this.grrApiService_.cancelPoll(this.pollPromise_);
+  this.pollPromise_ = undefined;
 
+  if (angular.isDefined(this.scope_['huntId'])) {
+      // FIXME: Remove the aff4 path from this.
+      var huntId = this.scope_['huntId'];
+      var components = huntId.split("/");
+      this.huntId = components[components.length-1];
+
+    this.pollPromise_ = this.grrApiService_.poll(
+      'v1/GetHunt',
+      AUTO_REFRESH_INTERVAL_MS,
+      {hunt_id: this.huntId});
+    this.pollPromise_.then(
+        undefined,
+        undefined,
+        function notify(response) {
+            this.hunt = response['data'];
+        }.bind(this));
+  }
+};
 
 /**
  * Handles huntId and activeTab scope attribute changes.
@@ -37,16 +99,9 @@ const HuntInspectorController = function($scope) {
  * @private
  */
 HuntInspectorController.prototype.onDirectiveArgumentsChange_ = function() {
-  if (angular.isString(this.scope_['activeTab'])) {
-    this.activeTab = this.scope_['activeTab'];
-  }
-
-  // Doing this asynchronously so that ng-if clause in the template gets
-  // triggered. This ensures that new hunt information gets properly
-  // rerendered.
-  this.scope_.$evalAsync(function() {
-    this.shownHuntId = this.scope_['huntId'];
-  }.bind(this));
+    if (angular.isString(this.scope_['activeTab'])) {
+        this.activeTab = this.scope_['activeTab'];
+    }
 };
 
 /**
@@ -57,10 +112,10 @@ HuntInspectorController.prototype.onDirectiveArgumentsChange_ = function() {
  * @private
  */
 HuntInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
-  if (newValue !== oldValue) {
-    this.scope_['activeTab'] = newValue;
-  }
-  this.tabsShown[newValue] = true;
+    if (newValue !== oldValue) {
+        this.scope_['activeTab'] = newValue;
+    }
+    this.tabsShown[newValue] = true;
 };
 
 

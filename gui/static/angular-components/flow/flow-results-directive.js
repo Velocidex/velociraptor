@@ -30,13 +30,16 @@ const FlowResultsController = function($scope) {
   /** @type {?string} */
   this.downloadFilesUrl;
 
+    this.queryParams;
+
   /** @type {?string} */
     this.exportCommand;
 
-    this.selectedArtifact;
+    this.flowId;
 
-    this.scope_.$watchGroup(['artifactNames', 'flowId', 'apiBasePath', 'exportBasePath'],
-                          this.onFlowIdOrBasePathChange_.bind(this));
+    this.scope_.$watchGroup(
+        ['flowId', 'controller.selectedArtifact', 'artifactNames'],
+        this.onFlowIdOrBasePathChange_.bind(this));
 };
 
 
@@ -49,33 +52,22 @@ const FlowResultsController = function($scope) {
 FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
     newValues, oldValues) {
 
+   if (angular.isDefined(this.scope_.artifactNames) &&
+        this.scope_.artifactNames.length > 0 &&
+        this.selectedArtifact == null) {
+        this.selectedArtifact = this.scope_.artifactNames[0];
+    }
+
     if (newValues != oldValues) {
-        this.flowResultsUrl = this.outputPluginsMetadataUrl =
-            this.downloadFilesUrl = null;
-
         if (newValues.every(angular.isDefined)) {
-            this.exportedResultsUrl = this.scope_['exportBasePath'] + '/' + this.scope_['flowId'];
-
-            var flowUrl = this.scope_['apiBasePath'] + '/' + this.scope_['flowId'];
-            this.flowResultsUrl = flowUrl + '/results';
-
-            if (angular.isDefined(this.scope_.artifactNames) &&
-                this.scope_.artifactNames.length > 0 &&
-                this.selectedArtifact == null) {
-                this.selectedArtifact = this.scope_.artifactNames[0];
-            }
+            this.queryParams = {
+                path: '/artifacts/Artifact ' + this.selectedArtifact +
+                    '/' + this.scope_.flowId + '.csv',
+                client_id: this.scope_['clientId'],
+            };
         }
     }
 };
-
-FlowResultsController.prototype.getPath = function() {
-    if (angular.isDefined(this.selectedArtifact) &&
-        this.selectedArtifact != null) {
-        return '/artifacts/Artifact ' + this.selectedArtifact +
-            '/' + this.scope_.flowId + '.csv';
-    }
-    return '';
-}
 
 
 /**
@@ -91,8 +83,6 @@ exports.FlowResultsDirective = function() {
         artifactNames: '=',
         flowId: '=',
         clientId: '=',
-        apiBasePath: '=',
-        exportBasePath: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/flow-results.html',

@@ -1,21 +1,21 @@
-<div ng-if="huntId && !controller.hunt">
+<div ng-if="!hunt">
   Loading...
 </div>
 
-<div ng-if="controller.hunt">
+<div ng-if="hunt">
 
   <dl class="dl-horizontal dl-hunt">
 
-    <grr-force-refresh refresh-trigger="controller.hunt">
+    <grr-force-refresh refresh-trigger="hunt">
 
-      <div ng-if="::controller.hunt.internal_error">
+      <div ng-if="::hunt.internal_error">
         <br>
         <dt class="alert-danger danger">Error while Opening</dt>
-        <dd>{$ ::controller.hunt.internal_error $}</dd>
+        <dd>{$ ::hunt.internal_error $}</dd>
         <br><br>
       </div>
 
-      <grr-semantic-value value="::controller.hunt" type="Hunt" />
+      <grr-semantic-value value="::hunt" type="Hunt" />
     </grr-force-refresh>
 
   </dl>

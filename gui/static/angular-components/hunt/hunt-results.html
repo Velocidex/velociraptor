@@ -1,5 +1,15 @@
-<grr-results-collection
-   results-url="controller.resultsUrl"
-   query-params="controller.queryParams"
-   exported-results-url="controller.exportedResultsUrl"
-   ng-if= "controller.resultsUrl"/>
+<div ng-if='controller.artifactNames.length > 0'>
+  <div>
+    <select class="form-control pull-left"
+            ng-options="artifact for artifact in controller.artifactNames"
+            ng-model="controller.selectedArtifact"
+            id="plugin-select">
+    </select>
+  </div>
+
+  <div>
+    <grr-csv-viewer
+      base-url='controller.resultsUrl'
+      params='controller.queryParams' />
+  </div>
+</div>

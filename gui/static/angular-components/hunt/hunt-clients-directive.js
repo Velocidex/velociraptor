@@ -14,36 +14,20 @@ goog.module.declareLegacyNamespace();
  */
 const HuntClientsController = function($scope) {
   /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    this.scope_ = $scope;
 
-  /** @export {string} */
-  this.huntClientsUrl;
+    this.params;
 
-  /** @export {string} */
-  this.clientType = 'COMPLETED';
-  this.huntClientsParams = {};
+    this.scope_.$watchGroup(['huntId'],
+                            this.onContextChange_.bind(this));
 
-  this.scope_.$watchGroup(['huntId', 'controller.clientType'],
-                          this.onHuntIdOrClientTypeChange_.bind(this));
 };
 
 
-
-/**
- * Handles huntId attribute changes.
- *
- * @private
- */
-HuntClientsController.prototype.onHuntIdOrClientTypeChange_ = function() {
-  var huntId = this.scope_['huntId'];
-
-  if (!angular.isString(huntId) ||
-      !angular.isString(this.clientType)) {
-    return;
-  }
-
-  this.huntClientsParams = {'hunt_id': huntId, 'type': this.clientType};
-  this.huntClientsUrl = 'v1/ListHuntClients';
+HuntClientsController.prototype.onContextChange_ = function(newValues, oldValues) {
+    if (newValues != oldValues || this.pageData == null) {
+        this.params = {path: "hunts/" + this.scope_.huntId + ".csv"};
+    }
 };
 
 

@@ -9,16 +9,17 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FileFinder struct {
-	*VQLCollector
+	*ArtifactCollector
 }
 
 func (self *FileFinder) New() Flow {
-	return &FileFinder{&VQLCollector{}}
+	return &FileFinder{&ArtifactCollector{&VQLCollector{}}}
 }
 
 func (self *FileFinder) Start(
@@ -35,6 +36,10 @@ func (self *FileFinder) Start(
 	if err != nil {
 		return err
 	}
+
+	// Update the flow's artifacts list.
+	flow_obj.FlowContext.Artifacts = []string{constants.FileFinderArtifactName}
+	flow_obj.SetContext(flow_obj.FlowContext)
 
 	flow_obj.Log(fmt.Sprintf("Compiled VQL request: %s",
 		proto.MarshalTextString(vql_request)))
@@ -135,7 +140,7 @@ func (self *file_finder_builder) Build() (*actions_proto.VQLCollectorArgs, error
 	// Default is stat action.
 	self.result.Query = append(self.result.Query, &actions_proto.VQLRequest{
 		VQL:  "SELECT * from files",
-		Name: "File Finder Response",
+		Name: "Artifact " + constants.FileFinderArtifactName,
 	})
 
 	return &self.result, nil
@@ -202,7 +207,11 @@ func (self *file_finder_builder) compileGrepQuery(
 	conditions []*flows_proto.FileFinderCondition) (string, error) {
 
 	if len(conditions) == 0 {
-		return fmt.Sprintf("SELECT * FROM %s", source), nil
+		result := fmt.Sprintf("SELECT %s, null as GrepHit FROM %s",
+			strings.Join(self.columns, " , "), source)
+
+		self.columns = append(self.columns, "GrepHit")
+		return result, nil
 	}
 
 	kw_vars := []string{}
@@ -228,8 +237,6 @@ func (self *file_finder_builder) compileGrepQuery(
 	fields = append(fields, fmt.Sprintf(
 		"grep(keywords=[%s], path=FullPath) as GrepHit",
 		strings.Join(kw_vars, " , ")))
-
-	self.columns = append(self.columns, "GrepHit")
 
 	return fmt.Sprintf("SELECT %s from %s WHERE GrepHit ",
 		strings.Join(fields, " , "), source), nil

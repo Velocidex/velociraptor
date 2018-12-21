@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"path"
 	"strings"
 	"sync"
 	"time"
@@ -374,6 +375,19 @@ func GetNewHuntId() string {
 	return urns.BuildURN("hunts", constants.HUNT_PREFIX+string(result))
 }
 
+func FindCollectedArtifacts(hunt *api_proto.Hunt) {
+	switch hunt.StartRequest.FlowName {
+	case "ArtifactCollector":
+		flow_args := &flows_proto.ArtifactCollectorArgs{}
+		err := ptypes.UnmarshalAny(hunt.StartRequest.Args, flow_args)
+		if err == nil {
+			hunt.Artifacts = flow_args.Artifacts.Names
+		}
+	case "FileFinder":
+		hunt.Artifacts = []string{constants.FileFinderArtifactName}
+	}
+}
+
 func CreateHunt(config_obj *api_proto.Config, hunt *api_proto.Hunt) (*string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -446,7 +460,15 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 	}
 
 	for _, hunt := range dispatcher.GetApplicableHunts(0) {
-		if hunt.HuntId == in.HuntId {
+		if path.Base(hunt.HuntId) == in.HuntId {
+			// HACK: Velociraptor only knows how to
+			// collect artifacts now. Eventually the whole
+			// concept of a flow will go away but for now
+			// we need to figure out which artifacts we
+			// are actually collecting - there are not
+			// many possibilities since we have reduced
+			// the number of possible flows significantly.
+			FindCollectedArtifacts(hunt)
 			return hunt, nil
 		}
 	}

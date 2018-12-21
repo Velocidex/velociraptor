@@ -14,6 +14,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -49,48 +51,52 @@ func NewWriter(w io.Writer) *Writer {
 	}
 }
 
+func AnyToString(item vfilter.Any) string {
+	value := ""
+
+	switch t := item.(type) {
+	case float64, float32:
+		value = fmt.Sprintf("%f", item)
+
+	case int, int16, int32, int64, uint16, uint32, uint64, bool:
+		value = fmt.Sprintf("%v", item)
+
+	case []byte:
+		value = "base64:" + base64.StdEncoding.EncodeToString(t)
+
+	case string:
+		// If the string looks like a number we encode
+		// it as a json object. This will ensure that
+		// the reader does not get confused between
+		// strings which look like a number and
+		// numbers.
+		if number_regex.MatchString(t) ||
+			protected_prefix.MatchString(t) {
+			value = " " + t
+		} else {
+			value = t
+		}
+
+	default:
+		serialized, err := json.MarshalIndent(item, "", " ")
+		if err != nil {
+			return ""
+		}
+
+		if len(serialized) > 0 && (serialized[0] == '{' ||
+			serialized[0] == '[') {
+			value = string(serialized)
+		}
+	}
+
+	return value
+}
+
 func (w *Writer) WriteAny(record []interface{}) error {
 	row := []string{}
 
 	for _, item := range record {
-		value := ""
-
-		switch t := item.(type) {
-		case float64, float32:
-			value = fmt.Sprintf("%f", item)
-
-		case int, int16, int32, int64, uint16, uint32, uint64, bool:
-			value = fmt.Sprintf("%v", item)
-
-		case []byte:
-			value = "base64:" + base64.StdEncoding.EncodeToString(t)
-
-		case string:
-			// If the string looks like a number we encode
-			// it as a json object. This will ensure that
-			// the reader does not get confused between
-			// strings which look like a number and
-			// numbers.
-			if number_regex.MatchString(t) ||
-				protected_prefix.MatchString(t) {
-				value = " " + t
-			} else {
-				value = t
-			}
-
-		default:
-			serialized, err := json.MarshalIndent(item, "", " ")
-			if err != nil {
-				return err
-			}
-
-			if len(serialized) > 0 && (serialized[0] == '{' ||
-				serialized[0] == '[') {
-				value = string(serialized)
-			}
-		}
-
-		row = append(row, value)
+		row = append(row, AnyToString(item))
 	}
 
 	return w.Write(row)

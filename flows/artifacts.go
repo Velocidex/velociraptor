@@ -47,6 +47,10 @@ func (self *ArtifactCollector) Start(
 		return err
 	}
 
+	// Update the flow's artifacts list.
+	flow_obj.FlowContext.Artifacts = collector_args.Artifacts.Names
+	flow_obj.SetContext(flow_obj.FlowContext)
+
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
 	for _, name := range collector_args.Artifacts.Names {
 		artifact, pres := repository.Get(name)

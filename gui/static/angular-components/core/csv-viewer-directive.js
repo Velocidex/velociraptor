@@ -4,6 +4,10 @@ goog.module('grrUi.core.csvViewerDirective');
 goog.module.declareLegacyNamespace();
 
 
+// Angular is too slow to work with more rows.
+var MAX_ROWS_PER_TABLE = 500;
+
+
 /**
  * Controller for CSVViewerDirective.
  *
@@ -14,29 +18,31 @@ goog.module.declareLegacyNamespace();
  */
 const CsvViewerDirective = function(
     $scope, grrApiService, DTOptionsBuilder, DTColumnBuilder) {
-  /** @private {!angular.Scope} */
+
+    /** @private {!angular.Scope} */
     this.scope_ = $scope;
 
     this.DTOptionsBuilder = DTOptionsBuilder;
     this.DTColumnBuilder = DTColumnBuilder;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @type {?string} */
-  this.pageData;
+    this.baseUrl;
+    this.params;
+
+    /** @type {?string} */
+    this.pageData;
 
     this.options = {
         "pagingType": "full_numbers"
     };
 
-  this.scope_.$watchGroup(['vfsPath', 'clientId'],
-                          this.onContextChange_.bind(this));
+    this.scope_.$watchGroup(['baseUrl', 'params'],
+                            this.onContextChange_.bind(this));
 
     this.dtInstance = {};
 };
-
-
 
 /**
  * Handles changes to the clientId and filePath.
@@ -45,9 +51,6 @@ const CsvViewerDirective = function(
  */
 CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
     if (newValues != oldValues || this.pageData == null) {
-        this.scope_.vfsPath = newValues[0];
-        this.scope_.clientId = newValues[1];
-
         this.fetchText_();
     }
 };
@@ -58,14 +61,11 @@ CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
  * @private
  */
 CsvViewerDirective.prototype.fetchText_ = function() {
-    if (this.scope_.vfsPath) {
-        var url = 'v1/GetTable';
-        var params = {
-            start_row: 0,
-            rows: this.chunkSize_,
-            path: this.scope_.vfsPath,
-            client_id: this.scope_.clientId,
-        };
+    if (this.scope_.baseUrl && this.scope_.params) {
+        var url = this.scope_.baseUrl;
+        var params = this.scope_.params;
+        params['start_row'] = 0;
+        params['rows'] = MAX_ROWS_PER_TABLE;
 
         var self = this;
         if (angular.isDefined(this.dtInstance.DataTable)) {
@@ -76,7 +76,6 @@ CsvViewerDirective.prototype.fetchText_ = function() {
             }
         }
         this.pageData = null;
-
         this.grrApiService_.get(url, params).then(function(response) {
             self.pageData = response.data;
         }.bind(this), function() {
@@ -94,8 +93,8 @@ CsvViewerDirective.prototype.fetchText_ = function() {
 exports.CsvViewerDirective = function() {
   return {
       scope: {
-          clientId: '=',
-          vfsPath: '=',
+          baseUrl: '=',
+          params: '=',
       },
       restrict: 'E',
       templateUrl: '/static/angular-components/core/csv-viewer.html',

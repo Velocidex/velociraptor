@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type ApiServer struct {
@@ -109,22 +110,28 @@ func (self *ApiServer) GetHunt(
 
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
-	in *api_proto.GetHuntResultsRequest) (*api_proto.ApiFlowResultDetails, error) {
-	result, err := flows.GetHuntResults(self.config, in)
+	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
+	env := vfilter.NewDict().
+		Set("HuntID", in.HuntId).
+		Set("Artifact", in.Artifact)
+
+	// More than 100 results are not very useful in the GUI -
+	// users should just download the csv file for post
+	// processing.
+	result, err := RunVQL(ctx, self.config, env,
+		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
+			"artifact=Artifact) LIMIT 100")
 	if err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
 func (self *ApiServer) ListHuntClients(
 	ctx context.Context,
-	in *api_proto.ListHuntClientsRequest) (*api_proto.HuntResults, error) {
-	result, err := flows.ListHuntClients(self.config, in)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	in *api_proto.ListHuntClientsRequest) (*api_proto.GetTableResponse, error) {
+	return &api_proto.GetTableResponse{}, nil
 }
 
 func (self *ApiServer) ListClients(
