@@ -42,7 +42,11 @@ const SemanticProtoUnionFormController = function(
 
 SemanticProtoUnionFormController.prototype.onUnionFieldChange_ = function(
   newValue, oldValue) {
-  var value = this.scope_.value;
+    if (newValue == oldValue) {
+        return;
+    }
+
+    var value = this.scope_.value;
 
   if (angular.isUndefined(newValue)) {
     return;

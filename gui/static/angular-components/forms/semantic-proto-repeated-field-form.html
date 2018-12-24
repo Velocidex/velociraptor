@@ -16,12 +16,12 @@
     </div>
   </div>
 
-  <div ng-repeat="item in controller.scope_.value track by $index">
+  <div ng-repeat="item in value track by $id(item)">
     <button type="button" class="control-label close" name="Remove"
             ng-click="controller.removeItem($index)">&times;</button>
     <div class="controls">
       <div class="form-group">
-        <grr-form-value value="controller.scope_.value[$index]"
+        <grr-form-value value="value[$index]"
                         default="field.default"
                         type="{$ field.type $}"
                         ></grr-form-value>

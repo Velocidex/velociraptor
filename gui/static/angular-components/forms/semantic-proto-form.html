@@ -2,7 +2,7 @@
   semantic-proto-form.html {{value}}
 </div>
 <div ng-if="controller.valueDescriptor.oneof">
-  <grr-form-proto-union value="controller.scope_.value"
+  <grr-form-proto-union value="value"
                         field="controller.valueDescriptor"/>
 </div>
 
@@ -17,13 +17,13 @@
     <div ng-repeat="field in controller.valueDescriptor.fields |
                     filter:controller.regularFieldsOnly |
                     filter:controller.boundNotExplicitlyHiddenFields">
-      <grr-form-proto-single-field value="controller.scope_.value[field.name]"
+      <grr-form-proto-single-field value="value[field.name]"
                                    type="{$ field.type $}"
                                    field="field"
                                    ng-if="!field.repeated">
       </grr-form-proto-single-field>
 
-      <grr-form-proto-repeated-field value="controller.scope_.value[field.name]"
+      <grr-form-proto-repeated-field value="value[field.name]"
                                      type="{$ field.type $}"
                                      field="field"
                                      ng-if="field.repeated">
@@ -48,12 +48,12 @@
         <div ng-repeat="field in controller.valueDescriptor.fields |
                         filter:controller.advancedFieldsOnly |
                         filter:controller.boundNotExplicitlyHiddenFields">
-          <grr-form-proto-single-field value="controller.scope_.value[field.name]"
+          <grr-form-proto-single-field value="value[field.name]"
                                        field="field"
                                        ng-if="!field.repeated">
           </grr-form-proto-single-field>
 
-          <grr-form-proto-repeated-field value="controller.scope_.value[field.name]"
+          <grr-form-proto-repeated-field value="value[field.name]"
                                          descriptor="controller.descriptors[field.type]"
                                          field="field"
                                          ng-if="field.repeated">
