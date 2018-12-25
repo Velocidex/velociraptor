@@ -4,25 +4,12 @@ package glob
 
 import (
 	"context"
-	"io"
-	"os"
 	"regexp"
 	"strings"
 
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
-
-type DataReadSeekCloser struct {
-	io.ReadSeeker
-}
-
-func (self DataReadSeekCloser) Close() error {
-	return nil
-}
-
-func (self DataReadSeekCloser) Stat() (os.FileInfo, error) {
-	return nil, errors.New("Not implemented")
-}
 
 type DataFilesystemAccessor struct{}
 
@@ -39,7 +26,7 @@ func (self DataFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 }
 
 func (self DataFilesystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	return DataReadSeekCloser{strings.NewReader(path)}, nil
+	return utils.DataReadSeekCloser{strings.NewReader(path)}, nil
 }
 
 func (self DataFilesystemAccessor) PathSplit() *regexp.Regexp {

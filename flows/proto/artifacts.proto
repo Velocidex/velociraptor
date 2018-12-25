@@ -15,10 +15,11 @@ message Artifacts {
 message ArtifactCollectorArgs {
     Artifacts artifacts = 1 [(sem_type) = {
             description: "The artifacts to launch.",
-            friendly_name: "Artifacts To Launch",
+            friendly_name: "Launch",
         }];
 
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
+            friendly_name: "Params",
         }];
 }

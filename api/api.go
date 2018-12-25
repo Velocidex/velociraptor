@@ -359,6 +359,36 @@ func (self *ApiServer) GetArtifacts(
 	return result, nil
 }
 
+func (self *ApiServer) GetArtifactFile(
+	ctx context.Context,
+	in *api_proto.GetArtifactRequest) (
+	*api_proto.GetArtifactResponse, error) {
+
+	artifact, err := getArtifactFile(self.config, in.VfsPath)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &api_proto.GetArtifactResponse{
+		Artifact: artifact,
+	}
+	return result, nil
+}
+
+func (self *ApiServer) SetArtifactFile(
+	ctx context.Context,
+	in *api_proto.SetArtifactRequest) (
+	*api_proto.SetArtifactResponse, error) {
+	err := setArtifactFile(self.config, in.VfsPath, in.Artifact)
+	if err != nil {
+		return &api_proto.SetArtifactResponse{
+			Error:        true,
+			ErrorMessage: fmt.Sprintf("%v", err),
+		}, nil
+	}
+	return &api_proto.SetArtifactResponse{}, nil
+}
+
 func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
 	bind_addr := fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
 		config_obj.API.BindPort)

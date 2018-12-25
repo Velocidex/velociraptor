@@ -4,6 +4,7 @@ package api
 
 import (
 	"archive/zip"
+	"errors"
 	"io"
 	"net/http"
 	"path"
@@ -13,10 +14,13 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -255,6 +259,58 @@ type vfsFileDownloadRequest struct {
 	Encoding string `schema:"encoding"`
 }
 
+func openBuiltInArtifact(config_obj *api_proto.Config, vfs_path string) (
+	file_store.ReadSeekCloser, error) {
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	artifact_path := path.Join("/", strings.TrimPrefix(
+		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
+
+	for _, artifact_obj := range repository.Data {
+		if artifact_obj.Path == artifact_path {
+			return utils.DataReadSeekCloser{
+				strings.NewReader(artifact_obj.Raw),
+			}, nil
+		}
+	}
+
+	return nil, errors.New("not found")
+
+}
+
+func getFileForVFSPath(
+	config_obj *api_proto.Config,
+	client_id string,
+	vfs_path string) (
+	file_store.ReadSeekCloser, error) {
+	vfs_path = path.Clean(vfs_path)
+	if strings.HasPrefix(vfs_path,
+		constants.BUILTIN_ARTIFACT_DEFINITION) {
+		return openBuiltInArtifact(config_obj, vfs_path)
+
+	} else if strings.HasPrefix(vfs_path, "/monitoring/") ||
+		strings.HasPrefix(vfs_path, "/artifacts/") {
+		vfs_path = path.Join(
+			"clients", client_id, vfs_path)
+
+		// These VFS directories are mapped directly
+		// to the root of the filestore.
+	} else if strings.HasPrefix(
+		vfs_path, constants.ARTIFACT_DEFINITION) ||
+		strings.HasPrefix(vfs_path, "/exported_files/") {
+
+	} else {
+		vfs_path = path.Join(
+			"clients", client_id,
+			"vfs_files", vfs_path)
+	}
+
+	return file_store.GetFileStore(config_obj).ReadFile(vfs_path)
+}
+
 // URL format: /api/v1/DownloadVFSFile
 func vfsFileDownloadHandler(
 	config_obj *api_proto.Config) http.Handler {
@@ -267,17 +323,8 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		vfs_path := path.Clean(request.VfsPath)
-		if strings.HasPrefix(vfs_path, "/monitoring/") ||
-			strings.HasPrefix(vfs_path, "/artifacts/") {
-			vfs_path = path.Join(
-				"clients", request.ClientId, vfs_path)
-		} else {
-			vfs_path = path.Join(
-				"clients", request.ClientId, "vfs_files", vfs_path)
-		}
-
-		file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
+		file, err := getFileForVFSPath(
+			config_obj, request.ClientId, request.VfsPath)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -293,8 +340,10 @@ func vfsFileDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		filename := strings.Replace(path.Dir(vfs_path), "\"", "_", -1)
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+		filename := strings.Replace(path.Dir(request.VfsPath),
+			"\"", "_", -1)
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+
+			filename+"\"")
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 

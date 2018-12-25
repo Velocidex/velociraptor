@@ -672,7 +672,12 @@ dd.histogram {
 
 .toolbar_icon,
 .toolbar-icon {
-  height: 20px;
+    height: 20px;
+    vertical-align: middle;
+}
+
+.toolbar_icon span {
+   vertical-align: middle;
 }
 
 .no-margin {
@@ -983,4 +988,11 @@ table.grr_flot_graph {
   -webkit-transform: translate(0, 0);
   -ms-transform: translate(0, 0);
   transform: translate(0, 0);
+}
+
+
+.ace_editor {
+    min-height: 400px;
+    min-width: 600px;
+    max-height: 80%;
 }

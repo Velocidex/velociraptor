@@ -3,6 +3,7 @@
 goog.module('grrUi.client.virtualFileSystem.virtualFileSystem');
 goog.module.declareLegacyNamespace();
 
+const {AddItemButtonDirective} = goog.require('grrUi.client.virtualFileSystem.addItemButtonDirective');
 const {BreadcrumbsDirective} = goog.require('grrUi.client.virtualFileSystem.breadcrumbsDirective');
 const {FileContextDirective} = goog.require('grrUi.client.virtualFileSystem.fileContextDirective');
 const {FileDetailsDirective} = goog.require('grrUi.client.virtualFileSystem.fileDetailsDirective');
@@ -25,8 +26,11 @@ const {semanticModule} = goog.require('grrUi.semantic.semantic');
  * Angular module for clients-related UI.
  */
 exports.virtualFileSystemModule = angular.module(
-    'grrUi.client.virtualFileSystem', [coreModule.name, semanticModule.name]);
+    'grrUi.client.virtualFileSystem',
+    [coreModule.name, semanticModule.name, 'ui.ace']);
 
+exports.virtualFileSystemModule.directive(
+    AddItemButtonDirective.directive_name, AddItemButtonDirective);
 exports.virtualFileSystemModule.directive(
     BreadcrumbsDirective.directive_name, BreadcrumbsDirective);
 exports.virtualFileSystemModule.directive(

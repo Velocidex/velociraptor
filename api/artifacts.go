@@ -1,0 +1,166 @@
+package api
+
+import (
+	"encoding/json"
+	"errors"
+	"path"
+	"strings"
+
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+const (
+	default_artifact = `name: Artifact.Name.In.Category
+description: |
+   This is the human readable description of the artifact.
+
+parameters:
+   - name: FirstParameter
+     default: Default Value of first parameter
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    queries:
+    - |
+      SELECT * FROM scope()
+`
+)
+
+func getArtifactFile(
+	config_obj *api_proto.Config,
+	vfs_path string) (string, error) {
+
+	vfs_path = path.Clean(vfs_path)
+	if vfs_path == "" || !strings.HasSuffix(vfs_path, ".yaml") {
+		return default_artifact, nil
+	}
+
+	fd, err := getFileForVFSPath(config_obj, "", vfs_path)
+	if err == nil {
+		defer fd.Close()
+
+		artifact := make([]byte, 1024*10)
+		n, err := fd.Read(artifact)
+		if err == nil {
+			return string(artifact[:n]), nil
+		}
+		return "", err
+	}
+
+	return default_artifact, nil
+}
+
+func setArtifactFile(config_obj *api_proto.Config,
+	vfs_path string, artifact string) error {
+
+	vfs_path = path.Clean(vfs_path)
+	if vfs_path == "" || !strings.HasSuffix(vfs_path, ".yaml") {
+		return errors.New("Artifact filename must end with .yaml")
+	}
+
+	if !strings.HasPrefix(vfs_path, constants.ARTIFACT_DEFINITION) {
+		return errors.New("Artifacts may only be stored in " +
+			constants.ARTIFACT_DEFINITION)
+	}
+
+	// First ensure that the artifact is correct.
+	tmp_repository := artifacts.NewRepository()
+	artifact_obj, err := tmp_repository.LoadYaml(artifact)
+	if err != nil {
+		return err
+	}
+	artifact_obj.Path = strings.TrimPrefix(
+		vfs_path, constants.ARTIFACT_DEFINITION)
+
+	// Now write it into the filestore.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.WriteFile(vfs_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	_, err = fd.Write([]byte(artifact))
+	return err
+}
+
+func renderBuiltinArtifacts(
+	config_obj *api_proto.Config,
+	vfs_path string) (*actions_proto.VQLResponse, error) {
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	directories := []string{}
+	artifacts := []*artifacts_proto.Artifact{}
+	artifact_path := path.Join("/", strings.TrimPrefix(
+		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
+
+	for _, artifact_obj := range repository.Data {
+		if !strings.HasPrefix(artifact_obj.Path, artifact_path) {
+			continue
+		}
+
+		components := []string{}
+		for _, item := range strings.Split(
+			strings.TrimPrefix(artifact_obj.Path, artifact_path),
+			"/") {
+			if item != "" {
+				components = append(components, item)
+			}
+		}
+
+		if len(components) > 1 && !utils.InString(&directories, components[0]) {
+			directories = append(directories, components[0])
+		} else if len(components) == 1 {
+			artifacts = append(artifacts, artifact_obj)
+		}
+	}
+
+	var rows []*FileInfoRow
+	for _, dirname := range directories {
+		rows = append(rows, &FileInfoRow{
+			Name: dirname,
+			Mode: "dr-xr-xr-x",
+		})
+	}
+
+	for _, artifact_obj := range artifacts {
+		rows = append(rows, &FileInfoRow{
+			Name: path.Base(artifact_obj.Path),
+			Mode: "-r--r--r--",
+			Size: int64(len(artifact_obj.Raw)),
+			Download: &DownloadInfo{
+				VfsPath: path.Join(
+					vfs_path, path.Base(artifact_obj.Path)),
+				Size: int64(len(artifact_obj.Raw)),
+			},
+		})
+	}
+
+	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	if err != nil {
+		return nil, err
+	}
+
+	return &actions_proto.VQLResponse{
+		Columns: []string{
+			"Download", "Name", "Size", "Mode", "Timestamp",
+		},
+		Response: string(encoded_rows),
+		Types: []*actions_proto.VQLTypeMap{
+			&actions_proto.VQLTypeMap{
+				Column: "Download",
+				Type:   "Download",
+			},
+		},
+	}, nil
+}

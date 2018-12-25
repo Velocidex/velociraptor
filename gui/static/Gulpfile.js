@@ -46,7 +46,6 @@ const closureCompilerFlags = {
     'visibility',
   ],
   language_out: 'ECMASCRIPT6_STRICT',
-  language_out: 'ECMASCRIPT5_STRICT',
   // See https://github.com/google/closure-compiler/issues/1138 for details.
   force_inject_library: [
     'base',
@@ -76,13 +75,16 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/angular-ui-router/release/angular-ui-router.js',
                    config.nodeModulesDir + '/datatables/media/js/jquery.dataTables.js',
                    config.nodeModulesDir + '/angular-datatables/dist/angular-datatables.js',
-
+                   config.nodeModulesDir + '/angular-ui-ace/src/ui-ace.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/ace.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/ext-language_tools.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/theme-twilight.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/mode-yaml.js',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/highlightjs/highlight.pack.js',
                    config.nodeModulesDir + '/marked/lib/marked.js',
-
                    'third-party/jquery.splitter.js'])
       .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
       .pipe(gulpConcat('third-party.bundle.js'))

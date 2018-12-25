@@ -67,56 +67,7 @@ exports.routingModule
               }
             }
           })
-          .state('apiDocs', {
-            url: '/api-docs',
-            template: '<grr-api-docs />',
-            title: 'API Docs'
-          })
 
-          //
-          // Approvals states.
-          //
-          .state('clientApproval', {
-            url: '/users/:username/approvals/client/:clientId/:approvalId',
-            template: '<grr-client-approval-view />',
-            title: function(params) {
-              return ['Approvals', params['username'], params['clientId']];
-            }
-          })
-          .state('huntApproval', {
-            url: '/users/:username/approvals/hunt/:huntId/:approvalId',
-            template: '<grr-hunt-approval-view />',
-            title: function(params) {
-              return ['Approvals', params['username'], params['huntId']];
-            }
-          })
-          .state('cronJobApproval', {
-            url: '/users/:username/approvals/cron-job/:cronJobId/:approvalId',
-            template: '<grr-cron-job-approval-view />',
-            title: function(params) {
-              return ['Approvals', params['username'], params['cronJobId']];
-            }
-          })
-
-          //
-          // Management states.
-          //
-
-          .state('crons', {
-            url: '/crons/:cronJobId/:tab',
-            template: '<grr-cron-view />',
-            params: {
-              cronJobId: {value: null, squash: true},
-              tab: {value: null, squash: true}
-            },
-            title: function(params) {
-              if (params['cronJobId']) {
-                return ['Cron Jobs', params['cronJobId']];
-              } else {
-                return 'Cron Jobs';
-              }
-            }
-          })
           .state('hunts', {
             url: '/hunts/:huntId/:tab',
             template: '<grr-hunts-view />',
@@ -131,35 +82,6 @@ exports.routingModule
                 return 'Hunts';
               }
             }
-          })
-          .state('stats', {
-            url: '/stats/:name/:client_label?start_time&duration',
-            template: '<grr-stats-view />',
-            params: {
-              name: {value: null, squash: true},
-              client_label: {value: null, squash: true}
-            },
-            title: 'Stats'
-          })
-          .state('serverLoad', {
-            url: '/server-load',
-            template: '<grr-server-load />',
-            title: 'Server Load'
-          })
-
-          //
-          // Configuration states.
-          //
-
-          .state('manageBinaries', {
-            url: '/manage-binaries',
-            template: '<grr-config-binaries-view />',
-            title: 'Manage Binaries'
-          })
-          .state('config', {
-            url: '/config',
-            template: '<grr-config-view />',
-            title: 'Configuration'
           })
           .state('artifacts', {
             url: '/artifacts',
@@ -188,6 +110,11 @@ exports.routingModule
             url: '/launch-flow',
             template: '<grr-start-flow-view />',
             title: 'Launch Flows'
+          })
+          .state('client.collectArtifacts', {
+            url: '/artifact-collector',
+            template: '<grr-artifact-collector />',
+            title: 'Collect Artifacts'
           })
           .state('client.vfs', {
             url: '/vfs/{path:pathWithUnescapedSlashes}?version&mode&tab',

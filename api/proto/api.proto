@@ -9,6 +9,7 @@ import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 // Files within the same directory must be imported relatively.
+import "artifacts.proto";
 import "clients.proto";
 import "hunts.proto";
 import "flows.proto";
@@ -262,4 +263,18 @@ service API {
             get: "/api/v1/GetArtifacts",
         };
     }
+
+    rpc GetArtifactFile(GetArtifactRequest) returns (GetArtifactResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetArtifactFile",
+        };
+    }
+
+    rpc SetArtifactFile(SetArtifactRequest) returns (SetArtifactResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/SetArtifactFile",
+            body: "*",
+        };
+    }
+
 }

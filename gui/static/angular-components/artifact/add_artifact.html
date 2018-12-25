@@ -1,0 +1,36 @@
+<div class="card ace_editor">
+  <div class="card-body">
+    <h4 class="card-title">Add/Modify an artifact</h4>
+    <form>
+      <div class="form-group">
+        <input type="text" class="form-control"
+               ng-model="controller.path"
+               placeholder="Path to the artifact.">
+      </div>
+
+      <div ui-ace="{
+                   useWrapMode : true,
+                   showGutter: true,
+                   theme:'twilight',
+                   mode: 'yaml',
+                   enableBasicAutocompletion: true,
+                   enableSnippets: true,
+                   enableLiveAutocompletion: true,
+                   rendererOptions: {
+                     fontSize: '14px',
+                     fontFamily: 'monospace',
+                   },
+                   }"
+           ng-model="controller.value"
+           ></div>
+    </form>
+
+    <a href="#!" class="btn btn-primary btn-block"
+       ng-click="controller.saveArtifact()"
+       role="button">Save Artifact</a>
+
+    <div ng-if="controller.error" class="proto_error">
+      {$ controller.error $}
+    </div>
+  </div>
+</div>

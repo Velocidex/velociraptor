@@ -14,11 +14,13 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -31,6 +33,14 @@ type DownloadInfo struct {
 	Mtime   int64  `json:"mtime"`
 }
 
+type FileInfoRow struct {
+	Name      string        `json:"Name"`
+	Size      int64         `json:"Size"`
+	Timestamp time.Time     `json:"Timestamp"`
+	Mode      string        `json:"Mode"`
+	Download  *DownloadInfo `json:"Download"`
+}
+
 // Render the root level psuedo directory. This provides anchor points
 // for the other drivers in the navigation.
 func renderRootVFS() *actions_proto.VQLResponse {
@@ -41,7 +51,9 @@ func renderRootVFS() *actions_proto.VQLResponse {
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"},
     {"Mode": "drwxrwxrwx", "Name": "artifacts"},
-    {"Mode": "drwxrwxrwx", "Name": "monitoring"}
+    {"Mode": "drwxrwxrwx", "Name": "monitoring"},
+    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"},
+    {"Mode": "drwxrwxrwx", "Name": "exported_files"}
    ]`,
 	}
 }
@@ -85,7 +97,7 @@ func renderDBVFS(
 			lookup[file.Name()] = file
 		}
 
-		var rows []map[string]interface{}
+		var rows []FileInfoRow
 		err := json.Unmarshal([]byte(result.Response), &rows)
 		if err != nil {
 			return nil, err
@@ -94,23 +106,13 @@ func renderDBVFS(
 		// If the row refers to a downloaded file, we mark it
 		// with the download details.
 		for _, row := range rows {
-			filename, pres := row["Name"]
+			file, pres := lookup[row.Name]
 			if !pres {
 				continue
 			}
 
-			filename_str, ok := filename.(string)
-			if !ok {
-				continue
-			}
-
-			file, pres := lookup[filename_str]
-			if !pres {
-				continue
-			}
-
-			row["Download"] = &DownloadInfo{
-				VfsPath: path.Join(vfs_path, filename_str),
+			row.Download = &DownloadInfo{
+				VfsPath: path.Join(vfs_path, row.Name),
 				Size:    file.Size(),
 				Mtime:   file.ModTime().UnixNano() / 1000,
 			}
@@ -136,11 +138,11 @@ func renderDBVFS(
 // Render VFS nodes from the filestore.
 func renderFileStore(
 	config_obj *api_proto.Config,
-	client_id string,
+	prefix string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
-	var rows []map[string]interface{}
+	var rows []FileInfoRow
 
-	filestore_urn := path.Join("clients", client_id, vfs_path)
+	filestore_urn := path.Join(prefix, vfs_path)
 	items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
 	if err != nil {
@@ -148,17 +150,17 @@ func renderFileStore(
 	}
 
 	for _, item := range items {
-		row := map[string]interface{}{
-			"Name":      item.Name(),
-			"Size":      item.Size(),
-			"Timestamp": item.ModTime().String(),
+		row := FileInfoRow{
+			Name:      item.Name(),
+			Size:      item.Size(),
+			Timestamp: item.ModTime(),
 		}
 
 		if item.IsDir() {
-			row["Mode"] = "dr-xr-xr-x"
+			row.Mode = "dr-xr-xr-x"
 		} else {
-			row["Mode"] = "-r--r--r--"
-			row["Download"] = &DownloadInfo{
+			row.Mode = "-r--r--r--"
+			row.Download = &DownloadInfo{
 				VfsPath: path.Join(vfs_path, item.Name()),
 				Size:    item.Size(),
 				Mtime:   item.ModTime().UnixNano() / 1000,
@@ -167,7 +169,6 @@ func renderFileStore(
 
 		rows = append(rows, row)
 	}
-
 	encoded_rows, err := json.MarshalIndent(rows, "", " ")
 	if err != nil {
 		return nil, err
@@ -189,6 +190,35 @@ func renderFileStore(
 	return result, nil
 }
 
+// We export some paths from the file_store into the VFS. This
+// function maps from the browser's vfs view into the file_store
+// prefix. If this function returns ok, then the full filestore path
+// can be obtained by joining the prefix with the vfs_path provided.
+func getVFSPathPrefix(vfs_path string, client_id string) (prefix string, ok bool) {
+	if strings.HasPrefix(vfs_path, "/monitoring") ||
+		strings.HasPrefix(vfs_path, "/artifacts") {
+		return path.Join("/clients", client_id), true
+	}
+
+	if strings.HasPrefix(vfs_path, "/artifact_definitions") {
+		return "/", true
+	}
+
+	if strings.HasPrefix(vfs_path, "/exported_files") {
+		return "/", true
+	}
+
+	if client_id != "" && strings.HasPrefix(vfs_path, "/clients/"+client_id) {
+		return "/", true
+	}
+
+	if strings.HasPrefix(vfs_path, "/hunts") && client_id == "" {
+		return "/", true
+	}
+
+	return "/", false
+}
+
 func vfsListDirectory(
 	config_obj *api_proto.Config,
 	client_id string,
@@ -199,9 +229,22 @@ func vfsListDirectory(
 		return renderRootVFS(), nil
 	}
 
-	if strings.HasPrefix(vfs_path, "/monitoring") ||
-		strings.HasPrefix(vfs_path, "/artifacts") {
-		return renderFileStore(config_obj, client_id, vfs_path)
+	if vfs_path == "/artifact_definitions" {
+		return &actions_proto.VQLResponse{
+			Response: `
+   [
+    {"Mode": "drwxrwxrwx", "Name": "builtin"},
+    {"Mode": "drwxrwxrwx", "Name": "custom"}
+   ]`,
+		}, nil
+	}
+	if strings.HasPrefix(vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION) {
+		return renderBuiltinArtifacts(config_obj, vfs_path)
+	}
+
+	prefix, ok := getVFSPathPrefix(vfs_path, client_id)
+	if ok {
+		return renderFileStore(config_obj, prefix, vfs_path)
 	}
 
 	return renderDBVFS(config_obj, client_id, vfs_path)

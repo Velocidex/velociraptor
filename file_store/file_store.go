@@ -28,6 +28,7 @@ type FileStore interface {
 	WriteFile(filename string) (WriteSeekCloser, error)
 	StatFile(filename string) (*FileStoreFileInfo, error)
 	ListDirectory(dirname string) ([]os.FileInfo, error)
+	Walk(root string, cb filepath.WalkFunc) error
 }
 
 type FileStoreFileInfo struct {
@@ -124,6 +125,42 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 	}
 
 	return filepath.Join(components...), nil
+}
+
+func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
+	string, error) {
+	if self.config_obj.Datastore.FilestoreDirectory == "" {
+		return "", errors.New("No configured file store directory.")
+	}
+
+	if !strings.HasPrefix(filename, self.config_obj.Datastore.FilestoreDirectory) {
+		return "", errors.New("Not a file store directory.")
+	}
+
+	components := []string{}
+	for _, component := range strings.Split(
+		strings.TrimPrefix(
+			filename, self.config_obj.Datastore.FilestoreDirectory),
+		string(os.PathSeparator)) {
+		components = append(components,
+			string(datastore.UnsanitizeComponent(component)))
+	}
+
+	return filepath.Join(components...), nil
+}
+
+func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
+	path, err := self.FilenameToFileStorePath(root)
+	if err != nil {
+		return err
+	}
+
+	return filepath.Walk(path,
+		func(path string, info os.FileInfo, err error) error {
+			filestore_path, _ := self.FileStorePathToFilename(path)
+			return walkFn(filestore_path,
+				&FileStoreFileInfo{info}, err)
+		})
 }
 
 // Currently we only support a DirectoryFileStore.

@@ -1,7 +1,7 @@
 package constants
 
 const (
-	VERSION                    = "0.2.5"
+	VERSION                    = "0.2.7"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -25,4 +25,8 @@ const (
 
 	// Some special built in artifacts.
 	FileFinderArtifactName = "System.Flow.FileFinder"
+
+	// Filestore paths for artifacts must begin with this prefix.
+	ARTIFACT_DEFINITION         = "/artifact_definitions/custom/"
+	BUILTIN_ARTIFACT_DEFINITION = "/artifact_definitions/builtin"
 )

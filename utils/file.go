@@ -82,3 +82,15 @@ func copyFileContents(src, dst string, mode os.FileMode) (err error) {
 
 	return out.Sync()
 }
+
+type DataReadSeekCloser struct {
+	io.ReadSeeker
+}
+
+func (self DataReadSeekCloser) Close() error {
+	return nil
+}
+
+func (self DataReadSeekCloser) Stat() (os.FileInfo, error) {
+	return nil, errors.New("Not implemented")
+}

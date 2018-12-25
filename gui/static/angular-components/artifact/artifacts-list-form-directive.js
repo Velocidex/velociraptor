@@ -33,20 +33,11 @@ const ArtifactsListFormController =
   /** @export {Object} */
   this.selectedName;
 
-  /** @export {Array<string>} */
-  this.platforms = ['', 'Darwin', 'Linux', 'Windows'];
-
-  /** @export {string} */
-  this.selectedPlatform = '';
-
   /** @export {string} */
   this.search = '';
 
   /** @export {Function} Bound function to be used as a filter. */
   this.searchFilterRef = this.searchFilter.bind(this);
-
-  /** @export {Function} Bound function to be used as a filter. */
-  this.platformFilterRef = this.platformFilter.bind(this);
 
   this.grrArtifactDescriptorsService_.listDescriptors().then(
       this.onArtifactsResponse_.bind(this),
@@ -72,37 +63,6 @@ ArtifactsListFormController.prototype.searchFilter = function(descriptor) {
   return !this.search ||
       descriptor.name
       .toLowerCase().indexOf(this.search.toLowerCase()) != -1;
-};
-
-/**
- * Filters artifacts by platform.
- *
- * @param {!Object} descriptor Artifact descriptor to check.
- * @return {boolean} True if list of artifact's platforms contains
- *     currently selected platform, false otherwise.
- * @export
- */
-ArtifactsListFormController.prototype.platformFilter = function(descriptor) {
-  if (!this.selectedPlatform) {
-    return true;
-  }
-
-  var checkOsList = function(precondition) {
-    // This is really dumb right now - just look for the OS in the
-    // precondition.
-    return precondition.toLowerCase().indexOf(
-      this.selectedPlatform.toLowerCase()) != -1;
-  }.bind(this);
-
-  var sourceList = descriptor['sources'] || [];
-  for (var index in sourceList) {
-    var source = sourceList[index];
-    if (checkOsList(source['precondition'] || [])) {
-      return true;
-    }
-  }
-
-  return false;
 };
 
 /**

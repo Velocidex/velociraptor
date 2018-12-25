@@ -44,6 +44,14 @@ message Artifact {
             "Linux.Browsers.ChromeHistory";
         }];
 
+    string path = 6 [(sem_type) = {
+            description: "The path of this artifact in the artifact store.",
+        }];
+
+    string raw = 7 [(sem_type) = {
+            description: "The raw YAML of this artifact.",
+        }];
+
     string description = 2 [(sem_type) = {
             description: "What the artifact is trying to collect."
         }];

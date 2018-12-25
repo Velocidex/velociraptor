@@ -2,13 +2,10 @@ package api
 
 import (
 	"io"
-	"path"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 )
 
 func getTable(config_obj *api_proto.Config, in *api_proto.GetTableRequest) (
@@ -19,15 +16,7 @@ func getTable(config_obj *api_proto.Config, in *api_proto.GetTableRequest) (
 		in.Rows = 500
 	}
 
-	file_path := ""
-	if in.ClientId == "" && strings.HasPrefix(in.Path, "hunts") {
-		file_path = in.Path
-	} else {
-		file_path = path.Join("clients", in.ClientId, in.Path)
-	}
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.ReadFile(file_path)
+	fd, err := getFileForVFSPath(config_obj, in.ClientId, in.Path)
 	if err != nil {
 		return nil, err
 	}

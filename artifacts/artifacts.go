@@ -16,6 +16,8 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -29,7 +31,7 @@ var (
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	data        map[string]*artifacts_proto.Artifact
+	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
 }
 
@@ -38,6 +40,7 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 	if utils.InString(&self.loaded_dirs, dirname) {
 		return &count, nil
 	}
+	dirname = path.Clean(dirname)
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
 	return &count, filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
@@ -48,38 +51,53 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
 				artifact, err := Parse(file_path)
 				if err != nil {
-					return errors.Wrap(err, path.Join(dirname, info.Name()))
+					return errors.Wrap(err,
+						path.Join(dirname, info.Name()))
 				}
-
-				self.data[artifact.Name] = artifact
+				artifact.Path = strings.TrimPrefix(
+					file_path, dirname)
+				self.Data[artifact.Name] = artifact
 				count += 1
 			}
 			return nil
 		})
 }
 
-func (self *Repository) LoadYaml(data string) error {
+func (self *Repository) LoadYaml(data string) (*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
 	err := yaml.UnmarshalStrict([]byte(data), artifact)
 	if err != nil {
-		return errors.WithStack(err)
+		return nil, errors.WithStack(err)
 	}
-	self.data[artifact.Name] = artifact
-	return nil
+	artifact.Raw = data
+	self.Data[artifact.Name] = artifact
+
+	return artifact, nil
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
-	res, pres := self.data[name]
+	res, pres := self.Data[name]
 	return res, pres
 }
 
+func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact {
+	result := []*artifacts_proto.Artifact{}
+	for _, artifact := range self.Data {
+		if strings.HasPrefix(artifact.Path, path) {
+			result = append(result, artifact)
+		}
+	}
+
+	return result
+}
+
 func (self *Repository) Set(artifact *artifacts_proto.Artifact) {
-	self.data[artifact.Name] = artifact
+	self.Data[artifact.Name] = artifact
 }
 
 func (self *Repository) List() []string {
 	result := []string{}
-	for k, _ := range self.data {
+	for k, _ := range self.Data {
 		result = append(result, k)
 	}
 	sort.Strings(result)
@@ -95,7 +113,7 @@ func (self *Repository) GetQueryDependencies(query string) []string {
 	result := []string{}
 	for _, hit := range artifact_in_query_regex.FindAllStringSubmatch(
 		query, -1) {
-		_, pres := self.data[hit[1]]
+		_, pres := self.Data[hit[1]]
 		if pres {
 			result = append(result, hit[1])
 		}
@@ -130,7 +148,7 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 
 func NewRepository() *Repository {
 	return &Repository{
-		data: make(map[string]*artifacts_proto.Artifact)}
+		Data: make(map[string]*artifacts_proto.Artifact)}
 }
 
 func Parse(filename string) (*artifacts_proto.Artifact, error) {
@@ -144,6 +162,7 @@ func Parse(filename string) (*artifacts_proto.Artifact, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+	result.Raw = string(data)
 
 	return result, nil
 }
@@ -163,10 +182,11 @@ func Compile(artifact *artifacts_proto.Artifact,
 		source_result := ""
 		if source.Precondition != "" {
 			source_precondition = "precondition_" + prefix
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: "LET " + source_precondition + " = " +
-					source.Precondition,
-			})
+			result.Query = append(result.Query,
+				&actions_proto.VQLRequest{
+					VQL: "LET " + source_precondition + " = " +
+						source.Precondition,
+				})
 		}
 
 		queries := []string{}
@@ -265,7 +285,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		// cant load the directory.
 		case *os.PathError:
 			logger.Info("Unable to load artifacts from directory "+
-				"%s (skipping): %v", config_obj.Frontend.ArtifactsPath, err)
+				"%s (skipping): %v",
+				config_obj.Frontend.ArtifactsPath, err)
 		case nil:
 			break
 		default:
@@ -276,5 +297,37 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		logger.Info("Loaded %d artifacts from %s",
 			*count, config_obj.Frontend.ArtifactsPath)
 	}
+
+	// Load artifacts from the custom file store.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION,
+		func(path string, info os.FileInfo, err error) error {
+			if err == nil && strings.HasSuffix(path, ".yaml") {
+				fd, err := file_store_factory.ReadFile(path)
+				if err != nil {
+					return nil
+				}
+				data, err := ioutil.ReadAll(fd)
+				if err != nil {
+					return nil
+				}
+
+				artifact_obj, err := global_repository.LoadYaml(
+					string(data))
+				if err != nil {
+					logger.Info("Unable to load custom "+
+						"artifact %s: %v", path, err)
+					return nil
+				}
+				artifact_obj.Path = path
+				artifact_obj.Raw = string(data)
+				fmt.Printf("Loaded %s\n", artifact_obj.Path)
+			}
+			return nil
+		})
+	if err != nil {
+		return nil, err
+	}
+
 	return global_repository, nil
 }

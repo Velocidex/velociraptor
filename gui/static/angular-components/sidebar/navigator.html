@@ -23,6 +23,11 @@
           disabled="!controller.uiTraits.start_client_flow_nav_item_enabled || !controller.hasClientAccess">
         Start new flows
       </li>
+      <li grr-nav-link state="client.collectArtifacts"
+          params="{clientId: controller.clientId}"
+          disabled="!controller.uiTraits.start_client_flow_nav_item_enabled || !controller.hasClientAccess">
+        Collect Artifacts
+      </li>
       <li grr-nav-link state="client.vfs"
           params="{clientId: controller.clientId}"
           disabled="!controller.uiTraits.browse_virtual_file_system_nav_item_enabled || !controller.hasClientAccess">
