@@ -1,5 +1,5 @@
 <div grr-force-refresh refresh-trigger="controller.fileContext.selectedRow">
-  <div ng-if="controller.fileContext.selectedRow.Download !== undefined">
+  <div ng-if="controller.fileContext.selectedRow.Download.vfs_path !== undefined">
     <h4>Last Collected</h4>
     <span>
       <grr-timestamp value="controller.fileContext.selectedRow.Download.mtime" />

@@ -83,6 +83,11 @@ exports.routingModule
               }
             }
           })
+          .state('server_files', {
+            url: '/server_files/{path:pathWithUnescapedSlashes}?mode&tab',
+            template: '<grr-server-files />',
+            title: 'Server Files'
+          })
           .state('artifacts', {
             url: '/artifacts',
             template: '<grr-artifact-manager-view />',

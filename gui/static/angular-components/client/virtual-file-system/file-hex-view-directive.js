@@ -88,9 +88,20 @@ FileHexViewController.prototype.onPageChange_ = function(page, oldPage) {
  * @private
  */
 FileHexViewController.prototype.fetchText_ = function() {
-  var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
-  var total_size = this.fileContext.selectedRow['Size'];
+    this.hexDataRows = null;
+    if (angular.isUndefined(this.fileContext.selectedRow)) {
+        return;
+    }
+
+    var clientId = this.fileContext['clientId'];
+
+    var download = this.fileContext.selectedRow.Download;
+    if (download == null) {
+        return;
+    }
+
+    var filePath = download.vfs_path;
+    var total_size = this.fileContext.selectedRow['Size'];
 
   this.pageCount = Math.ceil(total_size / this.chunkSize_);
 

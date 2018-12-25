@@ -20,9 +20,7 @@
       <uib-tab heading="Download" index="'download'"
                disable="controller.fileIsDirectory">
         <div ng-if="controller.currentTab === 'download'">
-          <div grr-force-refresh refresh-trigger="controller.downloadQueryParams.age">
-            <grr-file-download-view></grr-file-download-view>
-          </div>
+          <grr-file-download-view></grr-file-download-view>
         </div>
 
       </uib-tab>

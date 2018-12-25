@@ -27,6 +27,6 @@ const (
 	FileFinderArtifactName = "System.Flow.FileFinder"
 
 	// Filestore paths for artifacts must begin with this prefix.
-	ARTIFACT_DEFINITION         = "/artifact_definitions/custom/"
+	ARTIFACT_DEFINITION         = "/artifact_definitions/custom"
 	BUILTIN_ARTIFACT_DEFINITION = "/artifact_definitions/builtin"
 )

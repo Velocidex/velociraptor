@@ -39,11 +39,23 @@ type FileInfoRow struct {
 	Timestamp time.Time     `json:"Timestamp"`
 	Mode      string        `json:"Mode"`
 	Download  *DownloadInfo `json:"Download"`
+	Mtime     time.Time     `json:"mtime"`
+	Atime     time.Time     `json:"atime"`
+	Ctime     time.Time     `json:"ctime"`
 }
 
 // Render the root level psuedo directory. This provides anchor points
 // for the other drivers in the navigation.
-func renderRootVFS() *actions_proto.VQLResponse {
+func renderRootVFS(client_id string) *actions_proto.VQLResponse {
+	if client_id == "" {
+		return &actions_proto.VQLResponse{
+			Response: `
+   [
+    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"},
+    {"Mode": "drwxrwxrwx", "Name": "exported_files"}
+   ]`,
+		}
+	}
 	return &actions_proto.VQLResponse{
 		Response: `
    [
@@ -51,11 +63,10 @@ func renderRootVFS() *actions_proto.VQLResponse {
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"},
     {"Mode": "drwxrwxrwx", "Name": "artifacts"},
-    {"Mode": "drwxrwxrwx", "Name": "monitoring"},
-    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"},
-    {"Mode": "drwxrwxrwx", "Name": "exported_files"}
+    {"Mode": "drwxrwxrwx", "Name": "monitoring"}
    ]`,
 	}
+
 }
 
 // Render VFS nodes with VQL collection + uploads.
@@ -97,7 +108,7 @@ func renderDBVFS(
 			lookup[file.Name()] = file
 		}
 
-		var rows []FileInfoRow
+		var rows []*FileInfoRow
 		err := json.Unmarshal([]byte(result.Response), &rows)
 		if err != nil {
 			return nil, err
@@ -132,6 +143,7 @@ func renderDBVFS(
 		Column: "Download",
 		Type:   "Download",
 	})
+
 	return result, nil
 }
 
@@ -140,7 +152,7 @@ func renderFileStore(
 	config_obj *api_proto.Config,
 	prefix string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
-	var rows []FileInfoRow
+	var rows []*FileInfoRow
 
 	filestore_urn := path.Join(prefix, vfs_path)
 	items, err := file_store.GetFileStore(config_obj).
@@ -150,7 +162,7 @@ func renderFileStore(
 	}
 
 	for _, item := range items {
-		row := FileInfoRow{
+		row := &FileInfoRow{
 			Name:      item.Name(),
 			Size:      item.Size(),
 			Timestamp: item.ModTime(),
@@ -226,7 +238,7 @@ func vfsListDirectory(
 	vfs_path = path.Join("/", vfs_path)
 
 	if vfs_path == "" || vfs_path == "/" {
-		return renderRootVFS(), nil
+		return renderRootVFS(client_id), nil
 	}
 
 	if vfs_path == "/artifact_definitions" {

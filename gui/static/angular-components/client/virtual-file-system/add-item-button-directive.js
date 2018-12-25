@@ -49,9 +49,6 @@ const AddItemButtonController = function(
 };
 
 AddItemButtonController.prototype.onClientOrPathChange_ = function() {
-    console.log(this.scope_.filePath);
-    console.log(this.scope_.dirPath);
-
     var self =this;
 
     var is_valid_path = function(path) {

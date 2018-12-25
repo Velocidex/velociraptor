@@ -95,8 +95,8 @@ FileTreeController.prototype.initTree_ = function() {
     var folderPath =  node.data.path;
 
     if (getFolderFromPath(this.fileContext['selectedDirPath']) === folderPath) {
-      this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT,
-                                 ensurePathIsFolder(folderPath));
+        this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT,
+                                   ensurePathIsFolder(folderPath));
     } else {
       this.fileContext.selectFile(ensurePathIsFolder(folderPath));
     }
@@ -202,8 +202,8 @@ FileTreeController.prototype.onRefreshFolderEvent_ = function(e, path) {
   }
 
   var nodeId = getFileId(getFolderFromPath(path));
-  var node = $('#' + nodeId);
-  this.treeElement_.jstree(true)['refresh_node'](node);
+    var node = $('#' + nodeId);
+    this.treeElement_.jstree(true)['refresh_node'](node);
 };
 
 /**

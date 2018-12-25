@@ -110,19 +110,19 @@ FileDownloadViewController.prototype.pollUpdateOperationState_ = function() {
   };
   this.grrApiService_.get(url, params).then(
     function success(response) {
-      if (response['data']['context']['state'] != 'RUNNING') {
-        this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT);
-        this.rootScope_.$broadcast(REFRESH_FILE_EVENT);
+        if (response['data']['context']['state'] != 'RUNNING') {
+            this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT);
+            this.rootScope_.$broadcast(REFRESH_FILE_EVENT);
 
-        // Force a refresh on the file table which is watching this
-        // parameter.
-        this.fileContext.flowId = this.updateOperationId;
-        this.stopMonitorUpdateOperation_();
-      }
+            // Force a refresh on the file table which is watching this
+            // parameter.
+            this.fileContext.flowId = this.updateOperationId;
+            this.stopMonitorUpdateOperation_();
+        }
     }.bind(this),
-    function failure(response) {
-      this.stopMonitorUpdateOperation_();
-    }.bind(this));
+      function failure(response) {
+          this.stopMonitorUpdateOperation_();
+      }.bind(this));
 };
 
 /**

@@ -14,3 +14,8 @@
     </tr>
   </tbody>
 </table>
+
+<!-- Show a hint if no content exists. -->
+<div ng-if="!controller.pageData.columns" class="no-content">
+  No file content to show.
+</div>

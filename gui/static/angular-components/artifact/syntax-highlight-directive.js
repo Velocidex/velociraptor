@@ -13,10 +13,10 @@ const SyntaxHighlightDirective = function($scope, $sce) {
 };
 
 SyntaxHighlightDirective.prototype.onCodeChange_ = function(code) {
-  if (angular.isDefined(this.language)) {
-    var highlighted_code = hljs.highlight(this.language, code);
-    this.scope_.rendered = this.sce_.trustAsHtml(highlighted_code.value);
-  };
+    if (angular.isDefined(this.language) && angular.isDefined(code)) {
+        var highlighted_code = hljs.highlight(this.language, code);
+        this.scope_.rendered = this.sce_.trustAsHtml(highlighted_code.value);
+    };
 };
 
 exports.SyntaxHighlightDirective = function() {

@@ -61,6 +61,15 @@ CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
  * @private
  */
 CsvViewerDirective.prototype.fetchText_ = function() {
+    this.pageData = null;
+    if (angular.isDefined(this.dtInstance.DataTable)) {
+        this.dtInstance.DataTable.ngDestroy();
+        var i, ths = document.querySelectorAll('#dtable th');
+        for (i=0;i<ths.length;i++) {
+            ths[i].removeAttribute('style');
+        }
+    }
+
     if (this.scope_.baseUrl && this.scope_.params) {
         var url = this.scope_.baseUrl;
         var params = this.scope_.params;
@@ -68,13 +77,6 @@ CsvViewerDirective.prototype.fetchText_ = function() {
         params['rows'] = MAX_ROWS_PER_TABLE;
 
         var self = this;
-        if (angular.isDefined(this.dtInstance.DataTable)) {
-            this.dtInstance.DataTable.ngDestroy();
-            var i, ths = document.querySelectorAll('#dtable th');
-            for (i=0;i<ths.length;i++) {
-                ths[i].removeAttribute('style');
-            }
-        }
         this.pageData = null;
         this.grrApiService_.get(url, params).then(function(response) {
             self.pageData = response.data;

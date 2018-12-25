@@ -38,7 +38,7 @@ const ForceRefreshController = function(
 /**
  * @private
  */
-ForceRefreshController.prototype.updateDom_ = function() {
+ForceRefreshController.prototype.updateDom_ = function(newValue, oldValue) {
   if (angular.isDefined(this.transcludedScope_)) {
     this.transcludedScope_.$destroy();
     this.transcludedScope_ = undefined;

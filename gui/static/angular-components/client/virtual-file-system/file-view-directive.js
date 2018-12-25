@@ -76,9 +76,6 @@ const FileViewController = function(
   this.selectedDirPath;
 
   /** @type {string} */
-  this.viewMode = 'list';
-
-  /** @type {string} */
   this.tab = 'stats';
 
   /** @type {number|undefined} */
@@ -88,12 +85,11 @@ const FileViewController = function(
   this.clientId;
 
   this.grrRoutingService_.uiOnParamsChanged(
-      this.scope_, ['clientId', 'path', 'version', 'mode', 'tab'],
+      this.scope_, ['clientId', 'path', 'version', 'tab'],
       this.onUrlRoutingParamsChanged_.bind(this));
 
   this.scope_.$watchGroup(['controller.selectedDirPath',
                            'controller.fileVersion',
-                           'controller.viewMode',
                            'controller.tab'],
                           this.onFileContextRoutingParamsChange_.bind(this));
 };
@@ -111,8 +107,7 @@ FileViewController.prototype.onUrlRoutingParamsChanged_ = function(params) {
   this.clientId = params[0];
   this.selectedDirPath = params[1];
   this.fileVersion = parseInt(params[2], 10) || undefined;
-  this.viewMode = params[3] || 'list';
-  this.tab = params[4] || 'stats';
+  this.tab = params[3] || 'stats';
 };
 
 /**
@@ -126,12 +121,6 @@ FileViewController.prototype.onFileContextRoutingParamsChange_ = function() {
     path: this.selectedDirPath,
   };
   params['version'] = this.fileVersion || undefined;
-  if (!this.viewMode || this.viewMode == 'list') {
-    params['mode'] = undefined;
-  } else {
-    params['mode'] = this.viewMode;
-  }
-
   if (!this.tab || this.tab == 'stats') {
     params['tab'] = undefined;
   } else {

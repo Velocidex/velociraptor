@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 
@@ -252,7 +253,7 @@ func huntResultDownloadHandler(
 }
 
 type vfsFileDownloadRequest struct {
-	ClientId string `schema:"client_id,required"`
+	ClientId string `schema:"client_id"`
 	VfsPath  string `schema:"vfs_path,required"`
 	Offset   int64  `schema:"offset"`
 	Length   int    `schema:"length"`
@@ -278,7 +279,34 @@ func openBuiltInArtifact(config_obj *api_proto.Config, vfs_path string) (
 	}
 
 	return nil, errors.New("not found")
+}
 
+func filestorePathForVFSPath(
+	config_obj *api_proto.Config,
+	client_id string,
+	vfs_path string) string {
+	vfs_path = path.Clean(vfs_path)
+
+	// monitoring and artifacts vfs folders are in the client's
+	// space.
+	if strings.HasPrefix(vfs_path, "/monitoring/") ||
+		strings.HasPrefix(vfs_path, "/artifacts/") {
+		return path.Join(
+			"clients", client_id, vfs_path)
+	}
+
+	// These VFS directories are mapped directly to the root of
+	// the filestore regardless of the client id.
+	if strings.HasPrefix(
+		vfs_path, constants.ARTIFACT_DEFINITION) ||
+		strings.HasPrefix(vfs_path, "/exported_files/") {
+		return vfs_path
+	}
+
+	// Other folders live inside the client's vfs_files subdir.
+	return path.Join(
+		"clients", client_id,
+		"vfs_files", vfs_path)
 }
 
 func getFileForVFSPath(
@@ -287,28 +315,15 @@ func getFileForVFSPath(
 	vfs_path string) (
 	file_store.ReadSeekCloser, error) {
 	vfs_path = path.Clean(vfs_path)
+
 	if strings.HasPrefix(vfs_path,
 		constants.BUILTIN_ARTIFACT_DEFINITION) {
 		return openBuiltInArtifact(config_obj, vfs_path)
 
-	} else if strings.HasPrefix(vfs_path, "/monitoring/") ||
-		strings.HasPrefix(vfs_path, "/artifacts/") {
-		vfs_path = path.Join(
-			"clients", client_id, vfs_path)
-
-		// These VFS directories are mapped directly
-		// to the root of the filestore.
-	} else if strings.HasPrefix(
-		vfs_path, constants.ARTIFACT_DEFINITION) ||
-		strings.HasPrefix(vfs_path, "/exported_files/") {
-
-	} else {
-		vfs_path = path.Join(
-			"clients", client_id,
-			"vfs_files", vfs_path)
 	}
 
-	return file_store.GetFileStore(config_obj).ReadFile(vfs_path)
+	filestore_path := filestorePathForVFSPath(config_obj, client_id, vfs_path)
+	return file_store.GetFileStore(config_obj).ReadFile(filestore_path)
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -368,5 +383,78 @@ func vfsFileDownloadHandler(
 				return
 			}
 		}
+	})
+}
+
+// URL format: /api/v1/DownloadVFSFolder
+func vfsFolderDownloadHandler(
+	config_obj *api_proto.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		request := vfsFileDownloadRequest{}
+		decoder := schema.NewDecoder()
+		err := decoder.Decode(&request, r.URL.Query())
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		if r.Method == "HEAD" {
+			returnError(w, 200, "Ok")
+			return
+		}
+
+		// From here on we already sent the headers and we can
+		// not really report an error to the client.
+		w.Header().Set("Content-Disposition", "attachment; filename='"+
+			request.VfsPath+".zip'")
+		w.Header().Set("Content-Type", "binary/octet-stream")
+		w.WriteHeader(200)
+
+		// Log an audit event.
+		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+
+		// This should never happen!
+		if userinfo.Name == "" {
+			panic("Unauthenticated access.")
+		}
+
+		logger := logging.GetLogger(config_obj, &logging.Audit)
+		logger.WithFields(logrus.Fields{
+			"user":      userinfo.Name,
+			"vfs_path":  request.VfsPath,
+			"client_id": request.ClientId,
+			"remote":    r.RemoteAddr,
+		}).Info("DownloadVFSPath")
+
+		zip_writer := zip.NewWriter(w)
+		defer zip_writer.Close()
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+		file_store_factory.Walk(filestorePathForVFSPath(
+			config_obj, request.ClientId, request.VfsPath),
+			func(path string, info os.FileInfo, err error) error {
+				if err != nil || info.IsDir() {
+					return nil
+				}
+
+				fd, err := file_store_factory.ReadFile(path)
+				if err != nil {
+					logger.Warn("Cant open %s: %v", path, err)
+					return nil
+				}
+
+				zh, err := zip_writer.Create(path)
+				if err != nil {
+					logger.Warn("Cant create zip %s: %v", path, err)
+					return nil
+				}
+
+				_, err = io.Copy(zh, fd)
+				if err != nil {
+					logger.Warn("Cant copy %s", path)
+					return nil
+				}
+				return nil
+			})
 	})
 }

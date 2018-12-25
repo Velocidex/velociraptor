@@ -28,6 +28,8 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 		config_obj, huntResultDownloadHandler(config_obj)))
 	mux.Handle("/api/v1/DownloadVFSFile/", checkUserCredentialsHandler(
 		config_obj, vfsFileDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/DownloadVFSFolder", checkUserCredentialsHandler(
+		config_obj, vfsFolderDownloadHandler(config_obj)))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)

@@ -44,14 +44,28 @@ const FileDetailsController = function(
  * @private
  */
 FileDetailsController.prototype.onDirectiveTabChange_ = function(newValue) {
+    console.log(newValue);
   if (angular.isString(newValue)) {
     this.currentTab = newValue;
   }
 }
 
 FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
+    this.params = null;
+
+    if (angular.isUndefined(this.fileContext.selectedRow)) {
+        return;
+    }
+
+    var download = this.fileContext.selectedRow.Download;
+    if (download == null) {
+        return;
+    }
+
+    var filePath = download.vfs_path;
+
     this.params = {
-        path: this.fileContext.selectedFilePath,
+        path: filePath,
         client_id: this.fileContext.clientId,
     };
 };

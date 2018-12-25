@@ -61,33 +61,8 @@ const FileTableController = function(
 
   this.selectedRow = {};
 
-  /**
-   * This variable is set to a function by the infinite-table-directive
-   * and can be used to force data reload from the server.
-   *
-   * @export {function()}
-   */
-  this.triggerUpdate;
-/*
-  this.rootScope_.$on(REFRESH_FOLDER_EVENT, this.refreshFileList_.bind(this));
-  this.rootScope_.$on(REFRESH_FILE_EVENT, this.refreshFileList_.bind(this));
-
-  this.scope_.$watch('controller.fileContext.clientId', this.refreshFileList_.bind(this));
-  this.scope_.$watch('controller.fileContext.selectedDirPath', this.onDirPathChange_.bind(this));
-*/
-
   this.scope_.$watch('controller.fileContext.selectedRow', this.onSelectedRowChange_.bind(this));
 };
-
-
-
-/**
- * @param {string} mode
- */
-FileTableController.prototype.setViewMode = function(mode) {
-  this.scope_['viewMode'] = mode;
-};
-
 
 /**
  * @param {?string} newValue
@@ -126,11 +101,7 @@ FileTableController.prototype.refreshFileList_ = function() {
   var clientId = this.fileContext['clientId'];
   var selectedDirPath = this.fileContext['selectedDirPath'] || '';
 
-  this.filter = '';
-  // Required to trigger an update even if the selectedFolderPath changes to the same value.
-  if (this.triggerUpdate) {
-    this.triggerUpdate();
-  }
+    this.filter = '';
 };
 
 /**
@@ -165,7 +136,7 @@ FileTableController.prototype.selectFolder = function(file) {
  * @export
  */
 FileTableController.prototype.startVfsRefreshOperation = function() {
-  var clientId = this.fileContext['clientId'];
+    var clientId = this.fileContext['clientId'];
   var selectedDirPath = this.fileContext['selectedDirPath'];
 
   var url = 'v1/VFSRefreshDirectory/' + clientId;
@@ -187,8 +158,8 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
                 flow_id: this.lastRefreshOperationId,
               }, function(response) {
                 if (response.data.context.state != 'RUNNING') {
-                  this.lastRefreshOperationId = undefined;
-                  return true;
+                    this.lastRefreshOperationId = undefined;
+                    return true;
                 };
                 return false;
               }.bind(this));
@@ -216,39 +187,13 @@ FileTableController.prototype.updateFilter = function() {
 };
 
 /**
- * Downloads the timeline for the current directory.
- *
- * @export
- */
-FileTableController.prototype.downloadTimeline = function() {
-  var clientId = this.fileContext['clientId'];
-  var selectedDirPath = this.fileContext['selectedDirPath'] || '';
-
-  var url = 'clients/' + clientId + '/vfs-timeline-csv/' + selectedFolderPath;
-  this.grrApiService_.downloadFile(url).then(
-      function success() {}.bind(this),
-      function failure(response) {
-        if (angular.isUndefined(response.status)) {
-          this.rootScope_.$broadcast(
-              ERROR_EVENT_NAME, {
-                message: 'Couldn\'t export the timeline.'
-              });
-        }
-      }.bind(this)
-  );
-};
-
-
-/**
  * FileTableDirective definition.
  * @return {angular.Directive} Directive definition object.
  */
 exports.FileTableDirective = function() {
   return {
     restrict: 'E',
-    scope: {
-      viewMode: '='
-    },
+    scope: {},
     require: '^grrFileContext',
     templateUrl: '/static/angular-components/client/virtual-file-system/file-table.html',
     controller: FileTableController,

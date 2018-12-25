@@ -77,8 +77,19 @@ FileTextViewController.prototype.onPageChange_ = function(page, oldPage) {
  * @private
  */
 FileTextViewController.prototype.fetchText_ = function() {
-  var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
+    this.fileContent = null;
+    if (angular.isUndefined(this.fileContext.selectedRow)) {
+        return;
+    }
+
+    var clientId = this.fileContext['clientId'];
+    var download = this.fileContext.selectedRow.Download;
+    if (download == null) {
+        return;
+    }
+
+    var filePath = download.vfs_path;
+
   var total_size = this.fileContext.selectedRow['Size'];
   var offset = (this.page - 1) * this.chunkSize_;
 

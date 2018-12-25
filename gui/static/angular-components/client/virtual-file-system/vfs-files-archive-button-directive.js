@@ -6,15 +6,7 @@ goog.module.declareLegacyNamespace();
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
 const {getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 
-
 var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
-
-
-/** @const {number} */
-exports.DOWNLOAD_EVERYTHING_REENABLE_DELAY = 30000;
-
-var DOWNLOAD_EVERYTHING_REENABLE_DELAY =
-    exports.DOWNLOAD_EVERYTHING_REENABLE_DELAY;
 
 
 /**
@@ -40,43 +32,6 @@ const VfsFilesArchiveButtonController = function(
 
   /** @private {!grrUi.core.apiService.ApiService} */
   this.grrApiService_ = grrApiService;
-
-  /** @type {boolean} */
-  this.downloadEverythingDisabled = false;
-
-  /** @type {boolean} */
-  this.downloadCurrentFolderDisabled = false;
-
-  this.scope_.$watch('clientId', function() {
-    this.downloadEverythingDisabled = false;
-  }.bind(this));
-
-  this.scope_.$watch('filePath', function(value) {
-    this.downloadCurrentFolderDisabled = false;
-  }.bind(this));
-};
-
-
-/**
- * Starts download of an archive corresponding to a given path. Empty string
- * means that archive of all the files will be downloaded.
- *
- * @param {string} path
- */
-VfsFilesArchiveButtonController.prototype._download = function(path) {
-  var clientId = this.scope_['clientId'];
-  var url = 'clients/' + clientId + '/vfs-files-archive/' + path;
-  this.grrApiService_.downloadFile(url).then(
-      function success() {}.bind(this),
-      function failure(response) {
-        if (angular.isUndefined(response.status)) {
-          this.rootScope_.$broadcast(
-              ERROR_EVENT_NAME, {
-                message: 'Couldn\'t download the VFS archive.'
-              });
-        }
-      }.bind(this)
-  );
 };
 
 /**
@@ -86,34 +41,27 @@ VfsFilesArchiveButtonController.prototype._download = function(path) {
  * @export
  */
 VfsFilesArchiveButtonController.prototype.downloadCurrentFolder = function(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!this.downloadCurrentFolderDisabled) {
     var folderPath = getFolderFromPath(this.scope_['filePath']);
-    this._download(folderPath);
-    this.downloadCurrentFolderDisabled = true;
-  }
+    var clientId = this.scope_['clientId'];
+    var url = 'v1/DownloadVFSFolder';
+    var params = {
+        client_id: this.scope_['clientId'],
+        vfs_path: folderPath,
+    };
+    this.grrApiService_.downloadFile(url, params).then(
+        function success() {}.bind(this),
+        function failure(response) {
+            if (angular.isUndefined(response.status)) {
+                this.rootScope_.$broadcast(
+                    ERROR_EVENT_NAME, {
+                        message: 'Couldn\'t download the VFS archive.'
+                    });
+            }
+        }.bind(this)
+    );
 };
-
-/**
- * Handles mouse clicks on 'download everything' dropdown menu item.
- *
- * @param {Event} e
- * @export
- */
-VfsFilesArchiveButtonController.prototype.downloadEverything = function(e) {
-  e.preventDefault();
-
-  if (!this.downloadEverythingDisabled) {
-    this._download('');
-    this.downloadEverythingDisabled = true;
-
-    this.timeout_(function() {
-      this.downloadEverythingDisabled = false;
-    }.bind(this), DOWNLOAD_EVERYTHING_REENABLE_DELAY);
-  }
-};
-
 
 /**
  * VfsFilesArchiveButtonDirective renders a button that shows a dialog that allows
