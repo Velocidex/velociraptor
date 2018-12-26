@@ -16,12 +16,11 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  * @param {!angular.$interval} $interval
  * @param {!grrUi.core.apiService.ApiService} grrApiService
  * @param {!grrUi.routing.routingService.RoutingService} grrRoutingService
- * @param {!grrUi.acl.aclDialogService.AclDialogService} grrAclDialogService
  * @param {!grrUi.core.dialogService.DialogService} grrDialogService
  * @ngInject
  */
 const HostInfoController = function(
-    $scope, $interval, grrApiService, grrRoutingService, grrAclDialogService,
+    $scope, $interval, grrApiService, grrRoutingService,
     grrDialogService) {
 
   /** @private {!angular.Scope} */
@@ -35,9 +34,6 @@ const HostInfoController = function(
 
   /** @private {!grrUi.routing.routingService.RoutingService} */
   this.grrRoutingService_ = grrRoutingService;
-
-  /** @private {!grrUi.acl.aclDialogService.AclDialogService} */
-  this.grrAclDialogService_ = grrAclDialogService;
 
   /** @private {!grrUi.core.dialogService.DialogService} */
   this.grrDialogService_ = grrDialogService;
@@ -133,7 +129,7 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
  * @export
  */
 HostInfoController.prototype.requestApproval = function() {
-  this.grrAclDialogService_.openRequestClientApprovalDialog(this.clientId);
+//  this.grrAclDialogService_.openRequestClientApprovalDialog(this.clientId);
 };
 
 /**

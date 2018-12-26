@@ -153,11 +153,6 @@ exports.routingModule
             template: '<grr-debug-requests-view />',
             title: 'Debug Requests'
           })
-          .state('client.loadStats', {
-            url: '/load-stats',
-            template: '<grr-client-load-view />',
-            title: 'Load Stats'
-          });
     })
     .run(function($rootScope, $location, $state, $urlRouter, $document) {
       /**

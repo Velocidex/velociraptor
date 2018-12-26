@@ -4,7 +4,7 @@ goog.module('grrUi.routing.aff4UrnToUrl');
 goog.module.declareLegacyNamespace();
 
 const {CLIENT_ID_RE, stripAff4Prefix} = goog.require('grrUi.core.utils');
-const {vfsRoots} = goog.require('grrUi.core.fileDownloadUtils');
+//const {vfsRoots} = goog.require('grrUi.core.fileDownloadUtils');
 
 
 // TODO(hanuszczak): Delete suppression once ES6 module migration is complete.
@@ -12,7 +12,6 @@ const {vfsRoots} = goog.require('grrUi.core.fileDownloadUtils');
  * @fileoverview
  * @suppress {missingRequire}
  */
-
 
 /**
  * Returns a router configuration pointing to an AFF4 object with a given
@@ -29,7 +28,7 @@ exports.aff4UrnToUrl = function(urn) {
     // Handle references to client object or to something within the
     // client namespace: flows or VFS files.
 
-    if (vfsRoots.includes(components[1])) {
+/*    if (vfsRoots.includes(components[1])) {
       return {
         state: 'client.vfs',
         params: {
@@ -37,7 +36,8 @@ exports.aff4UrnToUrl = function(urn) {
           path: components.slice(1).join('/')
         }
       };
-    } else if (components[1] === 'flows' && components.length === 3) {
+    } else
+*/ if (components[1] === 'flows' && components.length === 3) {
       return {
         state: 'client.flows',
         params: {

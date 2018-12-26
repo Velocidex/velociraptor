@@ -155,8 +155,9 @@ ArtifactsListFormController.prototype.clear = function() {
  * @private
  **/
 ArtifactsListFormController.prototype.onDescriptorsOrValueChange_ = function() {
-  if (angular.isDefined(this.descriptors) &&
-      angular.isDefined(this.scope_.value.names)) {
+    if (angular.isDefined(this.descriptors) &&
+        angular.isDefined(this.scope_.value) &&
+        angular.isDefined(this.scope_.value.names)) {
     this.descriptorsList = [];
     angular.forEach(this.descriptors, function(descriptor, name) {
       var index = -1;

@@ -11,7 +11,7 @@ goog.module.declareLegacyNamespace();
  * AdminUI.use_precompiled_js = False, then this module is empty.
  */
 const templatesModule = goog.require('grrUi.templates.templates.templatesModule');
-const {aclModule} = goog.require('grrUi.acl.acl');
+//const {aclModule} = goog.require('grrUi.acl.acl');
 const {artifactModule} = goog.require('grrUi.artifact.artifact');
 const {clientModule} = goog.require('grrUi.client.client');
 const {configModule} = goog.require('grrUi.config.config');
@@ -34,7 +34,7 @@ const {userModule} = goog.require('grrUi.user.user');
  * Main GRR UI application module.
  */
 exports.appControllerModule = angular.module('grrUi.appController', [
-  aclModule.name,
+//  aclModule.name,
   artifactModule.name,
   clientModule.name,
   configModule.name,
@@ -94,7 +94,7 @@ exports.appControllerModule.config(function(
 });
 
 exports.appControllerModule.run(function(
-    $injector, $http, $cookies, grrFirebaseService, grrReflectionService) {
+    $injector, $http, $cookies, grrApiService, grrReflectionService) {
 
     // Ensure CSRF token is in place for Angular-initiated HTTP requests.
   $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
@@ -102,7 +102,7 @@ exports.appControllerModule.run(function(
     'X-CSRFToken': $cookies.get('csrftoken')
   };
 
-  grrFirebaseService.setupIfNeeded();
+    grrApiService.markAuthDone();
 
   // Call reflection service as soon as possible in the app lifetime to cache
   // the values. "ACLToken" is picked up here as an arbitrary name.

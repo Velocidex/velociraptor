@@ -11,7 +11,8 @@ var gulpPlumber = require('gulp-plumber');
 var gulpSass = require('gulp-sass');
 var gulpSourcemaps = require('gulp-sourcemaps');
 var karma = require('karma');
-
+var uglify = require('gulp-uglify');
+var del = require('del');
 
 var config = {};
 config.nodeModulesDir = './node_modules';
@@ -86,7 +87,8 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/highlightjs/highlight.pack.js',
                    'third-party/jquery.splitter.js'])
       .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
-      .pipe(gulpConcat('third-party.bundle.js'))
+        .pipe(gulpConcat('third-party.bundle.js'))
+        .pipe(uglify())
       .pipe(gulp.dest(config.distDir));
 });
 
@@ -312,3 +314,10 @@ gulp.task('test-debug', gulp.series('compile', function(done) {
 
   new karma.Server(config, done).start();
 }));
+
+gulp.task('clean', function() {
+    return del([
+        'dist/*',
+        '!dist/.keep'
+    ]);
+});

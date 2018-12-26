@@ -285,7 +285,7 @@ func filestorePathForVFSPath(
 	config_obj *api_proto.Config,
 	client_id string,
 	vfs_path string) string {
-	vfs_path = path.Clean(vfs_path)
+	vfs_path = path.Join("/", vfs_path)
 
 	// monitoring and artifacts vfs folders are in the client's
 	// space.
@@ -299,7 +299,8 @@ func filestorePathForVFSPath(
 	// the filestore regardless of the client id.
 	if strings.HasPrefix(
 		vfs_path, constants.ARTIFACT_DEFINITION) ||
-		strings.HasPrefix(vfs_path, "/exported_files/") {
+		strings.HasPrefix(vfs_path, "/exported_files/") ||
+		strings.HasPrefix(vfs_path, "/hunts/") {
 		return vfs_path
 	}
 

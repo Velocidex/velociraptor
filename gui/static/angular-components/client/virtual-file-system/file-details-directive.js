@@ -44,7 +44,6 @@ const FileDetailsController = function(
  * @private
  */
 FileDetailsController.prototype.onDirectiveTabChange_ = function(newValue) {
-    console.log(newValue);
   if (angular.isString(newValue)) {
     this.currentTab = newValue;
   }

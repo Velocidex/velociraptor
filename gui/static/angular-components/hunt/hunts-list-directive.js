@@ -3,7 +3,7 @@
 goog.module('grrUi.hunt.huntsListDirective');
 goog.module.declareLegacyNamespace();
 
-const {AclDialogService} = goog.require('grrUi.acl.aclDialogService');
+//const {AclDialogService} = goog.require('grrUi.acl.aclDialogService');
 const {ApiService} = goog.require('grrUi.core.apiService');
 const {DialogService} = goog.require('grrUi.core.dialogService');
 const {stripAff4Prefix} = goog.require('grrUi.core.utils');
@@ -18,12 +18,10 @@ const {stripAff4Prefix} = goog.require('grrUi.core.utils');
  * @param {!angularUi.$uibModal} $uibModal Bootstrap UI modal service.
  * @param {DialogService} grrDialogService
  * @param {!ApiService} grrApiService
- * @param {!AclDialogService} grrAclDialogService
  * @ngInject
  */
 const HuntsListController = function(
-    $scope, $q, $uibModal, grrDialogService, grrApiService,
-    grrAclDialogService) {
+    $scope, $q, $uibModal, grrDialogService, grrApiService) {
   // Injected dependencies.
 
   /** @private {!angular.Scope} */
@@ -40,9 +38,6 @@ const HuntsListController = function(
 
   /** @private {!ApiService} */
   this.grrApiService_ = grrApiService;
-
-  /** @private {!AclDialogService} */
-  this.grrAclDialogService_ = grrAclDialogService;
 
   this.selectedHunt;
 
@@ -102,8 +97,8 @@ HuntsListController.prototype.wrapApiPromise_ = function(promise, successMessage
             var subject = response['data']['subject'];
             var huntId = stripAff4Prefix(subject).split('/')[1];
 
-            this.grrAclDialogService_.openRequestHuntApprovalDialog(
-                huntId, message);
+              //this.grrAclDialogService_.openRequestHuntApprovalDialog(
+              //  huntId, message);
           }
           return this.q_.reject(message);
         }.bind(this));
