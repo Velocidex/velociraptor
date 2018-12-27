@@ -21,12 +21,6 @@
     <col style="width: 40px">
     <col style="width: 13em">
     <col style="width: 13em">
-    <col style="width: 20%">
-    <col style="width: 10%">
-    <col style="width: 20%">
-    <col style="width: 15%">
-    <col style="width: 15%">
-    <col style="width: 8%">
     <col style="width: 15%">
   </colgroup>
   <thead>
@@ -37,16 +31,10 @@
                  ng-change="controller.selectAll()" />
       </th>
       <th>Online</th>
-      <th>Subject</th>
+      <th>ClientID</th>
       <th>Host</th>
       <th>OS Version</th>
-      <th>MAC</th>
-      <th>Usernames</th>
-      <th>First Seen</th>
-      <th>Client version</th>
       <th>Labels</th>
-      <th>Last Checkin</th>
-      <th>OS Install Date</th>
     </tr>
   </thead>
   <tbody>
@@ -87,40 +75,9 @@
         <grr-semantic-value value="::item.os_info.release" />
       </td>
 
-      <!-- MAC -->
-      <td>
-        <grr-semantic-value value="::item._mac_addresses" />
-      </td>
-
-      <!-- Usernames -->
-      <td>
-        <grr-semantic-value value="::item._usernames" />
-      </td>
-
-      <!-- First seen -->
-      <td>
-        <grr-semantic-value value="::item.first_seen_at" />
-      </td>
-
-      <!-- Client version -->
-      <td>
-        <grr-semantic-value value="::item.agent_info.name" />
-        <grr-semantic-value value="::item.agent_info.version" />
-      </td>
-
       <!-- Labels -->
       <td>
         <grr-semantic-value value="::item.labels" />
-      </td>
-
-      <!-- Latest checkin -->
-      <td>
-        <grr-semantic-value value="::item.last_clock" />
-      </td>
-
-      <!-- OS install date -->
-      <td>
-        <grr-semantic-value value="::item.os_info.install_date" />
       </td>
 
     </tr>

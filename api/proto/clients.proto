@@ -66,6 +66,8 @@ message ApiClient {
     repeated Interface interfaces = 14;
 
     repeated VQLResponse info = 15;
+
+    repeated string labels = 18;
 }
 
 message Interface {
@@ -77,10 +79,21 @@ message SearchClientsRequest {
     uint64 offset = 1;
     uint64 limit = 2;
     string query = 3;
+    bool name_only = 4;
+
+    enum QueryType {
+        VALUE = 0; // Returns all values that match query.
+        KEY = 1;   // Returns all keys that match query.
+    }
+    QueryType type = 5;
 }
 
 message SearchClientsResponse {
     repeated ApiClient items = 1;
+    repeated string names = 2 [(sem_type) = {
+            description: "If name_only is specified in the request we only "
+            "return the names here.",
+        }];
 }
 
 message GetClientRequest {
@@ -89,4 +102,10 @@ message GetClientRequest {
     bool lightweight = 2 [(sem_type) = {
             description: "If set only collect some information.",
         }];
+}
+
+message LabelClientsRequest {
+    repeated string client_ids = 1;
+    repeated string labels = 2;
+    string operation = 3;
 }

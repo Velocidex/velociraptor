@@ -150,6 +150,13 @@ service API {
         };
     }
 
+    rpc LabelClients(LabelClientsRequest) returns (APIResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/LabelClients",
+            body: "*"
+        };
+    }
+
     rpc ListClients(SearchClientsRequest) returns (SearchClientsResponse) {
         option (google.api.http) = {
             get: "/api/v1/SearchClients",
@@ -270,7 +277,7 @@ service API {
         };
     }
 
-    rpc SetArtifactFile(SetArtifactRequest) returns (SetArtifactResponse) {
+    rpc SetArtifactFile(SetArtifactRequest) returns (APIResponse) {
         option (google.api.http) = {
             post: "/api/v1/SetArtifactFile",
             body: "*",

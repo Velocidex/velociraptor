@@ -28,7 +28,7 @@ message SetArtifactRequest {
         }];
 }
 
-message SetArtifactResponse {
+message APIResponse {
     bool error = 1 [(sem_type) = {
             description: "An error occured setting the artifact.",
         }];

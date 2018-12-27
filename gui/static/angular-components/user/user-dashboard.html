@@ -1,26 +1,26 @@
 <div class="container-fluid">
   <div class="row ">
-    <div id='front'>
-      <h2>Welcome to Velociraptor</h2>
+    <div class="card">
+      <div class="card-header">
+        <img class="card-img-top velociraptor-logo" src="/static/images/velo.png"
+             alt="Velociraptor Logo">
+        Welcome to Velociraptor
+      </div>
+      <div class="card-body">
+        <h4 class="card-title">
+          Query for a system to view in the search box above.
+        </h4>
+        <p class="card-text">
+          Type a search term to search for a machine using either a hostname,
+          mac address or username.
+        </p>
+        <p>
+          For example: <i>label:mylabel</i>,
+          <i>host:my_hostname</i>,
+          <i>user:usrname</i>,
+          or just client ID <i>c.1234</i>
+        </p>
+      </div>
     </div>
-    <div>
-      <br/>
-      Query for a system to view in the search box above.
-
-      <p>
-       Type a search term to search for a machine using either a hostname,
-       mac address or username.
-      </p>
-
-      <a href="/auth/google/login" style="text-transform:none">
-        <div class="left">
-          <img width="30px" alt="Google &quot;G&quot; Logo"
-               src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"/>
-        </div>
-        Login with Google
-      </a>
-
-      <br/>
-    </div>
-  </div>  <!-- row -->
-</div>  <!-- container -->
+  </div>
+</div>

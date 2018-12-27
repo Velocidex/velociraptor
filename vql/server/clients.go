@@ -57,7 +57,7 @@ func (self ClientsPlugin) Call(
 
 		for _, client_id := range db.SearchClients(
 			config_obj, constants.CLIENT_INDEX_URN,
-			search, 0, 1000000) {
+			search, "", 0, 1000000) {
 			api_client, err := api.GetApiClient(config_obj, client_id, false)
 			if err == nil {
 				output_chan <- api_client

@@ -5,7 +5,7 @@ Queries:
   # Check that the clients plugin allows searching by indexes.
   - SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer')
 
-  - SELECT * from clients()
+  - SELECT * from clients() order by client_id
 
   - |
     SELECT client_id, context.create_time as CreateTime,

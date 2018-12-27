@@ -165,13 +165,22 @@ func (self *ApiServer) ListClients(
 		limit = in.Limit
 	}
 
+	query_type := ""
+	if in.Type == api_proto.SearchClientsRequest_KEY {
+		query_type = "key"
+	}
+
 	result := &api_proto.SearchClientsResponse{}
 	for _, client_id := range db.SearchClients(
 		self.config, constants.CLIENT_INDEX_URN,
-		in.Query, in.Offset, limit) {
-		api_client, err := GetApiClient(self.config, client_id, false)
-		if err == nil {
-			result.Items = append(result.Items, api_client)
+		in.Query, query_type, in.Offset, limit) {
+		if in.NameOnly || query_type == "key" {
+			result.Names = append(result.Names, client_id)
+		} else {
+			api_client, err := GetApiClient(self.config, client_id, false)
+			if err == nil {
+				result.Items = append(result.Items, api_client)
+			}
 		}
 	}
 
@@ -191,6 +200,17 @@ func (self *ApiServer) NotifyClients(
 		return nil, errors.New("Client id should be specified.")
 	}
 	return &empty.Empty{}, nil
+}
+
+func (self *ApiServer) LabelClients(
+	ctx context.Context,
+	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
+	result, err := LabelClients(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 func (self *ApiServer) GetClient(
@@ -378,15 +398,15 @@ func (self *ApiServer) GetArtifactFile(
 func (self *ApiServer) SetArtifactFile(
 	ctx context.Context,
 	in *api_proto.SetArtifactRequest) (
-	*api_proto.SetArtifactResponse, error) {
+	*api_proto.APIResponse, error) {
 	err := setArtifactFile(self.config, in.VfsPath, in.Artifact)
 	if err != nil {
-		return &api_proto.SetArtifactResponse{
+		return &api_proto.APIResponse{
 			Error:        true,
 			ErrorMessage: fmt.Sprintf("%v", err),
 		}, nil
 	}
-	return &api_proto.SetArtifactResponse{}, nil
+	return &api_proto.APIResponse{}, nil
 }
 
 func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {

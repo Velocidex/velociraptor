@@ -195,12 +195,8 @@ func (self *FileBaseDataStore) DeleteSubject(
 	return nil
 }
 
-// Lists all the children of a URN.
-func (self *FileBaseDataStore) ListChildren(
-	config_obj *api_proto.Config,
-	urn string,
-	offset uint64, length uint64) ([]string, error) {
-	result := []string{}
+func listChildren(config_obj *api_proto.Config,
+	urn string) ([]os.FileInfo, error) {
 	filename, err := urnToFilename(config_obj, urn)
 	if err != nil {
 		return nil, err
@@ -209,11 +205,24 @@ func (self *FileBaseDataStore) ListChildren(
 	children, err := ioutil.ReadDir(dirname)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return result, nil
+			return []os.FileInfo{}, nil
 		}
 		return nil, errors.WithStack(err)
 	}
+	return children, nil
+}
 
+// Lists all the children of a URN.
+func (self *FileBaseDataStore) ListChildren(
+	config_obj *api_proto.Config,
+	urn string,
+	offset uint64, length uint64) ([]string, error) {
+	result := []string{}
+
+	children, err := listChildren(config_obj, urn)
+	if err != nil {
+		return result, err
+	}
 	sort.Slice(children, func(i, j int) bool {
 		return children[i].ModTime().Unix() > children[j].ModTime().Unix()
 	})
@@ -256,11 +265,28 @@ func (self *FileBaseDataStore) SetIndex(
 	return nil
 }
 
+func (self *FileBaseDataStore) UnsetIndex(
+	config_obj *api_proto.Config,
+	index_urn string,
+	entity string,
+	keywords []string) error {
+
+	for _, keyword := range keywords {
+		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
+		err := self.DeleteSubject(config_obj, subject)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (self *FileBaseDataStore) SearchClients(
 	config_obj *api_proto.Config,
 	index_urn string,
-	query string,
+	query string, query_type string,
 	offset uint64, limit uint64) []string {
+	seen := make(map[string]bool)
 	result := []string{}
 
 	query = strings.ToLower(query)
@@ -268,20 +294,70 @@ func (self *FileBaseDataStore) SearchClients(
 		query = "all"
 	}
 
-	children, err := self.ListChildren(
-		config_obj, path.Join(index_urn, query), offset, limit)
-	if err != nil {
-		return result
-	}
+	add_func := func(key string) {
+		children, err := listChildren(config_obj,
+			path.Join(index_urn, key))
+		if err != nil {
+			return
+		}
 
-	for _, child_urn := range children {
-		client_id := path.Base(child_urn)
-		if strings.HasPrefix(client_id, "C.") {
-			result = append(result, client_id)
+		for _, child_urn := range children {
+			name := strings.TrimSuffix(
+				UnsanitizeComponent(child_urn.Name()), ".db")
+			seen[name] = true
+
+			if uint64(len(seen)) > offset+limit {
+				break
+			}
 		}
 	}
 
-	return result
+	// Query has a wildcard.
+	if strings.ContainsAny(query, "[]*?") {
+		// We could make it smarter in future but this is
+		// quick enough for now.
+		sets, err := listChildren(config_obj, index_urn)
+		if err != nil {
+			return result
+		}
+		for _, set := range sets {
+			name := strings.TrimSuffix(
+				UnsanitizeComponent(set.Name()), ".db")
+
+			matched, err := path.Match(query, name)
+			if err != nil {
+				// Can only happen if pattern is invalid.
+				return result
+			}
+			if matched {
+				if query_type == "key" {
+					seen[name] = true
+				} else {
+					add_func(name)
+				}
+			}
+
+			if uint64(len(seen)) > offset+limit {
+				break
+			}
+		}
+	} else {
+		add_func(query)
+	}
+
+	for k, _ := range seen {
+		result = append(result, k)
+	}
+
+	if uint64(len(result)) < offset {
+		return []string{}
+	}
+
+	if uint64(len(result))-offset < limit {
+		limit = uint64(len(result)) - offset
+	}
+
+	return result[offset : offset+limit]
 }
 
 // Called to close all db handles etc. Not thread safe.

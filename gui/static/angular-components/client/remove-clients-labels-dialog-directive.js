@@ -48,15 +48,11 @@ RemoveClientsLabelsDialogController.prototype.onClientsChange_ = function(newVal
 
   if (angular.isDefined(newValue)) {
     angular.forEach(newValue, function(client) {
-      if (angular.isDefined(client['value']['labels'])) {
+      if (angular.isDefined(client['labels'])) {
         angular.forEach(
-            client['value']['labels'],
+            client['labels'],
             function(label) {
-              // Don't show system labels (i.e. the ones where "GRR" is the
-              // owner).
-              if (label['value']['owner']['value'] !== 'GRR') {
-                labelsSet[label['value']['name']['value']] = true;
-              }
+                labelsSet[label] = true;
             });
       }
     }.bind(this));
@@ -79,14 +75,15 @@ RemoveClientsLabelsDialogController.prototype.onClientsChange_ = function(newVal
 RemoveClientsLabelsDialogController.prototype.proceed = function() {
   var clients = [];
   angular.forEach(this.scope_['clients'], function(clientObj) {
-    clients.push(clientObj['value']['client_id']['value']);
+    clients.push(clientObj['client_id']);
   });
 
   var deferred = this.q_.defer();
-  var url = '/clients/labels/remove';
+  var url = '/v1/LabelClients';
   var params = {
-    client_ids: clients,
-    labels: [this.labelName]
+      client_ids: clients,
+      operation: "remove",
+      labels: [this.labelName]
   };
   this.grrApiService_.post(url, params).then(
     function success() {
@@ -95,6 +92,7 @@ RemoveClientsLabelsDialogController.prototype.proceed = function() {
     function failure(response) {
       deferred.reject(response.data.message);
     }.bind(this));
+
   return deferred.promise;
 };
 

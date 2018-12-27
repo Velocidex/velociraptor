@@ -1,0 +1,30 @@
+Queries:
+  # First remove all labels from all clients.
+  - |
+    SELECT label(client_id=client_id, op='remove', labels=labels)
+    FROM clients(search='label:*') ORDER BY client_id
+
+  # Make sure no labels exist.
+  - SELECT * FROM clients(search='label:*') ORDER BY client_id
+
+  # Now set labels on windows clients.
+  - |
+    SELECT * FROM foreach(
+      row={
+         SELECT * FROM clients()
+         WHERE os_info.system = 'windows' ORDER BY client_id
+      }, query={
+         SELECT os_info.system, label(client_id=client_id, labels=['WinBoxes'])
+         FROM scope()
+      })
+
+  # Should be able to see our labels now.
+  - SELECT * FROM clients(search='label:*')
+
+  # Clear everything
+  - |
+    SELECT label(client_id=client_id, op='remove', labels=labels)
+    FROM clients(search='label:*') ORDER BY client_id
+
+  # Make sure no labels exist.
+  - SELECT * FROM clients(search='label:*') ORDER BY client_id

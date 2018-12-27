@@ -39,11 +39,11 @@ const AddClientsLabelsDialogController = function($scope, $q, grrApiService) {
 AddClientsLabelsDialogController.prototype.proceed = function() {
   var clients = [];
   angular.forEach(this.scope_['clients'], function(clientObj) {
-    clients.push(clientObj['value']['client_id']['value']);
+    clients.push(clientObj.client_id);
   });
 
   var deferred = this.q_.defer();
-  var url = '/clients/labels/add';
+  var url = '/v1/LabelClients';
   var params = {
     client_ids: clients,
     labels: [this.labelName]

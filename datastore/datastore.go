@@ -62,10 +62,16 @@ type DataStore interface {
 		entity string,
 		keywords []string) error
 
+	UnsetIndex(
+		config_obj *api_proto.Config,
+		index_urn string,
+		entity string,
+		keywords []string) error
+
 	SearchClients(
 		config_obj *api_proto.Config,
 		index_urn string,
-		query string,
+		query string, query_type string,
 		offset uint64, limit uint64) []string
 
 	// Called to close all db handles etc. Not thread safe.

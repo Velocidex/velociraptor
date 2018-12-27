@@ -20,7 +20,7 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
   "Hostname": "TestComputer",
   "System": "windows"
  }
-]SELECT * from clients()[
+]SELECT * from clients() order by client_id[
  {
   "client_id": "C.11a3013cca8f826e",
   "agent_information": {},
@@ -64,7 +64,8 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
        runner_args.args.artifacts.names as Artifacts,
        runner_args.flow_name as Flow
 FROM flows(client_id='C.11a3013cca8f826e')
-WHERE Flow = 'ArtifactCollector'[
+WHERE Flow = 'ArtifactCollector'
+[
  {
   "Artifacts": [
    "Windows.Applications.ChocolateyPackages"
