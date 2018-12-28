@@ -5,6 +5,8 @@ package wmi
 
 // #cgo LDFLAGS: -lole32 -lwbemuuid -loleaut32 -luuid
 //
+// #include <stdlib.h>
+//
 // void *watchEvents(void *go_ctx, char *query, char *namespace);
 //
 // void destroyEvent(void *c_ctx);
@@ -120,8 +122,13 @@ func (self WmiEventPlugin) Call(
 		ptr := pointer.Save(&event_context)
 		defer pointer.Unref(ptr)
 
-		c_ctx := C.watchEvents(ptr, C.CString(arg.Query),
-			C.CString(arg.Namespace))
+		c_query := C.CString(arg.Query)
+		defer C.free(unsafe.Pointer(c_query))
+
+		c_nsp := C.CString(arg.Namespace)
+		defer C.free(unsafe.Pointer(c_nsp))
+
+		c_ctx := C.watchEvents(ptr, c_query, c_nsp)
 		if c_ctx == nil {
 			return
 		}

@@ -156,15 +156,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:64a5a67c69b70c2420e607a8545d674a23778ed9c3e80607bfd17b77c6c87f6a"
+  digest = "1:c96d16a4451e48e2c44b2c3531fd8ec9248d822637f1911a88959ca0bcae4a64"
   name = "github.com/go-ole/go-ole"
   packages = [
     ".",
     "oleutil",
   ]
   pruneopts = "UT"
-  revision = "a41e3c4b706f6ae8dfbff342b06e40fa4d2d0506"
-  version = "v1.2.1"
+  revision = "39dc8486bd0952279431257138bc428275b86797"
+  version = "v1.2.2"
 
 [[projects]]
   digest = "1:a11f0d1b183051552e449ad457d5d5c84d0779ae69201d6390bcacf2063c9f9b"
@@ -213,8 +213,8 @@
     "utilities",
   ]
   pruneopts = "UT"
-  revision = "01c07cdabb480b6d67b5c5586ae3b66e806de513"
-  version = "v1.6.2"
+  revision = "719aaadb1a4f7b11606d454e266fe5c5f789796f"
+  version = "v1.6.3"
 
 [[projects]]
   digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
@@ -255,17 +255,18 @@
   revision = "8b31f9c59b0feb56c456ce49a7b3d2b2e93a6f18"
 
 [[projects]]
-  digest = "1:19776767e34ab4def5b55714b3d67ac45d8f9a0d1cf6fa50b3b5920b3b38ff5c"
+  digest = "1:f4e64bb62274202b95403b8ae001d0601cee01afadf60767fb0e1d239f8f1413"
   name = "github.com/magefile/mage"
   packages = [
+    "internal",
     "mage",
     "mg",
     "parse",
     "sh",
   ]
   pruneopts = "UT"
-  revision = "11d15918ff3aa6f75cd6d3340a9507bb5309c679"
-  version = "v1.7.1"
+  revision = "aedfce64c122eef47009b7f80c9771044753215d"
+  version = "v1.8.0"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -293,11 +294,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c009d394bc9d4712cad99152e3923b74b9462fc4d7f17ca3f41b0a900b60e865"
+  digest = "1:5e6d66b03ec2df7ce14d19ad75f35d189ae56d5169813fb20eca4d076d81d37e"
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c88d7e5f2e24de48a200a2655ac8a0910be9a0f7"
+  revision = "703b5e6b11ae25aeb2af9ebb5d5fdf8fa2575211"
 
 [[projects]]
   digest = "1:4a49346ca45376a2bba679ca0e83bec949d780d4e927931317904bad482943ec"
@@ -437,7 +438,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0cb33da180bf2a498bdfc8eb6216233c845d9d8b6d00a793e559ef34cee80bbd"
+  digest = "1:e4b9d0f53336b00de5321ef2f4b7547a697ecc9d3a00dc67e26f644eff9f4f11"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -452,7 +453,7 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "610586996380ceef02dd726cc09df7e00a3f8e56"
+  revision = "927f97764cc334a6575f4b7a1584a147864d5723"
 
 [[projects]]
   branch = "master"
@@ -470,7 +471,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ac9e186c0a3c7b3fb4c865570251e1b65079b5c75d0b4da531bae5da5805eb32"
+  digest = "1:2af6d9ba571b66bf7c3b1bfa62c9da7b30461bb15bfb3e210d08bb7437f29d20"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -482,7 +483,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "ad97f365e15054527b467150f898ec66d7f81e14"
+  revision = "c6cbdbf9e68a68b19802a5c44e537c284b9c8e1a"
 
 [[projects]]
   digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
@@ -514,7 +515,7 @@
   version = "v0.3.0"
 
 [[projects]]
-  digest = "1:d2a8db567a76203e3b41c1f632d86485ffd57f8e650a0d1b19d240671c2fddd7"
+  digest = "1:fa026a5c59bd2df343ec4a3538e6288dcf4e2ec5281d743ae82c120affe6926a"
   name = "google.golang.org/appengine"
   packages = [
     ".",
@@ -529,8 +530,8 @@
     "urlfetch",
   ]
   pruneopts = "UT"
-  revision = "4a4468ece617fc8205e99368fa2200e9d1fad421"
-  version = "v1.3.0"
+  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
+  version = "v1.4.0"
 
 [[projects]]
   digest = "1:0ff5d79ff7df5c47800f11c139615b2e485efd0014b74257c1f46cb6cb3bb84d"
@@ -627,11 +628,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0ffea695b0d242eeb8575ddbaeca70a355e0f30a45c475439c072d62d5dc45ad"
+  digest = "1:4f6c003174f7aab1268a797385ff93015a52c5fd1b91a5dfe227b1bc54544ec1"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "e9b2a938cf7091a34b46d71a026454dec78755f6"
+  revision = "fd7d9e4b0f6780460ddc527e0c19453f2a33b2d0"
 
 [[projects]]
   branch = "master"

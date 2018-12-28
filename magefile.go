@@ -23,13 +23,13 @@ var (
 
 	mingw_xcompiler = "x86_64-w64-mingw32-gcc"
 	name            = "velociraptor"
-	version         = "v0.2.6"
+	version         = "v0.2.7"
 )
 
 func Xgo() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
-		"--targets", "windows/*,darwin/*,linux/*",
+		"--targets", "windows/amd64,darwin/amd64,linux/amd64",
 		"-tags", "release",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")

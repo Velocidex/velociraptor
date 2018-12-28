@@ -1,4 +1,4 @@
-SELECT label(client_id=client_id, op='remove', labels=labels)
+SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
 []SELECT * FROM clients(search='label:*') ORDER BY client_id[]SELECT * FROM foreach(
   row={
@@ -62,10 +62,11 @@ FROM clients(search='label:*') ORDER BY client_id
    "WinBoxes"
   ]
  }
-]SELECT label(client_id=client_id, op='remove', labels=labels)
+]SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
 [
  {
+  "client_id": "C.11a3013cca8f826e",
   "label(client_id=client_id, op='remove', labels=labels)": {
    "ClientId": "C.11a3013cca8f826e",
    "Labels": [
@@ -75,6 +76,7 @@ FROM clients(search='label:*') ORDER BY client_id
   }
  },
  {
+  "client_id": "C.c916a7e445eb0868",
   "label(client_id=client_id, op='remove', labels=labels)": {
    "ClientId": "C.c916a7e445eb0868",
    "Labels": [

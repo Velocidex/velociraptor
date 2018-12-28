@@ -60,6 +60,8 @@ func doLS(path string) {
 		Set("path", path)
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 
 	query := "SELECT Name, Size, Mode.String AS Mode, " +
@@ -90,6 +92,8 @@ func doCp(path string, dump_dir string) {
 		})
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 
 	eval_query(`SELECT * from foreach(

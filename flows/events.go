@@ -86,7 +86,10 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	}
 	defer fd.Close()
 
-	writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
+	writer, err := csv.GetCSVWriter(scope, fd)
 	defer writer.Close()
 
 	// Decode the VQLResponse and write into the CSV file.

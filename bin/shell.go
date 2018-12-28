@@ -120,6 +120,7 @@ func get_responses(ctx context.Context,
 		Set("ClientId", client_id)
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
+	defer scope.Close()
 
 	vql, err := vfilter.Parse(`SELECT ReturnCode, Stdout, Stderr, Timestamp,
            Argv FROM watch_monitoring(client_id=ClientId, artifact='Shell')`)

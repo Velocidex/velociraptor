@@ -15,6 +15,8 @@ var (
 
 func doVQLList() {
 	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
 	type_map := vfilter.NewTypeMap()
 	info := scope.Describe(type_map)
 

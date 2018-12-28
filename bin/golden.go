@@ -42,6 +42,8 @@ func runTest(fixture *testFixture) (string, error) {
 	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = logging.NewPlainLogger(config_obj,
 		&logging.ToolComponent)
 

@@ -25,6 +25,8 @@ func RunVQL(
 	env.Set("server_config", config_obj)
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = logging.NewPlainLogger(config_obj,
 		&logging.ToolComponent)
 

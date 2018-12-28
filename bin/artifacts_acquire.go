@@ -67,6 +67,8 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 
 	repository := getRepository(config_obj)
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = logging.NewPlainLogger(
 		config_obj, &logging.ToolComponent)
 

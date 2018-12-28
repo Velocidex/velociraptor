@@ -47,13 +47,11 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	go func() {
-		select {
-		case <-ctx.Done():
-			os.Remove(tmpfile.Name()) // clean up
-		}
-	}()
-
+	// Make sure the file is removed when the query is done.
+	scope.AddDesctructor(func() {
+		scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
+		os.Remove(tmpfile.Name())
+	})
 	return tmpfile.Name()
 }
 

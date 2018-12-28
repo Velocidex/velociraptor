@@ -94,6 +94,8 @@ func (self *VQLClientAction) StartQuery(
 		repository.Set(artifact)
 	}
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = log.New(&LogWriter{config_obj, responder},
 		"vql: ", log.Lshortfile)
 

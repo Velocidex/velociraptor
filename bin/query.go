@@ -110,6 +110,7 @@ func doQuery() {
 	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	for _, query := range *queries {
@@ -132,6 +133,8 @@ func doExplain(plugin string) {
 	result := vfilter.NewDict()
 	type_map := vfilter.NewTypeMap()
 	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
 	pslist_info, pres := scope.Info(type_map, plugin)
 	if pres {
 		result.Set(plugin+"_info", pslist_info)

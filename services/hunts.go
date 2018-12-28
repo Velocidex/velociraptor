@@ -51,6 +51,8 @@ func (self *HuntManager) Start() error {
 		return err
 	}
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
 	scope.Logger = logging.NewPlainLogger(self.config_obj,
 		&logging.FrontendComponent)
 
