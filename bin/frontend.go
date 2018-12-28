@@ -4,9 +4,11 @@ package main
 import (
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 )
 
@@ -20,6 +22,13 @@ func init() {
 		if command == frontend.FullCommand() {
 			config_obj, err := get_server_config(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
+
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.WithFields(logrus.Fields{
+				"version":    config_obj.Version.Version,
+				"build_time": config_obj.Version.BuildTime,
+				"commit":     config_obj.Version.Commit,
+			}).Info("Starting Frontend.")
 
 			server_obj, err := server.NewServer(config_obj)
 			kingpin.FatalIfError(err, "Unable to create server")

@@ -399,7 +399,7 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 					return
 				}
 
-				logger.Info("reader: notification received.")
+				logger.Debug("reader: notification received.")
 				response, _, err := server_obj.Process(
 					req.Context(),
 					message_info,
@@ -414,7 +414,7 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 				// and finish the request off.
 				n, err := w.Write(response)
 				if err != nil || n < len(serialized_pad) {
-					logger.Info("reader: Error %v", err)
+					logger.Debug("reader: Error %v", err)
 				}
 
 				flusher.Flush()

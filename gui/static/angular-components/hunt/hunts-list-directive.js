@@ -183,14 +183,14 @@ HuntsListController.prototype.runHunt = function() {
  *
  * @export
  */
-HuntsListController.prototype.pauseHunt = function() {
+HuntsListController.prototype.stopHunt = function() {
   var modalPromise = this.grrDialogService_.openConfirmation(
-      'Pause this hunt?',
-      'Paused hunts do not schedule new clients. You can resume the hunt later.',
+      'Stop this hunt?',
+      'Stopped hunts can not be restarted. You can create a new hunt later.',
       function() {
         var promise = this.grrApiService_.post(
           'v1/ModifyHunt', {state: 'PAUSED', hunt_id: this.scope_['selectedHuntId']});
-        return this.wrapApiPromise_(promise, 'Hunt paused successfully!');
+        return this.wrapApiPromise_(promise, 'Hunt stopped successfully!');
       }.bind(this));
   modalPromise.then(function resolve() {
     this.triggerUpdate();
