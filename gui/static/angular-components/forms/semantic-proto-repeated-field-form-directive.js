@@ -36,7 +36,6 @@ const SemanticProtoRepeatedFieldFormController = function(
   this.valueDescriptor;
 
   this.scope_.$watch('value', this.onValueChange_.bind(this));
-
   if (angular.isUndefined(this.scope_.value)) {
     if (angular.isDefined(this.scope_.field['default'])) {
       this.scope_.value = JSON.parse(this.scope_.field['default']);

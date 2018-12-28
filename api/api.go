@@ -73,21 +73,25 @@ func (self *ApiServer) LaunchFlow(
 func (self *ApiServer) CreateHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
+
+	// Log this event as an Audit event.
+	in.Creator = GetGRPCUserInfo(ctx).Name
+	in.HuntId = flows.GetNewHuntId()
+
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    in.Creator,
+			"hunt_id": in.HuntId,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("CreateHunt")
+
 	result := &api_proto.StartFlowResponse{}
-	hunt_id, err := flows.CreateHunt(self.config, in)
+	hunt_id, err := flows.CreateHunt(ctx, self.config, in)
 	if err != nil {
 		return nil, err
 	}
 
 	result.FlowId = *hunt_id
-
-	// Log this event as and Audit event.
-	logging.GetLogger(self.config, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":    GetGRPCUserInfo(ctx).Name,
-			"hunt_id": *hunt_id,
-			"details": fmt.Sprintf("%v", in),
-		}).Info("CreateHunt")
 
 	return result, nil
 }
@@ -144,12 +148,6 @@ func (self *ApiServer) GetHuntResults(
 	}
 
 	return result, nil
-}
-
-func (self *ApiServer) ListHuntClients(
-	ctx context.Context,
-	in *api_proto.ListHuntClientsRequest) (*api_proto.GetTableResponse, error) {
-	return &api_proto.GetTableResponse{}, nil
 }
 
 func (self *ApiServer) ListClients(
@@ -357,7 +355,10 @@ func (self *ApiServer) GetTable(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 	result, err := getTable(self.config, in)
-	return result, err
+	if err != nil {
+		return &api_proto.GetTableResponse{}, nil
+	}
+	return result, nil
 }
 
 func (self *ApiServer) GetArtifacts(

@@ -136,12 +136,6 @@ service API {
         };
     }
 
-    rpc ListHuntClients(ListHuntClientsRequest) returns (GetTableResponse) {
-        option (google.api.http) = {
-            get: "/api/v1/ListHuntClients",
-        };
-    }
-
     // Clients.
     rpc NotifyClients(NotificationRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {

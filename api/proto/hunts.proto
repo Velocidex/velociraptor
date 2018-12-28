@@ -56,15 +56,55 @@ message HuntCondition {
 }
 
 
+message HuntStats {
+    uint64 total_clients_scheduled = 9 [(sem_type) = {
+            description: "The total number of clients currently scheduled for this hunt.",
+            friendly_name: "Total Scheduled",
+        }];
+
+    uint64 total_clients_with_results = 14 [(sem_type) = {
+            description: "Total number of clients with results.",
+            friendly_name: "Total Clients with Results",
+        }];
+
+    uint64 total_clients_without_results = 16 [(sem_type) = {
+            description: "Total number of clients with out results.",
+            friendly_name: "Total Clients without Results",
+        }];
+
+    uint64 total_clients_with_errors = 15 [(sem_type) = {
+            description: "Total number of clients with errors.",
+            friendly_name: "Total Clients with Errors",
+        }];
+
+    bool stopped = 1 [(sem_type) = {
+            description: "If this is set then the hunt is stopped. This field "
+            "is manipulated by the hunt manager."
+        }];
+}
+
+
 message Hunt {
     string hunt_id = 1 [(sem_type) = {
             friendly_name: "Hunt ID",
         }];
+
     uint64 create_time = 2 [(sem_type) = {
             description: "When this hunt was created.",
             friendly_name: "Creation Time",
             type: "RDFDatetime",
         }];
+
+    string creator = 12 [(sem_type) = {
+            description: "Who created the hunt?",
+        }];
+
+    uint64 start_time = 21 [(sem_type) = {
+            description: "When this hunt was actually started.",
+            friendly_name: "Start Time",
+            type: "RDFDatetime",
+        }];
+
     uint64 expires = 10 [(sem_type) = {
             description: "When does this hunt expire?",
             friendly_name: "Expiry Time",
@@ -89,89 +129,31 @@ message Hunt {
             description: "Total number of clients this hunt will run on."
         }];
 
-    uint64 client_rate = 7 [(sem_type) = {
-            description: "Total clients per minute that will run the hunt.",
-            default: "20",
-        }];
+    HuntStats stats = 18;
 
-    uint64 total_clients_scheduled = 9 [(sem_type) = {
-            description: "The total number of clients currently scheduled for this hunt.",
-            friendly_name: "Total Scheduled",
-        }];
-
-    uint64 total_clients_with_results = 14 [(sem_type) = {
-            description: "Total number of clients with results.",
-            friendly_name: "Total Clients with Results",
-        }];
-
-    uint64 total_clients_without_results = 16 [(sem_type) = {
-            description: "Total number of clients with out results.",
-            friendly_name: "Total Clients without Results",
-        }];
-
-    uint64 total_clients_with_errors = 15 [(sem_type) = {
-            description: "Total number of clients with errors.",
-            friendly_name: "Total Clients with Errors",
-        }];
-
-    // The following fields are used to calculate the client
-    // recruitment rate when the hunt is paused.
-    uint64 last_unpause_time = 12 [(sem_type) = {
-            description: "The time when the hunt was last paused or the creation time.",
-            type: "RDFDatetime",
-            label: HIDDEN,
-        }];
-
-    uint64 total_clients_when_unpaused = 13 [(sem_type) = {
-            description: "The total number of clients schduled when the hunt was paused.",
-            label: HIDDEN,
+    repeated string artifacts = 17 [(sem_type) = {
+            description: "A list of artifacts this hunt produces.",
         }];
 
     enum State {
         UNSET = 0;
         PAUSED = 1 [(description) = "Hunt will not schedule new clients but can be started."];
         RUNNING = 2 [(description) = "Hunt is running and ready."];
-        STOPPED = 3 [(description) = "Hunt has expired."];
+        STOPPED = 3 [(description) = "Hunt has stopped."];
     };
 
-    State state = 8;
-
-    repeated string artifacts = 17 [(sem_type) = {
-            description: "A list of artifacts this hunt produces.",
+    State state = 8 [(sem_type) = {
+            description: "This is state of the hunt. This field is manupulated by the GUI."
         }];
 }
-
-
-message HuntInfo {
-    string hunt_id = 1;
-    uint64 scheduled_time = 2;
-    string client_id = 3;
-    string flow_id = 5 [(sem_type) = {
-            description: "The flow that was launched for this hunt."
-        }];
-
-    FlowRunnerArgs start_request = 4 [(sem_type) = {
-            description: "The flow that will be run on the client when it is scheduled."
-        }];
-
-    enum State {
-        UNSET = 0;
-        PENDING = 1 [(description) = "Flow has not yet been created but it is pending."];
-        RUNNING = 2 [(description) = "Flow has been created and scheduled."];
-        ERROR = 3 [(description) = "We tried to start the flow but it errored."];
-    }
-
-    State state = 8;
-
-    FlowContext result = 9 [(sem_type) = {
-            description: "When the flow is complete its final result is stored here."
-        }];
-}
-
 
 message ListHuntsRequest {
     uint64 offset = 1;
     uint64 count = 2;
+}
+
+message ListHuntsResponse {
+    repeated Hunt items = 1;
 }
 
 message GetHuntRequest {
@@ -183,29 +165,4 @@ message GetHuntResultsRequest {
     uint64 count = 2;
     string hunt_id = 3;
     string artifact = 4;
-}
-
-message HuntResults {
-    repeated HuntInfo items = 1;
-}
-
-message ListHuntsResponse {
-    repeated Hunt items = 1;
-}
-
-message ListHuntClientsRequest {
-    enum Type {
-        PENDING = 0 [(description) = "Clients that matched the hunt condition and are waiting to be scheduled."];
-        SCHEDULED = 1 [(description) = "Clients scheduled with flows in progress"];
-        COMPLETED = 2 [(description) = "Clients with completed flows"];
-        RESULTS = 3 [(description) = "Client with non empty results"];
-    }
-
-    Type type = 1 [(sem_type) = {
-            description: "Where type of clients to display";
-        }];
-
-    string hunt_id = 2;
-    uint64 offset = 3;
-    uint64 count = 4;
 }

@@ -72,20 +72,20 @@
       <col />
       <col />
       <col />
-      <col />
       <col width="100%" />
+      <col />
     </colgroup>
     <thead>
       <tr>
         <th>Status</th>
         <th>Hunt ID</th>
         <th>Name</th>
-        <th>Start Time</th>
+        <th>Create Time</th>
         <th>Expires</th>
         <th>Client Limit</th>
         <th>Clients Scheduled</th>
-        <th>Creator</th>
         <th>Description</th>
+        <th>Creator</th>
       </tr>
     </thead>
     <tbody>
@@ -95,15 +95,15 @@
           ng-click="controller.selectItem(item)"
           >
 
-        <td><grr-hunt-status-icon hunt="::item" /></td>
+        <td><grr-hunt-status-icon state="::controller.huntState(item)" /></td>
         <td>{$ ::item.hunt_id $}</td>
         <td>{$ ::item.start_request.flow_name $}</td>
         <td><grr-timestamp value="::item.create_time" /></td>
         <td><grr-timestamp value="::item.expires" /></td>
         <td>{$ ::item.client_limit || 'Unlimited' $}</td>
-        <td>{$ ::item.total_clients_scheduled || 0 $}</td>
-        <td>{$ ::item.creator $}</td>
+        <td>{$ ::item.stats.total_clients_scheduled || 0 $}</td>
         <td>{$ ::item.hunt_description $}</td>
+        <td>{$ ::item.creator $}</td>
       </tr>
     </tbody>
   </table>

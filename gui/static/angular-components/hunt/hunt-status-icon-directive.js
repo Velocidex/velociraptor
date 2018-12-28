@@ -14,7 +14,7 @@ goog.module.declareLegacyNamespace();
  */
 exports.HuntStatusIconDirective = function() {
   return {
-    scope: {hunt: '='},
+    scope: {state: '='},
     restrict: 'E',
     templateUrl: '/static/angular-components/hunt/hunt-status-icon.html'
   };

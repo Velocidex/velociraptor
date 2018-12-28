@@ -1,0 +1,6 @@
+Queries:
+  # Should retrieve client ids.
+  - select * from search(query='host:*') ORDER BY Hit
+
+  # Should retrieve keys matching the query.
+  - select * from search(query='host:*', type='key') ORDER BY Hit

@@ -14,7 +14,7 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
   "Hostname": "trek",
   "LastSeen": 1540368672.777812
  }
-]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer')[
+]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer') order by client_id[
  {
   "ClientId": "C.11a3013cca8f826e",
   "Hostname": "TestComputer",
@@ -64,7 +64,7 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
        runner_args.args.artifacts.names as Artifacts,
        runner_args.flow_name as Flow
 FROM flows(client_id='C.11a3013cca8f826e')
-WHERE Flow = 'ArtifactCollector'
+WHERE Flow = 'ArtifactCollector' order by client_id
 [
  {
   "Artifacts": [

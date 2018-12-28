@@ -145,6 +145,8 @@ func (self HuntResultsPlugin) Call(
 							UnixNano()/1000000).
 						Set("ClientId",
 							participation_row.ClientId).
+						Set("Fqdn",
+							participation_row.Fqdn).
 						Set("HuntId", participation_row.HuntId)
 				}
 			}

@@ -29,4 +29,7 @@ const (
 	// Filestore paths for artifacts must begin with this prefix.
 	ARTIFACT_DEFINITION         = "/artifact_definitions/custom"
 	BUILTIN_ARTIFACT_DEFINITION = "/artifact_definitions/builtin"
+
+	// Messages to the client which we dont care about their responses.
+	IgnoreResponseState = uint64(101)
 )

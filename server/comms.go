@@ -16,7 +16,6 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -86,13 +85,9 @@ func InstallSignalHandler(
 		wg.Add(1)
 		defer wg.Done()
 
-		// Start the hunt dispatcher.
-		_, err := flows.GetHuntDispatcher(config_obj)
-		if err != nil {
-			return
-		}
-
-		manager, err := services.StartHuntManager(config_obj)
+		// Start all the services and shut them down when we
+		// are done.
+		manager, err := services.StartServices(config_obj)
 		if err != nil {
 			return
 		}

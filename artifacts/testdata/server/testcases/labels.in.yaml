@@ -19,7 +19,7 @@ Queries:
       })
 
   # Should be able to see our labels now.
-  - SELECT * FROM clients(search='label:*')
+  - SELECT * FROM clients(search='label:*') ORDER BY client_id
 
   # Clear everything
   - |

@@ -9,7 +9,7 @@ and flexibility.
 
 To learn more about Velociraptor, read about it on our blog:
 
-   https://velociraptor-blog.velocidex.com
+   https://docs.velociraptor.velocidex.com
 
 ## Quick start
 
@@ -103,7 +103,6 @@ Velociraptor is also useful as a local triage tool. In particular you
 might find Velociraptor's artifacts especially useful for quickly
 capturing important information about a running system. You can
 collect artifacts by using the "artifacts collect" command:
-
     ```bash
     $ velociraptor artifacts list
     INFO:2018/08/20 22:28:56 Loaded 18 built in artifacts
@@ -127,7 +126,6 @@ Explore more of Velociraptor's options using the -h flag.
 
 To build from source, make sure you have a recent Golang installed
 from https://golang.org/dl/:
-
     ```bash
     $ go get -u www.velocidex.com/golang/velociraptor
     $ go get -u github.com/golang/dep/cmd/dep
@@ -157,7 +155,6 @@ from https://golang.org/dl/:
     ```
 
 If you want to rebuild the protobuf you will need to install protobuf compiler:
-
    ```bash
    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.6.1/protoc-3.6.1-linux-x86_64.zip
    $ unzip protoc-3.6.1-linux-x86_64.zip
@@ -179,4 +176,4 @@ File issues on https://gitlab.com/velocidex/velociraptor
 
 Read more about Velociraptor on our blog:
 
-https://velociraptor-blog.velocidex.com/
+https://docs.velociraptor.velocidex.com

@@ -29,7 +29,7 @@ FROM clients(search='label:*') ORDER BY client_id
   },
   "os_info.system": "windows"
  }
-]SELECT * FROM clients(search='label:*')[
+]SELECT * FROM clients(search='label:*') ORDER BY client_id[
  {
   "client_id": "C.11a3013cca8f826e",
   "agent_information": {},

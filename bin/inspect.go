@@ -32,10 +32,8 @@ var classifiers = map[string]proto.Message{
 	"aff4:/clients/C.[^/]+/flows/F\\.[^/]+/results/.+$": &crypto_proto.GrrMessage{},
 	"aff4:/clients/C.[^/]+/tasks/[^/]+$":                &crypto_proto.GrrMessage{},
 	"aff4:/hunts/H.[^/]+$":                              &api_proto.Hunt{},
-	"aff4:/hunts/H.[^/]+/(results|pending|no_results|errors|" +
-		"completed|running)/C.[^/]+$": &api_proto.HuntInfo{},
-	"aff4:/users/[^/]+$":                  &api_proto.VelociraptorUser{},
-	"aff4:/users/[^/]+/notifications/.+$": &api_proto.UserNotification{},
+	"aff4:/users/[^/]+$":                                &api_proto.VelociraptorUser{},
+	"aff4:/users/[^/]+/notifications/.+$":               &api_proto.UserNotification{},
 }
 
 var (

@@ -1,5 +1,5 @@
 // The foreman is a Well Known Flow for clients to check for hunt
-// memberships. Each client periodically informs the foreman on the
+// memberships. Each client periodically informs the foreman of the
 // most recent hunt it executed, and the foreman launches the relevant
 // flow on the client.
 
@@ -7,11 +7,13 @@
 
 // 1. The client sends a message to the foreman periodically with the
 //    timestamp of the most recent hunt it ran.
-// 2. The foreman then starts a conditional flow for each client. The
-//    conditional flow runs a VQL query on the client and determines
-//    if another flow should be run based on a codition posed on the
-//    VQL response.
-// 3. If the condition is satisfied, the flow proceeds to run
+
+// 2. If a newer hunt exists, the foreman sends the hunt_condition
+//    query to the client with the response directed to the
+//    System.Hunt.Participation artifact monitoring queue.
+
+// 3. The hunt manager scans the System.Hunt.Participation monitoring
+//    queue and launches the relevant flows on each client.
 
 package flows
 
@@ -28,6 +30,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
@@ -103,19 +106,35 @@ func (self *Foreman) ProcessMessage(
 		return errors.New("Expected args of type ForemanCheckin")
 	}
 
+	// Update the client's event tables.
 	err := self.ProcessEventTables(config_obj, flow_obj, message.Source,
 		foreman_checkin)
 	if err != nil {
 		return err
 	}
 
-	hunts_dispatcher, err := GetHuntDispatcher(config_obj)
-	if err != nil {
-		return err
+	// Process any needed hunts.
+	dispatcher := services.GetHuntDispatcher()
+	client_last_timestamp := foreman_checkin.LastHuntTimestamp
+
+	// Can we get away without a lock?
+	hunts_last_timestamp := dispatcher.GetLastTimestamp()
+	if client_last_timestamp >= hunts_last_timestamp {
+		return nil
 	}
 
-	for _, hunt := range hunts_dispatcher.GetApplicableHunts(
-		foreman_checkin.LastHuntTimestamp) {
+	// Nop - we need to lock and examine the hunts more carefully.
+	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+		// This hunt is not relevant to this client.
+		if hunt.StartTime <= client_last_timestamp {
+			return nil
+		}
+
+		// Check for labels.
+		label_condition := hunt.Condition.GetLabels()
+		if label_condition != nil && len(label_condition.Label) > 0 {
+			// TODO
+		}
 
 		flow_condition_query, err := calculateFlowConditionQuery(hunt)
 		if err != nil {
@@ -139,17 +158,19 @@ func (self *Foreman) ProcessMessage(
 			config_obj, message.Source, urn,
 			"UpdateForeman",
 			&actions_proto.ForemanCheckin{
-				LastHuntTimestamp: hunt.CreateTime,
-			}, processUpgradeForeman)
+				LastHuntTimestamp: hunt.StartTime,
+			}, constants.IgnoreResponseState)
 		if err != nil {
 			return err
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func calculateFlowConditionQuery(hunt *api_proto.Hunt) (
 	*actions_proto.VQLCollectorArgs, error) {
+
+	// TODO.
 
 	return getDefaultCollectorArgs(hunt.HuntId), nil
 }
@@ -165,7 +186,7 @@ func getDefaultCollectorArgs(hunt_id string) *actions_proto.VQLCollectorArgs {
 		Query: []*actions_proto.VQLRequest{
 			&actions_proto.VQLRequest{
 				Name: "Artifact System.Hunt.Participation",
-				VQL: "SELECT now() as Timestamp, HuntId, " +
+				VQL: "SELECT now() as Timestamp, Fqdn, HuntId, " +
 					"true as Participate from info()",
 			},
 		},

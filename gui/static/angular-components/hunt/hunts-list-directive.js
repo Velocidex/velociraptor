@@ -116,6 +116,14 @@ HuntsListController.prototype.selectItem = function(item) {
   this.selectedHunt = item;
 };
 
+HuntsListController.prototype.huntState = function(item) {
+    if (item.stats.stopped) {
+        return "STOPPED";
+    }
+
+    return item.state;
+};
+
 
 /**
  * Shows new hunt wizard.
