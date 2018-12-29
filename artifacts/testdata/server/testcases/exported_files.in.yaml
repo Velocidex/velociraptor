@@ -1,0 +1,5 @@
+Files:
+  # This will read the VFS file /exported_files/foo.txt
+  file_content: foo.txt
+Queries:
+  - SELECT split(string=file_content, sep='\\n') as line from scope()

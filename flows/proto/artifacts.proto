@@ -22,4 +22,9 @@ message ArtifactCollectorArgs {
             description: "Environment variables to be provided for the query.",
             friendly_name: "Params",
         }];
+
+    repeated VQLEnv files = 4 [(sem_type) = {
+            description: "Parameters to be filled in from exported files.",
+            friendly_name: "Exported Files",
+        }];
 }

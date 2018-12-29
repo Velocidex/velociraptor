@@ -176,6 +176,7 @@ func Compile(artifact *artifacts_proto.Artifact,
 			Value: value,
 		})
 	}
+
 	source_precondition := ""
 	for idx, source := range artifact.Sources {
 		prefix := fmt.Sprintf("%s_%d", escape_name(artifact.Name), idx)

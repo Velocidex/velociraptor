@@ -1,0 +1,9 @@
+SELECT split(string=file_content, sep='\\n') as line from scope()[
+ {
+  "line": [
+   "Line 1",
+   "Line 2",
+   ""
+  ]
+ }
+]

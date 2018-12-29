@@ -3,6 +3,7 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"path"
 
 	"github.com/golang/protobuf/proto"
@@ -66,10 +67,10 @@ func (self *ArtifactCollector) Start(
 
 	// Add any artifact dependencies.
 	repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-	for _, item := range collector_args.Env {
-		vql_collector_args.Env = append(vql_collector_args.Env,
-			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
-	}
+	AddArtifactCollectorArgs(
+		config_obj,
+		vql_collector_args,
+		collector_args)
 
 	return QueueMessageForClient(
 		config_obj, flow_obj,
@@ -152,6 +153,39 @@ func (self *ArtifactCollector) ProcessMessage(
 		}
 	}
 	return nil
+}
+
+// Adds any parameters set in the ArtifactCollectorArgs into the
+// VQLCollectorArgs.
+func AddArtifactCollectorArgs(
+	config_obj *api_proto.Config,
+	vql_collector_args *actions_proto.VQLCollectorArgs,
+	collector_args *flows_proto.ArtifactCollectorArgs) {
+
+	// Add any Environment Parameters from the request.
+	for _, item := range collector_args.Env {
+		vql_collector_args.Env = append(vql_collector_args.Env,
+			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
+	}
+
+	// Add any exported files.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	for _, item := range collector_args.Files {
+		file, err := file_store_factory.ReadFile(path.Join(
+			"/exported_files", item.Value))
+		if err != nil {
+			continue
+		}
+		buf, err := ioutil.ReadAll(file)
+		if err != nil {
+			continue
+		}
+		vql_collector_args.Env = append(vql_collector_args.Env,
+			&actions_proto.VQLEnv{
+				Key:   item.Key,
+				Value: string(buf),
+			})
+	}
 }
 
 func init() {
