@@ -11,13 +11,7 @@ message Artifacts {
         }];
 }
 
-
-message ArtifactCollectorArgs {
-    Artifacts artifacts = 1 [(sem_type) = {
-            description: "The artifacts to launch.",
-            friendly_name: "Launch",
-        }];
-
+message ArtifactParameters {
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
             friendly_name: "Params",
@@ -26,5 +20,18 @@ message ArtifactCollectorArgs {
     repeated VQLEnv files = 4 [(sem_type) = {
             description: "Parameters to be filled in from exported files.",
             friendly_name: "Exported Files",
+        }];
+}
+
+
+message ArtifactCollectorArgs {
+    Artifacts artifacts = 1 [(sem_type) = {
+            description: "The artifacts to launch.",
+            friendly_name: "Launch",
+        }];
+
+    ArtifactParameters parameters = 5 [(sem_type) = {
+            description: "Parameters to the artifacts.",
+            friendly_name: "Parameters",
         }];
 }

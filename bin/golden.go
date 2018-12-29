@@ -39,21 +39,27 @@ type testFixture struct {
 func vqlCollectorArgsFromFixture(
 	config_obj *api_proto.Config,
 	fixture *testFixture) *actions_proto.VQLCollectorArgs {
-	artifact_collector_args := &flows_proto.ArtifactCollectorArgs{}
+	artifact_collector_args := &flows_proto.ArtifactCollectorArgs{
+		Parameters: &flows_proto.ArtifactParameters{},
+	}
+
 	for k, v := range fixture.Parameters {
-		artifact_collector_args.Env = append(artifact_collector_args.Env,
+		artifact_collector_args.Parameters.Env = append(
+			artifact_collector_args.Parameters.Env,
 			&actions_proto.VQLEnv{Key: k, Value: v})
 	}
 	for k, v := range fixture.Files {
-		artifact_collector_args.Files = append(artifact_collector_args.Files,
+		artifact_collector_args.Parameters.Files = append(
+			artifact_collector_args.Parameters.Files,
 			&actions_proto.VQLEnv{Key: k, Value: v})
 	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	flows.AddArtifactCollectorArgs(
+	err := flows.AddArtifactCollectorArgs(
 		config_obj,
 		vql_collector_args,
 		artifact_collector_args)
+	kingpin.FatalIfError(err, "vqlCollectorArgsFromFixture")
 
 	return vql_collector_args
 }

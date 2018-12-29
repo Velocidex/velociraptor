@@ -18,6 +18,9 @@
   <grr-artifacts-list-form ng-switch-when="grrArtifactsListForm"
                  value="controller.scope_.value" />
 
+  <grr-artifacts-params-form ng-switch-when="grrArtifactsParamsForm"
+                           value="controller.scope_.value" />
+
   <div ng-switch-default>
     I dont know how to render {{ controller.renderer }} for type
     {{controller.scope_.type}} descriptors {{controller.valueDescriptor}}

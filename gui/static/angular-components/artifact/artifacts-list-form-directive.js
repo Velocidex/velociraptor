@@ -14,9 +14,10 @@ goog.module.declareLegacyNamespace();
  * @ngInject
  */
 const ArtifactsListFormController =
-    function($scope, grrArtifactDescriptorsService) {
+      function($scope, grrArtifactDescriptorsService, $rootScope) {
   /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+          this.scope_ = $scope;
+          this.rootScope_ = $rootScope;
 
   /** @private {!grrUi.artifact.artifactDescriptorsService.ArtifactDescriptorsService} */
   this.grrArtifactDescriptorsService_ = grrArtifactDescriptorsService;
@@ -45,9 +46,17 @@ const ArtifactsListFormController =
 
   this.scope_.$watch('controller.descriptors',
                      this.onDescriptorsOrValueChange_.bind(this));
+
+  this.scope_.$watch('controller.selectedName',
+                     this.onSelectedNameChange_.bind(this));
+
   this.scope_.$watchCollection('value',
                                this.onDescriptorsOrValueChange_.bind(this));
   this.scope_.value = {names:[]};
+};
+
+ArtifactsListFormController.prototype.onSelectedNameChange_ = function(newValue) {
+    this.rootScope_["selectedArtifact"] = this.descriptors[this.selectedName];
 };
 
 
@@ -210,5 +219,4 @@ exports.ArtifactsListFormDirective.directive_name = 'grrArtifactsListForm';
  * @const
  * @export
  */
-//exports.ArtifactsListFormDirective.semantic_type = 'ArtifactName';
 exports.ArtifactsListFormDirective.semantic_type = 'Artifacts';

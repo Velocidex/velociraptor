@@ -7,6 +7,7 @@ const {ArtifactCollectorDirective} = goog.require('grrUi.artifact.collectorDirec
 const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescriptorDirective');
 const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
 const {ArtifactsListFormDirective} = goog.require('grrUi.artifact.artifactsListFormDirective');
+const {ArtifactsParamsFormDirective} = goog.require('grrUi.artifact.artifactsParamsFormDirective');
 const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
@@ -25,6 +26,8 @@ exports.artifactModule.directive(
     ArtifactDescriptorDirective.directive_name, ArtifactDescriptorDirective);
 exports.artifactModule.directive(
     ArtifactsListFormDirective.directive_name, ArtifactsListFormDirective);
+exports.artifactModule.directive(
+    ArtifactsParamsFormDirective.directive_name, ArtifactsParamsFormDirective);
 
 exports.artifactModule.directive(
   SyntaxHighlightDirective.directive_name,
@@ -37,8 +40,11 @@ exports.artifactModule.run(function(
     grrSemanticFormDirectivesRegistryService) {
   var registry = grrSemanticFormDirectivesRegistryService;
 
-  registry.registerDirective(
-      ArtifactsListFormDirective.semantic_type, ArtifactsListFormDirective);
+    registry.registerDirective(
+        ArtifactsListFormDirective.semantic_type, ArtifactsListFormDirective);
+
+    registry.registerDirective(
+        ArtifactsParamsFormDirective.semantic_type, ArtifactsParamsFormDirective);
 });
 
 

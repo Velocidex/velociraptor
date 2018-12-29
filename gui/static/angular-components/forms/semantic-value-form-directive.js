@@ -58,9 +58,9 @@ SemanticValueFormController.prototype.onValueChange_ = function(newValue, oldVal
     this.grrReflectionService_.getRDFValueDescriptor(
       this.scope_.type, false, newValue).then(
         function(descriptor) {
-          this.valueDescriptor = descriptor;
+            this.valueDescriptor = descriptor;
           var directive = this.grrSemanticFormDirectivesRegistryService_.findDirectiveForDescriptor(
-            descriptor);
+              descriptor);
           this.renderer = directive.directive_name;
         }.bind(this));
   }

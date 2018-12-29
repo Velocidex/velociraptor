@@ -35,8 +35,10 @@ func doArtifactsHunt() {
 			Names: *artifact_command_hunt_names,
 		}}
 	for k, v := range *artifact_command_hunt_parameters {
-		request.Env = append(request.Env, &actions_proto.VQLEnv{
-			Key: k, Value: v})
+		request.Parameters.Env = append(request.Parameters.Env,
+			&actions_proto.VQLEnv{
+				Key: k, Value: v,
+			})
 	}
 
 	flow_args, _ := ptypes.MarshalAny(request)

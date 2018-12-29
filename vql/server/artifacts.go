@@ -52,8 +52,10 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 				return vfilter.Null{}
 			}
 
-			request.Env = append(request.Env, &actions_proto.VQLEnv{
-				Key: k, Value: value_str})
+			request.Parameters.Env = append(request.Parameters.Env,
+				&actions_proto.VQLEnv{
+					Key: k, Value: value_str,
+				})
 		}
 	}
 

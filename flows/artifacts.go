@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -17,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -67,10 +69,11 @@ func (self *ArtifactCollector) Start(
 
 	// Add any artifact dependencies.
 	repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-	AddArtifactCollectorArgs(
-		config_obj,
-		vql_collector_args,
-		collector_args)
+	err = AddArtifactCollectorArgs(
+		config_obj, vql_collector_args, collector_args)
+	if err != nil {
+		return err
+	}
 
 	return QueueMessageForClient(
 		config_obj, flow_obj,
@@ -160,21 +163,32 @@ func (self *ArtifactCollector) ProcessMessage(
 func AddArtifactCollectorArgs(
 	config_obj *api_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs,
-	collector_args *flows_proto.ArtifactCollectorArgs) {
+	collector_args *flows_proto.ArtifactCollectorArgs) error {
 
 	// Add any Environment Parameters from the request.
-	for _, item := range collector_args.Env {
+	if collector_args.Parameters == nil {
+		return nil
+	}
+
+	for _, item := range collector_args.Parameters.Env {
 		vql_collector_args.Env = append(vql_collector_args.Env,
 			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
 	}
 
 	// Add any exported files.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	for _, item := range collector_args.Files {
+
+	for _, item := range collector_args.Parameters.Files {
 		file, err := file_store_factory.ReadFile(path.Join(
 			"/exported_files", item.Value))
 		if err != nil {
-			continue
+			logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+			logger.WithFields(
+				logrus.Fields{
+					"filename": item.Value,
+					"error":    fmt.Sprintf("%v", err),
+				}).Error("Unable to read VFS file")
+			return err
 		}
 		buf, err := ioutil.ReadAll(file)
 		if err != nil {
@@ -186,6 +200,7 @@ func AddArtifactCollectorArgs(
 				Value: string(buf),
 			})
 	}
+	return nil
 }
 
 func init() {
