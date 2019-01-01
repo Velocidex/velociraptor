@@ -1,0 +1,29 @@
+name: Windows.Events.DNSQueries
+description: |
+  Monitor all DNS Queries and responses.
+
+  This artifact monitors all DNS queries and their responses seen on
+  the endpoint. DNS is a critical source of information for intrusion
+  detection and the best place to collect it is on the endpoint itself
+  (Perimeter collection can only see DNS requests while the endpoint
+  or laptop is inside the enterprise network).
+
+  It is recommended to collect this artifact and just archive the
+  results. When threat intelligence emerges about a watering hole or a
+  bad C&C you can use this archive to confirm if any of your endpoints
+  have contacted this C&C.
+
+parameters:
+  - name: whitelistRegex
+    description: We ignore DNS names that match this regex.
+    default: wpad.home
+
+sources:
+ - precondition:
+     SELECT OS from info() where OS = "windows"
+
+   queries:
+      - |
+        SELECT timestamp(epoch=Time) As Time, EventType, Name, CNAME, Answers
+        FROM dns()
+        WHERE not Name =~ whitelistRegex

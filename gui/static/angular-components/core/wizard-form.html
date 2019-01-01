@@ -1,11 +1,6 @@
 <div class="Wizard FormData">
   <div class="WizardPage">
     <div class="WizardBar modal-header">
-      <button type="button" class="close"
-              ng-click="controller.reject()" aria-hidden="true">
-        x
-      </button>
-
       <h3>{$ title $} -
         <span class="Description">
           {$ controller.currentPage.title $}
@@ -19,6 +14,10 @@
           Step {$ controller.currentPageIndex + 1 $} out of {$ controller.pages.length $}
         </span>
       </h3>
+      <button type="button" class="close"
+              ng-click="controller.reject()" aria-hidden="true">
+        x
+      </button>
     </div>
 
     <ng-transclude></ng-transclude>

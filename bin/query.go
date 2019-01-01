@@ -54,6 +54,10 @@ func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table
 	defer cancel()
 
 	output_chan := vql.Eval(ctx, scope)
+	scope.AddDesctructor(func() {
+		cancel()
+	})
+
 	table := tablewriter.NewWriter(os.Stdout)
 
 	columns := vql.Columns(scope)
@@ -111,6 +115,8 @@ func doQuery() {
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
+
+	InstallSignalHandler(scope)
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	for _, query := range *queries {

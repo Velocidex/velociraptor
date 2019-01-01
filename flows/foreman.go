@@ -59,7 +59,9 @@ func (self *Foreman) ProcessEventTables(
 			Version: config_obj.Events.Version,
 		}
 		for _, name := range config_obj.Events.Artifacts {
-			vql_collector_args := &actions_proto.VQLCollectorArgs{}
+			vql_collector_args := &actions_proto.VQLCollectorArgs{
+				MaxWait: 100,
+			}
 			artifact, pres := repository.Get(name)
 			if !pres {
 				return errors.New("Unknown artifact " + name)
