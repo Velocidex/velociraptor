@@ -57,7 +57,6 @@ Client:
   max_poll: 600
   server_urls:
   - http://localhost:8000/
-  version: "0.1"
   writeback_linux: /tmp/velociraptor.yaml
   writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
 Datastore:

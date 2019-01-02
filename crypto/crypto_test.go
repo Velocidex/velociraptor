@@ -1,18 +1,22 @@
 package crypto
 
 import (
-	metrics "github.com/rcrowley/go-metrics"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 	"strings"
 	"testing"
+
+	metrics "github.com/rcrowley/go-metrics"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TestSuite struct {
 	suite.Suite
-	config_obj     *config.Config
+	config_obj     *api_proto.Config
 	server_manager *CryptoManager
 	client_manager *CryptoManager
 	client_id      string
@@ -21,7 +25,9 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	t := self.T()
 	config_obj, err := config.LoadClientConfig("../test_data/server.config.yaml")
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
+	utils.Debug(err)
 
 	self.config_obj = config_obj
 	self.config_obj.Client.WritebackLinux = ""
@@ -32,18 +38,18 @@ func (self *TestSuite) SetupTest() {
 	// Configure the client manager.
 	self.client_manager, err = NewClientCryptoManager(
 		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_, err = self.client_manager.AddCertificate(
 		[]byte(self.config_obj.Frontend.Certificate))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	self.client_id = ClientIDFromPublicKey(
 		&self.client_manager.private_key.PublicKey)
 
 	// Configure the server manager.
 	self.server_manager, err = NewServerCryptoManager(self.config_obj)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Install an in memory public key resolver.
 	self.server_manager.public_key_resolver = NewInMemoryPublicKeyResolver()

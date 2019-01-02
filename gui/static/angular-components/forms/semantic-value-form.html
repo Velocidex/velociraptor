@@ -12,8 +12,12 @@
                  type="{$ type $}" default="default" />
 
   <grr-form-datetime ng-switch-when="grrFormDatetime"
-                 value="controller.scope_.value"
-                 type="{$ type $}" default="default" />
+                     value="controller.scope_.value"
+                     type="{$ type $}" default="default" />
+
+  <grr-form-datetime-seconds ng-switch-when="grrFormDatetimeSeconds"
+                     value="controller.scope_.value"
+                     type="{$ type $}" default="default" />
 
   <grr-artifacts-list-form ng-switch-when="grrArtifactsListForm"
                  value="controller.scope_.value" />

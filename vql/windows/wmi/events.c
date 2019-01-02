@@ -1,3 +1,4 @@
+// +build windows
 
 // References:
 // https://www.codeproject.com/Articles/10539/Making-WMI-Queries-In-C

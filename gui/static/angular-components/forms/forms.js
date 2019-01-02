@@ -5,6 +5,8 @@ goog.module.declareLegacyNamespace();
 
 const {ClientLabelFormDirective} = goog.require('grrUi.forms.clientLabelFormDirective');
 const {DatetimeFormDirective} = goog.require('grrUi.forms.datetimeFormDirective');
+const {DatetimeSecondsFormDirective} = goog.require('grrUi.forms.datetimeSecondsFormDirective');
+
 const {DurationFormDirective} = goog.require('grrUi.forms.durationFormDirective');
 const {GlobExpressionFormDirective} = goog.require('grrUi.forms.globExpressionFormDirective');
 const {GlobExpressionsListFormDirective} = goog.require('grrUi.forms.globExpressionsListFormDirective');
@@ -16,7 +18,6 @@ const {SemanticProtoSingleFieldFormDirective} = goog.require('grrUi.forms.semant
 const {SemanticProtoUnionFormDirective} = goog.require('grrUi.forms.semanticProtoUnionFormDirective');
 const {SemanticRegistryService} = goog.require('grrUi.core.semanticRegistryService');
 const {SemanticValueFormDirective} = goog.require('grrUi.forms.semanticValueFormDirective');
-const {TimerangeFormDirective} = goog.require('grrUi.forms.timerangeFormDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 
 
@@ -38,6 +39,8 @@ exports.formsModule.directive(
     ClientLabelFormDirective.directive_name, ClientLabelFormDirective);
 exports.formsModule.directive(
     DatetimeFormDirective.directive_name, DatetimeFormDirective);
+exports.formsModule.directive(
+    DatetimeSecondsFormDirective.directive_name, DatetimeSecondsFormDirective);
 exports.formsModule.directive(
     DurationFormDirective.directive_name, DurationFormDirective);
 exports.formsModule.directive(
@@ -63,15 +66,15 @@ exports.formsModule.directive(
     SemanticProtoUnionFormDirective);
 exports.formsModule.directive(
     SemanticValueFormDirective.directive_name, SemanticValueFormDirective);
-exports.formsModule.directive(
-    TimerangeFormDirective.directive_name, TimerangeFormDirective);
-
 
 exports.formsModule.run(function(grrSemanticFormDirectivesRegistryService) {
   var registry = grrSemanticFormDirectivesRegistryService;
 
   registry.registerDirective(
       DatetimeFormDirective.semantic_type, DatetimeFormDirective);
+
+  registry.registerDirective(
+      DatetimeSecondsFormDirective.semantic_type, DatetimeSecondsFormDirective);
 
   registry.registerDirective(
       DurationFormDirective.semantic_type, DurationFormDirective);

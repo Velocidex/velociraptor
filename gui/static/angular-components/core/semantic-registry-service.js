@@ -119,7 +119,7 @@ SemanticRegistryService.prototype.findDirectiveForMro = function(
  */
 SemanticRegistryService.prototype.findDirectiveForType = function(
   type, overrides) {
-  overrides = overrides || {};
+    overrides = overrides || {};
 
   // If we have an exact match with one of the overrides, no need for
   // the MRO check.

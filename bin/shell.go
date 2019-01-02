@@ -109,7 +109,7 @@ func get_responses(ctx context.Context,
 				return
 
 			case <-c:
-				fmt.Println("Cancelled!\n")
+				fmt.Println("Cancelled!")
 				cancel()
 			}
 		}

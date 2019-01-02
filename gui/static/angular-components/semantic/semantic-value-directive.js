@@ -50,6 +50,7 @@ exports.getCachedSingleValueTemplate = function(name) {
  * @param {!angular.Scope} $scope
  * @ngInject
  */
+
 const RegistryOverrideController = function(
     $scope) {
   /** @private {!angular.Scope} */

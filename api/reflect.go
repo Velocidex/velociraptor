@@ -1,11 +1,12 @@
 package api
 
 import (
+	"reflect"
+	"strings"
+
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"reflect"
-	"strings"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	semantic_proto "www.velocidex.com/golang/velociraptor/proto"
 )
@@ -51,6 +52,7 @@ func describeTypes() *api_proto.Types {
 			{Name: "integer", Kind: "primitive", Default: "0"},
 			{Name: "ApiClientId", Kind: "primitive", Default: "\"\""},
 			{Name: "RDFDatetime", Kind: "primitive", Default: "0"},
+			{Name: "RDFDatetimeSeconds", Kind: "primitive", Default: "0"},
 		},
 	}
 	for _, proto_name := range EXPORTED_PROTO {

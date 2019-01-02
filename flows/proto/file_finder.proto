@@ -11,13 +11,13 @@ package proto;
 // Next field ID: 7
 message FileFinderModificationTimeCondition {
     uint64 min_last_modified_time = 5 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Modified after",
             description: "File must be modified after this time."
         }];
 
     uint64 max_last_modified_time = 6 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Modified before",
             description: "File must be modified before this time."
         }];
@@ -26,13 +26,13 @@ message FileFinderModificationTimeCondition {
 // Next field ID: 7
 message FileFinderAccessTimeCondition {
     uint64 min_last_access_time = 5 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Accessed after",
             description: "File must be accessed after this time."
         }];
 
     uint64 max_last_access_time = 6 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Accessed before",
             description: "File must be accessed before this time."
         }];
@@ -41,13 +41,13 @@ message FileFinderAccessTimeCondition {
 // Next field ID: 7
 message FileFinderInodeChangeTimeCondition {
     uint64 min_last_inode_change_time = 5 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Inode changed after",
             description: "File's inode must be changed after this time."
         }];
 
     uint64 max_last_inode_change_time = 6 [(sem_type) = {
-            type: "RDFDatetime",
+            type: "RDFDatetimeSeconds",
             friendly_name: "Inode changed before",
             description: "File's must be changed before this time."
         }];
