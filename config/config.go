@@ -5,7 +5,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/ghodss/yaml"
+	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -127,7 +127,7 @@ func LoadConfig(filename string) (*api_proto.Config, error) {
 	if filename != "" {
 		data, err := ioutil.ReadFile(filename)
 		if err == nil {
-			err = yaml.Unmarshal(data, result)
+			err = yaml.UnmarshalStrict(data, result)
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}

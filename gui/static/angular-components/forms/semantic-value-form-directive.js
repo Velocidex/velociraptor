@@ -54,16 +54,24 @@ SemanticValueFormController.prototype.onValueChange_ = function(newValue, oldVal
    * our defaults into the value which is sent - otherwise these
    * defaults will not be set at all by the server.
    */
-  if (1 || newValue !== oldValue) {
-    this.grrReflectionService_.getRDFValueDescriptor(
-      this.scope_.type, false, newValue).then(
-        function(descriptor) {
-            this.valueDescriptor = descriptor;
-          var directive = this.grrSemanticFormDirectivesRegistryService_.findDirectiveForDescriptor(
-              descriptor);
-          this.renderer = directive.directive_name;
-        }.bind(this));
-  }
+    if (1 || newValue !== oldValue) {
+        if (angular.isDefined(this.scope_.descriptor)) {
+            this.valueDescriptor = this.scope_.descriptor;
+            console.log(this.valueDescriptor);
+            var directive = this.grrSemanticFormDirectivesRegistryService_.
+                findDirectiveForDescriptor(this.scope_.descriptor);
+            this.renderer = directive.directive_name;
+        } else {
+            this.grrReflectionService_.getRDFValueDescriptor(
+                this.scope_.type, false, newValue).then(
+                    function(descriptor) {
+                        this.valueDescriptor = descriptor;
+                        var directive = this.grrSemanticFormDirectivesRegistryService_.
+                            findDirectiveForDescriptor(descriptor);
+                        this.renderer = directive.directive_name;
+                    }.bind(this));
+        }
+    }
 };
 
 SemanticValueFormController.prototype.typeOfValue_ = function(value) {
@@ -93,15 +101,16 @@ SemanticValueFormController.prototype.typeOfValue_ = function(value) {
  */
 exports.SemanticValueFormDirective = function() {
   return {
-    restrict: 'E',
-    scope: {
-      value: '=',
-      default: '=',
-      type: '@',
-    },
-    templateUrl: '/static/angular-components/forms/semantic-value-form.html',
-    controller: SemanticValueFormController,
-    controllerAs: 'controller'
+      restrict: 'E',
+      scope: {
+          value: '=',
+          default: '=',
+          type: '@',
+          descriptor: '=?',
+      },
+      templateUrl: '/static/angular-components/forms/semantic-value-form.html',
+      controller: SemanticValueFormController,
+      controllerAs: 'controller'
   };
 };
 

@@ -89,6 +89,17 @@ func setArtifactFile(config_obj *api_proto.Config,
 	defer fd.Close()
 
 	_, err = fd.Write([]byte(artifact))
+	if err != nil {
+		return err
+	}
+
+	// Load the new artifact into the global repo so it is
+	// immediately available.
+	global_repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+	_, err = global_repository.LoadYaml(artifact)
 	return err
 }
 

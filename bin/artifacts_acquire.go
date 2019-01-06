@@ -15,6 +15,7 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -53,7 +54,8 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: filepath.Join(subdir, "files"),
-		})
+		}).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	// Allow the user to override the env - this is how we set
 	// artifact parameters.

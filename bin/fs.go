@@ -40,12 +40,14 @@ func eval_query(query string, scope *vfilter.Scope) {
 		kingpin.FatalIfError(err, "Unable to parse VQL Query")
 	}
 
+	ctx := InstallSignalHandler(scope)
+
 	switch *fs_command_format {
 	case "text":
-		table := evalQueryToTable(scope, vql)
+		table := evalQueryToTable(ctx, scope, vql)
 		table.Render()
 	case "json":
-		outputJSON(scope, vql)
+		outputJSON(ctx, scope, vql)
 	}
 }
 
@@ -89,7 +91,8 @@ func doCp(path string, dump_dir string) {
 		Set("path", path).
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: dump_dir,
-		})
+		}).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 	defer scope.Close()

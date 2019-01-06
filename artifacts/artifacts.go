@@ -11,8 +11,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -322,7 +322,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 				}
 				artifact_obj.Path = path
 				artifact_obj.Raw = string(data)
-				fmt.Printf("Loaded %s\n", artifact_obj.Path)
+				logger.Info("Loaded %s", artifact_obj.Path)
 			}
 			return nil
 		})

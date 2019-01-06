@@ -31,7 +31,6 @@ CA:
     y2ULpkCQxucVQlDlHddzSqTmiqo30Kytpe69Vcb16Vv04LQ//Xkk
     -----END RSA PRIVATE KEY-----
 Client:
-  build_time: "2018-08-06T22:27:52+10:00"
   ca_certificate: |
     -----BEGIN CERTIFICATE-----
     MIIDITCCAgmgAwIBAgIRAKVUNVlVVE/wwla83R/ZQK4wDQYJKoZIhvcNAQELBQAw
@@ -52,7 +51,6 @@ Client:
     CvhAfUMmZZ19wtN+37GflrcjDw7VzerTqNJ3gx6iF7Xy7AebkzvEjuyy7d7xKGdM
     Dixe4BWrhpv6DhOBWvtc/gpeqQP+EA71GuAZdQQC6NFdfXekBQ==
     -----END CERTIFICATE-----
-  name: velociraptor
   nonce: ukqqtSpJNUw=
   max_poll: 600
   server_urls:

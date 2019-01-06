@@ -13,7 +13,8 @@ var (
 )
 
 type ClockPluginArgs struct {
-	Period int64 `vfilter:"required,field=period"`
+	Period   int64 `vfilter:"required,field=period"`
+	PeriodMs int64 `vfilter:"required,field=ms"`
 }
 
 type ClockPlugin struct{}
@@ -45,7 +46,10 @@ func (self ClockPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case <-time.After(time.Duration(arg.Period) * time.Second):
+			case <-time.After(
+				time.Duration(arg.Period)*time.Second +
+					time.Duration(arg.PeriodMs)*
+						time.Second/1000):
 				output_chan <- time.Now()
 			}
 		}

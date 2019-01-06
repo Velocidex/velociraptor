@@ -163,7 +163,10 @@ SemanticRegistryService.prototype.findDirectiveForType = function(
 SemanticRegistryService.prototype.findDirectiveForDescriptor = function(
   descriptor) {
     var name = descriptor.name;
-
+    if (descriptor.name == "ArtifactParameter") {
+            console.log(descriptor);
+    }
+    console.log(descriptor.name);
   // Is there a specialized renderer for this descriptor?
   if (angular.isDefined(this.directivesByType_[name])) {
     return this.directivesByType_[name];

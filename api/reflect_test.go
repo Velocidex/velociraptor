@@ -2,15 +2,16 @@ package api
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/golang/protobuf/jsonpb"
 	assert "github.com/stretchr/testify/assert"
-	"testing"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func TestDescriptor(t *testing.T) {
-	result := &api_proto.Types{}
+	result := &artifacts_proto.Types{}
 	seen := make(map[string]bool)
 	add_type("proto.ApiClient", result, seen)
 

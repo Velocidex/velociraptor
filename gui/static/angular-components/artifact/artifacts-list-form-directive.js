@@ -56,7 +56,9 @@ const ArtifactsListFormController =
 };
 
 ArtifactsListFormController.prototype.onSelectedNameChange_ = function(newValue) {
-    this.rootScope_["selectedArtifact"] = this.descriptors[this.selectedName];
+    if (angular.isDefined(this.descriptors)) {
+        this.rootScope_["selectedArtifact"] = this.descriptors[this.selectedName];
+    }
 };
 
 

@@ -4,6 +4,54 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
+
+message FieldDescriptor {
+    string friendly_name = 1;
+    string name = 2;
+    bool repeated = 3;
+    string type = 4;
+    string doc = 5;
+    repeated string labels = 6;
+    string default = 7;
+
+    // Same as doc field.
+    string description = 8;
+}
+
+message EnumValue {
+    int32 value = 1;
+    string name = 2;
+}
+
+
+message TypeDescriptor {
+    string doc = 1;
+    // Same as doc field.
+    string description = 9;
+
+    repeated FieldDescriptor fields = 2;
+    string name = 3;
+    string friendly_name = 7;
+    string kind = 4;
+
+    // The fields are all part of a single one of structure. NOTE:
+    // Currently we only support an all or nothing approach to oneof -
+    // there can be at most a single oneof group within the proto and
+    // it implies that all the fields belong to it.
+    bool oneof = 5;
+
+    string default = 6 [(sem_type) = {
+            description: "The json encoded default value for this type."
+        }];
+
+    repeated EnumValue allowed_values = 8;
+}
+
+message Types {
+    repeated TypeDescriptor items = 1;
+}
+
+
 message ArtifactParameter {
     option (semantic) = {
         description: "Artifacts may accept parameters which are added to the "
@@ -14,6 +62,8 @@ message ArtifactParameter {
     string name = 1;
     string default = 2;
     string description = 3;
+    string type = 4;
+    string friendly_name = 5;
 }
 
 message ArtifactSource {

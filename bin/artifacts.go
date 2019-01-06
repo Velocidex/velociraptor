@@ -5,12 +5,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ghodss/yaml"
+	"github.com/Velocidex/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -72,7 +73,8 @@ func collectArtifact(
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
-		Set("server_config", config_obj)
+		Set("server_config", config_obj).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if *artifact_command_collect_dump_dir != "" {
 		env.Set("$uploader", &vql_networking.FileBasedUploader{
@@ -89,19 +91,22 @@ func collectArtifact(
 
 	scope.Logger = logging.NewPlainLogger(config_obj,
 		&logging.ToolComponent)
+
+	ctx := InstallSignalHandler(scope)
+
 	for _, query := range request.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		kingpin.FatalIfError(err, "Parse VQL")
 
 		switch *artifact_command_collect_format {
 		case "text":
-			table := evalQueryToTable(scope, vql)
+			table := evalQueryToTable(ctx, scope, vql)
 			table.SetCaption(true, "Artifact: "+artifact_name)
 			if table.NumLines() > 0 {
 				table.Render()
 			}
 		case "json":
-			outputJSON(scope, vql)
+			outputJSON(ctx, scope, vql)
 		}
 	}
 }

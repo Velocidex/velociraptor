@@ -62,6 +62,14 @@
   version = "v1.1.9"
 
 [[projects]]
+  digest = "1:abd552f55bd96b48f0b2442e49d95ffa3af6faa2a4473745e8b765618925f9c2"
+  name = "github.com/Velocidex/yaml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "841476fecdbcbc185db25640c78c17eea8db9fc3"
+  version = "v2.2.3"
+
+[[projects]]
   digest = "1:e81f98d138993c2cc169e08de69f5e8641e06b40909e372176b2076a5c7df04c"
   name = "github.com/alecthomas/participle"
   packages = [
@@ -145,14 +153,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "9f541cc9db5d55bce703bd99987c9d5cb8eea45e"
-  version = "v1.0.0"
-
-[[projects]]
-  digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
-  name = "github.com/ghodss/yaml"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
 
 [[projects]]
@@ -381,7 +381,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:772b258c49e7eb2d46983b28c108f4300291d7b44709ffbd12f50012397fd5a6"
+  digest = "1:5331094ce2c687a921af5ec1367fe96e894e5b6866c2c3b8d415e86b65e69bce"
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
@@ -393,8 +393,8 @@
     "process",
   ]
   pruneopts = "UT"
-  revision = "0f70a4a06f7a1039305ec9b3ba9c2800f8929fba"
-  version = "v2.18.11"
+  revision = "ccc1c1016bc5d10e803189ee43417c50cdde7f1b"
+  version = "v2.18.12"
 
 [[projects]]
   branch = "master"
@@ -434,15 +434,16 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "505ab145d0a99da450461ae2c1a9f6cd10d1f447"
+  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
 
 [[projects]]
   branch = "master"
-  digest = "1:e4b9d0f53336b00de5321ef2f4b7547a697ecc9d3a00dc67e26f644eff9f4f11"
+  digest = "1:54893f5cd3e10d4e36eecc890338da933f84f4093d3456249fac109e9c98335f"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
+    "dns/dnsmessage",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -471,7 +472,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2af6d9ba571b66bf7c3b1bfa62c9da7b30461bb15bfb3e210d08bb7437f29d20"
+  digest = "1:407a02030c1f591470fc7ddc3e8abb9ab87b4a080b450d39e88e524a1c1f3cc8"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -483,7 +484,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "c6cbdbf9e68a68b19802a5c44e537c284b9c8e1a"
+  revision = "82a175fd1598e8a172e58ebdf5ed262bb29129e5"
 
 [[projects]]
   digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
@@ -611,14 +612,6 @@
   version = "2.0.0"
 
 [[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
-
-[[projects]]
   branch = "master"
   digest = "1:d318b6e417c3607549bfb62d2b06bee5618846330dfd712efe3ac64df6829b0c"
   name = "www.velocidex.com/golang/go-ntfs"
@@ -628,11 +621,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4f6c003174f7aab1268a797385ff93015a52c5fd1b91a5dfe227b1bc54544ec1"
+  digest = "1:22ed2e75d9f516502b1745fe666fc6f81b6498b67528c3227de0c32183c680c7"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "fd7d9e4b0f6780460ddc527e0c19453f2a33b2d0"
+  revision = "b1a56779c8b218cf80a38c32621f11892a827160"
 
 [[projects]]
   branch = "master"
@@ -652,6 +645,7 @@
     "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/go-yara",
+    "github.com/Velocidex/yaml",
     "github.com/alecthomas/participle",
     "github.com/alecthomas/participle/lexer",
     "github.com/c-bata/go-prompt",
@@ -659,7 +653,6 @@
     "github.com/davecgh/go-spew/spew",
     "github.com/dgrijalva/jwt-go",
     "github.com/dustin/go-humanize",
-    "github.com/ghodss/yaml",
     "github.com/go-ole/go-ole",
     "github.com/go-ole/go-ole/oleutil",
     "github.com/golang/protobuf/descriptor",
@@ -691,10 +684,12 @@
     "github.com/shirou/gopsutil/process",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
+    "github.com/stretchr/testify/require",
     "github.com/stretchr/testify/suite",
     "golang.org/x/crypto/acme/autocert",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
+    "golang.org/x/net/dns/dnsmessage",
     "golang.org/x/net/webdav",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
@@ -713,7 +708,6 @@
     "google.golang.org/grpc/status",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
-    "gopkg.in/yaml.v2",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/vfilter",
     "www.velocidex.com/golang/vtypes",

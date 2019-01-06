@@ -228,7 +228,7 @@ func (self *ApiServer) GetClient(
 
 func (self *ApiServer) DescribeTypes(
 	ctx context.Context,
-	in *empty.Empty) (*api_proto.Types, error) {
+	in *empty.Empty) (*artifacts_proto.Types, error) {
 	return describeTypes(), nil
 }
 

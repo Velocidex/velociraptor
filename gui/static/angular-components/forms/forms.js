@@ -19,6 +19,7 @@ const {SemanticProtoUnionFormDirective} = goog.require('grrUi.forms.semanticProt
 const {SemanticRegistryService} = goog.require('grrUi.core.semanticRegistryService');
 const {SemanticValueFormDirective} = goog.require('grrUi.forms.semanticValueFormDirective');
 const {coreModule} = goog.require('grrUi.core.core');
+const {JsonProxyDirective} = goog.require('grrUi.forms.jsonProxyDirective');
 
 
 /**
@@ -66,6 +67,8 @@ exports.formsModule.directive(
     SemanticProtoUnionFormDirective);
 exports.formsModule.directive(
     SemanticValueFormDirective.directive_name, SemanticValueFormDirective);
+exports.formsModule.directive(
+    JsonProxyDirective.directive_name, JsonProxyDirective);
 
 exports.formsModule.run(function(grrSemanticFormDirectivesRegistryService) {
   var registry = grrSemanticFormDirectivesRegistryService;

@@ -7,7 +7,7 @@ import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	semantic_proto "www.velocidex.com/golang/velociraptor/proto"
 )
 
@@ -33,14 +33,15 @@ var (
 		"FileFinderArgs",
 		"VFSDownloadFileRequest",
 		"ArtifactCollectorArgs",
+		"ArtifactParameter",
 		"Artifacts",
 	}
 )
 
-func describeTypes() *api_proto.Types {
+func describeTypes() *artifacts_proto.Types {
 	seen := make(map[string]bool)
-	result := &api_proto.Types{
-		Items: []*api_proto.TypeDescriptor{
+	result := &artifacts_proto.Types{
+		Items: []*artifacts_proto.TypeDescriptor{
 			{Name: "ByteSize", Kind: "primitive", Default: "0"},
 			{Name: "GlobExpression", Kind: "primitive", Default: "\"\""},
 			{Name: "RegularExpression", Kind: "primitive", Default: "\"\""},
@@ -62,7 +63,7 @@ func describeTypes() *api_proto.Types {
 	return result
 }
 
-func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
+func add_type(type_name string, result *artifacts_proto.Types, seen map[string]bool) {
 	message_type := proto.MessageType("proto." + type_name)
 	if message_type == nil {
 		return
@@ -76,7 +77,7 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 	new_message := reflect.New(message_type.Elem()).Interface().(descriptor.Message)
 	_, md := descriptor.ForMessage(new_message)
-	type_desc := &api_proto.TypeDescriptor{
+	type_desc := &artifacts_proto.TypeDescriptor{
 		Name: type_name,
 		Kind: "struct",
 	}
@@ -99,7 +100,7 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 	seen[type_name] = true
 
 	for _, field := range md.Field {
-		field_descriptor := &api_proto.FieldDescriptor{
+		field_descriptor := &artifacts_proto.FieldDescriptor{
 			Type:    getFieldType(field),
 			Default: getFieldDefaults(field),
 		}
@@ -154,9 +155,9 @@ func add_type(type_name string, result *api_proto.Types, seen map[string]bool) {
 
 func describe_enum(
 	field *descriptor_proto.FieldDescriptorProto,
-	result *api_proto.Types,
+	result *artifacts_proto.Types,
 	seen map[string]bool,
-	descriptor *api_proto.FieldDescriptor) {
+	descriptor *artifacts_proto.FieldDescriptor) {
 	if field.TypeName == nil {
 		return
 	}
@@ -167,7 +168,7 @@ func describe_enum(
 	if message_type != nil {
 		descriptor.Type = type_name
 
-		type_desc := &api_proto.TypeDescriptor{
+		type_desc := &artifacts_proto.TypeDescriptor{
 			Name: type_name,
 			Kind: "enum",
 		}
@@ -175,7 +176,7 @@ func describe_enum(
 		for name, value := range message_type {
 			type_desc.AllowedValues = append(
 				type_desc.AllowedValues,
-				&api_proto.EnumValue{Name: name, Value: value})
+				&artifacts_proto.EnumValue{Name: name, Value: value})
 		}
 
 		type_desc.Name = type_name

@@ -6,8 +6,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/ghodss/yaml"
+	"github.com/Velocidex/yaml"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -16,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -28,9 +30,9 @@ var (
 )
 
 type testFixture struct {
-	Parameters map[string]string
-	Files      map[string]string
-	Queries    []string
+	Parameters map[string]string `json:"Parameters"`
+	Files      map[string]string `json:"Files"`
+	Queries    []string          `json:"Queries"`
 }
 
 // We want to emulate as closely as possible the logic in the artifact
@@ -68,9 +70,12 @@ func runTest(fixture *testFixture) (string, error) {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
 
+	throttle := time.Tick(time.Second / 1000)
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
-		Set("server_config", config_obj)
+		Set("server_config", config_obj).
+		Set("$throttle", throttle).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()

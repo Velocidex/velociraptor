@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"time"
 
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -21,6 +22,9 @@ var (
 	query   = app.Command("query", "Run a VQL query")
 	queries = query.Arg("queries", "The VQL Query to run.").
 		Required().Strings()
+
+	rate = app.Flag("ops_per_second", "Rate of execution").
+		Default("1000000").Float64()
 	format = query.Flag("format", "Output format to use.").
 		Default("json").Enum("text", "json")
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
@@ -36,9 +40,8 @@ var (
 	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
 
-func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func outputJSON(ctx context.Context,
+	scope *vfilter.Scope, vql *vfilter.VQL) {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
 	for {
 		result, ok := <-result_chan
@@ -49,15 +52,14 @@ func outputJSON(scope *vfilter.Scope, vql *vfilter.VQL) {
 	}
 }
 
-func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+func evalQueryToTable(ctx context.Context,
+	scope *vfilter.Scope,
+	vql *vfilter.VQL) *tablewriter.Table {
+
+	any_throttle, _ := scope.Resolve("$throttle")
+	throttle, _ := any_throttle.(chan time.Time)
 
 	output_chan := vql.Eval(ctx, scope)
-	scope.AddDesctructor(func() {
-		cancel()
-	})
-
 	table := tablewriter.NewWriter(os.Stdout)
 
 	columns := vql.Columns(scope)
@@ -88,6 +90,9 @@ func evalQueryToTable(scope *vfilter.Scope, vql *vfilter.VQL) *tablewriter.Table
 		}
 
 		table.Append(string_row)
+		if throttle != nil {
+			<-throttle
+		}
 	}
 }
 
@@ -100,12 +105,16 @@ func doQuery() {
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
+	throttle := time.Tick(time.Nanosecond * time.Duration((float64(1000000000) / *rate)))
+
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: *dump_dir,
-		})
+		}).
+		Set("$throttle", throttle).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if env_map != nil {
 		for k, v := range *env_map {
@@ -116,7 +125,7 @@ func doQuery() {
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	InstallSignalHandler(scope)
+	ctx := InstallSignalHandler(scope)
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	for _, query := range *queries {
@@ -127,10 +136,10 @@ func doQuery() {
 
 		switch *format {
 		case "text":
-			table := evalQueryToTable(scope, vql)
+			table := evalQueryToTable(ctx, scope, vql)
 			table.Render()
 		case "json":
-			outputJSON(scope, vql)
+			outputJSON(ctx, scope, vql)
 		}
 	}
 }

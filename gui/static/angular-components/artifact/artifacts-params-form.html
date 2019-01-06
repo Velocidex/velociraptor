@@ -13,10 +13,12 @@
 
     <div ng-repeat="item in value.env">
       <label class="control-label ng-binding" title="">
-        {$ item.key $}
+        {$ item.friendly_name || item.key $}
       </label>
       <div class="controls">
-        <grr-form-primitive type="string" value="item.value" />
+        <grr-json-proxy
+          type="{$ item.type $}"
+          value="item.value" />
       </div>
     </div>
   </div>

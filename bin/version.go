@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/ghodss/yaml"
+
+	"github.com/Velocidex/yaml"
 	"gopkg.in/alecthomas/kingpin.v2"
 	config "www.velocidex.com/golang/velociraptor/config"
 )

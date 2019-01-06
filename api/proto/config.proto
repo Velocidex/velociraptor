@@ -297,7 +297,7 @@ message Config {
 
     FlowsConfig Flows = 7;
 
-    Writeback writeback = 9 [(sem_type) = {
+    Writeback Writeback = 9 [(sem_type) = {
             description: "Contents of the client's state as stored in the writeback file."
         }];
 

@@ -20,13 +20,19 @@ ArtifactsParamsFormController.prototype.addItem = function() {
         for (var i=0; i<descriptor.parameters.length; i++) {
             this.scope_.value.env.push({
                 key: descriptor.parameters[i].name,
-                value: descriptor.parameters[i].default
+                friendly_name: descriptor.parameters[i].friendly_name,
+                value: descriptor.parameters[i].default,
+                descriptor: descriptor.parameters[i],
+                type: descriptor.parameters[i].type,
             });
         };
     }
 
-    // Make sure the artifact is added.
-    // this.scope_.$parent.controller.add();
+    // Make sure the artifact is added once we start filling in its
+    // parameters. This is a bit of a hack but its too hard to figure
+    // out how to do it the "angular" way so we just do it the obvious
+    // way.
+    $("#add_artifact").click();
 };
 
 

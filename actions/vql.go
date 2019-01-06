@@ -14,6 +14,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -58,6 +59,13 @@ func (self *VQLClientAction) StartQuery(
 	ctx context.Context,
 	responder *responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {
+	rate := arg.OpsPerSecond
+	if rate == 0 {
+		rate = 1000000
+	}
+
+	throttle := time.Tick(time.Nanosecond *
+		time.Duration((float64(1000000000) / float64(rate))))
 	if arg.Query == nil {
 		responder.RaiseError("Query should be specified.")
 		return
@@ -81,7 +89,9 @@ func (self *VQLClientAction) StartQuery(
 	env := vfilter.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
-		Set("config", config_obj)
+		Set("config", config_obj).
+		Set("$throttle", throttle).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)
@@ -102,7 +112,7 @@ func (self *VQLClientAction) StartQuery(
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for query_idx, query := range arg.Query {
-		now := uint64(time.Now().UTC().UnixNano() / 1000)
+		query_start := uint64(time.Now().UTC().UnixNano() / 1000)
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			responder.RaiseError(err.Error())
@@ -144,7 +154,7 @@ func (self *VQLClientAction) StartQuery(
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			}
 			responder.Log("Time %v: %s: Sending response part %d %s (%d rows).",
-				(response.Timestamp-now)/1000000,
+				(response.Timestamp-query_start)/1000000,
 				query.Name,
 				result.Part,
 				humanize.Bytes(uint64(len(result.Payload))),
