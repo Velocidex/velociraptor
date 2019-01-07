@@ -7,7 +7,6 @@ package filesystems
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -124,26 +123,10 @@ func getPath(path string) string {
 	return strings.TrimPrefix(path, "\\")
 }
 
-type OSFileSystemAccessor struct {
-	fd_cache map[string]io.ReadCloser
-}
+type OSFileSystemAccessor struct{}
 
 func (self OSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &OSFileSystemAccessor{
-		fd_cache: make(map[string]io.ReadCloser),
-	}
-
-	// When the context is done, close all the files. The files
-	// must remain open until the entire VQL query is done.
-	go func() {
-		select {
-		case <-ctx.Done():
-			for _, v := range result.fd_cache {
-				v.Close()
-			}
-		}
-	}()
-
+	result := &OSFileSystemAccessor{}
 	return result
 }
 

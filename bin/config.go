@@ -36,7 +36,7 @@ func doShowConfig() {
 	// Dump out the embedded config as is.
 	if *config_path == "" {
 		content := string(config.FileConfigDefaultYaml)
-		content = regexp.MustCompile("##[^\\n]+\\n").ReplaceAllString(content, "")
+		content = regexp.MustCompile(`##[^\n]+\n`).ReplaceAllString(content, "")
 		fmt.Printf("%v", content)
 		return
 	}
@@ -129,16 +129,16 @@ func doDumpClientConfig() {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case "config show":
+		case config_show_command.FullCommand():
 			doShowConfig()
 
-		case "config generate":
+		case config_generate_command.FullCommand():
 			doGenerateConfig()
 
-		case "config rotate_key":
+		case config_rotate_server_key.FullCommand():
 			doRotateKeyConfig()
 
-		case "config client":
+		case config_client_command.FullCommand():
 			doDumpClientConfig()
 		default:
 			return false

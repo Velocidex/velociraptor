@@ -64,8 +64,10 @@ func (self *VQLClientAction) StartQuery(
 		rate = 1000000
 	}
 
-	throttle := time.Tick(time.Nanosecond *
+	ticker := time.NewTicker(time.Nanosecond *
 		time.Duration((float64(1000000000) / float64(rate))))
+	defer ticker.Stop()
+
 	if arg.Query == nil {
 		responder.RaiseError("Query should be specified.")
 		return
@@ -90,7 +92,7 @@ func (self *VQLClientAction) StartQuery(
 		Set("$responder", responder).
 		Set("$uploader", uploader).
 		Set("config", config_obj).
-		Set("$throttle", throttle).
+		Set("$throttle", ticker.C).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {

@@ -130,16 +130,15 @@ func (self _BinaryParserPlugin) Call(
 		// objects which may reference the file. These objects
 		// may participate in WHERE clause and so will be
 		// referenced after the plugin is terminated.
+
+		// This is a real bad strategy. We should ensure that
+		// we are taking a copy of file content here! This
+		// leaks if the VQL is long.
 		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					fd, ok := file.(io.Closer)
-					if ok {
-						fd.Close()
-					}
-					return
-				}
+			<-ctx.Done()
+			fd, ok := file.(io.Closer)
+			if ok {
+				fd.Close()
 			}
 		}()
 

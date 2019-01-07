@@ -95,9 +95,12 @@ func (self YaraScanPlugin) Call(
 		}
 
 		accessor := glob.GetAccessor(arg.Accessor, ctx)
-		number_of_hits := int64(0)
 		buf := make([]byte, arg.Blocksize)
+
+	scan_file:
 		for _, filename := range arg.Files {
+			// Total hits per file.
+			number_of_hits := int64(0)
 			f, err := accessor.Open(filename)
 			if err != nil {
 				scope.Log("Failed to open %v", filename)
@@ -161,7 +164,7 @@ func (self YaraScanPlugin) Call(
 					number_of_hits += 1
 					if number_of_hits > arg.NumberOfHits {
 						f.Close()
-						return
+						continue scan_file
 					}
 					output_chan <- res
 				}
@@ -217,6 +220,11 @@ func (self YaraProcPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		// Do we need to throttle?
+		// We count an op as one MB scanned.
+		any_throttle, _ := scope.Resolve("$throttle")
+		throttle, _ := any_throttle.(chan time.Time)
+
 		arg := &YaraProcPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -243,6 +251,10 @@ func (self YaraProcPlugin) Call(
 			output_chan <- match
 		}
 
+		// Throttle if needed.
+		if throttle != nil {
+			<-throttle
+		}
 	}()
 
 	return output_chan

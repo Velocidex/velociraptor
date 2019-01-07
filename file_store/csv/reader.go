@@ -75,7 +75,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -107,7 +106,7 @@ var (
 	ErrBareQuote     = errors.New("bare \" in non-quoted-field")
 	ErrQuote         = errors.New("extraneous or missing \" in quoted-field")
 	ErrFieldCount    = errors.New("wrong number of fields")
-	ErrNoLineFeed    = errors.New("Line does not end with line feed.")
+	ErrNoLineFeed    = errors.New("line does not end with line feed")
 )
 
 var errInvalidDelim = errors.New("csv: invalid field or comment delimiter")
@@ -284,7 +283,7 @@ func (r *Reader) ReadAny() ([]interface{}, error) {
 }
 
 func (r *Reader) Seek(offset int64) {
-	r.raw_reader.Seek(offset, os.SEEK_SET)
+	r.raw_reader.Seek(offset, io.SeekStart)
 	r.r = bufio.NewReader(r.raw_reader)
 	r.ByteOffset = offset
 }

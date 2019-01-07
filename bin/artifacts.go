@@ -54,9 +54,7 @@ func listArtifacts() []string {
 	if err != nil {
 		return result
 	}
-	for _, name := range repository.List() {
-		result = append(result, name)
-	}
+	result = append(result, repository.List()...)
 	return result
 }
 
@@ -154,6 +152,15 @@ func doArtifactCollect() {
 		err := artifacts.Compile(artifact, request)
 		kingpin.FatalIfError(
 			err, fmt.Sprintf("Unable to compile artifact %s.", name))
+
+		if env_map != nil {
+			for k, v := range *env_map {
+				request.Env = append(
+					request.Env, &actions_proto.VQLEnv{
+						Key: k, Value: v,
+					})
+			}
+		}
 
 		collectArtifact(config_obj, repository, name, request)
 	}

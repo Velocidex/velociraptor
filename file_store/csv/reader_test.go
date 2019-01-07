@@ -5,7 +5,6 @@
 package csv
 
 import (
-	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -500,31 +499,5 @@ x,,,
 					r.ByteOffset, tt.ByteOffset)
 			}
 		})
-	}
-}
-
-// nTimes is an io.Reader which yields the string s n times.
-type nTimes struct {
-	s   string
-	n   int
-	off int
-}
-
-func (r *nTimes) Read(p []byte) (n int, err error) {
-	for {
-		if r.n <= 0 || r.s == "" {
-			return n, io.EOF
-		}
-		n0 := copy(p, r.s[r.off:])
-		p = p[n0:]
-		n += n0
-		r.off += n0
-		if r.off == len(r.s) {
-			r.off = 0
-			r.n--
-		}
-		if len(p) == 0 {
-			return
-		}
 	}
 }

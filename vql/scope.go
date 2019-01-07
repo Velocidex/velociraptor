@@ -17,8 +17,7 @@ func CacheGet(scope *vfilter.Scope, key string) interface{} {
 	any_obj, _ := scope.Resolve(CACHE_VAR)
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
-		item, _ := cache.cache[key]
-		return item
+		return cache.cache[key]
 	}
 	return nil
 }

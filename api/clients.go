@@ -17,7 +17,7 @@ func GetApiClient(
 	*api_proto.ApiClient, error) {
 
 	if client_id[0] != 'C' {
-		return nil, errors.New("Client_id must start with C")
+		return nil, errors.New("client_id must start with C")
 	}
 
 	result := &api_proto.ApiClient{
@@ -62,9 +62,7 @@ func GetApiClient(
 	}
 
 	if client_info.Knowledgebase != nil {
-		for _, user := range client_info.Knowledgebase.Users {
-			result.Users = append(result.Users, user)
-		}
+		result.Users = append(result.Users, client_info.Knowledgebase.Users...)
 	}
 
 	err = db.GetSubject(

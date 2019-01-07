@@ -72,9 +72,9 @@ func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWrit
 		return nil, err
 	}
 	headers_written := length > 0
+	result.wg.Add(1)
 
 	go func() {
-		result.wg.Add(1)
 		defer result.wg.Done()
 
 		w := NewWriter(fd)

@@ -25,7 +25,7 @@ var (
 		"^[+-]?[0-9]+$")
 
 	protected_prefix = regexp.MustCompile(
-		"^( |\\{|\\[|true|false|base64:)")
+		`^( |\{|\[|true|false|base64:)`)
 )
 
 // A Writer writes records to a CSV encoded file.

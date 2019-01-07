@@ -1,7 +1,7 @@
 [
  {
   "Name": "Empty request",
-  "Error": "Invalid request: No globs specified.",
+  "Error": "invalid request: No globs specified",
   "Request": {},
   "CollectorArgs": null
  },
@@ -113,7 +113,7 @@
  },
  {
   "Name": "Mod time Error",
-  "Error": "Invalid modification time condition: min \u003e max",
+  "Error": "invalid modification time condition: min \u003e max",
   "Request": {
    "paths": [
     "/bin/*"

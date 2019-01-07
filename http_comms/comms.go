@@ -29,12 +29,11 @@ import (
 // be done too frequently and should only be done in response for the
 // 406 HTTP codes.
 type Enroller struct {
-	config_obj              *api_proto.Config
-	manager                 *crypto.CryptoManager
-	executor                executor.Executor
-	logger                  *logging.LogContext
-	last_enrollment_time    time.Time
-	last_foreman_check_time time.Time
+	config_obj           *api_proto.Config
+	manager              *crypto.CryptoManager
+	executor             executor.Executor
+	logger               *logging.LogContext
+	last_enrollment_time time.Time
 }
 
 // TODO: This is a hold over from GRR - do we need it?  GRR's
@@ -206,10 +205,8 @@ func (self *HTTPConnector) ReKeyNextServer() {
 		if self.current_url_idx == 0 {
 			self.logger.Info("Waiting for a reachable server: %v",
 				self.maxPoll)
-			select {
-			case <-time.After(self.maxPoll):
-				continue
-			}
+
+			<-time.After(self.maxPoll)
 		}
 	}
 }
@@ -471,10 +468,7 @@ func (self *Sender) Start(ctx context.Context) {
 			// (since the executor channel itself has no
 			// buffer).
 			if atomic.LoadInt32(&self.IsPaused) != 0 {
-				select {
-				case <-time.After(self.minPoll):
-					continue
-				}
+				<-time.After(self.minPoll)
 			} else {
 				select {
 				case <-ctx.Done():
@@ -602,10 +596,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 	self.receiver.Start(ctx)
 	self.sender.Start(ctx)
 
-	select {
-	case <-ctx.Done():
-		return
-	}
+	<-ctx.Done()
 }
 
 func NewHTTPCommunicator(

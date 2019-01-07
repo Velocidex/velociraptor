@@ -87,7 +87,7 @@ func GetDefaultConfig() *api_proto.Config {
 			// connect to.
 			BindAddress:     "0.0.0.0",
 			BindPort:        8000,
-			ClientLeaseTime: 600,
+			ClientLeaseTime: 60000,
 		},
 		Datastore: &api_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",

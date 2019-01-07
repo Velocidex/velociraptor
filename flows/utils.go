@@ -42,6 +42,9 @@ func QueueAndNotifyClient(
 		config_obj, client_id,
 		flow_urn, client_action_name,
 		message, next_state)
+	if err != nil {
+		return err
+	}
 
 	channel := grpc_client.GetChannel(config_obj)
 	defer channel.Close()

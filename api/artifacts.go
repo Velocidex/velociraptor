@@ -63,11 +63,11 @@ func setArtifactFile(config_obj *api_proto.Config,
 
 	vfs_path = path.Clean(vfs_path)
 	if vfs_path == "" || !strings.HasSuffix(vfs_path, ".yaml") {
-		return errors.New("Artifact filename must end with .yaml")
+		return errors.New("artifact filename must end with .yaml")
 	}
 
 	if !strings.HasPrefix(vfs_path, constants.ARTIFACT_DEFINITION) {
-		return errors.New("Artifacts may only be stored in " +
+		return errors.New("artifacts may only be stored in " +
 			constants.ARTIFACT_DEFINITION)
 	}
 

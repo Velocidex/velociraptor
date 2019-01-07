@@ -88,6 +88,7 @@ func (self _Now) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.
 }
 
 func init() {
+	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_Now{})
 }

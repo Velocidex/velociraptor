@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	artifact_in_query_regex = regexp.MustCompile("Artifact\\.([^\\s\\(]+)\\(")
+	artifact_in_query_regex = regexp.MustCompile(`Artifact\.([^\s\(]+)\(`)
 	global_repository       *Repository
 	mu                      sync.Mutex
 )
@@ -97,7 +97,7 @@ func (self *Repository) Set(artifact *artifacts_proto.Artifact) {
 
 func (self *Repository) List() []string {
 	result := []string{}
-	for k, _ := range self.Data {
+	for k := range self.Data {
 		result = append(result, k)
 	}
 	sort.Strings(result)
@@ -130,7 +130,7 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 			dependencies[dep] = true
 		}
 	}
-	for k, _ := range dependencies {
+	for k := range dependencies {
 		artifact, pres := self.Get(k)
 		if pres {
 			// Deliberately make a copy of the artifact -
@@ -190,7 +190,6 @@ func Compile(artifact *artifacts_proto.Artifact,
 				})
 		}
 
-		queries := []string{}
 		// The artifact format requires all queries to be LET
 		// queries except for the last one.
 		for idx2, query := range source.Queries {
@@ -228,7 +227,6 @@ func Compile(artifact *artifacts_proto.Artifact,
 						VQL: "LET " + query_name +
 							" = " + query,
 					})
-				queries = append(queries, query_name)
 			}
 			source_result = query_name
 		}

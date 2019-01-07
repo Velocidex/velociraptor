@@ -32,6 +32,14 @@ func PrepareFrontendMux(
 	router.Handle("/server.pem", server_pem(config_obj))
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
+
+	if config_obj.Frontend.PublicPath != "" {
+		router.Handle(
+			"/public/", http.StripPrefix("/public/",
+				http.FileServer(http.Dir(
+					config_obj.Frontend.PublicPath,
+				))))
+	}
 }
 
 // Starts the frontend over HTTP. Velociraptor uses its own encryption
@@ -81,8 +89,9 @@ func InstallSignalHandler(
 	// server.
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
+	wg.Add(1)
+
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 
 		// Start all the services and shut them down when we

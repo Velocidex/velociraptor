@@ -68,7 +68,7 @@ func doVQLList() {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case "vql list":
+		case vql_info_list.FullCommand():
 			doVQLList()
 		default:
 			return false

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"gopkg.in/alecthomas/kingpin.v2"
 	"io/ioutil"
 	"os"
 	"regexp"
+
+	"gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 )
 
@@ -23,7 +24,7 @@ var (
 		"output", "The filename to write the repacked binary.").
 		Required().String()
 
-	embedded_re = regexp.MustCompile("#{3}<Begin Embedded Config>\\n")
+	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\n`)
 )
 
 func doRepack() {

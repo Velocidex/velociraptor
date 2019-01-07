@@ -16,7 +16,7 @@ import (
 
 var (
 	global_hunt_dispatcher *HuntDispatcher
-	hunt_id_regex          = regexp.MustCompile("^H\\.[^.]+$")
+	hunt_id_regex          = regexp.MustCompile(`^H\.[^.]+$`)
 )
 
 func GetHuntDispatcher() *HuntDispatcher {
@@ -82,7 +82,7 @@ func (self *HuntDispatcher) ModifyHunt(
 
 	hunt_obj, pres := self.hunts[path.Base(hunt_id)]
 	if !pres {
-		return errors.New("Not found")
+		return errors.New("not found")
 	}
 
 	err := cb(hunt_obj)

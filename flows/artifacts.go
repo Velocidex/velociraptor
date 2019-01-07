@@ -132,6 +132,10 @@ func (self *ArtifactCollector) ProcessMessage(
 			defer fd.Close()
 
 			writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return err
+			}
 			defer writer.Close()
 
 			// Decode the JSON data.

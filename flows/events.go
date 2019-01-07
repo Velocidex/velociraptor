@@ -90,6 +90,9 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	defer scope.Close()
 
 	writer, err := csv.GetCSVWriter(scope, fd)
+	if err != nil {
+		return err
+	}
 	defer writer.Close()
 
 	// Decode the VQLResponse and write into the CSV file.
@@ -104,8 +107,7 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 			Set("ClientId", event.ClientId)
 
 		for _, column := range event.Columns {
-			item, _ := row[column]
-			csv_row.Set(column, item)
+			csv_row.Set(column, row[column])
 		}
 		writer.Write(csv_row)
 	}
@@ -205,6 +207,10 @@ func (self *MonitoringFlow) ProcessMessage(
 			defer fd.Close()
 
 			writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return err
+			}
 			defer writer.Close()
 
 			var rows []map[string]interface{}
@@ -216,8 +222,7 @@ func (self *MonitoringFlow) ProcessMessage(
 			for _, row := range rows {
 				csv_row := vfilter.NewDict()
 				for _, column := range response.Columns {
-					item, _ := row[column]
-					csv_row.Set(column, item)
+					csv_row.Set(column, row[column])
 				}
 
 				writer.Write(csv_row)

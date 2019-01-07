@@ -8,7 +8,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-var basename_regexp = regexp.MustCompile("([^/\\\\]+)$")
+var basename_regexp = regexp.MustCompile(`([^/\\]+)$`)
 
 type _BasenameArgs struct {
 	Path string `vfilter:"required,field=path"`

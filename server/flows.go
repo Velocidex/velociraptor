@@ -17,7 +17,7 @@ func enroll(server *Server, message *crypto_proto.GrrMessage) error {
 	csr, pres := responder.ExtractGrrMessagePayload(
 		message).(*crypto_proto.Certificate)
 	if !pres {
-		return errors.New("Request should be of type Certificate")
+		return errors.New("request should be of type Certificate")
 	}
 
 	if csr.GetType() == crypto_proto.Certificate_CSR && csr.Pem != nil {

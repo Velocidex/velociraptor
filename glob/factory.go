@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	scheme_regex = regexp.MustCompile("^([a-z]+):(.+)$")
-	handlers     map[string]FileSystemAccessor
+	handlers map[string]FileSystemAccessor
 )
 
 // Interface for accessing the filesystem. Used for dependency

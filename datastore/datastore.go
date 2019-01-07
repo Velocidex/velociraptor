@@ -94,7 +94,7 @@ func GetImpl(name string) (DataStore, bool) {
 func GetDB(config_obj *api_proto.Config) (DataStore, error) {
 	db, pres := GetImpl(config_obj.Datastore.Implementation)
 	if !pres {
-		return nil, errors.New("No datastore implementation")
+		return nil, errors.New("no datastore implementation")
 	}
 
 	return db, nil

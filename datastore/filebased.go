@@ -345,7 +345,7 @@ func (self *FileBaseDataStore) SearchClients(
 		add_func(query)
 	}
 
-	for k, _ := range seen {
+	for k := range seen {
 		result = append(result, k)
 	}
 

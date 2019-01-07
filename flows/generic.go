@@ -36,7 +36,7 @@ func (self *VQLCollector) Start(
 	args proto.Message) error {
 	vql_collector_args, ok := args.(*actions_proto.VQLCollectorArgs)
 	if !ok {
-		return errors.New("Expected args of type VQLCollectorArgs")
+		return errors.New("expected args of type VQLCollectorArgs")
 	}
 
 	// Add any required artifacts to the request.

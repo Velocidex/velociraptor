@@ -199,6 +199,10 @@ func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt)
 
 			// Write the new hunt object to the datastore.
 			db, err := datastore.GetDB(config_obj)
+			if err != nil {
+				return err
+			}
+
 			err = db.SetSubject(config_obj, hunt.HuntId, hunt)
 			if err != nil {
 				return err

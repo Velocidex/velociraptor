@@ -236,7 +236,6 @@ func (self WatchMonitoringPlugin) Call(
 				return
 
 			case <-time.After(time.Second):
-				break
 			}
 		}
 	}()

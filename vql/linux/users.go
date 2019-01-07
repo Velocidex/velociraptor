@@ -116,13 +116,8 @@ func (self _UsersPlugin) Call(
 		// may participate in WHERE clause and so will be
 		// referenced after the plugin is terminated.
 		go func() {
-			for {
-				select {
-				case <-ctx.Done():
-					file.Close()
-					return
-				}
-			}
+			<-ctx.Done()
+			file.Close()
 		}()
 
 		profile := vtypes.NewProfile()

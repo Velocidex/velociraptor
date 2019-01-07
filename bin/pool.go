@@ -88,10 +88,7 @@ func doPoolClient() {
 	}
 
 	// Block forever.
-	select {
-	case <-ctx.Done():
-		break
-	}
+	<-ctx.Done()
 }
 
 func init() {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"time"
 
 	"github.com/0xrawsec/golang-evtx/evtx"
@@ -57,7 +56,10 @@ func _WriteEvents(
 		chunk.Offset = offsetChunk
 		chunk.Data = make([]byte, evtx.ChunkSize)
 
-		offset, err := file.Seek(offsetChunk, os.SEEK_SET)
+		offset, err := file.Seek(offsetChunk, io.SeekStart)
+		if err != nil {
+			continue
+		}
 		if offset != offsetChunk || err != nil {
 			return last_event, nil
 		}
@@ -76,7 +78,7 @@ func _WriteEvents(
 
 		chunk_reader.Seek(
 			int64(chunk.Header.SizeHeader),
-			os.SEEK_SET)
+			io.SeekStart)
 		chunk.ParseStringTable(chunk_reader)
 		err = chunk.ParseTemplateTable(chunk_reader)
 		if err != nil {
@@ -88,7 +90,7 @@ func _WriteEvents(
 			continue
 		}
 
-		for _, event_offset := range chunk.EventOffsets {
+		for event_offset := range chunk.EventOffsets {
 			event := chunk.ParseEvent(int64(event_offset))
 			item, err := event.GoEvtxMap(&chunk)
 			if err == nil {
@@ -207,9 +209,9 @@ func (self _WatchEvtxPlugin) Call(
 						return
 					}
 					defer file.Close()
-					first_event, _ := event_counts[filename]
 					last_event, err := _WriteEvents(
-						scope, file, output_chan, first_event)
+						scope, file, output_chan,
+						event_counts[filename])
 					if err != nil {
 						scope.Log("Error: %v", err)
 						return

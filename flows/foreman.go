@@ -132,11 +132,12 @@ func (self *Foreman) ProcessMessage(
 			return nil
 		}
 
-		// Check for labels.
-		label_condition := hunt.Condition.GetLabels()
-		if label_condition != nil && len(label_condition.Label) > 0 {
-			// TODO
-		}
+		// TODO Check for labels.
+		/*
+				label_condition := hunt.Condition.GetLabels()
+			        if label_condition != nil && len(label_condition.Label) > 0 {
+				}
+		*/
 
 		flow_condition_query, err := calculateFlowConditionQuery(hunt)
 		if err != nil {

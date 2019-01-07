@@ -21,7 +21,7 @@ type ArtifactRepositoryPlugin struct {
 
 func (self *ArtifactRepositoryPlugin) Print() {
 	var children []string
-	for k, _ := range self.children {
+	for k := range self.children {
 		children = append(children, k)
 	}
 	fmt.Printf("prefix '%v', Children %v, Leaf %v\n",
@@ -142,7 +142,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) GetMembers(
 
 	value := _getArtifactRepositoryPlugin(a)
 	if value != nil {
-		for k, _ := range value.children {
+		for k := range value.children {
 			result = append(result, k)
 		}
 	}

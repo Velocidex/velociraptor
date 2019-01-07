@@ -76,7 +76,7 @@ func processFile(
 					continue
 				}
 
-				for idx, _ := range items {
+				for idx := range items {
 					arg.Columns = append(
 						arg.Columns,
 						fmt.Sprintf("Column%d", idx))

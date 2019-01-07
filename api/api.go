@@ -189,13 +189,13 @@ func (self *ApiServer) NotifyClients(
 	ctx context.Context,
 	in *api_proto.NotificationRequest) (*empty.Empty, error) {
 	if in.NotifyAll {
-		self.server_obj.Info("Sending notification to everyone")
+		self.server_obj.Info("sending notification to everyone")
 		self.server_obj.NotificationPool.NotifyAll()
 	} else if in.ClientId != "" {
-		self.server_obj.Info("Sending notification to %s", in.ClientId)
+		self.server_obj.Info("sending notification to %s", in.ClientId)
 		self.server_obj.NotificationPool.Notify(in.ClientId)
 	} else {
-		return nil, errors.New("Client id should be specified.")
+		return nil, errors.New("client id should be specified")
 	}
 	return &empty.Empty{}, nil
 }

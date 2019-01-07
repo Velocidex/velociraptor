@@ -13,10 +13,6 @@ type _TempfileRequest struct {
 	Data []string `vfilter:"required,field=data"`
 }
 
-type _TempfileResponse struct {
-	Filename string `vfilter:"required,field=filename"`
-}
-
 type TempfileFunction struct{}
 
 func (self *TempfileFunction) Call(ctx context.Context,

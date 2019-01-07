@@ -29,7 +29,7 @@ func checkUserCredentialsHandler(
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 
 		username, password, ok := r.BasicAuth()
-		if ok == false {
+		if !ok {
 			http.Error(w, "Not authorized", http.StatusUnauthorized)
 			return
 		}

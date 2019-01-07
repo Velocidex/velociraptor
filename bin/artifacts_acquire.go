@@ -86,6 +86,9 @@ func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
 	defer fd.Close()
 
 	writer, err := csv.GetCSVWriter(scope, fd)
+	if err != nil {
+		return err
+	}
 	defer writer.Close()
 
 	for _, query := range request.Query {

@@ -199,6 +199,10 @@ message FrontendConfig {
     string artifacts_path = 7 [(sem_type) = {
             description: "Path to additional artifacts to load",
         }];
+
+    string public_path = 8 [(sem_type) = {
+            description: "If specified we export this path through the /public/ handler.",
+        }];
 }
 
 

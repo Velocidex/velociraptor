@@ -111,7 +111,7 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 	string, error) {
 	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return "", errors.New("No configured file store directory.")
+		return "", errors.New("no configured file store directory")
 	}
 
 	components := []string{self.config_obj.Datastore.FilestoreDirectory}
@@ -130,11 +130,11 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 	string, error) {
 	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return "", errors.New("No configured file store directory.")
+		return "", errors.New("no configured file store directory")
 	}
 
 	if !strings.HasPrefix(filename, self.config_obj.Datastore.FilestoreDirectory) {
-		return "", errors.New("Not a file store directory.")
+		return "", errors.New("not a file store directory")
 	}
 
 	components := []string{}

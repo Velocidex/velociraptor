@@ -14,7 +14,7 @@ var (
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
-		if command == "version" {
+		if command == version.FullCommand() {
 			config_obj := config.GetDefaultConfig()
 			res, err := yaml.Marshal(config_obj.Version)
 			if err != nil {

@@ -79,31 +79,15 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
-func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
+func (self *OSFileInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
 // Real implementation for non windows OSs:
-type OSFileSystemAccessor struct {
-	fd_cache map[string]*os.File
-}
+type OSFileSystemAccessor struct{}
 
 func (self OSFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
-	result := &OSFileSystemAccessor{
-		fd_cache: make(map[string]*os.File),
-	}
-
-	// When the context is done, close all the files. The files
-	// must remain open until the entire VQL query is done.
-	go func() {
-		select {
-		case <-ctx.Done():
-			for _, v := range result.fd_cache {
-				v.Close()
-			}
-		}
-	}()
-
+	result := &OSFileSystemAccessor{}
 	return result
 }
 
@@ -131,17 +115,10 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	fd, pres := self.fd_cache[path]
-	if pres {
-		return fd, nil
-	}
-
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-
-	self.fd_cache[path] = file
 
 	return file, nil
 }

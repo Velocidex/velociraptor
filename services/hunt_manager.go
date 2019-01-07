@@ -34,7 +34,6 @@ type HuntManager struct {
 	writers    map[string]*csv.CSVWriter
 	wg         sync.WaitGroup
 	done       chan bool
-	scope      *vfilter.Scope
 	config_obj *api_proto.Config
 }
 
@@ -61,9 +60,9 @@ func (self *HuntManager) Start() error {
 	if err != nil {
 		return err
 	}
+	self.wg.Add(1)
 
 	go func() {
-		self.wg.Add(1)
 		defer self.wg.Done()
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -144,7 +143,7 @@ func (self *HuntManager) ProcessRow(
 			// Ignore stopped hunts.
 			if hunt_obj.Stats.Stopped ||
 				hunt_obj.State != api_proto.Hunt_RUNNING {
-				return errors.New("Hunt is stopped")
+				return errors.New("hunt is stopped")
 			}
 
 			// Hunt limit exceeded or it expired - we stop it.
@@ -154,7 +153,7 @@ func (self *HuntManager) ProcessRow(
 
 				// Stop the hunt.
 				hunt_obj.Stats.Stopped = true
-				return errors.New("Hunt is expired")
+				return errors.New("hunt is expired")
 			}
 
 			// Use hunt information to launch the flow

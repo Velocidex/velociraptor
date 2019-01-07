@@ -28,7 +28,7 @@ func (self *FileFinder) Start(
 	args proto.Message) error {
 	file_finder_args, ok := args.(*flows_proto.FileFinderArgs)
 	if !ok {
-		return errors.New("Expected args of type VInterrogateArgs")
+		return errors.New("expected args of type VInterrogateArgs")
 	}
 
 	builder := file_finder_builder{args: file_finder_args}
@@ -57,10 +57,9 @@ func (self *FileFinder) Start(
 }
 
 type file_finder_builder struct {
-	args        *flows_proto.FileFinderArgs
-	columns     []string
-	glob_plugin string
-	result      actions_proto.VQLCollectorArgs
+	args    *flows_proto.FileFinderArgs
+	columns []string
+	result  actions_proto.VQLCollectorArgs
 }
 
 // Returns a list of conditions which are expensive to execute (such as grep).
@@ -150,7 +149,7 @@ func (self *file_finder_builder) compileGlobFunction() (string, error) {
 	glob_vars := []string{}
 
 	if len(self.args.Paths) == 0 {
-		return "", errors.New("Invalid request: No globs specified.")
+		return "", errors.New("invalid request: No globs specified")
 	}
 	// Push the glob into the query environment to prevent
 	// escaping issues.
@@ -250,7 +249,7 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 		if mod_time.MinLastModifiedTime > mod_time.MaxLastModifiedTime &&
 			mod_time.MaxLastModifiedTime != 0 {
 			return nil, errors.New(
-				"Invalid modification time condition: min > max")
+				"invalid modification time condition: min > max")
 		}
 
 		if mod_time.MinLastModifiedTime != 0 {
@@ -269,7 +268,7 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 		if access_time.MinLastAccessTime > access_time.MaxLastAccessTime &&
 			access_time.MaxLastAccessTime != 0 {
 			return nil, errors.New(
-				"Invalid access time condition: min > max")
+				"invalid access time condition: min > max")
 		}
 
 		if access_time.MinLastAccessTime != 0 {
@@ -288,7 +287,7 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 		if inode_time.MinLastInodeChangeTime > inode_time.MaxLastInodeChangeTime &&
 			inode_time.MaxLastInodeChangeTime != 0 {
 			return nil, errors.New(
-				"Invalid inode change time condition: min > max")
+				"invalid inode change time condition: min > max")
 		}
 
 		if inode_time.MinLastInodeChangeTime != 0 {
@@ -306,7 +305,7 @@ func processCondition(condition *flows_proto.FileFinderCondition) ([]string, err
 	if size != nil {
 		if size.MinFileSize > size.MaxFileSize && size.MaxFileSize != 0 {
 			return nil, errors.New(
-				"Invalid size condition: min > max")
+				"invalid size condition: min > max")
 		}
 		if size.MinFileSize != 0 {
 			result = append(result, fmt.Sprintf(

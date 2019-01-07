@@ -50,6 +50,18 @@ func doArtifactsHunt() {
 		State: api_proto.Hunt_RUNNING,
 	}
 
+	if artifact_command_hunt_condition != nil {
+		hunt_request.Condition = &api_proto.HuntCondition{}
+		hunt_request.Condition.GetGenericCondition().
+			FlowConditionQuery = &actions_proto.VQLCollectorArgs{
+			Query: []*actions_proto.VQLRequest{
+				&actions_proto.VQLRequest{
+					VQL: *artifact_command_hunt_condition,
+				},
+			},
+		}
+	}
+
 	// Just start an artifact collector hunt using the gRPC API.
 	config_obj := get_config_or_default()
 	channel := grpc_client.GetChannel(config_obj)

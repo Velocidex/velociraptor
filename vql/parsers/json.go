@@ -83,7 +83,7 @@ func (self _MapInterfaceAssociativeProtocol) GetMembers(
 	result := []string{}
 	a_map, ok := a.(map[string]interface{})
 	if ok {
-		for k, _ := range a_map {
+		for k := range a_map {
 			result = append(result, k)
 		}
 	}

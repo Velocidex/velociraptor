@@ -84,6 +84,9 @@ func renderDBVFS(
 	filestore_urn := path.Join("clients", client_id, "vfs_files", vfs_path)
 	downloaded_items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
+	if err != nil {
+		return nil, err
+	}
 
 	// We only care about actual files.
 	downloaded_files := []os.FileInfo{}

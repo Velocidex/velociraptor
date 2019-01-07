@@ -21,3 +21,6 @@ clean:
 
 generate:
 	go generate ./vql/windows/win32_windows.go
+
+check:
+	staticcheck ./...

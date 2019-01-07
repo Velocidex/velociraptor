@@ -56,7 +56,6 @@ func (self _Sentinel) String() string {
 
 var (
 	sentinal_filter = _Sentinel{}
-	sentinal        = &Globber{sentinal_filter: nil}
 )
 
 type _RecursiveComponent struct {
@@ -345,12 +344,10 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 }
 
 var (
-	_INTERPOLATED_REGEX = regexp.MustCompile("%%([^%]+?)%%")
-
 	// Support Brace Expansion {a,b}. NOTE: This happens before wild card
 	// expansions so you can do /foo/bar/{*.exe,*.dll}
 	_GROUPING_PATTERN = regexp.MustCompile("^(.*){([^}]+)}(.*)$")
-	_RECURSION_REGEX  = regexp.MustCompile("\\*\\*(\\d*)")
+	_RECURSION_REGEX  = regexp.MustCompile(`\*\*(\d*)`)
 
 	// A regex indicating if there are shell globs in this path.
 	_GLOB_MAGIC_CHECK = regexp.MustCompile("[*?[]")

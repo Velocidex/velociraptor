@@ -37,10 +37,8 @@ func (self *UpdateEventTable) Run(
 
 	// Cancel the context when the cancel channel is closed.
 	go func() {
-		select {
-		case <-table.Done:
-			cancel()
-		}
+		<-table.Done
+		cancel()
 	}()
 
 	logger := logging.GetLogger(config, &logging.ClientComponent)

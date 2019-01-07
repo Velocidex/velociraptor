@@ -1,4 +1,3 @@
-//
 package flows
 
 import (
@@ -41,15 +40,11 @@ func (self *VInterrogate) Start(
 	}
 
 	vql_request := &actions_proto.VQLCollectorArgs{}
-
-	for _, q := range interrogate_args.Queries {
-		vql_request.Query = append(vql_request.Query, q)
-	}
+	vql_request.Query = append(vql_request.Query, interrogate_args.Queries...)
 
 	// Run custom queries from the config file if present.
-	for _, q := range config_obj.Flows.InterrogateAdditionalQueries {
-		vql_request.Query = append(vql_request.Query, q)
-	}
+	vql_request.Query = append(vql_request.Query,
+		config_obj.Flows.InterrogateAdditionalQueries...)
 
 	// Run standard queries.
 	queries := []*actions_proto.VQLRequest{
@@ -68,9 +63,7 @@ func (self *VInterrogate) Start(
 			Name: "Recent Users"},
 	}
 
-	for _, query := range queries {
-		vql_request.Query = append(vql_request.Query, query)
-	}
+	vql_request.Query = append(vql_request.Query, queries...)
 
 	// Add any required artifacts to the request.
 	repository, err := artifacts.GetGlobalRepository(config_obj)

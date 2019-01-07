@@ -50,7 +50,7 @@ var (
 		"run", "Run as a service - only called by service manager.").Hidden()
 )
 
-func doInstall() error {
+func doInstall() (err error) {
 	config_obj, err := config.LoadClientConfig(*config_path)
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
@@ -62,7 +62,22 @@ func doInstall() error {
 	target_path := os.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
 
 	executable, err := os.Executable()
-	kingpin.FatalIfError(err, "Can't get executable path")
+	if err != nil {
+		return err
+	}
+
+	// Since we stopped the service here, we need to make sure it
+	// is started again.
+	defer func() {
+		err = startService(service_name)
+
+		// We can not start the service - everything is messed
+		// up! Just die here.
+		if err != nil {
+			return
+		}
+		logger.Info("Started service %s", service_name)
+	}()
 
 	pres, err := checkServiceExists(service_name)
 	if err != nil {
@@ -78,18 +93,6 @@ func doInstall() error {
 			logger.Info("Stopped service %s", service_name)
 		}
 	}
-
-	// Since we stopped the service here, we need to make sure it
-	// is started again.
-	defer func() {
-		err = startService(service_name)
-
-		// We can not start the service - everything is messed
-		// up! Just die here.
-		kingpin.FatalIfError(err, "Start service")
-
-		logger.Info("Started service %s", service_name)
-	}()
 
 	// Try to copy the executable to the target_path.
 	err = utils.CopyFile(executable, target_path, 0755)
@@ -399,7 +402,16 @@ func init() {
 		var err error
 		switch command {
 		case "service install":
-			err = doInstall()
+			// Try 10 times to install the service.
+			for i := 0; i < 10; i++ {
+				err = doInstall()
+				if err == nil {
+					break
+				}
+
+				time.Sleep(10 * time.Second)
+			}
+
 		case "service remove":
 			doRemove()
 

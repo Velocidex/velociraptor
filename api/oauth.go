@@ -100,6 +100,11 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 		// Sign and get the complete encoded token as a string using the secret
 		tokenString, err := token.SignedString(
 			[]byte(config_obj.Frontend.PrivateKey))
+		if err != nil {
+			log.Println(err.Error())
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
 
 		// Set the cookie and redirect.
 		cookie := &http.Cookie{
@@ -148,7 +153,6 @@ func authenticateOAUTHCookie(
 			// Not authorized - redirect to logon screen.
 			http.Redirect(w, r, "/auth/google/login",
 				http.StatusTemporaryRedirect)
-			return
 		}
 
 		auth_cookie, err := r.Cookie("VelociraptorAuth")
@@ -163,7 +167,7 @@ func authenticateOAUTHCookie(
 			func(token *jwt.Token) (interface{}, error) {
 				_, ok := token.Method.(*jwt.SigningMethodHMAC)
 				if !ok {
-					return nil, errors.New("Invalid signing method")
+					return nil, errors.New("invalid signing method")
 				}
 				return []byte(config_obj.Frontend.PrivateKey), nil
 			})
@@ -174,7 +178,7 @@ func authenticateOAUTHCookie(
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
-			reject(errors.New("Token not valid"))
+			reject(errors.New("token not valid"))
 			return
 		}
 
@@ -182,19 +186,19 @@ func authenticateOAUTHCookie(
 		// stack.
 		username, pres := claims["user"].(string)
 		if !pres {
-			reject(errors.New("Username not present"))
+			reject(errors.New("username not present"))
 			return
 		}
 
 		// Check if the claim is too old.
 		expires, pres := claims["expires"].(float64)
 		if !pres {
-			reject(errors.New("Expires field not present in JWT"))
+			reject(errors.New("expires field not present in JWT"))
 			return
 		}
 
 		if expires < float64(time.Now().Unix()) {
-			reject(errors.New("JWT expired - reauthenticate."))
+			reject(errors.New("the JWT is expired - reauthenticate"))
 			return
 		}
 

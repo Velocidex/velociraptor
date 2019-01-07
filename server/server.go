@@ -97,8 +97,6 @@ type Server struct {
 	logger           *logging.LogContext
 	db               datastore.DataStore
 	NotificationPool *NotificationPool
-
-	mu sync.Mutex
 }
 
 func (self *Server) Close() {
@@ -197,27 +195,17 @@ func (self *Server) Process(
 		return nil, 0, errors.WithStack(err)
 	}
 
-	// Here we split incoming messages from Velociraptor clients
-	// and GRR clients. We process the Velociraptor clients
-	// ourselves, while relaying the GRR client's messages to the
-	// GRR frontend server.
-	var grr_messages []*crypto_proto.GrrMessage
-	var velociraptor_messages []*crypto_proto.GrrMessage
-
+	var messages []*crypto_proto.GrrMessage
 	for _, message := range message_list.Job {
 		if message_info.Authenticated {
 			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
 		}
 		message.Source = message_info.Source
-		if message.ClientType == crypto_proto.GrrMessage_VELOCIRAPTOR {
-			velociraptor_messages = append(velociraptor_messages, message)
-		} else {
-			grr_messages = append(grr_messages, message)
-		}
+		messages = append(messages, message)
 	}
 
 	err = self.processVelociraptorMessages(
-		ctx, message_info.Source, velociraptor_messages)
+		ctx, message_info.Source, messages)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -238,10 +226,9 @@ func (self *Server) Process(
 
 	message_list = &crypto_proto.MessageList{}
 	if drain_requests_for_client {
-		for _, response := range self.DrainRequestsForClient(
-			message_info.Source) {
-			message_list.Job = append(message_list.Job, response)
-		}
+		message_list.Job = append(
+			message_list.Job,
+			self.DrainRequestsForClient(message_info.Source)...)
 	}
 
 	response, err := self.manager.EncryptMessageList(
