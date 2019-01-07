@@ -23,7 +23,7 @@ ArtifactsParamsFormController.prototype.addItem = function() {
                 friendly_name: descriptor.parameters[i].friendly_name,
                 value: descriptor.parameters[i].default,
                 descriptor: descriptor.parameters[i],
-                type: descriptor.parameters[i].type,
+                type: descriptor.parameters[i].type || "string",
             });
         };
     }

@@ -54,7 +54,9 @@ func (self *ArtifactCollector) Start(
 	flow_obj.FlowContext.Artifacts = collector_args.Artifacts.Names
 	flow_obj.SetContext(flow_obj.FlowContext)
 
-	vql_collector_args := &actions_proto.VQLCollectorArgs{}
+	vql_collector_args := &actions_proto.VQLCollectorArgs{
+		OpsPerSecond: collector_args.OpsPerSecond,
+	}
 	for _, name := range collector_args.Artifacts.Names {
 		artifact, pres := repository.Get(name)
 		if !pres {

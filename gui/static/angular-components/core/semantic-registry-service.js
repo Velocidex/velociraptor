@@ -161,27 +161,23 @@ SemanticRegistryService.prototype.findDirectiveForType = function(
 };
 
 SemanticRegistryService.prototype.findDirectiveForDescriptor = function(
-  descriptor) {
+    descriptor) {
     var name = descriptor.name;
-    if (descriptor.name == "ArtifactParameter") {
-            console.log(descriptor);
+    // Is there a specialized renderer for this descriptor?
+    if (angular.isDefined(this.directivesByType_[name])) {
+        return this.directivesByType_[name];
     }
-    console.log(descriptor.name);
-  // Is there a specialized renderer for this descriptor?
-  if (angular.isDefined(this.directivesByType_[name])) {
-    return this.directivesByType_[name];
-  }
 
-  if (descriptor.kind == "struct") {
+    if (descriptor.kind == "struct") {
+        return this.directivesByType_["RDFProtoStruct"];
+    }
+
+    if (descriptor.kind == 'enum') {
+        return this.directivesByType_["EnumNamedValue"];
+    }
+
+    console.log(descriptor);
+    console.log("No directive known for type " + descriptor.name);
+
     return this.directivesByType_["RDFProtoStruct"];
-  }
-
-  if (descriptor.kind == 'enum') {
-    return this.directivesByType_["EnumNamedValue"];
-  }
-
-  console.log(descriptor);
-  console.log("No directive known for type " + descriptor.name);
-
-  return this.directivesByType_["RDFProtoStruct"];
 };

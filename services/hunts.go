@@ -182,6 +182,7 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	dict_row.Set("FlowId", response.FlowId)
+	dict_row.Set("Timestamp", time.Now().Unix())
 	writer.Write(dict_row)
 }
 

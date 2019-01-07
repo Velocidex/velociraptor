@@ -34,4 +34,10 @@ message ArtifactCollectorArgs {
             description: "Parameters to the artifacts.",
             friendly_name: "Parameters",
         }];
+
+    float ops_per_second = 6 [(sem_type) = {
+            description: "Operations per second (Throttling).",
+            friendly_name: "Ops Per Second",
+            default: "1000000",
+        }];
 }
