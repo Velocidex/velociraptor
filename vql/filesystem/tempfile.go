@@ -2,15 +2,16 @@ package filesystem
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 
+	"github.com/tink-ab/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type _TempfileRequest struct {
-	Data []string `vfilter:"required,field=data"`
+	Data      []string `vfilter:"required,field=data"`
+	Extension string   `vfilter:"optional,field=extension"`
 }
 
 type TempfileFunction struct{}
@@ -25,9 +26,9 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		return false
 	}
 
-	tmpfile, err := ioutil.TempFile("", "tmp")
+	tmpfile, err := tempfile.TempFile("", "tmp", arg.Extension)
 	if err != nil {
-		scope.Log("tempfile: %s", err.Error())
+		scope.Log("tempfile: %v", err)
 		return false
 	}
 

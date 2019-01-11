@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"context"
@@ -50,37 +51,17 @@ var (
 		"run", "Run as a service - only called by service manager.").Hidden()
 )
 
-func doInstall() (err error) {
-	config_obj, err := config.LoadClientConfig(*config_path)
-	if err != nil {
-		return errors.Wrap(err, "Unable to load config file")
-	}
-
+func doInstall(config_obj *api_proto.Config) (err error) {
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 	target_path := os.ExpandEnv(config_obj.Client.WindowsInstaller.InstallPath)
 
 	executable, err := os.Executable()
-	if err != nil {
-		return err
-	}
-
-	// Since we stopped the service here, we need to make sure it
-	// is started again.
-	defer func() {
-		err = startService(service_name)
-
-		// We can not start the service - everything is messed
-		// up! Just die here.
-		if err != nil {
-			return
-		}
-		logger.Info("Started service %s", service_name)
-	}()
-
+	kingpin.FatalIfError(err, "unable to determine executable path")
 	pres, err := checkServiceExists(service_name)
 	if err != nil {
+		logger.Info("checkServiceExists: %v", err)
 		return errors.WithStack(err)
 	}
 	if pres {
@@ -102,20 +83,40 @@ func doInstall() (err error) {
 			dirname)
 		err = os.MkdirAll(dirname, 0700)
 		if err != nil {
+			logger.Info("MkdirAll %s: %v", dirname, err)
 			return errors.Wrap(err, "Create intermediate directories")
 		}
 		err = utils.CopyFile(executable, target_path, 0755)
 	}
 	if err != nil {
+		logger.Info("Cant copy binary to destination %s: %v", target_path, err)
 		return errors.Wrap(err, "Cant copy binary into destination dir.")
 	}
 
 	logger.Info("Copied binary to %s", target_path)
 
+	// If the installer was invoked with the --config arg then we
+	// need to copy the config to the target path.
+	if *config_path != "" {
+		config_target_path := strings.TrimSuffix(
+			target_path, filepath.Ext(target_path)) + ".config.yaml"
+
+		logger.Info("Copying config to destination %s",
+			config_target_path)
+
+		err = utils.CopyFile(*config_path, config_target_path, 0755)
+		if err != nil {
+			logger.Info("Cant copy config to destination %s: %v",
+				config_target_path, err)
+			return err
+		}
+	}
+
 	// A service already exists - we need to delete it and
 	// recreate it to make sure it is set up correctly.
 	pres, err = checkServiceExists(service_name)
 	if err != nil {
+		logger.Info("checkServiceExists: %v", err)
 		return errors.WithStack(err)
 	}
 	if pres {
@@ -131,6 +132,17 @@ func doInstall() (err error) {
 	}
 
 	logger.Info("Installed service %s", service_name)
+
+	// Since we stopped the service here, we need to make sure it
+	// is started again.
+	err = startService(service_name)
+
+	// We can not start the service - everything is messed
+	// up! Just die here.
+	if err != nil {
+		return
+	}
+	logger.Info("Started service %s", service_name)
 
 	return nil
 }
@@ -174,7 +186,7 @@ func installService(name string, executable string,
 	// Try to create an event source but dont sweat it if it does
 	// not work.
 	err = eventlog.InstallAsEventCreate(
-		name, eventlog.Error|eventlog.Warning|eventlog.Info)
+		"velociraptor", eventlog.Error|eventlog.Warning|eventlog.Info)
 	if err != nil {
 		logger.Info("SetupEventLogSource() failed: %s", err)
 	}
@@ -272,45 +284,71 @@ func doRemove() {
 	logger.Info("Removed service %s", service_name)
 }
 
-func doRun() {
-	config_obj, err := config.LoadClientConfig(*config_path)
-	kingpin.FatalIfError(err, "Unable to load config file")
-
-	// Make sure the config is ok.
-	err = crypto.VerifyConfig(config_obj)
-	kingpin.FatalIfError(err, "Unable to load config file")
-
-	name := config_obj.Client.WindowsInstaller.ServiceName
-
+func getLogger(name string) (debug.Log, error) {
 	var elog debug.Log
-	run := svc.Run
-
 	isIntSess, err := svc.IsAnInteractiveSession()
-	kingpin.FatalIfError(err,
-		"failed to determine if we are running in an interactive session")
+	if err != nil {
+		return nil, err
+	}
 	if isIntSess {
 		elog = debug.New(name)
-		run = debug.Run
 	} else {
 		elog, err = eventlog.Open(name)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
-	defer elog.Close()
 
-	service, err := NewVelociraptorService(config_obj, elog)
+	return elog, nil
+}
+
+func doRun() error {
+	executable, err := os.Executable()
 	if err != nil {
-		elog.Error(1, fmt.Sprintf("%s service failed: %v", name, err))
-		return
+		return err
 	}
 
-	err = run(name, service)
-	if err != nil {
-		elog.Error(1, fmt.Sprintf("%s service failed: %v", name, err))
-		return
+	// If the config path is not specified we look for the config
+	// file next to the service executable.
+	if *config_path == "" {
+		config_target_path := strings.TrimSuffix(
+			executable, filepath.Ext(executable)) + ".config.yaml"
+		config_path = &config_target_path
 	}
-	elog.Info(1, fmt.Sprintf("%s service stopped", name))
+
+	config_obj, err := config.LoadClientConfig(*config_path)
+	if err != nil {
+		return err
+	}
+
+	// Make sure the config is ok.
+	err = crypto.VerifyConfig(config_obj)
+	if err != nil {
+		return err
+	}
+
+	isIntSess, err := svc.IsAnInteractiveSession()
+	if err != nil {
+		return err
+	}
+
+	name := config_obj.Client.WindowsInstaller.ServiceName
+	service, err := NewVelociraptorService(config_obj)
+	if err != nil {
+		return err
+	}
+	defer service.Close()
+
+	if isIntSess {
+		err = debug.Run(name, service)
+	} else {
+		err = svc.Run(name, service)
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type VelociraptorService struct {
@@ -360,10 +398,24 @@ loop:
 	return
 }
 
-func NewVelociraptorService(config_obj *api_proto.Config, elog debug.Log) (
+func (self *VelociraptorService) Close() {
+	name := self.config_obj.Client.WindowsInstaller.ServiceName
+	self.elog.Info(1, fmt.Sprintf("%s service stopped", name))
+	self.elog.Close()
+}
+
+func NewVelociraptorService(config_obj *api_proto.Config) (
 	*VelociraptorService, error) {
+
+	name := config_obj.Client.WindowsInstaller.ServiceName
+	elog, err := getLogger(name)
+	if err != nil {
+		return nil, err
+	}
+
 	result := &VelociraptorService{
-		elog: elog,
+		config_obj: config_obj,
+		elog:       elog,
 	}
 
 	manager, err := crypto.NewClientCryptoManager(
@@ -402,13 +454,17 @@ func init() {
 		var err error
 		switch command {
 		case "service install":
-			// Try 10 times to install the service.
-			for i := 0; i < 10; i++ {
-				err = doInstall()
+			config_obj, err := config.LoadClientConfig(*config_path)
+			kingpin.FatalIfError(err, "Unable to load config file")
+			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+			// Try 5 times to install the service.
+			for i := 0; i < 5; i++ {
+				err = doInstall(config_obj)
 				if err == nil {
 					break
 				}
-
+				logger.Info("%v", err)
 				time.Sleep(10 * time.Second)
 			}
 
@@ -416,7 +472,17 @@ func init() {
 			doRemove()
 
 		case "service run":
-			doRun()
+			name := "velociraptor"
+			elog, err := getLogger(name)
+			kingpin.FatalIfError(err, "Unable to get logger")
+
+			defer elog.Close()
+
+			err = doRun()
+			if err != nil {
+				elog.Info(1, fmt.Sprintf(
+					"Failed to start service: %v", err))
+			}
 
 		case "service start":
 			config_obj, err := config.LoadClientConfig(*config_path)

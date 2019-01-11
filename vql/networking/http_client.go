@@ -126,15 +126,19 @@ func (self *_HttpPlugin) Call(
 
 		buf := make([]byte, arg.Chunk)
 		for {
-			n, err := http_resp.Body.Read(buf)
-			if err != nil && err == io.EOF {
+			n, err := io.ReadFull(http_resp.Body, buf)
+			if n > 0 {
 				response.Content = string(buf[:n])
 				output_chan <- response
-				return
 			}
 
-			response.Content = string(buf[:n])
-			output_chan <- response
+			if err == io.EOF {
+				break
+			}
+
+			if err != nil {
+				break
+			}
 		}
 	}()
 

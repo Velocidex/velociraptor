@@ -138,10 +138,12 @@ func (self *VelociraptorUploader) Upload(
 
 	offset := uint64(0)
 	self.Count += 1
+	buffer := make([]byte, 1024*1024)
+
 	for {
-		buffer := make([]byte, 1024*1024)
 		read_bytes, err := reader.Read(buffer)
 		if read_bytes == 0 {
+			result.Size = offset
 			return result, nil
 		}
 
@@ -158,14 +160,7 @@ func (self *VelociraptorUploader) Upload(
 			constants.TransferWellKnownFlowId, packet)
 
 		offset += uint64(read_bytes)
-
-		if err != nil {
-			// All done.
-			if err == io.EOF {
-				result.Size = offset
-				return result, nil
-			}
-			// Other error - relay it back.
+		if err != nil && err != io.EOF {
 			return nil, err
 		}
 	}

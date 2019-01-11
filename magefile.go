@@ -12,6 +12,7 @@ import (
 
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 var (
@@ -23,14 +24,14 @@ var (
 
 	mingw_xcompiler = "x86_64-w64-mingw32-gcc"
 	name            = "velociraptor"
-	version         = "v0.2.7"
+	version         = "v" + constants.VERSION
 )
 
 func Xgo() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
-		"--targets", "windows/amd64,darwin/amd64,linux/amd64",
-		"-tags", "release",
+		"--targets", "windows/amd64,windows/x86,darwin/amd64,linux/amd64",
+		"-tags", "release cgo",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 }
@@ -127,34 +128,15 @@ func Windows() error {
 	return err
 }
 
-// Cross compile the windows binary using mingw
+// We have to compile darwin executables with xgo otherwise many of
+// the cgo plugins wont work.
 func Darwin() error {
-	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
-		return fmt.Errorf("failed to create output: %v", err)
-	}
-
-	err := ensure_assets()
-	if err != nil {
-		return err
-	}
-
-	env := make(map[string]string)
-	env["GOOS"] = "darwin"
-	env["GOARCH"] = "amd64"
-
-	err = sh.RunWith(
-		env,
-		mg.GoCmd(), "build",
-		"-o", filepath.Join("output", name+".mach"),
+	return sh.RunV(
+		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
+		"--targets", "darwin/amd64",
 		"-tags", "release",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
-
-	if err != nil {
-		return err
-	}
-
-	return err
 }
 
 func Clean() error {

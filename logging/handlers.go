@@ -15,11 +15,20 @@ type statusRecorder struct {
 	http.Flusher
 	http.CloseNotifier
 	status int
+	error  []byte
 }
 
-func (rec *statusRecorder) WriteHeader(code int) {
-	rec.status = code
-	rec.ResponseWriter.WriteHeader(code)
+func (self *statusRecorder) WriteHeader(code int) {
+	self.status = code
+	self.ResponseWriter.WriteHeader(code)
+}
+
+func (self *statusRecorder) Write(buf []byte) (int, error) {
+	if self.status == 500 {
+		self.error = buf
+	}
+
+	return self.ResponseWriter.Write(buf)
 }
 
 func GetUserInfo(ctx context.Context,
@@ -46,18 +55,33 @@ func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Han
 				w,
 				w.(http.Flusher),
 				w.(http.CloseNotifier),
-				200}
+				200, nil}
 			defer func() {
-				logger.WithFields(
-					logrus.Fields{
-						"method":     r.Method,
-						"url":        r.URL.Path,
-						"remote":     r.RemoteAddr,
-						"user-agent": r.UserAgent(),
-						"status":     rec.status,
-						"user": GetUserInfo(
-							r.Context(), config_obj).Name,
-					}).Info("")
+				if rec.status == 500 {
+					logger.WithFields(
+						logrus.Fields{
+							"method":     r.Method,
+							"url":        r.URL.Path,
+							"remote":     r.RemoteAddr,
+							"error":      string(rec.error),
+							"user-agent": r.UserAgent(),
+							"status":     rec.status,
+							"user": GetUserInfo(
+								r.Context(), config_obj).Name,
+						}).Error("")
+
+				} else {
+					logger.WithFields(
+						logrus.Fields{
+							"method":     r.Method,
+							"url":        r.URL.Path,
+							"remote":     r.RemoteAddr,
+							"user-agent": r.UserAgent(),
+							"status":     rec.status,
+							"user": GetUserInfo(
+								r.Context(), config_obj).Name,
+						}).Info("")
+				}
 			}()
 			next.ServeHTTP(rec, r)
 		})

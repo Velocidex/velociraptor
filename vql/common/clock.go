@@ -14,7 +14,7 @@ var (
 
 type ClockPluginArgs struct {
 	Period   int64 `vfilter:"required,field=period"`
-	PeriodMs int64 `vfilter:"required,field=ms"`
+	PeriodMs int64 `vfilter:"optional,field=ms"`
 }
 
 type ClockPlugin struct{}
