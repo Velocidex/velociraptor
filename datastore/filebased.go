@@ -151,7 +151,8 @@ func (self *FileBaseDataStore) GetSubject(
 	urn string,
 	message proto.Message) error {
 
-	serialized_content, err := readContentFromFile(config_obj, urn)
+	serialized_content, err := readContentFromFile(
+		config_obj, urn, false /* must_exist */)
 	if err != nil {
 		return err
 	}
@@ -279,6 +280,24 @@ func (self *FileBaseDataStore) UnsetIndex(
 		}
 	}
 	return nil
+}
+
+func (self *FileBaseDataStore) CheckIndex(
+	config_obj *api_proto.Config,
+	index_urn string,
+	entity string,
+	keywords []string) error {
+	for _, keyword := range keywords {
+		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
+		_, err := readContentFromFile(
+			config_obj, subject, true /* must_exist */)
+		// Any of the matching entities means we checked
+		// successfully.
+		if err == nil {
+			return nil
+		}
+	}
+	return errors.New("Client does not have label")
 }
 
 func (self *FileBaseDataStore) SearchClients(
@@ -498,7 +517,9 @@ func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) e
 	return nil
 }
 
-func readContentFromFile(config_obj *api_proto.Config, urn string) ([]byte, error) {
+func readContentFromFile(
+	config_obj *api_proto.Config, urn string,
+	must_exist bool) ([]byte, error) {
 	filename, err := urnToFilename(config_obj, urn)
 	if err != nil {
 		return nil, err
@@ -506,7 +527,7 @@ func readContentFromFile(config_obj *api_proto.Config, urn string) ([]byte, erro
 
 	file, err := os.Open(filename)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if !must_exist && os.IsNotExist(err) {
 			return []byte{}, nil
 		}
 		return nil, errors.WithStack(err)

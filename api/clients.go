@@ -97,8 +97,11 @@ func LabelClients(
 	}
 
 	index_func := db.SetIndex
-	if in.Operation == "remove" {
+	switch in.Operation {
+	case "remove":
 		index_func = db.UnsetIndex
+	case "check":
+		index_func = db.CheckIndex
 	}
 
 	for _, label := range in.Labels {

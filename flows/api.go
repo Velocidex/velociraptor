@@ -62,6 +62,10 @@ func GetFlows(
 func GetFlowDetails(
 	config_obj *api_proto.Config,
 	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
+	if flow_id == "" || client_id == "" {
+		return &api_proto.ApiFlow{}, nil
+	}
+
 	flow_urn, err := ValidateFlowId(client_id, flow_id)
 	if err != nil {
 		return nil, err

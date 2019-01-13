@@ -68,6 +68,12 @@ type DataStore interface {
 		entity string,
 		keywords []string) error
 
+	CheckIndex(
+		config_obj *api_proto.Config,
+		index_urn string,
+		entity string,
+		keywords []string) error
+
 	SearchClients(
 		config_obj *api_proto.Config,
 		index_urn string,

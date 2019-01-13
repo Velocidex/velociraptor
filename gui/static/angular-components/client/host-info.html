@@ -25,7 +25,7 @@
     <button ng-if="!readOnly"
             class="btn btn-default"
             ng-click="controller.interrogate()"
-            ng-disabled="!controller.hasClientAccess || controller.interrogateOperationId">
+            ng-disabled="controller.interrogateOperationId">
       <i class="fa fa-search-plus"
          ng-if="!controller.interrogateOperationId"></i>
       <i class="fa fa-spinner fa-spin fa-fw"

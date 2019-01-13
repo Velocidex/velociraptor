@@ -49,7 +49,9 @@ func (self *VInterrogate) Start(
 	// Run standard queries.
 	queries := []*actions_proto.VQLRequest{
 		&actions_proto.VQLRequest{
-			VQL:  "select Version.Name, Version.BuildTime, Client.Labels from config",
+			VQL: "select Version.Name AS Name, " +
+				"Version.BuildTime as BuildTime, " +
+				"Client.Labels as Labels from config",
 			Name: "Client Info"},
 		&actions_proto.VQLRequest{
 			VQL: "select Hostname, OS, Architecture, Platform, PlatformVersion, " +

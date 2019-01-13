@@ -62,6 +62,20 @@ FROM clients(search='label:*') ORDER BY client_id
    "WinBoxes"
   ]
  }
+]SELECT label(client_id='C.11a3013cca8f826e', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
+ {
+  "HasLabel": {
+   "ClientId": "C.11a3013cca8f826e",
+   "Labels": [
+    "WinBoxes"
+   ],
+   "Op": "check"
+  }
+ }
+]SELECT label(client_id='C.11a3013cca8f826e', labels=['NoWinBoxes'], op='check') AS HasLabel FROM scope()[
+ {
+  "HasLabel": null
+ }
 ]SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
 [

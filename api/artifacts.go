@@ -88,6 +88,9 @@ func setArtifactFile(config_obj *api_proto.Config,
 	}
 	defer fd.Close()
 
+	// We want to completely replace the content of the file.
+	fd.Truncate(0)
+
 	_, err = fd.Write([]byte(artifact))
 	if err != nil {
 		return err

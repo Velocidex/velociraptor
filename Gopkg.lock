@@ -213,8 +213,8 @@
     "utilities",
   ]
   pruneopts = "UT"
-  revision = "719aaadb1a4f7b11606d454e266fe5c5f789796f"
-  version = "v1.6.3"
+  revision = "ae4bb97e7718691c8e0742a7c07989c91630e042"
+  version = "v1.6.4"
 
 [[projects]]
   digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
@@ -325,20 +325,20 @@
   version = "v0.0.1"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
   name = "github.com/pkg/errors"
   packages = ["."]
   pruneopts = "UT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
-  digest = "1:6ffbbc70c97837b3b139668c28125aa77b82c17b784f9733def338f3ac73e464"
+  digest = "1:fcb0de0dfbff6314fa0eb3672942d86054a713922b7c1bb0a690f59e6fe1ae3c"
   name = "github.com/pkg/term"
   packages = ["termios"]
   pruneopts = "UT"
-  revision = "27bbf2edb814447174b568fc0875a8e0c1608fae"
+  revision = "aa71e9d9e942418fbb97d80895dcea70efed297c"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -405,15 +405,15 @@
   revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
 
 [[projects]]
-  digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
+  digest = "1:87c2e02fb01c27060ccc5ba7c5a407cc91147726f8f40b70cceeedbc52b1f3a8"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
-  version = "v1.2.0"
+  revision = "e1e72e9de974bd926e5c56f83753fba2df402ce5"
+  version = "v1.3.0"
 
 [[projects]]
-  digest = "1:5110e3d4f130772fd39e6ce8208ad1955b242ccfcc8ad9d158857250579c82f4"
+  digest = "1:8ff03ccc603abb0d7cce94d34b613f5f6251a9e1931eba1a3f9888a9029b055c"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
@@ -421,8 +421,16 @@
     "suite",
   ]
   pruneopts = "UT"
-  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
-  version = "v1.2.2"
+  revision = "ffdc059bfe9ce6a4e144ba849dbedead332c6053"
+  version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e22944afcb6992d70266e5bc3586bfe0c7bc23fc4af18743b18eb398b1568a5f"
+  name = "github.com/tink-ab/tempfile"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "33beb0518f1ae76480585f0aead54fb6711c15e3"
 
 [[projects]]
   branch = "master"
@@ -438,7 +446,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:54893f5cd3e10d4e36eecc890338da933f84f4093d3456249fac109e9c98335f"
+  digest = "1:7fa68ab03ae56e5bdc672b90a11b260aa1c52e335f008781f2d60dec606c231f"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -454,11 +462,11 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "927f97764cc334a6575f4b7a1584a147864d5723"
+  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
 
 [[projects]]
   branch = "master"
-  digest = "1:23443edff0740e348959763085df98400dcfd85528d7771bb0ce9f5f2754ff4a"
+  digest = "1:c58bbfb91df5a7eae08cb9894f9897165f254e459f07666986cd448f9be4ad35"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -468,11 +476,11 @@
     "jwt",
   ]
   pruneopts = "UT"
-  revision = "d668ce993890a79bda886613ee587a69dd5da7a6"
+  revision = "36a7019397c4c86cf59eeab3bc0d188bac444277"
 
 [[projects]]
   branch = "master"
-  digest = "1:407a02030c1f591470fc7ddc3e8abb9ab87b4a080b450d39e88e524a1c1f3cc8"
+  digest = "1:c812cda507211187917c8a9e990e97521cb6f795c1415ac49e81ce1a352d2068"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -484,7 +492,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "82a175fd1598e8a172e58ebdf5ed262bb29129e5"
+  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
 
 [[projects]]
   digest = "1:e5a8511f063c38c51ab9ab80e718e9149f692652aeb4e393a8c020dd1bf38ca2"
@@ -613,11 +621,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d318b6e417c3607549bfb62d2b06bee5618846330dfd712efe3ac64df6829b0c"
+  digest = "1:729c8627b0644254a06cc9dfb6d3d3c97d9f115283aa2da035b54e73181e7da9"
   name = "www.velocidex.com/golang/go-ntfs"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f31ff6a38049b251d08b38da44492860f6d83bce"
+  revision = "5c34948f6424c10370ea1db48610d383fafc6ef7"
 
 [[projects]]
   branch = "master"
@@ -686,6 +694,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
     "github.com/stretchr/testify/suite",
+    "github.com/tink-ab/tempfile",
     "golang.org/x/crypto/acme/autocert",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",

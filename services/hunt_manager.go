@@ -146,6 +146,15 @@ func (self *HuntManager) ProcessRow(
 				return errors.New("hunt is stopped")
 			}
 
+			// Ignore hunts with label conditions which
+			// exclude this client.
+			if !huntHasLabel(
+				self.config_obj,
+				hunt_obj,
+				participation_row.ClientId) {
+				return errors.New("hunt label does not match")
+			}
+
 			// Hunt limit exceeded or it expired - we stop it.
 			if (hunt_obj.ClientLimit > 0 &&
 				hunt_obj.Stats.TotalClientsScheduled >= hunt_obj.ClientLimit) ||
@@ -195,4 +204,30 @@ func startHuntManager(config_obj *api_proto.Config) (
 	}
 	err := result.Start()
 	return result, err
+}
+
+func huntHasLabel(config_obj *api_proto.Config,
+	hunt_obj *api_proto.Hunt,
+	client_id string) bool {
+
+	label_condition := hunt_obj.Condition.GetLabels()
+	if label_condition != nil && len(label_condition.Label) > 0 {
+		channel := grpc_client.GetChannel(config_obj)
+		defer channel.Close()
+
+		client := api_proto.NewAPIClient(channel)
+		request := &api_proto.LabelClientsRequest{
+			ClientIds: []string{client_id},
+			Labels:    label_condition.Label,
+			Operation: "check",
+		}
+		_, err := client.LabelClients(
+			context.Background(), request)
+
+		if err != nil {
+			return false
+		}
+	}
+
+	return true
 }

@@ -21,7 +21,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
 	urns "www.velocidex.com/golang/velociraptor/urns"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetNewHuntId() string {
@@ -175,8 +174,6 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 // stopped hunts. It is not possible to go back and re-examine the
 // queue.
 func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt) error {
-	utils.Debug(hunt_modification)
-
 	dispatcher := services.GetHuntDispatcher()
 	err := dispatcher.ModifyHunt(
 		path.Base(hunt_modification.HuntId),

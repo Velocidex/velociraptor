@@ -21,6 +21,14 @@ Queries:
   # Should be able to see our labels now.
   - SELECT * FROM clients(search='label:*') ORDER BY client_id
 
+  # Check for labels
+  - SELECT label(client_id='C.11a3013cca8f826e',
+       labels=['WinBoxes'], op='check') AS HasLabel FROM scope()
+
+  # Should return Null - no such label
+  - SELECT label(client_id='C.11a3013cca8f826e',
+       labels=['NoWinBoxes'], op='check') AS HasLabel FROM scope()
+
   # Clear everything
   - |
     SELECT label(client_id=client_id, op='remove', labels=labels), client_id

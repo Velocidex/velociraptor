@@ -16,6 +16,7 @@ import (
 type WriteSeekCloser interface {
 	io.WriteSeeker
 	io.Closer
+	Truncate(size int64) error
 }
 
 type ReadSeekCloser interface {
