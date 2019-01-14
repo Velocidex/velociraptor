@@ -188,10 +188,6 @@ message FrontendConfig {
             description: "The private key of the frontend server encoded in PEM format."
         }];
 
-    uint32 client_lease_time = 5 [(sem_type) = {
-            description: "How long to lease client messages."
-        }];
-
     string dns_name = 6 [(sem_type) = {
             description: "The DNS name of the frontend."
         }];
@@ -272,6 +268,15 @@ message LoggingConfig {
     bool separate_logs_per_component = 2 [(sem_type) = {
             description: "If set, each component will log to a separate file.",
         }];
+
+    uint64 rotation_time = 3 [(sem_type) = {
+            description: "How often to rotate the files.",
+        }];
+
+    uint64 max_age = 4 [(sem_type) = {
+            description: "Maximum age of each file.",
+        }];
+
 }
 
 message Config {

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/Velocidex/yaml"
 	"github.com/sergi/go-diff/diffmatchpatch"
@@ -70,11 +69,9 @@ func runTest(fixture *testFixture) (string, error) {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
 
-	throttle := time.Tick(time.Second / 1000)
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
-		Set("$throttle", throttle).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)

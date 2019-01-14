@@ -20,12 +20,6 @@ type DataStore interface {
 		client_id string,
 		do_not_lease bool) ([]*crypto_proto.GrrMessage, error)
 
-	// Removes the task ids from the client queues.
-	RemoveTasksFromClientQueue(
-		config_obj *api_proto.Config,
-		client_id string,
-		task_ids []uint64) error
-
 	QueueMessageForClient(
 		config_obj *api_proto.Config,
 		client_id string,

@@ -13,7 +13,7 @@ var (
 )
 
 type ClockPluginArgs struct {
-	Period   int64 `vfilter:"required,field=period"`
+	Period   int64 `vfilter:"optional,field=period"`
 	PeriodMs int64 `vfilter:"optional,field=ms"`
 }
 
@@ -37,7 +37,7 @@ func (self ClockPlugin) Call(
 			return
 		}
 
-		if arg.Period == 0 {
+		if arg.Period == 0 && arg.PeriodMs == 0 {
 			arg.Period = 1
 		}
 

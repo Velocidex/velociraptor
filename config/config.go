@@ -85,9 +85,8 @@ func GetDefaultConfig() *api_proto.Config {
 		Frontend: &api_proto.FrontendConfig{
 			// A public interface for clients to
 			// connect to.
-			BindAddress:     "0.0.0.0",
-			BindPort:        8000,
-			ClientLeaseTime: 60000,
+			BindAddress: "0.0.0.0",
+			BindPort:    8000,
 		},
 		Datastore: &api_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",

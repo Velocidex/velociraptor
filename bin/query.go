@@ -5,12 +5,10 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"time"
 
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -56,9 +54,6 @@ func evalQueryToTable(ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL) *tablewriter.Table {
 
-	any_throttle, _ := scope.Resolve("$throttle")
-	throttle, _ := any_throttle.(chan time.Time)
-
 	output_chan := vql.Eval(ctx, scope)
 	table := tablewriter.NewWriter(os.Stdout)
 
@@ -90,22 +85,15 @@ func evalQueryToTable(ctx context.Context,
 		}
 
 		table.Append(string_row)
-		if throttle != nil {
-			<-throttle
-		}
+		vfilter.ChargeOp(scope)
 	}
 }
 
 func doQuery() {
-	config_obj, err := config.LoadConfig(*config_path)
-	if err != nil {
-		config_obj = config.GetDefaultConfig()
-	}
+	config_obj := get_config_or_default()
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
-
-	throttle := time.Tick(time.Nanosecond * time.Duration((float64(1000000000) / *rate)))
 
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
@@ -113,7 +101,6 @@ func doQuery() {
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: *dump_dir,
 		}).
-		Set("$throttle", throttle).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if env_map != nil {
@@ -124,6 +111,9 @@ func doQuery() {
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
+
+	// Install throttler into the scope.
+	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
 	ctx := InstallSignalHandler(scope)
 

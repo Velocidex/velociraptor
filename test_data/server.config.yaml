@@ -85,7 +85,6 @@ Frontend:
     W9PuGHgj5Ln/YRUqP3pddA5OGpGth3WXAYLYuy21Q4xSzGYNGExZD2vUFKDcmTBa
     AbG5+zcdtbbx
     -----END CERTIFICATE-----
-  client_lease_time: 600
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----
     MIIEoAIBAAKCAQEAwPScJFdUs/s+NgmcXuinG2R9Wxc7y4ROBNSUJEqXQsUqjXZB

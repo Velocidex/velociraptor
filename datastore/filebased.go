@@ -26,7 +26,6 @@ import (
 	"path"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
@@ -51,10 +50,6 @@ func (self *FileBaseDataStore) GetClientTasks(
 	tasks_urn := urns.BuildURN("clients", client_id, "tasks")
 	now_urn := tasks_urn + fmt.Sprintf("/%d", now)
 
-	next_timestamp := self.clock.Now().Add(
-		time.Second*time.Duration(config_obj.Frontend.ClientLeaseTime)).
-		UTC().UnixNano() / 1000
-
 	tasks, err := self.ListChildren(config_obj, tasks_urn, 0, 100)
 	if err != nil {
 		return nil, err
@@ -66,10 +61,8 @@ func (self *FileBaseDataStore) GetClientTasks(
 			break
 		}
 
-		// Here we read the task from the task_urn, modify it
-		// to reflect the next_timestamp and then write it to
-		// a new next_timestamp_urn. When the client replies
-		// to this task we can remove the next_timestamp_urn.
+		// Here we read the task from the task_urn and remove
+		// it from the queue.
 		message := &crypto_proto.GrrMessage{}
 		err = self.GetSubject(config_obj, task_urn, message)
 		if err != nil {
@@ -77,43 +70,14 @@ func (self *FileBaseDataStore) GetClientTasks(
 		}
 
 		if !do_not_lease {
-			next_timestamp_urn := tasks_urn + fmt.Sprintf(
-				"/%d", next_timestamp)
-
-			message.TaskId = uint64(next_timestamp)
-			err = self.SetSubject(config_obj, next_timestamp_urn, message)
-			if err != nil {
-				continue
-			}
-
 			err = self.DeleteSubject(config_obj, task_urn)
 			if err != nil {
 				return nil, err
 			}
 		}
 		result = append(result, message)
-
-		// Make sure next_timestamp is unique for all messages.
-		next_timestamp += 1
 	}
 	return result, nil
-}
-
-// Removes the task ids from the client queues.
-func (self *FileBaseDataStore) RemoveTasksFromClientQueue(
-	config_obj *api_proto.Config,
-	client_id string,
-	task_ids []uint64) error {
-	for _, task_id := range task_ids {
-		urn := urns.BuildURN("clients", client_id, "tasks",
-			fmt.Sprintf("/%d", task_id))
-		err := self.DeleteSubject(config_obj, urn)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (self *FileBaseDataStore) QueueMessageForClient(

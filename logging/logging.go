@@ -81,14 +81,27 @@ func (self *LogManager) GetLogger(
 	return ctx
 }
 
-func getRotator(base_path string) *rotatelogs.RotateLogs {
+func getRotator(
+	config_obj *api_proto.Config,
+	base_path string) *rotatelogs.RotateLogs {
+
+	max_age := config_obj.Logging.MaxAge
+	if max_age == 0 {
+		max_age = 86400 // 1 day.
+	}
+
+	rotation := config_obj.Logging.RotationTime
+	if rotation == 0 {
+		rotation = 604800 // 7 days
+	}
+
 	result, err := rotatelogs.New(
 		base_path+".%Y%m%d%H%M",
 		rotatelogs.WithLinkName(base_path),
 		// 1 day.
-		rotatelogs.WithMaxAge(time.Duration(86400)*time.Second),
+		rotatelogs.WithMaxAge(time.Duration(max_age)*time.Second),
 		// 7 days.
-		rotatelogs.WithRotationTime(time.Duration(604800)*time.Second),
+		rotatelogs.WithRotationTime(time.Duration(rotation)*time.Second),
 	)
 
 	if err != nil {
@@ -112,9 +125,15 @@ func (self *LogManager) makeNewComponent(
 			*component)
 
 		pathMap := lfshook.WriterMap{
-			logrus.DebugLevel: getRotator(base_filename + "_debug.log"),
-			logrus.InfoLevel:  getRotator(base_filename + "_info.log"),
-			logrus.ErrorLevel: getRotator(base_filename + "_error.log"),
+			logrus.DebugLevel: getRotator(
+				config_obj,
+				base_filename+"_debug.log"),
+			logrus.InfoLevel: getRotator(
+				config_obj,
+				base_filename+"_info.log"),
+			logrus.ErrorLevel: getRotator(
+				config_obj,
+				base_filename+"_error.log"),
 		}
 
 		hook := lfshook.NewHook(

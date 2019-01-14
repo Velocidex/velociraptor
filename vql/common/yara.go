@@ -72,11 +72,6 @@ func (self YaraScanPlugin) Call(
 			arg.Blocksize = 1024 * 1024
 		}
 
-		// Do we need to throttle?
-		// We count an op as one MB scanned.
-		any_throttle, _ := scope.Resolve("$throttle")
-		throttle, _ := any_throttle.(chan time.Time)
-
 		// Try to get the compiled yara expression from the
 		// scope cache.
 		rule_hash := md5.Sum([]byte(arg.Rules))
@@ -174,10 +169,8 @@ func (self YaraScanPlugin) Call(
 					break
 				}
 
-				// Throttle if needed.
-				if throttle != nil {
-					<-throttle
-				}
+				// We count an op as one MB scanned.
+				vfilter.ChargeOp(scope)
 			}
 
 			f.Close()
@@ -220,11 +213,6 @@ func (self YaraProcPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		// Do we need to throttle?
-		// We count an op as one MB scanned.
-		any_throttle, _ := scope.Resolve("$throttle")
-		throttle, _ := any_throttle.(chan time.Time)
-
 		arg := &YaraProcPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -251,10 +239,7 @@ func (self YaraProcPlugin) Call(
 			output_chan <- match
 		}
 
-		// Throttle if needed.
-		if throttle != nil {
-			<-throttle
-		}
+		vfilter.ChargeOp(scope)
 	}()
 
 	return output_chan

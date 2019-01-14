@@ -58,11 +58,7 @@ func NewJournalWriter() *JournalWriter {
 	}
 
 	go func() {
-		for {
-			event, ok := <-result.Channel
-			if !ok {
-				return
-			}
+		for event := range result.Channel {
 			result.WriteEvent(event)
 		}
 	}()

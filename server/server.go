@@ -134,19 +134,9 @@ func (self *Server) processVelociraptorMessages(
 
 	runner := flows.NewFlowRunner(self.config, self.logger)
 	defer runner.Close()
+
 	runner.ProcessMessages(messages)
 
-	var tasks_to_remove []uint64
-	for _, message := range messages {
-		// Velociraptor clients always return their task id so
-		// we can dequeue their messages immediately.
-		if message.Type == crypto_proto.GrrMessage_STATUS {
-			tasks_to_remove = append(tasks_to_remove, message.TaskId)
-		}
-	}
-
-	// Remove outstanding tasks.
-	self.db.RemoveTasksFromClientQueue(self.config, client_id, tasks_to_remove)
 	return nil
 }
 
