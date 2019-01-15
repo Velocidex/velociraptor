@@ -3,6 +3,8 @@ package glob
 import (
 	"os"
 	"time"
+
+	errors "github.com/pkg/errors"
 )
 
 // Virtual FileInfo for root directory - represent all drives as
@@ -59,4 +61,13 @@ func (self *VirtualDirectoryPath) Mtime() TimeVal {
 
 func (self *VirtualDirectoryPath) Ctime() TimeVal {
 	return TimeVal{}
+}
+
+// Not supported
+func (self *VirtualDirectoryPath) IsLink() bool {
+	return false
+}
+
+func (self *VirtualDirectoryPath) GetLink() (string, error) {
+	return "", errors.New("Not implemented")
 }

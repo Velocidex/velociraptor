@@ -49,6 +49,18 @@ func (self *OSFileInfo) Atime() TimeVal {
 	}
 }
 
+func (self *OSFileInfo) IsLink() bool {
+	return self.Mode()&os.ModeSymlink != 0
+}
+
+func (self *OSFileInfo) GetLink() (string, error) {
+	target, err := os.Readlink(self._full_path)
+	if err != nil {
+		return "", err
+	}
+	return target, nil
+}
+
 func (self *OSFileInfo) sys() *syscall.Stat_t {
 	return self.Sys().(*syscall.Stat_t)
 }
@@ -102,16 +114,17 @@ func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 	files, err := utils.ReadDir(path)
-	if files != nil {
-		var result []FileInfo
-		for _, f := range files {
-			result = append(result,
-				&OSFileInfo{f, filepath.Join(path, f.Name()), nil})
-		}
-
-		return result, nil
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+
+	var result []FileInfo
+	for _, f := range files {
+		result = append(result,
+			&OSFileInfo{f, filepath.Join(path, f.Name()), nil})
+	}
+
+	return result, nil
 }
 
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {

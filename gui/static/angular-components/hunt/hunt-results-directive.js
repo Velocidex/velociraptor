@@ -46,6 +46,7 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
         this.selectedArtifact = this.artifactNames[0];
     }
     this.queryParams = {'hunt_id': this.scope_.huntId,
+                        path: this.scope_.huntId,
                         artifact: this.selectedArtifact};
     this.resultsUrl = '/v1/GetHuntResults';
     this.exportedResultsUrl = '/v1/DownloadHuntResults';

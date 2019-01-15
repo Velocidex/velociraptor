@@ -91,6 +91,15 @@ func (self *NTFSFileInfo) Atime() glob.TimeVal {
 	}
 }
 
+// Not supported
+func (self *NTFSFileInfo) IsLink() bool {
+	return false
+}
+
+func (self *NTFSFileInfo) GetLink() (string, error) {
+	return "", errors.New("Not implemented")
+}
+
 func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string

@@ -7,10 +7,14 @@ environment:
   PATH: C:\msys64\mingw64\bin;%GOPATH%\bin;%PATH%
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\test.config.yaml
 
+cache:
+  - vendor -> Gopkg.lock
+
 install:
 - cmd: |
     echo %PATH%
     echo %GOPATH%
+    mklink c:\Users\link c:\Windows
     go version
     go env
     go get github.com/golang/dep

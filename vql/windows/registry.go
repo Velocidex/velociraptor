@@ -6,6 +6,7 @@ package windows
 import (
 	"context"
 
+	"golang.org/x/sys/windows/registry"
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -103,6 +104,41 @@ func (self ReadKeyValues) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	}
 }
 
+type _ExpandPathArgs struct {
+	Path string `vfilter:"required,field=path"`
+}
+
+type _ExpandPath struct{}
+
+func (self _ExpandPath) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_ExpandPathArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("expand: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	expanded_path, err := registry.ExpandString(arg.Path)
+	if err != nil {
+		scope.Log("expand: %v", err)
+		return vfilter.Null{}
+	}
+
+	return expanded_path
+}
+
+func (self _ExpandPath) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "expand",
+		Doc:     "Expand the path using the environment.",
+		ArgType: type_map.AddType(scope, &_ExpandPathArgs{}),
+	}
+}
+
 func init() {
+	vql_subsystem.RegisterFunction(&_ExpandPath{})
 	vql_subsystem.RegisterPlugin(&ReadKeyValues{})
 }

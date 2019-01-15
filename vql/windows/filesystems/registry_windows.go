@@ -95,6 +95,15 @@ func (self *RegKeyInfo) Atime() glob.TimeVal {
 	return self.Mtime()
 }
 
+// Not supported
+func (self *RegKeyInfo) IsLink() bool {
+	return false
+}
+
+func (self *RegKeyInfo) GetLink() (string, error) {
+	return "", errors.New("Not implemented")
+}
+
 func (self RegKeyInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string

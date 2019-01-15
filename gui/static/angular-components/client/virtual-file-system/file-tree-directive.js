@@ -172,24 +172,25 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
 
   var files = JSON.parse(response.data.Response);
   var result = [];
-  angular.forEach(files, function(file) {
-    if (file["Mode"][0] == "d") {
-      var filePath = file['Name'];
-      var fullFilePath = folderPath + "/" + filePath;
-      var fileId = getFileId(fullFilePath);
-      result.push({
-        id: fileId,
-        text: file['Name'].replace(/%5c/g, "\\").replace(/%2f/g, "/"),
-        data: {
-            name: file['Name'],
-            path: fullFilePath,
-        },
-        children: true  // always set to true to show the triangle
-      });
-    }
-  }.bind(this));
+    angular.forEach(files, function(file) {
+        var mode = file["Mode"][0];
+        if (mode == "d" || mode == "L") {
+            var filePath = file['Name'];
+            var fullFilePath = folderPath + "/" + filePath;
+            var fileId = getFileId(fullFilePath);
+            result.push({
+                id: fileId,
+                text: file['Name'].replace(/%5c/g, "\\").replace(/%2f/g, "/"),
+                data: {
+                    name: file['Name'],
+                    path: fullFilePath,
+                },
+                children: true  // always set to true to show the triangle
+            });
+        }
+    }.bind(this));
 
-  return result;
+    return result;
 };
 
 /**

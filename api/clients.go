@@ -102,6 +102,12 @@ func LabelClients(
 		index_func = db.UnsetIndex
 	case "check":
 		index_func = db.CheckIndex
+	case "set":
+		index_func = db.SetIndex
+
+	default:
+		return nil, errors.New(
+			"Unknown label operation. Must be set, check or remove")
 	}
 
 	for _, label := range in.Labels {

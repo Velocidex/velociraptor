@@ -97,6 +97,19 @@ type Server struct {
 	logger           *logging.LogContext
 	db               datastore.DataStore
 	NotificationPool *NotificationPool
+
+	// Limit concurrency for processing messages.
+	concurrency chan bool
+}
+
+func (self *Server) StartConcurrencyControl() {
+	// Wait here until we have enough room in the concurrency
+	// channel.
+	self.concurrency <- true
+}
+
+func (self *Server) EndConcurrencyControl() {
+	<-self.concurrency
 }
 
 func (self *Server) Close() {
@@ -115,6 +128,11 @@ func NewServer(config_obj *api_proto.Config) (*Server, error) {
 		return nil, err
 	}
 
+	concurrency := config_obj.Frontend.Concurrency
+	if concurrency == 0 {
+		concurrency = 50
+	}
+
 	result := Server{
 		config:           config_obj,
 		manager:          manager,
@@ -122,6 +140,7 @@ func NewServer(config_obj *api_proto.Config) (*Server, error) {
 		NotificationPool: NewNotificationPool(),
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
+		concurrency: make(chan bool, concurrency),
 	}
 	return &result, nil
 }

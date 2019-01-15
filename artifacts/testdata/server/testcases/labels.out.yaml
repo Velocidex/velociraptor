@@ -5,27 +5,29 @@ FROM clients(search='label:*') ORDER BY client_id
      SELECT * FROM clients()
      WHERE os_info.system = 'windows' ORDER BY client_id
   }, query={
-     SELECT os_info.system, label(client_id=client_id, labels=['WinBoxes'])
+     SELECT os_info.system, label(
+         client_id=client_id, labels=['WinBoxes'],
+         op='set')
      FROM scope()
   })
 [
  {
-  "label(client_id=client_id, labels= ['WinBoxes'])": {
+  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
    "ClientId": "C.11a3013cca8f826e",
    "Labels": [
     "WinBoxes"
    ],
-   "Op": ""
+   "Op": "set"
   },
   "os_info.system": "windows"
  },
  {
-  "label(client_id=client_id, labels= ['WinBoxes'])": {
+  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
    "ClientId": "C.c916a7e445eb0868",
    "Labels": [
     "WinBoxes"
    ],
-   "Op": ""
+   "Op": "set"
   },
   "os_info.system": "windows"
  }
@@ -62,7 +64,7 @@ FROM clients(search='label:*') ORDER BY client_id
    "WinBoxes"
   ]
  }
-]SELECT label(client_id='C.11a3013cca8f826e', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
+]SELECT label(client_id='C.11a3013cca8f826e', op='set', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
  {
   "HasLabel": {
    "ClientId": "C.11a3013cca8f826e",
@@ -72,7 +74,7 @@ FROM clients(search='label:*') ORDER BY client_id
    "Op": "check"
   }
  }
-]SELECT label(client_id='C.11a3013cca8f826e', labels=['NoWinBoxes'], op='check') AS HasLabel FROM scope()[
+]SELECT label(client_id='C.11a3013cca8f826e', op='set', labels=['NoWinBoxes'], op='check') AS HasLabel FROM scope()[
  {
   "HasLabel": null
  }

@@ -85,17 +85,19 @@ type MockFileInfo struct {
 	full_path string
 }
 
-func (self MockFileInfo) Data() interface{}  { return nil }
-func (self MockFileInfo) Name() string       { return self.name }
-func (self MockFileInfo) Size() int64        { return 0 }
-func (self MockFileInfo) Mode() os.FileMode  { return os.ModePerm }
-func (self MockFileInfo) ModTime() time.Time { return time.Time{} }
-func (self MockFileInfo) IsDir() bool        { return true }
-func (self MockFileInfo) Sys() interface{}   { return nil }
-func (self MockFileInfo) FullPath() string   { return self.full_path }
-func (self MockFileInfo) Mtime() TimeVal     { return TimeVal{} }
-func (self MockFileInfo) Atime() TimeVal     { return TimeVal{} }
-func (self MockFileInfo) Ctime() TimeVal     { return TimeVal{} }
+func (self MockFileInfo) Data() interface{}        { return nil }
+func (self MockFileInfo) Name() string             { return self.name }
+func (self MockFileInfo) Size() int64              { return 0 }
+func (self MockFileInfo) Mode() os.FileMode        { return os.ModePerm }
+func (self MockFileInfo) ModTime() time.Time       { return time.Time{} }
+func (self MockFileInfo) IsDir() bool              { return true }
+func (self MockFileInfo) Sys() interface{}         { return nil }
+func (self MockFileInfo) FullPath() string         { return self.full_path }
+func (self MockFileInfo) Mtime() TimeVal           { return TimeVal{} }
+func (self MockFileInfo) Atime() TimeVal           { return TimeVal{} }
+func (self MockFileInfo) Ctime() TimeVal           { return TimeVal{} }
+func (self MockFileInfo) IsLink() bool             { return false }
+func (self MockFileInfo) GetLink() (string, error) { return "", nil }
 
 type MockFileSystemAccessor []string
 

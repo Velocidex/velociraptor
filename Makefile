@@ -3,6 +3,8 @@ all:
 
 test:
 	go test ./...
+	./output/velociraptor --config artifacts/testdata/windows/test.config.yaml \
+	     golden artifacts/testdata/server/testcases/
 
 release:
 	go run make.go -v linux

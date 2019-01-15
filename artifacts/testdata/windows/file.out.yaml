@@ -8,6 +8,14 @@ SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  }
 ]SELECT FullPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "pagefile.sys"[
  {
-  "FullPath": "C:\\pagefile.sys"
+  "FullPath": "\\C:\\pagefile.sys"
+ }
+]SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file")[
+ {
+  "FullPath": "\\\\C:\\Users\\link\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file") WHERE FullPath =~ "drivers"[
+ {
+  "FullPath": "\\\\C:\\Users\\link\\System32\\drivers\\atapi.sys"
  }
 ]

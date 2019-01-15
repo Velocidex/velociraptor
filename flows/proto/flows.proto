@@ -87,7 +87,7 @@ message FlowRunnerArgs {
     bool notify_to_user = 2 [(sem_type) = {
       description: "Should a notification be sent to the initiator.",
       friendly_name: "Notify at Completion",
-      default: "true",
+      default: "false",
     }];
 
    string client_id = 5 [(sem_type) = {

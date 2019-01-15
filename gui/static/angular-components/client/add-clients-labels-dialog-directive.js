@@ -45,8 +45,9 @@ AddClientsLabelsDialogController.prototype.proceed = function() {
   var deferred = this.q_.defer();
   var url = '/v1/LabelClients';
   var params = {
-    client_ids: clients,
-    labels: [this.labelName]
+      client_ids: clients,
+      operation: "set",
+      labels: [this.labelName]
   };
   this.grrApiService_.post(url, params).then(
     function success() {

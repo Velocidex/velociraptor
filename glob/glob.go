@@ -28,6 +28,9 @@ type FileInfo interface {
 	Ctime() TimeVal
 	Atime() TimeVal
 	Data() interface{}
+
+	IsLink() bool
+	GetLink() (string, error)
 }
 
 type ReadSeekCloser interface {
@@ -183,6 +186,30 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 	return nil
 }
 
+func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
+	// Do not follow symlinks to symlinks deeply.
+	if depth > 10 {
+		return false
+	}
+
+	// If it is a link we need to determine if the target is a
+	// directory.
+	if f.IsLink() {
+		target, err := f.GetLink()
+		if err == nil {
+			target_info, err := accessor.Lstat(target)
+			if err == nil {
+				return is_dir_or_link(target_info, accessor, depth+1)
+			}
+		}
+	}
+
+	if f.IsDir() {
+		return true
+	}
+	return false
+}
+
 // Expands the component tree by traversing the filesystem. This
 // version uses a context to allow cancellation. We write the FileInfo
 // into the output channel.
@@ -226,7 +253,7 @@ func (self Globber) ExpandWithContext(
 				}
 
 				// Only recurse into directories.
-				if f.IsDir() {
+				if is_dir_or_link(f, accessor, 0) {
 					next_path := root + accessor.PathSep() + f.Name()
 					item := []*Globber{next}
 					prev_item, pres := children[next_path]
