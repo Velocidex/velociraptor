@@ -290,6 +290,7 @@ func filestorePathForVFSPath(
 	// monitoring and artifacts vfs folders are in the client's
 	// space.
 	if strings.HasPrefix(vfs_path, "/monitoring/") ||
+		strings.HasPrefix(vfs_path, "/flows/") ||
 		strings.HasPrefix(vfs_path, "/artifacts/") {
 		return path.Join(
 			"clients", client_id, vfs_path)

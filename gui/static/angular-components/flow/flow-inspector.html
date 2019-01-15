@@ -45,6 +45,7 @@
     <uib-tab heading="Log" index="'log'">
       <grr-flow-log
         flow="controller.flow"
+        client-id="controller.flow.runner_args.client_id"
         flow-id="flowId" api-base-path="apiBasePath"
         ng-if="controller.tabsShown['log']" />
     </uib-tab>

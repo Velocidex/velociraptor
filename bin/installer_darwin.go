@@ -20,9 +20,26 @@ import (
 var (
 	service_command = app.Command(
 		"service", "Manipulate the Velociraptor service.")
-	installl_command = service_command.Command(
-		"install", "Install Velociraptor as a Windows service.")
+	install_command = service_command.Command(
+		"install", "Install Velociraptor as a service.")
+	remove_command = service_command.Command(
+		"remove", "Remove the Velociraptor service.")
 )
+
+func doRemove() error {
+	config_obj, err := config.LoadClientConfig(*config_path)
+	if err != nil {
+		return errors.Wrap(err, "Unable to load config file")
+	}
+
+	service_name := config_obj.Client.DarwinInstaller.ServiceName
+	plist_path := "/Library/LaunchDaemons/" + service_name + ".plist"
+	err = exec.CommandContext(context.Background(),
+		"/bin/launchctl", "unload", "-w", plist_path).Run()
+	kingpin.FatalIfError(err, "Can't load service.")
+
+	return nil
+}
 
 func doInstall() error {
 	config_obj, err := config.LoadClientConfig(*config_path)
@@ -93,8 +110,12 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		var err error
 		switch command {
-		case "service install":
+		case install_command.FullCommand():
 			err = doInstall()
+
+		case remove_command.FullCommand():
+			err = doRemove()
+
 		default:
 			return false
 		}

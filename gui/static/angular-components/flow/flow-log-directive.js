@@ -3,22 +3,6 @@
 goog.module('grrUi.flow.flowLogDirective');
 goog.module.declareLegacyNamespace();
 
-
-
-/** @type {number} */
-let AUTO_REFRESH_INTERVAL_MS = 20 * 1000;
-
-/**
- * Sets the delay between automatic refreshes of the flow log.
- *
- * @param {number} millis Interval value in milliseconds.
- * @export
- */
-exports.setAutoRefreshInterval = function(millis) {
-  AUTO_REFRESH_INTERVAL_MS = millis;
-};
-
-
 /**
  * Controller for FlowLogDirective.
  *
@@ -30,30 +14,27 @@ const FlowLogController = function($scope) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  /** @type {?string} */
-  this.logsUrl;
-
   /** @type {number} */
-  this.autoRefreshInterval = AUTO_REFRESH_INTERVAL_MS;
+    this.scope_.$watch('flowId',
+                       this.onFlowIdChange_.bind(this));
 
-  this.scope_.$watchGroup(['flowId', 'apiBasePath'],
-                          this.onFlowIdOrBasePathChange_.bind(this));
+    this.scope_.$watch('clientId',
+                       this.onClientIdChange_.bind(this));
+
+    this.queryParams = {};
 };
-
-
 
 /**
  * Handles flowId attribute changes.
  *
  * @private
  */
-FlowLogController.prototype.onFlowIdOrBasePathChange_ = function(newValue) {
-  if (angular.isDefined(this.scope_['flowId']) &&
-      angular.isDefined(this.scope_['apiBasePath'])) {
-    this.logsUrl = [this.scope_['apiBasePath'],
-                    this.scope_['flowId'],
-                    'log'].join('/');
-  }
+FlowLogController.prototype.onFlowIdChange_ = function(newValue) {
+    this.queryParams.path = '/flows/' + newValue + '/logs';
+};
+
+FlowLogController.prototype.onClientIdChange_ = function(newValue) {
+        this.queryParams.client_id = newValue;
 };
 
 
@@ -66,14 +47,14 @@ FlowLogController.prototype.onFlowIdOrBasePathChange_ = function(newValue) {
  */
 exports.FlowLogDirective = function() {
   return {
-    scope: {
-      flowId: '=',
-      apiBasePath: '='
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-log.html',
-    controller: FlowLogController,
-    controllerAs: 'controller'
+      scope: {
+          flowId: '=',
+          clientId: '=',
+      },
+      restrict: 'E',
+      templateUrl: '/static/angular-components/flow/flow-log.html',
+      controller: FlowLogController,
+      controllerAs: 'controller'
   };
 };
 

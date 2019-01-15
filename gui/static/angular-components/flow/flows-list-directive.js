@@ -268,17 +268,18 @@ FlowsListController.prototype.triggerUpdate = function() {
  * @return {angular.Directive} Directive definition object.
  */
 exports.FlowsListDirective = function() {
-  return {
-    scope: {
-      flowsUrl: '=',
-      selectedFlowId: '=?',
-      triggerUpdate: '=?'
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flows-list.html',
-    controller: FlowsListController,
+    return {
+        scope: {
+            flowsUrl: '=',
+            selectedFlowId: '=?',
+            triggerUpdate: '=?',
+            clientId: '=',
+        },
+        restrict: 'E',
+        templateUrl: '/static/angular-components/flow/flows-list.html',
+        controller: FlowsListController,
     controllerAs: 'controller'
-  };
+    };
 };
 
 

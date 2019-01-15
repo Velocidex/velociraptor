@@ -197,17 +197,14 @@ func (self *FileBaseDataStore) ListChildren(
 		if i >= uint64(len(children)) {
 			break
 		}
-		component := strings.TrimSuffix(
-			UnsanitizeComponent(children[i].Name()), ".db")
 
-		// If there is both a file and directory refering to
-		// the same component we will have it twice so skip
-		// duplicates.
-		child_urn := urn + "/" + component
-		if len(result) > 0 && result[len(result)-1] == child_urn {
+		name := UnsanitizeComponent(children[i].Name())
+		if !strings.HasSuffix(name, ".db") {
 			continue
 		}
-		result = append(result, child_urn)
+		result = append(
+			result,
+			urn+"/"+strings.TrimSuffix(name, ".db"))
 	}
 	return result, nil
 }

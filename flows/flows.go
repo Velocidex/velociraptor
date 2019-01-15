@@ -2,9 +2,12 @@ package flows
 
 import (
 	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -14,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -101,12 +105,55 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	}
 }
 
+// Flush the logs to a csv file. This is important for long running
+// flows with a lot of log messages.
+func (self *FlowRunner) flushLogs(cached_flow *AFF4FlowObject) {
+	log_path := path.Join(
+		strings.TrimPrefix(cached_flow.Urn, "aff4:/"), "logs")
+
+	file_store_factory := file_store.GetFileStore(self.config)
+	fd, err := file_store_factory.WriteFile(log_path)
+	if err != nil {
+		return
+	}
+	defer fd.Close()
+
+	// Seek to the end of the file.
+	length, err := fd.Seek(0, os.SEEK_END)
+	if err != nil {
+		return
+	}
+
+	w := csv.NewWriter(fd)
+	defer w.Flush()
+
+	headers_written := length > 0
+	if !headers_written {
+		w.Write([]string{"timestamp", "time", "message"})
+	}
+
+	for _, row := range cached_flow.FlowContext.Logs {
+		w.Write([]string{
+			fmt.Sprintf("%v", row.Timestamp),
+			time.Unix(int64(row.Timestamp)/1000000, 0).String(),
+			row.Message})
+	}
+
+	// Clear the logs from the flow object.
+	cached_flow.FlowContext.Logs = []*crypto_proto.LogMessage{}
+}
+
 // Flush all the cached flows back to the DB.
 func (self *FlowRunner) Close() {
 	for _, cached_flow := range self.flow_cache {
 		if !cached_flow.dirty {
 			continue
 		}
+
+		if len(cached_flow.FlowContext.Logs) > 0 {
+			self.flushLogs(cached_flow)
+		}
+
 		cached_flow.impl.Save(self.config, cached_flow)
 		err := SetAFF4FlowObject(self.config, cached_flow)
 		if err != nil {

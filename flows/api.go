@@ -8,7 +8,6 @@ import (
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -86,36 +85,6 @@ func GetFlowDetails(
 	}, nil
 }
 
-func GetFlowLog(
-	config_obj *api_proto.Config,
-	client_id string, flow_id string,
-	offset uint64, length uint64) (*api_proto.ApiFlowLogDetails, error) {
-	flow_urn, err := ValidateFlowId(client_id, flow_id)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.ApiFlowLogDetails{}
-	for idx, item := range flow_obj.FlowContext.Logs {
-		if uint64(idx) < offset {
-			continue
-		}
-
-		if uint64(idx) > offset+length {
-			break
-		}
-
-		result.Items = append(result.Items, item)
-	}
-
-	return result, nil
-}
-
 func GetFlowRequests(
 	config_obj *api_proto.Config,
 	client_id string, flow_id string,
@@ -155,61 +124,6 @@ func GetFlowRequests(
 			request.ArgsRdfName = ""
 			result.Items = append(result.Items, request)
 		}
-	}
-
-	return result, nil
-}
-
-func GetFlowResults(
-	config_obj *api_proto.Config,
-	client_id string, flow_id string,
-	offset uint64, count uint64) (*api_proto.ApiFlowResultDetails, error) {
-
-	if count == 0 {
-		count = 50
-	}
-
-	result := &api_proto.ApiFlowResultDetails{}
-
-	// If flowId is given as a full URN, validate it.
-	urn := ""
-	if strings.HasPrefix(flow_id, "aff4:") {
-		valid_urn, err := ValidateFlowId(client_id, flow_id)
-		if err != nil {
-			return nil, err
-		}
-
-		urn = *valid_urn + "/results"
-	} else {
-		urn = urns.BuildURN(
-			"clients", client_id,
-			"flows", flow_id, "results")
-	}
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	results, err := db.ListChildren(config_obj, urn, offset, count)
-	if err != nil {
-		return nil, err
-	}
-	for _, result_urn := range results {
-		message := &crypto_proto.GrrMessage{}
-		err := db.GetSubject(config_obj, result_urn, message)
-		if err != nil {
-			return nil, err
-		}
-		args := responder.ExtractGrrMessagePayload(message)
-		payload, err := ptypes.MarshalAny(args)
-		if err != nil {
-			return nil, err
-		}
-		message.Payload = payload
-		message.Args = nil
-		message.ArgsRdfName = ""
-		result.Items = append(result.Items, message)
 	}
 
 	return result, nil

@@ -1,15 +1,6 @@
-<table class="proto-table no-cell-border full-width">
-  <thead>
-    <tr>
-      <th>Timestamp</th>
-      <th>Message</th>
-    </tr>
-  </thead>
-  <tbody ng-if="controller.logsUrl">
-    <tr grr-paged-filtered-table grr-api-items-provider url="::controller.logsUrl"
-        auto-refresh-interval="::controller.autoRefreshInterval">
-      <td class="table-cell proto_key"><grr-timestamp value="::item.timestamp" /></td>
-      <td class="table-cell proto_key"><grr-semantic-value value="::item.message" /></td>
-    </tr>
-  </tbody>
-</table>
+<div>
+  <grr-csv-viewer
+    base-url="'v1/GetTable'"
+    params="controller.queryParams"
+    />
+</div>

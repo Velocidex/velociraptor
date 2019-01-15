@@ -59,8 +59,14 @@ func (self *Foreman) ProcessEventTables(
 			Version: config_obj.Events.Version,
 		}
 		for _, name := range config_obj.Events.Artifacts {
+			rate := config_obj.Events.OpsPerSecond
+			if rate == 0 {
+				rate = 100
+			}
+
 			vql_collector_args := &actions_proto.VQLCollectorArgs{
-				MaxWait: 100,
+				MaxWait:      100,
+				OpsPerSecond: rate,
 			}
 			artifact, pres := repository.Get(name)
 			if !pres {

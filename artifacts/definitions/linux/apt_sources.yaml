@@ -99,9 +99,9 @@ sources:
            },
            then=add_stat_to_parsed_cache_file,
            else={
-             SELECT Source, dict() as Mtime, dict() as Ctime,
-               dict() as Atime, Type,
-               dict() as Record, Arch, URL, Name from scope()
+           SELECT Source, Null as Mtime, Null as Ctime,
+               Null as Atime, Type,
+               Null as Record, Arch, URL, Name from scope()
            })
 
        - |

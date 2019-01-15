@@ -194,18 +194,6 @@ service API {
         };
     }
 
-    rpc GetFlowResults(ApiFlowRequest) returns (ApiFlowResultDetails) {
-        option (google.api.http) = {
-            get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/results",
-        };
-    }
-
-    rpc GetFlowLogs(ApiFlowRequest) returns (ApiFlowLogDetails) {
-        option (google.api.http) = {
-            get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/log",
-        };
-    }
-
     rpc GetFlowDescriptors(google.protobuf.Empty) returns (FlowDescriptors) {
         option (google.api.http) = {
             get: "/api/v1/flows/descriptors",

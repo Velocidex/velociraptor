@@ -294,14 +294,6 @@ func (self *ApiServer) GetFlowRequests(
 	return result, err
 }
 
-func (self *ApiServer) GetFlowResults(
-	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResultDetails, error) {
-	result, err := flows.GetFlowResults(self.config, in.ClientId, in.FlowId,
-		in.Offset, in.Count)
-	return result, err
-}
-
 func (self *ApiServer) GetUserNotifications(
 	ctx context.Context,
 	in *api_proto.GetUserNotificationsRequest) (
@@ -316,14 +308,6 @@ func (self *ApiServer) GetUserNotificationCount(
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
 	n, err := users.GetUserNotificationCount(self.config, GetGRPCUserInfo(ctx).Name)
 	return &api_proto.UserNotificationCount{Count: n}, err
-}
-
-func (self *ApiServer) GetFlowLogs(
-	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowLogDetails, error) {
-	result, err := flows.GetFlowLog(self.config, in.ClientId, in.FlowId,
-		in.Offset, in.Count)
-	return result, err
 }
 
 func (self *ApiServer) GetFlowDescriptors(

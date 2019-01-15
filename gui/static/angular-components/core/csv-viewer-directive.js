@@ -38,8 +38,9 @@ const CsvViewerDirective = function(
         "pagingType": "full_numbers"
     };
 
-    this.scope_.$watchGroup(['baseUrl', 'params'],
-                            this.onContextChange_.bind(this));
+    this.scope_.$watch(
+        'params',
+        this.onContextChange_.bind(this), true);
 
     this.dtInstance = {};
 };
@@ -70,21 +71,23 @@ CsvViewerDirective.prototype.fetchText_ = function() {
         }
     }
 
-    if (this.scope_.baseUrl && this.scope_.params) {
+    if (this.scope_.baseUrl && angular.isDefined(this.scope_.params)) {
         var url = this.scope_.baseUrl;
         var params = this.scope_.params;
-        params['start_row'] = 0;
-        params['rows'] = MAX_ROWS_PER_TABLE;
+        if (angular.isDefined(params.path)) {
+            params['start_row'] = 0;
+            params['rows'] = MAX_ROWS_PER_TABLE;
 
-        var self = this;
-        this.pageData = null;
-        this.grrApiService_.get(url, params).then(function(response) {
-            self.pageData = response.data;
-        }.bind(this), function() {
+            var self = this;
             this.pageData = null;
-        }.bind(this)).catch(function() {
-            this.pageData = null;
-        });
+            this.grrApiService_.get(url, params).then(function(response) {
+                self.pageData = response.data;
+            }.bind(this), function() {
+                this.pageData = null;
+            }.bind(this)).catch(function() {
+                this.pageData = null;
+            });
+        }
     }
 };
 

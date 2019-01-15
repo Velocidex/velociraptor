@@ -152,13 +152,17 @@ func (self *VQLClientAction) StartQuery(
 				Response:  string(result.Payload),
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			}
-			responder.Log("Time %v: %s: Sending response part %d %s (%d rows).",
-				(response.Timestamp-query_start)/1000000,
-				query.Name,
-				result.Part,
-				humanize.Bytes(uint64(len(result.Payload))),
-				result.TotalRows,
-			)
+			// Don't log empty VQL statements.
+			if query.Name != "" {
+				responder.Log(
+					"Time %v: %s: Sending response part %d %s (%d rows).",
+					(response.Timestamp-query_start)/1000000,
+					query.Name,
+					result.Part,
+					humanize.Bytes(uint64(len(result.Payload))),
+					result.TotalRows,
+				)
+			}
 			response.Columns = result.Columns
 			responder.AddResponse(response)
 		}

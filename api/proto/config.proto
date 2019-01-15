@@ -234,6 +234,10 @@ message ClientEvents {
     uint64 version = 2 [(sem_type) = {
             description: "An incrementing version of collection requests.",
         }];
+
+    float ops_per_second = 24 [(sem_type) = {
+            description: "Default rate limiting for client event monitoring."
+        }];
 }
 
 // Configuration for the mail server.
