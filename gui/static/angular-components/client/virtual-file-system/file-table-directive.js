@@ -25,43 +25,46 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  */
 const FileTableController = function(
     $rootScope, $scope, $interval, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.rootScope_ = $rootScope;
+    /** @private {!angular.Scope} */
+    this.rootScope_ = $rootScope;
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.$interval} */
-  this.interval_ = $interval;
+    /** @private {!angular.$interval} */
+    this.interval_ = $interval;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {string} */
-  this.selectedDirPath_;
-  this.selecteFilePath_;
+    /** @private {string} */
+    this.selectedDirPath_;
 
-  /** @type {?string} */
-  this.lastRefreshOperationId;
+    /** @private {string} */
+    this.selecteFilePath_;
 
-  /**
-   * Used for UI binding with a filter edit field.
-   * @export {string}
-   */
-  this.filterEditedValue = '';
+    /** @type {?string} */
+    this.lastRefreshOperationId;
 
-  /**
-   * Currently used filter value.
-   * @export {string}
-   */
-  this.filterValue = '';
+    /**
+     * Used for UI binding with a filter edit field.
+     * @export {string}
+     */
+    this.filterEditedValue = '';
 
-  /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
-  this.fileContext;
+    /**
+     * Currently used filter value.
+     * @export {string}
+     */
+    this.filterValue = '';
 
-  this.selectedRow = {};
+    /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
+    this.fileContext;
 
-  this.scope_.$watch('controller.fileContext.selectedRow', this.onSelectedRowChange_.bind(this));
+    this.selectedRow = {};
+
+    this.scope_.$watch('controller.fileContext.selectedRow',
+                       this.onSelectedRowChange_.bind(this));
 };
 
 /**

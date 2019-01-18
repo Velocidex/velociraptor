@@ -32,7 +32,8 @@ const SemanticProtoRepeatedFieldFormController = function(
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;
 
-  // The descriptor of the proto we are trying to render.
+    // The descriptor of the proto we are trying to render.
+    /** @type {object} */
   this.valueDescriptor;
 
   this.scope_.$watch('value', this.onValueChange_.bind(this));

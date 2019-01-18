@@ -28,12 +28,16 @@ const CsvViewerDirective = function(
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
 
+    /** @type {string} */
     this.baseUrl;
+
+    /** @type {object} */
     this.params;
 
     /** @type {?string} */
     this.pageData;
 
+    /** @type {object} */
     this.options = {
         "pagingType": "full_numbers"
     };
@@ -42,6 +46,7 @@ const CsvViewerDirective = function(
         'params',
         this.onContextChange_.bind(this), true);
 
+    /** @type {object} */
     this.dtInstance = {};
 };
 

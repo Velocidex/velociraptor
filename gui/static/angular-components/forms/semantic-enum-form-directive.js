@@ -17,8 +17,10 @@ const SemanticEnumFormController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  this.allowedOptions = [];
-  this.valueDescriptor;
+    this.allowedOptions = [];
+
+    /** @type {object} */
+    this.valueDescriptor;
 
   this.grrReflectionService_ = grrReflectionService;
 

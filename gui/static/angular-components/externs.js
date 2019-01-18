@@ -1,4 +1,51 @@
 /**
+ * @constructor
+ */
+var jQuery = function() {};
+
+
+/**
+ * @constructor
+ */
+var jQuerySelector = function() {};
+
+
+/**
+ * @constructor
+ */
+var angular = function() {};
+
+/**
+ * A jQuery object that has been extended with Angular's extra methods.
+ * @typedef {!angular.JQLite}
+ */
+angular.JQLite;
+
+/**
+ * A jQuery object that has been extended with Angular's extra methods.
+ * @typedef {(jQuery|angular.JQLite)}
+ */
+angular.jQuery;
+
+/**
+ * @typedef {Object}
+ */
+angular.$q = {};
+
+
+/**
+ * @typedef {Function}
+ */
+angular.$q.Promise;
+
+/**
+ * @typedef {Function}
+ */
+angular.$locationProvider;
+
+
+
+/**
  * @param {string} module
  * @return {Function}
  */
@@ -92,13 +139,6 @@ grr.publish = function(name, value, opt_event, opt_data) {};
 
 
 /**
- * A jQuery object that has been extended with Angular's extra methods.
- * @typedef {(jQuery|angular.JQLite)}
- */
-angular.jQuery;
-
-
-/**
  * Angular UI definitions.
  */
 
@@ -129,17 +169,29 @@ angularUi.$uibModal;
 
 
 /**
+ * @type {Object}
+ * @const
+ */
+var $ = {};
+
+/**
  * @param {(jQuerySelector|Element|jQuery|string)} placeholder
  * @param {Array} data
  * @param {Object=} opt_options
  */
 $.plot = function(placeholder, data, opt_options) {};
 
-
 /**
  * @param {Object} data
  */
 jQuery.prototype.jstree = function(data) {};
+
+
+/**
+ * @type {Object}
+ * @const
+ */
+var moment = {};
 
 
 /**
@@ -383,3 +435,17 @@ ui.router.$stateProvider.prototype.state = function(name, definition) {};
  * @return {!string}
  */
 var marked = function(source) {};
+
+
+/**
+ * @type {Object}
+ * @const
+ */
+var hljs = {};
+
+
+/**
+ * @type {Object}
+ * @const
+ */
+var goog = {};

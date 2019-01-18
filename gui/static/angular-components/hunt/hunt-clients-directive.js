@@ -16,6 +16,7 @@ const HuntClientsController = function($scope) {
   /** @private {!angular.Scope} */
     this.scope_ = $scope;
 
+    /** @type {object} */
     this.params;
 
     this.scope_.$watchGroup(['huntId'],

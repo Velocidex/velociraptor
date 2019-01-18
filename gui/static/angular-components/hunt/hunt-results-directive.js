@@ -19,10 +19,12 @@ const HuntResultsController = function(
   this.resultsUrl;
 
   /** @export {string} */
-  this.exportedResultsUrl;
+    this.exportedResultsUrl;
 
+    /** @type {array} */
     this.artifactNames;
 
+    /** @type {string} */
     this.selectedArtifact;
 
   $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));

@@ -8,7 +8,7 @@ environment:
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\test.config.yaml
 
 cache:
-  - vendor -> Gopkg.lock
+  - c:\gopath\src\www.velocidex.com\golang\velociraptor\vendor -> Gopkg.lock
 
 install:
 - cmd: |

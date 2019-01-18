@@ -4,12 +4,25 @@ goog.module('grrUi.artifact.syntaxHighlightDirective');
 goog.module.declareLegacyNamespace();
 
 
+/**
+ * Controller for SyntaxHighlightDirective.
+ *
+ * @param {!angular.Scope} $scope
+ * @param {!grrUi.core.timeService.TimeService} grrTimeService
+ * @constructor
+ * @ngInject
+ */
 const SyntaxHighlightDirective = function($scope, $sce) {
-  this.sce_ = $sce;
-  this.scope_ = $scope;
-  this.language = this.scope_.language;
+    /** @private {?object} */
+    this.sce_ = $sce;
 
-  $scope.$watch('code', this.onCodeChange_.bind(this));
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
+
+    /** @private {?string} */
+    this.language = this.scope_.language;
+
+    $scope.$watch('code', this.onCodeChange_.bind(this));
 };
 
 SyntaxHighlightDirective.prototype.onCodeChange_ = function(code) {

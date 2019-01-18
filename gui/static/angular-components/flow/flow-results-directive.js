@@ -20,21 +20,24 @@ const FlowResultsController = function($scope) {
   this.flowResultsUrl;
 
   /** @type {?string} */
-  this.flowExportedResultsUrl;
+    this.flowExportedResultsUrl;
 
+  /** @type {string} */
   this.exportBasePath;
 
   /** @type {?string} */
   this.outputPluginsMetadataUrl;
 
   /** @type {?string} */
-  this.downloadFilesUrl;
+    this.downloadFilesUrl;
 
+    /** @type {object} */
     this.queryParams;
 
   /** @type {?string} */
     this.exportCommand;
 
+    /** @type {string} */
     this.flowId;
 
     this.scope_.$watchGroup(

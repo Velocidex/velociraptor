@@ -19,10 +19,15 @@ const vqlController = function(
   /** @type {?} */
   this.scope_.value;
 
-  this.payload;
-  this.columns;
-  this.type_map = {};
+    /** @type {object} */
+    this.payload;
+        /** @type {object} */
+    this.columns;
 
+       /** @type {object} */
+    this.type_map = {};
+
+    /** @type {string} */
   this.query = "";
 
   /** @private {!angular.jQuery} $element */

@@ -50,7 +50,7 @@ const FormController =
 FormController.prototype.sendRequest = function() {
   this.grrApiService_.post(
       'v1/CreateHunt',
-      /** @type {Object} */ this.scope_['createHuntArgs'])
+      this.scope_['createHuntArgs'])
   .then(function resolve(response) {
     this.serverResponse = response;
   }.bind(this), function reject(response) {

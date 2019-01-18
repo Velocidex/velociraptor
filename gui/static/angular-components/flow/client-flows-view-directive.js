@@ -33,6 +33,7 @@ const ClientFlowsViewController = function(
   /** @type {string} */
   this.flowApiBasePath;
 
+  /** @type {string} */
   this.exportBasePath;
 
   this.scope_.$watchGroup(

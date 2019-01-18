@@ -28,8 +28,8 @@
     "jstree": "^3.3.6",
     "moment": "^2.22",
     "node-sass": "^4.9.4",
-    "npm": "^6.4.1",
-    "uglify-js-es6": "^2.8.9"
+    "npm": "^6.6.0",
+    "uglify-js": "^3.4.9"
   },
   "devDependencies": {
     "angular-mocks": "^1.7.5",

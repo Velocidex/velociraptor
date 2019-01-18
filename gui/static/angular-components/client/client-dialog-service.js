@@ -7,7 +7,6 @@ const {AddClientsLabelsDialogDirective} = goog.require('grrUi.client.addClientsL
 const {RemoveClientsLabelsDialogDirective} = goog.require('grrUi.client.removeClientsLabelsDialogDirective');
 
 
-
 /**
  * Service for client dialogs.
  *

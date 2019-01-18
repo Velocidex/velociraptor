@@ -1,7 +1,11 @@
 'use strict';
 
+
 goog.module('grrUi.flow.flowInspectorDirective');
 goog.module.declareLegacyNamespace();
+
+
+var ERROR_EVENT_NAME = 'ServerError';
 
 
 /** @type {number} */

@@ -23,6 +23,7 @@ const SemanticProtoFormController = function(
   /** @type {?} */
   this.scope_.value;
 
+    /** @type {string} */
   this.scope_.type;
 
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
@@ -37,7 +38,8 @@ const SemanticProtoFormController = function(
   /** @type {boolean} */
   this.expanded = false;
 
-  // The descriptor of the proto we are trying to render.
+    // The descriptor of the proto we are trying to render.
+    /** @type {object} */
   this.valueDescriptor;
 
 

@@ -15,20 +15,21 @@ goog.module.declareLegacyNamespace();
  */
 const UserLabelController =
   function($scope, grrApiService) {
+      /** @private {!angular.Scope} */
+      this.scope_ = $scope;
 
-    /** @private {!angular.Scope} */
-    this.scope_ = $scope;
+      /** @private {!grrUi.core.apiService.ApiService} */
+      this.grrApiService_ = grrApiService;
 
-    /** @private {!grrUi.core.apiService.ApiService} */
-    this.grrApiService_ = grrApiService;
+      /** @type {string} */
+      this.username;
+      this.auth_using_google = false;
 
-    /** @type {string} */
-    this.username;
-    this.auth_using_google = false;
+      /** @type {string} */
       this.user_picture;
 
-    /** @type {string} */
-    this.error;
+      /** @type {string} */
+      this.error;
 
       this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
           this.username = response.data['username'];

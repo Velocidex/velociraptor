@@ -4,6 +4,16 @@ goog.module('grrUi.client.virtualFileSystem.addItemButtonDirective');
 goog.module.declareLegacyNamespace();
 
 
+/**
+ * Controller for AddItemButtonController
+ *
+ * @param {!angular.Scope} $rootScope
+ * @param {!angular.Scope} $scope
+ * @param {!grrUi.core.apiService.ApiService} grrApiService
+ * @param {!grrUi.core.reflectionService.ReflectionService} grrReflectionService
+ * @constructor
+ * @ngInject
+ */
 const AddItemButtonController = function(
     $rootScope, $scope, $timeout, $uibModal, grrApiService, grrReflectionService) {
   /** @private {!angular.Scope} */
@@ -37,13 +47,18 @@ const AddItemButtonController = function(
   this.error;
 
   /** @private {angularUi.$uibModalInstance} */
-  this.modalInstance;
-  this.fileContext;
+    this.modalInstance;
+
+    /** @type {?object} */
+    this.fileContext;
 
     this.scope_.$watchGroup(['clientId', 'filePath', 'dirPath'],
                             this.onClientOrPathChange_.bind(this));
 
+    /** @type {?string} */
     this.path;
+
+    /** @type {?string} */
     this.value;
     this.isActive = false;
 };

@@ -32,8 +32,10 @@ exports.SemanticValueFormController = function(
 
   debug("SemanticValueFormController", this.scope_.value);
 
-  // The descriptor of the proto we are trying to render.
-  this.valueDescriptor;
+    // The descriptor of the proto we are trying to render.
+    /** @type {object} */
+    this.valueDescriptor;
+        /** @type {string} */
   this.renderer;
 
   this.scope_.$watch('value', this.onValueChange_.bind(this));

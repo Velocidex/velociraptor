@@ -22,8 +22,9 @@ const SemanticProtoUnionFormController = function(
   this.cache = {};
 
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
+    this.grrReflectionService_ = grrReflectionService;
 
+    /** @type {object} */
   this.valueDescriptor;
 
   $scope.$watch('controller.unionField',

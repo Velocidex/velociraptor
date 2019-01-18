@@ -14,7 +14,6 @@ const FlowLogController = function($scope) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  /** @type {number} */
     this.scope_.$watch('flowId',
                        this.onFlowIdChange_.bind(this));
 

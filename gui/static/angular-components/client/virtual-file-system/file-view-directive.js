@@ -145,6 +145,20 @@ exports.FileViewDirective = function() {
   };
 };
 
+exports.getFilePathFromId = function(fileId) {
+    var replaceEncodedChars = function(item) {
+        return item.replace(/_[0-9A-F][0-9A-F]?/g, function(encChar) {
+            var charNum = parseInt(encChar.substr(1), 16);
+            return String.fromCharCode(charNum);
+        });
+    };
+
+    // substr accounts for a leading '_'.
+    var components = fileId.substr(1).split('-');
+    var mapped = components.map(replaceEncodedChars);
+    return mapped.join('/');
+};
+
 
 /**
  * Name of the directive in Angular.

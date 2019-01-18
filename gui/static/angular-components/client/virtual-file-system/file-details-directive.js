@@ -27,6 +27,7 @@ const FileDetailsController = function(
   /** @type {string} */
   this.currentTab = 'stats';
 
+    /** @type {?object} */
     this.params;
 
     this.scope_.$watch('controller.fileContext.selectedFilePath',
@@ -85,7 +86,7 @@ FileDetailsController.prototype.onControllerTabChange_ = function(newValue, oldV
 
 FileDetailsController.prototype.fileIsNotCSV = function() {
     return false;
-    return !this.fileContext.selectedFilePath.endsWith(".csv");
+//    return !this.fileContext.selectedFilePath.endsWith(".csv");
 };
 
 

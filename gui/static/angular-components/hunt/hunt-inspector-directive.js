@@ -3,6 +3,8 @@
 goog.module('grrUi.hunt.huntInspectorDirective');
 goog.module.declareLegacyNamespace();
 
+var ERROR_EVENT_NAME = 'ServerError';
+
 /** @type {number} */
 let AUTO_REFRESH_INTERVAL_MS = 15 * 1000;
 

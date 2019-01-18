@@ -4,17 +4,28 @@ goog.module('grrUi.artifact.collectorDirective');
 goog.module.declareLegacyNamespace();
 
 
+/**
+ * Controller for ArtifactCollectorController
+ *
+ * @param {!angular.Scope} $scope
+ * @param {!grrUi.routing.routingService.RoutingService} grrRoutingService
+ * @constructor
+ * @ngInject
+ */
 const ArtifactCollectorController = function(
     $scope, grrRoutingService) {
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
+    /** @export {?string} */
     this.clientId;
 
     /** @private {!grrUi.routing.routingService.RoutingService} */
     this.grrRoutingService_ = grrRoutingService;
-    this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
-                                              this.onClientIdChange_.bind(this));
+    grrRoutingService.uiOnParamsChanged(this.scope_, 'clientId',
+                                        this.onClientIdChange_.bind(this));
 
+    /** @export {?object} */
     this.descriptor = {
         name: "ArtifactCollector",
         args_type:"ArtifactCollectorArgs",

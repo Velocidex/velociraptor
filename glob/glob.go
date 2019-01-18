@@ -197,16 +197,27 @@ func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 	if f.IsLink() {
 		target, err := f.GetLink()
 		if err == nil {
+			// This is a link to a network share or
+			// something else we might not have access to.
+			if strings.HasPrefix(target, "\\\\") {
+				return true
+			}
+
 			target_info, err := accessor.Lstat(target)
 			if err == nil {
 				return is_dir_or_link(target_info, accessor, depth+1)
 			}
+
+			// Hmm we failed to lstat the target - assume
+			// it is a directory anyway.
+			return true
 		}
 	}
 
 	if f.IsDir() {
 		return true
 	}
+
 	return false
 }
 

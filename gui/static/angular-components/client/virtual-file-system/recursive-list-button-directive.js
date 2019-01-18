@@ -57,7 +57,9 @@ const RecursiveListButtonController = function(
   this.error;
 
   /** @private {angularUi.$uibModalInstance} */
-  this.modalInstance;
+    this.modalInstance;
+
+    /** @private {object} */
   this.fileContext;
 
   this.scope_.$watchGroup(['controller.fileContext.clientId',

@@ -6,7 +6,6 @@ goog.module.declareLegacyNamespace();
 
 const {ApiItemsProviderDirective} = goog.require('grrUi.core.apiItemsProviderDirective');
 const {ApiService} = goog.require('grrUi.core.apiService');
-const {VQLService} = goog.require('grrUi.core.vqlService');
 const {ClockDirective} = goog.require('grrUi.core.clockDirective');
 const {CsvViewerDirective} = goog.require('grrUi.core.csvViewerDirective');
 const {ConfirmationDialogDirective} = goog.require('grrUi.core.confirmationDialogDirective');

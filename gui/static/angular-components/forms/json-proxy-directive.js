@@ -4,10 +4,19 @@ goog.module('grrUi.forms.jsonProxyDirective');
 goog.module.declareLegacyNamespace();
 
 
+/**
+ * Controller for JsonProxyController
+ *
+ * @param {!angular.Scope} $rootScope
+ * @param {!angular.Scope} $scope
+ * @constructor
+ * @ngInject
+ */
 const JsonProxyController = function($scope, $rootScope) {
     this.scope_ = $scope;
     this.rootScope_ = $rootScope;
 
+    /** @type {object} */
     this.proxy;
 
     this.scope_.$watch('controller.proxy', this.onProxyChange_.bind(this), true);

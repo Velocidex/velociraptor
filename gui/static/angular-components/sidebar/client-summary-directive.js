@@ -28,6 +28,7 @@ const ClientSummaryController =
   /** @type {string} */
   this.approvalReason;
 
+    /** @type {object} */
   this.clientInfo;
 
   this.scope_.$watch('client', this.onClientChange_.bind(this));

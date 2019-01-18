@@ -16,9 +16,11 @@ const FlowRequestsController = function($scope) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  /** @type {string} */
-  this.requestsUrl;
-  this.requestsParams;
+    /** @type {string} */
+    this.requestsUrl;
+
+    /** @type {object} */
+    this.requestsParams;
 
   this.scope_.$watchGroup(['flowId', 'apiBasePath'],
                           this.onFlowIdOrBasePathChange_.bind(this));

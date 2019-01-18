@@ -3,7 +3,14 @@
 goog.module('grrUi.config.serverFilesDirective');
 goog.module.declareLegacyNamespace();
 
-
+/**
+ * Controller for ServerFilesController
+ *
+ * @param {!angular.Scope} $scope
+ * @param {!grrUi.routing.routingService.RoutingService} grrRoutingService
+ * @constructor
+ * @ngInject
+ */
 const ServerFilesController = function(
     $scope, grrRoutingService) {
   /** @private {!angular.Scope} */

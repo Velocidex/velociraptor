@@ -2,14 +2,14 @@
 
 var gulp = require('gulp');
 var gulpAngularTemplateCache = require('gulp-angular-templatecache');
-var gulpClosureCompiler = require('gulp-closure-compiler');
+var gulpClosureCompiler = require('google-closure-compiler');
 var gulpConcat = require('gulp-concat');
 var gulpInsert = require('gulp-insert');
 var gulpLess = require('gulp-less');
 var gulpNewer = require('gulp-newer');
 var gulpPlumber = require('gulp-plumber');
 var gulpSass = require('gulp-sass');
-var gulpSourcemaps = require('gulp-sourcemaps');
+var sourcemaps = require('gulp-sourcemaps');
 var karma = require('karma');
 var uglify = require('gulp-uglify');
 var del = require('del');
@@ -21,11 +21,10 @@ config.tempDir = 'tmp';
 
 var isWatching = false;
 
-const closureCompilerPath =
-    config.nodeModulesDir + '/google-closure-compiler/compiler.jar';
+var closureCompiler = gulpClosureCompiler.gulp();
 
 const closureCompilerFlags = {
-  compilation_level: 'WHITESPACE_ONLY',
+    compilation_level: 'WHITESPACE_ONLY',
   dependency_mode: 'STRICT',
   jscomp_off: [
     'checkTypes',
@@ -86,10 +85,10 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/highlightjs/highlight.pack.js',
                    'third-party/jquery.splitter.js'])
-      .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
+        .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
         .pipe(gulpConcat('third-party.bundle.js'))
         .pipe(uglify())
-      .pipe(gulp.dest(config.distDir));
+        .pipe(gulp.dest(config.distDir));
 });
 
 
@@ -108,7 +107,7 @@ gulp.task('copy-fontawesome-fonts', function() {
 gulp.task('copy-third-party-resources', function() {
   return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/*.gif',
                    config.nodeModulesDir + '/jstree/dist/themes/default/*.png',
-                   config.nodeModulesDir + '/bootstrap-sass/assets/fonts/bootstrap/glyphicons-halflings-regular.*'])
+                   config.nodeModulesDir + '/bootstrap-sass/assets/fonts/bootstrap/glyphicons-halflings-regular.woff2'])
       .pipe(gulp.dest(config.distDir));
 });
 
@@ -184,22 +183,21 @@ gulp.task(
               }
             }
           }))
-          .pipe(gulpClosureCompiler({
-            compilerPath: closureCompilerPath,
-            fileName: 'grr-ui.bundle.js',
-            compilerFlags: Object.assign({}, closureCompilerFlags, {
-              angular_pass: true,
-              entry_point: 'grrUi.appController',
-              externs: [
-                'angular-components/externs.js',
-              ],
-              create_source_map: config.distDir + '/grr-ui.bundle.js.map',
-              source_map_location_mapping:
-                  'angular-components/|/static/angular-components/',
-            }),
-          }))
-          .pipe(gulpInsert.append('//# sourceMappingURL=grr-ui.bundle.js.map'))
-          .pipe(gulp.dest(config.distDir));
+            .pipe(sourcemaps.init())
+            .pipe(closureCompiler(
+                Object.assign({}, closureCompilerFlags, {
+                    js_output_file: 'grr-ui.bundle.js',
+                    create_source_map: config.distDir + '/grr-ui.bundle.js.map',
+                    source_map_location_mapping:
+                         '|/static/angular-components/',
+                    angular_pass: true,
+                    entry_point: 'grrUi.appController',
+                    externs: [
+                        'angular-components/externs.js',
+                    ],
+                })))
+            .pipe(sourcemaps.write("."))
+            .pipe(gulp.dest(config.distDir));
     });
 
 
@@ -215,20 +213,17 @@ gulp.task('compile-grr-ui-tests', function() {
           }
         }
       }))
-      .pipe(gulpClosureCompiler({
-        compilerPath: closureCompilerPath,
-        fileName: 'grr-ui-test.bundle.js',
-        compilerFlags: Object.assign({}, closureCompilerFlags, {
-          angular_pass: true,
-          dependency_mode: 'NONE',
-          externs: [
-            'angular-components/externs.js',
-          ],
-          create_source_map: config.distDir + '/grr-ui-test.bundle.js.map',
-          source_map_location_mapping:
-              'angular-components/|/static/angular-components/',
-        }),
-      }))
+        .pipe(closureCompiler(
+            Object.assign({}, closureCompilerFlags, {
+                js_output_file: 'grr-ui.bundle.js',
+                create_source_map: config.distDir + 'grr-ui.bundle.js.map',
+                source_map_location_mapping: 'angular-components/|/static/angular-components/',
+                angular_pass: true,
+                entry_point: 'grrUi.appController',
+                externs: [
+                    'angular-components/externs.js',
+                ],
+            })))
       .pipe(gulpInsert.append('//# sourceMappingURL=grr-ui-test.bundle.js.map'))
       .pipe(gulp.dest(config.distDir));
 });

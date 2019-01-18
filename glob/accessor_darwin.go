@@ -51,6 +51,18 @@ func (self *OSFileInfo) sys() *syscall.Stat_t {
 	return self.Sys().(*syscall.Stat_t)
 }
 
+func (self *OSFileInfo) IsLink() bool {
+	return self.Mode()&os.ModeSymlink != 0
+}
+
+func (self *OSFileInfo) GetLink() (string, error) {
+	target, err := os.Readlink(self._full_path)
+	if err != nil {
+		return "", err
+	}
+	return target, nil
+}
+
 func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string

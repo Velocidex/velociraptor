@@ -4,9 +4,19 @@ goog.module('grrUi.artifact.artifactsParamsFormDirective');
 goog.module.declareLegacyNamespace();
 
 
-
+/**
+ * Controller for ArtifactsParamsFormController.
+ *
+ * @param {!angular.Scope} $scope
+ * @param {!angular.Scope} $rootScope
+ * @constructor
+ * @ngInject
+ */
 const ArtifactsParamsFormController = function($scope, $rootScope) {
+    /** @private {!angular.Scope} */
     this.scope_ = $scope;
+
+    /** @private {!angular.Scope} */
     this.rootScope_ = $rootScope;
 };
 

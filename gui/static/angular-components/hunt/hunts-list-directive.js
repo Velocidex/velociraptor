@@ -37,8 +37,9 @@ const HuntsListController = function(
   this.grrDialogService_ = grrDialogService;
 
   /** @private {!ApiService} */
-  this.grrApiService_ = grrApiService;
+    this.grrApiService_ = grrApiService;
 
+    /** @type {string} */
   this.selectedHunt;
 
   // Internal state.

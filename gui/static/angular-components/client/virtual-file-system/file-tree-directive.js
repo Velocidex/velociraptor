@@ -6,7 +6,6 @@ goog.module.declareLegacyNamespace();
 const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ensurePathIsFolder, getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 const {getFileId} = goog.require('grrUi.client.virtualFileSystem.fileViewDirective');
-const {VQLService} = goog.require('grrUi.core.vqlService');
 
 /**
  * Controller for FileTreeDirective.
