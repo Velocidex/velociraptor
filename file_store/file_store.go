@@ -1,6 +1,7 @@
 package file_store
 
 import (
+	"compress/gzip"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -30,6 +31,7 @@ type FileStore interface {
 	StatFile(filename string) (*FileStoreFileInfo, error)
 	ListDirectory(dirname string) ([]os.FileInfo, error)
 	Walk(root string, cb filepath.WalkFunc) error
+	Delete(filename string) error
 }
 
 type FileStoreFileInfo struct {
@@ -63,12 +65,29 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	return result, nil
 }
 
+func getCompressed(filename string) (ReadSeekCloser, error) {
+	fd, err := os.Open(filename)
+	if err == nil {
+		zr, err := gzip.NewReader(fd)
+		return &SeekableGzip{zr, fd}, err
+	}
+	return nil, err
+}
+
 func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
 	file_path, err := self.FilenameToFileStorePath(filename)
 	if err != nil {
 		return nil, err
 	}
+
+	if strings.HasSuffix(".gz", file_path) {
+		return getCompressed(file_path)
+	}
+
 	file, err := os.Open(file_path)
+	if os.IsNotExist(err) {
+		return getCompressed(file_path + ".gz")
+	}
 	return file, err
 }
 
@@ -107,6 +126,15 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 	}
 
 	return file, nil
+}
+
+func (self *DirectoryFileStore) Delete(filename string) error {
+	file_path, err := self.FilenameToFileStorePath(filename)
+	if err != nil {
+		return err
+	}
+
+	return os.Remove(file_path)
 }
 
 func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (

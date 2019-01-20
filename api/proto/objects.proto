@@ -6,13 +6,11 @@ package proto;
 
 
 message ObjectReference {
-    oneof union {
-        ClientReference client = 2;
-        HuntReference hunt = 3;
-        FlowReference flow = 4;
-        VfsFileReference vfs_file = 6;
-        ApprovalRequestReference approval_request = 7;
-    }
+    ClientReference client = 2;
+    HuntReference hunt = 3;
+    FlowReference flow = 4;
+    VfsFileReference vfs_file = 6;
+    ApprovalRequestReference approval_request = 7;
 }
 
 message ClientReference {

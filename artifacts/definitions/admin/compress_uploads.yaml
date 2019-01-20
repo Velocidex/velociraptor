@@ -1,0 +1,25 @@
+name: Admin.System.CompressUploads
+description: |
+  Compresses all uploaded files.
+
+  When artifacts collect files they are normally stored on the server
+  uncompressed. This artifact watches all completed flows and
+  compresses the files in the file store when the flow completes. This
+  is very useful for cloud based deployments with limited storage
+  space or when collecting large files.
+
+  In order to run this artifact you would normally run it as part of
+  an artifact acquisition process:
+
+  ```
+  $ velociraptor --config /etc/server.config.yaml artifacts acquire Admin.System.CompressUploads
+  ```
+
+sources:
+  - precondition:
+      SELECT server_config FROM scope()
+    queries:
+      - |
+        SELECT ClientId, Flow.Urn as Flow,
+           compress(path=Flow.FlowContext.uploaded_files) as CompressedFiles
+        FROM watch_monitoring(artifact='System.Flow.Completion')

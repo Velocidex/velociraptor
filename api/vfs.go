@@ -108,7 +108,8 @@ func renderDBVFS(
 	if len(downloaded_files) > 0 {
 		lookup := make(map[string]os.FileInfo)
 		for _, file := range downloaded_files {
-			lookup[file.Name()] = file
+			normalized_name := strings.TrimSuffix(file.Name(), ".gz")
+			lookup[normalized_name] = file
 		}
 
 		var rows []*FileInfoRow

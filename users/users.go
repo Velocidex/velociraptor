@@ -12,6 +12,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type UserRecord struct {
@@ -147,12 +148,10 @@ func GetUserNotifications(config_obj *api_proto.Config, username string, clear_p
 }
 
 func Notify(config_obj *api_proto.Config, notification *api_proto.UserNotification) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
+	utils.Debug(notification)
+	if gUserNotificationManager == nil {
+		return errors.New("Uninitiaalized UserNotificationManager")
 	}
-
-	urn := fmt.Sprintf("%s/%s/notifications/pending/%d",
-		constants.USER_URN, notification.Username, notification.Timestamp)
-	return db.SetSubject(config_obj, urn, notification)
+	gUserNotificationManager.Notify(notification)
+	return nil
 }

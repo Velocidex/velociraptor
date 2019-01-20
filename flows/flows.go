@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/csv"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -23,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -158,6 +160,28 @@ func (self *FlowRunner) Close() {
 		err := SetAFF4FlowObject(self.config, cached_flow)
 		if err != nil {
 			self.logger.Error("FlowRunner", err)
+		}
+
+		// If the flow is complete we generate an event. This
+		// allows VQL to follow the queue and respond to new
+		// flows completing.
+		if cached_flow.FlowContext != nil &&
+			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
+			row := vfilter.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("Flow", cached_flow)
+			serialized, err := json.Marshal([]vfilter.Row{row})
+			if err != nil {
+				continue
+			}
+			gJournalWriter.Channel <- &Event{
+				Config:    self.config,
+				ClientId:  cached_flow.RunnerArgs.ClientId,
+				QueryName: "Artifact System.Flow.Completion",
+				Response:  string(serialized),
+				Columns:   []string{"Timestamp", "Flow"},
+			}
+
 		}
 	}
 }
@@ -339,11 +363,9 @@ func (self *AFF4FlowObject) Complete(config_obj *api_proto.Config) error {
 				Message: fmt.Sprintf("Flow %s completed successfully.",
 					self.RunnerArgs.FlowName),
 				Reference: &api_proto.ObjectReference{
-					Union: &api_proto.ObjectReference_Flow{
-						Flow: &api_proto.FlowReference{
-							FlowId:   path.Base(self.Urn),
-							ClientId: self.RunnerArgs.ClientId,
-						},
+					Flow: &api_proto.FlowReference{
+						FlowId:   path.Base(self.Urn),
+						ClientId: self.RunnerArgs.ClientId,
 					},
 				},
 			})
@@ -375,32 +397,30 @@ func (self *AFF4FlowObject) FailIfError(
 
 			return errors.New(status.ErrorMessage)
 		}
-	}
 
-	// Notify to our user if we need to.
-	if self.RunnerArgs != nil && self.RunnerArgs.NotifyToUser &&
-		self.RunnerArgs.Creator != "" {
-		err := users.Notify(
-			config_obj,
-			&api_proto.UserNotification{
-				Username: self.RunnerArgs.Creator,
-				NotificationType: api_proto.
-					UserNotification_TYPE_FLOW_RUN_FAILED,
-				State:     api_proto.UserNotification_STATE_PENDING,
-				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-				Message: fmt.Sprintf("Flow %s failed!.",
-					self.RunnerArgs.FlowName),
-				Reference: &api_proto.ObjectReference{
-					Union: &api_proto.ObjectReference_Flow{
+		// Notify to our user if we need to.
+		if self.RunnerArgs != nil && self.RunnerArgs.NotifyToUser &&
+			self.RunnerArgs.Creator != "" {
+			err := users.Notify(
+				config_obj,
+				&api_proto.UserNotification{
+					Username: self.RunnerArgs.Creator,
+					NotificationType: api_proto.
+						UserNotification_TYPE_FLOW_RUN_FAILED,
+					State:     api_proto.UserNotification_STATE_PENDING,
+					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+					Message: fmt.Sprintf("Flow %s failed!.",
+						self.RunnerArgs.FlowName),
+					Reference: &api_proto.ObjectReference{
 						Flow: &api_proto.FlowReference{
 							FlowId:   path.Base(self.Urn),
 							ClientId: self.RunnerArgs.ClientId,
 						},
 					},
-				},
-			})
-		if err != nil {
-			return err
+				})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

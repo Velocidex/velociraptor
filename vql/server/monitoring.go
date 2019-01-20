@@ -198,7 +198,7 @@ func (self WatchMonitoringPlugin) Call(
 		for _, log_path := range watched_paths {
 			listing, err := file_store_factory.ListDirectory(log_path)
 			if err != nil {
-				return
+				continue
 			}
 
 			for _, item := range listing {
