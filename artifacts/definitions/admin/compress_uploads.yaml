@@ -15,11 +15,28 @@ description: |
   $ velociraptor --config /etc/server.config.yaml artifacts acquire Admin.System.CompressUploads
   ```
 
+  Note that there is nothing special about compressed files - you can
+  also just run `find` and `gzip` in the file store. Velociraptor will
+  automatically decompress the file when displaying it in the GUI
+  text/hexdump etc.
+
+parameters:
+  - name: blacklistCompressionFilename
+    description: Filenames which match this regex will be excluded from compression.
+    default: '(?i).+ntuser.dat'
+
 sources:
   - precondition:
       SELECT server_config FROM scope()
     queries:
       - |
-        SELECT ClientId, Flow.Urn as Flow,
-           compress(path=Flow.FlowContext.uploaded_files) as CompressedFiles
+        LET files = SELECT ClientId,
+            Flow.Urn as Flow,
+            Flow.FlowContext.uploaded_files as Files
         FROM watch_monitoring(artifact='System.Flow.Completion')
+        WHERE Files and not Files =~ blacklistCompressionFilename
+
+      - |
+        SELECT ClientId, Flow, Files,
+               compress(path=Files) as CompressedFiles
+        FROM files

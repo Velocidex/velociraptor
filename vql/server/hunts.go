@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -122,6 +123,12 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if participation_row.Participate {
+				flow_obj, err := flows.GetAFF4FlowObject(
+					config_obj, participation_row.FlowId)
+				if err != nil {
+					continue
+				}
+
 				result_path := path.Join(
 					"clients", participation_row.ClientId,
 					"artifacts", "Artifact "+arg.Artifact,
@@ -147,7 +154,8 @@ func (self HuntResultsPlugin) Call(
 							participation_row.ClientId).
 						Set("Fqdn",
 							participation_row.Fqdn).
-						Set("HuntId", participation_row.HuntId)
+						Set("HuntId", participation_row.HuntId).
+						Set("Flow", flow_obj)
 				}
 			}
 		}

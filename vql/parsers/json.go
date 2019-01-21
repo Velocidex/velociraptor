@@ -45,6 +45,35 @@ func (self ParseJsonFunction) Call(
 	return result
 }
 
+type ParseJsonArray struct{}
+
+func (self ParseJsonArray) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "parse_json_array",
+		Doc:     "Parse a JSON string into an array.",
+		ArgType: type_map.AddType(scope, &ParseJsonFunctionArg{}),
+	}
+}
+
+func (self ParseJsonArray) Call(
+	ctx context.Context, scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &ParseJsonFunctionArg{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("parse_json: %v", err)
+		return &vfilter.Null{}
+	}
+
+	result := []interface{}{}
+	err = json.Unmarshal([]byte(arg.Data), &result)
+	if err != nil {
+		scope.Log("parse_json_array: %v", err)
+		return &vfilter.Null{}
+	}
+	return result
+}
+
 // Associative protocol for map[string]interface{}
 type _MapInterfaceAssociativeProtocol struct{}
 
@@ -193,6 +222,7 @@ func (self _ProtobufAssociativeProtocol) GetMembers(
 
 func init() {
 	vql_subsystem.RegisterFunction(&ParseJsonFunction{})
+	vql_subsystem.RegisterFunction(&ParseJsonArray{})
 	vql_subsystem.RegisterProtocol(&_MapInterfaceAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_ProtobufAssociativeProtocol{})
 }
