@@ -10,10 +10,21 @@ import (
 
 // TODO- Return a cluster dialer.
 func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
-	address := fmt.Sprintf("%s:%d", config_obj.API.BindAddress, config_obj.API.BindPort)
+	address := GetAPIConnectionString(config_obj)
 	con, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to self: %v: %v", address, err))
 	}
 	return con
+}
+
+func GetAPIConnectionString(config_obj *api_proto.Config) string {
+	result := fmt.Sprintf("%s://%s", config_obj.API.BindScheme,
+		config_obj.API.BindAddress)
+	switch config_obj.API.BindScheme {
+	case "tcp":
+		result += fmt.Sprintf(":%d", config_obj.API.BindPort)
+	}
+
+	return result
 }

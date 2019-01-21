@@ -226,4 +226,6 @@ service API {
         };
     }
 
+    // Streaming free form VQL
+    rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
 }

@@ -132,6 +132,11 @@ message APIConfig {
     uint32 bind_port = 2 [(sem_type) = {
             description: "Port to bind to."
         }];
+
+    string bind_scheme = 3 [(sem_type) = {
+            description: "A scheme for the listening socket (e.g. tcp, unix).",
+            default: "unix",
+        }];
 }
 
 message GUIConfig {

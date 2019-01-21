@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -104,13 +105,13 @@ func GetAPIHandler(
 				return metadata.New(md)
 			}),
 	)
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	bind_addr := grpc_client.GetAPIConnectionString(config_obj)
 	err := api_proto.RegisterAPIHandlerFromEndpoint(
-		ctx, grpc_proxy_mux,
-		fmt.Sprintf("%s:%d",
-			config_obj.API.BindAddress,
-			config_obj.API.BindPort),
-		opts)
+		ctx, grpc_proxy_mux, bind_addr, opts)
 	if err != nil {
 		return nil, err
 	}

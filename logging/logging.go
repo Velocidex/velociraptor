@@ -26,6 +26,7 @@ var (
 	ClientComponent   = "VelociraptorClient"
 	GUIComponent      = "VelociraptorGUI"
 	ToolComponent     = "Velociraptor"
+	APICmponent       = "VelociraptorAPI"
 
 	// Used for high value audit related events.
 	Audit = "VelociraptorAudit"
@@ -63,7 +64,7 @@ func (self *LogManager) GetLogger(
 		switch component {
 		case &GenericComponent,
 			&FrontendComponent, &ToolComponent, &Audit,
-			&ClientComponent, &GUIComponent:
+			&ClientComponent, &GUIComponent, &APICmponent:
 
 			logger := self.makeNewComponent(config_obj, component)
 			if config_obj.Logging.SeparateLogsPerComponent {

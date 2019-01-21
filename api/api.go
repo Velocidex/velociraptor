@@ -394,18 +394,26 @@ func (self *ApiServer) SetArtifactFile(
 	return &api_proto.APIResponse{}, nil
 }
 
-func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
-	bind_addr := fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
-		config_obj.API.BindPort)
+func (self *ApiServer) Query(
+	in *actions_proto.VQLCollectorArgs,
+	stream api_proto.API_QueryServer) error {
+	return streamQuery(self.config, in, stream)
+}
 
-	lis, err := net.Listen("tcp", bind_addr)
+func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
+	bind_addr := config_obj.API.BindAddress
+	switch config_obj.API.BindScheme {
+	case "tcp":
+		bind_addr += fmt.Sprintf(":%d", config_obj.API.BindPort)
+	}
+
+	lis, err := net.Listen(config_obj.API.BindScheme, bind_addr)
 	if err != nil {
 		return err
 	}
 
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
-
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
