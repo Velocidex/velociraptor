@@ -173,7 +173,84 @@ func (self HuntResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 	}
 }
 
+type HuntFlowsPluginArgs struct {
+	HuntId string `vfilter:"required,field=hunt_id"`
+}
+
+type HuntFlowsPlugin struct{}
+
+func (self HuntFlowsPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		defer close(output_chan)
+
+		arg := &HuntFlowsPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_flows: %v", err)
+			return
+		}
+
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*api_proto.Config)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		file_path := path.Join("hunts", arg.HuntId+".csv")
+		file_store_factory := file_store.GetFileStore(config_obj)
+		fd, err := file_store_factory.ReadFile(file_path)
+		if err != nil {
+			scope.Log("Error %v: %v\n", err, file_path)
+			return
+		}
+
+		// Read each CSV file and emit it with
+		// some extra columns for context.
+		for row := range csv.GetCSVReader(fd) {
+			participation_row := &services.ParticipationRecord{}
+			err := vfilter.ExtractArgs(scope, row, participation_row)
+			if err != nil {
+				return
+			}
+
+			result := vfilter.NewDict().
+				Set("HuntId", participation_row.HuntId).
+				Set("ClientId", participation_row.ClientId).
+				Set("Fqdn", participation_row.Fqdn).
+				Set("Timestamp", participation_row.Timestamp).
+				Set("Participate", participation_row.Participate).
+				Set("Flow", vfilter.Null{})
+
+			if participation_row.Participate {
+				flow_obj, err := flows.GetAFF4FlowObject(
+					config_obj, participation_row.FlowId)
+				if err == nil {
+					result.Set("Flow", flow_obj)
+				}
+			}
+
+			output_chan <- result
+		}
+	}()
+
+	return output_chan
+}
+
+func (self HuntFlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "hunt_flows",
+		Doc:     "Retrieve the flows launched by a hunt.",
+		ArgType: type_map.AddType(scope, &HuntFlowsPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&HuntsPlugin{})
 	vql_subsystem.RegisterPlugin(&HuntResultsPlugin{})
+	vql_subsystem.RegisterPlugin(&HuntFlowsPlugin{})
 }
