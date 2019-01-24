@@ -1,15 +1,20 @@
 package api
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -75,6 +80,52 @@ func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	return http.ListenAndServe(listenAddr, mux)
 }
 
+func StartSelfSignedHTTPSProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+
+	cert, err := tls.X509KeyPair(
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
+	if err != nil {
+		return err
+	}
+
+	listenAddr := fmt.Sprintf("%s:%d",
+		config_obj.GUI.BindAddress,
+		config_obj.GUI.BindPort)
+
+	server := &http.Server{
+		Addr:    listenAddr,
+		Handler: mux,
+
+		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 900 * time.Second,
+		IdleTimeout:  15 * time.Second,
+		TLSConfig: &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			Certificates:             []tls.Certificate{cert},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+			},
+		},
+	}
+
+	logger.WithFields(
+		logrus.Fields{
+			"listenAddr": listenAddr,
+		}).Info("GUI is ready to handle TLS requests")
+
+	return server.ListenAndServeTLS("", "")
+}
+
 type _templateArgs struct {
 	Timestamp  int64
 	Heading    string
@@ -83,6 +134,8 @@ type _templateArgs struct {
 	Version    string
 }
 
+// An api handler which connects to the gRPC service (i.e. it is a
+// gRPC client).
 func GetAPIHandler(
 	ctx context.Context,
 	config_obj *api_proto.Config) (http.Handler, error) {
@@ -105,12 +158,32 @@ func GetAPIHandler(
 				return metadata.New(md)
 			}),
 	)
+
+	// We use the Frontend's certificate because this connection
+	// represents an internal connection.
+	cert, err := tls.X509KeyPair(
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
+	if err != nil {
+		return nil, err
+	}
+
+	// Authenticate API clients using certificates.
+	CA_Pool := x509.NewCertPool()
+	CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+
+	creds := credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      CA_Pool,
+		ServerName:   constants.FRONTEND_NAME,
+	})
+
 	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(creds),
 	}
 
 	bind_addr := grpc_client.GetAPIConnectionString(config_obj)
-	err := api_proto.RegisterAPIHandlerFromEndpoint(
+	err = api_proto.RegisterAPIHandlerFromEndpoint(
 		ctx, grpc_proxy_mux, bind_addr, opts)
 	if err != nil {
 		return nil, err

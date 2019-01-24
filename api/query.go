@@ -7,6 +7,7 @@ import (
 	"time"
 
 	errors "github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -18,7 +19,15 @@ import (
 func streamQuery(
 	config_obj *api_proto.Config,
 	arg *actions_proto.VQLCollectorArgs,
-	stream api_proto.API_QueryServer) (err error) {
+	stream api_proto.API_QueryServer,
+	peer_name string) (err error) {
+
+	logger := logging.GetLogger(config_obj, &logging.APICmponent)
+	logger.WithFields(logrus.Fields{
+		"arg":  arg,
+		"user": peer_name,
+	}).Info("Query API call")
+
 	if arg.MaxWait == 0 {
 		arg.MaxWait = 10
 	}

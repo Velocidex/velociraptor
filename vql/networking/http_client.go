@@ -2,6 +2,8 @@ package networking
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"net"
@@ -9,7 +11,9 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -20,6 +24,9 @@ type _HttpPluginRequest struct {
 	Headers vfilter.Any `vfilter:"optional,field=headers"`
 	Method  string      `vfilter:"optional,field=method"`
 	Chunk   int         `vfilter:"optional,field=chunk_size"`
+
+	// Sometimes it is useful to be able to query misconfigured hosts.
+	DisableSSLSecurity bool `vfilter:"optional,field=disable_ssl_security"`
 }
 
 type _HttpPluginResponse struct {
@@ -30,7 +37,77 @@ type _HttpPluginResponse struct {
 
 type _HttpPlugin struct{}
 
-func getHttpClient(arg *_HttpPluginRequest) *http.Client {
+func customVerifyPeerCert(
+	config_obj *api_proto.ClientConfig,
+	url_str string,
+	rawCerts [][]byte,
+	verifiedChains [][]*x509.Certificate) error {
+
+	url, err := url.Parse(url_str)
+	if err != nil {
+		return err
+	}
+
+	certs := make([]*x509.Certificate, len(rawCerts))
+	for i, rawCert := range rawCerts {
+		cert, err := x509.ParseCertificate(rawCert)
+		if err != nil {
+			return err
+		}
+		certs[i] = cert
+	}
+
+	verify_certs := func(opts *x509.VerifyOptions) error {
+		for i, cert := range certs {
+			if i == 0 {
+				continue
+			}
+			opts.Intermediates.AddCert(cert)
+		}
+		_, err = certs[0].Verify(*opts)
+		return err
+	}
+
+	opts := &x509.VerifyOptions{
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+	}
+
+	// First check if the certs come from our CA - ignore the name
+	// in that case.
+	if config_obj != nil {
+		opts.Roots = x509.NewCertPool()
+		opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+
+		// Yep its one of ours, just trust it.
+		if verify_certs(opts) == nil {
+			return nil
+		}
+	}
+
+	// It is not signed by our CA - check the system store
+	// and this time verify the Hostname.
+	rootCAs, err := x509.SystemCertPool()
+	if err != nil {
+		return err
+	}
+	opts.DNSName = url.Hostname()
+	opts.Roots = rootCAs
+
+	return verify_certs(opts)
+}
+
+func getHttpClient(
+	config_obj *api_proto.ClientConfig,
+	arg *_HttpPluginRequest) *http.Client {
+
+	// If we deployed Velociraptor using self signed certificates
+	// we want to be able to trust our own server. Our own server
+	// is signed by our own CA and also may have a different
+	// common name (not related to DNS). Therefore in the special
+	// case where the server cert is signed by our own CA we can
+	// ignore the server's Common Name.
+
 	result := &http.Client{}
 	// It is a unix domain socket.
 	if strings.HasPrefix(arg.Url, "/") {
@@ -44,7 +121,27 @@ func getHttpClient(arg *_HttpPluginRequest) *http.Client {
 			},
 		}
 		arg.Url = "http://unix" + components[1]
+
+	} else {
+		result.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true, // Not actually skipping, we check the cert in VerifyPeerCertificate
+				VerifyPeerCertificate: func(
+					rawCerts [][]byte,
+					verifiedChains [][]*x509.Certificate) error {
+					if arg.DisableSSLSecurity {
+						return nil
+					}
+					return customVerifyPeerCert(
+						config_obj,
+						arg.Url,
+						rawCerts,
+						verifiedChains)
+				},
+			},
+		}
 	}
+
 	return result
 }
 
@@ -98,8 +195,12 @@ func (self *_HttpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		any_config_obj, _ := scope.Resolve("config")
+		config_obj := any_config_obj.(*api_proto.ClientConfig)
+
 		params := encodeParams(arg, scope)
-		client := getHttpClient(arg)
+		client := getHttpClient(config_obj, arg)
 		req, err := http.NewRequest(
 			arg.Method, arg.Url,
 			strings.NewReader(params.Encode()))

@@ -32,4 +32,6 @@ const (
 
 	// Messages to the client which we dont care about their responses.
 	IgnoreResponseState = uint64(101)
+
+	FRONTEND_NAME = "VelociraptorServer"
 )

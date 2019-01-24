@@ -1,6 +1,8 @@
 package api
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net"
@@ -10,7 +12,9 @@ import (
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -31,6 +35,7 @@ import (
 type ApiServer struct {
 	config     *api_proto.Config
 	server_obj *server.Server
+	ca_pool    *x509.CertPool
 }
 
 func (self *ApiServer) LaunchFlow(
@@ -397,7 +402,38 @@ func (self *ApiServer) SetArtifactFile(
 func (self *ApiServer) Query(
 	in *actions_proto.VQLCollectorArgs,
 	stream api_proto.API_QueryServer) error {
-	return streamQuery(self.config, in, stream)
+
+	// Get the TLS context from the peer and verify its
+	// certificate.
+	peer, ok := peer.FromContext(stream.Context())
+	if !ok {
+		return errors.New("Cant get peer info")
+	}
+
+	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return errors.New("Unable to get credentials.")
+	}
+
+	// Authenticate API clients using certificates.
+	for _, peer_cert := range tlsInfo.State.PeerCertificates {
+		chains, err := peer_cert.Verify(
+			x509.VerifyOptions{Roots: self.ca_pool})
+		if err != nil {
+			return err
+		}
+
+		if len(chains) == 0 {
+			return errors.New("No chains verified.")
+		}
+
+		peer_name := peer_cert.Subject.CommonName
+
+		// Cert is good enough for us, run the query.
+		return streamQuery(self.config, in, stream, peer_name)
+	}
+
+	return errors.New("No peer certs?")
 }
 
 func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
@@ -412,13 +448,32 @@ func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error 
 		return err
 	}
 
-	var opts []grpc.ServerOption
-	grpcServer := grpc.NewServer(opts...)
+	// Use the server certificate to secure the gRPC connection.
+	cert, err := tls.X509KeyPair(
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
+	if err != nil {
+		return err
+	}
+
+	// Authenticate API clients using certificates.
+	CA_Pool := x509.NewCertPool()
+	CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+
+	// Create the TLS credentials
+	creds := credentials.NewTLS(&tls.Config{
+		// We verify the cert ourselves in the handler.
+		ClientAuth:   tls.RequireAnyClientCert,
+		Certificates: []tls.Certificate{cert},
+	})
+
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
 			config:     config_obj,
 			server_obj: server_obj,
+			ca_pool:    CA_Pool,
 		},
 	)
 	// Register reflection service.

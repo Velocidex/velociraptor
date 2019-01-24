@@ -3,6 +3,8 @@ package http_comms
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -135,6 +137,24 @@ func NewHTTPConnector(
 		max_poll = 60
 	}
 
+	tls_config := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	// For self signed certificates we must ignore the server name
+	// and only trust certs issued by our server.
+	if config_obj.UseSelfSignedSsl {
+		logger.Info("Expecting self signed certificate for server.")
+
+		CA_Pool := x509.NewCertPool()
+		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+
+		tls_config.ServerName = constants.FRONTEND_NAME
+
+		// We only trust **our** root CA.
+		tls_config.RootCAs = CA_Pool
+	}
+
 	return &HTTPConnector{
 		manager: manager,
 		logger:  logger,
@@ -157,6 +177,7 @@ func NewHTTPConnector(
 				TLSHandshakeTimeout:   10 * time.Second,
 				ExpectContinueTimeout: 1 * time.Second,
 				ResponseHeaderTimeout: 10 * time.Second,
+				TLSClientConfig:       tls_config,
 			},
 		},
 	}

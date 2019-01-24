@@ -1,6 +1,6 @@
 API:
   bind_address: 127.0.0.1
-  bind_port: 8888
+  bind_port: 8001
 CA:
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----
@@ -124,3 +124,5 @@ version:
   commit: 0c145ac342cbb0f510ac90d59d5ea3edf7e8fca2
   name: velociraptor
   version: 0.2.2
+
+use_self_signed_ssl: true

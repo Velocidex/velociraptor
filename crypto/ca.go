@@ -44,8 +44,12 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 		NotAfter:  end_time,
 
 		KeyUsage: x509.KeyUsageKeyEncipherment |
-			x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+			x509.KeyUsageDigitalSignature |
+			x509.KeyUsageCertSign,
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
 		BasicConstraintsValid: true,
 		DNSNames:              []string{"Velociraptor_ca.velocidex.com"},
 		IsCA:                  true,
@@ -76,7 +80,7 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 	}, nil
 }
 
-func GenerateServerCert(config_obj *api_proto.Config) (*CertBundle, error) {
+func GenerateServerCert(config_obj *api_proto.Config, name string) (*CertBundle, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -109,15 +113,18 @@ func GenerateServerCert(config_obj *api_proto.Config) (*CertBundle, error) {
 	template := x509.Certificate{
 		SerialNumber: serial_number,
 		Subject: pkix.Name{
-			CommonName:   "VelociraptorServer",
-			Organization: []string{"Velociraptor Server"},
+			CommonName:   name,
+			Organization: []string{"Velociraptor"},
 		},
 		NotBefore: start_time,
 		NotAfter:  end_time,
 
 		KeyUsage: x509.KeyUsageKeyEncipherment |
 			x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		ExtKeyUsage: []x509.ExtKeyUsage{
+			x509.ExtKeyUsageServerAuth,
+			x509.ExtKeyUsageClientAuth,
+		},
 		BasicConstraintsValid: true,
 	}
 

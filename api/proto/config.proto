@@ -139,6 +139,30 @@ message APIConfig {
         }];
 }
 
+// Configuration to be consumed by api clients.
+message ApiClientConfig {
+    string ca_certificate = 1 [(sem_type) = {
+            description: "The CA certificate used to verify API connections.",
+        }];
+
+    string client_cert = 2 [(sem_type) = {
+            description: "A client certificate that belongs to this client. "
+               "Generated from the 'velociraptor config api_client' command."
+        }];
+
+    string client_private_key = 3 [(sem_type) = {
+            description: "Private key to go with the client_cert.",
+        }];
+
+    string api_connection_string = 4 [(sem_type) = {
+            description: "Location where the api endpoint will be available.",
+        }];
+
+    string name = 5 [(sem_type) = {
+            description: "The CommonName for this API client.",
+        }];
+}
+
 message GUIConfig {
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
@@ -341,5 +365,12 @@ message Config {
 
     string autocert_cert_cache = 22 [(sem_type) = {
             description: "Path to store autocert certificates.",
+        }];
+
+    bool use_self_signed_ssl = 24 [(sem_type) = {
+            description: "If set we use self signed SSL to encrypt Frontend and GUI comms. "
+               "This option is incompatible with autocert_domain. "
+               "Unlike autocert_domain we can listen on any port. "
+               "This also forces the client to only trust certificates issued by our CA.",
         }];
 }

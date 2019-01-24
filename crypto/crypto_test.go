@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -101,7 +102,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 	}
 
 	cipher_text, err := self.client_manager.EncryptMessageList(
-		message_list, "VelociraptorServer")
+		message_list, constants.FRONTEND_NAME)
 	assert.NoError(t, err)
 
 	// Decrypt the same message 100 times.
@@ -125,11 +126,10 @@ func (self *TestSuite) TestEncDecClientToServer() {
 func (self *TestSuite) TestEncryption() {
 	t := self.T()
 	plain_text := []byte("hello world")
-	destination := "VelociraptorServer"
 
 	for i := 0; i < 100; i++ {
 		cipher_text, err := self.client_manager.Encrypt(
-			plain_text, destination)
+			plain_text, constants.FRONTEND_NAME)
 		assert.NoError(t, err)
 
 		result, err := self.server_manager.Decrypt(cipher_text)

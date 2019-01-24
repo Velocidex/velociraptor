@@ -50,7 +50,43 @@ func init() {
 					err, "Unable to start API server")
 			}()
 
-			if config_obj.AutocertDomain == "" {
+			if config_obj.UseSelfSignedSsl {
+				router := http.NewServeMux()
+
+				// If the GUI and Frontend need to be
+				// on the same server we just merge
+				// the handlers.
+				if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
+					config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
+					err := api.PrepareMux(config_obj, router)
+					kingpin.FatalIfError(
+						err, "Unable to start API server")
+				} else {
+
+					go func() {
+						// Launch a new server for the GUI.
+						router := http.NewServeMux()
+						err := api.PrepareMux(config_obj, router)
+						kingpin.FatalIfError(
+							err, "Unable to start API server")
+
+						// Start the GUI separately on
+						// a different port.
+						err = api.StartSelfSignedHTTPSProxy(config_obj, router)
+						kingpin.FatalIfError(
+							err, "Unable to start GUI server")
+
+					}()
+
+				}
+				// Add Comms handlers.
+				server.PrepareFrontendMux(config_obj, server_obj, router)
+
+				// Start comms over http.
+				err = server.StartFrontendHttps(config_obj, server_obj, router)
+				kingpin.FatalIfError(err, "StartFrontendHttps")
+
+			} else if config_obj.AutocertDomain == "" {
 				// For non TLS we separate the GUI and
 				// frontend ports because the frontend
 				// must be publically accessible but

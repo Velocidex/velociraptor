@@ -19,12 +19,14 @@ func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
 }
 
 func GetAPIConnectionString(config_obj *api_proto.Config) string {
-	result := fmt.Sprintf("%s://%s", config_obj.API.BindScheme,
-		config_obj.API.BindAddress)
 	switch config_obj.API.BindScheme {
 	case "tcp":
-		result += fmt.Sprintf(":%d", config_obj.API.BindPort)
+		return fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
+			config_obj.API.BindPort)
+
+	case "unix":
+		return fmt.Sprintf("unix://%s", config_obj.API.BindAddress)
 	}
 
-	return result
+	panic("Unknown API.BindScheme")
 }

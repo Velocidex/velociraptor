@@ -78,6 +78,63 @@ func StartFrontendHttp(
 	return nil
 }
 
+// Starts the frontend over HTTPS.
+func StartFrontendHttps(
+	config_obj *api_proto.Config,
+	server_obj *Server,
+	router *http.ServeMux) error {
+
+	cert, err := tls.X509KeyPair(
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
+	if err != nil {
+		return err
+	}
+
+	listenAddr := fmt.Sprintf(
+		"%s:%d",
+		config_obj.Frontend.BindAddress,
+		config_obj.Frontend.BindPort)
+
+	server := &http.Server{
+		Addr:    listenAddr,
+		Handler: router,
+
+		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 900 * time.Second,
+		IdleTimeout:  15 * time.Second,
+		TLSConfig: &tls.Config{
+			MinVersion:               tls.VersionTLS12,
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			Certificates:             []tls.Certificate{cert},
+			PreferServerCipherSuites: true,
+			CipherSuites: []uint16{
+				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+			},
+		},
+	}
+
+	wg := &sync.WaitGroup{}
+	InstallSignalHandler(config_obj, server_obj, server, wg)
+	server_obj.Info("Frontend is ready to handle client TLS requests at %s", listenAddr)
+
+	err = server.ListenAndServeTLS("", "")
+	if err != nil && err != http.ErrServerClosed {
+		return err
+	}
+
+	wg.Wait()
+	server_obj.Info("Server stopped")
+
+	return nil
+}
+
 // Install a signal handler which will shutdown the server gracefully.
 func InstallSignalHandler(
 	config_obj *api_proto.Config,
