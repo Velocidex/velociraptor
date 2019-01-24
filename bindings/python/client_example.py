@@ -5,9 +5,32 @@
 This example demonstrates how to connect to the Velociraptor server
 and issue a server side VQL query.
 
-In this example we issue an event query which streams results slowly
+In this example we may issue event queries which stream results slowly
 to the api client. This demonstrates how to build reactive post
 processing scripts as required.
+
+
+Some example queries to try:
+
+Get basic information about the server:
+
+ SELECT * from info()
+
+
+Get server load as a data stream (This will never terminate and return
+data points every 10 seconds):
+
+ SELECT * from Artifact.Generic.Client.Stats()
+
+
+Get an event for every execution of psexecsvc on any deployed
+machine. The event can be handled in this python loop as required. The
+python script will block until psexec is detected.
+
+   SELECT * from watch_monitoring(
+          artifact='Windows.Events.ProcessCreation')
+   WHERE Name =~ '(?i)psexesvc'
+
 """
 import argparse
 import json
@@ -41,27 +64,33 @@ def run(config, query):
             max_wait=1,
             Query=[api_pb2.VQLRequest(
                 Name="Test",
-                VQL="select * from info()",
+                VQL=query,
             )])
 
         # This will block as responses are streamed from the
-        # server. If the query is an event query we will block here
+        # server. If the query is an event query we will run this loop
         # forever.
         for response in stub.Query(request):
 
-            # Each response represents a set of rows. The columns are
-            # listed in their own field to ensure column order is
-            # preserved.
+            # Each response represents a list of rows. The columns are
+            # provided in their own field as an array, to ensure
+            # column order is preserved if required. If you dont care
+            # about column order just ignore the Columns field.
             print(response.Columns)
 
             # The actual payload is a list of dicts. Each dict has
-            # column names as keys and arbitrary values.
+            # column names as keys and arbitrary (possibly nested)
+            # values.
             package = json.loads(response.Response)
             print (package)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Example Velociraptor client.')
+    parser = argparse.ArgumentParser(
+        description="Sample Velociraptor query client.",
+        epilog='Example: client_example.py api_client.yaml '
+    '" SELECT * from Artifact.Generic.Client.Stats() "')
+
     parser.add_argument('config', type=str,
                         help='Path to the api_client config. You can generate such '
                         'a file with "velociraptor config api_client"')

@@ -69,7 +69,8 @@ func GetDefaultConfig() *api_proto.Config {
 		API: &api_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not
 			// normally be exposed.
-			BindAddress: "/tmp/velociraptor.sock",
+			BindAddress: "127.0.0.1",
+			BindPort:    8001,
 			BindScheme:  "tcp",
 		},
 		GUI: &api_proto.GUIConfig{
