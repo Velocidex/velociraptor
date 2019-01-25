@@ -78,8 +78,11 @@ func doGenerateConfig() {
 	}
 	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
 
-	// Generate frontend certificate.
-	frontend_cert, err := crypto.GenerateServerCert(config_obj, constants.FRONTEND_NAME)
+	// Generate frontend certificate. Frontend certificates must
+	// have a constant common name - clients will refuse to talk
+	// with another common name.
+	frontend_cert, err := crypto.GenerateServerCert(
+		config_obj, constants.FRONTEND_NAME)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)
 		return
@@ -103,7 +106,10 @@ func doRotateKeyConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
-	frontend_cert, err := crypto.GenerateServerCert(config_obj, constants.FRONTEND_NAME)
+
+	// Frontends must have a well known common name.
+	frontend_cert, err := crypto.GenerateServerCert(
+		config_obj, constants.FRONTEND_NAME)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)
 		return
@@ -145,7 +151,13 @@ func doDumpApiClientConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	bundle, err := crypto.GenerateServerCert(config_obj, *config_api_client_common_name)
+	if *config_api_client_common_name == constants.FRONTEND_NAME {
+		kingpin.Fatalf("Name reserved! You may not name your " +
+			"api keys with this name.")
+	}
+
+	bundle, err := crypto.GenerateServerCert(
+		config_obj, *config_api_client_common_name)
 	kingpin.FatalIfError(err, "Unable to generate certificate.")
 
 	api_client_config := &api_proto.ApiClientConfig{
