@@ -19,6 +19,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"os"
 	"os/signal"
 
@@ -48,4 +49,21 @@ func InstallSignalHandler(
 	}()
 
 	return ctx
+}
+
+// Turns os.Stdout into into file_store.WriteSeekCloser
+type StdoutWrapper struct {
+	io.Writer
+}
+
+func (self *StdoutWrapper) Seek(offset int64, whence int) (int64, error) {
+	return 0, nil
+}
+
+func (self *StdoutWrapper) Close() error {
+	return nil
+}
+
+func (self *StdoutWrapper) Truncate(offset int64) error {
+	return nil
 }

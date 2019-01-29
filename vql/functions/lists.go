@@ -21,12 +21,13 @@ import (
 	"context"
 	"reflect"
 	"regexp"
+	"strings"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-type JoinFunction struct{}
+type ArrayFunction struct{}
 
 func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 	var result []vfilter.Any
@@ -59,16 +60,48 @@ func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 	return []vfilter.Any{a}
 }
 
-func (self *JoinFunction) Call(ctx context.Context,
+func (self *ArrayFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
 	return flatten(scope, args)
 }
 
-func (self JoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self ArrayFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name: "array",
 		Doc:  "Create an array with all the args.",
+	}
+}
+
+type JoinFunctionArgs struct {
+	Array []string `vfilter:"required,field=array"`
+	Sep   string   `vfilter:"optional,field=sep"`
+}
+
+type JoinFunction struct{}
+
+func (self *JoinFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+
+	arg := &JoinFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("join: %s", err.Error())
+		return false
+	}
+
+	if arg.Sep == "" {
+		arg.Sep = ","
+	}
+
+	return strings.Join(arg.Array, arg.Sep)
+}
+
+func (self JoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "join",
+		Doc:  "Join all the args on a separator.",
 	}
 }
 
@@ -119,5 +152,6 @@ func (self FilterFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 
 func init() {
 	vql_subsystem.RegisterFunction(&FilterFunction{})
+	vql_subsystem.RegisterFunction(&ArrayFunction{})
 	vql_subsystem.RegisterFunction(&JoinFunction{})
 }

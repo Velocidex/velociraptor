@@ -18,9 +18,10 @@
 package vql
 
 import (
+	"runtime"
+
 	"github.com/Showmax/go-fqdn"
 	"github.com/shirou/gopsutil/host"
-	"runtime"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -28,6 +29,22 @@ type InfoStat struct {
 	host.InfoStat
 	Fqdn         string
 	Architecture string
+}
+
+func getInfo(host *host.InfoStat) *vfilter.Dict {
+	return vfilter.NewDict().
+		Set("Hostname", host.Hostname).
+		Set("Uptime", host.Uptime).
+		Set("BootTime", host.BootTime).
+		Set("Procs", host.Procs).
+		Set("OS", host.OS).
+		Set("Platform", host.Platform).
+		Set("PlatformFamily", host.PlatformFamily).
+		Set("PlatformVersion", host.PlatformVersion).
+		Set("KernelVersion", host.KernelVersion).
+		Set("VirtualizationSystem", host.VirtualizationSystem).
+		Set("VirtualizationRole", host.VirtualizationRole).
+		Set("HostID", host.HostID)
 }
 
 func init() {
@@ -39,15 +56,14 @@ func init() {
 				args *vfilter.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				if info, err := host.Info(); err == nil {
-					item := InfoStat{*info,
-						fqdn.Get(),
-						runtime.GOARCH}
+					item := getInfo(info).
+						Set("Fqdn", fqdn.Get()).
+						Set("Architecture", runtime.GOARCH)
 					result = append(result, item)
 				}
 
 				return result
 			},
-			RowType: InfoStat{},
-			Doc:     "Get information about the running host.",
+			Doc: "Get information about the running host.",
 		})
 }

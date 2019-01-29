@@ -424,12 +424,12 @@ func (self *ApiServer) Query(
 	// certificate.
 	peer, ok := peer.FromContext(stream.Context())
 	if !ok {
-		return errors.New("Cant get peer info")
+		return errors.New("cant get peer info")
 	}
 
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 	if !ok {
-		return errors.New("Unable to get credentials.")
+		return errors.New("unable to get credentials")
 	}
 
 	// Authenticate API clients using certificates.
@@ -441,7 +441,7 @@ func (self *ApiServer) Query(
 		}
 
 		if len(chains) == 0 {
-			return errors.New("No chains verified.")
+			return errors.New("no chains verified")
 		}
 
 		peer_name := peer_cert.Subject.CommonName
@@ -450,7 +450,7 @@ func (self *ApiServer) Query(
 		return streamQuery(self.config, in, stream, peer_name)
 	}
 
-	return errors.New("No peer certs?")
+	return errors.New("no peer certs?")
 }
 
 func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {

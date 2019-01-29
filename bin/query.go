@@ -26,6 +26,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -41,7 +42,7 @@ var (
 	rate = app.Flag("ops_per_second", "Rate of execution").
 		Default("1000000").Float64()
 	format = query.Flag("format", "Output format to use.").
-		Default("json").Enum("text", "json")
+		Default("json").Enum("text", "json", "csv")
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
 
@@ -65,6 +66,39 @@ func outputJSON(ctx context.Context,
 		}
 		os.Stdout.Write(result.Payload)
 	}
+}
+
+func outputCSV(ctx context.Context,
+	scope *vfilter.Scope, vql *vfilter.VQL) {
+	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
+
+	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{os.Stdout})
+	kingpin.FatalIfError(err, "outputCSV")
+	defer csv_writer.Close()
+
+	for {
+		result, ok := <-result_chan
+		if !ok {
+			return
+		}
+
+		payload := []map[string]interface{}{}
+		err := json.Unmarshal(result.Payload, &payload)
+		kingpin.FatalIfError(err, "outputCSV")
+
+		for _, row := range payload {
+			row_dict := vfilter.NewDict()
+			for _, column := range result.Columns {
+				value, pres := row[column]
+				if pres {
+					row_dict.Set(column, value)
+				}
+			}
+
+			csv_writer.Write(row_dict)
+		}
+	}
+
 }
 
 func evalQueryToTable(ctx context.Context,
@@ -147,6 +181,8 @@ func doQuery() {
 			table.Render()
 		case "json":
 			outputJSON(ctx, scope, vql)
+		case "csv":
+			outputCSV(ctx, scope, vql)
 		}
 	}
 }

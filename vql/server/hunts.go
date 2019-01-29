@@ -75,9 +75,18 @@ func (self HuntsPlugin) Call(
 		for _, hunt_urn := range hunts {
 			hunt_obj := &api_proto.Hunt{}
 			err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
-			if err == nil {
-				output_chan <- hunt_obj
+			if err != nil {
+				continue
 			}
+
+			// Re-read the stats into the hunt object.
+			hunt_stats := &api_proto.HuntStats{}
+			err := db.GetSubject(config_obj, hunt_urn+"/stats", hunt_stats)
+			if err == nil {
+				hunt_obj.Stats = hunt_stats
+			}
+
+			output_chan <- hunt_obj
 		}
 	}()
 
