@@ -30,8 +30,8 @@ var (
 )
 
 type ClockPluginArgs struct {
-	Period   int64 `vfilter:"optional,field=period"`
-	PeriodMs int64 `vfilter:"optional,field=ms"`
+	Period   int64 `vfilter:"optional,field=period,doc=Wait this many seconds between events."`
+	PeriodMs int64 `vfilter:"optional,field=ms,doc=Wait this many ms between events."`
 }
 
 type ClockPlugin struct{}
@@ -80,7 +80,7 @@ func (self ClockPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name: "clock",
 		Doc: "Generate a timestamp periodically. This is mostly " +
 			"useful for event queries.",
-		ArgType: "ClockPluginArgs",
+		ArgType: type_map.AddType(scope, &ClockPluginArgs{}),
 	}
 }
 

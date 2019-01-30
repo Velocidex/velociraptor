@@ -33,8 +33,8 @@ import (
 
 type ShellPluginArgs struct {
 	Argv   []string `vfilter:"required,field=argv"`
-	Sep    string   `vfilter:"optional,field=sep"`
-	Length int64    `vfilter:"optional,field=length"`
+	Sep    string   `vfilter:"optional,field=sep,doc=Path separator"`
+	Length int64    `vfilter:"optional,field=length,doc=Size of buffer to capture output per row."`
 }
 
 type ShellResult struct {
@@ -210,7 +210,7 @@ func (self ShellPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	return &vfilter.PluginInfo{
 		Name:    "execve",
 		Doc:     "Execute the commands given by argv.",
-		ArgType: "ShellPluginArgs",
+		ArgType: type_map.AddType(scope, &ShellPluginArgs{}),
 	}
 }
 

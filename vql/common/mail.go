@@ -35,7 +35,7 @@ type MailPluginArgs struct {
 
 	// How long to wait before sending the next mail. Many mail
 	// servers throttle mails sent too quickly.
-	Period int64 `vfilter:"required,field=period"`
+	Period int64 `vfilter:"required,field=period,doc=How long to wait before sending the next mail - help to throttle mails."`
 }
 
 var (
@@ -119,7 +119,7 @@ func (self MailPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.PluginInfo{
 		Name:    "mail",
 		Doc:     "Send Email to a remote server.",
-		ArgType: "MailPluginArgs",
+		ArgType: type_map.AddType(scope, &MailPluginArgs{}),
 	}
 }
 

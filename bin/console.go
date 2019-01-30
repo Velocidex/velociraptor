@@ -25,6 +25,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -62,6 +63,114 @@ func console_executor(config_obj *api_proto.Config,
 		return
 	}
 
+	args := strings.Split(t, " ")
+	switch strings.ToUpper(args[0]) {
+	case "SELECT", "LET":
+		executeVQL(config_obj, scope, state, t)
+
+	case "HELP":
+		executeHelp(config_obj, scope, state, t)
+
+	}
+}
+
+func executeHelp(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	state *consoleState,
+	t string) {
+
+	state.History = append(state.History, t)
+
+	args := strings.Split(t, " ")
+	for _, arg := range args {
+		if arg == "" || strings.ToUpper(arg) == "HELP" {
+			continue
+		}
+
+		if strings.HasPrefix(arg, "Artifact.") {
+			name := strings.TrimPrefix(arg, "Artifact.")
+			repository, err := artifacts.GetGlobalRepository(config_obj)
+			if err != nil {
+				return
+			}
+
+			artifact, pres := repository.Get(name)
+			if !pres {
+				fmt.Printf("Unknown artifact\n")
+				return
+			}
+
+			fmt.Printf(artifact.Raw)
+			return
+
+		} else {
+			type_map := vfilter.NewTypeMap()
+			descriptions := scope.Describe(type_map)
+			for _, function := range descriptions.Functions {
+				if function.Name == arg {
+					fmt.Printf("Function %v:\n%v\n\n",
+						function.Name, function.Doc)
+
+					arg_type, pres := type_map.Get(scope, function.ArgType)
+					if pres {
+						renderArgs(arg_type)
+					}
+					return
+				}
+			}
+
+			for _, plugin := range descriptions.Plugins {
+				if plugin.Name == arg {
+					fmt.Printf("VQL Plugin %v:\n%v\n\n",
+						plugin.Name, plugin.Doc)
+
+					arg_type, pres := type_map.Get(scope, plugin.ArgType)
+					if pres {
+						renderArgs(arg_type)
+					}
+					return
+				}
+			}
+
+		}
+	}
+
+	fmt.Printf("Unknown function or plugin.\n")
+}
+
+func renderArgs(type_desc *vfilter.TypeDescription) {
+	re := regexp.MustCompile("doc=(.[^,]+)")
+	required_re := regexp.MustCompile("(^|,)required(,|$)")
+
+	fmt.Printf("Args:\n")
+	for field, desc := range type_desc.Fields {
+		repeated := ""
+		if desc.Repeated {
+			repeated = "repeated"
+		}
+
+		required := ""
+		if required_re.FindString(desc.Tag) != "" {
+			required = "required"
+		}
+
+		doc := ""
+		matches := re.FindStringSubmatch(desc.Tag)
+		if matches != nil && len(matches) > 0 {
+			doc = matches[1]
+		}
+
+		fmt.Printf("  %v: %v (%v) %v %v\n", field, doc, desc.Target,
+			repeated, required)
+	}
+}
+
+func executeVQL(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	state *consoleState,
+	t string) {
 	vql, err := vfilter.Parse(t)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
@@ -87,9 +196,13 @@ func console_executor(config_obj *api_proto.Config,
 var toplevel_commands = []prompt.Suggest{
 	{Text: "SELECT", Description: "Start a query"},
 	{Text: "LET", Description: "Assign a stored query"},
+	{Text: "HELP", Description: "Show help about plugins, functions etc"},
 }
 
-func console_completer(scope *vfilter.Scope, d prompt.Document) []prompt.Suggest {
+func console_completer(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	d prompt.Document) []prompt.Suggest {
 	if d.TextBeforeCursor() == "" {
 		return []prompt.Suggest{}
 	}
@@ -99,12 +212,18 @@ func console_completer(scope *vfilter.Scope, d prompt.Document) []prompt.Suggest
 		return prompt.FilterHasPrefix(toplevel_commands, args[0], true)
 	}
 
-	if strings.ToUpper(args[0]) == "SELECT" {
-		return completeSELECT(scope, args)
-	}
+	current_word := d.GetWordBeforeCursor()
 
-	if strings.ToUpper(args[0]) == "LET" {
-		return completeLET(scope, args)
+	switch strings.ToUpper(args[0]) {
+	case "SELECT":
+		return completeSELECT(config_obj, scope, args, current_word)
+
+	case "LET":
+		return completeLET(config_obj, scope, args, current_word)
+
+	case "HELP":
+		return completeHELP(config_obj, scope, args, current_word)
+
 	}
 
 	return []prompt.Suggest{}
@@ -140,27 +259,59 @@ func suggestVars(scope *vfilter.Scope) []prompt.Suggest {
 	return result
 }
 
-func suggestPlugins(scope *vfilter.Scope) []prompt.Suggest {
+func suggestPlugins(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	add_bracket bool) []prompt.Suggest {
 	result := []prompt.Suggest{}
 
 	type_map := vfilter.NewTypeMap()
 	descriptions := scope.Describe(type_map)
 	for _, plugin := range descriptions.Plugins {
+		name := plugin.Name
+		if add_bracket {
+			name += "("
+		}
+
 		result = append(result, prompt.Suggest{
-			Text: plugin.Name + "(", Description: plugin.Doc},
+			Text: name, Description: plugin.Doc},
 		)
+	}
+
+	// Now fill in the artifacts.
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return result
+	}
+	for _, name := range repository.List() {
+		artifact, pres := repository.Get(name)
+		if pres {
+			if add_bracket {
+				name += "("
+			}
+
+			result = append(result, prompt.Suggest{
+				Text:        "Artifact." + name,
+				Description: artifact.Description,
+			})
+		}
 	}
 	return result
 }
 
-func suggestFunctions(scope *vfilter.Scope) []prompt.Suggest {
+func suggestFunctions(scope *vfilter.Scope,
+	add_bracket bool) []prompt.Suggest {
 	result := []prompt.Suggest{}
 
 	type_map := vfilter.NewTypeMap()
 	descriptions := scope.Describe(type_map)
 	for _, function := range descriptions.Functions {
+		name := function.Name
+		if add_bracket {
+			name += "("
+		}
 		result = append(result, prompt.Suggest{
-			Text: function.Name + "(", Description: function.Doc},
+			Text: name, Description: function.Doc},
 		)
 	}
 	return result
@@ -173,7 +324,26 @@ func suggestLimit(scope *vfilter.Scope) []prompt.Suggest {
 	}
 }
 
-func completeLET(scope *vfilter.Scope, args []string) []prompt.Suggest {
+func completeHELP(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	args []string,
+	current_word string) []prompt.Suggest {
+	columns := append(suggestFunctions(scope, false),
+		suggestPlugins(config_obj, scope, false)...)
+
+	sort.Slice(columns, func(i, j int) bool {
+		return columns[i].Text < columns[j].Text
+	})
+
+	return prompt.FilterHasPrefix(columns, current_word, true)
+}
+
+func completeLET(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	args []string,
+	current_word string) []prompt.Suggest {
 	columns := []prompt.Suggest{}
 
 	if len(args) == 3 {
@@ -186,17 +356,22 @@ func completeLET(scope *vfilter.Scope, args []string) []prompt.Suggest {
 			{Text: "SELECT", Description: "Start Query"},
 		}
 	} else if len(args) > 4 && strings.ToUpper(args[3]) == "SELECT" {
-		return completeSELECT(scope, args[3:len(args)])
+		return completeSELECT(config_obj,
+			scope, args[3:len(args)], current_word)
 	}
 
 	sort.Slice(columns, func(i, j int) bool {
 		return columns[i].Text < columns[j].Text
 	})
 
-	return prompt.FilterHasPrefix(columns, args[len(args)-1], true)
+	return prompt.FilterHasPrefix(columns, current_word, true)
 }
 
-func completeSELECT(scope *vfilter.Scope, args []string) []prompt.Suggest {
+func completeSELECT(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	args []string,
+	current_word string) []prompt.Suggest {
 	last_word := ""
 	previous_word := ""
 	for _, w := range args {
@@ -205,8 +380,6 @@ func completeSELECT(scope *vfilter.Scope, args []string) []prompt.Suggest {
 			last_word = w
 		}
 	}
-
-	current_word := args[len(args)-1]
 
 	columns := []prompt.Suggest{}
 
@@ -221,12 +394,12 @@ func completeSELECT(scope *vfilter.Scope, args []string) []prompt.Suggest {
 				Text: "*", Description: "All columns",
 			})
 			columns = append(columns, suggestVars(scope)...)
-			columns = append(columns, suggestFunctions(scope)...)
+			columns = append(columns, suggestFunctions(scope, true)...)
 
 			// * is only valid immediately after SELECT
 		} else if strings.HasSuffix(last_word, ",") || current_word != "" {
 			columns = append(columns, suggestVars(scope)...)
-			columns = append(columns, suggestFunctions(scope)...)
+			columns = append(columns, suggestFunctions(scope, true)...)
 		}
 
 	} else {
@@ -234,7 +407,7 @@ func completeSELECT(scope *vfilter.Scope, args []string) []prompt.Suggest {
 			current_word != "" &&
 				strings.ToUpper(previous_word) == "FROM" {
 			columns = append(columns, suggestVars(scope)...)
-			columns = append(columns, suggestPlugins(scope)...)
+			columns = append(columns, suggestPlugins(config_obj, scope, true)...)
 
 		} else if !NoCaseInString(args, "WHERE") {
 			columns = append(columns, prompt.Suggest{
@@ -245,7 +418,7 @@ func completeSELECT(scope *vfilter.Scope, args []string) []prompt.Suggest {
 		} else {
 			columns = append(columns, suggestLimit(scope)...)
 			columns = append(columns, suggestVars(scope)...)
-			columns = append(columns, suggestFunctions(scope)...)
+			columns = append(columns, suggestFunctions(scope, true)...)
 		}
 	}
 
@@ -335,10 +508,11 @@ func doConsole() {
 			console_executor(config_obj, scope, state, t)
 		},
 		func(d prompt.Document) []prompt.Suggest {
-			return console_completer(scope, d)
+			return console_completer(config_obj, scope, d)
 		},
-		prompt.OptionPrefix("-> "),
+		prompt.OptionPrefix("VQL > "),
 		prompt.OptionHistory(state.History),
+		prompt.OptionMaxSuggestion(10),
 	)
 	p.Run()
 }

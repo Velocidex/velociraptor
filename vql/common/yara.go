@@ -50,14 +50,14 @@ type YaraResult struct {
 }
 
 type YaraScanPluginArgs struct {
-	Rules        string   `vfilter:"required,field=rules"`
-	Files        []string `vfilter:"required,field=files"`
-	Accessor     string   `vfilter:"optional,field=accessor"`
-	Context      int      `vfilter:"optional,field=context"`
-	Start        int64    `vfilter:"optional,field=start"`
-	End          uint64   `vfilter:"optional,field=end"`
-	NumberOfHits int64    `vfilter:"optional,field=number"`
-	Blocksize    int64    `vfilter:"optional,field=blocksize"`
+	Rules        string   `vfilter:"required,field=rules,doc=Yara rules in the yara DSL."`
+	Files        []string `vfilter:"required,field=files,doc=The list of files to scan."`
+	Accessor     string   `vfilter:"optional,field=accessor,doc=Accessor (e.g. NTFS)"`
+	Context      int      `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
+	Start        int64    `vfilter:"optional,field=start,doc=The start offset to scan"`
+	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
+	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
 }
 
 type YaraScanPlugin struct{}
@@ -198,11 +198,13 @@ func (self YaraScanPlugin) Call(
 	return output_chan
 }
 
-func (self YaraScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self YaraScanPlugin) Info(
+	scope *vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "yara",
 		Doc:     "Scan files using yara rules.",
-		ArgType: "YaraScanPluginArgs",
+		ArgType: type_map.AddType(scope, &YaraScanPluginArgs{}),
 	}
 }
 
@@ -214,11 +216,13 @@ type YaraProcPluginArgs struct {
 
 type YaraProcPlugin struct{}
 
-func (self YaraProcPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self YaraProcPlugin) Info(
+	scope *vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "proc_yara",
 		Doc:     "Scan processes using yara rules.",
-		ArgType: "YaraProcPluginArgs",
+		ArgType: type_map.AddType(scope, &YaraScanPluginArgs{}),
 	}
 }
 
