@@ -109,7 +109,7 @@ func executeSET(
 
 	set_re := regexp.MustCompile(`(?i)^\s*SET\s*([^\s]+)\s*=\s*(.+)`)
 	matches := set_re.FindStringSubmatch(t)
-	if matches != nil && len(matches) > 1 {
+	if len(matches) > 1 {
 		ConsoleLog.Info("Setting %v to %v\n", matches[1], matches[2])
 		scope.AppendVars(vfilter.NewDict().Set(matches[1], matches[2]))
 	}
@@ -140,7 +140,21 @@ func executeHelp(
 			if !pres {
 				ConsoleLog.Error("Unknown artifact %s\n", name)
 			} else {
+				pager, err := GetPager(scope)
+				if err != nil {
+					ConsoleLog.Error("Cant execute pager: %v\n", err)
+					return
+				}
+
+				if pager != nil {
+					defer pager.Close()
+
+					pager.Writer.Write([]byte(artifact.Raw + "\n"))
+					return
+				}
+
 				ConsoleLog.Markup(markupArtifact(artifact.Raw))
+				return
 			}
 
 		} else {
@@ -199,7 +213,7 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 
 		doc := ""
 		matches := re.FindStringSubmatch(desc.Tag)
-		if matches != nil && len(matches) > 0 {
+		if len(matches) > 0 {
 			doc = matches[1]
 		}
 
@@ -233,14 +247,15 @@ func executeVQL(
 	}
 
 	var out io.WriteCloser = os.Stdout
-	env_pager, pres := scope.Resolve("PAGER")
-	if pres {
-		pager_cmd, _ := env_pager.(string)
-		pager, err := NewPager(pager_cmd)
-		if err == nil {
-			defer pager.Close()
-			out = pager.Writer
-		}
+	pager, err := GetPager(scope)
+	if err != nil {
+		ConsoleLog.Error("Cant execute pager: %v\n", err)
+		return
+	}
+
+	if pager != nil {
+		out = pager.Writer
+		defer pager.Close()
 	}
 
 	switch format {
@@ -460,7 +475,7 @@ func completeLET(
 		}
 	} else if len(args) > 4 && strings.ToUpper(args[3]) == "SELECT" {
 		return completeSELECT(config_obj,
-			scope, args[3:len(args)], current_word)
+			scope, args[3:], current_word)
 	}
 
 	sort.Slice(columns, func(i, j int) bool {

@@ -8,3 +8,4 @@ emacs.desktop
 *.debhelper
 ab0x.go
 output/
+.velociraptor_history.json

@@ -1,0 +1,10 @@
+---
+blacklist:
+  - GPL-2.0
+
+whitelist:
+  - Apache-2.0
+  - MIT
+  - NewBSD
+  - FreeBSD
+  - ISC
