@@ -95,11 +95,11 @@ func log_error(ctx *C.int, message *C.char) {
 }
 
 type WmiEventPluginArgs struct {
-	Query     string `vfilter:"required,field=query"`
-	Namespace string `vfilter:"required,field=namespace"`
+	Query     string `vfilter:"required,field=query,doc=WMI query to run."`
+	Namespace string `vfilter:"required,field=namespace,doc=WMI namespace"`
 
 	// How long to wait for events.
-	Wait int64 `vfilter:"required,field=wait"`
+	Wait int64 `vfilter:"required,field=wait,doc=Wait this many seconds for events and then quit."`
 }
 
 type WmiEventPlugin struct{}

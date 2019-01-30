@@ -78,14 +78,13 @@ func (self _binaryFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []s
 }
 
 type _BinaryParserPluginArg struct {
-	Offset     int64       `vfilter:"optional,field=offset"`
-	File       string      `vfilter:"optional,field=file"`
-	String     string      `vfilter:"optional,field=string"`
-	Accessor   string      `vfilter:"optional,field=accessor"`
-	Profile    string      `vfilter:"optional,field=profile"`
-	Target     string      `vfilter:"required,field=target"`
-	Args       vfilter.Any `vfilter:"optional,field=args"`
-	StartField string      `vfilter:"optional,field=start"`
+	Offset     int64       `vfilter:"optional,field=offset,doc=Start parsing from this offset"`
+	File       string      `vfilter:"required,field=file,doc=Filename to parse"`
+	Accessor   string      `vfilter:"optional,field=accessor,doc=Accessor to use (e.g. ntfs, data)"`
+	Profile    string      `vfilter:"optional,field=profile,doc=Profile to use."`
+	Target     string      `vfilter:"required,field=target,doc=The target to fetch."`
+	Args       vfilter.Any `vfilter:"optional,field=args,doc=Args for the target class."`
+	StartField string      `vfilter:"optional,field=start,doc=The initial field in the target to fetch."`
 }
 
 type _BinaryParserPlugin struct{}
@@ -135,8 +134,6 @@ func (self _BinaryParserPlugin) Call(
 			if !ok {
 				return
 			}
-		} else if arg.String != "" {
-			file = strings.NewReader(arg.String)
 		} else {
 			scope.Log("%s: %s", self.Name(), "At least on of file or string must be given.")
 			return
@@ -213,12 +210,11 @@ func (self _BinaryParserPlugin) Info(scope *vfilter.Scope, type_map *vfilter.Typ
 }
 
 type _BinaryParserFunctionArg struct {
-	Offset   int64  `vfilter:"optional,field=offset"`
-	String   string `vfilter:"required,field=string"`
-	Profile  string `vfilter:"optional,field=profile"`
-	Iterator string `vfilter:"optional,field=iterator"`
-	Target   string `vfilter:"optional,field=target"`
-	Accessor string `vfilter:"optional,field=accessor"`
+	Offset   int64  `vfilter:"optional,field=offset,doc=Start parsing from this offset."`
+	String   string `vfilter:"required,field=string,doc=The string to parse."`
+	Profile  string `vfilter:"optional,field=profile,doc=The profile to use."`
+	Iterator string `vfilter:"optional,field=iterator,doc=An iterator to begin with."`
+	Target   string `vfilter:"optional,field=target,doc=The target type to fetch."`
 }
 
 type _BinaryParserFunction struct{}

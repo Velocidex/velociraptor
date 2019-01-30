@@ -33,6 +33,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -47,7 +48,7 @@ var (
 				Default(".").String()
 
 	console_history_file = console.Flag("history", "Filename to store history in.").
-				Default("/tmp/velociraptor_history").String()
+				Default(".velociraptor_history.json").String()
 )
 
 type consoleState struct {
@@ -71,6 +72,45 @@ func console_executor(config_obj *api_proto.Config,
 	case "HELP":
 		executeHelp(config_obj, scope, state, t)
 
+	case "SET":
+		executeSET(config_obj, scope, state, t)
+
+	case "PRINT":
+		executePRINT(config_obj, scope, state, t)
+
+	}
+}
+
+func executePRINT(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	state *consoleState,
+	t string) {
+
+	state.History = append(state.History, t)
+
+	args := strings.Split(t, " ")
+	for _, arg := range args {
+		value, pres := scope.Resolve(arg)
+		if pres {
+			utils.Debug(value)
+		}
+	}
+}
+
+func executeSET(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	state *consoleState,
+	t string) {
+
+	state.History = append(state.History, t)
+
+	set_re := regexp.MustCompile(`(?i)^\s*SET\s*([^\s]+)\s*=\s*(.+)`)
+	matches := set_re.FindStringSubmatch(t)
+	if matches != nil && len(matches) > 1 {
+		fmt.Printf("Setting %v to %v\n", matches[1], matches[2])
+		scope.AppendVars(vfilter.NewDict().Set(matches[1], matches[2]))
 	}
 }
 
@@ -98,11 +138,9 @@ func executeHelp(
 			artifact, pres := repository.Get(name)
 			if !pres {
 				fmt.Printf("Unknown artifact\n")
-				return
+			} else {
+				fmt.Printf(artifact.Raw)
 			}
-
-			fmt.Printf(artifact.Raw)
-			return
 
 		} else {
 			type_map := vfilter.NewTypeMap()
@@ -116,7 +154,6 @@ func executeHelp(
 					if pres {
 						renderArgs(arg_type)
 					}
-					return
 				}
 			}
 
@@ -129,14 +166,11 @@ func executeHelp(
 					if pres {
 						renderArgs(arg_type)
 					}
-					return
 				}
 			}
 
 		}
 	}
-
-	fmt.Printf("Unknown function or plugin.\n")
 }
 
 func renderArgs(type_desc *vfilter.TypeDescription) {
@@ -164,6 +198,7 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 		fmt.Printf("  %v: %v (%v) %v %v\n", field, doc, desc.Target,
 			repeated, required)
 	}
+	fmt.Printf("\n")
 }
 
 func executeVQL(
@@ -182,7 +217,13 @@ func executeVQL(
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	switch *console_format {
+	format := *console_format
+	env_format, pres := scope.Resolve("FORMAT")
+	if pres {
+		format, _ = env_format.(string)
+	}
+
+	switch format {
 	case "text":
 		table := evalQueryToTable(ctx, scope, vql)
 		table.Render()
@@ -190,6 +231,8 @@ func executeVQL(
 		outputJSON(ctx, scope, vql)
 	case "csv":
 		outputCSV(ctx, scope, vql)
+	default:
+		fmt.Printf("Unknown format, to fix issue - SET FORMAT = json\n")
 	}
 }
 
@@ -197,6 +240,8 @@ var toplevel_commands = []prompt.Suggest{
 	{Text: "SELECT", Description: "Start a query"},
 	{Text: "LET", Description: "Assign a stored query"},
 	{Text: "HELP", Description: "Show help about plugins, functions etc"},
+	{Text: "SET", Description: "Set an environment variable"},
+	{Text: "PRINT", Description: "Print an environment variable"},
 }
 
 func console_completer(
@@ -224,6 +269,11 @@ func console_completer(
 	case "HELP":
 		return completeHELP(config_obj, scope, args, current_word)
 
+	case "SET":
+		return completeSET(config_obj, scope, args, current_word)
+
+	case "PRINT":
+		return completePRINT(config_obj, scope, args, current_word)
 	}
 
 	return []prompt.Suggest{}
@@ -322,6 +372,39 @@ func suggestLimit(scope *vfilter.Scope) []prompt.Suggest {
 		{Text: "LIMIT", Description: "Limit to this many rows"},
 		{Text: "ORDER BY", Description: "order results by a column"},
 	}
+}
+
+func completePRINT(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	args []string,
+	current_word string) []prompt.Suggest {
+
+	columns := suggestVars(scope)
+
+	sort.Slice(columns, func(i, j int) bool {
+		return columns[i].Text < columns[j].Text
+	})
+
+	return prompt.FilterHasPrefix(columns, current_word, true)
+}
+
+func completeSET(
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	args []string,
+	current_word string) []prompt.Suggest {
+
+	columns := []prompt.Suggest{
+		{Text: "FORMAT", Description: "Control the output format."},
+		{Text: "PAGER", Description: "Specify the output pager."},
+	}
+
+	sort.Slice(columns, func(i, j int) bool {
+		return columns[i].Text < columns[j].Text
+	})
+
+	return prompt.FilterHasPrefix(columns, current_word, true)
 }
 
 func completeHELP(

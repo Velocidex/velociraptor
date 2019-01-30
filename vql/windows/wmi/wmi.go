@@ -160,8 +160,8 @@ func getProperties(item *ole.IDispatch) ([]string, error) {
 
 // The VQL WMI plugin.
 type WMIQueryArgs struct {
-	Query     string `vfilter:"required,field=query"`
-	Namespace string `vfilter:"required,field=namespace"`
+	Query     string `vfilter:"required,field=query,doc=The WMI query to issue."`
+	Namespace string `vfilter:"optional,field=namespace,doc=The WMI namespace to use (ROOT/CIMV2)"`
 }
 
 func runWMIQuery(scope *vfilter.Scope,
