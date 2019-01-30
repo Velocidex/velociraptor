@@ -61,10 +61,10 @@ func eval_query(query string, scope *vfilter.Scope) {
 
 	switch *fs_command_format {
 	case "text":
-		table := evalQueryToTable(ctx, scope, vql)
+		table := evalQueryToTable(ctx, scope, vql, os.Stdout)
 		table.Render()
 	case "json":
-		outputJSON(ctx, scope, vql)
+		outputJSON(ctx, scope, vql, os.Stdout)
 	}
 }
 

@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -109,7 +110,7 @@ func executeSET(
 	set_re := regexp.MustCompile(`(?i)^\s*SET\s*([^\s]+)\s*=\s*(.+)`)
 	matches := set_re.FindStringSubmatch(t)
 	if matches != nil && len(matches) > 1 {
-		fmt.Printf("Setting %v to %v\n", matches[1], matches[2])
+		ConsoleLog.Info("Setting %v to %v\n", matches[1], matches[2])
 		scope.AppendVars(vfilter.NewDict().Set(matches[1], matches[2]))
 	}
 }
@@ -137,9 +138,9 @@ func executeHelp(
 
 			artifact, pres := repository.Get(name)
 			if !pres {
-				fmt.Printf("Unknown artifact\n")
+				ConsoleLog.Error("Unknown artifact %s\n", name)
 			} else {
-				fmt.Printf(artifact.Raw)
+				ConsoleLog.Markup(markupArtifact(artifact.Raw))
 			}
 
 		} else {
@@ -147,8 +148,12 @@ func executeHelp(
 			descriptions := scope.Describe(type_map)
 			for _, function := range descriptions.Functions {
 				if function.Name == arg {
-					fmt.Printf("Function %v:\n%v\n\n",
-						function.Name, function.Doc)
+					ConsoleLog.Markup(
+						fmt.Sprintf(`
+Function <important>%v</>:
+  <doc>%v</>
+
+`, function.Name, function.Doc))
 
 					arg_type, pres := type_map.Get(scope, function.ArgType)
 					if pres {
@@ -159,8 +164,11 @@ func executeHelp(
 
 			for _, plugin := range descriptions.Plugins {
 				if plugin.Name == arg {
-					fmt.Printf("VQL Plugin %v:\n%v\n\n",
-						plugin.Name, plugin.Doc)
+					ConsoleLog.Markup(fmt.Sprintf(`
+VQL Plugin <important>%v</>:
+ <doc>%v</>
+
+`, plugin.Name, plugin.Doc))
 
 					arg_type, pres := type_map.Get(scope, plugin.ArgType)
 					if pres {
@@ -177,16 +185,16 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 	re := regexp.MustCompile("doc=(.[^,]+)")
 	required_re := regexp.MustCompile("(^|,)required(,|$)")
 
-	fmt.Printf("Args:\n")
+	ConsoleLog.Markup("Args:\n")
 	for field, desc := range type_desc.Fields {
 		repeated := ""
 		if desc.Repeated {
-			repeated = "repeated"
+			repeated = "<repeated>repeated</>"
 		}
 
 		required := ""
 		if required_re.FindString(desc.Tag) != "" {
-			required = "required"
+			required = "<required>required</>"
 		}
 
 		doc := ""
@@ -195,10 +203,11 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 			doc = matches[1]
 		}
 
-		fmt.Printf("  %v: %v (%v) %v %v\n", field, doc, desc.Target,
-			repeated, required)
+		ConsoleLog.Markup(
+			fmt.Sprintf("  <name>%v</>: %v (<type>%v</>) %v %v\n",
+				field, doc, desc.Target, repeated, required))
 	}
-	fmt.Printf("\n")
+	ConsoleLog.Markup("\n")
 }
 
 func executeVQL(
@@ -208,7 +217,7 @@ func executeVQL(
 	t string) {
 	vql, err := vfilter.Parse(t)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
+		ConsoleLog.Error("Error: %v\n", err)
 		return
 	}
 
@@ -223,16 +232,27 @@ func executeVQL(
 		format, _ = env_format.(string)
 	}
 
+	var out io.WriteCloser = os.Stdout
+	env_pager, pres := scope.Resolve("PAGER")
+	if pres {
+		pager_cmd, _ := env_pager.(string)
+		pager, err := NewPager(pager_cmd)
+		if err == nil {
+			defer pager.Close()
+			out = pager.Writer
+		}
+	}
+
 	switch format {
 	case "text":
-		table := evalQueryToTable(ctx, scope, vql)
+		table := evalQueryToTable(ctx, scope, vql, out)
 		table.Render()
 	case "json":
-		outputJSON(ctx, scope, vql)
+		outputJSON(ctx, scope, vql, out)
 	case "csv":
-		outputCSV(ctx, scope, vql)
+		outputCSV(ctx, scope, vql, out)
 	default:
-		fmt.Printf("Unknown format, to fix issue - SET FORMAT = json\n")
+		ConsoleLog.Error("Unknown format, to fix issue - SET FORMAT = json\n")
 	}
 }
 
@@ -598,6 +618,17 @@ func doConsole() {
 		prompt.OptionMaxSuggestion(10),
 	)
 	p.Run()
+}
+
+var yaml_keywords = regexp.MustCompile(
+	`(name:|description:|parameters:|sources:|precondition:|queries:)`)
+
+var VQL_keywords = regexp.MustCompile(
+	`(SELECT|LET|FROM)`)
+
+func markupArtifact(str string) string {
+	str = yaml_keywords.ReplaceAllString(str, `<keyword>$1</>`)
+	return VQL_keywords.ReplaceAllString(str, `<VQL>$1</>`)
 }
 
 func init() {

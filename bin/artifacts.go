@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -115,13 +116,13 @@ func collectArtifact(
 
 		switch *artifact_command_collect_format {
 		case "text":
-			table := evalQueryToTable(ctx, scope, vql)
+			table := evalQueryToTable(ctx, scope, vql, os.Stdout)
 			table.SetCaption(true, "Artifact: "+artifact_name)
 			if table.NumLines() > 0 {
 				table.Render()
 			}
 		case "json":
-			outputJSON(ctx, scope, vql)
+			outputJSON(ctx, scope, vql, os.Stdout)
 		}
 	}
 }

@@ -20,6 +20,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 
@@ -57,22 +58,26 @@ var (
 )
 
 func outputJSON(ctx context.Context,
-	scope *vfilter.Scope, vql *vfilter.VQL) {
+	scope *vfilter.Scope,
+	vql *vfilter.VQL,
+	out io.Writer) {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
 	for {
 		result, ok := <-result_chan
 		if !ok {
 			return
 		}
-		os.Stdout.Write(result.Payload)
+		out.Write(result.Payload)
 	}
 }
 
 func outputCSV(ctx context.Context,
-	scope *vfilter.Scope, vql *vfilter.VQL) {
+	scope *vfilter.Scope,
+	vql *vfilter.VQL,
+	out io.Writer) {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
 
-	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{os.Stdout})
+	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{out})
 	kingpin.FatalIfError(err, "outputCSV")
 	defer csv_writer.Close()
 
@@ -103,10 +108,11 @@ func outputCSV(ctx context.Context,
 
 func evalQueryToTable(ctx context.Context,
 	scope *vfilter.Scope,
-	vql *vfilter.VQL) *tablewriter.Table {
+	vql *vfilter.VQL,
+	out io.Writer) *tablewriter.Table {
 
 	output_chan := vql.Eval(ctx, scope)
-	table := tablewriter.NewWriter(os.Stdout)
+	table := tablewriter.NewWriter(out)
 
 	columns := vql.Columns(scope)
 	table.SetHeader(*columns)
@@ -177,12 +183,12 @@ func doQuery() {
 
 		switch *format {
 		case "text":
-			table := evalQueryToTable(ctx, scope, vql)
+			table := evalQueryToTable(ctx, scope, vql, os.Stdout)
 			table.Render()
 		case "json":
-			outputJSON(ctx, scope, vql)
+			outputJSON(ctx, scope, vql, os.Stdout)
 		case "csv":
-			outputCSV(ctx, scope, vql)
+			outputCSV(ctx, scope, vql, os.Stdout)
 		}
 	}
 }

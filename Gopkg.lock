@@ -140,6 +140,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:e921c3d4324ffdcb4fd39d5f47a832f2112d44731a5f21d8ae0ccfe82e608711"
+  name = "github.com/daviddengcn/go-colortext"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "17e75f6184bc9e727756cd0d82e0af58b1fc7191"
+  version = "1.0.0"
+
+[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -659,6 +667,7 @@
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",
+    "github.com/daviddengcn/go-colortext",
     "github.com/dgrijalva/jwt-go",
     "github.com/dustin/go-humanize",
     "github.com/go-ole/go-ole",
