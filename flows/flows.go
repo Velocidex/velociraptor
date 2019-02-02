@@ -31,6 +31,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -46,6 +48,16 @@ import (
 
 var (
 	implementations map[string]FlowImplementation
+
+	flowStartCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "flow_start",
+		Help: "Total number of started flow.",
+	})
+
+	flowCompletionCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "flow_completion",
+		Help: "Total number of completed flow.",
+	})
 )
 
 type FlowImplementation struct {
@@ -184,6 +196,9 @@ func (self *FlowRunner) Close() {
 		// flows completing.
 		if cached_flow.FlowContext != nil &&
 			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
+
+			flowCompletionCounter.Inc()
+
 			row := vfilter.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).
 				Set("Flow", cached_flow)
@@ -644,6 +659,8 @@ func StartFlow(
 	if err != nil {
 		return nil, err
 	}
+
+	flowStartCounter.Inc()
 
 	err = flow_obj.impl.Save(config_obj, flow_obj)
 	if err != nil {

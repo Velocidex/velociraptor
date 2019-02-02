@@ -30,6 +30,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/crypto/acme/autocert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -38,7 +40,11 @@ import (
 )
 
 var (
-	healthy int32
+	healthy            int32
+	currentConnections = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "client_comms_current_connections",
+		Help: "Number of currently connected clients.",
+	})
 )
 
 func PrepareFrontendMux(
@@ -282,6 +288,9 @@ func server_pem(config_obj *api_proto.Config) http.Handler {
 	})
 }
 
+// This handler is used to receive messages from the client to the
+// server. These connections are short lived - the client will just
+// post its message and then disconnect.
 func control(server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
@@ -385,6 +394,10 @@ func control(server_obj *Server) http.Handler {
 	})
 }
 
+// This handler is used to send messages to the client. This
+// connection will persist up to Client.MaxPoll so we always have a
+// channel to the client. This allows us to send the client jobs
+// immediately with low latency.
 func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
@@ -396,6 +409,10 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 		if !ok {
 			panic("http handler is not a flusher")
 		}
+
+		// Keep track of currently connected clients.
+		currentConnections.Inc()
+		defer currentConnections.Dec()
 
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {

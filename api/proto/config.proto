@@ -316,6 +316,16 @@ message LoggingConfig {
 
 }
 
+message MonitoringConfig {
+    string bind_address = 1 [(sem_type) = {
+            description: "Address to bind monitoring endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
+        }];
+
+    uint32 bind_port = 2 [(sem_type) = {
+            description: "Port to bind monitoring port."
+        }];
+}
+
 message Config {
     Version version = 8 [(sem_type) = {
             description: "Version information."
@@ -372,5 +382,9 @@ message Config {
                "This option is incompatible with autocert_domain. "
                "Unlike autocert_domain we can listen on any port. "
                "This also forces the client to only trust certificates issued by our CA.",
+        }];
+
+    MonitoringConfig Monitoring = 25 [(sem_type) = {
+            description: "Where to bind prometheus monitoring endpoint.",
         }];
 }

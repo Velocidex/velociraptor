@@ -122,6 +122,10 @@ func GetDefaultConfig() *api_proto.Config {
 		},
 		Mail:    &api_proto.MailConfig{},
 		Logging: &api_proto.LoggingConfig{},
+		Monitoring: &api_proto.MonitoringConfig{
+			BindAddress: "127.0.0.1",
+			BindPort:    8003,
+		},
 	}
 }
 

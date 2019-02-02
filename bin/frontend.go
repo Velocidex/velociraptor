@@ -60,6 +60,9 @@ func init() {
 			// Increase resource limits.
 			server.IncreaseLimits(config_obj)
 
+			// Start monitoring.
+			api.StartMonitoringService(config_obj)
+
 			// Start the gRPC API server.
 			go func() {
 				err := api.StartServer(config_obj, server_obj)

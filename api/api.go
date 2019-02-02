@@ -23,8 +23,10 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -505,4 +507,27 @@ func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error 
 	}
 
 	return nil
+}
+
+func StartMonitoringService(config_obj *api_proto.Config) {
+	bind_addr := fmt.Sprintf("%s:%d",
+		config_obj.Monitoring.BindAddress,
+		config_obj.Monitoring.BindPort)
+
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+	server := &http.Server{
+		Addr:    bind_addr,
+		Handler: mux,
+	}
+
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			panic("Unable to listen on monitoring")
+		}
+	}()
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Launched Prometheus monitoring server on %v ", bind_addr)
 }

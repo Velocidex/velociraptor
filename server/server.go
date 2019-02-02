@@ -25,6 +25,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -33,6 +35,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/urns"
+)
+
+var (
+	concurrencyControl = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "client_comms_concurrency",
+		Help: "The total number of currently executing client recerive operations",
+	})
 )
 
 type NotificationPool struct {
@@ -123,10 +132,12 @@ func (self *Server) StartConcurrencyControl() {
 	// Wait here until we have enough room in the concurrency
 	// channel.
 	self.concurrency <- true
+	concurrencyControl.Inc()
 }
 
 func (self *Server) EndConcurrencyControl() {
 	<-self.concurrency
+	concurrencyControl.Dec()
 }
 
 func (self *Server) Close() {
