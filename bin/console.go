@@ -631,6 +631,10 @@ func doConsole() {
 		prompt.OptionPrefix("VQL > "),
 		prompt.OptionHistory(state.History),
 		prompt.OptionMaxSuggestion(10),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlDelete,
+			Fn:  prompt.DeleteWord,
+		}),
 	)
 	p.Run()
 }

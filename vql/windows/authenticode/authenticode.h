@@ -15,13 +15,30 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package plugins
 
-import (
-	_ "www.velocidex.com/golang/velociraptor/vql/windows"
-	_ "www.velocidex.com/golang/velociraptor/vql/windows/authenticode"
-	_ "www.velocidex.com/golang/velociraptor/vql/windows/dns"
-	_ "www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
-	_ "www.velocidex.com/golang/velociraptor/vql/windows/process"
-	_ "www.velocidex.com/golang/velociraptor/vql/windows/wmi"
-)
+#include <windows.h>
+#include <wchar.h>
+
+typedef struct {
+    wchar_t *filename;
+    wchar_t *program_name;
+    wchar_t *publisher_link;
+    wchar_t *more_info_link;
+    char *signer_cert_serial_number;
+    char *issuer_name;
+    char *subject_name;
+
+    char *timestamp_issuer_name;
+    char *timestamp_subject_name;
+    char *timestamp;
+
+    // Static strings - do not free.
+    char *trusted;
+} authenticode_data_struct;
+
+
+// Populate the authenticode_data_struct with information from the filename.
+int verify_file_authenticode(wchar_t *filename, authenticode_data_struct* result);
+
+// Free any C allocated strings.
+void free_authenticode_data_struct(authenticode_data_struct *data);

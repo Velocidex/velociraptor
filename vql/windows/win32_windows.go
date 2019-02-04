@@ -20,9 +20,10 @@ package windows
 //go:generate go run ../../tools/mksyscall_windows.go -output zwin32_windows.go win32_windows.go
 
 import (
-	"golang.org/x/sys/windows"
 	"reflect"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 func NewLazySystemDLL(name string) *windows.LazyDLL {

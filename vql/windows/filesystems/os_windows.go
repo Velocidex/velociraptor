@@ -142,7 +142,7 @@ func getAvailableDrives() ([]string, error) {
 	return result, nil
 }
 
-func getPath(path string) string {
+func GetPath(path string) string {
 	expanded_path, err := registry.ExpandString(path)
 	if err == nil {
 		path = expanded_path
@@ -207,7 +207,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 	// needed for windows since paths that do not end with a \\
 	// are interpreted incorrectly. Example readdir("c:") is not
 	// the same as readdir("c:\\")
-	dir_path := getPath(path) + "\\"
+	dir_path := GetPath(path) + "\\"
 
 	// Windows symlinks are buggy - a ReadDir() of a link to a
 	// directory fails and the caller needs to specially check for
@@ -229,7 +229,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 	files, err := ioutil.ReadDir(dir_path)
 	if err != nil {
 		// Maybe it is a symlink
-		link_path := getPath(path)
+		link_path := GetPath(path)
 		target, err := os.Readlink(link_path)
 		if err == nil {
 
@@ -251,13 +251,13 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 
 func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
-	path = getPath(path)
+	path = GetPath(path)
 	file, err := os.Open(path)
 	return file, err
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
-	stat, err := os.Lstat(getPath(path))
+	stat, err := os.Lstat(GetPath(path))
 	return &OSFileInfo{
 		FileInfo:   stat,
 		_full_path: path,
