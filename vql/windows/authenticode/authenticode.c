@@ -155,6 +155,7 @@ int verify_file_authenticode(wchar_t *filename, authenticode_data_struct* result
     SYSTEMTIME st;
 
     result->filename = AllocateAndCopyWideString(filename);
+    result->trusted = "unsigned";
 
     // Get message handle and store handle from the signed file.
     fResult = CryptQueryObject(CERT_QUERY_OBJECT_FILE,

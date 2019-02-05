@@ -118,7 +118,13 @@ func Query(query string, namespace string) ([]*vfilter.Dict, error) {
 					continue
 				}
 
-				row.Set(property, property_raw.Value())
+				switch property_raw.VT {
+				case ole.VT_UNKNOWN, ole.VT_DISPATCH:
+					// Do not set these because we
+					// cant do anything with them.
+				default:
+					row.Set(property, property_raw.Value())
+				}
 			}
 
 			result = append(result, row)

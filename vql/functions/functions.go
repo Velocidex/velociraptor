@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/base64"
 	"strconv"
+	"strings"
 	"time"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -55,6 +56,56 @@ func (self _Base64Decode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	return &vfilter.FunctionInfo{
 		Name:    "base64decode",
 		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
+	}
+}
+
+type _ToLowerArgs struct {
+	String string `vfilter:"required,field=string"`
+}
+
+type _ToLower struct{}
+
+func (self _ToLower) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_ToLowerArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("lowcase: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return strings.ToLower(arg.String)
+}
+
+func (self _ToLower) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "lowcase",
+		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
+	}
+}
+
+type _ToUpper struct{}
+
+func (self _ToUpper) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_ToLowerArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("upcase: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return strings.ToUpper(arg.String)
+}
+
+func (self _ToUpper) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "upcase",
+		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
 	}
 }
 
@@ -108,4 +159,6 @@ func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_Now{})
+	vql_subsystem.RegisterFunction(&_ToLower{})
+	vql_subsystem.RegisterFunction(&_ToUpper{})
 }
