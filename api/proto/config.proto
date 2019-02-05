@@ -56,6 +56,9 @@ message WindowsInstallerConfig {
             description: "Where should the binary be installed? The install command "
             "copies the binary to this location and installs the service.",
         }];
+    string service_description = 3 [(sem_type) = {
+            description: "Description for the windows service.",
+        }];
 }
 
 

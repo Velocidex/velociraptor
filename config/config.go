@@ -71,6 +71,7 @@ func GetDefaultConfig() *api_proto.Config {
 				ServiceName: "Velociraptor",
 				InstallPath: "$ProgramFiles\\Velociraptor\\" +
 					"Velociraptor.exe",
+				ServiceDescription: "Velociraptor service",
 			},
 
 			DarwinInstaller: &api_proto.DarwinInstallerConfig{

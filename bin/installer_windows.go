@@ -144,7 +144,7 @@ func doInstall(config_obj *api_proto.Config) (err error) {
 		}
 	}
 
-	err = installService(service_name, target_path, logger)
+	err = installService(config_obj, target_path, logger)
 	if err != nil {
 		return errors.Wrap(err, "Install service")
 	}
@@ -180,18 +180,22 @@ func checkServiceExists(name string) (bool, error) {
 	return false, nil
 }
 
-func installService(name string, executable string,
+func installService(
+	config_obj *api_proto.Config,
+	executable string,
 	logger *logging.LogContext) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
 	}
 	defer m.Disconnect()
-	s, err := m.CreateService(name, executable,
+	s, err := m.CreateService(
+		config_obj.Client.WindowsInstaller.ServiceName,
+		executable,
 		mgr.Config{
 			StartType:   mgr.StartAutomatic,
-			DisplayName: name,
-			Description: "Velociraptor service",
+			DisplayName: config_obj.Client.WindowsInstaller.ServiceName,
+			Description: config_obj.Client.WindowsInstaller.ServiceDescription,
 		},
 
 		// Executable will be started with this command line args:
