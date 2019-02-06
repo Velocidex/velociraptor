@@ -1,0 +1,3 @@
+Queries:
+  - SELECT Code, ModuleName FROM Artifact.Windows.Applications.OfficeMacros(
+        officeFileSearchGlob="c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\**10\\")

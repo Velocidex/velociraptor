@@ -58,7 +58,7 @@ var (
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
-		Default("text").Enum("text", "json")
+		Default("text").Enum("text", "json", "csv")
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"regex", "Regex of artifact names to collect.").
@@ -123,6 +123,9 @@ func collectArtifact(
 			}
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)
+
+		case "csv":
+			outputCSV(ctx, scope, vql, os.Stdout)
 		}
 	}
 }

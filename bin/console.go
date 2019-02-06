@@ -107,7 +107,7 @@ func executeSET(
 
 	state.History = append(state.History, t)
 
-	set_re := regexp.MustCompile(`(?i)^\s*SET\s*([^\s]+)\s*=\s*(.+)`)
+	set_re := regexp.MustCompile(`(?i)^\s*SET\s*([^\s]+)\s*=?\s*(.+)`)
 	matches := set_re.FindStringSubmatch(t)
 	if len(matches) > 1 {
 		ConsoleLog.Info("Setting %v to %v\n", matches[1], matches[2])

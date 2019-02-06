@@ -1,0 +1,18 @@
+SELECT Code, ModuleName FROM Artifact.Windows.Applications.OfficeMacros( officeFileSearchGlob="c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\**10\\")[
+ {
+  "Code": "Attribute VB_Name = \"ThisWorkbook\"\r\nAttribute VB_Base = \"0{00020819-0000-0000-C000-000000000046}\"\r\nAttribute VB_GlobalNameSpace = False\r\nAttribute VB_Creatable = False\r\nAttribute VB_PredeclaredId = True\r\nAttribute VB_Exposed = True\r\nAttribute VB_TemplateDerived = False\r\nAttribute VB_Customizable = True\r\nSub Run_Cmd(command, visibility, wait_on_execute)\r\nDim WshShell As Variant\r\nSet WshShell = CreateObject(\"WScript.Shell\")\r\nWshShell.Run \"%COMSPEC% /c \" \u0026 command, visibility, wait_on_execute\r\nEnd Sub\r\nSub Run_Program(program, arguments, visibility, wait_on_execute)\r\nDim WshShell As Variant\r\nSet WshShell = CreateObject(\"WScript.Shell\")\r\nWshShell.Run program \u0026 \" \" \u0026 arguments \u0026 \" \", visibility, wait_on_execute\r\nEnd Sub\r\n\r\nSub Workbook_Open()\r\nConst VISIBLE = 1, INVISIBLE = 0\r\nConst WAIT = True, NOWAIT = False\r\nRun_Cmd \"ping 127.0.0.1\", VISIBLE, WAIT\r\nRun_Program \"notepad.exe\", \"\", VISIBLE, NOWAIT\r\nEnd Sub\r\n",
+  "ModuleName": "ThisWorkbook"
+ },
+ {
+  "Code": "Attribute VB_Name = \"Sheet1\"\r\nAttribute VB_Base = \"0{00020820-0000-0000-C000-000000000046}\"\r\nAttribute VB_GlobalNameSpace = False\r\nAttribute VB_Creatable = False\r\nAttribute VB_PredeclaredId = True\r\nAttribute VB_Exposed = True\r\nAttribute VB_TemplateDerived = False\r\nAttribute VB_Customizable = True\r\n",
+  "ModuleName": "Sheet1"
+ },
+ {
+  "Code": "Attribute VB_Name = \"Sheet2\"\r\nAttribute VB_Base = \"0{00020820-0000-0000-C000-000000000046}\"\r\nAttribute VB_GlobalNameSpace = False\r\nAttribute VB_Creatable = False\r\nAttribute VB_PredeclaredId = True\r\nAttribute VB_Exposed = True\r\nAttribute VB_TemplateDerived = False\r\nAttribute VB_Customizable = True\r\n",
+  "ModuleName": "Sheet2"
+ },
+ {
+  "Code": "Attribute VB_Name = \"Sheet3\"\r\nAttribute VB_Base = \"0{00020820-0000-0000-C000-000000000046}\"\r\nAttribute VB_GlobalNameSpace = False\r\nAttribute VB_Creatable = False\r\nAttribute VB_PredeclaredId = True\r\nAttribute VB_Exposed = True\r\nAttribute VB_TemplateDerived = False\r\nAttribute VB_Customizable = True\r\n",
+  "ModuleName": "Sheet3"
+ }
+]
