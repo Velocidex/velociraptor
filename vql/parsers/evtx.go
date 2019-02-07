@@ -81,7 +81,7 @@ func _WriteEvents(
 			return last_event, nil
 		}
 
-		n, err := file.Read(chunk.Data)
+		n, err := io.ReadAtLeast(file, chunk.Data, len(chunk.Data))
 		if n != len(chunk.Data) || err != nil {
 			return last_event, nil
 		}
@@ -107,7 +107,7 @@ func _WriteEvents(
 			continue
 		}
 
-		for event_offset := range chunk.EventOffsets {
+		for _, event_offset := range chunk.EventOffsets {
 			event := chunk.ParseEvent(int64(event_offset))
 			item, err := event.GoEvtxMap(&chunk)
 			if err == nil {

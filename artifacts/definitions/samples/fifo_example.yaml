@@ -1,0 +1,78 @@
+name: Demo.Plugins.Fifo
+description: |
+  This is a demo of the fifo() plugin. The Fifo plugin collects and
+  caches rows from its inner query. Every subsequent execution of the
+  query then reads from the cache. The plugin will expire old rows
+  depending on its expiration policy - so we always see recent rows.
+
+  You can use this to build queries which consider historical events
+  together with current events at the same time. In this example, we
+  check for a successful logon preceeded by a number of failed logon
+  attempts.
+
+  In this example, we use the clock() plugin to simulate events. We
+  simulate failed logon attempts using the clock() plugin every
+  second. By feeding the failed logon events to the fifo() plugin we
+  ensure the fifo() plugin cache contains the last 5 failed logon
+  events.
+
+  We simulate a successful logon event every 3 seconds, again using
+  the clock plugin. Once a successful logon event is detected, we go
+  back over the last 5 login events, count them and collect the last
+  failed logon times (using the GROUP BY operator we group the
+  FailedTime for every unique SuccessTime).
+
+  If we receive more than 3 events, we emit the row.
+
+  This now represents a high value signal! It will only occur when a
+  successful logon event is preceeded by at least 3 failed logon
+  events in the last hour. It is now possible to escalate this on the
+  server via email or other alerts.
+
+  Here is sample output:
+
+  {
+    "Count": 5,
+    "FailedTime": [
+      1549527272,
+      1549527273,
+      1549527274,
+      1549527275,
+      1549527276
+    ],
+    "SuccessTime": 1549527277
+  },
+
+  Of course in the real artifact we would want to include more
+  information than just times (i.e. who logged on to where etc).
+
+sources:
+  - queries:
+      # This query simulates failed logon attempts.
+      - LET failed_logon = SELECT Unix as FailedTime from clock(period=1)
+
+      # This is the fifo which holds the last 5 failed logon attempts
+      # within the last hour.
+      - LET last_5_events = SELECT FailedTime
+            FROM fifo(query=failed_logon, max_rows=5, max_age=3600)
+
+      # We need to get it started collecting data immediately by
+      # materializing the cache contents. Otherwise the fifo wont
+      # start until it is first called (i.e. the first successful
+      # login and we will miss the failed events before hand).
+      - LET foo <= SELECT * FROM last_5_events
+
+      # This simulates successful logon - we assume every 3 seonds.
+      - LET success_logon = SELECT Unix as SuccessTime from clock(period=3)
+
+      # For each successful logon, query the last failed logon
+      # attempts from the fifo(). We also count the total number of
+      # failed logons. We only actually emit results if there are more
+      # than 3 failed logon attempts before each successful one.
+      - |
+        SELECT * FROM foreach(
+          row=success_logon,
+          query={
+           SELECT SuccessTime, FailedTime, count(items=FailedTime) as Count
+           FROM last_5_events GROUP BY SuccessTime
+          }) WHERE Count > 3
