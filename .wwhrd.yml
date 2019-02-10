@@ -8,3 +8,8 @@ whitelist:
   - NewBSD
   - FreeBSD
   - ISC
+  - MPL-2.0
+
+exceptions:
+  # Really MIT
+  - github.com/mattn/go-pointer

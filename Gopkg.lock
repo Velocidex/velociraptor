@@ -2,32 +2,12 @@
 
 
 [[projects]]
-  digest = "1:5ad08b0e14866764a6d7475eb11c9cf05cad9a52c442593bdfa544703ff77f61"
+  digest = "1:4d6f036ea3fe636bcb2e89850bcdc62a771354e157cd51b8b22a2de8562bf663"
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
   pruneopts = "UT"
-  revision = "0ebda48a7f143b1cce9eb37a8c1106ac762a3430"
-  version = "v0.34.0"
-
-[[projects]]
-  digest = "1:54bcfb06c1b456bed329aa04b06c91feb0fe83d993b3d315969c9c7b806b918d"
-  name = "github.com/0xrawsec/golang-evtx"
-  packages = ["evtx"]
-  pruneopts = "UT"
-  revision = "5e33e64ffcd64c074e825f525cec77751eb8920a"
-  version = "v1.1"
-
-[[projects]]
-  branch = "master"
-  digest = "1:7da6c31ac71c50f91f24b9e37ba0393000df9e3098ced86c064e5dd0c0e93cea"
-  name = "github.com/0xrawsec/golang-utils"
-  packages = [
-    "datastructs",
-    "encoding",
-    "log",
-  ]
-  pruneopts = "UT"
-  revision = "f4193a2e7f4582f9699f7c5898dd055ef530a762"
+  revision = "c9474f2f8deb81759839474b6bd1726bbfe1c1c4"
+  version = "v0.36.0"
 
 [[projects]]
   branch = "master"
@@ -132,12 +112,12 @@
   revision = "0efaee1733e3399a3cb88fc7d2ce340bf2e863d7"
 
 [[projects]]
-  digest = "1:8e18047715934056ed06c61d4d512ffd80787671d95bb1808cebb56adac56d34"
+  digest = "1:e570f0b2e12c65a3405722e0791f5c9f7c9a1c5545c6e3a7f50785b1b6b209ba"
   name = "github.com/clbanning/mxj"
   packages = ["."]
   pruneopts = "UT"
-  revision = "79cfe7d36986ce108bd1e2c1d0a2a85c895237a2"
-  version = "v1.8.3"
+  revision = "b0d71e6effe1addc982453290a91f15ba0a50922"
+  version = "v1.8.4"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -221,16 +201,16 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:1125fb981553dec25344f857eb68ccf2438c3696bc2f718acbb56321933490d0"
+  digest = "1:ec9b294ee624e9b87e31a8fa39a2a7724f90ce7af2055a9248100883d9956922"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
+    "internal",
     "runtime",
-    "runtime/internal",
     "utilities",
   ]
   pruneopts = "UT"
-  revision = "ae4bb97e7718691c8e0742a7c07989c91630e042"
-  version = "v1.6.4"
+  revision = "b7a5640779183161e8d6c3e51f60f0859b5559ba"
+  version = "v1.7.0"
 
 [[projects]]
   digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
@@ -407,7 +387,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5833c61ebbd625a6bad8e5a1ada2b3e13710cf3272046953a2c8915340fe60a3"
+  digest = "1:f0bb332b39488b057a8671557f307997426e5c650ee738a634a0697a41e207c5"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -416,7 +396,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "488faf799f863e27e50c516468f76ae8f1da20a5"
+  revision = "f8d8b3f739bd91a7c0462cb55235ef63c79c9abc"
 
 [[projects]]
   branch = "master"
@@ -451,7 +431,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:5331094ce2c687a921af5ec1367fe96e894e5b6866c2c3b8d415e86b65e69bce"
+  digest = "1:93c93626c76feac9d1908eb494d7b24e681ac2822d2a06c236f7a797b86bd6a5"
   name = "github.com/shirou/gopsutil"
   packages = [
     "cpu",
@@ -463,8 +443,8 @@
     "process",
   ]
   pruneopts = "UT"
-  revision = "ccc1c1016bc5d10e803189ee43417c50cdde7f1b"
-  version = "v2.18.12"
+  revision = "071446942108a03a13cf0717275ad3bdbcb691b4"
+  version = "v2.19.01"
 
 [[projects]]
   branch = "master"
@@ -504,7 +484,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cea8a31af44e77908c71e68561ce2e5992cf08d3ec29a3f9007f90c9b29bd001"
+  digest = "1:4078ffacb97ad7cd3968cc7acd20552234a8eb70cf5c84a7bc9d85bdcfc9ff3e"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -512,11 +492,11 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "ff983b9c42bc9fbf91556e191cc8efb585c16908"
+  revision = "193df9c0f06f8bb35fba505183eaf0acc0136505"
 
 [[projects]]
   branch = "master"
-  digest = "1:7fa68ab03ae56e5bdc672b90a11b260aa1c52e335f008781f2d60dec606c231f"
+  digest = "1:b44d6c56a7cfd6aee571ae0f762ddee5b850535bfd90f00171696d663c0551d7"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -532,11 +512,11 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "915654e7eabcea33ae277abbecf52f0d8b7a9fdc"
+  revision = "65e2d4e15006aab9813ff8769e768bbf4bb667a0"
 
 [[projects]]
   branch = "master"
-  digest = "1:c58bbfb91df5a7eae08cb9894f9897165f254e459f07666986cd448f9be4ad35"
+  digest = "1:511a6232760c10dcb1ebf1ab83ef0291e2baf801f203ca6314759c5458b73a6a"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -546,11 +526,11 @@
     "jwt",
   ]
   pruneopts = "UT"
-  revision = "36a7019397c4c86cf59eeab3bc0d188bac444277"
+  revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
 
 [[projects]]
   branch = "master"
-  digest = "1:c812cda507211187917c8a9e990e97521cb6f795c1415ac49e81ce1a352d2068"
+  digest = "1:2255dd68107e6aee994770b5a2ce7bc8d680540243813f8deab11bfcb845f751"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -562,7 +542,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "48ac38b7c8cbedd50b1613c0fccacfc7d88dfcdf"
+  revision = "3b5209105503162ded1863c307ac66fec31120dd"
 
 [[projects]]
   digest = "1:f85c8ec580dc0b7f57f2faa4e4339f3c7b761e51575d52110d3e2499724ca7bb"
@@ -625,7 +605,7 @@
   revision = "383e8b2c3b9e36c4076b235b32537292176bae20"
 
 [[projects]]
-  digest = "1:8c8ed249fa6a8db070bf2082f02052c697695fa5e1558b4e28dd0fb5f15f70a2"
+  digest = "1:468bc9b39a60a4ac6726976d60d32cb0fbcaf749fea4139be8cec53fdfbd82d5"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -663,8 +643,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "df014850f6dee74ba2fc94874043a9f3f75fbfd8"
-  version = "v1.17.0"
+  revision = "a02b0774206b209466313a0b525d2c738fe407eb"
+  version = "v1.18.0"
 
 [[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
@@ -689,6 +669,14 @@
   pruneopts = "UT"
   revision = "41f3572897373c5538c50a2402db15db079fa4fd"
   version = "2.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:75d514507b4df5d6f42aab7cda776419d4384e904e7d0daf1f2aa7233db8eb4c"
+  name = "www.velocidex.com/golang/evtx"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b45fe1505163c36b9bef14a414e70eb021fc4608"
 
 [[projects]]
   branch = "master"
@@ -726,8 +714,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/0xrawsec/golang-evtx/evtx",
-    "github.com/0xrawsec/golang-utils/encoding",
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
@@ -802,6 +788,7 @@
     "google.golang.org/grpc/status",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
+    "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/oleparse",
     "www.velocidex.com/golang/vfilter",

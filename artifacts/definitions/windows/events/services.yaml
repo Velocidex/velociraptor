@@ -25,5 +25,7 @@ sources:
                EventData.ImagePath as ImagePath,
                EventData.ServiceName as ServiceName,
                EventData.ServiceType as Type,
-               EventData as _EventData
-        FROM watch_evtx(filename=systemLogFile) WHERE EventID = '7045'
+               System.Security.UserID as UserSID,
+               EventData as _EventData,
+               System as _System
+        FROM watch_evtx(filename=systemLogFile) WHERE EventID = 7045
