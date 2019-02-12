@@ -41,7 +41,7 @@ sources:
         LET failed_logon = SELECT EventData as FailedEventData,
            System as FailedSystem
         FROM watch_evtx(filename=securityLogFile)
-        WHERE System.EventID = '4625'
+        WHERE System.EventID.Value = 4625
 
       - |
         LET last_5_events = SELECT FailedEventData, FailedSystem
@@ -56,7 +56,7 @@ sources:
         LET success_logon = SELECT EventData as SuccessEventData,
            System as SuccessSystem
         FROM watch_evtx(filename=securityLogFile)
-        WHERE System.EventID = '4624'
+        WHERE System.EventID.Value = 4624
 
       - |
         SELECT * FROM foreach(

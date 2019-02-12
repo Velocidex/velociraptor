@@ -48,7 +48,7 @@ var (
 func Xgo() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
-		"--targets", "windows/amd64,windows/x86,darwin/amd64,linux/amd64",
+		"--targets", "windows/*,darwin/amd64,linux/amd64",
 		"-tags", "release cgo",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")

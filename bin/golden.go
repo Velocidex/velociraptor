@@ -21,6 +21,8 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -32,7 +34,6 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	logging "www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -94,9 +95,7 @@ func runTest(fixture *testFixture) (string, error) {
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
-
+	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	vql_collector_args := vqlCollectorArgsFromFixture(
 		config_obj, fixture)
 	for _, env_spec := range vql_collector_args.Env {

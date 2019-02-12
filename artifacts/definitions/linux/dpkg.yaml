@@ -25,7 +25,7 @@ sources:
                    regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
       - |
         SELECT Record.Package as Package,
-               Record.InstalledSize as InstalledSize,
+               atoi(string=Record.InstalledSize) as InstalledSize,
                Record.Version as Version,
                Record.Source as Source,
                Record.Architecture as Architecture from packages

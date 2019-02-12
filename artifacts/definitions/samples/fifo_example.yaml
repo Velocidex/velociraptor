@@ -31,17 +31,19 @@ description: |
 
   Here is sample output:
 
-  {
-    "Count": 5,
-    "FailedTime": [
-      1549527272,
-      1549527273,
-      1549527274,
-      1549527275,
-      1549527276
-    ],
-    "SuccessTime": 1549527277
-  },
+  .. code-block:: json
+
+      {
+        "Count": 5,
+        "FailedTime": [
+          1549527272,
+          1549527273,
+          1549527274,
+          1549527275,
+          1549527276
+        ],
+        "SuccessTime": 1549527277
+      }
 
   Of course in the real artifact we would want to include more
   information than just times (i.e. who logged on to where etc).

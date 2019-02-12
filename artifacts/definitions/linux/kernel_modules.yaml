@@ -9,7 +9,11 @@ sources:
 
     queries:
       - |
-        SELECT * from split_records(
+        SELECT Name,
+          atoi(string=Size) As Size,
+          atoi(string=UseCount) As UseCount,
+          Status, Address
+        FROM split_records(
            filenames=ProcModules,
            regex='\\s+',
            columns=['Name', 'Size', 'UseCount', 'UsedBy', 'Status', 'Address'])

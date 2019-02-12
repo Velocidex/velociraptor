@@ -19,7 +19,9 @@ package filesystem
 
 import (
 	"context"
+	"io"
 
+	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -114,6 +116,7 @@ func (self ReadFilePlugin) processFile(
 	total_len := int64(0)
 	accessor := glob.GetAccessor(arg.Accessor, ctx)
 	fd, err := accessor.Open(file)
+
 	if err != nil {
 		scope.Log("%s: %s", self.Name(), err.Error())
 		return
@@ -127,11 +130,17 @@ func (self ReadFilePlugin) processFile(
 			return
 
 		default:
-			n, err := fd.Read(buf)
-			if err != nil || n == 0 {
+			n, err := io.ReadAtLeast(fd, buf, arg.Chunk)
+			if err != nil &&
+				errors.Cause(err) != io.ErrUnexpectedEOF &&
+				errors.Cause(err) != io.EOF {
+				scope.Log("read_file: %v", err)
 				return
 			}
 
+			if n == 0 {
+				return
+			}
 			response := &ReadFileResponse{
 				Data:     string(buf[:n]),
 				Offset:   total_len,
