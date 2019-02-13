@@ -1,0 +1,74 @@
+SELECT OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.Applications.Office.Keywords( searchGlob='c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files')[
+ {
+  "HexContext": [
+   [
+    "00000000  61 77 69 6e 67 22 20 78  6d 6c 6e 73 3a 77 31 34  |awing\" xmlns:w14|",
+    "00000010  3d 22 68 74 74 70 3a 2f  2f 73 63 68 65 6d 61 73  |=\"http://schemas|",
+    "00000020  2e 6d 69 63 72 6f 73 6f  66 74 2e 63 6f 6d 2f 6f  |.microsoft.com/o|",
+    "00000030  66 66 69 63 65 2f 77 6f  72 64 2f 32 30 31 30 2f  |ffice/word/2010/|",
+    "00000040  77 6f 72 64 6d 6c 22 20  6d 63 3a 49 67 6e 6f 72  |wordml\" mc:Ignor|",
+    "00000050  61 62 6c 65 3d 22 77 31  34 20 77 70 31 34 22 3e  |able=\"w14 wp14\"\u003e|",
+    "00000060  3c 77 3a 62 6f 64 79 3e  3c 77 3a 70 3e 3c 77 3a  |\u003cw:body\u003e\u003cw:p\u003e\u003cw:|",
+    "00000070  70 50 72 3e 3c 77 3a 70  53 74 79 6c 65 20 77 3a  |pPr\u003e\u003cw:pStyle w:|",
+    "00000080  76 61 6c 3d 22 4e 6f 72  6d 61 6c 22 2f 3e 3c 77  |val=\"Normal\"/\u003e\u003cw|",
+    "00000090  3a 72 50 72 3e 3c 2f 77  3a 72 50 72 3e 3c 2f 77  |:rPr\u003e\u003c/w:rPr\u003e\u003c/w|",
+    "000000a0  3a 70 50 72 3e 3c 77 3a  72 3e 3c 77 3a 72 50 72  |:pPr\u003e\u003cw:r\u003e\u003cw:rPr|",
+    "000000b0  3e 3c 2f 77 3a 72 50 72  3e 3c 77 3a 74 3e 54 68  |\u003e\u003c/w:rPr\u003e\u003cw:t\u003eTh|",
+    "000000c0  69 73 20 69 73 20 61 20  73 65 63 72 65 74 20 64  |is is a secret d|",
+    "000000d0  6f 63 75 6d 65 6e 74 2e  3c 2f 77 3a 74 3e 3c 2f  |ocument.\u003c/w:t\u003e\u003c/|",
+    "000000e0  77 3a 72 3e 3c 2f 77 3a  70 3e 3c 77 3a 70 3e 3c  |w:r\u003e\u003c/w:p\u003e\u003cw:p\u003e\u003c|",
+    "000000f0  77 3a 70 50 72 3e 3c 77  3a 70 53 74 79 6c 65 20  |w:pPr\u003e\u003cw:pStyle |",
+    "00000100  77 3a 76 61 6c 3d 22 4e  6f 72 6d 61 6c 22 2f 3e  |w:val=\"Normal\"/\u003e|",
+    "00000110  3c 77 3a 72 50 72 3e 3c  2f 77 3a 72 50 72 3e 3c  |\u003cw:rPr\u003e\u003c/w:rPr\u003e\u003c|",
+    "00000120  2f 77 3a 70 50 72 3e 3c  77 3a 72 3e 3c 77 3a 72  |/w:pPr\u003e\u003cw:r\u003e\u003cw:r|",
+    "00000130  50 72 3e 3c 2f 77 3a 72  50 72 3e 3c 2f 77 3a 72  |Pr\u003e\u003c/w:rPr\u003e\u003c/w:r|",
+    "00000140  3e 3c 2f 77 3a 70 3e 3c  77 3a 70 3e 3c 77 3a 70  |\u003e\u003c/w:p\u003e\u003cw:p\u003e\u003cw:p|",
+    "00000150  50 72 3e 3c 77 3a 70 53  74 79 6c 65 20 77 3a 76  |Pr\u003e\u003cw:pStyle w:v|",
+    "00000160  61 6c 3d 22 4e 6f 72 6d  61 6c 22 2f 3e 3c 77 3a  |al=\"Normal\"/\u003e\u003cw:|",
+    "00000170  72 50 72 3e 3c 2f 77 3a  72 50 72 3e 3c 2f 77 3a  |rPr\u003e\u003c/w:rPr\u003e\u003c/w:|",
+    "00000180  70 50 72 3e 3c 77 3a 72  3e 3c 77 3a 72 50 72 3e  |pPr\u003e\u003cw:r\u003e\u003cw:rPr\u003e|",
+    "00000190  3c 2f 77 3a 72 50                                 |\u003c/w:rP|",
+    ""
+   ]
+  ],
+  "InternalMtime": "2019-02-12T13:28:32Z",
+  "OfficePath": "\\\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.docx",
+  "OfficeSize": 4172
+ },
+ {
+  "HexContext": [
+   [
+    "00000000  74 3a 73 65 71 75 65 6e  63 65 2d 64 65 63 6c 20  |t:sequence-decl |",
+    "00000010  74 65 78 74 3a 64 69 73  70 6c 61 79 2d 6f 75 74  |text:display-out|",
+    "00000020  6c 69 6e 65 2d 6c 65 76  65 6c 3d 22 30 22 20 74  |line-level=\"0\" t|",
+    "00000030  65 78 74 3a 6e 61 6d 65  3d 22 44 72 61 77 69 6e  |ext:name=\"Drawin|",
+    "00000040  67 22 2f 3e 3c 74 65 78  74 3a 73 65 71 75 65 6e  |g\"/\u003e\u003ctext:sequen|",
+    "00000050  63 65 2d 64 65 63 6c 20  74 65 78 74 3a 64 69 73  |ce-decl text:dis|",
+    "00000060  70 6c 61 79 2d 6f 75 74  6c 69 6e 65 2d 6c 65 76  |play-outline-lev|",
+    "00000070  65 6c 3d 22 30 22 20 74  65 78 74 3a 6e 61 6d 65  |el=\"0\" text:name|",
+    "00000080  3d 22 46 69 67 75 72 65  22 2f 3e 3c 2f 74 65 78  |=\"Figure\"/\u003e\u003c/tex|",
+    "00000090  74 3a 73 65 71 75 65 6e  63 65 2d 64 65 63 6c 73  |t:sequence-decls|",
+    "000000a0  3e 3c 74 65 78 74 3a 70  20 74 65 78 74 3a 73 74  |\u003e\u003ctext:p text:st|",
+    "000000b0  79 6c 65 2d 6e 61 6d 65  3d 22 50 31 22 3e 54 68  |yle-name=\"P1\"\u003eTh|",
+    "000000c0  69 73 20 69 73 20 61 20  73 65 63 72 65 74 20 64  |is is a secret d|",
+    "000000d0  6f 63 75 6d 65 6e 74 2e  3c 2f 74 65 78 74 3a 70  |ocument.\u003c/text:p|",
+    "000000e0  3e 3c 74 65 78 74 3a 70  20 74 65 78 74 3a 73 74  |\u003e\u003ctext:p text:st|",
+    "000000f0  79 6c 65 2d 6e 61 6d 65  3d 22 50 31 22 2f 3e 3c  |yle-name=\"P1\"/\u003e\u003c|",
+    "00000100  74 65 78 74 3a 70 20 74  65 78 74 3a 73 74 79 6c  |text:p text:styl|",
+    "00000110  65 2d 6e 61 6d 65 3d 22  50 31 22 3e 46 69 6e 64  |e-name=\"P1\"\u003eFind|",
+    "00000120  20 6d 65 20 69 66 20 79  6f 75 20 63 61 6e 21 3c  | me if you can!\u003c|",
+    "00000130  2f 74 65 78 74 3a 70 3e  3c 2f 6f 66 66 69 63 65  |/text:p\u003e\u003c/office|",
+    "00000140  3a 74 65 78 74 3e 3c 2f  6f 66 66 69 63 65 3a 62  |:text\u003e\u003c/office:b|",
+    "00000150  6f 64 79 3e 3c 2f 6f 66  66 69 63 65 3a 64 6f 63  |ody\u003e\u003c/office:doc|",
+    "00000160  75 6d 65 6e 74 2d 63 6f  6e 74 65 6e 74 3e 00 00  |ument-content\u003e..|",
+    "00000170  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|",
+    "00000180  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|",
+    "00000190  00 00 00 00 00 00                                 |......|",
+    ""
+   ]
+  ],
+  "InternalMtime": "2019-02-12T13:34:12Z",
+  "OfficePath": "\\\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.odt",
+  "OfficeSize": 8678
+ }
+]

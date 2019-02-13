@@ -108,6 +108,22 @@ func Dev() error {
 	return err
 }
 
+// Build step for Appveyor.
+func Appveyor() error {
+	// Appveyor can cache the vendor directory in which case we do
+	// not need to run dep ensure at all. If the toml file is
+	// changed though it wont do it and we end up with an empty
+	// vendor directory.
+	files, err := ioutil.ReadDir("vendor")
+	if err != nil || len(files) == 0 {
+		sh.RunV("go", "get", "github.com/golang/dep")
+		sh.RunV("go", "get", "-u", "github.com/golang/dep/cmd/dep")
+		sh.RunV("dep", "ensure")
+	}
+
+	return Windows()
+}
+
 // Cross compile the windows binary using mingw
 func Windows() error {
 	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {

@@ -17,14 +17,11 @@ install:
     mklink c:\Users\link c:\Windows
     go version
     go env
-    go get github.com/golang/dep
-    go get -u github.com/golang/dep/cmd/dep
-    dep ensure
 
 build_script:
 - cmd: |
     regedit /S artifacts/testdata/windows/init.reg
-    go run make.go -v windows
+    go run make.go -v appveyor
 
 test_script:
 - cmd: output\velociraptor.exe golden artifacts\testdata\windows\
