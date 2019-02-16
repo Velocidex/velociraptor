@@ -21,7 +21,6 @@ package api
 
 import (
 	"archive/zip"
-	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/schema"
+	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -476,4 +476,33 @@ func vfsFolderDownloadHandler(
 				return nil
 			})
 	})
+}
+
+func vfsGetBuffer(
+	config_obj *api_proto.Config,
+	client_id string, vfs_path string, offset uint64, length uint32) (
+	*api_proto.VFSFileBuffer, error) {
+
+	file, err := getFileForVFSPath(
+		config_obj, client_id, vfs_path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	file.Seek(int64(offset), 0)
+
+	result := &api_proto.VFSFileBuffer{
+		Data: make([]byte, length),
+	}
+
+	n, err := io.ReadAtLeast(file, result.Data, len(result.Data))
+	if err != nil && errors.Cause(err) != io.EOF &&
+		errors.Cause(err) != io.ErrUnexpectedEOF {
+		return nil, err
+	}
+
+	result.Data = result.Data[:n]
+
+	return result, nil
 }

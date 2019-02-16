@@ -18,8 +18,10 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 
+	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	"gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -35,8 +37,12 @@ type CommandHandler func(command string) bool
 var (
 	app = kingpin.New("velociraptor",
 		"An advanced incident response and monitoring agent.")
+
 	config_path = app.Flag("config", "The configuration file.").Short('c').
 			Envar("VELOCIRAPTOR_CONFIG").String()
+
+	api_config_path = app.Flag("api_config", "The API configuration file.").Short('a').
+			Envar("VELOCIRAPTOR_API_CONFIG").String()
 
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
@@ -68,12 +74,24 @@ func get_server_config(config_path string) (*api_proto.Config, error) {
 	return config_obj, err
 }
 
+func maybe_parse_api_config(config_obj *api_proto.Config) {
+	if *api_config_path != "" {
+		fd, err := os.Open(*api_config_path)
+		kingpin.FatalIfError(err, "Unable to read api config.")
+
+		data, err := ioutil.ReadAll(fd)
+		kingpin.FatalIfError(err, "Unable to read api config.")
+		err = yaml.Unmarshal(data, &config_obj.ApiConfig)
+		kingpin.FatalIfError(err, "Unable to decode config.")
+	}
+}
+
 func get_config_or_default() *api_proto.Config {
 	config_obj, err := config.LoadConfig(*config_path)
 	if err != nil {
 		config_obj = config.GetDefaultConfig()
 	}
-
+	maybe_parse_api_config(config_obj)
 	return config_obj
 }
 

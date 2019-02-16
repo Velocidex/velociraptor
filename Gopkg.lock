@@ -213,6 +213,19 @@
   version = "v1.7.0"
 
 [[projects]]
+  digest = "1:b934afd6ff135f3f1c9a5c573247aaa7c81d9653fb52f59b802ebc7ab809b79f"
+  name = "github.com/hanwen/go-fuse"
+  packages = [
+    "fuse",
+    "fuse/nodefs",
+    "fuse/pathfs",
+    "splice",
+  ]
+  pruneopts = "UT"
+  revision = "5690be47d614355a22931c129e1075c25a62e9ac"
+  version = "v20170619"
+
+[[projects]]
   digest = "1:8ec8d88c248041a6df5f6574b87bc00e7e0b493881dad2e7ef47b11dc69093b5"
   name = "github.com/hashicorp/golang-lru"
   packages = [
@@ -740,6 +753,9 @@
     "github.com/gorilla/schema",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/hanwen/go-fuse/fuse",
+    "github.com/hanwen/go-fuse/fuse/nodefs",
+    "github.com/hanwen/go-fuse/fuse/pathfs",
     "github.com/lestrrat-go/file-rotatelogs",
     "github.com/magefile/mage/mage",
     "github.com/magefile/mage/mg",

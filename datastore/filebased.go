@@ -371,13 +371,15 @@ func init() {
 var hexTable = []rune("0123456789ABCDEF")
 
 // We are very conservative about our escaping.
-func shouldEscape(c rune) bool {
-	if 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' {
+func shouldEscape(c byte) bool {
+	if 'A' <= c && c <= 'Z' ||
+		'a' <= c && c <= 'z' ||
+		'0' <= c && c <= '9' {
 		return false
 	}
 
 	switch c {
-	case '-', '_', '.', '~':
+	case '-', '_', '.', '~', ' ', '$':
 		return false
 	}
 
@@ -397,12 +399,12 @@ func SanitizeString(component string) []rune {
 		component += "_"
 	}
 
-	result := make([]rune, len(component)*3)
+	result := make([]rune, len(component)*4)
 	result_idx := 0
 
-	for _, c := range component {
+	for _, c := range []byte(component) {
 		if !shouldEscape(c) {
-			result[result_idx] = c
+			result[result_idx] = rune(c)
 			result_idx += 1
 		} else {
 			result[result_idx] = '%'

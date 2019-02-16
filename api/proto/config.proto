@@ -390,4 +390,8 @@ message Config {
     MonitoringConfig Monitoring = 25 [(sem_type) = {
             description: "Where to bind prometheus monitoring endpoint.",
         }];
+
+    ApiClientConfig api_config = 26 [(sem_type) = {
+            description: "If we loaded the api config we load this into the global config.",
+        }];
 }

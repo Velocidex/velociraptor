@@ -41,18 +41,28 @@ func getCreds(config_obj *api_proto.Config) credentials.TransportCredentials {
 	defer mu.Unlock()
 
 	if creds == nil {
+		certificate := config_obj.Frontend.Certificate
+		private_key := config_obj.Frontend.PrivateKey
+		ca_certificate := config_obj.Client.CaCertificate
+
+		if config_obj.ApiConfig.ClientCert != "" {
+			certificate = config_obj.ApiConfig.ClientCert
+			private_key = config_obj.ApiConfig.ClientPrivateKey
+			ca_certificate = config_obj.ApiConfig.CaCertificate
+		}
+
 		// We use the Frontend's certificate because this connection
 		// represents an internal connection.
 		cert, err := tls.X509KeyPair(
-			[]byte(config_obj.Frontend.Certificate),
-			[]byte(config_obj.Frontend.PrivateKey))
+			[]byte(certificate),
+			[]byte(private_key))
 		if err != nil {
 			return nil
 		}
 
 		// The server cert must be signed by our CA.
 		CA_Pool := x509.NewCertPool()
-		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+		CA_Pool.AppendCertsFromPEM([]byte(ca_certificate))
 
 		creds = credentials.NewTLS(&tls.Config{
 			Certificates: []tls.Certificate{cert},
@@ -70,7 +80,7 @@ func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
 	con, err := grpc.Dial(address, grpc.WithTransportCredentials(
 		getCreds(config_obj)))
 	if err != nil {
-		panic(fmt.Sprintf("Unable to connect to self: %v: %v", address, err))
+		panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
 	}
 	return con
 }

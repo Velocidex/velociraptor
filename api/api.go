@@ -359,6 +359,17 @@ func (self *ApiServer) VFSRefreshDirectory(
 	return result, err
 }
 
+func (self *ApiServer) VFSGetBuffer(
+	ctx context.Context,
+	in *api_proto.VFSFileBuffer) (
+	*api_proto.VFSFileBuffer, error) {
+
+	result, err := vfsGetBuffer(
+		self.config, in.ClientId, in.VfsPath, in.Offset, in.Length)
+
+	return result, err
+}
+
 func (self *ApiServer) GetTable(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {

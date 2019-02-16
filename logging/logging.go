@@ -168,6 +168,8 @@ func (self *LogManager) makeNewComponent(
 	if !SuppressLogging {
 		stderr_map[logrus.DebugLevel] = os.Stderr
 		stderr_map[logrus.InfoLevel] = os.Stderr
+		stderr_map[logrus.WarnLevel] = os.Stderr
+		stderr_map[logrus.ErrorLevel] = os.Stderr
 	}
 
 	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{}))

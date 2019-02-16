@@ -9,6 +9,7 @@ environment:
 
 cache:
   - c:\gopath\src\www.velocidex.com\golang\velociraptor\vendor -> Gopkg.lock
+  - c:\gopath\src\github.com -> Gopkg.lock
 
 install:
 - cmd: |
@@ -21,6 +22,7 @@ install:
 build_script:
 - cmd: |
     regedit /S artifacts/testdata/windows/init.reg
+    go get github.com/magefile/mage/mage
     go run make.go -v appveyor
 
 test_script:

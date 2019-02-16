@@ -127,6 +127,7 @@ func GetDefaultConfig() *api_proto.Config {
 			BindAddress: "127.0.0.1",
 			BindPort:    8003,
 		},
+		ApiConfig: &api_proto.ApiClientConfig{},
 	}
 }
 

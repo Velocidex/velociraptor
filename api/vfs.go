@@ -178,30 +178,29 @@ func renderFileStore(
 	filestore_urn := path.Join(prefix, vfs_path)
 	items, err := file_store.GetFileStore(config_obj).
 		ListDirectory(filestore_urn)
-	if err != nil {
-		return &actions_proto.VQLResponse{}, nil
-	}
-
-	for _, item := range items {
-		row := &FileInfoRow{
-			Name:      item.Name(),
-			Size:      item.Size(),
-			Timestamp: item.ModTime(),
-		}
-
-		if item.IsDir() {
-			row.Mode = "dr-xr-xr-x"
-		} else {
-			row.Mode = "-r--r--r--"
-			row.Download = &DownloadInfo{
-				VfsPath: path.Join(vfs_path, item.Name()),
-				Size:    item.Size(),
-				Mtime:   item.ModTime().UnixNano() / 1000,
+	if err == nil {
+		for _, item := range items {
+			row := &FileInfoRow{
+				Name:      item.Name(),
+				Size:      item.Size(),
+				Timestamp: item.ModTime(),
 			}
-		}
 
-		rows = append(rows, row)
+			if item.IsDir() {
+				row.Mode = "dr-xr-xr-x"
+			} else {
+				row.Mode = "-r--r--r--"
+				row.Download = &DownloadInfo{
+					VfsPath: path.Join(vfs_path, item.Name()),
+					Size:    item.Size(),
+					Mtime:   item.ModTime().UnixNano() / 1000,
+				}
+			}
+
+			rows = append(rows, row)
+		}
 	}
+
 	encoded_rows, err := json.MarshalIndent(rows, "", " ")
 	if err != nil {
 		return nil, err

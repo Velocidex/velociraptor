@@ -47,6 +47,17 @@ message VFSRefreshDirectoryRequest {
         }];
 }
 
+message VFSFileBuffer {
+    string client_id = 1;
+    string vfs_path = 2 [(sem_type) = {
+            description: "The VFS Path to list files in .",
+        }];
+
+    uint64 offset = 3;
+    uint32 length = 4;
+    bytes data = 5;
+}
+
 
 message NotificationRequest {
     string client_id = 1;
@@ -174,6 +185,11 @@ service API {
             body: "*",
         };
     }
+
+    rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
+        // Not accessible via the GUI - the gui can access the
+        // download handlers directly.
+    };
 
     rpc GetTable(GetTableRequest) returns (GetTableResponse) {
         option (google.api.http) = {
