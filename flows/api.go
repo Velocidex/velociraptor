@@ -60,11 +60,19 @@ func GetFlows(
 			continue
 		}
 
+		// Skip system flows - they are hidden from users
+		// because they are internal and users cant interact
+		// with them anyway.
+		flow_id := path.Base(urn)
+		if flow_id == "F.Monitoring" {
+			continue
+		}
+
 		if flow_obj.RunnerArgs != nil {
 			item := &api_proto.ApiFlow{
 				Urn:        urn,
 				ClientId:   client_id,
-				FlowId:     path.Base(urn),
+				FlowId:     flow_id,
 				Name:       flow_obj.RunnerArgs.FlowName,
 				RunnerArgs: flow_obj.RunnerArgs,
 				Context:    flow_obj.FlowContext,
