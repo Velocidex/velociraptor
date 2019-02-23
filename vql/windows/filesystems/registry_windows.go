@@ -31,12 +31,12 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
+	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -246,6 +246,8 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	}
 	defer key.Close()
 
+	full_key_path := filepath.Join(hive_name, key_path)
+
 	// Now enumerate the subkeys
 	subkeys, err := key.ReadSubKeyNames(-1)
 	if err != nil {
@@ -262,8 +264,13 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		}
 		defer subkey.Close()
 
-		key_info, err := getKeyInfo(
-			subkey, filepath.Join(hive_name, key_path, subkey_name))
+		full_path := filepath.Join(hive_name, key_path, subkey_name)
+		// Handle the case where subkey_name contains slashes.
+		if strings.Contains(subkey_name, "/") {
+			full_path = hive_name + "\\" + key_path + "\"" + subkey_name + "\""
+		}
+
+		key_info, err := getKeyInfo(subkey, full_path, subkey_name)
 		if err != nil {
 			continue
 		}
@@ -279,7 +286,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	for _, value_name := range values {
 		value_info, err := getValueInfo(
 			key,
-			filepath.Join(hive_name, key_path),
+			full_key_path,
 			value_name)
 		if err != nil {
 			continue
@@ -346,17 +353,21 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 	}
 	defer key.Close()
 
-	return getKeyInfo(key, key_path)
+	return getKeyInfo(key, key_path, "")
 }
 
-func getKeyInfo(key registry.Key, key_path string) (*RegKeyInfo, error) {
+func getKeyInfo(key registry.Key, key_path string, name string) (*RegKeyInfo, error) {
 	stat, err := key.Stat()
 	if err != nil {
 		return nil, err
 	}
 
+	if name == "" {
+		name = filepath.Base(key_path)
+	}
+
 	return &RegKeyInfo{
-		_name:      filepath.Base(key_path),
+		_name:      name,
 		_modtime:   stat.ModTime(),
 		_full_path: key_path,
 		_data:      vfilter.NewDict().Set("type", "key"),
@@ -495,12 +506,26 @@ func (self *RegFileSystemAccessor) GetRoot(path string) (string, string, error) 
 }
 
 // We accept both / and \ as a path separator
-func (self *RegFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("[\\\\/]")
+func (self *RegFileSystemAccessor) PathSplit(path string) []string {
+	return regparser.SplitComponents(path)
 }
 
-func (self *RegFileSystemAccessor) PathSep() string {
-	return "\\"
+func (self *RegFileSystemAccessor) PathJoin(components []string) string {
+	// First component is the URL part (the root).
+	escaped_components := []string{components[0]}
+	for _, i := range components[1:] {
+		// If any of the subsequent components contain
+		// a slash then escape them together.
+		if strings.Contains(i, "/") {
+			escaped_components = append(escaped_components,
+				"\""+i+"\"")
+		} else {
+			escaped_components = append(escaped_components, i)
+		}
+
+	}
+
+	return filepath.Join(escaped_components...)
 }
 
 func init() {

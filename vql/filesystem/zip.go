@@ -180,7 +180,7 @@ type _CDLookup struct {
 	info       *zip.File
 }
 
-type ZileFileCache struct {
+type ZipFileCache struct {
 	zip_file *zip.Reader
 	fd       glob.ReadSeekCloser
 	lookup   []_CDLookup
@@ -188,11 +188,11 @@ type ZileFileCache struct {
 
 type ZipFileSystemAccessor struct {
 	mu       sync.Mutex
-	fd_cache map[string]*ZileFileCache
+	fd_cache map[string]*ZipFileCache
 }
 
 func (self *ZipFileSystemAccessor) GetZipFile(
-	file_path string) (*ZileFileCache, *url.URL, error) {
+	file_path string) (*ZipFileCache, *url.URL, error) {
 	url, err := url.Parse(file_path)
 	if err != nil {
 		return nil, nil, err
@@ -231,8 +231,10 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 			return nil, nil, err
 		}
 
-		zip_file_cache = &ZileFileCache{
-			zip_file: zip_file, fd: fd}
+		zip_file_cache = &ZipFileCache{
+			zip_file: zip_file,
+			fd:       fd,
+		}
 
 		self.fd_cache[url.String()] = zip_file_cache
 
@@ -324,12 +326,14 @@ func (self *ZipFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 	return &SeekableZip{fd, info}, nil
 }
 
-func (self *ZipFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("/")
+var ZipFileSystemAccessor_re = regexp.MustCompile("/")
+
+func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
+	return ZipFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self *ZipFileSystemAccessor) PathSep() string {
-	return "/"
+func (self ZipFileSystemAccessor) PathJoin(components []string) string {
+	return path.Join(components...)
 }
 
 func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, error) {
@@ -396,7 +400,7 @@ loop:
 
 func (self ZipFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
 	result := &ZipFileSystemAccessor{
-		fd_cache: make(map[string]*ZileFileCache),
+		fd_cache: make(map[string]*ZipFileCache),
 	}
 
 	// When the context is done, close all the files.
@@ -409,7 +413,7 @@ func (self ZipFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccess
 			for _, v := range result.fd_cache {
 				v.fd.Close()
 			}
-			result.fd_cache = make(map[string]*ZileFileCache)
+			result.fd_cache = make(map[string]*ZipFileCache)
 		}
 	}()
 

@@ -66,7 +66,7 @@ func (self ReadKeyValues) Call(
 			continue
 		}
 		root = item_root
-		globber.Add(item_path, accessor.PathSplit())
+		globber.Add(item_path, accessor.PathSplit)
 	}
 	go func() {
 		defer close(output_chan)

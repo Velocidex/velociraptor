@@ -324,7 +324,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, errors.New("Unable to open raw device")
 	}
 
-	components := self.PathSplit().Split(subpath, -1)
+	components := self.PathSplit(subpath)
 
 	root, err := self.getRootMFTEntry(device)
 	if err != nil {
@@ -336,7 +336,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, err
 	}
 
-	dirname := strings.Join(components[:len(components)-1], self.PathSep())
+	dirname := self.PathJoin(components[:len(components)-1])
 	dir, err := root.Open(dirname)
 	if err != nil {
 		return nil, err
@@ -366,14 +366,14 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 		return nil, errors.New("Unable to open raw device")
 	}
 
-	components := self.PathSplit().Split(subpath, -1)
+	components := self.PathSplit(subpath)
 
 	root, err := self.getRootMFTEntry(device)
 	if err != nil {
 		return nil, err
 	}
 
-	dirname := strings.Join(components[:len(components)-1], self.PathSep())
+	dirname := self.PathJoin(components[:len(components)-1])
 	dir, err := root.Open(dirname)
 	if err != nil {
 		return nil, err
@@ -419,12 +419,14 @@ func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error)
 }
 
 // We accept both / and \ as a path separator
-func (self *NTFSFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("[\\\\/]")
+var NTFSFileSystemAccessor_re = regexp.MustCompile("[\\\\/]")
+
+func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
+	return NTFSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self *NTFSFileSystemAccessor) PathSep() string {
-	return "\\"
+func (self NTFSFileSystemAccessor) PathJoin(components []string) string {
+	return filepath.Join(components...)
 }
 
 // We want to show the entire device as one name so we need to escape

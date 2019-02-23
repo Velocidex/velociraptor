@@ -32,7 +32,7 @@ SELECT OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.A
    ]
   ],
   "InternalMtime": "2019-02-12T13:28:32Z",
-  "OfficePath": "\\\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.docx",
+  "OfficePath": "\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.docx",
   "OfficeSize": 4172
  },
  {
@@ -68,7 +68,7 @@ SELECT OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.A
    ]
   ],
   "InternalMtime": "2019-02-12T13:34:12Z",
-  "OfficePath": "\\\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.odt",
+  "OfficePath": "\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.odt",
   "OfficeSize": 8678
  }
 ]

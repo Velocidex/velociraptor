@@ -64,7 +64,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 func TestConvertToPathComponent(t *testing.T) {
 	for _, fixture := range pathComponentsTestFixture {
 		if components, err := convert_glob_into_path_components(
-			fixture.pattern, regexp.MustCompile("/")); err == nil {
+			fixture.pattern, MockFileSystemAccessor{}.PathSplit); err == nil {
 			if reflect.DeepEqual(fixture.components, components) {
 				continue
 			}
@@ -157,12 +157,13 @@ func (self MockFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
 }
 
-func (self MockFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("/")
+func (self MockFileSystemAccessor) PathSplit(path string) []string {
+	re := regexp.MustCompile("/")
+	return re.Split(path, -1)
 }
 
-func (self MockFileSystemAccessor) PathSep() string {
-	return "/"
+func (self MockFileSystemAccessor) PathJoin(components []string) string {
+	return path.Join(components...)
 }
 
 func (self MockFileSystemAccessor) GetRoot(filepath string) (string, string, error) {
@@ -220,7 +221,7 @@ func TestGlobWithContext(t *testing.T) {
 
 		globber := &Globber{}
 		for _, pattern := range fixture.patterns {
-			err := globber.Add(pattern, regexp.MustCompile("/"))
+			err := globber.Add(pattern, MockFileSystemAccessor{}.PathSplit)
 			if err != nil {
 				t.Fatalf("Failed %v", err)
 			}

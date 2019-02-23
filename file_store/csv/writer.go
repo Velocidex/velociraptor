@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -55,8 +56,11 @@ func AnyToString(item vfilter.Any) string {
 	value := ""
 
 	switch t := item.(type) {
-	case float64, float32:
-		value = fmt.Sprintf("%f", item)
+	case float32:
+		value = strconv.FormatFloat(float64(t), 'f', -1, 64)
+
+	case float64:
+		value = strconv.FormatFloat(t, 'f', -1, 64)
 
 	case int, int16, int32, int64, uint16, uint32, uint64, bool:
 		value = fmt.Sprintf("%v", item)

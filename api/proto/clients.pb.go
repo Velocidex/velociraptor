@@ -3,14 +3,12 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	_ "google.golang.org/genproto/googleapis/api/annotations"
-	math "math"
-	proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
-	_ "www.velocidex.com/golang/velociraptor/proto"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import _ "google.golang.org/genproto/googleapis/api/annotations"
+import proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
+import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -21,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type ApiClient_IPAddressClass int32
 
@@ -38,7 +36,6 @@ var ApiClient_IPAddressClass_name = map[int32]string{
 	2: "EXTERNAL",
 	3: "VPN",
 }
-
 var ApiClient_IPAddressClass_value = map[string]int32{
 	"UNKNOWN":  0,
 	"INTERNAL": 1,
@@ -49,9 +46,8 @@ var ApiClient_IPAddressClass_value = map[string]int32{
 func (x ApiClient_IPAddressClass) String() string {
 	return proto.EnumName(ApiClient_IPAddressClass_name, int32(x))
 }
-
 func (ApiClient_IPAddressClass) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{1, 0}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{1, 0}
 }
 
 type SearchClientsRequest_QueryType int32
@@ -65,7 +61,6 @@ var SearchClientsRequest_QueryType_name = map[int32]string{
 	0: "VALUE",
 	1: "KEY",
 }
-
 var SearchClientsRequest_QueryType_value = map[string]int32{
 	"VALUE": 0,
 	"KEY":   1,
@@ -74,9 +69,8 @@ var SearchClientsRequest_QueryType_value = map[string]int32{
 func (x SearchClientsRequest_QueryType) String() string {
 	return proto.EnumName(SearchClientsRequest_QueryType_name, int32(x))
 }
-
 func (SearchClientsRequest_QueryType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{3, 0}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{3, 0}
 }
 
 // GRR uses an int for client_version which is difficult to use
@@ -95,17 +89,16 @@ func (m *AgentInformation) Reset()         { *m = AgentInformation{} }
 func (m *AgentInformation) String() string { return proto.CompactTextString(m) }
 func (*AgentInformation) ProtoMessage()    {}
 func (*AgentInformation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{0}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{0}
 }
-
 func (m *AgentInformation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AgentInformation.Unmarshal(m, b)
 }
 func (m *AgentInformation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AgentInformation.Marshal(b, m, deterministic)
 }
-func (m *AgentInformation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AgentInformation.Merge(m, src)
+func (dst *AgentInformation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AgentInformation.Merge(dst, src)
 }
 func (m *AgentInformation) XXX_Size() int {
 	return xxx_messageInfo_AgentInformation.Size(m)
@@ -163,17 +156,16 @@ func (m *ApiClient) Reset()         { *m = ApiClient{} }
 func (m *ApiClient) String() string { return proto.CompactTextString(m) }
 func (*ApiClient) ProtoMessage()    {}
 func (*ApiClient) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{1}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{1}
 }
-
 func (m *ApiClient) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiClient.Unmarshal(m, b)
 }
 func (m *ApiClient) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiClient.Marshal(b, m, deterministic)
 }
-func (m *ApiClient) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiClient.Merge(m, src)
+func (dst *ApiClient) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiClient.Merge(dst, src)
 }
 func (m *ApiClient) XXX_Size() int {
 	return xxx_messageInfo_ApiClient.Size(m)
@@ -293,17 +285,16 @@ func (m *Interface) Reset()         { *m = Interface{} }
 func (m *Interface) String() string { return proto.CompactTextString(m) }
 func (*Interface) ProtoMessage()    {}
 func (*Interface) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{2}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{2}
 }
-
 func (m *Interface) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Interface.Unmarshal(m, b)
 }
 func (m *Interface) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Interface.Marshal(b, m, deterministic)
 }
-func (m *Interface) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Interface.Merge(m, src)
+func (dst *Interface) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Interface.Merge(dst, src)
 }
 func (m *Interface) XXX_Size() int {
 	return xxx_messageInfo_Interface.Size(m)
@@ -336,17 +327,16 @@ func (m *SearchClientsRequest) Reset()         { *m = SearchClientsRequest{} }
 func (m *SearchClientsRequest) String() string { return proto.CompactTextString(m) }
 func (*SearchClientsRequest) ProtoMessage()    {}
 func (*SearchClientsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{3}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{3}
 }
-
 func (m *SearchClientsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchClientsRequest.Unmarshal(m, b)
 }
 func (m *SearchClientsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SearchClientsRequest.Marshal(b, m, deterministic)
 }
-func (m *SearchClientsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SearchClientsRequest.Merge(m, src)
+func (dst *SearchClientsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SearchClientsRequest.Merge(dst, src)
 }
 func (m *SearchClientsRequest) XXX_Size() int {
 	return xxx_messageInfo_SearchClientsRequest.Size(m)
@@ -404,17 +394,16 @@ func (m *SearchClientsResponse) Reset()         { *m = SearchClientsResponse{} }
 func (m *SearchClientsResponse) String() string { return proto.CompactTextString(m) }
 func (*SearchClientsResponse) ProtoMessage()    {}
 func (*SearchClientsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{4}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{4}
 }
-
 func (m *SearchClientsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SearchClientsResponse.Unmarshal(m, b)
 }
 func (m *SearchClientsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SearchClientsResponse.Marshal(b, m, deterministic)
 }
-func (m *SearchClientsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SearchClientsResponse.Merge(m, src)
+func (dst *SearchClientsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SearchClientsResponse.Merge(dst, src)
 }
 func (m *SearchClientsResponse) XXX_Size() int {
 	return xxx_messageInfo_SearchClientsResponse.Size(m)
@@ -451,17 +440,16 @@ func (m *GetClientRequest) Reset()         { *m = GetClientRequest{} }
 func (m *GetClientRequest) String() string { return proto.CompactTextString(m) }
 func (*GetClientRequest) ProtoMessage()    {}
 func (*GetClientRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{5}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{5}
 }
-
 func (m *GetClientRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetClientRequest.Unmarshal(m, b)
 }
 func (m *GetClientRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetClientRequest.Marshal(b, m, deterministic)
 }
-func (m *GetClientRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetClientRequest.Merge(m, src)
+func (dst *GetClientRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetClientRequest.Merge(dst, src)
 }
 func (m *GetClientRequest) XXX_Size() int {
 	return xxx_messageInfo_GetClientRequest.Size(m)
@@ -499,17 +487,16 @@ func (m *LabelClientsRequest) Reset()         { *m = LabelClientsRequest{} }
 func (m *LabelClientsRequest) String() string { return proto.CompactTextString(m) }
 func (*LabelClientsRequest) ProtoMessage()    {}
 func (*LabelClientsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_6c7b36ecb5ad4a28, []int{6}
+	return fileDescriptor_clients_cf97a2481f0207ad, []int{6}
 }
-
 func (m *LabelClientsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_LabelClientsRequest.Unmarshal(m, b)
 }
 func (m *LabelClientsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_LabelClientsRequest.Marshal(b, m, deterministic)
 }
-func (m *LabelClientsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LabelClientsRequest.Merge(m, src)
+func (dst *LabelClientsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LabelClientsRequest.Merge(dst, src)
 }
 func (m *LabelClientsRequest) XXX_Size() int {
 	return xxx_messageInfo_LabelClientsRequest.Size(m)
@@ -542,8 +529,6 @@ func (m *LabelClientsRequest) GetOperation() string {
 }
 
 func init() {
-	proto.RegisterEnum("proto.ApiClient_IPAddressClass", ApiClient_IPAddressClass_name, ApiClient_IPAddressClass_value)
-	proto.RegisterEnum("proto.SearchClientsRequest_QueryType", SearchClientsRequest_QueryType_name, SearchClientsRequest_QueryType_value)
 	proto.RegisterType((*AgentInformation)(nil), "proto.AgentInformation")
 	proto.RegisterType((*ApiClient)(nil), "proto.ApiClient")
 	proto.RegisterType((*Interface)(nil), "proto.Interface")
@@ -551,11 +536,13 @@ func init() {
 	proto.RegisterType((*SearchClientsResponse)(nil), "proto.SearchClientsResponse")
 	proto.RegisterType((*GetClientRequest)(nil), "proto.GetClientRequest")
 	proto.RegisterType((*LabelClientsRequest)(nil), "proto.LabelClientsRequest")
+	proto.RegisterEnum("proto.ApiClient_IPAddressClass", ApiClient_IPAddressClass_name, ApiClient_IPAddressClass_value)
+	proto.RegisterEnum("proto.SearchClientsRequest_QueryType", SearchClientsRequest_QueryType_name, SearchClientsRequest_QueryType_value)
 }
 
-func init() { proto.RegisterFile("clients.proto", fileDescriptor_6c7b36ecb5ad4a28) }
+func init() { proto.RegisterFile("clients.proto", fileDescriptor_clients_cf97a2481f0207ad) }
 
-var fileDescriptor_6c7b36ecb5ad4a28 = []byte{
+var fileDescriptor_clients_cf97a2481f0207ad = []byte{
 	// 1038 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x95, 0xdd, 0x6e, 0x1b, 0x45,
 	0x14, 0xc7, 0xeb, 0xc4, 0x8e, 0xbd, 0xc7, 0x49, 0xea, 0x0e, 0xa5, 0xac, 0xda, 0x94, 0x4c, 0x2d,

@@ -163,7 +163,7 @@
   version = "v1.2.2"
 
 [[projects]]
-  digest = "1:a11f0d1b183051552e449ad457d5d5c84d0779ae69201d6390bcacf2063c9f9b"
+  digest = "1:5446f1309e134e4e5cb74c6e34205d344668c0c5c815a301a5ee1a6f10649767"
   name = "github.com/golang/protobuf"
   packages = [
     "descriptor",
@@ -182,7 +182,7 @@
     "ptypes/wrappers",
   ]
   pruneopts = "UT"
-  revision = "1d3f30b51784bec5aad268e59fd3c2fc1c2fe73f"
+  revision = "aa810b61a9c79d51363740d207bb46cf8e620ed5"
 
 [[projects]]
   branch = "master"
@@ -400,16 +400,17 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f0bb332b39488b057a8671557f307997426e5c650ee738a634a0697a41e207c5"
+  digest = "1:ca30ee2c96d195cef49b546d10825d3e13b50c63da4df23c80e77c51e07bad0d"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
     "internal/util",
+    "iostats",
     "nfs",
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "f8d8b3f739bd91a7c0462cb55235ef63c79c9abc"
+  revision = "e4d4a2206da023361ed100d85c5f2cf9c8364e9f"
 
 [[projects]]
   branch = "master"
@@ -497,7 +498,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4078ffacb97ad7cd3968cc7acd20552234a8eb70cf5c84a7bc9d85bdcfc9ff3e"
+  digest = "1:1f0cbd8233393b95a48ea56f25c8784a2d22130390fa389ec0e8f7558155fc62"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -505,7 +506,7 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "193df9c0f06f8bb35fba505183eaf0acc0136505"
+  revision = "a4c6cb3142f211c99e4bf4cd769535b29a9b616f"
 
 [[projects]]
   branch = "master"
@@ -525,11 +526,11 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "65e2d4e15006aab9813ff8769e768bbf4bb667a0"
+  revision = "3a22650c66bd7f4fb6d1e8072ffd7b75c8a27898"
 
 [[projects]]
   branch = "master"
-  digest = "1:511a6232760c10dcb1ebf1ab83ef0291e2baf801f203ca6314759c5458b73a6a"
+  digest = "1:6ca682cc9faff447b8992389e20fd11e5e7366ba66768b2d0e2c12235fd3dec2"
   name = "golang.org/x/oauth2"
   packages = [
     ".",
@@ -539,11 +540,11 @@
     "jwt",
   ]
   pruneopts = "UT"
-  revision = "99b60b757ec124ebb7d6b7e97f153b19c10ce163"
+  revision = "9b3c75971fc92dd27c6436a37c05c831498658f1"
 
 [[projects]]
   branch = "master"
-  digest = "1:2255dd68107e6aee994770b5a2ce7bc8d680540243813f8deab11bfcb845f751"
+  digest = "1:036fe50f774e9202d59d7e8e4da6c12246d8c9e4c8f9a053c53853dabe7a7022"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -555,7 +556,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "3b5209105503162ded1863c307ac66fec31120dd"
+  revision = "a9d3bda3a223baa6bba6ef412cb273f0fd163c05"
 
 [[projects]]
   digest = "1:f85c8ec580dc0b7f57f2faa4e4339f3c7b761e51575d52110d3e2499724ca7bb"
@@ -709,6 +710,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9dbbfcad8476dc45beb3feeca872ee6ee854a0d3803b3b07d22a616d03faf852"
+  name = "www.velocidex.com/golang/regparser"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "25767a94db21440a975d7fd5fd7e405ff53bcd12"
+
+[[projects]]
+  branch = "master"
   digest = "1:28be96904219d006b16e69760af9dc3601045f344adeb730ab04c16f6aa81f12"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
@@ -807,6 +816,7 @@
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/oleparse",
+    "www.velocidex.com/golang/regparser",
     "www.velocidex.com/golang/vfilter",
     "www.velocidex.com/golang/vtypes",
   ]

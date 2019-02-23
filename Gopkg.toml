@@ -24,12 +24,13 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[override]]
-   name = "github.com/golang/protobuf"
+#[[override]]
+#   name = "github.com/golang/protobuf"
 
    # Remove when protobuf makes a new release. They current release is
    # too old WRT the rest of the protobuf eco system.
-   revision = "1d3f30b51784bec5aad268e59fd3c2fc1c2fe73f"
+#   revision = "1d3f30b51784bec5aad268e59fd3c2fc1c2fe73f"
+
 
 [prune]
   go-tests = true

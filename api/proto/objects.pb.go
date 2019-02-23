@@ -3,12 +3,10 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-	_ "www.velocidex.com/golang/velociraptor/proto"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -19,7 +17,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type ObjectReference struct {
 	Client               *ClientReference          `protobuf:"bytes,2,opt,name=client,proto3" json:"client,omitempty"`
@@ -36,17 +34,16 @@ func (m *ObjectReference) Reset()         { *m = ObjectReference{} }
 func (m *ObjectReference) String() string { return proto.CompactTextString(m) }
 func (*ObjectReference) ProtoMessage()    {}
 func (*ObjectReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{0}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{0}
 }
-
 func (m *ObjectReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ObjectReference.Unmarshal(m, b)
 }
 func (m *ObjectReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ObjectReference.Marshal(b, m, deterministic)
 }
-func (m *ObjectReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ObjectReference.Merge(m, src)
+func (dst *ObjectReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ObjectReference.Merge(dst, src)
 }
 func (m *ObjectReference) XXX_Size() int {
 	return xxx_messageInfo_ObjectReference.Size(m)
@@ -103,17 +100,16 @@ func (m *ClientReference) Reset()         { *m = ClientReference{} }
 func (m *ClientReference) String() string { return proto.CompactTextString(m) }
 func (*ClientReference) ProtoMessage()    {}
 func (*ClientReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{1}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{1}
 }
-
 func (m *ClientReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientReference.Unmarshal(m, b)
 }
 func (m *ClientReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClientReference.Marshal(b, m, deterministic)
 }
-func (m *ClientReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientReference.Merge(m, src)
+func (dst *ClientReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientReference.Merge(dst, src)
 }
 func (m *ClientReference) XXX_Size() int {
 	return xxx_messageInfo_ClientReference.Size(m)
@@ -142,17 +138,16 @@ func (m *HuntReference) Reset()         { *m = HuntReference{} }
 func (m *HuntReference) String() string { return proto.CompactTextString(m) }
 func (*HuntReference) ProtoMessage()    {}
 func (*HuntReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{2}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{2}
 }
-
 func (m *HuntReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntReference.Unmarshal(m, b)
 }
 func (m *HuntReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntReference.Marshal(b, m, deterministic)
 }
-func (m *HuntReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntReference.Merge(m, src)
+func (dst *HuntReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntReference.Merge(dst, src)
 }
 func (m *HuntReference) XXX_Size() int {
 	return xxx_messageInfo_HuntReference.Size(m)
@@ -182,17 +177,16 @@ func (m *FlowReference) Reset()         { *m = FlowReference{} }
 func (m *FlowReference) String() string { return proto.CompactTextString(m) }
 func (*FlowReference) ProtoMessage()    {}
 func (*FlowReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{3}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{3}
 }
-
 func (m *FlowReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowReference.Unmarshal(m, b)
 }
 func (m *FlowReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowReference.Marshal(b, m, deterministic)
 }
-func (m *FlowReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowReference.Merge(m, src)
+func (dst *FlowReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowReference.Merge(dst, src)
 }
 func (m *FlowReference) XXX_Size() int {
 	return xxx_messageInfo_FlowReference.Size(m)
@@ -229,17 +223,16 @@ func (m *VfsFileReference) Reset()         { *m = VfsFileReference{} }
 func (m *VfsFileReference) String() string { return proto.CompactTextString(m) }
 func (*VfsFileReference) ProtoMessage()    {}
 func (*VfsFileReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{4}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{4}
 }
-
 func (m *VfsFileReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VfsFileReference.Unmarshal(m, b)
 }
 func (m *VfsFileReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VfsFileReference.Marshal(b, m, deterministic)
 }
-func (m *VfsFileReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VfsFileReference.Merge(m, src)
+func (dst *VfsFileReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VfsFileReference.Merge(dst, src)
 }
 func (m *VfsFileReference) XXX_Size() int {
 	return xxx_messageInfo_VfsFileReference.Size(m)
@@ -277,17 +270,16 @@ func (m *ApprovalRequestReference) Reset()         { *m = ApprovalRequestReferen
 func (m *ApprovalRequestReference) String() string { return proto.CompactTextString(m) }
 func (*ApprovalRequestReference) ProtoMessage()    {}
 func (*ApprovalRequestReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da965bc36916fc1, []int{5}
+	return fileDescriptor_objects_8652956576a0e6ac, []int{5}
 }
-
 func (m *ApprovalRequestReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApprovalRequestReference.Unmarshal(m, b)
 }
 func (m *ApprovalRequestReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApprovalRequestReference.Marshal(b, m, deterministic)
 }
-func (m *ApprovalRequestReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApprovalRequestReference.Merge(m, src)
+func (dst *ApprovalRequestReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApprovalRequestReference.Merge(dst, src)
 }
 func (m *ApprovalRequestReference) XXX_Size() int {
 	return xxx_messageInfo_ApprovalRequestReference.Size(m)
@@ -321,9 +313,9 @@ func init() {
 	proto.RegisterType((*ApprovalRequestReference)(nil), "proto.ApprovalRequestReference")
 }
 
-func init() { proto.RegisterFile("objects.proto", fileDescriptor_7da965bc36916fc1) }
+func init() { proto.RegisterFile("objects.proto", fileDescriptor_objects_8652956576a0e6ac) }
 
-var fileDescriptor_7da965bc36916fc1 = []byte{
+var fileDescriptor_objects_8652956576a0e6ac = []byte{
 	// 456 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xdf, 0x8a, 0xd4, 0x30,
 	0x18, 0xc5, 0xe9, 0xcc, 0xda, 0xd9, 0x7e, 0xcb, 0x30, 0x6b, 0x14, 0xb7, 0x28, 0xb2, 0xa1, 0x17,

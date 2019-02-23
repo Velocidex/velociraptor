@@ -44,6 +44,8 @@ var (
 
 	golden_command_prefix = golden_command.Arg(
 		"prefix", "Golden file prefix").Required().String()
+
+	testonly = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
 )
 
 type testFixture struct {
@@ -129,9 +131,12 @@ func doGolden() {
 		"%s*.in.yaml", *golden_command_prefix))
 	kingpin.FatalIfError(err, "Glob")
 
+	logger := log.New(os.Stderr, "golden: ", log.Lshortfile)
+
 	failures := []string{}
 
 	for _, filename := range globs {
+		logger.Printf("Openning %v", filename)
 		data, err := ioutil.ReadFile(filename)
 		kingpin.FatalIfError(err, "Reading file")
 
@@ -157,6 +162,10 @@ func doGolden() {
 			fmt.Printf("New file for  %v:\n", filename)
 			fmt.Println(result)
 			failures = append(failures, filename)
+		}
+
+		if *testonly {
+			continue
 		}
 
 		err = ioutil.WriteFile(

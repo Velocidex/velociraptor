@@ -71,7 +71,7 @@ var writeAnyTests = []struct {
 	{Input: [][]interface{}{{"a", "b", "c"}}, Output: "a,b,c\n"},
 
 	// Integers and floats are written without quotes.
-	{Input: [][]interface{}{{1, 2, 3.0}}, Output: "1,2,3.000000\n"},
+	{Input: [][]interface{}{{1, 2, 3.1}}, Output: "1,2,3.1\n"},
 
 	// Strings with line feeds are quoted.
 	{Input: [][]interface{}{{"a\nb", 2, "c\nd"}},
@@ -94,7 +94,7 @@ var writeAnyTests = []struct {
 
 	// Encode ints, floats without quotes and strings with quotes.
 	{Input: [][]interface{}{{1, "2", 4.5, "abc"}},
-		Output: "1,\" 2\",4.500000,abc\n"},
+		Output: "1,\" 2\",4.5,abc\n"},
 
 	// Ints, maps and strings.
 	{Input: [][]interface{}{{1, map[string]interface{}{

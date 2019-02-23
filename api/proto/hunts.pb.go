@@ -3,15 +3,13 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-	proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
-	_ "www.velocidex.com/golang/velociraptor/crypto/proto"
-	proto2 "www.velocidex.com/golang/velociraptor/flows/proto"
-	_ "www.velocidex.com/golang/velociraptor/proto"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
+import _ "www.velocidex.com/golang/velociraptor/crypto/proto"
+import proto2 "www.velocidex.com/golang/velociraptor/flows/proto"
+import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -22,7 +20,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type HuntOsCondition_OS int32
 
@@ -39,7 +37,6 @@ var HuntOsCondition_OS_name = map[int32]string{
 	2: "LINUX",
 	3: "OSX",
 }
-
 var HuntOsCondition_OS_value = map[string]int32{
 	"ALL":     0,
 	"WINDOWS": 1,
@@ -50,9 +47,8 @@ var HuntOsCondition_OS_value = map[string]int32{
 func (x HuntOsCondition_OS) String() string {
 	return proto.EnumName(HuntOsCondition_OS_name, int32(x))
 }
-
 func (HuntOsCondition_OS) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{2, 0}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{2, 0}
 }
 
 type Hunt_State int32
@@ -70,7 +66,6 @@ var Hunt_State_name = map[int32]string{
 	2: "RUNNING",
 	3: "STOPPED",
 }
-
 var Hunt_State_value = map[string]int32{
 	"UNSET":   0,
 	"PAUSED":  1,
@@ -81,9 +76,8 @@ var Hunt_State_value = map[string]int32{
 func (x Hunt_State) String() string {
 	return proto.EnumName(Hunt_State_name, int32(x))
 }
-
 func (Hunt_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{5, 0}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{5, 0}
 }
 
 type HuntConditionGeneric struct {
@@ -98,17 +92,16 @@ func (m *HuntConditionGeneric) Reset()         { *m = HuntConditionGeneric{} }
 func (m *HuntConditionGeneric) String() string { return proto.CompactTextString(m) }
 func (*HuntConditionGeneric) ProtoMessage()    {}
 func (*HuntConditionGeneric) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{0}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{0}
 }
-
 func (m *HuntConditionGeneric) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntConditionGeneric.Unmarshal(m, b)
 }
 func (m *HuntConditionGeneric) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntConditionGeneric.Marshal(b, m, deterministic)
 }
-func (m *HuntConditionGeneric) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntConditionGeneric.Merge(m, src)
+func (dst *HuntConditionGeneric) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntConditionGeneric.Merge(dst, src)
 }
 func (m *HuntConditionGeneric) XXX_Size() int {
 	return xxx_messageInfo_HuntConditionGeneric.Size(m)
@@ -144,17 +137,16 @@ func (m *HuntLabelCondition) Reset()         { *m = HuntLabelCondition{} }
 func (m *HuntLabelCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntLabelCondition) ProtoMessage()    {}
 func (*HuntLabelCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{1}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{1}
 }
-
 func (m *HuntLabelCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntLabelCondition.Unmarshal(m, b)
 }
 func (m *HuntLabelCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntLabelCondition.Marshal(b, m, deterministic)
 }
-func (m *HuntLabelCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntLabelCondition.Merge(m, src)
+func (dst *HuntLabelCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntLabelCondition.Merge(dst, src)
 }
 func (m *HuntLabelCondition) XXX_Size() int {
 	return xxx_messageInfo_HuntLabelCondition.Size(m)
@@ -183,17 +175,16 @@ func (m *HuntOsCondition) Reset()         { *m = HuntOsCondition{} }
 func (m *HuntOsCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntOsCondition) ProtoMessage()    {}
 func (*HuntOsCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{2}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{2}
 }
-
 func (m *HuntOsCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntOsCondition.Unmarshal(m, b)
 }
 func (m *HuntOsCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntOsCondition.Marshal(b, m, deterministic)
 }
-func (m *HuntOsCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntOsCondition.Merge(m, src)
+func (dst *HuntOsCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntOsCondition.Merge(dst, src)
 }
 func (m *HuntOsCondition) XXX_Size() int {
 	return xxx_messageInfo_HuntOsCondition.Size(m)
@@ -226,17 +217,16 @@ func (m *HuntCondition) Reset()         { *m = HuntCondition{} }
 func (m *HuntCondition) String() string { return proto.CompactTextString(m) }
 func (*HuntCondition) ProtoMessage()    {}
 func (*HuntCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{3}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{3}
 }
-
 func (m *HuntCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntCondition.Unmarshal(m, b)
 }
 func (m *HuntCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntCondition.Marshal(b, m, deterministic)
 }
-func (m *HuntCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntCondition.Merge(m, src)
+func (dst *HuntCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntCondition.Merge(dst, src)
 }
 func (m *HuntCondition) XXX_Size() int {
 	return xxx_messageInfo_HuntCondition.Size(m)
@@ -297,13 +287,97 @@ func (m *HuntCondition) GetOs() *HuntOsCondition {
 	return nil
 }
 
-// XXX_OneofWrappers is for the internal use of the proto package.
-func (*HuntCondition) XXX_OneofWrappers() []interface{} {
-	return []interface{}{
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*HuntCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _HuntCondition_OneofMarshaler, _HuntCondition_OneofUnmarshaler, _HuntCondition_OneofSizer, []interface{}{
 		(*HuntCondition_GenericCondition)(nil),
 		(*HuntCondition_Labels)(nil),
 		(*HuntCondition_Os)(nil),
 	}
+}
+
+func _HuntCondition_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*HuntCondition)
+	// union_field
+	switch x := m.UnionField.(type) {
+	case *HuntCondition_GenericCondition:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.GenericCondition); err != nil {
+			return err
+		}
+	case *HuntCondition_Labels:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Labels); err != nil {
+			return err
+		}
+	case *HuntCondition_Os:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Os); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("HuntCondition.UnionField has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _HuntCondition_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*HuntCondition)
+	switch tag {
+	case 1: // union_field.generic_condition
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(HuntConditionGeneric)
+		err := b.DecodeMessage(msg)
+		m.UnionField = &HuntCondition_GenericCondition{msg}
+		return true, err
+	case 2: // union_field.labels
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(HuntLabelCondition)
+		err := b.DecodeMessage(msg)
+		m.UnionField = &HuntCondition_Labels{msg}
+		return true, err
+	case 3: // union_field.os
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(HuntOsCondition)
+		err := b.DecodeMessage(msg)
+		m.UnionField = &HuntCondition_Os{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _HuntCondition_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*HuntCondition)
+	// union_field
+	switch x := m.UnionField.(type) {
+	case *HuntCondition_GenericCondition:
+		s := proto.Size(x.GenericCondition)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *HuntCondition_Labels:
+		s := proto.Size(x.Labels)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *HuntCondition_Os:
+		s := proto.Size(x.Os)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
 }
 
 type HuntStats struct {
@@ -321,17 +395,16 @@ func (m *HuntStats) Reset()         { *m = HuntStats{} }
 func (m *HuntStats) String() string { return proto.CompactTextString(m) }
 func (*HuntStats) ProtoMessage()    {}
 func (*HuntStats) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{4}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{4}
 }
-
 func (m *HuntStats) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_HuntStats.Unmarshal(m, b)
 }
 func (m *HuntStats) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_HuntStats.Marshal(b, m, deterministic)
 }
-func (m *HuntStats) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_HuntStats.Merge(m, src)
+func (dst *HuntStats) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_HuntStats.Merge(dst, src)
 }
 func (m *HuntStats) XXX_Size() int {
 	return xxx_messageInfo_HuntStats.Size(m)
@@ -399,17 +472,16 @@ func (m *Hunt) Reset()         { *m = Hunt{} }
 func (m *Hunt) String() string { return proto.CompactTextString(m) }
 func (*Hunt) ProtoMessage()    {}
 func (*Hunt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{5}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{5}
 }
-
 func (m *Hunt) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Hunt.Unmarshal(m, b)
 }
 func (m *Hunt) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Hunt.Marshal(b, m, deterministic)
 }
-func (m *Hunt) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Hunt.Merge(m, src)
+func (dst *Hunt) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Hunt.Merge(dst, src)
 }
 func (m *Hunt) XXX_Size() int {
 	return xxx_messageInfo_Hunt.Size(m)
@@ -516,17 +588,16 @@ func (m *ListHuntsRequest) Reset()         { *m = ListHuntsRequest{} }
 func (m *ListHuntsRequest) String() string { return proto.CompactTextString(m) }
 func (*ListHuntsRequest) ProtoMessage()    {}
 func (*ListHuntsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{6}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{6}
 }
-
 func (m *ListHuntsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListHuntsRequest.Unmarshal(m, b)
 }
 func (m *ListHuntsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListHuntsRequest.Marshal(b, m, deterministic)
 }
-func (m *ListHuntsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListHuntsRequest.Merge(m, src)
+func (dst *ListHuntsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListHuntsRequest.Merge(dst, src)
 }
 func (m *ListHuntsRequest) XXX_Size() int {
 	return xxx_messageInfo_ListHuntsRequest.Size(m)
@@ -562,17 +633,16 @@ func (m *ListHuntsResponse) Reset()         { *m = ListHuntsResponse{} }
 func (m *ListHuntsResponse) String() string { return proto.CompactTextString(m) }
 func (*ListHuntsResponse) ProtoMessage()    {}
 func (*ListHuntsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{7}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{7}
 }
-
 func (m *ListHuntsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListHuntsResponse.Unmarshal(m, b)
 }
 func (m *ListHuntsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListHuntsResponse.Marshal(b, m, deterministic)
 }
-func (m *ListHuntsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListHuntsResponse.Merge(m, src)
+func (dst *ListHuntsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListHuntsResponse.Merge(dst, src)
 }
 func (m *ListHuntsResponse) XXX_Size() int {
 	return xxx_messageInfo_ListHuntsResponse.Size(m)
@@ -601,17 +671,16 @@ func (m *GetHuntRequest) Reset()         { *m = GetHuntRequest{} }
 func (m *GetHuntRequest) String() string { return proto.CompactTextString(m) }
 func (*GetHuntRequest) ProtoMessage()    {}
 func (*GetHuntRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{8}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{8}
 }
-
 func (m *GetHuntRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetHuntRequest.Unmarshal(m, b)
 }
 func (m *GetHuntRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetHuntRequest.Marshal(b, m, deterministic)
 }
-func (m *GetHuntRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetHuntRequest.Merge(m, src)
+func (dst *GetHuntRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetHuntRequest.Merge(dst, src)
 }
 func (m *GetHuntRequest) XXX_Size() int {
 	return xxx_messageInfo_GetHuntRequest.Size(m)
@@ -643,17 +712,16 @@ func (m *GetHuntResultsRequest) Reset()         { *m = GetHuntResultsRequest{} }
 func (m *GetHuntResultsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetHuntResultsRequest) ProtoMessage()    {}
 func (*GetHuntResultsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{9}
+	return fileDescriptor_hunts_28ffb7a781a59f7f, []int{9}
 }
-
 func (m *GetHuntResultsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetHuntResultsRequest.Unmarshal(m, b)
 }
 func (m *GetHuntResultsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetHuntResultsRequest.Marshal(b, m, deterministic)
 }
-func (m *GetHuntResultsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetHuntResultsRequest.Merge(m, src)
+func (dst *GetHuntResultsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetHuntResultsRequest.Merge(dst, src)
 }
 func (m *GetHuntResultsRequest) XXX_Size() int {
 	return xxx_messageInfo_GetHuntResultsRequest.Size(m)
@@ -693,8 +761,6 @@ func (m *GetHuntResultsRequest) GetArtifact() string {
 }
 
 func init() {
-	proto.RegisterEnum("proto.HuntOsCondition_OS", HuntOsCondition_OS_name, HuntOsCondition_OS_value)
-	proto.RegisterEnum("proto.Hunt_State", Hunt_State_name, Hunt_State_value)
 	proto.RegisterType((*HuntConditionGeneric)(nil), "proto.HuntConditionGeneric")
 	proto.RegisterType((*HuntLabelCondition)(nil), "proto.HuntLabelCondition")
 	proto.RegisterType((*HuntOsCondition)(nil), "proto.HuntOsCondition")
@@ -705,11 +771,13 @@ func init() {
 	proto.RegisterType((*ListHuntsResponse)(nil), "proto.ListHuntsResponse")
 	proto.RegisterType((*GetHuntRequest)(nil), "proto.GetHuntRequest")
 	proto.RegisterType((*GetHuntResultsRequest)(nil), "proto.GetHuntResultsRequest")
+	proto.RegisterEnum("proto.HuntOsCondition_OS", HuntOsCondition_OS_name, HuntOsCondition_OS_value)
+	proto.RegisterEnum("proto.Hunt_State", Hunt_State_name, Hunt_State_value)
 }
 
-func init() { proto.RegisterFile("hunts.proto", fileDescriptor_0cb9fe450e8d0e17) }
+func init() { proto.RegisterFile("hunts.proto", fileDescriptor_hunts_28ffb7a781a59f7f) }
 
-var fileDescriptor_0cb9fe450e8d0e17 = []byte{
+var fileDescriptor_hunts_28ffb7a781a59f7f = []byte{
 	// 1800 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x56, 0x4d, 0x6c, 0x23, 0x49,
 	0xf5, 0x4f, 0x3b, 0x1f, 0x1e, 0x97, 0x67, 0x12, 0xa7, 0x94, 0x4c, 0x3c, 0x1e, 0x8d, 0x54, 0xff,

@@ -21,6 +21,7 @@ package glob
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -46,12 +47,13 @@ func (self DataFilesystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return utils.DataReadSeekCloser{strings.NewReader(path)}, nil
 }
 
-func (self DataFilesystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("/")
+func (self DataFilesystemAccessor) PathSplit(path string) []string {
+	re := regexp.MustCompile("/")
+	return re.Split(path, -1)
 }
 
-func (self DataFilesystemAccessor) PathSep() string {
-	return "/"
+func (self DataFilesystemAccessor) PathJoin(components []string) string {
+	return filepath.Join(components...)
 }
 
 func (self DataFilesystemAccessor) GetRoot(path string) (string, string, error) {

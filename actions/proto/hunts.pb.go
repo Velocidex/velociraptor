@@ -3,11 +3,9 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +16,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type ForemanCheckin struct {
 	LastHuntTimestamp     uint64   `protobuf:"varint,1,opt,name=last_hunt_timestamp,json=lastHuntTimestamp,proto3" json:"last_hunt_timestamp,omitempty"`
@@ -32,17 +30,16 @@ func (m *ForemanCheckin) Reset()         { *m = ForemanCheckin{} }
 func (m *ForemanCheckin) String() string { return proto.CompactTextString(m) }
 func (*ForemanCheckin) ProtoMessage()    {}
 func (*ForemanCheckin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0cb9fe450e8d0e17, []int{0}
+	return fileDescriptor_hunts_cdd282ac240f9248, []int{0}
 }
-
 func (m *ForemanCheckin) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ForemanCheckin.Unmarshal(m, b)
 }
 func (m *ForemanCheckin) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ForemanCheckin.Marshal(b, m, deterministic)
 }
-func (m *ForemanCheckin) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ForemanCheckin.Merge(m, src)
+func (dst *ForemanCheckin) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ForemanCheckin.Merge(dst, src)
 }
 func (m *ForemanCheckin) XXX_Size() int {
 	return xxx_messageInfo_ForemanCheckin.Size(m)
@@ -71,9 +68,9 @@ func init() {
 	proto.RegisterType((*ForemanCheckin)(nil), "proto.ForemanCheckin")
 }
 
-func init() { proto.RegisterFile("hunts.proto", fileDescriptor_0cb9fe450e8d0e17) }
+func init() { proto.RegisterFile("hunts.proto", fileDescriptor_hunts_cdd282ac240f9248) }
 
-var fileDescriptor_0cb9fe450e8d0e17 = []byte{
+var fileDescriptor_hunts_cdd282ac240f9248 = []byte{
 	// 140 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xce, 0x28, 0xcd, 0x2b,
 	0x29, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x05, 0x53, 0x4a, 0x95, 0x5c, 0x7c, 0x6e,

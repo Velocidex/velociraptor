@@ -19,6 +19,7 @@ package glob
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 
 	errors "github.com/pkg/errors"
@@ -35,12 +36,9 @@ type FileSystemAccessor interface {
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
 
-	// Produce a regex which can be used to split the path into
-	// components.
-	PathSplit() *regexp.Regexp
-
-	// The most natural way to join paths together.
-	PathSep() string
+	// Produce a function which splits a path into components.
+	PathSplit(path string) []string
+	PathJoin(components []string) string
 
 	// Split a path into a glob root and a sub path
 	// component. This is required when the accessor uses a prefix
@@ -79,12 +77,13 @@ func (self NullFileSystemAccessor) GetRoot(path string) (string, string, error) 
 	return "/", path, nil
 }
 
-func (self NullFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("/")
+func (self NullFileSystemAccessor) PathSplit(path string) []string {
+	re := regexp.MustCompile("/")
+	return re.Split(path, -1)
 }
 
-func (self NullFileSystemAccessor) PathSep() string {
-	return "/"
+func (self NullFileSystemAccessor) PathJoin(components []string) string {
+	return filepath.Join(components...)
 }
 
 func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {

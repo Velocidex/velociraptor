@@ -27,7 +27,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -269,12 +268,12 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 }
 
 // We accept both / and \ as a path separator
-func (self *OSFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("[\\\\/]")
+func (self *OSFileSystemAccessor) PathSplit(path string) []string {
+	return NTFSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self *OSFileSystemAccessor) PathSep() string {
-	return "\\"
+func (self *OSFileSystemAccessor) PathJoin(components []string) string {
+	return filepath.Join(components...)
 }
 
 // Glob sends us paths in normal form which we need to convert to

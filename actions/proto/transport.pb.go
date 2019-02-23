@@ -3,12 +3,10 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	math "math"
-	_ "www.velocidex.com/golang/velociraptor/proto"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import _ "www.velocidex.com/golang/velociraptor/proto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -19,7 +17,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 // The Velociraptor client sends back the buffer and the filename and
 // the server saves the entire file directly in the file storage
@@ -40,17 +38,16 @@ func (m *FileBuffer) Reset()         { *m = FileBuffer{} }
 func (m *FileBuffer) String() string { return proto.CompactTextString(m) }
 func (*FileBuffer) ProtoMessage()    {}
 func (*FileBuffer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a97e32c760ec1b28, []int{0}
+	return fileDescriptor_transport_594992a3647cd82f, []int{0}
 }
-
 func (m *FileBuffer) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileBuffer.Unmarshal(m, b)
 }
 func (m *FileBuffer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileBuffer.Marshal(b, m, deterministic)
 }
-func (m *FileBuffer) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileBuffer.Merge(m, src)
+func (dst *FileBuffer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileBuffer.Merge(dst, src)
 }
 func (m *FileBuffer) XXX_Size() int {
 	return xxx_messageInfo_FileBuffer.Size(m)
@@ -93,9 +90,9 @@ func init() {
 	proto.RegisterType((*FileBuffer)(nil), "proto.FileBuffer")
 }
 
-func init() { proto.RegisterFile("transport.proto", fileDescriptor_a97e32c760ec1b28) }
+func init() { proto.RegisterFile("transport.proto", fileDescriptor_transport_594992a3647cd82f) }
 
-var fileDescriptor_a97e32c760ec1b28 = []byte{
+var fileDescriptor_transport_594992a3647cd82f = []byte{
 	// 244 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x3c, 0x8e, 0x41, 0x4a, 0x2c, 0x31,
 	0x10, 0x86, 0xc9, 0x7b, 0x6d, 0xab, 0x51, 0x19, 0xc8, 0xc6, 0x66, 0x56, 0x51, 0x37, 0x2d, 0x42,

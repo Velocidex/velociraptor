@@ -3,12 +3,10 @@
 
 package proto
 
-import (
-	fmt "fmt"
-	proto "github.com/golang/protobuf/proto"
-	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
-	math "math"
-)
+import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
+import descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -19,7 +17,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type SemanticDescriptor_Labels int32
 
@@ -35,7 +33,6 @@ var SemanticDescriptor_Labels_name = map[int32]string{
 	1: "ADVANCED",
 	2: "HIDDEN",
 }
-
 var SemanticDescriptor_Labels_value = map[string]int32{
 	"DEFAULT":  0,
 	"ADVANCED": 1,
@@ -45,9 +42,8 @@ var SemanticDescriptor_Labels_value = map[string]int32{
 func (x SemanticDescriptor_Labels) String() string {
 	return proto.EnumName(SemanticDescriptor_Labels_name, int32(x))
 }
-
 func (SemanticDescriptor_Labels) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_32e5db2b9bc8653e, []int{0, 0}
+	return fileDescriptor_semantic_182244142de9a04c, []int{0, 0}
 }
 
 type SemanticDescriptor struct {
@@ -73,17 +69,16 @@ func (m *SemanticDescriptor) Reset()         { *m = SemanticDescriptor{} }
 func (m *SemanticDescriptor) String() string { return proto.CompactTextString(m) }
 func (*SemanticDescriptor) ProtoMessage()    {}
 func (*SemanticDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_32e5db2b9bc8653e, []int{0}
+	return fileDescriptor_semantic_182244142de9a04c, []int{0}
 }
-
 func (m *SemanticDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SemanticDescriptor.Unmarshal(m, b)
 }
 func (m *SemanticDescriptor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SemanticDescriptor.Marshal(b, m, deterministic)
 }
-func (m *SemanticDescriptor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SemanticDescriptor.Merge(m, src)
+func (dst *SemanticDescriptor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SemanticDescriptor.Merge(dst, src)
 }
 func (m *SemanticDescriptor) XXX_Size() int {
 	return xxx_messageInfo_SemanticDescriptor.Size(m)
@@ -149,17 +144,16 @@ func (m *SemanticMessageDescriptor) Reset()         { *m = SemanticMessageDescri
 func (m *SemanticMessageDescriptor) String() string { return proto.CompactTextString(m) }
 func (*SemanticMessageDescriptor) ProtoMessage()    {}
 func (*SemanticMessageDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_32e5db2b9bc8653e, []int{1}
+	return fileDescriptor_semantic_182244142de9a04c, []int{1}
 }
-
 func (m *SemanticMessageDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SemanticMessageDescriptor.Unmarshal(m, b)
 }
 func (m *SemanticMessageDescriptor) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_SemanticMessageDescriptor.Marshal(b, m, deterministic)
 }
-func (m *SemanticMessageDescriptor) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_SemanticMessageDescriptor.Merge(m, src)
+func (dst *SemanticMessageDescriptor) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SemanticMessageDescriptor.Merge(dst, src)
 }
 func (m *SemanticMessageDescriptor) XXX_Size() int {
 	return xxx_messageInfo_SemanticMessageDescriptor.Size(m)
@@ -189,7 +183,7 @@ var E_SemType = &proto.ExtensionDesc{
 	ExtensionType: (*SemanticDescriptor)(nil),
 	Field:         51584972,
 	Name:          "proto.sem_type",
-	Tag:           "bytes,51584972,opt,name=sem_type",
+	Tag:           "bytes,51584972,opt,name=sem_type,json=semType",
 	Filename:      "semantic.proto",
 }
 
@@ -221,18 +215,18 @@ var E_Label = &proto.ExtensionDesc{
 }
 
 func init() {
-	proto.RegisterEnum("proto.SemanticDescriptor_Labels", SemanticDescriptor_Labels_name, SemanticDescriptor_Labels_value)
 	proto.RegisterType((*SemanticDescriptor)(nil), "proto.SemanticDescriptor")
 	proto.RegisterType((*SemanticMessageDescriptor)(nil), "proto.SemanticMessageDescriptor")
+	proto.RegisterEnum("proto.SemanticDescriptor_Labels", SemanticDescriptor_Labels_name, SemanticDescriptor_Labels_value)
 	proto.RegisterExtension(E_SemType)
 	proto.RegisterExtension(E_Semantic)
 	proto.RegisterExtension(E_Description)
 	proto.RegisterExtension(E_Label)
 }
 
-func init() { proto.RegisterFile("semantic.proto", fileDescriptor_32e5db2b9bc8653e) }
+func init() { proto.RegisterFile("semantic.proto", fileDescriptor_semantic_182244142de9a04c) }
 
-var fileDescriptor_32e5db2b9bc8653e = []byte{
+var fileDescriptor_semantic_182244142de9a04c = []byte{
 	// 396 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x92, 0xcd, 0x4e, 0xea, 0x40,
 	0x14, 0xc7, 0x6f, 0xf9, 0x28, 0xdc, 0x53, 0x2e, 0x21, 0xb3, 0xb9, 0xc3, 0x4d, 0x6e, 0x2c, 0xb8,

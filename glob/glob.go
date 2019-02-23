@@ -141,7 +141,7 @@ func (self Globber) _DebugString(indent string) string {
 }
 
 // Add a new pattern to the filter tree.
-func (self *Globber) Add(pattern string, pathsep *regexp.Regexp) error {
+func (self *Globber) Add(pattern string, pathsep func(path string) []string) error {
 	var brace_expanded []string
 	self._brace_expansion(pattern, &brace_expanded)
 
@@ -155,7 +155,7 @@ func (self *Globber) Add(pattern string, pathsep *regexp.Regexp) error {
 	return nil
 }
 
-func (self *Globber) _add_brace_expanded(pattern string, pathsep *regexp.Regexp) error {
+func (self *Globber) _add_brace_expanded(pattern string, pathsep func(path string) []string) error {
 	// Convert the pattern into path components.
 	filter, err := convert_glob_into_path_components(pattern, pathsep)
 	if err == nil {
@@ -282,7 +282,8 @@ func (self Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if is_dir_or_link(f, accessor, 0) {
-					next_path := root + accessor.PathSep() + f.Name()
+					next_path := accessor.PathJoin([]string{
+						root, f.Name()})
 					item := []*Globber{next}
 					prev_item, pres := children[next_path]
 					if pres {
@@ -420,11 +421,11 @@ var (
 // /home/test**/*exe -> [{path: 'home', type: "LITERAL",
 //                       {path: 'test.*\\Z(?ms)', type: "RECURSIVE",
 // 			 {path: '.*exe\\Z(?ms)', type="REGEX"}]]
-func convert_glob_into_path_components(pattern string, path_sep *regexp.Regexp) (
+func convert_glob_into_path_components(pattern string, path_sep func(path string) []string) (
 	[]_PathFilterer, error) {
 	var result []_PathFilterer
 
-	for _, path_component := range path_sep.Split(pattern, -1) {
+	for _, path_component := range path_sep(pattern) {
 		if len(path_component) == 0 {
 			continue
 		}

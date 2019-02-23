@@ -1,6 +1,6 @@
 LET zip_files = SELECT FullPath, Size FROM glob( globs="c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\**\\*.zip")[]SELECT * FROM zip_files[
  {
-  "FullPath": "\\\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.zip",
+  "FullPath": "\\C:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\test.zip",
   "Size": 926
  }
 ]LET hits = SELECT * from foreach(row=zip_files, query= { select FullPath, Mtime, Size from glob(globs=url(scheme='file', path=FullPath, fragment='/**/*.txt').String, accessor='zip') } )[]SELECT * from hits[
