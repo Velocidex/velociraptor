@@ -1,0 +1,13 @@
+## This is a sample prometheus config to access the server's
+## monitoring port.
+# Run prometheus like this:
+
+# ./prometheus --config.file velociraptor.yml
+
+global:
+  scrape_interval:     5s
+
+scrape_configs:
+  - job_name: 'velociraptor'
+    static_configs:
+      - targets: ['localhost:8003']

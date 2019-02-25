@@ -336,7 +336,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 		return nil, err
 	}
 
-	dirname := self.PathJoin(components[:len(components)-1])
+	dirname := filepath.Dir(subpath)
 	dir, err := root.Open(dirname)
 	if err != nil {
 		return nil, err
@@ -373,7 +373,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 		return nil, err
 	}
 
-	dirname := self.PathJoin(components[:len(components)-1])
+	dirname := filepath.Dir(subpath)
 	dir, err := root.Open(dirname)
 	if err != nil {
 		return nil, err
@@ -425,8 +425,8 @@ func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
 	return NTFSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self NTFSFileSystemAccessor) PathJoin(components []string) string {
-	return filepath.Join(components...)
+func (self NTFSFileSystemAccessor) PathJoin(x, y string) string {
+	return filepath.Join(x, y)
 }
 
 // We want to show the entire device as one name so we need to escape

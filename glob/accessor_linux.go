@@ -160,8 +160,8 @@ func (self OSFileSystemAccessor) PathSplit(path string) []string {
 	return OSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self OSFileSystemAccessor) PathJoin(components []string) string {
-	return filepath.Join(components...)
+func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
+	return filepath.Join(root, stem)
 }
 
 func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {

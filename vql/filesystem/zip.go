@@ -332,8 +332,20 @@ func (self *ZipFileSystemAccessor) PathSplit(path string) []string {
 	return ZipFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self ZipFileSystemAccessor) PathJoin(components []string) string {
-	return path.Join(components...)
+// The root is a url for the parent node and the stem is the new subdir.
+// Example: root  is file://path/to/zip#subdir and stem is foo ->
+// file://path/to/zip#subdir/foo
+func (self *ZipFileSystemAccessor) PathJoin(root, stem string) string {
+	url, err := url.Parse(root)
+	if err != nil {
+		path.Join(root, stem)
+	}
+
+	url.Fragment = path.Join(url.Fragment, stem)
+
+	result := url.String()
+
+	return result
 }
 
 func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, error) {

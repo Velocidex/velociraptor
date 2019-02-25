@@ -510,22 +510,14 @@ func (self *RegFileSystemAccessor) PathSplit(path string) []string {
 	return regparser.SplitComponents(path)
 }
 
-func (self *RegFileSystemAccessor) PathJoin(components []string) string {
-	// First component is the URL part (the root).
-	escaped_components := []string{components[0]}
-	for _, i := range components[1:] {
-		// If any of the subsequent components contain
-		// a slash then escape them together.
-		if strings.Contains(i, "/") {
-			escaped_components = append(escaped_components,
-				"\""+i+"\"")
-		} else {
-			escaped_components = append(escaped_components, i)
-		}
-
+func (self *RegFileSystemAccessor) PathJoin(root, stem string) string {
+	// If any of the subsequent components contain
+	// a slash then escape them together.
+	if strings.Contains(stem, "/") {
+		stem = "\"" + stem + "\""
 	}
 
-	return filepath.Join(escaped_components...)
+	return filepath.Join(root, stem)
 }
 
 func init() {

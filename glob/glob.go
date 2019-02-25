@@ -93,6 +93,7 @@ type _RegexComponent struct {
 
 func (self _RegexComponent) Match(f FileInfo) bool {
 	re := regexp.MustCompile("^(?msi)" + self.regexp)
+
 	return re.MatchString(f.Name())
 }
 
@@ -282,8 +283,7 @@ func (self Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if is_dir_or_link(f, accessor, 0) {
-					next_path := accessor.PathJoin([]string{
-						root, f.Name()})
+					next_path := accessor.PathJoin(root, f.Name())
 					item := []*Globber{next}
 					prev_item, pres := children[next_path]
 					if pres {

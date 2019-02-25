@@ -272,8 +272,8 @@ func (self *OSFileSystemAccessor) PathSplit(path string) []string {
 	return NTFSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self *OSFileSystemAccessor) PathJoin(components []string) string {
-	return filepath.Join(components...)
+func (self *OSFileSystemAccessor) PathJoin(x, y string) string {
+	return filepath.Join(x, y)
 }
 
 // Glob sends us paths in normal form which we need to convert to

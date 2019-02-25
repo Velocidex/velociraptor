@@ -52,8 +52,8 @@ func (self DataFilesystemAccessor) PathSplit(path string) []string {
 	return re.Split(path, -1)
 }
 
-func (self DataFilesystemAccessor) PathJoin(components []string) string {
-	return filepath.Join(components...)
+func (self DataFilesystemAccessor) PathJoin(root, stem string) string {
+	return filepath.Join(root, stem)
 }
 
 func (self DataFilesystemAccessor) GetRoot(path string) (string, string, error) {

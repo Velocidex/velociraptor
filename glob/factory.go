@@ -38,7 +38,7 @@ type FileSystemAccessor interface {
 
 	// Produce a function which splits a path into components.
 	PathSplit(path string) []string
-	PathJoin(components []string) string
+	PathJoin(root, stem string) string
 
 	// Split a path into a glob root and a sub path
 	// component. This is required when the accessor uses a prefix
@@ -82,8 +82,8 @@ func (self NullFileSystemAccessor) PathSplit(path string) []string {
 	return re.Split(path, -1)
 }
 
-func (self NullFileSystemAccessor) PathJoin(components []string) string {
-	return filepath.Join(components...)
+func (self NullFileSystemAccessor) PathJoin(root, stem string) string {
+	return filepath.Join(root, stem)
 }
 
 func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {

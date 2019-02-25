@@ -37,7 +37,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -45,7 +44,6 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -63,7 +61,7 @@ func (self *RawRegKeyInfo) IsDir() bool {
 }
 
 func (self *RawRegKeyInfo) Data() interface{} {
-	return vfilter.NewDict()
+	return vfilter.NewDict().Set("type", "Key")
 }
 
 func (self *RawRegKeyInfo) Size() int64 {
@@ -165,10 +163,14 @@ func (self *RawRegValueInfo) Size() int64 {
 
 func (self *RawRegValueInfo) Data() interface{} {
 	value_data := self.value.ValueData()
-	result := vfilter.NewDict().Set("type", self.value.TypeString())
+	result := vfilter.NewDict().
+		Set("type", self.value.TypeString()).
+		Set("data_len", len(value_data.Data))
+
 	switch value_data.Type {
 	case regparser.REG_SZ, regparser.REG_MULTI_SZ, regparser.REG_EXPAND_SZ:
-		result.Set("data", value_data.String)
+		result.Set("data", strings.TrimRight(value_data.String, "\x00"))
+
 	case regparser.REG_DWORD, regparser.REG_QWORD, regparser.REG_DWORD_BIG_ENDIAN:
 		result.Set("data", value_data.Uint64)
 	default:
@@ -301,13 +303,10 @@ func (self *RawRegFileSystemAccessor) New(
 func (self RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
 
-	utils.Debug(key_path)
 	file_cache, url, err := self.GetRegHive(key_path)
 	if err != nil {
 		return nil, err
 	}
-
-	utils.Debug(regparser.SplitComponents(url.Fragment))
 
 	key := file_cache.registry.OpenKey(url.Fragment)
 	if key == nil {
@@ -315,23 +314,20 @@ func (self RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, 
 	}
 
 	for _, subkey := range key.Subkeys() {
-		new_url := *url
-		new_url.Fragment = path.Join(url.Fragment, subkey.Name())
-
 		result = append(result,
-			&RawRegKeyInfo{subkey, new_url.String()})
+			&RawRegKeyInfo{
+				subkey,
+				self.PathJoin(key_path, subkey.Name()),
+			})
 	}
 
 	for _, value := range key.Values() {
-		new_url := *url
-		new_url.Fragment = path.Join(
-			url.Fragment, value.ValueName())
-
 		result = append(result,
 			&RawRegValueInfo{
 				&RawRegKeyInfo{
 					key,
-					new_url.String(),
+					self.PathJoin(
+						key_path, value.ValueName()),
 				}, value,
 			})
 	}
@@ -361,28 +357,28 @@ func (self *RawRegFileSystemAccessor) GetRoot(path string) (string, string, erro
 
 // We accept both / and \ as a path separator
 func (self *RawRegFileSystemAccessor) PathSplit(path string) []string {
-	fmt.Printf("%v -> %v\n", path, regparser.SplitComponents(path))
 	return regparser.SplitComponents(path)
 }
 
-func (self *RawRegFileSystemAccessor) PathJoin(components []string) string {
-	// First component is the URL part (the root).
-	escaped_components := []string{components[0]}
-	for _, i := range components[1:] {
-		// If any of the subsequent components contain
-		// a slash then escape them together.
-		if strings.Contains(i, "/") {
-			escaped_components = append(escaped_components,
-				"\""+i+"\"")
-		} else {
-			escaped_components = append(escaped_components, i)
-		}
-
+func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {
+	// If any of the subsequent components contain
+	// a slash then escape them together.
+	if strings.Contains(stem, "/") {
+		stem = "\"" + stem + "\""
 	}
 
-	fmt.Printf("%v -> %v\n", components, filepath.Join(escaped_components...))
+	url, err := url.Parse(root)
+	if err != nil {
+		fmt.Printf("Error %v Joining %v and %v -> %v\n",
+			err, root, stem, path.Join(root, stem))
+		return path.Join(root, stem)
+	}
 
-	return filepath.Join(escaped_components...)
+	url.Fragment = path.Join(url.Fragment, stem)
+
+	result := url.String()
+
+	return result
 }
 
 func init() {

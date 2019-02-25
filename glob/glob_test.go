@@ -162,8 +162,8 @@ func (self MockFileSystemAccessor) PathSplit(path string) []string {
 	return re.Split(path, -1)
 }
 
-func (self MockFileSystemAccessor) PathJoin(components []string) string {
-	return path.Join(components...)
+func (self MockFileSystemAccessor) PathJoin(x, y string) string {
+	return path.Join(x, y)
 }
 
 func (self MockFileSystemAccessor) GetRoot(filepath string) (string, string, error) {
