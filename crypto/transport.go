@@ -40,12 +40,35 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+)
+
+var (
+	rsaSignCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rsa_sign_op",
+		Help: "Total number of rsa signatures.",
+	})
+
+	rsaEncryptCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rsa_encrypt_op",
+		Help: "Total number of rsa encryption ops.",
+	})
+
+	rsaDecryptCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rsa_decrypt_op",
+		Help: "Total number of rsa decryption ops.",
+	})
+
+	rsaVerifyCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "rsa_verify_op",
+		Help: "Total number of rsa verify ops.",
+	})
 )
 
 type _Cipher struct {
@@ -101,7 +124,7 @@ func _NewCipher(
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
-	metrics.GetOrRegisterCounter("rsa.sign", nil).Inc(1)
+	rsaSignCounter.Inc()
 	signature, err := rsa.SignPKCS1v15(
 		rand.Reader, private_key, crypto.SHA256, hashed[:])
 	if err != nil {
@@ -109,7 +132,7 @@ func _NewCipher(
 	}
 	result.cipher_metadata.Signature = signature
 
-	metrics.GetOrRegisterCounter("rsa.encrypt", nil).Inc(1)
+	rsaEncryptCounter.Inc()
 	encrypted_cipher, err := rsa.EncryptOAEP(
 		sha1.New(), rand.Reader,
 		public_key,
@@ -465,7 +488,8 @@ func (self *CryptoManager) getAuthState(
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
-	metrics.GetOrRegisterCounter("rsa.verify", nil).Inc(1)
+
+	rsaVerifyCounter.Inc()
 	err := rsa.VerifyPKCS1v15(public_key, crypto.SHA256, hashed[:],
 		cipher_metadata.Signature)
 	if err != nil {
@@ -509,7 +533,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 
 	} else {
 		// Decrypt the CipherProperties
-		metrics.GetOrRegisterCounter("rsa.decrypt", nil).Inc(1)
+		rsaDecryptCounter.Inc()
 		serialized_cipher, err := rsa.DecryptOAEP(
 			sha1.New(), rand.Reader,
 			self.private_key,

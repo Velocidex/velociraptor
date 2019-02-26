@@ -366,13 +366,14 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:ef03fb1dae4d010196652653f00a8002e94c19bcabdc8ca5100a804ffef63a47"
+  digest = "1:7b9fa0181f740bed4de3321f29dfc46667927c13dd71e9cb740d390e49e22f9f"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
     "prometheus/internal",
     "prometheus/promauto",
     "prometheus/promhttp",
+    "prometheus/testutil",
   ]
   pruneopts = "UT"
   revision = "505eaef017263e299324067d40ca2c48f6a2cf50"
@@ -411,14 +412,6 @@
   ]
   pruneopts = "UT"
   revision = "e4d4a2206da023361ed100d85c5f2cf9c8364e9f"
-
-[[projects]]
-  branch = "master"
-  digest = "1:d38f81081a389f1466ec98192cf9115a82158854d6f01e1c23e2e7554b97db71"
-  name = "github.com/rcrowley/go-metrics"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3113b8401b8a98917cde58f8bbd42a1b1c03b1fd"
 
 [[projects]]
   digest = "1:1a23fdd843129ef761ffe7651bc5fe7c5b09fbe933e92783ab06cc11c37b7b37"
@@ -776,7 +769,7 @@
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promauto",
     "github.com/prometheus/client_golang/prometheus/promhttp",
-    "github.com/rcrowley/go-metrics",
+    "github.com/prometheus/client_golang/prometheus/testutil",
     "github.com/rifflock/lfshook",
     "github.com/sebdah/goldie",
     "github.com/sergi/go-diff/diffmatchpatch",

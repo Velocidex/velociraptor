@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -73,9 +73,6 @@ func (self *TestSuite) SetupTest() {
 	self.server_manager.public_key_resolver = NewInMemoryPublicKeyResolver()
 	self.server_manager.public_key_resolver.SetPublicKey(
 		self.client_id, &self.client_manager.private_key.PublicKey)
-
-	// Clear the metrics for each test case.
-	metrics.DefaultRegistry.UnregisterAll()
 }
 
 func (self *TestSuite) TestEncDecServerToClient() {
@@ -91,6 +88,8 @@ func (self *TestSuite) TestEncDecServerToClient() {
 		message_list, self.client_id)
 	assert.NoError(t, err)
 
+	initial_c := testutil.ToFloat64(rsaDecryptCounter)
+
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
 		result, err := self.client_manager.DecryptMessageList(cipher_text)
@@ -105,8 +104,8 @@ func (self *TestSuite) TestEncDecServerToClient() {
 
 	// This should only do the RSA operation once since it should
 	// hit the LRU cache each time.
-	c := metrics.GetOrRegisterCounter("rsa.decrypt", nil)
-	assert.Equal(t, c.Count(), int64(1))
+	c := testutil.ToFloat64(rsaDecryptCounter)
+	assert.Equal(t, c-initial_c, float64(1))
 }
 
 func (self *TestSuite) TestEncDecClientToServer() {
@@ -122,6 +121,8 @@ func (self *TestSuite) TestEncDecClientToServer() {
 		message_list, constants.FRONTEND_NAME)
 	assert.NoError(t, err)
 
+	initial_c := testutil.ToFloat64(rsaDecryptCounter)
+
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
 		result, err := self.server_manager.DecryptMessageList(cipher_text)
@@ -136,14 +137,15 @@ func (self *TestSuite) TestEncDecClientToServer() {
 
 	// This should only do the RSA operation once since it should
 	// hit the LRU cache each time.
-	c := metrics.GetOrRegisterCounter("rsa.decrypt", nil)
-	assert.Equal(t, c.Count(), int64(1))
+	c := testutil.ToFloat64(rsaDecryptCounter)
+	assert.Equal(t, c-initial_c, float64(1))
 }
 
 func (self *TestSuite) TestEncryption() {
 	t := self.T()
 	plain_text := []byte("hello world")
 
+	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		cipher_text, err := self.client_manager.Encrypt(
 			plain_text, constants.FRONTEND_NAME)
@@ -158,8 +160,8 @@ func (self *TestSuite) TestEncryption() {
 	}
 
 	// We should encrypt this only once since we cache the cipher in the output LRU.
-	c := metrics.GetOrRegisterCounter("rsa.encrypt", nil)
-	assert.Equal(t, c.Count(), int64(1))
+	c := testutil.ToFloat64(rsaDecryptCounter)
+	assert.Equal(t, c-initial_c, float64(1))
 }
 
 func (self *TestSuite) TestClientIDFromPublicKey() {
