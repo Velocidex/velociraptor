@@ -22,6 +22,8 @@ import (
 	"crypto/x509"
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -35,6 +37,47 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
+
+func AddProxyMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+
+	for _, reverse_proxy_config := range config_obj.GUI.ReverseProxy {
+		target, err := url.Parse(reverse_proxy_config.Url)
+		if err != nil {
+			return err
+		}
+
+		logger.Info("Adding reverse proxy router from %v to %v", reverse_proxy_config.Route,
+			reverse_proxy_config.Url)
+
+		var handler http.Handler
+		if target.Scheme == "file" {
+			fmt.Printf(target.Path)
+			handler = http.StripPrefix(reverse_proxy_config.Route,
+				http.FileServer(http.Dir(target.Path)))
+
+		} else {
+			handler = http.StripPrefix(reverse_proxy_config.Route,
+				http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					r.URL.Host = target.Host
+					r.URL.Scheme = target.Scheme
+					r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
+					r.Host = target.Host
+					r.Header.Del("Authorization")
+
+					httputil.NewSingleHostReverseProxy(target).ServeHTTP(w, r)
+				}))
+		}
+
+		if reverse_proxy_config.RequireAuth {
+			handler = checkUserCredentialsHandler(config_obj, handler)
+		}
+
+		mux.Handle(reverse_proxy_config.Route, handler)
+	}
+
+	return nil
+}
 
 // Prepares a mux by adding handler required for the GUI.
 func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
@@ -56,6 +99,12 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
+
+	// Add reverse proxy support.
+	err = AddProxyMux(config_obj, mux)
+	if err != nil {
+		return err
+	}
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
 	if err != nil {
@@ -81,7 +130,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 	if config_obj.GUI.BindAddress != "127.0.0.1" {
-		logger.Info("GUI is not encrypted and listening on public interfact. " +
+		logger.Info("GUI is not encrypted and listening on public interface. " +
 			"This is not secure. Please enable TLS.")
 	}
 

@@ -417,6 +417,8 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 
 	switch value_type {
 	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
+		value_info._data = vfilter.NewDict().
+			Set("type", value_info.Type)
 		data, _, err := key.GetIntegerValue(value_name)
 		if err != nil {
 			return nil, err
@@ -431,33 +433,31 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			value_info.Type = "QWORD"
 		}
 
-		value_info._data = vfilter.NewDict().
-			Set("type", value_info.Type).
-			Set("value", data)
+		value_info._data.Set("value", data)
 
 	case registry.BINARY:
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			value_info._data = vfilter.NewDict().Set("type", "BINARY")
 			data, _, err := key.GetBinaryValue(value_name)
 			if err != nil {
 				return nil, err
 			}
 
-			value_info._data = vfilter.NewDict().
-				Set("type", "BINARY").
-				Set("value", data)
+			value_info._data.Set("value", data)
 		}
 		value_info.Type = "BINARY"
 
 	case registry.MULTI_SZ:
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			value_info._data = vfilter.NewDict().
+				Set("type", "MULTI_SZ")
+
 			values, _, err := key.GetStringsValue(value_name)
 			if err != nil {
 				return nil, err
 			}
 
-			value_info._data = vfilter.NewDict().
-				Set("type", "MULTI_SZ").
-				Set("value", values)
+			value_info._data.Set("value", values)
 		}
 		value_info.Type = "MULTI_SZ"
 
@@ -470,6 +470,8 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		}
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			value_info._data = vfilter.NewDict().
+				Set("type", value_info.Type)
 			data, _, err := key.GetStringValue(value_name)
 			if err != nil {
 				return nil, err
@@ -478,23 +480,22 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			// We do not expand the key because
 			// this will depend on the agent's own
 			// environment strings.
-			value_info._data = vfilter.NewDict().
-				Set("type", value_info.Type).
-				Set("value", data)
+			value_info._data.Set("value", data)
 		}
 
 	default:
 		value_info.Type = fmt.Sprintf("%d", value_type)
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			value_info._data = vfilter.NewDict().
+				Set("type", value_info.Type)
+
 			buf := make([]byte, buf_size)
 			_, _, err := key.GetValue(value_name, buf)
 			if err != nil {
 				return nil, err
 			}
 
-			value_info._data = vfilter.NewDict().
-				Set("type", value_info.Type).
-				Set("value", buf)
+			value_info._data.Set("value", buf)
 		}
 	}
 	return value_info, nil

@@ -99,6 +99,7 @@ func GetDefaultConfig() *api_proto.Config {
 			InternalCidr: []string{
 				"127.0.0.1/12", "192.168.0.0/16",
 			},
+			ReverseProxy: []*api_proto.ReverseProxyConfig{},
 		},
 		CA: &api_proto.CAConfig{},
 		Frontend: &api_proto.FrontendConfig{

@@ -139,8 +139,15 @@ func NewDefaultUserObject(config_obj *api_proto.Config) *api_proto.ApiGrrUser {
 			ManageClientFlowsNavItemEnabled:       true,
 			ModifyClientLabelsActionEnabled:       true,
 			AuthUsingGoogle:                       config_obj.GUI.GoogleOauthClientId != "",
+			Links:                                 []*api_proto.UILink{},
 		},
 		UserType: api_proto.ApiGrrUser_USER_TYPE_ADMIN,
 	}
+
+	for _, link := range config_obj.GUI.Links {
+		result.InterfaceTraits.Links = append(result.InterfaceTraits.Links,
+			&api_proto.UILink{Text: link.Text, Url: link.Url})
+	}
+
 	return result
 }

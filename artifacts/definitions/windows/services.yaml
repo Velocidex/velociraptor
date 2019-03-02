@@ -1,0 +1,25 @@
+name: Windows.System.Services
+description: |
+  List all the installed services.
+
+parameters:
+  - name: servicesKeyGlob
+    default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\
+
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'windows'
+
+    queries:
+      - |
+        SELECT State, Name, DisplayName, Status,
+               ProcessId as Pid, ExitCode, StartMode,
+               PathName, ServiceType, StartName as UserAccount,
+               {
+                  SELECT timestamp(epoch=Mtime.Sec) as Created
+                  FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
+               } AS Created,
+               {
+                 SELECT ServiceDll FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
+               } AS ServiceDll
+        FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")

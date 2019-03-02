@@ -55,5 +55,10 @@
       <ComponentRef Id='Config' />
     </Feature>
 
+    <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed." Schedule="afterInstallValidate" />
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
   </Product>
 </Wix>

@@ -166,6 +166,11 @@ message ApiClientConfig {
         }];
 }
 
+message GUILink {
+    string text = 1;
+    string url = 2;
+}
+
 message GUIConfig {
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
@@ -194,12 +199,27 @@ message GUIConfig {
     string public_url = 7 [(sem_type) = {
             description: "The public URL of this server.",
         }];
+
+    repeated ReverseProxyConfig reverse_proxy = 8 [(sem_type) = {
+            description: "Routes for reverse proxies.",
+        }];
+
+    repeated GUILink links = 9 [(sem_type) = {
+            description: "Additional links to present in the GUI."
+        }];
 }
 
 message CAConfig {
     string private_key = 1 [(sem_type) = {
             description: "The private key of the CA encoded in PEM. This must correspond with the certificate in Client.ca_certificate."
         }];
+}
+
+
+message ReverseProxyConfig {
+    string route = 1;
+    string url = 2;
+    bool require_auth = 3;
 }
 
 

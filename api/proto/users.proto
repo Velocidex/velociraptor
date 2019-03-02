@@ -42,6 +42,11 @@ message GUISettings {
         }];
 }
 
+message UILink {
+    string text = 1;
+    string url = 2;
+}
+
 // These traits are used by the AdminUI Angular app to disable certain UI
 // elements.
 message ApiGrrUserInterfaceTraits {
@@ -70,6 +75,8 @@ message ApiGrrUserInterfaceTraits {
 
     bool auth_using_google = 19;
     string picture = 20;
+
+    repeated UILink links = 21;
 };
 
 message ApiGrrUser {

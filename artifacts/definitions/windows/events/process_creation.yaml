@@ -2,9 +2,13 @@ name: Windows.Events.ProcessCreation
 description: |
   Collect all process creation events.
 parameters:
+  # This query will not see processes that complete within 1 second.
   - name: wmiQuery
     default: SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE
       TargetInstance ISA 'Win32_Process'
+
+  # This query is faster but contains less data. If the process
+  # terminates too quickly we miss its commandline.
   - name: eventQuery
     default: SELECT * FROM Win32_ProcessStartTrace
 
@@ -23,7 +27,14 @@ sources:
                    query="SELECT * FROM Win32_Process WHERE ProcessID = " +
                     format(format="%v", args=Parse.ProcessID),
                    namespace="ROOT/CIMV2")
-               } AS CommandLine
+               } AS CommandLine,
+               {
+                 SELECT CommandLine
+                 FROM wmi(
+                   query="SELECT * FROM Win32_Process WHERE ProcessID = " +
+                    format(format="%v", args=Parse.ParentProcessID),
+                   namespace="ROOT/CIMV2")
+               } AS ParentInfo
         FROM wmi_events(
            query=eventQuery,
            wait=5000000,   // Do not time out.

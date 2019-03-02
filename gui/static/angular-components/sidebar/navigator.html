@@ -60,17 +60,14 @@
 
   </section>
 
-  <!-- Configuration links -->
-  <!-- Not used any more - configuration happens on the server.
-  <section>
-    <h1>Configuration</h1>
+  <!-- Additional links -->
+  <section ng-if="controller.uiTraits.links">
+    <h1>Links</h1>
 
     <ul class="nav nav-list">
-      <li grr-nav-link state="artifacts"
-          disabled="!controller.uiTraits.artifact_manager_nav_item_enabled">
-        Artifact Manager
+      <li ng-repeat="item in controller.uiTraits.links">
+        <a href="{{item.url}}">{{ item.text }}</a>
       </li>
     </ul>
   </section>
-  -->
 </div>

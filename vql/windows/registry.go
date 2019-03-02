@@ -95,7 +95,7 @@ func (self ReadKeyValues) Call(
 						value_info, ok := item.(glob.FileInfo)
 						if ok {
 							value_data, ok := value_info.Data().(*vfilter.Dict)
-							if ok {
+							if ok && value_data != nil {
 								value, pres := value_data.Get("value")
 								if pres {
 									res.Set(item.Name(), value)
