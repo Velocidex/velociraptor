@@ -169,13 +169,13 @@ func (self *RawRegValueInfo) Data() interface{} {
 
 	switch value_data.Type {
 	case regparser.REG_SZ, regparser.REG_MULTI_SZ, regparser.REG_EXPAND_SZ:
-		result.Set("data", strings.TrimRight(value_data.String, "\x00"))
+		result.Set("value", strings.TrimRight(value_data.String, "\x00"))
 
 	case regparser.REG_DWORD, regparser.REG_QWORD, regparser.REG_DWORD_BIG_ENDIAN:
-		result.Set("data", value_data.Uint64)
+		result.Set("value", value_data.Uint64)
 	default:
 		if len(value_data.Data) < MAX_EMBEDDED_REG_VALUE {
-			result.Set("data", value_data.Data)
+			result.Set("value", value_data.Data)
 		}
 	}
 	return result

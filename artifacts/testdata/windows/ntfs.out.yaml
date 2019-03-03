@@ -10,4 +10,18 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
  {
   "FullPath": "\\\\.\\c:\\pagefile.sys"
  }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs") WHERE Name = "notepad.exe"[
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs") WHERE Name = "notepad.exe"[
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
 ]

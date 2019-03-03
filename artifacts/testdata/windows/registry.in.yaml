@@ -15,3 +15,7 @@ Queries:
   - SELECT FullPath FROM stat(
        filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
        accessor="reg")
+
+  # This artifact uses the raw registry parser.
+  - SELECT * FROM Artifact.Windows.System.Amcache(
+       amCacheGlob="c:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5

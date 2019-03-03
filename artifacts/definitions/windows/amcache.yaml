@@ -1,0 +1,45 @@
+name: Windows.System.Amcache
+description: |
+  Get information from the system's amcache.
+
+  The Amcache.hve file is a registry file that stores the information
+  of executed applications. Amcache.hve records the recent processes
+  that were run and lists the path of the files that’s executed which
+  can then be used to find the executed program.
+
+  This artifact works on Windows 10 1607 version.
+
+  References:
+    https://www.andreafortuna.org/cybersecurity/amcache-and-shimcache-in-forensic-analysis/
+    https://www.ssi.gouv.fr/uploads/2019/01/anssi-coriin_2019-analysis_amcache.pdf
+
+parameters:
+  - name: amCacheGlob
+    default: "%SYSTEMROOT%/appcompat/Programs/Amcache.hve"
+  - name: amCacheRegPath
+    default: /Root/InventoryApplicationFile/*
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+    queries:
+      - |
+        SELECT FileId,
+               Key.FullPath as Key,
+               timestamp(epoch=Key.Mtime.Sec) as LastModified,
+               LowerCaseLongPath as Binary,
+               Name,
+               Size,
+               ProductName,
+               Publisher,
+               Version,
+               BinFileVersion
+        FROM foreach(
+          row={
+            SELECT FullPath from glob(globs=expand(path=amCacheGlob))
+          }, query={
+            SELECT * from read_reg_key(
+               globs=url(scheme='ntfs', path=FullPath, fragment=amCacheRegPath).String,
+               accessor='raw_reg'
+            )
+        })

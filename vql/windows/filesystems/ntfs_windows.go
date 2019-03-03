@@ -41,6 +41,9 @@ import (
 )
 
 var (
+	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
+	driveRegex = regexp.MustCompile(
+		"(?i)^[/\\\\]?([a-z]:)(.*)")
 	deviceDriveRegex = regexp.MustCompile(
 		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-zA-Z]:)(.*)")
 	deviceDirectoryRegex = regexp.MustCompile(
@@ -303,6 +306,11 @@ func (self *readAdapter) Read(buf []byte) (int, error) {
 	return res, err
 }
 
+func (self *readAdapter) ReadAt(buf []byte, offset int64) (int, error) {
+	self.Seek(offset, os.SEEK_SET)
+	return self.Read(buf)
+}
+
 func (self *readAdapter) Close() error {
 	return nil
 }
@@ -348,7 +356,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 			return &readAdapter{
 				info: &NTFSFileInfo{
 					info:       info,
-					_full_path: device + dirname + "\\" + info.Name,
+					_full_path: device + subpath + "\\" + info.Name,
 				},
 				reader: data,
 			}, nil
@@ -405,9 +413,15 @@ func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error)
 	// collapse multiple slashes (and prevent device names from
 	// being recognized).
 	path = strings.Replace(path, "/", "\\", -1)
+
 	m := deviceDriveRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
 		return m[1], clean(m[2]), nil
+	}
+
+	m = driveRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		return "\\\\.\\" + m[1], clean(m[2]), nil
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
@@ -426,7 +440,7 @@ func (self *NTFSFileSystemAccessor) PathSplit(path string) []string {
 }
 
 func (self NTFSFileSystemAccessor) PathJoin(x, y string) string {
-	return filepath.Join(x, y)
+	return x + "\\" + strings.TrimLeft(y, "\\")
 }
 
 // We want to show the entire device as one name so we need to escape
