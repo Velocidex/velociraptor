@@ -105,6 +105,7 @@ func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 type HuntResultsPluginArgs struct {
 	Artifact string `vfilter:"required,field=artifact"`
 	HuntId   string `vfilter:"required,field=hunt_id"`
+	Brief    bool   `vfilter:"optional,field=brief"`
 }
 
 type HuntResultsPlugin struct{}
@@ -173,15 +174,20 @@ func (self HuntResultsPlugin) Call(
 				// Read each CSV file and emit it with
 				// some extra columns for context.
 				for row := range csv.GetCSVReader(fd) {
-					output_chan <- row.
+					value := row.
 						Set("Timestamp", stat.ModTime().
 							UnixNano()/1000000).
 						Set("ClientId",
 							participation_row.ClientId).
 						Set("Fqdn",
-							participation_row.Fqdn).
-						Set("HuntId", participation_row.HuntId).
-						Set("Flow", flow_obj)
+							participation_row.Fqdn)
+
+					if !arg.Brief {
+						value.Set("HuntId",
+							participation_row.HuntId).
+							Set("Flow", flow_obj)
+					}
+					output_chan <- value
 				}
 			}
 		}

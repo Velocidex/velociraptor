@@ -23,6 +23,7 @@ import (
 	"archive/zip"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -39,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -129,7 +131,8 @@ func flowResultDownloadHandler(
 
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename='"+flow_id+".zip'")
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(flow_id+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
@@ -191,6 +194,7 @@ func huntResultDownloadHandler(
 			returnError(w, 404, err.Error())
 			return
 		}
+		flows.FindCollectedArtifacts(hunt_details)
 
 		// TODO: ACL checks.
 		if r.Method == "HEAD" {
@@ -200,7 +204,8 @@ func huntResultDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename='"+hunt_id+".zip'")
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(hunt_id+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
@@ -235,6 +240,29 @@ func huntResultDownloadHandler(
 		_, err = f.Write([]byte(hunt_details_json))
 		if err != nil {
 			return
+		}
+
+		// Export aggregate CSV files for all clients.
+		for _, artifact := range hunt_details.Artifacts {
+			query := "SELECT * FROM hunt_results(" +
+				"hunt_id=HuntId, artifact=Artifact, brief=true)"
+			env := vfilter.NewDict().
+				Set("Artifact", artifact).
+				Set("HuntId", hunt_id)
+
+			f, err := zip_writer.Create("All " + artifact)
+			if err != nil {
+				continue
+			}
+
+			err = StoreVQLAsCSVFile(r.Context(), config_obj,
+				env, query, f)
+			if err != nil {
+				logging.GetLogger(config_obj, &logging.Audit).
+					WithFields(logrus.Fields{
+						"artifact": artifact,
+					}).Info("ExportHuntArtifact")
+			}
 		}
 
 		file_store_factory := file_store.GetFileStore(config_obj)
@@ -376,8 +404,8 @@ func vfsFileDownloadHandler(
 		// really report an error to the client.
 		filename := strings.Replace(path.Dir(request.VfsPath),
 			"\"", "_", -1)
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+
-			filename+"\"")
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(filename))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 

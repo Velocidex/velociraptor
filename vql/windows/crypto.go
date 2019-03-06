@@ -35,6 +35,7 @@ import (
 	"unsafe"
 
 	"github.com/mattn/go-pointer"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -56,6 +57,9 @@ var (
 //export cert_walker
 func cert_walker(cert *C.char, len C.int,
 	store *C.wchar_t, store_len C.int, ctx *C.int) {
+
+	// This sometimes panics when the API returns crazy data.
+	defer utils.CheckForPanic("cert %p, len %d", cert, len)
 
 	// Make a copy of the slice so windows may free its own copy.
 	der_cert := append(

@@ -18,6 +18,8 @@
 package api
 
 import (
+	"io"
+
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -73,4 +75,45 @@ func RunVQL(
 	}
 
 	return result, nil
+}
+
+func StoreVQLAsCSVFile(
+	ctx context.Context,
+	config_obj *api_proto.Config,
+	env *vfilter.Dict,
+	query string,
+	writer io.Writer) error {
+
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	env.Set("server_config", config_obj)
+
+	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
+	scope.Logger = logging.NewPlainLogger(config_obj,
+		&logging.ToolComponent)
+
+	vql, err := vfilter.Parse(query)
+	if err != nil {
+		return err
+	}
+
+	csv_writer, err := csv.GetCSVAppender(scope, writer, true /* write_headers */)
+	if err != nil {
+		return err
+	}
+	defer csv_writer.Close()
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	for row := range vql.Eval(sub_ctx, scope) {
+		csv_writer.Write(row)
+	}
+
+	return nil
 }

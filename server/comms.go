@@ -302,7 +302,6 @@ func control(server_obj *Server) http.Handler {
 			panic("http handler is not a flusher")
 		}
 
-		// Wait here until the server can deal with this post.
 		server_obj.StartConcurrencyControl()
 		defer server_obj.EndConcurrencyControl()
 

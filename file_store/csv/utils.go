@@ -18,6 +18,7 @@
 package csv
 
 import (
+	"io"
 	"os"
 	"sync"
 	"time"
@@ -77,18 +78,17 @@ func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 
 }
 
-func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
+func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) (*CSVWriter, error) {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
 	}
 
-	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
-	if err != nil {
-		return nil, err
+	headers_written := true
+	if write_headers {
+		headers_written = false
 	}
-	headers_written := length > 0
+
 	result.wg.Add(1)
 
 	go func() {
@@ -137,4 +137,13 @@ func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWrit
 	}()
 
 	return result, nil
+}
+
+func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
+	// Seek to the end of the file.
+	length, err := fd.Seek(0, os.SEEK_END)
+	if err != nil {
+		return nil, err
+	}
+	return GetCSVAppender(scope, fd, length == 0)
 }

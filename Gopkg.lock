@@ -34,6 +34,14 @@
   revision = "e1c353eeaaee536ccb6ffb0ba2e97de77134a20c"
 
 [[projects]]
+  digest = "1:f51081e4d4f581556c41c1a656f9b3d1c95c956210bcdbbe88b0020432ec3b95"
+  name = "github.com/Velocidex/cgofuse"
+  packages = ["fuse"]
+  pruneopts = "UT"
+  revision = "b96e4f2547d088a20b1770612bd74fc0e65720bd"
+  version = "v1.1.2"
+
+[[projects]]
   digest = "1:7eb4fdedc36c5ce400296a0726ffcde3bcb452daa74ab5675d19274f24799ad9"
   name = "github.com/Velocidex/go-yara"
   packages = ["."]
@@ -732,6 +740,7 @@
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
+    "github.com/Velocidex/cgofuse/fuse",
     "github.com/Velocidex/go-yara",
     "github.com/Velocidex/yaml",
     "github.com/alecthomas/participle",

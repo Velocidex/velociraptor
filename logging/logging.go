@@ -55,8 +55,20 @@ type LogContext struct {
 	*logrus.Logger
 }
 
+func (self *LogContext) Debug(format string, v ...interface{}) {
+	self.Logger.Debug(fmt.Sprintf(format, v...))
+}
+
 func (self *LogContext) Info(format string, v ...interface{}) {
 	self.Logger.Info(fmt.Sprintf(format, v...))
+}
+
+func (self *LogContext) Warn(format string, v ...interface{}) {
+	self.Logger.Warn(fmt.Sprintf(format, v...))
+}
+
+func (self *LogContext) Err(format string, v ...interface{}) {
+	self.Logger.Error(fmt.Sprintf(format, v...))
 }
 
 type LogManager struct {
