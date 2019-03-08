@@ -136,7 +136,7 @@ func NewFIFOCache(
 
 	// Start the query and populate the _FIFOCache.
 	go func() {
-		// Create a backgroup context to ensure this query
+		// Create a backgroud context to ensure this query
 		// keeps running *after* we are finished. It will
 		// eventually be destroyed when the root scope is
 		// done.
