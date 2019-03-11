@@ -18,11 +18,14 @@
 package functions
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/binary"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -155,10 +158,42 @@ func (self _Now) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.
 	}
 }
 
+type _UTF16 struct{}
+
+func (self _UTF16) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+
+	arg := &_Base64DecodeArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("utf16: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	ints := make([]uint16, len(arg.String)/2)
+	if err := binary.Read(bytes.NewReader([]byte(arg.String)), binary.LittleEndian, &ints); err != nil {
+		scope.Log("utf16: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return string(utf16.Decode(ints))
+}
+
+func (self _UTF16) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "utf16",
+		Doc:     "Parse input from utf16.",
+		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_Now{})
 	vql_subsystem.RegisterFunction(&_ToLower{})
 	vql_subsystem.RegisterFunction(&_ToUpper{})
+	vql_subsystem.RegisterFunction(&_UTF16{})
 }

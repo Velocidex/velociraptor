@@ -63,7 +63,8 @@ sources:
           row=success_logon,
           query={
            SELECT SuccessSystem.TimeCreated.SystemTime AS LogonTime,
-                  SuccessSystem, SuccessEventData, FailedEventData,
+                  SuccessSystem, SuccessEventData,
+                  enumerate(items=FailedEventData) as FailedEventData,
                   FailedSystem, count(items=SuccessSystem) as Count
            FROM last_5_events
            WHERE FailedEventData.SubjectUserName = SuccessEventData.SubjectUserName

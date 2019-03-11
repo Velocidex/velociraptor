@@ -42,7 +42,8 @@ key. For example watching for new files or modified files can be achieved by:
 
 SELECT format(format="%v@%v", args=[FullPath, Mtime.Sec]) as Key, ....
 
-*/package common
+*/
+package common
 
 import (
 	"context"

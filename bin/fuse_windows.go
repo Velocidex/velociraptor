@@ -54,7 +54,7 @@ var (
 	trace_print = false
 )
 
-func trace(msg string, vals ...interface{}) {
+func trace_debug(msg string, vals ...interface{}) {
 	r := recover()
 	if r != nil {
 		fmt.Printf("PANIC %v\n", r)
@@ -101,7 +101,7 @@ func (self *VFSFs) Getattr(file_path string, stat *fuse.Stat_t, fh uint64) (errc
 		stat.Mode = fuse.S_IFDIR | 0755
 		return 0
 	}
-	defer trace("Getattr %v", file_path)
+	defer trace_debug("Getattr %v", file_path)
 
 	vfs_name := fsPathToVFS(file_path)
 
@@ -128,7 +128,7 @@ func (self *VFSFs) Open(path string, flags int) (errc int, fh uint64) {
 }
 
 func (self *VFSFs) Read(file_path string, buff []byte, off int64, fd uint64) (n int) {
-	defer trace("Read %v @ %v\n", file_path, off)
+	defer trace_debug("Read %v @ %v\n", file_path, off)
 
 	vfs_name := fsPathToVFS(file_path)
 	ferr := self.read_buffer(vfs_name, buff, off, fd)
@@ -208,7 +208,7 @@ func (self *VFSFs) Readdir(path string,
 	ofst int64,
 	fh uint64) (errc int) {
 
-	defer trace("Readdir %v", path)
+	defer trace_debug("Readdir %v", path)
 
 	fill(".", nil, 0)
 	fill("..", nil, 0)

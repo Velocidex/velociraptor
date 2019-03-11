@@ -20,6 +20,8 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"runtime/pprof"
+	"runtime/trace"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
@@ -50,6 +52,12 @@ var (
 	verbose_flag = app.Flag(
 		"verbose", "Enabled verbose logging for client.").Short('v').
 		Default("false").Bool()
+
+	profile_flag = app.Flag(
+		"profile", "Write profiling information to this file.").String()
+
+	trace_flag = app.Flag(
+		"trace", "Write trace information to this file.").String()
 
 	command_handlers []CommandHandler
 )
@@ -102,6 +110,22 @@ func main() {
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true
+	}
+
+	if *trace_flag != "" {
+		f, err := os.Create(*trace_flag)
+		kingpin.FatalIfError(err, "trace file.")
+		trace.Start(f)
+		defer trace.Stop()
+	}
+
+	if *profile_flag != "" {
+		f2, err := os.Create(*profile_flag)
+		kingpin.FatalIfError(err, "Profile file.")
+
+		pprof.StartCPUProfile(f2)
+		defer pprof.StopCPUProfile()
+
 	}
 
 	for _, command_handler := range command_handlers {

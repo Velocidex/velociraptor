@@ -286,6 +286,19 @@
   version = "v1.8.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:5bf23f15fd4550fa19e9fbc8e9fd2e254444a01f4644ad835b5389d1f7d91077"
+  name = "github.com/mailru/easyjson"
+  packages = [
+    ".",
+    "buffer",
+    "jlexer",
+    "jwriter",
+  ]
+  pruneopts = "UT"
+  revision = "6243d8e04c3f819e79757e8bc3faa15c3cb27003"
+
+[[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
@@ -686,6 +699,18 @@
   version = "2.0.0"
 
 [[projects]]
+  digest = "1:d71c944662848a1da05e9da502b4141c710325cfc6403e795d415baeaa499795"
+  name = "gopkg.in/olivere/elastic.v5"
+  packages = [
+    ".",
+    "config",
+    "uritemplates",
+  ]
+  pruneopts = "UT"
+  revision = "2a49cd32474903f20e8a6c2feae0f37e0e5a74cd"
+  version = "v5.0.79"
+
+[[projects]]
   branch = "master"
   digest = "1:75d514507b4df5d6f42aab7cda776419d4384e904e7d0daf1f2aa7233db8eb4c"
   name = "www.velocidex.com/golang/evtx"
@@ -719,11 +744,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:28be96904219d006b16e69760af9dc3601045f344adeb730ab04c16f6aa81f12"
+  digest = "1:d82bfcde0ad45030ac07036fb5fa589d774fdc0c2827ea9774ae54acf11e4e11"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "b2111909fb0b810f97613f0fec4677fb0a06cce7"
+  revision = "9c2489980673523fb26dc47565741d47d0618e1d"
 
 [[projects]]
   branch = "master"
@@ -815,6 +840,7 @@
     "google.golang.org/grpc/status",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
+    "gopkg.in/olivere/elastic.v5",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/oleparse",

@@ -222,61 +222,73 @@ func (r *Reader) Read() (record []string, err error) {
 }
 
 func (r *Reader) ReadAny() ([]interface{}, error) {
-	record := []interface{}{}
-
 	result, err := r.Read()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, item := range result {
+	record := make([]interface{}, len(result))
+
+	for i, item := range result {
 		if item == "true" {
-			record = append(record, true)
+			record[i] = true
+			continue
+		}
 
-		} else if item == "false" {
-			record = append(record, false)
+		if item == "false" {
+			record[i] = false
+			continue
+		}
 
-		} else if strings.HasPrefix(item, "base64:") {
+		if strings.HasPrefix(item, "base64:") {
 			value, err := base64.StdEncoding.DecodeString(item[7:])
 			if err != nil {
 				return nil, err
 			}
-			record = append(record, value)
-
-		} else if strings.HasPrefix(item, " ") {
-			record = append(record, item[1:])
-
-			// It is a Json object
-		} else if strings.HasPrefix(item, "{") {
+			record[i] = value
+			continue
+		}
+		if strings.HasPrefix(item, " ") {
+			record[i] = item[1:]
+			continue
+		}
+		// It is a Json object
+		if strings.HasPrefix(item, "{") {
 			value := make(map[string]interface{})
 			err := json.Unmarshal([]byte(item), &value)
 			if err != nil {
 				return nil, err
 			}
-			record = append(record, value)
+			record[i] = value
+			continue
+		}
 
-			// It is a json list
-		} else if strings.HasPrefix(item, "[") {
+		// It is a json list
+		if strings.HasPrefix(item, "[") {
 			value := []interface{}{}
 			err := json.Unmarshal([]byte(item), &value)
 			if err != nil {
 				return nil, err
 			}
-			record = append(record, value)
-
-			// Its a number
-		} else if integer_regex.MatchString(item) {
-			value, _ := strconv.Atoi(item)
-			record = append(record, value)
-
-		} else if number_regex.MatchString(item) {
-			value, _ := strconv.ParseFloat(item, 64)
-			record = append(record, value)
-
-			// Just a regular string.
-		} else {
-			record = append(record, item)
+			record[i] = value
+			continue
 		}
+
+		// Its a number
+		value, err := strconv.Atoi(item)
+		if err == nil {
+			record[i] = value
+			continue
+		}
+
+		f_value, err := strconv.ParseFloat(item, 64)
+		if err == nil {
+			record[i] = f_value
+			continue
+		}
+
+		// Just a regular string.
+		record[i] = item
 	}
 
 	return record, nil

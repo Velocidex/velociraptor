@@ -75,6 +75,8 @@ sources:
         SELECT * FROM foreach(
           row=success_logon,
           query={
-           SELECT SuccessTime, FailedTime, count(items=FailedTime) as Count
+           SELECT SuccessTime,
+              enumerate(items=FailedTime) as FailedTime,
+              count(items=FailedTime) as Count
            FROM last_5_events GROUP BY SuccessTime
           }) WHERE Count > 3
