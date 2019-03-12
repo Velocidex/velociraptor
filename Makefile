@@ -15,6 +15,9 @@ darwin:
 windows:
 	go run make.go -v windows
 
+windows_race:
+	go run make.go -v windowsRace
+
 xgo:
 	go run make.go -v xgo
 

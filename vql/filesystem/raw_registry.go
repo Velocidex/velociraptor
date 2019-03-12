@@ -231,7 +231,7 @@ type RawRegFileSystemAccessor struct {
 	fd_cache map[string]*RawRegistryFileCache
 }
 
-func (self *RawRegFileSystemAccessor) GetRegHive(
+func (self *RawRegFileSystemAccessor) getRegHive(
 	file_path string) (*RawRegistryFileCache, *url.URL, error) {
 	url, err := url.Parse(file_path)
 	if err != nil {
@@ -242,9 +242,6 @@ func (self *RawRegFileSystemAccessor) GetRegHive(
 	if accessor == nil || isnull {
 		return nil, nil, errors.New("Unknown delegate accessor")
 	}
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	base_url := *url
 	base_url.Fragment = ""
@@ -302,12 +299,13 @@ func (self *RawRegFileSystemAccessor) New(
 
 func (self RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	file_cache, url, err := self.GetRegHive(key_path)
+	file_cache, url, err := self.getRegHive(key_path)
 	if err != nil {
 		return nil, err
 	}
-
 	key := file_cache.registry.OpenKey(url.Fragment)
 	if key == nil {
 		return nil, errors.New("Key not found")

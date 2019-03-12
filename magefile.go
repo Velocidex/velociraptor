@@ -54,6 +54,15 @@ func Xgo() error {
 		"./bin/")
 }
 
+func WindowsRace() error {
+	return sh.RunV(
+		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
+		"--targets", "windows/amd64",
+		"-tags", "release cgo", "-race",
+		"-ldflags=-s -w "+flags(),
+		"./bin/")
+}
+
 func Linux() error {
 	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("failed to create output: %v", err)
@@ -95,7 +104,7 @@ func Dev() error {
 	env := make(map[string]string)
 	err = sh.RunWith(
 		env,
-		mg.GoCmd(), "build",
+		mg.GoCmd(), "build", "-race",
 		"-o", filepath.Join("output", name),
 		"-tags", "devel",
 		"-ldflags=-s -w "+flags(),
@@ -125,7 +134,9 @@ func Appveyor() error {
 	return Windows()
 }
 
-// Cross compile the windows binary using mingw
+// Cross compile the windows binary using mingw. Note that this does
+// not run the race detector because the ubuntu distribution of mingw
+// does not include tsan. Use WindowsRace() to build with xgo.
 func Windows() error {
 	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("failed to create output: %v", err)

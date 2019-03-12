@@ -31,6 +31,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs"
@@ -294,12 +295,17 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 }
 
 type readAdapter struct {
+	sync.Mutex
+
 	info   *NTFSFileInfo
 	reader io.ReaderAt
 	pos    int64
 }
 
 func (self *readAdapter) Read(buf []byte) (int, error) {
+	self.Lock()
+	defer self.Unlock()
+
 	res, err := self.reader.ReadAt(buf, self.pos)
 	self.pos += int64(res)
 
@@ -307,8 +313,12 @@ func (self *readAdapter) Read(buf []byte) (int, error) {
 }
 
 func (self *readAdapter) ReadAt(buf []byte, offset int64) (int, error) {
-	self.Seek(offset, os.SEEK_SET)
-	return self.Read(buf)
+	self.Lock()
+	defer self.Unlock()
+
+	self.pos = offset
+
+	return self.reader.ReadAt(buf, offset)
 }
 
 func (self *readAdapter) Close() error {
@@ -316,10 +326,16 @@ func (self *readAdapter) Close() error {
 }
 
 func (self *readAdapter) Stat() (os.FileInfo, error) {
+	self.Lock()
+	defer self.Unlock()
+
 	return self.info, nil
 }
 
 func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
+	self.Lock()
+	defer self.Unlock()
+
 	self.pos = offset
 	return self.pos, nil
 }
