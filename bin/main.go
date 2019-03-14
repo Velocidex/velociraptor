@@ -18,10 +18,14 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
+	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
+	"strings"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
@@ -65,6 +69,36 @@ var (
 func validateServerConfig(configuration *api_proto.Config) error {
 	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
+	}
+
+	// On windows we require file locations to include a drive
+	// letter.
+	if runtime.GOOS == "windows" {
+		path_regex := regexp.MustCompile("^[a-zA-Z]:")
+		path_check := func(parameter, value string) error {
+			if !path_regex.MatchString(value) {
+				return errors.New(fmt.Sprintf(
+					"%s must have a drive letter.",
+					parameter))
+			}
+			if strings.Contains(value, "/") {
+				return errors.New(fmt.Sprintf(
+					"%s can not contain / path separators on windows.",
+					parameter))
+			}
+			return nil
+		}
+
+		err := path_check("Datastore.Locations",
+			configuration.Datastore.Location)
+		if err != nil {
+			return err
+		}
+		err = path_check("Datastore.Locations",
+			configuration.Datastore.FilestoreDirectory)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

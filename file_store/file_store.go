@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -192,7 +193,16 @@ func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 			string(datastore.UnsanitizeComponent(component)))
 	}
 
-	return filepath.Join(components...), nil
+	result := filepath.Join(components...)
+
+	// This relies on the filepath starting with a drive letter
+	// and having \ as path separators. Main's
+	// validateServerConfig() ensures this is the case.
+	if runtime.GOOS == "windows" {
+		return "\\\\?\\" + result, nil
+	}
+
+	return result, nil
 }
 
 func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {

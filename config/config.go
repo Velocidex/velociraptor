@@ -51,7 +51,7 @@ func WritebackLocation(self *api_proto.Config) string {
 
 // Create a default configuration object.
 func GetDefaultConfig() *api_proto.Config {
-	return &api_proto.Config{
+	result := &api_proto.Config{
 		Version: &api_proto.Version{
 			Name:      "velociraptor",
 			Version:   constants.VERSION,
@@ -129,7 +129,18 @@ func GetDefaultConfig() *api_proto.Config {
 			BindPort:    8003,
 		},
 		ApiConfig: &api_proto.ApiClientConfig{},
+
+		// Use SSL by default - there is no real reason not to.
+		UseSelfSignedSsl: true,
 	}
+
+	// On windows we need slightly different defaults.
+	if runtime.GOOS == "windows" {
+		result.Datastore.Location = "C:\\Windows\\Temp"
+		result.Datastore.FilestoreDirectory = "C:\\Windows\\Temp"
+	}
+
+	return result
 }
 
 func maybeReadEmbeddedConfig() *api_proto.Config {

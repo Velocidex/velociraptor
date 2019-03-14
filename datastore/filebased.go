@@ -41,6 +41,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -466,7 +468,16 @@ func urnToFilename(config_obj *api_proto.Config, urn string) (string, error) {
 	// this suffix so it is not possible to break the datastore by
 	// having a urn with a component that ends with .db which
 	// creates a directory with the same name as a file.
-	return path.Join(components...) + ".db", nil
+	result := filepath.Join(components...) + ".db"
+
+	// This relies on the filepath starting with a drive letter
+	// and having \ as path separators. Main's
+	// validateServerConfig() ensures this is the case.
+	if runtime.GOOS == "windows" {
+		return "\\\\?\\" + result, nil
+	}
+
+	return result, nil
 }
 
 func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) error {
@@ -476,9 +487,10 @@ func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) e
 	}
 
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
+
 	// Try to create intermediate directories and try again.
 	if err != nil && os.IsNotExist(err) {
-		os.MkdirAll(path.Dir(filename), 0700)
+		os.MkdirAll(filepath.Dir(filename), 0700)
 		file, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
 	}
 	if err != nil {
