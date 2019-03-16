@@ -4,8 +4,8 @@ description: |
   table presents the AppCompat Shim information from the registry in a
   nice format.
 
-reference: |
-  http://files.brucon.org/2015/Tomczak_and_Ballenthin_Shims_for_the_Win.pdf
+reference:
+  - http://files.brucon.org/2015/Tomczak_and_Ballenthin_Shims_for_the_Win.pdf
 
 parameters:
   - name: shimKeys

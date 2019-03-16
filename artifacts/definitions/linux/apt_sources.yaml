@@ -14,7 +14,8 @@ description: |
   We then try to open the file. If the file exists we parse some
   metadata from it. If not we leave those columns empty.
 
-reference: "https://osquery.io/schema/3.2.6#apt_sources"
+reference:
+  - https://osquery.io/schema/3.2.6#apt_sources
 parameters:
   - name: linuxAptSourcesGlobs
     description: Globs to find apt source *.list files.

@@ -1,6 +1,7 @@
 name: Linux.Sys.ACPITables
 description: Firmware ACPI functional table common metadata and content.
-reference: https://osquery.io/schema/3.2.6#acpi_tables
+reference:
+  - https://osquery.io/schema/3.2.6#acpi_tables
 parameters:
   - name: kLinuxACPIPath
     default: /sys/firmware/acpi/tables

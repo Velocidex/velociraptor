@@ -139,6 +139,28 @@ func (self *Repository) GetQueryDependencies(query string) []string {
 	return result
 }
 
+// Expand artifact packs (i.e. those with multiple sources) into their
+// respective artifacts.
+func (self *Repository) GetArtifactNames(names []string) []string {
+	result := []string{}
+
+name_list:
+	for _, name := range names {
+		definition, pres := self.Data[name]
+		if pres {
+			for _, source := range definition.Sources {
+				if source.Name == "" {
+					result = append(result, name)
+					continue name_list
+				}
+
+				result = append(result, source.Name)
+			}
+		}
+	}
+	return result
+}
+
 func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 	request *actions_proto.VQLCollectorArgs) {
 	dependencies := make(map[string]bool)
@@ -194,16 +216,49 @@ func Compile(artifact *artifacts_proto.Artifact,
 		})
 	}
 
-	source_precondition := ""
 	for idx, source := range artifact.Sources {
-		prefix := fmt.Sprintf("%s_%d", escape_name(artifact.Name), idx)
-		source_result := ""
+		// If a precondition is defined at the artifact level, the
+		// source may override it.
+		source_precondition := artifact.Precondition
+		source_precondition_var := ""
 		if source.Precondition != "" {
-			source_precondition = "precondition_" + prefix
+			source_precondition = source.Precondition
+		}
+
+		// If the source has specialized name and description
+		// we use it otherwise take the name and description
+		// from the artifact itself. This allows us to create
+		// an artifact pack which contains multiple related
+		// artifacts in the sources list.
+
+		// NOTE: The client does not receive the actual name
+		// or description because we compress the
+		// VQLCollectorArgs object before we sent it to them
+		// (i.e. substitute the strings with place holders).
+		// It is therefore safe to include confidential
+		// information in the description or name properties
+		// of an artifact (Although obviously the client can
+		// see the actual VQL query that its running).
+		name := artifact.Name
+		description := artifact.Description
+
+		if source.Name != "" {
+			name = source.Name
+		}
+
+		if source.Description != "" {
+			description = source.Description
+		}
+
+		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
+		source_result := ""
+
+		if source_precondition != "" {
+			source_precondition_var = "precondition_" + prefix
 			result.Query = append(result.Query,
 				&actions_proto.VQLRequest{
-					VQL: "LET " + source_precondition + " = " +
-						source.Precondition,
+					VQL: "LET " + source_precondition_var + " = " +
+						source_precondition,
 				})
 		}
 
@@ -250,15 +305,17 @@ func Compile(artifact *artifacts_proto.Artifact,
 
 		if source.Precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name: "Artifact " + artifact.Name,
+				Name:        "Artifact " + name,
+				Description: description,
 				VQL: fmt.Sprintf(
 					"SELECT * FROM if(then=%s, condition=%s)",
-					source_result, source_precondition),
+					source_result, source_precondition_var),
 			})
 		} else {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name: "Artifact " + artifact.Name,
-				VQL:  "SELECT * FROM " + source_result,
+				Name:        "Artifact " + name,
+				Description: description,
+				VQL:         "SELECT * FROM " + source_result,
 			})
 		}
 	}

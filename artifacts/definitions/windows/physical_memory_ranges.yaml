@@ -1,7 +1,8 @@
 name: Windows.Sys.PhysicalMemoryRanges
 description: List Windows physical memory ranges.
-reference: |
-  https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_cm_resource_list
+reference:
+  - https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/content/wdm/ns-wdm-_cm_resource_list
+
 parameters:
   - name: physicalMemoryKey
     default: HKEY_LOCAL_MACHINE\HARDWARE\RESOURCEMAP\System Resources\Physical Memory\.Translated

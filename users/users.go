@@ -29,7 +29,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type UserRecord struct {
@@ -165,7 +164,9 @@ func GetUserNotifications(config_obj *api_proto.Config, username string, clear_p
 }
 
 func Notify(config_obj *api_proto.Config, notification *api_proto.UserNotification) error {
-	utils.Debug(notification)
+	mu.Lock()
+	defer mu.Unlock()
+
 	if gUserNotificationManager == nil {
 		return errors.New("Uninitiaalized UserNotificationManager")
 	}

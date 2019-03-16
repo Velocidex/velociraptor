@@ -21,6 +21,7 @@ package users
 
 import (
 	"path"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -31,6 +32,7 @@ import (
 )
 
 var (
+	mu                       sync.Mutex
 	gUserNotificationManager *UserNotificationManager
 )
 
@@ -105,6 +107,9 @@ func (self *UserNotificationManager) HandleNotification(
 
 func StartUserNotificationManager(config_obj *api_proto.Config) (
 	*UserNotificationManager, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	result := &UserNotificationManager{
 		config_obj:           config_obj,
 		writers:              make(map[string]*csv.CSVWriter),

@@ -485,7 +485,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 
 	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
 		LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
-		LastEventTableVersion: events.GlobalEventTable.Version,
+		LastEventTableVersion: events.GlobalEventTableVersion(),
 	})
 	if err != nil {
 		return result

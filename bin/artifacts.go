@@ -29,8 +29,8 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -52,16 +52,21 @@ var (
 	artifact_command_collect = artifact_command.Command(
 		"collect", "Collect all artifacts")
 
-	artifact_command_collect_dump_dir = artifact_command_collect.Flag(
-		"dump_dir", "Directory to dump output files.").
+	artifact_command_collect_output = artifact_command_collect.Flag(
+		"output", "When specified we create a zip file and "+
+			"store all output in it.").
 		Default("").String()
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
 		Default("text").Enum("text", "json", "csv")
 
+	artifact_command_collect_details = artifact_command_collect.Flag(
+		"details", "Show more details (Use -d -dd for even more)").
+		Short('d').Counter()
+
 	artifact_command_collect_name = artifact_command_collect.Arg(
-		"regex", "Regex of artifact names to collect.").
+		"artifact_name", "The artifact name to collectartifact_command_coll.").
 		Required().String()
 )
 
@@ -76,12 +81,6 @@ func listArtifacts() []string {
 	return result
 }
 
-func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
-	pattern = strings.Replace(pattern, "*", ".*", -1)
-	pattern = "^" + pattern + "$"
-	return regexp.Compile(pattern)
-}
-
 func collectArtifact(
 	config_obj *api_proto.Config,
 	repository *artifacts.Repository,
@@ -91,12 +90,6 @@ func collectArtifact(
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
-
-	if *artifact_command_collect_dump_dir != "" {
-		env.Set("$uploader", &vql_networking.FileBasedUploader{
-			UploadDir: *artifact_command_collect_dump_dir,
-		})
-	}
 
 	for _, request_env := range request.Env {
 		env.Set(request_env.Key, request_env.Value)
@@ -116,16 +109,83 @@ func collectArtifact(
 
 		switch *artifact_command_collect_format {
 		case "text":
-			table := evalQueryToTable(ctx, scope, vql, os.Stdout)
-			table.SetCaption(true, "Artifact: "+artifact_name)
+			var rows []vfilter.Row
+			for row := range vql.Eval(ctx, scope) {
+				rows = append(rows, row)
+			}
+
+			if *artifact_command_collect_details > 0 {
+				if query.Name != "" {
+					fmt.Printf("# %s\n\n", query.Name)
+				}
+				if query.Description != "" {
+					fmt.Printf("%s\n\n", reporting.FormatDescription(
+						config_obj, query.Description, rows))
+				}
+			}
+
+			// Queries without a name do not produce
+			// interesting results.
+			table := reporting.OutputRowsToTable(scope, rows, os.Stdout)
+			if query.Name == "" {
+				continue
+			}
+			table.SetCaption(true, query.Name)
 			if table.NumLines() > 0 {
 				table.Render()
 			}
+			fmt.Println("")
+
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)
 
 		case "csv":
 			outputCSV(ctx, scope, vql, os.Stdout)
+		}
+	}
+}
+
+func collectArtifactToContainer(
+	config_obj *api_proto.Config,
+	repository *artifacts.Repository,
+	artifact_name string,
+	request *actions_proto.VQLCollectorArgs) {
+	env := vfilter.NewDict().
+		Set("config", config_obj.Client).
+		Set("server_config", config_obj).
+		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+
+	// Create an output container.
+	container, err := reporting.NewContainer(*artifact_command_collect_output)
+	kingpin.FatalIfError(err, "Can not create output container")
+	defer container.Close()
+
+	// Any uploads go into the container.
+	env.Set("$uploader", container)
+
+	for _, request_env := range request.Env {
+		env.Set(request_env.Key, request_env.Value)
+	}
+
+	scope := artifacts.MakeScope(repository).AppendVars(env)
+	defer scope.Close()
+
+	scope.Logger = logging.NewPlainLogger(config_obj,
+		&logging.ToolComponent)
+
+	ctx := InstallSignalHandler(scope)
+
+	for _, query := range request.Query {
+		vql, err := vfilter.Parse(query.VQL)
+		kingpin.FatalIfError(err, "Parse VQL")
+
+		// Store query output in the container.
+		err = container.StoreArtifact(config_obj, ctx, scope, vql, query)
+		kingpin.FatalIfError(err, "container.StoreArtifact")
+
+		if query.Name != "" {
+			logging.GetLogger(config_obj, &logging.ToolComponent).
+				Info("Collected %s", query.Name)
 		}
 	}
 }
@@ -150,41 +210,38 @@ func getRepository(config_obj *api_proto.Config) *artifacts.Repository {
 func doArtifactCollect() {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
-	var name_regex *regexp.Regexp
-	if *artifact_command_collect_name != "" {
-		re, err := getFilterRegEx(*artifact_command_collect_name)
-		kingpin.FatalIfError(err, "Artifact name regex not valid")
-
-		name_regex = re
+	artifact, pres := repository.Get(*artifact_command_collect_name)
+	if !pres {
+		kingpin.Fatalf("Artifact %v not known.", *artifact_command_collect_name)
 	}
 
-	for _, name := range repository.List() {
-		// Skip artifacts that do not match.
-		if name_regex != nil && name_regex.FindString(name) == "" {
-			continue
+	request := &actions_proto.VQLCollectorArgs{}
+	err := artifacts.Compile(artifact, request)
+	kingpin.FatalIfError(
+		err, fmt.Sprintf("Unable to compile artifact %s.",
+			*artifact_command_collect_name))
+
+	if env_map != nil {
+		for k, v := range *env_map {
+			request.Env = append(
+				request.Env, &actions_proto.VQLEnv{
+					Key: k, Value: v,
+				})
 		}
-
-		artifact, pres := repository.Get(name)
-		if !pres {
-			kingpin.Fatalf("Artifact not found")
-		}
-
-		request := &actions_proto.VQLCollectorArgs{}
-		err := artifacts.Compile(artifact, request)
-		kingpin.FatalIfError(
-			err, fmt.Sprintf("Unable to compile artifact %s.", name))
-
-		if env_map != nil {
-			for k, v := range *env_map {
-				request.Env = append(
-					request.Env, &actions_proto.VQLEnv{
-						Key: k, Value: v,
-					})
-			}
-		}
-
-		collectArtifact(config_obj, repository, name, request)
 	}
+
+	if *artifact_command_collect_output == "" {
+		collectArtifact(config_obj, repository, *artifact_command_collect_name, request)
+	} else {
+		collectArtifactToContainer(
+			config_obj, repository, *artifact_command_collect_name, request)
+	}
+}
+
+func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
+	pattern = strings.Replace(pattern, "*", ".*", -1)
+	pattern = "^" + pattern + "$"
+	return regexp.Compile(pattern)
 }
 
 func doArtifactList() {

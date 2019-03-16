@@ -37,6 +37,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -68,7 +69,8 @@ func (self *ArtifactCollector) Start(
 	}
 
 	// Update the flow's artifacts list.
-	flow_obj.FlowContext.Artifacts = collector_args.Artifacts.Names
+	flow_obj.FlowContext.Artifacts = repository.GetArtifactNames(
+		collector_args.Artifacts.Names)
 	flow_obj.SetContext(flow_obj.FlowContext)
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
@@ -93,6 +95,15 @@ func (self *ArtifactCollector) Start(
 	if err != nil {
 		return err
 	}
+
+	flow_state := &flows_proto.ArtifactCompressionDict{}
+	err = artifactCompress(vql_collector_args, flow_state)
+	if err != nil {
+		return err
+	}
+	flow_obj.SetState(flow_state)
+
+	utils.Debug(vql_collector_args)
 
 	return QueueMessageForClient(
 		config_obj, flow_obj,
@@ -133,6 +144,11 @@ func (self *ArtifactCollector) ProcessMessage(
 		if !ok {
 			return nil
 		}
+
+		// Restore strings from flow state.
+		dict := flow_obj.GetState().(*flows_proto.ArtifactCompressionDict)
+		artifactUncompress(response, dict)
+
 		log_path := path.Join(
 			"clients", flow_obj.RunnerArgs.ClientId,
 			"artifacts", response.Query.Name,
@@ -224,6 +240,60 @@ func AddArtifactCollectorArgs(
 			})
 	}
 	return nil
+}
+
+// Compile the artifact definition into a VQL Request. In order to
+// avoid sending the client descriptive strings we encode strings in a
+// dictionary then decode them to show the user.
+func artifactCompress(result *actions_proto.VQLCollectorArgs,
+	dictionary *flows_proto.ArtifactCompressionDict) error {
+	idx := 0
+	scope := vql_subsystem.MakeScope()
+	compress := func(value string) string {
+		key := fmt.Sprintf("$$%d", idx)
+		idx++
+		dictionary.Substs = append(dictionary.Substs, &actions_proto.VQLEnv{
+			Key: key, Value: value})
+
+		return key
+	}
+
+	for _, query := range result.Query {
+		if query.Name != "" {
+			query.Name = compress(query.Name)
+		}
+		if query.Description != "" {
+			query.Description = compress(query.Description)
+		}
+
+		// Parse and re-serialize the query into standard
+		// forms. This removes comments.
+		ast, err := vfilter.Parse(query.VQL)
+		if err != nil {
+			return err
+		}
+
+		// TODO: Compress the AST.
+		query.VQL = ast.ToString(scope)
+	}
+
+	return nil
+}
+
+func artifactUncompress(response *actions_proto.VQLResponse,
+	dictionary *flows_proto.ArtifactCompressionDict) {
+
+	decompress := func(value string) string {
+		for _, subst := range dictionary.Substs {
+			if subst.Key == value {
+				return subst.Value
+			}
+		}
+		return value
+	}
+
+	response.Query.Name = decompress(response.Query.Name)
+	response.Query.Description = decompress(response.Query.Description)
 }
 
 func init() {

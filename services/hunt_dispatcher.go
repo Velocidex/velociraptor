@@ -32,11 +32,16 @@ import (
 )
 
 var (
+	mu sync.Mutex
+
 	global_hunt_dispatcher *HuntDispatcher
 	hunt_id_regex          = regexp.MustCompile(`^H\.[^.]+$`)
 )
 
 func GetHuntDispatcher() *HuntDispatcher {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if global_hunt_dispatcher == nil {
 		panic("Global hunt dispatcher has not been initialized yet!")
 	}
@@ -223,6 +228,9 @@ func (self *HuntDispatcher) Refresh() error {
 }
 
 func startHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting hunt dispatcher.")
 

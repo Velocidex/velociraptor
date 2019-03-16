@@ -36,11 +36,18 @@ var (
 
 type EventTable struct {
 	Events  []*actions_proto.VQLCollectorArgs
-	Version uint64
+	version uint64
 
 	// This will be closed to signal we need to abort the current
 	// event queries.
 	Done chan bool
+}
+
+func GlobalEventTableVersion() uint64 {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return GlobalEventTable.version
 }
 
 func Update(
@@ -66,7 +73,7 @@ func NewEventTable(
 	table *actions_proto.VQLEventTable) *EventTable {
 	result := &EventTable{
 		Events:  table.Event,
-		Version: table.Version,
+		version: table.Version,
 		Done:    make(chan bool),
 	}
 

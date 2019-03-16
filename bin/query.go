@@ -24,11 +24,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/olekukonko/tablewriter"
 	"gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -81,12 +80,7 @@ func outputCSV(ctx context.Context,
 	kingpin.FatalIfError(err, "outputCSV")
 	defer csv_writer.Close()
 
-	for {
-		result, ok := <-result_chan
-		if !ok {
-			return
-		}
-
+	for result := range result_chan {
 		payload := []map[string]interface{}{}
 		err := json.Unmarshal(result.Payload, &payload)
 		kingpin.FatalIfError(err, "outputCSV")
@@ -104,46 +98,6 @@ func outputCSV(ctx context.Context,
 		}
 	}
 
-}
-
-func evalQueryToTable(ctx context.Context,
-	scope *vfilter.Scope,
-	vql *vfilter.VQL,
-	out io.Writer) *tablewriter.Table {
-
-	output_chan := vql.Eval(ctx, scope)
-	table := tablewriter.NewWriter(out)
-
-	columns := vql.Columns(scope)
-	table.SetHeader(*columns)
-	table.SetCaption(true, vql.ToString(scope))
-	table.SetAutoFormatHeaders(false)
-	table.SetAutoWrapText(false)
-
-	for {
-		row, ok := <-output_chan
-		if !ok {
-			return table
-		}
-		string_row := []string{}
-		if len(*columns) == 0 {
-			members := scope.GetMembers(row)
-			table.SetHeader(members)
-			columns = &members
-		}
-
-		for _, key := range *columns {
-			cell := ""
-			value, pres := scope.Associative(row, key)
-			if pres && !utils.IsNil(value) {
-				cell = utils.Stringify(value, scope)
-			}
-			string_row = append(string_row, cell)
-		}
-
-		table.Append(string_row)
-		vfilter.ChargeOp(scope)
-	}
 }
 
 func doQuery() {
@@ -183,7 +137,7 @@ func doQuery() {
 
 		switch *format {
 		case "text":
-			table := evalQueryToTable(ctx, scope, vql, os.Stdout)
+			table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
 			table.Render()
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)

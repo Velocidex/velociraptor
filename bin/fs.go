@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -61,7 +62,7 @@ func eval_query(query string, scope *vfilter.Scope) {
 
 	switch *fs_command_format {
 	case "text":
-		table := evalQueryToTable(ctx, scope, vql, os.Stdout)
+		table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
 		table.Render()
 	case "json":
 		outputJSON(ctx, scope, vql, os.Stdout)

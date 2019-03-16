@@ -3,7 +3,8 @@ description: |
   Represents products as they are installed by Windows Installer. A product generally
   correlates to one installation package on Windows. Some fields may be blank as Windows
   installation details are left to the discretion of the product author.
-reference: https://github.com/facebook/osquery/blob/master/specs/windows/programs.table
+reference:
+  - https://github.com/facebook/osquery/blob/master/specs/windows/programs.table
 
 parameters:
   - name: programKeys

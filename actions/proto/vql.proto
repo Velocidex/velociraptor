@@ -11,6 +11,9 @@ message VQLRequest {
     string Name = 2 [(sem_type) = {
             description: "The name of this query. This should be descriptive to indicate what type of informaiton the query retrieves.",
         }];
+    string Description = 3 [(sem_type) = {
+            description: "What this query is supposed to do.",
+        }];
     string VQL = 1 [(sem_type) = {
             description: "The VQL query to execute on the client.",
         }];

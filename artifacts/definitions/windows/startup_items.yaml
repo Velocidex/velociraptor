@@ -1,7 +1,8 @@
 name: Windows.Sys.StartupItems
 description: Applications that will be started up from the various run key locations.
-reference: |
-  https://docs.microsoft.com/en-us/windows/desktop/setupapi/run-and-runonce-registry-keys
+reference:
+  - https://docs.microsoft.com/en-us/windows/desktop/setupapi/run-and-runonce-registry-keys
+
 parameters:
   - name: runKeyGlobs
     default: >

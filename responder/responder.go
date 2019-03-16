@@ -19,19 +19,23 @@ package responder
 
 import (
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"reflect"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type Responder struct {
+	output chan<- *crypto_proto.GrrMessage
+
+	sync.Mutex
 	request *crypto_proto.GrrMessage
 	next_id uint64
-	output  chan<- *crypto_proto.GrrMessage
 }
 
 // NewResponder returns a new Responder.
@@ -52,6 +56,10 @@ func (self *Responder) AddResponse(message proto.Message) error {
 
 func (self *Responder) AddResponseToRequest(
 	request_id uint64, message proto.Message) error {
+
+	self.Lock()
+	defer self.Unlock()
+
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
 	self.next_id = self.next_id + 1
@@ -107,6 +115,10 @@ func (self *Responder) Log(format string, v ...interface{}) error {
 
 func (self *Responder) SendResponseToWellKnownFlow(
 	flow_name string, message proto.Message) error {
+
+	self.Lock()
+	defer self.Unlock()
+
 	components := strings.Split(proto.MessageName(message), ".")
 	rdf_name := components[len(components)-1]
 	response := &crypto_proto.GrrMessage{

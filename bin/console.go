@@ -34,6 +34,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -260,7 +261,7 @@ func executeVQL(
 
 	switch format {
 	case "text":
-		table := evalQueryToTable(ctx, scope, vql, out)
+		table := reporting.EvalQueryToTable(ctx, scope, vql, out)
 		table.Render()
 	case "json":
 		outputJSON(ctx, scope, vql, out)

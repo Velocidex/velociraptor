@@ -71,6 +71,17 @@ message ArtifactSource {
         description: "Where the artifact gets its data."
     };
 
+    string name = 3 [(sem_type) = {
+            description: "The name of this artifact source. "
+            "If not set we use the same of the artifact itself. The artifact "
+            "compiler will generate a query with this name."
+        }];
+
+    string description = 4 [(sem_type) = {
+            description: "A description string for this source. "
+            "Note it can be interpolated with other artifact descriptions."
+        }];
+
     string precondition = 1 [(sem_type) = {
             description: "A VQL expression to be evaluated prior to using "
             "this source."
@@ -94,20 +105,18 @@ message Artifact {
             "Linux.Browsers.ChromeHistory";
         }];
 
-    string path = 6 [(sem_type) = {
-            description: "The path of this artifact in the artifact store.",
-        }];
-
-    string raw = 7 [(sem_type) = {
-            description: "The raw YAML of this artifact.",
-        }];
-
     string description = 2 [(sem_type) = {
             description: "What the artifact is trying to collect."
         }];
 
-    string reference = 5 [(sem_type) = {
+    repeated string reference = 5 [(sem_type) = {
             description: "A reference for this artifact."
+        }];
+
+    // If set here this applies to all sources.
+    string precondition = 8 [(sem_type) = {
+            description: "A VQL expression to be evaluated prior to using "
+            "this source."
         }];
 
     repeated ArtifactParameter parameters = 3 [(sem_type) = {
@@ -116,6 +125,16 @@ message Artifact {
 
     repeated ArtifactSource sources = 4 [(sem_type) = {
             description: "Where the artifact gets its data."
+        }];
+
+    /* Internal use only */
+    string path = 6 [(sem_type) = {
+            description: "The path of this artifact in the artifact store.",
+        }];
+
+    /* Internal use only */
+    string raw = 7 [(sem_type) = {
+            description: "The raw YAML of this artifact.",
         }];
 }
 
