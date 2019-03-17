@@ -184,16 +184,16 @@ func NewHTTPConnector(
 		client: &http.Client{
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
-					Timeout:   30 * time.Second,
-					KeepAlive: 30 * time.Second,
+					Timeout:   300 * time.Second,
+					KeepAlive: 300 * time.Second,
 					DualStack: true,
 				}).DialContext,
 				Proxy:                 http.ProxyFromEnvironment,
 				MaxIdleConns:          100,
-				IdleConnTimeout:       30 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				ResponseHeaderTimeout: 10 * time.Second,
+				IdleConnTimeout:       300 * time.Second,
+				TLSHandshakeTimeout:   100 * time.Second,
+				ExpectContinueTimeout: 10 * time.Second,
+				ResponseHeaderTimeout: 100 * time.Second,
 				TLSClientConfig:       tls_config,
 			},
 		},

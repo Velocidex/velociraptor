@@ -1,0 +1,24 @@
+name: Windows.Triage.Collectors.ScheduledTasks
+description: |
+  Scheduled tasks (*.job and XML).
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="at .job",
+               path="C:\\Windows\\Tasks\\*.job")
+          },
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="at SchedLgU.txt",
+               path="C:\\Windows\\SchedLgU.txt")
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="XML",
+               path="C:\\Windows\\system32\\Tasks\\**")
+          }
+        )

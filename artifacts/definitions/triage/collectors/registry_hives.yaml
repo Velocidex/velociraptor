@@ -1,0 +1,143 @@
+name: Windows.Triage.Collectors.RegistryHives
+description: |
+  System and user related Registry hives.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+reference:
+  - https://github.com/EricZimmerman/KapeFiles
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="ntuser.dat registry hive",
+               accessor="ntfs",
+               path=[
+                 "C:\\Documents and Settings\\*\\ntuser.dat",
+                 "C:\\Users\\*\\ntuser.dat"
+               ])
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="ntuser.dat registry transaction files",
+               accessor="ntfs",
+               path="C:\\Users\\*\\ntuser.dat.LOG*")
+          },
+          a3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="UsrClass.dat registry hive",
+               accessor="ntfs",
+               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat")
+          },
+          a4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="UsrClass.dat registry transaction files",
+               accessor="ntfs",
+               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat.LOG*")
+          },
+          a5={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SAM registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SAM.LOG*")
+          },
+          a6={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SECURITY registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SECURITY.LOG*")
+          },
+          a7={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SOFTWARE registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SOFTWARE.LOG*")
+          },
+          a8={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SYSTEM registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SYSTEM.LOG*")
+          },
+          a9={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SAM registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SAM")
+          },
+          b1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SECURITY registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SECURITY")
+          },
+          b2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SOFTWARE registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SOFTWARE")
+          },
+          b3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SYSTEM registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\SYSTEM")
+          },
+          b4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="RegBack registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\*.LOG*")
+          },
+          b5={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SAM registry hive (RegBack)",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\SAM")
+          },
+          b6={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SECURITY registry hive (RegBack)",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\SECURITY")
+          },
+          b7={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SOFTWARE registry hive (RegBack)",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\SOFTWARE")
+          },
+          b8={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SYSTEM registry hive (RegBack)",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\SYSTEM")
+          },
+          b9={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="SYSTEM registry hive (RegBack)",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\RegBack\\SYSTEM")
+          },
+          ba={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="System Profile registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\systemprofile\\ntuser.dat")
+          },
+          c1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="System Profile registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\System32\\config\\systemprofile\\ntuser.dat.LOG*")
+          },
+          c2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Local Service registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\ServiceProfiles\\LocalService\\ntuser.dat")
+          },
+          c3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Local Service registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\ServiceProfiles\\LocalService\\ntuser.dat.LOG*")
+          },
+          c4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Network Service registry hive",
+               accessor="ntfs",
+               path="C:\\Windows\\ServiceProfiles\\NetworkService\\ntuser.dat")
+          },
+          c5={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Network Service registry transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\ServiceProfiles\\NetworkService\\ntuser.dat.LOG*")
+          },
+          c6={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="System Restore Points Registry Hives (XP)",
+               accessor="ntfs",
+               path="C:\\System Volume Information\\_restore*\\RP*\\snapshot\\_REGISTRY_*")
+          }
+
+        )

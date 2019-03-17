@@ -1,0 +1,69 @@
+name: Windows.Triage.Collectors.Chrome
+description: |
+  Collect Chrome related artifacts.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: baseLocations
+    description: Globs for different possible locations of firefox profiles.
+    default: C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome bookmarks",
+               path=split(string=baseLocations, sep=",") + "Bookmarks*")
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Cookies",
+               path=split(string=baseLocations, sep=",") + "Cookies*")
+          },
+          a3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Current Session",
+               path=split(string=baseLocations, sep=",") + "Current Session")
+          },
+          a4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Current Tabs",
+               path=split(string=baseLocations, sep=",") + "Current Tabs")
+          },
+          a5={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Favicons",
+               path=split(string=baseLocations, sep=",") + "Favicons*")
+          },
+          a6={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome History",
+               path=split(string=baseLocations, sep=",") + "History*")
+          },
+          a7={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Last Session",
+               path=split(string=baseLocations, sep=",") + "Last Session")
+          },
+          a8={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Last Tabs",
+               path=split(string=baseLocations, sep=",") + "Last Tabs")
+          },
+          a9={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Preferences",
+               path=split(string=baseLocations, sep=",") + "Preferences")
+          },
+          b1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Shortcuts",
+               path=split(string=baseLocations, sep=",") + "Shortcuts*")
+          },
+          b2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Top Sites",
+               path=split(string=baseLocations, sep=",") + "Top Sites*")
+          },
+          b3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Visited Links",
+               path=split(string=baseLocations, sep=",") + "Visited Links")
+          },
+          b4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Chrome Web Data",
+               path=split(string=baseLocations, sep=",") + "Web Data*")
+          }
+        )

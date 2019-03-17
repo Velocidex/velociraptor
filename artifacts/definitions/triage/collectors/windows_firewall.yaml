@@ -1,0 +1,16 @@
+name: Windows.Triage.Collectors.WindowsFirewall
+description: |
+  Windows Firewall Logs.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Windows Firewall Logs",
+               path="C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.*"
+          }
+        )

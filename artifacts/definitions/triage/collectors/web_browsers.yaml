@@ -1,0 +1,16 @@
+name: Windows.Triage.WebBrowsers
+description: |
+  A high level artifact for selecting all browser related artifacts.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Windows.Triage.Collectors.Chrome() },
+          a2={ SELECT * FROM Artifact.Windows.Triage.Collectors.Firefox() },
+          a3={ SELECT * FROM Artifact.Windows.Triage.Collectors.Edge() },
+          a4={ SELECT * FROM Artifact.Windows.Triage.Collectors.InternetExplorer() }
+        )

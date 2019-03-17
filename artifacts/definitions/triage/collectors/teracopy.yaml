@@ -1,0 +1,18 @@
+name: Windows.Triage.Collectors.TeraCopy
+description: |
+  TeraCopy log history.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="TeraCopy",
+               path=[
+                  "C:\\Users\\*\\AppData\\Roaming\\TeraCopy"
+               ])
+          }
+        )

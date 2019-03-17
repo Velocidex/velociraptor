@@ -49,6 +49,11 @@ var (
 		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-zA-Z]:)(.*)")
 	deviceDirectoryRegex = regexp.MustCompile(
 		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
+
+	// Cache raw devices for a given time.
+	mu        sync.Mutex
+	fd_cache  map[string]*PagedReader // Protected by mutex
+	timestamp time.Time               // Protected by mutex
 )
 
 type NTFSFileInfo struct {
@@ -147,16 +152,19 @@ func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
+type PagedReader struct {
+	*ntfs.PagedReader
+
+	fd *os.File
+}
+
 type NTFSFileSystemAccessor struct {
 	profile *vtypes.Profile
-
-	fd_cache map[string]*os.File
 }
 
 func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
 	result := &NTFSFileSystemAccessor{
-		profile:  self.profile,
-		fd_cache: make(map[string]*os.File),
+		profile: self.profile,
 	}
 
 	// When the context is done, close all the files. The files
@@ -164,8 +172,11 @@ func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 	go func() {
 		select {
 		case <-ctx.Done():
-			for _, v := range result.fd_cache {
-				v.Close()
+			mu.Lock()
+			defer mu.Unlock()
+
+			for _, v := range fd_cache {
+				v.fd.Close()
 			}
 		}
 	}()
@@ -175,16 +186,28 @@ func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 
 func (self *NTFSFileSystemAccessor) getRootMFTEntry(device string) (
 	*ntfs.MFT_ENTRY, error) {
-	fd, pres := self.fd_cache[device]
-	if !pres {
-		var err error
+	mu.Lock()
+	defer mu.Unlock()
 
+	fd, pres := fd_cache[device]
+	if !pres || time.Now().After(timestamp.Add(10*time.Minute)) {
 		// Try to open the device and list its path.
-		fd, err = os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
+		raw_fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
 		if err != nil {
 			return nil, err
 		}
-		self.fd_cache[device] = fd
+
+		reader, _ := ntfs.NewPagedReader(raw_fd, 1024, 10000)
+		fd = &PagedReader{
+			PagedReader: reader,
+			fd:          raw_fd,
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		fd_cache[device] = fd
+		timestamp = time.Now()
 	}
 
 	boot, err := ntfs.NewBootRecord(self.profile, fd, 0)
@@ -474,6 +497,11 @@ func unescape(path string) string {
 func init() {
 	profile, err := ntfs.GetProfile()
 	if err == nil {
-		glob.Register("ntfs", &NTFSFileSystemAccessor{profile, nil})
+		glob.Register("ntfs", &NTFSFileSystemAccessor{
+			profile: profile,
+		})
 	}
+
+	fd_cache = make(map[string]*PagedReader)
+	timestamp = time.Now()
 }

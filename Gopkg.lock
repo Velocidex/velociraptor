@@ -190,8 +190,8 @@
     "ptypes/wrappers",
   ]
   pruneopts = "UT"
-  revision = "c823c79ea1570fb5ff454033735a8e68575d1d0f"
-  version = "v1.3.0"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  version = "v1.3.1"
 
 [[projects]]
   branch = "master"
@@ -210,7 +210,7 @@
   version = "v1.0.2"
 
 [[projects]]
-  digest = "1:c272da016742f6d54a7ea9c521f2fc89830649722cfe6f0db78e15dad9d090f0"
+  digest = "1:4cbbca3db0ff89197d000fb2fa0b90ca4516a7fbd4d8cd9fa4bebf17df484f6d"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "internal",
@@ -218,8 +218,8 @@
     "utilities",
   ]
   pruneopts = "UT"
-  revision = "6523154b0128738bcc0320ce39849670007e66ac"
-  version = "v1.8.3"
+  revision = "20f268a412e5b342ebfb1a0eef7c3b7bd6c260ea"
+  version = "v1.8.5"
 
 [[projects]]
   digest = "1:b934afd6ff135f3f1c9a5c573247aaa7c81d9653fb52f59b802ebc7ab809b79f"
@@ -277,7 +277,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5bf23f15fd4550fa19e9fbc8e9fd2e254444a01f4644ad835b5389d1f7d91077"
+  digest = "1:b8774f0cf1c719f5253e92f1fc7880b4186046064c3c23ead99ab568028a6510"
   name = "github.com/mailru/easyjson"
   packages = [
     ".",
@@ -286,7 +286,7 @@
     "jwriter",
   ]
   pruneopts = "UT"
-  revision = "6243d8e04c3f819e79757e8bc3faa15c3cb27003"
+  revision = "1de009706dbeb9d05f18586f0735fcdb7c524481"
 
 [[projects]]
   digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
@@ -297,12 +297,12 @@
   version = "v0.0.9"
 
 [[projects]]
-  digest = "1:3bb9c8451d199650bfd303e0068d86f135952fead374ad87c09a9b8a2cc4bd7c"
+  digest = "1:e150b5fafbd7607e2d638e4e5cf43aa4100124e5593385147b0a74e2733d8b0d"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
   pruneopts = "UT"
-  revision = "369ecd8cea9851e459abb67eb171853e3986591e"
-  version = "v0.0.6"
+  revision = "c2a7a6ca930a4cd0bc33a3f298eb71960732a3a7"
+  version = "v0.0.7"
 
 [[projects]]
   branch = "master"
@@ -412,7 +412,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:01cd0cd47758f04c5604daa3be4637e2afa1e0c15af7e08289e95360369e4f48"
+  digest = "1:0573a48c92e778ad732779bf1e5064a5085ab3fbd236ad71e53cab5753ef3e6e"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -422,7 +422,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "d0f344d83b0c80a1bc03b547a2374a9ec6711144"
+  revision = "e56f2e22fc761e82a34aca553f6725e2aff4fe6c"
 
 [[projects]]
   digest = "1:1a23fdd843129ef761ffe7651bc5fe7c5b09fbe933e92783ab06cc11c37b7b37"
@@ -510,7 +510,7 @@
     "ssh/terminal",
   ]
   pruneopts = "UT"
-  revision = "c2843e01d9a2bc60bb26ad24e09734fdc2d9ec58"
+  revision = "a1f597ede03a7bef967a422b5b3a5bd08805a01e"
 
 [[projects]]
   branch = "master"
@@ -530,7 +530,7 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "d8887717615a059821345a5c23649351b52a1c0b"
+  revision = "9f648a60d9775ef5c977e7669d1673a7a67bef33"
 
 [[projects]]
   branch = "master"
@@ -548,7 +548,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:31a870ab88e6f361345522025034048deb46d6651c2d08f98f2fa826fa9c7fe1"
+  digest = "1:cc8200f2a8e5d6d28181d46f2d2f8de43437dd8ff46778352510898430524204"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -560,7 +560,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "c8c8c57fd1e1a977c10821a559dda983a9a9a3b5"
+  revision = "a2f829d7f35f2ed1c3520c553a6226495455cae0"
 
 [[projects]]
   digest = "1:f85c8ec580dc0b7f57f2faa4e4339f3c7b761e51575d52110d3e2499724ca7bb"
@@ -613,10 +613,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:228bde098aefdcf15d514bc45673610f4168f0bf020682a1194d9acb1d41e1c8"
+  digest = "1:6323af2277308b9ddced244cc284acf3579ef05bb9d199337d0b70d80efd1fa3"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
+    "googleapis/api/httpbody",
     "googleapis/rpc/status",
     "protobuf/field_mask",
   ]
@@ -711,11 +712,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d89dc8baf29ccb9b4470c5f6f4656fe086a9c0621571de4b598d46ca7dd436ed"
+  digest = "1:681b5c9f1871b03df819963f6ec6d8bbb2f07823e219d08609420285b503c84f"
   name = "www.velocidex.com/golang/go-ntfs"
   packages = ["."]
   pruneopts = "UT"
-  revision = "06fc230e0d907adc6542dd087d982f669c453814"
+  revision = "ad76b9975280b9f15c1d1e9b8a6a8d96721cf5d3"
 
 [[projects]]
   branch = "master"

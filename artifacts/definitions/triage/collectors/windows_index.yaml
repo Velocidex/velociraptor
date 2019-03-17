@@ -1,0 +1,16 @@
+name: Windows.Triage.Collectors.WindowsIndex
+description: |
+  Windows Index Search.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="WindowsIndexSearch",
+               path="C:\\programdata\\microsoft\\search\\data\\applications\\windows\\Windows.edb")
+          }
+        )

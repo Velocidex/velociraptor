@@ -122,7 +122,7 @@ func (self *Repository) List() []string {
 }
 
 // Parse the query and determine if it requires any artifacts. If any
-// artifacts are found, then recursive determine their dependencies
+// artifacts are found, then recursivly determine their dependencies
 // etc.
 func (self *Repository) GetQueryDependencies(query string) []string {
 	// For now this is really dumb - just search for something
@@ -130,9 +130,18 @@ func (self *Repository) GetQueryDependencies(query string) []string {
 	result := []string{}
 	for _, hit := range artifact_in_query_regex.FindAllStringSubmatch(
 		query, -1) {
-		_, pres := self.Data[hit[1]]
-		if pres {
+		dep, pres := self.Data[hit[1]]
+		if pres && !utils.InString(&result, hit[1]) {
 			result = append(result, hit[1])
+			for _, source := range dep.Sources {
+				for _, query := range source.Queries {
+					for _, subdep := range self.GetQueryDependencies(query) {
+						if !utils.InString(&result, subdep) {
+							result = append(result, subdep)
+						}
+					}
+				}
+			}
 		}
 	}
 

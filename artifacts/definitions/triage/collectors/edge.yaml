@@ -1,0 +1,20 @@
+name: Windows.Triage.Collectors.Edge
+description: |
+  Collect Edge related artifacts.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Edge folder",
+               path="C:\\Users\\*\\AppData\\Local\\Packages\\Microsoft.MicrosoftEdge_*\\**")
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="WebcacheV01.dat",
+               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\WebCache\\**")
+          }
+        )
