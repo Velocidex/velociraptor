@@ -206,7 +206,7 @@ func Parse(filename string) (*artifacts_proto.Artifact, error) {
 	return result, nil
 }
 
-func Compile(artifact *artifacts_proto.Artifact,
+func (self *Repository) Compile(artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
@@ -214,6 +214,19 @@ func Compile(artifact *artifacts_proto.Artifact,
 			Key:   parameter.Name,
 			Value: value,
 		})
+	}
+
+	sources := []string{}
+	return self.mergeSources(artifact, result, sources, 0)
+}
+
+func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
+	result *actions_proto.VQLCollectorArgs,
+	sources []string,
+	depth int) error {
+
+	if depth > 10 {
+		return errors.New("Recursive include detected.")
 	}
 
 	for idx, source := range artifact.Sources {
@@ -249,6 +262,13 @@ func Compile(artifact *artifacts_proto.Artifact,
 		if source.Description != "" {
 			description = source.Description
 		}
+
+		// Skip sources we have seen before. This can happen
+		// through include loops.
+		if utils.InString(&sources, name) {
+			continue
+		}
+		sources = append(sources, name)
 
 		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
 		source_result := ""
@@ -317,6 +337,17 @@ func Compile(artifact *artifacts_proto.Artifact,
 				Description: description,
 				VQL:         "SELECT * FROM " + source_result,
 			})
+		}
+	}
+
+	// Now process any includes.
+	for _, include := range artifact.Includes {
+		child, pres := self.Get(include)
+		if pres {
+			err := self.mergeSources(child, result, sources, depth+1)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

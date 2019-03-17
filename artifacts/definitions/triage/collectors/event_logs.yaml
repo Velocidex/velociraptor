@@ -1,0 +1,17 @@
+name: Windows.Triage.Collectors.EventLogs
+description: |
+  Collect event log files.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+parameters:
+  - name: EventLogGlobs
+    default: C:\Windows\system32\config\*.evt,C:\Windows\system32\winevt\logs\*.evtx
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM Artifact.Triage.Collection.Upload(
+           type="EventLogs",
+           path=split(string=EventLogGlobs, sep=","))

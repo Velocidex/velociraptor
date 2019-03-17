@@ -68,11 +68,11 @@ func hard_wrap(text string, colBreak int) string {
 	return wrapped
 }
 
-func Stringify(value interface{}, scope *vfilter.Scope) string {
+func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
 	// Deal with pointers to things as those things.
 	if reflect.TypeOf(value).Kind() == reflect.Ptr {
 		return Stringify(reflect.Indirect(
-			reflect.ValueOf(value)).Interface(), scope)
+			reflect.ValueOf(value)).Interface(), scope, min_width)
 	}
 
 	if reflect.TypeOf(value).Kind() == reflect.Slice {
@@ -82,7 +82,7 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 		for i := 0; i < a_value.Len(); i++ {
 			result = append(
 				result, Stringify(
-					a_value.Index(i).Interface(), scope))
+					a_value.Index(i).Interface(), scope, min_width))
 		}
 
 		return strings.Join(result, "\n")
@@ -94,7 +94,7 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 				k = k[1 : len(k)-1]
 			}
 
-			return hard_wrap(string(k), 30)
+			return hard_wrap(string(k), min_width)
 		}
 		return ""
 	}
@@ -119,11 +119,12 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 		return t.ToString(scope)
 
 	case []byte:
-		return hard_wrap(string(t), 30)
+		return hard_wrap(string(t), min_width)
 
 	case string:
-		return hard_wrap(t, 30)
+		return hard_wrap(t, min_width)
 
+	//  If we have a custom marshaller we use it.
 	case json.Marshaler:
 		return json_marshall(value)
 	default:
@@ -133,7 +134,7 @@ func Stringify(value interface{}, scope *vfilter.Scope) string {
 		}
 
 		// Anything else we output something useful.
-		return hard_wrap(fmt.Sprintf("%v", value), 30)
+		return hard_wrap(fmt.Sprintf("%v", value), min_width)
 	}
 }
 

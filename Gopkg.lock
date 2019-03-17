@@ -735,11 +735,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:932389d7a1b23734d436691e58425e33fd809ba2ef86375f33603e7e5d825df5"
+  digest = "1:1d3891652f4627f21f87de8d5bcbee62c7e65015102678af2172f1186925ddaf"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "539c2f79fc26b196e7d3ed1fa9d9b3912b3c9266"
+  revision = "4c434a3f56e801b12cd7d7db83c8d200df4655dd"
 
 [[projects]]
   branch = "master"
@@ -761,6 +761,7 @@
     "github.com/Velocidex/yaml",
     "github.com/alecthomas/participle",
     "github.com/alecthomas/participle/lexer",
+    "github.com/alecthomas/template",
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",

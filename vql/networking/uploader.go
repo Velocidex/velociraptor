@@ -35,9 +35,11 @@ import (
 
 // Returned as the result of the query.
 type UploadResponse struct {
-	Path  string
-	Size  uint64
-	Error string
+	Path   string `json:"Path"`
+	Size   uint64 `json:"Size"`
+	Error  string `json:"Error,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
+	Md5    string `json:"md5,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.

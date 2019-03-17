@@ -216,7 +216,7 @@ func doArtifactCollect() {
 	}
 
 	request := &actions_proto.VQLCollectorArgs{}
-	err := artifacts.Compile(artifact, request)
+	err := repository.Compile(artifact, request)
 	kingpin.FatalIfError(
 		err, fmt.Sprintf("Unable to compile artifact %s.",
 			*artifact_command_collect_name))
@@ -283,7 +283,7 @@ func doArtifactList() {
 		}
 
 		request := &actions_proto.VQLCollectorArgs{}
-		err = artifacts.Compile(artifact, request)
+		err = repository.Compile(artifact, request)
 		kingpin.FatalIfError(err, "Unable to compile artifact.")
 
 		res, err = yaml.Marshal(request)

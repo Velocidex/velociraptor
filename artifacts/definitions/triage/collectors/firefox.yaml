@@ -1,0 +1,53 @@
+name: Windows.Triage.Collectors.Firefox
+description: |
+  Collect Firefox related artifacts.
+
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: baseLocations
+    description: Globs for different possible locations of firefox profiles.
+    default: C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Places",
+               path=split(string=baseLocations, sep=",") + "places.sqlite*")
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Downloads",
+               path=split(string=baseLocations, sep=",") + "downloads.sqlite*")
+          },
+          a3={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Form history",
+               path=split(string=baseLocations, sep=",") + "formhistory.sqlite*")
+          },
+          a4={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Cookies",
+               path=split(string=baseLocations, sep=",") + "cookies.sqlite*")
+          },
+          a5={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Signons",
+               path=split(string=baseLocations, sep=",") + "signons.sqlite*")
+          },
+          a6={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Webappstore",
+               path=split(string=baseLocations, sep=",") + "webappstore.sqlite*")
+          },
+          a7={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Favicons",
+               path=split(string=baseLocations, sep=",") + "favicons.sqlite*")
+          },
+          a8={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Addons",
+               path=split(string=baseLocations, sep=",") + "addons.sqlite*")
+          },
+          a9={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Search",
+               path=split(string=baseLocations, sep=",") + "search.sqlite*")
+          }
+          )

@@ -94,7 +94,8 @@ func renderTable(response *actions_proto.VQLResponse) error {
 			if !pres {
 				item = ""
 			}
-			string_row = append(string_row, utils.Stringify(item, scope))
+			string_row = append(string_row, utils.Stringify(
+				item, scope, 120/len(response.Columns)))
 		}
 
 		table.Append(string_row)

@@ -127,6 +127,10 @@ message Artifact {
             description: "Where the artifact gets its data."
         }];
 
+    repeated string includes = 9 [(sem_type) = {
+            description: "A list of other artifacts to merge our source with."
+        }];
+
     /* Internal use only */
     string path = 6 [(sem_type) = {
             description: "The path of this artifact in the artifact store.",

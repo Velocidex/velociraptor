@@ -61,7 +61,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 	}
 
 	request := &actions_proto.VQLCollectorArgs{}
-	err := Compile(self.leaf, request)
+	err := self.repository.Compile(self.leaf, request)
 	if err != nil {
 		scope.Log("Artifact %s invalid: %s",
 			strings.Join(self.prefix, "."), err.Error())

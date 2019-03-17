@@ -1,0 +1,21 @@
+name: Windows.Triage.Collectors.NTFSMetadata
+description: |
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: NTFS Metadata Files
+    queries:
+      - SELECT * FROM Artifact.Triage.Collection.Upload(
+        type="NTFS Metadata Files",
+        accessor="ntfs",
+        path=[
+            "C:\\$MFT",
+            "C:\\$LogFile",
+            "C:\\$Extend\\$UsnJrnl:$J",
+            "C:\\$Extend\\$UsnJrnl:$Max",
+            "C:\\$Secure:$SDS",
+            "C:\\$Boot",
+            "C:\\$Extend\\$RmMetadata\\$TxfLog\\$Tops:$T"
+        ])

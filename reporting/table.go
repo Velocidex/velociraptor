@@ -35,7 +35,7 @@ func EvalQueryToTable(ctx context.Context,
 			cell := ""
 			value, pres := scope.Associative(row, key)
 			if pres && !utils.IsNil(value) {
-				cell = utils.Stringify(value, scope)
+				cell = utils.Stringify(value, scope, 120/len(*columns))
 			}
 			string_row = append(string_row, cell)
 		}
@@ -67,7 +67,7 @@ func OutputRowsToTable(scope *vfilter.Scope,
 			cell := ""
 			value, pres := scope.Associative(row, key)
 			if pres && !utils.IsNil(value) {
-				cell = utils.Stringify(value, scope)
+				cell = utils.Stringify(value, scope, 120/len(columns))
 			}
 			string_row = append(string_row, cell)
 		}

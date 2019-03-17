@@ -1,0 +1,19 @@
+name: Windows.Triage.Collectors.Amcache
+description: |
+  {{ Query "SELECT * FROM Rows" }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT * FROM chain(
+          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Amcache",
+               accessor="ntfs",
+               path="C:\\Windows\\AppCompat\\Programs\\Amcache.hve")
+          },
+          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
+               type="Amcache transaction files",
+               accessor="ntfs",
+               path="C:\\Windows\\AppCompat\\Programs\\Amcache.hve.LOG*")
+          })

@@ -90,7 +90,7 @@ func (self *Foreman) ProcessEventTables(
 				return errors.New("Unknown artifact " + name)
 			}
 
-			err := artifacts.Compile(artifact, vql_collector_args)
+			err := repository.Compile(artifact, vql_collector_args)
 			if err != nil {
 				return err
 			}

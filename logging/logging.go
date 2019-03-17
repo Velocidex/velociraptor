@@ -196,7 +196,7 @@ func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	levelText := strings.ToUpper(entry.Level.String())
 	fmt.Fprintf(b, "[%s] %v %s ", levelText, entry.Time.Format(time.RFC3339),
-		entry.Message)
+		strings.TrimRight(entry.Message, "\r\n"))
 
 	if len(entry.Data) > 0 {
 		serialized, _ := json.Marshal(entry.Data)
@@ -220,10 +220,11 @@ func NewPlainLogger(
 	config *api_proto.Config,
 	component *string) *log.Logger {
 	if !SuppressLogging {
-		return log.New(&logWriter{GetLogger(config, component)}, "", log.Lshortfile)
+		return log.New(&logWriter{
+			GetLogger(config, component)}, "", 0)
 	}
 
-	return log.New(ioutil.Discard, "", log.Lshortfile)
+	return log.New(ioutil.Discard, "", 0)
 }
 
 func GetLogger(config_obj *api_proto.Config, component *string) *LogContext {
