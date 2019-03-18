@@ -131,7 +131,7 @@ func GetDefaultConfig() *api_proto.Config {
 		ApiConfig: &api_proto.ApiClientConfig{},
 
 		// Use SSL by default - there is no real reason not to.
-		UseSelfSignedSsl: true,
+		DisableSelfSignedSsl: false,
 	}
 
 	// On windows we need slightly different defaults.
