@@ -79,6 +79,7 @@ func (self ClientsPlugin) Call(
 			if err == nil {
 				output_chan <- api_client
 			}
+			vfilter.ChargeOp(scope)
 		}
 	}()
 
@@ -156,6 +157,7 @@ func (self FlowsPlugin) Call(
 
 					output_chan <- item
 				}
+				vfilter.ChargeOp(scope)
 			}
 		}
 	}()

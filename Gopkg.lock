@@ -6,8 +6,8 @@
   name = "cloud.google.com/go"
   packages = ["compute/metadata"]
   pruneopts = "UT"
-  revision = "f52f9bc132541d2aa914f42100c36d10b1ef7e0c"
-  version = "v0.37.0"
+  revision = "2fa99f4c25c422525316dcb1fd3d5b94e1944cfd"
+  version = "v0.37.1"
 
 [[projects]]
   branch = "master"
@@ -530,7 +530,7 @@
     "webdav/internal/xml",
   ]
   pruneopts = "UT"
-  revision = "9f648a60d9775ef5c977e7669d1673a7a67bef33"
+  revision = "d196dffd7c2beec1957382065df08bcc353b9706"
 
 [[projects]]
   branch = "master"
@@ -548,7 +548,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cc8200f2a8e5d6d28181d46f2d2f8de43437dd8ff46778352510898430524204"
+  digest = "1:efaa59f652c7376c5bb5f8fef33e8e307962d22e718b9c54a4726f76e094e0ca"
   name = "golang.org/x/sys"
   packages = [
     "unix",
@@ -560,7 +560,7 @@
     "windows/svc/mgr",
   ]
   pruneopts = "UT"
-  revision = "a2f829d7f35f2ed1c3520c553a6226495455cae0"
+  revision = "6c81ef8f67ca3f42fc9cd71dfbd5f35b0c4b5771"
 
 [[projects]]
   digest = "1:f85c8ec580dc0b7f57f2faa4e4339f3c7b761e51575d52110d3e2499724ca7bb"
@@ -736,11 +736,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1d3891652f4627f21f87de8d5bcbee62c7e65015102678af2172f1186925ddaf"
+  digest = "1:3c70971dcc57cac965e51e461eb304768ca5fb6b65381b29ede433f7ae3bffdf"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4c434a3f56e801b12cd7d7db83c8d200df4655dd"
+  revision = "d0ebfe792d87e6d73d132ac7f0e0f18628064ae5"
 
 [[projects]]
   branch = "master"

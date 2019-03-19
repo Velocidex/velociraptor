@@ -28,12 +28,14 @@ type ServicesManager struct {
 	hunt_manager    *HuntManager
 	hunt_dispatcher *HuntDispatcher
 	user_manager    *users.UserNotificationManager
+	stats_collector *StatsCollector
 }
 
 func (self *ServicesManager) Close() {
 	self.hunt_manager.Close()
 	self.hunt_dispatcher.Close()
 	self.user_manager.Close()
+	self.stats_collector.Close()
 }
 
 // Start all the server services.
@@ -57,6 +59,12 @@ func StartServices(config_obj *api_proto.Config) (*ServicesManager, error) {
 		return nil, err
 	}
 	result.user_manager = user_manager
+
+	stats_collector, err := startStatsCollector(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.stats_collector = stats_collector
 
 	return result, nil
 }
