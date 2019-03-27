@@ -62,7 +62,7 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
-		tmpfile, err := ioutil.TempFile(os.TempDir(), "dmp.")
+		tmpfile, err := ioutil.TempFile(os.TempDir(), "dmp")
 		if err != nil {
 			scope.Log("proc_dump: %s", err.Error())
 			return
@@ -73,6 +73,9 @@ func (self ProcDumpPlugin) Call(
 		filename := tmpfile.Name()
 		tmpfile.Close()
 		os.Remove(filename)
+
+		// Use a dmp extension to make it easier to open.
+		filename += ".dmp"
 
 		scope.AddDesctructor(func() {
 			os.Remove(filename)

@@ -18,16 +18,19 @@
 package networking
 
 import (
+	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
+	"runtime"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -59,7 +62,7 @@ type FileBasedUploader struct {
 // be created as a directory.
 var sanitize_re = regexp.MustCompile(`[^a-zA-Z0-9_@\(\)\. \-=\{\}\[\]]`)
 
-func sanitize_path(path string) string {
+func (self *FileBasedUploader) sanitize_path(path string) string {
 	// Strip any leading devices, and make sure the device name
 	// consists of valid chars.
 	path = regexp.MustCompile(
@@ -68,22 +71,19 @@ func sanitize_path(path string) string {
 
 	// Split the path into components and escape any non valid
 	// chars.
-	res := []string{}
-	components := utils.SplitComponents(path)
-	for _, component := range components {
+	components := []string{self.UploadDir}
+	for _, component := range utils.SplitComponents(path) {
 		if len(component) > 0 {
-			res = append(
-				res,
-				sanitize_re.ReplaceAllStringFunc(
-					component, func(x string) string {
-						result := make([]byte, 2)
-						hex.Encode(result, []byte(x))
-						return "%" + string(result)
-					}))
+			components = append(components,
+				string(datastore.SanitizeString(component)))
 		}
 	}
 
-	result := strings.Join(res, "/")
+	result := filepath.Join(components...)
+	if runtime.GOOS == "windows" {
+		return "\\\\?\\" + result
+	}
+
 	return result
 }
 
@@ -100,10 +100,10 @@ func (self *FileBasedUploader) Upload(
 	}
 
 	if store_as_name == "" {
-		store_as_name = sanitize_path(filename)
+		store_as_name = filename
 	}
 
-	file_path := filepath.Join(self.UploadDir, store_as_name)
+	file_path := self.sanitize_path(store_as_name)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		scope.Log("Can not create dir: %s", err.Error())
@@ -119,19 +119,29 @@ func (self *FileBasedUploader) Upload(
 
 	buf := make([]byte, 1024*1024)
 	offset := int64(0)
+	md5_sum := md5.New()
+	sha_sum := sha256.New()
+
 	for {
 		n, _ := reader.Read(buf)
 		if n == 0 {
 			break
 		}
-		file.Write(buf[:n])
+		data := buf[:n]
+
+		file.Write(data)
+		md5_sum.Write(data)
+		sha_sum.Write(data)
+
 		offset += int64(n)
 	}
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
 	return &UploadResponse{
-		Path: file_path,
-		Size: uint64(offset),
+		Path:   file_path,
+		Size:   uint64(offset),
+		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
 }
 
@@ -159,12 +169,21 @@ func (self *VelociraptorUploader) Upload(
 	self.Count += 1
 	buffer := make([]byte, 1024*1024)
 
+	md5_sum := md5.New()
+	sha_sum := sha256.New()
+
 	for {
 		read_bytes, err := reader.Read(buffer)
 		if read_bytes == 0 {
 			result.Size = offset
+			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
+			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 			return result, nil
 		}
+
+		data := buffer[:read_bytes]
+		sha_sum.Write(data)
+		md5_sum.Write(data)
 
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
@@ -172,7 +191,7 @@ func (self *VelociraptorUploader) Upload(
 				Accessor: accessor,
 			},
 			Offset: offset,
-			Data:   buffer[:read_bytes],
+			Data:   data,
 		}
 		// Send the packet to the server.
 		self.Responder.AddResponseToRequest(

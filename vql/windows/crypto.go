@@ -58,13 +58,21 @@ var (
 func cert_walker(cert *C.char, len C.int,
 	store *C.wchar_t, store_len C.int, ctx *C.int) {
 
+	if len == 0 || len > 1<<12 {
+		return
+	}
+
+	if store_len == 0 || store_len > 1<<12 {
+		return
+	}
+
 	// This sometimes panics when the API returns crazy data.
 	defer utils.CheckForPanic("cert %p, len %d", cert, len)
 
 	// Make a copy of the slice so windows may free its own copy.
 	der_cert := append(
 		[]byte{},
-		(*[1 << 10]byte)(unsafe.Pointer(cert))[0:len]...)
+		(*[1 << 12]byte)(unsafe.Pointer(cert))[0:len]...)
 
 	certificates, err := x509.ParseCertificates(der_cert)
 	if err != nil {
@@ -72,7 +80,7 @@ func cert_walker(cert *C.char, len C.int,
 	}
 
 	store_name := append([]uint16{},
-		(*[1 << 10]uint16)(unsafe.Pointer(store))[0:store_len]...)
+		(*[1 << 12]uint16)(unsafe.Pointer(store))[0:store_len]...)
 
 	result := pointer.Restore(unsafe.Pointer(ctx)).(*certContext)
 	for _, c := range certificates {

@@ -6,6 +6,8 @@ description: |
    Note this requires that the Windows.Event.ProcessCreation
    monitoring artifact be collected from clients.
 
+type: SERVER_EVENT
+
 parameters:
   - name: EmailAddress
     default: admin@example.com

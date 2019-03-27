@@ -6,7 +6,8 @@ description: |
   programs (e.g. notepad) then another program can be launched at the
   same time (with the same privileges).
 
-  https://www.winhelponline.com/blog/replace-notepad-text-editor-notepad-plus-association/
+reference:
+  - https://attack.mitre.org/techniques/T1183/
 
 parameters:
   - name: imageFileExecutionOptions

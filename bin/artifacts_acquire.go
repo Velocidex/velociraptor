@@ -149,7 +149,7 @@ func doArtifactsAcquire() {
 			kingpin.Fatalf("Artifact %v not found", name)
 		}
 
-		request := &actions_proto.VQLCollectorArgs{}
+		request := &actions_proto.VQLCollectorArgs{MaxWait: uint64(*max_wait)}
 		err := repository.Compile(artifact, request)
 		kingpin.FatalIfError(
 			err, fmt.Sprintf("Unable to compile artifact %s.", name))

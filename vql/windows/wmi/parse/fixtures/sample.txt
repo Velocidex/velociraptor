@@ -45,6 +45,9 @@ instance of Win32_Process
         WriteOperationCount = "0";
         WriteTransferCount = "0";
         Foo = {1, 2, 3, 4};
+        AcceptPause = FALSE;
+        AcceptStop = TRUE;
+        NullDescription = NULL;
 };
         TIME_CREATED = "131834423287753198";
 };

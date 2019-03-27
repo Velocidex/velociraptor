@@ -1,0 +1,41 @@
+name: Windows.Detection.ProcessMemory
+description: |
+  Scanning process memory for signals is powerfull technique. This
+  artifact scans processes for a yara signature and when detected, the
+  process memory is dumped and uploaded to the server.
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: processRegex
+    default: notepad
+  - name: yaraRule
+    default: |
+      rule Process {
+         strings:
+           $a = "this is a secret" nocase wide
+           $b = "this is a secret" nocase
+         condition:
+           any of them
+      }
+
+sources:
+  - queries:
+      - LET processes = SELECT Name as ProcessName, CommandLine, Pid
+            FROM pslist()
+            WHERE Name =~ processRegex
+
+      - LET hits = SELECT * FROM foreach(
+          row=processes,
+          query={
+             SELECT ProcessName, CommandLine, Pid, Strings.Offset as Offsets
+             FROM proc_yara(rules=yaraRule, pid=Pid)
+          })
+
+      - SELECT * FROM foreach(
+          row=hits,
+          query={
+            SELECT ProcessName, CommandLine, Pid, Offsets, FullPath,
+                   upload(file=FullPath) as CrashDump
+            FROM proc_dump(pid=Pid)
+          })

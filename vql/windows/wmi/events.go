@@ -55,7 +55,7 @@ func (self *WMIObject) Parse() (*vfilter.Dict, error) {
 
 	mof, err := wmi_parse.Parse(self.Raw)
 	if err != nil {
-		return nil, err
+		return vfilter.NewDict(), err
 	}
 	self.parsed = mof.ToDict()
 	return self.parsed, nil

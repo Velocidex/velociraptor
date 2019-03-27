@@ -37,6 +37,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -220,7 +221,13 @@ func (self *VFSFs) Readdir(path string,
 		return err
 	}
 
+	names := make([]string, len(rows))
 	for _, row := range rows {
+		if utils.InString(&names, row.Name) {
+			continue
+		}
+		names = append(names, row.Name)
+
 		if !fill(vfsPathToFS(row.Name), newStatF(row), 0) {
 			break
 		}
@@ -247,6 +254,7 @@ func newStatF(row *api.FileInfoRow) *fuse.Stat_t {
 	}
 
 	result := &fuse.Stat_t{
+
 		Mode:     mode,
 		Nlink:    1,
 		Size:     row.Size,

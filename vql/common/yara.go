@@ -119,7 +119,6 @@ func (self YaraScanPlugin) Call(
 				scope.Log("Failed to open %v", filename)
 				continue
 			}
-
 			f.Seek(arg.Start, 0)
 			base_offset := uint64(arg.Start)
 			for {
@@ -163,7 +162,10 @@ func (self YaraScanPlugin) Call(
 							end = len(buf) - 1
 						}
 
-						data := buf[start:end]
+						// Make a copy of the underlying data.
+						data := make([]byte, end-start)
+						copy(data, buf[start:end])
+
 						res.Strings = append(
 							res.Strings, &YaraHit{
 								Name: match_string.Name,

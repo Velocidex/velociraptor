@@ -29,6 +29,8 @@ var (
 	mofLexer = lexer.Must(lexer.Regexp(
 		`(?ms)` +
 			`(\s+)` +
+			`|(?P<Bool>FALSE|TRUE)` +
+			`|(?P<Null>NULL)` +
 			`|(?i)(?P<Instance>INSTANCE OF)` +
 			`|(?P<Ident>[a-zA-Z_][a-zA-Z0-9_]*)` +
 			`|(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)` +
@@ -85,6 +87,8 @@ type Field struct {
 type Value struct {
 	String   *string          ` ( @String `
 	Number   *int64           ` | @Number `
+	Bool     *bool            ` | @Bool `
+	Null     *string          ` | @Null `
 	Array    *CommaExpression ` | "{" @@ "}" `
 	Instance *Instance        ` | @@ )`
 }
@@ -96,6 +100,14 @@ func (self *Value) Interface() interface{} {
 
 	if self.Number != nil {
 		return *self.Number
+	}
+
+	if self.Null != nil {
+		return vfilter.Null{}
+	}
+
+	if self.Bool != nil {
+		return *self.Bool
 	}
 
 	if self.Array != nil {

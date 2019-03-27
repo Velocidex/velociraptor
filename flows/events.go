@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -28,6 +29,7 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -41,8 +43,90 @@ import (
 
 var (
 	gJournalWriter = NewJournalWriter()
+
+	gEventTable = &VQLEventTable{}
 )
 
+type VQLEventTable struct {
+	mu               sync.Mutex
+	flow_runner_args *flows_proto.FlowRunnerArgs
+	CompressionDict  *flows_proto.ArtifactCompressionDict
+	version          int64
+}
+
+func (self *VQLEventTable) GetFlowRunnerArgs(
+	config_obj *api_proto.Config) (flows_proto.FlowRunnerArgs, error) {
+	result := flows_proto.FlowRunnerArgs{}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Create the runner args for the first time. In the current
+	// implementation the server needs to be restarted before the
+	// event table can be updated because the event table is
+	// stored in the config file. Therefore this will only happen
+	// the first time, and all other requests can use the same
+	// flow runner args.
+	if self.flow_runner_args == nil {
+		self.CompressionDict = &flows_proto.ArtifactCompressionDict{}
+
+		repository, err := artifacts.GetGlobalRepository(config_obj)
+		if err != nil {
+			return result, err
+		}
+
+		event_table := &actions_proto.VQLEventTable{
+			Version: config_obj.Events.Version,
+		}
+		for _, name := range config_obj.Events.Artifacts {
+			rate := config_obj.Events.OpsPerSecond
+			if rate == 0 {
+				rate = 100
+			}
+
+			vql_collector_args := &actions_proto.VQLCollectorArgs{
+				MaxWait:      100,
+				OpsPerSecond: rate,
+			}
+			artifact, pres := repository.Get(name)
+			if !pres {
+				return result, errors.New("Unknown artifact " + name)
+			}
+
+			err := repository.Compile(artifact, vql_collector_args)
+			if err != nil {
+				return result, err
+			}
+			// Add any artifact dependencies.
+			repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			event_table.Event = append(event_table.Event, vql_collector_args)
+
+			// Compress the VQL on the way out.
+			if config_obj.Frontend.DoNotCompressArtifacts {
+				continue
+			}
+
+			err = artifactCompress(vql_collector_args, self.CompressionDict)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		self.flow_runner_args = &flows_proto.FlowRunnerArgs{
+			FlowName: "MonitoringFlow",
+		}
+		flow_args, err := ptypes.MarshalAny(event_table)
+		if err != nil {
+			return result, errors.WithStack(err)
+		}
+		self.flow_runner_args.Args = flow_args
+	}
+
+	// Return a copy to keep the flow_runner_args immutable
+	return *self.flow_runner_args, nil
+}
+
+// What we write in the journal.
 type Event struct {
 	Config    *api_proto.Config
 	Timestamp time.Time
@@ -192,6 +276,9 @@ func (self *MonitoringFlow) ProcessMessage(
 			return nil
 		}
 
+		if !config_obj.Frontend.DoNotCompressArtifacts {
+			artifactUncompress(response, gEventTable.CompressionDict)
+		}
 		// Write the response on the journal.
 		gJournalWriter.Channel <- &Event{
 			Config:    config_obj,

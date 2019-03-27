@@ -118,6 +118,10 @@ func (self *Container) Upload(scope *vfilter.Scope,
 	self.Lock()
 	defer self.Unlock()
 
+	if store_as_name == "" {
+		store_as_name = filename
+	}
+
 	sanitized_name := path.Join(accessor, strings.TrimLeft(store_as_name, "/\\"))
 	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
@@ -126,9 +130,9 @@ func (self *Container) Upload(scope *vfilter.Scope,
 
 	scope.Log("Collecting file %s", store_as_name)
 
-	sha := sha256.New()
-	md5 := md5.New()
-	n, err := io.Copy(utils.NewTee(writer, sha, md5), reader)
+	sha_sum := sha256.New()
+	md5_sum := md5.New()
+	n, err := io.Copy(utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
 		return &vql_networking.UploadResponse{
 			Error: err.Error(),
@@ -138,8 +142,8 @@ func (self *Container) Upload(scope *vfilter.Scope,
 	return &vql_networking.UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(n),
-		Sha256: hex.EncodeToString(sha.Sum(nil)),
-		Md5:    hex.EncodeToString(md5.Sum(nil)),
+		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
 }
 

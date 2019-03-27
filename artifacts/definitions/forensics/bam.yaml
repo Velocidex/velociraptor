@@ -1,0 +1,29 @@
+name: Windows.Forensics.Bam
+description: |
+  The Background Activity Moderator (BAM) is a Windows service that
+  Controls activity of background applications.  This service exists
+  in Windows 10 only after Fall Creators update – version 1709.
+
+  It provides full path of the executable file that was run on the
+  system and last execution date/time
+
+reference:
+  - https://www.andreafortuna.org/dfir/forensic-artifacts-evidences-of-program-execution-on-windows-systems/
+
+parameters:
+    - name: bamKeys
+      default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*
+
+sources:
+  - precondition:
+      SELECT OS from info() where OS = "windows"
+    queries:
+      - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+      - SELECT basename(path=dirname(path=FullPath)) as SID, {
+            SELECT Name FROM users WHERE UUID = basename(path=dirname(path=FullPath))
+          } As UserName,
+          Name as Binary,
+          timestamp(winfiletime=binary_parse(
+          string=Data.value, target="int64").AsInteger) as Bam_time
+        FROM glob(globs=bamKeys + "\\*", accessor="reg")
+        WHERE Data.type = "BINARY"

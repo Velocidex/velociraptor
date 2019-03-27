@@ -250,7 +250,7 @@ func huntResultDownloadHandler(
 				Set("Artifact", artifact).
 				Set("HuntId", hunt_id)
 
-			f, err := zip_writer.Create("All " + artifact)
+			f, err := zip_writer.Create("All " + artifact + ".csv")
 			if err != nil {
 				continue
 			}

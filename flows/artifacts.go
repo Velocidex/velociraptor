@@ -37,7 +37,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -96,14 +95,16 @@ func (self *ArtifactCollector) Start(
 		return err
 	}
 
-	flow_state := &flows_proto.ArtifactCompressionDict{}
-	err = artifactCompress(vql_collector_args, flow_state)
-	if err != nil {
-		return err
-	}
-	flow_obj.SetState(flow_state)
+	if !config_obj.Frontend.DoNotCompressArtifacts {
+		flow_state := &flows_proto.ArtifactCompressionDict{}
 
-	utils.Debug(vql_collector_args)
+		err = artifactCompress(vql_collector_args, flow_state)
+		if err != nil {
+			return err
+		}
+
+		flow_obj.SetState(flow_state)
+	}
 
 	return QueueMessageForClient(
 		config_obj, flow_obj,
@@ -146,9 +147,10 @@ func (self *ArtifactCollector) ProcessMessage(
 		}
 
 		// Restore strings from flow state.
-		dict := flow_obj.GetState().(*flows_proto.ArtifactCompressionDict)
-		artifactUncompress(response, dict)
-
+		if !config_obj.Frontend.DoNotCompressArtifacts {
+			dict := flow_obj.GetState().(*flows_proto.ArtifactCompressionDict)
+			artifactUncompress(response, dict)
+		}
 		log_path := path.Join(
 			"clients", flow_obj.RunnerArgs.ClientId,
 			"artifacts", response.Query.Name,
@@ -247,11 +249,9 @@ func AddArtifactCollectorArgs(
 // dictionary then decode them to show the user.
 func artifactCompress(result *actions_proto.VQLCollectorArgs,
 	dictionary *flows_proto.ArtifactCompressionDict) error {
-	idx := 0
 	scope := vql_subsystem.MakeScope()
 	compress := func(value string) string {
-		key := fmt.Sprintf("$$%d", idx)
-		idx++
+		key := fmt.Sprintf("$$%d", len(dictionary.Substs)+1)
 		dictionary.Substs = append(dictionary.Substs, &actions_proto.VQLEnv{
 			Key: key, Value: value})
 

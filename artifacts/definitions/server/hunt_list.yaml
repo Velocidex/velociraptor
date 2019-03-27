@@ -2,6 +2,8 @@ name: Server.Hunts.List
 description: |
   List Hunts currently scheduled on the server.
 
+type: SERVER
+
 sources:
   - precondition:
       SELECT * from server_config

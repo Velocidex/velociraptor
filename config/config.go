@@ -119,8 +119,12 @@ func GetDefaultConfig() *api_proto.Config {
 		Flows:     &api_proto.FlowsConfig{},
 		Writeback: &api_proto.Writeback{},
 		Events: &api_proto.ClientEvents{
-			Artifacts: []string{"Generic.Client.Stats"},
-			Version:   1,
+			Artifacts: []string{
+				"Generic.Client.Stats",
+				"Windows.Events.ServiceCreation",
+				"Windows.Events.ProcessCreation",
+			},
+			Version: 1,
 		},
 		Mail:    &api_proto.MailConfig{},
 		Logging: &api_proto.LoggingConfig{},

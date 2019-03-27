@@ -20,6 +20,7 @@ description: |
 
   You can set the policy in group policy managment console (gpmc):
   Computer Configuration\Windows Settings\Security Settings\Local Policies\Audit Policy.
+type: EVENT
 
 parameters:
   - name: securityLogFile

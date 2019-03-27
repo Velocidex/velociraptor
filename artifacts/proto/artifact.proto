@@ -123,6 +123,13 @@ message Artifact {
             description: "Parameters to be provided to the artifact."
         }];
 
+
+    // Unfortunately we can not use enum due to limitations in
+    // yaml->json->protobuf conversion.
+    string type = 10 [(sem_type) = {
+            description: "The type of the query. Can be NORMAL, EVENT, SERVER",
+        }];
+
     repeated ArtifactSource sources = 4 [(sem_type) = {
             description: "Where the artifact gets its data."
         }];

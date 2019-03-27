@@ -1,0 +1,16 @@
+name: Windows.System.Pslist
+description: |
+  List processes and their running binaries.
+
+parameters:
+  - name: processRegex
+    default: .
+
+sources:
+  - queries:
+      - SELECT Pid, Ppid, Name, CommandLine, Exe,
+               hash(path=Exe) as Hash,
+               authenticode(filename=Exe) AS Authenticode,
+               Username, WorkingSetSize
+        FROM pslist()
+        WHERE Name =~ processRegex

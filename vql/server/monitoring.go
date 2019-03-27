@@ -20,6 +20,7 @@ package server
 import (
 	"context"
 	"path"
+	"regexp"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -30,8 +31,9 @@ import (
 )
 
 type MonitoringPluginArgs struct {
-	ClientId []string `vfilter:"optional,field=client_id"`
-	Artifact string   `vfilter:"required,field=artifact"`
+	ClientId  []string `vfilter:"optional,field=client_id"`
+	Artifact  string   `vfilter:"required,field=artifact"`
+	DateRegex string   `vfilter:"optional,field=date_regex"`
 }
 
 type MonitoringPlugin struct{}
@@ -59,6 +61,15 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
+		date_regex := regexp.MustCompile(".")
+		if arg.DateRegex != "" {
+			date_regex, err = regexp.Compile(arg.DateRegex)
+			if err != nil {
+				scope.Log("monitoring: %v", err)
+				return
+			}
+		}
+
 		// If no client id is specified, we list the journal
 		// which collects events from all clients at once.
 		if len(arg.ClientId) == 0 {
@@ -67,7 +78,7 @@ func (self MonitoringPlugin) Call(
 				"Artifact "+arg.Artifact)
 
 			self.ScanLog(config_obj, scope, output_chan,
-				log_path, "", arg.Artifact)
+				log_path, "", arg.Artifact, date_regex)
 			return
 		}
 
@@ -77,7 +88,7 @@ func (self MonitoringPlugin) Call(
 				"Artifact "+arg.Artifact)
 
 			self.ScanLog(config_obj, scope, output_chan,
-				log_path, client_id, arg.Artifact)
+				log_path, client_id, arg.Artifact, date_regex)
 		}
 	}()
 
@@ -90,7 +101,8 @@ func (self MonitoringPlugin) ScanLog(
 	output_chan chan<- vfilter.Row,
 	log_path string,
 	client_id string,
-	artifact string) {
+	artifact string,
+	date_regex *regexp.Regexp) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
@@ -100,6 +112,10 @@ func (self MonitoringPlugin) ScanLog(
 	}
 
 	for _, item := range listing {
+		if !date_regex.MatchString(item.Name()) {
+			continue
+		}
+
 		file_path := path.Join(log_path, item.Name())
 		fd, err := file_store_factory.ReadFile(file_path)
 		if err != nil {

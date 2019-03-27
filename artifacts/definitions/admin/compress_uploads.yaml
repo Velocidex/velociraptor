@@ -20,6 +20,8 @@ description: |
   automatically decompress the file when displaying it in the GUI
   text/hexdump etc.
 
+type: SERVER_EVENT
+
 parameters:
   - name: blacklistCompressionFilename
     description: Filenames which match this regex will be excluded from compression.

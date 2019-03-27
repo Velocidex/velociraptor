@@ -223,7 +223,7 @@ service API {
     }
 
     // Artifacts
-    rpc GetArtifacts(google.protobuf.Empty) returns (ArtifactDescriptors) {
+    rpc GetArtifacts(GetArtifactsRequest) returns (ArtifactDescriptors) {
         option (google.api.http) = {
             get: "/api/v1/GetArtifacts",
         };

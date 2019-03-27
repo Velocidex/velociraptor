@@ -120,7 +120,6 @@ func (self ShellPlugin) Call(
 			output_member *string,
 			wg *sync.WaitGroup) {
 
-			wg.Add(1)
 			defer wg.Done()
 
 			// Read as much as possible into the buffer
@@ -177,6 +176,8 @@ func (self ShellPlugin) Call(
 		}
 
 		// Read asyncronously.
+		wg.Add(1)
+		wg.Add(1)
 		go read_from_pipe(stdout_pipe, &response.Stdout, &wg)
 		go read_from_pipe(stderr_pipe, &response.Stderr, &wg)
 

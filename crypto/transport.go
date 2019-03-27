@@ -241,8 +241,14 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 	// number in our writeback state. Note- serial number can only
 	// be advanced.
 
+	// With the use of TLS I am not sure this code is needed. It
+	// may also erroneously increment serial numbers then lock the
+	// client out. It is disabled for now - we need to explictly
+	// update the minimum server serial number from the server
+	// when needed.
+
 	// last_serial_number < server_cert.SerialNumber
-	if last_serial_number.Cmp(server_cert.SerialNumber) == -1 {
+	if false && last_serial_number.Cmp(server_cert.SerialNumber) == -1 {
 		// Clear all our internal caches because we are now
 		// re-keying.
 		self.Clear()

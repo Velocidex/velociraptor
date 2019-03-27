@@ -37,14 +37,11 @@ package flows
 import (
 	"context"
 
-	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -67,52 +64,17 @@ func (self *Foreman) ProcessEventTables(
 
 	// Need to update client's event table.
 	if arg.LastEventTableVersion < config_obj.Events.Version {
-		repository, err := artifacts.GetGlobalRepository(config_obj)
+		channel := grpc_client.GetChannel(config_obj)
+		defer channel.Close()
+
+		client := api_proto.NewAPIClient(channel)
+		flow_runner_args, err := gEventTable.GetFlowRunnerArgs(config_obj)
 		if err != nil {
 			return err
 		}
 
-		event_table := &actions_proto.VQLEventTable{
-			Version: config_obj.Events.Version,
-		}
-		for _, name := range config_obj.Events.Artifacts {
-			rate := config_obj.Events.OpsPerSecond
-			if rate == 0 {
-				rate = 100
-			}
-
-			vql_collector_args := &actions_proto.VQLCollectorArgs{
-				MaxWait:      100,
-				OpsPerSecond: rate,
-			}
-			artifact, pres := repository.Get(name)
-			if !pres {
-				return errors.New("Unknown artifact " + name)
-			}
-
-			err := repository.Compile(artifact, vql_collector_args)
-			if err != nil {
-				return err
-			}
-			// Add any artifact dependencies.
-			repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-			event_table.Event = append(event_table.Event, vql_collector_args)
-		}
-
-		channel := grpc_client.GetChannel(config_obj)
-		defer channel.Close()
-
-		flow_runner_args := &flows_proto.FlowRunnerArgs{
-			ClientId: source,
-			FlowName: "MonitoringFlow",
-		}
-		flow_args, err := ptypes.MarshalAny(event_table)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		flow_runner_args.Args = flow_args
-		client := api_proto.NewAPIClient(channel)
-		_, err = client.LaunchFlow(context.Background(), flow_runner_args)
+		flow_runner_args.ClientId = source
+		_, err = client.LaunchFlow(context.Background(), &flow_runner_args)
 		if err != nil {
 			return err
 		}

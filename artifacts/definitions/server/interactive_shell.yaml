@@ -4,6 +4,8 @@ description: |
   to monitor use of the shell on any clients, simply collect this
   artifact.
 
+type: SERVER_EVENT
+
 sources:
   - queries:
       - |

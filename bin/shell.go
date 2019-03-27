@@ -169,6 +169,8 @@ func get_responses(ctx context.Context,
 
 		print_value(row, "Stderr")
 		print_value(row, "Stdout")
+
+		break
 	}
 }
 

@@ -109,7 +109,7 @@ func doGenerateConfig() {
 	config_obj.Frontend.PrivateKey = frontend_cert.PrivateKey
 
 	// Users have to updated the following fields.
-	config_obj.Client.ServerUrls = []string{"http://localhost:8000/"}
+	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
@@ -154,7 +154,7 @@ func doDumpClientConfig() {
 
 		// Clients will change their SSL requirements for self
 		// signing.
-		UseSelfSignedSsl: config_obj.UseSelfSignedSsl,
+		UseSelfSignedSsl: !config_obj.DisableSelfSignedSsl,
 	}
 
 	res, err := yaml.Marshal(client_config)

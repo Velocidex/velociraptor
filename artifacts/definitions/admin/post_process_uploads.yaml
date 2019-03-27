@@ -11,6 +11,8 @@ description: |
   files - we will just relay our stdout/stderr to the artifact's
   result set.
 
+type: SERVER_EVENT
+
 parameters:
   - name: uploadPostProcessCommand
     description: |

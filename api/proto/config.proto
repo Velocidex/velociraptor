@@ -255,6 +255,13 @@ message FrontendConfig {
     uint64 concurrency = 9 [(sem_type) = {
             description: "The number of client messages to process concurrently.",
         }];
+
+    bool do_not_compress_artifacts = 10 [(sem_type) = {
+            description: "When set we do not compress artifacts sent to the client. "
+            "This is only useful for debugging. Note: Setting this will send the client "
+            "artifact fields like name and description which may result in information "
+            "disclosure if the client is untrusted."
+        }];
 }
 
 

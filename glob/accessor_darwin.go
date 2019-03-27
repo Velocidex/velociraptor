@@ -162,12 +162,14 @@ func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
 	return file, err
 }
 
-func (self OSFileSystemAccessor) PathSplit() *regexp.Regexp {
-	return regexp.MustCompile("/")
+var OSFileSystemAccessor_re = regexp.MustCompile("/")
+
+func (self OSFileSystemAccessor) PathSplit(path string) []string {
+	return OSFileSystemAccessor_re.Split(path, -1)
 }
 
-func (self OSFileSystemAccessor) PathSep() string {
-	return "/"
+func (self OSFileSystemAccessor) PathJoin(root, stem string) string {
+	return filepath.Join(root, stem)
 }
 
 func (self OSFileSystemAccessor) GetRoot(path string) (string, string, error) {

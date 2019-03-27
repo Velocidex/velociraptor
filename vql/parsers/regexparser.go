@@ -106,7 +106,7 @@ func (self _ParseFileWithRegex) Call(
 	}
 
 	for _, regex := range arg.Regex {
-		r, err := regexp.Compile(regex)
+		r, err := regexp.Compile("(?i)" + regex)
 		if err != nil {
 			scope.Log("Unable to compile regex %s", regex)
 			close(output_chan)
@@ -162,7 +162,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	row := vfilter.NewDict()
 	merged_names := []string{}
 	for _, regex := range arg.Regex {
-		r, err := regexp.Compile(regex)
+		r, err := regexp.Compile("(?i)" + regex)
 		if err != nil {
 			scope.Log("Unable to compile regex %s", regex)
 			return vfilter.Null{}
@@ -229,7 +229,7 @@ func (self _RegexReplace) Call(
 		scope.Log("regex_replace: %s", err.Error())
 		return vfilter.Null{}
 	}
-	re, err := regexp.Compile(arg.Re)
+	re, err := regexp.Compile("(?i)" + arg.Re)
 	if err != nil {
 		scope.Log("Unable to compile regex %s", arg.Re)
 		return vfilter.Null{}
@@ -240,8 +240,9 @@ func (self _RegexReplace) Call(
 
 func (self _RegexReplace) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "regex_replace",
-		Doc:     "Search and replace a string with a regexp.",
+		Name: "regex_replace",
+		Doc: "Search and replace a string with a regexp. " +
+			"Note you can use $1 to replace the capture string.",
 		ArgType: type_map.AddType(scope, &_RegexReplaceArg{}),
 	}
 }

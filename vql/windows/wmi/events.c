@@ -237,7 +237,6 @@ void *watchEvents(void *go_ctx, char *query, char *namespace) {
         goto error;
     }
 
-
     ctx->sink = NewEventSink();
     ctx->sink->lpVtbl->AddRef((IWbemEventSink *)ctx->sink);
     // Pass the go context along.
@@ -277,7 +276,6 @@ void *watchEvents(void *go_ctx, char *query, char *namespace) {
         Error(go_ctx, "ExecNotificationQueryAsync", hres);
         goto error;
     }
-
     return ctx;
 
  error:
@@ -325,6 +323,5 @@ void Error(void *go_ctx, char *function, HRESULT hres) {
     // what it means.
     char buf[512];
     snprintf(buf, 512, "%s: Error code %#x", function, hres);
-
     log_error(go_ctx, buf);
 }

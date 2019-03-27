@@ -123,7 +123,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 
 	res := []*regexp.Regexp{}
 	for _, re := range arg.Regex {
-		r, err := regexp.Compile(re)
+		r, err := regexp.Compile("(?i)" + re)
 		if err != nil {
 			scope.Log("filter: Unable to compile regex %s", re)
 			return false

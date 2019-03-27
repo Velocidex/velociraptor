@@ -47,6 +47,11 @@ func init() {
 				"commit":     config_obj.Version.Commit,
 			}).Info("Starting Frontend.")
 
+			if *debug_flag {
+				logger.Info("Disabling artifact compression because --debug was specified.")
+				config_obj.Frontend.DoNotCompressArtifacts = true
+			}
+
 			server_obj, err := server.NewServer(config_obj)
 			kingpin.FatalIfError(err, "Unable to create server")
 			defer server_obj.Close()
@@ -70,7 +75,7 @@ func init() {
 					err, "Unable to start API server")
 			}()
 
-			if config_obj.UseSelfSignedSsl {
+			if !config_obj.DisableSelfSignedSsl {
 				router := http.NewServeMux()
 
 				// If the GUI and Frontend need to be

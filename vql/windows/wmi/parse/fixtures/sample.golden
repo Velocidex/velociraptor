@@ -1,6 +1,8 @@
 {
  "TIME_CREATED": "131834423287753198",
  "TargetInstance": {
+ "AcceptPause": true,
+ "AcceptStop": true,
  "CSCreationClassName": "Win32_ComputerSystem",
  "CSName": "DESKTOP-IOME2K5",
  "Caption": "notepad.exe",
@@ -21,6 +23,7 @@
  "MaximumWorkingSetSize": 1380,
  "MinimumWorkingSetSize": 200,
  "Name": "notepad.exe",
+ "NullDescription": null,
  "OSCreationClassName": "Win32_OperatingSystem",
  "OSName": "Microsoft Windows 10 Pro N|C:\\WINDOWS|\\Device\\Harddisk0\\Partition2",
  "OtherOperationCount": "151",

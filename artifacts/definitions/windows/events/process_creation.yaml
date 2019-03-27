@@ -1,6 +1,9 @@
 name: Windows.Events.ProcessCreation
 description: |
   Collect all process creation events.
+
+type: EVENT
+
 parameters:
   # This query will not see processes that complete within 1 second.
   - name: wmiQuery

@@ -150,6 +150,7 @@ func (self *HuntManager) ProcessRow(
 
 	request := &flows_proto.FlowRunnerArgs{
 		ClientId: participation_row.ClientId,
+		Creator:  participation_row.HuntId,
 	}
 
 	// Get hunt information about this hunt.

@@ -395,7 +395,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 			return &readAdapter{
 				info: &NTFSFileInfo{
 					info:       info,
-					_full_path: device + subpath + "\\" + info.Name,
+					_full_path: device + dirname + "\\" + info.Name,
 				},
 				reader: data,
 			}, nil

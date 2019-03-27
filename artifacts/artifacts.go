@@ -87,9 +87,17 @@ func (self *Repository) LoadYaml(data string) (*artifacts_proto.Artifact, error)
 		return nil, errors.WithStack(err)
 	}
 	artifact.Raw = data
-	self.Data[artifact.Name] = artifact
 
-	return artifact, nil
+	// Normalize the type.
+	artifact.Type = strings.ToLower(artifact.Type)
+	switch artifact.Type {
+	case "", "normal", "event", "server", "server_event":
+		self.Data[artifact.Name] = artifact
+		return artifact, nil
+
+	default:
+		return nil, errors.New("Artifact type invalid.")
+	}
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
@@ -225,13 +233,11 @@ func (self *Repository) Compile(artifact *artifacts_proto.Artifact,
 		})
 	}
 
-	sources := []string{}
-	return self.mergeSources(artifact, result, sources, 0)
+	return self.mergeSources(artifact, result, 0)
 }
 
 func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs,
-	sources []string,
 	depth int) error {
 
 	if depth > 10 {
@@ -271,13 +277,6 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 		if source.Description != "" {
 			description = source.Description
 		}
-
-		// Skip sources we have seen before. This can happen
-		// through include loops.
-		if utils.InString(&sources, name) {
-			continue
-		}
-		sources = append(sources, name)
 
 		prefix := fmt.Sprintf("%s_%d", escape_name(name), idx)
 		source_result := ""
@@ -353,7 +352,7 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 	for _, include := range artifact.Includes {
 		child, pres := self.Get(include)
 		if pres {
-			err := self.mergeSources(child, result, sources, depth+1)
+			err := self.mergeSources(child, result, depth+1)
 			if err != nil {
 				return err
 			}

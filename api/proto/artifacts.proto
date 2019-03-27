@@ -5,6 +5,12 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
+message GetArtifactsRequest {
+    bool include_event_artifacts = 1;
+    bool include_server_artifacts = 2;
+}
+
+
 message GetArtifactRequest {
     string vfs_path = 1 [(sem_type) = {
             description: "The vfs path relative to the artifacts definition store."

@@ -4,6 +4,7 @@ parameters:
   - name: Frequency
     description: Return stats every this many seconds.
     default: "10"
+type: EVENT
 
 sources:
   - queries:
