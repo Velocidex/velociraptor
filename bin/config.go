@@ -151,10 +151,12 @@ func doDumpClientConfig() {
 	client_config := &api_proto.Config{
 		Version: config_obj.Version,
 		Client:  config_obj.Client,
+	}
 
-		// Clients will change their SSL requirements for self
-		// signing.
-		UseSelfSignedSsl: !config_obj.DisableSelfSignedSsl,
+	// Only allow self signed certs if we do not use autocerts or
+	// ssl at all.
+	if !config_obj.DisableSelfSignedSsl && config_obj.AutocertDomain == "" {
+		client_config.Client.UseSelfSignedSsl = true
 	}
 
 	res, err := yaml.Marshal(client_config)

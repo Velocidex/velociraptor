@@ -160,7 +160,7 @@ func NewHTTPConnector(
 
 	// For self signed certificates we must ignore the server name
 	// and only trust certs issued by our server.
-	if !config_obj.DisableSelfSignedSsl {
+	if config_obj.Client.UseSelfSignedSsl {
 		logger.Info("Expecting self signed certificate for server.")
 
 		CA_Pool := x509.NewCertPool()

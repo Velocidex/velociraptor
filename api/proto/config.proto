@@ -125,6 +125,11 @@ message ClientConfig {
     uint64 default_max_wait = 19 [(sem_type) = {
             description: "The default max time to wait before we send partial VQL results.",
         }];
+
+    bool use_self_signed_ssl = 24 [(sem_type) = {
+            description: "If this is set, the client will expect a self signed certificate from the server."
+            "NOTE: The self signed certificate must be signed by the Velociraptor CA which is embedded above."
+        }];
 }
 
 message APIConfig {
@@ -405,15 +410,6 @@ message Config {
 
     string autocert_cert_cache = 22 [(sem_type) = {
             description: "Path to store autocert certificates.",
-        }];
-
-    // Deprecated - This is now the default. Set disable_self_signed_ssl to disable it.
-    bool use_self_signed_ssl = 24 [(sem_type) = {
-            description: "If set we use self signed SSL to encrypt Frontend and GUI comms. "
-               "This option is incompatible with autocert_domain. "
-               "Unlike autocert_domain we can listen on any port. "
-               "This also forces the client to only trust certificates issued by our CA.",
-            default: "true",
         }];
 
     bool disable_self_signed_ssl = 27 [(sem_type) = {

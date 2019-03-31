@@ -173,7 +173,7 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	now := time.Now()
 	log_path := path.Join(
 		"journals", event.QueryName,
-		fmt.Sprintf("%d-%02d-%02d", now.Year(),
+		fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
 			now.Month(), now.Day()))
 
 	fd, err := file_store_factory.WriteFile(log_path)
@@ -297,7 +297,7 @@ func (self *MonitoringFlow) ProcessMessage(
 			log_path := path.Join(
 				"clients", message.Source,
 				"monitoring", response.Query.Name,
-				fmt.Sprintf("%d-%02d-%02d", now.Year(),
+				fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
 					now.Month(), now.Day()))
 			fd, err := file_store_factory.WriteFile(log_path)
 			if err != nil {

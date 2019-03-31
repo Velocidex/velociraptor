@@ -28,18 +28,6 @@ import (
 // We also offer a VQL function to manage the upload.
 // Example: select upload(file=FullPath) from glob(globs="/bin/*")
 
-// NOTE: Due to the order in which VQL is evaluated, VQL column
-// transformations happen _BEFORE_ The where condition is
-// applied. This means that an expression like:
-
-// select upload(file=FullPath) from glob(globs="/bin/*") where Size > 100
-
-// Will cause all files to be uploaded, even if their size is smaller
-// than 100. You need to instead issue the following query to apply
-// the WHERE clause filtering first, then upload the result:
-
-// let files = select * from glob(globs="/bin/*") where Size > 100
-// select upload(files=FullPath) from files
 type UploadFunctionArgs struct {
 	File     string `vfilter:"required,field=file"`
 	Name     string `vfilter:"optional,field=name"`
