@@ -284,9 +284,11 @@ func artifactUncompress(response *actions_proto.VQLResponse,
 	dictionary *flows_proto.ArtifactCompressionDict) {
 
 	decompress := func(value string) string {
-		for _, subst := range dictionary.Substs {
-			if subst.Key == value {
-				return subst.Value
+		if dictionary != nil {
+			for _, subst := range dictionary.Substs {
+				if subst.Key == value {
+					return subst.Value
+				}
 			}
 		}
 		return value

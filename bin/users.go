@@ -19,6 +19,7 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -35,6 +36,11 @@ var (
 	user_add_password = user_add.Arg(
 		"password",
 		"The password. If not specified we read from the terminal.").String()
+	user_add_readonly = user_add.Flag("read_only", "Desginate this user as read only.").Bool()
+
+	user_show      = user_command.Command("show", "Display information about a user")
+	user_show_name = user_show.Arg(
+		"username", "Username to show").Required().String()
 )
 
 func doAddUser() {
@@ -45,6 +51,7 @@ func doAddUser() {
 	if err != nil {
 		kingpin.FatalIfError(err, "add user:")
 	}
+	user_record.ReadOnly = *user_add_readonly
 
 	if config_obj.GUI.GoogleOauthClientId != "" {
 		fmt.Printf("Authentication will occur via Google - " +
@@ -76,11 +83,28 @@ func doAddUser() {
 	fmt.Printf("\r\n")
 }
 
+func doShowUser() {
+	config_obj, err := get_server_config(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config file")
+
+	user_record, err := users.GetUser(config_obj, *user_show_name)
+	kingpin.FatalIfError(err, "Unable to find user %s", *user_show_name)
+
+	s, err := json.MarshalIndent(user_record, "", " ")
+	if err == nil {
+		os.Stdout.Write(s)
+	}
+}
+
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case "user add":
 			doAddUser()
+
+		case user_show.FullCommand():
+			doShowUser()
+
 		default:
 			return false
 		}

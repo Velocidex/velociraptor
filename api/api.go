@@ -62,6 +62,20 @@ func (self *ApiServer) LaunchFlow(
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	result := &api_proto.StartFlowResponse{}
 	in.Creator = GetGRPCUserInfo(ctx).Name
+
+	// Empty creators are called internally.
+	if in.Creator != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, in.Creator)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to launch flows.")
+		}
+	}
+
 	flow_id, err := flows.StartFlow(self.config, in)
 	if err != nil {
 		return nil, err
@@ -102,6 +116,19 @@ func (self *ApiServer) CreateHunt(
 	in.Creator = GetGRPCUserInfo(ctx).Name
 	in.HuntId = flows.GetNewHuntId()
 
+	// Empty creators are called internally.
+	if in.Creator != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, in.Creator)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to launch hunts.")
+		}
+	}
+
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
@@ -123,6 +150,30 @@ func (self *ApiServer) CreateHunt(
 func (self *ApiServer) ModifyHunt(
 	ctx context.Context,
 	in *api_proto.Hunt) (*empty.Empty, error) {
+
+	// Log this event as an Audit event.
+	in.Creator = GetGRPCUserInfo(ctx).Name
+
+	// Empty creators are called internally.
+	if in.Creator != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, in.Creator)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to modify hunts.")
+		}
+	}
+
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    in.Creator,
+			"hunt_id": in.HuntId,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("ModifyHunt")
+
 	err := flows.ModifyHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -227,6 +278,20 @@ func (self *ApiServer) NotifyClients(
 func (self *ApiServer) LabelClients(
 	ctx context.Context,
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
+
+	user_name := GetGRPCUserInfo(ctx).Name
+	if user_name != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, user_name)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to manipulate labels.")
+		}
+	}
+
 	result, err := LabelClients(self.config, in)
 	if err != nil {
 		return nil, err
@@ -429,6 +494,27 @@ func (self *ApiServer) SetArtifactFile(
 	ctx context.Context,
 	in *api_proto.SetArtifactRequest) (
 	*api_proto.APIResponse, error) {
+
+	user_name := GetGRPCUserInfo(ctx).Name
+	if user_name != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, user_name)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to modify artifacts.")
+		}
+	}
+
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":          user_name,
+			"artifact_file": in.VfsPath,
+			"details":       fmt.Sprintf("%v", in.Artifact),
+		}).Info("SetArtifactFile")
+
 	err := setArtifactFile(self.config, in.VfsPath, in.Artifact)
 	if err != nil {
 		return &api_proto.APIResponse{

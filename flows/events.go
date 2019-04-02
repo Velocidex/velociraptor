@@ -277,6 +277,18 @@ func (self *MonitoringFlow) ProcessMessage(
 		}
 
 		if !config_obj.Frontend.DoNotCompressArtifacts {
+			// When the server is first started there may
+			// be clients which have the compressed table
+			// already. They wiil send us messages before
+			// we can build the compression dictionary.
+
+			// This only works because the event table is
+			// in the config file. We need to think about
+			// how to handle proper updates.
+			if gEventTable.CompressionDict == nil {
+				gEventTable.GetFlowRunnerArgs(config_obj)
+			}
+
 			artifactUncompress(response, gEventTable.CompressionDict)
 		}
 		// Write the response on the journal.

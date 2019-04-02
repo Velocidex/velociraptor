@@ -18,6 +18,10 @@ message VelociraptorUser {
     string email = 4;
     string picture = 5;
     bool verified_email = 6;
+
+    bool read_only = 7 [(sem_type) = {
+            description: "A read only user can use the GUI but is not allowed to launch flows or hunts.",
+        }];
 }
 
 

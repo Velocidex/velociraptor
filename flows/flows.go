@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -95,8 +96,8 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 		if r := recover(); r != nil {
 			self.logger.Error(
 				fmt.Sprintf(
-					"%v, during processing of message %v",
-					r, message), errors.New("Panic"))
+					"%v, during processing of message %v: %v",
+					r, message, string(debug.Stack())), errors.New("Panic"))
 		}
 	}()
 
