@@ -24,9 +24,7 @@ sources:
   - queries:
       - LET file_scan = SELECT File, Rule, Strings, now() AS Timestamp,
                Name, ServiceType
-        FROM yara(rules=yaraRule,
-                  accessor="ntfs",
-                  files=PathName)
+        FROM yara(rules=yaraRule, files=PathName)
         WHERE Rule
 
       - LET service_creation = SELECT Parse.TargetInstance.Name AS Name,

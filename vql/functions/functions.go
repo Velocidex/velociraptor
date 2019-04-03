@@ -189,8 +189,27 @@ func (self _UTF16) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 	}
 }
 
+
+type _Scope struct{}
+
+func (self _Scope) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+
+	return scope
+}
+
+func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "scope",
+		Doc:     "return the scope.",
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
+	vql_subsystem.RegisterFunction(&_Scope{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_Now{})
 	vql_subsystem.RegisterFunction(&_ToLower{})

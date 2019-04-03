@@ -19,9 +19,11 @@ parameters:
   - name: amCacheRegPath
     default: /Root/InventoryApplicationFile/*
 
+precondition: |
+  SELECT OS From info() where OS = 'windows'
+
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'windows'
+  - name: Windows.System.Amcache.InventoryApplicationFile
     queries:
       - |
         SELECT FileId,
@@ -39,7 +41,26 @@ sources:
             SELECT FullPath from glob(globs=expand(path=amCacheGlob))
           }, query={
             SELECT * from read_reg_key(
-               globs=url(scheme='ntfs', path=FullPath, fragment=amCacheRegPath).String,
+               globs=url(scheme='ntfs', path=FullPath,
+                         fragment=amCacheRegPath).String,
+               accessor='raw_reg'
+            )
+        })
+
+  - name: Windows.System.Amcache.File
+    queries:
+      - |
+        SELECT * FROM foreach(
+          row={
+            SELECT FullPath from glob(globs=expand(path=amCacheGlob))
+          }, query={
+            SELECT get(item=scope(), member="100") As ProductId,
+                   get(item=scope(), member="101") As SHA1,
+                   get(item=scope(), member="15") As FullPath,
+                   timestamp(epoch=Key.Mtime.Sec) as LastModifiedKey
+            FROM read_reg_key(
+               globs=url(scheme='ntfs', path=FullPath,
+                         fragment='/Root/File/*/*').String,
                accessor='raw_reg'
             )
         })
