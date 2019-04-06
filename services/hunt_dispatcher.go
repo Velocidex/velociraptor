@@ -60,17 +60,20 @@ func GetHuntDispatcher() *HuntDispatcher {
 
 // The two are stored in different objects in the data store.
 type HuntDispatcher struct {
-	mu         sync.Mutex
-	config_obj *api_proto.Config
-
 	// This is the last timestamp of the latest hunt. At steady
 	// state all clients will have run all hunts, therefore we can
 	// immediately serve their forman checks by simply comparing a
 	// single number.
+	// NOTE: This has to be aligned to 64 bits or 32 bit builds will break
+	// https://github.com/golang/go/issues/13868
 	last_timestamp uint64
-	hunts          map[string]*api_proto.Hunt
-	done           chan bool
-	dirty          bool
+
+	mu         sync.Mutex
+	config_obj *api_proto.Config
+
+	hunts map[string]*api_proto.Hunt
+	done  chan bool
+	dirty bool
 }
 
 func (self *HuntDispatcher) GetLastTimestamp() uint64 {
