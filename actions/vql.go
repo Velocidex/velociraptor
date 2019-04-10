@@ -19,6 +19,7 @@ package actions
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"runtime/debug"
 	"strings"
@@ -91,18 +92,21 @@ func (self *VQLClientAction) StartQuery(
 		rate = 1000000
 	}
 
+	timeout := arg.Timeout
+	if timeout == 0 {
+		timeout = 600
+	}
+
+	// Cancel the query after this deadline
+	deadline := time.After(time.Second * time.Duration(timeout))
+	started := time.Now().Unix()
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	if arg.Query == nil {
 		responder.RaiseError("Query should be specified.")
 		return
 	}
-
-	// If we panic we need to recover and report this to the
-	// server.
-	defer func() {
-		if r := recover(); r != nil {
-			responder.RaiseError(string(debug.Stack()))
-		}
-	}()
 
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment
@@ -135,6 +139,17 @@ func (self *VQLClientAction) StartQuery(
 
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
 
+	// If we panic we need to recover and report this to the
+	// server.
+	defer func() {
+		r := recover()
+		if r != nil {
+			msg := string(debug.Stack())
+			scope.Log(msg)
+			responder.RaiseError(msg)
+		}
+	}()
+
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for query_idx, query := range arg.Query {
@@ -146,36 +161,51 @@ func (self *VQLClientAction) StartQuery(
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, ctx, scope, int(arg.MaxRow), int(arg.MaxWait))
+			vql, sub_ctx, scope, int(arg.MaxRow), int(arg.MaxWait))
+	run_query:
 		for {
-			result, ok := <-result_chan
-			if !ok {
-				break
+			select {
+			case <-deadline:
+				msg := fmt.Sprintf("Query timed out after %v seconds",
+					time.Now().Unix()-started)
+				scope.Log(msg)
+
+				// Cancel the sub ctx but do not exit
+				// - we need to wait for the sub query
+				// to finish after cancelling so we
+				// can at least return any data it
+				// has.
+				cancel()
+
+			case result, ok := <-result_chan:
+				if !ok {
+					break run_query
+				}
+				// Skip let queries since they never produce results.
+				if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
+					continue
+				}
+				response := &actions_proto.VQLResponse{
+					Query:     query,
+					QueryId:   uint64(query_idx),
+					Part:      uint64(result.Part),
+					Response:  string(result.Payload),
+					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+				}
+				// Don't log empty VQL statements.
+				if query.Name != "" {
+					responder.Log(
+						"Time %v: %s: Sending response part %d %s (%d rows).",
+						(response.Timestamp-query_start)/1000000,
+						query.Name,
+						result.Part,
+						humanize.Bytes(uint64(len(result.Payload))),
+						result.TotalRows,
+					)
+				}
+				response.Columns = result.Columns
+				responder.AddResponse(response)
 			}
-			// Skip let queries since they never produce results.
-			if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
-				continue
-			}
-			response := &actions_proto.VQLResponse{
-				Query:     query,
-				QueryId:   uint64(query_idx),
-				Part:      uint64(result.Part),
-				Response:  string(result.Payload),
-				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-			}
-			// Don't log empty VQL statements.
-			if query.Name != "" {
-				responder.Log(
-					"Time %v: %s: Sending response part %d %s (%d rows).",
-					(response.Timestamp-query_start)/1000000,
-					query.Name,
-					result.Part,
-					humanize.Bytes(uint64(len(result.Payload))),
-					result.TotalRows,
-				)
-			}
-			response.Columns = result.Columns
-			responder.AddResponse(response)
 		}
 	}
 

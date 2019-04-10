@@ -40,6 +40,12 @@ message ArtifactCollectorArgs {
             friendly_name: "Ops Per Second",
             default: "1000000",
         }];
+
+    uint64 timeout = 7 [(sem_type) = {
+            description: "Number of seconds to run before cancelling the query.",
+            friendly_name: "Timeout",
+            default: "600",
+        }];
 }
 
 

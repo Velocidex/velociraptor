@@ -57,6 +57,10 @@ message VQLCollectorArgs {
     repeated Artifact artifacts = 5 [(sem_type) = {
             description: "Artifacts sent from the server to help with this query."
         }];
+
+    uint64 timeout = 25 [(sem_type) = {
+            description: "Maximum time for the query to run."
+        }];
 }
 
 message VQLTypeMap {

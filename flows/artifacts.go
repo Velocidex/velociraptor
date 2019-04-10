@@ -74,6 +74,7 @@ func (self *ArtifactCollector) Start(
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
 		OpsPerSecond: collector_args.OpsPerSecond,
+		Timeout:      collector_args.Timeout,
 	}
 	for _, name := range collector_args.Artifacts.Names {
 		artifact, pres := repository.Get(name)

@@ -71,6 +71,13 @@ func validateServerConfig(configuration *api_proto.Config) error {
 		return errors.New("Configuration does not specify a frontend certificate.")
 	}
 
+	for _, url := range configuration.Client.ServerUrls {
+		if !strings.HasSuffix(url, "/") {
+			return errors.New(
+				"Configuration Client.server_urls must end with /")
+		}
+	}
+
 	// On windows we require file locations to include a drive
 	// letter.
 	if runtime.GOOS == "windows" {
