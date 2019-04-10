@@ -118,7 +118,7 @@ func (self *VQLClientAction) StartQuery(
 	env := vfilter.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
-		Set("config", config_obj).
+		Set("config", config_obj.Client).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {
