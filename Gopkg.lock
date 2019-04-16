@@ -502,11 +502,39 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4d54720291eea730f5deb3923833faa506a142fc9d14142b0ab8061fb7c6d23b"
+  digest = "1:02d4ed56fe57cde00d0d6b5f3572401d637a97a9e40e394ebfd9f32b1bcf91c6"
+  name = "github.com/xor-gate/ar"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5c72ae81e2b71456d16dc856c3d2affdf7157379"
+
+[[projects]]
+  digest = "1:d35019df7c2012f70fe3f87bfa2a6692a53009fb9aceb1e5f687f4b6042ddf23"
+  name = "github.com/xor-gate/debpkg"
+  packages = [
+    ".",
+    "internal/config",
+    "internal/targzip",
+  ]
+  pruneopts = "UT"
+  revision = "bbfb9f6867ee06369429bb33eea8578d1d096100"
+  version = "v0.1.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ea568c5ebd7e683e4425ad2146c7390cc3cc5be29c5d18dcc8071cf2f2dac493"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
     "acme/autocert",
+    "cast5",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/clearsign",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
     "ssh/terminal",
   ]
   pruneopts = "UT"
@@ -703,6 +731,14 @@
   version = "v5.0.79"
 
 [[projects]]
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
+[[projects]]
   branch = "master"
   digest = "1:75d514507b4df5d6f42aab7cda776419d4384e904e7d0daf1f2aa7233db8eb4c"
   name = "www.velocidex.com/golang/evtx"
@@ -809,6 +845,7 @@
     "github.com/stretchr/testify/require",
     "github.com/stretchr/testify/suite",
     "github.com/tink-ab/tempfile",
+    "github.com/xor-gate/debpkg",
     "golang.org/x/crypto/acme/autocert",
     "golang.org/x/crypto/ssh/terminal",
     "golang.org/x/net/context",
