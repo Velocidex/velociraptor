@@ -104,7 +104,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	for _, message = range messages {
 		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
-			self.logger.Error(fmt.Sprintf("FlowRunner %v: ", message), err)
+			self.logger.Error(fmt.Sprintf("FlowRunner %s: %v: ", message.SessionId, message), err)
 			continue
 		}
 
@@ -131,7 +131,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 				cached_flow.FlowContext.Backtrace = ""
 				cached_flow.dirty = true
 			}
-			self.logger.Error("FlowRunner", err)
+			self.logger.Error(fmt.Sprintf("FlowRunner %s: ", message.SessionId), err)
 			return
 		}
 	}

@@ -156,9 +156,12 @@ func NewServer(config_obj *api_proto.Config) (*Server, error) {
 		return nil, err
 	}
 
+	// This number mainly affects memory use during large tranfers
+	// as it controls the number of concurrent clients that may be
+	// tranferring data (each will use some memory to buffer).
 	concurrency := config_obj.Frontend.Concurrency
 	if concurrency == 0 {
-		concurrency = 50
+		concurrency = 6
 	}
 
 	result := Server{

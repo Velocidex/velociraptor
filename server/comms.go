@@ -501,8 +501,6 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 					logger.Info("reader: quit.")
 					return
 				}
-
-				logger.Debug("reader: notification received.")
 				response, _, err := server_obj.Process(
 					req.Context(),
 					message_info,

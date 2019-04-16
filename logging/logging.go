@@ -117,7 +117,7 @@ func getRotator(
 
 	max_age := config_obj.Logging.MaxAge
 	if max_age == 0 {
-		max_age = 86400 // 1 day.
+		max_age = 86400 * 365 // 1 year.
 	}
 
 	rotation := config_obj.Logging.RotationTime
@@ -128,7 +128,7 @@ func getRotator(
 	result, err := rotatelogs.New(
 		base_path+".%Y%m%d%H%M",
 		rotatelogs.WithLinkName(base_path),
-		// 1 day.
+		// 365 days.
 		rotatelogs.WithMaxAge(time.Duration(max_age)*time.Second),
 		// 7 days.
 		rotatelogs.WithRotationTime(time.Duration(rotation)*time.Second),

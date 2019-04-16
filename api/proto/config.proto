@@ -346,7 +346,8 @@ message LoggingConfig {
         }];
 
     uint64 max_age = 4 [(sem_type) = {
-            description: "Maximum age of each file.",
+            description: "Maximum age of each file (File will be deleted after this time).",
+            default: "31536000", // One year
         }];
 
 }
