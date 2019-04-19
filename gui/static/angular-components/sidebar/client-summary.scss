@@ -1,9 +1,10 @@
 grr-client-summary {
   padding: 5px 10px;
-  display: block;
+  float: left;
 
   .client-name {
-    color: $color-infoline-success;
+      color: $color-infoline-success;
+      display: inline;
   }
 
   grr-client-status-icons > div {

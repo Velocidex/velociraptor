@@ -1,63 +1,60 @@
-<div>
+<div class="navbar navbar-default toolbar">
 
-  <div class="navbar navbar-default toolbar">
+  <div class="navbar-inner">
+    <div class="navbar-form pull-left">
+      <div class="btn-group" role="group">
+        <button id="refresh-dir" class="btn btn-default"
+                title="Refresh this directory (sync its listing with the client)"
+                ng-disabled="!controller.fileContext.clientId"
+                ng-click="controller.startVfsRefreshOperation()">
+          <img src="/static/images/stock_refresh.png" class="toolbar_icon" />
+        </button>
 
-    <div class="navbar-inner">
-      <div class="navbar-form pull-left">
-        <div class="btn-group" role="group">
-          <button id="refresh-dir" class="btn btn-default"
-                  title="Refresh this directory (sync its listing with the client)"
-                  ng-disabled="!controller.fileContext.clientId"
-                  ng-click="controller.startVfsRefreshOperation()">
-            <img src="/static/images/stock_refresh.png" class="toolbar_icon" />
-          </button>
+        <grr-recursive-list-button client-id="controller.fileContext.clientId"
+                                   file-path="controller.fileContext.selectedDirPath"
+                                   class="space-right">
+        </grr-recursive-list-button>
 
-          <grr-recursive-list-button client-id="controller.fileContext.clientId"
-                                     file-path="controller.fileContext.selectedDirPath"
-                                     class="space-right">
-          </grr-recursive-list-button>
-
-          <grr-add-item-button client-id="controller.fileContext.clientId"
-                               file-path="controller.fileContext.selectedFilePath"
-                               dir-path="controller.fileContext.selectedDirPath"
-                               class="space-right">
-          </grr-add-item-button>
-        </div>
-
-        <grr-vfs-files-archive-button client-id="controller.fileContext.clientId"
-                                      file-path="controller.fileContext.selectedDirPath"
-                                      class="space-right">
-        </grr-vfs-files-archive-button>
-
+        <grr-add-item-button client-id="controller.fileContext.clientId"
+                             file-path="controller.fileContext.selectedFilePath"
+                             dir-path="controller.fileContext.selectedDirPath"
+                             class="space-right">
+        </grr-add-item-button>
       </div>
 
-      <div class="navbar-form pull-right">
+      <grr-vfs-files-archive-button client-id="controller.fileContext.clientId"
+                                    file-path="controller.fileContext.selectedDirPath"
+                                    class="space-right">
+      </grr-vfs-files-archive-button>
 
-        <grr-r-we-owned-button class="space-right"></grr-r-we-owned-button>
+    </div>
 
-      </div>
+    <div class="navbar-form pull-right">
+
+      <grr-r-we-owned-button class="space-right"></grr-r-we-owned-button>
 
     </div>
 
   </div>
 
-  <div class="fill-parent-with-toolbar">
-    <grr-breadcrumbs path="controller.fileContext.selectedDirPath"></grr-breadcrumbs>
-    <div grr-force-refresh
-         refresh-trigger="controller.fileContext.selectedDirPathData.Response"
+</div>
+
+<div class="fill-parent-with-toolbar">
+  <grr-breadcrumbs path="controller.fileContext.selectedDirPath"></grr-breadcrumbs>
+  <div grr-force-refresh
+       refresh-trigger="controller.fileContext.selectedDirPathData.Response"
+       >
+
+    <div ng-if="controller.fileContext.selectedDirPathData.Response"
          >
+      <grr-vql value="controller.fileContext.selectedDirPathData"
+               selected-row="controller.fileContext.selectedRow"/>
+    </div>
 
-      <div ng-if="controller.fileContext.selectedDirPathData.Response"
-           >
-        <grr-vql value="controller.fileContext.selectedDirPathData"
-                 selected-row="controller.fileContext.selectedRow"/>
-      </div>
-
-      <div ng-if="!controller.fileContext.selectedDirPathData.Response"
-           class="no-content">
-        No data available for directory.
-        You can try to refresh this directory using the toolbar above.
-      </div>
+    <div ng-if="!controller.fileContext.selectedDirPathData.Response"
+         class="no-content">
+      No data available for directory.
+      You can try to refresh this directory using the toolbar above.
     </div>
   </div>
 </div>

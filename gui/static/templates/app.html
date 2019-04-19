@@ -37,12 +37,11 @@
   <div class="navbar navbar-default navbar-static-top" id="header">
     <div class="navbar-inner">
       <div class="container-fluid">
-        <a href="/"><img class="grr-logo" src="/static/images/velo.png" /></a>
-        <div class="navbar-brand">Velociraptor</div>
-
+        <grr-navigator></grr-navigator>
         <div class="pull-left navbar-form toolbar-buttons">
           <grr-search-box></grr-search-box>
         </div>
+        <grr-client-summary></grr-client-summary>
         <div class="nav pull-right">
           <grr-user-label class="navbar-text"></grr-user-label>
         </div>
@@ -57,16 +56,7 @@
   <!-- This element contains the navigator and the main content- -->
   <div id="content">
     <grr-global-notifications></grr-global-notifications>
-
-    <div grr-splitter orientation="vertical" min-left-pane-size="230" max-left-pane-size="230">
-      <div grr-splitter-pane id="content_leftPane" class="leftPane">
-        <grr-navigator></grr-navigator>
-      </div>
-
-      <div grr-splitter-pane id="content_rightPane" class="rightPane">
-        <div ui-view></div>
-      </div>
-    </div>
+    <div ui-view></div>
   </div>
 
   <div class="navbar navbar-default navbar-fixed-bottom" id="footer">

@@ -144,7 +144,6 @@ label.btn {
 }
 
 .navbar.navbar-fixed-bottom {
-  position: absolute !important;
   min-width: 1024px;
 }
 
@@ -161,7 +160,6 @@ label.btn {
 
 .grr-logo {
   max-height: 41px;
-  position: absolute;
   left: 20px;
 }
 
@@ -176,6 +174,10 @@ img.velociraptor-logo {
 
 #notifications_and_settings {
   margin-left: 10px;
+}
+
+.search-table {
+    margin-left: 15px;
 }
 
 .navbar-text p {
@@ -212,6 +214,7 @@ div[ui-view] {
   right: 0;
   min-width: 1024px;
   min-height: 400px;
+  background-color: $color-default-background;
 }
 
 .breadcrumb {
@@ -704,7 +707,7 @@ dd.histogram {
 }
 
 .full-width {
-  width: 100%;
+    width: 100%;
 }
 
 .full-width-height {
@@ -744,7 +747,7 @@ dd.histogram {
   height: 48px;
   box-sizing: content-box;
   overflow: visible;
-  z-index: 1025; // Toolbar should be below the modal background (1050) but above everything else.
+//  z-index: 1025; // Toolbar should be below the modal background (1050) but above everything else.
 }
 
 .fill-parent-with-toolbar {

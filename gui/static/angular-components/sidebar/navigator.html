@@ -1,73 +1,71 @@
-<div id="navigator">
+<div class="pull-left">
+  <span class="hamburger toolbar-buttons"
+        ng-click="controller.Collapse()">&#9776;</span>
+  <div id="navigator"
+       ng-class="{'collapsed': controller.collapsed, 'uncollapsed': !controller.collapsed}"
+       ng-click="controller.Collapse()"
+       >
+    <div>
+      <!-- Client overview and links for client navigation -->
+      <section ng-if="controller.clientId">
+        <!-- Client links -->
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="client.hostInfo"
+              params="{clientId: controller.clientId}">
+            Host Information
+          </li>
+          <li grr-nav-link state="client.launchFlows"
+              params="{clientId: controller.clientId}"
+              >
+            Start new flows
+          </li>
+          <li grr-nav-link state="client.collectArtifacts"
+              params="{clientId: controller.clientId}"
+              >
+            Collect Artifacts
+          </li>
+          <li grr-nav-link state="client.vfs"
+              params="{clientId: controller.clientId}"
+              >
+            Browse Virtual Filesystem
+          </li>
+          <li grr-nav-link state="client.flows"
+              params="{clientId: controller.clientId}"
+              >
+            View Past Collections
+          </li>
+        </ul>
+      </section>
 
-  <section ng-if="controller.clientId && !controller.client">
-    Loading...
-  </section>
+      <!-- Management links -->
+      <section>
+        <h1>Management</h1>
 
-  <!-- Client overview and links for client navigation -->
-  <section ng-if="controller.client">
-    <!-- Client overview-->
-    <grr-periodic-refresh interval="30000"
-                          on-refresh="controller.refreshClientDetails()">
-    </grr-periodic-refresh>
-    <grr-client-summary client="controller.client"></grr-client-summary>
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="hunts"
+              >
+            Hunt Manager
+          </li>
+        </ul>
 
-    <!-- Client links -->
-    <ul class="nav nav-pills">
-      <li grr-nav-link state="client.hostInfo"
-          params="{clientId: controller.clientId}">
-        Host Information
-      </li>
-      <li grr-nav-link state="client.launchFlows"
-          params="{clientId: controller.clientId}"
-          disabled="!controller.uiTraits.start_client_flow_nav_item_enabled || !controller.hasClientAccess">
-        Start new flows
-      </li>
-      <li grr-nav-link state="client.collectArtifacts"
-          params="{clientId: controller.clientId}"
-          disabled="!controller.uiTraits.start_client_flow_nav_item_enabled || !controller.hasClientAccess">
-        Collect Artifacts
-      </li>
-      <li grr-nav-link state="client.vfs"
-          params="{clientId: controller.clientId}"
-          disabled="!controller.uiTraits.browse_virtual_file_system_nav_item_enabled || !controller.hasClientAccess">
-        Browse Virtual Filesystem
-      </li>
-      <li grr-nav-link state="client.flows"
-          params="{clientId: controller.clientId}"
-          disabled="!controller.uiTraits.manage_client_flows_nav_item_enabled || !controller.hasClientAccess">
-        Manage launched flows
-      </li>
-    </ul>
-  </section>
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="server_files">
+            Server Files
+          </li>
+        </ul>
 
-  <!-- Management links -->
-  <section>
-    <h1>Management</h1>
+      </section>
 
-    <ul class="nav nav-pills">
-      <li grr-nav-link state="hunts"
-          disabled="!controller.uiTraits.hunt_manager_nav_item_enabled">
-        Hunt Manager
-      </li>
-    </ul>
+      <!-- Additional links -->
+      <section ng-if="controller.uiTraits.links">
+        <h1>Links</h1>
 
-    <ul class="nav nav-pills">
-      <li grr-nav-link state="server_files">
-        Server Files
-      </li>
-    </ul>
-
-  </section>
-
-  <!-- Additional links -->
-  <section ng-if="controller.uiTraits.links">
-    <h1>Links</h1>
-
-    <ul class="nav nav-list">
-      <li ng-repeat="item in controller.uiTraits.links">
-        <a href="{{item.url}}">{{ item.text }}</a>
-      </li>
-    </ul>
-  </section>
-</div>
+        <ul class="nav nav-list">
+          <li ng-repeat="item in controller.uiTraits.links">
+            <a href="{{item.url}}">{{ item.text }}</a>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</span>

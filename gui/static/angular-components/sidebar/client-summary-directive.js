@@ -12,10 +12,12 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $scope
  * @param {!grrUi.core.apiService.ApiService} grrApiService
  * @param {!grrUi.core.timeService.TimeService} grrTimeService
+ * @param {!RoutingService} grrRoutingService
  * @ngInject
  */
 const ClientSummaryController =
-    function($scope, grrApiService, grrTimeService) {
+      function($scope, grrApiService, grrTimeService, grrRoutingService) {
+
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
@@ -25,53 +27,63 @@ const ClientSummaryController =
   /** @private {!grrUi.core.timeService.TimeService} */
   this.grrTimeService_ = grrTimeService;
 
+  /** @private {!RoutingService} */
+  this.grrRoutingService_ = grrRoutingService;
+
   /** @type {string} */
   this.approvalReason;
 
     /** @type {object} */
-  this.clientInfo;
+  this.clientInfo = null;
+  this.clientId;
 
-  this.scope_.$watch('client', this.onClientChange_.bind(this));
+  this.scope_.$watch('clientId', this.onClientSelectionChange_.bind(this));
+
+  // Subscribe to legacy grr events to be notified on client change.
+  this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
+      this.onClientSelectionChange_.bind(this), true);
+
 };
 
-
-
 /**
- * Handles changes to the client.
+ * Handles selection of a client.
  *
+ * @param {string} clientId The id of the selected client.
  * @private
  */
-ClientSummaryController.prototype.onClientChange_ = function() {
-  if (!this.scope_['client'])  {
+ClientSummaryController.prototype.onClientSelectionChange_ = function(clientId) {
+  if (!clientId) {
+    return; // Stil display the last client for convenience.
+  }
+  if (clientId.indexOf('aff4:/') === 0) {
+    clientId = clientId.split('/')[1];
+  }
+  if (this.clientId === clientId) {
     return;
   }
 
+  var url = 'v1/GetClient/' + clientId;
+  this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
+};
+
+/**
+ * Called when the client details were fetched.
+ *
+ * @param {Object} response
+ * @private
+ */
+ClientSummaryController.prototype.onClientDetailsFetched_ = function(response) {
+    this.clientInfo = response['data'];
+
   // Check for the last crash.
-  if (this.scope_['client']['last_crash_at']){
+  if (this.clientInfo['last_crash_at']){
     var currentTimeMs = this.grrTimeService_.getCurrentTimeMs();
-    var crashTime = this.scope_['client']['last_crash_at'];
+    var crashTime = this.clientInfo['last_crash_at'];
     if (angular.isDefined(crashTime) &&
         (currentTimeMs / 1000 - crashTime / 1000000) < 60 * 60 * 24) {
       this.crashTime = crashTime;
     }
   }
-
-  var clientId = this.scope_['client']['client_id'];
-  var clientInfoUrl = 'v1/GetClient/' + clientId;
-  this.grrApiService_.get(clientInfoUrl, {'lightweight': true}).then(
-    function(response) {
-      this.clientInfo = response.data;
-    }.bind(this));
-
-  var approvalUrl = 'v1/GetApprovals/' + clientId;
-  this.grrApiService_.get(approvalUrl).then(function(response) {
-    var approvals = response.data['items'];
-    if (approvals && approvals.length) {
-      // Approvals are returned from newest to oldest, so the first item
-      // holds the most recent approval reason.
-      this.approvalReason = approvals[0]['reason'];
-    }
-  }.bind(this));
 };
 
 
@@ -85,7 +97,7 @@ ClientSummaryController.prototype.onClientChange_ = function() {
 exports.ClientSummaryDirective = function() {
   return {
     scope: {
-      client: '='
+      client_id: '='
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/sidebar/client-summary.html',

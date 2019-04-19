@@ -4,17 +4,23 @@ grr-navigator {
   //
   // Sidebar navigation
   //
-  //
+    //
 
   #navigator {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: 0;
-    padding-top: 10px;
-    background-color: $color-sidebar-background;
+      height: 100%;
+      position: fixed;
+      z-index: 2000; // Must be above everything else;
+      top: 51px;
+      left: 0;
+      background-color: #111;
+      overflow-x: hidden;
+      transition: 0.5s;
+      background-color: $color-sidebar-background;
+  }
+
+  #navigator div {
+      width: 200px;
+      overflow-x: hidden;
   }
 
   //
@@ -84,6 +90,20 @@ grr-navigator {
     color: $color-nav-header-color;
     text-shadow: 0 1px 0 $color-nav-link-default-shadow;
     text-transform: uppercase;
+  }
+
+  .collapsed {
+      width: 0px;
+  }
+
+  .uncollapsed {
+      width: 200px;
+  }
+
+  .hamburger {
+      float: left;
+      font-size: 30px;
+      cursor: pointer;
   }
 
 } // grr-navigator

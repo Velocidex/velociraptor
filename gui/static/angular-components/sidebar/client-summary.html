@@ -1,38 +1,18 @@
-<div>
-  <div class="client-name">
-    <span ng-if="client.os_info.fqdn">
-      {$ client.os_info.fqdn $}
-    </span>
-    <span ng-if="!client.os_info.fqdn">
-      {$ client.client_id $}
-    </span>
+<div class="client-status toolbar-buttons">
+  <div ng-if="controller.clientInfo.os_info.fqdn" class="client-name">
+    {$ controller.clientInfo.os_info.fqdn $}
   </div>
-  <div class="approval-reason" ng-if="controller.approvalReason">
-    Access reason: {$ controller.approvalReason $}
-  </div>
-  <div class="client-status">
-    <!-- Output of the directives below depends on the current time (as
-         they depend on the time *passed since* the time the client was last
-         active. We have to refresh them every second, as Angular won't
-         detect the changes automatically (since source value - last_seen_at -
-         stays the same). -->
-    <grr-periodic-refresh interval="1000">
-      Status:
-      <grr-client-status-icons client="client"></grr-client-status-icons>
-      {$ (client.last_seen_at | grrTimeSince) $}
-    </grr-periodic-refresh>
-  </div>
-  <span ng-if="controller.crashTime != null" class="last-crash">
-    <strong>Last crash:</strong><br/>
-    {$ (controller.crashTime | grrTimeSince) $}
-  </span>
-  <div class="client-ip-info">
-    <img ng-if="client.last_ip_class === 'UNKNOWN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
-    <img ng-if="client.last_ip_class === 'INTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_internal.png">
-    <img ng-if="client.last_ip_class === 'EXTERNAL'" class="grr-icon-small vertical_aligned" src="/static/images/ip_external.png">
-    <img ng-if="client.last_ip_class === 'VPN'" class="grr-icon-small vertical_aligned" src="/static/images/ip_unknown.png">
-    {$ client.last_ip $}
+  <div ng-if="!controller.clientInfo.os_info.fqdn" class="client-name">
+    {$ controller.clientInfo.client_id $}
   </div>
 
-  <grr-client-warnings client="client"></grr-client-warnings>
+  <!-- Output of the directives below depends on the current time (as
+       they depend on the time *passed since* the time the client was last
+       active. We have to refresh them every second, as Angular won't
+       detect the changes automatically (since source value - last_seen_at -
+       stays the same). -->
+  <grr-periodic-refresh interval="1000">
+    <grr-client-status-icons client="controller.clientInfo"></grr-client-status-icons>
+    {$ (controller.clientInfo.last_seen_at | grrTimeSince) $}
+  </grr-periodic-refresh>
 </div>

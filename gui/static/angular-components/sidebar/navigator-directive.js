@@ -39,24 +39,18 @@ const NavigatorController = function(
   /** @type {Object} */
   this.uiTraits;
 
+  this.collapsed = true;
+
   // Fetch UI traits.
    this.grrApiService_.getCached('v1/GetUserUITraits').then(function (response) {
     this.uiTraits = response['data']['interface_traits'];
-  }.bind(this));
+   }.bind(this));
 
   // Subscribe to legacy grr events to be notified on client change.
   this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
       this.onClientSelectionChange_.bind(this), true);
 };
 
-
-
-/**
- * Handles selection of a client.
- *
- * @param {string} clientId The id of the selected client.
- * @private
- */
 NavigatorController.prototype.onClientSelectionChange_ = function(clientId) {
   if (!clientId) {
     return; // Stil display the last client for convenience.
@@ -69,29 +63,10 @@ NavigatorController.prototype.onClientSelectionChange_ = function(clientId) {
   }
 
   this.clientId = clientId;
-  this.client = null; // Set to null so the loader is shown.
-
-  this.refreshClientDetails();
-  this.checkClientAccess_();
 };
 
-
-/**
- * Fetches new client details.
- */
-NavigatorController.prototype.refreshClientDetails = function() {
-  var url = 'v1/GetClient/' + this.clientId;
-  this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
-};
-
-/**
- * Called when the client details were fetched.
- *
- * @param {Object} response
- * @private
- */
-NavigatorController.prototype.onClientDetailsFetched_ = function(response) {
-  this.client = response['data'];
+NavigatorController.prototype.Collapse = function() {
+    this.collapsed = !this.collapsed;
 };
 
 /**
