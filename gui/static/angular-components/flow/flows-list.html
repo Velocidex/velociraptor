@@ -18,26 +18,18 @@
     </tr>
   </thead>
   <tbody>
-    <tr grr-infinite-table grr-api-items-provider url="flowsUrl" page-size="controller.pageSize"
+    <tr grr-infinite-table grr-api-items-provider
         transform-items="controller.transformItems(items)"
+        url="flowsUrl"
+        page-size="controller.pageSize"
         trigger-update="controller.triggerTableUpdate"
         auto-refresh-interval="controller.autoRefreshInterval"
         ng-click="controller.selectItem(item)"
         ng-class="{'row-selected': item.flow_id == controller.selectedFlowId}"
-        ng-if="item.shown">
+        >
       <td><grr-flow-status-icon flow="::item" /></td>
       <td>
-        <span ng-if="::item.expanded === undefined"
-              style="float: left; margin-left: {$ ::item.depth $}em"
-              class="tree_leaf">
-        </span>
-        <span ng-if="::item.expanded !== undefined"
-              ng-class="{'tree_closed': !item.expanded, 'tree_opened': item.expanded}"
-              ng-click="item.expand($event)"
-              style="margin-left: {$ ::item.depth $}em"
-              class="tree_branch">
-        </span>
-        {$ ::item.shortId $}
+        {$ ::item.flow_id $}
       </td>
       <td>
         <grr-semantic-value value="::item.context.artifacts" />

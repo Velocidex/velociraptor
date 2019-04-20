@@ -26,6 +26,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
@@ -107,6 +108,67 @@ func GetFlowDetails(
 		Name:       flow_obj.RunnerArgs.FlowName,
 		RunnerArgs: flow_obj.RunnerArgs,
 		Context:    flow_obj.FlowContext,
+	}, nil
+}
+
+func CancelFlow(
+	config_obj *api_proto.Config,
+	client_id string, flow_id string, username string) (
+	*api_proto.StartFlowResponse, error) {
+	if flow_id == "" || client_id == "" {
+		return &api_proto.StartFlowResponse{}, nil
+	}
+
+	flow_urn, err := ValidateFlowId(client_id, flow_id)
+	if err != nil {
+		return nil, err
+	}
+
+	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
+	if err != nil {
+		return nil, err
+	}
+
+	if flow_obj.FlowContext != nil {
+		if flow_obj.FlowContext.State != flows_proto.FlowContext_RUNNING {
+			return nil, errors.New("Flow is not in the running state. " +
+				"Can only cancel running flows.")
+		}
+
+		flow_obj.FlowContext.State = flows_proto.FlowContext_ERROR
+		flow_obj.FlowContext.Status = "Cancelled by " + username
+		flow_obj.FlowContext.Backtrace = ""
+		flow_obj.dirty = true
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all queued tasks for the client and delete only those in this flow.
+	tasks, err := db.GetClientTasks(config_obj, client_id, true /* do_not_lease */)
+	if err != nil {
+		return nil, err
+	}
+
+	session_id := urns.BuildURN("clients", client_id, "flows", flow_id)
+	for _, task := range tasks {
+		if task.SessionId == session_id {
+			err = db.UnQueueMessageForClient(config_obj, client_id, task)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	err = SetAFF4FlowObject(config_obj, flow_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api_proto.StartFlowResponse{
+		FlowId: flow_id,
 	}, nil
 }
 

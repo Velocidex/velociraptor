@@ -4,7 +4,7 @@ grr-navigator {
   //
   // Sidebar navigation
   //
-    //
+  //
 
   #navigator {
       height: 100%;
@@ -12,9 +12,11 @@ grr-navigator {
       z-index: 2000; // Must be above everything else;
       top: 51px;
       left: 0;
-      background-color: #111;
       overflow-x: hidden;
       transition: 0.5s;
+      border-right: gray;
+      border-width: 3px;
+      border-right-style: solid;
       background-color: $color-sidebar-background;
   }
 

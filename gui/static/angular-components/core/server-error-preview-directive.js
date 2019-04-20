@@ -10,7 +10,7 @@ const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonD
 var ERROR_EVENT_NAME =
   ServerErrorButtonDirective.error_event_name;
 
-var ERROR_PREVIEW_INTERVAL = 5000; //ms
+var ERROR_PREVIEW_INTERVAL = 30000; //ms
 
 
 /**
@@ -59,6 +59,8 @@ ServerErrorPreviewController.prototype.onErrorEvent = function(unused_event, err
     this.error = error;
     this.labelVisible = true;
 
+      console.log("Velociraptor Error: " + error.message);
+
     // hide error preview after ERROR_PREVIEW_INTERVAL ms.
     this.timeout_(function() {
       this.labelVisible = false;
@@ -83,7 +85,7 @@ exports.ServerErrorPreviewDirective = function() {
     scope: true,
     restrict: 'E',
     replace: true,
-    template: '<div class="navbar-text" ng-show="controller.labelVisible">' +
+    template: '<div class="navbar-text error-message" ng-show="controller.labelVisible">' +
     '    {$ controller.error.message $}' +
     '</div>',
     controller: ServerErrorPreviewController,
@@ -108,5 +110,3 @@ ServerErrorPreviewDirective.directive_name = 'grrServerErrorPreview';
  * @export
  */
 ServerErrorPreviewDirective.error_preview_interval = 5000;
-
-

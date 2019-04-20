@@ -44,7 +44,6 @@ const CreateHuntFromFlowFormController =
 };
 
 
-
 /**
  * Handles flowId/clientId attributes changes.
  *

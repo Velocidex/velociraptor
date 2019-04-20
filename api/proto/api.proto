@@ -67,13 +67,6 @@ message NotificationRequest {
 
 
 service API {
-    rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
-        option (google.api.http) = {
-            post: "/api/v1/LaunchFlow",
-            body: "*"
-        };
-    }
-
     // Hunts
     rpc CreateHunt(Hunt) returns (StartFlowResponse) {
         option (google.api.http) = {
@@ -198,6 +191,20 @@ service API {
     }
 
     // Flows
+    rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/LaunchFlow",
+            body: "*"
+        };
+    }
+
+    rpc CancelFlow(ApiFlowRequest) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/CancelFlow",
+            body: "*"
+        };
+    }
+
     rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails/{client_id}",

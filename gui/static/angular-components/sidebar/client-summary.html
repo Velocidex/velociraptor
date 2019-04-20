@@ -1,4 +1,6 @@
-<div class="client-status toolbar-buttons">
+<div class="client-status toolbar-buttons"
+    ng-if="controller.clientInfo.last_seen_at"
+     >
   <div ng-if="controller.clientInfo.os_info.fqdn" class="client-name">
     {$ controller.clientInfo.os_info.fqdn $}
   </div>

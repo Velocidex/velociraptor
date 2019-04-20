@@ -41,12 +41,17 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	_                          = iota
+	processVQLResponses uint64 = iota
+)
+
 type ArtifactCollector struct {
-	*VQLCollector
+	*BaseFlow
 }
 
 func (self *ArtifactCollector) New() Flow {
-	return &ArtifactCollector{&VQLCollector{}}
+	return &ArtifactCollector{&BaseFlow{}}
 }
 
 func (self *ArtifactCollector) Start(
@@ -299,8 +304,45 @@ func artifactUncompress(response *actions_proto.VQLResponse,
 	response.Query.Description = decompress(response.Query.Description)
 }
 
+func appendDataToFile(
+	config_obj *api_proto.Config,
+	flow_obj *AFF4FlowObject,
+	base_urn string,
+	message *crypto_proto.GrrMessage) error {
+	payload := responder.ExtractGrrMessagePayload(message)
+	if payload == nil {
+		return nil
+	}
+
+	file_buffer, ok := payload.(*actions_proto.FileBuffer)
+	if !ok {
+		return nil
+	}
+	file_store_factory := file_store.GetFileStore(config_obj)
+	file_path := path.Join(base_urn, file_buffer.Pathspec.Accessor,
+		file_buffer.Pathspec.Path)
+	fd, err := file_store_factory.WriteFile(file_path)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return err
+	}
+	defer fd.Close()
+
+	fd.Seek(int64(file_buffer.Offset), 0)
+	fd.Write(file_buffer.Data)
+
+	// Keep track of all the files we uploaded.
+	if file_buffer.Offset == 0 {
+		flow_obj.FlowContext.UploadedFiles = append(
+			flow_obj.FlowContext.UploadedFiles,
+			file_path)
+		flow_obj.dirty = true
+	}
+	return nil
+}
+
 func init() {
-	impl := ArtifactCollector{&VQLCollector{}}
+	impl := ArtifactCollector{&BaseFlow{}}
 	default_args, _ := ptypes.MarshalAny(&flows_proto.ArtifactCollectorArgs{})
 	desc := &flows_proto.FlowDescriptor{
 		Name:         "ArtifactCollector",

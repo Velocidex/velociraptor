@@ -1,0 +1,45 @@
+<grr-wizard-form title="New Artifact Collection"
+                 on-resolve="controller.resolve()"
+                 on-reject="onReject()">
+
+  <grr-wizard-form-page title="Select Artifacts to collect">
+    <grr-flow-form
+      flow-args="controller.flowArguments"
+      flow-runner-args="controller.flowRunnerArguments">
+    </grr-flow-form>
+  </grr-wizard-form-page>
+
+  <grr-wizard-form-page title="Launched Flow"
+                        on-show="controller.startClientFlow()"
+                        next-button-label="Done"
+                        no-back-button="true">
+    <div class="padded">
+      <div ng-if="!controller.responseData">
+        <uib-progressbar class="progress-striped active" max="100" value="50">
+          Creating hunt...
+        </uib-progressbar>
+      </div>
+
+      <div ng-if="controller.responseData && controller.responseData.error" class="alert alert-error">
+        <p><em>Can't Launch Artifact connection:</em></p>
+        <p class="preserve-linebreaks">{$ controller.responseData.data $}</p>
+      </div>
+
+      <div ng-if="controller.responseData && !controller.responseData.error" class="panel panel-default">
+        <div class="panel-body">
+          <p>
+            Launched Flow {{ controller.responseData.flow_id }}
+          </p>
+          <p>
+            Flow arguments:<br/>
+            <grr-semantic-value value="controller.flowArguments"
+                                type="ArtifactCollectorArgs"
+                                ></grr-semantic-value>
+          </p>
+        </div>
+      </div>
+    </div>
+  </grr-wizard-form-page>
+
+
+</grr-wizard-form>

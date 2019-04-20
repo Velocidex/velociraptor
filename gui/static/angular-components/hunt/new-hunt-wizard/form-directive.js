@@ -16,29 +16,27 @@ const {debug} = goog.require('grrUi.core.utils');
  * @constructor
  * @ngInject
  */
-const FormController =
-    function($scope, grrReflectionService, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+const FormController = function($scope, grrReflectionService, grrApiService) {
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
+    /** @private {!ReflectionService} */
+    this.grrReflectionService_ = grrReflectionService;
 
-  /** @private {!ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!Object<string, Object>} */
-  this.descriptors_ = {};
-
-  /** @type {boolean} */
-      this.configureFlowPageHasErrors;
-
-      if (angular.isUndefined(this.scope_['createHuntArgs'])) {
+    if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
-          start_request: {},
-          condition: {},
+            start_request: {
+                "flow_name": "ArtifactCollector",
+                args: {
+                    "@type": "type.googleapis.com/proto.ArtifactCollectorArgs",
+                },
+            },
+            condition: {},
         };
-      }
+    }
 };
 
 

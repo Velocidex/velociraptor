@@ -37,6 +37,11 @@ type DataStore interface {
 		client_id string,
 		do_not_lease bool) ([]*crypto_proto.GrrMessage, error)
 
+	UnQueueMessageForClient(
+		config_obj *api_proto.Config,
+		client_id string,
+		message *crypto_proto.GrrMessage) error
+
 	QueueMessageForClient(
 		config_obj *api_proto.Config,
 		client_id string,

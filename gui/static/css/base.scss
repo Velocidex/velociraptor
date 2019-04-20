@@ -992,3 +992,55 @@ table.grr_flot_graph {
     min-width: 600px;
     max-height: 80%;
 }
+
+.dashboard {
+    margin: 20px;
+}
+
+.table-loading {
+    position: absolute;
+    z-index: 10000;
+}
+
+
+.splitbarV {
+    border-left: solid 1px #a7a7a7;
+    border-right: solid 1px #a7a7a7;
+    background: #f5ebeb;
+}
+
+.splitbarH {
+    border-left: solid 1px #a7a7a7;
+    border-right: solid 1px #a7a7a7;
+    background: #f5ebeb;
+}
+
+.splitbuttonH, .splitbuttonV {
+    z-index: 1000;
+}
+
+
+table.table tbody {
+    cursor: pointer;
+}
+
+
+.nav-pills li.active .nav-link:hover {
+    background-color: #9f9f9f;
+}
+
+.nav-pills li.active .nav-link {
+    width: 200px;
+    background-color: #9f9f9f;
+}
+
+
+.modal-dialog.modal-lg {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+div.error-message {
+    font-size: 12pt;
+    color: #f11818 !important;
+}

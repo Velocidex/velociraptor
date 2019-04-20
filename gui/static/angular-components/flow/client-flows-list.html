@@ -1,8 +1,12 @@
-<!---
 <div class="toolbar">
   <div class="breadcrumb">
     <li>
-      <button title="Cancel Selected Flows" class="btn btn-default" name="cancel_flow"
+      <button class="btn btn-default" name="NewHunt"
+              title="Collect More Artifacts" ng-click="controller.newArtifactCollection()">
+        <img src="/static/images/new.png" class="toolbar-icon" />
+      </button>
+
+      <button title="Cancel Artifact Collection" class="btn btn-default" name="cancel_flow"
               ng-disabled="!selectedFlowId"
               ng-click="controller.cancelButtonClicked()">
         <img src="/static/images/editdelete.png" class="toolbar_icon">
@@ -24,12 +28,8 @@
   </div>
 </div>
 <div class="fill-parent-with-toolbar">
-
--->
   <grr-flows-list flows-url="controller.flowsUrl"
                   selected-flow-id="selectedFlowId"
                   trigger-update="controller.triggerUpdate">
   </grr-flows-list>
-  <!--
-      </div>
-  -->
+</div>

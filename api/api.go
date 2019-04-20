@@ -57,6 +57,42 @@ type ApiServer struct {
 	ca_pool    *x509.CertPool
 }
 
+func (self *ApiServer) CancelFlow(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
+	result := &api_proto.StartFlowResponse{}
+	user := GetGRPCUserInfo(ctx).Name
+
+	// Empty users are called internally.
+	if user != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, user)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to launch flows.")
+		}
+	}
+
+	result, err := flows.CancelFlow(self.config, in.ClientId, in.FlowId, user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log this event as and Audit event.
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    user,
+			"client":  in.ClientId,
+			"flow_id": in.FlowId,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("CancelFlow")
+
+	return result, nil
+}
+
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {

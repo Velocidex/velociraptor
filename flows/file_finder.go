@@ -1,3 +1,7 @@
+// +build deprecated
+
+// Deprecated in favor of artifacts.
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.

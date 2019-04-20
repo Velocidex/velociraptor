@@ -34,7 +34,7 @@ const ClientFlowsListController = function(
   this.grrRoutingService_ = grrRoutingService;
 
   /** @type {?string} */
-  this.flowsUrl;
+    this.flowsUrl;
 
   /**
    * This variable is bound to grr-flows-list's trigger-update attribute
@@ -46,7 +46,6 @@ const ClientFlowsListController = function(
 
   this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
 };
-
 
 /**
  * Handles changes of clientId binding.
@@ -70,21 +69,20 @@ ClientFlowsListController.prototype.onClientIdChange_ = function(newValue) {
  * @export
  */
 ClientFlowsListController.prototype.cancelButtonClicked = function() {
-  var cancelUrl = [this.flowsUrl,
-                   this.scope_['selectedFlowId'],
-                   'actions/cancel'].join('/');
+    this.grrApiService_.post('/v1/CancelFlow', {
+        client_id: this.scope_['clientId'],
+        flow_id: this.scope_['selectedFlowId'],
+    }).then(function() {
+        this.triggerUpdate();
 
-  this.grrApiService_.post(cancelUrl, {}).then(function() {
-    this.triggerUpdate();
-
-    // This will force all the directives that depend on selectedFlowId
-    // binding to refresh.
-    var flowId = this.scope_['selectedFlowId'];
-    this.scope_['selectedFlowId'] = undefined;
-    this.timeout_(function() {
-      this.scope_['selectedFlowId'] = flowId;
-    }.bind(this), 0);
-  }.bind(this));
+        // This will force all the directives that depend on selectedFlowId
+        // binding to refresh.
+        var flowId = this.scope_['selectedFlowId'];
+        this.scope_['selectedFlowId'] = undefined;
+        this.timeout_(function() {
+            this.scope_['selectedFlowId'] = flowId;
+        }.bind(this), 0);
+    }.bind(this));
 };
 
 /**
@@ -162,6 +160,35 @@ ClientFlowsListController.prototype.copyFlow = function() {
   }.bind(this));
 };
 
+/**
+ * Shows new hunt wizard.
+ *
+ * @export
+ */
+ClientFlowsListController.prototype.newArtifactCollection = function() {
+    var modalScope = this.scope_.$new();
+    var self = this;
+
+  modalScope.resolve = function() {
+      modalInstance.close();
+      self.triggerUpdate();
+  };
+  modalScope.reject = function() {
+    modalInstance.dismiss();
+  };
+  this.scope_.$on('$destroy', function() {
+    modalScope.$destroy();
+  });
+
+  var modalInstance = this.uibModal_.open({
+    template: '<grr-new-artifact-collection client-id="clientId" '+
+          'on-resolve="resolve()" on-reject="reject()" />',
+    scope: modalScope,
+    windowClass: 'wide-modal high-modal',
+    size: 'lg'
+  });
+};
+
 
 /**
  * FlowsListDirective definition.
@@ -171,8 +198,9 @@ ClientFlowsListController.prototype.copyFlow = function() {
 exports.ClientFlowsListDirective = function() {
   return {
     scope: {
-      clientId: '=',
-      selectedFlowId: '=?'
+        clientId: '=',
+        selectedFlowId: '=?',
+        triggerUpdate: '=?',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/client-flows-list.html',

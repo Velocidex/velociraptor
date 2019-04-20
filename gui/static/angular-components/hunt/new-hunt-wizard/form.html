@@ -1,12 +1,10 @@
 <grr-wizard-form title="New Hunt" on-resolve="controller.resolve()" on-reject="onReject()">
 
   <!-- Configure flow -->
-  <grr-wizard-form-page title="What to run?"
-                        is-valid="createHuntArgs.start_request.args['@type']">
-    <grr-configure-flow-page flow-start-request="createHuntArgs.start_request"
-                             has-errors="controller.configureFlowPageHasErrors">
-    </grr-configure-flow-page>
-
+  <grr-wizard-form-page title="Select Artifacts to collect">
+    <grr-flow-form flow-args="createHuntArgs.start_request.args"
+                   flow-runner-args="createHuntArgs.start_request">
+    </grr-flow-form>
   </grr-wizard-form-page>
 
   <!-- Configure hunt -->

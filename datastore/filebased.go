@@ -99,6 +99,17 @@ func (self *FileBaseDataStore) GetClientTasks(
 	return result, nil
 }
 
+func (self *FileBaseDataStore) UnQueueMessageForClient(
+	config_obj *api_proto.Config,
+	client_id string,
+	message *crypto_proto.GrrMessage) error {
+
+	task_urn := urns.BuildURN("clients", client_id, "tasks",
+		fmt.Sprintf("/%d", message.TaskId))
+
+	return self.DeleteSubject(config_obj, task_urn)
+}
+
 func (self *FileBaseDataStore) QueueMessageForClient(
 	config_obj *api_proto.Config,
 	client_id string,

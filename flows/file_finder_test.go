@@ -1,3 +1,5 @@
+// +build deprecated
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -19,9 +21,10 @@ package flows
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/sebdah/goldie"
-	"testing"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	//	utils "www.velocidex.com/golang/velociraptor/testing"

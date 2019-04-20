@@ -1,3 +1,5 @@
+// To be deprecated in favor of an artifact.
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -19,6 +21,7 @@ package flows
 
 import (
 	"encoding/json"
+	"path"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -153,11 +156,13 @@ func (self *VInterrogate) ProcessMessage(
 		// Also support receiving files in interrogate
 		// actions.
 	case constants.TransferWellKnownFlowId:
-		delegate := &VQLCollector{}
-		err := delegate.ProcessMessage(config_obj, flow_obj, message)
-		if err != nil {
-			return err
-		}
+		return appendDataToFile(
+			config_obj, flow_obj,
+			path.Join("clients",
+				flow_obj.RunnerArgs.ClientId,
+				"uploads",
+				path.Base(message.SessionId)),
+			message)
 	}
 
 	return nil
