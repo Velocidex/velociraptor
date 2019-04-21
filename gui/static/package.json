@@ -26,6 +26,7 @@
     "jquery-migrate": "^1.4.1",
     "jquery-ui-dist": "^1.12.1",
     "jstree": "^3.3.6",
+    "jstree-bootstrap-theme": "^1.0.1",
     "moment": "^2.24.0",
     "node-sass": "^4.9.4",
     "npm": "^6.8.0",

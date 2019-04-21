@@ -11,20 +11,16 @@ const {debug} = goog.require('grrUi.core.utils');
  *
  * @constructor
  * @param {!angular.Scope} $scope
- * @param {!angular.$compile} $compile
  * @param {!angular.jQuery} $element
  * @param {!grrUi.core.reflectionService.ReflectionService} grrReflectionService
  * @ngInject
  */
 exports.SemanticValueFormController = function(
-  $scope, $compile, $element,
+  $scope, $element,
   grrReflectionService,
   grrSemanticFormDirectivesRegistryService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
-
-  /** @private {!angular.$compile} */
-  this.compile_ = $compile;
 
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;

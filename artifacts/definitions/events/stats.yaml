@@ -19,3 +19,32 @@ sources:
                   MemoryInfo.RSS as RSS
            FROM pslist(pid=getpid())
          })
+
+
+reports:
+  - type: MONITORING_DAILY
+    template: |
+      {{ define "top_memory" }}
+          SELECT timestamp(epoch=Timestamp) As time,
+                 CPU, RSS, humanize(bytes=RSS) AS Resident
+          FROM monitoring(client_id=ClientId,
+                          artifact='Generic.Client.Stats',
+                          date_regex=dayName)
+          Order By RSS desc LIMIT 10
+      {{ end }}
+      {{ $rows := Query "top_memory" }}
+
+      {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
+
+      {{ Scope "ClientId" }}
+
+      # Client Footprint for {{ Get $client_info "0.ClientId" }}  (Hostname {{ Get $client_info "0.OsInfo.Fqdn" }})
+
+      ```sql
+      {{ template "top_memory" }}
+      ```
+
+      Over the course of {{ Scope "dayName" }}, the highest resident memory size was {{ Get $rows "0.Resident" }}.
+
+      {{ Table $rows }}
+      {{ Get $rows "RSS" }}

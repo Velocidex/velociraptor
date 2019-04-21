@@ -78,7 +78,8 @@ exports.TableBottomDirective.directive_name = 'grrPagedFilteredTableBottom';
  * @ngInject
  */
 const PagedFilteredTableController = function(
-    $scope, $element, $transclude, $compile, $interval) {
+    $scope, $element, $transclude,
+    $compile, $interval) {
   // Injected dependencies.
 
   /** @private {!angular.Scope} */

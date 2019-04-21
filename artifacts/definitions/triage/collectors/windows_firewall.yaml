@@ -11,6 +11,6 @@ sources:
       - SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="Windows Firewall Logs",
-               path="C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.*"
+               path="C:\\Windows\\System32\\LogFiles\\Firewall\\pfirewall.*")
           }
         )

@@ -1,7 +1,6 @@
 'use strict';
 
 goog.module('grrUi.client.virtualFileSystem.fileDetailsDirective');
-goog.module.declareLegacyNamespace();
 
 const {REFRESH_FILE_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 
@@ -29,6 +28,8 @@ const FileDetailsController = function(
 
     /** @type {?object} */
     this.params;
+
+    this.reporting_params = {};
 
     this.scope_.$watch('controller.fileContext.selectedFilePath',
                        this.onFilePathChange_.bind(this));
@@ -68,6 +69,8 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
         path: filePath,
         client_id: this.fileContext.clientId,
     };
+
+    this.reportingParameters();
 };
 
 /**
@@ -90,6 +93,34 @@ FileDetailsController.prototype.fileIsNotCSV = function() {
 };
 
 
+FileDetailsController.prototype.reportingParameters = function() {
+    this.reporting_params = null;
+
+    if (!angular.isString(this.params.path)) {
+        return;
+    }
+    var components = this.params.path.split('/');
+    if (components.length != 4) {
+        return;
+    }
+
+    if (components[1] == "monitoring") {
+        var artifact_name = components[2];
+        var prefix = "Artifact ";
+        if (!artifact_name.indexOf(prefix) == 0) {
+            return;
+        }
+        artifact_name = artifact_name.slice(prefix.length);
+        var params = {
+            "artifact": artifact_name,
+            "client_id": this.params["client_id"],
+            "dayName": components[3],
+        };
+
+        params["type"] = "MONITORING_DAILY";
+        this.reporting_params = params;
+    }
+};
 
 /**
  * FileDetailsDirective definition.

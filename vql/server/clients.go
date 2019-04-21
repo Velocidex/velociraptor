@@ -34,7 +34,8 @@ import (
 )
 
 type ClientsPluginArgs struct {
-	Search string `vfilter:"optional,field=search"`
+	Search   string `vfilter:"optional,field=search"`
+	ClientId string `vfilter:"optional,field=client_id"`
 }
 
 type ClientsPlugin struct{}
@@ -64,6 +65,15 @@ func (self ClientsPlugin) Call(
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
 			scope.Log("Error: %v", err)
+			return
+		}
+
+		// If a client id is specifies we do not need to search at all.
+		if arg.ClientId != "" {
+			api_client, err := api.GetApiClient(config_obj, arg.ClientId, false)
+			if err == nil {
+				output_chan <- api_client
+			}
 			return
 		}
 

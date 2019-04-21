@@ -4,7 +4,6 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
-
 message FieldDescriptor {
     string friendly_name = 1;
     string name = 2;
@@ -93,6 +92,22 @@ message ArtifactSource {
         }];
 }
 
+
+message Report {
+    option (semantic) = {
+        description: "A report is generated from the output of the artifact collected. "
+        "There can be multiple report types generated depending on context."
+    };
+
+    // Each report type will be handled differently. Read about the
+    // different types in reporting.go
+    string type = 1 [(sem_type) = {
+            description: "Type of report: MONITORING_DAILY, POST_PROCESSING"
+        }];
+
+    string template = 2;
+}
+
 message Artifact {
     option (semantic) = {
         description: "An artifact wraps a VQL query in reusable, documented way."
@@ -136,6 +151,10 @@ message Artifact {
 
     repeated string includes = 9 [(sem_type) = {
             description: "A list of other artifacts to merge our source with."
+        }];
+
+    repeated Report reports = 11 [(sem_type) = {
+            description: "A list of reports to potentially post process this artifact.",
         }];
 
     /* Internal use only */

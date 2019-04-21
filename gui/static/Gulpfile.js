@@ -105,8 +105,8 @@ gulp.task('copy-fontawesome-fonts', function() {
 });
 
 gulp.task('copy-third-party-resources', function() {
-  return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/*.gif',
-                   config.nodeModulesDir + '/jstree/dist/themes/default/*.png',
+  return gulp.src([config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/*.gif',
+                   config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/*.png',
                    config.nodeModulesDir + '/bootstrap-sass/assets/fonts/bootstrap/glyphicons-halflings-regular.woff2'])
       .pipe(gulp.dest(config.distDir));
 });
@@ -126,20 +126,20 @@ gulp.task('compile-third-party-bootstrap-css', function() {
 
 
 gulp.task('compile-third-party-css', function() {
-  return gulp.src([config.nodeModulesDir + '/jstree/dist/themes/default/style.css',
-                   config.nodeModulesDir + '/bootstrap/dist/css/bootstrap.css',
-                   config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-csp.css',
-                   config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
-                   config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
-                   config.nodeModulesDir + '/angular-datatables/dist/css/angular-datatables.css',
-                   config.nodeModulesDir + '/datatables/media/css/jquery.dataTables.css',
-                   config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
-                   config.nodeModulesDir + '/highlightjs/styles/atom-one-light.css',
-                   config.tempDir + '/grr-bootstrap.css',
-                   'third-party/splitter.css'])
-      .pipe(gulpNewer(config.distDir + '/third-party.bundle.css'))
-      .pipe(gulpConcat('third-party.bundle.css'))
-      .pipe(gulp.dest(config.distDir));
+    return gulp.src([config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/style.min.css',
+                     config.nodeModulesDir + '/bootstrap/dist/css/bootstrap.css',
+                     config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-csp.css',
+                     config.nodeModulesDir + '/font-awesome/css/font-awesome.css',
+                     config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.css',
+                     config.nodeModulesDir + '/angular-datatables/dist/css/angular-datatables.css',
+                     config.nodeModulesDir + '/datatables/media/css/jquery.dataTables.css',
+                     config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
+                     config.nodeModulesDir + '/highlightjs/styles/atom-one-light.css',
+                     config.tempDir + '/grr-bootstrap.css',
+                     'third-party/splitter.css'])
+        .pipe(gulpNewer(config.distDir + '/third-party.bundle.css'))
+        .pipe(gulpConcat('third-party.bundle.css'))
+        .pipe(gulp.dest(config.distDir));
 });
 
 

@@ -49,6 +49,13 @@
         </div>
       </uib-tab>
 
+      <uib-tab heading="Reports" index="'reports'"
+               disable="!controller.reporting_params">
+        <div ng-if="controller.currentTab === 'reports'">
+          <grr-report-viewer params="controller.reporting_params"/>
+        </div>
+      </uib-tab>
+
     </uib-tabset>
 
   </div>

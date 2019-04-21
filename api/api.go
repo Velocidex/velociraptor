@@ -93,6 +93,12 @@ func (self *ApiServer) CancelFlow(
 	return result, nil
 }
 
+func (self *ApiServer) GetReport(
+	ctx context.Context,
+	in *api_proto.GetReportRequest) (*api_proto.GetReportResponse, error) {
+	return getReport(ctx, self.config, in)
+}
+
 func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {

@@ -249,6 +249,14 @@ service API {
         };
     }
 
+    // Reporting and post processing.
+    rpc GetReport(GetReportRequest) returns (GetReportResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/GetReport",
+            body: "*",
+        };
+    }
+
     // Streaming free form VQL
     rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
 }

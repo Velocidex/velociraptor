@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
@@ -237,9 +238,68 @@ func (self _ProtobufAssociativeProtocol) GetMembers(
 	return result
 }
 
+// Allow a slice to be accessed by a field
+type _IndexAssociativeProtocol struct{}
+
+func (self _IndexAssociativeProtocol) Applicable(
+	a vfilter.Any, b vfilter.Any) bool {
+
+	a_value := reflect.Indirect(reflect.ValueOf(a))
+	a_type := a_value.Type()
+	if a_type.Kind() != reflect.Slice {
+		return false
+	}
+
+	switch t := b.(type) {
+	case string:
+		_, err := strconv.Atoi(t)
+		if err == nil {
+			return true
+		}
+	case int, float64, uint64:
+		return true
+	}
+	return false
+}
+
+func (self _IndexAssociativeProtocol) Associative(
+	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	vfilter.Any, bool) {
+
+	idx := 0
+	switch t := b.(type) {
+	case string:
+		idx, _ = strconv.Atoi(t)
+	case int:
+		idx = int(t)
+	case float64:
+		idx = int(t)
+	case uint64:
+		idx = int(t)
+
+	default:
+		return vfilter.Null{}, false
+	}
+
+	a_value := reflect.Indirect(reflect.ValueOf(a))
+	if a_value.Len() == 0 {
+		return vfilter.Null{}, false
+	}
+
+	idx = idx % a_value.Len()
+
+	return a_value.Index(idx).Interface(), true
+}
+
+func (self _IndexAssociativeProtocol) GetMembers(
+	scope *vfilter.Scope, a vfilter.Any) []string {
+	return []string{}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&ParseJsonFunction{})
 	vql_subsystem.RegisterFunction(&ParseJsonArray{})
 	vql_subsystem.RegisterProtocol(&_MapInterfaceAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_ProtobufAssociativeProtocol{})
+	vql_subsystem.RegisterProtocol(&_IndexAssociativeProtocol{})
 }

@@ -12,22 +12,17 @@ const {debug} = goog.require('grrUi.core.utils');
  * @constructor
  * @param {!angular.Scope} $scope
  * @param {!angular.jQuery} $element
- * @param {!angular.$compile} $compile
  * @param {!grrUi.core.semanticRegistryService.SemanticRegistryService}
  *     grrSemanticRepeatedFormDirectivesRegistryService
  * @ngInject
  */
 const SemanticProtoRepeatedFieldFormController = function(
-        $scope, $element, $compile,
-        grrReflectionService) {
+        $scope, $element, grrReflectionService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
   /** @private {!angular.jQuery} */
   this.element_ = $element;
-
-  /** @private {!angular.$compile} */
-  this.compile_ = $compile;
 
   /** @private {!grrUi.core.reflectionService.ReflectionService} */
   this.grrReflectionService_ = grrReflectionService;

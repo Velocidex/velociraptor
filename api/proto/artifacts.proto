@@ -2,6 +2,7 @@ syntax = "proto3";
 
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
 
@@ -40,4 +41,37 @@ message APIResponse {
         }];
 
     string error_message = 2;
+}
+
+message GetReportRequest {
+    string artifact = 1 [(sem_type) = {
+            description: "The artifact for which we report"
+        }];
+
+    string type = 2 [(sem_type) = {
+            description: "The report type we need (e.g. MONITORING_DAILY)"
+        }];
+
+    string format = 3 [(sem_type) = {
+            description: "Format e.g. html"
+        }];
+
+    // Common parameters
+    string client_id = 5;
+
+    // Parameters for MONITORING_DAILY
+    string day_name = 6;
+
+    repeated VQLEnv parameters = 4 [(sem_type) = {
+            description: "Report parameters. These depend on the type of the report."
+        }];
+}
+
+// This presents the report in a form that can be rendered in the
+// GUI. The data is presented in two parts - first "data" contains a
+// json encoded object, then "template" is an angular template to be
+// evaluated with the data.
+message GetReportResponse {
+    string data = 1;
+    string template = 2;
 }

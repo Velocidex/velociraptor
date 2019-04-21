@@ -10,6 +10,14 @@
   version = "v0.37.2"
 
 [[projects]]
+  digest = "1:16500dba440f014310f65d6c775f3a5f62aed67289a2e3ffe7afdf97f5ba8da3"
+  name = "github.com/Depado/bfchroma"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ab1c9aadb8f293e2de3df96dd5df09cccaf21dcd"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   digest = "1:f3be0a119925fc5abcf38ee2dad9fa17c2735090b54e503cd8bb8ea93b3d0668"
   name = "github.com/Showmax/go-fqdn"
@@ -56,6 +64,44 @@
   pruneopts = "UT"
   revision = "841476fecdbcbc185db25640c78c17eea8db9fc3"
   version = "v2.2.3"
+
+[[projects]]
+  digest = "1:c8ecb1984606eb58419ab440aff4ee5b7ce3b42a1677b5c7d32a3c6864f79e43"
+  name = "github.com/alecthomas/chroma"
+  packages = [
+    ".",
+    "formatters/html",
+    "lexers",
+    "lexers/a",
+    "lexers/b",
+    "lexers/c",
+    "lexers/d",
+    "lexers/e",
+    "lexers/f",
+    "lexers/g",
+    "lexers/h",
+    "lexers/i",
+    "lexers/internal",
+    "lexers/j",
+    "lexers/k",
+    "lexers/l",
+    "lexers/m",
+    "lexers/n",
+    "lexers/o",
+    "lexers/p",
+    "lexers/q",
+    "lexers/r",
+    "lexers/s",
+    "lexers/t",
+    "lexers/v",
+    "lexers/w",
+    "lexers/x",
+    "lexers/y",
+    "styles",
+  ]
+  pruneopts = "UT"
+  revision = "3020e2ea8c6b1a9c2336022d847c4392c3997f02"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:bcefcf763fa7290658a39a361619db4e8bb88004474074df85a74c5d2f1433d6"
@@ -128,6 +174,14 @@
   version = "v1.8.4"
 
 [[projects]]
+  branch = "master"
+  digest = "1:710109527a119c813d4fac773712dd92f449ed7c2f7b81f49822f94d290c8f72"
+  name = "github.com/danwakefield/fnmatch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cbb64ac3d964b81592e64f957ad53df015803288"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -150,6 +204,17 @@
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  digest = "1:72dc2b6056e7097f829260e4a2ff08d32fec6017df1982a66e110ab4128486f8"
+  name = "github.com/dlclark/regexp2"
+  packages = [
+    ".",
+    "syntax",
+  ]
+  pruneopts = "UT"
+  revision = "487489b64fb796de2e55f4e8a4ad1e145f80e957"
+  version = "v1.1.6"
 
 [[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
@@ -473,6 +538,14 @@
   revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
 
 [[projects]]
+  digest = "1:9421f6e9e28ef86933e824b5caff441366f2b69bb281085b9dca40e1f27a1602"
+  name = "github.com/shurcooL/sanitized_anchor_name"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:e4c72127d910a96daf869a44f3dd563b86dbe6931a172863a0e99c5ff04b59e4"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -731,6 +804,14 @@
   version = "v5.0.79"
 
 [[projects]]
+  digest = "1:2ee0f15eb0fb04f918db7c2dcf39745f40d69f798ef171610a730e8a56aaa4fd"
+  name = "gopkg.in/russross/blackfriday.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
+  version = "v2.0.1"
+
+[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -790,15 +871,16 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Depado/bfchroma",
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/cgofuse/fuse",
     "github.com/Velocidex/go-yara",
     "github.com/Velocidex/yaml",
+    "github.com/alecthomas/chroma/formatters/html",
     "github.com/alecthomas/participle",
     "github.com/alecthomas/participle/lexer",
-    "github.com/alecthomas/template",
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
     "github.com/davecgh/go-spew/spew",
@@ -871,6 +953,7 @@
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
+    "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/oleparse",

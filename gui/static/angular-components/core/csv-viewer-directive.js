@@ -67,32 +67,54 @@ CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
  * @private
  */
 CsvViewerDirective.prototype.fetchText_ = function() {
-    this.pageData = null;
+    var self = this;
+
+    self.pageData = null;
     if (angular.isDefined(this.dtInstance.DataTable)) {
-        this.dtInstance.DataTable.ngDestroy();
+        self.dtInstance.DataTable.ngDestroy();
         var i, ths = document.querySelectorAll('#dtable th');
         for (i=0;i<ths.length;i++) {
             ths[i].removeAttribute('style');
         }
     }
 
-    if (this.scope_.baseUrl && angular.isDefined(this.scope_.params)) {
-        var url = this.scope_.baseUrl;
-        var params = this.scope_.params;
+    if (self.scope_.baseUrl && angular.isDefined(self.scope_.params)) {
+        var url = self.scope_.baseUrl;
+        var params = self.scope_.params;
         if (angular.isDefined(params.path)) {
             params['start_row'] = 0;
             params['rows'] = MAX_ROWS_PER_TABLE;
-
-            var self = this;
-            this.pageData = null;
+            self.pageData = null;
             this.grrApiService_.get(url, params).then(function(response) {
                 self.pageData = response.data;
             }.bind(this), function() {
-                this.pageData = null;
+                self.pageData = null;
             }.bind(this)).catch(function() {
-                this.pageData = null;
+                self.pageData = null;
             });
         }
+    } else if (angular.isObject(self.scope_.value)) {
+
+        // If value is specified we expect it to be a VQLResponse so
+        // we need to convert it into the same format as a csv file.
+        var value = self.scope_.value;
+        var rows = JSON.parse(value.Response);
+        var new_rows = [];
+
+        for (var i=0; i<rows.length; i++) {
+            var new_row = [];
+            for (var c=0; c<value.Columns.length;c++) {
+                var column = value.Columns[c];
+                new_row.push(rows[i][column]);
+            }
+
+            new_rows.push({"cell": new_row});
+        }
+
+        self.pageData = {
+            "columns": value.Columns,
+            "rows": new_rows,
+        };
     }
 };
 
@@ -105,6 +127,7 @@ exports.CsvViewerDirective = function() {
       scope: {
           baseUrl: '=',
           params: '=',
+          value: '=',
       },
       restrict: 'E',
       templateUrl: '/static/angular-components/core/csv-viewer.html',

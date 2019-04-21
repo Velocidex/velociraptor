@@ -66,7 +66,7 @@ var (
 		Short('d').Counter()
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
-		"artifact_name", "The artifact name to collectartifact_command_coll.").
+		"artifact_name", "The artifact name to collect.").
 		Required().String()
 )
 
@@ -300,10 +300,12 @@ func doArtifactList() {
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case "artifacts list":
+		case artifact_command_list.FullCommand():
 			doArtifactList()
-		case "artifacts collect":
+
+		case artifact_command_collect.FullCommand():
 			doArtifactCollect()
+
 		default:
 			return false
 		}
