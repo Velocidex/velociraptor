@@ -1,7 +1,7 @@
 {
-  "name": "grr-ui",
+  "name": "velociraptor-ui",
   "version": "0.0.2",
-  "description": "",
+  "description": "Web app GUI for Velociraptor.",
   "dependencies": {
     "@babel/preset-env": "^7.3.4",
     "ace-builds": "^1.4.3",
@@ -18,6 +18,7 @@
     "bootstrap-sass": ">=3.4.1",
     "datatables": "^1.10.18",
     "del": "^3.0.0",
+    "flot": "^3.0.2",
     "font-awesome": "^4.7.0",
     "gulp-cli": "^2.0.1",
     "gulp-uglify": "^3.0.1",
@@ -29,7 +30,8 @@
     "jstree-bootstrap-theme": "^1.0.1",
     "moment": "^2.24.0",
     "node-sass": "^4.9.4",
-    "npm": "^6.8.0",
+    "npm": "^6.9.0",
+    "tar": "^4.4.8",
     "uglify-js": "^3.4.9"
   },
   "devDependencies": {
@@ -46,22 +48,22 @@
     "gulp-less": "^4.0.1",
     "gulp-newer": "^1.2.0",
     "gulp-plumber": "^1.1.0",
-    "gulp-sass": "^3.2.1",
+    "gulp-sass": "^4.0.2",
     "gulp-sourcemaps": "^1.6.0",
     "jasmine-core": "^2.99.1",
-    "karma": "^4.0.0",
+    "karma": "^4.1.0",
     "karma-chrome-launcher": "^2.2.0",
     "karma-jasmine": "^1.1.1",
     "karma-ng-html2js-preprocessor": "^1.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/google/grr.git"
+    "url": "https://github.com/Velocidex/velociraptor.git"
   },
-  "author": "Mikhail Bushkov",
-  "license": "Apache-2.0",
+  "author": "Mike Cohen",
+  "license": "AGPL3.0",
   "bugs": {
-    "url": "https://github.com/google/grr/issues"
+    "url": "https://github.com/Velocidex/velociraptor/issues"
   },
-  "homepage": "https://github.com/google/grr#readme"
+  "homepage": "https://github.com/Velocidex/velociraptor/"
 }

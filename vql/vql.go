@@ -62,5 +62,7 @@ func MakeScope() *vfilter.Scope {
 		result.AppendFunctions(function)
 	}
 
+	result.SetContext("", "")
+
 	return result
 }

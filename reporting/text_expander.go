@@ -63,7 +63,23 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 	return result
 }
 
-func (self *TextTemplateEngine) Table(rows []vfilter.Row) string {
+// Not implemented for text.
+func (self *TextTemplateEngine) LineChart(values ...interface{}) string {
+	return self.Table(values...)
+}
+
+func (self *TextTemplateEngine) Table(values ...interface{}) string {
+	_, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	rows, ok := argv[0].([]vfilter.Row)
+	if !ok { // Not the right type
+		return ""
+	}
+
 	buffer := &bytes.Buffer{}
 	table := tablewriter.NewWriter(buffer)
 
@@ -104,11 +120,12 @@ func NewTextTemplateEngine(config_obj *api_proto.Config,
 	template_engine := &TextTemplateEngine{BaseTemplateEngine: base_engine}
 	template_engine.tmpl = template.New("").Funcs(
 		template.FuncMap{
-			"Query": template_engine.Query,
-			"Scope": template_engine.GetScope,
-			"Table": template_engine.Table,
-			"Get":   template_engine.getFunction,
-			"str":   strval,
+			"Query":     template_engine.Query,
+			"Scope":     template_engine.GetScope,
+			"Table":     template_engine.Table,
+			"LineChart": template_engine.LineChart,
+			"Get":       template_engine.getFunction,
+			"str":       strval,
 		})
 
 	return template_engine, nil

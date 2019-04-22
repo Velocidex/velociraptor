@@ -131,8 +131,8 @@ exports.CsvViewerDirective = function() {
       },
       restrict: 'E',
       templateUrl: '/static/angular-components/core/csv-viewer.html',
-    controller: CsvViewerDirective,
-    controllerAs: 'controller',
+      controller: CsvViewerDirective,
+      controllerAs: 'controller',
   };
 };
 

@@ -24,12 +24,54 @@ type GuiTemplateEngine struct {
 	Data map[string]*actions_proto.VQLResponse
 }
 
-func (self *GuiTemplateEngine) Table(rows []vfilter.Row) template.HTML {
-	if len(rows) == 0 {
+// Go templates can call functions which take args. The pipeline is
+// always called last, so any options must come before it. This
+// function takes care of parsing the args in a consistent way -
+// keyword options are
+func parseOptions(values []interface{}) (*vfilter.Dict, []interface{}) {
+	result := []interface{}{}
+	dict := vfilter.NewDict()
+	for i := 0; i < len(values); i++ {
+		value := values[i]
+
+		key, ok := value.(string)
+		if !ok {
+			result = append(result, value)
+			continue
+		}
+
+		if i+1 < len(values) {
+			dict.Set(key, values[i+1])
+			i++
+			continue
+		}
+		result = append(result, value)
+	}
+	return dict, result
+}
+
+func (self *GuiTemplateEngine) Table(values ...interface{}) template.HTML {
+	options, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	rows, ok := argv[0].([]vfilter.Row)
+	if !ok { // Not the right type
+		return ""
+	}
+
+	if len(rows) == 0 { // No rows returned.
 		return ""
 	}
 
 	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	if err != nil {
+		return ""
+	}
+
+	parameters, err := options.MarshalJSON()
 	if err != nil {
 		return ""
 	}
@@ -39,7 +81,46 @@ func (self *GuiTemplateEngine) Table(rows []vfilter.Row) template.HTML {
 		Response: string(encoded_rows),
 		Columns:  self.Scope.GetMembers(rows[0]),
 	}
-	return template.HTML(fmt.Sprintf(`<grr-csv-viewer value="data['%s']" />`, key))
+	return template.HTML(fmt.Sprintf(
+		`<grr-csv-viewer value="data['%s']" params='%s' />`,
+		key, string(parameters)))
+}
+
+// Currently supported line chart options:
+// 1) xaxis_mode: time - specifies x axis is time since epoch.
+func (self *GuiTemplateEngine) LineChart(values ...interface{}) template.HTML {
+	options, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	rows, ok := argv[0].([]vfilter.Row)
+	if !ok { // Not the right type
+		return ""
+	}
+
+	if len(rows) == 0 {
+		return ""
+	}
+	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	if err != nil {
+		return ""
+	}
+
+	parameters, err := options.MarshalJSON()
+	if err != nil {
+		return ""
+	}
+
+	key := fmt.Sprintf("table%d", len(self.Data))
+	self.Data[key] = &actions_proto.VQLResponse{
+		Response: string(encoded_rows),
+		Columns:  self.Scope.GetMembers(rows[0]),
+	}
+	return template.HTML(fmt.Sprintf(
+		`<grr-line-chart value="data['%s']" params='%s' />`, key, string(parameters)))
+
 }
 
 func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
@@ -111,11 +192,12 @@ func NewGuiTemplateEngine(config_obj *api_proto.Config,
 	}
 	template_engine.tmpl = template.New("").Funcs(
 		template.FuncMap{
-			"Query": template_engine.Query,
-			"Scope": template_engine.GetScope,
-			"Table": template_engine.Table,
-			"Get":   template_engine.getFunction,
-			"str":   strval,
+			"Query":     template_engine.Query,
+			"Scope":     template_engine.GetScope,
+			"Table":     template_engine.Table,
+			"LineChart": template_engine.LineChart,
+			"Get":       template_engine.getFunction,
+			"str":       strval,
 		})
 	return template_engine, nil
 }

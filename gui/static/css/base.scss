@@ -1045,3 +1045,23 @@ div.error-message {
     font-size: 12pt;
     color: #f11818 !important;
 }
+
+
+grr-line-chart {
+    display:block;
+    position: relative;
+}
+
+grr-line-chart div {
+    width:90%;
+    height:400px;
+}
+
+flot-tooltip {
+    position: "absolute";
+    display: "none";
+    border: "1px solid #fdd";
+    padding: "2px";
+    background-color: "#fee";
+    opacity: 0.80;
+}

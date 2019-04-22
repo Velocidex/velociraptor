@@ -8,6 +8,7 @@ const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescr
 const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
 const {ArtifactsListFormDirective} = goog.require('grrUi.artifact.artifactsListFormDirective');
 const {ArtifactsParamsFormDirective} = goog.require('grrUi.artifact.artifactsParamsFormDirective');
+const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
 const {ReportingDirective} = goog.require('grrUi.artifact.reportingDirective');
 const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
@@ -19,7 +20,8 @@ const {semanticModule} = goog.require('grrUi.semantic.semantic');
  */
 exports.artifactModule = angular.module(
     'grrUi.artifact',
-    [coreModule.name, formsModule.name, semanticModule.name, 'ui.bootstrap']);
+    [coreModule.name, formsModule.name, semanticModule.name,
+     'ui.bootstrap']);
 
 exports.artifactModule.directive(
     ArtifactCollectorDirective.directive_name, ArtifactCollectorDirective);
@@ -30,11 +32,12 @@ exports.artifactModule.directive(
 exports.artifactModule.directive(
     ArtifactsParamsFormDirective.directive_name, ArtifactsParamsFormDirective);
 exports.artifactModule.directive(
-  ReportingDirective.directive_name, ReportingDirective);
-
+    LineChartDirective.directive_name, LineChartDirective);
 exports.artifactModule.directive(
-  SyntaxHighlightDirective.directive_name,
-  SyntaxHighlightDirective);
+    ReportingDirective.directive_name, ReportingDirective);
+exports.artifactModule.directive(
+    SyntaxHighlightDirective.directive_name,
+    SyntaxHighlightDirective);
 
 exports.artifactModule.service(
     ArtifactDescriptorsService.service_name, ArtifactDescriptorsService);

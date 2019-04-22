@@ -24,27 +24,40 @@ sources:
 reports:
   - type: MONITORING_DAILY
     template: |
-      {{ define "top_memory" }}
-          SELECT timestamp(epoch=Timestamp) As time,
-                 CPU, RSS, humanize(bytes=RSS) AS Resident
-          FROM monitoring(client_id=ClientId,
-                          artifact='Generic.Client.Stats',
-                          date_regex=dayName)
-          Order By RSS desc LIMIT 10
+      {{ define "resources" }}
+           SELECT Timestamp, rate(x=CPU, y=Timestamp) * 100 As CPUPercent,
+                  RSS / 1000000 AS MemoryUse
+           FROM monitoring(client_id=ClientId,
+                  artifact='Generic.Client.Stats',
+                  date_regex=dayName)
       {{ end }}
-      {{ $rows := Query "top_memory" }}
 
       {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
 
-      {{ Scope "ClientId" }}
+      # Client Footprint for {{ Get $client_info "0.OsInfo.Fqdn" }} on {{ Scope "dayName" }}.
 
-      # Client Footprint for {{ Get $client_info "0.ClientId" }}  (Hostname {{ Get $client_info "0.OsInfo.Fqdn" }})
+      The client has a client ID of {{ Get $client_info "0.ClientId" }}.
+      Clients report the Velociraptor process footprint to the
+      server every 10 seconds. The data includes the total CPU
+      utilization, and the resident memory size used by the client.
+
+      The following graph shows the total utilization over the course
+      of {{ Scope "dayName" }}. Memory utilization is meausred in `Mb`
+      while CPU Utilization is measured by `Percent of one core`.
+
+      We would expect the client to use around 1-5% of one core when
+      idle, but if a heavy hunt is running this might climb
+      substantially.
+
+      {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+
+      ## VQL Query
+
+      The following VQL query was used to plot the graph above.
 
       ```sql
-      {{ template "top_memory" }}
+      {{ template "resources" }}
       ```
 
-      Over the course of {{ Scope "dayName" }}, the highest resident memory size was {{ Get $rows "0.Resident" }}.
-
-      {{ Table $rows }}
-      {{ Get $rows "RSS" }}
+      > To learn about managing end point performance with Velociraptor see
+        the [blog post](https://docs.velociraptor.velocidex.com/blog/html/2019/02/10/velociraptor_performance.html).

@@ -70,7 +70,8 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/angular-animate/angular-animate.js',
                    config.nodeModulesDir + '/angular-cookies/angular-cookies.js',
                    config.nodeModulesDir + '/angular-resource/angular-resource.js',
-
+                   config.nodeModulesDir + '/flot/dist/es5/jquery.flot.js',
+                   config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
                    config.nodeModulesDir + '/angular-ui-router/release/angular-ui-router.js',
                    config.nodeModulesDir + '/datatables/media/js/jquery.dataTables.js',

@@ -1,3 +1,11 @@
+// +build elastic
+
+// This module addes a dependency on elsatic.v5 which turns out to be
+// huge! Disabling for now:
+
+// $ goweight ./bin/
+// 7.8 MB www.velocidex.com/golang/velociraptor/vendor/gopkg.in/olivere/elastic.v5
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
