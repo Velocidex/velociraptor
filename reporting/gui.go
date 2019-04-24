@@ -7,10 +7,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"html/template"
 
 	"github.com/Depado/bfchroma"
-	"github.com/alecthomas/chroma/formatters/html"
+	chrome_html "github.com/alecthomas/chroma/formatters/html"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -50,7 +51,7 @@ func parseOptions(values []interface{}) (*vfilter.Dict, []interface{}) {
 	return dict, result
 }
 
-func (self *GuiTemplateEngine) Table(values ...interface{}) template.HTML {
+func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	options, argv := parseOptions(values)
 	// Not enough args.
 	if len(argv) != 1 {
@@ -59,7 +60,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) template.HTML {
 
 	rows, ok := argv[0].([]vfilter.Row)
 	if !ok { // Not the right type
-		return ""
+		return argv[0]
 	}
 
 	if len(rows) == 0 { // No rows returned.
@@ -68,12 +69,12 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) template.HTML {
 
 	encoded_rows, err := json.MarshalIndent(rows, "", " ")
 	if err != nil {
-		return ""
+		return self.Error("Error: %v", err)
 	}
 
 	parameters, err := options.MarshalJSON()
 	if err != nil {
-		return ""
+		return self.Error("Error: %v", err)
 	}
 
 	key := fmt.Sprintf("table%d", len(self.Data))
@@ -140,13 +141,13 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 	output := blackfriday.Run(
 		buffer.Bytes(),
 		blackfriday.WithRenderer(bfchroma.NewRenderer(
-			bfchroma.ChromaOptions(html.WithLineNumbers()),
+			bfchroma.ChromaOptions(chrome_html.WithLineNumbers()),
 			bfchroma.Style("github"),
 		)))
 	return string(output), nil
 }
 
-func (self *GuiTemplateEngine) Query(queries ...string) []vfilter.Row {
+func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 	result := []vfilter.Row{}
 
 	for _, query := range queries {
@@ -155,18 +156,22 @@ func (self *GuiTemplateEngine) Query(queries ...string) []vfilter.Row {
 			buf := &bytes.Buffer{}
 			err := t.Execute(buf, nil)
 			if err != nil {
-				self.logger.Err("Template Error (%s): %v",
+				return self.Error("Template Error (%s): %v",
 					self.Artifact.Name, err)
-				return []vfilter.Row{}
 			}
-			query = buf.String()
+
+			// html/template escapes its template but this
+			// is the wrong thing to do for use because we
+			// use the template as a work around for
+			// text/template actions not spanning multiple
+			// lines.
+			query = html.UnescapeString(buf.String())
 		}
 
 		vql, err := vfilter.Parse(query)
 		if err != nil {
-			self.logger.Err("VQL Error while reporting %s: %v",
+			return self.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
-			return result
 		}
 
 		for row := range vql.Eval(context.Background(), self.Scope) {
@@ -175,6 +180,16 @@ func (self *GuiTemplateEngine) Query(queries ...string) []vfilter.Row {
 	}
 
 	return result
+}
+
+func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) template.HTML {
+	message := fmt.Sprintf(fmt_str, argv...)
+	key := fmt.Sprintf("key%d", len(self.Data))
+	self.Data[key] = &actions_proto.VQLResponse{
+		Response: message,
+	}
+
+	return template.HTML(fmt.Sprintf(`<grr-error-label message="data['%s'].Response" />`, key))
 }
 
 func NewGuiTemplateEngine(config_obj *api_proto.Config,

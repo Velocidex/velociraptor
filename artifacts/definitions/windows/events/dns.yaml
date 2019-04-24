@@ -27,3 +27,36 @@ sources:
         SELECT timestamp(epoch=Time) As Time, EventType, Name, CNAME, Answers
         FROM dns()
         WHERE not Name =~ whitelistRegex
+
+reports:
+- type: MONITORING_DAILY
+  template: |
+    {{ define "dns" }}
+       SELECT count(items=Name) AS Total, Name
+       FROM monitoring(client_id=ClientId,
+            artifact='Windows.Events.DNSQueries',
+            date_regex=dayName)
+      WHERE EventType = "Q" and not Name =~ ".home.$"
+      GROUP BY Name
+      ORDER BY Total desc
+      LIMIT 1000
+    {{ end }}
+
+    {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
+
+    # DNS Questions for {{ Get $client_info "0.OsInfo.Fqdn" }} on {{ Scope "dayName" }}.
+
+    The 1000 most common DNS Queries on this day are listed in the
+    below table. Typically we are looking for two interesting
+    anomalies:
+
+    1. Sorting by count for the most frequently called domains. If you
+       do not recognize these it may be possible that a malware is
+       frequently calling out to its C&C.
+
+    2. Examining some of the least commonly used DNS names might
+       indicate DNS exfiltration.
+
+    {{ Query "dns" | Table }}
+
+    > The following domains are filtered out: `.home.`

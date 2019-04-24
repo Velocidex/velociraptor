@@ -20,6 +20,7 @@ const {PagedFilteredTableDirective, TableBottomDirective, TableTopDirective} = g
 const {PeriodicRefreshDirective} = goog.require('grrUi.core.periodicRefreshDirective');
 const {ReflectionService} = goog.require('grrUi.core.reflectionService');
 const {SearchBoxDirective} = goog.require('grrUi.core.searchBoxDirective');
+const {ErrorLabelDirective} = goog.require('grrUi.core.errorLabelDirective');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
 const {ServerErrorDialogDirective} = goog.require('grrUi.core.serverErrorDialogDirective');
 const {ServerErrorInterceptorFactory} = goog.require('grrUi.core.serverErrorInterceptorFactory');
@@ -72,6 +73,8 @@ exports.coreModule.directive(
     DisableIfNoTraitDirective.directive_name, DisableIfNoTraitDirective);
 exports.coreModule.directive(
     SearchBoxDirective.directive_name, SearchBoxDirective);
+exports.coreModule.directive(
+    ErrorLabelDirective.directive_name, ErrorLabelDirective);
 exports.coreModule.directive(
     ServerErrorButtonDirective.directive_name, ServerErrorButtonDirective);
 exports.coreModule.directive(

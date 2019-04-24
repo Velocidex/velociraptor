@@ -1,0 +1,42 @@
+name: System.Hunt.Participation
+description: |
+     Endpoints may participate in hunts. This artifact collects which hunt
+     each system participated in.
+
+     Note: This is an automated system hunt. You do not need to start it.
+
+reports:
+  - type: MONITORING_DAILY
+    template: |
+      {{ define "all_hunts" }}LET allhunts <= SELECT * FROM hunts(){{ end }}
+      {{ define "hunts" }}
+           SELECT * FROM foreach(
+             row={ SELECT timestamp(epoch=Timestamp) AS Scheduled,
+                          HuntId as ParticipatedHuntId
+                   FROM monitoring(client_id=ClientId,
+                       artifact='System.Hunt.Participation',
+                       date_regex=dayName) },
+             query={
+                SELECT Scheduled,
+                       HuntId,
+                       HuntDescription,
+                       StartRequest.Args.Artifacts.Names
+                FROM allhunts
+                WHERE HuntId = ParticipatedHuntId
+             })
+      {{ end }}
+
+      {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
+
+      # Hunt participation for {{ Get $client_info "0.OsInfo.Fqdn" }} on {{ Scope "dayName" }}.
+
+      The client with a client ID of {{ Get $client_info "0.ClientId" }} participated in some hunts today.
+
+      {{ Query "all_hunts" "hunts" | Table }}
+
+      ## VQL Query
+      The following VQL query was used to plot the graph above.
+
+      ```sql
+      {{ template "hunts" }}
+      ```

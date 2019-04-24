@@ -30,6 +30,7 @@ reports:
            FROM monitoring(client_id=ClientId,
                   artifact='Generic.Client.Stats',
                   date_regex=dayName)
+           WHERE CPUPercent >= 0
       {{ end }}
 
       {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}

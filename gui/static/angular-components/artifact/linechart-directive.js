@@ -25,7 +25,16 @@ const LineChartController = function($scope) {
  * @return {angular.Directive} Directive definition object.
  */
 exports.LineChartDirective = function() {
-  return {
+    var tooltip = $("<div class='flot-tooltip'></div>").css({
+        position: "absolute",
+        display: "none",
+        border: "1px solid #fdd",
+        padding: "2px",
+        "background-color": "#fee",
+        opacity: 0.80
+    }).appendTo("body");
+
+    return {
       scope: {
           params: '=',
           value: '=',
@@ -77,15 +86,6 @@ exports.LineChartDirective = function() {
           placeholder.bind("plotunselected", function (event) {
               $("#selection").text("");
           });
-
-          var tooltip = $("<div class='flot-tooltip'></div>").css({
-              position: "absolute",
-              display: "none",
-              border: "1px solid #fdd",
-              padding: "2px",
-              "background-color": "#fee",
-              opacity: 0.80
-          }).appendTo("body");
 
           placeholder.bind("plothover", function (event, pos, item) {
               if (item) {
