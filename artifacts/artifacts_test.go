@@ -20,14 +20,115 @@ package artifacts
 import (
 	"flag"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 
-var environment = flag.String("test.env", "",
-	"The name of the test environment.")
+var (
+	environment = flag.String("test.env", "",
+		"The name of the test environment.")
+
+	// Artifacts 1 and 2 are invalid: cyclic
+	artifact1 = `
+name: Artifact1
+sources:
+  - queries:
+      - SELECT * FROM Artifact.Artifact2()
+`
+
+	artifact2 = `
+name: Artifact2
+sources:
+  - queries:
+      - SELECT * FROM Artifact.Artifact1()
+`
+
+	// Artifact3 has no dependencies itself.
+	artifact3 = `
+name: Artifact3
+sources:
+  - queries:
+      - SELECT * FROM scope()
+`
+
+	// Artifact4 depends on 3
+	artifact4 = `
+name: Artifact4
+sources:
+  - queries:
+      - SELECT * FROM Artifact.Artifact3()
+`
+
+	// Artifact5 depends on an unknown artifact
+	artifact5 = `
+name: Artifact5
+sources:
+  - queries:
+      - SELECT * FROM Artifact.Unknown()
+`
+)
 
 func TestArtifacts(t *testing.T) {
-	if *environment == "" {
-		return
+	repository := NewRepository()
+	repository.LoadYaml(artifact1)
+	repository.LoadYaml(artifact2)
+	repository.LoadYaml(artifact3)
+	repository.LoadYaml(artifact4)
+	repository.LoadYaml(artifact5)
+
+	assert := assert.New(t)
+
+	var request *actions_proto.VQLCollectorArgs
+	var err error
+
+	// Cycle: Artifact1 -> Artifact2 -> Artifact1
+	request = &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				VQL: "SELECT * FROM Artifact.Artifact1()",
+			},
+		},
+	}
+	err = repository.PopulateArtifactsVQLCollectorArgs(request)
+	assert.Error(err)
+	assert.Contains(err.Error(), "Cycle")
+
+	// No Cycle - this should work
+	request = &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				VQL: "SELECT * FROM Artifact.Artifact3()",
+			},
+		},
 	}
 
+	err = repository.PopulateArtifactsVQLCollectorArgs(request)
+	assert.NoError(err)
+	assert.Len(request.Artifacts, 1)
+	assert.Equal(request.Artifacts[0].Name, "Artifact3")
+
+	// No Cycle - this should work
+	request = &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				VQL: "SELECT * FROM Artifact.Artifact4()",
+			},
+		},
+	}
+	err = repository.PopulateArtifactsVQLCollectorArgs(request)
+	assert.NoError(err)
+	assert.Len(request.Artifacts, 2)
+
+	// Broken - depends on an unknown artifact
+	request = &actions_proto.VQLCollectorArgs{
+		Query: []*actions_proto.VQLRequest{
+			&actions_proto.VQLRequest{
+				VQL: "SELECT * FROM Artifact.Artifact5()",
+			},
+		},
+	}
+	err = repository.PopulateArtifactsVQLCollectorArgs(request)
+	assert.Error(err)
+	assert.Contains(err.Error(), "Unknown artifact reference")
 }

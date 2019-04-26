@@ -58,13 +58,15 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
         return;
     }
 
+    /*
     var download = this.fileContext.selectedRow.Download;
     if (download == null) {
         return;
     }
 
     var filePath = download.vfs_path;
-
+    */
+    var filePath = this.fileContext.selectedFilePath.replace(/\/+/g,"/");
     this.params = {
         path: filePath,
         client_id: this.fileContext.clientId,
@@ -106,11 +108,6 @@ FileDetailsController.prototype.reportingParameters = function() {
 
     if (components[1] == "monitoring") {
         var artifact_name = components[2];
-        var prefix = "Artifact ";
-        if (!artifact_name.indexOf(prefix) == 0) {
-            return;
-        }
-        artifact_name = artifact_name.slice(prefix.length);
         var params = {
             "artifact": artifact_name,
             "client_id": this.params["client_id"],
@@ -120,6 +117,24 @@ FileDetailsController.prototype.reportingParameters = function() {
         params["type"] = "MONITORING_DAILY";
         this.reporting_params = params;
     }
+
+    if (components[1] == "artifacts") {
+        var artifact_name = components[2];
+        var flowId = components[3];
+
+        // Stip possible extensions.
+        flowId = flowId.replace(/\.csv$/, "");
+
+        var params = {
+            "artifact": artifact_name,
+            "client_id": this.params["client_id"],
+            "flowId": flowId,
+            "type": "CLIENT",
+        };
+
+        this.reporting_params = params;
+    }
+
 };
 
 /**

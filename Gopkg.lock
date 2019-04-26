@@ -410,6 +410,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:6ff1026b8d873d074ddec82ad60bb0eb537dc013f456ef26b63d30beba2f99e7"
+  name = "github.com/microcosm-cc/bluemonday"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "506f3da9b7c86d737e91f16b7431df8635871552"
+  version = "v1.0.2"
+
+[[projects]]
   digest = "1:abcdbf03ca6ca13d3697e2186edc1f33863bbdac2b3a44dfa39015e8903f7409"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
@@ -615,12 +623,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8056b0c7495a7762ccdc6624a11762d13d2a60867372bdf0d2a6095bd0c3536b"
+  digest = "1:d101b2c7e38efe9d81650fb70a449200ce434dbb5807a130291a44443d3ac62a"
   name = "golang.org/x/net"
   packages = [
     "context",
     "context/ctxhttp",
     "dns/dnsmessage",
+    "html",
+    "html/atom",
     "http/httpguts",
     "http2",
     "http2/hpack",
@@ -909,6 +919,7 @@
     "github.com/magefile/mage/sh",
     "github.com/mattn/go-pointer",
     "github.com/mattn/go-sqlite3",
+    "github.com/microcosm-cc/bluemonday",
     "github.com/olekukonko/tablewriter",
     "github.com/pkg/errors",
     "github.com/prometheus/client_golang/prometheus",

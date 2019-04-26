@@ -79,7 +79,10 @@ func streamQuery(
 	if err != nil {
 		return err
 	}
-	repository.PopulateArtifactsVQLCollectorArgs(arg)
+	err = repository.PopulateArtifactsVQLCollectorArgs(arg)
+	if err != nil {
+		return err
+	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()

@@ -19,18 +19,21 @@ package server
 
 import (
 	"context"
-	"path"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type CollectedArtifactsPluginArgs struct {
-	ClientId []string `vfilter:"required,field=client_id"`
-	Artifact string   `vfilter:"required,field=artifact"`
+	ClientId string `vfilter:"required,field=client_id"`
+	FlowId   string `vfilter:"required,field=flow_id"`
+	Artifact string `vfilter:"required,field=artifact"`
+	Source   string `vfilter:"optional,field=source"`
 }
 
 type CollectedArtifactsPlugin struct{}
@@ -58,34 +61,29 @@ func (self CollectedArtifactsPlugin) Call(
 			return
 		}
 
-		for _, client_id := range arg.ClientId {
-			log_path := path.Join(
-				"clients", client_id, "artifacts",
-				"Artifact "+arg.Artifact)
+		artifact_name := arg.Artifact
+		if arg.Source != "" {
+			artifact_name += "/" + arg.Source
+		}
 
-			file_store_factory := file_store.GetFileStore(config_obj)
-			listing, err := file_store_factory.ListDirectory(log_path)
-			if err != nil {
-				return
-			}
+		log_path := flows.CalculateArtifactResultPath(
+			arg.ClientId, artifact_name, arg.FlowId)
 
-			for _, item := range listing {
-				file_path := path.Join(log_path, item.Name())
-				fd, err := file_store_factory.ReadFile(file_path)
-				if err != nil {
-					scope.Log("Error %v: %v\n", err, file_path)
-					continue
-				}
+		utils.Debug(log_path)
 
-				// Read each CSV file and emit it with
-				// some extra columns for context.
-				for row := range csv.GetCSVReader(fd) {
-					output_chan <- row.
-						Set("CollectedTime",
-							item.ModTime().UnixNano()/1000).
-						Set("ClientId", client_id)
-				}
-			}
+		file_store_factory := file_store.GetFileStore(config_obj)
+		fd, err := file_store_factory.ReadFile(log_path)
+		if err != nil {
+			scope.Log("Error %v: %v\n", err, log_path)
+			return
+		}
+
+		// Read each CSV file and emit it with
+		// some extra columns for context.
+		for row := range csv.GetCSVReader(fd) {
+			output_chan <- row.
+				Set("ClientId", arg.ClientId).
+				Set("FlowId", arg.FlowId)
 		}
 	}()
 

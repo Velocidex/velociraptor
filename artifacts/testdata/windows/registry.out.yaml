@@ -96,7 +96,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
   "Size": 73585544,
-  "Version": "1.289.0.0"
+  "Version": "1.289.0.0",
+  "_LastModified": 1551514872
  },
  {
   "BinFileVersion": "1.289.263.0",
@@ -108,7 +109,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
   "Size": 1994928,
-  "Version": "1.289.263.0"
+  "Version": "1.289.263.0",
+  "_LastModified": 1551514878
  },
  {
   "BinFileVersion": "1.1.15700.9",
@@ -120,7 +122,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
   "Size": 5634728,
-  "Version": "1.1.15700.9"
+  "Version": "1.1.15700.9",
+  "_LastModified": 1551514848
  },
  {
   "BinFileVersion": "10.0.17763.1",
@@ -132,7 +135,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProductName": "microsoft® windows® operating system",
   "Publisher": "microsoft corporation",
   "Size": 956416,
-  "Version": "10.0.17763.1 (winbuild.160101.0800)"
+  "Version": "10.0.17763.1 (winbuild.160101.0800)",
+  "_LastModified": 1551514203
  },
  {
   "BinFileVersion": "72.0.3626.121",
@@ -144,6 +148,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProductName": "google chrome installer",
   "Publisher": "google inc.",
   "Size": 2640880,
-  "Version": "72.0.3626.121"
+  "Version": "72.0.3626.121",
+  "_LastModified": 1551514272
  }
 ]

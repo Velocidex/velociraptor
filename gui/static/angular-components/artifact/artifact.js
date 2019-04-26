@@ -9,6 +9,7 @@ const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescri
 const {ArtifactsListFormDirective} = goog.require('grrUi.artifact.artifactsListFormDirective');
 const {ArtifactsParamsFormDirective} = goog.require('grrUi.artifact.artifactsParamsFormDirective');
 const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
+const {TimelineDirective} = goog.require('grrUi.artifact.timelineDirective');
 const {ReportingDirective} = goog.require('grrUi.artifact.reportingDirective');
 const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
@@ -33,6 +34,9 @@ exports.artifactModule.directive(
     ArtifactsParamsFormDirective.directive_name, ArtifactsParamsFormDirective);
 exports.artifactModule.directive(
     LineChartDirective.directive_name, LineChartDirective);
+exports.artifactModule.directive(
+    TimelineDirective.directive_name, TimelineDirective);
+
 exports.artifactModule.directive(
     ReportingDirective.directive_name, ReportingDirective);
 exports.artifactModule.directive(

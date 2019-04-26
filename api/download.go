@@ -67,7 +67,7 @@ func downloadFlowToZip(
 	for _, artifact := range flow_details.Context.Artifacts {
 		file_path := path.Join(
 			"clients", client_id,
-			"artifacts", "Artifact "+artifact,
+			"artifacts", artifact,
 			path.Base(flow_id)+".csv")
 
 		fd, err := file_store_factory.ReadFile(file_path)
@@ -452,8 +452,8 @@ func vfsFolderDownloadHandler(
 
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename='"+
-			request.VfsPath+".zip'")
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(request.VfsPath+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 

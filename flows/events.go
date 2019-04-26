@@ -98,7 +98,10 @@ func (self *VQLEventTable) GetFlowRunnerArgs(
 				return result, err
 			}
 			// Add any artifact dependencies.
-			repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			if err != nil {
+				return *self.flow_runner_args, err
+			}
 			event_table.Event = append(event_table.Event, vql_collector_args)
 
 			// Compress the VQL on the way out.

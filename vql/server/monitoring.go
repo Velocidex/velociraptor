@@ -75,7 +75,7 @@ func (self MonitoringPlugin) Call(
 		if len(arg.ClientId) == 0 {
 			log_path := path.Join(
 				"journals",
-				"Artifact "+arg.Artifact)
+				arg.Artifact)
 
 			self.ScanLog(config_obj, scope, output_chan,
 				log_path, "", arg.Artifact, date_regex)
@@ -85,7 +85,7 @@ func (self MonitoringPlugin) Call(
 		for _, client_id := range arg.ClientId {
 			log_path := path.Join(
 				"clients", client_id, "monitoring",
-				"Artifact "+arg.Artifact)
+				arg.Artifact)
 
 			self.ScanLog(config_obj, scope, output_chan,
 				log_path, client_id, arg.Artifact, date_regex)
@@ -213,7 +213,7 @@ func (self WatchMonitoringPlugin) Call(
 		// time.
 		if len(arg.ClientId) == 0 {
 			watched_paths = append(watched_paths, path.Join(
-				"journals", "Artifact "+arg.Artifact))
+				"journals", arg.Artifact))
 
 		} else {
 
@@ -222,7 +222,7 @@ func (self WatchMonitoringPlugin) Call(
 			for _, client_id := range arg.ClientId {
 				watched_paths = append(watched_paths, path.Join(
 					"clients", client_id, "monitoring",
-					"Artifact "+arg.Artifact))
+					arg.Artifact))
 			}
 		}
 
@@ -246,7 +246,7 @@ func (self WatchMonitoringPlugin) Call(
 			if len(arg.ClientId) == 0 {
 				log_path := path.Join(
 					"journals",
-					"Artifact "+arg.Artifact)
+					arg.Artifact)
 				self.ScanLog(ctx, config_obj, scope,
 					dir_state, output_chan,
 					log_path, "", arg.Artifact)

@@ -8,15 +8,28 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
-	"html/template"
+	"text/template"
 
 	"github.com/Depado/bfchroma"
-	chrome_html "github.com/alecthomas/chroma/formatters/html"
+	chroma_html "github.com/alecthomas/chroma/formatters/html"
+	"github.com/microcosm-cc/bluemonday"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
+)
+
+// The templating language is used to generate markdown and the
+// markdown is then converted to html using the blackfriday
+// renderer. We do not use golang's html/template because it will
+// escape html once, and blackfriday will escape it again.
+
+// To protect against XSS we use bluemonday to restrict the allowed
+// tags. It is a bit of a hack though. It is possible for malformed
+// input to mess up the page but hopefully not to XSS.
+var (
+	bm_policy = NewBlueMondayPolicy()
 )
 
 type GuiTemplateEngine struct {
@@ -82,14 +95,14 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		Response: string(encoded_rows),
 		Columns:  self.Scope.GetMembers(rows[0]),
 	}
-	return template.HTML(fmt.Sprintf(
+	return fmt.Sprintf(
 		`<grr-csv-viewer value="data['%s']" params='%s' />`,
-		key, string(parameters)))
+		key, string(parameters))
 }
 
 // Currently supported line chart options:
 // 1) xaxis_mode: time - specifies x axis is time since epoch.
-func (self *GuiTemplateEngine) LineChart(values ...interface{}) template.HTML {
+func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 	options, argv := parseOptions(values)
 	// Not enough args.
 	if len(argv) != 1 {
@@ -119,8 +132,46 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) template.HTML {
 		Response: string(encoded_rows),
 		Columns:  self.Scope.GetMembers(rows[0]),
 	}
-	return template.HTML(fmt.Sprintf(
-		`<grr-line-chart value="data['%s']" params='%s' />`, key, string(parameters)))
+	return fmt.Sprintf(
+		`<grr-line-chart value="data['%s']" params='%s' />`,
+		key, string(parameters))
+
+}
+
+// Currently supported timeline options:
+func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
+	options, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	rows, ok := argv[0].([]vfilter.Row)
+	if !ok { // Not the right type
+		return ""
+	}
+
+	if len(rows) == 0 {
+		return ""
+	}
+	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	if err != nil {
+		return ""
+	}
+
+	parameters, err := options.MarshalJSON()
+	if err != nil {
+		return ""
+	}
+
+	key := fmt.Sprintf("timeline%d", len(self.Data))
+	self.Data[key] = &actions_proto.VQLResponse{
+		Response: string(encoded_rows),
+		Columns:  self.Scope.GetMembers(rows[0]),
+	}
+	return fmt.Sprintf(
+		`<grr-timeline value="data['%s']" params='%s' />`,
+		key, string(parameters))
 
 }
 
@@ -131,20 +182,35 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 	}
 
 	buffer := &bytes.Buffer{}
-	err = tmpl.Execute(buffer, nil)
+	err = tmpl.Execute(buffer, self.Artifact)
 	if err != nil {
 		utils.Debug(err)
 		return "", err
 	}
 
-	// We expect the template to be in markdown format, so now generate the HTML
+	// We expect the template to be in markdown format, so now
+	// generate the HTML
 	output := blackfriday.Run(
 		buffer.Bytes(),
 		blackfriday.WithRenderer(bfchroma.NewRenderer(
-			bfchroma.ChromaOptions(chrome_html.WithLineNumbers()),
+			bfchroma.ChromaOptions(
+				chroma_html.ClassPrefix("chroma"),
+				chroma_html.WithClasses(),
+				chroma_html.WithLineNumbers()),
 			bfchroma.Style("github"),
 		)))
-	return string(output), nil
+	output_string := string(output)
+	/* This is used to dump out the CSS to be included in
+	/* reporting.scss.
+
+	formatter := chroma_html.New(
+		chroma_html.ClassPrefix("chroma"),
+		chroma_html.WithClasses())
+	formatter.WriteCSS(os.Stdout, styles.Get("github"))
+	*/
+
+	// Sanitize the HTML.
+	return bm_policy.Sanitize(output_string), nil
 }
 
 func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
@@ -154,7 +220,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		t := self.tmpl.Lookup(query)
 		if t != nil {
 			buf := &bytes.Buffer{}
-			err := t.Execute(buf, nil)
+			err := t.Execute(buf, self.Artifact)
 			if err != nil {
 				return self.Error("Template Error (%s): %v",
 					self.Artifact.Name, err)
@@ -182,14 +248,14 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 	return result
 }
 
-func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) template.HTML {
+func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) string {
 	message := fmt.Sprintf(fmt_str, argv...)
 	key := fmt.Sprintf("key%d", len(self.Data))
 	self.Data[key] = &actions_proto.VQLResponse{
 		Response: message,
 	}
 
-	return template.HTML(fmt.Sprintf(`<grr-error-label message="data['%s'].Response" />`, key))
+	return fmt.Sprintf(`<grr-error-label message="data['%s'].Response" />`, key)
 }
 
 func NewGuiTemplateEngine(config_obj *api_proto.Config,
@@ -211,8 +277,25 @@ func NewGuiTemplateEngine(config_obj *api_proto.Config,
 			"Scope":     template_engine.GetScope,
 			"Table":     template_engine.Table,
 			"LineChart": template_engine.LineChart,
+			"Timeline":  template_engine.Timeline,
 			"Get":       template_engine.getFunction,
 			"str":       strval,
 		})
 	return template_engine, nil
+}
+
+func NewBlueMondayPolicy() *bluemonday.Policy {
+	p := bluemonday.UGCPolicy()
+
+	p.AllowStandardURLs()
+
+	// Angular directives.
+	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
+	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
+	p.AllowAttrs("value", "params").OnElements("grr-timeline")
+
+	// Required for syntax highlighting.
+	p.AllowAttrs("class").OnElements("span")
+
+	return p
 }

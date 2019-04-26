@@ -152,7 +152,7 @@ func (self *file_finder_builder) Build() (*actions_proto.VQLCollectorArgs, error
 
 		self.result.Query = append(self.result.Query, &actions_proto.VQLRequest{
 			VQL:  query,
-			Name: "Artifact " + constants.FileFinderArtifactName,
+			Name: constants.FileFinderArtifactName,
 		})
 		return &self.result, nil
 	}
@@ -160,7 +160,7 @@ func (self *file_finder_builder) Build() (*actions_proto.VQLCollectorArgs, error
 	// Default is stat action.
 	self.result.Query = append(self.result.Query, &actions_proto.VQLRequest{
 		VQL:  "SELECT * from files",
-		Name: "Artifact " + constants.FileFinderArtifactName,
+		Name: constants.FileFinderArtifactName,
 	})
 
 	return &self.result, nil

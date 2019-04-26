@@ -132,58 +132,60 @@ func (self *Repository) List() []string {
 // Parse the query and determine if it requires any artifacts. If any
 // artifacts are found, then recursivly determine their dependencies
 // etc.
-func (self *Repository) GetQueryDependencies(query string) []string {
+
+// Called recursively to deterimine requirements at each level. If an
+// artifact at a certain depth calls an artifact which is already used
+// in a higher depth this is a cycle and we fail to compile.
+func (self *Repository) GetQueryDependencies(
+	query string,
+	depth int,
+	dependency map[string]int) error {
 	// For now this is really dumb - just search for something
 	// that looks like an artifact.
-	result := []string{}
-	for _, hit := range artifact_in_query_regex.FindAllStringSubmatch(
-		query, -1) {
-		dep, pres := self.Data[hit[1]]
-		if pres && !utils.InString(&result, hit[1]) {
-			result = append(result, hit[1])
-			for _, source := range dep.Sources {
-				for _, query := range source.Queries {
-					for _, subdep := range self.GetQueryDependencies(query) {
-						if !utils.InString(&result, subdep) {
-							result = append(result, subdep)
-						}
-					}
-				}
-			}
+	for _, hit := range artifact_in_query_regex.
+		FindAllStringSubmatch(query, -1) {
+		artifact_name := hit[1]
+		dep, pres := self.Data[artifact_name]
+		if !pres {
+			return errors.New(
+				fmt.Sprintf("Unknown artifact reference %s",
+					artifact_name))
 		}
-	}
 
-	return result
-}
-
-// Expand artifact packs (i.e. those with multiple sources) into their
-// respective artifacts.
-func (self *Repository) GetArtifactNames(names []string) []string {
-	result := []string{}
-
-name_list:
-	for _, name := range names {
-		definition, pres := self.Data[name]
+		existing_depth, pres := dependency[hit[1]]
 		if pres {
-			for _, source := range definition.Sources {
-				if source.Name == "" {
-					result = append(result, name)
-					continue name_list
-				}
+			if existing_depth <= depth {
+				return errors.New(
+					fmt.Sprintf(
+						"Cycle found while compiling %s", artifact_name))
+			}
+			continue
+		}
 
-				result = append(result, source.Name)
+		dependency[artifact_name] = depth
+
+		// Now search the referred to artifact's query for its
+		// own dependencies.
+		for _, source := range dep.Sources {
+			for _, query := range source.Queries {
+				err := self.GetQueryDependencies(query, depth+1, dependency)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
-	return result
+
+	return nil
 }
 
 func (self *Repository) PopulateArtifactsVQLCollectorArgs(
-	request *actions_proto.VQLCollectorArgs) {
-	dependencies := make(map[string]bool)
+	request *actions_proto.VQLCollectorArgs) error {
+	dependencies := make(map[string]int)
 	for _, query := range request.Query {
-		for _, dep := range self.GetQueryDependencies(query.VQL) {
-			dependencies[dep] = true
+		err := self.GetQueryDependencies(query.VQL, 0, dependencies)
+		if err != nil {
+			return err
 		}
 	}
 	for k := range dependencies {
@@ -200,6 +202,8 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 				})
 		}
 	}
+
+	return nil
 }
 
 func NewRepository() *Repository {
@@ -266,12 +270,12 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 		// It is therefore safe to include confidential
 		// information in the description or name properties
 		// of an artifact (Although obviously the client can
-		// see the actual VQL query that its running).
+		// see the actual VQL query that it is running).
 		name := artifact.Name
 		description := artifact.Description
 
 		if source.Name != "" {
-			name = source.Name
+			name = path.Join(name, source.Name)
 		}
 
 		if source.Description != "" {
@@ -333,7 +337,7 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 
 		if source.Precondition != "" {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name:        "Artifact " + name,
+				Name:        name,
 				Description: description,
 				VQL: fmt.Sprintf(
 					"SELECT * FROM if(then=%s, condition=%s)",
@@ -341,7 +345,7 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 			})
 		} else {
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				Name:        "Artifact " + name,
+				Name:        name,
 				Description: description,
 				VQL:         "SELECT * FROM " + source_result,
 			})

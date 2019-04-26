@@ -210,7 +210,7 @@ func (self *FlowRunner) Close() {
 			gJournalWriter.Channel <- &Event{
 				Config:    self.config,
 				ClientId:  cached_flow.RunnerArgs.ClientId,
-				QueryName: "Artifact System.Flow.Completion",
+				QueryName: "System.Flow.Completion",
 				Response:  string(serialized),
 				Columns:   []string{"Timestamp", "Flow"},
 			}

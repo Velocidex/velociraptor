@@ -64,7 +64,7 @@ FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
     if (newValues != oldValues) {
         if (newValues.every(angular.isDefined)) {
             this.queryParams = {
-                path: '/artifacts/Artifact ' + this.selectedArtifact +
+                path: '/artifacts/' + this.selectedArtifact +
                     '/' + this.scope_.flowId + '.csv',
                 client_id: this.scope_['clientId'],
             };

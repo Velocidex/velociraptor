@@ -158,7 +158,7 @@ func (self HuntResultsPlugin) Call(
 
 				result_path := path.Join(
 					"clients", participation_row.ClientId,
-					"artifacts", "Artifact "+arg.Artifact,
+					"artifacts", arg.Artifact,
 					path.Base(participation_row.FlowId)+".csv")
 
 				fd, err := file_store_factory.ReadFile(result_path)

@@ -71,7 +71,7 @@ func (self *VInterrogate) Start(
 		&actions_proto.VQLRequest{
 			VQL: "select Version.Name AS Name, " +
 				"Version.BuildTime as BuildTime, " +
-				"Client.Labels as Labels from config",
+				"Labels from config",
 			Name: "Client Info"},
 		&actions_proto.VQLRequest{
 			VQL: "select Hostname, OS, Architecture, Platform, PlatformVersion, " +
@@ -92,7 +92,10 @@ func (self *VInterrogate) Start(
 	if err != nil {
 		return err
 	}
-	repository.PopulateArtifactsVQLCollectorArgs(vql_request)
+	err = repository.PopulateArtifactsVQLCollectorArgs(vql_request)
+	if err != nil {
+		return err
+	}
 
 	err = QueueMessageForClient(
 		config_obj, flow_obj,

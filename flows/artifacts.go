@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -73,8 +74,7 @@ func (self *ArtifactCollector) Start(
 	}
 
 	// Update the flow's artifacts list.
-	flow_obj.FlowContext.Artifacts = repository.GetArtifactNames(
-		collector_args.Artifacts.Names)
+	flow_obj.FlowContext.Artifacts = collector_args.Artifacts.Names
 	flow_obj.SetContext(flow_obj.FlowContext)
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
@@ -94,7 +94,11 @@ func (self *ArtifactCollector) Start(
 	}
 
 	// Add any artifact dependencies.
-	repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	if err != nil {
+		return err
+	}
+
 	err = AddArtifactCollectorArgs(
 		config_obj, vql_collector_args, collector_args)
 	if err != nil {
@@ -157,15 +161,15 @@ func (self *ArtifactCollector) ProcessMessage(
 			dict := flow_obj.GetState().(*flows_proto.ArtifactCompressionDict)
 			artifactUncompress(response, dict)
 		}
-		log_path := path.Join(
-			"clients", flow_obj.RunnerArgs.ClientId,
-			"artifacts", response.Query.Name,
-			path.Base(flow_obj.Urn))
+		log_path := CalculateArtifactResultPath(
+			flow_obj.RunnerArgs.ClientId,
+			response.Query.Name,
+			flow_obj.Urn)
 
 		// Store the event log in the client's VFS.
 		if response.Query.Name != "" {
 			file_store_factory := file_store.GetFileStore(config_obj)
-			fd, err := file_store_factory.WriteFile(log_path + ".csv")
+			fd, err := file_store_factory.WriteFile(log_path)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err
@@ -339,6 +343,41 @@ func appendDataToFile(
 		flow_obj.dirty = true
 	}
 	return nil
+}
+
+// Figure out where the artifact result should be stored in the file
+// store.
+
+// NOTE: An artifact may have multiple sources and therefore contain
+// multiple tables. However, each table is stored in its own CSV
+// file. We therefore use a directory structure on the server to
+// contain all sources related to the artifact:
+
+// clients/<client_id>/artifacts/<artifact name>/<flow_id>/<source name>.csv
+
+func CalculateArtifactResultPath(client_id, name, flow_urn string) string {
+
+	// The artifact name is prepared by the artifact compiler. If
+	// an artifact contains multiple sources, the query name will
+	// consists of <artifact name>/<source name>.
+
+	// This code places the source name under the artifact's main
+	// result.
+	components := strings.Split(name, "/")
+	switch len(components) {
+	case 2:
+		source_name := components[1]
+		artifact_name := components[0]
+		return path.Join(
+			"clients", client_id,
+			"artifacts", artifact_name,
+			path.Base(flow_urn), source_name+".csv")
+	default:
+		return path.Join(
+			"clients", client_id,
+			"artifacts", name,
+			path.Base(flow_urn)+".csv")
+	}
 }
 
 func init() {

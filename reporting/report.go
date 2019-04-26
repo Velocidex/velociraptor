@@ -11,13 +11,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
 	valid_report_types = []string{
-		"MONITORING_DAILY", "POST_PROCESSING",
+		"MONITORING_DAILY", "CLIENT",
 	}
 )
 
@@ -92,6 +93,30 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	for _, report := range template_engine.GetArtifact().Reports {
 		type_name := strings.ToLower(report.Type)
 		if type_name != "monitoring_daily" {
+			continue
+		}
+
+		value, err := template_engine.Execute(report.Template)
+		if err != nil {
+			return "", err
+		}
+		result += value
+	}
+
+	return result, nil
+}
+
+func GenerateClientReport(template_engine TemplateEngine,
+	client_id, flow_id string) (string, error) {
+
+	template_engine.SetEnv("FlowId", flow_id)
+	template_engine.SetEnv("ClientId", client_id)
+
+	result := ""
+	for _, report := range template_engine.GetArtifact().Reports {
+		utils.Debug(report)
+		type_name := strings.ToLower(report.Type)
+		if type_name != "client" {
 			continue
 		}
 

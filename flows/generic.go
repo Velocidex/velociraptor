@@ -62,7 +62,11 @@ func (self *VQLCollector) Start(
 	if err != nil {
 		return err
 	}
-	repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	if err != nil {
+		return err
+	}
+
 	return QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",

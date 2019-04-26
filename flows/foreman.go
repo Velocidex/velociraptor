@@ -166,7 +166,7 @@ func getDefaultCollectorArgs(hunt_id string) *actions_proto.VQLCollectorArgs {
 		},
 		Query: []*actions_proto.VQLRequest{
 			&actions_proto.VQLRequest{
-				Name: "Artifact System.Hunt.Participation",
+				Name: "System.Hunt.Participation",
 				VQL: "SELECT now() as Timestamp, Fqdn, HuntId, " +
 					"true as Participate from info()",
 			},

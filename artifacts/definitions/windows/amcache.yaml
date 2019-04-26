@@ -29,6 +29,7 @@ sources:
         SELECT FileId,
                Key.FullPath as Key,
                timestamp(epoch=Key.Mtime.Sec) as LastModified,
+               Key.Mtime.Sec as _LastModified,
                LowerCaseLongPath as Binary,
                Name,
                Size,
@@ -64,3 +65,50 @@ sources:
                accessor='raw_reg'
             )
         })
+
+reports:
+  - type: CLIENT
+    template: |
+      {{define "recent_executions"}}
+           LET recent_executions <= SELECT LastModified, Name, count(items=Name) As Count,
+                  int(int=_LastModified/3600) AS Hour
+           FROM collected_artifact(
+               client_id=ClientId,
+               flow_id=FlowId,
+               artifact='Windows.System.Amcache/Windows.System.Amcache.InventoryApplicationFile')
+           GROUP BY Hour
+           LIMIT 500
+      {{ end }}
+
+      {{ define "timeline" }}
+         SELECT LastModified,
+                format(format="%s (%d)", args=[Name, Count]) As TotalCount
+         FROM recent_executions
+      {{ end }}
+
+      The AMCache file
+      ================
+
+      {{ .Description }}
+
+      ## Execution clusters
+
+      The AMCache artifact only shows us the time of first execution
+      of a binary. We get an idea when it was installed. Typically
+      execution artifacts are clustered in time - if an attacker
+      copies a bunch of new tools they will all start running at about
+      the same time.
+
+      The below timeline shows a summary of execution clusters. The
+      binaries are grouped in an hour interval. The label is the first
+      binary name and the total number of binaries within that hour.
+
+      > For clarity we hide the names of all other binaries, and just
+        show the total count.
+
+      {{ Query "recent_executions" "timeline" | Timeline }}
+
+
+      Here is the same data in tabular form.
+
+      {{ Query "timeline" | Table }}
