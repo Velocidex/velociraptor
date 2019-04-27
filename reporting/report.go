@@ -111,6 +111,7 @@ func GenerateClientReport(template_engine TemplateEngine,
 
 	template_engine.SetEnv("FlowId", flow_id)
 	template_engine.SetEnv("ClientId", client_id)
+	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""
 	for _, report := range template_engine.GetArtifact().Reports {

@@ -77,4 +77,7 @@ message GetReportRequest {
 message GetReportResponse {
     string data = 1;
     string template = 2;
+    repeated string messages = 3 [(sem_type) = {
+            description: "Error or warning messages.",
+        }];
 }

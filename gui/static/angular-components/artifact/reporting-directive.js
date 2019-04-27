@@ -22,6 +22,8 @@ const ReportingController = function(
     this.compile_ = $compile;
     this.template_ = "Loading ..";
 
+    this.messages;
+
     this.scope_.$watch(
         'params',
         this.onContextChange_.bind(this), true);
@@ -42,6 +44,11 @@ ReportingController.prototype.onContextChange_ = function(newValues) {
         this.grrApiService_.post(
             "/v1/GetReport", this.scope_.params).then(function(response) {
                 self.template_ = response.data.template || "No Reports";
+                self.messages = response.data.messages || [];
+                for (var i=0; i<self.messages.length; i++) {
+                    console.log("While generating report: " + self.messages[i]);
+                }
+
                 self.scope_["data"] = JSON.parse(response.data.data);
                 self.element_.html(self.template_).show();
                 self.compile_(self.element_.contents())(self.scope_);

@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"log"
+	"sync"
 	"text/template"
 
 	"github.com/Depado/bfchroma"
@@ -34,8 +36,10 @@ var (
 
 type GuiTemplateEngine struct {
 	*BaseTemplateEngine
-	tmpl *template.Template
-	Data map[string]*actions_proto.VQLResponse
+	tmpl     *template.Template
+	ctx      context.Context
+	Messages *[]string
+	Data     map[string]*actions_proto.VQLResponse
 }
 
 // Go templates can call functions which take args. The pipeline is
@@ -240,7 +244,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				self.Artifact.Name, err)
 		}
 
-		for row := range vql.Eval(context.Background(), self.Scope) {
+		for row := range vql.Eval(self.ctx, self.Scope) {
 			result = append(result, row)
 		}
 	}
@@ -249,16 +253,26 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 }
 
 func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) string {
-	message := fmt.Sprintf(fmt_str, argv...)
-	key := fmt.Sprintf("key%d", len(self.Data))
-	self.Data[key] = &actions_proto.VQLResponse{
-		Response: message,
-	}
-
-	return fmt.Sprintf(`<grr-error-label message="data['%s'].Response" />`, key)
+	self.Scope.Log(fmt_str, argv...)
+	return ""
 }
 
-func NewGuiTemplateEngine(config_obj *api_proto.Config,
+type logWriter struct {
+	mu       sync.Mutex
+	messages *[]string
+}
+
+func (self *logWriter) Write(b []byte) (int, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	*self.messages = append(*self.messages, string(b))
+	return len(b), nil
+}
+
+func NewGuiTemplateEngine(
+	config_obj *api_proto.Config,
+	ctx context.Context,
 	artifact_name string,
 	parameters map[string]string) (*GuiTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
@@ -267,8 +281,12 @@ func NewGuiTemplateEngine(config_obj *api_proto.Config,
 		return nil, err
 	}
 
+	messages := []string{}
+	base_engine.Scope.Logger = log.New(&logWriter{messages: &messages}, "", 0)
 	template_engine := &GuiTemplateEngine{
 		BaseTemplateEngine: base_engine,
+		ctx:                ctx,
+		Messages:           &messages,
 		Data:               make(map[string]*actions_proto.VQLResponse),
 	}
 	template_engine.tmpl = template.New("").Funcs(

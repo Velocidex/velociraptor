@@ -19,13 +19,15 @@ package functions
 
 import (
 	"context"
+	"fmt"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type IpArgs struct {
-	Netaddr4 uint64 `vfilter:"required,field=netaddr4,doc=A network order IPv4 address"`
+	Netaddr4LE int64 `vfilter:"optional,field=netaddr4_le,docs=A network order IPv4 address (as little endian)."`
+	Netaddr4BE int64 `vfilter:"optional,field=netaddr4_be,docs=A network order IPv4 address (as big endian)."`
 }
 
 type IpFunction struct{}
@@ -40,7 +42,23 @@ func (self *IpFunction) Call(ctx context.Context,
 		return false
 	}
 
-	return vfilter.Null{}
+	if arg.Netaddr4LE > 0 {
+		ip := uint32(arg.Netaddr4LE)
+		return fmt.Sprintf(
+			"%d.%d.%d.%d",
+			byte(ip),
+			byte(ip>>8),
+			byte(ip>>16),
+			byte(ip>>24))
+	} else {
+		ip := uint32(arg.Netaddr4BE)
+		return fmt.Sprintf(
+			"%d.%d.%d.%d",
+			byte(ip>>24),
+			byte(ip>>16),
+			byte(ip>>8),
+			byte(ip))
+	}
 }
 
 func (self IpFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

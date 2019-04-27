@@ -40,9 +40,8 @@ exports.TimelineDirective = function() {
             var data = [];
 
             elem = $(elem);
-            $("<div id='foo'>").appendTo(elem).show();
-            var container = document.getElementById('foo');
-
+            var new_element = $("<div>").appendTo(elem).show();
+            var container = new_element[0];
             var rows = JSON.parse(value.Response);
             for (var i=0; i<rows.length; i++) {
                 if (i > 1000) {  // Protect ourselves from overuse.

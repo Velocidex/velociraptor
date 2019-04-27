@@ -23,10 +23,11 @@ func getReport(ctx context.Context,
 	// collected from a client.
 	case "CLIENT":
 		template_engine, err := reporting.NewGuiTemplateEngine(
-			config_obj, in.Artifact, params)
+			config_obj, ctx, in.Artifact, params)
 		if err != nil {
 			return nil, err
 		}
+		defer template_engine.Close()
 
 		template_data, err := reporting.GenerateClientReport(
 			template_engine, in.ClientId, in.FlowId)
@@ -41,6 +42,7 @@ func getReport(ctx context.Context,
 
 		return &api_proto.GetReportResponse{
 			Data:     string(encoded_data),
+			Messages: *template_engine.Messages,
 			Template: template_data,
 		}, nil
 
@@ -48,10 +50,11 @@ func getReport(ctx context.Context,
 	// over a single day of a monitoring artifact
 	case "MONITORING_DAILY":
 		template_engine, err := reporting.NewGuiTemplateEngine(
-			config_obj, in.Artifact, params)
+			config_obj, ctx, in.Artifact, params)
 		if err != nil {
 			return nil, err
 		}
+		defer template_engine.Close()
 
 		template_data, err := reporting.GenerateMonitoringDailyReport(
 			template_engine, in.ClientId, in.DayName)
@@ -66,6 +69,7 @@ func getReport(ctx context.Context,
 
 		return &api_proto.GetReportResponse{
 			Data:     string(encoded_data),
+			Messages: *template_engine.Messages,
 			Template: template_data,
 		}, nil
 

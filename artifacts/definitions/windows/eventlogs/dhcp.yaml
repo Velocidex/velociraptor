@@ -1,0 +1,129 @@
+name: Windows.EventLogs.DHCP
+description: |
+
+  This artifact parses the windows dhcp event log looking for evidence
+  of IP address assignments.
+
+  In some investigations it is important to be able to identify the
+  machine which was assigned a particular IP address at a point in
+  time. Usually these logs are available from the DHCP server, but in
+  many cases the server logs are not available (for example, if the
+  endpoint was visiting a different network or the DHCP server is on a
+  wireless router with no log retention).
+
+  On windows, there are two types of logs:
+
+    1. The first type is the admin log
+       (`Microsoft-Windows-Dhcp-Client%4Admin.evt`). These only contain
+       errors such as an endpoint trying to continue its lease, but
+       the lease is rejected by the server.
+
+    2. The operational log
+       (`Microsoft-Windows-Dhcp-Client%4Operational.evtx`) contains
+       the full log of each lease. Unfortunately this log is disabled
+       by default. If it is available we can rely on the information.
+
+parameters:
+  - name: eventDirGlob
+    default: C:\Windows\system32\winevt\logs\
+  - name: adminLog
+    default: Microsoft-Windows-Dhcp-Client%4Admin.evtx
+
+  - name: operationalLog
+    default: Microsoft-Windows-Dhcp-Client%4Operational.evtx
+
+  - name: accessor
+    default: file
+
+sources:
+  - name: RejectedDHCP
+    queries:
+      - LET files = SELECT * FROM glob(
+            globs=eventDirGlob + adminLog,
+            accessor=accessor)
+      - |
+        SELECT Time AS _Time,
+               timestamp(epoch=Time) As Timestamp,
+               Computer, MAC, ClientIP, DHCPServer, Type FROM foreach(
+           row=files,
+           query={
+              SELECT System.TimeCreated.SystemTime as Time,
+                     System.Computer AS Computer,
+                     format(format="%x:%x:%x:%x:%x:%x", args=[EventData.HWAddress]) AS MAC,
+                     ip(netaddr4_le=EventData.Address1) AS ClientIP,
+                     ip(netaddr4_le=EventData.Address2) AS DHCPServer,
+                     "Lease Rejected" AS Type
+              FROM parse_evtx(filename=FullPath, accessor=accessor)
+              WHERE System.EventID.Value = 1002
+           })
+
+  - name: AssignedDHCP
+    queries:
+      - LET files = SELECT * FROM glob(
+            globs=eventDirGlob + operationalLog,
+            accessor=accessor)
+      - |
+        SELECT Time AS _Time,
+               timestamp(epoch=Time) As Timestamp,
+               Computer, MAC, ClientIP, DHCPServer, Type FROM foreach(
+           row=files,
+           query={
+              SELECT System.TimeCreated.SystemTime as Time,
+                     System.Computer AS Computer,
+                     EventData.InterfaceGuid AS MAC,
+                     ip(netaddr4_le=EventData.Address1) AS ClientIP,
+                     ip(netaddr4_le=EventData.Address2) AS DHCPServer,
+                     "Lease Assigned" AS Type
+              FROM parse_evtx(filename=FullPath, accessor=accessor)
+              WHERE System.EventID.Value = 60000
+           })
+
+
+reports:
+  - type: CLIENT
+    template: |
+      Evidence of DHCP assigned IP addresses
+      ======================================
+
+      {{ .Description }}
+
+      {{ define "assigned_dhcp" }}
+            SELECT Computer, ClientIP,
+                   count(items=Timestamp) AS Total,
+                   enumerate(items=Timestamp) AS Times
+            FROM source(source='AssignedDHCP')
+            GROUP BY ClientIP
+      {{ end }}
+      {{ define "rejected_dhcp" }}
+            SELECT Computer, ClientIP,
+                   count(items=Timestamp) AS Total,
+                   enumerate(items=Timestamp) AS Times
+            FROM source(source='RejectedDHCP')
+            GROUP BY ClientIP
+      {{ end }}
+
+      {{ $assigned := Query "assigned_dhcp"}}
+      {{ if $assigned }}
+      ## Operational logs
+
+      This machine has DHCP operational logging enabled. We therefore
+      can see complete references to all granted leases:
+        {{ Table $assigned }}
+
+      ## Timeline
+
+      {{ Query "SELECT _Time * 1000, ClientIP FROM source(source='AssignedDHCP')" | Timeline }}
+
+      {{ end }}
+
+      ## Admin logs
+
+      The admin logs show errors with DHCP lease requests. Typically
+      rejected leases indicate that the machine held a least on a IP
+      address in the past, but this lease is invalid for its current
+      environment. For example, the machine has been moved to a
+      different network.
+
+      {{ Query "rejected_dhcp" | Table }}
+
+      {{ Query "SELECT _Time * 1000, ClientIP FROM source(source='RejectedDHCP')" | Timeline }}

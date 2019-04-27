@@ -99,6 +99,50 @@ func (self CollectedArtifactsPlugin) Info(
 	}
 }
 
+type SourcePluginArgs struct {
+	Source string `vfilter:"required,field=source"`
+}
+
+type SourcePlugin struct{}
+
+func (self SourcePlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	arg := &SourcePluginArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		utils.Debug(err)
+		scope.Log("source: %v", err)
+		output_chan := make(chan vfilter.Row)
+		close(output_chan)
+		return output_chan
+	}
+
+	args.Set("source", arg.Source)
+	client_id, _ := scope.Resolve("ClientId")
+	args.Set("client_id", client_id)
+	flow_id, _ := scope.Resolve("FlowId")
+	args.Set("flow_id", flow_id)
+	artifact_name, _ := scope.Resolve("ArtifactName")
+	args.Set("artifact", artifact_name)
+
+	utils.Debug(args)
+
+	return CollectedArtifactsPlugin{}.Call(ctx, scope, args)
+}
+
+func (self SourcePlugin) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "source",
+		Doc: "Retrieve artifacts from the current artifact. " +
+			"This is mostly only useful in reports as a shorthand.",
+		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&CollectedArtifactsPlugin{})
+	vql_subsystem.RegisterPlugin(&SourcePlugin{})
 }
