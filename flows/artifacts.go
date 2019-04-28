@@ -38,6 +38,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -203,6 +204,17 @@ func (self *ArtifactCollector) ProcessMessage(
 				}
 
 				writer.Write(csv_row)
+			}
+
+			// Update the artifacts with results in the
+			// context.
+			if len(rows) > 0 && !utils.InString(
+				&flow_obj.FlowContext.ArtifactsWithResults,
+				response.Query.Name) {
+				flow_obj.FlowContext.
+					ArtifactsWithResults = append(
+					flow_obj.FlowContext.ArtifactsWithResults,
+					response.Query.Name)
 			}
 		}
 	}
@@ -378,6 +390,36 @@ func CalculateArtifactResultPath(client_id, name, flow_urn string) string {
 			"artifacts", name,
 			path.Base(flow_urn)+".csv")
 	}
+}
+
+// Expand all the artifacts with their sources. Since each artifact
+// can have multiple named sources, we return a list of name/source
+// name type.
+func ExpandArtifactNamesWithSouces(repository *artifacts.Repository,
+	artifact_names []string) []string {
+	result := []string{}
+
+	for _, artifact_name := range artifact_names {
+		names := []string{}
+		artifact, pres := repository.Get(artifact_name)
+		if !pres {
+			continue
+		}
+		for _, source := range artifact.Sources {
+			if source.Name != "" {
+				names = append(
+					names, artifact_name+"/"+source.Name)
+			}
+		}
+
+		if names == nil {
+			result = append(result, artifact_name)
+		} else {
+			result = append(result, names...)
+		}
+	}
+
+	return result
 }
 
 func init() {

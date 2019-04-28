@@ -97,9 +97,9 @@ FlowInspectorController.prototype.startPolling = function(newValues, oldValues) 
  * @private
  */
 FlowInspectorController.prototype.onDirectiveArgumentsChange_ = function(newValue) {
-  if (angular.isString(newValue)) {
-    this.activeTab = newValue;
-  }
+    if (angular.isString(newValue)) {
+        this.activeTab = newValue;
+    }
 };
 
 /**

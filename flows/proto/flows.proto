@@ -75,6 +75,11 @@ message FlowContext {
             description: "If the flow returns a set of artifacts "
             "this field will list them."
         }];
+
+    repeated string artifacts_with_results = 22 [(sem_type) = {
+            description: "The full path to the artifacts with their results. "
+            "This takes the form artifact name/source name."
+        }];
 }
 
 // Next field: 23

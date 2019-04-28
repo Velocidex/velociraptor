@@ -66,6 +66,7 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
 
     var filePath = download.vfs_path;
     */
+    // Normalize path to contain only single / path separators.
     var filePath = this.fileContext.selectedFilePath.replace(/\/+/g,"/");
     this.params = {
         path: filePath,

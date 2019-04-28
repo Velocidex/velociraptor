@@ -63,11 +63,23 @@ FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
 
     if (newValues != oldValues) {
         if (newValues.every(angular.isDefined)) {
-            this.queryParams = {
-                path: '/artifacts/' + this.selectedArtifact +
-                    '/' + this.scope_.flowId + '.csv',
-                client_id: this.scope_['clientId'],
-            };
+            var components = this.selectedArtifact.split("/");
+            // Artifact has no source name.
+            if (components.length == 1) {
+                this.queryParams = {
+                    path: '/artifacts/' + this.selectedArtifact +
+                        '/' + this.scope_.flowId + '.csv',
+                    client_id: this.scope_['clientId'],
+                };
+            } else {
+                // Artifact has a source name.
+                this.queryParams = {
+                    path: '/artifacts/' + components[0] +
+                        '/' + this.scope_.flowId + "/" +
+                        components[1] + '.csv',
+                    client_id: this.scope_['clientId'],
+                };
+            }
         }
     }
 };

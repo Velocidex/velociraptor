@@ -36,7 +36,7 @@
 
     <uib-tab heading="Results" index="'results'">
       <grr-flow-results
-        artifact-names="controller.flow.context.artifacts || controller.flow.runner_args.args.artifacts.names"
+        artifact-names="controller.flow.context.artifacts_with_results || controller.flow.context.artifacts"
         client-id="controller.flow.runner_args.client_id"
         flow-id="flowId"
         ng-if="controller.tabsShown['results']" />
@@ -50,6 +50,14 @@
         ng-if="controller.tabsShown['log']" />
     </uib-tab>
 
+    <uib-tab heading="Reports" index="'reports'"
+             disable="!controller.flow.context.artifacts">
+      <grr-flow-report artifact-names="controller.flow.context.artifacts"
+                       flow-id="flowId"
+                       ng-if="controller.tabsShown['reports']"
+                       client-id="controller.flow.runner_args.client_id"
+                       />
+    </uib-tab>
   </uib-tabset>
 
 </div>
