@@ -1,10 +1,10 @@
-<button class="btn btn-default"
-        title="Add/Edit an Artifact"
-        style="position: relative"
-        name="AddArtifact"
-        ng-click="controller.onClick()"
-        ng-disabled="!controller.isActive">
-  <div class="toolbar_icon">
-    <i class="fa fa-pencil-square-o"></i>
-  </div>
-</button>
+<div
+  type="button"
+  class="btn btn-default"
+  title="Add/Edit an Artifact"
+  name="AddArtifact"
+  ng-click="controller.onClick()"
+  ng-class="{'disabled': !controller.isActive}"
+  >
+  <img src="/static/images/new.png" class="toolbar_icon" />
+</div>

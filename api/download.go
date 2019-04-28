@@ -346,6 +346,7 @@ func filestorePathForVFSPath(
 	if strings.HasPrefix(
 		vfs_path, constants.ARTIFACT_DEFINITION) ||
 		strings.HasPrefix(vfs_path, "/exported_files/") ||
+		strings.HasPrefix(vfs_path, "/server_artifacts/") ||
 		strings.HasPrefix(vfs_path, "/hunts/") {
 		return vfs_path
 	}

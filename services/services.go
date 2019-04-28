@@ -25,10 +25,11 @@ import (
 // A manager responsible for starting and shutting down all the
 // services in an orderly fashion.
 type ServicesManager struct {
-	hunt_manager    *HuntManager
-	hunt_dispatcher *HuntDispatcher
-	user_manager    *users.UserNotificationManager
-	stats_collector *StatsCollector
+	hunt_manager      *HuntManager
+	hunt_dispatcher   *HuntDispatcher
+	user_manager      *users.UserNotificationManager
+	stats_collector   *StatsCollector
+	server_monitoring *EventTable
 }
 
 func (self *ServicesManager) Close() {
@@ -36,6 +37,7 @@ func (self *ServicesManager) Close() {
 	self.hunt_dispatcher.Close()
 	self.user_manager.Close()
 	self.stats_collector.Close()
+	self.server_monitoring.Close()
 }
 
 // Start all the server services.
@@ -65,6 +67,12 @@ func StartServices(config_obj *api_proto.Config) (*ServicesManager, error) {
 		return nil, err
 	}
 	result.stats_collector = stats_collector
+
+	server_monitoring, err := startServerMonitoringService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.server_monitoring = server_monitoring
 
 	return result, nil
 }

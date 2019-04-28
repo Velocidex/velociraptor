@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
@@ -259,4 +260,21 @@ service API {
 
     // Streaming free form VQL
     rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
+
+    // Server Monitoring Artifacts - manage the Server Monitoring
+    // Service..
+    rpc GetServerMonitoringState(google.protobuf.Empty) returns (ArtifactCollectorArgs) {
+        option (google.api.http) = {
+            get: "/api/v1/GetServerMonitoringState",
+        };
+    }
+
+       // Server Monitoring Artifacts - manage the Server Monitoring
+    // Service..
+    rpc SetServerMonitoringState(ArtifactCollectorArgs) returns (ArtifactCollectorArgs) {
+        option (google.api.http) = {
+            post: "/api/v1/SetServerMonitoringState",
+            body: "*",
+        };
+    }
 }

@@ -60,26 +60,40 @@ const AddItemButtonController = function(
 
     /** @type {?string} */
     this.value;
+
     this.isActive = false;
+
+    this.mode = "add_artifact";
+
+    // Used to add server monitoring artifacts.
+    this.flowArguments = {};
 };
 
 AddItemButtonController.prototype.onClientOrPathChange_ = function() {
     var self =this;
 
     var is_valid_path = function(path) {
-        if (!angular.isDefined(path)) {
+        if (angular.isUndefined(path)) {
             return false;
         };
 
         path = path.replace(/\/+/g, "/");
-        path = path.replace(/builtin/, "custom");
 
-        if (!path.startsWith("/artifact_definitions/")) {
+        // Manipulate artifact definitions.
+        if (path.startsWith("/artifact_definitions/")) {
+            path = path.replace(/builtin/, "custom");
+
+            self.mode = "add_artifact";
+            self.isActive = true;
+            return path;
+        } else if (path.startsWith("/server_artifacts/")) {
+            self.mode = "add_server_monitoring";
+            self.isActive = true;
+            return path;
+
+        } else {
             return false;
         }
-
-        self.isActive = true;
-        return path;
     };
 
     this.isActive = false;
@@ -89,24 +103,52 @@ AddItemButtonController.prototype.onClientOrPathChange_ = function() {
 
 
 AddItemButtonController.prototype.onClick = function() {
-    var url = 'v1/GetArtifactFile';
-    var params = {
-        vfs_path: this.scope_.filePath,
-    };
-    this.error = "";
-    this.grrApiService_.get(url, params).then(function(response) {
-        this.value = response['data']['artifact'];
-        this.modalInstance = this.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_artifact.html',
-            scope: this.scope_,
-            size: "lg",
+    var self =this;
+
+    if (self.mode == "add_artifact") {
+        var url = 'v1/GetArtifactFile';
+        var params = {
+            vfs_path: this.scope_.filePath,
+        };
+        this.error = "";
+        this.grrApiService_.get(url, params).then(function(response) {
+            self.value = response['data']['artifact'];
+            self.modalInstance = self.uibModal_.open({
+                templateUrl: '/static/angular-components/artifact/add_artifact.html',
+                scope: self.scope_,
+                size: "lg",
+            });
+        }.bind(this), function() {
+        }.bind(this));
+
+    } else if (self.mode == "add_server_monitoring") {
+        var url = 'v1/GetServerMonitoringState';
+        this.error = "";
+        this.grrApiService_.get(url).then(function(response) {
+            self.flowArguments = response['data'];
+            self.modalInstance = self.uibModal_.open({
+                templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
+                scope: self.scope_,
+                size: "lg",
+            });
         });
-
-    }.bind(this), function() {
-
-    }.bind(this));
+    }
 };
 
+AddItemButtonController.prototype.saveServerArtifacts = function() {
+    var self = this;
+    var url = 'v1/SetServerMonitoringState';
+    this.grrApiService_.post(
+        url, self.flowArguments).then(function(response) {
+        if (response.data.error) {
+            this.error = response.data['error_message'];
+        } else {
+            this.modalInstance.close();
+        }
+    }.bind(this), function(error) {
+        this.error = error;
+    }.bind(this));
+};
 
 AddItemButtonController.prototype.saveArtifact = function() {
     var url = 'v1/SetArtifactFile';

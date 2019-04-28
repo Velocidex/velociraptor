@@ -52,7 +52,10 @@ const ArtifactsListFormController =
 
   this.scope_.$watchCollection('value',
                                this.onDescriptorsOrValueChange_.bind(this));
-  this.scope_.value = {names:[]};
+
+ if (angular.isUndefined(this.scope_.value)) {
+     this.scope_.value = {names:[]};
+ }
 };
 
 ArtifactsListFormController.prototype.onSelectedNameChange_ = function(newValue) {

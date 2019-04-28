@@ -3,32 +3,36 @@
   <div class="navbar-inner">
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
-        <button id="refresh-dir" class="btn btn-default"
-                title="Refresh this directory (sync its listing with the client)"
-                ng-disabled="!controller.fileContext.clientId"
-                ng-click="controller.startVfsRefreshOperation()">
+        <div id="refresh-dir"
+             type="button"
+             class="btn btn-default btn-rounded"
+             title="Refresh this directory (sync its listing with the client)"
+             ng-class="{'disabled': !controller.fileContext.clientId }"
+             ng-click="controller.startVfsRefreshOperation()">
           <img src="/static/images/stock_refresh.png" class="toolbar_icon" />
-        </button>
-
-        <grr-recursive-list-button client-id="controller.fileContext.clientId"
-                                   file-path="controller.fileContext.selectedDirPath"
-                                   class="space-right">
+        </div>
+        <grr-recursive-list-button
+          type="button"
+          class="btn btn-default"
+          client-id="controller.fileContext.clientId"
+          ng-class="{'disabled': !controller.fileContext.clientId }"
+          file-path="controller.fileContext.selectedDirPath"
+          class="toolbar_icon">
         </grr-recursive-list-button>
 
-        <grr-add-item-button client-id="controller.fileContext.clientId"
-                             file-path="controller.fileContext.selectedFilePath"
-                             dir-path="controller.fileContext.selectedDirPath"
-                             class="space-right">
+        <grr-add-item-button
+          client-id="controller.fileContext.clientId"
+          file-path="controller.fileContext.selectedFilePath"
+          dir-path="controller.fileContext.selectedDirPath"
+          >
         </grr-add-item-button>
       </div>
-
-      <grr-vfs-files-archive-button client-id="controller.fileContext.clientId"
-                                    file-path="controller.fileContext.selectedDirPath"
-                                    class="space-right">
+      <grr-vfs-files-archive-button
+        client-id="controller.fileContext.clientId"
+        file-path="controller.fileContext.selectedDirPath"
+        >
       </grr-vfs-files-archive-button>
-
     </div>
-
     <div class="navbar-form pull-right">
 
       <grr-r-we-owned-button class="space-right"></grr-r-we-owned-button>

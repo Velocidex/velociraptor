@@ -1,0 +1,17 @@
+<div class="card ace_editor">
+  <div class="card-body">
+    <h4 class="card-title">Add server monitoring.</h4>
+
+    <grr-form-value value="controller.flowArguments"
+                    type="ArtifactCollectorArgs">
+    </grr-form-value>
+
+    <a href="#!" class="btn btn-primary btn-block"
+       ng-click="controller.saveServerArtifacts()"
+       role="button">Save Server Monitoring Artifacts</a>
+
+    <div ng-if="controller.error" class="proto_error">
+      {$ controller.error $}
+    </div>
+  </div>
+</div>

@@ -51,4 +51,6 @@ const (
 	IgnoreResponseState = uint64(101)
 
 	FRONTEND_NAME = "VelociraptorServer"
+
+	ServerMonitoringFlowURN = "aff4:/config/server_monitoring"
 )

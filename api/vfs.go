@@ -69,7 +69,8 @@ func renderRootVFS(client_id string) *actions_proto.VQLResponse {
 			Response: `
    [
     {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"},
-    {"Mode": "drwxrwxrwx", "Name": "exported_files"}
+    {"Mode": "drwxrwxrwx", "Name": "exported_files"},
+    {"Mode": "drwxrwxrwx", "Name": "server_artifacts"}
    ]`,
 		}
 	}
@@ -233,6 +234,10 @@ func getVFSPathPrefix(vfs_path string, client_id string) (prefix string, ok bool
 	}
 
 	if strings.HasPrefix(vfs_path, "/artifact_definitions") {
+		return "/", true
+	}
+
+	if strings.HasPrefix(vfs_path, "/server_artifacts") {
 		return "/", true
 	}
 

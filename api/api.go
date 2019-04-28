@@ -604,6 +604,24 @@ func (self *ApiServer) Query(
 	return errors.New("no peer certs?")
 }
 
+func (self *ApiServer) GetServerMonitoringState(
+	ctx context.Context,
+	in *empty.Empty) (
+	*flows_proto.ArtifactCollectorArgs, error) {
+
+	result, err := getServerMonitoringState(self.config)
+	return result, err
+}
+
+func (self *ApiServer) SetServerMonitoringState(
+	ctx context.Context,
+	in *flows_proto.ArtifactCollectorArgs) (
+	*flows_proto.ArtifactCollectorArgs, error) {
+
+	err := setServerMonitoringState(self.config, in)
+	return in, err
+}
+
 func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
 	bind_addr := config_obj.API.BindAddress
 	switch config_obj.API.BindScheme {
