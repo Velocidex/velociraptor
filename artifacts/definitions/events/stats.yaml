@@ -22,14 +22,23 @@ sources:
 
 
 reports:
+  - type: SERVER_EVENT
+    template: |
+      {{ define "resources" }}
+           SELECT Timestamp, rate(x=CPU, y=Timestamp) * 100 As CPUPercent,
+                  RSS / 1000000 AS MemoryUse
+           FROM source()
+           WHERE CPUPercent >= 0
+      {{ end }}
+
+      {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+
   - type: MONITORING_DAILY
     template: |
       {{ define "resources" }}
            SELECT Timestamp, rate(x=CPU, y=Timestamp) * 100 As CPUPercent,
                   RSS / 1000000 AS MemoryUse
-           FROM monitoring(client_id=ClientId,
-                  artifact='Generic.Client.Stats',
-                  date_regex=dayName)
+           FROM source()
            WHERE CPUPercent >= 0
       {{ end }}
 

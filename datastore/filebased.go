@@ -46,6 +46,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -150,18 +151,31 @@ func (self *FileBaseDataStore) GetSubject(
 	if err != nil {
 		return err
 	}
-	err = proto.Unmarshal(serialized_content, message)
-	if err != nil {
-		return err
+
+	if strings.HasSuffix(urn, ".json") {
+		return jsonpb.UnmarshalString(
+			string(serialized_content), message)
 	}
 
-	return nil
+	return proto.Unmarshal(serialized_content, message)
 }
 
 func (self *FileBaseDataStore) SetSubject(
 	config_obj *api_proto.Config,
 	urn string,
 	message proto.Message) error {
+
+	// Encode as JSON
+	if strings.HasSuffix(urn, ".json") {
+		marshaler := &jsonpb.Marshaler{Indent: " "}
+		serialized_content, err := marshaler.MarshalToString(
+			message)
+		if err != nil {
+			return err
+		}
+		return writeContentToFile(
+			config_obj, urn, []byte(serialized_content))
+	}
 	serialized_content, err := proto.Marshal(message)
 	if err != nil {
 		return errors.WithStack(err)

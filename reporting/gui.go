@@ -18,7 +18,6 @@ import (
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -188,7 +187,7 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 	buffer := &bytes.Buffer{}
 	err = tmpl.Execute(buffer, self.Artifact)
 	if err != nil {
-		utils.Debug(err)
+		self.Error("Template Erorr: %v", err)
 		return "", err
 	}
 

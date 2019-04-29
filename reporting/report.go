@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -82,12 +81,12 @@ func (self *BaseTemplateEngine) GetScope(item string) interface{} {
 // dayName: The name of the required day as needed by VQL plugins like
 //   the monitoring() plugin. This allows the report to query
 //   monitoring logs of one or more artifacts.
-
 func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	client_id, day_name string) (string, error) {
-
+	template_engine.SetEnv("ReportMode", "MONITORING_DAILY")
 	template_engine.SetEnv("dayName", day_name)
 	template_engine.SetEnv("ClientId", client_id)
+	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""
 	for _, report := range template_engine.GetArtifact().Reports {
@@ -106,16 +105,38 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	return result, nil
 }
 
+func GenerateServerMonitoringDailyReport(template_engine TemplateEngine,
+	day_name string) (string, error) {
+	template_engine.SetEnv("ReportMode", "SERVER_EVENT")
+	template_engine.SetEnv("dayName", day_name)
+	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
+
+	result := ""
+	for _, report := range template_engine.GetArtifact().Reports {
+		type_name := strings.ToLower(report.Type)
+		if type_name != "server_event" {
+			continue
+		}
+
+		value, err := template_engine.Execute(report.Template)
+		if err != nil {
+			return "", err
+		}
+		result += value
+	}
+
+	return result, nil
+}
+
 func GenerateClientReport(template_engine TemplateEngine,
 	client_id, flow_id string) (string, error) {
-
+	template_engine.SetEnv("ReportMode", "CLIENT")
 	template_engine.SetEnv("FlowId", flow_id)
 	template_engine.SetEnv("ClientId", client_id)
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""
 	for _, report := range template_engine.GetArtifact().Reports {
-		utils.Debug(report)
 		type_name := strings.ToLower(report.Type)
 		if type_name != "client" {
 			continue

@@ -97,8 +97,8 @@ AddItemButtonController.prototype.onClientOrPathChange_ = function() {
     };
 
     this.isActive = false;
-    this.path = is_valid_path(this.scope_.filePath) ||
-        is_valid_path(this.scope_.dirPath);
+    this.path = is_valid_path(this.scope_.dirPath) ||
+        is_valid_path(this.scope_.filePath);
 };
 
 

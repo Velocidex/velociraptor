@@ -500,16 +500,6 @@ func (self *ApiServer) GetArtifacts(
 	for _, name := range repository.List() {
 		artifact, pres := repository.Get(name)
 		if pres {
-			if !in.IncludeEventArtifacts &&
-				artifact.Type == "event" {
-				continue
-			}
-			if !in.IncludeServerArtifacts &&
-				(artifact.Type == "server" ||
-					artifact.Type == "server_event") {
-				continue
-			}
-
 			result.Items = append(result.Items, artifact)
 		}
 	}

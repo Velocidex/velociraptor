@@ -52,5 +52,5 @@ const (
 
 	FRONTEND_NAME = "VelociraptorServer"
 
-	ServerMonitoringFlowURN = "aff4:/config/server_monitoring"
+	ServerMonitoringFlowURN = "aff4:/config/server_monitoring.json"
 )

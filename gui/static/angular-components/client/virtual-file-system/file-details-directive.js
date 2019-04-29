@@ -109,14 +109,24 @@ FileDetailsController.prototype.reportingParameters = function() {
 
     if (components[1] == "monitoring") {
         var artifact_name = components[2];
-        var params = {
+        var dayName = components[3].replace(/\.csv$/, "");
+        this.reporting_params = {
             "artifact": artifact_name,
             "client_id": this.params["client_id"],
-            "dayName": components[3],
+            "dayName": dayName,
+            type: "MONITORING_DAILY",
         };
+    }
 
-        params["type"] = "MONITORING_DAILY";
-        this.reporting_params = params;
+    if (components[1] == "server_artifacts") {
+        var dayName = components[3].replace(/\.csv$/, "");
+        var artifact_name = components[2];
+        this.reporting_params = {
+            "artifact": artifact_name,
+            "client_id": this.params["client_id"],
+            "dayName": dayName,
+            type: "SERVER_EVENT",
+        };
     }
 
     if (components[1] == "artifacts") {
@@ -126,14 +136,12 @@ FileDetailsController.prototype.reportingParameters = function() {
         // Stip possible extensions.
         flowId = flowId.replace(/\.csv$/, "");
 
-        var params = {
+        this.reporting_params = {
             "artifact": artifact_name,
             "client_id": this.params["client_id"],
             "flowId": flowId,
             "type": "CLIENT",
         };
-
-        this.reporting_params = params;
     }
 
 };

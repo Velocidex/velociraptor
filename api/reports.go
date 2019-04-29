@@ -18,62 +18,56 @@ func getReport(ctx context.Context,
 		params[env.Key] = env.Value
 	}
 
+	template_engine, err := reporting.NewGuiTemplateEngine(
+		config_obj, ctx, in.Artifact, params)
+	if err != nil {
+		return nil, err
+	}
+	defer template_engine.Close()
+
+	var template_data string
+
 	switch in.Type {
+	default:
+		return nil, errors.New("Report type not supported")
+
 	// A CLIENT artifact report is a specific artifact
 	// collected from a client.
 	case "CLIENT":
-		template_engine, err := reporting.NewGuiTemplateEngine(
-			config_obj, ctx, in.Artifact, params)
-		if err != nil {
-			return nil, err
-		}
-		defer template_engine.Close()
-
-		template_data, err := reporting.GenerateClientReport(
+		template_data, err = reporting.GenerateClientReport(
 			template_engine, in.ClientId, in.FlowId)
 		if err != nil {
 			return nil, err
 		}
 
-		encoded_data, err := json.Marshal(template_engine.Data)
+	case "SERVER_EVENT":
+		template_data, err = reporting.
+			GenerateServerMonitoringDailyReport(
+				template_engine, in.DayName)
 		if err != nil {
 			return nil, err
 		}
-
-		return &api_proto.GetReportResponse{
-			Data:     string(encoded_data),
-			Messages: *template_engine.Messages,
-			Template: template_data,
-		}, nil
 
 	// A MONITORING_DAILY report is a report generated
 	// over a single day of a monitoring artifact
 	case "MONITORING_DAILY":
-		template_engine, err := reporting.NewGuiTemplateEngine(
-			config_obj, ctx, in.Artifact, params)
-		if err != nil {
-			return nil, err
-		}
-		defer template_engine.Close()
-
-		template_data, err := reporting.GenerateMonitoringDailyReport(
+		template_data, err = reporting.GenerateMonitoringDailyReport(
 			template_engine, in.ClientId, in.DayName)
 		if err != nil {
 			return nil, err
 		}
 
-		encoded_data, err := json.Marshal(template_engine.Data)
-		if err != nil {
-			return nil, err
-		}
-
-		return &api_proto.GetReportResponse{
-			Data:     string(encoded_data),
-			Messages: *template_engine.Messages,
-			Template: template_data,
-		}, nil
-
 	}
 
-	return nil, errors.New("Report type not supported")
+	encoded_data, err := json.Marshal(template_engine.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api_proto.GetReportResponse{
+		Data:     string(encoded_data),
+		Messages: *template_engine.Messages,
+		Template: template_data,
+	}, nil
+
 }

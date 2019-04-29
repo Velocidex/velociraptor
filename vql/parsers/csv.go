@@ -27,14 +27,14 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-type _ParseCSVPluginArgs struct {
+type ParseCSVPluginArgs struct {
 	Filenames []string `vfilter:"required,field=filename"`
 	Accessor  string   `vfilter:"optional,field=accessor"`
 }
 
-type _ParseCSVPlugin struct{}
+type ParseCSVPlugin struct{}
 
-func (self _ParseCSVPlugin) Call(
+func (self ParseCSVPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
@@ -43,7 +43,7 @@ func (self _ParseCSVPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		arg := &_ParseCSVPluginArgs{}
+		arg := &ParseCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("parse_csv: %s", err.Error())
@@ -90,11 +90,11 @@ func (self _ParseCSVPlugin) Call(
 	return output_chan
 }
 
-func (self _ParseCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self ParseCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "parse_csv",
 		Doc:     "Parses events from a CSV file.",
-		ArgType: type_map.AddType(scope, &_ParseCSVPluginArgs{}),
+		ArgType: type_map.AddType(scope, &ParseCSVPluginArgs{}),
 	}
 }
 
@@ -109,7 +109,7 @@ func (self _WatchCSVPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		arg := &_ParseCSVPluginArgs{}
+		arg := &ParseCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("watch_evtx: %s", err.Error())
@@ -200,11 +200,11 @@ func (self _WatchCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 		Name: "watch_csv",
 		Doc: "Watch a CSV file and stream events from it. " +
 			"Note: This is an event plugin which does not complete.",
-		ArgType: type_map.AddType(scope, &_ParseCSVPluginArgs{}),
+		ArgType: type_map.AddType(scope, &ParseCSVPluginArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_ParseCSVPlugin{})
+	vql_subsystem.RegisterPlugin(&ParseCSVPlugin{})
 	vql_subsystem.RegisterPlugin(&_WatchCSVPlugin{})
 }

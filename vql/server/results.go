@@ -19,13 +19,14 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -69,8 +70,6 @@ func (self CollectedArtifactsPlugin) Call(
 		log_path := flows.CalculateArtifactResultPath(
 			arg.ClientId, artifact_name, arg.FlowId)
 
-		utils.Debug(log_path)
-
 		file_store_factory := file_store.GetFileStore(config_obj)
 		fd, err := file_store_factory.ReadFile(log_path)
 		if err != nil {
@@ -100,7 +99,7 @@ func (self CollectedArtifactsPlugin) Info(
 }
 
 type SourcePluginArgs struct {
-	Source string `vfilter:"required,field=source"`
+	Source string `vfilter:"optional,field=source"`
 }
 
 type SourcePlugin struct{}
@@ -109,27 +108,71 @@ func (self SourcePlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
 	arg := &SourcePluginArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		utils.Debug(err)
 		scope.Log("source: %v", err)
 		output_chan := make(chan vfilter.Row)
 		close(output_chan)
 		return output_chan
 	}
+	any_config_obj, _ := scope.Resolve("server_config")
+	config_obj, ok := any_config_obj.(*api_proto.Config)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		close(output_chan)
+		return output_chan
+	}
 
-	args.Set("source", arg.Source)
 	client_id, _ := scope.Resolve("ClientId")
-	args.Set("client_id", client_id)
+	dayName, _ := scope.Resolve("dayName")
 	flow_id, _ := scope.Resolve("FlowId")
-	args.Set("flow_id", flow_id)
 	artifact_name, _ := scope.Resolve("ArtifactName")
-	args.Set("artifact", artifact_name)
+	mode, _ := scope.Resolve("ReportMode")
+	root := config_obj.Datastore.FilestoreDirectory
+	var path string
 
-	utils.Debug(args)
+	switch mode {
+	case "CLIENT":
+		if arg.Source != "" {
+			path = fmt.Sprintf(
+				"%s/clients/%s/artifacts/%s/%s/%s.csv",
+				root, client_id, artifact_name,
+				flow_id, arg.Source)
+		} else {
+			path = fmt.Sprintf(
+				"%s/clients/%s/artifacts/%s/%s.csv",
+				root, client_id, artifact_name,
+				flow_id)
+		}
 
-	return CollectedArtifactsPlugin{}.Call(ctx, scope, args)
+	case "SERVER_EVENT":
+		if arg.Source != "" {
+			path = fmt.Sprintf(
+				"%s/server_artifacts/%s/%s/%s.csv",
+				root, artifact_name, dayName, arg.Source)
+		} else {
+			path = fmt.Sprintf(
+				"%s/server_artifacts/%s/%s.csv",
+				root, artifact_name, dayName)
+		}
+
+	case "MONITORING_DAILY":
+		if arg.Source != "" {
+			path = fmt.Sprintf(
+				"%s/journals/%s/%s/%s.csv",
+				root, artifact_name, dayName, arg.Source)
+		} else {
+			path = fmt.Sprintf(
+				"%s/journals/%s/%s.csv",
+				root, artifact_name, dayName)
+		}
+	}
+
+	return parsers.ParseCSVPlugin{}.Call(
+		ctx, scope, vfilter.NewDict().Set("filename", path))
 }
 
 func (self SourcePlugin) Info(

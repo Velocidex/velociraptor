@@ -5,7 +5,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func getServerMonitoringState(config_obj *api_proto.Config) (
@@ -32,7 +32,10 @@ func setServerMonitoringState(
 		return err
 	}
 
-	utils.Debug(args)
+	err = services.GlobalEventTable.Update(config_obj, args)
+	if err != nil {
+		return err
+	}
 
 	return db.SetSubject(
 		config_obj, constants.ServerMonitoringFlowURN,
