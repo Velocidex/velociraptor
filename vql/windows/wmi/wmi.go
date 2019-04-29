@@ -30,7 +30,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/go-ole/go-ole"
+	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -117,6 +117,7 @@ func Query(query string, namespace string) ([]*vfilter.Dict, error) {
 					row.Set(property, &vfilter.Null{})
 					continue
 				}
+				defer property_raw.Clear()
 
 				switch property_raw.VT {
 				case ole.VT_UNKNOWN, ole.VT_DISPATCH:
@@ -153,6 +154,7 @@ func getProperties(item *ole.IDispatch) ([]string, error) {
 			if err != nil {
 				return err
 			}
+			defer name.Clear()
 
 			value, ok := name.Value().(string)
 			if ok {
