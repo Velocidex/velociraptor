@@ -12,10 +12,10 @@ goog.module('grrUi.artifact.reportingDirective');
  */
 const ReportingController = function(
     $scope, $compile, $element, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
+    /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
 
     this.element_ = $element;

@@ -3,10 +3,9 @@
                  on-reject="onReject()">
 
   <grr-wizard-form-page title="Select Artifacts to collect">
-    <grr-flow-form
-      flow-args="controller.flowArguments"
-      flow-runner-args="controller.flowRunnerArguments">
-    </grr-flow-form>
+    <grr-search-artifact names="controller.names"
+                         params="controller.params">
+    </grr-search-artifact>
   </grr-wizard-form-page>
 
   <grr-wizard-form-page title="Launched Flow"
@@ -16,7 +15,7 @@
     <div class="padded">
       <div ng-if="!controller.responseData">
         <uib-progressbar class="progress-striped active" max="100" value="50">
-          Creating hunt...
+          Launching new Artifacts Collection...
         </uib-progressbar>
       </div>
 
@@ -32,9 +31,10 @@
           </p>
           <p>
             Flow arguments:<br/>
-            <grr-semantic-value value="controller.flowArguments"
-                                type="ArtifactCollectorArgs"
-                                ></grr-semantic-value>
+            <grr-semantic-value
+              value="controller.flowRunnerArguments.args"
+              type="ArtifactCollectorArgs"
+              ></grr-semantic-value>
           </p>
         </div>
       </div>

@@ -1,0 +1,124 @@
+<div class="container-fluid">
+
+<div class="col-md-5">
+
+  <div class="input-group">
+    <input name="Search" class="form-control"
+           style="background-color: #ffffff"
+           type="text" placeholder="Search"
+           autocomplete="off"
+           ng-model="controller.search"></input>
+  </div>
+
+  <div style="height: 150px; overflow-y: auto; overflow-x: hidden; border: 1px solid #dddddd; border-top: none">
+
+    <table name="Artifacts" class="table table-condensed table-hover table-striped">
+      <colgroup>
+        <col width="100%"></col>
+      </colgroup>
+
+      <tbody>
+        <tr ng-if="!controller.descriptorsError && controller.descriptors === undefined">
+          <td>
+            Search for an artifact by typing above.
+          </td>
+        </tr>
+        <tr ng-if="controller.descriptorsError" class="alert-danger danger">
+          <td>
+            <strong>Can't fetch artifacts list:</strong><br/>
+            <span class="preserve-linebreaks">{$ controller.descriptorsError $}</span>
+          </td>
+        </tr>
+        <tr ng-repeat="descriptor in controller.matchingDescriptors"
+            ng-class="{'row-selected': descriptor.name ==
+                      controller.selectedName}">
+          <td style="cursor: pointer; border: none"
+              ng-dblclick="controller.add(descriptor.name)"
+              ng-click="controller.selectedName = descriptor.name">
+            <div style="display:block" class="full-width-height">
+              {$ ::descriptor.name $}
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="full-width">
+    <div class="pull-left" style="padding-top: 1.5em">
+      <p>Selected Artifacts:</p>
+    </div>
+    <div class="pull-right">
+      <button class="btn btn-default btn-sm form-add" style="margin-top: 0.5em" name="Add"
+              id="add_artifact"
+              ng-click="controller.add(controller.selectedName)">
+        Add
+      </button>
+    </div>
+    <div class="clearfix"></div>
+  </div>
+
+  <div style="margin-top: 0em; height: 150px; overflow-y: auto; overflow-x: hidden; border: 1px solid #dddddd">
+
+    <table name="SelectedArtifacts" class="table table-condensed table-hover table-striped">
+      <colgroup>
+        <col width="100%"></col>
+      </colgroup>
+
+      <tbody>
+        <tr ng-repeat="name in names"
+            ng-class="{'row-selected': name == controller.selectedName}">
+          <td style="cursor: pointer; border: none"
+              ng-dblclick="controller.remove(name)"
+              ng-click="controller.selectedName = name"
+              ng-class="{'row-selected': name == controller.selectedName}">
+            <div style="display:block" class="full-width-height">
+              <strong>{$ ::name $}</strong>
+            </div>
+          </td>
+        </tr>
+        <tr ng-if="names.length == 0">
+          <td>
+            <em>Use "Add" button or double-click to add artifacts to the list.</em>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="full-width" style="margin-top: 0.5em">
+    <button class="btn btn-default btn-sm form-add" name="Add"
+            ng-click="controller.clear()">
+      Clear
+    </button>
+
+    <div class="pull-right">
+      <button class="btn btn-default btn-sm form-add" name="Add"
+              ng-click="controller.remove(controller.selectedName)">
+        Remove
+      </button>
+    </div>
+    <div style="cleafix"></div>
+  </div>
+</div>
+
+<div name="ArtifactInfo" class="col-md-7 artifact-description"
+     grr-force-refresh refresh-trigger="controller.selectedName">
+  <grr-artifact-descriptor value="controller.descriptors[controller.selectedName]" />
+</div>
+
+<table class="table table-condensed">
+  <tr ng-repeat="(k, v) in params ">
+    <td>
+      {{ k }}
+    </td>
+    <td>
+      <input class="form-control"
+             ng-model="params[k]"
+             >
+      </input>
+    </td>
+  </tr>
+</table>
+
+</div>

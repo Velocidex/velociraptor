@@ -324,6 +324,7 @@ func (self Globber) ExpandWithContext(
 						if !ok {
 							break search_subdir
 						}
+
 						output_chan <- f
 					}
 				}

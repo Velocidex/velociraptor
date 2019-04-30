@@ -161,54 +161,44 @@ func (self *EventTable) GetWriter(
 
 		defer closer()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
+		for row := range row_chan {
+			now := time.Now()
+			log_path := path.Join(
+				"server_artifacts", name,
+				fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
+					now.Month(), now.Day()))
 
-			case row, ok := <-row_chan:
-				if !ok {
-					return
+			// We need to rotate the log file.
+			if log_path != last_log {
+				closer()
+
+				fd, err = file_store_factory.WriteFile(log_path)
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+					continue
 				}
 
-				now := time.Now()
-				log_path := path.Join(
-					"server_artifacts", name,
-					fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
-						now.Month(), now.Day()))
-
-				// We need to rotate the log file.
-				if log_path != last_log {
-					closer()
-
-					fd, err = file_store_factory.WriteFile(log_path)
-					if err != nil {
-						fmt.Printf("Error: %v\n", err)
-						continue
-					}
-
-					writer, err = csv.GetCSVWriter(scope, fd)
-					if err != nil {
-						continue
-					}
+				writer, err = csv.GetCSVWriter(scope, fd)
+				if err != nil {
+					continue
 				}
-
-				if columns == nil {
-					columns = scope.GetMembers(row)
-				}
-
-				dict_row, ok := row.(*vfilter.Dict)
-				if !ok {
-					dict_row := vfilter.NewDict()
-					for _, column := range columns {
-						value, pres := scope.Associative(row, column)
-						if pres {
-							dict_row.Set(column, value)
-						}
-					}
-				}
-				writer.Write(dict_row)
 			}
+
+			if columns == nil {
+				columns = scope.GetMembers(row)
+			}
+
+			dict_row, ok := row.(*vfilter.Dict)
+			if !ok {
+				dict_row := vfilter.NewDict()
+				for _, column := range columns {
+					value, pres := scope.Associative(row, column)
+					if pres {
+						dict_row.Set(column, value)
+					}
+				}
+			}
+			writer.Write(dict_row)
 		}
 	}()
 

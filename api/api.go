@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -38,7 +39,6 @@ import (
 	"google.golang.org/grpc/status"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -103,10 +103,12 @@ func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	result := &api_proto.StartFlowResponse{}
-	in.Creator = GetGRPCUserInfo(ctx).Name
+	creator := GetGRPCUserInfo(ctx).Name
 
-	// Empty creators are called internally.
-	if in.Creator != "" {
+	// Internal calls from the frontend can set the creator.
+	if creator != constants.FRONTEND_NAME {
+		in.Creator = creator
+
 		// If user is not found then reject it.
 		user_record, err := users.GetUser(self.config, in.Creator)
 		if err != nil {
@@ -491,19 +493,10 @@ func (self *ApiServer) GetArtifacts(
 	ctx context.Context,
 	in *api_proto.GetArtifactsRequest) (
 	*artifacts_proto.ArtifactDescriptors, error) {
-	result := &artifacts_proto.ArtifactDescriptors{}
-
-	repository, err := artifacts.GetGlobalRepository(self.config)
-	if err != nil {
-		return nil, err
-	}
-	for _, name := range repository.List() {
-		artifact, pres := repository.Get(name)
-		if pres {
-			result.Items = append(result.Items, artifact)
-		}
-	}
-	return result, nil
+	terms := strings.Split(in.SearchTerm, " ")
+	result, err := searchArtifact(
+		self.config, terms, in.Type, in.NumberOfResults)
+	return result, err
 }
 
 func (self *ApiServer) GetArtifactFile(

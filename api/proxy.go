@@ -34,8 +34,15 @@ import (
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+)
+
+var (
+	// An internal cert used to make grpc calles from the gw proxy
+	// to the grpc service.
+	api_handle_certificate *crypto.CertBundle
 )
 
 func AddProxyMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
@@ -225,11 +232,23 @@ func GetAPIHandler(
 			}),
 	)
 
+	// Generate internal certificates so we can tell when a call
+	// came from internal.
+	if api_handle_certificate == nil {
+		new_cert, err := crypto.GenerateServerCert(
+			config_obj, constants.GRPC_GW_CLIENT_NAME)
+		if err != nil {
+			return nil, err
+		}
+
+		api_handle_certificate = new_cert
+	}
+
 	// We use the Frontend's certificate because this connection
 	// represents an internal connection.
 	cert, err := tls.X509KeyPair(
-		[]byte(config_obj.Frontend.Certificate),
-		[]byte(config_obj.Frontend.PrivateKey))
+		[]byte(api_handle_certificate.Cert),
+		[]byte(api_handle_certificate.PrivateKey))
 	if err != nil {
 		return nil, err
 	}

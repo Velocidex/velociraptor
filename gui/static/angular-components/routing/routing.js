@@ -97,7 +97,6 @@ exports.routingModule
           //
           // States when a client is selected.
           //
-
           .state('client', {
             url: '/clients/:clientId',
             redirectTo: 'client.hostInfo',
@@ -121,6 +120,11 @@ exports.routingModule
             template: '<grr-artifact-collector />',
             title: 'Collect Artifacts'
           })
+            .state('client.searchArtifacts', {
+                url: '/search-artifacts',
+                template: '<grr-search-artifact names="[]" />',
+                title: 'Search for Artifact',
+            })
           .state('client.vfs', {
             url: '/vfs/{path:pathWithUnescapedSlashes}?version&mode&tab',
             template: '<grr-file-view />',

@@ -1,10 +1,8 @@
 'use strict';
 
 goog.module('grrUi.flow.newArtifactCollectionDirective');
-goog.module.declareLegacyNamespace();
 
 const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
-const {ReflectionService} = goog.require('grrUi.core.reflectionService');
 
 
 /**
@@ -13,11 +11,10 @@ const {ReflectionService} = goog.require('grrUi.core.reflectionService');
  * @constructor
  * @param {!angular.Scope} $scope
  * @param {!ApiService} grrApiService
- * @param {!ReflectionService} grrReflectionService
  * @ngInject
  */
 const NewArtifactCollectionController = function(
-    $scope, grrApiService, grrReflectionService) {
+    $scope, grrApiService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
@@ -26,19 +23,6 @@ const NewArtifactCollectionController = function(
 
   /** @private {!ApiService} */
   this.grrApiService_ = grrApiService;
-
-  /** @private {!ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
-
-  /** @type {Object} */
-    this.flowArguments = {
-        "@type": "type.googleapis.com/proto.ArtifactCollectorArgs"
-    };
-
-  /** @type {Object} */
-    this.flowRunnerArguments = {
-        "flow_name": "ArtifactCollector",
-    };
 
   /** @type {boolean} */
   this.requestSent = false;
@@ -50,7 +34,12 @@ const NewArtifactCollectionController = function(
   this.responseData;
 
   /** @type {boolean} */
-  this.flowFormHasErrors;
+    this.flowFormHasErrors;
+
+    this.params = {};
+    this.names = [];
+    this.ops_per_second;
+    this.timeout;
 };
 
 
@@ -69,24 +58,39 @@ NewArtifactCollectionController.prototype.resolve = function() {
  * @export
  */
 NewArtifactCollectionController.prototype.startClientFlow = function() {
-  var clientIdComponents = this.scope_['clientId'].split('/');
-  var clientId;
-  if (clientIdComponents[0] == 'aff4:') {
-    clientId = clientIdComponents[1];
-  } else {
-    clientId = clientIdComponents[0];
-  }
+    var self = this;
+    var clientId = this.scope_['clientId'];
+    var env = [];
+    for (var k in self.params) {
+        if (self.params.hasOwnProperty(k)) {
+            env.push({key: k, value: self.params[k]});
+        }
+    }
 
-  this.flowRunnerArguments.client_id = clientId;
-  this.flowRunnerArguments.args = this.flowArguments;
-  this.grrApiService_.post(
-    'v1/LaunchFlow',
-    this.flowRunnerArguments).then(function success(response) {
-      this.responseData = response['data'];
-    }.bind(this), function failure(response) {
-      this.responseError = response['data']['error'] || 'Unknown error';
-    }.bind(this));
-  this.requestSent = true;
+    this.flowRunnerArguments = {
+        client_id: clientId,
+        "flow_name": "ArtifactCollector",
+        args: {
+            "@type": "type.googleapis.com/proto.ArtifactCollectorArgs",
+            artifacts: {
+                names: this.names,
+            },
+            parameters: {
+                env: env,
+            },
+            ops_per_second: this.ops_per_second,
+            timeout: this.timeout,
+        }
+    };
+
+    this.grrApiService_.post(
+        'v1/LaunchFlow',
+        this.flowRunnerArguments).then(function success(response) {
+            this.responseData = response['data'];
+        }.bind(this), function failure(response) {
+            this.responseError = response['data']['error'] || 'Unknown error';
+        }.bind(this));
+    this.requestSent = true;
 };
 
 

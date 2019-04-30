@@ -22,8 +22,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
@@ -107,12 +110,26 @@ func getClientApprovalForUser(
 func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 	result := &api_proto.VelociraptorUser{}
 
-	md, ok := metadata.FromIncomingContext(ctx)
+	peer, ok := peer.FromContext(ctx)
 	if ok {
-		userinfo := md.Get("USER")
-		if len(userinfo) > 0 {
-			data := []byte(userinfo[0])
-			json.Unmarshal(data, result)
+		tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
+		if ok {
+			v := tlsInfo.State.PeerCertificates[0].Subject.CommonName
+			// Calls from the gRPC gateway embed the
+			// authenticated web user in the metadata.
+			if v == constants.GRPC_GW_CLIENT_NAME {
+				md, ok := metadata.FromIncomingContext(ctx)
+				if ok {
+					userinfo := md.Get("USER")
+					if len(userinfo) > 0 {
+						data := []byte(userinfo[0])
+						json.Unmarshal(data, result)
+					}
+				}
+
+			} else {
+				result.Name = v
+			}
 		}
 	}
 

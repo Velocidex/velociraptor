@@ -59,11 +59,15 @@ func (self *HashFunction) Call(ctx context.Context,
 		return false
 	}
 
+	if arg.Path == "" {
+		return vfilter.Null{}
+	}
+
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 	fs := glob.GetAccessor(arg.Accessor, ctx)
 	file, err := fs.Open(arg.Path)
 	if err != nil {
-		scope.Log(err.Error())
+		scope.Log("hash %s: %v", arg.Path, err.Error())
 		return false
 	}
 	defer file.Close()

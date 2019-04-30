@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"path"
+	"regexp"
 	"strings"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -194,4 +195,63 @@ func renderBuiltinArtifacts(
 			},
 		},
 	}, nil
+}
+
+func searchArtifact(
+	config_obj *api_proto.Config,
+	terms []string,
+	artifact_type string,
+	number_of_results uint64) (
+	*artifacts_proto.ArtifactDescriptors, error) {
+
+	if number_of_results == 0 {
+		number_of_results = 100
+	}
+
+	result := &artifacts_proto.ArtifactDescriptors{}
+	regexes := []*regexp.Regexp{}
+	for _, term := range terms {
+		if len(term) <= 2 {
+			continue
+		}
+
+		re, err := regexp.Compile("(?i)" + term)
+		if err == nil {
+			regexes = append(regexes, re)
+		}
+	}
+
+	if len(regexes) == 0 {
+		return result, nil
+	}
+
+	matcher := func(text string, regexes []*regexp.Regexp) bool {
+		for _, re := range regexes {
+			if re.FindString(text) == "" {
+				return false
+			}
+		}
+		return true
+	}
+
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, name := range repository.List() {
+		artifact, pres := repository.Get(name)
+		if pres {
+			if matcher(artifact.Description, regexes) ||
+				matcher(artifact.Name, regexes) {
+				result.Items = append(result.Items, artifact)
+			}
+		}
+
+		if len(result.Items) >= int(number_of_results) {
+			break
+		}
+	}
+
+	return result, nil
 }

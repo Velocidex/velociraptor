@@ -15,28 +15,21 @@ goog.module.declareLegacyNamespace();
 const ArtifactsParamsFormController = function($scope, $rootScope) {
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
-
-    /** @private {!angular.Scope} */
-    this.rootScope_ = $rootScope;
 };
 
 ArtifactsParamsFormController.prototype.addItem = function() {
-    var descriptor = this.rootScope_["selectedArtifact"];
-    if (angular.isUndefined(this.scope_.value.env)) {
-        this.scope_.value.env = []
-    }
+    var parameters = this.scope_["params"];
+    var descriptors = this.scope_["descriptors"];
 
-    if (angular.isDefined(descriptor)) {
-        for (var i=0; i<descriptor.parameters.length; i++) {
-            this.scope_.value.env.push({
-                key: descriptor.parameters[i].name,
-                friendly_name: descriptor.parameters[i].friendly_name,
-                value: descriptor.parameters[i].default,
-                descriptor: descriptor.parameters[i],
-                type: descriptor.parameters[i].type || "string",
-            });
-        };
-    }
+    for (var i=0; i<descriptors.length; i++) {
+        parameters.push({
+            key: parameters[i].name,
+            friendly_name: parameters[i].friendly_name,
+            value: parameters[i].default,
+            descriptor: parameters[i],
+            type: parameters[i].type || "string",
+        });
+    };
 
     // Make sure the artifact is added once we start filling in its
     // parameters. This is a bit of a hack but its too hard to figure
@@ -49,16 +42,16 @@ ArtifactsParamsFormController.prototype.addItem = function() {
 exports.ArtifactsParamsFormDirective = function() {
   return {
     restrict: 'E',
-    scope: {
-      value: '='
-    },
-    templateUrl: '/static/angular-components/artifact/' +
-        'artifacts-params-form.html',
-    controller: ArtifactsParamsFormController,
-    controllerAs: 'controller'
+      scope: {
+          descriptors: "=",
+          params: '='
+      },
+      templateUrl: '/static/angular-components/artifact/' +
+          'artifacts-params-form.html',
+      controller: ArtifactsParamsFormController,
+      controllerAs: 'controller'
   };
 };
 
 
 exports.ArtifactsParamsFormDirective.directive_name = 'grrArtifactsParamsForm';
-exports.ArtifactsParamsFormDirective.semantic_type = 'ArtifactParameters';

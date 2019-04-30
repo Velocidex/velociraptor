@@ -7,12 +7,18 @@ import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 package proto;
 
 message GetArtifactsRequest {
+    // Deprecated
     bool include_event_artifacts = 1;
     bool include_server_artifacts = 2;
+
+    string search_term = 3;
+    uint64 number_of_results = 4;
+    string type = 5;
 }
 
 
 message GetArtifactRequest {
+    // Deprecated.
     string vfs_path = 1 [(sem_type) = {
             description: "The vfs path relative to the artifacts definition store."
         }];

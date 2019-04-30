@@ -26,6 +26,11 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
     /** @private {!ApiService} */
     this.grrApiService_ = grrApiService;
 
+    this.names = [];
+    this.params = {};
+    this.ops_per_second;
+    this.timeout;
+
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
             start_request: {
@@ -46,15 +51,27 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
  * @export
  */
 FormController.prototype.sendRequest = function() {
-  this.grrApiService_.post(
-      'v1/CreateHunt',
-      this.scope_['createHuntArgs'])
-  .then(function resolve(response) {
-    this.serverResponse = response;
-  }.bind(this), function reject(response) {
-    this.serverResponse = response;
-    this.serverResponse['error'] = true;
-  }.bind(this));
+    var self = this;
+    var env = [];
+    for (var k in self.params) {
+        if (self.params.hasOwnProperty(k)) {
+            env.push({key: k, value: self.params[k]});
+        }
+    }
+
+    var createHuntArgs = this.scope_['createHuntArgs'];
+    createHuntArgs.start_request.args.artifacts = {names: this.names};
+    createHuntArgs.start_request.args.parameters = {env: env};
+    createHuntArgs.start_request.args.ops_per_second = this.ops_per_second;
+    createHuntArgs.start_request.args.timeout = this.timeout;
+
+    this.grrApiService_.post('v1/CreateHunt', createHuntArgs)
+        .then(function resolve(response) {
+            this.serverResponse = response;
+        }.bind(this), function reject(response) {
+            this.serverResponse = response;
+            this.serverResponse['error'] = true;
+        }.bind(this));
 };
 
 

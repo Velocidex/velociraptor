@@ -2,9 +2,10 @@
 
   <!-- Configure flow -->
   <grr-wizard-form-page title="Select Artifacts to collect">
-    <grr-flow-form flow-args="createHuntArgs.start_request.args"
-                   flow-runner-args="createHuntArgs.start_request">
-    </grr-flow-form>
+    <grr-search-artifact names="controller.names"
+                         params="controller.params">
+    </grr-search-artifact>
+
   </grr-wizard-form-page>
 
   <!-- Configure hunt -->

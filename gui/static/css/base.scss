@@ -328,6 +328,7 @@ div[ui-view] {
     bottom: 5em;
     margin-left: 5%;
     position: absolute;
+    height: 80%;
   }
 }
 
@@ -1068,4 +1069,10 @@ flot-tooltip {
 
 .report-selector {
     padding-bottom: 40px;
+}
+
+.artifact-description {
+    height: 420px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
