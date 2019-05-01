@@ -10,12 +10,11 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $rootScope
  * @param {!angular.Scope} $scope
  * @param {!grrUi.core.apiService.ApiService} grrApiService
- * @param {!grrUi.core.reflectionService.ReflectionService} grrReflectionService
  * @constructor
  * @ngInject
  */
 const AddItemButtonController = function(
-    $rootScope, $scope, $timeout, $uibModal, grrApiService, grrReflectionService) {
+    $rootScope, $scope, $timeout, $uibModal, grrApiService) {
   /** @private {!angular.Scope} */
   this.rootScope_ = $rootScope;
 
@@ -31,14 +30,14 @@ const AddItemButtonController = function(
   /** @private {!grrUi.core.apiService.ApiService} */
   this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.core.reflectionService.ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
-
   /** @type {?string} */
   this.lastOperationId;
 
   /** @type {Object} */
   this.refreshOperation;
+
+    this.names = [];
+    this.param = {};
 
   /** @type {?boolean} */
   this.done;
@@ -46,7 +45,7 @@ const AddItemButtonController = function(
   /** @type {?string} */
   this.error;
 
-  /** @private {angularUi.$uibModalInstance} */
+    /** @private {angularUi.$uibModalInstance} */
     this.modalInstance;
 
     /** @type {?object} */
@@ -126,6 +125,7 @@ AddItemButtonController.prototype.onClick = function() {
         this.error = "";
         this.grrApiService_.get(url).then(function(response) {
             self.flowArguments = response['data'];
+            self.names = self.flowArguments.artifacts.names;
             self.modalInstance = self.uibModal_.open({
                 templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
                 scope: self.scope_,
@@ -137,6 +137,17 @@ AddItemButtonController.prototype.onClick = function() {
 
 AddItemButtonController.prototype.saveServerArtifacts = function() {
     var self = this;
+
+    // Update the names and the parameters.
+    var env = [];
+    for (var k in self.params) {
+        if (self.params.hasOwnProperty(k)) {
+            env.push({key: k, value: self.params[k]});
+        }
+    }
+    self.flowArguments.artifacts.names = self.names;
+    self.flowArguments.parameters = env;
+
     var url = 'v1/SetServerMonitoringState';
     this.grrApiService_.post(
         url, self.flowArguments).then(function(response) {

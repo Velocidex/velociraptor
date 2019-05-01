@@ -20,6 +20,7 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -37,12 +38,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-)
-
-var (
-	// An internal cert used to make grpc calles from the gw proxy
-	// to the grpc service.
-	api_handle_certificate *crypto.CertBundle
 )
 
 func AddProxyMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
@@ -232,23 +227,27 @@ func GetAPIHandler(
 			}),
 	)
 
-	// Generate internal certificates so we can tell when a call
-	// came from internal.
-	if api_handle_certificate == nil {
-		new_cert, err := crypto.GenerateServerCert(
+	// If there is no gw cert in the config file, this might be an
+	// old config file. We can generate a new one now for
+	// backwards compatibility.
+	if config_obj.GUI.GwCertificate == "" {
+		// Generate internal certificates so we can tell when
+		// a call came from internal.
+		gw_certificate, err := crypto.GenerateServerCert(
 			config_obj, constants.GRPC_GW_CLIENT_NAME)
 		if err != nil {
 			return nil, err
 		}
 
-		api_handle_certificate = new_cert
+		config_obj.GUI.GwCertificate = gw_certificate.Cert
+		config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
 	}
 
-	// We use the Frontend's certificate because this connection
-	// represents an internal connection.
+	// We use a dedicated gw certificate. The gRPC server will
+	// only accept a relayed username from us.
 	cert, err := tls.X509KeyPair(
-		[]byte(api_handle_certificate.Cert),
-		[]byte(api_handle_certificate.PrivateKey))
+		[]byte(config_obj.GUI.GwCertificate),
+		[]byte(config_obj.GUI.GwPrivateKey))
 	if err != nil {
 		return nil, err
 	}
@@ -256,6 +255,22 @@ func GetAPIHandler(
 	// Authenticate API clients using certificates.
 	CA_Pool := x509.NewCertPool()
 	CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+
+	// Make sure the cert is ok.
+	gw_cert, err := crypto.ParseX509CertFromPemStr(
+		[]byte(config_obj.GUI.GwCertificate))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = gw_cert.Verify(x509.VerifyOptions{Roots: CA_Pool})
+	if err != nil {
+		return nil, err
+	}
+
+	if gw_cert.Subject.CommonName != constants.GRPC_GW_CLIENT_NAME {
+		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
+	}
 
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},

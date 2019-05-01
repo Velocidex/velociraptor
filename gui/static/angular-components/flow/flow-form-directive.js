@@ -10,18 +10,13 @@ const {debug} = goog.require('grrUi.core.utils');
  * Controller for FlowFormDirective.
  *
  * @param {!angular.Scope} $scope
- * @param {!grrUi.core.reflectionService.ReflectionService} grrReflectionService
  * @constructor
  * @ngInject
  */
-const FlowFormController = function(
-    $scope, grrReflectionService) {
+const FlowFormController = function($scope) {
 
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
-
-  /** @private {!grrUi.core.reflectionService.ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
 
   debug("FlowFormDirective", this.scope_.flowArgs);
 

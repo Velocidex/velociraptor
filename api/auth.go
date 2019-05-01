@@ -128,6 +128,8 @@ func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 				}
 
 			} else {
+				// Other callers will return the name
+				// on their certificate.
 				result.Name = v
 			}
 		}

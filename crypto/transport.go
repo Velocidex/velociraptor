@@ -208,7 +208,7 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 
 // Adds the server certificate to the crypto manager.
 func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, error) {
-	server_cert, err := parseX509CertFromPemStr(certificate_pem)
+	server_cert, err := ParseX509CertFromPemStr(certificate_pem)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func NewCryptoManager(config_obj *api_proto.Config, source string, pem_str []byt
 }
 
 func NewServerCryptoManager(config_obj *api_proto.Config) (*CryptoManager, error) {
-	cert, err := parseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
+	cert, err := ParseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
 	if err != nil {
 		return nil, err
 	}

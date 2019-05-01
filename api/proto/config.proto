@@ -185,6 +185,16 @@ message GUIConfig {
             description: "Port to bind to."
         }];
 
+    string gw_certificate = 10 [(sem_type) = {
+            description: "The GUI exposes a HTTP interface to the gRPC end point."
+            "This is the certificate and private key that will be used to "
+            "connect to the gRPC endpoint."
+        }];
+
+    string gw_private_key = 11 [(sem_type) = {
+            description: "The private key of the frontend server encoded in PEM format."
+        }];
+
     repeated string internal_cidr = 3 [(sem_type) = {
             description: "CIDR addresses of internal networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
         }];

@@ -1,0 +1,25 @@
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">Help!</h4>
+
+    <div ng-if="controller.mode == 'vfs_files'"
+      >
+      <h1>Navigating the client's filesystem</h1>
+    </div>
+
+    <div ng-if="controller.mode == 'server'"
+      >
+      <h1>Updating the server's configuration.</h1>
+    </div>
+
+    <div ng-if="controller.mode == 'artifact'"
+      >
+      <h1>Viewing results from artifacts.</h1>
+    </div>
+
+
+    <a href="#!" class="btn btn-primary btn-block"
+       ng-click="controller.modalInstance.close()"
+       role="button">Close</a>
+  </div>
+</div>

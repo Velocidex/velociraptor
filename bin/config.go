@@ -24,7 +24,7 @@ import (
 	"regexp"
 
 	"github.com/Velocidex/yaml"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -107,6 +107,17 @@ func doGenerateConfig() {
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
 	config_obj.Frontend.PrivateKey = frontend_cert.PrivateKey
+
+	// Generate gRPC gateway certificate.
+	gw_certificate, err := crypto.GenerateServerCert(
+		config_obj, constants.GRPC_GW_CLIENT_NAME)
+	if err != nil {
+		logger.Error("Unable to create Frontend cert", err)
+		return
+	}
+
+	config_obj.GUI.GwCertificate = gw_certificate.Cert
+	config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
 
 	// Users have to updated the following fields.
 	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}

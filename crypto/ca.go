@@ -107,7 +107,7 @@ func GenerateServerCert(config_obj *api_proto.Config, name string) (*CertBundle,
 	end_time := start_time.Add(365 * 24 * time.Hour)
 
 	serial_number := big.NewInt(1)
-	old_cert, err := parseX509CertFromPemStr([]byte(
+	old_cert, err := ParseX509CertFromPemStr([]byte(
 		config_obj.Frontend.Certificate))
 	if err == nil {
 		serial_number.Add(serial_number, old_cert.SerialNumber)
@@ -115,7 +115,7 @@ func GenerateServerCert(config_obj *api_proto.Config, name string) (*CertBundle,
 			"Incremented server serial number to %v", serial_number)
 	}
 
-	ca_cert, err := parseX509CertFromPemStr([]byte(
+	ca_cert, err := ParseX509CertFromPemStr([]byte(
 		config_obj.Client.CaCertificate))
 	if err != nil {
 		return nil, err

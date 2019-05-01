@@ -3,15 +3,9 @@
 goog.module('grrUi.client.virtualFileSystem.fileTableDirective');
 goog.module.declareLegacyNamespace();
 
-const {REFRESH_FILE_EVENT, REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
-const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
-const {ensurePathIsFolder, getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
-
-
-var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
+const {getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 
 var OPERATION_POLL_INTERVAL_MS = 1000;
-
 
 /**
  * Controller for FileTableDirective.
@@ -24,12 +18,14 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  * @ngInject
  */
 const FileTableController = function(
-    $rootScope, $scope, $interval, grrApiService) {
+    $rootScope, $scope, $interval, $uibModal, grrApiService) {
     /** @private {!angular.Scope} */
     this.rootScope_ = $rootScope;
 
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
+
+    this.uibModal_ = $uibModal;
 
     /** @private {!angular.$interval} */
     this.interval_ = $interval;
@@ -46,25 +42,57 @@ const FileTableController = function(
     /** @type {?string} */
     this.lastRefreshOperationId;
 
-    /**
-     * Used for UI binding with a filter edit field.
-     * @export {string}
-     */
-    this.filterEditedValue = '';
-
-    /**
-     * Currently used filter value.
-     * @export {string}
-     */
-    this.filterValue = '';
-
     /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
     this.fileContext;
 
     this.selectedRow = {};
 
+    // Set the mode for the tool bar:
+    // - all: show all buttons.
+    // - vfs_files: browsing the vfs filesystem on the client.
+    // - server: Showing server files.
+    // - artifacts: Showing artifacts.
+    this.mode = "all";
+
     this.scope_.$watch('controller.fileContext.selectedRow',
                        this.onSelectedRowChange_.bind(this));
+
+    this.scope_.$watch('controller.fileContext.selectedDirPath',
+                       this.onDirPathChange_.bind(this));
+
+};
+
+FileTableController.prototype.setMode_ = function() {
+    if (!angular.isDefined(this.fileContext.selectedDirPath)) {
+        return;
+    }
+
+    var path = this.fileContext.selectedDirPath.replace(/\/+/, "");
+    // Viewing the server files VFS
+    if (this.fileContext.clientId == "") {
+        this.mode = "server";
+
+        if (path.startsWith("server_artifacts")) {
+            this.mode = "artifact";
+        }
+
+        // Viewing the client's VFS
+    } else {
+        this.mode = "vfs_files";
+        if (path.startsWith("artifacts") ||
+            path.startsWith("monitoring")) {
+            this.mode = "artifact";
+        }
+    }
+};
+
+FileTableController.prototype.showHelp = function() {
+    var self = this;
+    self.modalInstance = self.uibModal_.open({
+        templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
+        scope: self.scope_,
+        size: "lg",
+    });
 };
 
 /**
@@ -74,15 +102,14 @@ const FileTableController = function(
  * @private
  */
 FileTableController.prototype.onDirPathChange_ = function(newValue, oldValue) {
-  var newFolder = getFolderFromPath(newValue);
-  var oldFolder = getFolderFromPath(oldValue);
+    var newFolder = getFolderFromPath(newValue);
+    var oldFolder = getFolderFromPath(oldValue);
 
-  if (newFolder !== oldFolder) {
-    this.refreshFileList_();
-
-    // Reset the "refresh directory" button state.
-    this.lastRefreshOperationId = null;
-  }
+    if (newFolder !== oldFolder) {
+        // Reset the "refresh directory" button state.
+        this.lastRefreshOperationId = null;
+    }
+    this.setMode_();
 };
 
 
@@ -95,43 +122,6 @@ FileTableController.prototype.onSelectedRowChange_ = function(newValue, oldValue
   }
 };
 
-/**
- * Is triggered whenever the client id or the selected folder path changes.
- *
- * @private
- */
-FileTableController.prototype.refreshFileList_ = function() {
-  var clientId = this.fileContext['clientId'];
-  var selectedDirPath = this.fileContext['selectedDirPath'] || '';
-
-    this.filter = '';
-};
-
-/**
- * Selects a file by setting it as selected in the context.
- *
- * @param {Object} file
- * @export
- */
-FileTableController.prototype.selectFile = function(file) {
-  // Always reset the version when the file is selected.
-  this.fileContext.selectFile(file['path'], 0);
-};
-
-/**
- * Selects a folder by setting it as selected in the context.
- *
- * @param {Object} file
- * @export
- */
-FileTableController.prototype.selectFolder = function(file) {
-  var clientId = this.fileContext['clientId'];
-  var filePath = file['path'];
-  filePath = ensurePathIsFolder(filePath);
-
-  // Always reset the version if the file is selected.
-  this.fileContext.selectFile(filePath, 0);
-};
 
 /**
  * Refreshes the current directory.
@@ -177,16 +167,6 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
             this.rootScope_.$broadcast(
                 REFRESH_FOLDER_EVENT, selectedDirPath);
           }.bind(this));
-};
-
-
-/**
- * Updates the file filter.
- *
- * @export
- */
-FileTableController.prototype.updateFilter = function() {
-  this.filterValue = this.filterEditedValue;
 };
 
 /**

@@ -51,7 +51,7 @@ func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
 	}
 }
 
-func parseX509CertFromPemStr(pem_str []byte) (*x509.Certificate, error) {
+func ParseX509CertFromPemStr(pem_str []byte) (*x509.Certificate, error) {
 	for {
 		block, rest := pem.Decode(pem_str)
 		if block == nil {

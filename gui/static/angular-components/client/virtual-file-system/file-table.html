@@ -5,6 +5,7 @@
       <div class="btn-group" role="group">
         <div id="refresh-dir"
              type="button"
+             ng-if="controller.mode == 'vfs_files'"
              class="btn btn-default btn-rounded"
              title="Refresh this directory (sync its listing with the client)"
              ng-class="{'disabled': !controller.fileContext.clientId }"
@@ -15,6 +16,7 @@
           type="button"
           class="btn btn-default"
           client-id="controller.fileContext.clientId"
+          ng-if="controller.mode == 'vfs_files'"
           ng-class="{'disabled': !controller.fileContext.clientId }"
           file-path="controller.fileContext.selectedDirPath"
           class="toolbar_icon">
@@ -24,21 +26,30 @@
           client-id="controller.fileContext.clientId"
           file-path="controller.fileContext.selectedFilePath"
           dir-path="controller.fileContext.selectedDirPath"
+          ng-if="controller.mode == 'server'"
           >
         </grr-add-item-button>
       </div>
       <grr-vfs-files-archive-button
         client-id="controller.fileContext.clientId"
         file-path="controller.fileContext.selectedDirPath"
+        ng-if="controller.mode == 'vfs_files'"
         >
       </grr-vfs-files-archive-button>
     </div>
+
     <div class="navbar-form pull-right">
-
-      <grr-r-we-owned-button class="space-right"></grr-r-we-owned-button>
-
+      <div class="btn-group" role="group">
+        <div class="btn btn-default btn-rounded"
+             type="button"
+             >
+          <img src="/static/images/stock_dialog_question.png"
+               class="toolbar_icon"
+               ng-click="controller.showHelp()"
+               title="Help!"/>
+        </div>
+      </div>
     </div>
-
   </div>
 
 </div>

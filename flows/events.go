@@ -87,6 +87,8 @@ func (self *VQLEventTable) GetFlowRunnerArgs(
 			vql_collector_args := &actions_proto.VQLCollectorArgs{
 				MaxWait:      100,
 				OpsPerSecond: rate,
+				// Event queries never time out on their own.
+				Timeout: 1000000000,
 			}
 			artifact, pres := repository.Get(name)
 			if !pres {
