@@ -22,6 +22,7 @@ import (
 	"errors"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -91,12 +92,10 @@ func setArtifactFile(config_obj *api_proto.Config,
 
 	// First ensure that the artifact is correct.
 	tmp_repository := artifacts.NewRepository()
-	artifact_obj, err := tmp_repository.LoadYaml(artifact)
+	_, err := tmp_repository.LoadYaml(artifact)
 	if err != nil {
 		return err
 	}
-	artifact_obj.Path = strings.TrimPrefix(
-		vfs_path, constants.ARTIFACT_DEFINITION)
 
 	// Now write it into the filestore.
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -132,19 +131,26 @@ func renderBuiltinArtifacts(
 		return nil, err
 	}
 	directories := []string{}
-	artifacts := []*artifacts_proto.Artifact{}
+	matching_artifacts := []*artifacts_proto.Artifact{}
+
 	artifact_path := path.Join("/", strings.TrimPrefix(
 		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
 
+	// Make sure there is a trailing / so prefix match below
+	// matches full directory names.
+	if !strings.HasSuffix(artifact_path, "/") {
+		artifact_path += "/"
+	}
+
 	for _, artifact_obj := range repository.Data {
-		if !strings.HasPrefix(artifact_obj.Path, artifact_path) {
+		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
+		if !strings.HasPrefix(artifact_obj_path, artifact_path) {
 			continue
 		}
 
 		components := []string{}
 		for _, item := range strings.Split(
-			strings.TrimPrefix(artifact_obj.Path, artifact_path),
-			"/") {
+			strings.TrimPrefix(artifact_obj_path, artifact_path), "/") {
 			if item != "" {
 				components = append(components, item)
 			}
@@ -153,9 +159,11 @@ func renderBuiltinArtifacts(
 		if len(components) > 1 && !utils.InString(&directories, components[0]) {
 			directories = append(directories, components[0])
 		} else if len(components) == 1 {
-			artifacts = append(artifacts, artifact_obj)
+			matching_artifacts = append(matching_artifacts, artifact_obj)
 		}
 	}
+
+	sort.Strings(directories)
 
 	var rows []*FileInfoRow
 	for _, dirname := range directories {
@@ -165,14 +173,15 @@ func renderBuiltinArtifacts(
 		})
 	}
 
-	for _, artifact_obj := range artifacts {
+	for _, artifact_obj := range matching_artifacts {
+		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
 		rows = append(rows, &FileInfoRow{
-			Name: path.Base(artifact_obj.Path),
+			Name: path.Base(artifact_obj_path),
 			Mode: "-r--r--r--",
 			Size: int64(len(artifact_obj.Raw)),
 			Download: &DownloadInfo{
 				VfsPath: path.Join(
-					vfs_path, path.Base(artifact_obj.Path)),
+					vfs_path, path.Base(artifact_obj_path)),
 				Size: int64(len(artifact_obj.Raw)),
 			},
 		})
@@ -203,6 +212,8 @@ func searchArtifact(
 	artifact_type string,
 	number_of_results uint64) (
 	*artifacts_proto.ArtifactDescriptors, error) {
+
+	artifact_type = strings.ToLower(artifact_type)
 
 	if number_of_results == 0 {
 		number_of_results = 100
@@ -242,6 +253,12 @@ func searchArtifact(
 	for _, name := range repository.List() {
 		artifact, pres := repository.Get(name)
 		if pres {
+			// Skip non matching types
+			if artifact_type != "" &&
+				strings.ToLower(artifact.Type) != artifact_type {
+				continue
+			}
+
 			if matcher(artifact.Description, regexes) ||
 				matcher(artifact.Name, regexes) {
 				result.Items = append(result.Items, artifact)

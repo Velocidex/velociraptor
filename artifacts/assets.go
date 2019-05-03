@@ -42,14 +42,12 @@ func register(config_obj *api_proto.Config) error {
 				logger.Info("Cant read asset %s: %v", file, err)
 				continue
 			}
-			artifact, err := global_repository.LoadYaml(string(data))
+			_, err = global_repository.LoadYaml(string(data))
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
 				continue
 			}
 
-			artifact.Path = strings.TrimPrefix(
-				file, "artifacts/definitions")
 			count += 1
 		}
 	}

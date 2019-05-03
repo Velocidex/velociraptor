@@ -316,7 +316,8 @@ func openBuiltInArtifact(config_obj *api_proto.Config, vfs_path string) (
 		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
 
 	for _, artifact_obj := range repository.Data {
-		if artifact_obj.Path == artifact_path {
+		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
+		if artifact_obj_path == artifact_path {
 			return utils.DataReadSeekCloser{
 				strings.NewReader(artifact_obj.Raw),
 			}, nil

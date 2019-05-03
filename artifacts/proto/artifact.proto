@@ -158,11 +158,6 @@ message Artifact {
         }];
 
     /* Internal use only */
-    string path = 6 [(sem_type) = {
-            description: "The path of this artifact in the artifact store.",
-        }];
-
-    /* Internal use only */
     string raw = 7 [(sem_type) = {
             description: "The raw YAML of this artifact.",
         }];

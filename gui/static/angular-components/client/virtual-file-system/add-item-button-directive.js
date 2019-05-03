@@ -138,6 +138,12 @@ AddItemButtonController.prototype.updateServerMonitoringTable = function() {
     this.grrApiService_.get(url).then(function(response) {
         self.flowArguments = response['data'];
         self.names = self.flowArguments.artifacts.names;
+        self.params = {};
+        var parameters = self.flowArguments.parameters.env;
+        for (var i=0; i<parameters.length;i++) {
+            var p = parameters[0];
+            self.params[p["key"]] = p["value"];
+        }
         self.modalInstance = self.uibModal_.open({
             templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
             scope: self.scope_,

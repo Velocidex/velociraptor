@@ -109,7 +109,7 @@ SearchArtifactController.prototype.remove = function(name) {
         var is_key_defined = function(key) {
             for (var i = 0; i < self.scope_.names.length; ++i) {
                 var name = self.scope_.names[i];
-                var params = self.descriptors[name].parameters;
+                var params = self.descriptors[name].parameters || [];
                 for (var j=0; j<params.length; j++) {
                     if (params[j].name == key) {
                         return true;

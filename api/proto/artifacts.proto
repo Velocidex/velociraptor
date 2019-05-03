@@ -91,3 +91,7 @@ message GetReportResponse {
             description: "Error or warning messages.",
         }];
 }
+
+
+// Deprecated.
+message ArtifactCompressionDict {}

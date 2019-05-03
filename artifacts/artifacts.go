@@ -71,8 +71,6 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 					return errors.Wrap(err,
 						path.Join(dirname, info.Name()))
 				}
-				artifact.Path = strings.TrimPrefix(
-					file_path, dirname)
 				self.Data[artifact.Name] = artifact
 				count += 1
 			}
@@ -106,9 +104,11 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 }
 
 func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact {
+	name := strings.Replace(path, "/", ".", -1)
+
 	result := []*artifacts_proto.Artifact{}
 	for _, artifact := range self.Data {
-		if strings.HasPrefix(artifact.Path, path) {
+		if strings.HasPrefix(artifact.Name, name) {
 			result = append(result, artifact)
 		}
 	}
@@ -154,7 +154,7 @@ func (self *Repository) GetQueryDependencies(
 
 		existing_depth, pres := dependency[hit[1]]
 		if pres {
-			if existing_depth <= depth {
+			if existing_depth < depth {
 				return errors.New(
 					fmt.Sprintf(
 						"Cycle found while compiling %s", artifact_name))
@@ -435,9 +435,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 						"artifact %s: %v", path, err)
 					return nil
 				}
-				artifact_obj.Path = path
 				artifact_obj.Raw = string(data)
-				logger.Info("Loaded %s", artifact_obj.Path)
+				logger.Info("Loaded %s", path)
 			}
 			return nil
 		})
