@@ -53,5 +53,8 @@ const (
 	FRONTEND_NAME       = "VelociraptorServer"
 	GRPC_GW_CLIENT_NAME = "GRPC_GW"
 
+	// These store configuration for the server and client
+	// monitoring artifacts.
 	ServerMonitoringFlowURN = "aff4:/config/server_monitoring.json"
+	ClientMonitoringFlowURN = "aff4:/config/client_monitoring.json"
 )

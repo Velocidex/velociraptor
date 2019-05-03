@@ -39,6 +39,7 @@ import (
 	"google.golang.org/grpc/status"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -493,6 +494,23 @@ func (self *ApiServer) GetArtifacts(
 	ctx context.Context,
 	in *api_proto.GetArtifactsRequest) (
 	*artifacts_proto.ArtifactDescriptors, error) {
+
+	if len(in.Names) > 0 {
+		result := &artifacts_proto.ArtifactDescriptors{}
+		repository, err := artifacts.GetGlobalRepository(self.config)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, name := range in.Names {
+			artifact, pres := repository.Get(name)
+			if pres {
+				result.Items = append(result.Items, artifact)
+			}
+		}
+		return result, nil
+	}
+
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
 		self.config, terms, in.Type, in.NumberOfResults)
@@ -602,6 +620,32 @@ func (self *ApiServer) SetServerMonitoringState(
 	*flows_proto.ArtifactCollectorArgs, error) {
 
 	err := setServerMonitoringState(self.config, in)
+	return in, err
+}
+
+func (self *ApiServer) GetClientMonitoringState(
+	ctx context.Context,
+	in *empty.Empty) (
+	*flows_proto.ArtifactCollectorArgs, error) {
+
+	result, err := getClientMonitoringState(self.config)
+	return result, err
+}
+
+func (self *ApiServer) SetClientMonitoringState(
+	ctx context.Context,
+	in *flows_proto.ArtifactCollectorArgs) (
+	*flows_proto.ArtifactCollectorArgs, error) {
+
+	err := setClientMonitoringState(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = self.NotifyClients(ctx, &api_proto.NotificationRequest{
+		NotifyAll: true,
+	})
+
 	return in, err
 }
 

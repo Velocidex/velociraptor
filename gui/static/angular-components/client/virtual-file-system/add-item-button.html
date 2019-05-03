@@ -3,8 +3,31 @@
   class="btn btn-default"
   title="Add/Edit an Artifact"
   name="AddArtifact"
-  ng-click="controller.onClick()"
-  ng-class="{'disabled': !controller.isActive}"
+  ng-click="controller.updateArtifactDefinitions()"
+  ng-if="mode == 'artifact_definitions'"
   >
-  <img src="/static/images/edit.png" class="toolbar_icon" />
+  <img src="/static/images/edit.png"
+       class="toolbar_icon" />
+</div>
+
+<div
+  type="button"
+  class="btn btn-default"
+  title="Update server monitoring table"
+  ng-click="controller.updateServerMonitoringTable()"
+  ng-if="mode == 'server_artifacts'"
+  >
+  <img src="/static/images/update_table.svg"
+       class="toolbar_icon" />
+</div>
+
+<div
+  type="button"
+  class="btn btn-default"
+  title="Update client monitoring table"
+  ng-click="controller.updateClientMonitoringTable()"
+  ng-if="mode == 'client_monitoring_view'"
+  >
+  <img src="/static/images/update_table.svg"
+       class="toolbar_icon" />
 </div>

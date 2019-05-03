@@ -37,7 +37,7 @@ const AddItemButtonController = function(
   this.refreshOperation;
 
     this.names = [];
-    this.param = {};
+    this.params = {};
 
   /** @type {?boolean} */
   this.done;
@@ -60,10 +60,6 @@ const AddItemButtonController = function(
     /** @type {?string} */
     this.value;
 
-    this.isActive = false;
-
-    this.mode = "add_artifact";
-
     // Used to add server monitoring artifacts.
     this.flowArguments = {};
 };
@@ -82,12 +78,8 @@ AddItemButtonController.prototype.onClientOrPathChange_ = function() {
         if (path.startsWith("/artifact_definitions/")) {
             path = path.replace(/builtin/, "custom");
 
-            self.mode = "add_artifact";
-            self.isActive = true;
             return path;
         } else if (path.startsWith("/server_artifacts/")) {
-            self.mode = "add_server_monitoring";
-            self.isActive = true;
             return path;
 
         } else {
@@ -95,71 +87,30 @@ AddItemButtonController.prototype.onClientOrPathChange_ = function() {
         }
     };
 
-    this.isActive = false;
     this.path = is_valid_path(this.scope_.dirPath) ||
         is_valid_path(this.scope_.filePath);
 };
 
-
-AddItemButtonController.prototype.onClick = function() {
-    var self =this;
-
-    if (self.mode == "add_artifact") {
-        var url = 'v1/GetArtifactFile';
-        var params = {
-            vfs_path: this.scope_.filePath,
-        };
-        this.error = "";
-        this.grrApiService_.get(url, params).then(function(response) {
-            self.value = response['data']['artifact'];
-            self.modalInstance = self.uibModal_.open({
-                templateUrl: '/static/angular-components/artifact/add_artifact.html',
-                scope: self.scope_,
-                size: "lg",
-            });
-        }.bind(this), function() {
-        }.bind(this));
-
-    } else if (self.mode == "add_server_monitoring") {
-        var url = 'v1/GetServerMonitoringState';
-        this.error = "";
-        this.grrApiService_.get(url).then(function(response) {
-            self.flowArguments = response['data'];
-            self.names = self.flowArguments.artifacts.names;
-            self.modalInstance = self.uibModal_.open({
-                templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
-                scope: self.scope_,
-                size: "lg",
-            });
-        });
-    }
-};
-
-AddItemButtonController.prototype.saveServerArtifacts = function() {
+AddItemButtonController.prototype.updateArtifactDefinitions = function() {
+    var url = 'v1/GetArtifactFile';
+    var params = {
+        vfs_path: this.scope_.filePath,
+    };
     var self = this;
 
-    // Update the names and the parameters.
-    var env = [];
-    for (var k in self.params) {
-        if (self.params.hasOwnProperty(k)) {
-            env.push({key: k, value: self.params[k]});
-        }
-    }
-    self.flowArguments.artifacts.names = self.names;
-    self.flowArguments.parameters = env;
+    this.error = "";
+    this.grrApiService_.get(url, params).then(function(response) {
+        self.value = response['data']['artifact'];
+        self.modalInstance = self.uibModal_.open({
+            templateUrl: '/static/angular-components/artifact/add_artifact.html',
+            scope: self.scope_,
+            size: "lg",
+        });
+    });
 
-    var url = 'v1/SetServerMonitoringState';
-    this.grrApiService_.post(
-        url, self.flowArguments).then(function(response) {
-        if (response.data.error) {
-            this.error = response.data['error_message'];
-        } else {
-            this.modalInstance.close();
-        }
-    }.bind(this), function(error) {
-        this.error = error;
-    }.bind(this));
+    return false;
 };
+
 
 AddItemButtonController.prototype.saveArtifact = function() {
     var url = 'v1/SetArtifactFile';
@@ -179,12 +130,99 @@ AddItemButtonController.prototype.saveArtifact = function() {
 };
 
 
+AddItemButtonController.prototype.updateServerMonitoringTable = function() {
+    var url = 'v1/GetServerMonitoringState';
+    var self = this;
+
+    this.error = "";
+    this.grrApiService_.get(url).then(function(response) {
+        self.flowArguments = response['data'];
+        self.names = self.flowArguments.artifacts.names;
+        self.modalInstance = self.uibModal_.open({
+            templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
+            scope: self.scope_,
+            size: "lg",
+        });
+    });
+    return false;
+};
+
+AddItemButtonController.prototype.saveServerArtifacts = function() {
+    var self = this;
+
+    // Update the names and the parameters.
+    var env = [];
+    for (var k in self.params) {
+        if (self.params.hasOwnProperty(k)) {
+            env.push({key: k, value: self.params[k]});
+        }
+    }
+    self.flowArguments.artifacts.names = self.names;
+    self.flowArguments.parameters = {env: env};
+
+    var url = 'v1/SetServerMonitoringState';
+    this.grrApiService_.post(
+        url, self.flowArguments).then(function(response) {
+        if (response.data.error) {
+            this.error = response.data['error_message'];
+        } else {
+            this.modalInstance.close();
+        }
+    }.bind(this), function(error) {
+        this.error = error;
+    }.bind(this));
+};
+
+AddItemButtonController.prototype.updateClientMonitoringTable = function() {
+    var url = 'v1/GetClientMonitoringState';
+    var self = this;
+
+    this.error = "";
+    this.grrApiService_.get(url).then(function(response) {
+        self.flowArguments = response['data'];
+        self.names = self.flowArguments.artifacts.names;
+        self.modalInstance = self.uibModal_.open({
+            templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
+            scope: self.scope_,
+            size: "lg",
+        });
+    });
+    return false;
+};
+
+AddItemButtonController.prototype.saveClientMonitoringArtifacts = function() {
+    var self = this;
+
+    // Update the names and the parameters.
+    var env = [];
+    for (var k in self.params) {
+        if (self.params.hasOwnProperty(k)) {
+            env.push({key: k, value: self.params[k]});
+        }
+    }
+    self.flowArguments.artifacts.names = self.names;
+    self.flowArguments.parameters = {env: env};
+
+    var url = 'v1/SetClientMonitoringState';
+    this.grrApiService_.post(
+        url, self.flowArguments).then(function(response) {
+        if (response.data.error) {
+            this.error = response.data['error_message'];
+        } else {
+            this.modalInstance.close();
+        }
+    }.bind(this), function(error) {
+        this.error = error;
+    }.bind(this));
+};
+
 exports.AddItemButtonDirective = function() {
   return {
     scope: {
         clientId: '=',
         filePath: '=',
         dirPath: '=',
+        mode: '=',
     },
     require: '^grrFileContext',
     restrict: 'E',

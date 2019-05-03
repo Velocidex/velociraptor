@@ -23,14 +23,15 @@
 // The process goes like this:
 
 // 1. The client sends a message to the foreman periodically with the
-//    timestamp of the most recent hunt it ran.
+//    timestamp of the most recent hunt it ran (as well latest event
+//    table version).
 
 // 2. If a newer hunt exists, the foreman sends the hunt_condition
 //    query to the client with the response directed to the
 //    System.Hunt.Participation artifact monitoring queue.
 
-// 3. The hunt manager scans the System.Hunt.Participation monitoring
-//    queue and launches the relevant flows on each client.
+// 3. The hunt manager service scans the System.Hunt.Participation
+//    monitoring queue and launches the relevant flows on each client.
 
 package flows
 
@@ -63,18 +64,15 @@ func (self *Foreman) ProcessEventTables(
 	arg *actions_proto.ForemanCheckin) error {
 
 	// Need to update client's event table.
-	if arg.LastEventTableVersion < config_obj.Events.Version {
+	if arg.LastEventTableVersion < services.GetClientEventsVersion() {
 		channel := grpc_client.GetChannel(config_obj)
 		defer channel.Close()
 
 		client := api_proto.NewAPIClient(channel)
-		flow_runner_args, err := gEventTable.GetFlowRunnerArgs(config_obj)
-		if err != nil {
-			return err
-		}
-
+		flow_runner_args := services.GetClientEventsFlowRunnerArgs()
+		flow_runner_args.Creator = "Foreman"
 		flow_runner_args.ClientId = source
-		_, err = client.LaunchFlow(context.Background(), &flow_runner_args)
+		_, err := client.LaunchFlow(context.Background(), flow_runner_args)
 		if err != nil {
 			return err
 		}

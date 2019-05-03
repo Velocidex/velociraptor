@@ -15,6 +15,15 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+// Client Events are long lived VQL queries which stream their results
+// to the event handler on the server. Clients maintain a global event
+// table internally containing a set of event queries. The client's
+// table is kept in sync with the server by compaing the table's
+// version on each packet sent. If the server's event table is higher
+// than the client's the server will refresh the client's table using
+// the UpdateEventTable() action.
+
 package actions
 
 import (
@@ -24,10 +33,60 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/events"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
+
+var (
+	GlobalEventTable = &EventTable{}
+	mu               sync.Mutex
+)
+
+type EventTable struct {
+	Events  []*actions_proto.VQLCollectorArgs
+	version uint64
+
+	// This will be closed to signal we need to abort the current
+	// event queries.
+	Done chan bool
+}
+
+func GlobalEventTableVersion() uint64 {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return GlobalEventTable.version
+}
+
+func update(
+	responder *responder.Responder,
+	table *actions_proto.VQLEventTable) (*EventTable, error) {
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Close the old table.
+	if GlobalEventTable.Done != nil {
+		close(GlobalEventTable.Done)
+	}
+
+	// Make a new table.
+	GlobalEventTable = NewEventTable(responder, table)
+
+	return GlobalEventTable, nil
+}
+
+func NewEventTable(
+	responder *responder.Responder,
+	table *actions_proto.VQLEventTable) *EventTable {
+	result := &EventTable{
+		Events:  table.Event,
+		version: table.Version,
+		Done:    make(chan bool),
+	}
+
+	return result
+}
 
 type UpdateEventTable struct{}
 
@@ -44,7 +103,7 @@ func (self *UpdateEventTable) Run(
 	}
 
 	// Make a new table.
-	table, err := events.Update(responder, arg)
+	table, err := update(responder, arg)
 	if err != nil {
 		responder.Log("Error updating global event table: %v", err)
 	}

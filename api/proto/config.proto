@@ -302,22 +302,6 @@ message FlowsConfig {
         }];
 }
 
-// Event generators for the client. Note: These are sent from the
-// server to the client and are not embedded in the client.
-message ClientEvents {
-    repeated string artifacts = 1 [(sem_type) = {
-            description: "Events will be collected from the client using these artifacts."
-        }];
-
-    uint64 version = 2 [(sem_type) = {
-            description: "An incrementing version of collection requests.",
-        }];
-
-    float ops_per_second = 24 [(sem_type) = {
-            description: "Default rate limiting for client event monitoring."
-        }];
-}
-
 // Configuration for the mail server.
 message MailConfig {
     string from = 1 [(sem_type) = {
@@ -379,10 +363,6 @@ message Config {
 
     ClientConfig Client = 1 [(sem_type) = {
             description: "Client configuration."
-        }];
-
-    ClientEvents Events = 10 [(sem_type) = {
-            description: "Events to collect from clients."
         }];
 
     APIConfig API = 2 [(sem_type) = {

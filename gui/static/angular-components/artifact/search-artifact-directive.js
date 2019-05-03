@@ -37,6 +37,18 @@ const SearchArtifactController = function(
 
     this.scope_.$watch('controller.search',
                        this.onSearchChange_.bind(this));
+
+    var self = this;
+    if (this.scope_["names"].length>0) {
+        this.grrApiService_.get("v1/GetArtifacts", {names: this.scope_["names"]}).then(
+            function(response) {
+                var items = response['data'].items;
+                for(var i=0; i < items.length;i++) {
+                    var item = items[i];
+                    self.descriptors[item.name] = item;
+                }
+            });
+    }
 };
 
 /**

@@ -4,6 +4,7 @@ goog.module('grrUi.client.virtualFileSystem.fileTableDirective');
 goog.module.declareLegacyNamespace();
 
 const {getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
+const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 
 var OPERATION_POLL_INTERVAL_MS = 1000;
 
@@ -73,15 +74,20 @@ FileTableController.prototype.setMode_ = function() {
         this.mode = "server";
 
         if (path.startsWith("server_artifacts")) {
-            this.mode = "artifact";
+            this.mode = "server_artifacts";
+
+        } else if (path.startsWith("artifact_definitions")) {
+            this.mode = "artifact_definitions";
         }
 
         // Viewing the client's VFS
     } else {
         this.mode = "vfs_files";
-        if (path.startsWith("artifacts") ||
-            path.startsWith("monitoring")) {
-            this.mode = "artifact";
+        if (path.startsWith("artifacts")) {
+            this.mode = "artifact_view";
+
+        } else if (path.startsWith("monitoring")) {
+            this.mode = "client_monitoring_view";
         }
     }
 };
@@ -129,44 +135,48 @@ FileTableController.prototype.onSelectedRowChange_ = function(newValue, oldValue
  * @export
  */
 FileTableController.prototype.startVfsRefreshOperation = function() {
+    if (this.lastRefreshOperationId) {
+        return;
+    }
+
     var clientId = this.fileContext['clientId'];
-  var selectedDirPath = this.fileContext['selectedDirPath'];
+    var selectedDirPath = this.fileContext['selectedDirPath'];
 
-  var url = 'v1/VFSRefreshDirectory/' + clientId;
-  var params = {
-    vfs_path: selectedDirPath,
-    depth: 0,
-  };
+    var url = 'v1/VFSRefreshDirectory/' + clientId;
+    var params = {
+        vfs_path: selectedDirPath,
+        depth: 0,
+    };
 
-  // Setting this.lastRefreshOperationId means that the update button
-  // will get disabled immediately.
-  this.lastRefreshOperationId = 'unknown';
-  this.grrApiService_.post(url, params)
-      .then(
-          function success(response) {
-            this.lastRefreshOperationId = response.data['flow_id'];
-            var pollPromise = this.grrApiService_.poll(
-              'v1/GetFlowDetails/' + clientId,
-              OPERATION_POLL_INTERVAL_MS, {
-                flow_id: this.lastRefreshOperationId,
-              }, function(response) {
-                if (response.data.context.state != 'RUNNING') {
-                    this.lastRefreshOperationId = undefined;
-                    return true;
-                };
-                return false;
-              }.bind(this));
-            this.scope_.$on('$destroy', function() {
-              this.grrApiService_.cancelPoll(pollPromise);
+    // Setting this.lastRefreshOperationId means that the update button
+    // will get disabled immediately.
+    this.lastRefreshOperationId = 'unknown';
+    this.grrApiService_.post(url, params)
+        .then(
+            function success(response) {
+                this.lastRefreshOperationId = response.data['flow_id'];
+                var pollPromise = this.grrApiService_.poll(
+                    'v1/GetFlowDetails/' + clientId,
+                    OPERATION_POLL_INTERVAL_MS, {
+                        flow_id: this.lastRefreshOperationId,
+                    }, function(response) {
+                        if (response.data.context.state != 'RUNNING') {
+                            this.lastRefreshOperationId = undefined;
+                            return true;
+                        };
+                        return false;
+                    }.bind(this));
+                this.scope_.$on('$destroy', function() {
+                    this.grrApiService_.cancelPoll(pollPromise);
+                }.bind(this));
+
+                return pollPromise;
+            }.bind(this))
+        .then(
+            function success() {
+                this.rootScope_.$broadcast(
+                    REFRESH_FOLDER_EVENT, selectedDirPath);
             }.bind(this));
-
-            return pollPromise;
-          }.bind(this))
-      .then(
-          function success() {
-            this.rootScope_.$broadcast(
-                REFRESH_FOLDER_EVENT, selectedDirPath);
-          }.bind(this));
 };
 
 /**

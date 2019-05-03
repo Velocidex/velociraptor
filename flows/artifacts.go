@@ -107,14 +107,10 @@ func (self *ArtifactCollector) Start(
 	}
 
 	if !config_obj.Frontend.DoNotCompressArtifacts {
-		flow_state := &flows_proto.ArtifactCompressionDict{}
-
-		err = artifactCompress(vql_collector_args, flow_state)
+		err = artifacts.Obfuscate(config_obj, vql_collector_args)
 		if err != nil {
 			return err
 		}
-
-		flow_obj.SetState(flow_state)
 	}
 
 	return QueueMessageForClient(
@@ -159,8 +155,11 @@ func (self *ArtifactCollector) ProcessMessage(
 
 		// Restore strings from flow state.
 		if !config_obj.Frontend.DoNotCompressArtifacts {
-			dict := flow_obj.GetState().(*flows_proto.ArtifactCompressionDict)
-			artifactUncompress(response, dict)
+			err := artifacts.Deobfuscate(config_obj, response)
+			if err != nil {
+				return err
+			}
+
 		}
 		log_path := CalculateArtifactResultPath(
 			flow_obj.RunnerArgs.ClientId,
@@ -264,60 +263,6 @@ func AddArtifactCollectorArgs(
 			})
 	}
 	return nil
-}
-
-// Compile the artifact definition into a VQL Request. In order to
-// avoid sending the client descriptive strings we encode strings in a
-// dictionary then decode them to show the user.
-func artifactCompress(result *actions_proto.VQLCollectorArgs,
-	dictionary *flows_proto.ArtifactCompressionDict) error {
-	scope := vql_subsystem.MakeScope()
-	compress := func(value string) string {
-		key := fmt.Sprintf("$$%d", len(dictionary.Substs)+1)
-		dictionary.Substs = append(dictionary.Substs, &actions_proto.VQLEnv{
-			Key: key, Value: value})
-
-		return key
-	}
-
-	for _, query := range result.Query {
-		if query.Name != "" {
-			query.Name = compress(query.Name)
-		}
-		if query.Description != "" {
-			query.Description = compress(query.Description)
-		}
-
-		// Parse and re-serialize the query into standard
-		// forms. This removes comments.
-		ast, err := vfilter.Parse(query.VQL)
-		if err != nil {
-			return err
-		}
-
-		// TODO: Compress the AST.
-		query.VQL = ast.ToString(scope)
-	}
-
-	return nil
-}
-
-func artifactUncompress(response *actions_proto.VQLResponse,
-	dictionary *flows_proto.ArtifactCompressionDict) {
-
-	decompress := func(value string) string {
-		if dictionary != nil {
-			for _, subst := range dictionary.Substs {
-				if subst.Key == value {
-					return subst.Value
-				}
-			}
-		}
-		return value
-	}
-
-	response.Query.Name = decompress(response.Query.Name)
-	response.Query.Description = decompress(response.Query.Description)
 }
 
 func appendDataToFile(

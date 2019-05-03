@@ -1,10 +1,13 @@
 <div class="btn-group large">
-  <button class="btn btn-default"
-          name="downloadCurrentFolder"
-          title="Download files in this folder and below"
-          ng-click="controller.downloadCurrentFolder($event)"
-          >
-    <i class="fa fa-folder-open-o"></i>
-    <i class="fa fa-arrow-circle-down annotation"></i>
-  </button>
+  <div class="btn btn-default btn-rounded"
+       type="button"
+       name="downloadCurrentFolder"
+       title="Download files in this folder and below"
+       ng-click="controller.downloadCurrentFolder($event)"
+       >
+    <div class="toolbar_icon">
+      <i class="fa fa-folder-open-o"></i>
+      <i class="fa fa-arrow-circle-down annotation"></i>
+    </div>
+  </div>
 </div>

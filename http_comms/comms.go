@@ -34,12 +34,12 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/events"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -485,7 +485,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 
 	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
 		LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
-		LastEventTableVersion: events.GlobalEventTableVersion(),
+		LastEventTableVersion: actions.GlobalEventTableVersion(),
 	})
 	if err != nil {
 		return result

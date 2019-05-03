@@ -120,11 +120,6 @@ exports.routingModule
             template: '<grr-artifact-collector />',
             title: 'Collect Artifacts'
           })
-            .state('client.searchArtifacts', {
-                url: '/search-artifacts',
-                template: '<grr-search-artifact names="[]" />',
-                title: 'Search for Artifact',
-            })
           .state('client.vfs', {
             url: '/vfs/{path:pathWithUnescapedSlashes}?version&mode&tab',
             template: '<grr-file-view />',
@@ -156,7 +151,7 @@ exports.routingModule
             url: '/debug-requests',
             template: '<grr-debug-requests-view />',
             title: 'Debug Requests'
-          })
+          });
     })
     .run(function($rootScope, $location, $state, $urlRouter, $document) {
       /**

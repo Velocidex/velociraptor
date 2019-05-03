@@ -269,11 +269,28 @@ service API {
         };
     }
 
-       // Server Monitoring Artifacts - manage the Server Monitoring
-    // Service..
+    // Server Monitoring Artifacts - manage the Server Monitoring
+    // Service.
     rpc SetServerMonitoringState(ArtifactCollectorArgs) returns (ArtifactCollectorArgs) {
         option (google.api.http) = {
             post: "/api/v1/SetServerMonitoringState",
+            body: "*",
+        };
+    }
+
+    // Client Monitoring Artifacts - manage the Client Monitoring
+    // Service.
+    rpc GetClientMonitoringState(google.protobuf.Empty) returns (ArtifactCollectorArgs) {
+        option (google.api.http) = {
+            get: "/api/v1/GetClientMonitoringState",
+        };
+    }
+
+    // Client Monitoring Artifacts - manage the Client Monitoring
+    // Service.
+    rpc SetClientMonitoringState(ArtifactCollectorArgs) returns (ArtifactCollectorArgs) {
+        option (google.api.http) = {
+            post: "/api/v1/SetClientMonitoringState",
             body: "*",
         };
     }

@@ -50,6 +50,7 @@ message ArtifactCollectorArgs {
 
 
 // This is stored in the ArtifactCollector state.
-message ArtifactCompressionDict {
-    repeated VQLEnv substs = 1;
+message ClientEventTable {
+    uint64 version = 1;
+    ArtifactCollectorArgs artifacts = 2;
 }

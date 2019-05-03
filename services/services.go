@@ -74,5 +74,10 @@ func StartServices(config_obj *api_proto.Config) (*ServicesManager, error) {
 	}
 	result.server_monitoring = server_monitoring
 
+	err = startClientMonitoringService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	return result, nil
 }

@@ -1,5 +1,4 @@
 <div class="navbar navbar-default toolbar">
-
   <div class="navbar-inner">
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
@@ -8,7 +7,7 @@
              ng-if="controller.mode == 'vfs_files'"
              class="btn btn-default btn-rounded"
              title="Refresh this directory (sync its listing with the client)"
-             ng-class="{'disabled': !controller.fileContext.clientId }"
+             ng-class="{'disabled': controller.lastRefreshOperationId }"
              ng-click="controller.startVfsRefreshOperation()">
           <img src="/static/images/stock_refresh.png" class="toolbar_icon" />
         </div>
@@ -26,7 +25,7 @@
           client-id="controller.fileContext.clientId"
           file-path="controller.fileContext.selectedFilePath"
           dir-path="controller.fileContext.selectedDirPath"
-          ng-if="controller.mode == 'server'"
+          mode="controller.mode"
           >
         </grr-add-item-button>
       </div>
