@@ -110,11 +110,6 @@ exports.routingModule
             template: '<grr-host-info />',
             title: 'Host Information'
           })
-          .state('client.launchFlows', {
-            url: '/launch-flow',
-            template: '<grr-start-flow-view />',
-            title: 'Launch Flows'
-          })
           .state('client.collectArtifacts', {
             url: '/artifact-collector',
             template: '<grr-artifact-collector />',

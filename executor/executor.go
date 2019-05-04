@@ -118,8 +118,8 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Run the plugin in the other thread and drain its messages
 	// to send to the server.
 	go func() {
+		defer close(receive_chan)
 		plugin.Run(config_obj, ctx, req, receive_chan)
-		close(receive_chan)
 	}()
 
 	for {

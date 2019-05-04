@@ -58,7 +58,17 @@
 
         <!-- Online status -->
         <td>
-          <grr-client-status-icons client="::item" />
+          <img class="grr-icon-small" name="clientStatusIcon"
+               ng-src="/static/images/online.png"
+               ng-if="item.last_seen_sec - controller.now < 60 * 15"/>
+
+          <img class="grr-icon-small" name="clientStatusIcon"
+               ng-src="/static/images/online-1d.png"
+               ng-if="item.last_seen_sec - controller.now  > 60 * 15 && controller.last_seen_sec - controller.now  < 60 * 60 * 24 "/>
+
+          <img class="grr-icon-small" name="clientStatusIcon"
+               ng-src="/static/images/online-1d.png"
+               ng-if="controller.last_seen_sec - controller.now  > 60 * 60 * 24" />
         </td>
 
         <!-- Subject -->

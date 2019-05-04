@@ -6,7 +6,6 @@ goog.module.declareLegacyNamespace();
 const {AddClientsLabelsDialogDirective} = goog.require('grrUi.client.addClientsLabelsDialogDirective');
 const {ClientContextDirective} = goog.require('grrUi.client.clientContextDirective');
 const {ClientDialogService} = goog.require('grrUi.client.clientDialogService');
-const {ClientStatusIconsDirective} = goog.require('grrUi.client.clientStatusIconsDirective');
 const {ClientUsernamesDirective} = goog.require('grrUi.client.clientUsernamesDirective');
 const {ClientsListDirective} = goog.require('grrUi.client.clientsListDirective');
 const {HostInfoDirective} = goog.require('grrUi.client.hostInfoDirective');
@@ -30,8 +29,6 @@ exports.clientModule.directive(
     ClientContextDirective.directive_name, ClientContextDirective);
 exports.clientModule.directive(
     ClientsListDirective.directive_name, ClientsListDirective);
-exports.clientModule.directive(
-    ClientStatusIconsDirective.directive_name, ClientStatusIconsDirective);
 exports.clientModule.directive(
     ClientUsernamesDirective.directive_name, ClientUsernamesDirective);
 exports.clientModule.directive(

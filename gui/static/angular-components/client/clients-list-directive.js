@@ -15,7 +15,8 @@ goog.module.declareLegacyNamespace();
  * @ngInject
  */
 const ClientsListController = function(
-    $scope, grrClientDialogService, grrRoutingService) {
+    $scope, grrClientDialogService, grrTimeService,
+    grrRoutingService) {
 
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
@@ -35,7 +36,8 @@ const ClientsListController = function(
   this.triggerUpdate;
 
   /** @export {Object.<string, Object>} */
-  this.clients = {};
+    this.clients = {};
+    this.now = grrTimeService.getCurrentTimeMs()/1000;
 
   /** @export {Object.<string, boolean>} */
   this.selectedClients = {};

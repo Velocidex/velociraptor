@@ -237,7 +237,10 @@ func startServerMonitoringService(config_obj *api_proto.Config) (
 		return nil, err
 	}
 
-	artifacts := flows_proto.ArtifactCollectorArgs{}
+	artifacts := flows_proto.ArtifactCollectorArgs{
+		Artifacts:  &flows_proto.Artifacts{},
+		Parameters: &flows_proto.ArtifactParameters{},
+	}
 	err = db.GetSubject(
 		config_obj,
 		constants.ServerMonitoringFlowURN,

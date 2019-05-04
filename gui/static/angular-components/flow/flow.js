@@ -17,8 +17,6 @@ const {FlowStatusIconDirective} = goog.require('grrUi.flow.flowStatusIconDirecti
 const {FlowReportDirective} = goog.require('grrUi.flow.flowReportDirective');
 const {FlowsListDirective} = goog.require('grrUi.flow.flowsListDirective');
 const {NewArtifactCollectionDirective} = goog.require('grrUi.flow.newArtifactCollectionDirective');
-const {StartFlowFormDirective} = goog.require('grrUi.flow.startFlowFormDirective');
-const {StartFlowViewDirective} = goog.require('grrUi.flow.startFlowViewDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 
 
@@ -54,8 +52,4 @@ exports.flowModule.directive(
 exports.flowModule.directive(
     FlowsListDirective.directive_name, FlowsListDirective);
 exports.flowModule.directive(
-    StartFlowFormDirective.directive_name, StartFlowFormDirective);
-exports.flowModule.directive(
     NewArtifactCollectionDirective.directive_name, NewArtifactCollectionDirective);
-exports.flowModule.directive(
-    StartFlowViewDirective.directive_name, StartFlowViewDirective);

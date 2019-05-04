@@ -5,24 +5,28 @@
   </div>
 
   <uib-tabset ng-if="flowId" active="controller.activeTab">
-    <uib-tab heading="Flow Information" index="''">
+    <uib-tab heading="Artifact Collection" index="''">
       <grr-flow-overview flow="controller.flow"
                          flow-id="flowId" api-base-path="apiBasePath"
                          ng-if="controller.tabsShown['']" />
     </uib-tab>
 
-    <uib-tab heading="Download" index="'download'">
-      <div class="card">
+    <uib-tab heading="Uploaded Files" index="'files'"
+             disable="!controller.flow.context.uploaded_files.length">
+      <div class="card" ng-if="controller.flow.context.uploaded_files">
+        <h5 class="card-header">Files uploaded</h5>
         <div class="card-body">
-          <h4 class="card-title">Download</h4>
-
-          <p class="card-text">
-            Click the link below to download the flow as a zip file.
-          </p>
-          <button class="btn btn-default"
-                  ng-click="controller.downloadFile()">
-            Download
-          </button>
+          <table datatable="ng"
+                 dt-instance="controller.dtInstance"
+                 dt-disable-deep-watchers="true"
+                 class="row-border hover dtable">
+            <thead><tr><th>Filename</th></tr></thead>
+            <tbody>
+              <tr ng-repeat="filename in controller.flow.context.uploaded_files track by $index">
+                <td>{$ filename $}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </uib-tab>

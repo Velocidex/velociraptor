@@ -34,21 +34,22 @@ FlowReportController.prototype.onFlowChange_ = function(
         this.selectedArtifact = this.scope_.artifactNames[0];
     }
 
-        var flow_id = this.scope_["flowId"];
-        var client_id = this.scope_["clientId"];
+    var flow_id = this.scope_["flowId"];
+    var client_id = this.scope_["clientId"];
 
-        this.reporting_params = {
-            "artifact": this.selectedArtifact,
-            "client_id": client_id,
-            "flowId": flow_id,
-            "type": "CLIENT",
-        };
+    this.reporting_params = {
+        "artifact": this.selectedArtifact,
+        "client_id": client_id,
+        "flowId": flow_id,
+        "type": "CLIENT",
+    };
 
-        this.artifactNames = this.scope_["artifactNames"];
-        if (!angular.isDefined(this.selectedArtifact) &&
-            this.artifactNames.length > 0 ) {
-            this.selectedArtifact = this.artifactNames[0];
-        }
+    this.artifactNames = this.scope_["artifactNames"];
+    if (!angular.isDefined(this.selectedArtifact) &&
+        angular.isDefined(this.artifactNames) &&
+        this.artifactNames.length > 0 ) {
+        this.selectedArtifact = this.artifactNames[0];
+    }
 };
 
 /**

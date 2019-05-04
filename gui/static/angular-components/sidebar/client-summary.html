@@ -1,5 +1,5 @@
 <div class="client-status toolbar-buttons"
-    ng-if="controller.clientInfo.last_seen_at"
+    ng-if="controller.clientInfo"
      >
   <div ng-if="controller.clientInfo.os_info.fqdn" class="client-name">
     {$ controller.clientInfo.os_info.fqdn $}
@@ -8,13 +8,22 @@
     {$ controller.clientInfo.client_id $}
   </div>
 
-  <!-- Output of the directives below depends on the current time (as
-       they depend on the time *passed since* the time the client was last
-       active. We have to refresh them every second, as Angular won't
-       detect the changes automatically (since source value - last_seen_at -
-       stays the same). -->
-  <grr-periodic-refresh interval="1000">
-    <grr-client-status-icons client="controller.clientInfo"></grr-client-status-icons>
-    {$ (controller.clientInfo.last_seen_at | grrTimeSince) $}
-  </grr-periodic-refresh>
+  <span class="centered">
+    <img class="grr-icon-small" name="clientStatusIcon"
+         ng-src="/static/images/online.png"
+         ng-if="controller.last_seen_sec < 60 * 15"
+         title="{$ controller.seen_ago $}" />
+
+    <img class="grr-icon-small" name="clientStatusIcon"
+         ng-src="/static/images/online-1d.png"
+         ng-if="controller.last_seen_sec > 60 * 15 && controller.last_seen_sec < 60 * 60 * 24 "
+         title="{$ controller.seen_ago $}" />
+
+    <img class="grr-icon-small" name="clientStatusIcon"
+         ng-src="/static/images/online-1d.png"
+         ng-if="controller.last_seen_sec > 60 * 60 * 24"
+         title="{$ controller.seen_ago $}" />
+  </span>
+  {{ controller.seen_ago }}
+
 </div>

@@ -15,34 +15,42 @@ goog.module.declareLegacyNamespace();
  * @param {!RoutingService} grrRoutingService
  * @ngInject
  */
-const ClientSummaryController =
-      function($scope, grrApiService, grrTimeService, grrRoutingService) {
+const ClientSummaryController = function($scope, $interval,
+                                         grrApiService,
+                                         grrTimeService,
+                                         grrRoutingService) {
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.timeService.TimeService} */
+    this.grrTimeService_ = grrTimeService;
 
-  /** @private {!grrUi.core.timeService.TimeService} */
-  this.grrTimeService_ = grrTimeService;
-
-  /** @private {!RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
-
-  /** @type {string} */
-  this.approvalReason;
+    /** @private {!RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
     /** @type {object} */
-  this.clientInfo = null;
-  this.clientId;
+    this.clientInfo = null;
 
-  this.scope_.$watch('clientId', this.onClientSelectionChange_.bind(this));
+    // How long did we see this client.
+    this.seen_ago;
 
-  // Subscribe to legacy grr events to be notified on client change.
-  this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
-      this.onClientSelectionChange_.bind(this), true);
+    this.clientId;
 
+    this.scope_.$watch('clientId',
+                       this.onClientSelectionChange_.bind(this));
+
+    // Subscribe to legacy grr events to be notified on client change.
+    this.grrRoutingService_.uiOnParamsChanged(
+        this.scope_, 'clientId',
+        this.onClientSelectionChange_.bind(this), true);
+
+    this.stop = $interval(this.onInterval_.bind(this), 1000);
+    this.scope_.$on('$destroy', function() {
+        $interval.cancel(this.stop);
+    });
 };
 
 /**
@@ -55,9 +63,7 @@ ClientSummaryController.prototype.onClientSelectionChange_ = function(clientId) 
   if (!clientId) {
     return; // Stil display the last client for convenience.
   }
-  if (clientId.indexOf('aff4:/') === 0) {
-    clientId = clientId.split('/')[1];
-  }
+
   if (this.clientId === clientId) {
     return;
   }
@@ -75,17 +81,54 @@ ClientSummaryController.prototype.onClientSelectionChange_ = function(clientId) 
 ClientSummaryController.prototype.onClientDetailsFetched_ = function(response) {
     this.clientInfo = response['data'];
 
-  // Check for the last crash.
-  if (this.clientInfo['last_crash_at']){
-    var currentTimeMs = this.grrTimeService_.getCurrentTimeMs();
-    var crashTime = this.clientInfo['last_crash_at'];
-    if (angular.isDefined(crashTime) &&
-        (currentTimeMs / 1000 - crashTime / 1000000) < 60 * 60 * 24) {
-      this.crashTime = crashTime;
+    // Check for the last crash.
+    if (this.clientInfo['last_crash_at']){
+        var currentTimeMs = this.grrTimeService_.getCurrentTimeMs();
+        var crashTime = this.clientInfo['last_crash_at'];
+        if (angular.isDefined(crashTime) &&
+            (currentTimeMs / 1000 - crashTime / 1000000) < 60 * 60 * 24) {
+            this.crashTime = crashTime;
+        }
     }
-  }
 };
 
+ClientSummaryController.prototype.onInterval_ = function() {
+    if (!angular.isDefined(this.clientInfo)) {
+        return;
+    }
+
+    var last_seen_at = this.clientInfo['last_seen_at'] || 0;
+    var currentTimeMs = this.grrTimeService_.getCurrentTimeMs();
+    var inputTimeMs = last_seen_at / 1000;
+
+    if (inputTimeMs < 1e-6) {
+        return '<invalid time value>';
+    }
+
+    var differenceSec = Math.abs(
+        Math.round((currentTimeMs - inputTimeMs) / 1000));
+    this.last_seen_sec = differenceSec;
+
+    var measureUnit;
+    var measureValue;
+    if (differenceSec < 60) {
+        measureUnit = 'seconds';
+        measureValue = differenceSec;
+    } else if (differenceSec < 60 * 60) {
+        measureUnit = 'minutes';
+        measureValue = Math.floor(differenceSec / 60);
+    } else if (differenceSec < 60 * 60 * 24) {
+        measureUnit = 'hours';
+        measureValue = Math.floor(differenceSec / (60 * 60));
+    } else {
+        measureUnit = 'days';
+        measureValue = Math.floor(differenceSec / (60 * 60 * 24));
+    }
+
+    if (currentTimeMs >= inputTimeMs) {
+        this.seen_ago = measureValue + ' ' + measureUnit + ' ago';
+    }
+};
 
 /**
  * Directive for displaying a client summary for the navigation.

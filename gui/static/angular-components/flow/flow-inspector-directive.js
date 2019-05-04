@@ -103,32 +103,6 @@ FlowInspectorController.prototype.onDirectiveArgumentsChange_ = function(newValu
 };
 
 /**
- * Downloades the file.
- *
- * @export
- */
-FlowInspectorController.prototype.downloadFile = function() {
-  var clientId = this.flow['client_id'];
-  var flow_id = this.flow['flow_id'];
-  var filename = clientId + '/' + flow_id;
-
-  // Sanitize filename for download.
-  var url = 'v1/download/' + filename.replace(/[^./a-zA-Z0-9]+/g, '_');
-  this.grrApiService_.downloadFile(url).then(
-    function success() {}.bind(this),
-    function failure(response) {
-      if (angular.isUndefined(response.status)) {
-        this.rootScope_.$broadcast(
-          ERROR_EVENT_NAME, {
-            message: 'Couldn\'t download file.'
-          });
-      }
-    }.bind(this)
-  );
-};
-
-
-/**
  * Handles controller's activeTab attribute changes and propagates them to the
  * directive's scope.
  *
