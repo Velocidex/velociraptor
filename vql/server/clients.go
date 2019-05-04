@@ -70,7 +70,8 @@ func (self ClientsPlugin) Call(
 
 		// If a client id is specifies we do not need to search at all.
 		if arg.ClientId != "" {
-			api_client, err := api.GetApiClient(config_obj, arg.ClientId, false)
+			api_client, err := api.GetApiClient(
+				config_obj, nil, arg.ClientId, false)
 			if err == nil {
 				output_chan <- api_client
 			}
@@ -85,7 +86,8 @@ func (self ClientsPlugin) Call(
 		for _, client_id := range db.SearchClients(
 			config_obj, constants.CLIENT_INDEX_URN,
 			search, "", 0, 1000000) {
-			api_client, err := api.GetApiClient(config_obj, client_id, false)
+			api_client, err := api.GetApiClient(
+				config_obj, nil, client_id, false)
 			if err == nil {
 				output_chan <- api_client
 			}

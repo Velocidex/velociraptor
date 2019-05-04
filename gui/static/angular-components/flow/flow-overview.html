@@ -3,82 +3,82 @@
 </div>
 
 <div ng-if="flow">
-    <grr-force-refresh refresh-trigger="flow">
-      <div class="row">
-          <div class="col-sm-6">
-            <div class="card">
-              <h5 class="card-header">Overview</h5>
-              <div class="card-body">
-                <dl class="dl-horizontal dl-flow">
-                  <dt>Artifact Names</dt>
-                  <dd>
-                    <grr-semantic-value value="::flow.context.artifacts" />
-                    <grr-semantic-value
-                      ng-if="!flow.context.artifacts"
-                      value="::flow.name"/>
-                  </dd>
+  <grr-force-refresh refresh-trigger="flow">
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="card">
+          <h5 class="card-header">Overview</h5>
+          <div class="card-body">
+            <dl class="dl-horizontal dl-flow">
+              <dt>Artifact Names</dt>
+              <dd>
+                <grr-semantic-value value="::flow.context.artifacts" />
+                <grr-semantic-value
+                  ng-if="!flow.context.artifacts"
+                  value="::flow.name"/>
+              </dd>
 
-                  <dt>Flow ID</dt>
-                  <dd> {{ ::flow.flow_id }}</dd>
+              <dt>Flow ID</dt>
+              <dd> {{ ::flow.flow_id }}</dd>
 
-                  <dt>Creator</dt>
-                  <dd>{{ ::flow.runner_args.creator }}</dd>
+              <dt>Creator</dt>
+              <dd>{{ ::flow.runner_args.creator }}</dd>
 
-                  <dt>Start Time</dt>
-                  <dd><grr-timestamp value="flow.context.create_time" /></dd>
+              <dt>Start Time</dt>
+              <dd><grr-timestamp value="flow.context.create_time" /></dd>
 
-                  <dt>Last Active</dt>
-                  <dd><grr-timestamp value="flow.context.active_time" /></dd>
+              <dt>Last Active</dt>
+              <dd><grr-timestamp value="flow.context.active_time" /></dd>
 
-                  <dt>State</dt>
-                  <dd>{{::flow.context.state}}</dd>
-                  <br>
-                </dl>
+              <dt>State</dt>
+              <dd>{{::flow.context.state}}</dd>
+              <br>
+            </dl>
 
-                <h5> Parameters </h5>
-                <dl class="dl-horizontal dl-flow">
-                  <div ng-repeat="item in ::flow.runner_args.args.parameters.env">
-                    <dt>{{item.key}}</dt>
-                    <dd>{{item.value}}</dd>
-                  </div>
-                </dl>
-
+            <h5> Parameters </h5>
+            <dl class="dl-horizontal dl-flow">
+              <div ng-repeat="item in ::flow.runner_args.args.parameters.env">
+                <dt>{{item.key}}</dt>
+                <dd>{{item.value}}</dd>
               </div>
-            </div>
+            </dl>
+
           </div>
-          <div class="col-sm-6">
+        </div>
+      </div>
+      <div class="col-sm-6">
 
-            <div class="card">
-              <h5 class="card-header">Results</h5>
-              <div class="card-body">
-                <dl class="dl-horizontal dl-flow">
-                  <dt>Artifacts with Results</dt>
-                  <dd>
-                    <grr-semantic-value value="::flow.context.artifacts_with_results" />
-                  </dd>
+        <div class="card">
+          <h5 class="card-header">Results</h5>
+          <div class="card-body">
+            <dl class="dl-horizontal dl-flow">
+              <dt>Artifacts with Results</dt>
+              <dd>
+                <grr-semantic-value value="::flow.context.artifacts_with_results" />
+              </dd>
 
-                  <dt>Files uploaded</dt>
-                  <dd> {{ ::flow.context.uploaded_files.length || 0 }} </dd>
+              <dt>Files uploaded</dt>
+              <dd> {{ ::flow.context.uploaded_files.length || 0 }} </dd>
 
-                  <dt>Download Results</dt>
-                  <dd>
-                    <button class="btn btn-default"
-                            ng-click="controller.downloadFile()">
-                      Download
-                    </button>
-                  </dd>
-                </dl>
+              <dt>Download Results</dt>
+              <dd>
+                <button class="btn btn-default"
+                        ng-click="controller.downloadFile()">
+                  Download
+                </button>
+              </dd>
+            </dl>
 
-              </div>
-            </div>
           </div>
+        </div>
       </div>
-      <div ng-if="::flow.internal_error">
-        <br>
-        <dt class="alert-danger danger">Error while Opening</dt>
-        <dd>{$ ::flow.internal_error $}</dd>
-        <br><br>
-      </div>
+    </div>
+    <div ng-if="::flow.internal_error">
+      <br>
+      <dt class="alert-danger danger">Error while Opening</dt>
+      <dd>{$ ::flow.internal_error $}</dd>
+      <br><br>
+    </div>
 
-    </grr-force-refresh>
+  </grr-force-refresh>
 </div>

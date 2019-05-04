@@ -21,16 +21,20 @@ import (
 	"errors"
 	"net"
 	"strings"
+	"time"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/server"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 func GetApiClient(
-	config_obj *api_proto.Config, client_id string, detailed bool) (
+	config_obj *api_proto.Config,
+	server_obj *server.Server,
+	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 
 	if client_id[0] != 'C' {
@@ -92,6 +96,13 @@ func GetApiClient(
 
 	result.LastSeenAt = client_info.Ping
 	result.LastIp = client_info.IpAddress
+
+	// Update the time to now if the client is currently actually
+	// connected.
+	if server_obj != nil &&
+		server_obj.NotificationPool.IsClientConnected(client_id) {
+		result.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
+	}
 
 	remote_address := strings.Split(result.LastIp, ":")[0]
 	if _is_ip_in_ranges(remote_address, config_obj.GUI.InternalCidr) {

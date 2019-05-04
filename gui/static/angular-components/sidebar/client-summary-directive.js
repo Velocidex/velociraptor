@@ -48,9 +48,21 @@ const ClientSummaryController = function($scope, $interval,
         this.onClientSelectionChange_.bind(this), true);
 
     this.stop = $interval(this.onInterval_.bind(this), 1000);
+
+    // Refresh client information every 10 seconds to ensure we pick
+    // up clients coming online.
+    this.clientDetailsRefresher = $interval(function() {
+        if (angular.isDefined(this.clientId)) {
+            var url = 'v1/GetClient/' + this.clientId;
+            this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
+        }
+    }.bind(this), 10000);
+
     this.scope_.$on('$destroy', function() {
         $interval.cancel(this.stop);
+        $interval.cancel(this.clientDetailsRefresher);
     });
+
 };
 
 /**
@@ -60,16 +72,17 @@ const ClientSummaryController = function($scope, $interval,
  * @private
  */
 ClientSummaryController.prototype.onClientSelectionChange_ = function(clientId) {
-  if (!clientId) {
-    return; // Stil display the last client for convenience.
-  }
+    if (!clientId) {
+        return; // Stil display the last client for convenience.
+    }
 
-  if (this.clientId === clientId) {
-    return;
-  }
+    if (this.clientId === clientId) {
+        return;
+    }
+    this.clientId = clientId;
 
-  var url = 'v1/GetClient/' + clientId;
-  this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
+    var url = 'v1/GetClient/' + clientId;
+    this.grrApiService_.get(url).then(this.onClientDetailsFetched_.bind(this));
 };
 
 /**
@@ -111,7 +124,10 @@ ClientSummaryController.prototype.onInterval_ = function() {
 
     var measureUnit;
     var measureValue;
-    if (differenceSec < 60) {
+    if (differenceSec < 15) {
+        this.seen_ago = "connected";
+        return;
+    } else if (differenceSec < 60) {
         measureUnit = 'seconds';
         measureValue = differenceSec;
     } else if (differenceSec < 60 * 60) {

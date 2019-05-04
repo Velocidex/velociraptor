@@ -295,7 +295,8 @@ func (self *ApiServer) ListClients(
 		if in.NameOnly || query_type == "key" {
 			result.Names = append(result.Names, client_id)
 		} else {
-			api_client, err := GetApiClient(self.config, client_id, false)
+			api_client, err := GetApiClient(
+				self.config, self.server_obj, client_id, false)
 			if err == nil {
 				result.Items = append(result.Items, api_client)
 			}
@@ -350,6 +351,7 @@ func (self *ApiServer) GetClient(
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
 	api_client, err := GetApiClient(
 		self.config,
+		self.server_obj,
 		in.ClientId,
 		!in.Lightweight, // Detailed
 	)
@@ -558,7 +560,7 @@ func (self *ApiServer) SetArtifactFile(
 			"details":       fmt.Sprintf("%v", in.Artifact),
 		}).Info("SetArtifactFile")
 
-	err := setArtifactFile(self.config, in.VfsPath, in.Artifact)
+	err := setArtifactFile(self.config, in.Artifact)
 	if err != nil {
 		return &api_proto.APIResponse{
 			Error:        true,

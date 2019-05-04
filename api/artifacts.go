@@ -19,7 +19,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"path"
 	"regexp"
 	"sort"
@@ -77,25 +76,17 @@ func getArtifactFile(
 	return default_artifact, nil
 }
 
-func setArtifactFile(config_obj *api_proto.Config,
-	vfs_path string, artifact string) error {
-
-	vfs_path = path.Clean(vfs_path)
-	if vfs_path == "" || !strings.HasSuffix(vfs_path, ".yaml") {
-		return errors.New("artifact filename must end with .yaml")
-	}
-
-	if !strings.HasPrefix(vfs_path, constants.ARTIFACT_DEFINITION) {
-		return errors.New("artifacts may only be stored in " +
-			constants.ARTIFACT_DEFINITION)
-	}
+func setArtifactFile(config_obj *api_proto.Config, artifact string) error {
 
 	// First ensure that the artifact is correct.
 	tmp_repository := artifacts.NewRepository()
-	_, err := tmp_repository.LoadYaml(artifact)
+	artifact_definition, err := tmp_repository.LoadYaml(artifact)
 	if err != nil {
 		return err
 	}
+
+	vfs_path := path.Join(constants.ARTIFACT_DEFINITION,
+		artifacts.NameToPath(artifact_definition.Name))
 
 	// Now write it into the filestore.
 	file_store_factory := file_store.GetFileStore(config_obj)

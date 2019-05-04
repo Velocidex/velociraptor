@@ -78,9 +78,6 @@ const FileViewController = function(
   /** @type {string} */
   this.tab = 'stats';
 
-  /** @type {number|undefined} */
-  this.fileVersion;
-
   /** @type {string} */
   this.clientId;
 
@@ -89,7 +86,6 @@ const FileViewController = function(
       this.onUrlRoutingParamsChanged_.bind(this));
 
   this.scope_.$watchGroup(['controller.selectedDirPath',
-                           'controller.fileVersion',
                            'controller.tab'],
                           this.onFileContextRoutingParamsChange_.bind(this));
 };
@@ -106,7 +102,6 @@ const FileViewController = function(
 FileViewController.prototype.onUrlRoutingParamsChanged_ = function(params) {
   this.clientId = params[0];
   this.selectedDirPath = params[1];
-  this.fileVersion = parseInt(params[2], 10) || undefined;
   this.tab = params[3] || 'stats';
 };
 
@@ -120,7 +115,6 @@ FileViewController.prototype.onFileContextRoutingParamsChange_ = function() {
   var params = {
     path: this.selectedDirPath,
   };
-  params['version'] = this.fileVersion || undefined;
   if (!this.tab || this.tab == 'stats') {
     params['tab'] = undefined;
   } else {

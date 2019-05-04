@@ -55,9 +55,6 @@ const AddItemButtonController = function(
                             this.onClientOrPathChange_.bind(this));
 
     /** @type {?string} */
-    this.path;
-
-    /** @type {?string} */
     this.value;
 
     // Used to add server monitoring artifacts.
@@ -65,6 +62,8 @@ const AddItemButtonController = function(
 };
 
 AddItemButtonController.prototype.onClientOrPathChange_ = function() {
+    return;
+
     var self =this;
 
     var is_valid_path = function(path) {
@@ -115,7 +114,6 @@ AddItemButtonController.prototype.updateArtifactDefinitions = function() {
 AddItemButtonController.prototype.saveArtifact = function() {
     var url = 'v1/SetArtifactFile';
     var params = {
-        vfs_path: this.path,
         artifact: this.value,
     };
     this.grrApiService_.post(url, params).then(function(response) {

@@ -19,8 +19,9 @@ package flows
 
 import (
 	"crypto/rand"
+	"encoding/base32"
+	"encoding/binary"
 	"encoding/csv"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -676,16 +677,18 @@ func StartFlow(
 	return &flow_obj.Urn, nil
 }
 
+// The Flow ID has 4 bytes of the time/date and 4 bytes of
+// random. This allows it to be sorted by time.
 func GetNewFlowIdForClient(client_id string) string {
-	result := make([]byte, 8)
-	buf := make([]byte, 4)
-
+	buf := make([]byte, 8)
 	rand.Read(buf)
-	hex.Encode(result, buf)
+
+	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return urns.BuildURN(
 		"clients", client_id,
-		"flows", constants.FLOW_PREFIX+string(result))
+		"flows", constants.FLOW_PREFIX+result)
 }
 
 func StoreResultInFlow(

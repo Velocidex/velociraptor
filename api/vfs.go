@@ -53,7 +53,7 @@ type DownloadInfo struct {
 type FileInfoRow struct {
 	Name      string        `json:"Name"`
 	Size      int64         `json:"Size"`
-	Timestamp time.Time     `json:"Timestamp"`
+	Timestamp string        `json:"Timestamp"`
 	Mode      string        `json:"Mode"`
 	Download  *DownloadInfo `json:"Download"`
 	Mtime     time.Time     `json:"mtime"`
@@ -184,7 +184,7 @@ func renderFileStore(
 			row := &FileInfoRow{
 				Name:      item.Name(),
 				Size:      item.Size(),
-				Timestamp: item.ModTime(),
+				Timestamp: item.ModTime().Format("2006-01-02 15:04:05"),
 			}
 
 			if item.IsDir() {
