@@ -147,6 +147,11 @@ func (self *VInterrogate) ProcessMessage(
 		vql_response, ok := responder.ExtractGrrMessagePayload(
 			message).(*actions_proto.VQLResponse)
 		if ok {
+			err = artifacts.Deobfuscate(config_obj, vql_response)
+			if err != nil {
+				return err
+			}
+
 			client_info.Info = append(client_info.Info, vql_response)
 			switch vql_response.Query.Name {
 			case "System Info":

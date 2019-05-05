@@ -205,7 +205,6 @@ exports.HostInfoDirective = function() {
   return {
     scope: {
       'clientId': '=',
-      'readOnly': '='
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/client/host-info.html',

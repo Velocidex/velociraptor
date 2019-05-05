@@ -1,17 +1,72 @@
-<div grr-force-refresh refresh-trigger="controller.fileContext.selectedRow">
-  <table class="table table-striped table-condensed table-hover
-                table-bordered full-width">
-    <thead>
-      <tr>
-        <th>Attribute</th>
-        <th>Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr ng-repeat="(key, value) in controller.fileContext.selectedRow">
-        <td>{{ key }}</td>
-        <td>{{ value }}</td>
-      </tr>
-    </tbody>
-  </table>
+
+<div class="card" ng-if="!controller.fileContext.selectedRow.Name">
+  <h5 class="card-header">Click on a file in the table above.</h5>
+</div>
+
+<div class="card-deck" ng-if="controller.fileContext.selectedRow.Name">
+  <div class="card" >
+    <h5 class="card-header">{$ controller.fileContext.selectedRow._FullPath ||
+      controller.fileContext.selectedRow.Name
+      $}</h5>
+    <div class="card-body">
+      <div grr-force-refresh refresh-trigger="controller.fileContext.selectedRow">
+        <dl class="dl-horizontal dl-flow">
+          <dt>Size</dt>
+          <dd>
+            {$ controller.fileContext.selectedRow.Size $}
+          </dd>
+
+          <dt>Mode</dt>
+          <dd> {{ controller.fileContext.selectedRow.Mode }}</dd>
+
+          <dt>Mtime</dt>
+          <dd>{{ controller.fileContext.selectedRow.mtime }}</dd>
+
+          <dt>Atime</dt>
+          <dd> {{ controller.fileContext.selectedRow.atime }}</dd>
+
+          <dt>Ctime</dt>
+          <dd>{{ controller.fileContext.selectedRow.ctime }}</dd>
+
+          <div ng-if="controller.fileContext.selectedRow.Download">
+            <dt >
+              Last Collected
+            </dt>
+            <dd>
+              <grr-timestamp value="controller.fileContext.selectedRow.Download.mtime" />
+              <a ng-click="controller.downloadFile()">
+                <i class="fa fa-download"></i>Download
+              </a>
+            </dd>
+          </div>
+
+          <div ng-if="controller.fileContext.selectedRow.Mode[0] == '-' && controller.fileContext.clientId">
+            <dt>Fetch from Client</dt>
+            <dd>
+              <button class="btn btn-default"
+                      ng-click="controller.updateFile()"
+                      ng-disabled="controller.updateInProgress">
+                <i class="fa fa-refresh"
+                   ng-class="{'fa-spin': controller.updateInProgress}"></i>
+                {{ controller.fileContext.selectedRow.Dowload ? 'Re-Collect' : 'Collect' }} from the client
+              </button>
+            </dd>
+          </div>
+        </dl>
+
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card" ng-if="controller.fileContext.selectedRow._Data" >
+    <h5 class="card-header">Properties </h5>
+    <div class="card-body">
+      <dl class="dl-horizontal dl-flow">
+        <div ng-repeat="(key, value) in controller.fileContext.selectedRow._Data">
+          <dt>{{key}}</dt><dd>{{value}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
 </div>

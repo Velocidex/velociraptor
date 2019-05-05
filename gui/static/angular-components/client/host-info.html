@@ -1,29 +1,7 @@
 <div ng-if="controller.client">
-
-  <h1>
-    {$ controller.client.os_info.fqdn $}
-    <span>{$ controller.clientId $}</span>
-  </h1>
-
-  <div ng-if="!readOnly">
-    <grr-check-client-access client-id="controller.clientId" no-redirect="true"
-                             out-has-access="controller.hasClientAccess">
-    </grr-check-client-access>
-
-    <div class="no-approval alert alert-danger alert-block"
-         ng-if="controller.hasClientAccess !== undefined && !controller.hasClientAccess">
-      <i class="fa fa-warning"></i> You do not have an <b>approval</b> for this client. <br/>
-
-      <button name="requestApproval" class="btn btn-default"
-              ng-click="controller.requestApproval()">Request Approval</button>
-    </div>
-  </div>
-
   <!-- Toolbar -->
-  <div class="client-actions">
-
-    <button ng-if="!readOnly"
-            class="btn btn-default"
+  <div class="client-info">
+    <button class="btn btn-default"
             ng-click="controller.interrogate()"
             ng-disabled="controller.interrogateOperationId">
       <i class="fa fa-search-plus"
@@ -31,6 +9,16 @@
       <i class="fa fa-spinner fa-spin fa-fw"
           ng-if="controller.interrogateOperationId"></i>
       Interrogate
+    </button>
+
+    <button class="btn btn-default" grr-nav-link state="client.vfs" >
+      <i class="fa fa-folder-open-o"></i>
+      VFS
+    </button>
+
+    <button class="btn btn-default" grr-nav-link state="client.flows" >
+      <i class="fa fa-history"></i>
+      Collected
     </button>
 
     <div class="btn-group" data-toggle="buttons">
@@ -41,30 +29,67 @@
         <input type="radio" name="show-client-details"> VQL Drilldown
       </label>
     </div>
-
     <div class="clearfix"></div>
-  </div>
 
+    <!-- Client Details -->
+    <div class="card">
+      <h5 class="card-header">{$ controller.client.os_info.fqdn $}</h5>
+      <div class="card-body">
+        <div class="client-details" ng-if="!controller.showDetails"
+             grr-force-refresh refresh-trigger="controller.client">
 
-  <!-- Client Details -->
-  <div class="client-details" ng-if="!controller.showDetails"
-       grr-force-refresh refresh-trigger="controller.client">
-    <grr-semantic-proto
-       type="ApiClient"
-       client="::controller.client"
-       value="::controller.client"
-       hidden-fields="['info']">
-    </grr-semantic-proto>
-  </div>
+          <dl class="dl-horizontal dl-flow">
+            <dt>Client ID</dt>
+            <dd>
+              {$ controller.clientId $}
+            </dd>
 
-  <!-- Shows the full view on the client with all properties and in full details -->
-  <div class="client-details"
-       ng-if="controller.showDetails"
-       grr-force-refresh refresh-trigger="controller.client">
-    <div ng-repeat="item in ::controller.client.info">
-      <grr-vql
-         value="::item">
-      </grr-vql>
+            <dt>Agent Version</dt>
+            <dd> {{ controller.client.agent_information.version }}</dd>
+
+            <dt>Agent Name</dt>
+            <dd>{{ controller.client.agent_information.name }}</dd>
+
+            <dt>Last Seen At</dt>
+            <dd><grr-timestamp value="controller.client.last_seen_at" /></dd>
+
+            <dt>Last Seen IP</dt>
+            <dd>{{ controller.client.last_ip }}</dd>
+          </dl>
+          <hr />
+          <dl class="dl-horizontal dl-flow">
+            <dt>Operating System</dt>
+            <dd>
+              {$ controller.client.os_info.system $}
+            </dd>
+
+            <dt>Hostname</dt>
+            <dd>
+              {$ controller.client.os_info.fqdn $}
+            </dd>
+
+            <dt>Release</dt>
+            <dd>
+              {$ controller.client.os_info.release $}
+            </dd>
+
+            <dt>Architecture</dt>
+            <dd>
+              {$ controller.client.os_info.machine $}
+            </dd>
+
+          </dl>
+        </div>
+        <!-- Shows the full view on the client with all properties and in full details -->
+        <div class="client-details"
+             ng-if="controller.showDetails"
+             grr-force-refresh refresh-trigger="controller.client">
+          <div ng-repeat="item in controller.client.info">
+            <grr-vql value="item">
+            </grr-vql>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

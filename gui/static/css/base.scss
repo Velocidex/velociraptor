@@ -651,7 +651,7 @@ img.toolbar-buttons {
 }
 
 .tab-content {
-  margin-top: 1em;
+  margin-top: 0em;
 }
 
 dd.histogram {
@@ -1034,6 +1034,11 @@ table.table tbody {
 .nav-pills li.active .nav-link {
     width: 200px;
     background-color: #9f9f9f;
+}
+
+button a.nav-link {
+    padding: 0px;
+    color: black;
 }
 
 

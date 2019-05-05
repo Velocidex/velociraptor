@@ -839,11 +839,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:681b5c9f1871b03df819963f6ec6d8bbb2f07823e219d08609420285b503c84f"
+  digest = "1:809eec415ea26d0b77aac243107b57355c61cae858721254a0a97f62ecea74e5"
   name = "www.velocidex.com/golang/go-ntfs"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ad76b9975280b9f15c1d1e9b8a6a8d96721cf5d3"
+  revision = "1fe4c7fe70fb96470ede11ad9f43e7798824ef63"
 
 [[projects]]
   branch = "master"

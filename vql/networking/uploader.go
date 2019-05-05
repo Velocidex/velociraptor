@@ -22,6 +22,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -81,6 +82,7 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 
 	result := filepath.Join(components...)
 	if runtime.GOOS == "windows" {
+		result, _ = filepath.Abs(result)
 		return "\\\\?\\" + result
 	}
 
@@ -106,7 +108,8 @@ func (self *FileBasedUploader) Upload(
 	file_path := self.sanitize_path(store_as_name)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
-		scope.Log("Can not create dir: %s", err.Error())
+		scope.Log("Can not create dir: %s(%s) %s", store_as_name,
+			file_path, err.Error())
 		return nil, err
 	}
 
@@ -174,6 +177,7 @@ func (self *VelociraptorUploader) Upload(
 
 	for {
 		read_bytes, err := reader.Read(buffer)
+		fmt.Printf("Reading %v %d\n", filename, read_bytes)
 		if read_bytes == 0 {
 			result.Size = offset
 			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))

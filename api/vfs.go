@@ -59,6 +59,8 @@ type FileInfoRow struct {
 	Mtime     time.Time     `json:"mtime"`
 	Atime     time.Time     `json:"atime"`
 	Ctime     time.Time     `json:"ctime"`
+	FullPath  string        `json:"_FullPath"`
+	Data      interface{}   `json:"_Data"`
 }
 
 // Render the root level psuedo directory. This provides anchor points
@@ -185,6 +187,7 @@ func renderFileStore(
 				Name:      item.Name(),
 				Size:      item.Size(),
 				Timestamp: item.ModTime().Format("2006-01-02 15:04:05"),
+				FullPath:  path.Join(vfs_path, item.Name()),
 			}
 
 			if item.IsDir() {
