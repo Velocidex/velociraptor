@@ -38,6 +38,9 @@ const (
 description: |
    This is the human readable description of the artifact.
 
+# Can be CLIENT, EVENT, SERVER, SERVER_EVENT
+type: CLIENT
+
 parameters:
    - name: FirstParameter
      default: Default Value of first parameter
@@ -49,6 +52,14 @@ sources:
     queries:
     - |
       SELECT * FROM scope()
+
+
+# Reports can be MONITORING_DAILY, CLIENT
+reports:
+  - type: CLIENT
+    template: |
+      {{ .Description }}
+
 `
 )
 
@@ -77,7 +88,6 @@ func getArtifactFile(
 }
 
 func setArtifactFile(config_obj *api_proto.Config, artifact string) error {
-
 	// First ensure that the artifact is correct.
 	tmp_repository := artifacts.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(artifact)
@@ -246,7 +256,7 @@ func searchArtifact(
 		if pres {
 			// Skip non matching types
 			if artifact_type != "" &&
-				strings.ToLower(artifact.Type) != artifact_type {
+				artifact.Type != artifact_type {
 				continue
 			}
 

@@ -106,7 +106,7 @@ ClientSummaryController.prototype.onClientDetailsFetched_ = function(response) {
 };
 
 ClientSummaryController.prototype.onInterval_ = function() {
-    if (!angular.isDefined(this.clientInfo)) {
+    if (!angular.isObject(this.clientInfo)) {
         return;
     }
 

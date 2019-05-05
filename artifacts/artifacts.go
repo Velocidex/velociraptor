@@ -66,12 +66,15 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 			}
 
 			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
-				artifact, err := Parse(file_path)
+				data, err := ioutil.ReadFile(file_path)
 				if err != nil {
-					return errors.Wrap(err,
-						path.Join(dirname, info.Name()))
+					return errors.WithStack(err)
 				}
-				self.Data[artifact.Name] = artifact
+				_, err = self.LoadYaml(string(data))
+				if err != nil {
+					return err
+				}
+
 				count += 1
 			}
 			return nil
@@ -86,16 +89,34 @@ func (self *Repository) LoadYaml(data string) (*artifacts_proto.Artifact, error)
 	}
 	artifact.Raw = data
 
+	// Validate the artifact.
+	for _, report := range artifact.Reports {
+		report.Type = strings.ToLower(report.Type)
+		switch report.Type {
+		case "monitoring_daily", "server_event", "client":
+			continue
+		default:
+			return nil, errors.New(fmt.Sprintf("Invalid report type %s",
+				report.Type))
+		}
+	}
+
 	// Normalize the type.
 	artifact.Type = strings.ToLower(artifact.Type)
 	switch artifact.Type {
-	case "", "normal", "event", "server", "server_event":
-		self.Data[artifact.Name] = artifact
-		return artifact, nil
+	case "":
+		// By default use the client type.
+		artifact.Type = "client"
+
+	case "client", "event", "server", "server_event":
+		// These types are acceptable.
 
 	default:
 		return nil, errors.New("Artifact type invalid.")
 	}
+
+	self.Data[artifact.Name] = artifact
+	return artifact, nil
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {

@@ -50,7 +50,13 @@ var (
 	deviceDirectoryRegex = regexp.MustCompile(
 		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
 
-	// Cache raw devices for a given time.
+	// Cache raw devices for a given time. Note that the cache is
+	// only alive for the duration of a single VQL query
+	// (including its subqueries). The query will close the cache
+	// after it terminates. The cache helps in the case where
+	// subqueries need to open the same device. For long running
+	// queries, the cache will refresh every 10 minutes to get a
+	// fresh view of the data.
 	mu        sync.Mutex
 	fd_cache  map[string]*PagedReader // Protected by mutex
 	timestamp time.Time               // Protected by mutex
@@ -175,8 +181,9 @@ func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 			mu.Lock()
 			defer mu.Unlock()
 
-			for _, v := range fd_cache {
+			for k, v := range fd_cache {
 				v.fd.Close()
+				delete(fd_cache, k)
 			}
 		}
 	}()
