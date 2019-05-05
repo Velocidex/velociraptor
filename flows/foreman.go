@@ -41,6 +41,7 @@ import (
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -110,12 +111,18 @@ func (self *Foreman) ProcessMessage(
 
 	// Nop - we need to lock and examine the hunts more carefully.
 	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+		// Hunt is stopped we dont care about it.
+		if hunt.State != api_proto.Hunt_RUNNING {
+			return nil
+		}
+
 		// This hunt is not relevant to this client.
 		if hunt.StartTime <= client_last_timestamp {
 			return nil
 		}
 
-		flow_condition_query, err := calculateFlowConditionQuery(hunt)
+		flow_condition_query, err := calculateFlowConditionQuery(
+			config_obj, hunt)
 		if err != nil {
 			return err
 		}
@@ -146,12 +153,16 @@ func (self *Foreman) ProcessMessage(
 	})
 }
 
-func calculateFlowConditionQuery(hunt *api_proto.Hunt) (
+func calculateFlowConditionQuery(
+	config_obj *api_proto.Config,
+	hunt *api_proto.Hunt) (
 	*actions_proto.VQLCollectorArgs, error) {
 
 	// TODO.
 
-	return getDefaultCollectorArgs(hunt.HuntId), nil
+	default_query := getDefaultCollectorArgs(hunt.HuntId)
+	err := artifacts.Obfuscate(config_obj, default_query)
+	return default_query, err
 }
 
 func getDefaultCollectorArgs(hunt_id string) *actions_proto.VQLCollectorArgs {

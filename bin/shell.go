@@ -26,11 +26,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/c-bata/go-prompt"
+	prompt "github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -90,6 +91,9 @@ func shell_executor(config_obj *api_proto.Config,
 			},
 		},
 	}
+
+	// Obfuscate the artifact from the client.
+	artifacts.Obfuscate(config_obj, vql_request)
 
 	urn := urns.BuildURN(
 		"clients", *shell_client,

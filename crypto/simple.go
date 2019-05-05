@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"sync"
 
 	errors "github.com/pkg/errors"
@@ -43,7 +44,7 @@ func (self *Obfuscator) Encrypt(config_obj *api_proto.Config, name string) (
 	cipher_text := make([]byte, len(plain_text))
 	mode.CryptBlocks(cipher_text, plain_text)
 
-	return hex.EncodeToString(cipher_text), nil
+	return "$" + hex.EncodeToString(cipher_text), nil
 }
 
 func (self *Obfuscator) generateCrypter(config_obj *api_proto.Config) error {
@@ -66,7 +67,13 @@ func (self *Obfuscator) Decrypt(config_obj *api_proto.Config, name string) (
 		return "", nil
 	}
 
-	cipher_text, err := hex.DecodeString(name)
+	// Not obfuscated
+	if name[0] != '$' {
+		fmt.Printf("Name %s is not obfuscated\n", name)
+		return name, nil
+	}
+
+	cipher_text, err := hex.DecodeString(name[1:])
 	if err != nil {
 		return "", err
 	}

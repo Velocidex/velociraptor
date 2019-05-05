@@ -87,12 +87,12 @@ func (self *MonitoringFlow) ProcessMessage(
 			return nil
 		}
 
-		if !config_obj.Frontend.DoNotCompressArtifacts {
-			err := artifacts.Deobfuscate(config_obj, response)
-			if err != nil {
-				return err
-			}
+		// Deobfuscate the response if needed.
+		err := artifacts.Deobfuscate(config_obj, response)
+		if err != nil {
+			return err
 		}
+
 		// Write the response on the journal.
 		gJournalWriter.Channel <- &Event{
 			Config:    config_obj,

@@ -124,10 +124,6 @@ func (self *ClientEventTable) Update(
 		event_table.Event = append(event_table.Event, vql_collector_args)
 
 		// Compress the VQL on the way out.
-		if config_obj.Frontend.DoNotCompressArtifacts {
-			continue
-		}
-
 		err = artifacts.Obfuscate(config_obj, vql_collector_args)
 		if err != nil {
 			return err

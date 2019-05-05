@@ -97,6 +97,11 @@ func (self *VInterrogate) Start(
 		return err
 	}
 
+	err = artifacts.Obfuscate(config_obj, vql_request)
+	if err != nil {
+		return err
+	}
+
 	err = QueueMessageForClient(
 		config_obj, flow_obj,
 		"VQLClientAction",

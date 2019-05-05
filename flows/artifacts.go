@@ -106,11 +106,9 @@ func (self *ArtifactCollector) Start(
 		return err
 	}
 
-	if !config_obj.Frontend.DoNotCompressArtifacts {
-		err = artifacts.Obfuscate(config_obj, vql_collector_args)
-		if err != nil {
-			return err
-		}
+	err = artifacts.Obfuscate(config_obj, vql_collector_args)
+	if err != nil {
+		return err
 	}
 
 	return QueueMessageForClient(
@@ -154,13 +152,11 @@ func (self *ArtifactCollector) ProcessMessage(
 		}
 
 		// Restore strings from flow state.
-		if !config_obj.Frontend.DoNotCompressArtifacts {
-			err := artifacts.Deobfuscate(config_obj, response)
-			if err != nil {
-				return err
-			}
-
+		err := artifacts.Deobfuscate(config_obj, response)
+		if err != nil {
+			return err
 		}
+
 		log_path := CalculateArtifactResultPath(
 			flow_obj.RunnerArgs.ClientId,
 			response.Query.Name,
