@@ -79,6 +79,9 @@ func (self *UserNotificationManager) HandleNotification(
 	writer, pres := self.writers[message.Username]
 	if !pres {
 		file_store_factory := file_store.GetFileStore(self.config_obj)
+
+		// Writer is added to cache and closed when the
+		// manager is closed.
 		fd, err := file_store_factory.WriteFile(
 			path.Join("/users/", message.Username,
 				"notifications.csv"))

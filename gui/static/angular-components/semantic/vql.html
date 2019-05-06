@@ -16,9 +16,11 @@
     </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="row in ::controller.payload"
-        ng-click="controller.selectRow_(row)">
-      <td ng-repeat="column in ::controller.columns">
+    <tr ng-repeat="row in ::controller.payload track by $index"
+        ng-click="controller.selectRow_(row, $index)"
+        ng-class="{'row-selected': $index == controller.selectedIndex }"
+        >
+      <td ng-repeat="column in ::controller.columns track by $index">
         <div ng-if="::!controller.type_map[column]">
           {{ ::row[column] }}
         </div>

@@ -122,6 +122,7 @@ func (self MonitoringPlugin) ScanLog(
 			scope.Log("Error %v: %v\n", err, file_path)
 			continue
 		}
+		defer fd.Close()
 
 		csv_reader := csv.NewReader(fd)
 		headers, err := csv_reader.Read()
@@ -311,6 +312,7 @@ func (self WatchMonitoringPlugin) ScanLog(
 			scope.Log("Error %v: %v\n", err, file_path)
 			continue
 		}
+		defer fd.Close()
 
 		// Read the headers.
 		csv_reader := csv.NewReader(fd)

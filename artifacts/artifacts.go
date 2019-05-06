@@ -444,6 +444,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 				if err != nil {
 					return nil
 				}
+				defer fd.Close()
+
 				data, err := ioutil.ReadAll(fd)
 				if err != nil {
 					return nil

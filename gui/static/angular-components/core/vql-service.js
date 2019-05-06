@@ -6,4 +6,4 @@ goog.module.declareLegacyNamespace();
 
 exports.generateVQLResponse = function(response) {
   return JSON.parse(response.response);
-}
+};

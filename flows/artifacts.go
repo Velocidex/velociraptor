@@ -248,6 +248,8 @@ func AddArtifactCollectorArgs(
 				}).Error("Unable to read VFS file")
 			return err
 		}
+		defer file.Close()
+
 		buf, err := ioutil.ReadAll(file)
 		if err != nil {
 			continue

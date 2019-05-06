@@ -13,27 +13,28 @@ goog.module.declareLegacyNamespace();
  */
 const vqlController = function(
     $scope, $element) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @type {?} */
-  this.scope_.value;
+    /** @type {?} */
+    this.scope_.value;
 
     /** @type {object} */
     this.payload;
-        /** @type {object} */
+    /** @type {object} */
     this.columns;
 
-       /** @type {object} */
+    /** @type {object} */
     this.type_map = {};
 
     /** @type {string} */
-  this.query = "";
+    this.query = "";
+    this.selectedIndex = -1;
 
-  /** @private {!angular.jQuery} $element */
-  this.element_ = $element;
+    /** @private {!angular.jQuery} $element */
+    this.element_ = $element;
 
-  this.scope_.$watch('::value', this.onValueChange.bind(this));
+    this.scope_.$watch('::value', this.onValueChange.bind(this));
 };
 
 
@@ -81,8 +82,9 @@ vqlController.prototype.onValueChange = function(newValue) {
 };
 
 
-vqlController.prototype.selectRow_ = function(row) {
-  this.scope_.selectedRow = row;
+vqlController.prototype.selectRow_ = function(row, index) {
+    this.scope_.selectedRow = row;
+    this.selectedIndex = index;
 };
 
 

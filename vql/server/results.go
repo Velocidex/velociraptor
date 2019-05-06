@@ -76,6 +76,7 @@ func (self CollectedArtifactsPlugin) Call(
 			scope.Log("Error %v: %v\n", err, log_path)
 			return
 		}
+		defer fd.Close()
 
 		// Read each CSV file and emit it with
 		// some extra columns for context.
@@ -160,14 +161,27 @@ func (self SourcePlugin) Call(
 		}
 
 	case "MONITORING_DAILY":
-		if arg.Source != "" {
-			path = fmt.Sprintf(
-				"%s/journals/%s/%s/%s.csv",
-				root, artifact_name, dayName, arg.Source)
+		if client_id == "" {
+			if arg.Source != "" {
+				path = fmt.Sprintf(
+					"%s/journals/%s/%s/%s.csv",
+					root, artifact_name, dayName, arg.Source)
+			} else {
+				path = fmt.Sprintf(
+					"%s/journals/%s/%s.csv",
+					root, artifact_name, dayName)
+			}
 		} else {
-			path = fmt.Sprintf(
-				"%s/journals/%s/%s.csv",
-				root, artifact_name, dayName)
+			if arg.Source != "" {
+				path = fmt.Sprintf(
+					"%s/clients/%s/monitoring/%s/%s/%s.csv",
+					root, client_id, artifact_name,
+					dayName, arg.Source)
+			} else {
+				path = fmt.Sprintf(
+					"%s/clients/%s/monitoring/%s/%s.csv",
+					root, client_id, artifact_name, dayName)
+			}
 		}
 	}
 

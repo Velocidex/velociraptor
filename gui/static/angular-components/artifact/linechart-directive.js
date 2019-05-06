@@ -117,7 +117,6 @@ exports.LineChartDirective = function() {
                   position: position,
               });
           }
-          console.log(yaxes);
 
           var options = {
               grid: {

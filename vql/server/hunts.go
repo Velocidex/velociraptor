@@ -139,6 +139,7 @@ func (self HuntResultsPlugin) Call(
 			scope.Log("Error %v: %v\n", err, file_path)
 			return
 		}
+		defer fd.Close()
 
 		// Read each CSV file and emit it with
 		// some extra columns for context.
@@ -165,6 +166,7 @@ func (self HuntResultsPlugin) Call(
 				if err != nil {
 					continue
 				}
+				defer fd.Close()
 
 				stat, err := file_store_factory.StatFile(result_path)
 				if err != nil {
@@ -240,6 +242,7 @@ func (self HuntFlowsPlugin) Call(
 			scope.Log("Error %v: %v\n", err, file_path)
 			return
 		}
+		defer fd.Close()
 
 		// Read each CSV file and emit it with
 		// some extra columns for context.

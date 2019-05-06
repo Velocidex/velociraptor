@@ -134,6 +134,9 @@ func (self *HuntManager) ProcessRow(
 	writer, pres := self.writers[participation_row.HuntId]
 	if !pres {
 		file_store_factory := file_store.GetFileStore(self.config_obj)
+
+		// Hold references to all the writers for the life of
+		// the manager.
 		fd, err := file_store_factory.WriteFile(
 			participation_row.HuntId + ".csv")
 		if err != nil {

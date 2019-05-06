@@ -74,6 +74,7 @@ func downloadFlowToZip(
 		if err != nil {
 			continue
 		}
+		defer fd.Close()
 
 		zh, err := zip_writer.Create(file_path)
 		if err != nil {
@@ -92,6 +93,7 @@ func downloadFlowToZip(
 		if err != nil {
 			continue
 		}
+		defer reader.Close()
 
 		f, err := zip_writer.Create(upload_name)
 		if err != nil {
