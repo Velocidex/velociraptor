@@ -1,10 +1,14 @@
 <div class="client-status toolbar-buttons"
     ng-if="controller.clientInfo"
      >
-  <div ng-if="controller.clientInfo.os_info.fqdn" class="client-name">
+  <div
+    grr-nav-link state="client.hostInfo"
+    ng-if="controller.clientInfo.os_info.fqdn" class="client-name">
     {$ controller.clientInfo.os_info.fqdn $}
   </div>
-  <div ng-if="!controller.clientInfo.os_info.fqdn" class="client-name">
+  <div
+    grr-nav-link state="client.hostInfo"
+    ng-if="!controller.clientInfo.os_info.fqdn" class="client-name">
     {$ controller.clientInfo.client_id $}
   </div>
 

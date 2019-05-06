@@ -37,6 +37,8 @@ const ClientsListController = function(
 
   /** @export {Object.<string, Object>} */
     this.clients = {};
+
+    // Now as seconds since epoch.
     this.now = grrTimeService.getCurrentTimeMs()/1000;
 
   /** @export {Object.<string, boolean>} */

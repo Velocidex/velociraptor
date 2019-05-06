@@ -1,0 +1,40 @@
+:name: Server.Monitor.Shell
+description: |
+   Velociraptor can get an interactive shell on the endpoint by using
+   the shell command. In order to use it, the user must be directly
+   logged on the server.
+
+   Obviously being able to run arbitrary commands on the end point is
+   a powerful feature and should be used sparingly. There is an audit
+   trail for shell commands executed and their output available by
+   streaming all shell commands to the "Shell" client evnt monitoring
+   artifact.
+
+   This server event artifact centralizes all shell access from all
+   clients into the same log file.
+
+# Can be CLIENT, EVENT, SERVER, SERVER_EVENT
+type: SERVER_EVENT
+
+sources:
+  - queries:
+    - |
+      SELECT * FROM watch_monitoring(artifact="Shell")
+
+# Reports can be MONITORING_DAILY, CLIENT
+reports:
+  - type: SERVER_EVENT
+    template: |
+      {{ .Description }}
+
+      {{ $rows := Query "SELECT timestamp(epoch=Timestamp) AS Timestamp, Argv, Stdout FROM source()" }}
+
+      {{ range $row := $rows }}
+
+         * On {{ Get $row "Timestamp" }} we ran {{ Get $row "Argv" }}
+
+         ```text
+         {{ Get $row "Stdout" }}
+         ```
+
+      {{end}}

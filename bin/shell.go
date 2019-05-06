@@ -84,7 +84,7 @@ func shell_executor(config_obj *api_proto.Config,
 		},
 		Query: []*actions_proto.VQLRequest{
 			&actions_proto.VQLRequest{
-				Name: "Artifact Shell",
+				Name: "Shell",
 				VQL: "SELECT now() as Timestamp, Argv, Stdout, " +
 					"Stderr, ReturnCode FROM execve(" +
 					"argv=parse_json(data=Argv).Argv)",
@@ -92,7 +92,9 @@ func shell_executor(config_obj *api_proto.Config,
 		},
 	}
 
-	// Obfuscate the artifact from the client.
+	// Obfuscate the artifact from the client. It will be
+	// automatically deobfuscated when the client replies to the
+	// monitoring flow.
 	artifacts.Obfuscate(config_obj, vql_request)
 
 	urn := urns.BuildURN(

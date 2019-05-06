@@ -54,7 +54,7 @@ sources:
       SELECT * FROM scope()
 
 
-# Reports can be MONITORING_DAILY, CLIENT
+# Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT
 reports:
   - type: CLIENT
     template: |

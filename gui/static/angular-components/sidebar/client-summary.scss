@@ -7,6 +7,11 @@ grr-client-summary {
       display: inline;
   }
 
+  .client-name .nav-link {
+      display: inline;
+      color: $color-infoline-success;
+  }
+
   grr-client-status-icons > div {
     text-align: left;
     display: inline;

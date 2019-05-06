@@ -17,7 +17,7 @@ import (
 
 var (
 	valid_report_types = []string{
-		"MONITORING_DAILY", "CLIENT",
+		"MONITORING_DAILY", "CLIENT", "SERVER_EVENT",
 	}
 )
 

@@ -135,12 +135,14 @@ AddItemButtonController.prototype.updateServerMonitoringTable = function() {
     this.error = "";
     this.grrApiService_.get(url).then(function(response) {
         self.flowArguments = response['data'];
-        self.names = self.flowArguments.artifacts.names;
-        self.params = {};
-        var parameters = self.flowArguments.parameters.env;
-        for (var i=0; i<parameters.length;i++) {
-            var p = parameters[0];
-            self.params[p["key"]] = p["value"];
+        if (angular.isObject(self.flowArguments.artifacts)) {
+            self.names = self.flowArguments.artifacts.names || [];
+            self.params = {};
+            var parameters = self.flowArguments.parameters.env || {};
+            for (var i=0; i<parameters.length;i++) {
+                var p = parameters[0];
+                self.params[p["key"]] = p["value"];
+            }
         }
         self.modalInstance = self.uibModal_.open({
             templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
@@ -161,7 +163,8 @@ AddItemButtonController.prototype.saveServerArtifacts = function() {
             env.push({key: k, value: self.params[k]});
         }
     }
-    self.flowArguments.artifacts.names = self.names;
+
+    self.flowArguments.artifacts = {names: self.names};
     self.flowArguments.parameters = {env: env};
 
     var url = 'v1/SetServerMonitoringState';
@@ -184,7 +187,7 @@ AddItemButtonController.prototype.updateClientMonitoringTable = function() {
     this.error = "";
     this.grrApiService_.get(url).then(function(response) {
         self.flowArguments = response['data'];
-        self.names = self.flowArguments.artifacts.names;
+        self.names = self.flowArguments.artifacts.names || [];
         self.modalInstance = self.uibModal_.open({
             templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
             scope: self.scope_,

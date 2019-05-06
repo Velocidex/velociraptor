@@ -37,7 +37,7 @@ func GetApiClient(
 	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 
-	if client_id[0] != 'C' {
+	if client_id == "" || client_id[0] != 'C' {
 		return nil, errors.New("client_id must start with C")
 	}
 
