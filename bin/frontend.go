@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	"github.com/sirupsen/logrus"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -30,7 +30,9 @@ import (
 
 var (
 	// Run the server.
-	frontend = app.Command("frontend", "Run the frontend and GUI.")
+	frontend         = app.Command("frontend", "Run the frontend and GUI.")
+	compression_flag = frontend.Flag("disable_artifact_compression",
+		"Disables artifact compressions").Bool()
 )
 
 func init() {
@@ -46,8 +48,8 @@ func init() {
 				"commit":     config_obj.Version.Commit,
 			}).Info("Starting Frontend.")
 
-			if *debug_flag {
-				logger.Info("Disabling artifact compression because --debug was specified.")
+			if *compression_flag {
+				logger.Info("Disabling artifact compression.")
 				config_obj.Frontend.DoNotCompressArtifacts = true
 			}
 

@@ -1,4 +1,4 @@
-:name: Server.Monitor.Shell
+name: Server.Monitor.Shell
 description: |
    Velociraptor can get an interactive shell on the endpoint by using
    the shell command. In order to use it, the user must be directly

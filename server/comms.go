@@ -22,6 +22,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -454,9 +455,12 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 		// client drops off completely or is behind a proxy
 		// which caches the heartbeats. After the deadline we
 		// close the connection and expect the client to
-		// reconnect again.
-		deadline := time.After(time.Duration(
-			config_obj.Client.MaxPoll) * time.Second)
+		// reconnect again. We add a bit of jitter to ensure
+		// clients do not get synchronized.
+		wait := time.Duration(config_obj.Client.MaxPoll+
+			uint64(rand.Intn(30))) * time.Second
+
+		deadline := time.After(wait)
 
 		// We now write the header and block the client until
 		// a notification is sent on the notification pool.

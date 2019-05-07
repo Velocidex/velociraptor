@@ -144,31 +144,22 @@ func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	go func() {
 		for {
-			func() {
-				// Do not allow panic to terminate the
-				// executor.
-				defer func() {
-					if r := recover(); r != nil {
-						fmt.Println("Recovered in f", r)
-					}
-				}()
+			// Pump messages from input channel and
+			// process each request.
+			req := result.ReadFromServer()
 
-				// Pump messages from input channel and
-				// process each request.
-				req := result.ReadFromServer()
+			// Ignore unauthenticated messages - the
+			// server should never send us those.
+			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
+				// Each request has its own context.
+				ctx := context.Background()
+				logger.Info("Received request: %v", req)
 
-				// Ignore unauthenticated messages - the
-				// server should never send us those.
-				if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
-					// Each request has its own context.
-					ctx := context.Background()
-					logger.Info("Received request: %v", req)
-
-					// Process the request asynchronously.
-					go result.processRequestPlugin(config_obj, ctx, req)
-				}
-			}()
+				// Process the request asynchronously.
+				go result.processRequestPlugin(config_obj, ctx, req)
+			}
 		}
+		panic("Boo")
 	}()
 
 	return result, nil

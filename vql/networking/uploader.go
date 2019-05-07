@@ -22,7 +22,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -177,7 +176,6 @@ func (self *VelociraptorUploader) Upload(
 
 	for {
 		read_bytes, err := reader.Read(buffer)
-		fmt.Printf("Reading %v %d\n", filename, read_bytes)
 		if read_bytes == 0 {
 			result.Size = offset
 			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))

@@ -27,8 +27,7 @@ import (
 )
 
 type ClientAction interface {
-	Run(
-		config *api_proto.Config,
+	Run(config *api_proto.Config,
 		ctx context.Context,
 		args *crypto_proto.GrrMessage,
 		output chan<- *crypto_proto.GrrMessage)

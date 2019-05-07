@@ -19,12 +19,15 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
 
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
@@ -63,8 +66,15 @@ func RunClient(config_path *string) {
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 	}
 
-	ctx := context.Background()
-	comm.Run(ctx)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	go comm.Run(context.Background())
+
+	<-quit
+
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+	logger.Info("Interrupted! Shutting down\n")
 }
 
 func init() {

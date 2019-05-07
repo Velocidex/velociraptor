@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"net/http"
 	"runtime/debug"
@@ -241,10 +242,15 @@ func (self *HTTPConnector) ReKeyNextServer() {
 
 		// Only wait once we go round the list a full time.
 		if self.current_url_idx == 0 {
-			self.logger.Info("Waiting for a reachable server: %v",
-				self.maxPoll)
+			wait := self.maxPoll + time.Duration(
+				rand.Intn(30))*time.Second
 
-			<-time.After(self.maxPoll)
+			self.logger.Info(
+				"Waiting for a reachable server: %v", wait)
+
+			// Add random wait between polls to avoid
+			// synchronization of endpoints.
+			<-time.After(wait)
 		}
 	}
 }
@@ -340,7 +346,8 @@ func NewNotificationReader(
 // Block until the messages are sent. Will retry, back off and rekey
 // the server.
 func (self *NotificationReader) sendMessageList(
-	ctx context.Context, message_list *crypto_proto.MessageList) {
+	ctx context.Context, message_list []byte) {
+
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			err := self.sendToURL(ctx, message_list)
@@ -357,13 +364,18 @@ func (self *NotificationReader) sendMessageList(
 				self.connector.GetCurrentUrl()+self.handler, err)
 		}
 
+		// Add random wait between polls to avoid
+		// synchronization of endpoints.
+		wait := self.maxPoll + time.Duration(
+			rand.Intn(30))*time.Second
+
 		select {
 		case <-ctx.Done():
 			return
 
 			// Wait for the maximum length of time
 			// and try to rekey the next URL.
-		case <-time.After(self.maxPoll):
+		case <-time.After(wait):
 			self.connector.ReKeyNextServer()
 			continue
 		}
@@ -371,7 +383,7 @@ func (self *NotificationReader) sendMessageList(
 }
 
 func (self *NotificationReader) sendToURL(
-	ctx context.Context, message_list *crypto_proto.MessageList) error {
+	ctx context.Context, message_list []byte) error {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
@@ -380,7 +392,7 @@ func (self *NotificationReader) sendToURL(
 	self.logger.Info("%s: Connected to %s", self.name,
 		self.connector.GetCurrentUrl()+self.handler)
 
-	cipher_text, err := self.manager.EncryptMessageList(
+	cipher_text, err := self.manager.Encrypt(
 		message_list, self.connector.ServerName())
 	if err != nil {
 		return err
@@ -457,7 +469,11 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			// The Reader does not send any server bound
 			// messages - it is blocked reading server
 			// responses.
-			self.sendMessageList(ctx, self.GetMessageList())
+			message_list := self.GetMessageList()
+			serialized_message_list, err := proto.Marshal(message_list)
+			if err == nil {
+				self.sendMessageList(ctx, serialized_message_list)
+			}
 
 			select {
 			case <-ctx.Done():
@@ -499,12 +515,21 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 
 type Sender struct {
 	*NotificationReader
-	pending_messages chan *crypto_proto.GrrMessage
+
+	// We serialize messages into the message queue as they
+	// arrive. If the queue is too large we flush it to the
+	// server.
+	mu            sync.Mutex
+	message_queue []byte
 }
 
 // The sender simply sends any server bound messages to the server. We
 // only send messages when responses are pending.
 func (self *Sender) Start(ctx context.Context) {
+	// This channel will be signalled when the output queue is too
+	// large and needs to be flushed.
+	release := make(chan bool)
+
 	// Pump messages from the executor to the pending message list
 	// - this is our local queue of output pending messages.
 	go func() {
@@ -524,11 +549,62 @@ func (self *Sender) Start(ctx context.Context) {
 				case msg := <-self.executor.ReadResponse():
 					// Executor closed the channel.
 					if msg == nil {
-						close(self.pending_messages)
 						return
 					}
 
-					self.pending_messages <- msg
+					// NOTE: This is kind of a
+					// hack. We hold in memory a
+					// bunch of GrrMessage proto
+					// objects and we want to
+					// serialize them into a
+					// MessageList proto one at
+					// the time (so we can track
+					// how large the final message
+					// is going to be). We use the
+					// special wire format
+					// property of protobufs that
+					// repeated fields can be
+					// appended on the wire, and
+					// then parsed as a single
+					// message. This saves us
+					// encoding the GrrMessage
+					// just to see how large it is
+					// going to be and then
+					// encoding it again.
+					item := &crypto_proto.MessageList{
+						Job: []*crypto_proto.GrrMessage{msg}}
+					serialized_msg, err := proto.Marshal(item)
+					if err != nil {
+						// Cant serialize the
+						// message - drop it
+						// on the floor.
+						continue
+					}
+
+					// We need to block here until
+					// there is room in the
+					// message queue. If the
+					// message queue is being sent
+					// to the server, the mutex
+					// will be locked and we wait
+					// here until the data is
+					// pushed through. While
+					// waiting here we block the
+					// executor channel.
+					self.mu.Lock()
+					self.message_queue = append(
+						self.message_queue, serialized_msg...)
+					length_of_message_queue := len(self.message_queue)
+					self.mu.Unlock()
+
+					// We have just filled the
+					// message queue with enough
+					// data, trigger the sender to
+					// send this data out
+					// immediately.
+					if length_of_message_queue > 5*1024*1024 {
+						release <- true
+					}
 				}
 			}
 		}
@@ -540,9 +616,19 @@ func (self *Sender) Start(ctx context.Context) {
 				// If there is some data in the queues we send
 				// it immediately. If there is no data pending
 				// we send nothing.
-				message_list := self.drainMessageQueue()
-				if len(message_list.Job) > 0 {
-					self.sendMessageList(ctx, message_list)
+				self.mu.Lock()
+				if len(self.message_queue) > 0 {
+					// sendMessageList will block
+					// until the messages are
+					// successfully sent to the
+					// server. We hold the lock
+					// here which blocks the
+					// executor from adding more
+					// data to the message queue.
+					self.sendMessageList(ctx, self.message_queue)
+
+					// Clean the message_queue
+					self.message_queue = make([]byte, 0)
 
 					// We need to make sure our
 					// memory footprint is as
@@ -556,7 +642,9 @@ func (self *Sender) Start(ctx context.Context) {
 					// free our memory to the OS.
 					debug.FreeOSMemory()
 				}
+				self.mu.Unlock()
 			}
+
 			// Wait a minimum time before sending the next
 			// one to give the executor a chance to fill
 			// the queue.
@@ -564,31 +652,19 @@ func (self *Sender) Start(ctx context.Context) {
 			case <-ctx.Done():
 				return
 
+				// If the queue is too large we need
+				// to flush it out immediately.
+			case <-release:
+				continue
+
+				// Wait a minimum amount of time to
+				// allow for responses to be queued in
+				// the same POST.
 			case <-time.After(self.minPoll):
 				continue
 			}
-
 		}
 	}()
-}
-
-// Pull off as many messages as we can off the channel to send. Note:
-// As we drain the channel the executor will be woken to fill it up
-// again - since the self.pending_messages channel has a buffer.
-func (self *Sender) drainMessageQueue() *crypto_proto.MessageList {
-	result := &crypto_proto.MessageList{}
-
-	for {
-		select {
-		case item := <-self.pending_messages:
-			result.Job = append(result.Job, item)
-
-		default:
-			// No blocking - if there is no messages
-			// available, just return
-			return result
-		}
-	}
 }
 
 func NewSender(
@@ -601,11 +677,8 @@ func NewSender(
 	name string,
 	handler string) *Sender {
 	result := &Sender{
-		NewNotificationReader(config_obj, connector, manager,
+		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler),
-
-		// Allow the executor to queue 100 messages in the same packet.
-		make(chan *crypto_proto.GrrMessage, 100),
 	}
 
 	return result
@@ -678,4 +751,8 @@ func NewHTTPCommunicator(
 	}
 
 	return result, nil
+}
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
 }
