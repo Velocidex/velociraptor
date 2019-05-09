@@ -38,6 +38,7 @@ package datastore
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -50,6 +51,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -551,7 +553,8 @@ func readContentFromFile(
 	}
 	defer file.Close()
 
-	result, err := ioutil.ReadAll(file)
+	result, err := ioutil.ReadAll(
+		io.LimitReader(file, constants.MAX_MEMORY))
 	return result, errors.WithStack(err)
 }
 

@@ -259,7 +259,8 @@ func include_package(url, deb_path string, deb *debpkg.DebPkg) error {
 		}
 
 		if header.Typeflag == tar.TypeReg {
-			// This is not ideal but debpkg does not support streamed readers.
+			// This is not ideal but debpkg does not
+			// support streamed readers.
 			buffer, err := ioutil.ReadAll(tarReader)
 			if err != nil {
 				return err

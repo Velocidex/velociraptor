@@ -3,7 +3,7 @@
 goog.module('grrUi.hunt.huntInspectorDirective');
 goog.module.declareLegacyNamespace();
 
-var ERROR_EVENT_NAME = 'ServerError';
+
 
 /** @type {number} */
 let AUTO_REFRESH_INTERVAL_MS = 15 * 1000;
@@ -119,29 +119,6 @@ HuntInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
     }
     this.tabsShown[newValue] = true;
 };
-
-
-/**
- * Downloades the file.
- *
- * @export
- */
-HuntInspectorController.prototype.downloadFile = function() {
-    var url = 'v1/DownloadHuntResults';
-    var params = {hunt_id: this.scope_["huntId"]};
-    this.grrApiService_.downloadFile(url, params).then(
-        function success() {}.bind(this),
-        function failure(response) {
-            if (angular.isUndefined(response.status)) {
-                this.rootScope_.$broadcast(
-                    ERROR_EVENT_NAME, {
-                        message: 'Couldn\'t download file.'
-                    });
-            }
-        }.bind(this)
-    );
-};
-
 
 /**
  * HuntInspectorDirective definition.

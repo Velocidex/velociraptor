@@ -7,6 +7,10 @@
                          params="controller.params"
                          type="'CLIENT'">
     </grr-search-artifact>
+    <dl class="dl-horizontal dl-flow">
+      <dt>Ops/Sec</dt>
+      <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
+    </dl>
   </grr-wizard-form-page>
 
   <grr-wizard-form-page title="Launched Flow"
@@ -21,7 +25,7 @@
       </div>
 
       <div ng-if="controller.responseData && controller.responseData.error" class="alert alert-error">
-        <p><em>Can't Launch Artifact connection:</em></p>
+        <p><em>Can't Launch Artifact collection:</em></p>
         <p class="preserve-linebreaks">{$ controller.responseData.data $}</p>
       </div>
 

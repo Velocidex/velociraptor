@@ -167,7 +167,7 @@ func StartSelfSignedHTTPSProxy(config_obj *api_proto.Config, mux *http.ServeMux)
 		Handler: mux,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  5 * time.Second,
+		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 		TLSConfig: &tls.Config{

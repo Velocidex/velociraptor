@@ -20,6 +20,7 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"path"
 	"strings"
@@ -38,6 +39,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -124,6 +126,15 @@ func (self *ArtifactCollector) ProcessMessage(
 
 	err := flow_obj.FailIfError(config_obj, message)
 	if err != nil {
+		if constants.HuntIdRegex.MatchString(flow_obj.RunnerArgs.Creator) {
+			err = services.GetHuntDispatcher().ModifyHunt(
+				flow_obj.RunnerArgs.Creator,
+				func(hunt *api_proto.Hunt) error {
+					hunt.Stats.TotalClientsWithErrors++
+					return nil
+				})
+		}
+
 		return err
 	}
 
@@ -143,6 +154,15 @@ func (self *ArtifactCollector) ProcessMessage(
 
 	case processVQLResponses:
 		if flow_obj.IsRequestComplete(message) {
+			if constants.HuntIdRegex.MatchString(flow_obj.RunnerArgs.Creator) {
+				err = services.GetHuntDispatcher().ModifyHunt(
+					flow_obj.RunnerArgs.Creator,
+					func(hunt *api_proto.Hunt) error {
+						hunt.Stats.TotalClientsWithResults++
+						return nil
+					})
+			}
+
 			return flow_obj.Complete(config_obj)
 		}
 
@@ -250,7 +270,8 @@ func AddArtifactCollectorArgs(
 		}
 		defer file.Close()
 
-		buf, err := ioutil.ReadAll(file)
+		buf, err := ioutil.ReadAll(
+			io.LimitReader(file, constants.MAX_MEMORY))
 		if err != nil {
 			continue
 		}
@@ -282,8 +303,11 @@ func appendDataToFile(
 		file_buffer.Pathspec.Path)
 	fd, err := file_store_factory.WriteFile(file_path)
 	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return err
+		// If we fail to write this one file we keep going -
+		// otherwise the flow will be terminated.
+		flow_obj.Log(fmt.Sprintf("While writing to %v: %v",
+			file_path, err))
+		return nil
 	}
 	defer fd.Close()
 

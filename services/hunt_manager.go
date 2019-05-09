@@ -20,13 +20,13 @@ package services
 import (
 	"context"
 	"errors"
-	"path"
 	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -138,7 +138,7 @@ func (self *HuntManager) ProcessRow(
 		// Hold references to all the writers for the life of
 		// the manager.
 		fd, err := file_store_factory.WriteFile(
-			participation_row.HuntId + ".csv")
+			constants.HUNTS_URN + participation_row.HuntId + ".csv")
 		if err != nil {
 			return
 		}
@@ -153,13 +153,13 @@ func (self *HuntManager) ProcessRow(
 
 	request := &flows_proto.FlowRunnerArgs{
 		ClientId: participation_row.ClientId,
-		Creator:  path.Base(participation_row.HuntId),
+		Creator:  participation_row.HuntId,
 	}
 
 	// Get hunt information about this hunt.
 	now := uint64(time.Now().UnixNano() / 1000)
 	err = GetHuntDispatcher().ModifyHunt(
-		path.Base(participation_row.HuntId),
+		participation_row.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			// Ignore stopped hunts.
 			if hunt_obj.Stats.Stopped ||

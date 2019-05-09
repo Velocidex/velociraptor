@@ -29,9 +29,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/olekukonko/tablewriter"
 	errors "github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -48,7 +49,7 @@ var classifiers = map[string]proto.Message{
 	"aff4:/clients/C.[^/]+/flows/F\\.[^/]+$":            &flows_proto.AFF4FlowObject{},
 	"aff4:/clients/C.[^/]+/flows/F\\.[^/]+/results/.+$": &crypto_proto.GrrMessage{},
 	"aff4:/clients/C.[^/]+/tasks/[^/]+$":                &crypto_proto.GrrMessage{},
-	"aff4:/hunts/H.[^/]+$":                              &api_proto.Hunt{},
+	constants.HUNTS_URN + "H.[^/]+$":                    &api_proto.Hunt{},
 	"aff4:/users/[^/]+$":                                &api_proto.VelociraptorUser{},
 	"aff4:/users/[^/]+/notifications/.+$":               &api_proto.UserNotification{},
 }

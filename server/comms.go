@@ -21,6 +21,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -35,6 +36,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/crypto/acme/autocert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -82,7 +84,7 @@ func StartFrontendHttp(
 		Handler: router,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  5 * time.Second,
+		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
@@ -125,7 +127,7 @@ func StartFrontendHttps(
 		Handler: router,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  5 * time.Second,
+		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 		TLSConfig: &tls.Config{
@@ -243,7 +245,7 @@ func StartTLSServer(
 		Handler: mux,
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  5 * time.Second,
+		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 		TLSConfig: &tls.Config{
@@ -296,6 +298,7 @@ func control(server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)
+	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		flusher, ok := w.(http.Flusher)
@@ -306,20 +309,33 @@ func control(server_obj *Server) http.Handler {
 		server_obj.StartConcurrencyControl()
 		defer server_obj.EndConcurrencyControl()
 
-		body, err := ioutil.ReadAll(req.Body)
+		logger.Debug("Received a post from %v", req.RemoteAddr)
+
+		body, err := ioutil.ReadAll(
+			io.LimitReader(req.Body, int64(server_obj.config.
+				Frontend.MaxUploadSize*2)))
 		if err != nil {
-			server_obj.Error("Unable to read body", err)
+			logger.Debug("Unable to read body: %+v (read %v)",
+				err, len(body))
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
 
+		logger.Debug("Read the post from %v (%v out of max %v)",
+			req.RemoteAddr, len(body), server_obj.config.
+				Frontend.MaxUploadSize*2)
+
 		message_info, err := server_obj.Decrypt(req.Context(), body)
 		if err != nil {
+			logger.Debug("Unable to decrypt body from %v: %+v len %v",
+				req.RemoteAddr, err, len(body))
 			// Just plain reject with a 403.
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}
 		message_info.RemoteAddr = req.RemoteAddr
+		logger.Debug("Received a post of length %v from %v (%v)", len(body),
+			req.RemoteAddr, message_info.Source)
 
 		// Very few Unauthenticated client messages are valid
 		// - currently only enrolment requests.
@@ -414,7 +430,8 @@ func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
 		currentConnections.Inc()
 		defer currentConnections.Dec()
 
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := ioutil.ReadAll(
+			io.LimitReader(req.Body, constants.MAX_MEMORY))
 		if err != nil {
 			server_obj.Error("Unable to read body", err)
 			http.Error(w, "", http.StatusServiceUnavailable)

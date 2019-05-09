@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"www.velocidex.com/golang/oleparse"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -69,7 +70,7 @@ func _OLEVBAPlugin_ParseFile(
 
 	if string(signature) == oleparse.OLE_SIGNATURE {
 		fd.Seek(0, os.SEEK_SET)
-		data, err := ioutil.ReadAll(fd)
+		data, err := ioutil.ReadAll(io.LimitReader(fd, constants.MAX_MEMORY))
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +91,8 @@ func _OLEVBAPlugin_ParseFile(
 				if err != nil {
 					return nil, err
 				}
-				data, err := ioutil.ReadAll(rc)
+				data, err := ioutil.ReadAll(
+					io.LimitReader(rc, constants.MAX_MEMORY))
 				if err != nil {
 					return nil, err
 				}

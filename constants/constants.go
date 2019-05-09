@@ -17,6 +17,8 @@
 */
 package constants
 
+import "regexp"
+
 const (
 	VERSION                    = "0.3.0"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
@@ -27,7 +29,7 @@ const (
 
 	FLOW_PREFIX             = "F."
 	FOREMAN_WELL_KNOWN_FLOW = "aff4:/flows/E.Foreman"
-	HUNTS_URN               = "aff4:/hunts"
+	HUNTS_URN               = "aff4:/hunts/"
 	HUNT_PREFIX             = "H."
 
 	// The GUI uses this as the client index.
@@ -39,6 +41,10 @@ const (
 	LOG_SINK uint64 = 980
 
 	TransferWellKnownFlowId = 5
+
+	// Largest buffer we use for comms.
+	MAX_MEMORY    = 1 * 1024 * 1024
+	MAX_POST_SIZE = 5 * 1024 * 1024
 
 	// Some special built in artifacts.
 	FileFinderArtifactName = "System.Flow.FileFinder"
@@ -57,4 +63,8 @@ const (
 	// monitoring artifacts.
 	ServerMonitoringFlowURN = "aff4:/config/server_monitoring.json"
 	ClientMonitoringFlowURN = "aff4:/config/client_monitoring.json"
+)
+
+var (
+	HuntIdRegex = regexp.MustCompile(`^H\.[^.]+$`)
 )

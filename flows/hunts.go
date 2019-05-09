@@ -37,7 +37,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 func GetNewHuntId() string {
@@ -47,7 +46,7 @@ func GetNewHuntId() string {
 	rand.Read(buf)
 	hex.Encode(result, buf)
 
-	return urns.BuildURN("hunts", constants.HUNT_PREFIX+string(result))
+	return constants.HUNT_PREFIX + string(result)
 }
 
 func FindCollectedArtifacts(hunt *api_proto.Hunt) {
@@ -112,7 +111,7 @@ func CreateHunt(
 			})
 	}
 
-	err = db.SetSubject(config_obj, hunt.HuntId, hunt)
+	err = db.SetSubject(config_obj, constants.HUNTS_URN+hunt.HuntId, hunt)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +137,10 @@ func ListHunts(config_obj *api_proto.Config, in *api_proto.ListHuntsRequest) (
 			if uint64(len(result.Items)) >= in.Offset+in.Count {
 				return errors.New("Stop Iteration")
 			}
+
+			// FIXME: Backwards compatibility.
+			hunt.HuntId = path.Base(hunt.HuntId)
+
 			result.Items = append(result.Items, hunt)
 			return nil
 		})
@@ -155,7 +158,7 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 	var result *api_proto.Hunt
 
 	services.GetHuntDispatcher().ModifyHunt(
-		path.Base(in.HuntId),
+		in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			// Make a copy
 			result = &(*hunt_obj)
@@ -193,7 +196,7 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt) error {
 	dispatcher := services.GetHuntDispatcher()
 	err := dispatcher.ModifyHunt(
-		path.Base(hunt_modification.HuntId),
+		hunt_modification.HuntId,
 		func(hunt *api_proto.Hunt) error {
 			// We are trying to start the hunt.
 			if hunt_modification.State == api_proto.Hunt_RUNNING {
@@ -217,7 +220,9 @@ func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt)
 				return err
 			}
 
-			err = db.SetSubject(config_obj, hunt.HuntId, hunt)
+			err = db.SetSubject(
+				config_obj,
+				constants.HUNTS_URN+hunt.HuntId, hunt)
 			if err != nil {
 				return err
 			}

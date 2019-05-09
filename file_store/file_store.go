@@ -167,6 +167,8 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 			continue
 		}
 
+		component = strings.Replace(component, "\\", "/", -1)
+
 		components = append(components,
 			string(datastore.SanitizeString(component)))
 	}

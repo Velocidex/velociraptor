@@ -19,6 +19,7 @@ package artifacts
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -446,7 +447,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 				}
 				defer fd.Close()
 
-				data, err := ioutil.ReadAll(fd)
+				data, err := ioutil.ReadAll(
+					io.LimitReader(fd, constants.MAX_MEMORY))
 				if err != nil {
 					return nil
 				}

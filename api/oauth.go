@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -34,6 +35,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
@@ -154,7 +156,9 @@ func getUserDataFromGoogle(config_obj *api_proto.Config, code string) ([]byte, e
 		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
 	}
 	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
+
+	contents, err := ioutil.ReadAll(
+		io.LimitReader(response.Body, constants.MAX_MEMORY))
 	if err != nil {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}

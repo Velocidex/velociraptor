@@ -31,6 +31,14 @@
 
             <dt>State</dt>
             <dd>{{::flow.context.state}}</dd>
+
+            <div ng-if="::flow.context.state == 'ERROR'">
+              <dt>Error</dt>
+              <dd>{{::flow.context.status}}</dd>
+            </div>
+
+            <dt>Ops/Sec</dt>
+            <dd>{{::flow.runner_args.args.ops_per_second || 'Unlimited' }}</dd>
             <br>
           </dl>
 

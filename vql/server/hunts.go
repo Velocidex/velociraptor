@@ -132,7 +132,9 @@ func (self HuntResultsPlugin) Call(
 			return
 		}
 
-		file_path := path.Join("hunts", arg.HuntId+".csv")
+		// Backwards compatibility.
+		hunt_id := path.Base(arg.HuntId)
+		file_path := path.Join("hunts", hunt_id+".csv")
 		file_store_factory := file_store.GetFileStore(config_obj)
 		fd, err := file_store_factory.ReadFile(file_path)
 		if err != nil {

@@ -4,20 +4,76 @@
 
 <div ng-if="hunt">
 
-  <dl class="dl-horizontal dl-hunt">
+  <grr-force-refresh refresh-trigger="hunt">
+    <div class="card-deck">
+      <div class="card">
+        <h5 class="card-header">Overview</h5>
+        <div class="card-body">
+          <dl class="dl-horizontal dl-flow">
+            <dt>Artifact Names</dt>
+            <dd>
+              <grr-semantic-value value="::hunt.start_request.args.artifacts.names" />
+            </dd>
 
-    <grr-force-refresh refresh-trigger="hunt">
+            <dt>Hunt ID</dt>
+            <dd> {{ ::hunt.hunt_id }}</dd>
 
-      <div ng-if="::hunt.internal_error">
-        <br>
-        <dt class="alert-danger danger">Error while Opening</dt>
-        <dd>{$ ::hunt.internal_error $}</dd>
-        <br><br>
+            <dt>Creator</dt>
+            <dd>{{ ::hunt.creator }}</dd>
+
+            <dt>Creation Time</dt>
+            <dd><grr-timestamp value="hunt.create_time" /></dd>
+
+            <dt>Expiry Time</dt>
+            <dd><grr-timestamp value="hunt.expires" /></dd>
+
+            <dt>State</dt>
+            <dd>{{::hunt.state}}</dd>
+
+            <dt>Ops/Sec</dt>
+            <dd>{{::hunt.start_request.args.ops_per_second || 'Unlimited' }}</dd>
+            <br>
+          </dl>
+
+          <h5> Parameters </h5>
+          <dl class="dl-horizontal dl-flow">
+            <div ng-repeat="item in ::hunt.start_request.args.parameters.env">
+              <dt>{{item.key}}</dt>
+              <dd>{{item.value}}</dd>
+            </div>
+          </dl>
+
+        </div>
       </div>
+      <div class="card">
+        <h5 class="card-header">Results</h5>
+        <div class="card-body">
+          <dl class="dl-horizontal dl-flow">
+            <dt>Total scheduled</dt>
+            <dd>
+              <grr-semantic-value value="::hunt.stats.total_clients_scheduled" />
+            </dd>
 
-      <grr-semantic-value value="::hunt" type="Hunt" />
-    </grr-force-refresh>
+            <dt>Total clients</dt>
+            <dd> {{ ::hunt.stats.total_clients_with_results || 0 }} </dd>
 
-  </dl>
+            <dt>Results</dt>
+            <dd>
+              <button class="btn btn-default"
+                      ng-click="controller.downloadFile()">
+                Download
+              </button>
+            </dd>
+          </dl>
 
+        </div>
+      </div>
+    </div>
+    <div ng-if="::flow.internal_error">
+      <br>
+      <dt class="alert-danger danger">Error while Opening</dt>
+      <dd>{$ ::flow.internal_error $}</dd>
+      <br><br>
+    </div>
+  </grr-force-refresh>
 </div>

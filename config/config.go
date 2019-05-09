@@ -83,6 +83,7 @@ func GetDefaultConfig() *api_proto.Config {
 			// arbitrary code execution on the
 			// client.
 			PreventExecve: false,
+			MaxUploadSize: constants.MAX_MEMORY,
 		},
 		API: &api_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not
@@ -105,8 +106,9 @@ func GetDefaultConfig() *api_proto.Config {
 		Frontend: &api_proto.FrontendConfig{
 			// A public interface for clients to
 			// connect to.
-			BindAddress: "0.0.0.0",
-			BindPort:    8000,
+			BindAddress:   "0.0.0.0",
+			BindPort:      8000,
+			MaxUploadSize: constants.MAX_MEMORY * 2,
 		},
 		Datastore: &api_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",

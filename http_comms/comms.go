@@ -276,7 +276,8 @@ func (self *HTTPConnector) rekeyNextServer() error {
 		return err
 	}
 	defer resp.Body.Close()
-	pem, err := ioutil.ReadAll(resp.Body)
+
+	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -439,6 +440,9 @@ process_response:
 			}
 
 			encrypted = append(encrypted, buf[:n]...)
+			if len(encrypted) > int(self.config_obj.Client.MaxUploadSize) {
+				return errors.New("Response too long")
+			}
 		}
 	}
 
@@ -602,7 +606,8 @@ func (self *Sender) Start(ctx context.Context) {
 					// data, trigger the sender to
 					// send this data out
 					// immediately.
-					if length_of_message_queue > 5*1024*1024 {
+					if length_of_message_queue > int(self.
+						config_obj.Client.MaxUploadSize) {
 						release <- true
 					}
 				}

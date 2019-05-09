@@ -33,6 +33,7 @@ import (
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math/big"
 	"strings"
@@ -626,7 +627,8 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 			return nil, errors.WithStack(err)
 		}
 		defer z.Close()
-		p, err := ioutil.ReadAll(z)
+		p, err := ioutil.ReadAll(io.LimitReader(
+			z, int64(self.config.Frontend.MaxUploadSize*2)))
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}

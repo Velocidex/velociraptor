@@ -20,7 +20,6 @@ package services
 import (
 	"errors"
 	"path"
-	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -35,7 +34,6 @@ var (
 	mu sync.Mutex
 
 	global_hunt_dispatcher *HuntDispatcher
-	hunt_id_regex          = regexp.MustCompile(`^H\.[^.]+$`)
 )
 
 func GetHuntDispatcher() *HuntDispatcher {
@@ -131,6 +129,7 @@ func (self *HuntDispatcher) _flush_stats() error {
 		return nil
 	}
 
+	// Already locked.
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -139,7 +138,7 @@ func (self *HuntDispatcher) _flush_stats() error {
 	for _, hunt_obj := range self.hunts {
 		err = db.SetSubject(
 			self.config_obj,
-			hunt_obj.HuntId+"/stats", hunt_obj.Stats)
+			constants.HUNTS_URN+hunt_obj.HuntId+"/stats", hunt_obj.Stats)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_obj.HuntId, err)
@@ -197,24 +196,27 @@ func (self *HuntDispatcher) Refresh() error {
 
 	for _, hunt_urn := range hunts {
 		hunt_id := path.Base(hunt_urn)
-
-		if !hunt_id_regex.MatchString(hunt_id) {
+		if !constants.HuntIdRegex.MatchString(hunt_id) {
 			continue
 		}
 
 		hunt_obj := &api_proto.Hunt{}
-		err = db.GetSubject(self.config_obj, hunt_urn, hunt_obj)
+		err = db.GetSubject(
+			self.config_obj,
+			constants.HUNTS_URN+hunt_id, hunt_obj)
 		if err != nil {
 			continue
 		}
 
 		// Re-read the stats into the hunt object.
 		hunt_stats := &api_proto.HuntStats{}
-		err := db.GetSubject(self.config_obj, hunt_urn+"/stats", hunt_stats)
+		err := db.GetSubject(self.config_obj,
+			constants.HUNTS_URN+hunt_id+"/stats", hunt_stats)
 		if err == nil {
 			hunt_obj.Stats = hunt_stats
 		}
 
+		// FIXME: Backwards compatibility
 		if path.Base(hunt_obj.HuntId) != hunt_id {
 			continue
 		}
