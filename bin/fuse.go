@@ -132,7 +132,7 @@ func (self *VFSFs) fetchFile(vfs_name string) error {
 		if response.Context.State != flows_proto.FlowContext_RUNNING {
 			// If there were no files uploaded we could
 			// not find the file on the client.
-			if len(response.Context.UploadedFiles) == 0 {
+			if response.Context.TotalUploadedFiles == 0 {
 				return &os.PathError{Path: vfs_name}
 			}
 			break

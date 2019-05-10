@@ -58,51 +58,58 @@ func downloadFlowToZip(
 	if err != nil {
 		return err
 	}
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	copier := func(upload_name string) error {
+		reader, err := file_store_factory.ReadFile(upload_name)
+		if err != nil {
+			return err
+		}
+		defer reader.Close()
+
+		f, err := zip_writer.Create(upload_name)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(f, reader)
+		return err
+	}
+
+	// Copy the flow's logs.
+	copier(path.Join("clients", client_id, "flows", flow_id, "logs"))
 
 	// This basically copies the CSV files from the
 	// filestore into the zip. We do not need to do any
 	// processing - just give the user the files as they
 	// are. Users can do their own post processing.
-	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, artifact := range flow_details.Context.Artifacts {
 		file_path := path.Join(
 			"clients", client_id,
 			"artifacts", artifact,
 			path.Base(flow_id)+".csv")
 
-		fd, err := file_store_factory.ReadFile(file_path)
-		if err != nil {
-			continue
-		}
-		defer fd.Close()
-
-		zh, err := zip_writer.Create(file_path)
-		if err != nil {
-			continue
-		}
-
-		_, err = io.Copy(zh, fd)
-		if err != nil {
-			return err
-		}
+		copier(file_path)
 	}
 
 	// Get all file uploads
+	// FIXME: Backwards compatibility.
 	for _, upload_name := range flow_details.Context.UploadedFiles {
-		reader, err := file_store_factory.ReadFile(upload_name)
-		if err != nil {
-			continue
-		}
-		defer reader.Close()
+		copier(upload_name)
+	}
 
-		f, err := zip_writer.Create(upload_name)
-		if err != nil {
-			continue
-		}
+	// File uploads are stored in their own CSV file.
+	file_path := path.Join("clients", client_id, "flows", flow_id, "uploads")
+	fd, err := file_store_factory.ReadFile(file_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
 
-		_, err = io.Copy(f, reader)
-		if err != nil {
-			continue
+	for row := range csv.GetCSVReader(fd) {
+		vfs_path_any, pres := row.Get("vfs_path")
+		if pres {
+			err = copier(vfs_path_any.(string))
 		}
 	}
 	return err

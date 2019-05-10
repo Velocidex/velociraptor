@@ -162,12 +162,12 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
 	}
 
 	components := []string{self.config_obj.Datastore.FilestoreDirectory}
+	filename = strings.Replace(filename, "\\", "/", -1)
+
 	for idx, component := range strings.Split(filename, "/") {
 		if idx == 0 && component == "aff4:" {
 			continue
 		}
-
-		component = strings.Replace(component, "\\", "/", -1)
 
 		components = append(components,
 			string(datastore.SanitizeString(component)))

@@ -18,7 +18,7 @@ let AUTO_REFRESH_INTERVAL_MS = 1500 * 1000;
  * @export
  */
 exports.setAutoRefreshInterval = function(millis) {
-  AUTO_REFRESH_INTERVAL_MS = millis;
+    AUTO_REFRESH_INTERVAL_MS = millis;
 };
 
 /**
@@ -29,33 +29,33 @@ exports.setAutoRefreshInterval = function(millis) {
  * @ngInject
  */
 const FlowInspectorController = function($scope, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @type {string} */
-  this.activeTab = '';
+    /** @type {string} */
+    this.activeTab = '';
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** type {Object<string, boolean>} */
-  this.tabsShown = {};
+    /** type {Object<string, boolean>} */
+    this.tabsShown = {};
 
-  this.scope_.$watch('activeTab', this.onDirectiveArgumentsChange_.bind(this));
+    this.scope_.$watch('activeTab', this.onDirectiveArgumentsChange_.bind(this));
     this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
 
-  this.scope_.$watchGroup(['flowId'],
-                          this.startPolling.bind(this));
+    this.scope_.$watchGroup(['flowId'],
+                            this.startPolling.bind(this));
 
-  /** @export {Object} */
-  this.flow;
+    /** @export {Object} */
+    this.flow;
 
-  /** @private {!angular.$q.Promise|undefined} */
-  this.pollPromise_;
+    /** @private {!angular.$q.Promise|undefined} */
+    this.pollPromise_;
 
-  this.scope_.$on('$destroy', function() {
-    this.grrApiService_.cancelPoll(this.pollPromise_);
-  }.bind(this));
+    this.scope_.$on('$destroy', function() {
+        this.grrApiService_.cancelPoll(this.pollPromise_);
+    }.bind(this));
 };
 
 
@@ -68,25 +68,30 @@ FlowInspectorController.prototype.startPolling = function(newValues, oldValues) 
     this.grrApiService_.cancelPoll(this.pollPromise_);
     this.pollPromise_ = undefined;
 
-  if (angular.isDefined(this.scope_['apiBasePath']) &&
-      angular.isDefined(this.scope_['flowId'])) {
-    var flowUrl = this.scope_['apiBasePath'];
-    var interval = AUTO_REFRESH_INTERVAL_MS;
+    this.uploadedFilesParams = {
+        path: '/flows/' + this.scope_['flowId'] + '/uploads',
+        client_id: this.scope_['clientId'],
+    };
 
-      this.flow = null;
+    if (angular.isDefined(this.scope_['apiBasePath']) &&
+        angular.isDefined(this.scope_['flowId'])) {
+        var flowUrl = this.scope_['apiBasePath'];
+        var interval = AUTO_REFRESH_INTERVAL_MS;
 
-    // It's important to assign the result of the poll() call, not the
-    // result of the poll().then() call, since we need the original
-    // promise to pass to cancelPoll if needed.
-    this.pollPromise_ = this.grrApiService_.poll(
-      flowUrl, interval, {flow_id: this.scope_['flowId']});
-    this.pollPromise_.then(
-        undefined,
-        undefined,
-        function notify(response) {
-          this.flow = response['data'];
-        }.bind(this));
-  }
+        this.flow = null;
+
+        // It's important to assign the result of the poll() call, not the
+        // result of the poll().then() call, since we need the original
+        // promise to pass to cancelPoll if needed.
+        this.pollPromise_ = this.grrApiService_.poll(
+            flowUrl, interval, {flow_id: this.scope_['flowId']});
+        this.pollPromise_.then(
+            undefined,
+            undefined,
+            function notify(response) {
+                this.flow = response['data'];
+            }.bind(this));
+    }
 };
 
 
@@ -111,10 +116,10 @@ FlowInspectorController.prototype.onDirectiveArgumentsChange_ = function(newValu
  * @private
  */
 FlowInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
-  if (newValue !== oldValue) {
-    this.scope_['activeTab'] = newValue;
-  }
-  this.tabsShown[newValue] = true;
+    if (newValue !== oldValue) {
+        this.scope_['activeTab'] = newValue;
+    }
+    this.tabsShown[newValue] = true;
 };
 
 
@@ -124,18 +129,19 @@ FlowInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
  * @return {angular.Directive} Directive definition object.
  */
 exports.FlowInspectorDirective = function() {
-  return {
-    scope: {
-      flowId: '=',
-      apiBasePath: '=',
-      activeTab: '=?',
-      exportBasePath: '=',
-    },
-    controller: FlowInspectorController,
-    controllerAs: 'controller',
-    restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-inspector.html'
-  };
+    return {
+        scope: {
+            flowId: '=',
+            apiBasePath: '=',
+            activeTab: '=?',
+            exportBasePath: '=',
+            clientId: '=',
+        },
+        controller: FlowInspectorController,
+        controllerAs: 'controller',
+        restrict: 'E',
+        templateUrl: '/static/angular-components/flow/flow-inspector.html'
+    };
 };
 
 

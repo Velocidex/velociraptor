@@ -36,6 +36,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -105,7 +106,9 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 	for _, message = range messages {
 		cached_flow, err := self.getFlow(message.SessionId)
 		if err != nil {
-			self.logger.Error(fmt.Sprintf("FlowRunner %s: %v: ", message.SessionId, message), err)
+			self.logger.Error(fmt.Sprintf(
+				"FlowRunner: Can not find flow %s: %v ",
+				message.SessionId, err))
 			continue
 		}
 
@@ -119,7 +122,7 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 		// Handle log messages automatically so flows do not
 		// need to all remember to do this.
 		if message.RequestId == constants.LOG_SINK {
-			cached_flow.LogMessage(message)
+			cached_flow.LogMessage(self.config, message)
 			continue
 		}
 
@@ -176,6 +179,43 @@ func (self *FlowRunner) flushLogs(cached_flow *AFF4FlowObject) {
 	cached_flow.FlowContext.Logs = []*crypto_proto.LogMessage{}
 }
 
+// Flush the logs to a csv file. This is important for long running
+// flows with a lot of log messages.
+func (self *FlowRunner) flushUploadedFiles(cached_flow *AFF4FlowObject) {
+	log_path := path.Join(
+		strings.TrimPrefix(cached_flow.Urn, "aff4:/"), "uploads")
+
+	file_store_factory := file_store.GetFileStore(self.config)
+	fd, err := file_store_factory.WriteFile(log_path)
+	if err != nil {
+		return
+	}
+	defer fd.Close()
+
+	// Seek to the end of the file.
+	length, err := fd.Seek(0, os.SEEK_END)
+	if err != nil {
+		return
+	}
+
+	w := csv.NewWriter(fd)
+	defer w.Flush()
+
+	headers_written := length > 0
+	if !headers_written {
+		w.Write([]string{"timestamp", "vfs_path"})
+	}
+
+	for _, row := range cached_flow.FlowContext.UploadedFiles {
+		w.Write([]string{
+			time.Now().UTC().String(),
+			row})
+	}
+
+	// Clear the logs from the flow object.
+	cached_flow.FlowContext.UploadedFiles = []string{}
+}
+
 // Flush all the cached flows back to the DB.
 func (self *FlowRunner) Close() {
 	for _, cached_flow := range self.flow_cache {
@@ -185,6 +225,10 @@ func (self *FlowRunner) Close() {
 
 		if len(cached_flow.FlowContext.Logs) > 0 {
 			self.flushLogs(cached_flow)
+		}
+
+		if len(cached_flow.FlowContext.UploadedFiles) > 0 {
+			self.flushUploadedFiles(cached_flow)
 		}
 
 		cached_flow.impl.Save(self.config, cached_flow)
@@ -466,7 +510,8 @@ func (self *AFF4FlowObject) IsRequestComplete(message *crypto_proto.GrrMessage) 
 	return message.Type == crypto_proto.GrrMessage_STATUS
 }
 
-func (self *AFF4FlowObject) Log(log_msg string) {
+func (self *AFF4FlowObject) Log(config_obj *api_proto.Config, log_msg string) {
+	log_msg = artifacts.DeobfuscateString(config_obj, log_msg)
 	self.FlowContext.Logs = append(
 		self.FlowContext.Logs, &crypto_proto.LogMessage{
 			Message:   log_msg,
@@ -475,10 +520,12 @@ func (self *AFF4FlowObject) Log(log_msg string) {
 	self.dirty = true
 }
 
-func (self *AFF4FlowObject) LogMessage(message *crypto_proto.GrrMessage) {
+func (self *AFF4FlowObject) LogMessage(config_obj *api_proto.Config,
+	message *crypto_proto.GrrMessage) {
 	log_msg, ok := responder.ExtractGrrMessagePayload(
 		message).(*crypto_proto.LogMessage)
 	if ok && self.FlowContext != nil {
+		log_msg.Message = artifacts.DeobfuscateString(config_obj, log_msg.Message)
 		self.FlowContext.Logs = append(self.FlowContext.Logs, log_msg)
 		self.dirty = true
 	}

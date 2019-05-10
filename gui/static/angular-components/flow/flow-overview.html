@@ -58,11 +58,11 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifacts with Results</dt>
             <dd>
-              <grr-semantic-value value="::flow.context.artifacts_with_results" />
+              {{ flow.context.artifacts_with_results || 0 }}
             </dd>
 
             <dt>Files uploaded</dt>
-            <dd> {{ ::flow.context.uploaded_files.length || 0 }} </dd>
+            <dd> {{ flow.context.uploaded_files.length || flow.context.total_uploaded_files || 0 }} </dd>
 
             <dt>Download Results</dt>
             <dd>

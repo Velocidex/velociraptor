@@ -305,7 +305,7 @@ func appendDataToFile(
 	if err != nil {
 		// If we fail to write this one file we keep going -
 		// otherwise the flow will be terminated.
-		flow_obj.Log(fmt.Sprintf("While writing to %v: %v",
+		flow_obj.Log(config_obj, fmt.Sprintf("While writing to %v: %v",
 			file_path, err))
 		return nil
 	}
@@ -316,6 +316,7 @@ func appendDataToFile(
 
 	// Keep track of all the files we uploaded.
 	if file_buffer.Offset == 0 {
+		flow_obj.FlowContext.TotalUploadedFiles += 1
 		flow_obj.FlowContext.UploadedFiles = append(
 			flow_obj.FlowContext.UploadedFiles,
 			file_path)

@@ -12,11 +12,12 @@
     </uib-tab>
 
     <uib-tab heading="Uploaded Files" index="'files'"
-             disable="!controller.flow.context.uploaded_files.length">
-      <div class="card" ng-if="controller.flow.context.uploaded_files">
+             disable="controller.flow.context.total_uploaded_files == 0 && controller.flow.context.uploaded_files.length == 0">
+      <div class="card" >
         <h5 class="card-header">Files uploaded</h5>
         <div class="card-body">
           <table datatable="ng"
+                 ng-if="controller.flow.context.uploaded_files.length"
                  dt-instance="controller.dtInstance"
                  dt-disable-deep-watchers="true"
                  class="row-border hover dtable">
@@ -27,6 +28,11 @@
               </tr>
             </tbody>
           </table>
+          <grr-csv-viewer
+            ng-if="controller.flow.context.total_uploaded_files"
+            base-url="'v1/GetTable'"
+            params="controller.uploadedFilesParams"
+            />
         </div>
       </div>
     </uib-tab>

@@ -43,7 +43,7 @@ const (
 	TransferWellKnownFlowId = 5
 
 	// Largest buffer we use for comms.
-	MAX_MEMORY    = 1 * 1024 * 1024
+	MAX_MEMORY    = 5 * 1024 * 1024
 	MAX_POST_SIZE = 5 * 1024 * 1024
 
 	// Some special built in artifacts.

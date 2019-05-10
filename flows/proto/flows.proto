@@ -40,8 +40,13 @@ message FlowContext {
             description: "The total number of results in the flow's result collection",
         }];
 
+    // Deprecated: Uploads are now stored in a csv file.
     repeated string uploaded_files = 19 [(sem_type) = {
             description: "A list of files uploaded as part of the flow."
+        }];
+
+    uint64 total_uploaded_files = 23 [(sem_type) = {
+            description: "Total number of uploaded files."
         }];
 
     repeated LogMessage logs = 20 [(sem_type) = {

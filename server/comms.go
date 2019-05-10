@@ -309,26 +309,22 @@ func control(server_obj *Server) http.Handler {
 		server_obj.StartConcurrencyControl()
 		defer server_obj.EndConcurrencyControl()
 
-		logger.Debug("Received a post from %v", req.RemoteAddr)
-
 		body, err := ioutil.ReadAll(
 			io.LimitReader(req.Body, int64(server_obj.config.
 				Frontend.MaxUploadSize*2)))
 		if err != nil {
-			logger.Debug("Unable to read body: %+v (read %v)",
-				err, len(body))
+			logger.Debug("Unable to read body from %v: %+v (read %v)",
+				req.RemoteAddr, err, len(body))
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return
 		}
 
-		logger.Debug("Read the post from %v (%v out of max %v)",
-			req.RemoteAddr, len(body), server_obj.config.
-				Frontend.MaxUploadSize*2)
-
 		message_info, err := server_obj.Decrypt(req.Context(), body)
 		if err != nil {
-			logger.Debug("Unable to decrypt body from %v: %+v len %v",
-				req.RemoteAddr, err, len(body))
+			logger.Debug("Unable to decrypt body from %v: %+v "+
+				"(%v out of max %v)",
+				req.RemoteAddr, err, len(body), server_obj.config.
+					Frontend.MaxUploadSize*2)
 			// Just plain reject with a 403.
 			http.Error(w, "", http.StatusForbidden)
 			return

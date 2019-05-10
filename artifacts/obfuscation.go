@@ -1,6 +1,8 @@
 package artifacts
 
 import (
+	"regexp"
+
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -47,6 +49,22 @@ func Obfuscate(
 	}
 
 	return nil
+}
+
+var obfuscated_item = regexp.MustCompile("\\$[a-fA-F0-9]+")
+
+func DeobfuscateString(config_obj *api_proto.Config, in string) string {
+	if config_obj.Frontend.DoNotCompressArtifacts {
+		return in
+	}
+
+	return obfuscated_item.ReplaceAllStringFunc(in, func(in string) string {
+		out, err := obfuscator.Decrypt(config_obj, in)
+		if err != nil {
+			return in
+		}
+		return out
+	})
 }
 
 func Deobfuscate(
