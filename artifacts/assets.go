@@ -42,7 +42,8 @@ func register(config_obj *api_proto.Config) error {
 				logger.Info("Cant read asset %s: %v", file, err)
 				continue
 			}
-			_, err = global_repository.LoadYaml(string(data))
+			_, err = global_repository.LoadYaml(
+				string(data), false /* Validate */)
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
 				continue

@@ -71,7 +71,7 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 				if err != nil {
 					return errors.WithStack(err)
 				}
-				_, err = self.LoadYaml(string(data))
+				_, err = self.LoadYaml(string(data), false)
 				if err != nil {
 					return err
 				}
@@ -82,7 +82,8 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 		})
 }
 
-func (self *Repository) LoadYaml(data string) (*artifacts_proto.Artifact, error) {
+func (self *Repository) LoadYaml(data string, validate bool) (
+	*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
 	err := yaml.UnmarshalStrict([]byte(data), artifact)
 	if err != nil {
@@ -114,6 +115,25 @@ func (self *Repository) LoadYaml(data string) (*artifacts_proto.Artifact, error)
 
 	default:
 		return nil, errors.New("Artifact type invalid.")
+	}
+
+	// Validate the artifact contains syntactically correct VQL.
+	if validate {
+		for _, source := range artifact.Sources {
+			if source.Precondition != "" {
+				_, err := vfilter.Parse(source.Precondition)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			for _, query := range source.Queries {
+				_, err := vfilter.Parse(query)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
 	self.Data[artifact.Name] = artifact
@@ -454,7 +474,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 				}
 
 				artifact_obj, err := global_repository.LoadYaml(
-					string(data))
+					string(data), false /* validate */)
 				if err != nil {
 					logger.Info("Unable to load custom "+
 						"artifact %s: %v", path, err)

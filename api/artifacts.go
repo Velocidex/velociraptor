@@ -90,7 +90,7 @@ func getArtifactFile(
 func setArtifactFile(config_obj *api_proto.Config, artifact string) error {
 	// First ensure that the artifact is correct.
 	tmp_repository := artifacts.NewRepository()
-	artifact_definition, err := tmp_repository.LoadYaml(artifact)
+	artifact_definition, err := tmp_repository.LoadYaml(artifact, true /* validate */)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,8 @@ func setArtifactFile(config_obj *api_proto.Config, artifact string) error {
 	if err != nil {
 		return err
 	}
-	_, err = global_repository.LoadYaml(artifact)
+	// Artifact is already valid - no need to revalidate it again.
+	_, err = global_repository.LoadYaml(artifact, false /* validate */)
 	return err
 }
 

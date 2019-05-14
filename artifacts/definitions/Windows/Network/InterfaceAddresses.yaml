@@ -10,6 +10,6 @@ sources:
            from interfaces()
 
       - |
-        SELECT Index, MTU, Name, HardwareAddr,
-           Flags, Addrs.IP as IP, Addrs.Mask as Mask
+        SELECT Index, MTU, Name, HardwareAddr.String As HardwareAddr,
+           Flags, Addrs.IP as IP, Addrs.Mask.String as Mask
         FROM flatten(query=interface_address)

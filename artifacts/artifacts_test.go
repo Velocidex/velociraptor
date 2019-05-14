@@ -71,11 +71,11 @@ sources:
 
 func TestArtifacts(t *testing.T) {
 	repository := NewRepository()
-	repository.LoadYaml(artifact1)
-	repository.LoadYaml(artifact2)
-	repository.LoadYaml(artifact3)
-	repository.LoadYaml(artifact4)
-	repository.LoadYaml(artifact5)
+	repository.LoadYaml(artifact1, false)
+	repository.LoadYaml(artifact2, false)
+	repository.LoadYaml(artifact3, false)
+	repository.LoadYaml(artifact4, false)
+	repository.LoadYaml(artifact5, false)
 
 	assert := assert.New(t)
 
