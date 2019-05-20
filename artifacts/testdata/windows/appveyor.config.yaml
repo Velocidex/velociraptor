@@ -1,0 +1,4 @@
+# The configuration file to run on appveyor
+Datastore:
+  filestore_directory: C:\gopath\src\www.velocidex.com\golang\velociraptor\artifacts\testdata\server
+  location: C:\gopath\src\www.velocidex.com\golang\velociraptor\artifacts\testdata\server

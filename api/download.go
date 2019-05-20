@@ -294,14 +294,10 @@ func huntResultDownloadHandler(
 				continue
 			}
 
-			err := downloadFlowToZip(
-				config_obj,
+			downloadFlowToZip(config_obj,
 				client_id,
 				flow_id,
 				zip_writer)
-			if err != nil {
-				return
-			}
 		}
 	})
 }

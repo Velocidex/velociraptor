@@ -1,0 +1,3 @@
+Queries:
+  - SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(
+        globs=srcDir + "/artifacts/**10/*.exe")

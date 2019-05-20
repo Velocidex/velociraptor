@@ -50,6 +50,7 @@ func Xgo() error {
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "windows/*,darwin/amd64,linux/amd64",
 		"-tags", "release cgo",
+		"-go", "1.11",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 }
@@ -58,6 +59,7 @@ func WindowsRace() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "windows/amd64",
+		"-go", "1.11",
 		"-tags", "release cgo", "-race",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")

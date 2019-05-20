@@ -1,0 +1,47 @@
+SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob( globs=srcDir + "/artifacts/**10/*.exe")[
+ {
+  "Name": "3DBuilder.ResourceResolver.exe",
+  "PEInfo": {
+   "Machine": "IMAGE_FILE_MACHINE_I386",
+   "TimeDateStamp": "2019-03-15T09:32:39Z",
+   "GUIDAge": "84068848695B4DFDA86ECCE04021A1A91",
+   "PDB": "C:\\BA\\2821\\i\\obj\\resourceresolver.csproj__1458271508\\Release\\x64\\3DBuilder.ResourceResolver.pdb",
+   "Sections": [
+    {
+     "Perm": "xr-",
+     "Name": ".text",
+     "FileOffset": 512,
+     "VMA": 8192,
+     "Size": 0
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".rsrc",
+     "FileOffset": 7680,
+     "VMA": 16384,
+     "Size": 0
+    },
+    {
+     "Perm": "-r-",
+     "Name": ".reloc",
+     "FileOffset": 9216,
+     "VMA": 24576,
+     "Size": 0
+    }
+   ],
+   "VersionInformation": {
+    "CompanyName": "Microsoft Corporation",
+    "FileDescription": "3DBuilder.ResourceResolver.exe",
+    "FileVersion": "16.1.1903.15001",
+    "InternalName": "3DBuilder.ResourceResolver",
+    "LegalCopyright": "©Microsoft Corporation.  All rights reserved.",
+    "OriginalFilename": "3DBuilder.ResourceResolver.exe",
+    "ProductName": "3D Builder",
+    "ProductVersion": "16.1.190315001-3DBuilderR16.1"
+   },
+   "Imports": [
+    "mscoree.dll!_CorExeMain"
+   ]
+  }
+ }
+]

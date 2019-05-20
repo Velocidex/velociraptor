@@ -94,6 +94,12 @@ func runTest(fixture *testFixture) (string, error) {
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
+	if env_map != nil {
+		for k, v := range *env_map {
+			env.Set(k, v)
+		}
+	}
+
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 

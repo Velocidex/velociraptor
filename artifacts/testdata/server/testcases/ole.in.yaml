@@ -1,0 +1,3 @@
+Queries:
+  - SELECT Code, ModuleName FROM Artifact.Windows.Applications.OfficeMacros(
+        officeFileSearchGlob=srcDir + "/artifacts/**10/")

@@ -847,6 +847,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:ae9bbd72654b259a4b05ca87d0b8b0ae3feb5d94e4a86f03513bcfc1a108530c"
+  name = "www.velocidex.com/golang/go-pe"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d3d2d63cf34cdcc008a1ec13761588dda63b04a2"
+
+[[projects]]
+  branch = "master"
   digest = "1:c2ed30a5b615988962a8160c4e234d025794dfe08851ef86696925b78aec0714"
   name = "www.velocidex.com/golang/oleparse"
   packages = ["."]
@@ -967,6 +975,7 @@
     "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
+    "www.velocidex.com/golang/go-pe",
     "www.velocidex.com/golang/oleparse",
     "www.velocidex.com/golang/regparser",
     "www.velocidex.com/golang/vfilter",

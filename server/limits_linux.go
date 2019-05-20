@@ -43,7 +43,7 @@ func IncreaseLimits(config_obj *api_proto.Config) {
 
 	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
 	if err != nil {
-		logger.Info("Error Getting Rlimit ", err)
+		logger.Info("Error Getting Rlimit %v", err)
 		return
 	}
 	rLimit.Max = 999999

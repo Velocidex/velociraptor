@@ -27,7 +27,7 @@ import (
 // such names are escaped using quotes. For example:
 // HKEY_USERS\S-1-5-21-546003962-2713609280-610790815-1003\Software\Microsoft\Windows\CurrentVersion\Run\"c:\windows\system32\mshta.exe"
 var component_quoted_regex = regexp.MustCompile(`^"([^"\\/]*(?:[\\/].[^"\\/]*)*)"`)
-var component_unquoted_regex = regexp.MustCompile(`^[\\/]?([^\\/]+)([\\/]?|$)`)
+var component_unquoted_regex = regexp.MustCompile(`^[\\/]?([^\\/]*)([\\/]?|$)`)
 
 func SplitComponents(path string) []string {
 	var components []string

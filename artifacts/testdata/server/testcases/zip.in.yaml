@@ -1,14 +1,14 @@
 Queries:
   - LET zip_files = SELECT FullPath, Size FROM glob(
-      globs="c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files\\**\\*.zip")
+      globs=srcDir+"/artifacts/testdata/files/**/*.zip")
 
-  - SELECT * FROM zip_files
+  - SELECT basename(path=FullPath) as Name, Size FROM zip_files
 
   # Find txt files inside the zip files.
   - LET hits = SELECT * from foreach(row=zip_files, query= {
        select FullPath, Mtime, Size from glob(globs=url(scheme='file', path=FullPath, fragment='/**/*.txt').String, accessor='zip') } )
 
-  - SELECT * from hits
+  - SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits
 
   # Make sure we can read the contents of zip members.
-  - SELECT * FROM foreach(row=hits, query={ SELECT * from read_file(filenames=FullPath, accessor='zip')})
+  - SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT * from read_file(filenames=FullPath, accessor='zip')})

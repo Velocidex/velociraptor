@@ -29,7 +29,7 @@ import (
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -148,6 +148,9 @@ func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
 	command := kingpin.MustParse(app.Parse(os.Args[1:]))
+
+	// Just display everything in UTC.
+	os.Setenv("TZ", "Z")
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true

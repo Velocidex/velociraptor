@@ -1,3 +1,0 @@
-Queries:
-  - SELECT OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.Applications.Office.Keywords(
-     searchGlob='c:\\gopath\\src\\www.velocidex.com\\golang\\velociraptor\\artifacts\\testdata\\files')

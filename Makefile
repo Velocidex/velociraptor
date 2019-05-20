@@ -4,7 +4,7 @@ all:
 test:
 	go test ./...
 	./output/velociraptor --config artifacts/testdata/windows/test.config.yaml \
-	     golden artifacts/testdata/server/testcases/
+	     golden artifacts/testdata/server/testcases/ --env srcDir=`pwd`
 
 release:
 	go run make.go -v linux
