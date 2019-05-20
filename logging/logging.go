@@ -30,6 +30,7 @@ import (
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -229,6 +230,19 @@ func NewPlainLogger(
 
 func GetLogger(config_obj *api_proto.Config, component *string) *LogContext {
 	return Manager.GetLogger(config_obj, component)
+}
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
+}
+
+func GetStackTrace(err error) string {
+	if err, ok := err.(stackTracer); ok {
+		for _, f := range err.StackTrace() {
+			return fmt.Sprintf("%+s:%d\n", f, f)
+		}
+	}
+	return ""
 }
 
 func init() {

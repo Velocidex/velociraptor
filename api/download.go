@@ -67,6 +67,9 @@ func downloadFlowToZip(
 		}
 		defer reader.Close()
 
+		// Clean the name so it makes a reasonable zip member.
+		upload_name = path.Clean(strings.Replace(
+			upload_name, "\\", "/", -1))
 		f, err := zip_writer.Create(upload_name)
 		if err != nil {
 			return err
@@ -99,7 +102,9 @@ func downloadFlowToZip(
 	}
 
 	// File uploads are stored in their own CSV file.
-	file_path := path.Join("clients", client_id, "flows", flow_id, "uploads")
+	file_path := path.Join(
+		"clients", client_id, "flows",
+		path.Base(flow_id), "uploads")
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -294,10 +299,20 @@ func huntResultDownloadHandler(
 				continue
 			}
 
-			downloadFlowToZip(config_obj,
+			err := downloadFlowToZip(
+				config_obj,
 				client_id,
 				flow_id,
 				zip_writer)
+			if err != nil {
+				logging.GetLogger(config_obj, &logging.FrontendComponent).
+					WithFields(logrus.Fields{
+						"hunt_id": hunt_id,
+						"error":   err.Error(),
+						"bt":      logging.GetStackTrace(err),
+					}).Info("DownloadHuntResults")
+				continue
+			}
 		}
 	})
 }

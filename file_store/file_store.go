@@ -19,13 +19,14 @@ package file_store
 
 import (
 	"compress/gzip"
-	"errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -85,11 +86,16 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 
 func getCompressed(filename string) (ReadSeekCloser, error) {
 	fd, err := os.Open(filename)
-	if err == nil {
-		zr, err := gzip.NewReader(fd)
-		return &SeekableGzip{zr, fd}, err
+	if err != nil {
+		return nil, errors.WithStack(err)
 	}
-	return nil, err
+
+	zr, err := gzip.NewReader(fd)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &SeekableGzip{zr, fd}, nil
 }
 
 func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
@@ -106,7 +112,11 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 	if os.IsNotExist(err) {
 		return getCompressed(file_path + ".gz")
 	}
-	return file, err
+
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return file, nil
 }
 
 func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {
@@ -140,7 +150,7 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.FrontendComponent).Error(
 			"Unable to open file "+file_path, err)
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return file, nil
