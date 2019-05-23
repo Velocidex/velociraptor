@@ -80,6 +80,10 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Allow the args to override the artifact defaults.
 		for k, v := range *args.ToDict() {
+			lazy_v, ok := v.(vfilter.LazyExpr)
+			if ok {
+				v = lazy_v.Reduce()
+			}
 			env.Set(k, v)
 		}
 

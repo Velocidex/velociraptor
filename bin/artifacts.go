@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/yaml"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -67,7 +67,7 @@ var (
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
-		Required().String()
+		Required().HintAction(listArtifacts).String()
 )
 
 func listArtifacts() []string {

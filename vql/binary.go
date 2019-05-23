@@ -234,6 +234,11 @@ func (self *_BinaryParserFunction) Call(ctx context.Context,
 	// Extract additional args
 	options := make(map[string]interface{})
 	for k, v := range *args.ToDict() {
+		lazy_v, ok := v.(vfilter.LazyExpr)
+		if ok {
+			v = lazy_v.Reduce()
+		}
+
 		switch k {
 		case "offset", "string", "profile", "iterator", "accessor", "target":
 			continue

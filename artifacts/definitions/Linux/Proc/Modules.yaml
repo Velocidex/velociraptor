@@ -3,6 +3,7 @@ description: Module listing via /proc/modules.
 parameters:
   - name: ProcModules
     default: /proc/modules
+
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'

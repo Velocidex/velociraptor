@@ -107,6 +107,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 			}
 
 			offset += n
+			vfilter.ChargeOp(scope)
 		}
 	}
 }

@@ -713,8 +713,9 @@ func StartMonitoringService(config_obj *api_proto.Config) {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())
 	server := &http.Server{
-		Addr:    bind_addr,
-		Handler: mux,
+		Addr:     bind_addr,
+		Handler:  mux,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 	}
 
 	go func() {

@@ -163,8 +163,9 @@ func StartSelfSignedHTTPSProxy(config_obj *api_proto.Config, mux *http.ServeMux)
 		config_obj.GUI.BindPort)
 
 	server := &http.Server{
-		Addr:    listenAddr,
-		Handler: mux,
+		Addr:     listenAddr,
+		Handler:  mux,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,

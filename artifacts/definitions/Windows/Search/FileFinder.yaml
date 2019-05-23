@@ -1,0 +1,85 @@
+name: Windows.Search.FileFinder
+description: |
+  Find files on the filesystem using the filename or content.
+
+
+  ## Performance Note
+
+  This artifact can be quite expensive, especially if we search file
+  content. It will require opening each file and reading its entire
+  content. To minimize the impact on the endpoint we recommend this
+  artifact is collected with a rate limited way (about 20-50 ops per
+  second).
+
+  This artifact is usefull in the following scenarios:
+
+    * We need to locate all the places on our network where customer
+      data has been copied.
+
+    * We’ve identified malware in a data breach, named using short
+      random strings in specific folders and need to search for other
+      instances across the network.
+
+    * We believe our user account credentials have been dumped and
+      need to locate them.
+
+    * We need to search for exposed credit card data to satisfy PCI
+      requirements.
+
+    * We have a sample of data that has been disclosed and need to
+      locate other similar files
+
+
+precondition:
+  SELECT * FROM info() where OS = 'windows'
+
+parameters:
+  - name: SearchFilesGlob
+    default: C:\Users\**
+    description: Use a glob to define the files that will be searched.
+
+  - name: Keywords
+    default:
+    description: A comma delimited list of strings to search for.
+
+  - name: Use_Raw_NTFS
+    default: Y
+
+  - name: Upload_File
+    default: N
+
+  - name: Calculate_Hash
+    default: N
+
+
+
+sources:
+  - queries:
+    - LET ntfs_search = SELECT FullPath,
+               Sys.mft as Inode,
+               Mode.String AS Mode, Size,
+               timestamp(epoch=Atime.Sec) AS Atime,
+               timestamp(epoch=Mtime.Sec) AS Mtime,
+               timestamp(epoch=Ctime.Sec) AS Ctime,
+               if(condition=(Upload_File = "Y" and NOT IsDir ),
+                  then=upload(file=FullPath, accessor="ntfs")) AS Upload,
+               if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
+                  then=hash(path=FullPath, accessor="ntfs")) AS Hash
+        FROM glob(globs=SearchFilesGlob, accessor="ntfs")
+
+    - LET file_search = SELECT FullPath,
+               Sys.mft as Inode,
+               Mode.String AS Mode, Size,
+               timestamp(epoch=Atime.Sec) AS Atime,
+               timestamp(epoch=Mtime.Sec) AS Mtime,
+               timestamp(epoch=Ctime.Sec) AS Ctime,
+               if(condition=(Upload_File = "Y" and NOT IsDir ),
+                  then=upload(file=FullPath, accessor="file")) AS Upload,
+               if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
+                  then=hash(path=FullPath, accessor="file")) AS Hash
+        FROM glob(globs=SearchFilesGlob, accessor="file")
+
+    - SELECT * FROM if(
+        condition=(Use_Raw_NTFS = "Y"),
+        then=ntfs_search,
+        else=file_search)

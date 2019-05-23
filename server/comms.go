@@ -80,8 +80,9 @@ func StartFrontendHttp(
 		config_obj.Frontend.BindPort)
 
 	server := &http.Server{
-		Addr:    listenAddr,
-		Handler: router,
+		Addr:     listenAddr,
+		Handler:  router,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,
@@ -123,8 +124,9 @@ func StartFrontendHttps(
 		config_obj.Frontend.BindPort)
 
 	server := &http.Server{
-		Addr:    listenAddr,
-		Handler: router,
+		Addr:     listenAddr,
+		Handler:  router,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,
@@ -241,8 +243,9 @@ func StartTLSServer(
 
 	server := &http.Server{
 		// ACME protocol requires TLS be served over port 443.
-		Addr:    ":https",
-		Handler: mux,
+		Addr:     ":https",
+		Handler:  mux,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,

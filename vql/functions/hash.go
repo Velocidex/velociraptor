@@ -85,16 +85,19 @@ func (self *HashFunction) Call(ctx context.Context,
 
 		default:
 			n, err := file.Read(buf)
+
 			// We are done!
 			if err == io.EOF {
-				result.MD5 = fmt.Sprintf(
-					"%x", result.md5.Sum(nil))
-				result.SHA1 = fmt.Sprintf(
-					"%x", result.sha1.Sum(nil))
-				result.SHA256 = fmt.Sprintf(
-					"%x", result.sha256.Sum(nil))
+				if n == 0 {
+					result.MD5 = fmt.Sprintf(
+						"%x", result.md5.Sum(nil))
+					result.SHA1 = fmt.Sprintf(
+						"%x", result.sha1.Sum(nil))
+					result.SHA256 = fmt.Sprintf(
+						"%x", result.sha256.Sum(nil))
 
-				return result
+					return result
+				}
 
 			} else if err != nil {
 				scope.Log(err.Error())
@@ -104,6 +107,8 @@ func (self *HashFunction) Call(ctx context.Context,
 			result.md5.Write(buf[:n])
 			result.sha1.Write(buf[:n])
 			result.sha256.Write(buf[:n])
+
+			vfilter.ChargeOp(scope)
 		}
 	}
 }
