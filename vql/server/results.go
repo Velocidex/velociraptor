@@ -19,88 +19,28 @@ package server
 
 import (
 	"context"
-	"fmt"
+	"io"
+	"strings"
+	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/vfilter"
 )
 
-type CollectedArtifactsPluginArgs struct {
-	ClientId string `vfilter:"required,field=client_id"`
-	FlowId   string `vfilter:"required,field=flow_id"`
-	Artifact string `vfilter:"required,field=artifact"`
-	Source   string `vfilter:"optional,field=source"`
-}
-
-type CollectedArtifactsPlugin struct{}
-
-func (self CollectedArtifactsPlugin) Call(
-	ctx context.Context,
-	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
-
-	go func() {
-		defer close(output_chan)
-
-		arg := &CollectedArtifactsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
-		if err != nil {
-			scope.Log("collected_artifacts: %v", err)
-			return
-		}
-
-		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
-		if !ok {
-			scope.Log("Command can only run on the server")
-			return
-		}
-
-		artifact_name := arg.Artifact
-		if arg.Source != "" {
-			artifact_name += "/" + arg.Source
-		}
-
-		log_path := flows.CalculateArtifactResultPath(
-			arg.ClientId, artifact_name, arg.FlowId)
-
-		file_store_factory := file_store.GetFileStore(config_obj)
-		fd, err := file_store_factory.ReadFile(log_path)
-		if err != nil {
-			scope.Log("Error %v: %v\n", err, log_path)
-			return
-		}
-		defer fd.Close()
-
-		// Read each CSV file and emit it with
-		// some extra columns for context.
-		for row := range csv.GetCSVReader(fd) {
-			output_chan <- row.
-				Set("ClientId", arg.ClientId).
-				Set("FlowId", arg.FlowId)
-		}
-	}()
-
-	return output_chan
-}
-
-func (self CollectedArtifactsPlugin) Info(
-	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
-	return &vfilter.PluginInfo{
-		Name:    "collected_artifact",
-		Doc:     "Retrieve artifacts collected from clients.",
-		ArgType: type_map.AddType(scope, &CollectedArtifactsPluginArgs{}),
-	}
-}
-
 type SourcePluginArgs struct {
-	Source string `vfilter:"optional,field=source"`
+	ClientId  string `vfilter:"optional,field=client_id"`
+	DayName   string `vfilter:"optional,field=day_name"`
+	StartTime int64  `vfilter:"optional,field=start_time"`
+	EndTime   int64  `vfilter:"optional,field=end_time"`
+	FlowId    string `vfilter:"optional,field=flow_id"`
+	Artifact  string `vfilter:"optional,field=artifact"`
+	Source    string `vfilter:"optional,field=source"`
+	Mode      string `vfilter:"optional,field=mode"`
 }
 
 type SourcePlugin struct{}
@@ -111,95 +51,212 @@ func (self SourcePlugin) Call(
 	args *vfilter.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
-	arg := &SourcePluginArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	go func() {
+		defer close(output_chan)
+		arg := &SourcePluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
+
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*api_proto.Config)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		// This plugin will take parameters from environment
+		// parameters. This allows its use to be more concise in
+		// reports etc where many parameters can be inferred from
+		// context.
+		parseSourceArgsFromScope(arg, scope)
+
+		// Figure out the mode by looking at the artifact type.
+		if arg.Mode == "" {
+			repository, _ := artifacts.GetGlobalRepository(config_obj)
+			artifact, pres := repository.Get(arg.Artifact)
+			if !pres {
+				scope.Log("Artifact %s not known", arg.Artifact)
+				return
+			}
+			arg.Mode = artifact.Type
+		}
+
+		mode := artifacts.ModeNameToMode(arg.Mode)
+		if mode == 0 {
+			scope.Log("Invalid mode %v", arg.Mode)
+			return
+		}
+
+		// Find the glob for the CSV files making up these results.
+		csv_path := artifacts.GetCSVPath(
+			arg.ClientId, "*",
+			arg.FlowId, arg.Artifact, arg.Source, mode)
+
+		if csv_path == "" {
+			scope.Log("Invalid mode %v", arg.Mode)
+			return
+		}
+
+		globber := make(glob.Globber)
+		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		globber.Add(csv_path, accessor.PathSplit)
+
+		for hit := range globber.ExpandWithContext(ctx, "", accessor) {
+			ts := parseFileTimestamp(hit.FullPath())
+
+			// Skip files modified before the required
+			// start time.
+			if ts < arg.StartTime {
+				continue
+			}
+
+			if arg.EndTime > 0 && ts >= arg.EndTime {
+				return
+			}
+
+			err := self.ScanLog(ctx, config_obj,
+				scope, arg, output_chan,
+				hit.FullPath())
+			if err != nil {
+				scope.Log(
+					"Error reading %v: %v",
+					hit.FullPath(), err)
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self SourcePlugin) ScanLog(
+	ctx context.Context,
+	config_obj *api_proto.Config,
+	scope *vfilter.Scope,
+	arg *SourcePluginArgs,
+	output_chan chan<- vfilter.Row,
+	log_path string) error {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.ReadFile(log_path)
 	if err != nil {
-		scope.Log("source: %v", err)
-		output_chan := make(chan vfilter.Row)
-		close(output_chan)
-		return output_chan
+		return err
 	}
-	any_config_obj, _ := scope.Resolve("server_config")
-	config_obj, ok := any_config_obj.(*api_proto.Config)
-	if !ok {
-		scope.Log("Command can only run on the server")
-		close(output_chan)
-		return output_chan
+	defer fd.Close()
+
+	csv_reader := csv.NewReader(fd)
+	headers, err := csv_reader.Read()
+	if err != nil {
+		return err
 	}
 
-	client_id, _ := scope.Resolve("ClientId")
-	dayName, _ := scope.Resolve("dayName")
-	flow_id, _ := scope.Resolve("FlowId")
-	artifact_name, _ := scope.Resolve("ArtifactName")
-	mode, _ := scope.Resolve("ReportMode")
-	root := config_obj.Datastore.FilestoreDirectory
-	var path string
+	row_to_dict := func(row_data []interface{}) *vfilter.Dict {
+		row := vfilter.NewDict()
 
-	switch mode {
-	case "CLIENT":
-		if arg.Source != "" {
-			path = fmt.Sprintf(
-				"%s/clients/%s/artifacts/%s/%s/%s.csv",
-				root, client_id, artifact_name,
-				flow_id, arg.Source)
-		} else {
-			path = fmt.Sprintf(
-				"%s/clients/%s/artifacts/%s/%s.csv",
-				root, client_id, artifact_name,
-				flow_id)
-		}
-
-	case "SERVER_EVENT":
-		if arg.Source != "" {
-			path = fmt.Sprintf(
-				"%s/server_artifacts/%s/%s/%s.csv",
-				root, artifact_name, dayName, arg.Source)
-		} else {
-			path = fmt.Sprintf(
-				"%s/server_artifacts/%s/%s.csv",
-				root, artifact_name, dayName)
-		}
-
-	case "MONITORING_DAILY":
-		if client_id == "" {
-			if arg.Source != "" {
-				path = fmt.Sprintf(
-					"%s/journals/%s/%s/%s.csv",
-					root, artifact_name, dayName, arg.Source)
-			} else {
-				path = fmt.Sprintf(
-					"%s/journals/%s/%s.csv",
-					root, artifact_name, dayName)
+		for idx, row_item := range row_data {
+			if idx > len(headers) {
+				break
 			}
-		} else {
-			if arg.Source != "" {
-				path = fmt.Sprintf(
-					"%s/clients/%s/monitoring/%s/%s/%s.csv",
-					root, client_id, artifact_name,
-					dayName, arg.Source)
-			} else {
-				path = fmt.Sprintf(
-					"%s/clients/%s/monitoring/%s/%s.csv",
-					root, client_id, artifact_name, dayName)
+			// Event logs have a _ts column representing
+			// the time of each event.
+			column_name := headers[idx]
+			if column_name == "_ts" {
+				timestamp, ok := row_item.(int)
+				if ok {
+					if timestamp < int(arg.StartTime) {
+						return nil
+					}
+
+					if arg.EndTime > 0 && timestamp > int(arg.EndTime) {
+						return nil
+					}
+				}
 			}
+
+			row.Set(column_name, row_item)
 		}
+		return row
 	}
 
-	return parsers.ParseCSVPlugin{}.Call(
-		ctx, scope, vfilter.NewDict().Set("filename", path))
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		default:
+			row_data, err := csv_reader.ReadAny()
+			if err != nil {
+				if err == io.EOF {
+					return nil
+				}
+				return err
+			}
+
+			dict := row_to_dict(row_data)
+			if dict == nil {
+				break
+			}
+			output_chan <- dict
+		}
+	}
 }
 
 func (self SourcePlugin) Info(
 	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "source",
-		Doc: "Retrieve artifacts from the current artifact. " +
-			"This is mostly only useful in reports as a shorthand.",
+		Name:    "source",
+		Doc:     "Retrieve rows from an artifact's source.",
 		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
 	}
 }
 
+// Derive the unix timestamp from the filename.
+func parseFileTimestamp(filename string) int64 {
+	for _, component := range strings.Split(filename, "/") {
+		component = strings.Split(component, ".")[0]
+		ts, err := time.Parse("2006-01-02", component)
+		if err == nil {
+			return ts.Unix()
+		}
+	}
+	return 0
+}
+
+// Override SourcePluginArgs from the scope.
+func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
+	client_id, pres := scope.Resolve("ClientId")
+	if pres {
+		arg.ClientId, _ = client_id.(string)
+	}
+
+	start_time, pres := scope.Resolve("StartTime")
+	if pres {
+		arg.StartTime, _ = start_time.(int64)
+	}
+
+	end_time, pres := scope.Resolve("EndTime")
+	if pres {
+		arg.EndTime, _ = end_time.(int64)
+	}
+
+	flow_id, pres := scope.Resolve("FlowId")
+	if pres {
+		arg.FlowId, _ = flow_id.(string)
+	}
+
+	artifact_name, pres := scope.Resolve("ArtifactName")
+	if pres {
+		arg.Artifact = artifact_name.(string)
+	}
+
+	mode, pres := scope.Resolve("ReportMode")
+	if pres {
+		arg.Mode = mode.(string)
+	}
+}
+
 func init() {
-	vql_subsystem.RegisterPlugin(&CollectedArtifactsPlugin{})
 	vql_subsystem.RegisterPlugin(&SourcePlugin{})
 }

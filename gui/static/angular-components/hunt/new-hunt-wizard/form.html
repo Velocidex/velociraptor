@@ -1,4 +1,7 @@
-<grr-wizard-form title="New Hunt" on-resolve="controller.resolve()" on-reject="onReject()">
+<grr-wizard-form title="New Hunt"
+                 on-page-change="controller.onValueChange_()"
+                 on-resolve="controller.resolve()"
+                 on-reject="onReject()">
 
   <!-- Configure flow -->
   <grr-wizard-form-page title="Select Artifacts to collect">

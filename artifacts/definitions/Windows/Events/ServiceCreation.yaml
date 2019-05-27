@@ -9,7 +9,7 @@ description: |
 
   This event monitor extracts the service creation events from the
   event log and records them on the server.
-type: EVENT
+type: CLIENT_EVENT
 
 parameters:
   - name: systemLogFile

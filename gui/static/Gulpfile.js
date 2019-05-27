@@ -86,7 +86,9 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
                    config.nodeModulesDir + '/highlightjs/highlight.pack.js',
-                   'third-party/jquery.splitter.js'])
+                   'third-party/jquery.splitter.js',
+                   config.nodeModulesDir + '/sprintf/lib/sprintf.js',
+                  ])
         .pipe(gulpNewer(config.distDir + '/third-party.bundle.js'))
         .pipe(gulpConcat('third-party.bundle.js'))
         .pipe(uglify())

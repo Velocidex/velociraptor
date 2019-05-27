@@ -31,10 +31,12 @@ const FileTextViewController = function(
   this.page = 1;
 
   /** @export {number} */
-  this.pageCount = 1;
+  this.pageCount = 10;
 
   /** @private {number} */
   this.chunkSize_ = 10000;
+
+  this.language;
 
   this.scope_.$watchGroup(['controller.fileContext.clientId',
                            'controller.fileContext.selectedFilePath'],
@@ -71,24 +73,38 @@ FileTextViewController.prototype.onPageChange_ = function(page, oldPage) {
   }
 };
 
+FileTextViewController.prototype.guessHighlighting = function(filename) {
+  if (filename.match(/yaml$/i)) {
+    return "yaml";
+  }
+
+  if (filename.match(/csv$/i)) {
+    return "yaml";
+  }
+
+  return "";
+};
+
 /**
  * Fetches the file content.
  *
  * @private
  */
 FileTextViewController.prototype.fetchText_ = function() {
-    this.fileContent = null;
-    if (angular.isUndefined(this.fileContext.selectedRow)) {
-        return;
-    }
+  this.fileContent = "Loading....";
+  if (angular.isUndefined(this.fileContext.selectedRow)) {
+    return;
+  }
 
-    var clientId = this.fileContext['clientId'];
-    var download = this.fileContext.selectedRow.Download;
-    if (download == null) {
-        return;
-    }
+  var clientId = this.fileContext['clientId'];
+  var download = this.fileContext.selectedRow.Download;
+  if (download == null) {
+    return;
+  }
 
-    var filePath = download.vfs_path;
+  var filePath = download.vfs_path;
+
+  this.language = this.guessHighlighting(filePath);
 
   var total_size = this.fileContext.selectedRow['Size'];
   var offset = (this.page - 1) * this.chunkSize_;

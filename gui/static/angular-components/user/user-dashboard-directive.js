@@ -25,62 +25,13 @@ const UserDashboardController = function(
   /** @private {!grrUi.routing.routingService.RoutingService} */
   this.grrRoutingService_ = grrRoutingService;
 
-  /** @type {Array<Object>} */
-  this.clientApprovals;
-
-  this.grrApiService_.get('/users/me/approvals/client', {count: 7}).then(
-      this.onApprovals_.bind(this));
-  this.grrApiService_.get('/hunts',
-                          {
-                            count: 5,
-                            active_within: '31d',
-                            created_by: 'me'
-                          }).then(this.onHunts_.bind(this));
+  let current_datetime = new Date();
+  this.params = {
+    artifact: "Server.Monitor.Health",
+    type: "SERVER_EVENT",
+    dayName: moment.utc().format("YYYY-MM-DD")
+  };
 };
-
-
-/**
- * Handles results of the user approvals request.
- *
- * @param {!Object} response API response.
- * @private
- */
-UserDashboardController.prototype.onApprovals_ = function(response) {
-  this.clientApprovals = response['data']['items'];
-};
-
-
-/**
- * Handles results of the hunts request.
- *
- * @param {!Object} response API response.
- * @private
- */
-UserDashboardController.prototype.onHunts_ = function(response) {
-  this.hunts = response['data']['items'];
-};
-
-/**
- * Handles clicks in the client panel.
- *
- * @param {string} clientId Client ID corresponding to a clicked row.
- * @export
- */
-UserDashboardController.prototype.onClientClicked = function(clientId) {
-  this.grrRoutingService_.go('client', {clientId: clientId});
-};
-
-/**
- * Handles clicks in the hunts panel.
- *
- * @param {!Object} hunt Hunt object corresponding to a clicked row.
- * @export
- */
-UserDashboardController.prototype.onHuntClicked = function(hunt) {
-  var huntId = hunt['value']['urn']['value'].split('/')[2];
-  this.grrRoutingService_.go('hunts', {huntId: huntId});
-};
-
 
 /**
  * UserDashboardDirective renders a dashboard that users see when they

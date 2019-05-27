@@ -42,6 +42,8 @@ type WriteSeekCloser interface {
 type ReadSeekCloser interface {
 	io.ReadSeeker
 	io.Closer
+
+	Stat() (os.FileInfo, error)
 }
 
 type FileStore interface {
@@ -55,6 +57,8 @@ type FileStore interface {
 
 type FileStoreFileInfo struct {
 	os.FileInfo
+	_full_path string
+	_data      interface{}
 }
 
 func (self FileStoreFileInfo) Name() string {
@@ -78,7 +82,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 
 	var result []os.FileInfo
 	for _, fileinfo := range files {
-		result = append(result, &FileStoreFileInfo{fileinfo})
+		result = append(result, &FileStoreFileInfo{
+			fileinfo, dirname, nil})
 	}
 
 	return result, nil
@@ -129,7 +134,7 @@ func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, e
 		return nil, err
 	}
 
-	return &FileStoreFileInfo{file}, nil
+	return &FileStoreFileInfo{file, filename, nil}, nil
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
@@ -227,7 +232,7 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 		func(path string, info os.FileInfo, err error) error {
 			filestore_path, _ := self.FileStorePathToFilename(path)
 			return walkFn(filestore_path,
-				&FileStoreFileInfo{info}, err)
+				&FileStoreFileInfo{info, path, nil}, err)
 		})
 }
 

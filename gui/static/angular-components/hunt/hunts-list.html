@@ -3,7 +3,7 @@
     <li>
       <button class="btn btn-default" name="NewHunt"
               title="New Hunt" ng-click="controller.newHunt()">
-        <img src="/static/images/new.png" class="toolbar-icon" />
+        <i class="fa fa-plus"></i>
       </button>
 
       <div class="btn-group">
@@ -12,14 +12,14 @@
                 ng-disabled="controller.selectedHunt.state != 'PAUSED' &&
                              controller.selectedHunt.state != 'STOPPED'"
                 ng-click="controller.runHunt()">
-          <img src="/static/images/play_button.png" class="toolbar-icon" />
+          <i class="fa fa-play"></i>
         </button>
 
         <button class="btn btn-default" name="StopHunt"
                 title="Stop Hunt"
                 ng-disabled="controller.selectedHunt.state != 'RUNNING'"
                 ng-click="controller.stopHunt()">
-          <img src="/static/images/stop_button.png" class="toolbar-icon" />
+          <i class="fa fa-stop"></i>
         </button>
       </div>
     </li>

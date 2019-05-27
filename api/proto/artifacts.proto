@@ -72,6 +72,9 @@ message GetReportRequest {
     // Parameters for MONITORING_DAILY
     string day_name = 6;
 
+    uint64 start_time = 8;
+    uint64 end_time = 9;
+
     // Parameters for CLIENT
     string flow_id = 7;
 

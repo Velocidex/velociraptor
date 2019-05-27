@@ -1,6 +1,6 @@
 Queries:
-  - SELECT Authors, ClientId, FullPath, License, Name, Summary, Version
-    FROM collected_artifact(
+  - SELECT Authors, FullPath, License, Name, Summary, Version
+    FROM source(
        client_id='C.11a3013cca8f826e',
        flow_id="F.11cb737b",
        artifact='Windows.Applications.ChocolateyPackages')

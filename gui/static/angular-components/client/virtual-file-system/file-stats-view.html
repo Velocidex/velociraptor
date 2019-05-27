@@ -4,7 +4,7 @@
 </div>
 
 <div class="card-deck" ng-if="controller.fileContext.selectedRow.Name">
-  <div class="card" >
+  <div class="card panel" >
     <h5 class="card-header">{$ controller.fileContext.selectedRow._FullPath ||
       controller.fileContext.selectedRow.Name
       $}</h5>
@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <div class="card" ng-if="controller.fileContext.selectedRow._Data" >
+  <div class="card panel" ng-if="controller.fileContext.selectedRow._Data" >
     <h5 class="card-header">Properties </h5>
     <div class="card-body">
       <dl class="dl-horizontal dl-flow">

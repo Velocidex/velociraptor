@@ -99,7 +99,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		Columns:  self.Scope.GetMembers(rows[0]),
 	}
 	return fmt.Sprintf(
-		`<grr-csv-viewer value="data['%s']" params='%s' />`,
+		`<div class="panel"><grr-csv-viewer value="data['%s']" params='%s' /></div>`,
 		key, string(parameters))
 }
 
@@ -243,8 +243,19 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 				self.Artifact.Name, err)
 		}
 
-		for row := range vql.Eval(self.ctx, self.Scope) {
+		ctx, cancel := context.WithCancel(self.ctx)
+		defer cancel()
+
+		for row := range vql.Eval(ctx, self.Scope) {
 			result = append(result, row)
+
+			// Do not let the query collect too many rows
+			// - it impacts on server performance.
+			if len(result) > 10000 {
+				self.Error("Query cancelled because it "+
+					"exceeded row count: '%s'", query)
+				return result
+			}
 		}
 	}
 
@@ -313,6 +324,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 
 	// Required for syntax highlighting.
 	p.AllowAttrs("class").OnElements("span")
+	p.AllowAttrs("class").OnElements("div")
 
 	return p
 }

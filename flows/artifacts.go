@@ -23,7 +23,6 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
-	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
@@ -177,13 +176,16 @@ func (self *ArtifactCollector) ProcessMessage(
 			return err
 		}
 
-		log_path := CalculateArtifactResultPath(
-			flow_obj.RunnerArgs.ClientId,
-			response.Query.Name,
-			flow_obj.Urn)
+		artifact_name, source_name := artifacts.
+			QueryNameToArtifactAndSource(response.Query.Name)
 
 		// Store the event log in the client's VFS.
 		if response.Query.Name != "" {
+			log_path := artifacts.GetCSVPath(
+				flow_obj.RunnerArgs.ClientId, "",
+				path.Base(flow_obj.Urn),
+				artifact_name, source_name, artifacts.MODE_CLIENT)
+
 			file_store_factory := file_store.GetFileStore(config_obj)
 			fd, err := file_store_factory.WriteFile(log_path)
 			if err != nil {
@@ -323,41 +325,6 @@ func appendDataToFile(
 		flow_obj.dirty = true
 	}
 	return nil
-}
-
-// Figure out where the artifact result should be stored in the file
-// store.
-
-// NOTE: An artifact may have multiple sources and therefore contain
-// multiple tables. However, each table is stored in its own CSV
-// file. We therefore use a directory structure on the server to
-// contain all sources related to the artifact:
-
-// clients/<client_id>/artifacts/<artifact name>/<flow_id>/<source name>.csv
-
-func CalculateArtifactResultPath(client_id, name, flow_urn string) string {
-
-	// The artifact name is prepared by the artifact compiler. If
-	// an artifact contains multiple sources, the query name will
-	// consists of <artifact name>/<source name>.
-
-	// This code places the source name under the artifact's main
-	// result.
-	components := strings.Split(name, "/")
-	switch len(components) {
-	case 2:
-		source_name := components[1]
-		artifact_name := components[0]
-		return path.Join(
-			"clients", client_id,
-			"artifacts", artifact_name,
-			path.Base(flow_urn), source_name+".csv")
-	default:
-		return path.Join(
-			"clients", client_id,
-			"artifacts", name,
-			path.Base(flow_urn)+".csv")
-	}
 }
 
 // Expand all the artifacts with their sources. Since each artifact

@@ -15,7 +15,7 @@ reports:
                           HuntId as ParticipatedHuntId
                    FROM monitoring(client_id=ClientId,
                        artifact='System.Hunt.Participation',
-                       date_regex=dayName) },
+                       day_name=dayName) },
              query={
                 SELECT Scheduled,
                        HuntId,

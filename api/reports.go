@@ -42,17 +42,17 @@ func getReport(ctx context.Context,
 
 	case "SERVER_EVENT":
 		template_data, err = reporting.
-			GenerateServerMonitoringDailyReport(
-				template_engine, in.DayName)
+			GenerateServerMonitoringReport(
+				template_engine, in.StartTime, in.EndTime)
 		if err != nil {
 			return nil, err
 		}
 
 	// A MONITORING_DAILY report is a report generated
 	// over a single day of a monitoring artifact
-	case "MONITORING_DAILY":
+	case "MONITORING_DAILY", "CLIENT_EVENT":
 		template_data, err = reporting.GenerateMonitoringDailyReport(
-			template_engine, in.ClientId, in.DayName)
+			template_engine, in.ClientId, in.StartTime, in.EndTime)
 		if err != nil {
 			return nil, err
 		}

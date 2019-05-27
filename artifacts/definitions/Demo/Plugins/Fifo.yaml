@@ -47,7 +47,7 @@ description: |
 
   Of course in the real artifact we would want to include more
   information than just times (i.e. who logged on to where etc).
-type: EVENT
+type: CLIENT_EVENT
 
 sources:
   - queries:

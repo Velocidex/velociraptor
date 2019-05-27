@@ -21,12 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 )
 
 type SeekableGzip struct {
 	io.Reader
 
-	backing_file io.Closer
+	backing_file *os.File
 }
 
 func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
@@ -40,6 +41,11 @@ func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
 	return 0, errors.New(fmt.Sprintf(
 		"Seeking to %v (%v) not supported on compressed files.",
 		offset, whence))
+}
+
+func (self SeekableGzip) Stat() (os.FileInfo, error) {
+	stat, err := self.backing_file.Stat()
+	return stat, err
 }
 
 func (self *SeekableGzip) Close() error {

@@ -23,7 +23,7 @@ precondition: |
   SELECT OS From info() where OS = 'windows'
 
 sources:
-  - name: Windows.System.Amcache.InventoryApplicationFile
+  - name: InventoryApplicationFile
     queries:
       - |
         SELECT FileId,
@@ -48,7 +48,7 @@ sources:
             )
         })
 
-  - name: Windows.System.Amcache.File
+  - name: File
     queries:
       - |
         SELECT * FROM foreach(
@@ -72,10 +72,7 @@ reports:
       {{define "recent_executions"}}
            LET recent_executions <= SELECT LastModified, Name, count(items=Name) As Count,
                   int(int=_LastModified/3600) AS Hour
-           FROM collected_artifact(
-               client_id=ClientId,
-               flow_id=FlowId,
-               artifact='Windows.System.Amcache/Windows.System.Amcache.InventoryApplicationFile')
+           FROM source(source="InventoryApplicationFile")
            GROUP BY Hour
            LIMIT 500
       {{ end }}

@@ -137,7 +137,7 @@ func (self _WatchCSVPlugin) Call(
 				for {
 					_, err := csv_reader.ReadAny()
 					if err != nil {
-						break
+						return
 					}
 				}
 
@@ -170,7 +170,7 @@ func (self _WatchCSVPlugin) Call(
 					for {
 						row_data, err := csv_reader.ReadAny()
 						if err != nil {
-							break
+							return
 						}
 
 						row := vfilter.NewDict()

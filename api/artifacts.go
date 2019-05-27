@@ -38,7 +38,7 @@ const (
 description: |
    This is the human readable description of the artifact.
 
-# Can be CLIENT, EVENT, SERVER, SERVER_EVENT
+# Can be CLIENT, CLIENT_EVENT, SERVER, SERVER_EVENT
 type: CLIENT
 
 parameters:

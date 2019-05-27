@@ -3,11 +3,11 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"time"
 
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -62,11 +62,15 @@ func NewJournalWriter() *JournalWriter {
 func (self *JournalWriter) WriteEvent(event *Event) error {
 	file_store_factory := file_store.GetFileStore(event.Config)
 
-	now := time.Now()
-	log_path := path.Join(
-		"journals", event.QueryName,
-		fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
-			now.Month(), now.Day()))
+	artifact_name, source_name := artifacts.
+		QueryNameToArtifactAndSource(event.QueryName)
+
+	log_path := artifacts.GetCSVPath(
+		/* client_id */ "",
+		artifacts.GetDayName(),
+		/* flow_id */ "",
+		artifact_name, source_name,
+		artifacts.MODE_JOURNAL_DAILY)
 
 	fd, err := file_store_factory.WriteFile(log_path)
 	if err != nil {
@@ -93,6 +97,7 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 
 	for _, row := range rows {
 		csv_row := vfilter.NewDict().
+			Set("_ts", int(time.Now().Unix())).
 			Set("ClientId", event.ClientId)
 
 		for _, column := range event.Columns {

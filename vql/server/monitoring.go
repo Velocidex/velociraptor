@@ -19,22 +19,18 @@ package server
 
 import (
 	"context"
+	"io"
 	"path"
-	"regexp"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
-
-type MonitoringPluginArgs struct {
-	ClientId  []string `vfilter:"optional,field=client_id"`
-	Artifact  string   `vfilter:"required,field=artifact"`
-	DateRegex string   `vfilter:"optional,field=date_regex"`
-}
 
 type MonitoringPlugin struct{}
 
@@ -47,7 +43,7 @@ func (self MonitoringPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		arg := &MonitoringPluginArgs{}
+		arg := &SourcePluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
@@ -61,34 +57,45 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		date_regex := regexp.MustCompile(".")
-		if arg.DateRegex != "" {
-			date_regex, err = regexp.Compile(arg.DateRegex)
-			if err != nil {
-				scope.Log("monitoring: %v", err)
-				return
-			}
+		if arg.DayName == "" {
+			arg.DayName = "*"
 		}
 
-		// If no client id is specified, we list the journal
-		// which collects events from all clients at once.
-		if len(arg.ClientId) == 0 {
-			log_path := path.Join(
-				"journals",
-				arg.Artifact)
+		// Figure out the mode by looking at the artifact type.
+		if arg.Mode == "" {
+			repository, _ := artifacts.GetGlobalRepository(config_obj)
+			artifact, pres := repository.Get(arg.Artifact)
+			if !pres {
+				scope.Log("Artifact %s not known", arg.Artifact)
+				return
+			}
+			arg.Mode = artifact.Type
+		}
 
-			self.ScanLog(config_obj, scope, output_chan,
-				log_path, "", arg.Artifact, date_regex)
+		mode := artifacts.ModeNameToMode(arg.Mode)
+		if mode == 0 {
+			scope.Log("Unknown mode %v", arg.Mode)
 			return
 		}
 
-		for _, client_id := range arg.ClientId {
-			log_path := path.Join(
-				"clients", client_id, "monitoring",
-				arg.Artifact)
+		log_path := artifacts.GetCSVPath(
+			arg.ClientId, arg.DayName,
+			arg.FlowId, arg.Artifact,
+			arg.Source, mode)
 
-			self.ScanLog(config_obj, scope, output_chan,
-				log_path, client_id, arg.Artifact, date_regex)
+		globber := make(glob.Globber)
+		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		globber.Add(log_path, accessor.PathSplit)
+
+		for hit := range globber.ExpandWithContext(ctx, "", accessor) {
+			err := self.ScanLog(config_obj,
+				scope, output_chan,
+				hit.FullPath())
+			if err != nil {
+				scope.Log(
+					"Error reading %v: %v",
+					hit.FullPath(), err)
+			}
 		}
 	}()
 
@@ -99,57 +106,38 @@ func (self MonitoringPlugin) ScanLog(
 	config_obj *api_proto.Config,
 	scope *vfilter.Scope,
 	output_chan chan<- vfilter.Row,
-	log_path string,
-	client_id string,
-	artifact string,
-	date_regex *regexp.Regexp) {
+	log_path string) error {
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	listing, err := file_store_factory.ListDirectory(log_path)
+	fd, err := file_store.GetFileStore(config_obj).ReadFile(log_path)
 	if err != nil {
-		return
+		return err
+	}
+	defer fd.Close()
+
+	csv_reader := csv.NewReader(fd)
+	headers, err := csv_reader.Read()
+	if err != nil {
+		return err
 	}
 
-	for _, item := range listing {
-		if !date_regex.MatchString(item.Name()) {
-			continue
-		}
-
-		file_path := path.Join(log_path, item.Name())
-		fd, err := file_store_factory.ReadFile(file_path)
+	for {
+		row := vfilter.NewDict()
+		row_data, err := csv_reader.ReadAny()
 		if err != nil {
-			scope.Log("Error %v: %v\n", err, file_path)
-			continue
-		}
-		defer fd.Close()
-
-		csv_reader := csv.NewReader(fd)
-		headers, err := csv_reader.Read()
-		if err != nil {
-			continue
-		}
-
-	process_file:
-		for {
-			row := vfilter.NewDict().
-				Set("ClientId", client_id).
-				Set("Artifact", artifact)
-
-			row_data, err := csv_reader.ReadAny()
-			if err != nil {
-				break process_file
+			if err == io.EOF {
+				return nil
 			}
-
-			for idx, row_item := range row_data {
-				if idx > len(headers) {
-					break
-				}
-				row.Set(headers[idx], row_item)
-			}
-
-			output_chan <- row
+			return err
 		}
+
+		for idx, row_item := range row_data {
+			if idx > len(headers) {
+				break
+			}
+			row.Set(headers[idx], row_item)
+		}
+
+		output_chan <- row
 	}
 }
 
@@ -173,6 +161,15 @@ type info struct {
 	offset int64
 }
 
+type MonitoringPluginArgs struct {
+	ClientId  []string `vfilter:"optional,field=client_id"`
+	Artifact  string   `vfilter:"required,field=artifact"`
+	Source    string   `vfilter:"required,field=source"`
+	DateRegex string   `vfilter:"optional,field=date_regex"`
+}
+
+// The watch_monitoring plugin watches for new rows written to the
+// monitoring CSV files on the server.
 type WatchMonitoringPlugin struct{}
 
 func (self WatchMonitoringPlugin) Call(

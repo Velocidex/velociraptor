@@ -45,6 +45,10 @@ var WizardFormController = exports.WizardFormController;
  */
 WizardFormController.prototype.onPagesOrCurrentPageChange_ = function() {
   this.currentPageIndex = this.pages.indexOf(this.currentPage);
+  var page_change_cb = this.scope_['onPageChange'];
+  if (angular.isDefined(page_change_cb)) {
+    page_change_cb({'page': this.currentPageIndex});
+  };
 };
 
 /**
@@ -111,6 +115,7 @@ exports.WizardFormDirective = function() {
   return {
     scope: {
       title: '@',
+      onPageChange: '&',
       onResolve: '&',
       onReject: '&'
     },

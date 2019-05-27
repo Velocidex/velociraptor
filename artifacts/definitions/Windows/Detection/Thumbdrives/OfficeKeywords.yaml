@@ -12,7 +12,7 @@ description: |
   We exclude very large removable drives since they might have too
   many files.
 
-type: EVENT
+type: CLIENT_EVENT
 
 parameters:
   - name: officeExtensions

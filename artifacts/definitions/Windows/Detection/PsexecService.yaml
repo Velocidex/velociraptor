@@ -6,7 +6,7 @@ description: |
   improves on this by scanning the service binary to detect the
   original psexec binary.
 
-type: EVENT
+type: CLIENT_EVENT
 
 parameters:
   - name: yaraRule

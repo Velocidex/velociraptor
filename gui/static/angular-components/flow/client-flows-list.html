@@ -3,20 +3,20 @@
     <li>
       <button class="btn btn-default" name="NewHunt"
               title="Collect More Artifacts" ng-click="controller.newArtifactCollection()">
-        <img src="/static/images/new.png" class="toolbar-icon" />
+        <i class="fa fa-plus"></i>
       </button>
 
       <button title="Cancel Artifact Collection" class="btn btn-default" name="cancel_flow"
               ng-disabled="!selectedFlowId"
               ng-click="controller.cancelButtonClicked()">
-        <img src="/static/images/editdelete.png" class="toolbar_icon">
+        <i class="fa fa-trash"></i>
       </button>
 
       <button class="btn btn-default" name="copy_flow"
               title="Copy Flow"
               ng-disabled="!selectedFlowId"
               ng-click="controller.copyFlow()">
-        <img src="/static/images/copy.png" class="toolbar-icon" />
+        <i class="fa fa-copy"></i>
       </button>
 
       <button title="Create Hunt From Flow" class="btn btn-default" name="create_hunt"

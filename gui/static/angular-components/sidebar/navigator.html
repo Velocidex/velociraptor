@@ -1,49 +1,56 @@
 <div class="pull-left">
   <span class="hamburger toolbar-buttons"
-        ng-click="controller.Collapse()">&#9776;</span>
+        ng-click="controller.CollapseToggle()">&#9776;</span>
   <div id="navigator"
        ng-class="{'collapsed': controller.collapsed, 'uncollapsed': !controller.collapsed}"
        ng-click="controller.Collapse()"
        >
     <div>
-      <!-- Client overview and links for client navigation -->
-      <section ng-if="controller.clientId">
-        <!-- Client links -->
-        <ul class="nav nav-pills">
-          <li grr-nav-link state="client.hostInfo"
-              params="{clientId: controller.clientId}">
-            Host Information
-          </li>
-          <li grr-nav-link state="client.vfs"
-              params="{clientId: controller.clientId}"
-              >
-            Browse Virtual Filesystem
-          </li>
-          <li grr-nav-link state="client.flows"
-              params="{clientId: controller.clientId}"
-              >
-            Collected Artifacts
-          </li>
-        </ul>
-      </section>
-
       <!-- Management links -->
       <section>
-        <h1>Management</h1>
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="userDashboard">
+            <i class="fa fa-home navicon"></i>
+            Home
+          </li>
+        </ul>
 
         <ul class="nav nav-pills">
-          <li grr-nav-link state="hunts"
-              >
+          <li grr-nav-link state="hunts" >
+            <i class="fa fa-crosshairs navicon"></i>
             Hunt Manager
           </li>
         </ul>
 
         <ul class="nav nav-pills">
           <li grr-nav-link state="server_files">
+            <i class="fa fa-wrench navicon"></i>
             Server Management
           </li>
         </ul>
 
+      </section>
+
+      <!-- Client overview and links for client navigation -->
+      <section ng-if="controller.clientId">
+        <!-- Client links -->
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="client.hostInfo"
+              params="{clientId: controller.clientId}">
+            <i class="fa fa-laptop navicon"></i>
+            Host Information
+          </li>
+          <li grr-nav-link state="client.vfs"
+              params="{clientId: controller.clientId}" >
+            <i class="fa fa-folder-open navicon"></i>
+            Virtual Filesystem
+          </li>
+          <li grr-nav-link state="client.flows"
+              params="{clientId: controller.clientId}" >
+            <i class="fa fa-binoculars navicon"></i>
+            Collected Artifacts
+          </li>
+        </ul>
       </section>
 
       <!-- Additional links -->

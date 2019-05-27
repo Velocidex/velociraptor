@@ -28,11 +28,21 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
+)
+
+var (
+	mu sync.Mutex
+
+	// HTTP clients can be reused between goroutines. This should
+	// keep TCP connections up etc.
+	http_client        *http.Client
+	http_client_no_ssl *http.Client
 )
 
 type _HttpPluginRequest struct {
@@ -125,30 +135,65 @@ func getHttpClient(
 	// case where the server cert is signed by our own CA we can
 	// ignore the server's Common Name.
 
-	result := &http.Client{}
 	// It is a unix domain socket.
 	if strings.HasPrefix(arg.Url, "/") {
 		components := strings.Split(arg.Url, ":")
 		if len(components) == 1 {
 			components = append(components, "/")
 		}
-		result.Transport = &http.Transport{
-			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
-				return net.Dial("unix", components[0])
-			},
-		}
 		arg.Url = "http://unix" + components[1]
 
-	} else {
-		result.Transport = &http.Transport{
+		return &http.Client{
+			Timeout: time.Second * 10,
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost: 10,
+				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
+					return net.Dial("unix", components[0])
+				},
+			},
+		}
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if arg.DisableSSLSecurity {
+		if http_client_no_ssl != nil {
+			return http_client_no_ssl
+		}
+
+		http_client_no_ssl = &http.Client{
+			Timeout: time.Second * 10,
+			Transport: &http.Transport{
+				MaxIdleConns: 10,
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		}
+
+		return http_client_no_ssl
+	}
+
+	if http_client != nil {
+		return http_client
+	}
+
+	http_client = &http.Client{
+		Timeout: time.Second * 10,
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				KeepAlive: 600 * time.Second,
+			}).Dial,
+			MaxIdleConnsPerHost: 10,
+			MaxIdleConns:        10,
 			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: true, // Not actually skipping, we check the cert in VerifyPeerCertificate
+				// Not actually skipping, we check the
+				// cert in VerifyPeerCertificate
+				InsecureSkipVerify: true,
 				VerifyPeerCertificate: func(
 					rawCerts [][]byte,
 					verifiedChains [][]*x509.Certificate) error {
-					if arg.DisableSSLSecurity {
-						return nil
-					}
 					return customVerifyPeerCert(
 						config_obj,
 						arg.Url,
@@ -156,10 +201,10 @@ func getHttpClient(
 						verifiedChains)
 				},
 			},
-		}
+		},
 	}
 
-	return result
+	return http_client
 }
 
 func encodeParams(arg *_HttpPluginRequest, scope *vfilter.Scope) *url.Values {
@@ -227,6 +272,10 @@ func (self *_HttpPlugin) Call(
 		}
 
 		http_resp, err := client.Do(req)
+		if http_resp != nil {
+			defer http_resp.Body.Close()
+		}
+
 		if err != nil {
 			output_chan <- &_HttpPluginResponse{
 				Url:      arg.Url,
@@ -235,7 +284,6 @@ func (self *_HttpPlugin) Call(
 			}
 			return
 		}
-		defer http_resp.Body.Close()
 
 		response := &_HttpPluginResponse{
 			Url:      arg.Url,

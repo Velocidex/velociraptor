@@ -52,7 +52,7 @@ exports.routingModule
           //
 
           .state('userDashboard', {
-            url: '',
+            url: '/',
             template: '<grr-user-dashboard />',
             title: 'Home',
           })

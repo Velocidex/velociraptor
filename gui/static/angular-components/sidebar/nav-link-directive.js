@@ -3,7 +3,6 @@
 goog.module('grrUi.sidebar.navLinkDirective');
 goog.module.declareLegacyNamespace();
 
-const {NavDropdownController} = goog.require('grrUi.sidebar.navDropdownDirective');
 const {RoutingService} = goog.require('grrUi.routing.routingService');
 
 
@@ -26,9 +25,6 @@ const NavLinkController = function(
 
   /** @private {!RoutingService} */
   this.grrRoutingService_ = grrRoutingService;
-
-  /** @type {NavDropdownController} */
-  this.navDropdownController;
 
   /** @type {boolean} */
   this.isActive = false;
@@ -105,7 +101,6 @@ exports.NavLinkDirective = function() {
       disabled: '=?'
     },
     restrict: 'A',
-    require: '?^grrNavDropdown',
     transclude: true,
     templateUrl: '/static/angular-components/sidebar/nav-link.html',
     controller: NavLinkController,

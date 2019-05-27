@@ -17,7 +17,7 @@ import (
 
 var (
 	valid_report_types = []string{
-		"MONITORING_DAILY", "CLIENT", "SERVER_EVENT",
+		"MONITORING_DAILY", "CLIENT", "CLIENT_EVENT", "SERVER_EVENT",
 	}
 )
 
@@ -25,7 +25,7 @@ var (
 // operations.
 type TemplateEngine interface {
 	Execute(template_string string) (string, error)
-	SetEnv(key, value string)
+	SetEnv(key string, value interface{})
 	GetArtifact() *artifacts_proto.Artifact
 	Close()
 }
@@ -42,7 +42,7 @@ func (self *BaseTemplateEngine) GetArtifact() *artifacts_proto.Artifact {
 	return self.Artifact
 }
 
-func (self *BaseTemplateEngine) SetEnv(key, value string) {
+func (self *BaseTemplateEngine) SetEnv(key string, value interface{}) {
 	self.Env.Set(key, value)
 }
 
@@ -82,9 +82,10 @@ func (self *BaseTemplateEngine) GetScope(item string) interface{} {
 //   the monitoring() plugin. This allows the report to query
 //   monitoring logs of one or more artifacts.
 func GenerateMonitoringDailyReport(template_engine TemplateEngine,
-	client_id, day_name string) (string, error) {
+	client_id string, start uint64, end uint64) (string, error) {
 	template_engine.SetEnv("ReportMode", "MONITORING_DAILY")
-	template_engine.SetEnv("dayName", day_name)
+	template_engine.SetEnv("StartTime", int64(start))
+	template_engine.SetEnv("EndTime", int64(end))
 	template_engine.SetEnv("ClientId", client_id)
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
@@ -105,10 +106,12 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	return result, nil
 }
 
-func GenerateServerMonitoringDailyReport(template_engine TemplateEngine,
-	day_name string) (string, error) {
+func GenerateServerMonitoringReport(
+	template_engine TemplateEngine,
+	start, end uint64) (string, error) {
 	template_engine.SetEnv("ReportMode", "SERVER_EVENT")
-	template_engine.SetEnv("dayName", day_name)
+	template_engine.SetEnv("StartTime", int64(start))
+	template_engine.SetEnv("EndTime", int64(end))
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""

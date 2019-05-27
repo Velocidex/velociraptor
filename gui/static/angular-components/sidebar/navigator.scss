@@ -95,7 +95,7 @@ grr-navigator {
   }
 
   .collapsed {
-      width: 0px;
+      width: $sidebar-collapsed-width;
   }
 
   .uncollapsed {

@@ -110,7 +110,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 		// By default use the client type.
 		artifact.Type = "client"
 
-	case "client", "event", "server", "server_event":
+	case "client", "client_event", "server", "server_event":
 		// These types are acceptable.
 
 	default:
@@ -307,7 +307,7 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 
 		// NOTE: The client does not receive the actual name
 		// or description because we compress the
-		// VQLCollectorArgs object before we sent it to them
+		// VQLCollectorArgs object before we send it to them
 		// (i.e. substitute the strings with place holders).
 		// It is therefore safe to include confidential
 		// information in the description or name properties

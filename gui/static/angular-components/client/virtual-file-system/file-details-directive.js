@@ -49,7 +49,7 @@ FileDetailsController.prototype.onDirectiveTabChange_ = function(newValue) {
   if (angular.isString(newValue)) {
     this.currentTab = newValue;
   }
-}
+};
 
 FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
     this.params = null;
@@ -91,10 +91,13 @@ FileDetailsController.prototype.onControllerTabChange_ = function(newValue, oldV
 
 
 FileDetailsController.prototype.fileIsNotCSV = function() {
-    return false;
-//    return !this.fileContext.selectedFilePath.endsWith(".csv");
+  return !this.fileContext.selectedFilePath.endsWith(".csv");
 };
 
+
+FileDetailsController.prototype.parseFilenameToTimestamp = function(filename) {
+  return Date.parse(filename.replace(/\.csv$/, "") + " 00:00:00 GMT") / 1000;
+};
 
 FileDetailsController.prototype.reportingParameters = function() {
     this.reporting_params = null;
@@ -109,22 +112,24 @@ FileDetailsController.prototype.reportingParameters = function() {
 
     if (components[1] == "monitoring") {
         var artifact_name = components[2];
-        var dayName = components[3].replace(/\.csv$/, "");
+        var start = this.parseFilenameToTimestamp(components[3]);
         this.reporting_params = {
             "artifact": artifact_name,
             "client_id": this.params["client_id"],
-            "dayName": dayName,
+            "start_time": start,
+            "end_time": start + 60*60*24,
             type: "MONITORING_DAILY",
         };
     }
 
     if (components[1] == "server_artifacts") {
-        var dayName = components[3].replace(/\.csv$/, "");
         var artifact_name = components[2];
+        var start = this.parseFilenameToTimestamp(components[3]);
         this.reporting_params = {
             "artifact": artifact_name,
             "client_id": this.params["client_id"],
-            "dayName": dayName,
+            "start_time": start,
+            "end_time": start + 60*60*24,
             type: "SERVER_EVENT",
         };
     }
@@ -133,7 +138,7 @@ FileDetailsController.prototype.reportingParameters = function() {
         var artifact_name = components[2];
         var flowId = components[3];
 
-        // Stip possible extensions.
+        // Strip possible extensions.
         flowId = flowId.replace(/\.csv$/, "");
 
         this.reporting_params = {

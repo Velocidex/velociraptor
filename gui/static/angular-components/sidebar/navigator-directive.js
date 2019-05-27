@@ -66,24 +66,12 @@ NavigatorController.prototype.onClientSelectionChange_ = function(clientId) {
 };
 
 NavigatorController.prototype.Collapse = function() {
-    this.collapsed = !this.collapsed;
+  this.collapsed = true;
 };
 
-/**
- * Checks client access.
- *
- * @private
- */
-NavigatorController.prototype.checkClientAccess_ = function() {
-  this.grrApiService_.head('v1/GetClientFlows/' + this.clientId).then(
-      function resolve() {
-        this.hasClientAccess = true;
-      }.bind(this),
-      function reject() {
-        this.hasClientAccess = false;
-      }.bind(this));
+NavigatorController.prototype.CollapseToggle = function() {
+  this.collapsed = !this.collapsed;
 };
-
 
 /**
  * Directive for the navigator.

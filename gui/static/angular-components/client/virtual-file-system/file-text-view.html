@@ -2,25 +2,30 @@
 
   <!-- Show pagination and content if there is file content. -->
   <div ng-if="controller.fileContent">
-
-    <div>
-      <uib-pagination total-items="controller.pageCount" items-per-page="1"
-                  max-size="1" rotate="false" boundary-links="true"
-                  ng-model="controller.page">
-      </uib-pagination>
-      <div style="clear:both"></div>
-    </div>
+    <ul uib-pagination
+        total-items="controller.pageCount" items-per-page="1"
+        rotate="false" boundary-links="true" max_size="10"
+        ng-model="controller.page">
+    </ul>
 
     <div class="monospace">
-      <pre>{$ controller.fileContent $}</pre>
+      <pre ng-if="controller.language">
+        <grr-syntax-highlight
+          language="{{controller.language}}"
+          code="controller.fileContent">
+        </grr-syntax-highlight>
+      </pre>
+
+      <pre ng-if="!controller.language">
+        {{controller.fileContent}}
+      </pre>
     </div>
 
-    <div>
-      <uib-pagination total-items="controller.pageCount" items-per-page="1"
-                  max-size="1" rotate="false" boundary-links="true"
-                  ng-model="controller.page">
-      </uib-pagination>
-    </div>
+    <ul uib-pagination
+        total-items="controller.pageCount" items-per-page="1"
+        rotate="false" boundary-links="true" max_size="10"
+        ng-model="controller.page">
+    </ul>
 
   </div>
 

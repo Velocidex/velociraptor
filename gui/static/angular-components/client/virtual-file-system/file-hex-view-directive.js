@@ -88,7 +88,7 @@ FileHexViewController.prototype.onPageChange_ = function(page, oldPage) {
  * @private
  */
 FileHexViewController.prototype.fetchText_ = function() {
-    this.hexDataRows = null;
+    this.hexDataRows = [];
     if (angular.isUndefined(this.fileContext.selectedRow)) {
         return;
     }

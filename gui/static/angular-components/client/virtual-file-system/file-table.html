@@ -2,18 +2,16 @@
   <div class="navbar-inner">
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
-        <div id="refresh-dir"
+        <button id="refresh-dir"
              type="button"
              ng-if="controller.mode == 'vfs_files'"
              class="btn btn-default btn-rounded"
              title="Refresh this directory (sync its listing with the client)"
              ng-class="{'disabled': controller.lastRefreshOperationId }"
-             ng-click="controller.startVfsRefreshOperation()">
-          <img src="/static/images/stock_refresh.png" class="toolbar_icon" />
-        </div>
+                ng-click="controller.startVfsRefreshOperation()">
+          <i class="fa fa-folder-open"></i>
+        </button>
         <grr-recursive-list-button
-          type="button"
-          class="btn btn-default"
           client-id="controller.fileContext.clientId"
           ng-if="controller.mode == 'vfs_files'"
           ng-class="{'disabled': !controller.fileContext.clientId }"
@@ -39,14 +37,12 @@
 
     <div class="navbar-form pull-right">
       <div class="btn-group" role="group">
-        <div class="btn btn-default btn-rounded"
-             type="button"
-             >
-          <img src="/static/images/stock_dialog_question.png"
-               class="toolbar_icon"
-               ng-click="controller.showHelp()"
-               title="Help!"/>
-        </div>
+        <button class="btn btn-default btn-rounded"
+                type="button"
+                ng-click="controller.showHelp()"
+                title="Help!">
+          <i class="fa fa-life-ring"></i>
+        </button>
       </div>
     </div>
   </div>

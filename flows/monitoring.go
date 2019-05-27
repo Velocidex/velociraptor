@@ -107,12 +107,17 @@ func (self *MonitoringFlow) ProcessMessage(
 		if response.Query.Name != "" {
 			file_store_factory := file_store.GetFileStore(config_obj)
 
-			now := time.Now()
-			log_path := path.Join(
-				"clients", message.Source,
-				"monitoring", response.Query.Name,
-				fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
-					now.Month(), now.Day()))
+			artifact_name, source_name := artifacts.
+				QueryNameToArtifactAndSource(
+					response.Query.Name)
+
+			log_path := artifacts.GetCSVPath(
+				message.Source, /* client_id */
+				artifacts.GetDayName(),
+				path.Base(flow_obj.Urn),
+				artifact_name, source_name,
+				artifacts.MODE_MONITORING_DAILY)
+
 			fd, err := file_store_factory.WriteFile(log_path)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
@@ -134,7 +139,8 @@ func (self *MonitoringFlow) ProcessMessage(
 			}
 
 			for _, row := range rows {
-				csv_row := vfilter.NewDict()
+				csv_row := vfilter.NewDict().Set(
+					"_ts", int(time.Now().Unix()))
 				for _, column := range response.Columns {
 					csv_row.Set(column, row[column])
 				}

@@ -31,6 +31,8 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
     this.ops_per_second;
     this.timeout;
 
+    this.currentPage = 0;
+
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
             start_request: {
@@ -44,15 +46,9 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
     }
 };
 
-
-/**
- * Sends hunt creation request to the server.
- *
- * @export
- */
-FormController.prototype.sendRequest = function() {
-    var self = this;
-    var env = [];
+FormController.prototype.onValueChange_ = function(page_index) {
+  var self = this;
+  var env = [];
     for (var k in self.params) {
         if (self.params.hasOwnProperty(k)) {
             env.push({key: k, value: self.params[k]});
@@ -64,6 +60,17 @@ FormController.prototype.sendRequest = function() {
     createHuntArgs.start_request.args.parameters = {env: env};
     createHuntArgs.start_request.args.ops_per_second = this.ops_per_second;
     createHuntArgs.start_request.args.timeout = this.timeout;
+};
+
+
+/**
+ * Sends hunt creation request to the server.
+ *
+ * @export
+ */
+FormController.prototype.sendRequest = function() {
+    var self = this;
+    var createHuntArgs = this.scope_['createHuntArgs'];
 
     this.grrApiService_.post('v1/CreateHunt', createHuntArgs)
         .then(function resolve(response) {

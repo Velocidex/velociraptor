@@ -64,9 +64,6 @@ reports:
       {{ define "users" }}
          LET users <= SELECT Name, UUID, Type,
                timestamp(epoch=Mtime) as Mtime
-         FROM collected_artifact(
-               client_id=ClientId,
-               flow_id=FlowId,
-               artifact='Windows.Sys.Users')
+         FROM source()
       {{ end }}
       {{ Query "users" "SELECT Name, UUID, Type, Mtime FROM users" | Table }}

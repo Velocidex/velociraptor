@@ -141,6 +141,31 @@ func (self _ToInt) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 	}
 }
 
+type _ParseFloat struct{}
+
+func (self _ParseFloat) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_ToIntArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("atoi: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	result, _ := strconv.ParseFloat(arg.String, 64)
+	return result
+}
+
+func (self _ParseFloat) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "parse_float",
+		Doc:     "Convert a string to a float.",
+		ArgType: type_map.AddType(scope, &_ToIntArgs{}),
+	}
+}
+
 type _Now struct{}
 
 func (self _Now) Call(
@@ -189,7 +214,6 @@ func (self _UTF16) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 	}
 }
 
-
 type _Scope struct{}
 
 func (self _Scope) Call(
@@ -202,8 +226,8 @@ func (self _Scope) Call(
 
 func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "scope",
-		Doc:     "return the scope.",
+		Name: "scope",
+		Doc:  "return the scope.",
 	}
 }
 
@@ -211,6 +235,7 @@ func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_Scope{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
+	vql_subsystem.RegisterFunction(&_ParseFloat{})
 	vql_subsystem.RegisterFunction(&_Now{})
 	vql_subsystem.RegisterFunction(&_ToLower{})
 	vql_subsystem.RegisterFunction(&_ToUpper{})

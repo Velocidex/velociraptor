@@ -48,7 +48,7 @@ func (x FlowContext_State) String() string {
 	return proto.EnumName(FlowContext_State_name, int32(x))
 }
 func (FlowContext_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{1, 0}
+	return fileDescriptor_flows_85991726b705a971, []int{1, 0}
 }
 
 type StartFlowRequest struct {
@@ -63,7 +63,7 @@ func (m *StartFlowRequest) Reset()         { *m = StartFlowRequest{} }
 func (m *StartFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*StartFlowRequest) ProtoMessage()    {}
 func (*StartFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{0}
+	return fileDescriptor_flows_85991726b705a971, []int{0}
 }
 func (m *StartFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StartFlowRequest.Unmarshal(m, b)
@@ -110,26 +110,27 @@ type FlowContext struct {
 	NextProcessedRequest uint64                  `protobuf:"varint,9,opt,name=next_processed_request,json=nextProcessedRequest,proto3" json:"next_processed_request,omitempty"`
 	OutstandingRequests  uint64                  `protobuf:"varint,11,opt,name=outstanding_requests,json=outstandingRequests,proto3" json:"outstanding_requests,omitempty"`
 	TotalResults         uint64                  `protobuf:"varint,18,opt,name=total_results,json=totalResults,proto3" json:"total_results,omitempty"`
-	UploadedFiles        []string                `protobuf:"bytes,19,rep,name=uploaded_files,json=uploadedFiles,proto3" json:"uploaded_files,omitempty"`
-	TotalUploadedFiles   uint64                  `protobuf:"varint,23,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
-	Logs                 []*proto1.LogMessage    `protobuf:"bytes,20,rep,name=logs,proto3" json:"logs,omitempty"`
-	SessionId            string                  `protobuf:"bytes,13,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	State                FlowContext_State       `protobuf:"varint,14,opt,name=state,proto3,enum=proto.FlowContext_State" json:"state,omitempty"`
-	Status               string                  `protobuf:"bytes,15,opt,name=status,proto3" json:"status,omitempty"`
-	UserNotified         bool                    `protobuf:"varint,16,opt,name=user_notified,json=userNotified,proto3" json:"user_notified,omitempty"`
-	ActiveTime           uint64                  `protobuf:"varint,17,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty"`
-	Artifacts            []string                `protobuf:"bytes,21,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
-	ArtifactsWithResults []string                `protobuf:"bytes,22,rep,name=artifacts_with_results,json=artifactsWithResults,proto3" json:"artifacts_with_results,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                `json:"-"`
-	XXX_unrecognized     []byte                  `json:"-"`
-	XXX_sizecache        int32                   `json:"-"`
+	// Deprecated: Uploads are now stored in a csv file.
+	UploadedFiles        []string             `protobuf:"bytes,19,rep,name=uploaded_files,json=uploadedFiles,proto3" json:"uploaded_files,omitempty"`
+	TotalUploadedFiles   uint64               `protobuf:"varint,23,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
+	Logs                 []*proto1.LogMessage `protobuf:"bytes,20,rep,name=logs,proto3" json:"logs,omitempty"`
+	SessionId            string               `protobuf:"bytes,13,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	State                FlowContext_State    `protobuf:"varint,14,opt,name=state,proto3,enum=proto.FlowContext_State" json:"state,omitempty"`
+	Status               string               `protobuf:"bytes,15,opt,name=status,proto3" json:"status,omitempty"`
+	UserNotified         bool                 `protobuf:"varint,16,opt,name=user_notified,json=userNotified,proto3" json:"user_notified,omitempty"`
+	ActiveTime           uint64               `protobuf:"varint,17,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty"`
+	Artifacts            []string             `protobuf:"bytes,21,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
+	ArtifactsWithResults []string             `protobuf:"bytes,22,rep,name=artifacts_with_results,json=artifactsWithResults,proto3" json:"artifacts_with_results,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
 }
 
 func (m *FlowContext) Reset()         { *m = FlowContext{} }
 func (m *FlowContext) String() string { return proto.CompactTextString(m) }
 func (*FlowContext) ProtoMessage()    {}
 func (*FlowContext) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{1}
+	return fileDescriptor_flows_85991726b705a971, []int{1}
 }
 func (m *FlowContext) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowContext.Unmarshal(m, b)
@@ -308,7 +309,7 @@ func (m *FlowRunnerArgs) Reset()         { *m = FlowRunnerArgs{} }
 func (m *FlowRunnerArgs) String() string { return proto.CompactTextString(m) }
 func (*FlowRunnerArgs) ProtoMessage()    {}
 func (*FlowRunnerArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{2}
+	return fileDescriptor_flows_85991726b705a971, []int{2}
 }
 func (m *FlowRunnerArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowRunnerArgs.Unmarshal(m, b)
@@ -399,7 +400,7 @@ func (m *VelociraptorFlowState) Reset()         { *m = VelociraptorFlowState{} }
 func (m *VelociraptorFlowState) String() string { return proto.CompactTextString(m) }
 func (*VelociraptorFlowState) ProtoMessage()    {}
 func (*VelociraptorFlowState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{3}
+	return fileDescriptor_flows_85991726b705a971, []int{3}
 }
 func (m *VelociraptorFlowState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VelociraptorFlowState.Unmarshal(m, b)
@@ -453,7 +454,7 @@ func (m *FlowDescriptor) Reset()         { *m = FlowDescriptor{} }
 func (m *FlowDescriptor) String() string { return proto.CompactTextString(m) }
 func (*FlowDescriptor) ProtoMessage()    {}
 func (*FlowDescriptor) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{4}
+	return fileDescriptor_flows_85991726b705a971, []int{4}
 }
 func (m *FlowDescriptor) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowDescriptor.Unmarshal(m, b)
@@ -544,7 +545,7 @@ func (m *VInterrogateArgs) Reset()         { *m = VInterrogateArgs{} }
 func (m *VInterrogateArgs) String() string { return proto.CompactTextString(m) }
 func (*VInterrogateArgs) ProtoMessage()    {}
 func (*VInterrogateArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{5}
+	return fileDescriptor_flows_85991726b705a971, []int{5}
 }
 func (m *VInterrogateArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VInterrogateArgs.Unmarshal(m, b)
@@ -592,7 +593,7 @@ func (m *AFF4FlowObject) Reset()         { *m = AFF4FlowObject{} }
 func (m *AFF4FlowObject) String() string { return proto.CompactTextString(m) }
 func (*AFF4FlowObject) ProtoMessage()    {}
 func (*AFF4FlowObject) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{6}
+	return fileDescriptor_flows_85991726b705a971, []int{6}
 }
 func (m *AFF4FlowObject) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AFF4FlowObject.Unmarshal(m, b)
@@ -652,7 +653,7 @@ func (m *VQLNameTags) Reset()         { *m = VQLNameTags{} }
 func (m *VQLNameTags) String() string { return proto.CompactTextString(m) }
 func (*VQLNameTags) ProtoMessage()    {}
 func (*VQLNameTags) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{7}
+	return fileDescriptor_flows_85991726b705a971, []int{7}
 }
 func (m *VQLNameTags) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLNameTags.Unmarshal(m, b)
@@ -697,7 +698,7 @@ func (m *VQLNameTagsState) Reset()         { *m = VQLNameTagsState{} }
 func (m *VQLNameTagsState) String() string { return proto.CompactTextString(m) }
 func (*VQLNameTagsState) ProtoMessage()    {}
 func (*VQLNameTagsState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_37c8a72ab5e34748, []int{8}
+	return fileDescriptor_flows_85991726b705a971, []int{8}
 }
 func (m *VQLNameTagsState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VQLNameTagsState.Unmarshal(m, b)
@@ -737,9 +738,9 @@ func init() {
 	proto.RegisterEnum("proto.FlowContext_State", FlowContext_State_name, FlowContext_State_value)
 }
 
-func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_37c8a72ab5e34748) }
+func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_85991726b705a971) }
 
-var fileDescriptor_flows_37c8a72ab5e34748 = []byte{
+var fileDescriptor_flows_85991726b705a971 = []byte{
 	// 1954 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0x5f, 0x6f, 0x5b, 0xb7,
 	0x15, 0x9f, 0x6c, 0x27, 0x91, 0x28, 0xdb, 0x51, 0x18, 0x27, 0x55, 0xd2, 0x02, 0x65, 0xb5, 0x61,

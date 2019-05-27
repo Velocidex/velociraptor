@@ -214,7 +214,8 @@ div[ui-view] {
   right: 0;
   min-width: 1024px;
   min-height: 400px;
-  background-color: $color-default-background;
+  background-color: $color-dashboard-background;
+  margin-left: $sidebar-collapsed-width;
 }
 
 .breadcrumb {
@@ -769,13 +770,6 @@ dd.histogram {
   margin: 0;
 }
 
-.panel {
-  @include border-radius(6px);
-  @include box-shadow(0, 3, 7, $color-panel-box-shadow);
-  background-color: $color-panel-background;
-  border: 1px solid $color-panel-border;
-}
-
 .details-right-panel {
   position: absolute;
   top: 45px;
@@ -1027,13 +1021,13 @@ table.table tbody {
 }
 
 
-.nav-pills li.active .nav-link:hover {
-    background-color: #9f9f9f;
+grr-navigator .nav-pills li.active .nav-link:hover {
+    background-color: $sidebar-icon-color;
 }
 
-.nav-pills li.active .nav-link {
+grr-navigator .nav-pills li.active .nav-link {
     width: 200px;
-    background-color: #9f9f9f;
+    background-color: $sidebar-icon-color;
 }
 
 button a.nav-link {
@@ -1089,4 +1083,45 @@ h5.card-header {
 
 .card-body {
     overflow-x: auto;
+}
+
+
+.panel {
+    color: #666666;
+    background-color: #ffffff;
+    border-radius: 5px;
+    position: relative;
+    margin: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.25);
+    border: #f0f0f0;
+    border-top-width: 2px;
+    border-top-style: solid;
+}
+
+
+grr-client-list {
+    background-color: $color-default-background;
+}
+
+.navicon {
+    margin-right: 10px;
+    font-size: 18px;
+    color: $sidebar-icon-color;
+}
+
+grr-navigator a {
+    color: $sidebar-icon-color;
+}
+
+grr-navigator li.active a {
+    color: $sidebar-icon-color-bg;
+}
+
+li.active .navicon {
+    color: $sidebar-icon-color-bg;
+}
+
+.hexdump {
+    margin: 0px;
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -37,10 +38,13 @@ func doDailyMonitoring() {
 		config_obj, *report_command_daily_monitoring_artifact, *env_map)
 	kingpin.FatalIfError(err, "Generating report")
 
+	ts, err := time.Parse("2006-01-02", *report_command_daily_monitoring_day_name)
+	kingpin.FatalIfError(err, "Invalid day name (e.g. 2019-02-28)")
+
 	res, err := reporting.GenerateMonitoringDailyReport(
 		template_engine,
 		*report_command_daily_monitoring_client,
-		*report_command_daily_monitoring_day_name)
+		uint64(ts.Unix()), uint64(ts.Unix()+60*60*24))
 	kingpin.FatalIfError(err, "Generating report")
 	fmt.Println(res)
 }

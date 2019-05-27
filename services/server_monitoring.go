@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -86,18 +86,9 @@ func (self *EventTable) Update(
 	}
 
 	for _, name := range arg.Artifacts.Names {
-		vql_collector_args := &actions_proto.VQLCollectorArgs{
-			OpsPerSecond: 50,
-		}
-
 		artifact, pres := repository.Get(name)
 		if !pres {
 			return errors.New("Unknown artifact " + name)
-		}
-
-		err := repository.Compile(artifact, vql_collector_args)
-		if err != nil {
-			return err
 		}
 
 		env := vfilter.NewDict().
@@ -105,14 +96,18 @@ func (self *EventTable) Update(
 			Set("config", config_obj.Client).
 			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
+		// First set param default.
 		for _, param := range artifact.Parameters {
 			env.Set(param.Name, param.Default)
 		}
 
+		// Then override with the request environment.
 		for _, env_spec := range arg.Parameters.Env {
 			env.Set(env_spec.Key, env_spec.Value)
 		}
 
+		// A new scope for each artifact - but shared scope
+		// for all sources.
 		scope := artifacts.MakeScope(repository).AppendVars(env)
 		scope.Logger = logging.NewPlainLogger(
 			config_obj, &logging.FrontendComponent)
@@ -121,12 +116,18 @@ func (self *EventTable) Update(
 		vfilter.InstallThrottler(
 			scope, vfilter.NewTimeThrottler(float64(50)))
 
+		// Keep track of all the scopes so we can close them.
 		self.Scopes = append(self.Scopes, scope)
 
-		self.wg.Add(1)
-		go self.RunQuery(
-			new_ctx, config_obj,
-			scope, name, vql_collector_args)
+		// Run each source concurrently.
+		for _, source := range artifact.Sources {
+			err := self.RunQuery(
+				new_ctx, config_obj,
+				scope, name, source)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -136,7 +137,9 @@ func (self *EventTable) GetWriter(
 	ctx context.Context,
 	config_obj *api_proto.Config,
 	scope *vfilter.Scope,
-	name string) chan vfilter.Row {
+	artifact_name string,
+	source_name string) chan vfilter.Row {
+
 	row_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -162,11 +165,12 @@ func (self *EventTable) GetWriter(
 		defer closer()
 
 		for row := range row_chan {
-			now := time.Now()
-			log_path := path.Join(
-				"server_artifacts", name,
-				fmt.Sprintf("%d-%02d-%02d.csv", now.Year(),
-					now.Month(), now.Day()))
+			log_path := artifacts.GetCSVPath(
+				/* client_id */ "",
+				artifacts.GetDayName(),
+				/* flow_id */ "",
+				artifact_name, source_name,
+				artifacts.MODE_SERVER_EVENT)
 
 			// We need to rotate the log file.
 			if log_path != last_log {
@@ -188,16 +192,17 @@ func (self *EventTable) GetWriter(
 				columns = scope.GetMembers(row)
 			}
 
-			dict_row, ok := row.(*vfilter.Dict)
-			if !ok {
-				dict_row := vfilter.NewDict()
-				for _, column := range columns {
-					value, pres := scope.Associative(row, column)
-					if pres {
-						dict_row.Set(column, value)
-					}
+			// First column is a row timestamp. This makes
+			// it easier to do a row scan for time ranges.
+			dict_row := vfilter.NewDict().
+				Set("_ts", int(time.Now().Unix()))
+			for _, column := range columns {
+				value, pres := scope.Associative(row, column)
+				if pres {
+					dict_row.Set(column, value)
 				}
 			}
+
 			writer.Write(dict_row)
 		}
 	}()
@@ -209,24 +214,54 @@ func (self *EventTable) RunQuery(
 	ctx context.Context,
 	config_obj *api_proto.Config,
 	scope *vfilter.Scope,
-	name string,
-	arg *actions_proto.VQLCollectorArgs) {
-	defer self.wg.Done()
+	artifact_name string,
+	source *artifacts_proto.ArtifactSource) error {
 
-	row_chan := self.GetWriter(ctx, config_obj, scope, name)
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Collecting Server Artifact: %s", name)
-	for _, query := range arg.Query {
-		vql, err := vfilter.Parse(query.VQL)
+	// Parse all the source VQL to ensure they are valid before we
+	// try to run them.
+	vqls := []*vfilter.VQL{}
+	for idx, query := range source.Queries {
+		vql, err := vfilter.Parse(query)
 		if err != nil {
-			logger.Error("Error: %v", err)
-			return
+			return err
 		}
 
-		for row := range vql.Eval(ctx, scope) {
-			row_chan <- row
+		if (idx < len(source.Queries)-1 && vql.Let == "") ||
+			(idx == len(source.Queries) && vql.Let != "") {
+			return errors.New(
+				"Invalid artifact: All Queries in a source " +
+					"must be LET queries, except for the " +
+					"final one.")
 		}
+
+		vqls = append(vqls, vql)
 	}
+
+	self.wg.Add(1)
+
+	go func() {
+		defer self.wg.Done()
+
+		name := artifact_name
+		if source.Name != "" {
+			name = path.Join(artifact_name, source.Name)
+		}
+
+		row_chan := self.GetWriter(ctx, config_obj, scope,
+			artifact_name, source.Name)
+		defer close(row_chan)
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("Collecting Server Artifact: %s", name)
+
+		for _, vql := range vqls {
+			for row := range vql.Eval(ctx, scope) {
+				row_chan <- row
+			}
+		}
+	}()
+
+	return nil
 }
 
 // Bring up the server monitoring service.

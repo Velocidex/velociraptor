@@ -13,6 +13,8 @@ description: |
   bad C&C you can use this archive to confirm if any of your endpoints
   have contacted this C&C.
 
+type: CLIENT_EVENT
+
 parameters:
   - name: whitelistRegex
     description: We ignore DNS names that match this regex.
@@ -35,7 +37,7 @@ reports:
        SELECT count(items=Name) AS Total, Name
        FROM monitoring(client_id=ClientId,
             artifact='Windows.Events.DNSQueries',
-            date_regex=dayName)
+            day_name=dayName)
       WHERE EventType = "Q" and not Name =~ ".home.$"
       GROUP BY Name
       ORDER BY Total desc

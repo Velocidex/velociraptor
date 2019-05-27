@@ -26,8 +26,8 @@ const {semanticModule} = goog.require('grrUi.semantic.semantic');
  * Angular module for clients-related UI.
  */
 exports.virtualFileSystemModule = angular.module(
-    'grrUi.client.virtualFileSystem',
-    [coreModule.name, semanticModule.name, 'ui.ace']);
+  'grrUi.client.virtualFileSystem',
+  [coreModule.name, semanticModule.name, 'ui.ace', 'ui.bootstrap']);
 
 exports.virtualFileSystemModule.directive(
     AddItemButtonDirective.directive_name, AddItemButtonDirective);
