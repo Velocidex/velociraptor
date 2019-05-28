@@ -4,13 +4,17 @@
             ng-disabled="controller.numSelectedClients == 0"
             ng-click="controller.showLabelsDialog('add')"
             name="AddLabels">
-      <img src="/static/images/label-add.png" class="toolbar_icon" />
+      <i class="fa fa-tags"></i>
+      <span style="position: absolute; left: 23px; top: 5px; font-weight: bold;
+                   font-size: 24px; -webkit-text-stroke: 1px #000; color: #fff">+</span>
       </button>
     <button title="Remove Labels" class="btn btn-default"
             ng-disabled="controller.numSelectedClients == 0"
             ng-click="controller.showLabelsDialog('remove')"
             name="RemoveLabels">
-      <img src="/static/images/label-remove.png" class="toolbar_icon" />
+      <i class="fa fa-tags"></i>
+      <span style="position: absolute; left: 23px; top: 5px; font-weight: bold;
+                   font-size: 24px; -webkit-text-stroke: 1px #000; color: #fff">x</span>
     </button>
   </li>
 </ul>

@@ -14,15 +14,12 @@ goog.module.declareLegacyNamespace();
  * @ngInject
  */
 const AddItemButtonController = function(
-    $rootScope, $scope, $timeout, $uibModal, grrApiService) {
+    $rootScope, $scope, $uibModal, grrApiService) {
   /** @private {!angular.Scope} */
   this.rootScope_ = $rootScope;
 
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
-
-  /** @private {!angular.$timeout} */
-  this.timeout_ = $timeout;
 
   /** @private {!angularUi.$uibModal} */
   this.uibModal_ = $uibModal;

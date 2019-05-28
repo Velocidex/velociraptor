@@ -37,17 +37,25 @@ reports:
   - type: SERVER_EVENT
     template: |
       {{ define "CPU" }}
-           SELECT _ts as Timestamp,
+           SELECT * FROM sample(
+             n=4,
+             query={
+               SELECT _ts as Timestamp,
                   CPUPercent,
                   MemoryUse
-           FROM source(source="Prometheus", start_time=now() - 36000)
+               FROM source(source="Prometheus", start_time=now() - 36000)
+             })
       {{ end }}
 
       {{ define "CurrentConnections" }}
-           SELECT _ts as Timestamp,
+           SELECT * FROM sample(
+             n=4,
+             query={
+               SELECT _ts as Timestamp,
                   client_comms_current_connections,
                   client_comms_concurrency
-           FROM source(source="Prometheus", start_time=now() - 36000)
+               FROM source(source="Prometheus", start_time=now() - 36000)
+            })
       {{ end }}
 
       {{ $CurrentMetrics := Query "SELECT * FROM Artifact.Server.Monitor.VeloMetrics()" }}

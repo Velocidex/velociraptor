@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strings"
 
+	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -269,6 +270,48 @@ func searchArtifact(
 
 		if len(result.Items) >= int(number_of_results) {
 			break
+		}
+	}
+
+	return result, nil
+}
+
+func (self *ApiServer) ListAvailableEventResults(
+	ctx context.Context,
+	in *api_proto.ListAvailableEventResultsRequest) (
+	*api_proto.ListAvailableEventResultsResponse, error) {
+	result := &api_proto.ListAvailableEventResultsResponse{}
+
+	root_path := "server_artifacts"
+
+	if in.ClientId != "" {
+		root_path = "clients/" + in.ClientId + "/monitoring"
+	}
+
+	file_store_factory := file_store.GetFileStore(self.config)
+	dir_list, err := file_store_factory.ListDirectory(root_path)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, dirname := range dir_list {
+		available_event := &api_proto.AvailableEvent{
+			Artifact: dirname.Name(),
+		}
+		result.Logs = append(result.Logs, available_event)
+
+		timestamps, err := file_store_factory.ListDirectory(
+			path.Join(root_path, dirname.Name()))
+		if err == nil {
+			for _, filename := range timestamps {
+				timestamp := artifacts.DayNameToTimestamp(
+					filename.Name())
+				if timestamp > 0 {
+					available_event.Timestamps = append(
+						available_event.Timestamps,
+						int32(timestamp))
+				}
+			}
 		}
 	}
 

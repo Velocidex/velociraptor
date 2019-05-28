@@ -98,3 +98,19 @@ message GetReportResponse {
 
 // Deprecated.
 message ArtifactCompressionDict {}
+
+message ListAvailableEventResultsRequest {
+    string client_id = 1 [(sem_type) = {
+       description: "The client ID we list the available monitoring logs. "
+       "If empty we list the server's monitoring logs."
+    }];
+}
+
+message AvailableEvent {
+    string artifact = 1;
+    repeated int32 timestamps = 2;
+}
+
+message ListAvailableEventResultsResponse {
+    repeated AvailableEvent logs = 1;
+}

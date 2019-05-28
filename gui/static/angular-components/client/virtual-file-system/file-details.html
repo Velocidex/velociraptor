@@ -20,24 +20,44 @@
       <uib-tab heading="TextView" index="'textview'"
                disable="controller.fileIsDirectory">
         <div ng-if="controller.currentTab === 'textview'">
-          <grr-file-text-view></grr-file-text-view>
+          <grr-file-text-view
+            ng-if="controller.fileHasContent"
+            ></grr-file-text-view>
+
+          <div ng-if="!controller.fileHasContent" class="no-content">
+            No file content to show.
+          </div>
+
         </div>
       </uib-tab>
 
       <uib-tab heading="HexView" index="'hexview'"
                disable="controller.fileIsDirectory">
         <div ng-if="controller.currentTab === 'hexview'">
-          <grr-file-hex-view></grr-file-hex-view>
+          <grr-file-hex-view
+            ng-if="controller.fileHasContent">
+          </grr-file-hex-view>
+
+          <div ng-if="!controller.fileHasContent" class="no-content">
+            No file content to show.
+          </div>
+
         </div>
       </uib-tab>
 
       <uib-tab heading="CSVView" index="'csvview'"
-               disable="controller.fileIsNotCSV()">
+               disable="!controller.fileIsCSV">
         <div ng-if="controller.currentTab === 'csvview'">
           <grr-csv-viewer
+            ng-if="controller.fileHasContent"
             base-url='"v1/GetTable"'
             params='controller.params'
             />
+
+          <div ng-if="!controller.fileHasContent" class="no-content">
+            No file content to show.
+          </div>
+
         </div>
       </uib-tab>
 

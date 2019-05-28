@@ -40,6 +40,8 @@ func getReport(ctx context.Context,
 			return nil, err
 		}
 
+	// Server event artifacts run on the server. Typically they
+	// post process client event streams.
 	case "SERVER_EVENT":
 		template_data, err = reporting.
 			GenerateServerMonitoringReport(

@@ -74,25 +74,31 @@ func (self *BaseTemplateEngine) GetScope(item string) interface{} {
 // GenerateMonitoringDailyReport Generates a report for daily
 // monitoring reports.
 
-// Daily monitoring reports are intended to operate on one of more
-// daily logs.
+// Daily monitoring reports are intended to operate on one or more
+// daily logs. The template automatically provides a number of
+// parameters through the scope, which may be accessed by the
+// template. However, normally the template will simply use the
+// source() VQL plugin. This plugin will be able to transparently use
+// these parameters so the report template author does not need to
+// worry about the parameters too much.
 
 // Parameters:
-// dayName: The name of the required day as needed by VQL plugins like
-//   the monitoring() plugin. This allows the report to query
-//   monitoring logs of one or more artifacts.
+// StartTime: When the report should start reporting from.
+// EndTime: When the report should end reporting.
 func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	client_id string, start uint64, end uint64) (string, error) {
+	artifact := template_engine.GetArtifact()
+
 	template_engine.SetEnv("ReportMode", "MONITORING_DAILY")
 	template_engine.SetEnv("StartTime", int64(start))
 	template_engine.SetEnv("EndTime", int64(end))
 	template_engine.SetEnv("ClientId", client_id)
-	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
+	template_engine.SetEnv("ArtifactName", artifact.Name)
 
 	result := ""
-	for _, report := range template_engine.GetArtifact().Reports {
+	for _, report := range getArtifactReports(artifact, "client_event") {
 		type_name := strings.ToLower(report.Type)
-		if type_name != "monitoring_daily" {
+		if type_name != "monitoring_daily" && type_name != "client_event" {
 			continue
 		}
 
@@ -104,6 +110,40 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	}
 
 	return result, nil
+}
+
+// Get reports from the artifact or generate a default report if it
+// does not exist.
+func getArtifactReports(
+	artifact *artifacts_proto.Artifact,
+	report_type string) []*artifacts_proto.Report {
+	reports := artifact.Reports
+	if len(reports) > 0 {
+		return reports
+	}
+
+	// Generate a default report if none are defined.
+	for _, source := range artifact.Sources {
+		parameters := ""
+		name := artifact.Name
+
+		if source.Name != "" {
+			name += "/" + source.Name
+			parameters = "source='" + source.Name + "'"
+		}
+
+		reports = append(reports, &artifacts_proto.Report{
+			Type: report_type,
+			Template: fmt.Sprintf(`
+## %s
+
+{{ Query "SELECT * FROM source(%s) LIMIT 500" | Table }}
+
+`, name, parameters),
+		})
+	}
+
+	return reports
 }
 
 func GenerateServerMonitoringReport(

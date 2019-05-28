@@ -104,8 +104,8 @@ gulp.task('copy-jquery-ui-images', function() {
 
 
 gulp.task('copy-fontawesome-fonts', function() {
-  return gulp.src([config.nodeModulesDir + '/font-awesome/fonts/fontawesome-webfont.*'])
-      .pipe(gulp.dest('fonts')); // TODO(user): should be copied to 'dist' folder.
+  return gulp.src([config.nodeModulesDir + '/font-awesome/fonts/fontawesome-webfont.woff2'])
+      .pipe(gulp.dest('fonts'));
 });
 
 gulp.task('copy-third-party-resources', function() {

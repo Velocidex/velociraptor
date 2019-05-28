@@ -44,16 +44,16 @@ reports:
 
       {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
 
-      # Client Footprint for {{ Get $client_info "0.OsInfo.Fqdn" }} on {{ Scope "dayName" }}.
+      # Client Footprint for {{ Get $client_info "0.OsInfo.Fqdn" }}
 
       The client has a client ID of {{ Get $client_info "0.ClientId" }}.
       Clients report the Velociraptor process footprint to the
       server every 10 seconds. The data includes the total CPU
       utilization, and the resident memory size used by the client.
 
-      The following graph shows the total utilization over the course
-      of {{ Scope "dayName" }}. Memory utilization is meausred in `Mb`
-      while CPU Utilization is measured by `Percent of one core`.
+      The following graph shows the total utilization. Memory
+      utilization is meausred in `Mb` while CPU Utilization is
+      measured by `Percent of one core`.
 
       We would expect the client to use around 1-5% of one core when
       idle, but if a heavy hunt is running this might climb

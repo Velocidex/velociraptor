@@ -1,4 +1,5 @@
 <div class="pull-left">
+  <img src="/static/images/velo.svg" class="velo-logo"/>
   <span class="hamburger toolbar-buttons"
         ng-click="controller.CollapseToggle()">&#9776;</span>
   <div id="navigator"
@@ -29,6 +30,20 @@
           </li>
         </ul>
 
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="server_artifacts">
+            <i class="fa fa-server navicon"></i>
+            Server Artifacts
+          </li>
+        </ul>
+
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="alerts">
+            <i class="fa fa-exclamation-triangle navicon"></i>
+            Alerts
+          </li>
+        </ul>
+
       </section>
 
       <!-- Client overview and links for client navigation -->
@@ -47,9 +62,16 @@
           </li>
           <li grr-nav-link state="client.flows"
               params="{clientId: controller.clientId}" >
-            <i class="fa fa-binoculars navicon"></i>
+            <i class="fa fa-history navicon"></i>
             Collected Artifacts
           </li>
+
+          <li grr-nav-link state="client.events"
+              params="{clientId: controller.clientId}" >
+            <i class="fa fa-binoculars navicon"></i>
+            Client Events
+          </li>
+
         </ul>
       </section>
 

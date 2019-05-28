@@ -153,19 +153,10 @@ label.btn {
   height: 50px;
 }
 
-.XXnavbar-text {
-    padding: 15px;
-    height: 40px;
-}
-
-.grr-logo {
-  max-height: 41px;
-  left: 20px;
-}
-
-img.velociraptor-logo {
+img.velo-logo {
     height: 36px;
     width: 29px;
+    margin: 5px;
 }
 
 #notification_button {
@@ -991,6 +982,8 @@ table.grr_flot_graph {
 
 .dashboard {
     margin: 20px;
+    margin-bottom: 40px;
+    overflow-y: auto;
 }
 
 .table-loading {
@@ -1097,6 +1090,7 @@ h5.card-header {
     border: #f0f0f0;
     border-top-width: 2px;
     border-top-style: solid;
+    overflow-x: auto;
 }
 
 
@@ -1124,4 +1118,14 @@ li.active .navicon {
 
 .hexdump {
     margin: 0px;
+}
+
+
+.datepicker-toolbar {
+    width: 12em;
+    margin-left: 20px;
+}
+
+.datepicker-toolbar input {
+    height: 33px;
 }

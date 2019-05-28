@@ -2,6 +2,7 @@ package artifacts
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -120,4 +121,20 @@ func GetDayName() string {
 	now := time.Now()
 	return fmt.Sprintf("%d-%02d-%02d", now.Year(),
 		now.Month(), now.Day())
+}
+
+var day_name_regex = regexp.MustCompile(
+	`^\d\d\d\d-\d\d-\d\d`)
+
+func DayNameToTimestamp(name string) int64 {
+	matches := day_name_regex.FindAllString(name, -1)
+	if len(matches) == 1 {
+		time, err := time.Parse("2006-01-02 MST",
+			matches[0]+" UTC")
+		if err == nil {
+			return time.Unix()
+		}
+	}
+
+	return 0
 }

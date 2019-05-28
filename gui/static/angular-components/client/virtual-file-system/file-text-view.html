@@ -1,7 +1,7 @@
 <div>
 
   <!-- Show pagination and content if there is file content. -->
-  <div ng-if="controller.fileContent">
+  <div>
     <ul uib-pagination
         total-items="controller.pageCount" items-per-page="1"
         rotate="false" boundary-links="true" max_size="10"
@@ -28,10 +28,4 @@
     </ul>
 
   </div>
-
-  <!-- Show a hint if no content exists. -->
-  <div ng-if="!controller.fileContent" class="no-content">
-    No file content to show.
-  </div>
-
 </div>

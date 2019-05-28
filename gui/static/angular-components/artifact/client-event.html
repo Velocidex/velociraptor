@@ -1,0 +1,90 @@
+<div class="navbar navbar-default toolbar"  >
+  <div class="navbar-inner">
+    <div class="navbar-form pull-left">
+      <div class="btn-group" role="group">
+        <div class="btn-group" uib-dropdown is-open="status.isopen">
+          <button
+            type="button"
+            class="btn btn-default"
+            title="Update client monitoring table"
+            ng-click="controller.updateClientMonitoringTable()"
+            >
+            <i class="fa fa-edit"></i>
+          </button>
+
+          <button id="single-button" type="button"
+                  class="btn btn-default"
+                  uib-dropdown-toggle>
+            <i class="fa fa-book"></i>
+            {{ controller.selectedArtifact.artifact || "Select Artifact" }}
+          </button>
+          <ul class="dropdown-menu"
+              uib-dropdown-menu
+              ng-model="artifact"
+              role="menu" aria-labelledby="single-button">
+            <li role="menuitem"
+                ng-repeat="artifact in controller.artifacts.logs track by $index"
+                >
+              <a href ng-click="controller.selectArtifact(artifact)">
+                {{ artifact.artifact }}
+              </a>
+            </li>
+          </ul>
+
+        </div>
+        <p class="input-group datepicker-toolbar">
+          <input type="text" class="form-control"
+                 uib-datepicker-popup
+                 ng-model="controller.selected_date"
+                 ng-model-options="{timezone: 'utc'}"
+                 is-open="controller.opened"
+                 datepicker-options="controller.dateOptions"
+                 ng-required="true"
+                 close-text="Close" />
+          <span class="input-group-btn">
+            <button type="button"
+                    class="btn btn-default"
+                    ng-click="controller.openDatePicker()">
+              <i class="fa fa-calendar"></i>
+            </button>
+          </span>
+        </p>
+      </div>
+    </div>
+
+    <div class="navbar-form pull-right">
+      <div class="btn-group" role="group">
+        <button class="btn btn-default btn-rounded"
+                type="button"
+                ng-click="controller.showHelp()"
+                title="Help!">
+          <i class="fa fa-life-ring"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div ng-if="!controller.selectedArtifact.artifact">
+  <div class="card panel" >
+    <h5 class="card-header">Client Event Monitoring</h5>
+    <div class="card-body">
+      <p>The Velociraptor client runs event artifacts that stream
+      event information to the server. The server collects these in
+      daily logs.</p>
+
+      <p>
+        This dashboard displays reports from these event artifacts
+        broken by day. Select a client side event in the drop down
+        above, then select a day you wish to see.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard">
+  <grr-report-viewer
+    ng-if="controller.selectedArtifact.artifact"
+    params="controller.reportParams">
+  </grr-report-viewer>
+</div>

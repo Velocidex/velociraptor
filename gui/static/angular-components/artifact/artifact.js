@@ -11,6 +11,8 @@ const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
 const {TimelineDirective} = goog.require('grrUi.artifact.timelineDirective');
 const {ReportingDirective} = goog.require('grrUi.artifact.reportingDirective');
 const {SearchArtifactDirective} = goog.require('grrUi.artifact.searchArtifactDirective');
+const {ClientEventDirective} = goog.require('grrUi.artifact.clientEventDirective');
+const {ServerArtifactDirective} = goog.require('grrUi.artifact.serverArtifactDirective');
 const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
@@ -36,10 +38,19 @@ exports.artifactModule.directive(
     TimelineDirective.directive_name, TimelineDirective);
 
 exports.artifactModule.directive(
-    ReportingDirective.directive_name, ReportingDirective);
+  ReportingDirective.directive_name, ReportingDirective);
+
 exports.artifactModule.directive(
-    SearchArtifactDirective.directive_name,
-    SearchArtifactDirective);
+  SearchArtifactDirective.directive_name,
+  SearchArtifactDirective);
+
+exports.artifactModule.directive(
+  ClientEventDirective.directive_name,
+  ClientEventDirective);
+
+exports.artifactModule.directive(
+    ServerArtifactDirective.directive_name,
+    ServerArtifactDirective);
 exports.artifactModule.directive(
     SyntaxHighlightDirective.directive_name,
     SyntaxHighlightDirective);

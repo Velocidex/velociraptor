@@ -14,7 +14,6 @@ const {FileTableDirective} = goog.require('grrUi.client.virtualFileSystem.fileTa
 const {FileTextViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileTextViewDirective');
 const {FileTreeDirective} = goog.require('grrUi.client.virtualFileSystem.fileTreeDirective');
 const {FileViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileViewDirective');
-const {RWeOwnedButtonDirective} = goog.require('grrUi.client.virtualFileSystem.rWeOwnedButtonDirective');
 const {RecursiveListButtonDirective} = goog.require('grrUi.client.virtualFileSystem.recursiveListButtonDirective');
 const {VfsFilesArchiveButtonDirective} = goog.require('grrUi.client.virtualFileSystem.vfsFilesArchiveButtonDirective');
 const {coreModule} = goog.require('grrUi.core.core');
@@ -56,5 +55,3 @@ exports.virtualFileSystemModule.directive(
 exports.virtualFileSystemModule.directive(
     VfsFilesArchiveButtonDirective.directive_name,
     VfsFilesArchiveButtonDirective);
-exports.virtualFileSystemModule.directive(
-    RWeOwnedButtonDirective.directive_name, RWeOwnedButtonDirective);

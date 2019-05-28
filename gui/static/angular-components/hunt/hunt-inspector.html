@@ -1,7 +1,14 @@
 <div class="padded">
 
-  <div ng-if="!huntId">
-    Please select a hunt to see its details here.
+  <div ng-if="!huntId || !controller.huntId">
+    <div class="card-deck">
+      <div class="card panel" >
+        <h5 class="card-header">View Hunt details</h5>
+        <div class="card-body">
+          Please select a hunt in the table above to see its details here.
+        </div>
+      </div>
+    </div>
   </div>
 
   <uib-tabset ng-if="huntId && controller.huntId"

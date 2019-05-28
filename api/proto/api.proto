@@ -258,7 +258,7 @@ service API {
         };
     }
 
-    // Streaming free form VQL
+    // Streaming free form VQL - Not available over http.
     rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
 
     // Server Monitoring Artifacts - manage the Server Monitoring
@@ -292,6 +292,13 @@ service API {
         option (google.api.http) = {
             post: "/api/v1/SetClientMonitoringState",
             body: "*",
+        };
+    }
+
+    rpc ListAvailableEventResults(ListAvailableEventResultsRequest)
+        returns (ListAvailableEventResultsResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/ListAvailableEventResults",
         };
     }
 }

@@ -91,7 +91,7 @@ FileTextViewController.prototype.guessHighlighting = function(filename) {
  * @private
  */
 FileTextViewController.prototype.fetchText_ = function() {
-  this.fileContent = "Loading....";
+  this.fileContent = "";
   if (angular.isUndefined(this.fileContext.selectedRow)) {
     return;
   }

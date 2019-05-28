@@ -70,9 +70,7 @@ func renderRootVFS(client_id string) *actions_proto.VQLResponse {
 		return &actions_proto.VQLResponse{
 			Response: `
    [
-    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"},
-    {"Mode": "drwxrwxrwx", "Name": "exported_files"},
-    {"Mode": "drwxrwxrwx", "Name": "server_artifacts"}
+    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"}
    ]`,
 		}
 	}
@@ -82,8 +80,7 @@ func renderRootVFS(client_id string) *actions_proto.VQLResponse {
     {"Mode": "drwxrwxrwx", "Name": "file"},
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"},
-    {"Mode": "drwxrwxrwx", "Name": "artifacts"},
-    {"Mode": "drwxrwxrwx", "Name": "monitoring"}
+    {"Mode": "drwxrwxrwx", "Name": "artifacts"}
    ]`,
 	}
 

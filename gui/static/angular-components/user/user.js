@@ -9,7 +9,6 @@ const {UserLabelDirective} = goog.require('grrUi.user.userLabelDirective');
 const {UserNotificationButtonDirective} = goog.require('grrUi.user.userNotificationButtonDirective');
 const {UserNotificationDialogDirective} = goog.require('grrUi.user.userNotificationDialogDirective');
 const {UserNotificationItemDirective} = goog.require('grrUi.user.userNotificationItemDirective');
-const {UserSettingsButtonDirective} = goog.require('grrUi.user.userSettingsButtonDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
 
@@ -37,5 +36,3 @@ exports.userModule.directive(
 exports.userModule.directive(
     UserNotificationItemDirective.directive_name,
     UserNotificationItemDirective);
-exports.userModule.directive(
-    UserSettingsButtonDirective.directive_name, UserSettingsButtonDirective);

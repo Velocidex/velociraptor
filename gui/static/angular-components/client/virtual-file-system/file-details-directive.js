@@ -26,13 +26,15 @@ const FileDetailsController = function(
   /** @type {string} */
   this.currentTab = 'stats';
 
-    /** @type {?object} */
-    this.params;
+  this.fileIsDirectory;
 
-    this.reporting_params = {};
+  /** @type {?object} */
+  this.params;
 
-    this.scope_.$watch('controller.fileContext.selectedFilePath',
-                       this.onFilePathChange_.bind(this));
+  this.reporting_params = {};
+
+  this.scope_.$watch('controller.fileContext.selectedFilePath',
+                     this.onFilePathChange_.bind(this));
   this.scope_.$watch('currentTab', this.onDirectiveTabChange_.bind(this));
   this.scope_.$watch('controller.currentTab', this.onControllerTabChange_.bind(this));
 };
@@ -58,20 +60,19 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
         return;
     }
 
-    /*
-    var download = this.fileContext.selectedRow.Download;
-    if (download == null) {
-        return;
-    }
 
-    var filePath = download.vfs_path;
-    */
+    var download = this.fileContext.selectedRow.Download;
+    this.fileHasContent = angular.isObject(download);
+
     // Normalize path to contain only single / path separators.
     var filePath = this.fileContext.selectedFilePath.replace(/\/+/g,"/");
     this.params = {
         path: filePath,
         client_id: this.fileContext.clientId,
     };
+
+  this.fileIsDirectory = this.fileContext.selectedRow.Mode[0] == "d";
+  this.fileIsCSV = this.fileContext.selectedRow.Name.endsWith(".csv");
 
     this.reportingParameters();
 };
@@ -87,11 +88,6 @@ FileDetailsController.prototype.onControllerTabChange_ = function(newValue, oldV
   if (newValue !== oldValue) {
     this.scope_['currentTab'] = newValue;
   }
-};
-
-
-FileDetailsController.prototype.fileIsNotCSV = function() {
-  return !this.fileContext.selectedFilePath.endsWith(".csv");
 };
 
 
