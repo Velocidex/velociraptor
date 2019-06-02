@@ -164,7 +164,7 @@ type info struct {
 type MonitoringPluginArgs struct {
 	ClientId  []string `vfilter:"optional,field=client_id"`
 	Artifact  string   `vfilter:"required,field=artifact"`
-	Source    string   `vfilter:"required,field=source"`
+	Source    string   `vfilter:"optional,field=source"`
 	DateRegex string   `vfilter:"optional,field=date_regex"`
 }
 

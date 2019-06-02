@@ -181,32 +181,41 @@ func InstallSignalHandler(
 
 		// Start all the services and shut them down when we
 		// are done.
+		logger := logging.Manager.GetLogger(
+			config_obj, &logging.GUIComponent)
+
+		// When we exit from here, unwind the server.
+		defer func() {
+			atomic.StoreInt32(&healthy, 0)
+
+			// Server must shutdown in a reasonable time.
+			ctx, cancel := context.WithTimeout(
+				context.Background(), 10*time.Second)
+			defer cancel()
+
+			server.SetKeepAlivesEnabled(false)
+			logger.Info("Server is shutting down...")
+
+			// Notify all the currently connected clients we need
+			// to shut down.
+			server_obj.NotificationPool.NotifyAll()
+			err := server.Shutdown(ctx)
+			if err != nil {
+				logger.Error(
+					"Could not gracefully shutdown the server: ",
+					err)
+			}
+		}()
+
 		manager, err := services.StartServices(config_obj)
 		if err != nil {
+			logger.Error("Failed starting services: ", err)
 			return
 		}
 		defer manager.Close()
 
-		// Wait for the signal on this channel.
+		// Wait for the signal on this channel then return.
 		<-quit
-
-		logger := logging.Manager.GetLogger(
-			config_obj, &logging.GUIComponent)
-		atomic.StoreInt32(&healthy, 0)
-
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		server.SetKeepAlivesEnabled(false)
-		logger.Info("Server is shutting down...")
-
-		// Notify all the currently connected clients we need
-		// to shut down.
-		server_obj.NotificationPool.NotifyAll()
-		err = server.Shutdown(ctx)
-		if err != nil {
-			logger.Error("Could not gracefully shutdown the server: ", err)
-		}
 	}()
 
 	atomic.StoreInt32(&healthy, 1)

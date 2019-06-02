@@ -2,13 +2,13 @@ name: Windows.Triage.Collectors.RecycleBin
 description: |
   Collect contents of Recycle Bin.
 
-  {{ Query "SELECT * FROM Rows" }}
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="Recycle.Bin",
                path=[

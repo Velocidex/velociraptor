@@ -2,8 +2,6 @@ name: Windows.Triage.Collectors.Chrome
 description: |
   Collect Chrome related artifacts.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
@@ -13,7 +11,8 @@ parameters:
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="Chrome bookmarks",
                path=split(string=baseLocations, sep=",") + "Bookmarks*")

@@ -1,6 +1,4 @@
 name: Windows.Triage.Collectors.Amcache
-description: |
-  {{ Query "SELECT * FROM Rows" }}
 
 precondition: SELECT OS From info() where OS = 'windows'
 

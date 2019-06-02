@@ -2,13 +2,12 @@ name: Windows.Triage.Collectors.Edge
 description: |
   Collect Edge related artifacts.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="Edge folder",
                path="C:\\Users\\*\\AppData\\Local\\Packages\\Microsoft.MicrosoftEdge_*\\**")

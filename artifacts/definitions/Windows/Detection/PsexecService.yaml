@@ -22,12 +22,14 @@ parameters:
 
 sources:
   - queries:
-      - LET file_scan = SELECT File, Rule, Strings, now() AS Timestamp,
+      - |
+        LET file_scan = SELECT File, Rule, Strings, now() AS Timestamp,
                Name, ServiceType
         FROM yara(rules=yaraRule, files=PathName)
         WHERE Rule
 
-      - LET service_creation = SELECT Parse.TargetInstance.Name AS Name,
+      - |
+        LET service_creation = SELECT Parse.TargetInstance.Name AS Name,
                Parse.TargetInstance.PathName As PathName,
                Parse.TargetInstance.ServiceType As ServiceType
         FROM wmi_events(
@@ -35,6 +37,7 @@ sources:
            wait=5000000,
            namespace="ROOT/CIMV2")
 
-      - SELECT * FROM foreach(
+      - |
+        SELECT * FROM foreach(
           row=service_creation,
           query=file_scan)

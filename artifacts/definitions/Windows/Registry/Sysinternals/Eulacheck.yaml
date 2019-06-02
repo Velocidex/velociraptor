@@ -17,7 +17,8 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     queries:
-    - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+    - |
+      LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
     - |
       SELECT Key.Name as ProgramName,
              Key.FullPath as Key,

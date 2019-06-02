@@ -2,15 +2,14 @@ name: Windows.Triage.Collectors.RegistryHives
 description: |
   System and user related Registry hives.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 reference:
   - https://github.com/EricZimmerman/KapeFiles
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="ntuser.dat registry hive",
                accessor="ntfs",

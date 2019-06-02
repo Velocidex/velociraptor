@@ -38,7 +38,8 @@ parameters:
 sources:
   - name: RejectedDHCP
     queries:
-      - LET files = SELECT * FROM glob(
+      - |
+        LET files = SELECT * FROM glob(
             globs=eventDirGlob + adminLog,
             accessor=accessor)
       - |
@@ -59,7 +60,8 @@ sources:
 
   - name: AssignedDHCP
     queries:
-      - LET files = SELECT * FROM glob(
+      - |
+        LET files = SELECT * FROM glob(
             globs=eventDirGlob + operationalLog,
             accessor=accessor)
       - |

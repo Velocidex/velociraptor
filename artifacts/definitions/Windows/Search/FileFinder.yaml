@@ -55,7 +55,8 @@ parameters:
 
 sources:
   - queries:
-    - LET ntfs_search = SELECT FullPath,
+    - |
+      LET ntfs_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
                timestamp(epoch=Atime.Sec) AS Atime,
@@ -67,7 +68,8 @@ sources:
                   then=hash(path=FullPath, accessor="ntfs")) AS Hash
         FROM glob(globs=SearchFilesGlob, accessor="ntfs")
 
-    - LET file_search = SELECT FullPath,
+    - |
+      LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
                timestamp(epoch=Atime.Sec) AS Atime,
@@ -79,7 +81,8 @@ sources:
                   then=hash(path=FullPath, accessor="file")) AS Hash
         FROM glob(globs=SearchFilesGlob, accessor="file")
 
-    - SELECT * FROM if(
+    - |
+      SELECT * FROM if(
         condition=(Use_Raw_NTFS = "Y"),
         then=ntfs_search,
         else=file_search)

@@ -1,15 +1,11 @@
 name: Windows.Triage.Collectors.EvidenceOfExecution
-description: |
-  {{ Query "SELECT * FROM Rows" }}
-
-includes:
-  - Windows.Triage.Collectors.Amcache
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="Prefetch",
                path="C:\\Windows\\prefetch\\*.pf")

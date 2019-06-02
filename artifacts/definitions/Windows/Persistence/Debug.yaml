@@ -15,7 +15,9 @@ parameters:
 
 sources:
   - queries:
-      - SELECT Key.Name AS Program,
+      - |
+        SELECT Key.Name AS Program,
                Key.FullPath as Key,
-               Debugger FROM read_reg_key(globs=imageFileExecutionOptions)
+               Debugger FROM read_reg_key(
+                  globs=imageFileExecutionOptions)
         WHERE Debugger

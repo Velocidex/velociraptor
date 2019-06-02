@@ -18,15 +18,19 @@ precondition:
 
 sources:
   - queries:
-      - LET files = SELECT ClientId,
-                           file_store(path=Flow.FlowContext.uploaded_files) as LogFiles
+      - |
+        LET files = SELECT ClientId,
+          file_store(path=Flow.FlowContext.uploaded_files) as LogFiles
         FROM hunt_results(
-          hunt_id=huntId, artifact='Windows.Triage.Collectors.PowershellConsoleLogs')
+          hunt_id=huntId,
+          artifact='Windows.Triage.Collectors.PowershellConsoleLogs')
 
       # A lookup between client id and FQDN
-      - LET clients <= SELECT ClientId, os_info.fqdn AS FQDN from clients()
+      - |
+        LET clients <= SELECT ClientId, os_info.fqdn AS FQDN from clients()
 
-      - SELECT * FROM foreach(
+      - |
+        SELECT * FROM foreach(
           row=files,
           query={
             SELECT ClientId, {

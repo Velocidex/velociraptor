@@ -40,13 +40,15 @@ parameters:
 
 sources:
   - queries:
-      - LET office_docs = SELECT FullPath AS OfficePath,
+      - |
+        LET office_docs = SELECT FullPath AS OfficePath,
              timestamp(epoch=Mtime.Sec) as OfficeMtime,
              Size as OfficeSize
           FROM glob(globs=searchGlob + documentGlobs)
 
       # A list of zip members inside the doc that have some content.
-      - LET document_parts = SELECT OfficePath,
+      - |
+        LET document_parts = SELECT OfficePath,
              FullPath AS ZipMemberPath
           FROM glob(globs=url(
              scheme="file", path=OfficePath, fragment="/**").String,
@@ -54,7 +56,8 @@ sources:
           WHERE not IsDir and Size > 0
 
       # For each document, scan all its parts for the keyword.
-      - SELECT OfficePath,
+      - |
+        SELECT OfficePath,
                OfficeMtime,
                OfficeSize,
                File.ModTime as InternalMtime,

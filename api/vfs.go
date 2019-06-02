@@ -37,7 +37,6 @@ import (
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -264,19 +263,6 @@ func vfsListDirectory(
 
 	if vfs_path == "" || vfs_path == "/" {
 		return renderRootVFS(client_id), nil
-	}
-
-	if vfs_path == "/artifact_definitions" {
-		return &actions_proto.VQLResponse{
-			Response: `
-   [
-    {"Mode": "drwxrwxrwx", "Name": "builtin"},
-    {"Mode": "drwxrwxrwx", "Name": "custom"}
-   ]`,
-		}, nil
-	}
-	if strings.HasPrefix(vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION) {
-		return renderBuiltinArtifacts(config_obj, vfs_path)
 	}
 
 	prefix, ok := getVFSPathPrefix(vfs_path, client_id)

@@ -7,4 +7,5 @@ parameters:
 sources:
   - precondition: SELECT * from info()
     queries:
-      - SELECT Content as IP from http_client(url=externalUrl)
+      - |
+        SELECT Content as IP from http_client(url=externalUrl)

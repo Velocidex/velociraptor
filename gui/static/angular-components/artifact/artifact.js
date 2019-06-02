@@ -5,8 +5,8 @@ goog.module.declareLegacyNamespace();
 
 const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescriptorDirective');
 const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
-const {ArtifactsListFormDirective} = goog.require('grrUi.artifact.artifactsListFormDirective');
-const {ArtifactsParamsFormDirective} = goog.require('grrUi.artifact.artifactsParamsFormDirective');
+const {ArtifactsViewerDirective} = goog.require('grrUi.artifact.artifactViewerDirective');
+
 const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
 const {TimelineDirective} = goog.require('grrUi.artifact.timelineDirective');
 const {ReportingDirective} = goog.require('grrUi.artifact.reportingDirective');
@@ -28,10 +28,10 @@ exports.artifactModule = angular.module(
 
 exports.artifactModule.directive(
     ArtifactDescriptorDirective.directive_name, ArtifactDescriptorDirective);
+
 exports.artifactModule.directive(
-    ArtifactsListFormDirective.directive_name, ArtifactsListFormDirective);
-exports.artifactModule.directive(
-    ArtifactsParamsFormDirective.directive_name, ArtifactsParamsFormDirective);
+    ArtifactsViewerDirective.directive_name, ArtifactsViewerDirective);
+
 exports.artifactModule.directive(
     LineChartDirective.directive_name, LineChartDirective);
 exports.artifactModule.directive(
@@ -57,18 +57,6 @@ exports.artifactModule.directive(
 
 exports.artifactModule.service(
     ArtifactDescriptorsService.service_name, ArtifactDescriptorsService);
-
-exports.artifactModule.run(function(
-    grrSemanticFormDirectivesRegistryService) {
-  var registry = grrSemanticFormDirectivesRegistryService;
-
-    registry.registerDirective(
-        ArtifactsListFormDirective.semantic_type, ArtifactsListFormDirective);
-
-    registry.registerDirective(
-        ArtifactsParamsFormDirective.semantic_type, ArtifactsParamsFormDirective);
-});
-
 
 exports.artifactModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;

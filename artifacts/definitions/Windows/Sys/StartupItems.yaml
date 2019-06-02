@@ -63,6 +63,7 @@ sources:
               FROM read_file(filenames=FullPath)
            })
 
-      - SELECT * from chain(
+      - |
+        SELECT * from chain(
            first=registry_runners,
            second=file_runners)

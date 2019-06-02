@@ -109,10 +109,9 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 }
 
 func NewTextTemplateEngine(config_obj *api_proto.Config,
-	artifact_name string,
-	parameters map[string]string) (*TextTemplateEngine, error) {
+	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, artifact_name, parameters)
+		config_obj, artifact_name)
 	if err != nil {
 		return nil, err
 	}

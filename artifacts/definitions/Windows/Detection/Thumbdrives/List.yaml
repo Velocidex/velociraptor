@@ -23,15 +23,27 @@ parameters:
 
 sources:
   - queries:
-      - LET removable_disks = SELECT Name AS Drive, atoi(string=Data.Size) AS Size
+      - |
+        LET removable_disks = SELECT Name AS Drive,
+            atoi(string=Data.Size) AS Size
         FROM glob(globs="/*", accessor="file")
-        WHERE Data.Description =~ "Removable" AND Size < atoi(string=maxDriveSize)
+        WHERE Data.Description =~ "Removable" AND
+           Size < atoi(string=maxDriveSize)
 
-      - LET file_listing = SELECT FullPath, timestamp(epoch=Mtime.Sec) As Modified, Size
-        FROM glob(globs=Drive+"\\**", accessor="file") LIMIT 1000
+      - |
+        LET file_listing = SELECT FullPath,
+            timestamp(epoch=Mtime.Sec) As Modified,
+            Size
+        FROM glob(globs=Drive+"\\**", accessor="file")
+        LIMIT 1000
 
-      - SELECT * FROM diff(
-         query={ SELECT * FROM foreach(row=removable_disks, query=file_listing) },
-         key="FullPath",
-         period=10)
-         WHERE Diff = "added"
+      - |
+        SELECT * FROM diff(
+          query={
+             SELECT * FROM foreach(
+                 row=removable_disks,
+                 query=file_listing)
+          },
+          key="FullPath",
+          period=10)
+          WHERE Diff = "added"

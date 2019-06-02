@@ -7,6 +7,7 @@ const {UserNotificationButtonDirective} = goog.require('grrUi.user.userNotificat
 const {annotateApiNotification, openReference} = goog.require('grrUi.user.userNotificationItemDirective');
 
 
+const Notification = null;
 
 document.addEventListener('DOMContentLoaded', function() {
   if(Notification && Notification.permission !== 'granted') {

@@ -2,16 +2,25 @@
   <div class="navbar-inner">
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
-        <div class="btn-group" uib-dropdown is-open="status.isopen">
-          <button
-            type="button"
-            class="btn btn-default"
-            title="Update client monitoring table"
-            ng-click="controller.updateClientMonitoringTable()"
-            >
-            <i class="fa fa-edit"></i>
-          </button>
+        <button
+          type="button"
+          class="btn btn-default"
+          title="Download Results"
+          ng-click="controller.downloadResults()"
+          >
+          <i class="fa fa-download"></i>
+        </button>
 
+        <button
+          type="button"
+          class="btn btn-default"
+          title="Update client monitoring table"
+          ng-click="controller.updateClientMonitoringTable()"
+          >
+          <i class="fa fa-edit"></i>
+        </button>
+
+        <div class="btn-group" uib-dropdown is-open="status.isopen">
           <button id="single-button" type="button"
                   class="btn btn-default"
                   uib-dropdown-toggle>

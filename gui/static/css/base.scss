@@ -9,7 +9,6 @@
 @import 'css/mixins';
 
 // Directive style includes
-@import 'angular-components/artifact/artifacts-list-form';
 @import 'angular-components/artifact/reporting';
 @import 'angular-components/artifact/artifact-descriptor';
 @import 'angular-components/client/host-info';
@@ -26,7 +25,6 @@
 @import 'angular-components/sidebar/client-warnings';
 @import 'angular-components/sidebar/navigator';
 @import 'angular-components/user/user-notification-item';
-@import 'angular-components/user/user-settings-button';
 
 //
 //
@@ -982,8 +980,14 @@ table.grr_flot_graph {
 
 .dashboard {
     margin: 20px;
-    margin-bottom: 40px;
+    padding-left: 20px;
+    // Height of dashboard toolbar + footer + scrollbars.
+    padding-bottom: 70px;
+    margin-right: 0px;
     overflow-y: auto;
+    height: -webkit-fill-available;
+    height: -moz-available;
+    height: fill-available;
 }
 
 .table-loading {
@@ -1098,6 +1102,17 @@ grr-client-list {
     background-color: $color-default-background;
 }
 
+grr-client-events, grr-server-artifacts, grr-user-dashboard, grr-artifact-viewer {
+    overflow: hidden;
+}
+
+.artifact-view-description {
+    height: -webkit-fill-available;
+    height: -moz-available;
+    height: fill-available;
+    overflow: auto;
+}
+
 .navicon {
     margin-right: 10px;
     font-size: 18px;
@@ -1128,4 +1143,19 @@ li.active .navicon {
 
 .datepicker-toolbar input {
     height: 33px;
+}
+
+.hamburger {
+    margin-left: -10px;
+}
+
+
+div.artifact-view-table {
+    max-height: -webkit-fill-available;
+    max-height: -moz-available;
+    max-height: fill-available;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #dddddd;
+    border-top: none;
 }

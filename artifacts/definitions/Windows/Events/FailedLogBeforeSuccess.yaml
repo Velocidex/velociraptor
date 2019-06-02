@@ -51,7 +51,8 @@ sources:
                       max_age=atoi(string=failedLogonTimeWindow))
 
       # Force the fifo to materialize.
-      - LET foo <= SELECT * FROM last_5_events
+      - |
+        LET foo <= SELECT * FROM last_5_events
 
       - |
         LET success_logon = SELECT EventData as SuccessEventData,

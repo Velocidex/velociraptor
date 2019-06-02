@@ -2,13 +2,12 @@ name: Windows.Triage.Collectors.SRUM
 description: |
   System Resource Usage Monitor (SRUM) Data.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
                type="SRUM",
                path="C:\\Windows\\System32\\SRU\\**")

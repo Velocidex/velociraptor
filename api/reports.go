@@ -13,13 +13,8 @@ func getReport(ctx context.Context,
 	config_obj *api_proto.Config, in *api_proto.GetReportRequest) (
 	*api_proto.GetReportResponse, error) {
 
-	params := make(map[string]string)
-	for _, env := range in.Parameters {
-		params[env.Key] = env.Value
-	}
-
 	template_engine, err := reporting.NewGuiTemplateEngine(
-		config_obj, ctx, in.Artifact, params)
+		config_obj, ctx, in.Artifact)
 	if err != nil {
 		return nil, err
 	}
@@ -36,29 +31,29 @@ func getReport(ctx context.Context,
 	case "CLIENT":
 		template_data, err = reporting.GenerateClientReport(
 			template_engine, in.ClientId, in.FlowId)
-		if err != nil {
-			return nil, err
-		}
 
 	// Server event artifacts run on the server. Typically they
 	// post process client event streams.
 	case "SERVER_EVENT":
 		template_data, err = reporting.
 			GenerateServerMonitoringReport(
-				template_engine, in.StartTime, in.EndTime)
-		if err != nil {
-			return nil, err
-		}
+				template_engine,
+				in.StartTime, in.EndTime,
+				in.Parameters)
 
 	// A MONITORING_DAILY report is a report generated
 	// over a single day of a monitoring artifact
 	case "MONITORING_DAILY", "CLIENT_EVENT":
 		template_data, err = reporting.GenerateMonitoringDailyReport(
 			template_engine, in.ClientId, in.StartTime, in.EndTime)
-		if err != nil {
-			return nil, err
-		}
 
+	case "ARTIFACT_DESCRIPTION":
+		template_data, err = reporting.GenerateArtifactDescriptionReport(
+			template_engine, config_obj)
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	encoded_data, err := json.Marshal(template_engine.Data)

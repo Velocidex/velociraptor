@@ -18,24 +18,21 @@
 package api
 
 import (
-	"encoding/json"
+	"errors"
 	"path"
 	"regexp"
-	"sort"
 	"strings"
 
 	context "golang.org/x/net/context"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
-	default_artifact = `name: Artifact.Name.In.Category
+	default_artifact = `name: Custom.Artifact.Name
 description: |
    This is the human readable description of the artifact.
 
@@ -51,8 +48,7 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     queries:
-    - |
-      SELECT * FROM scope()
+    - SELECT * FROM scope()
 
 
 # Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT
@@ -66,147 +62,94 @@ reports:
 
 func getArtifactFile(
 	config_obj *api_proto.Config,
-	vfs_path string) (string, error) {
+	name string) (string, error) {
 
-	vfs_path = path.Clean(vfs_path)
-	if vfs_path == "" || !strings.HasSuffix(vfs_path, ".yaml") {
-		return default_artifact, nil
-	}
-
-	fd, err := getFileForVFSPath(config_obj, "", vfs_path)
-	if err == nil {
-		defer fd.Close()
-
-		artifact := make([]byte, 1024*10)
-		n, err := fd.Read(artifact)
-		if err == nil {
-			return string(artifact[:n]), nil
-		}
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
 		return "", err
 	}
 
-	return default_artifact, nil
+	artifact, pres := repository.Get(name)
+	if !pres {
+		return default_artifact, nil
+	}
+
+	// This is hacky but necessary since we can not reserialize
+	// the artifact - the yaml library is unable to properly round
+	// trip the raw yaml.
+	if !strings.HasPrefix(artifact.Name, "Custom.") {
+		regex, err := regexp.Compile(
+			"(?s)(?m)^name:\\s*" + artifact.Name + "$")
+		if err != nil {
+			return default_artifact, err
+		}
+
+		result := regex.ReplaceAllString(
+			artifact.Raw, "name: Custom."+artifact.Name)
+		return result, nil
+	}
+
+	return artifact.Raw, nil
 }
 
-func setArtifactFile(config_obj *api_proto.Config, artifact string) error {
+func setArtifactFile(config_obj *api_proto.Config,
+	in *api_proto.SetArtifactRequest) (
+	*artifacts_proto.Artifact, error) {
+
 	// First ensure that the artifact is correct.
 	tmp_repository := artifacts.NewRepository()
-	artifact_definition, err := tmp_repository.LoadYaml(artifact, true /* validate */)
+	artifact_definition, err := tmp_repository.LoadYaml(
+		in.Artifact, true /* validate */)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	vfs_path := path.Join(constants.ARTIFACT_DEFINITION,
-		artifacts.NameToPath(artifact_definition.Name))
+	if !strings.HasPrefix(artifact_definition.Name, "Custom.") {
+		return nil, errors.New(
+			"Modified or custom artifacts must start with 'Custom'")
+	}
 
-	// Now write it into the filestore.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(vfs_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	// We want to completely replace the content of the file.
-	fd.Truncate(0)
-
-	_, err = fd.Write([]byte(artifact))
-	if err != nil {
-		return err
-	}
+	vfs_path := path.Join(constants.ARTIFACT_DEFINITION_PREFIX,
+		artifacts.NameToPath(artifact_definition.Name))
 
 	// Load the new artifact into the global repo so it is
 	// immediately available.
 	global_repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
-		return err
-	}
-	// Artifact is already valid - no need to revalidate it again.
-	_, err = global_repository.LoadYaml(artifact, false /* validate */)
-	return err
-}
-
-func renderBuiltinArtifacts(
-	config_obj *api_proto.Config,
-	vfs_path string) (*actions_proto.VQLResponse, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	directories := []string{}
-	matching_artifacts := []*artifacts_proto.Artifact{}
-
-	artifact_path := path.Join("/", strings.TrimPrefix(
-		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
-
-	// Make sure there is a trailing / so prefix match below
-	// matches full directory names.
-	if !strings.HasSuffix(artifact_path, "/") {
-		artifact_path += "/"
-	}
-
-	for _, artifact_obj := range repository.Data {
-		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
-		if !strings.HasPrefix(artifact_obj_path, artifact_path) {
-			continue
-		}
-
-		components := []string{}
-		for _, item := range strings.Split(
-			strings.TrimPrefix(artifact_obj_path, artifact_path), "/") {
-			if item != "" {
-				components = append(components, item)
-			}
-		}
-
-		if len(components) > 1 && !utils.InString(&directories, components[0]) {
-			directories = append(directories, components[0])
-		} else if len(components) == 1 {
-			matching_artifacts = append(matching_artifacts, artifact_obj)
-		}
-	}
-
-	sort.Strings(directories)
-
-	var rows []*FileInfoRow
-	for _, dirname := range directories {
-		rows = append(rows, &FileInfoRow{
-			Name: dirname,
-			Mode: "dr-xr-xr-x",
-		})
-	}
-
-	for _, artifact_obj := range matching_artifacts {
-		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
-		rows = append(rows, &FileInfoRow{
-			Name: path.Base(artifact_obj_path),
-			Mode: "-r--r--r--",
-			Size: int64(len(artifact_obj.Raw)),
-			Download: &DownloadInfo{
-				VfsPath: path.Join(
-					vfs_path, path.Base(artifact_obj_path)),
-				Size: int64(len(artifact_obj.Raw)),
-			},
-		})
-	}
-
-	encoded_rows, err := json.MarshalIndent(rows, "", " ")
-	if err != nil {
 		return nil, err
 	}
 
-	return &actions_proto.VQLResponse{
-		Columns: []string{
-			"Download", "Name", "Size", "Mode", "Timestamp",
-		},
-		Response: string(encoded_rows),
-		Types: []*actions_proto.VQLTypeMap{
-			&actions_proto.VQLTypeMap{
-				Column: "Download",
-				Type:   "Download",
-			},
-		},
-	}, nil
+	switch in.Op {
+
+	case api_proto.SetArtifactRequest_DELETE:
+		global_repository.Del(artifact_definition.Name)
+		err = file_store_factory.Delete(vfs_path)
+		return artifact_definition, err
+
+	case api_proto.SetArtifactRequest_SET:
+		// Now write it into the filestore.
+		fd, err := file_store_factory.WriteFile(vfs_path)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+
+		// We want to completely replace the content of the file.
+		fd.Truncate(0)
+
+		_, err = fd.Write([]byte(in.Artifact))
+		if err != nil {
+			return nil, err
+		}
+
+		// Load the artifact into the currently running repository.
+		// Artifact is already valid - no need to revalidate it again.
+		_, err = global_repository.LoadYaml(in.Artifact, false /* validate */)
+		return artifact_definition, err
+	}
+
+	return nil, errors.New("Unknown op")
 }
 
 func searchArtifact(

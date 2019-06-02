@@ -10,11 +10,13 @@ parameters:
 
 sources:
   - queries:
-      - LET processes = SELECT Name as ProcessName, CommandLine, Pid
+      - |
+        LET processes = SELECT Name as ProcessName, CommandLine, Pid
             FROM pslist()
             WHERE Name =~ processRegex
 
-      - SELECT * FROM foreach(
+      - |
+        SELECT * FROM foreach(
           row=processes,
           query={
             SELECT ProcessName, CommandLine, Pid, FullPath,

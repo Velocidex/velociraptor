@@ -7,7 +7,8 @@ precondition: SELECT OS From info() where OS = 'windows'
 sources:
   - name: NTFS Metadata Files
     queries:
-      - SELECT * FROM Artifact.Triage.Collection.Upload(
+      - |
+        SELECT * FROM Artifact.Triage.Collection.Upload(
         type="NTFS Metadata Files",
         accessor="ntfs",
         path=[

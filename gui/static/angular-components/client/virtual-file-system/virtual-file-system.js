@@ -7,7 +7,6 @@ const {AddItemButtonDirective} = goog.require('grrUi.client.virtualFileSystem.ad
 const {BreadcrumbsDirective} = goog.require('grrUi.client.virtualFileSystem.breadcrumbsDirective');
 const {FileContextDirective} = goog.require('grrUi.client.virtualFileSystem.fileContextDirective');
 const {FileDetailsDirective} = goog.require('grrUi.client.virtualFileSystem.fileDetailsDirective');
-const {FileDownloadViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileDownloadViewDirective');
 const {FileHexViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileHexViewDirective');
 const {FileStatsViewDirective} = goog.require('grrUi.client.virtualFileSystem.fileStatsViewDirective');
 const {FileTableDirective} = goog.require('grrUi.client.virtualFileSystem.fileTableDirective');
@@ -36,8 +35,6 @@ exports.virtualFileSystemModule.directive(
     FileContextDirective.directive_name, FileContextDirective);
 exports.virtualFileSystemModule.directive(
     FileDetailsDirective.directive_name, FileDetailsDirective);
-exports.virtualFileSystemModule.directive(
-    FileDownloadViewDirective.directive_name, FileDownloadViewDirective);
 exports.virtualFileSystemModule.directive(
     FileHexViewDirective.directive_name, FileHexViewDirective);
 exports.virtualFileSystemModule.directive(

@@ -1,9 +1,6 @@
 'use strict';
 
 goog.module('grrUi.user.userDashboardDirective');
-goog.module.declareLegacyNamespace();
-
-
 
 /**
  * Controller for UserDashboardDirective.
@@ -29,16 +26,24 @@ const UserDashboardController = function(
   this.params = {
     artifact: "Server.Monitor.Health",
     type: "SERVER_EVENT",
-    dayName: moment.utc().format("YYYY-MM-DD")
   };
+
+  this.ranges = [
+    {desc: "Last Day", sec: 60*60*24, sample: 4},
+    {desc: "Last 2 days", sec: 60*60*24*2, sample: 8},
+    {desc: "Last Week", sec: 60*24*24*7, sample: 20},
+  ];
+
+  this.current_range_desc;
+  this.setRange(this.ranges[0]);
 };
 
-/**
- * UserDashboardDirective renders a dashboard that users see when they
- * hit GRR's Admin UI home page.
- *
- * @return {!angular.Directive} Directive definition object.
- */
+UserDashboardController.prototype.setRange = function(args) {
+  this.params.start_time = moment.utc().unix() - args.sec;
+  this.params.sample = args.sample;
+  this.current_range_desc = args.desc;
+};
+
 exports.UserDashboardDirective = function() {
   return {
     scope: {},
@@ -49,11 +54,4 @@ exports.UserDashboardDirective = function() {
   };
 };
 
-
-/**
- * Name of the directive in Angular.
- *
- * @const
- * @export
- */
 exports.UserDashboardDirective.directive_name = 'grrUserDashboard';

@@ -524,7 +524,7 @@ func (self *ApiServer) GetArtifactFile(
 	in *api_proto.GetArtifactRequest) (
 	*api_proto.GetArtifactResponse, error) {
 
-	artifact, err := getArtifactFile(self.config, in.VfsPath)
+	artifact, err := getArtifactFile(self.config, in.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -553,20 +553,21 @@ func (self *ApiServer) SetArtifactFile(
 		}
 	}
 
-	logging.GetLogger(self.config, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":          user_name,
-			"artifact_file": in.VfsPath,
-			"details":       fmt.Sprintf("%v", in.Artifact),
-		}).Info("SetArtifactFile")
-
-	err := setArtifactFile(self.config, in.Artifact)
+	definition, err := setArtifactFile(self.config, in)
 	if err != nil {
 		return &api_proto.APIResponse{
 			Error:        true,
 			ErrorMessage: fmt.Sprintf("%v", err),
 		}, nil
 	}
+
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":     user_name,
+			"artifact": definition.Name,
+			"details":  fmt.Sprintf("%v", in.Artifact),
+		}).Info("SetArtifactFile")
+
 	return &api_proto.APIResponse{}, nil
 }
 

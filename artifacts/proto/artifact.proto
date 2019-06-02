@@ -106,6 +106,8 @@ message Report {
         }];
 
     string template = 2;
+
+    repeated ArtifactParameter parameters = 3;
 }
 
 message Artifact {

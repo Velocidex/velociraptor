@@ -26,17 +26,17 @@ sources:
          namespace=namespace)
    - |
      SELECT {
-       SELECT * FROM wmi(
-          query="SELECT * FROM " + Consumer.Type,
-          namespace=if(condition=Consumer.namespace,
+         SELECT * FROM wmi(
+           query="SELECT * FROM " + Consumer.Type,
+           namespace=if(condition=Consumer.namespace,
               then=Consumer.namespace,
               else=namespace)) WHERE Name = Consumer.Name
-     } AS ConsumerDetails,
-     {
-       SELECT * FROM wmi(
-          query="SELECT * FROM " + Filter.Type,
-          namespace=if(condition=Filter.namespace,
+       } AS ConsumerDetails,
+       {
+         SELECT * FROM wmi(
+           query="SELECT * FROM " + Filter.Type,
+           namespace=if(condition=Filter.namespace,
               then=Filter.namespace,
               else=namespace)) WHERE Name = Filter.Name
-     } AS FilterDetails
+       } AS FilterDetails
      FROM FilterToConsumerBinding

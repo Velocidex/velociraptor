@@ -19,11 +19,12 @@ parameters:
 
 sources:
   - queries:
-      - SELECT * FROM foreach(
-        row = {
-          SELECT * FROM Artifact.Windows.Detection.Thumbdrives.List()
-          WHERE FullPath =~ officeExtensions
-        },
-        query = {
-          SELECT * from olevba(file=FullPath)
-        })
+      - |
+        SELECT * FROM foreach(
+          row = {
+            SELECT * FROM Artifact.Windows.Detection.Thumbdrives.List()
+            WHERE FullPath =~ officeExtensions
+          },
+          query = {
+            SELECT * from olevba(file=FullPath)
+          })

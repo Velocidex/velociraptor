@@ -32,4 +32,11 @@
       </grr-hunt-clients>
     </uib-tab>
 
+    <uib-tab heading="Report" index="'report'">
+      <grr-hunt-report hunt="controller.hunt"
+                       huntId="controller.hunt.hunt_id"
+                       ng-if="controller.tabsShown['report']">
+      </grr-hunt-report>
+    </uib-tab>
+
 </div>

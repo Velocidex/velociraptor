@@ -3,6 +3,7 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 
 package proto;
 
@@ -23,8 +24,11 @@ message GetArtifactsRequest {
 
 message GetArtifactRequest {
     // Deprecated.
-    string vfs_path = 1 [(sem_type) = {
-            description: "The vfs path relative to the artifacts definition store."
+    // string vfs_path = 1 [(sem_type) = {
+    //        description: "The vfs path relative to the artifacts definition store."
+    //    }];
+    string name = 2 [(sem_type) = {
+            description: "The artifact name."
         }];
 }
 
@@ -36,12 +40,22 @@ message GetArtifactResponse {
 
 
 message SetArtifactRequest {
-    string vfs_path = 1 [(sem_type) = {
-            description: "The vfs path relative to the artifacts definition store."
-        }];
+    // Deprecated
+    //    string vfs_path = 1 [(sem_type) = {
+    //        description: "The vfs path relative to the artifacts definition store."
+    //    }];
 
     string artifact = 2 [(sem_type) = {
             description: "The artifact data, or a default.",
+        }];
+
+    enum Operation {
+        SET = 0;
+        DELETE = 1;
+    }
+
+    Operation op = 3 [(sem_type) = {
+            description: "What to do with the artifact?",
         }];
 }
 
@@ -78,7 +92,7 @@ message GetReportRequest {
     // Parameters for CLIENT
     string flow_id = 7;
 
-    repeated VQLEnv parameters = 4 [(sem_type) = {
+    repeated ArtifactParameter parameters = 4 [(sem_type) = {
             description: "Report parameters. These depend on the type of the report."
         }];
 }

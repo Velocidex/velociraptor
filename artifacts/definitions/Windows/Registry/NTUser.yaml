@@ -1,0 +1,38 @@
+name: Windows.Registry.NTUser
+description: |
+  This artifact searches for keys or values within the user's
+  NTUser.dat registry hives.
+
+  When a user logs into a windows machine the system creates their own
+  "profile" which consists of a registry hive mapped into the
+  HKEY_USERS hive. This hive file is locked as long as the user is
+  logged in. If the user is not logged in, the file is not mapped at
+  all.
+
+  This artifact bypasses the locking mechanism by parsing the raw NTFS
+  filesystem to recover the registry hives. We then parse the registry
+  hives to search for the glob provided.
+
+  This artifact is designed to be reused by other artifacts that need
+  to access user data.
+
+parameters:
+ - name: KeyGlob
+   default: Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\**
+ - name: UserHomes
+   default: C:\Users\*\NTUSER.DAT
+
+sources:
+ - queries:
+     - |
+       SELECT * FROM foreach(
+         row={
+            SELECT FullPath FROM glob(globs=UserHomes)
+         },
+         query={
+            SELECT FullPath, Data, Mtime.Sec AS Mtime FROM glob(
+               globs=url(scheme="ntfs",
+                  path=FullPath,
+                  fragment=KeyGlob).String,
+               accessor="raw_reg")
+         })

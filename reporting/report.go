@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	//	html_template "html/template"
-
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -112,6 +110,28 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	return result, nil
 }
 
+func GenerateArtifactDescriptionReport(
+	template_engine TemplateEngine,
+	config_obj *api_proto.Config) (
+	string, error) {
+	artifact := template_engine.GetArtifact()
+
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	template_artifact, pres := repository.Get("Server.Internal.ArtifactDescription")
+	if pres {
+		template_engine.SetEnv("artifact", artifact)
+		for _, report := range getArtifactReports(
+			template_artifact, "internal") {
+			return template_engine.Execute(report.Template)
+		}
+	}
+	return "", nil
+}
+
 // Get reports from the artifact or generate a default report if it
 // does not exist.
 func getArtifactReports(
@@ -148,9 +168,12 @@ func getArtifactReports(
 
 func GenerateServerMonitoringReport(
 	template_engine TemplateEngine,
-	start, end uint64) (string, error) {
+	start, end uint64,
+	parameters []*artifacts_proto.ArtifactParameter) (string, error) {
+
 	template_engine.SetEnv("ReportMode", "SERVER_EVENT")
 	template_engine.SetEnv("StartTime", int64(start))
+	template_engine.SetEnv("EndTime", int64(end))
 	template_engine.SetEnv("EndTime", int64(end))
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
@@ -159,6 +182,15 @@ func GenerateServerMonitoringReport(
 		type_name := strings.ToLower(report.Type)
 		if type_name != "server_event" {
 			continue
+		}
+
+		for _, param := range report.Parameters {
+			template_engine.SetEnv(param.Name, param.Default)
+		}
+
+		// Override with user specified parameters.
+		for _, param := range parameters {
+			template_engine.SetEnv(param.Name, param.Default)
 		}
 
 		value, err := template_engine.Execute(report.Template)
@@ -197,8 +229,8 @@ func GenerateClientReport(template_engine TemplateEngine,
 
 func newBaseTemplateEngine(
 	config_obj *api_proto.Config,
-	artifact_name string,
-	parameters map[string]string) (*BaseTemplateEngine, error) {
+	artifact_name string) (
+	*BaseTemplateEngine, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
@@ -214,12 +246,6 @@ func newBaseTemplateEngine(
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
-
-	if parameters != nil {
-		for k, v := range parameters {
-			env.Set(k, v)
-		}
-	}
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	return &BaseTemplateEngine{

@@ -4,6 +4,7 @@ goog.module('grrUi.hunt.hunt');
 goog.module.declareLegacyNamespace();
 
 const {HuntClientsDirective} = goog.require('grrUi.hunt.huntClientsDirective');
+const {HuntReportDirective} = goog.require('grrUi.hunt.huntReportDirective');
 const {HuntInspectorDirective} = goog.require('grrUi.hunt.huntInspectorDirective');
 const {HuntOverviewDirective} = goog.require('grrUi.hunt.huntOverviewDirective');
 const {HuntResultsDirective} = goog.require('grrUi.hunt.huntResultsDirective');
@@ -24,6 +25,8 @@ exports.huntModule = angular.module(
 
 exports.huntModule.directive(
     HuntClientsDirective.directive_name, HuntClientsDirective);
+exports.huntModule.directive(
+    HuntReportDirective.directive_name, HuntReportDirective);
 exports.huntModule.directive(
     HuntInspectorDirective.directive_name, HuntInspectorDirective);
 exports.huntModule.directive(

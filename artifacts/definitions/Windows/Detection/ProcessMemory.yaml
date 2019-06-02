@@ -21,18 +21,21 @@ parameters:
 
 sources:
   - queries:
-      - LET processes = SELECT Name as ProcessName, CommandLine, Pid
+      - |
+        LET processes = SELECT Name as ProcessName, CommandLine, Pid
             FROM pslist()
             WHERE Name =~ processRegex
 
-      - LET hits = SELECT * FROM foreach(
+      - |
+        LET hits = SELECT * FROM foreach(
           row=processes,
           query={
              SELECT ProcessName, CommandLine, Pid, Strings.Offset as Offsets
              FROM proc_yara(rules=yaraRule, pid=Pid)
           })
 
-      - SELECT * FROM foreach(
+      - |
+        SELECT * FROM foreach(
           row=hits,
           query={
             SELECT ProcessName, CommandLine, Pid, Offsets, FullPath,

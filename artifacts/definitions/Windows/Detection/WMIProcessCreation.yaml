@@ -14,7 +14,8 @@ type: CLIENT_EVENT
 
 sources:
   - queries:
-      - SELECT Parse from wmi_events(
+      - |
+        SELECT Parse from wmi_events(
           query="SELECT * FROM MSFT_WmiProvider_ExecMethodAsyncEvent_Pre WHERE ObjectPath=\"Win32_Process\" AND MethodName=\"Create\"",
           namespace="ROOT/CIMV2",
           wait=50000000)

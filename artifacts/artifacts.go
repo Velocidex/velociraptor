@@ -95,7 +95,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
-		case "monitoring_daily", "server_event", "client":
+		case "monitoring_daily", "server_event", "client", "internal":
 			continue
 		default:
 			return nil, errors.New(fmt.Sprintf("Invalid report type %s",
@@ -143,6 +143,10 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 	res, pres := self.Data[name]
 	return res, pres
+}
+
+func (self *Repository) Del(name string) {
+	delete(self.Data, name)
 }
 
 func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact {
@@ -424,8 +428,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		return global_repository, nil
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	global_repository = NewRepository()
-
 	for _, function := range init_registry {
 		err := function(config_obj)
 		if err != nil {
@@ -433,7 +437,6 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		}
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	if config_obj.Frontend.ArtifactsPath != "" {
 		count, err := global_repository.LoadDirectory(
 			config_obj.Frontend.ArtifactsPath)
@@ -458,7 +461,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 
 	// Load artifacts from the custom file store.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION,
+	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
 		func(path string, info os.FileInfo, err error) error {
 			if err == nil && strings.HasSuffix(path, ".yaml") {
 				fd, err := file_store_factory.ReadFile(path)

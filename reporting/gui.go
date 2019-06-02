@@ -283,10 +283,11 @@ func (self *logWriter) Write(b []byte) (int, error) {
 func NewGuiTemplateEngine(
 	config_obj *api_proto.Config,
 	ctx context.Context,
-	artifact_name string,
-	parameters map[string]string) (*GuiTemplateEngine, error) {
+	artifact_name string) (
+	*GuiTemplateEngine, error) {
+
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, artifact_name, parameters)
+		config_obj, artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -325,6 +326,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	// Required for syntax highlighting.
 	p.AllowAttrs("class").OnElements("span")
 	p.AllowAttrs("class").OnElements("div")
+	p.AllowAttrs("class").OnElements("table")
 
 	return p
 }

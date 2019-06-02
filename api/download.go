@@ -33,13 +33,10 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -325,28 +322,6 @@ type vfsFileDownloadRequest struct {
 	Encoding string `schema:"encoding"`
 }
 
-func openBuiltInArtifact(config_obj *api_proto.Config, vfs_path string) (
-	file_store.ReadSeekCloser, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	artifact_path := path.Join("/", strings.TrimPrefix(
-		vfs_path, constants.BUILTIN_ARTIFACT_DEFINITION))
-
-	for _, artifact_obj := range repository.Data {
-		artifact_obj_path := artifacts.NameToPath(artifact_obj.Name)
-		if artifact_obj_path == artifact_path {
-			return utils.DataReadSeekCloser{
-				strings.NewReader(artifact_obj.Raw),
-			}, nil
-		}
-	}
-
-	return nil, errors.New("not found")
-}
-
 func filestorePathForVFSPath(
 	config_obj *api_proto.Config,
 	client_id string,
@@ -364,10 +339,7 @@ func filestorePathForVFSPath(
 
 	// These VFS directories are mapped directly to the root of
 	// the filestore regardless of the client id.
-	if strings.HasPrefix(
-		vfs_path, constants.ARTIFACT_DEFINITION) ||
-		strings.HasPrefix(vfs_path, "/exported_files/") ||
-		strings.HasPrefix(vfs_path, "/server_artifacts/") ||
+	if strings.HasPrefix(vfs_path, "/server_artifacts/") ||
 		strings.HasPrefix(vfs_path, "/hunts/") {
 		return vfs_path
 	}
@@ -384,12 +356,6 @@ func getFileForVFSPath(
 	vfs_path string) (
 	file_store.ReadSeekCloser, error) {
 	vfs_path = path.Clean(vfs_path)
-
-	if strings.HasPrefix(vfs_path,
-		constants.BUILTIN_ARTIFACT_DEFINITION) {
-		return openBuiltInArtifact(config_obj, vfs_path)
-
-	}
 
 	filestore_path := filestorePathForVFSPath(config_obj, client_id, vfs_path)
 	return file_store.GetFileStore(config_obj).ReadFile(filestore_path)

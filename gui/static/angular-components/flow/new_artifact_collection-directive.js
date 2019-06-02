@@ -39,7 +39,7 @@ const NewArtifactCollectionController = function(
     this.params = {};
     this.names = [];
     this.ops_per_second;
-    this.timeout;
+    this.timeout = 600;
 };
 
 

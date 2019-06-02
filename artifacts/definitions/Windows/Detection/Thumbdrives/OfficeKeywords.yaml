@@ -31,12 +31,13 @@ parameters:
 
 sources:
   - queries:
-      - SELECT * FROM foreach(
-        row = {
-          SELECT * FROM Artifact.Windows.Detection.Thumbdrives.List()
-          WHERE FullPath =~ officeExtensions
-        },
-        query = {
-          SELECT * FROM Artifact.Generic.Applications.Office.Keywords(
-            yaraRule=yaraRule, searchGlob=FullPath, documentGlobs="")
-        })
+      - |
+        SELECT * FROM foreach(
+          row = {
+            SELECT * FROM Artifact.Windows.Detection.Thumbdrives.List()
+            WHERE FullPath =~ officeExtensions
+          },
+          query = {
+            SELECT * FROM Artifact.Generic.Applications.Office.Keywords(
+              yaraRule=yaraRule, searchGlob=FullPath, documentGlobs="")
+          })

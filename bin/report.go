@@ -5,6 +5,7 @@ import (
 	"time"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 )
 
@@ -34,8 +35,15 @@ func doDailyMonitoring() {
 
 	getRepository(config_obj)
 
+	parameters := []*artifacts_proto.ArtifactParameter{}
+	for k, v := range *env_map {
+		parameters = append(parameters, &artifacts_proto.ArtifactParameter{
+			Name: k, Default: v,
+		})
+	}
+
 	template_engine, err := reporting.NewTextTemplateEngine(
-		config_obj, *report_command_daily_monitoring_artifact, *env_map)
+		config_obj, *report_command_daily_monitoring_artifact)
 	kingpin.FatalIfError(err, "Generating report")
 
 	ts, err := time.Parse("2006-01-02", *report_command_daily_monitoring_day_name)

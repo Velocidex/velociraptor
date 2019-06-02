@@ -18,8 +18,10 @@ sources:
   - precondition:
       SELECT OS from info() where OS = "windows"
     queries:
-      - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
-      - SELECT basename(path=dirname(path=FullPath)) as SID, {
+      - |
+        LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+      - |
+        SELECT basename(path=dirname(path=FullPath)) as SID, {
             SELECT Name FROM users WHERE UUID = basename(path=dirname(path=FullPath))
           } As UserName,
           Name as Binary,

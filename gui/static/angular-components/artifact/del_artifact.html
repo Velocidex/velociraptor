@@ -1,0 +1,16 @@
+<div class="card panel" >
+  <h5 class="card-header">Delete an artifact</h5>
+  <div class="card-body">
+    <p>
+      You are about to delete artifact {$ controller.selectedName $}.
+    </p>
+
+    <a href class="btn btn-primary btn-block"
+       ng-click="controller.deleteArtifactDefinitionsForReal()"
+       role="button">Yes do it!</a>
+
+    <div ng-if="controller.error" class="proto_error">
+      {$ controller.error $}
+    </div>
+  </div>
+</div>

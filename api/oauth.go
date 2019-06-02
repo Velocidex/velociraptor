@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -63,13 +62,17 @@ func oauthGoogleLogin(config_obj *api_proto.Config) http.Handler {
 		}
 
 		// Create oauthState cookie
-		oauthState := generateStateOauthCookie(w)
-		u := googleOauthConfig.AuthCodeURL(oauthState)
+		oauthState, err := r.Cookie("oauthstate")
+		if err != nil {
+			oauthState = generateStateOauthCookie(w)
+		}
+
+		u := googleOauthConfig.AuthCodeURL(oauthState.Value)
 		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	})
 }
 
-func generateStateOauthCookie(w http.ResponseWriter) string {
+func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
 	var expiration = time.Now().Add(365 * 24 * time.Hour)
 
 	b := make([]byte, 16)
@@ -78,7 +81,7 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
 	http.SetCookie(w, &cookie)
 
-	return state
+	return &cookie
 }
 
 func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
@@ -87,14 +90,18 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 		oauthState, _ := r.Cookie("oauthstate")
 
 		if r.FormValue("state") != oauthState.Value {
-			log.Println("invalid oauth google state")
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				Error("invalid oauth google state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
 
 		data, err := getUserDataFromGoogle(config_obj, r.FormValue("code"))
 		if err != nil {
-			log.Println(err.Error())
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
@@ -102,7 +109,10 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 		user_info := &api_proto.VelociraptorUser{}
 		err = json.Unmarshal(data, &user_info)
 		if err != nil {
-			log.Println(err.Error())
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
@@ -120,7 +130,10 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 		tokenString, err := token.SignedString(
 			[]byte(config_obj.Frontend.PrivateKey))
 		if err != nil {
-			log.Println(err.Error())
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
@@ -229,6 +242,8 @@ func authenticateOAUTHCookie(
 		user_record, err := users.GetUser(config_obj, username)
 		if err != nil || user_record.Name != username {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnauthorized)
+
 			fmt.Fprintf(w, `
 <html><body>
 Authorization failed. You are not registered on this system as %v.
@@ -240,7 +255,7 @@ to log in again:
       </a>
 </body></html>
 `, username)
-			http.Error(w, "", http.StatusUnauthorized)
+
 			logging.GetLogger(config_obj, &logging.Audit).
 				WithFields(logrus.Fields{
 					"user":   username,

@@ -29,7 +29,8 @@ sources:
                } as Directory, User_sid as UUID, 0 AS Mtime, "local" AS Type
         FROM users()
 
-      - LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
+      - |
+        LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
             Directory, UUID, {
                 SELECT Mtime.Sec FROM stat(filename=expand(path=Directory))
             } As Mtime, Type

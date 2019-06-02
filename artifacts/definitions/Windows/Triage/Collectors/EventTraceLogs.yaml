@@ -2,13 +2,12 @@ name: Windows.Triage.Collectors.EventTraceLogs
 description: |
   Collect event trace log files.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT * FROM chain(
+      - |
+        SELECT * FROM chain(
           a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
             type="WDI Trace Logs",
             path=[

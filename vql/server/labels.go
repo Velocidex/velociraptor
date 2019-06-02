@@ -59,6 +59,7 @@ func (self *AddLabels) Call(ctx context.Context,
 
 	_, err = api.LabelClients(config_obj, request)
 	if err != nil {
+		scope.Log("label: %s", err.Error())
 		return vfilter.Null{}
 	}
 

@@ -2,16 +2,15 @@
   <div class="navbar-inner">
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
+        <button
+          type="button"
+          class="btn btn-default"
+          title="Update server monitoring table"
+          ng-click="controller.updateServerMonitoringTable()"
+          >
+          <i class="fa fa-edit"></i>
+        </button>
         <div class="btn-group" uib-dropdown is-open="status.isopen">
-          <button
-            type="button"
-            class="btn btn-default"
-            title="Update server monitoring table"
-            ng-click="controller.updateServerMonitoringTable()"
-            >
-            <i class="fa fa-edit"></i>
-          </button>
-
           <button id="single-button" type="button"
                   class="btn btn-default"
                   uib-dropdown-toggle>

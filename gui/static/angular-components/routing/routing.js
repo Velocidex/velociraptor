@@ -49,7 +49,12 @@ exports.routingModule
     // Landing state.
     //
       .state('userDashboard', {
-        url: '/',
+        url: '',
+        template: '<grr-user-dashboard />',
+        title: 'Home',
+      })
+      .state('home', {
+        url: '',
         template: '<grr-user-dashboard />',
         title: 'Home',
       })
@@ -80,10 +85,10 @@ exports.routingModule
           }
         }
       })
-      .state('server_files', {
-        url: '/server_files/{path:pathWithUnescapedSlashes}?mode&tab',
-        template: '<grr-server-files />',
-        title: 'Server Files'
+      .state('view_artifacts', {
+        url: '/view_artifacts',
+        template: '<grr-artifact-viewer />',
+        title: 'View Artifacts'
       })
 
       .state('server_artifacts', {
