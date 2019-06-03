@@ -119,11 +119,13 @@ func (self _BinaryParserPlugin) Call(
 
 		var file io.Reader
 		if arg.File != "" {
-			accessor := arg.Accessor
-			if accessor == "" {
-				accessor = "file"
+			accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+			if err != nil {
+				scope.Log("%s: %v", self.Name(), err)
+				return
 			}
-			file_handle, err := glob.GetAccessor(accessor, ctx).Open(arg.File)
+
+			file_handle, err := accessor.Open(arg.File)
 			if err != nil {
 				scope.Log("%s: %s", self.Name(), err.Error())
 				return

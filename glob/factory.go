@@ -86,10 +86,11 @@ func (self NullFileSystemAccessor) PathJoin(root, stem string) string {
 	return filepath.Join(root, stem)
 }
 
-func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {
+func GetAccessor(scheme string, ctx context.Context) (
+	FileSystemAccessor, error) {
 	handler, pres := handlers[scheme]
 	if pres {
-		return handler.New(ctx)
+		return handler.New(ctx), nil
 	}
 
 	// Fallback to the file handler - this should work
@@ -98,11 +99,11 @@ func GetAccessor(scheme string, ctx context.Context) FileSystemAccessor {
 	if scheme == "" {
 		handler, pres = handlers["file"]
 		if pres {
-			return handler.New(ctx)
+			return handler.New(ctx), nil
 		}
 	}
 
-	return NullFileSystemAccessor{}
+	return nil, errors.New("Unknown filesystem accessor")
 }
 
 func Register(scheme string, accessor FileSystemAccessor) {

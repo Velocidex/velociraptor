@@ -25,10 +25,6 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-var (
-	count = 0
-)
-
 type ClockPluginArgs struct {
 	Period   int64 `vfilter:"optional,field=period,doc=Wait this many seconds between events."`
 	PeriodMs int64 `vfilter:"optional,field=ms,doc=Wait this many ms between events."`
@@ -41,8 +37,6 @@ func (self ClockPlugin) Call(
 	scope *vfilter.Scope,
 	args *vfilter.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-
-	count += 1
 
 	go func() {
 		defer close(output_chan)

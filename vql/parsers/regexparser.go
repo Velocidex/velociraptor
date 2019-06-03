@@ -44,7 +44,13 @@ func _ParseFile(
 	scope *vfilter.Scope,
 	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
+
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("error: %v", err)
+		return
+	}
+
 	file, err := accessor.Open(filename)
 	if err != nil {
 		scope.Log("Unable to open file %s", filename)

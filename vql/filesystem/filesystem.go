@@ -41,29 +41,35 @@ func (self GlobPlugin) Call(
 	args *vfilter.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
-	arg := &GlobPluginArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
-	if err != nil {
-		scope.Log("glob: %s", err.Error())
-		close(output_chan)
-		return output_chan
-	}
-
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
-	root := ""
-	for _, item := range arg.Globs {
-		item_root, item_path, _ := accessor.GetRoot(item)
-		if root != "" && root != item_root {
-			scope.Log("glob: %s: Must use the same root for "+
-				"all globs. Skipping.", item)
-			continue
-		}
-		root = item_root
-		globber.Add(item_path, accessor.PathSplit)
-	}
 
 	go func() {
 		defer close(output_chan)
+
+		arg := &GlobPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("glob: %s", err.Error())
+			return
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
+
+		root := ""
+		for _, item := range arg.Globs {
+			item_root, item_path, _ := accessor.GetRoot(item)
+			if root != "" && root != item_root {
+				scope.Log("glob: %s: Must use the same root for "+
+					"all globs. Skipping.", item)
+				continue
+			}
+			root = item_root
+			globber.Add(item_path, accessor.PathSplit)
+		}
+
 		file_chan := globber.ExpandWithContext(
 			ctx, root, accessor)
 		for {
@@ -114,7 +120,12 @@ func (self ReadFilePlugin) processFile(
 	file string,
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
+
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("read_file: %v", err)
+		return
+	}
 	fd, err := accessor.Open(file)
 
 	if err != nil {
@@ -221,7 +232,11 @@ func (self *StatPlugin) Call(
 			return
 		}
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("%s: %s", "stat", err.Error())
+			return
+		}
 		for _, filename := range arg.Filename {
 			f, err := accessor.Lstat(filename)
 			if err == nil {

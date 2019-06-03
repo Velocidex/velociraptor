@@ -238,12 +238,11 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 	if err != nil {
 		return nil, nil, err
 	}
-	accessor := glob.GetAccessor(url.Scheme, context.Background())
-	_, isnull := accessor.(glob.NullFileSystemAccessor)
-	if accessor == nil || isnull {
-		return nil, nil, errors.New("Unknown delegate accessor")
-	}
 
+	accessor, err := glob.GetAccessor(url.Scheme, context.Background())
+	if err != nil {
+		return nil, nil, err
+	}
 	base_url := *url
 	base_url.Fragment = ""
 
@@ -393,33 +392,39 @@ func (self ReadKeyValues) Call(
 	args *vfilter.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
-	arg := &ReadKeyValuesArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
-	if err != nil {
-		scope.Log("read_reg_key: %s", err.Error())
-		close(output_chan)
-		return output_chan
-	}
 
-	accessor_name := arg.Accessor
-	if accessor_name == "" {
-		accessor_name = "reg"
-	}
-
-	accessor := glob.GetAccessor(accessor_name, ctx)
-	root := ""
-	for _, item := range arg.Globs {
-		item_root, item_path, _ := accessor.GetRoot(item)
-		if root != "" && root != item_root {
-			scope.Log("glob: %s: Must use the same root for "+
-				"all globs. Skipping.", item)
-			continue
-		}
-		root = item_root
-		globber.Add(item_path, accessor.PathSplit)
-	}
 	go func() {
 		defer close(output_chan)
+
+		arg := &ReadKeyValuesArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("read_reg_key: %s", err.Error())
+			return
+		}
+
+		accessor_name := arg.Accessor
+		if accessor_name == "" {
+			accessor_name = "reg"
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("read_reg_key: %v", err)
+			return
+		}
+		root := ""
+		for _, item := range arg.Globs {
+			item_root, item_path, _ := accessor.GetRoot(item)
+			if root != "" && root != item_root {
+				scope.Log("glob: %s: Must use the same root for "+
+					"all globs. Skipping.", item)
+				continue
+			}
+			root = item_root
+			globber.Add(item_path, accessor.PathSplit)
+		}
+
 		file_chan := globber.ExpandWithContext(
 			ctx, root, accessor)
 		for {

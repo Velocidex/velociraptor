@@ -61,7 +61,13 @@ func (self *GrepFunction) Call(ctx context.Context,
 	offset := 0
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
-	fs := glob.GetAccessor(arg.Accessor, ctx)
+
+	fs, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log(err.Error())
+		return false
+	}
+
 	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log(err.Error())

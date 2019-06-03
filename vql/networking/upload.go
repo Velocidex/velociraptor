@@ -57,7 +57,14 @@ func (self *UploadFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("upload: %v", err)
+			return &UploadResponse{
+				Error: err.Error(),
+			}
+		}
+
 		file, err := accessor.Open(arg.File)
 		if err != nil {
 			scope.Log("upload: Unable to open %s: %s",
@@ -128,7 +135,11 @@ func (self *UploadPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("upload: %v", err)
+			return
+		}
 		for _, filename := range arg.Files {
 			file, err := accessor.Open(filename)
 			if err != nil {

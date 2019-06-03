@@ -52,7 +52,11 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("parse_pe: %v", err)
+		return &vfilter.Null{}
+	}
 	fd, err := accessor.Open(arg.Filename)
 	if err != nil {
 		scope.Log("parse_pe: %v", err)

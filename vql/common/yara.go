@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Velocidex/go-yara"
+	yara "github.com/Velocidex/go-yara"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -107,7 +107,12 @@ func (self YaraScanPlugin) Call(
 				scope, "yara_rule"+rule_hash_str, rules)
 		}
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("yara: %v", err)
+			return
+		}
+
 		buf := make([]byte, arg.Blocksize)
 
 	scan_file:

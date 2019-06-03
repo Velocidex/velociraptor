@@ -197,10 +197,10 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 	if err != nil {
 		return nil, nil, err
 	}
-	accessor := glob.GetAccessor(url.Scheme, context.Background())
-	_, isnull := accessor.(glob.NullFileSystemAccessor)
-	if accessor == nil || isnull {
-		return nil, nil, errors.New("Unknown delegate accessor")
+
+	accessor, err := glob.GetAccessor(url.Scheme, context.Background())
+	if err != nil {
+		return nil, nil, err
 	}
 
 	self.mu.Lock()

@@ -52,7 +52,11 @@ func (self _ParseEvtxPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				accessor := glob.GetAccessor(arg.Accessor, ctx)
+				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+				if err != nil {
+					scope.Log("parse_evtx: %v", err)
+					return
+				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
 					scope.Log("Unable to open file %s: %v",
@@ -111,7 +115,11 @@ func (self _WatchEvtxPlugin) Call(
 			return
 		}
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("watch_evtx: %v", err)
+			return
+		}
 		event_counts := make(map[string]uint64)
 
 		// Parse the files once to get the last event

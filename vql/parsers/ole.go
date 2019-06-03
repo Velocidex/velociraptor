@@ -45,10 +45,15 @@ func _OLEVBAPlugin_ParseFile(
 	filename string,
 	scope *vfilter.Scope,
 	arg *_OLEVBAArgs) ([]*oleparse.VBAModule, error) {
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
-	fd, err := accessor.Open(filename)
+
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	fd, err := accessor.Open(filename)
+	if err != nil {
+
 	}
 	defer fd.Close()
 

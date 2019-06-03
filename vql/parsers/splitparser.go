@@ -50,12 +50,18 @@ type _SplitRecordParser struct{}
 
 func processFile(
 	ctx context.Context,
+	scope *vfilter.Scope,
 	file string, arg *_SplitRecordParserArgs,
 	output_chan chan vfilter.Row) {
 
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("split_records: %v", err)
+		return
+	}
 	fd, err := accessor.Open(file)
 	if err != nil {
+		scope.Log("split_records: %v", err)
 		return
 	}
 	defer fd.Close()
@@ -140,7 +146,7 @@ func (self _SplitRecordParser) Call(
 				return
 
 			default:
-				processFile(ctx, file, &arg, output_chan)
+				processFile(ctx, scope, file, &arg, output_chan)
 			}
 		}
 	}()

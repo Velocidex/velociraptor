@@ -43,11 +43,15 @@ func (self _ParseXMLFunction) Call(
 		return vfilter.Null{}
 	}
 
-	accessor := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("parse_xml: %v", err)
+		return vfilter.Null{}
+	}
 	file, err := accessor.Open(arg.File)
 	if err != nil {
 		scope.Log("Unable to open file %s", arg.File)
-		return &vfilter.Null{}
+		return vfilter.Null{}
 	}
 	defer file.Close()
 
@@ -55,7 +59,7 @@ func (self _ParseXMLFunction) Call(
 	result, err := mxj.NewMapXmlReader(file)
 	if err != nil {
 		scope.Log("NewMapXmlReader: %v", err)
-		return &vfilter.Null{}
+		return vfilter.Null{}
 	}
 
 	return result.Old()

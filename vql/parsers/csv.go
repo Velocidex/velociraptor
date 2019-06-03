@@ -52,7 +52,11 @@ func (self ParseCSVPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				accessor := glob.GetAccessor(arg.Accessor, ctx)
+				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+				if err != nil {
+					scope.Log("parse_csv: %v", err)
+					return
+				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
 					scope.Log("Unable to open file %s: %v",
@@ -116,7 +120,11 @@ func (self _WatchCSVPlugin) Call(
 			return
 		}
 
-		accessor := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("watch_evtx: %v", err)
+			return
+		}
 
 		// A map between file name and the last offset we read.
 		last_offset_map := make(map[string]int64)

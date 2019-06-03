@@ -64,7 +64,13 @@ func (self *HashFunction) Call(ctx context.Context,
 	}
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
-	fs := glob.GetAccessor(arg.Accessor, ctx)
+
+	fs, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("yara: %v", err)
+		return vfilter.Null{}
+	}
+
 	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log("hash %s: %v", arg.Path, err.Error())

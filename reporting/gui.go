@@ -230,7 +230,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			}
 
 			// html/template escapes its template but this
-			// is the wrong thing to do for use because we
+			// is the wrong thing to do for us because we
 			// use the template as a work around for
 			// text/template actions not spanning multiple
 			// lines.

@@ -48,10 +48,12 @@ const ServerArtifactController = function($scope, $uibModal, grrApiService) {
       };
 
       var timestamps = this.selectedArtifact.timestamps;
-      for (var i=0; i<timestamps.length; i++) {
-        var ts = timestamps[i];
-        if (ts >= timestamp_start && ts <= timestamp_end) {
-          return false;
+      if (angular.isDefined(timestamps.length)) {
+        for (var i=0; i<timestamps.length; i++) {
+          var ts = timestamps[i];
+          if (ts >= timestamp_start && ts <= timestamp_end) {
+            return false;
+          }
         }
       }
 
@@ -127,7 +129,7 @@ ServerArtifactController.prototype.updateServerMonitoringTable = function() {
             self.params = {};
             var parameters = self.flowArguments.parameters.env || {};
             for (var i=0; i<parameters.length;i++) {
-                var p = parameters[0];
+                var p = parameters[i];
                 self.params[p["key"]] = p["value"];
             }
         }
