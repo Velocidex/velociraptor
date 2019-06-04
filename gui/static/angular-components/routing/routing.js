@@ -91,6 +91,11 @@ exports.routingModule
         title: 'View Artifacts'
       })
 
+      .state('server_events', {
+        url: '/server_events',
+        template: '<grr-server-events />',
+        title: "Server Events",
+      })
       .state('server_artifacts', {
         url: '/server_artifacts',
         template: '<grr-server-artifacts />',
@@ -117,11 +122,6 @@ exports.routingModule
         url: '/host-info',
         template: '<grr-host-info />',
         title: 'Host Information'
-      })
-      .state('client.collectArtifacts', {
-        url: '/artifact-collector',
-        template: '<grr-artifact-collector />',
-        title: 'Collect Artifacts'
       })
       .state('client.vfs', {
         url: '/vfs/{path:pathWithUnescapedSlashes}?version&mode&tab',

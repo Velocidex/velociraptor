@@ -63,17 +63,17 @@ const FlowsListController = function(
 
   // Push the selection changes back to the scope, so that other UI components
   // can react on the change.
-   this.scope_.$watch('controller.selectedFlowId', function(newValue, oldValue) {
-       // Only propagate real changes, don't propagate initial undefined
-       // value.
-       if (angular.isDefined(newValue)) {
-           this.scope_['selectedFlowId'] = newValue;
-       }
-   }.bind(this));
+  this.scope_.$watch('controller.selectedFlowId', function(newValue, oldValue) {
+    // Only propagate real changes, don't propagate initial undefined
+    // value.
+    if (angular.isDefined(newValue)) {
+      this.scope_['selectedFlowId'] = newValue;
+    }
+  }.bind(this));
 
-    // Propagate our triggerUpdate implementation to the scope so that users of
-    // this directive can use it.
-    this.scope_['triggerUpdate'] = this.triggerUpdate.bind(this);
+  // Propagate our triggerUpdate implementation to the scope so that users of
+  // this directive can use it.
+  this.scope_['triggerUpdate'] = this.triggerUpdate.bind(this);
 };
 
 

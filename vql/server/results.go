@@ -20,6 +20,7 @@ package server
 import (
 	"context"
 	"io"
+	"sort"
 	"strings"
 	"time"
 
@@ -104,8 +105,16 @@ func (self SourcePlugin) Call(
 		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
 		globber.Add(csv_path, accessor.PathSplit)
 
+		// Expanding the glob is not sorted but we really need
+		// to go in order of dates.
+		hits := []string{}
 		for hit := range globber.ExpandWithContext(ctx, "", accessor) {
-			ts := parseFileTimestamp(hit.FullPath())
+			hits = append(hits, hit.FullPath())
+		}
+		sort.Strings(hits)
+
+		for _, hit := range hits {
+			ts := parseFileTimestamp(hit)
 
 			// Skip files modified before the required
 			// start time.
@@ -118,12 +127,9 @@ func (self SourcePlugin) Call(
 			}
 
 			err := self.ScanLog(ctx, config_obj,
-				scope, arg, output_chan,
-				hit.FullPath())
+				scope, arg, output_chan, hit)
 			if err != nil {
-				scope.Log(
-					"Error reading %v: %v",
-					hit.FullPath(), err)
+				scope.Log("Error reading %v: %v", hit, err)
 			}
 		}
 	}()

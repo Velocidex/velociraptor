@@ -26,7 +26,9 @@ import (
 )
 
 var (
-	GlobalEventTable = &EventTable{}
+	GlobalEventTable = &EventTable{
+		Done: make(chan bool),
+	}
 )
 
 type EventTable struct {
@@ -252,7 +254,7 @@ func (self *EventTable) RunQuery(
 		defer close(row_chan)
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Collecting Server Artifact: %s", name)
+		logger.Info("Collecting Server Event Artifact: %s", name)
 
 		for _, vql := range vqls {
 			for row := range vql.Eval(ctx, scope) {

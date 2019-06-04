@@ -207,7 +207,9 @@ func InstallSignalHandler(
 			}
 		}()
 
-		manager, err := services.StartServices(config_obj)
+		manager, err := services.StartServices(
+			config_obj,
+			server_obj.NotificationPool)
 		if err != nil {
 			logger.Error("Failed starting services: ", err)
 			return

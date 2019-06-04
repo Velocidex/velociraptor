@@ -31,7 +31,7 @@ const UserDashboardController = function(
   this.ranges = [
     {desc: "Last Day", sec: 60*60*24, sample: 4},
     {desc: "Last 2 days", sec: 60*60*24*2, sample: 8},
-    {desc: "Last Week", sec: 60*24*24*7, sample: 20},
+    {desc: "Last Week", sec: 60*60*24*7, sample: 40},
   ];
 
   this.current_range_desc;

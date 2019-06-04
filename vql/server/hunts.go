@@ -187,9 +187,11 @@ func (self HuntResultsPlugin) Call(
 							participation_row.Fqdn)
 
 					if !arg.Brief {
-						value.Set("HuntId",
-							participation_row.HuntId).
-							Set("Flow", flow_obj)
+						value.
+							Set("HuntId",
+								participation_row.HuntId).
+							Set("FlowContext",
+								flow_obj.FlowContext)
 					}
 					output_chan <- value
 				}

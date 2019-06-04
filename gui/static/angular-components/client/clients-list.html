@@ -31,7 +31,6 @@
     <thead>
       <tr>
         <th><input type="checkbox" class="client-checkbox select-all"
-                   grr-disable-if-no-trait="modify_client_labels_action_enabled"
                    ng-model="controller.allClientsSelected"
                    ng-change="controller.selectAll()" />
         </th>
@@ -52,7 +51,6 @@
         <!-- Selection checkbox -->
         <td>
           <input type="checkbox" class="client-checkbox"
-                 grr-disable-if-no-trait="modify_client_labels_action_enabled"
                  client_id="{$ item.client_id $}"
                  ng-model="controller.selectedClients[item.client_id]"
                  ng-change="controller.updateNumSelectedClients()"

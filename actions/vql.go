@@ -177,6 +177,9 @@ func (self *VQLClientAction) StartQuery(
 				// has.
 				cancel()
 
+				// Try again after a while to prevent spinning here.
+				deadline = time.After(time.Second * time.Duration(timeout))
+
 			case result, ok := <-result_chan:
 				if !ok {
 					break run_query

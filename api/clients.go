@@ -37,12 +37,17 @@ func GetApiClient(
 	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 
-	if client_id == "" || client_id[0] != 'C' {
-		return nil, errors.New("client_id must start with C")
-	}
-
 	result := &api_proto.ApiClient{
 		ClientId: client_id,
+	}
+
+	// Special well know client id.
+	if client_id == "server" {
+		return result, nil
+	}
+
+	if client_id == "" || client_id[0] != 'C' {
+		return nil, errors.New("client_id must start with C")
 	}
 
 	client_urn := urns.BuildURN("clients", client_id)

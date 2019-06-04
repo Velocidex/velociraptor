@@ -1,0 +1,37 @@
+name: Server.Information.Users
+description: |
+  List the user names and SIDs on each machine. We get this
+  information from the last time we collected Windows.Sys.Users. If we
+  never collected it for this machine, there will be no results.
+
+type: SERVER
+
+parameters:
+  - name: ClientId
+    default:
+  - name: StandardUserAccounts
+    description: Well known SIDs to hide from the output.
+    default: "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"
+
+sources:
+  - queries:
+      - |
+        // Get the most recent collection of our user listing.
+        LET last_user_listing = SELECT flow_id
+           FROM flows(client_id=ClientId)
+           WHERE context.artifacts =~'Windows.Sys.Users'
+           ORDER BY LastActive DESC LIMIT 1
+
+      - |
+        /* For each Windows.Sys.Users collection, extract the user
+           names. Hide standard SIDs.
+        */
+        SELECT * FROM foreach(
+            row=last_user_listing,
+            query={
+              SELECT Name, UUID from source(
+                 flow_id=flow_id,
+                 artifact='Windows.Sys.Users',
+                 client_id=ClientId)
+              WHERE NOT UUID =~ StandardUserAccounts
+            })

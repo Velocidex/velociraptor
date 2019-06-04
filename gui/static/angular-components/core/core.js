@@ -10,7 +10,6 @@ const {ClockDirective} = goog.require('grrUi.core.clockDirective');
 const {CsvViewerDirective} = goog.require('grrUi.core.csvViewerDirective');
 const {ConfirmationDialogDirective} = goog.require('grrUi.core.confirmationDialogDirective');
 const {DialogService} = goog.require('grrUi.core.dialogService');
-const {DisableIfNoTraitDirective} = goog.require('grrUi.core.disableIfNoTraitDirective');
 const {ForceRefreshDirective} = goog.require('grrUi.core.forceRefreshDirective');
 const {GlobalNotificationsDirective} = goog.require('grrUi.core.globalNotificationsDirective');
 const {HexNumberFilter} = goog.require('grrUi.core.hexNumberFilter');
@@ -69,8 +68,6 @@ exports.coreModule.directive(
     WizardFormPageDirective.directive_name, WizardFormPageDirective);
 exports.coreModule.directive(
     ConfirmationDialogDirective.directive_name, ConfirmationDialogDirective);
-exports.coreModule.directive(
-    DisableIfNoTraitDirective.directive_name, DisableIfNoTraitDirective);
 exports.coreModule.directive(
     SearchBoxDirective.directive_name, SearchBoxDirective);
 exports.coreModule.directive(

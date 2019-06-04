@@ -36,15 +36,7 @@ const NavigatorController = function(
   /** @type {boolean} */
   this.hasClientAccess = false;
 
-  /** @type {Object} */
-  this.uiTraits;
-
   this.collapsed = true;
-
-  // Fetch UI traits.
-   this.grrApiService_.getCached('v1/GetUserUITraits').then(function (response) {
-    this.uiTraits = response['data']['interface_traits'];
-   }.bind(this));
 
   // Subscribe to legacy grr events to be notified on client change.
   this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',

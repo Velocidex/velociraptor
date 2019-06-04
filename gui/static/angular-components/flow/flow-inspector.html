@@ -47,7 +47,7 @@
     <uib-tab heading="Results" index="'results'">
       <grr-flow-results
         artifact-names="controller.flow.context.artifacts_with_results || controller.flow.context.artifacts"
-        client-id="controller.flow.runner_args.client_id"
+        client-id="clientId"
         flow-id="flowId"
         ng-if="controller.tabsShown['results']" />
     </uib-tab>
@@ -55,9 +55,9 @@
     <uib-tab heading="Log" index="'log'">
       <grr-flow-log
         flow="controller.flow"
-        client-id="controller.flow.runner_args.client_id"
+        client-id="clientId"
         flow-id="flowId" api-base-path="apiBasePath"
-        ng-if="controller.tabsShown['log']" />
+        ng-if="controller.activeTab == 'log'" />
     </uib-tab>
 
     <uib-tab heading="Reports" index="'reports'"
@@ -65,7 +65,7 @@
       <grr-flow-report artifact-names="controller.flow.context.artifacts"
                        flow-id="flowId"
                        ng-if="controller.tabsShown['reports']"
-                       client-id="controller.flow.runner_args.client_id"
+                       client-id="clientId"
                        />
     </uib-tab>
   </uib-tabset>

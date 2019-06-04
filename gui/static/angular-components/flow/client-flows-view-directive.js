@@ -36,13 +36,9 @@ const ClientFlowsViewController = function(
   /** @type {string} */
   this.exportBasePath;
 
-  this.scope_.$watchGroup(
-      ['controller.selectedFlowId', 'controller.tab'],
-      this.onSelectionOrTabChange_.bind(this));
-
   this.grrRoutingService_.uiOnParamsChanged(
-      this.scope_, ['clientId', 'flowId', 'tab'],
-      this.onRoutingParamsChange_.bind(this));
+    this.scope_, ['clientId', 'flowId', 'tab'],
+    this.onRoutingParamsChange_.bind(this));
 };
 
 
@@ -55,23 +51,11 @@ const ClientFlowsViewController = function(
  */
 ClientFlowsViewController.prototype.onRoutingParamsChange_ = function(
     unused_newValues, opt_stateParams) {
-  this.clientId = opt_stateParams['clientId'];
+  this.clientId = opt_stateParams['clientId'] || this.scope_['clientId'];
   this.selectedFlowId = opt_stateParams['flowId'];
   this.tab = opt_stateParams['tab'];
   this.flowApiBasePath = 'v1/GetFlowDetails' + '/' + this.clientId;
   this.exportBasePath = "v1/download/" + this.clientId;
-};
-
-/**
- * Handles binding changes.
- *
- * @private
- */
-ClientFlowsViewController.prototype.onSelectionOrTabChange_ = function() {
-  if (angular.isDefined(this.selectedFlowId)) {
-    this.grrRoutingService_.go('client.flows',
-                               {flowId: this.selectedFlowId, tab: this.tab});
-  }
 };
 
 /**
@@ -81,7 +65,9 @@ ClientFlowsViewController.prototype.onSelectionOrTabChange_ = function() {
  */
 exports.ClientFlowsViewDirective = function() {
   return {
-    scope: {},
+    scope: {
+      clientId: '=',
+    },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/client-flows-view.html',
     controller: ClientFlowsViewController,

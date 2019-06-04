@@ -1,8 +1,8 @@
 'use strict';
 
-goog.module('grrUi.artifact.serverArtifactDirective');
+goog.module('grrUi.artifact.serverEventsDirective');
 
-const ServerArtifactController = function($scope, $uibModal, grrApiService) {
+const ServerEventsController = function($scope, $uibModal, grrApiService) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
@@ -66,7 +66,7 @@ const ServerArtifactController = function($scope, $uibModal, grrApiService) {
   this.GetArtifactList();
 };
 
-ServerArtifactController.prototype.onDateChange = function() {
+ServerEventsController.prototype.onDateChange = function() {
   if (!angular.isDefined(this.selected_date)) {
     return;
   }
@@ -80,7 +80,7 @@ ServerArtifactController.prototype.onDateChange = function() {
   };
 };
 
-ServerArtifactController.prototype.GetArtifactList = function() {
+ServerEventsController.prototype.GetArtifactList = function() {
   var url = 'v1/ListAvailableEventResults';
   var params = {};
   return this.grrApiService_.get(url, params).then(
@@ -90,11 +90,11 @@ ServerArtifactController.prototype.GetArtifactList = function() {
 };
 
 
-ServerArtifactController.prototype.openDatePicker = function() {
+ServerEventsController.prototype.openDatePicker = function() {
   this.opened = true;
 };
 
-ServerArtifactController.prototype.selectArtifact = function(artifact) {
+ServerEventsController.prototype.selectArtifact = function(artifact) {
   this.selectedArtifact = artifact;
   this.selected_date = null;
 
@@ -106,7 +106,7 @@ ServerArtifactController.prototype.selectArtifact = function(artifact) {
   return false;
 };
 
-ServerArtifactController.prototype.showHelp = function() {
+ServerEventsController.prototype.showHelp = function() {
     var self = this;
     self.modalInstance = self.uibModal_.open({
         templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
@@ -117,7 +117,7 @@ ServerArtifactController.prototype.showHelp = function() {
 };
 
 
-ServerArtifactController.prototype.updateServerMonitoringTable = function() {
+ServerEventsController.prototype.updateServerMonitoringTable = function() {
     var url = 'v1/GetServerMonitoringState';
     var self = this;
 
@@ -142,7 +142,7 @@ ServerArtifactController.prototype.updateServerMonitoringTable = function() {
     return false;
 };
 
-ServerArtifactController.prototype.saveServerArtifacts = function() {
+ServerEventsController.prototype.saveServerArtifacts = function() {
     var self = this;
 
     // Update the names and the parameters.
@@ -179,17 +179,17 @@ ServerArtifactController.prototype.saveServerArtifacts = function() {
  * @ngInject
  * @export
  */
-exports.ServerArtifactDirective = function() {
+exports.ServerEventsDirective = function() {
   return {
     scope: {
       "artifact": '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/artifact/server-artifact.html',
-    controller: ServerArtifactController,
+    templateUrl: '/static/angular-components/artifact/server-events.html',
+    controller: ServerEventsController,
     controllerAs: 'controller'
   };
 };
 
 
-exports.ServerArtifactDirective.directive_name = 'grrServerArtifacts';
+exports.ServerEventsDirective.directive_name = 'grrServerEvents';

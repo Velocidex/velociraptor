@@ -18,9 +18,6 @@ const NewArtifactCollectionController = function(
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-  /** @type {string} */
-  this.scope_.clientId;
-
   /** @private {!ApiService} */
   this.grrApiService_ = grrApiService;
 
@@ -33,13 +30,22 @@ const NewArtifactCollectionController = function(
   /** @type {?string} */
   this.responseData;
 
-  /** @type {boolean} */
-    this.flowFormHasErrors;
+  // This controls which type of artifact we are allowed to search
+  // for.
+  var client_id = this.scope_['clientId'];
+  if (client_id[0] == "C") {
+    this.artifactType = "CLIENT";
+  } else {
+    this.artifactType = "SERVER";
+  }
 
-    this.params = {};
-    this.names = [];
-    this.ops_per_second;
-    this.timeout = 600;
+  /** @type {boolean} */
+  this.flowFormHasErrors;
+
+  this.params = {};
+  this.names = [];
+  this.ops_per_second;
+  this.timeout = 600;
 };
 
 

@@ -10,9 +10,10 @@ import (
 const (
 	// The different types of artifacts.
 	MODE_CLIENT           = 1
-	MODE_SERVER_EVENT     = 2
-	MODE_MONITORING_DAILY = 3
-	MODE_JOURNAL_DAILY    = 4
+	MODE_SERVER           = 2
+	MODE_SERVER_EVENT     = 3
+	MODE_MONITORING_DAILY = 4
+	MODE_JOURNAL_DAILY    = 5
 )
 
 func ModeNameToMode(name string) int {
@@ -20,6 +21,8 @@ func ModeNameToMode(name string) int {
 	switch name {
 	case "CLIENT":
 		return MODE_CLIENT
+	case "SERVER":
+		return MODE_SERVER
 	case "SERVER_EVENT":
 		return MODE_SERVER_EVENT
 	case "MONITORING_DAILY", "CLIENT_EVENT":
@@ -58,6 +61,17 @@ func GetCSVPath(
 				"/clients/%s/artifacts/%s/%s.csv",
 				client_id, artifact_name,
 				flow_id)
+		}
+
+	case MODE_SERVER:
+		if source_name != "" {
+			return fmt.Sprintf(
+				"/clients/server/artifacts/%s/%s/%s.csv",
+				artifact_name, flow_id, source_name)
+		} else {
+			return fmt.Sprintf(
+				"/clients/server/artifacts/%s/%s.csv",
+				artifact_name, flow_id)
 		}
 
 	case MODE_SERVER_EVENT:

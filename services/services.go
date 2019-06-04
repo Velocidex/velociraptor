@@ -19,6 +19,7 @@ package services
 
 import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -30,6 +31,7 @@ type ServicesManager struct {
 	user_manager      *users.UserNotificationManager
 	stats_collector   *StatsCollector
 	server_monitoring *EventTable
+	server_artifacts  *ServerArtifactsRunner
 }
 
 func (self *ServicesManager) Close() {
@@ -38,10 +40,13 @@ func (self *ServicesManager) Close() {
 	self.user_manager.Close()
 	self.stats_collector.Close()
 	self.server_monitoring.Close()
+	self.server_artifacts.Close()
 }
 
 // Start all the server services.
-func StartServices(config_obj *api_proto.Config) (*ServicesManager, error) {
+func StartServices(
+	config_obj *api_proto.Config,
+	notifier *notifications.NotificationPool) (*ServicesManager, error) {
 	result := &ServicesManager{}
 
 	hunt_manager, err := startHuntManager(config_obj)
@@ -73,6 +78,12 @@ func StartServices(config_obj *api_proto.Config) (*ServicesManager, error) {
 		return nil, err
 	}
 	result.server_monitoring = server_monitoring
+
+	server_artifacts, err := startServerArtifactService(config_obj, notifier)
+	if err != nil {
+		return nil, err
+	}
+	result.server_artifacts = server_artifacts
 
 	err = startClientMonitoringService(config_obj)
 	if err != nil {

@@ -237,7 +237,7 @@ func startHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) 
 	defer mu.Unlock()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting hunt dispatcher.")
+	logger.Info("Starting Hunt Dispatcher Service.")
 
 	result := &HuntDispatcher{
 		config_obj: config_obj,

@@ -140,19 +140,6 @@ service API {
         };
     }
 
-    rpc GetClientApprovalForUser(GetClientRequest) returns (ApprovalList) {
-        option (google.api.http) = {
-            get: "/api/v1/GetApprovals/{client_id}",
-        };
-    }
-
-    // Users
-    rpc GetUserUITraits(google.protobuf.Empty) returns (ApiGrrUser) {
-        option (google.api.http) = {
-            get: "/api/v1/GetUserUITraits",
-        };
-    }
-
     rpc GetUserNotifications(GetUserNotificationsRequest) returns (GetUserNotificationsResponse) {
         option (google.api.http) = {
             post: "/api/v1/GetUserNotifications",

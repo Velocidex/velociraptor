@@ -5,7 +5,6 @@ goog.module.declareLegacyNamespace();
 
 const {UserDashboardDirective} = goog.require('grrUi.user.userDashboardDirective');
 const {UserDesktopNotificationsDirective} = goog.require('grrUi.user.userDesktopNotificationsDirective');
-const {UserLabelDirective} = goog.require('grrUi.user.userLabelDirective');
 const {UserNotificationButtonDirective} = goog.require('grrUi.user.userNotificationButtonDirective');
 const {UserNotificationDialogDirective} = goog.require('grrUi.user.userNotificationDialogDirective');
 const {UserNotificationItemDirective} = goog.require('grrUi.user.userNotificationItemDirective');
@@ -25,8 +24,6 @@ exports.userModule.directive(
 exports.userModule.directive(
     UserDesktopNotificationsDirective.directive_name,
     UserDesktopNotificationsDirective);
-exports.userModule.directive(
-    UserLabelDirective.directive_name, UserLabelDirective);
 exports.userModule.directive(
     UserNotificationButtonDirective.directive_name,
     UserNotificationButtonDirective);

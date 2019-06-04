@@ -31,12 +31,9 @@ import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -262,7 +259,7 @@ func (self *ApiServer) GetHuntResults(
 	// processing.
 	result, err := RunVQL(ctx, self.config, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
-			"artifact=Artifact) LIMIT 100")
+			"artifact=Artifact, brief=true) LIMIT 100")
 	if err != nil {
 		return nil, err
 	}
@@ -371,47 +368,7 @@ func (self *ApiServer) DescribeTypes(
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
-
-	// HTTP HEAD requests against this method are used by the GUI
-	// for auth checks.
-	result := &api_proto.ApiFlowResponse{}
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		method := md.Get("METHOD")
-		if len(method) > 0 && method[0] == "HEAD" {
-			if IsUserApprovedForClient(self.config, &md, in.ClientId) {
-				return result, nil
-			}
-			return nil, status.New(
-				codes.PermissionDenied, "Not authorized").Err()
-		}
-	}
-
-	result, err := flows.GetFlows(self.config, in.ClientId, in.Offset, in.Count)
-	return result, err
-}
-
-func (self *ApiServer) GetClientApprovalForUser(
-	ctx context.Context,
-	in *api_proto.GetClientRequest) (*api_proto.ApprovalList, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if ok {
-		return getClientApprovalForUser(self.config, &md, in.ClientId), nil
-	}
-	return nil, status.New(
-		codes.PermissionDenied, "Not authorized").Err()
-}
-
-func (self *ApiServer) GetUserUITraits(
-	ctx context.Context,
-	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
-	result := NewDefaultUserObject(self.config)
-	user_info := GetGRPCUserInfo(ctx)
-
-	result.Username = user_info.Name
-	result.InterfaceTraits.Picture = user_info.Picture
-
-	return result, nil
+	return flows.GetFlows(self.config, in.ClientId, in.Offset, in.Count)
 }
 
 func (self *ApiServer) GetFlowDetails(

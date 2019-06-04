@@ -36,7 +36,7 @@ type StatsCollector struct {
 
 func (self *StatsCollector) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Starting stats collector.")
+	logger.Info("Starting Stats Collector Service.")
 
 	env := vfilter.NewDict().
 		Set("config", self.config_obj.Client).

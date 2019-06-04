@@ -14,13 +14,11 @@ const FlowLogController = function($scope) {
   /** @private {!angular.Scope} */
   this.scope_ = $scope;
 
-    this.scope_.$watch('flowId',
-                       this.onFlowIdChange_.bind(this));
+  this.scope_.$watchGroup(['flowId', 'clientId'],
+                          this.onChange_.bind(this));
 
-    this.scope_.$watch('clientId',
-                       this.onClientIdChange_.bind(this));
-
-    this.queryParams = {};
+  this.queryParams = {};
+  this.onChange_();
 };
 
 /**
@@ -28,14 +26,10 @@ const FlowLogController = function($scope) {
  *
  * @private
  */
-FlowLogController.prototype.onFlowIdChange_ = function(newValue) {
-    this.queryParams.path = '/flows/' + newValue + '/logs';
+FlowLogController.prototype.onChange_ = function() {
+  this.queryParams.path = '/flows/' + this.scope_['flowId'] + '/logs';;
+  this.queryParams.client_id = this.scope_["clientId"];
 };
-
-FlowLogController.prototype.onClientIdChange_ = function(newValue) {
-        this.queryParams.client_id = newValue;
-};
-
 
 /**
  * Directive for displaying logs of a flow with a given URN.
