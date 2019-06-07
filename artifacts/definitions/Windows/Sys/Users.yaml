@@ -47,6 +47,24 @@ sources:
 
 
 reports:
+  - type: HUNT
+    template: |
+      # Users Hunt
+
+      Enumerating all the users on all endpoints can reveal machines
+      which had an unexpected login activity. For example, if a user
+      from an unrelated department is logging into an endpoint by
+      virtue of domain credentials, this could mean their account is
+      compromised and the attackers are laterally moving through the
+      network.
+
+      {{ define "users" }}
+         SELECT Name, UUID, Fqdn, timestamp(epoch=Mtime) as LastMod FROM source()
+         WHERE NOT UUID =~ "(-5..$|S-1-5-18|S-1-5-19|S-1-5-20)"
+      {{ end }}
+
+      {{ Query "users" | Table }}
+
   - type: CLIENT
     template: |
 

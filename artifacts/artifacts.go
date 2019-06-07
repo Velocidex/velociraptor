@@ -95,7 +95,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
-		case "monitoring_daily", "server_event", "client", "internal":
+		case "monitoring_daily", "server_event", "client", "internal", "hunt":
 			continue
 		default:
 			return nil, errors.New(fmt.Sprintf("Invalid report type %s",

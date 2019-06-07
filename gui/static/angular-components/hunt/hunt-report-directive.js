@@ -7,36 +7,27 @@ const HuntReportController = function($scope) {
   this.scope_ = $scope;
 
   /** @type {string} */
-  this.hunt;
-  this.reporting_params;
-  this.artifactNames;
+  this.reportParams;
 
   this.scope_.$watchGroup(
-    ['hunt_id'],
+    ['hunt.hunt_id'],
     this.onHuntChange_.bind(this));
+
+  this.onHuntChange_();
 };
 
-HuntReportController.prototype.onHuntChange_ = function(
-    newValues, oldValues) {
+HuntReportController.prototype.onHuntChange_ = function() {
+  var hunt = this.scope_["hunt"];
+  if (!angular.isDefined(hunt) || hunt.artifacts.length == 0) {
+    return;
+  }
 
-   if (angular.isDefined(this.scope_.artifactNames) &&
-        this.scope_.artifactNames.length > 0 &&
-        this.selectedArtifact == null) {
-        this.selectedArtifact = this.scope_.artifactNames[0];
-    }
-
-    this.reporting_params = {
-      "artifact": this.selectedArtifact,
-      "hunt_id":  this.scope_["huntId"],
-      "type": "HUNT",
-    };
-
-    this.artifactNames = this.scope_["artifactNames"];
-    if (!angular.isDefined(this.selectedArtifact) &&
-        angular.isDefined(this.artifactNames) &&
-        this.artifactNames.length > 0 ) {
-        this.selectedArtifact = this.artifactNames[0];
-    }
+  this.selectedArtifact = hunt.artifacts[0];
+  this.reportParams = {
+    "artifact": this.selectedArtifact,
+    "hunt_id":  hunt.hunt_id,
+    "type": "HUNT",
+  };
 };
 
 exports.HuntReportDirective = function() {

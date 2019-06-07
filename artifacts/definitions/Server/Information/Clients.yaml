@@ -24,7 +24,8 @@ sources:
         FROM clients()
         ORDER BY _LastSeenAt DESC
 
-      - LET names = SELECT Name FROM Artifact.Server.Information.Users(
+      - |
+        LET names = SELECT Name FROM Artifact.Server.Information.Users(
                ClientId=client_id)
 
       - |

@@ -83,14 +83,17 @@ message GetReportRequest {
     // Common parameters
     string client_id = 5;
 
-    // Parameters for MONITORING_DAILY
+    // Parameters for SERVER_EVENT reports
     string day_name = 6;
 
     uint64 start_time = 8;
     uint64 end_time = 9;
 
-    // Parameters for CLIENT
+    // Parameters for CLIENT reports
     string flow_id = 7;
+
+    // Parameters for HUNT reports
+    string hunt_id = 10;
 
     repeated ArtifactParameter parameters = 4 [(sem_type) = {
             description: "Report parameters. These depend on the type of the report."

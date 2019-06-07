@@ -15,7 +15,8 @@ import (
 
 var (
 	valid_report_types = []string{
-		"MONITORING_DAILY", "CLIENT", "CLIENT_EVENT", "SERVER_EVENT",
+		"MONITORING_DAILY", "CLIENT",
+		"CLIENT_EVENT", "SERVER_EVENT", "HUNT",
 	}
 )
 
@@ -94,12 +95,11 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 	template_engine.SetEnv("ArtifactName", artifact.Name)
 
 	result := ""
-	for _, report := range getArtifactReports(artifact, "client_event") {
-		type_name := strings.ToLower(report.Type)
-		if type_name != "monitoring_daily" && type_name != "client_event" {
-			continue
-		}
-
+	for _, report := range getArtifactReports(
+		artifact, []string{
+			"client_event",
+			"monitoring_daily",
+		}) {
 		value, err := template_engine.Execute(report.Template)
 		if err != nil {
 			return "", err
@@ -125,7 +125,7 @@ func GenerateArtifactDescriptionReport(
 	if pres {
 		template_engine.SetEnv("artifact", artifact)
 		for _, report := range getArtifactReports(
-			template_artifact, "internal") {
+			template_artifact, []string{"internal"}) {
 			return template_engine.Execute(report.Template)
 		}
 	}
@@ -136,8 +136,15 @@ func GenerateArtifactDescriptionReport(
 // does not exist.
 func getArtifactReports(
 	artifact *artifacts_proto.Artifact,
-	report_type string) []*artifacts_proto.Report {
-	reports := artifact.Reports
+	report_types []string) []*artifacts_proto.Report {
+	reports := []*artifacts_proto.Report{}
+	for _, report := range artifact.Reports {
+		for _, report_type := range report_types {
+			if report.Type == report_type {
+				reports = append(reports, report)
+			}
+		}
+	}
 	if len(reports) > 0 {
 		return reports
 	}
@@ -153,7 +160,7 @@ func getArtifactReports(
 		}
 
 		reports = append(reports, &artifacts_proto.Report{
-			Type: report_type,
+			Type: report_types[0],
 			Template: fmt.Sprintf(`
 ## %s
 
@@ -178,12 +185,8 @@ func GenerateServerMonitoringReport(
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""
-	for _, report := range template_engine.GetArtifact().Reports {
-		type_name := strings.ToLower(report.Type)
-		if type_name != "server_event" {
-			continue
-		}
-
+	for _, report := range getArtifactReports(
+		template_engine.GetArtifact(), []string{"server_event"}) {
 		for _, param := range report.Parameters {
 			template_engine.SetEnv(param.Name, param.Default)
 		}
@@ -211,12 +214,32 @@ func GenerateClientReport(template_engine TemplateEngine,
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
 
 	result := ""
-	for _, report := range template_engine.GetArtifact().Reports {
-		type_name := strings.ToLower(report.Type)
-		if type_name != "client" {
-			continue
+	for _, report := range getArtifactReports(
+		template_engine.GetArtifact(), []string{
+			"client",
+			"server",
+		}) {
+		value, err := template_engine.Execute(report.Template)
+		if err != nil {
+			return "", err
 		}
+		result += value
+	}
 
+	return result, nil
+}
+
+func GenerateHuntReport(template_engine TemplateEngine,
+	hunt_id string) (string, error) {
+	template_engine.SetEnv("ReportMode", "HUNT")
+	template_engine.SetEnv("HuntId", hunt_id)
+	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
+
+	result := ""
+	for _, report := range getArtifactReports(
+		template_engine.GetArtifact(), []string{
+			"hunt",
+		}) {
 		value, err := template_engine.Execute(report.Template)
 		if err != nil {
 			return "", err

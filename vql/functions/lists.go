@@ -32,6 +32,11 @@ type ArrayFunction struct{}
 func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 	var result []vfilter.Any
 
+	lazy_a, ok := a.(vfilter.LazyExpr)
+	if ok {
+		a = lazy_a.Reduce()
+	}
+
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
 

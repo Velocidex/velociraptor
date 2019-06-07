@@ -1,11 +1,14 @@
-Hunt Report
+<div ng-if="hunt.artifacts.length > 0">
+  <div class="report-selector">
+    <select class="form-control pull-left"
+            ng-options="artifact for artifact in hunt.artifacts"
+            ng-model="controller.reportParams.artifact"
+            id="plugin-select">
+    </select>
+  </div>
 
-<div class="dashboard">
   <grr-report-viewer
-    ng-if="huntId"
+    ng-if="hunt.hunt_id"
     params="controller.reportParams">
   </grr-report-viewer>
 </div>
-
-{{ hunt }}
-{{ hunt_id }}

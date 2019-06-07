@@ -10,7 +10,16 @@
   </thead>
   <tbody>
     <tr ng-repeat="row in ::controller.pageData.rows track by $index">
-      <td ng-repeat="cell in ::row.cell track by $index">{$ cell $}</td>
+      <td ng-repeat="cell in ::row.cell track by $index">
+        <div ng-if="::controller.isObject(cell)" >
+          <div ng-repeat="(k, v) in ::cell" >
+            {$ ::k $} : {$ ::v $} <br>
+          </div>
+        </div>
+        <div ng-if="::!controller.isObject(cell)" >
+          {$ ::cell $}
+        </div>
+      </td>
     </tr>
   </tbody>
 </table>

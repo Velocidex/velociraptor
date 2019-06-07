@@ -20,10 +20,10 @@
   <tbody>
     <tr grr-infinite-table grr-api-items-provider
         transform-items="controller.transformItems(items)"
-        url="flowsUrl"
-        page-size="controller.pageSize"
+        url="::flowsUrl"
+        page-size="::controller.pageSize"
         trigger-update="controller.triggerTableUpdate"
-        auto-refresh-interval="controller.autoRefreshInterval"
+        auto-refresh-interval="::controller.autoRefreshInterval"
         ng-click="controller.selectItem(item)"
         ng-class="{'row-selected': item.flow_id == controller.selectedFlowId}"
         >
@@ -32,10 +32,12 @@
         {$ ::item.flow_id $}
       </td>
       <td>
-        <grr-semantic-value value="::item.context.artifacts" />
-        <grr-semantic-value
-          ng-if="!item.context.artifacts"
-          value="::item.name"/>
+        <div ng-repeat="name in ::item.context.artifacts track by $index">
+          {$ ::name $}
+        </div>
+        <div ng-if="::!item.context.artifacts">
+          {$ ::item.name $}
+        </div>
       </td>
       <td>
         <grr-timestamp value="::item.context.create_time" />

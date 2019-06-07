@@ -42,11 +42,12 @@ type YaraHit struct {
 }
 
 type YaraResult struct {
-	Rule    string
-	Meta    map[string]interface{}
-	Tags    []string
-	Strings []*YaraHit
-	File    os.FileInfo
+	Rule     string
+	Meta     map[string]interface{}
+	Tags     []string
+	Strings  []*YaraHit
+	File     os.FileInfo
+	FileName string
 }
 
 type YaraScanPluginArgs struct {
@@ -147,10 +148,11 @@ func (self YaraScanPlugin) Call(
 
 					stat, _ := f.Stat()
 					res := &YaraResult{
-						Rule: rule,
-						Tags: match.Tags,
-						Meta: match.Meta,
-						File: stat,
+						Rule:     rule,
+						Tags:     match.Tags,
+						Meta:     match.Meta,
+						File:     stat,
+						FileName: filename,
 					}
 
 					for _, match_string := range match.Strings {

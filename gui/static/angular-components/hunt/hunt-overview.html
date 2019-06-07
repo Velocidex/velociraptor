@@ -22,10 +22,10 @@
             <dd>{{ ::hunt.creator }}</dd>
 
             <dt>Creation Time</dt>
-            <dd><grr-timestamp value="hunt.create_time" /></dd>
+            <dd><grr-timestamp value="::hunt.create_time" /></dd>
 
             <dt>Expiry Time</dt>
-            <dd><grr-timestamp value="hunt.expires" /></dd>
+            <dd><grr-timestamp value="::hunt.expires" /></dd>
 
             <dt>State</dt>
             <dd>{{::hunt.state}}</dd>
@@ -37,9 +37,9 @@
 
           <h5> Parameters </h5>
           <dl class="dl-horizontal dl-flow">
-            <div ng-repeat="item in ::hunt.start_request.args.parameters.env">
-              <dt>{{item.key}}</dt>
-              <dd>{{item.value}}</dd>
+            <div ng-repeat="::item in ::hunt.start_request.args.parameters.env">
+              <dt>{{::item.key}}</dt>
+              <dd>{{::item.value}}</dd>
             </div>
           </dl>
 
@@ -68,12 +68,6 @@
 
         </div>
       </div>
-    </div>
-    <div ng-if="::flow.internal_error">
-      <br>
-      <dt class="alert-danger danger">Error while Opening</dt>
-      <dd>{$ ::flow.internal_error $}</dd>
-      <br><br>
     </div>
   </grr-force-refresh>
 </div>

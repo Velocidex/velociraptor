@@ -28,9 +28,13 @@ func getReport(ctx context.Context,
 
 	// A CLIENT artifact report is a specific artifact
 	// collected from a client.
-	case "CLIENT":
+	case "CLIENT", "SERVER":
 		template_data, err = reporting.GenerateClientReport(
 			template_engine, in.ClientId, in.FlowId)
+
+	case "HUNT":
+		template_data, err = reporting.GenerateHuntReport(
+			template_engine, in.HuntId)
 
 	// Server event artifacts run on the server. Typically they
 	// post process client event streams.

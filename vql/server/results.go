@@ -39,6 +39,7 @@ type SourcePluginArgs struct {
 	StartTime int64  `vfilter:"optional,field=start_time"`
 	EndTime   int64  `vfilter:"optional,field=end_time"`
 	FlowId    string `vfilter:"optional,field=flow_id"`
+	HuntId    string `vfilter:"optional,field=hunt_id"`
 	Artifact  string `vfilter:"optional,field=artifact"`
 	Source    string `vfilter:"optional,field=source"`
 	Mode      string `vfilter:"optional,field=mode"`
@@ -73,6 +74,21 @@ func (self SourcePlugin) Call(
 		// reports etc where many parameters can be inferred from
 		// context.
 		parseSourceArgsFromScope(arg, scope)
+
+		// Hunt mode is just a proxy for the hunt_results()
+		// plugin.
+		if arg.Mode == "HUNT" {
+			args := vfilter.NewDict().
+				Set("hunt_id", arg.HuntId).
+				Set("artifact", arg.Artifact)
+
+			// Just delegate to the hunt_results() plugin.
+			plugin := &HuntResultsPlugin{}
+			for row := range plugin.Call(ctx, scope, args) {
+				output_chan <- row
+			}
+			return
+		}
 
 		// Figure out the mode by looking at the artifact type.
 		if arg.Mode == "" {
@@ -114,15 +130,15 @@ func (self SourcePlugin) Call(
 		sort.Strings(hits)
 
 		for _, hit := range hits {
-			ts := parseFileTimestamp(hit)
+			ts_start, ts_end := parseFileTimestamp(hit)
 
 			// Skip files modified before the required
 			// start time.
-			if ts < arg.StartTime {
+			if ts_end < arg.StartTime {
 				continue
 			}
 
-			if arg.EndTime > 0 && ts >= arg.EndTime {
+			if arg.EndTime > 0 && ts_start >= arg.EndTime {
 				return
 			}
 
@@ -219,15 +235,16 @@ func (self SourcePlugin) Info(
 }
 
 // Derive the unix timestamp from the filename.
-func parseFileTimestamp(filename string) int64 {
+func parseFileTimestamp(filename string) (int64, int64) {
 	for _, component := range strings.Split(filename, "/") {
 		component = strings.Split(component, ".")[0]
 		ts, err := time.Parse("2006-01-02", component)
 		if err == nil {
-			return ts.Unix()
+			start := ts.Unix()
+			return start, start + 60*60*24
 		}
 	}
-	return 0
+	return 0, 0
 }
 
 // Override SourcePluginArgs from the scope.
@@ -250,6 +267,11 @@ func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 	flow_id, pres := scope.Resolve("FlowId")
 	if pres {
 		arg.FlowId, _ = flow_id.(string)
+	}
+
+	hunt_id, pres := scope.Resolve("HuntId")
+	if pres {
+		arg.HuntId, _ = hunt_id.(string)
 	}
 
 	artifact_name, pres := scope.Resolve("ArtifactName")

@@ -86,7 +86,7 @@ CsvViewerDirective.prototype.fetchText_ = function() {
             params['rows'] = MAX_ROWS_PER_TABLE;
             self.pageData = null;
             this.grrApiService_.get(url, params).then(function(response) {
-                self.pageData = response.data;
+              self.pageData = this.prepareData(response.data);
             }.bind(this), function() {
                 self.pageData = null;
             }.bind(this)).catch(function() {
@@ -116,6 +116,31 @@ CsvViewerDirective.prototype.fetchText_ = function() {
             "rows": new_rows,
         };
     }
+};
+
+CsvViewerDirective.prototype.isObject = function(value) {
+  return angular.isObject(value);
+};
+
+CsvViewerDirective.prototype.prepareData = function(value) {
+  var rows = [];
+  for (var i=0; i<value.rows.length; i++) {
+    var row = value.rows[i].cell;
+    var cells = [];
+    for (var j=0; j<row.length; j++) {
+      var cell = row[j];
+
+      // A bit of a hack for now, this represents an object.
+      if (cell[0] == "{" || cell[0] == "[") {
+        cell = JSON.parse(cell);
+      }
+
+      cells.push(cell);
+    }
+    rows.push({cell: cells});
+  }
+
+  return {columns: value.columns, rows: rows};
 };
 
 /**
