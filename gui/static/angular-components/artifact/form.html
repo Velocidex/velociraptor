@@ -1,0 +1,33 @@
+<div ng-switch="type">
+  <div class="form-group"
+       ng-switch-when="timestamp">
+    <p class="input-group datepicker-toolbar">
+      <input type="text"
+             class="form-control"
+             uib-datepicker-popup="{{format}}"
+             ng-model="controller.date_time"
+             is-open="controller.popup_opened"
+             datepicker-options="dateOptions"
+             ng-required="true"
+             close-text="Close"
+             alt-input-formats="altInputFormats" />
+      <span class="input-group-btn">
+        <button type="button"
+                class="btn btn-default"
+                ng-click="controller.openDatePopup()">
+          <i class="fa fa-calendar"></i>
+        </button>
+      </span>
+    </p>
+  </div>
+
+  <input class=""
+         ng-switch-when="bool"
+         type="checkbox"
+         ng-true-value="'Y'"
+         ng-false-value="'N'"
+         ng-model="value"></input>
+  <input class="form-control"
+         ng-switch-default
+         ng-model="value"></input>
+</div>

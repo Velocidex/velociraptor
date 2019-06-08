@@ -44,13 +44,23 @@ parameters:
 
   - name: Use_Raw_NTFS
     default: Y
+    type: bool
 
   - name: Upload_File
     default: N
+    type: bool
 
   - name: Calculate_Hash
     default: N
+    type: bool
 
+  - name: MoreRecentThan
+    default: ""
+    type: timestamp
+
+  - name: ModifiedBefore
+    default: ""
+    type: timestamp
 
 
 sources:
@@ -59,9 +69,10 @@ sources:
       LET ntfs_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
-               timestamp(epoch=Atime.Sec) AS Atime,
-               timestamp(epoch=Mtime.Sec) AS Mtime,
-               timestamp(epoch=Ctime.Sec) AS Ctime,
+               Mtime.Sec AS Modified,
+               timestamp(epoch=Atime.Sec) AS ATime,
+               timestamp(epoch=Mtime.Sec) AS MTime,
+               timestamp(epoch=Ctime.Sec) AS CTime,
                if(condition=(Upload_File = "Y" and NOT IsDir ),
                   then=upload(file=FullPath, accessor="ntfs")) AS Upload,
                if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
@@ -72,9 +83,10 @@ sources:
       LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
-               timestamp(epoch=Atime.Sec) AS Atime,
-               timestamp(epoch=Mtime.Sec) AS Mtime,
-               timestamp(epoch=Ctime.Sec) AS Ctime,
+               Mtime.Sec AS Modified,
+               timestamp(epoch=Atime.Sec) AS ATime,
+               timestamp(epoch=Mtime.Sec) AS MTime,
+               timestamp(epoch=Ctime.Sec) AS CTime,
                if(condition=(Upload_File = "Y" and NOT IsDir ),
                   then=upload(file=FullPath, accessor="file")) AS Upload,
                if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
@@ -82,7 +94,23 @@ sources:
         FROM glob(globs=SearchFilesGlob, accessor="file")
 
     - |
-      SELECT * FROM if(
+      LET combined_search = SELECT * FROM if(
         condition=(Use_Raw_NTFS = "Y"),
         then=ntfs_search,
         else=file_search)
+
+    - |
+      LET more_recent = SELECT * FROM if(
+        condition=MoreRecentThan,
+        then={
+          SELECT * FROM combined_search
+          WHERE Modified > atoi(string=MoreRecentThan)
+        }, else=combined_search)
+
+    - |
+      SELECT * FROM if(
+        condition=ModifiedBefore,
+        then={
+          SELECT * FROM more_recent
+          WHERE Modified < atoi(string=ModifiedBefore)
+        }, else=more_recent)

@@ -27,7 +27,9 @@ const SearchArtifactController = function(
     // A list of descriptors that matched the search term.
     this.matchingDescriptors = [];
 
-    this.paramDescriptors = {};
+
+  this.param_types = {};
+  this.paramDescriptors = {};
 
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
@@ -78,7 +80,8 @@ SearchArtifactController.prototype.add = function(name) {
                     var param = params[j];
 
                     if (!angular.isDefined(self.scope_.params[param.name])) {
-                        self.scope_.params[param.name]= param.default || "";
+                      self.scope_.params[param.name]= param.default || "";
+                      self.param_types[param.name] = param.type;
                     }
                 }
             }
@@ -158,11 +161,6 @@ SearchArtifactController.prototype.onSearchChange_ = function() {
             });
 };
 
-/**
- * OutputPluginDescriptorFormDirective definition.
- *
- * @return {angular.Directive} Directive definition object.
- */
 exports.SearchArtifactDirective = function() {
   return {
       restrict: 'E',

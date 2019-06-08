@@ -6,6 +6,7 @@ goog.module.declareLegacyNamespace();
 const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescriptorDirective');
 const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
 const {ArtifactsViewerDirective} = goog.require('grrUi.artifact.artifactViewerDirective');
+const {FormDirective} = goog.require('grrUi.artifact.formDirective');
 
 const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
 const {TimelineDirective} = goog.require('grrUi.artifact.timelineDirective');
@@ -32,6 +33,9 @@ exports.artifactModule.directive(
 
 exports.artifactModule.directive(
     ArtifactsViewerDirective.directive_name, ArtifactsViewerDirective);
+
+exports.artifactModule.directive(
+    FormDirective.directive_name, FormDirective);
 
 exports.artifactModule.directive(
     LineChartDirective.directive_name, LineChartDirective);

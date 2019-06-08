@@ -113,10 +113,8 @@
       {{ k }}
     </td>
     <td>
-      <input class="form-control"
-             ng-model="params[k]"
-             >
-      </input>
+      <grr-form type="::controller.param_types[k]"
+                value="params[k]"></grr-form>
     </td>
   </tr>
 </table>
