@@ -3,7 +3,7 @@
   <Product Name='Velociraptor' Manufacturer='Velocidex Innovations'
            Id='8316dc94-3c0f-46a0-b54b-aeb484dd533d'
            UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
-           Language='1033' Codepage='1252' Version='0.31.0'>
+           Language='1033' Codepage='1252' Version='1.0.0'>
     <Package Id='*' Keywords='Installer' Description="Velociraptor Service Installer"
              Comments='This installs the Velociraptor service.'
              Manufacturer='Velocidex Innovations'
@@ -30,7 +30,7 @@
                 Description="Velociraptor Service"
                 Start="auto"
                 Account="LocalSystem"
-                Arguments='service run '
+                Arguments=' --config "[INSTALLDIR]/server.config.yaml" service run '
                 ErrorControl="normal"
                 Interactive="no"/>
 
@@ -41,16 +41,21 @@
                 Start="install"
                 Remove="uninstall" Wait="yes" />
           </Component>
+          <Component Id='Config' Guid='d47dd101-3f53-45ef-889e-2b0db79e554c'>
+            <File Id='Config' Name='server.config.yaml'
+                  DiskId='1' Source='Output/server.config.yaml' KeyPath='yes'>
+            </File>
+          </Component>
         </Directory>
       </Directory>
     </Directory>
 
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='MainExecutable' />
+      <ComponentRef Id='Config' />
     </Feature>
 
-    <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed."
-                  Schedule="afterInstallValidate" />
+    <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed." Schedule="afterInstallValidate" />
     <Property Id="ALLUSERS" Value="1" />
     <Property Id="ARPNOREPAIR" Value="1" />
     <Property Id="ARPNOMODIFY" Value="1" />

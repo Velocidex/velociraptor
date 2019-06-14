@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"context"
@@ -34,7 +35,7 @@ import (
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -324,10 +325,10 @@ func getLogger(name string) (debug.Log, error) {
 	return elog, nil
 }
 
-func doRun() error {
+func loadClientConfig() (*api_proto.Config, error) {
 	executable, err := os.Executable()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// If the config path is not specified we look for the config
@@ -340,26 +341,34 @@ func doRun() error {
 
 	config_obj, err := config.LoadClientConfig(*config_path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Make sure the config is ok.
 	err = crypto.VerifyConfig(config_obj)
 	if err != nil {
+		return nil, err
+	}
+
+	return config_obj, nil
+}
+
+func doRun() error {
+	name := "Velociraptor"
+	config_obj, err := loadClientConfig()
+	if err == nil {
+		name = config_obj.Client.WindowsInstaller.ServiceName
+	}
+	service, err := NewVelociraptorService(name)
+	if err != nil {
 		return err
 	}
+	defer service.Close()
 
 	isIntSess, err := svc.IsAnInteractiveSession()
 	if err != nil {
 		return err
 	}
-
-	name := config_obj.Client.WindowsInstaller.ServiceName
-	service, err := NewVelociraptorService(config_obj)
-	if err != nil {
-		return err
-	}
-	defer service.Close()
 
 	if isIntSess {
 		err = debug.Run(name, service)
@@ -374,10 +383,17 @@ func doRun() error {
 }
 
 type VelociraptorService struct {
-	config_obj *api_proto.Config
-	ctx        context.Context
-	comms      *http_comms.HTTPCommunicator
-	elog       debug.Log
+	mu    sync.Mutex
+	comms *http_comms.HTTPCommunicator
+	name  string
+}
+
+func (self *VelociraptorService) SetPause(value bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	if self.comms != nil {
+		self.comms.SetPause(value)
+	}
 }
 
 func (self *VelociraptorService) Execute(args []string,
@@ -387,8 +403,14 @@ func (self *VelociraptorService) Execute(args []string,
 	changes <- svc.Status{State: svc.StartPending}
 
 	// Start running and tell the SCM about it.
-	self.comms.SetPause(false)
+	self.SetPause(false)
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
+
+	elog, err := getLogger(self.name)
+	if err != nil {
+		return
+	}
+	defer elog.Close()
 
 loop:
 	for {
@@ -400,72 +422,97 @@ loop:
 			case svc.Stop, svc.Shutdown:
 				break loop
 			case svc.Pause:
-				changes <- svc.Status{State: svc.Paused, Accepts: cmdsAccepted}
-				self.comms.SetPause(true)
-				self.elog.Info(1, "Service Paused")
+				changes <- svc.Status{
+					State:   svc.Paused,
+					Accepts: cmdsAccepted,
+				}
+				self.SetPause(true)
+				elog.Info(1, "Service Paused")
 
 			case svc.Continue:
-				changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
-				self.comms.SetPause(false)
-				self.elog.Info(1, "Service Resumed")
+				changes <- svc.Status{
+					State:   svc.Running,
+					Accepts: cmdsAccepted,
+				}
+				self.SetPause(false)
+				elog.Info(1, "Service Resumed")
 
 			default:
-				self.elog.Error(1, fmt.Sprintf("unexpected control request #%d", c))
+				elog.Error(1, fmt.Sprintf(
+					"unexpected control request #%d", c))
 			}
 		}
 	}
 
 	changes <- svc.Status{State: svc.StopPending}
-	self.elog.Info(1, "Service Shutting Down")
+	elog.Info(1, "Service Shutting Down")
 	return
 }
 
 func (self *VelociraptorService) Close() {
-	name := self.config_obj.Client.WindowsInstaller.ServiceName
-	self.elog.Info(1, fmt.Sprintf("%s service stopped", name))
-	self.elog.Close()
+	elog, err := getLogger(self.name)
+	if err == nil {
+		elog.Info(1, fmt.Sprintf("%s service stopped", self.name))
+		elog.Close()
+	}
 }
 
-func NewVelociraptorService(config_obj *api_proto.Config) (
-	*VelociraptorService, error) {
-
-	name := config_obj.Client.WindowsInstaller.ServiceName
+func NewVelociraptorService(name string) (*VelociraptorService, error) {
 	elog, err := getLogger(name)
 	if err != nil {
 		return nil, err
 	}
 
-	result := &VelociraptorService{
-		config_obj: config_obj,
-		elog:       elog,
-	}
-
-	manager, err := crypto.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Writeback.PrivateKey))
-	if err != nil {
-		return nil, err
-	}
-
-	exe, err := executor.NewClientExecutor(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	comm, err := http_comms.NewHTTPCommunicator(
-		config_obj,
-		manager,
-		exe,
-		config_obj.Client.ServerUrls,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	result.comms = comm
+	result := &VelociraptorService{name: name}
 
 	go func() {
-		ctx := context.Background()
-		comm.Run(ctx)
+		for {
+			// Spin forever waiting for a config file to be
+			// dropped into place.
+			config_obj, err := loadClientConfig()
+			if err != nil {
+				time.Sleep(10 * time.Second)
+				continue
+			}
+
+			manager, err := crypto.NewClientCryptoManager(
+				config_obj, []byte(config_obj.Writeback.PrivateKey))
+			if err != nil {
+				elog.Error(1, fmt.Sprintf(
+					"Can not create crypto: %v", err))
+				time.Sleep(10 * time.Second)
+				continue
+			}
+
+			exe, err := executor.NewClientExecutor(config_obj)
+			if err != nil {
+				elog.Error(1, fmt.Sprintf(
+					"Can not create client: %v", err))
+				time.Sleep(10 * time.Second)
+				continue
+			}
+
+			comm, err := http_comms.NewHTTPCommunicator(
+				config_obj,
+				manager,
+				exe,
+				config_obj.Client.ServerUrls,
+			)
+			if err != nil {
+				elog.Error(1, fmt.Sprintf(
+					"Can not create comms: %v", err))
+				time.Sleep(10 * time.Second)
+				continue
+			}
+
+			result.mu.Lock()
+			result.comms = comm
+			result.mu.Unlock()
+
+			ctx := context.Background()
+			comm.Run(ctx)
+			return
+		}
 	}()
 
 	return result, nil
@@ -475,7 +522,7 @@ func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		var err error
 		switch command {
-		case "service install":
+		case installl_command.FullCommand():
 			config_obj, err := config.LoadClientConfig(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -490,42 +537,41 @@ func init() {
 				time.Sleep(10 * time.Second)
 			}
 
-		case "service remove":
+		case remove_command.FullCommand():
 			doRemove()
 
-		case "service run":
+		case run_command.FullCommand():
 			name := "velociraptor"
-			elog, err := getLogger(name)
-			kingpin.FatalIfError(err, "Unable to get logger")
-
-			defer elog.Close()
-
 			err = doRun()
 			if err != nil {
+				elog, err := getLogger(name)
+				kingpin.FatalIfError(err, "Unable to get logger")
+				defer elog.Close()
+
 				elog.Info(1, fmt.Sprintf(
 					"Failed to start service: %v", err))
 			}
 
-		case "service start":
+		case start_command.FullCommand():
 			config_obj, err := config.LoadClientConfig(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = startService(config_obj.Client.WindowsInstaller.ServiceName)
 
-		case "service stop":
+		case stop_command.FullCommand():
 			config_obj, err := config.LoadClientConfig(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Stop, svc.Stopped)
 
-		case "service pause":
+		case pause_command.FullCommand():
 			config_obj, err := config.LoadClientConfig(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Pause, svc.Paused)
 
-		case "service continue":
+		case continue_command.FullCommand():
 			config_obj, err := config.LoadClientConfig(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
