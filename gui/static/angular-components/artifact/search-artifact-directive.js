@@ -29,6 +29,7 @@ const SearchArtifactController = function(
 
 
   this.param_types = {};
+  this.param_descriptions = {};
   this.paramDescriptors = {};
 
     /** @private {!grrUi.core.apiService.ApiService} */
@@ -82,6 +83,7 @@ SearchArtifactController.prototype.add = function(name) {
                     if (!angular.isDefined(self.scope_.params[param.name])) {
                       self.scope_.params[param.name]= param.default || "";
                       self.param_types[param.name] = param.type;
+                      self.param_descriptions[param.name] = param.description;
                     }
                 }
             }

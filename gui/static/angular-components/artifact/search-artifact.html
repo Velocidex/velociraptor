@@ -109,13 +109,17 @@
 
 <table class="table table-condensed">
   <tr ng-repeat="(k, v) in params ">
-    <td>
-      {{ k }}
-    </td>
-    <td>
-      <grr-form type="::controller.param_types[k]"
-                value="params[k]"></grr-form>
-    </td>
+    <div data-placement="left"
+         data-toggle="tooltip"
+         title="{$ ::controller.param_descriptions[k] $}">
+      <td>
+        {{ k }}
+      </td>
+      <td>
+        <grr-form type="::controller.param_types[k]"
+                  value="params[k]"></grr-form>
+      </td>
+    </div>
   </tr>
 </table>
 

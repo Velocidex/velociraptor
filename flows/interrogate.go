@@ -20,6 +20,7 @@
 package flows
 
 import (
+	"context"
 	"encoding/json"
 	"path"
 
@@ -33,6 +34,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -160,7 +162,10 @@ func (self *VInterrogate) ProcessMessage(
 					return err
 				}
 			case "Client Info":
-				processClientInfoQuery(vql_response, client_info)
+				processClientInfoQuery(
+					config_obj,
+					flow_obj.RunnerArgs.ClientId,
+					vql_response, client_info)
 			case "Recent Users":
 				processRecentUsers(vql_response, client_info)
 			}
@@ -272,9 +277,12 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 	return nil
 }
 
-func processClientInfoQuery(response *actions_proto.VQLResponse,
+func processClientInfoQuery(
+	config_obj *api_proto.Config,
+	client_id string,
+	response *actions_proto.VQLResponse,
 	client_info *actions_proto.ClientInfo) error {
-	var result []map[string]string
+	var result []map[string]interface{}
 
 	err := json.Unmarshal([]byte(response.Response), &result)
 	if err != nil {
@@ -283,8 +291,44 @@ func processClientInfoQuery(response *actions_proto.VQLResponse,
 
 	for _, info := range result {
 		if info != nil {
-			client_info.ClientName = info["Name"]
-			client_info.ClientVersion = info["BuildTime"]
+			name, ok := info["Name"].(string)
+			if ok {
+				client_info.ClientName = name
+			}
+			build_time, ok := info["BuildTime"].(string)
+			if ok {
+				client_info.ClientVersion = build_time
+			}
+
+			label_array, ok := info["Labels"].([]interface{})
+			if !ok {
+				continue
+			}
+			labels := []string{}
+			for _, item := range label_array {
+				label, ok := item.(string)
+				if !ok {
+					continue
+				}
+
+				labels = append(labels, label)
+			}
+
+			if labels == nil {
+				continue
+			}
+
+			channel := grpc_client.GetChannel(config_obj)
+			defer channel.Close()
+
+			client := api_proto.NewAPIClient(channel)
+			_, err = client.LabelClients(
+				context.Background(),
+				&api_proto.LabelClientsRequest{
+					ClientIds: []string{client_id},
+					Labels:    labels,
+					Operation: "set",
+				})
 		}
 	}
 	return nil

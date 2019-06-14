@@ -26,12 +26,14 @@
         </uib-progressbar>
       </div>
 
-      <div ng-if="controller.responseData && controller.responseData.error" class="alert alert-error">
+      <div ng-if="controller.responseData && controller.responseData.error"
+           class="alert alert-error">
         <p><em>Can't Launch Artifact collection:</em></p>
         <p class="preserve-linebreaks">{$ controller.responseData.data $}</p>
       </div>
 
-      <div ng-if="controller.responseData && !controller.responseData.error" class="panel panel-default">
+      <div ng-if="controller.responseData && !controller.responseData.error"
+           class="panel panel-default">
         <div class="panel-body">
           <p>
             Launched Flow {{ controller.responseData.flow_id }}

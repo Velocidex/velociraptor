@@ -24,6 +24,7 @@ import (
 	"regexp"
 
 	"github.com/Velocidex/yaml"
+	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -50,6 +51,11 @@ var (
 	config_generate_command = config_command.Command(
 		"generate",
 		"Generate a new config file to stdout (with new keys).")
+
+	config_generate_command_interactive = config_generate_command.Flag(
+		"interactive", "Interactively fill in configuration.").
+		Short('i').Bool()
+
 	config_rotate_server_key = config_command.Command(
 		"rotate_key",
 		"Generate a new config file with a rotates server key.")
@@ -75,13 +81,11 @@ func doShowConfig() {
 	fmt.Printf("%v", string(res))
 }
 
-func doGenerateConfig() {
+func generateNewKeys() (*api_proto.Config, error) {
 	config_obj := config.GetDefaultConfig()
-	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	ca_bundle, err := crypto.GenerateCACert(2048)
 	if err != nil {
-		logger.Error("Unable to create CA cert", err)
-		return
+		return nil, errors.Wrap(err, "Unable to create CA cert")
 	}
 
 	config_obj.Client.CaCertificate = ca_bundle.Cert
@@ -90,8 +94,7 @@ func doGenerateConfig() {
 	nonce := make([]byte, 8)
 	_, err = rand.Read(nonce)
 	if err != nil {
-		logger.Error("Unable to create nonce", err)
-		return
+		return nil, errors.Wrap(err, "Unable to create nonce")
 	}
 	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
 
@@ -101,8 +104,7 @@ func doGenerateConfig() {
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, constants.FRONTEND_NAME)
 	if err != nil {
-		logger.Error("Unable to create Frontend cert", err)
-		return
+		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
@@ -112,19 +114,30 @@ func doGenerateConfig() {
 	gw_certificate, err := crypto.GenerateServerCert(
 		config_obj, constants.GRPC_GW_CLIENT_NAME)
 	if err != nil {
-		logger.Error("Unable to create Frontend cert", err)
-		return
+		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert
 	config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
 
+	return config_obj, nil
+}
+
+func doGenerateConfigNonInteractive() {
+	config_obj, err := generateNewKeys()
+
 	// Users have to updated the following fields.
 	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
 
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+	if err != nil {
+		logger.Error("Unable to create config", err)
+		return
+	}
+
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
-		logger.Error("Unable to create CA cert", err)
+		logger.Error("Unable to create config", err)
 		return
 	}
 	fmt.Printf("%v", string(res))
@@ -153,10 +166,7 @@ func doRotateKeyConfig() {
 	fmt.Printf("%v", string(res))
 }
 
-func doDumpClientConfig() {
-	config_obj, err := config.LoadConfig(*config_path)
-	kingpin.FatalIfError(err, "Unable to load config.")
-
+func getClientConfig(config_obj *api_proto.Config) *api_proto.Config {
 	// Copy only settings relevant to the client from the main
 	// config.
 	client_config := &api_proto.Config{
@@ -169,7 +179,14 @@ func doDumpClientConfig() {
 	if !config_obj.DisableSelfSignedSsl && config_obj.AutocertDomain == "" {
 		client_config.Client.UseSelfSignedSsl = true
 	}
+	return client_config
+}
 
+func doDumpClientConfig() {
+	config_obj, err := config.LoadConfig(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config.")
+
+	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
@@ -222,7 +239,11 @@ func init() {
 			doShowConfig()
 
 		case config_generate_command.FullCommand():
-			doGenerateConfig()
+			if *config_generate_command_interactive {
+				doGenerateConfigInteractive()
+			} else {
+				doGenerateConfigNonInteractive()
+			}
 
 		case config_rotate_server_key.FullCommand():
 			doRotateKeyConfig()

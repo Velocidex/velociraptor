@@ -554,6 +554,7 @@ func load_state() *consoleState {
 	if err != nil {
 		return result
 	}
+	defer fd.Close()
 
 	data, _ := ioutil.ReadAll(fd)
 	json.Unmarshal(data, &result)
@@ -566,6 +567,7 @@ func save_state(state *consoleState) {
 	if err != nil {
 		return
 	}
+	defer fd.Close()
 
 	serialized, err := json.Marshal(state)
 	if err != nil {
