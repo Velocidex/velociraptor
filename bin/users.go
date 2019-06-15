@@ -24,7 +24,7 @@ import (
 	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
-	"gopkg.in/alecthomas/kingpin.v2"
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -41,6 +41,11 @@ var (
 	user_show      = user_command.Command("show", "Display information about a user")
 	user_show_name = user_show.Arg(
 		"username", "Username to show").Required().String()
+
+	user_lock = user_command.Command(
+		"lock", "Lock a user immediately by locking their account.")
+	user_lock_name = user_lock.Arg(
+		"username", "Username to lock").Required().String()
 )
 
 func doAddUser() {
@@ -96,11 +101,30 @@ func doShowUser() {
 	}
 }
 
+func doLockUser() {
+	config_obj, err := get_server_config(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config file")
+
+	user_record, err := users.GetUser(config_obj, *user_lock_name)
+	kingpin.FatalIfError(err, "Unable to find user %s", *user_lock_name)
+
+	user_record.Lock()
+	err = users.SetUser(config_obj, user_record)
+	if err != nil {
+		kingpin.FatalIfError(
+			err, "Unable to set user account.")
+	}
+	fmt.Printf("\r\n")
+}
+
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case "user add":
+		case user_add.FullCommand():
 			doAddUser()
+
+		case user_lock.FullCommand():
+			doLockUser()
 
 		case user_show.FullCommand():
 			doShowUser()

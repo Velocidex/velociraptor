@@ -63,8 +63,8 @@ var (
 		fmt.Sprintf("velociraptor_%s_server.deb", constants.VERSION)).
 		String()
 
-	server_debian_command_without_monitoring = server_debian_command.Flag(
-		"without_monitoring", "Do not include Grafana and Prometheus").Bool()
+	server_debian_command_with_monitoring = server_debian_command.Flag(
+		"with_monitoring", "Also include Grafana and Prometheus").Bool()
 
 	service_definition = `
 [Unit]
@@ -147,7 +147,7 @@ func doServerDeb() {
 	deb.AddFile(input, velociraptor_bin)
 
 	// Just a simple bare bones deb.
-	if *server_debian_command_without_monitoring {
+	if !*server_debian_command_with_monitoring {
 		deb.AddControlExtraString("postinst", `
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server

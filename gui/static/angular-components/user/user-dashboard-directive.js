@@ -24,7 +24,7 @@ const UserDashboardController = function(
 
   let current_datetime = new Date();
   this.params = {
-    artifact: "Server.Monitor.Health",
+    artifact: "Custom.Server.Monitor.Health",
     type: "SERVER_EVENT",
   };
 

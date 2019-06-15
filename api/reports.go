@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"strings"
 
 	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
@@ -16,7 +17,14 @@ func getReport(ctx context.Context,
 	template_engine, err := reporting.NewGuiTemplateEngine(
 		config_obj, ctx, in.Artifact)
 	if err != nil {
-		return nil, err
+		if strings.HasPrefix(in.Artifact, "Custom.") {
+			template_engine, err = reporting.NewGuiTemplateEngine(
+				config_obj, ctx,
+				strings.TrimPrefix(in.Artifact, "Custom."))
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer template_engine.Close()
 

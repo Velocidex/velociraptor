@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -56,12 +57,6 @@ func (self SourcePlugin) Call(
 	go func() {
 		defer close(output_chan)
 		arg := &SourcePluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
-		}
-
 		any_config_obj, _ := scope.Resolve("server_config")
 		config_obj, ok := any_config_obj.(*api_proto.Config)
 		if !ok {
@@ -74,6 +69,13 @@ func (self SourcePlugin) Call(
 		// reports etc where many parameters can be inferred from
 		// context.
 		parseSourceArgsFromScope(arg, scope)
+
+		// Allow the plugin args to override the environment scope.
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
 
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
@@ -111,7 +113,6 @@ func (self SourcePlugin) Call(
 		csv_path := artifacts.GetCSVPath(
 			arg.ClientId, "*",
 			arg.FlowId, arg.Artifact, arg.Source, mode)
-
 		if csv_path == "" {
 			scope.Log("Invalid mode %v", arg.Mode)
 			return
@@ -236,7 +237,7 @@ func (self SourcePlugin) Info(
 
 // Derive the unix timestamp from the filename.
 func parseFileTimestamp(filename string) (int64, int64) {
-	for _, component := range strings.Split(filename, "/") {
+	for _, component := range utils.SplitComponents(filename) {
 		component = strings.Split(component, ".")[0]
 		ts, err := time.Parse("2006-01-02", component)
 		if err == nil {

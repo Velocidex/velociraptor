@@ -29,6 +29,13 @@ var (
 	GlobalEventTable = &EventTable{
 		Done: make(chan bool),
 	}
+
+	DefaultServerMonitoringTable = flows_proto.ArtifactCollectorArgs{
+		Artifacts: &flows_proto.Artifacts{
+			Names: []string{"Server.Monitor.Health"},
+		},
+		Parameters: &flows_proto.ArtifactParameters{},
+	}
 )
 
 type EventTable struct {
@@ -283,8 +290,13 @@ func startServerMonitoringService(config_obj *api_proto.Config) (
 		constants.ServerMonitoringFlowURN,
 		&artifacts)
 	if err != nil {
-		// No monitoring rules found, nothing to do.
-		return GlobalEventTable, nil
+		// No monitoring rules found, set defaults.
+		artifacts = DefaultServerMonitoringTable
+		err = db.SetSubject(
+			config_obj, constants.ServerMonitoringFlowURN, &artifacts)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	logger := logging.GetLogger(

@@ -140,6 +140,13 @@ service API {
         };
     }
 
+    // Users
+    rpc GetUserUITraits(google.protobuf.Empty) returns (ApiGrrUser) {
+        option (google.api.http) = {
+           get: "/api/v1/GetUserUITraits",
+        };
+    }
+
     rpc GetUserNotifications(GetUserNotificationsRequest) returns (GetUserNotificationsResponse) {
         option (google.api.http) = {
             post: "/api/v1/GetUserNotifications",

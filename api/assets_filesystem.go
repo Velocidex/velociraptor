@@ -39,6 +39,9 @@ func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
 		Info("GUI will serve files from directory gui/static")
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
 		http.Dir("gui/static"))))
+	mux.Handle("/favicon.ico",
+		http.RedirectHandler("/static/images/favicon.ico",
+			http.StatusMovedPermanently))
 }
 
 func GetTemplateHandler(config_obj *api_proto.Config,

@@ -45,6 +45,8 @@ type ParticipationRecord struct {
 }
 
 type HuntManager struct {
+	mu sync.Mutex
+
 	// We keep a cache of hunt writers to write the output of each
 	// hunt. Note that each writer is responsible for its own
 	// flushing etc.
@@ -105,6 +107,8 @@ func (self *HuntManager) Start() error {
 
 // Close will block until all our cleanup is done.
 func (self *HuntManager) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 	for _, v := range self.writers {
 		v.Close()
 	}
@@ -115,6 +119,8 @@ func (self *HuntManager) Close() {
 func (self *HuntManager) ProcessRow(
 	scope *vfilter.Scope,
 	row vfilter.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	dict_row := vql_subsystem.RowToDict(scope, row)
 	participation_row := &ParticipationRecord{}

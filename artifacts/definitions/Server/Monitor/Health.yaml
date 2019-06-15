@@ -49,7 +49,8 @@ reports:
                SELECT _ts as Timestamp,
                   CPUPercent,
                   MemoryUse
-               FROM source(source="Prometheus")
+               FROM source(source="Prometheus",
+                           artifact="Server.Monitor.Health")
              })
       {{ end }}
 
@@ -60,7 +61,8 @@ reports:
                SELECT _ts as Timestamp,
                   client_comms_current_connections,
                   client_comms_concurrency
-               FROM source(source="Prometheus")
+               FROM source(source="Prometheus",
+                           artifact="Server.Monitor.Health")
             })
       {{ end }}
 

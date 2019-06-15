@@ -49,6 +49,12 @@ func (self *UserRecord) SetPassword(password string) *UserRecord {
 	hash := sha256.Sum256(append(salt, []byte(password)...))
 	self.PasswordSalt = salt[:]
 	self.PasswordHash = hash[:]
+	self.Locked = false
+	return self
+}
+
+func (self *UserRecord) Lock() *UserRecord {
+	self.Locked = true
 	return self
 }
 

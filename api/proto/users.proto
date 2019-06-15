@@ -22,6 +22,10 @@ message VelociraptorUser {
     bool read_only = 7 [(sem_type) = {
             description: "A read only user can use the GUI but is not allowed to launch flows or hunts.",
         }];
+
+    bool locked = 8 [(sem_type) = {
+           description: "If set the user is not allowed to log in.",
+        }];
 }
 
 

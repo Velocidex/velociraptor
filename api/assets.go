@@ -33,6 +33,9 @@ import (
 func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
 	dir := "/static/"
 	mux.Handle(dir, http.FileServer(assets.HTTP))
+	mux.Handle("/favicon.png",
+		http.RedirectHandler("/static/images/favicon.ico",
+			http.StatusMovedPermanently))
 }
 
 func GetTemplateHandler(

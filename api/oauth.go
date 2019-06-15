@@ -240,7 +240,7 @@ func authenticateOAUTHCookie(
 
 		// Now check if the user is allowed to log in.
 		user_record, err := users.GetUser(config_obj, username)
-		if err != nil || user_record.Name != username {
+		if err != nil || user_record.Locked || user_record.Name != username {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 

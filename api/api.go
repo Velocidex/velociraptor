@@ -387,6 +387,18 @@ func (self *ApiServer) GetFlowRequests(
 	return result, err
 }
 
+func (self *ApiServer) GetUserUITraits(
+	ctx context.Context,
+	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
+	result := NewDefaultUserObject(self.config)
+	user_info := GetGRPCUserInfo(ctx)
+
+	result.Username = user_info.Name
+	result.InterfaceTraits.Picture = user_info.Picture
+
+	return result, nil
+}
+
 func (self *ApiServer) GetUserNotifications(
 	ctx context.Context,
 	in *api_proto.GetUserNotificationsRequest) (

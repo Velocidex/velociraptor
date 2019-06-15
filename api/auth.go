@@ -60,7 +60,7 @@ func checkUserCredentialsHandler(
 			return
 		}
 
-		if user_record.Name != username ||
+		if user_record.Locked || user_record.Name != username ||
 			!user_record.VerifyPassword(password) {
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return

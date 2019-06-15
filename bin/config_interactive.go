@@ -14,6 +14,7 @@ import (
 const (
 	self_signed = "Self Signed SSL"
 	autocert    = "Automatically provision certificates with Lets Encrypt"
+	oauth_sso   = "Authenticate users with Google OAuth SSO"
 )
 
 var (
@@ -26,7 +27,7 @@ I will be creating a new deployment configuration for you. I will
 begin by identifying what type of deployment you need.
 
 `,
-		Options: []string{self_signed, autocert},
+		Options: []string{self_signed, autocert, oauth_sso},
 	}
 
 	url_question = &survey.Input{
@@ -65,8 +66,17 @@ begin by identifying what type of deployment you need.
 	user_name_question = &survey.Input{
 		Message: "GUI Username or email address to authorize (empty to end):",
 	}
+
 	password_question = &survey.Password{
 		Message: "Password",
+	}
+
+	google_oauth_client_id_question = &survey.Input{
+		Message: "Enter the Google OAuth Client ID?",
+	}
+
+	google_oauth_client_secret_question = &survey.Input{
+		Message: "Enter the Google OAuth Client Secret?",
 	}
 )
 
@@ -93,12 +103,6 @@ func doGenerateConfigInteractive() {
 			fmt.Sprintf("https://%s:%d/", hostname,
 				config_obj.Frontend.BindPort))
 
-		err = getFileStoreLocation(config_obj)
-		kingpin.FatalIfError(err, "getFileStoreLocation")
-
-		err = getLogLocation(config_obj)
-		kingpin.FatalIfError(err, "getLogLocation")
-
 	case autocert:
 		// In autocert mode these are all fixed.
 		config_obj.Frontend.BindPort = 443
@@ -112,15 +116,40 @@ func doGenerateConfigInteractive() {
 		config_obj.Client.ServerUrls = []string{
 			fmt.Sprintf("https://%s/", hostname)}
 
-		err = getFileStoreLocation(config_obj)
-		kingpin.FatalIfError(err, "getFileStoreLocation")
-		err = getLogLocation(config_obj)
-		kingpin.FatalIfError(err, "getLogLocation")
+		config_obj.AutocertDomain = hostname
+		config_obj.AutocertCertCache = config_obj.Datastore.Location
+
+	case oauth_sso:
+		// In autocert mode these are all fixed.
+		config_obj.Frontend.BindPort = 443
+		config_obj.GUI.BindPort = 443
+		config_obj.Frontend.BindAddress = "0.0.0.0"
+
+		hostname := ""
+		err = survey.AskOne(url_question, &hostname, survey.Required)
+		kingpin.FatalIfError(err, "Question")
+
+		config_obj.GUI.PublicUrl = fmt.Sprintf("https://%s/", hostname)
+		config_obj.Client.ServerUrls = []string{config_obj.GUI.PublicUrl}
 
 		config_obj.AutocertDomain = hostname
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 
+		err = survey.AskOne(google_oauth_client_id_question,
+			&config_obj.GUI.GoogleOauthClientId, survey.Required)
+		kingpin.FatalIfError(err, "Question")
+
+		err = survey.AskOne(google_oauth_client_secret_question,
+			&config_obj.GUI.GoogleOauthClientSecret, survey.Required)
+		kingpin.FatalIfError(err, "Question")
+
 	}
+
+	err = getFileStoreLocation(config_obj)
+	kingpin.FatalIfError(err, "getFileStoreLocation")
+
+	err = getLogLocation(config_obj)
+	kingpin.FatalIfError(err, "getLogLocation")
 
 	path := ""
 	err = survey.AskOne(output_question, &path, survey.Required)
