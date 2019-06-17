@@ -135,6 +135,10 @@ message Hunt {
             description: "A list of artifacts this hunt produces.",
         }];
 
+    repeated string artifact_sources = 19 [(sem_type) = {
+            description: "A list of artifact sources this hunt produces.",
+        }];
+
     enum State {
         UNSET = 0;
         PAUSED = 1 [(description) = "Hunt will not schedule new clients but can be started."];

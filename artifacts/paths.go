@@ -2,9 +2,12 @@ package artifacts
 
 import (
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 	"time"
+
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 const (
@@ -118,6 +121,40 @@ func GetCSVPath(
 	}
 
 	return ""
+}
+
+// Currently only CLIENT artifacts upload files.
+func GetUploadsFile(client_id, flow_id string) string {
+	return path.Join(
+		"clients", client_id, "flows",
+		flow_id, "uploads")
+}
+
+func GetArtifactSources(
+	config_obj *api_proto.Config,
+	artifact string) []string {
+	result := []string{}
+	repository, err := GetGlobalRepository(config_obj)
+	if err == nil {
+		artifact_obj, pres := repository.Get(artifact)
+		if pres {
+			for _, source := range artifact_obj.Sources {
+				result = append(result, source.Name)
+			}
+		}
+	}
+	return result
+}
+
+// Fully qualified source names are obtained by joining the artifact
+// name to the source name. This splits them back up.
+func SplitFullSourceName(artifact_source string) (artifact string, source string) {
+	parts := strings.Split(artifact_source, "/")
+	if len(parts) == 2 {
+		return parts[0], parts[1]
+	}
+
+	return artifact_source, ""
 }
 
 func QueryNameToArtifactAndSource(query_name string) (

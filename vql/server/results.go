@@ -82,7 +82,8 @@ func (self SourcePlugin) Call(
 		if arg.Mode == "HUNT" {
 			args := vfilter.NewDict().
 				Set("hunt_id", arg.HuntId).
-				Set("artifact", arg.Artifact)
+				Set("artifact", arg.Artifact).
+				Set("source", arg.Source)
 
 			// Just delegate to the hunt_results() plugin.
 			plugin := &HuntResultsPlugin{}

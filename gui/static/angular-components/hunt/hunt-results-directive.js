@@ -41,7 +41,7 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
     if (!angular.isString(huntId)) {
         return;
     }
-    this.artifactNames = this.scope_.hunt.artifacts;
+    this.artifactNames = this.scope_.hunt.artifact_sources;
 
     if (angular.isDefined(this.artifactNames) &&
         this.artifactNames.length > 0) {

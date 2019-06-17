@@ -29,9 +29,11 @@ import (
 	"sort"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -49,7 +51,9 @@ func GetNewHuntId() string {
 	return constants.HUNT_PREFIX + string(result)
 }
 
-func FindCollectedArtifacts(hunt *api_proto.Hunt) {
+func FindCollectedArtifacts(
+	config_obj *api_proto.Config,
+	hunt *api_proto.Hunt) {
 	if hunt == nil || hunt.StartRequest == nil {
 		return
 	}
@@ -60,9 +64,16 @@ func FindCollectedArtifacts(hunt *api_proto.Hunt) {
 		err := ptypes.UnmarshalAny(hunt.StartRequest.Args, flow_args)
 		if err == nil {
 			hunt.Artifacts = flow_args.Artifacts.Names
+			hunt.ArtifactSources = []string{}
+			for _, artifact := range flow_args.Artifacts.Names {
+				for _, source := range artifacts.GetArtifactSources(
+					config_obj, artifact) {
+					hunt.ArtifactSources = append(
+						hunt.ArtifactSources,
+						path.Join(artifact, source))
+				}
+			}
 		}
-	case "FileFinder":
-		hunt.Artifacts = []string{constants.FileFinderArtifactName}
 	}
 }
 
@@ -160,9 +171,6 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 	services.GetHuntDispatcher().ModifyHunt(
 		in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
-			// Make a copy
-			result = &(*hunt_obj)
-
 			// HACK: Velociraptor only knows how to
 			// collect artifacts now. Eventually the whole
 			// concept of a flow will go away but for now
@@ -170,13 +178,16 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 			// are actually collecting - there are not
 			// many possibilities since we have reduced
 			// the number of possible flows significantly.
-			FindCollectedArtifacts(result)
+			FindCollectedArtifacts(config_obj, hunt_obj)
+
+			// Make a copy
+			result = proto.Clone(hunt_obj).(*api_proto.Hunt)
 
 			return nil
 		})
 
 	if result == nil {
-		return nil, errors.New("Not found")
+		return result, errors.New("Not found")
 	}
 
 	return result, nil

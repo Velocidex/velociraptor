@@ -33,6 +33,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -73,6 +74,14 @@ func downloadFlowToZip(
 		}
 
 		_, err = io.Copy(f, reader)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.WithFields(logrus.Fields{
+				"flow_id":     flow_id,
+				"client_id":   client_id,
+				"upload_name": upload_name,
+			}).Error("Download Flow")
+		}
 		return err
 	}
 
@@ -83,25 +92,25 @@ func downloadFlowToZip(
 	// filestore into the zip. We do not need to do any
 	// processing - just give the user the files as they
 	// are. Users can do their own post processing.
-	for _, artifact := range flow_details.Context.Artifacts {
-		file_path := path.Join(
-			"clients", client_id,
-			"artifacts", artifact,
-			path.Base(flow_id)+".csv")
-
-		copier(file_path)
+	for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
+		artifact, source := artifacts.SplitFullSourceName(artifact_source)
+		copier(artifacts.GetCSVPath(
+			client_id, "", path.Base(flow_id),
+			artifact, source, artifacts.MODE_CLIENT))
 	}
 
 	// Get all file uploads
+	if flow_details.Context.TotalUploadedFiles == 0 {
+		return nil
+	}
+
 	// FIXME: Backwards compatibility.
 	for _, upload_name := range flow_details.Context.UploadedFiles {
 		copier(upload_name)
 	}
 
 	// File uploads are stored in their own CSV file.
-	file_path := path.Join(
-		"clients", client_id, "flows",
-		path.Base(flow_id), "uploads")
+	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id))
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -205,7 +214,6 @@ func huntResultDownloadHandler(
 			returnError(w, 404, err.Error())
 			return
 		}
-		flows.FindCollectedArtifacts(hunt_details)
 
 		// TODO: ACL checks.
 		if r.Method == "HEAD" {
@@ -254,14 +262,20 @@ func huntResultDownloadHandler(
 		}
 
 		// Export aggregate CSV files for all clients.
-		for _, artifact := range hunt_details.Artifacts {
+		for _, artifact_source := range hunt_details.ArtifactSources {
+			artifact, source := artifacts.SplitFullSourceName(
+				artifact_source)
+
 			query := "SELECT * FROM hunt_results(" +
-				"hunt_id=HuntId, artifact=Artifact, brief=true)"
+				"hunt_id=HuntId, artifact=Artifact, " +
+				"source=Source, brief=true)"
 			env := vfilter.NewDict().
 				Set("Artifact", artifact).
-				Set("HuntId", hunt_id)
+				Set("HuntId", hunt_id).
+				Set("Source", source)
 
-			f, err := zip_writer.Create("All " + artifact + ".csv")
+			f, err := zip_writer.Create("All " +
+				path.Join(artifact, source) + ".csv")
 			if err != nil {
 				continue
 			}

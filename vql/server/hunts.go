@@ -24,6 +24,7 @@ import (
 	"path"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -104,6 +105,7 @@ func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 
 type HuntResultsPluginArgs struct {
 	Artifact string `vfilter:"required,field=artifact"`
+	Source   string `vfilter:"required,field=source"`
 	HuntId   string `vfilter:"required,field=hunt_id"`
 	Brief    bool   `vfilter:"optional,field=brief"`
 }
@@ -159,28 +161,26 @@ func (self HuntResultsPlugin) Call(
 					continue
 				}
 
-				result_path := path.Join(
-					"clients", participation_row.ClientId,
-					"artifacts", arg.Artifact,
-					path.Base(participation_row.FlowId)+".csv")
-
+				// Read individual flow's
+				// results. Artifacts are by
+				// definition client artifacts - hunts
+				// only run on client artifacts.
+				flow_id := path.Base(participation_row.FlowId)
+				result_path := artifacts.GetCSVPath(
+					participation_row.ClientId, "",
+					flow_id, arg.Artifact, arg.Source,
+					artifacts.MODE_CLIENT)
 				fd, err := file_store_factory.ReadFile(result_path)
 				if err != nil {
 					continue
 				}
 				defer fd.Close()
 
-				stat, err := file_store_factory.StatFile(result_path)
-				if err != nil {
-					continue
-				}
-
 				// Read each CSV file and emit it with
 				// some extra columns for context.
 				for row := range csv.GetCSVReader(fd) {
 					value := row.
-						Set("Timestamp", stat.ModTime().
-							UnixNano()/1000000).
+						Set("FlowId", flow_id).
 						Set("ClientId",
 							participation_row.ClientId).
 						Set("Fqdn",

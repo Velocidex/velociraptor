@@ -46,9 +46,6 @@ const (
 	MAX_MEMORY    = 5 * 1024 * 1024
 	MAX_POST_SIZE = 5 * 1024 * 1024
 
-	// Some special built in artifacts.
-	FileFinderArtifactName = "System.Flow.FileFinder"
-
 	// Filestore paths for artifacts must begin with this prefix.
 	ARTIFACT_DEFINITION_PREFIX = "/artifact_definitions/"
 

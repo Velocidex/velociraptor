@@ -250,16 +250,19 @@ func (self *ApiServer) GetHunt(
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
+	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
 	env := vfilter.NewDict().
 		Set("HuntID", in.HuntId).
-		Set("Artifact", in.Artifact)
+		Set("Artifact", artifact).
+		Set("Source", source)
 
 	// More than 100 results are not very useful in the GUI -
 	// users should just download the csv file for post
 	// processing.
 	result, err := RunVQL(ctx, self.config, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
-			"artifact=Artifact, brief=true) LIMIT 100")
+			"artifact=Artifact, source=Source, "+
+			"brief=true) LIMIT 100")
 	if err != nil {
 		return nil, err
 	}
