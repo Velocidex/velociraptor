@@ -111,9 +111,6 @@ func (self _MapInterfaceAssociativeProtocol) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
 	vfilter.Any, bool) {
 
-	utils.Debug(a)
-	utils.Debug(b)
-
 	key, key_ok := b.(string)
 	map_value := reflect.ValueOf(a)
 	if key_ok && map_value.Kind() == reflect.Map {
