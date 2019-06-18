@@ -27,6 +27,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -97,28 +98,34 @@ type _MapInterfaceAssociativeProtocol struct{}
 
 func (self _MapInterfaceAssociativeProtocol) Applicable(
 	a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(map[string]interface{})
-	_, b_ok := b.(string)
 
-	return a_ok && b_ok
+	if reflect.TypeOf(a).Kind() != reflect.Map {
+		return false
+	}
+
+	_, b_ok := b.(string)
+	return b_ok
 }
 
 func (self _MapInterfaceAssociativeProtocol) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
 	vfilter.Any, bool) {
-	a_map, map_ok := a.(map[string]interface{})
-	key, key_ok := b.(string)
-	if map_ok && key_ok {
-		result, pres := a_map[key]
-		if pres {
-			return result, true
-		}
 
-		// Try a case insensitive match.
-		key = strings.ToLower(key)
-		for k, v := range a_map {
-			if strings.ToLower(k) == key {
-				return v, true
+	utils.Debug(a)
+	utils.Debug(b)
+
+	key, key_ok := b.(string)
+	map_value := reflect.ValueOf(a)
+	if key_ok && map_value.Kind() == reflect.Map {
+		lower_key := strings.ToLower(key)
+		for _, map_key_value := range map_value.MapKeys() {
+			map_key := map_key_value.String()
+			// Try a case insensitive match.
+			if map_key == key || map_key == lower_key {
+				result := map_value.MapIndex(map_key_value)
+				if !utils.IsNil(result) {
+					return result.Interface(), true
+				}
 			}
 		}
 	}
