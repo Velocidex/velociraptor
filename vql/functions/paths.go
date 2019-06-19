@@ -27,7 +27,7 @@ import (
 )
 
 type DirnameArgs struct {
-	Path string `vfilter:"required,field=path"`
+	Path string `vfilter:"required,field=path,doc=Extract directory name of path"`
 }
 
 type DirnameFunction struct{}

@@ -380,8 +380,8 @@ func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {
 }
 
 type ReadKeyValuesArgs struct {
-	Globs    []string `vfilter:"required,field=globs"`
-	Accessor string   `vfilter:"optional,field=accessor"`
+	Globs    []string `vfilter:"required,field=globs,doc=Glob expressions to apply."`
+	Accessor string   `vfilter:"optional,field=accessor,doc=The accessor to use (default raw_reg)."`
 }
 
 type ReadKeyValues struct{}

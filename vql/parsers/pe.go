@@ -28,8 +28,8 @@ import (
 )
 
 type _PEFunctionArgs struct {
-	Filename string `vfilter:"required,field=file"`
-	Accessor string `vfilter:"optional,field=accessor"`
+	Filename string `vfilter:"required,field=file,doc=The PE file to open."`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _PEFunction struct{}

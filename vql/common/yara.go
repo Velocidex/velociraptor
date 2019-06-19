@@ -218,9 +218,9 @@ func (self YaraScanPlugin) Info(
 }
 
 type YaraProcPluginArgs struct {
-	Rules   string `vfilter:"required,field=rules"`
-	Pid     int    `vfilter:"required,field=pid"`
-	Context int    `vfilter:"optional,field=context"`
+	Rules   string `vfilter:"required,field=rules,doc=Yara rules"`
+	Pid     int    `vfilter:"required,field=pid,doc=The pid to scan"`
+	Context int    `vfilter:"optional,field=context,doc=Return this many bytes either side of a hit"`
 }
 
 type YaraProcPlugin struct{}

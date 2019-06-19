@@ -37,13 +37,13 @@ var (
 )
 
 type _SplitRecordParserArgs struct {
-	Filenames            []string `vfilter:"required,field=filenames"`
-	Accessor             string   `vfilter:"optional,field=accessor"`
-	Regex                string   `vfilter:"required,field=regex"`
+	Filenames            []string `vfilter:"required,field=filenames,doc=Files to parse."`
+	Accessor             string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Regex                string   `vfilter:"required,field=regex,doc=The split regular expression (e.g. a comma)"`
 	compiled_regex       *regexp.Regexp
-	Columns              []string `vfilter:"optional,field=columns"`
-	First_row_is_headers bool     `vfilter:"optional,field=first_row_is_headers"`
-	Count                int      `vfilter:"optional,field=count"`
+	Columns              []string `vfilter:"optional,field=columns,doc=If the first row is not the headers, this arg must provide a list of column names for each value."`
+	First_row_is_headers bool     `vfilter:"optional,field=first_row_is_headers,doc=A bool indicating if we should get column names from the first row."`
+	Count                int      `vfilter:"optional,field=count,doc=Only split into this many columns if possible."`
 }
 
 type _SplitRecordParser struct{}

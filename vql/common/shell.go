@@ -32,7 +32,7 @@ import (
 )
 
 type ShellPluginArgs struct {
-	Argv   []string `vfilter:"required,field=argv"`
+	Argv   []string `vfilter:"required,field=argv,doc=Argv to run the command with."`
 	Sep    string   `vfilter:"optional,field=sep,doc=The serparator that will be used to split the stdout into rows."`
 	Length int64    `vfilter:"optional,field=length,doc=Size of buffer to capture output per row."`
 }

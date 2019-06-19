@@ -31,9 +31,9 @@ import (
 )
 
 type ScheduleCollectionFunctionArg struct {
-	ClientId  string      `vfilter:"required,field=client_id"`
-	Artifacts []string    `vfilter:"required,field=artifacts"`
-	Env       vfilter.Any `vfilter:"optional,field=env"`
+	ClientId  string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
+	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Env       vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifacts"`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -100,7 +100,7 @@ func (self ScheduleCollectionFunction) Info(scope *vfilter.Scope, type_map *vfil
 	return &vfilter.FunctionInfo{
 		Name:    "collect",
 		Doc:     "Launch an artifact collection against a client.",
-		ArgType: type_map.AddType(scope, &ScheduleCollectionFunction{}),
+		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
 	}
 }
 

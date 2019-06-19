@@ -34,7 +34,7 @@ import (
 )
 
 type ClientsPluginArgs struct {
-	Search   string `vfilter:"optional,field=search"`
+	Search   string `vfilter:"optional,field=search,doc=Client search string. Can have the following prefixes: 'lable:', 'host:'"`
 	ClientId string `vfilter:"optional,field=client_id"`
 }
 

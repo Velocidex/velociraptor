@@ -30,7 +30,7 @@ import (
 )
 
 type _ExpandPathArgs struct {
-	Path string `vfilter:"required,field=path"`
+	Path string `vfilter:"required,field=path,doc=A path with environment escapes"`
 }
 
 type _ExpandPath struct{}

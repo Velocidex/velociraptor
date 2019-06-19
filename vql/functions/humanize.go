@@ -27,7 +27,7 @@ import (
 )
 
 type HumanizeArgs struct {
-	Bytes int64 `vfilter:"optional,field=bytes"`
+	Bytes int64 `vfilter:"optional,field=bytes,doc=Format bytes with units"`
 }
 
 type HumanizeFunction struct{}

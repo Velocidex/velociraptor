@@ -26,8 +26,8 @@ import (
 )
 
 type IpArgs struct {
-	Netaddr4LE int64 `vfilter:"optional,field=netaddr4_le,docs=A network order IPv4 address (as little endian)."`
-	Netaddr4BE int64 `vfilter:"optional,field=netaddr4_be,docs=A network order IPv4 address (as big endian)."`
+	Netaddr4LE int64 `vfilter:"optional,field=netaddr4_le,doc=A network order IPv4 address (as little endian)."`
+	Netaddr4BE int64 `vfilter:"optional,field=netaddr4_be,doc=A network order IPv4 address (as big endian)."`
 }
 
 type IpFunction struct{}
@@ -65,7 +65,7 @@ func (self IpFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.FunctionInfo{
 		Name:    "ip",
 		Doc:     "Format an IP address.",
-		ArgType: type_map.AddType(scope, &DirnameArgs{}),
+		ArgType: type_map.AddType(scope, &IpArgs{}),
 	}
 }
 

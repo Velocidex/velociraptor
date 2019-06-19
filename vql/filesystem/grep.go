@@ -28,10 +28,10 @@ import (
 )
 
 type GrepFunctionArgs struct {
-	Path     string   `vfilter:"required,field=path"`
-	Accessor string   `vfilter:"optional,field=accessor"`
-	Keywords []string `vfilter:"required,field=keywords"`
-	Context  int      `vfilter:"optional,field=context"`
+	Path     string   `vfilter:"required,field=path,doc=path to open."`
+	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Keywords []string `vfilter:"required,field=keywords,doc=Keywords to search for."`
+	Context  int      `vfilter:"optional,field=context,doc=Extract this many bytes as context around hits."`
 }
 
 type GrepFunction struct{}

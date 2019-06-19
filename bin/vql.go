@@ -19,6 +19,8 @@ package main
 
 import (
 	"fmt"
+	"regexp"
+	"sort"
 	"strings"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -28,7 +30,103 @@ import (
 var (
 	vql_info      = app.Command("vql", "Show information about the VQL subsystem")
 	vql_info_list = vql_info.Command("list", "Print all VQL plugins and functions")
+
+	doc_regex = regexp.MustCompile("doc=(.+)")
 )
+
+func formatPlugins(
+	scope *vfilter.Scope,
+	info *vfilter.ScopeInformation,
+	type_map *vfilter.TypeMap) string {
+	records := make(map[string]string)
+	names := []string{}
+
+	for _, item := range info.Plugins {
+		record := fmt.Sprintf("## %s\n\n%s\n\n", item.Name, item.Doc)
+		arg_desc, pres := type_map.Get(scope, item.ArgType)
+		if pres {
+			record += "Arg | Description | Type\n"
+			record += "----|-------------|-----\n"
+			for k, v := range arg_desc.Fields {
+				target := v.Target
+				if v.Repeated {
+					target = " list of " + target
+				}
+
+				required := ""
+				if strings.Contains(v.Tag, "required") {
+					required = "(required)"
+				}
+				doc := ""
+				matches := doc_regex.FindStringSubmatch(v.Tag)
+				if matches != nil {
+					doc = matches[1]
+				}
+				record += fmt.Sprintf(
+					"%s | %s | %s %s\n", k, doc, target, required)
+			}
+		}
+
+		records[item.Name] = record
+		names = append(names, item.Name)
+	}
+
+	sort.Strings(names)
+
+	result := []string{}
+	for _, name := range names {
+		result = append(result, records[name])
+	}
+
+	return strings.Replace(strings.Join(result, "\n"), "vfilter.Any", "Any", -1)
+}
+
+func formatFunctions(
+	scope *vfilter.Scope,
+	info *vfilter.ScopeInformation,
+	type_map *vfilter.TypeMap) string {
+	records := make(map[string]string)
+	names := []string{}
+
+	for _, item := range info.Functions {
+		record := fmt.Sprintf("## %s\n\n%s\n\n", item.Name, item.Doc)
+		arg_desc, pres := type_map.Get(scope, item.ArgType)
+		if pres {
+			record += "Arg | Description | Type\n"
+			record += "----|-------------|-----\n"
+			for k, v := range arg_desc.Fields {
+				target := v.Target
+				if v.Repeated {
+					target = " list of " + target
+				}
+
+				required := ""
+				if strings.Contains(v.Tag, "required") {
+					required = "(required)"
+				}
+				doc := ""
+				matches := doc_regex.FindStringSubmatch(v.Tag)
+				if matches != nil {
+					doc = matches[1]
+				}
+				record += fmt.Sprintf(
+					"%s | %s | %s %s\n", k, doc, target, required)
+			}
+		}
+
+		records[item.Name] = record
+		names = append(names, item.Name)
+	}
+
+	sort.Strings(names)
+
+	result := []string{}
+	for _, name := range names {
+		result = append(result, records[name])
+	}
+
+	return strings.Replace(strings.Join(result, "\n"), "vfilter.Any", "Any", -1)
+}
 
 func doVQLList() {
 	scope := vql_subsystem.MakeScope()
@@ -37,49 +135,15 @@ func doVQLList() {
 	type_map := vfilter.NewTypeMap()
 	info := scope.Describe(type_map)
 
-	fmt.Println("VQL Functions:")
-	for _, item := range info.Functions {
-		fmt.Printf("%s: %s\n", item.Name, item.Doc)
-		arg_desc, pres := type_map.Get(scope, item.ArgType)
-		if pres {
-			fmt.Printf("  Args:\n")
-			for k, v := range arg_desc.Fields {
-				target := "type " + v.Target
-				if v.Repeated {
-					target = " list of " + target
-				}
+	fmt.Println("VQL Functions")
+	fmt.Println("=============")
+	fmt.Println("")
+	fmt.Println(formatFunctions(scope, info, type_map))
 
-				required := ""
-				if strings.Contains(v.Tag, "required") {
-					required = "(required)"
-				}
-				fmt.Printf("     %s:  %s %s\n", k, target, required)
-			}
-		}
-		fmt.Println()
-	}
-
-	fmt.Println("VQL Plugins:")
-	for _, item := range info.Plugins {
-		fmt.Printf("%s: %s\n", item.Name, item.Doc)
-		arg_desc, pres := type_map.Get(scope, item.ArgType)
-		if pres {
-			fmt.Printf("  Args:\n")
-			for k, v := range arg_desc.Fields {
-				target := "type " + v.Target
-				if v.Repeated {
-					target = " list of " + target
-				}
-
-				required := ""
-				if strings.Contains(v.Tag, "required") {
-					required = "(required)"
-				}
-				fmt.Printf("     %s:  %s %s\n", k, target, required)
-			}
-		}
-		fmt.Println()
-	}
+	fmt.Println("VQL Plugins")
+	fmt.Println("===========")
+	fmt.Println("")
+	fmt.Println(formatPlugins(scope, info, type_map))
 }
 
 func init() {

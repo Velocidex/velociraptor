@@ -33,7 +33,7 @@ import (
 )
 
 type ParseJsonFunctionArg struct {
-	Data string `vfilter:"required,field=data"`
+	Data string `vfilter:"required,field=data,doc=Json encoded string."`
 }
 type ParseJsonFunction struct{}
 
@@ -118,7 +118,8 @@ func (self _MapInterfaceAssociativeProtocol) Associative(
 		for _, map_key_value := range map_value.MapKeys() {
 			map_key := map_key_value.String()
 			// Try a case insensitive match.
-			if map_key == key || map_key == lower_key {
+			if map_key == key ||
+				strings.ToLower(map_key) == lower_key {
 				result := map_value.MapIndex(map_key_value)
 				if !utils.IsNil(result) {
 					return result.Interface(), true

@@ -29,9 +29,9 @@ import (
 )
 
 type _ParseFileWithRegexArgs struct {
-	Filenames       []string `vfilter:"required,field=file"`
-	Regex           []string `vfilter:"required,field=regex"`
-	Accessor        string   `vfilter:"optional,field=accessor"`
+	Filenames       []string `vfilter:"required,field=file,doc=A list of files to parse."`
+	Regex           []string `vfilter:"required,field=regex,doc=A list of regex to apply to the file data."`
+	Accessor        string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	compiled_regexs []*regexp.Regexp
 	capture_vars    []string
 }
@@ -150,8 +150,8 @@ func (self _ParseFileWithRegex) Info(scope *vfilter.Scope, type_map *vfilter.Typ
 }
 
 type _ParseStringWithRegexFunctionArgs struct {
-	String string   `vfilter:"required,field=string"`
-	Regex  []string `vfilter:"required,field=regex"`
+	String string   `vfilter:"required,field=string,doc=A string to parse."`
+	Regex  []string `vfilter:"required,field=regex,doc=The regex to apply."`
 }
 
 type _ParseStringWithRegexFunction struct{}
@@ -218,9 +218,9 @@ func (self _ParseStringWithRegexFunction) Info(scope *vfilter.Scope, type_map *v
 }
 
 type _RegexReplaceArg struct {
-	Source  string `vfilter:"required,field=source"`
-	Replace string `vfilter:"required,field=replace"`
-	Re      string `vfilter:"required,field=re"`
+	Source  string `vfilter:"required,field=source,doc=The source string to replace."`
+	Replace string `vfilter:"required,field=replace,doc=The substitute string."`
+	Re      string `vfilter:"required,field=re,doc=A regex to apply"`
 }
 
 type _RegexReplace struct{}

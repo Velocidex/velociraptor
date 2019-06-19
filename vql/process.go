@@ -66,7 +66,7 @@ func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []
 }
 
 type PslistArgs struct {
-	Pid int64 `vfilter:"optional,field=pid"`
+	Pid int64 `vfilter:"optional,field=pid,doc=A pid to list. If this is provided we are able to operate much faster by only opening a single process."`
 }
 
 func init() {

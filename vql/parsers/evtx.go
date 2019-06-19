@@ -28,8 +28,8 @@ import (
 )
 
 type _ParseEvtxPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename"`
-	Accessor  string   `vfilter:"optional,field=accessor"`
+	Filenames []string `vfilter:"required,field=filename,doc=A list of event log files to parse."`
+	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _ParseEvtxPlugin struct{}

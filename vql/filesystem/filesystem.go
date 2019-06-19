@@ -29,8 +29,8 @@ import (
 )
 
 type GlobPluginArgs struct {
-	Globs    []string `vfilter:"required,field=globs"`
-	Accessor string   `vfilter:"optional,field=accessor"`
+	Globs    []string `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
+	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type GlobPlugin struct{}
@@ -99,10 +99,10 @@ func (self GlobPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 }
 
 type ReadFileArgs struct {
-	Chunk     int      `vfilter:"optional,field=chunk"`
-	MaxLength int      `vfilter:"optional,field=max_length"`
-	Filenames []string `vfilter:"required,field=filenames"`
-	Accessor  string   `vfilter:"optional,field=accessor"`
+	Chunk     int      `vfilter:"optional,field=chunk,doc=length of each chunk to read from the file."`
+	MaxLength int      `vfilter:"optional,field=max_length,doc=Max length of the file to read."`
+	Filenames []string `vfilter:"required,field=filenames,doc=One or more files to open."`
+	Accessor  string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type ReadFileResponse struct {
@@ -210,8 +210,8 @@ func (self ReadFilePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type StatArgs struct {
-	Filename []string `vfilter:"required,field=filename"`
-	Accessor string   `vfilter:"optional,field=accessor"`
+	Filename []string `vfilter:"required,field=filename,doc=One or more files to open."`
+	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type StatPlugin struct{}

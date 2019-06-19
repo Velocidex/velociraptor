@@ -33,8 +33,8 @@ import (
 )
 
 type _OLEVBAArgs struct {
-	Filenames []string `vfilter:"required,field=file"`
-	Accessor  string   `vfilter:"optional,field=accessor"`
+	Filenames []string `vfilter:"required,field=file,doc=A list of filenames to open as OLE files."`
+	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	MaxSize   int64    `vfilter:"optional,field=max_size,doc=Maximum size of file we load into memory."`
 }
 

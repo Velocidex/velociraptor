@@ -41,8 +41,8 @@ type HashResult struct {
 }
 
 type HashFunctionArgs struct {
-	Path     string `vfilter:"required,field=path"`
-	Accessor string `vfilter:"optional,field=accessor"`
+	Path     string `vfilter:"required,field=path,doc=Path to open and hash."`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 // The hash fuction calculates a hash of a file. It may be expensive

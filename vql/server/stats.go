@@ -13,8 +13,8 @@ type rateState struct {
 }
 
 type _RateFunctionArgs struct {
-	X float64 `vfilter:"required,field=x"`
-	Y float64 `vfilter:"required,field=y"`
+	X float64 `vfilter:"required,field=x,doc=The X float"`
+	Y float64 `vfilter:"required,field=y,doc=The Y float"`
 }
 
 type _RateFunction struct{}

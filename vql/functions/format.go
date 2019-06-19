@@ -27,8 +27,8 @@ import (
 )
 
 type FormatArgs struct {
-	Format string      `vfilter:"required,field=format"`
-	Args   vfilter.Any `vfilter:"optional,field=args"`
+	Format string      `vfilter:"required,field=format,doc=Format string to use"`
+	Args   vfilter.Any `vfilter:"optional,field=args,doc=An array of elements to apply into the format string."`
 }
 
 type FormatFunction struct{}

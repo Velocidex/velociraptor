@@ -37,7 +37,7 @@ import (
 )
 
 type AuthenticodeArgs struct {
-	Filename string `vfilter:"required,field=filename"`
+	Filename string `vfilter:"required,field=filename,doc=The filename to parse."`
 }
 
 type AuthenticodeFunction struct{}

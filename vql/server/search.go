@@ -61,12 +61,12 @@ import (
 
 type SearchPluginArgs struct {
 	// This searches for all search terms by approximate match.
-	Query  string `vfilter:"optional,field=query"`
-	Offset uint64 `vfilter:"optional,field=offset"`
-	Limit  uint64 `vfilter:"optional,field=limit"`
+	Query  string `vfilter:"optional,field=query,doc=The query string."`
+	Offset uint64 `vfilter:"optional,field=offset,doc=Skip this many results."`
+	Limit  uint64 `vfilter:"optional,field=limit,doc=Only return limited results"`
 
 	// If this is "key" then we return keys that match.
-	Type string `vfilter:"optional,field=type"`
+	Type string `vfilter:"optional,field=type,doc=The type of search (e.g. 'key')"`
 }
 
 type SearchPlugin struct{}

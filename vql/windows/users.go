@@ -140,7 +140,7 @@ func getUsers(scope *vfilter.Scope,
 }
 
 type LookupSidFunctionArgs struct {
-	Sid string `vfilter:"required,field=sid"`
+	Sid string `vfilter:"required,field=sid,doc=A SID to lookup using LookupAccountSid "`
 }
 
 type LookupSidFunction struct{}

@@ -104,10 +104,10 @@ func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 type HuntResultsPluginArgs struct {
-	Artifact string `vfilter:"required,field=artifact"`
-	Source   string `vfilter:"required,field=source"`
-	HuntId   string `vfilter:"required,field=hunt_id"`
-	Brief    bool   `vfilter:"optional,field=brief"`
+	Artifact string `vfilter:"required,field=artifact,doc=The artifact to retrieve"`
+	Source   string `vfilter:"optional,field=source,doc=An optional source within the artifact."`
+	HuntId   string `vfilter:"required,field=hunt_id,doc=The hunt id to read."`
+	Brief    bool   `vfilter:"optional,field=brief,doc=If set we return less columns."`
 }
 
 type HuntResultsPlugin struct{}
@@ -212,7 +212,7 @@ func (self HuntResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 }
 
 type HuntFlowsPluginArgs struct {
-	HuntId string `vfilter:"required,field=hunt_id"`
+	HuntId string `vfilter:"required,field=hunt_id,doc=The hunt id to inspect."`
 }
 
 type HuntFlowsPlugin struct{}

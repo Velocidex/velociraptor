@@ -28,10 +28,10 @@ import (
 )
 
 type MailPluginArgs struct {
-	To      []string `vfilter:"required,field=to"`
-	CC      []string `vfilter:"optional,field=cc"`
-	Subject string   `vfilter:"optional,field=subject"`
-	Body    string   `vfilter:"required,field=body"`
+	To      []string `vfilter:"required,field=to,doc=Receipient of the mail"`
+	CC      []string `vfilter:"optional,field=cc,doc=A cc for the mail"`
+	Subject string   `vfilter:"optional,field=subject,doc=The subject."`
+	Body    string   `vfilter:"required,field=body,doc=The body of the mail."`
 
 	// How long to wait before sending the next mail. Many mail
 	// servers throttle mails sent too quickly.

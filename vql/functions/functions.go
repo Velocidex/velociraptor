@@ -32,7 +32,7 @@ import (
 )
 
 type _Base64DecodeArgs struct {
-	String string `vfilter:"required,field=string"`
+	String string `vfilter:"required,field=string,doc=A string to decode"`
 }
 
 type _Base64Decode struct{}
@@ -63,7 +63,7 @@ func (self _Base64Decode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type _ToLowerArgs struct {
-	String string `vfilter:"required,field=string"`
+	String string `vfilter:"required,field=string,doc=A string to lower"`
 }
 
 type _ToLower struct{}
@@ -113,7 +113,7 @@ func (self _ToUpper) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 }
 
 type _ToIntArgs struct {
-	String string `vfilter:"required,field=string"`
+	String string `vfilter:"required,field=string,doc=A string to convert to int"`
 }
 
 type _ToInt struct{}

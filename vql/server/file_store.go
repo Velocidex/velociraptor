@@ -27,7 +27,7 @@ import (
 )
 
 type FileStoreArgs struct {
-	VFSPath []string `vfilter:"required,field=path"`
+	VFSPath []string `vfilter:"required,field=path,doc=A VFS path to convert"`
 }
 
 type FileStore struct{}

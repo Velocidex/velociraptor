@@ -39,7 +39,7 @@ import (
 )
 
 type ProcDumpArgs struct {
-	Pid int64 `vfilter:"required,field=pid"`
+	Pid int64 `vfilter:"required,field=pid,doc=The PID to dump out."`
 }
 
 type ProcDumpPlugin struct{}

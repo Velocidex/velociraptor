@@ -162,10 +162,9 @@ type info struct {
 }
 
 type MonitoringPluginArgs struct {
-	ClientId  []string `vfilter:"optional,field=client_id"`
-	Artifact  string   `vfilter:"required,field=artifact"`
-	Source    string   `vfilter:"optional,field=source"`
-	DateRegex string   `vfilter:"optional,field=date_regex"`
+	ClientId []string `vfilter:"optional,field=client_id,doc=A list of client ids to watch. If not provided we watch all clients."`
+	Artifact string   `vfilter:"required,field=artifact,doc=The event artifact name to watch"`
+	Source   string   `vfilter:"optional,field=source,doc=An optional artifact named source"`
 }
 
 // The watch_monitoring plugin watches for new rows written to the

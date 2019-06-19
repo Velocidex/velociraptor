@@ -28,8 +28,8 @@ import (
 )
 
 type ParseCSVPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename"`
-	Accessor  string   `vfilter:"optional,field=accessor"`
+	Filenames []string `vfilter:"required,field=filename,doc=CSV files to open"`
+	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 type ParseCSVPlugin struct{}

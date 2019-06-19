@@ -31,7 +31,7 @@ import (
 )
 
 type PslistArgs struct {
-	Pid int64 `vfilter:"optional,field=pid"`
+	Pid int64 `vfilter:"optional,field=pid,doc=A process ID to list. If not provided list all processes."`
 }
 
 type Win32_Process struct {

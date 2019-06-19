@@ -27,8 +27,8 @@ import (
 )
 
 type _ParseXMLFunctionArgs struct {
-	File     string `vfilter:"required,field=file"`
-	Accessor string `vfilter:"optional,field=accessor"`
+	File     string `vfilter:"required,field=file,doc=XML file to open."`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 type _ParseXMLFunction struct{}
 

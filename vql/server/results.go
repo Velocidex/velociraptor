@@ -35,15 +35,15 @@ import (
 )
 
 type SourcePluginArgs struct {
-	ClientId  string `vfilter:"optional,field=client_id"`
-	DayName   string `vfilter:"optional,field=day_name"`
-	StartTime int64  `vfilter:"optional,field=start_time"`
-	EndTime   int64  `vfilter:"optional,field=end_time"`
-	FlowId    string `vfilter:"optional,field=flow_id"`
-	HuntId    string `vfilter:"optional,field=hunt_id"`
-	Artifact  string `vfilter:"optional,field=artifact"`
-	Source    string `vfilter:"optional,field=source"`
-	Mode      string `vfilter:"optional,field=mode"`
+	ClientId  string `vfilter:"optional,field=client_id,doc=The client id to extract"`
+	DayName   string `vfilter:"optional,field=day_name,doc=Only extract this day's Monitoring logs (deprecated)"`
+	StartTime int64  `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
+	EndTime   int64  `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
+	FlowId    string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
+	HuntId    string `vfilter:"optional,field=hunt_id,doc=Retrieve sources from this hunt (combines all results from all clients)"`
+	Artifact  string `vfilter:"optional,field=artifact,doc=The name of the artifact collection to fetch"`
+	Source    string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
+	Mode      string `vfilter:"optional,field=mode,doc=HUNT or CLIENT mode can be empty"`
 }
 
 type SourcePlugin struct{}

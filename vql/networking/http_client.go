@@ -46,14 +46,14 @@ var (
 )
 
 type _HttpPluginRequest struct {
-	Url     string      `vfilter:"required,field=url"`
-	Params  vfilter.Any `vfilter:"optional,field=params"`
-	Headers vfilter.Any `vfilter:"optional,field=headers"`
-	Method  string      `vfilter:"optional,field=method"`
-	Chunk   int         `vfilter:"optional,field=chunk_size"`
+	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
+	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
+	Headers vfilter.Any `vfilter:"optional,field=headers.doc=A dict of headers to send."`
+	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST)"`
+	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
-	DisableSSLSecurity bool `vfilter:"optional,field=disable_ssl_security"`
+	DisableSSLSecurity bool `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
 }
 
 type _HttpPluginResponse struct {

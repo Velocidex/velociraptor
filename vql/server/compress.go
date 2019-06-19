@@ -29,7 +29,7 @@ import (
 )
 
 type CompressArgs struct {
-	VFSPath []string `vfilter:"required,field=path"`
+	VFSPath []string `vfilter:"required,field=path,doc=A VFS path to compress"`
 }
 
 type Compress struct{}

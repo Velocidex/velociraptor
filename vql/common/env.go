@@ -27,11 +27,11 @@ import (
 )
 
 type EnvPluginArgs struct {
-	Vars []string `vfilter:"optional,field=vars"`
+	Vars []string `vfilter:"optional,field=vars,doc=Extract these variables from the environment and return them one per row"`
 }
 
 type EnvFunctionArgs struct {
-	Var string `vfilter:"required,field=var"`
+	Var string `vfilter:"required,field=var,doc=Extract the var from the environment."`
 }
 
 type EnvFunction struct{}

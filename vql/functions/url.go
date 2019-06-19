@@ -28,12 +28,12 @@ import (
 )
 
 type UrlArgs struct {
-	Scheme   string `vfilter:"optional,field=scheme"`
-	Host     string `vfilter:"optional,field=host"`
-	Path     string `vfilter:"optional,field=path"`
-	Fragment string `vfilter:"optional,field=fragment"`
+	Scheme   string `vfilter:"optional,field=scheme,doc=The scheme to use"`
+	Host     string `vfilter:"optional,field=host,doc=The host component"`
+	Path     string `vfilter:"optional,field=path,doc=The path component"`
+	Fragment string `vfilter:"optional,field=fragment,doc=The fragment"`
 
-	Parse string `vfilter:"optional,field=parse"`
+	Parse string `vfilter:"optional,field=parse,doc=A url to parse"`
 }
 
 type UrlFunction struct{}

@@ -25,7 +25,7 @@ import (
 )
 
 type IntArgs struct {
-	Int vfilter.Any `vfilter:"optional,field=int"`
+	Int vfilter.Any `vfilter:"optional,field=int,doc=The integer to round"`
 }
 
 type IntFunction struct{}

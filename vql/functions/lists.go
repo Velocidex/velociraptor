@@ -79,8 +79,8 @@ func (self ArrayFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type JoinFunctionArgs struct {
-	Array []string `vfilter:"required,field=array"`
-	Sep   string   `vfilter:"optional,field=sep"`
+	Array []string `vfilter:"required,field=array,doc=The array to join"`
+	Sep   string   `vfilter:"optional,field=sep,doc=The separator"`
 }
 
 type JoinFunction struct{}
@@ -105,14 +105,15 @@ func (self *JoinFunction) Call(ctx context.Context,
 
 func (self JoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "join",
-		Doc:  "Join all the args on a separator.",
+		Name:    "join",
+		Doc:     "Join all the args on a separator.",
+		ArgType: type_map.AddType(scope, &JoinFunctionArgs{}),
 	}
 }
 
 type FilterFunctionArgs struct {
-	List  []string `vfilter:"required,field=list"`
-	Regex []string `vfilter:"required,field=regex"`
+	List  []string `vfilter:"required,field=list,doc=A list of items too filter"`
+	Regex []string `vfilter:"required,field=regex,doc=A regex to test each item"`
 }
 type FilterFunction struct{}
 
@@ -150,8 +151,9 @@ func (self *FilterFunction) Call(ctx context.Context,
 
 func (self FilterFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "filter",
-		Doc:  "Filters a strings array by regex.",
+		Name:    "filter",
+		Doc:     "Filters a strings array by regex.",
+		ArgType: type_map.AddType(scope, &FilterFunctionArgs{}),
 	}
 }
 

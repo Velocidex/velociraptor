@@ -43,7 +43,7 @@ func (self ExtendedFileSystemInfo) SerialNumber() string {
 */
 
 type PartitionsArgs struct {
-	All bool `vfilter:"optional,field=all"`
+	All bool `vfilter:"optional,field=all,doc=If specified list all Partitions"`
 }
 
 func init() {

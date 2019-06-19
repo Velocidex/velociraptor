@@ -95,7 +95,7 @@ var (
 )
 
 type _UsersPluginArg struct {
-	File string `vfilter:"optional,field=file"`
+	File string `vfilter:"optional,field=file,doc=The wtmp file to use"`
 }
 
 type _UsersPlugin struct{}

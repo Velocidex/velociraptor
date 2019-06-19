@@ -28,7 +28,7 @@ import (
 var basename_regexp = regexp.MustCompile(`([^/\\]+)$`)
 
 type _BasenameArgs struct {
-	Path string `vfilter:"required,field=path"`
+	Path string `vfilter:"required,field=path,doc=The path to use"`
 }
 
 type _Basename struct{}

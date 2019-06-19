@@ -29,9 +29,9 @@ import (
 // Example: select upload(file=FullPath) from glob(globs="/bin/*")
 
 type UploadFunctionArgs struct {
-	File     string `vfilter:"required,field=file"`
-	Name     string `vfilter:"optional,field=name"`
-	Accessor string `vfilter:"optional,field=accessor"`
+	File     string `vfilter:"required,field=file,doc=The file to upload"`
+	Name     string `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 type UploadFunction struct{}
 
@@ -104,8 +104,8 @@ func (self UploadFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type UploadPluginArgs struct {
-	Files    []string `vfilter:"required,field=files"`
-	Accessor string   `vfilter:"optional,field=accessor"`
+	Files    []string `vfilter:"required,field=files,doc=A list of files to upload"`
+	Accessor string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 type UploadPlugin struct{}
