@@ -1,0 +1,36 @@
+name: Windows.System.CriticalServices
+description: |
+  This artifact returns information about any services which are
+  considered critical.
+
+  The default list contains virus scanners. If the software is not
+  installed at all, it will not be shown.
+
+  ATT&CK: T1089
+
+  ### References:
+  * https://github.com/teoseller/osquery-attck/blob/master/windows_critical_service_status.conf
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: lookupTable
+    default: |
+       ServiceName
+       WinDefend
+       MpsSvc
+       SepMasterService
+       SAVAdminService
+       SavService
+       wscsvc
+       wuauserv
+
+sources:
+     - queries:
+       - LET lookup <= SELECT * FROM parse_csv(filename=lookupTable, accessor='data')
+       - |
+         SELECT Name, DisplayName, Created, State, {
+            SELECT * FROM lookup WHERE Name =~ ServiceName
+         } AS Critical
+         FROM Artifact.Windows.System.Services()
+         WHERE Critical AND State != "Running"
