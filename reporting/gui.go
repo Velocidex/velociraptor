@@ -13,6 +13,7 @@ import (
 	"text/template"
 
 	"github.com/Depado/bfchroma"
+	"github.com/Masterminds/sprig"
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
@@ -300,7 +301,7 @@ func NewGuiTemplateEngine(
 		Messages:           &messages,
 		Data:               make(map[string]*actions_proto.VQLResponse),
 	}
-	template_engine.tmpl = template.New("").Funcs(
+	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
 		template.FuncMap{
 			"Query":     template_engine.Query,
 			"Scope":     template_engine.GetScope,

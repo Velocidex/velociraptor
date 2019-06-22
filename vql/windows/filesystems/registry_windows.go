@@ -25,6 +25,7 @@
 package filesystems
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -147,6 +148,15 @@ type RegValueInfo struct {
 	RegKeyInfo
 	Type  string
 	_size int64
+
+	// A private copy of the value data. This is not made
+	// available to VQL. The data made available to VQL will be
+	// attached to the Data field of the FileInfo struct. While
+	// that can only contain fields smaller than
+	// MAX_EMBEDDED_REG_VALUE, we store the full value in the
+	// _binary_data field. We can then return the buffer for an
+	// Open() call.
+	_binary_data []byte
 }
 
 func (self *RegValueInfo) Sys() interface{} {
@@ -198,9 +208,9 @@ func (self *ValueBuffer) Close() error {
 	return nil
 }
 
-func NewValueBuffer(buf string, stat glob.FileInfo) *ValueBuffer {
+func NewValueBuffer(buf []byte, stat glob.FileInfo) *ValueBuffer {
 	return &ValueBuffer{
-		strings.NewReader(buf),
+		bytes.NewReader(buf),
 		stat,
 	}
 }
@@ -304,15 +314,13 @@ func (self RegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error)
 		return nil, err
 	}
 
-	value, pres := stat.Data().(*vfilter.Dict).Get("value")
-	if pres {
-		value_buf, ok := value.(string)
-		if ok {
-			return NewValueBuffer(value_buf, stat), nil
-		}
+	value_info, ok := stat.(*RegValueInfo)
+	if ok {
+		return NewValueBuffer(value_info._binary_data, stat), nil
 	}
 
-	return NewValueBuffer("", stat), nil
+	// Keys do not have any data.
+	return NewValueBuffer([]byte{}, stat), nil
 }
 
 func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error) {
@@ -436,30 +444,32 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		value_info._data.Set("value", data)
 
 	case registry.BINARY:
-		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = vfilter.NewDict().Set("type", "BINARY")
-			data, _, err := key.GetBinaryValue(value_name)
-			if err != nil {
-				return nil, err
-			}
-
-			value_info._data.Set("value", data)
+		data, _, err := key.GetBinaryValue(value_name)
+		if err != nil {
+			return nil, err
 		}
+
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			value_info._data = vfilter.NewDict().
+				Set("type", "BINARY").
+				Set("value", data)
+		}
+		value_info._binary_data = data
 		value_info.Type = "BINARY"
 
 	case registry.MULTI_SZ:
+		values, _, err := key.GetStringsValue(value_name)
+		if err != nil {
+			return nil, err
+		}
+		value_info._binary_data = []byte(strings.Join(values, "\n"))
+		value_info.Type = "MULTI_SZ"
+
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
 			value_info._data = vfilter.NewDict().
-				Set("type", "MULTI_SZ")
-
-			values, _, err := key.GetStringsValue(value_name)
-			if err != nil {
-				return nil, err
-			}
-
-			value_info._data.Set("value", values)
+				Set("type", "MULTI_SZ").
+				Set("value", values)
 		}
-		value_info.Type = "MULTI_SZ"
 
 	case registry.SZ, registry.EXPAND_SZ:
 		switch value_type {
@@ -469,33 +479,34 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			value_info.Type = "EXPAND_SZ"
 		}
 
+		data, _, err := key.GetStringValue(value_name)
+		if err != nil {
+			return nil, err
+		}
+		value_info._binary_data = []byte(data)
+
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
 			value_info._data = vfilter.NewDict().
-				Set("type", value_info.Type)
-			data, _, err := key.GetStringValue(value_name)
-			if err != nil {
-				return nil, err
-			}
-
-			// We do not expand the key because
-			// this will depend on the agent's own
-			// environment strings.
-			value_info._data.Set("value", data)
+				Set("type", value_info.Type).
+				// We do not expand the value data
+				// because this will depend on the
+				// agent's own environment strings.
+				Set("value", data)
 		}
 
 	default:
+		buf := make([]byte, buf_size)
+		_, _, err := key.GetValue(value_name, buf)
+		if err != nil {
+			return nil, err
+		}
+		value_info._binary_data = buf
 		value_info.Type = fmt.Sprintf("%d", value_type)
+
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
 			value_info._data = vfilter.NewDict().
-				Set("type", value_info.Type)
-
-			buf := make([]byte, buf_size)
-			_, _, err := key.GetValue(value_name, buf)
-			if err != nil {
-				return nil, err
-			}
-
-			value_info._data.Set("value", buf)
+				Set("type", value_info.Type).
+				Set("value", buf)
 		}
 	}
 	return value_info, nil

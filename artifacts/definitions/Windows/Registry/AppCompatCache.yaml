@@ -1,0 +1,20 @@
+name: Windows.Registery.AppCompatCache
+description: |
+  Parses the system's app compatibility cache.
+
+parameters:
+  - name: AppCompatCacheKey
+    default: HKEY_LOCAL_MACHINE/System/CurrentControlSet/Control/Session Manager/AppCompatCache/AppCompatCache
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - |
+        SELECT * FROM foreach(
+          row={
+              SELECT Data FROM read_file(
+                  filenames=AppCompatCacheKey, accessor='reg')
+          }, query={
+              SELECT * FROM appcompatcache(value=Data)
+        }) WHERE epoch < 2000000000

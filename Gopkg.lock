@@ -26,6 +26,30 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:3b10c6fd33854dc41de2cf78b7bae105da94c2789b6fa5b9ac9e593ea43484ac"
+  name = "github.com/Masterminds/goutils"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "41ac8693c5c10a92ea1ff5ac3a7f95646f6123b0"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:55388fd080150b9a072912f97b1f5891eb0b50df43401f8b75fb4273d3fec9fc"
+  name = "github.com/Masterminds/semver"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c7af12943936e8c39859482e61f0574c2fd7fc75"
+  version = "v1.4.2"
+
+[[projects]]
+  digest = "1:ab506cfc00b11d6d406789c15abb0b341e8db076640e3f5255615a7e327398c1"
+  name = "github.com/Masterminds/sprig"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "258b00ffa7318e8b109a141349980ffbd30a35db"
+  version = "v2.20.0"
+
+[[projects]]
   branch = "master"
   digest = "1:f3be0a119925fc5abcf38ee2dad9fa17c2735090b54e503cd8bb8ea93b3d0668"
   name = "github.com/Showmax/go-fqdn"
@@ -275,6 +299,14 @@
   revision = "c34317bd91bf98fab745d77b03933cf8769299fe"
 
 [[projects]]
+  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
+  name = "github.com/google/uuid"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
+  version = "v1.1.1"
+
+[[projects]]
   digest = "1:345ad428d03cc89fa5498d61383d0d7f39afbe8731ca135c0ec92782285121d3"
   name = "github.com/gorilla/schema"
   packages = ["."]
@@ -306,6 +338,22 @@
   pruneopts = "UT"
   revision = "5690be47d614355a22931c129e1075c25a62e9ac"
   version = "v20170619"
+
+[[projects]]
+  digest = "1:f9a5e090336881be43cfc1cf468330c1bdd60abdc9dd194e0b1ab69f4b94dd7c"
+  name = "github.com/huandu/xstrings"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f02667b379e2fb5916c3cda2cf31e0eb885d79f8"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:a0cefd27d12712af4b5018dc7046f245e1e3b5760e2e848c30b171b570708f9b"
+  name = "github.com/imdario/mergo"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7c29201646fa3de8506f701213473dd407f19646"
+  version = "v0.3.7"
 
 [[projects]]
   branch = "master"
@@ -627,7 +675,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ea568c5ebd7e683e4425ad2146c7390cc3cc5be29c5d18dcc8071cf2f2dac493"
+  digest = "1:c437cfccac8def7303f14130849d25a006caf5cf76c07e3bbf0abd487b7fed19"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -640,6 +688,8 @@
     "openpgp/errors",
     "openpgp/packet",
     "openpgp/s2k",
+    "pbkdf2",
+    "scrypt",
     "ssh/terminal",
   ]
   pruneopts = "UT"
@@ -926,6 +976,7 @@
   input-imports = [
     "github.com/AlecAivazis/survey",
     "github.com/Depado/bfchroma",
+    "github.com/Masterminds/sprig",
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
     "github.com/Velocidex/ahocorasick",
