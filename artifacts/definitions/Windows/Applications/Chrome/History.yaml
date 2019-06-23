@@ -1,0 +1,42 @@
+name: Windows.Applications.Chrome.History
+description: |
+  Enumerate the users chrome history.
+
+parameters:
+  - name: historyGlobs
+    default: \AppData\Local\Google\Chrome\User Data\*\History
+  - name: urlSQLQuery
+    default: |
+      SELECT url as visited_url, title, visit_count,
+             typed_count, last_visit_time
+      FROM urls
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: URLs
+    queries:
+      - |
+        /* For each user on the system, search for extension manifests
+           in their home directory. */
+        LET history_files = SELECT * from foreach(
+          row={
+             SELECT Uid, Name AS User, Directory from Artifact.Windows.Sys.Users()
+          },
+          query={
+             SELECT User, FullPath, Mtime from glob(
+               globs=Directory + historyGlobs)
+          })
+
+      - |
+        SELECT * FROM foreach(row=history_files,
+          query={
+            SELECT User, FullPath,
+                   timestamp(epoch=Mtime.Sec) as Mtime,
+                   visited_url,
+                   title, visit_count, typed_count,
+                   timestamp(winfiletime=last_visit_time * 10) as last_visit_time
+            FROM sqlite(
+              file=FullPath,
+              query=urlSQLQuery)
+          })

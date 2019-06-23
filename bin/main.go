@@ -26,6 +26,7 @@ import (
 	"runtime/pprof"
 	"runtime/trace"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
@@ -151,6 +152,7 @@ func main() {
 
 	// Just display everything in UTC.
 	os.Setenv("TZ", "Z")
+	time.Local = time.UTC
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true

@@ -1,0 +1,28 @@
+Queries:
+  - SELECT * FROM sqlite(
+        file=srcDir + "/artifacts/testdata/files/history.sqlite",
+        query="SELECT * FROM urls")
+
+  # Test that parameter interpolations work.
+  - SELECT * FROM sqlite(
+        file=srcDir + "/artifacts/testdata/files/history.sqlite",
+        query="SELECT * FROM urls WHERE url like ?",
+        args='%hunt%')
+
+  - SELECT * FROM sqlite(
+        file=srcDir + "/artifacts/testdata/files/history.sqlite",
+        query="SELECT * FROM urls WHERE typed_count = ? and visit_count = ?",
+        args=[0, 41])
+
+  # Test that we can read sqlite files from accessors - we will copy
+  # to a tempfile and parse that instead. This allows us to access
+  # locked files.
+  - SELECT * FROM foreach(
+      row={
+         SELECT Data from read_file(
+           filenames=srcDir + "/artifacts/testdata/files/history.sqlite")
+      },
+      query={
+         SELECT * FROM sqlite(file=Data, accessor="data",
+           query="SELECT * FROM urls")
+      })

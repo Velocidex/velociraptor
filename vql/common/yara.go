@@ -59,6 +59,7 @@ type YaraScanPluginArgs struct {
 	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
 	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
 	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
+	Key          string   `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
 }
 
 type YaraScanPlugin struct{}
@@ -93,10 +94,12 @@ func (self YaraScanPlugin) Call(
 
 		// Try to get the compiled yara expression from the
 		// scope cache.
-		rule_hash := md5.Sum([]byte(arg.Rules))
-		rule_hash_str := string(rule_hash[:])
+		if arg.Key == "" {
+			rule_hash := md5.Sum([]byte(arg.Rules))
+			arg.Key = string(rule_hash[:])
+		}
 		rules, ok := vql_subsystem.CacheGet(
-			scope, "yara_rule"+rule_hash_str).(*yara.Rules)
+			scope, arg.Key).(*yara.Rules)
 		if !ok {
 			variables := make(map[string]interface{})
 			rules, err = yara.Compile(arg.Rules, variables)
@@ -105,7 +108,7 @@ func (self YaraScanPlugin) Call(
 				return
 			}
 			vql_subsystem.CacheSet(
-				scope, "yara_rule"+rule_hash_str, rules)
+				scope, arg.Key, rules)
 		}
 
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)

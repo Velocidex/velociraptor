@@ -356,6 +356,17 @@
   version = "v0.3.7"
 
 [[projects]]
+  digest = "1:6c41d4f998a03b6604227ccad36edaed6126c397e5d78709ef4814a1145a6757"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx",
+  ]
+  pruneopts = "UT"
+  revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
+  version = "v1.2.0"
+
+[[projects]]
   branch = "master"
   digest = "1:400e113a367b511b9b09ca642ee11d9885485a93838526d697033af334a2fdde"
   name = "github.com/kballard/go-shellquote"
@@ -948,19 +959,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eee1dd171b4f4ccf600ae7e78a3139e3f8adbc56d1af289158e92ed3527069bd"
+  digest = "1:3b1f1d4c84bb9001cfb7a2cff928e05662b43fab4e76fae65acef00cb596273a"
   name = "www.velocidex.com/golang/regparser"
-  packages = ["."]
+  packages = [
+    ".",
+    "appcompatcache",
+  ]
   pruneopts = "UT"
-  revision = "1d9f8c4f306f4d8e0b2a47b0a8167ca3252fdeaf"
+  revision = "c17c489569a758c6afc3898f73be311a920cfd6d"
 
 [[projects]]
   branch = "master"
-  digest = "1:943df6053a051e9bce0d16a1936ffaac4b3b9b74efaea88ae3e71517d498dde9"
+  digest = "1:d407bbde76f51ffe3cd0ad0812557db671be5102677b1816d126e31a2ad275c9"
   name = "www.velocidex.com/golang/vfilter"
   packages = ["."]
   pruneopts = "UT"
-  revision = "4bbfcb8fd8e77a2aaff726fa127c54f75b1832ac"
+  revision = "239150b9c2ab0fdbda668d3a7c2bec18bec25489"
 
 [[projects]]
   branch = "master"
@@ -1008,6 +1022,7 @@
     "github.com/hanwen/go-fuse/fuse",
     "github.com/hanwen/go-fuse/fuse/nodefs",
     "github.com/hanwen/go-fuse/fuse/pathfs",
+    "github.com/jmoiron/sqlx",
     "github.com/lestrrat-go/file-rotatelogs",
     "github.com/magefile/mage/mage",
     "github.com/magefile/mage/mg",
@@ -1065,6 +1080,7 @@
     "www.velocidex.com/golang/go-pe",
     "www.velocidex.com/golang/oleparse",
     "www.velocidex.com/golang/regparser",
+    "www.velocidex.com/golang/regparser/appcompatcache",
     "www.velocidex.com/golang/vfilter",
     "www.velocidex.com/golang/vtypes",
   ]
