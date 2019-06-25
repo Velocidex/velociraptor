@@ -14,14 +14,12 @@ parameters:
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - name: URLs
-    queries:
+  - queries:
       - |
-        /* For each user on the system, search for extension manifests
-           in their home directory. */
         LET history_files = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory from Artifact.Windows.Sys.Users()
+             SELECT Uid, Name AS User, Directory
+             FROM Artifact.Windows.Sys.Users()
           },
           query={
              SELECT User, FullPath, Mtime from glob(

@@ -1,0 +1,49 @@
+name: Windows.Applications.Chrome.Cookies
+description: |
+  Enumerate the users chrome cookies.
+
+  The cookies are typically encrypted by the DPAPI using the user's
+  credentials. Since Velociraptor is typically not running in the user
+  context we can not decrypt these. It may be possible to decrypt the
+  cookies off line.
+
+  The pertinant information from a forensic point of view is the
+  user's Created and LastAccess timestamp and the fact that the user
+  has actually visited the site and obtained a cookie.
+
+parameters:
+  - name: cookieGlobs
+    default: \AppData\Local\Google\Chrome\User Data\*\Cookies
+  - name: cookieSQLQuery
+    default: |
+      SELECT creation_utc, host_key, name, value, path, expires_utc,
+             last_access_utc, encrypted_value
+      FROM cookies
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - |
+        LET cookie_files = SELECT * from foreach(
+          row={
+             SELECT Uid, Name AS User, Directory
+             FROM Artifact.Windows.Sys.Users()
+          },
+          query={
+             SELECT User, FullPath, Mtime from glob(
+               globs=Directory + cookieGlobs)
+          })
+
+      - |
+        SELECT * FROM foreach(row=cookie_files,
+          query={
+            SELECT timestamp(winfiletime=creation_utc * 10) as Created,
+                   timestamp(winfiletime=last_access_utc * 10) as LastAccess,
+                   timestamp(winfiletime=expires_utc * 10) as Expires,
+                   host_key, name, path, value,
+                   base64encode(string=encrypted_value) as EncryptedValue
+            FROM sqlite(
+              file=FullPath,
+              query=cookieSQLQuery)
+          })

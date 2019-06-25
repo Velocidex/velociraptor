@@ -951,6 +951,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:86dfb4505fe365d2750189e0abb86c1913b59bba9a9ba324428a3edef4e8b296"
+  name = "www.velocidex.com/golang/go-prefetch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5eae37f1a9d0899c61b57a3e2390e6537ad29d23"
+
+[[projects]]
+  branch = "master"
   digest = "1:c2ed30a5b615988962a8160c4e234d025794dfe08851ef86696925b78aec0714"
   name = "www.velocidex.com/golang/oleparse"
   packages = ["."]
@@ -959,14 +967,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3b1f1d4c84bb9001cfb7a2cff928e05662b43fab4e76fae65acef00cb596273a"
+  digest = "1:f447468a5577899a55e7e66d8dabceac78774145d5d0811303558c36c465377c"
   name = "www.velocidex.com/golang/regparser"
   packages = [
     ".",
     "appcompatcache",
   ]
   pruneopts = "UT"
-  revision = "c17c489569a758c6afc3898f73be311a920cfd6d"
+  revision = "b02dc43c2500790b1364e5907fce162dae18b8c2"
 
 [[projects]]
   branch = "master"
@@ -1078,6 +1086,7 @@
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/go-pe",
+    "www.velocidex.com/golang/go-prefetch",
     "www.velocidex.com/golang/oleparse",
     "www.velocidex.com/golang/regparser",
     "www.velocidex.com/golang/regparser/appcompatcache",

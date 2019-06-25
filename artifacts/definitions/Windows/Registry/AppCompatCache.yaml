@@ -16,5 +16,5 @@ sources:
               SELECT Data FROM read_file(
                   filenames=AppCompatCacheKey, accessor='reg')
           }, query={
-              SELECT * FROM appcompatcache(value=Data)
+              SELECT name, epoch, time FROM appcompatcache(value=Data)
         }) WHERE epoch < 2000000000

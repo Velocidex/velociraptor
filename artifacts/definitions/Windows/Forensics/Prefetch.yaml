@@ -1,0 +1,29 @@
+name: Windows.Forensics.Prefetch
+description: |
+  Windows keeps a cache of prefetch files. When an executable is run,
+  the system records properties about the executable to make it faster
+  to run next time. By parsing this information we are able to
+  determine when binaries are run in the past. On Windows10 we can see
+  the last 8 execution times.
+
+reference:
+  - https://www.forensicswiki.org/wiki/Prefetch
+
+parameters:
+    - name: prefetchGlobs
+      default: C:\Windows\Prefetch\*.pf
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - |
+        SELECT * FROM foreach(
+          row={
+             SELECT * FROM glob(globs=prefetchGlobs)
+          },
+          query={
+             SELECT Name AS PrefetchFileName,
+                    Executable, FileSize, LastRunTimes
+             FROM prefetch(filename=FullPath)
+          })

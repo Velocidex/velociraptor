@@ -62,6 +62,35 @@ func (self _Base64Decode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	}
 }
 
+type _Base64EncodeArgs struct {
+	String string `vfilter:"required,field=string,doc=A string to decode"`
+}
+
+type _Base64Encode struct{}
+
+func (self _Base64Encode) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &_Base64EncodeArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("base64encode: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	result := base64.StdEncoding.EncodeToString(
+		[]byte(arg.String))
+	return string(result)
+}
+
+func (self _Base64Encode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "base64encode",
+		ArgType: type_map.AddType(scope, &_Base64EncodeArgs{}),
+	}
+}
+
 type _ToLowerArgs struct {
 	String string `vfilter:"required,field=string,doc=A string to lower"`
 }
@@ -233,6 +262,7 @@ func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
+	vql_subsystem.RegisterFunction(&_Base64Encode{})
 	vql_subsystem.RegisterFunction(&_Scope{})
 	vql_subsystem.RegisterFunction(&_ToInt{})
 	vql_subsystem.RegisterFunction(&_ParseFloat{})
