@@ -951,11 +951,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:86dfb4505fe365d2750189e0abb86c1913b59bba9a9ba324428a3edef4e8b296"
+  digest = "1:084ffef90c3bafd518eac24313beeb08c1d79f0d9483920b65365885e8fc17ce"
   name = "www.velocidex.com/golang/go-prefetch"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5eae37f1a9d0899c61b57a3e2390e6537ad29d23"
+  revision = "083dff883c19312f982ba46c051408c6fae526ae"
 
 [[projects]]
   branch = "master"
