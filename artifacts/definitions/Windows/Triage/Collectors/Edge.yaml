@@ -4,16 +4,13 @@ description: |
 
 precondition: SELECT OS From info() where OS = 'windows'
 
+parameters:
+  - name: triageTable
+    default: |
+      Type,Accessor,Glob
+      Edge folder,ntfs,C:\Users\*\AppData\Local\Packages\Microsoft.MicrosoftEdge_*\**
+      WebcacheV01.dat,ntfs,C:\Users\*\AppData\Local\Microsoft\Windows\WebCache\**
+
 sources:
   - queries:
-      - |
-        SELECT * FROM chain(
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Edge folder",
-               path="C:\\Users\\*\\AppData\\Local\\Packages\\Microsoft.MicrosoftEdge_*\\**")
-          },
-          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="WebcacheV01.dat",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\WebCache\\**")
-          }
-        )
+      - SELECT * FROM Artifact.Triage.Collection.UploadTable(triageTable=triageTable)

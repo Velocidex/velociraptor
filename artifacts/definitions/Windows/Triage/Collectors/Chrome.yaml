@@ -5,64 +5,38 @@ description: |
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
-  - name: baseLocations
-    description: Globs for different possible locations of firefox profiles.
-    default: C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\
+  - name: triageTable
+    default: |
+      Type,Accessor,Glob
+      Chrome Bookmarks,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Bookmarks*
+      Chrome Bookmarks,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Bookmarks*
+      Chrome Bookmarks,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Bookmarks*
+      Chrome Bookmarks,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Bookmarks*
+      Chrome Cookies,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Cookies*
+      Chrome Cookies,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Cookies*
+      Chrome Current Session,ntfs,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Current Session
+      Chrome Current Session,ntfs,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Current Session
+      Chrome Current Tab,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Current Tab
+      Chrome Current Tab,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Current Tab
+      Chrome Favicons,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Favicons*
+      Chrome Favicons,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Favicons*
+      Chrome History,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\History*
+      Chrome History,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\History*
+      Chrome Last Session,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Last Session
+      Chrome Last Session,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Last Session
+      Chrome Last Tabs,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Last Tabs
+      Chrome Last Tabs,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Last Tabs
+      Chrome Preferences,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Preferences
+      Chrome Preferences,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Preferences
+      Chrome Shortcuts,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Shortcuts*
+      Chrome Shortcuts,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Shortcuts*
+      Chrome Top Sites,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Top Sites*
+      Chrome Top Sites,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Top Sites
+      Chrome Visited Links,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Visited Links
+      Chrome Visited Links,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Visited Links
+      Chrome Web Data,file,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Web Data*
+      Chrome Web Data,file,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Web Data*
 
 sources:
   - queries:
-      - |
-        SELECT * FROM chain(
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome bookmarks",
-               path=split(string=baseLocations, sep=",") + "Bookmarks*")
-          },
-          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Cookies",
-               path=split(string=baseLocations, sep=",") + "Cookies*")
-          },
-          a3={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Current Session",
-               path=split(string=baseLocations, sep=",") + "Current Session")
-          },
-          a4={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Current Tabs",
-               path=split(string=baseLocations, sep=",") + "Current Tabs")
-          },
-          a5={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Favicons",
-               path=split(string=baseLocations, sep=",") + "Favicons*")
-          },
-          a6={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome History",
-               path=split(string=baseLocations, sep=",") + "History*")
-          },
-          a7={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Last Session",
-               path=split(string=baseLocations, sep=",") + "Last Session")
-          },
-          a8={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Last Tabs",
-               path=split(string=baseLocations, sep=",") + "Last Tabs")
-          },
-          a9={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Preferences",
-               path=split(string=baseLocations, sep=",") + "Preferences")
-          },
-          b1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Shortcuts",
-               path=split(string=baseLocations, sep=",") + "Shortcuts*")
-          },
-          b2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Top Sites",
-               path=split(string=baseLocations, sep=",") + "Top Sites*")
-          },
-          b3={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Visited Links",
-               path=split(string=baseLocations, sep=",") + "Visited Links")
-          },
-          b4={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Chrome Web Data",
-               path=split(string=baseLocations, sep=",") + "Web Data*")
-          }
-        )
+      - SELECT * FROM Artifact.Triage.Collection.UploadTable(triageTable=triageTable)

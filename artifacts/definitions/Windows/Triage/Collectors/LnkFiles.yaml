@@ -2,8 +2,6 @@ name: Windows.Triage.Collectors.LnkFiles
 description: |
   Lnk files and jump lists.
 
-  {{ Query "SELECT * FROM Rows" }}
-
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:

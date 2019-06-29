@@ -24,6 +24,7 @@ sources:
           },
           query={
              SELECT Name AS PrefetchFileName,
-                    Executable, FileSize, LastRunTimes
+                    Executable, FileSize, LastRunTimes,
+                    LastRunTimes.Unix AS LastExecutionTS
              FROM prefetch(filename=FullPath)
           })

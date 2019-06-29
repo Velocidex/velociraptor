@@ -4,73 +4,27 @@ description: |
 
 precondition: SELECT OS From info() where OS = 'windows'
 
+parameters:
+  - name: triageTable
+    default: |
+      Type,Accessor,Glob
+      Index.dat History,file,C:\Documents and Settings\*\Local Settings\History\History.IE5\index.dat
+      Index.dat History,file,C:\Documents and Settings\*\Local Settings\History\History.IE5\*\index.dat
+      Index.dat temp internet files,file,C:\Documents and Settings\*\Local Settings\Temporary Internet Files\Content.IE5\index.dat
+      Index.dat cookies,file,C:\Documents and Settings\*\Cookies\index.dat
+      Index.dat UserData,file,C:\Documents and Settings\*\Application Data\Microsoft\Internet Explorer\UserData\index.dat
+      Index.dat Office XP,file,C:\Documents and Settings\*\Application Data\Microsoft\Office\Recent\index.dat
+      Index.dat Office,file,C:\Users\*\AppData\Roaming\Microsoft\Office\Recent\index.dat
+      Local Internet Explorer folder,ntfs,C:\Users\*\AppData\Local\Microsoft\Internet Explorer\**
+      Roaming Internet Explorer folder,file,C:\Users\*\AppData\Roaming\Microsoft\Internet Explorer\**
+      IE 9/10 History,file,C:\Users\*\AppData\Local\Microsoft\Windows\History\**
+      IE 9/10 Cache,file,C:\Users\*\AppData\Local\Microsoft\Windows\Temporary Internet Files\**
+      IE 9/10 Cookies,file,C:\Users\*\AppData\Local\Microsoft\Windows\Cookies\**
+      IE 9/10 Download History,file,C:\Users\*\AppData\Local\Microsoft\Windows\IEDownloadHistory\**
+      IE 11 Metadata,ntfs,C:\Users\*\AppData\Local\Microsoft\Windows\WebCache\**
+      IE 11 Cache,ntfs,C:\Users\*\AppData\Local\Microsoft\Windows\INetCache\**
+      IE 11 Cookies,file,C:\Users\*\AppData\Local\Microsoft\Windows\INetCookies\**
+
 sources:
   - queries:
-      - |
-        SELECT * FROM chain(
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat History",
-               path=[
-                 "C:\\Documents and Settings\\*\\Local Settings\\History\\History.IE5\\index.dat",
-                 "C:\\Documents and Settings\\*\\Local Settings\\History\\History.IE5\\*\\index.dat"
-               ])
-          },
-          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat temp internet files",
-               path="C:\\Documents and Settings\\*\\Local Settings\\Temporary Internet Files\\Content.IE5\\index.dat")
-          },
-          a3={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat cookies",
-               path="C:\\Documents and Settings\\*\\Cookies\\index.dat")
-          },
-          a4={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat UserData",
-               path="C:\\Documents and Settings\\*\\Application Data\\Microsoft\\Internet Explorer\\UserData\\index.dat")
-          },
-          a5={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat Office XP",
-               path="C:\\Documents and Settings\\*\\Application Data\\Microsoft\\Office\\Recent\\index.dat")
-          },
-          a6={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Index.dat Office",
-               path="C:\\Users\\*\\AppData\\Roaming\\Microsoft\\Office\\Recent\\index.dat")
-          },
-          a7={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Local Internet Explorer folder",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Internet Explorer\\**")
-          },
-          a8={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Roaming Internet Explorer folder",
-               path="C:\\Users\\*\\AppData\\Roaming\\Microsoft\\Internet Explorer\\**")
-          },
-          a9={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 9/10 History",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\History\\**")
-          },
-          b1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 9/10 Cache",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\Temporary Internet Files\\**")
-          },
-          b2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 9/10 Cookies",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\Cookies\\**")
-          },
-          b3={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 9/10 Download History",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\IEDownloadHistory\\**")
-          },
-          b4={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 11 Metadata",
-               accessor="ntfs",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\WebCache\\**")
-          },
-          b5={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 11 Cache",
-               accessor="ntfs",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\INetCache\\**")
-          },
-          b6={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="IE 11 Cookies",
-               path="C:\\Users\\*\\AppData\\Local\\Microsoft\\Windows\\INetCookies\\**")
-          }
-        )
+      - SELECT * FROM Artifact.Triage.Collection.UploadTable(triageTable=triageTable)

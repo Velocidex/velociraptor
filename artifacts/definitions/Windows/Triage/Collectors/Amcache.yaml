@@ -2,17 +2,13 @@ name: Windows.Triage.Collectors.Amcache
 
 precondition: SELECT OS From info() where OS = 'windows'
 
+parameters:
+  - name: triageTable
+    default: |
+      Type,Accessor,Glob
+      Amcache,ntfs,C:\Windows\AppCompat\Programs\Amcache.hve
+      Amcache transaction files,ntfs,C:\Windows\AppCompat\Programs\Amcache.hve.LOG*
+
 sources:
   - queries:
-      - |
-        SELECT * FROM chain(
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Amcache",
-               accessor="ntfs",
-               path="C:\\Windows\\AppCompat\\Programs\\Amcache.hve")
-          },
-          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="Amcache transaction files",
-               accessor="ntfs",
-               path="C:\\Windows\\AppCompat\\Programs\\Amcache.hve.LOG*")
-          })
+      - SELECT * FROM Artifact.Triage.Collection.UploadTable(triageTable=triageTable)

@@ -12,7 +12,7 @@ reference:
 
 parameters:
     - name: bamKeys
-      default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*
+      default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*\*,HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\*\*
 
 sources:
   - precondition:
@@ -22,10 +22,12 @@ sources:
         LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
       - |
         SELECT basename(path=dirname(path=FullPath)) as SID, {
-            SELECT Name FROM users WHERE UUID = basename(path=dirname(path=FullPath))
+            SELECT Name FROM users
+            WHERE UUID = basename(path=dirname(path=FullPath))
           } As UserName,
           Name as Binary,
           timestamp(winfiletime=binary_parse(
-          string=Data.value, target="int64").AsInteger) as Bam_time
-        FROM glob(globs=bamKeys + "\\*", accessor="reg")
+               string=Data.value,
+               target="int64").AsInteger) as Bam_time
+        FROM glob(globs=split(string=bamKeys, sep=","), accessor="reg")
         WHERE Data.type = "BINARY"

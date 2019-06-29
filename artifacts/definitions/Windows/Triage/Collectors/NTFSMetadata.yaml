@@ -1,8 +1,9 @@
 name: Windows.Triage.Collectors.NTFSMetadata
-description: |
-  {{ Query "SELECT * FROM Rows" }}
 
 precondition: SELECT OS From info() where OS = 'windows'
+
+reference:
+  - https://github.com/EricZimmerman/KapeFiles
 
 sources:
   - name: NTFS Metadata Files

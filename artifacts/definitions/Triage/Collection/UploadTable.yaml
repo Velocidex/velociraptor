@@ -1,0 +1,34 @@
+name: Triage.Collection.UploadTable
+description: |
+  A Generic uploader used by triaging artifacts. This is similar to
+  `Triage.Collection.Upload` but uses a CSV table to drive it.
+
+parameters:
+  - name: triageTable
+    description: "A CSV table controlling upload. Must have the headers: Type, Accessor, Glob."
+    default: |
+      Type,Accessor,Glob
+
+sources:
+  - queries:
+      - |
+        LET results = SELECT FullPath, Size,
+               timestamp(epoch=Mtime.Sec) As Modifed,
+               Type, {
+                 SELECT * FROM upload(files=FullPath, accessor=Accessor)
+               } AS FileDetails
+        FROM glob(globs=split(string=Glob, sep=","), accessor=Accessor)
+        WHERE NOT IsDir
+
+      - |
+        SELECT * FROM foreach(
+         row={
+           SELECT * FROM parse_csv(filename=triageTable, accessor='data')
+         },
+         query={
+           SELECT FullPath, Size, Modifed, Type,
+               FileDetails.Path AS ZipPath,
+               FileDetails.Md5 as Md5,
+               FileDetails.Sha256 as SHA256
+          FROM results
+        })

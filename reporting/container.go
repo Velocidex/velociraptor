@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -122,7 +121,17 @@ func (self *Container) Upload(scope *vfilter.Scope,
 		store_as_name = filename
 	}
 
-	sanitized_name := path.Join(accessor, strings.TrimLeft(store_as_name, "/\\"))
+	// Normalize and clean up the path so the zip file is more
+	// usable by fragile zip programs like Windows explorer.
+	components := []string{accessor}
+	for _, component := range utils.SplitComponents(store_as_name) {
+		if component == "." || component == ".." {
+			continue
+		}
+		components = append(components,
+			string(datastore.SanitizeString(component)))
+	}
+	sanitized_name := path.Join(components...)
 	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
 		return nil, err

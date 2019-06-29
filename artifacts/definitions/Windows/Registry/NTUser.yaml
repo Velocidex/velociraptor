@@ -16,9 +16,23 @@ description: |
   This artifact is designed to be reused by other artifacts that need
   to access user data.
 
+  {{% notice note %}}
+
+    Any artifacts that look into the HKEY_USERS registry hive should
+    be using the `Windows.Registry.NTUser` artifact instead of
+    accessing the hive via the API. The API only makes the currently
+    logged in users available in that hive and so if we rely on the
+    windows API we will likely miss any settings for users not
+    currently logged on.
+
+  {{% /notice }}
+
+precondition: SELECT OS From info() where OS = 'windows'
+
 parameters:
  - name: KeyGlob
    default: Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\**
+
  - name: UserHomes
    default: C:\Users\*\NTUSER.DAT
 

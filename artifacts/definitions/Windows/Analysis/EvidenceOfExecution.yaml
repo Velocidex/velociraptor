@@ -1,0 +1,28 @@
+name: Windows.Analysis.EvidenceOfExecution
+description: |
+  In many investigations it is useful to find evidence of program execution.
+
+  This artifact combines the findings of several other collectors into
+  an overview of all program execution artifacts. The associated
+  report walks the user through the analysis of the findings.
+
+sources:
+  - name: UserAssist
+    queries:
+      - SELECT * FROM Artifact.Windows.Registry.UserAssist()
+
+  - name: Timeline
+    queries:
+      - SELECT * FROM Artifact.Windows.Forensics.Timeline()
+
+  - name: Recent Apps
+    queries:
+      - SELECT * FROM Artifact.Windows.Forensics.RecentApps()
+
+  - name: ShimCache
+    queries:
+      - SELECT * FROM Artifact.Windows.Registery.AppCompatCache()
+
+  - name: Prefetch
+    queries:
+      - SELECT * FROM Artifact.Windows.Forensics.Prefetch()
