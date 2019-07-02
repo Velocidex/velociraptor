@@ -23,7 +23,7 @@ parameters:
 sources:
   - queries:
       - |
-        LET file_scan = SELECT File, Rule, Strings, now() AS Timestamp,
+        LET file_scan = SELECT File, Rule, String, now() AS Timestamp,
                Name, ServiceType
         FROM yara(rules=yaraRule, files=PathName)
         WHERE Rule

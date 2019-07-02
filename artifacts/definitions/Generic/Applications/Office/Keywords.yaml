@@ -61,11 +61,11 @@ sources:
                OfficeMtime,
                OfficeSize,
                File.ModTime as InternalMtime,
-               Strings.HexData as HexContext
+               String.HexData as HexContext
          FROM foreach(
            row=office_docs,
            query={
-              SELECT File, Strings, OfficePath,
+              SELECT File, String, OfficePath,
                      OfficeMtime, OfficeSize
               FROM yara(
                  rules=yaraRule,

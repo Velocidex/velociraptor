@@ -45,7 +45,7 @@ type YaraResult struct {
 	Rule     string
 	Meta     map[string]interface{}
 	Tags     []string
-	Strings  []*YaraHit
+	String   *YaraHit
 	File     os.FileInfo
 	FileName string
 }
@@ -56,7 +56,7 @@ type YaraScanPluginArgs struct {
 	Accessor     string   `vfilter:"optional,field=accessor,doc=Accessor (e.g. NTFS)"`
 	Context      int      `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
 	Start        int64    `vfilter:"optional,field=start,doc=The start offset to scan"`
-	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	End          int64    `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
 	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
 	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
 	Key          string   `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
@@ -129,7 +129,7 @@ func (self YaraScanPlugin) Call(
 				continue
 			}
 			f.Seek(arg.Start, 0)
-			base_offset := uint64(arg.Start)
+			base_offset := arg.Start
 			for {
 				n, _ := f.Read(buf)
 				if n == 0 {
@@ -150,14 +150,6 @@ func (self YaraScanPlugin) Call(
 					}
 
 					stat, _ := f.Stat()
-					res := &YaraResult{
-						Rule:     rule,
-						Tags:     match.Tags,
-						Meta:     match.Meta,
-						File:     stat,
-						FileName: filename,
-					}
-
 					for _, match_string := range match.Strings {
 						start := int(match_string.Offset) -
 							arg.Context
@@ -176,25 +168,31 @@ func (self YaraScanPlugin) Call(
 						data := make([]byte, end-start)
 						copy(data, buf[start:end])
 
-						res.Strings = append(
-							res.Strings, &YaraHit{
+						res := &YaraResult{
+							Rule:     rule,
+							Tags:     match.Tags,
+							Meta:     match.Meta,
+							File:     stat,
+							FileName: filename,
+							String: &YaraHit{
 								Name: match_string.Name,
 								Offset: match_string.Offset +
-									base_offset,
+									uint64(base_offset),
 								Data: data,
 								HexData: strings.Split(
 									hex.Dump(data), "\n"),
-							})
+							},
+						}
+						output_chan <- res
+						number_of_hits += 1
+						if number_of_hits > arg.NumberOfHits {
+							f.Close()
+							continue scan_file
+						}
 					}
-					number_of_hits += 1
-					if number_of_hits > arg.NumberOfHits {
-						f.Close()
-						continue scan_file
-					}
-					output_chan <- res
 				}
 
-				base_offset += uint64(n)
+				base_offset += int64(n)
 				if base_offset > arg.End {
 					break
 				}

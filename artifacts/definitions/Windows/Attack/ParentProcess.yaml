@@ -1,4 +1,4 @@
-name: Windows.Attack.ParentProcess1
+name: Windows.Attack.ParentProcess
 description: |
   Maps the Mitre Att&ck framework process executions into artifacts.
 

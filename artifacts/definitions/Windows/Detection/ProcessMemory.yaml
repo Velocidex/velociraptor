@@ -30,7 +30,7 @@ sources:
         LET hits = SELECT * FROM foreach(
           row=processes,
           query={
-             SELECT ProcessName, CommandLine, Pid, Strings.Offset as Offsets
+             SELECT ProcessName, CommandLine, Pid, String.Offset as Offsets
              FROM proc_yara(rules=yaraRule, pid=Pid)
           })
 

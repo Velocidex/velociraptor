@@ -988,6 +988,14 @@ table.grr_flot_graph {
     height: -webkit-fill-available;
     height: -moz-available;
     height: fill-available;
+    height: calc(100% - 90px);
+    display: fixed;
+    width: calc(100%-85px);
+}
+
+div.container-fluid.dashboard {
+    height: 100%;
+    display: flex;
 }
 
 .table-loading {
@@ -1158,6 +1166,7 @@ div.artifact-view-table {
     overflow-x: hidden;
     border: 1px solid #dddddd;
     border-top: none;
+    height: 90%;
 }
 
 body {
