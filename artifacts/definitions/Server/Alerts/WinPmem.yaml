@@ -1,0 +1,34 @@
+name: Server.Alerts.WinPmem
+description: |
+   Send an email if the pmem service has been installed on any of the
+   endpoints.
+
+   Note this requires that the Windows.Event.ServiceCreation
+   monitoring artifact be collected from clients.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: EmailAddress
+    default: admin@example.com
+
+sources:
+  - queries:
+      - |
+        SELECT * FROM foreach(
+          row={
+            SELECT * from watch_monitoring(
+              artifact='Windows.Events.ServiceCreation')
+            WHERE ServiceName =~ 'pmem'
+          },
+          query={
+            SELECT * FROM mail(
+              to=EmailAddress,
+              subject='Pmem launched on host',
+              period=60,
+              body=format(
+                 format="WinPmem execution detected at %s for client %v",
+                 args=[Timestamp, ClientId]
+              )
+          )
+        })

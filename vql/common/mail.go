@@ -106,7 +106,9 @@ func (self MailPlugin) Call(
 		err = d.DialAndSend(m)
 		if err != nil {
 			scope.Log("mail: %v", err)
-			return
+			// Failed to send the mail but we should emit
+			// the row anyway so it gets logged in the
+			// artifact CSV file.
 		}
 
 		output_chan <- arg

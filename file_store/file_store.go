@@ -31,6 +31,13 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+const (
+	// On windows all file paths must be prefixed by this to
+	// support long paths.
+	WINDOWS_LFN_PREFIX = "\\\\?\\"
 )
 
 type WriteSeekCloser interface {
@@ -71,10 +78,7 @@ type DirectoryFileStore struct {
 
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	[]os.FileInfo, error) {
-	file_path, err := self.FilenameToFileStorePath(dirname)
-	if err != nil {
-		return nil, err
-	}
+	file_path := self.FilenameToFileStorePath(dirname)
 	files, err := ioutil.ReadDir(file_path)
 	if err != nil {
 		return nil, err
@@ -104,11 +108,7 @@ func getCompressed(filename string) (ReadSeekCloser, error) {
 }
 
 func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
-	file_path, err := self.FilenameToFileStorePath(filename)
-	if err != nil {
-		return nil, err
-	}
-
+	file_path := self.FilenameToFileStorePath(filename)
 	if strings.HasSuffix(".gz", file_path) {
 		return getCompressed(file_path)
 	}
@@ -125,10 +125,7 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 }
 
 func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {
-	file_path, err := self.FilenameToFileStorePath(filename)
-	if err != nil {
-		return nil, err
-	}
+	file_path := self.FilenameToFileStorePath(filename)
 	file, err := os.Stat(file_path)
 	if err != nil {
 		return nil, err
@@ -138,12 +135,8 @@ func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, e
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
-	file_path, err := self.FilenameToFileStorePath(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	err = os.MkdirAll(filepath.Dir(file_path), 0700)
+	file_path := self.FilenameToFileStorePath(filename)
+	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
 		logging.GetLogger(self.config_obj,
 			&logging.FrontendComponent).Error(
@@ -162,72 +155,58 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 }
 
 func (self *DirectoryFileStore) Delete(filename string) error {
-	file_path, err := self.FilenameToFileStorePath(filename)
-	if err != nil {
-		return err
-	}
-
+	file_path := self.FilenameToFileStorePath(filename)
 	return os.Remove(file_path)
 }
 
-func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) (
-	string, error) {
-	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return "", errors.New("no configured file store directory")
-	}
-
+// In the below:
+// Filename: is an abstract filename to be represented in the file store.
+// FileStorePath: An actual path to store the file on the filesystem.
+//
+// On windows, the FileStorePath always includes the LFN prefix.
+func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string {
 	components := []string{self.config_obj.Datastore.FilestoreDirectory}
-	filename = strings.Replace(filename, "\\", "/", -1)
-
-	for idx, component := range strings.Split(filename, "/") {
-		if idx == 0 && component == "aff4:" {
-			continue
-		}
-
+	for _, component := range utils.SplitComponents(filename) {
 		components = append(components,
 			string(datastore.SanitizeString(component)))
 	}
 
-	return filepath.Join(components...), nil
+	result := filepath.Join(components...)
+	if runtime.GOOS == "windows" {
+		return WINDOWS_LFN_PREFIX + result
+	}
+	return result
 }
 
 func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 	string, error) {
-	if self.config_obj.Datastore.FilestoreDirectory == "" {
-		return "", errors.New("no configured file store directory")
+
+	if runtime.GOOS == "windows" {
+		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
 	}
 
-	if !strings.HasPrefix(filename, self.config_obj.Datastore.FilestoreDirectory) {
+	if !strings.HasPrefix(
+		filename, self.config_obj.Datastore.FilestoreDirectory) {
 		return "", errors.New("not a file store directory")
 	}
 
+	filename = strings.TrimPrefix(filename,
+		self.config_obj.Datastore.FilestoreDirectory)
+
 	components := []string{}
 	for _, component := range strings.Split(
-		strings.TrimPrefix(
-			filename, self.config_obj.Datastore.FilestoreDirectory),
+		filename,
 		string(os.PathSeparator)) {
 		components = append(components,
 			string(datastore.UnsanitizeComponent(component)))
 	}
 
 	result := filepath.Join(components...)
-
-	// This relies on the filepath starting with a drive letter
-	// and having \ as path separators. Main's
-	// validateServerConfig() ensures this is the case.
-	if runtime.GOOS == "windows" {
-		return "\\\\?\\" + result, nil
-	}
-
 	return result, nil
 }
 
 func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
-	path, err := self.FilenameToFileStorePath(root)
-	if err != nil {
-		return err
-	}
-
+	path := self.FilenameToFileStorePath(root)
 	return filepath.Walk(path,
 		func(path string, info os.FileInfo, err error) error {
 			filestore_path, _ := self.FileStorePathToFilename(path)

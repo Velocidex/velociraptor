@@ -52,11 +52,9 @@ func (self *FileStore) Call(ctx context.Context,
 	result := []string{}
 	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, path := range arg.VFSPath {
-		file_path, err := file_store_factory.(*file_store.DirectoryFileStore).
+		file_path := file_store_factory.(*file_store.DirectoryFileStore).
 			FilenameToFileStorePath(path)
-		if err == nil {
-			result = append(result, file_path)
-		}
+		result = append(result, file_path)
 	}
 
 	return result
