@@ -19,6 +19,7 @@ sources:
     queries:
       - |
         SELECT Key.Name as Name,
+               timestamp(epoch=Key.Mtime.Sec) AS MTime,
                DisplayName,
                DisplayVersion,
                InstallLocation,
@@ -27,4 +28,5 @@ sources:
                Publisher,
                UninstallString,
                InstallDate
-        FROM read_reg_key(globs=split(string=programKeys, sep=',[\\s]*'))
+        FROM read_reg_key(globs=split(string=programKeys, sep=',[\\s]*'),
+                          accessor="reg")

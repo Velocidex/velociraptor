@@ -24,6 +24,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -102,7 +103,8 @@ func (self YaraScanPlugin) Call(
 			scope, arg.Key).(*yara.Rules)
 		if !ok {
 			variables := make(map[string]interface{})
-			rules, err = yara.Compile(arg.Rules, variables)
+			generated_rules := RuleGenerator(arg.Rules)
+			rules, err = yara.Compile(generated_rules, variables)
 			if err != nil {
 				scope.Log("Failed to initialize YARA compiler: %s", err)
 				return
@@ -275,6 +277,37 @@ func (self YaraProcPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+// Provide a shortcut way to define common rules.
+func RuleGenerator(rule string) string {
+	rule = strings.TrimSpace(rule)
+
+	// Just a normal yara rule
+	if strings.HasPrefix(rule, "rule") {
+		return rule
+	}
+
+	tmp := strings.SplitN(rule, ":", 2)
+	if len(tmp) != 2 {
+		return rule
+	}
+	method, data := tmp[0], tmp[1]
+	switch method {
+	case "wide", "wide ascii", "wide nocase", "wide nocase ascii":
+		string_clause := ""
+		for _, item := range strings.Split(data, ",") {
+			item = strings.TrimSpace(item)
+			string_clause += fmt.Sprintf(
+				" $ = \"%s\" %s\n", item, method)
+		}
+
+		return fmt.Sprintf(
+			"rule X { strings: %s condition: any of them }",
+			string_clause)
+	}
+
+	return rule
 }
 
 func init() {

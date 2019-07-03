@@ -381,7 +381,7 @@ func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {
 
 type ReadKeyValuesArgs struct {
 	Globs    []string `vfilter:"required,field=globs,doc=Glob expressions to apply."`
-	Accessor string   `vfilter:"optional,field=accessor,doc=The accessor to use (default raw_reg)."`
+	Accessor string   `vfilter:"optional,field=accessor,default=reg,doc=The accessor to use."`
 }
 
 type ReadKeyValues struct{}
@@ -408,7 +408,7 @@ func (self ReadKeyValues) Call(
 			accessor_name = "reg"
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(accessor_name, ctx)
 		if err != nil {
 			scope.Log("read_reg_key: %v", err)
 			return

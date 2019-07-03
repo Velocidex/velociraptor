@@ -108,9 +108,17 @@ gulp.task('copy-fontawesome-fonts', function() {
       .pipe(gulp.dest('fonts'));
 });
 
+gulp.task('copy-jstree-theme', function() {
+    return gulp.src([config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/fonts/titillium/*.ttf',
+                     config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/fonts/titillium/*.woff'])
+        .pipe(gulp.dest(config.distDir + '/fonts/titillium/'));
+});
+
+
 gulp.task('copy-third-party-resources', function() {
   return gulp.src([config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/*.gif',
                    config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/*.png',
+                   config.nodeModulesDir + '/jstree-bootstrap-theme/dist/themes/proton/fonts/titillium/*.ttf',
                    config.nodeModulesDir + '/bootstrap/dist/css/bootstrap.css.map',
                    config.nodeModulesDir + '/bootstrap-sass/assets/fonts/bootstrap/glyphicons-halflings-regular.woff2'])
       .pipe(gulp.dest(config.distDir));
@@ -271,6 +279,7 @@ gulp.task('compile-third-party',
                       'compile-third-party-bootstrap-css',
                       'compile-third-party-css',
                       'copy-third-party-resources',
+                      'copy-jstree-theme',
                       'copy-jquery-ui-images',
                       'copy-fontawesome-fonts',
                       'compile-third-party-bootstrap-css',
