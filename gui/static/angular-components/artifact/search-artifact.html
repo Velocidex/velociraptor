@@ -111,13 +111,14 @@
   <tr ng-repeat="(k, v) in params ">
     <div data-placement="left"
          data-toggle="tooltip"
-         title="{$ ::controller.param_descriptions[k] $}">
+         title="{$ controller.param_descriptions[k] $}">
       <td>
         {{ k }}
       </td>
       <td>
-        <grr-form type="::controller.param_types[k]"
-                  value="params[k]"></grr-form>
+        <grr-form type="controller.param_types[k]"
+                  value="params"
+                  field="k"></grr-form>
       </td>
     </div>
   </tr>

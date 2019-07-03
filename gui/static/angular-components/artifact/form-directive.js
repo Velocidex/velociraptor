@@ -14,7 +14,8 @@ const FormController = function($scope) {
 
 FormController.prototype.onDateChange_ = function() {
   if (angular.isDefined(this.date_time)) {
-    this.scope_["value"] = (this.date_time.getTime() / 1000).toString();
+    this.scope_.value[this.scope_.field] = (
+      this.date_time.getTime() / 1000).toString();
   }
 };
 
@@ -24,14 +25,15 @@ FormController.prototype.openDatePopup = function() {
 
 exports.FormDirective = function() {
   return {
-      restrict: 'E',
-      scope: {
-          value: '=',
-          type: '=',
-      },
-      templateUrl: '/static/angular-components/artifact/form.html',
-      controller: FormController,
-      controllerAs: 'controller'
+    restrict: 'E',
+    scope: {
+      field: '=',
+      value: '=',
+      type: '=',
+    },
+    templateUrl: '/static/angular-components/artifact/form.html',
+    controller: FormController,
+    controllerAs: 'controller'
   };
 };
 

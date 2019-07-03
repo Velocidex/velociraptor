@@ -6,8 +6,8 @@ description: |
 
   This can be easily done via the wmic.exe command or via powershell:
 
-  ```
-  wmic process create cmd.exe
+  ```bash
+  wmic process call create cmd.exe
   ```
 
 type: CLIENT_EVENT

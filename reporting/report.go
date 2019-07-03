@@ -207,7 +207,8 @@ func GenerateServerMonitoringReport(
 }
 
 func GenerateClientReport(template_engine TemplateEngine,
-	client_id, flow_id string) (string, error) {
+	client_id, flow_id string,
+	parameters []*artifacts_proto.ArtifactParameter) (string, error) {
 	template_engine.SetEnv("ReportMode", "CLIENT")
 	template_engine.SetEnv("FlowId", flow_id)
 	template_engine.SetEnv("ClientId", client_id)
@@ -219,6 +220,15 @@ func GenerateClientReport(template_engine TemplateEngine,
 			"client",
 			"server",
 		}) {
+		for _, param := range report.Parameters {
+			template_engine.SetEnv(param.Name, param.Default)
+		}
+
+		// Override with user specified parameters.
+		for _, param := range parameters {
+			template_engine.SetEnv(param.Name, param.Default)
+		}
+
 		value, err := template_engine.Execute(report.Template)
 		if err != nil {
 			return "", err
@@ -230,7 +240,8 @@ func GenerateClientReport(template_engine TemplateEngine,
 }
 
 func GenerateHuntReport(template_engine TemplateEngine,
-	hunt_id string) (string, error) {
+	hunt_id string,
+	parameters []*artifacts_proto.ArtifactParameter) (string, error) {
 	template_engine.SetEnv("ReportMode", "HUNT")
 	template_engine.SetEnv("HuntId", hunt_id)
 	template_engine.SetEnv("ArtifactName", template_engine.GetArtifact().Name)
@@ -240,6 +251,15 @@ func GenerateHuntReport(template_engine TemplateEngine,
 		template_engine.GetArtifact(), []string{
 			"hunt",
 		}) {
+		for _, param := range report.Parameters {
+			template_engine.SetEnv(param.Name, param.Default)
+		}
+
+		// Override with user specified parameters.
+		for _, param := range parameters {
+			template_engine.SetEnv(param.Name, param.Default)
+		}
+
 		value, err := template_engine.Execute(report.Template)
 		if err != nil {
 			return "", err

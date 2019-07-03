@@ -178,18 +178,13 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string 
 	return result
 }
 
+// Converts from a physical path on disk to a normalized filestore path.
 func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 	string, error) {
 
 	if runtime.GOOS == "windows" {
 		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
 	}
-
-	if !strings.HasPrefix(
-		filename, self.config_obj.Datastore.FilestoreDirectory) {
-		return "", errors.New("not a file store directory")
-	}
-
 	filename = strings.TrimPrefix(filename,
 		self.config_obj.Datastore.FilestoreDirectory)
 
@@ -209,8 +204,11 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 	path := self.FilenameToFileStorePath(root)
 	return filepath.Walk(path,
 		func(path string, info os.FileInfo, err error) error {
-			filestore_path, _ := self.FileStorePathToFilename(path)
-			return walkFn(filestore_path,
+			filename, err := self.FileStorePathToFilename(path)
+			if err != nil {
+				return err
+			}
+			return walkFn(filename,
 				&FileStoreFileInfo{info, path, nil}, err)
 		})
 }

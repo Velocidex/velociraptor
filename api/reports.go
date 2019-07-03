@@ -38,11 +38,13 @@ func getReport(ctx context.Context,
 	// collected from a client.
 	case "CLIENT", "SERVER":
 		template_data, err = reporting.GenerateClientReport(
-			template_engine, in.ClientId, in.FlowId)
+			template_engine, in.ClientId, in.FlowId,
+			in.Parameters)
 
 	case "HUNT":
 		template_data, err = reporting.GenerateHuntReport(
-			template_engine, in.HuntId)
+			template_engine, in.HuntId,
+			in.Parameters)
 
 	// Server event artifacts run on the server. Typically they
 	// post process client event streams.

@@ -26,8 +26,10 @@
          type="checkbox"
          ng-true-value="'Y'"
          ng-false-value="'N'"
-         ng-model="value"></input>
-  <input class="form-control"
-         ng-switch-default
-         ng-model="value"></input>
+         ng-model="value[field]"></input>
+
+  <div ng-switch-default>
+    <input class="form-control"
+           ng-model="value[field]"></input>
+  </div>
 </div>

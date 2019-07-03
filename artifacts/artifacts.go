@@ -58,7 +58,7 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 	if utils.InString(&self.loaded_dirs, dirname) {
 		return &count, nil
 	}
-	dirname = path.Clean(dirname)
+	dirname = filepath.Clean(dirname)
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
 	return &count, filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
@@ -466,6 +466,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 			if err == nil && strings.HasSuffix(path, ".yaml") {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
+					logger.Error(err)
 					return nil
 				}
 				defer fd.Close()
@@ -473,6 +474,7 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 				data, err := ioutil.ReadAll(
 					io.LimitReader(fd, constants.MAX_MEMORY))
 				if err != nil {
+					logger.Error(err)
 					return nil
 				}
 
