@@ -172,7 +172,7 @@ func (self _SQLitePlugin) GetHandle(
 		}
 
 		vql_subsystem.CacheSet(scope, key, handle)
-		scope.AddDesctructor(func() {
+		scope.AddDestructor(func() {
 			handle.Close()
 		})
 	}
@@ -195,7 +195,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 	defer tmpfile.Close()
 
 	// Make sure the file is removed when the query is done.
-	scope.AddDesctructor(func() {
+	scope.AddDestructor(func() {
 		scope.Log("sqlite: removing tempfile %v", tmpfile.Name())
 		err = os.Remove(tmpfile.Name())
 		if err != nil {

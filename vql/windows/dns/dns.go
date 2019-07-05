@@ -191,7 +191,7 @@ func (self DNSEventPlugin) Call(
 		// When the scope is destroyed we want to quit reading
 		// from the DNS generator immediately.
 		sub_ctx, cancel := context.WithCancel(ctx)
-		scope.AddDesctructor(func() {
+		scope.AddDestructor(func() {
 			C.destroyDNS(c_ctx)
 			cancel()
 		})

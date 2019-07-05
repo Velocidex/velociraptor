@@ -34,6 +34,7 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -94,6 +95,19 @@ func runTest(fixture *testFixture) (string, error) {
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
+	// Create an output container.
+	tmpfile, err := ioutil.TempFile("", "golden")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	container, err := reporting.NewContainer(tmpfile.Name())
+	kingpin.FatalIfError(err, "Can not create output container")
+
+	// Any uploads go into the container.
+	env.Set("$uploader", container)
+	env.Set("GoldenOutput", tmpfile.Name())
+
 	if env_map != nil {
 		for k, v := range *env_map {
 			env.Set(k, v)
@@ -102,6 +116,11 @@ func runTest(fixture *testFixture) (string, error) {
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
+
+	scope.AddDestructor(func() {
+		container.Close()
+		os.Remove(tmpfile.Name()) // clean up
+	})
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
 	vql_collector_args := vqlCollectorArgsFromFixture(

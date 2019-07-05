@@ -64,6 +64,43 @@ func (self IntFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	}
 }
 
+type StrFunctionArgs struct {
+	Str vfilter.Any `vfilter:"required,field=str,doc=The string to normalize"`
+}
+
+type StrFunction struct{}
+
+func (self *StrFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &StrFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("str: %s", err.Error())
+		return false
+	}
+
+	switch t := arg.Str.(type) {
+	case string:
+		return string(t)
+
+	case []byte:
+		return string(t)
+
+	default:
+		return t
+	}
+}
+
+func (self StrFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "str",
+		Doc:     "Normalize a String.",
+		ArgType: type_map.AddType(scope, &StrFunctionArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&IntFunction{})
+	vql_subsystem.RegisterFunction(&StrFunction{})
 }

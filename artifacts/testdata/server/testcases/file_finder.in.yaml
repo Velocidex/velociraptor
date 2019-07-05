@@ -1,0 +1,23 @@
+Queries:
+# Just find a zip file.
+  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+    FROM Artifact.Windows.Search.FileFinder(
+        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+
+# Calculate the hash.
+  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+    FROM Artifact.Windows.Search.FileFinder(
+        Calculate_Hash="Y",
+        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+
+# Upload it.
+  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords
+    FROM Artifact.Windows.Search.FileFinder(
+        Upload_File="Y",
+        SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
+
+# Search for files that match a keyword
+  - SELECT basename(path=FullPath) AS File, Keywords
+    FROM Artifact.Windows.Search.FileFinder(
+        Keywords="supercalifragilisticexpialidocious",
+        SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")

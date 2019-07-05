@@ -80,6 +80,14 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Allow the args to override the artifact defaults.
 		for k, v := range *args.ToDict() {
+			_, pres := env.Get(k)
+			if !pres {
+				scope.Log(fmt.Sprintf(
+					"Unknown parameter %s provided to artifact %v",
+					k, strings.Join(self.prefix, ".")))
+				return
+			}
+
 			lazy_v, ok := v.(vfilter.LazyExpr)
 			if ok {
 				v = lazy_v.Reduce()

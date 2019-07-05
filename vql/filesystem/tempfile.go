@@ -62,7 +62,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	}
 
 	// Make sure the file is removed when the query is done.
-	scope.AddDesctructor(func() {
+	scope.AddDestructor(func() {
 		scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
 		os.Remove(tmpfile.Name())
 	})

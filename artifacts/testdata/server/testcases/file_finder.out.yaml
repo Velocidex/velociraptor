@@ -1,0 +1,34 @@
+SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+ {
+  "File": "test.zip",
+  "Hash": null,
+  "Keywords": "",
+  "Size": 926,
+  "Upload": null
+ }
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( Calculate_Hash="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+ {
+  "File": "test.zip",
+  "Hash": {
+   "MD5": "fa2e382dedf895a251fcc369faa8818c",
+   "SHA1": "5ba90c3c0752a2a410fee786b29e290156bb5720",
+   "SHA256": "3dd71339a8563b9f4bdedcb0b72ef3001afb40ad3e8001429cac5fa4c338347c"
+  },
+  "Keywords": "",
+  "Size": 926,
+  "Upload": null
+ }
+]SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords FROM Artifact.Windows.Search.FileFinder( Upload_File="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
+ {
+  "File": "test.zip",
+  "Hash": null,
+  "Keywords": "",
+  "Size": 926,
+  "Upload.md5": "fa2e382dedf895a251fcc369faa8818c"
+ }
+]SELECT basename(path=FullPath) AS File, Keywords FROM Artifact.Windows.Search.FileFinder( Keywords="supercalifragilisticexpialidocious", SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")[
+ {
+  "File": "file_finder.in.yaml",
+  "Keywords": "supercalifragilisticexpialidocious"
+ }
+]

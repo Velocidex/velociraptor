@@ -39,7 +39,7 @@ func InstallSignalHandler(
 	signal.Notify(quit, os.Interrupt)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	scope.AddDesctructor(func() {
+	scope.AddDestructor(func() {
 		cancel()
 	})
 

@@ -59,7 +59,7 @@ var (
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
-		Default("text").Enum("text", "json", "csv")
+		Default("json").Enum("text", "json", "csv")
 
 	artifact_command_collect_details = artifact_command_collect.Flag(
 		"details", "Show more details (Use -d -dd for even more)").

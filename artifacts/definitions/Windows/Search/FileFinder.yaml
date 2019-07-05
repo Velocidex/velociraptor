@@ -82,7 +82,7 @@ sources:
         condition=MoreRecentThan,
         then={
           SELECT * FROM file_search
-          WHERE Modified > atoi(string=MoreRecentThan)
+          WHERE Modified > parse_float(string=MoreRecentThan)
         }, else=file_search)
 
     - |
@@ -90,10 +90,33 @@ sources:
         condition=ModifiedBefore,
         then={
           SELECT * FROM more_recent
-          WHERE Modified < atoi(string=ModifiedBefore)
+          WHERE Modified < parse_float(string=ModifiedBefore)
         }, else=more_recent)
+
     - |
-      SELECT FullPath, Inode, Mode, Size, Modified, ATime, MTime, CTime,
+      LET keyword_search = SELECT * FROM if(
+        condition=Keywords,
+        then={
+          SELECT * FROM foreach(
+            row={
+               SELECT * FROM modified_before
+            },
+            query={
+               SELECT FullPath, Inode, Mode,
+                      Size, Modified, ATime, MTime, CTime,
+                      str(str=String.Data) As Keywords
+
+               FROM yara(files=FullPath,
+                         key=Keywords,
+                         rules="wide nocase ascii:"+Keywords,
+                         accessor=if(condition=Use_Raw_NTFS = "Y",
+                                          then="ntfs", else="file"))
+            })
+        }, else=modified_before)
+
+    - |
+      SELECT FullPath, Inode, Mode, Size, Modified, ATime,
+             MTime, CTime, Keywords,
                if(condition=(Upload_File = "Y" and NOT IsDir ),
                   then=upload(file=FullPath,
                               accessor=if(condition=Use_Raw_NTFS = "Y",
@@ -102,4 +125,4 @@ sources:
                   then=hash(path=FullPath,
                             accessor=if(condition=Use_Raw_NTFS = "Y",
                                         then="ntfs", else="file"))) AS Hash
-      FROM modified_before
+      FROM keyword_search

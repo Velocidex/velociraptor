@@ -138,7 +138,7 @@ func NewDiffCache(
 		done:         make(chan bool),
 	}
 
-	scope.AddDesctructor(func() {
+	scope.AddDestructor(func() {
 		close(result.done)
 	})
 

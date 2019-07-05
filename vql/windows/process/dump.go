@@ -77,7 +77,7 @@ func (self ProcDumpPlugin) Call(
 		// Use a dmp extension to make it easier to open.
 		filename += ".dmp"
 
-		scope.AddDesctructor(func() {
+		scope.AddDestructor(func() {
 			os.Remove(filename)
 		})
 

@@ -64,7 +64,7 @@ func (self NTFSFunction) Call(
 			return &vfilter.Null{}
 		}
 
-		scope.AddDesctructor(func() { fd.Close() })
+		scope.AddDestructor(func() { fd.Close() })
 		paged_reader, _ := ntfs.NewPagedReader(fd, 1024, 10000)
 
 		profile, _ := ntfs.GetProfile()
