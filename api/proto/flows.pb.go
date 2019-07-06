@@ -3,13 +3,15 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import any "github.com/golang/protobuf/ptypes/any"
-import proto2 "www.velocidex.com/golang/velociraptor/crypto/proto"
-import proto1 "www.velocidex.com/golang/velociraptor/flows/proto"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	any "github.com/golang/protobuf/ptypes/any"
+	math "math"
+	proto2 "www.velocidex.com/golang/velociraptor/crypto/proto"
+	proto1 "www.velocidex.com/golang/velociraptor/flows/proto"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -20,7 +22,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // Enum values here correspond to Flow.State values.
 type ApiFlow_State int32
@@ -38,6 +40,7 @@ var ApiFlow_State_name = map[int32]string{
 	3: "ERROR",
 	4: "CLIENT_CRASHED",
 }
+
 var ApiFlow_State_value = map[string]int32{
 	"RUNNING":        0,
 	"TERMINATED":     1,
@@ -48,8 +51,9 @@ var ApiFlow_State_value = map[string]int32{
 func (x ApiFlow_State) String() string {
 	return proto.EnumName(ApiFlow_State_name, int32(x))
 }
+
 func (ApiFlow_State) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{0, 0}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{0, 0}
 }
 
 // Next id: 16
@@ -76,16 +80,17 @@ func (m *ApiFlow) Reset()         { *m = ApiFlow{} }
 func (m *ApiFlow) String() string { return proto.CompactTextString(m) }
 func (*ApiFlow) ProtoMessage()    {}
 func (*ApiFlow) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{0}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{0}
 }
+
 func (m *ApiFlow) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlow.Unmarshal(m, b)
 }
 func (m *ApiFlow) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlow.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlow) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlow.Merge(dst, src)
+func (m *ApiFlow) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlow.Merge(m, src)
 }
 func (m *ApiFlow) XXX_Size() int {
 	return xxx_messageInfo_ApiFlow.Size(m)
@@ -200,16 +205,17 @@ func (m *ApiFlowRequestDetails) Reset()         { *m = ApiFlowRequestDetails{} }
 func (m *ApiFlowRequestDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowRequestDetails) ProtoMessage()    {}
 func (*ApiFlowRequestDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{1}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{1}
 }
+
 func (m *ApiFlowRequestDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowRequestDetails.Unmarshal(m, b)
 }
 func (m *ApiFlowRequestDetails) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlowRequestDetails.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlowRequestDetails) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlowRequestDetails.Merge(dst, src)
+func (m *ApiFlowRequestDetails) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlowRequestDetails.Merge(m, src)
 }
 func (m *ApiFlowRequestDetails) XXX_Size() int {
 	return xxx_messageInfo_ApiFlowRequestDetails.Size(m)
@@ -238,16 +244,17 @@ func (m *ApiFlowResultDetails) Reset()         { *m = ApiFlowResultDetails{} }
 func (m *ApiFlowResultDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowResultDetails) ProtoMessage()    {}
 func (*ApiFlowResultDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{2}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{2}
 }
+
 func (m *ApiFlowResultDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowResultDetails.Unmarshal(m, b)
 }
 func (m *ApiFlowResultDetails) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlowResultDetails.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlowResultDetails) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlowResultDetails.Merge(dst, src)
+func (m *ApiFlowResultDetails) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlowResultDetails.Merge(m, src)
 }
 func (m *ApiFlowResultDetails) XXX_Size() int {
 	return xxx_messageInfo_ApiFlowResultDetails.Size(m)
@@ -276,16 +283,17 @@ func (m *ApiFlowLogDetails) Reset()         { *m = ApiFlowLogDetails{} }
 func (m *ApiFlowLogDetails) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowLogDetails) ProtoMessage()    {}
 func (*ApiFlowLogDetails) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{3}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{3}
 }
+
 func (m *ApiFlowLogDetails) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowLogDetails.Unmarshal(m, b)
 }
 func (m *ApiFlowLogDetails) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlowLogDetails.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlowLogDetails) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlowLogDetails.Merge(dst, src)
+func (m *ApiFlowLogDetails) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlowLogDetails.Merge(m, src)
 }
 func (m *ApiFlowLogDetails) XXX_Size() int {
 	return xxx_messageInfo_ApiFlowLogDetails.Size(m)
@@ -317,16 +325,17 @@ func (m *ApiFlowRequest) Reset()         { *m = ApiFlowRequest{} }
 func (m *ApiFlowRequest) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowRequest) ProtoMessage()    {}
 func (*ApiFlowRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{4}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{4}
 }
+
 func (m *ApiFlowRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowRequest.Unmarshal(m, b)
 }
 func (m *ApiFlowRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlowRequest.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlowRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlowRequest.Merge(dst, src)
+func (m *ApiFlowRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlowRequest.Merge(m, src)
 }
 func (m *ApiFlowRequest) XXX_Size() int {
 	return xxx_messageInfo_ApiFlowRequest.Size(m)
@@ -376,16 +385,17 @@ func (m *ApiFlowResponse) Reset()         { *m = ApiFlowResponse{} }
 func (m *ApiFlowResponse) String() string { return proto.CompactTextString(m) }
 func (*ApiFlowResponse) ProtoMessage()    {}
 func (*ApiFlowResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{5}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{5}
 }
+
 func (m *ApiFlowResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ApiFlowResponse.Unmarshal(m, b)
 }
 func (m *ApiFlowResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ApiFlowResponse.Marshal(b, m, deterministic)
 }
-func (dst *ApiFlowResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ApiFlowResponse.Merge(dst, src)
+func (m *ApiFlowResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ApiFlowResponse.Merge(m, src)
 }
 func (m *ApiFlowResponse) XXX_Size() int {
 	return xxx_messageInfo_ApiFlowResponse.Size(m)
@@ -414,16 +424,17 @@ func (m *FlowDescriptors) Reset()         { *m = FlowDescriptors{} }
 func (m *FlowDescriptors) String() string { return proto.CompactTextString(m) }
 func (*FlowDescriptors) ProtoMessage()    {}
 func (*FlowDescriptors) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flows_06a16f162104c604, []int{6}
+	return fileDescriptor_b6bd6ebccf1a7f18, []int{6}
 }
+
 func (m *FlowDescriptors) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FlowDescriptors.Unmarshal(m, b)
 }
 func (m *FlowDescriptors) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FlowDescriptors.Marshal(b, m, deterministic)
 }
-func (dst *FlowDescriptors) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FlowDescriptors.Merge(dst, src)
+func (m *FlowDescriptors) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FlowDescriptors.Merge(m, src)
 }
 func (m *FlowDescriptors) XXX_Size() int {
 	return xxx_messageInfo_FlowDescriptors.Size(m)
@@ -442,6 +453,7 @@ func (m *FlowDescriptors) GetItems() []*proto1.FlowDescriptor {
 }
 
 func init() {
+	proto.RegisterEnum("proto.ApiFlow_State", ApiFlow_State_name, ApiFlow_State_value)
 	proto.RegisterType((*ApiFlow)(nil), "proto.ApiFlow")
 	proto.RegisterType((*ApiFlowRequestDetails)(nil), "proto.ApiFlowRequestDetails")
 	proto.RegisterType((*ApiFlowResultDetails)(nil), "proto.ApiFlowResultDetails")
@@ -449,12 +461,11 @@ func init() {
 	proto.RegisterType((*ApiFlowRequest)(nil), "proto.ApiFlowRequest")
 	proto.RegisterType((*ApiFlowResponse)(nil), "proto.ApiFlowResponse")
 	proto.RegisterType((*FlowDescriptors)(nil), "proto.FlowDescriptors")
-	proto.RegisterEnum("proto.ApiFlow_State", ApiFlow_State_name, ApiFlow_State_value)
 }
 
-func init() { proto.RegisterFile("flows.proto", fileDescriptor_flows_06a16f162104c604) }
+func init() { proto.RegisterFile("flows.proto", fileDescriptor_b6bd6ebccf1a7f18) }
 
-var fileDescriptor_flows_06a16f162104c604 = []byte{
+var fileDescriptor_b6bd6ebccf1a7f18 = []byte{
 	// 904 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x94, 0xdd, 0x6e, 0x1b, 0x45,
 	0x14, 0xc7, 0x59, 0x62, 0xc7, 0xf1, 0x38, 0x38, 0xe9, 0x90, 0xa4, 0xdb, 0x14, 0xe8, 0xc8, 0x6a,

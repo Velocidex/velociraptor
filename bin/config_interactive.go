@@ -78,6 +78,14 @@ begin by identifying what type of deployment you need.
 	google_oauth_client_secret_question = &survey.Input{
 		Message: "Enter the Google OAuth Client Secret?",
 	}
+
+	google_domains_username = &survey.Input{
+		Message: "Google Domains DynDNS Username",
+	}
+
+	google_domains_password = &survey.Input{
+		Message: "Google Domains DynDNS Password",
+	}
 )
 
 func doGenerateConfigInteractive() {
@@ -119,6 +127,9 @@ func doGenerateConfigInteractive() {
 		config_obj.AutocertDomain = hostname
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 
+		err = dynDNSConfig(config_obj, hostname)
+		kingpin.FatalIfError(err, "dynDNSConfig")
+
 	case oauth_sso:
 		// In autocert mode these are all fixed.
 		config_obj.Frontend.BindPort = 443
@@ -143,6 +154,8 @@ func doGenerateConfigInteractive() {
 			&config_obj.GUI.GoogleOauthClientSecret, survey.Required)
 		kingpin.FatalIfError(err, "Question")
 
+		err = dynDNSConfig(config_obj, hostname)
+		kingpin.FatalIfError(err, "dynDNSConfig")
 	}
 
 	err = getFileStoreLocation(config_obj)
@@ -178,6 +191,41 @@ func doGenerateConfigInteractive() {
 	fd.Write(res)
 
 	kingpin.FatalIfError(addUser(config_obj), "Add users")
+}
+
+func dynDNSConfig(config_obj *api_proto.Config, hostname string) error {
+	dyndns := false
+	err := survey.AskOne(&survey.Confirm{
+		Message: "Are you using Google Domains DynDNS?"},
+		&dyndns, survey.Required)
+	if err != nil {
+		return err
+	}
+
+	if dyndns {
+		username := ""
+		err = survey.AskOne(
+			google_domains_username, &username,
+			survey.Required)
+		if err != nil {
+			return err
+		}
+
+		password := ""
+		err = survey.AskOne(google_domains_password, &password,
+			survey.Required)
+		if err != nil {
+			return err
+		}
+
+		config_obj.Frontend.DynDns = &api_proto.DynDNSConfig{
+			Hostname:     hostname,
+			DdnsUsername: username,
+			DdnsPassword: password,
+		}
+	}
+
+	return nil
 }
 
 func getFileStoreLocation(config_obj *api_proto.Config) error {

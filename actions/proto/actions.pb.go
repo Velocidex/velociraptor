@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // These are used when mapping registry keys to the VFS
 type StatEntry_RegistryType int32
@@ -47,6 +49,7 @@ var StatEntry_RegistryType_name = map[int32]string{
 	7:  "REG_MULTI_SZ",
 	11: "REG_QWORD",
 }
+
 var StatEntry_RegistryType_value = map[string]int32{
 	"REG_NONE":                0,
 	"REG_SZ":                  1,
@@ -63,8 +66,9 @@ var StatEntry_RegistryType_value = map[string]int32{
 func (x StatEntry_RegistryType) String() string {
 	return proto.EnumName(StatEntry_RegistryType_name, int32(x))
 }
+
 func (StatEntry_RegistryType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{2, 0}
+	return fileDescriptor_eeb49063df94c2b8, []int{2, 0}
 }
 
 // Stores information about the GRR client itself
@@ -84,16 +88,17 @@ func (m *ClientInformation) Reset()         { *m = ClientInformation{} }
 func (m *ClientInformation) String() string { return proto.CompactTextString(m) }
 func (*ClientInformation) ProtoMessage()    {}
 func (*ClientInformation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{0}
+	return fileDescriptor_eeb49063df94c2b8, []int{0}
 }
+
 func (m *ClientInformation) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientInformation.Unmarshal(m, b)
 }
 func (m *ClientInformation) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClientInformation.Marshal(b, m, deterministic)
 }
-func (dst *ClientInformation) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientInformation.Merge(dst, src)
+func (m *ClientInformation) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientInformation.Merge(m, src)
 }
 func (m *ClientInformation) XXX_Size() int {
 	return xxx_messageInfo_ClientInformation.Size(m)
@@ -158,16 +163,17 @@ func (m *ListDirRequest) Reset()         { *m = ListDirRequest{} }
 func (m *ListDirRequest) String() string { return proto.CompactTextString(m) }
 func (*ListDirRequest) ProtoMessage()    {}
 func (*ListDirRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{1}
+	return fileDescriptor_eeb49063df94c2b8, []int{1}
 }
+
 func (m *ListDirRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ListDirRequest.Unmarshal(m, b)
 }
 func (m *ListDirRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ListDirRequest.Marshal(b, m, deterministic)
 }
-func (dst *ListDirRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListDirRequest.Merge(dst, src)
+func (m *ListDirRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ListDirRequest.Merge(m, src)
 }
 func (m *ListDirRequest) XXX_Size() int {
 	return xxx_messageInfo_ListDirRequest.Size(m)
@@ -226,16 +232,17 @@ func (m *StatEntry) Reset()         { *m = StatEntry{} }
 func (m *StatEntry) String() string { return proto.CompactTextString(m) }
 func (*StatEntry) ProtoMessage()    {}
 func (*StatEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{2}
+	return fileDescriptor_eeb49063df94c2b8, []int{2}
 }
+
 func (m *StatEntry) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatEntry.Unmarshal(m, b)
 }
 func (m *StatEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_StatEntry.Marshal(b, m, deterministic)
 }
-func (dst *StatEntry) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StatEntry.Merge(dst, src)
+func (m *StatEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StatEntry.Merge(m, src)
 }
 func (m *StatEntry) XXX_Size() int {
 	return xxx_messageInfo_StatEntry.Size(m)
@@ -405,16 +412,17 @@ func (m *StatEntry_ExtAttr) Reset()         { *m = StatEntry_ExtAttr{} }
 func (m *StatEntry_ExtAttr) String() string { return proto.CompactTextString(m) }
 func (*StatEntry_ExtAttr) ProtoMessage()    {}
 func (*StatEntry_ExtAttr) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{2, 0}
+	return fileDescriptor_eeb49063df94c2b8, []int{2, 0}
 }
+
 func (m *StatEntry_ExtAttr) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_StatEntry_ExtAttr.Unmarshal(m, b)
 }
 func (m *StatEntry_ExtAttr) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_StatEntry_ExtAttr.Marshal(b, m, deterministic)
 }
-func (dst *StatEntry_ExtAttr) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_StatEntry_ExtAttr.Merge(dst, src)
+func (m *StatEntry_ExtAttr) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StatEntry_ExtAttr.Merge(m, src)
 }
 func (m *StatEntry_ExtAttr) XXX_Size() int {
 	return xxx_messageInfo_StatEntry_ExtAttr.Size(m)
@@ -453,16 +461,17 @@ func (m *PathSpec) Reset()         { *m = PathSpec{} }
 func (m *PathSpec) String() string { return proto.CompactTextString(m) }
 func (*PathSpec) ProtoMessage()    {}
 func (*PathSpec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{3}
+	return fileDescriptor_eeb49063df94c2b8, []int{3}
 }
+
 func (m *PathSpec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathSpec.Unmarshal(m, b)
 }
 func (m *PathSpec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_PathSpec.Marshal(b, m, deterministic)
 }
-func (dst *PathSpec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PathSpec.Merge(dst, src)
+func (m *PathSpec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PathSpec.Merge(m, src)
 }
 func (m *PathSpec) XXX_Size() int {
 	return xxx_messageInfo_PathSpec.Size(m)
@@ -509,16 +518,17 @@ func (m *Uname) Reset()         { *m = Uname{} }
 func (m *Uname) String() string { return proto.CompactTextString(m) }
 func (*Uname) ProtoMessage()    {}
 func (*Uname) Descriptor() ([]byte, []int) {
-	return fileDescriptor_actions_45669e6d59c5b790, []int{4}
+	return fileDescriptor_eeb49063df94c2b8, []int{4}
 }
+
 func (m *Uname) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Uname.Unmarshal(m, b)
 }
 func (m *Uname) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Uname.Marshal(b, m, deterministic)
 }
-func (dst *Uname) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Uname.Merge(dst, src)
+func (m *Uname) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Uname.Merge(m, src)
 }
 func (m *Uname) XXX_Size() int {
 	return xxx_messageInfo_Uname.Size(m)
@@ -607,18 +617,18 @@ func (m *Uname) GetPep425Tag() string {
 }
 
 func init() {
+	proto.RegisterEnum("proto.StatEntry_RegistryType", StatEntry_RegistryType_name, StatEntry_RegistryType_value)
 	proto.RegisterType((*ClientInformation)(nil), "proto.ClientInformation")
 	proto.RegisterType((*ListDirRequest)(nil), "proto.ListDirRequest")
 	proto.RegisterType((*StatEntry)(nil), "proto.StatEntry")
 	proto.RegisterType((*StatEntry_ExtAttr)(nil), "proto.StatEntry.ExtAttr")
 	proto.RegisterType((*PathSpec)(nil), "proto.PathSpec")
 	proto.RegisterType((*Uname)(nil), "proto.Uname")
-	proto.RegisterEnum("proto.StatEntry_RegistryType", StatEntry_RegistryType_name, StatEntry_RegistryType_value)
 }
 
-func init() { proto.RegisterFile("actions.proto", fileDescriptor_actions_45669e6d59c5b790) }
+func init() { proto.RegisterFile("actions.proto", fileDescriptor_eeb49063df94c2b8) }
 
-var fileDescriptor_actions_45669e6d59c5b790 = []byte{
+var fileDescriptor_eeb49063df94c2b8 = []byte{
 	// 1720 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x56, 0x4f, 0x73, 0x1b, 0x49,
 	0x15, 0x47, 0x89, 0xad, 0x3f, 0xed, 0x3f, 0xb1, 0x9b, 0x64, 0x2d, 0xbc, 0x1b, 0xe8, 0x72, 0x2d,

@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type GetTableRequest struct {
 	Path                 string   `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
@@ -33,16 +35,17 @@ func (m *GetTableRequest) Reset()         { *m = GetTableRequest{} }
 func (m *GetTableRequest) String() string { return proto.CompactTextString(m) }
 func (*GetTableRequest) ProtoMessage()    {}
 func (*GetTableRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_csv_17577c629c96f44b, []int{0}
+	return fileDescriptor_3e185232356a2266, []int{0}
 }
+
 func (m *GetTableRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetTableRequest.Unmarshal(m, b)
 }
 func (m *GetTableRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetTableRequest.Marshal(b, m, deterministic)
 }
-func (dst *GetTableRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetTableRequest.Merge(dst, src)
+func (m *GetTableRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTableRequest.Merge(m, src)
 }
 func (m *GetTableRequest) XXX_Size() int {
 	return xxx_messageInfo_GetTableRequest.Size(m)
@@ -92,16 +95,17 @@ func (m *Row) Reset()         { *m = Row{} }
 func (m *Row) String() string { return proto.CompactTextString(m) }
 func (*Row) ProtoMessage()    {}
 func (*Row) Descriptor() ([]byte, []int) {
-	return fileDescriptor_csv_17577c629c96f44b, []int{1}
+	return fileDescriptor_3e185232356a2266, []int{1}
 }
+
 func (m *Row) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Row.Unmarshal(m, b)
 }
 func (m *Row) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Row.Marshal(b, m, deterministic)
 }
-func (dst *Row) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Row.Merge(dst, src)
+func (m *Row) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Row.Merge(m, src)
 }
 func (m *Row) XXX_Size() int {
 	return xxx_messageInfo_Row.Size(m)
@@ -131,16 +135,17 @@ func (m *GetTableResponse) Reset()         { *m = GetTableResponse{} }
 func (m *GetTableResponse) String() string { return proto.CompactTextString(m) }
 func (*GetTableResponse) ProtoMessage()    {}
 func (*GetTableResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_csv_17577c629c96f44b, []int{2}
+	return fileDescriptor_3e185232356a2266, []int{2}
 }
+
 func (m *GetTableResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetTableResponse.Unmarshal(m, b)
 }
 func (m *GetTableResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_GetTableResponse.Marshal(b, m, deterministic)
 }
-func (dst *GetTableResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetTableResponse.Merge(dst, src)
+func (m *GetTableResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetTableResponse.Merge(m, src)
 }
 func (m *GetTableResponse) XXX_Size() int {
 	return xxx_messageInfo_GetTableResponse.Size(m)
@@ -171,9 +176,9 @@ func init() {
 	proto.RegisterType((*GetTableResponse)(nil), "proto.GetTableResponse")
 }
 
-func init() { proto.RegisterFile("csv.proto", fileDescriptor_csv_17577c629c96f44b) }
+func init() { proto.RegisterFile("csv.proto", fileDescriptor_3e185232356a2266) }
 
-var fileDescriptor_csv_17577c629c96f44b = []byte{
+var fileDescriptor_3e185232356a2266 = []byte{
 	// 351 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x90, 0x5f, 0xcb, 0xd3, 0x30,
 	0x14, 0xc6, 0xa9, 0xad, 0xfa, 0x36, 0x2f, 0xa2, 0x64, 0x88, 0x9d, 0x03, 0x3d, 0xec, 0xc6, 0xde,

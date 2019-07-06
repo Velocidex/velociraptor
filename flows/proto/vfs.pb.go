@@ -3,11 +3,13 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	proto1 "www.velocidex.com/golang/velociraptor/actions/proto"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -18,7 +20,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type VFSListRequest struct {
 	ClientId             string   `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
@@ -33,16 +35,17 @@ func (m *VFSListRequest) Reset()         { *m = VFSListRequest{} }
 func (m *VFSListRequest) String() string { return proto.CompactTextString(m) }
 func (*VFSListRequest) ProtoMessage()    {}
 func (*VFSListRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_30fce3983bd211fd, []int{0}
+	return fileDescriptor_3498b34ebe55a2be, []int{0}
 }
+
 func (m *VFSListRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSListRequest.Unmarshal(m, b)
 }
 func (m *VFSListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VFSListRequest.Marshal(b, m, deterministic)
 }
-func (dst *VFSListRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VFSListRequest.Merge(dst, src)
+func (m *VFSListRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VFSListRequest.Merge(m, src)
 }
 func (m *VFSListRequest) XXX_Size() int {
 	return xxx_messageInfo_VFSListRequest.Size(m)
@@ -87,16 +90,17 @@ func (m *VFSListRequestState) Reset()         { *m = VFSListRequestState{} }
 func (m *VFSListRequestState) String() string { return proto.CompactTextString(m) }
 func (*VFSListRequestState) ProtoMessage()    {}
 func (*VFSListRequestState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_30fce3983bd211fd, []int{1}
+	return fileDescriptor_3498b34ebe55a2be, []int{1}
 }
+
 func (m *VFSListRequestState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSListRequestState.Unmarshal(m, b)
 }
 func (m *VFSListRequestState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VFSListRequestState.Marshal(b, m, deterministic)
 }
-func (dst *VFSListRequestState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VFSListRequestState.Merge(dst, src)
+func (m *VFSListRequestState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VFSListRequestState.Merge(m, src)
 }
 func (m *VFSListRequestState) XXX_Size() int {
 	return xxx_messageInfo_VFSListRequestState.Size(m)
@@ -140,16 +144,17 @@ func (m *VFSDownloadFileRequest) Reset()         { *m = VFSDownloadFileRequest{}
 func (m *VFSDownloadFileRequest) String() string { return proto.CompactTextString(m) }
 func (*VFSDownloadFileRequest) ProtoMessage()    {}
 func (*VFSDownloadFileRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_30fce3983bd211fd, []int{2}
+	return fileDescriptor_3498b34ebe55a2be, []int{2}
 }
+
 func (m *VFSDownloadFileRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VFSDownloadFileRequest.Unmarshal(m, b)
 }
 func (m *VFSDownloadFileRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_VFSDownloadFileRequest.Marshal(b, m, deterministic)
 }
-func (dst *VFSDownloadFileRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VFSDownloadFileRequest.Merge(dst, src)
+func (m *VFSDownloadFileRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VFSDownloadFileRequest.Merge(m, src)
 }
 func (m *VFSDownloadFileRequest) XXX_Size() int {
 	return xxx_messageInfo_VFSDownloadFileRequest.Size(m)
@@ -186,16 +191,17 @@ func (m *ClientMonitoringState) Reset()         { *m = ClientMonitoringState{} }
 func (m *ClientMonitoringState) String() string { return proto.CompactTextString(m) }
 func (*ClientMonitoringState) ProtoMessage()    {}
 func (*ClientMonitoringState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_vfs_30fce3983bd211fd, []int{3}
+	return fileDescriptor_3498b34ebe55a2be, []int{3}
 }
+
 func (m *ClientMonitoringState) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ClientMonitoringState.Unmarshal(m, b)
 }
 func (m *ClientMonitoringState) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_ClientMonitoringState.Marshal(b, m, deterministic)
 }
-func (dst *ClientMonitoringState) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ClientMonitoringState.Merge(dst, src)
+func (m *ClientMonitoringState) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClientMonitoringState.Merge(m, src)
 }
 func (m *ClientMonitoringState) XXX_Size() int {
 	return xxx_messageInfo_ClientMonitoringState.Size(m)
@@ -227,9 +233,9 @@ func init() {
 	proto.RegisterType((*ClientMonitoringState)(nil), "proto.ClientMonitoringState")
 }
 
-func init() { proto.RegisterFile("vfs.proto", fileDescriptor_vfs_30fce3983bd211fd) }
+func init() { proto.RegisterFile("vfs.proto", fileDescriptor_3498b34ebe55a2be) }
 
-var fileDescriptor_vfs_30fce3983bd211fd = []byte{
+var fileDescriptor_3498b34ebe55a2be = []byte{
 	// 531 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x90, 0xcd, 0x6e, 0xd3, 0x4c,
 	0x14, 0x86, 0xe5, 0x36, 0x5f, 0x93, 0xcc, 0x27, 0x8a, 0x34, 0x55, 0x51, 0xc8, 0x82, 0x1e, 0x22,

@@ -242,6 +242,14 @@ message ReverseProxyConfig {
 }
 
 
+message DynDNSConfig {
+    string hostname = 1;
+    string ddns_username = 2;
+    string ddns_password = 3;
+    string update_url = 4;
+    uint64 frequency = 5;
+}
+
 message FrontendConfig {
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind frontend endpoint. Clients connect to this endpoint to poll for jobs."
@@ -284,6 +292,10 @@ message FrontendConfig {
 
     uint64 max_upload_size = 11 [(sem_type) = {
              description: "Maximum size in Bytes we will accept uploads for"
+        }];
+
+    DynDNSConfig dyn_dns = 12 [(sem_type) = {
+            description: "If set we start the dyn dns service.",
         }];
 }
 

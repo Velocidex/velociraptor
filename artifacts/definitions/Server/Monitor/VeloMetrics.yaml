@@ -23,7 +23,7 @@ sources:
                      MemoryInfo.RSS as RSS
               FROM pslist(pid=getpid())
            } AS PslistStats
-        FROM  http_client(url=MetricsURL, chunk=50000)
+        FROM  http_client(url=MetricsURL, chunk_size=50000)
 
       - |
         SELECT now() AS Timestamp,

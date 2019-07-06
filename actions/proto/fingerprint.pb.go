@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 // The fingerprinting methods the fingerprinter can be asked to perform.
 // If none is given, all are applied.
@@ -32,6 +34,7 @@ var FingerprintTuple_Type_name = map[int32]string{
 	0: "FPT_GENERIC",
 	1: "FPT_PE_COFF",
 }
+
 var FingerprintTuple_Type_value = map[string]int32{
 	"FPT_GENERIC": 0,
 	"FPT_PE_COFF": 1,
@@ -40,8 +43,9 @@ var FingerprintTuple_Type_value = map[string]int32{
 func (x FingerprintTuple_Type) String() string {
 	return proto.EnumName(FingerprintTuple_Type_name, int32(x))
 }
+
 func (FingerprintTuple_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{2, 0}
+	return fileDescriptor_958480b1a11f31b5, []int{2, 0}
 }
 
 // The hash functions that a fingerprinting method may employ.
@@ -59,6 +63,7 @@ var FingerprintTuple_HashType_name = map[int32]string{
 	1: "SHA1",
 	2: "SHA256",
 }
+
 var FingerprintTuple_HashType_value = map[string]int32{
 	"MD5":    0,
 	"SHA1":   1,
@@ -68,8 +73,9 @@ var FingerprintTuple_HashType_value = map[string]int32{
 func (x FingerprintTuple_HashType) String() string {
 	return proto.EnumName(FingerprintTuple_HashType_name, int32(x))
 }
+
 func (FingerprintTuple_HashType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{2, 1}
+	return fileDescriptor_958480b1a11f31b5, []int{2, 1}
 }
 
 type Hash struct {
@@ -90,16 +96,17 @@ func (m *Hash) Reset()         { *m = Hash{} }
 func (m *Hash) String() string { return proto.CompactTextString(m) }
 func (*Hash) ProtoMessage()    {}
 func (*Hash) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{0}
+	return fileDescriptor_958480b1a11f31b5, []int{0}
 }
+
 func (m *Hash) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Hash.Unmarshal(m, b)
 }
 func (m *Hash) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Hash.Marshal(b, m, deterministic)
 }
-func (dst *Hash) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Hash.Merge(dst, src)
+func (m *Hash) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Hash.Merge(m, src)
 }
 func (m *Hash) XXX_Size() int {
 	return xxx_messageInfo_Hash.Size(m)
@@ -179,16 +186,17 @@ func (m *AuthenticodeSignedData) Reset()         { *m = AuthenticodeSignedData{}
 func (m *AuthenticodeSignedData) String() string { return proto.CompactTextString(m) }
 func (*AuthenticodeSignedData) ProtoMessage()    {}
 func (*AuthenticodeSignedData) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{1}
+	return fileDescriptor_958480b1a11f31b5, []int{1}
 }
+
 func (m *AuthenticodeSignedData) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AuthenticodeSignedData.Unmarshal(m, b)
 }
 func (m *AuthenticodeSignedData) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_AuthenticodeSignedData.Marshal(b, m, deterministic)
 }
-func (dst *AuthenticodeSignedData) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AuthenticodeSignedData.Merge(dst, src)
+func (m *AuthenticodeSignedData) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AuthenticodeSignedData.Merge(m, src)
 }
 func (m *AuthenticodeSignedData) XXX_Size() int {
 	return xxx_messageInfo_AuthenticodeSignedData.Size(m)
@@ -232,16 +240,17 @@ func (m *FingerprintTuple) Reset()         { *m = FingerprintTuple{} }
 func (m *FingerprintTuple) String() string { return proto.CompactTextString(m) }
 func (*FingerprintTuple) ProtoMessage()    {}
 func (*FingerprintTuple) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{2}
+	return fileDescriptor_958480b1a11f31b5, []int{2}
 }
+
 func (m *FingerprintTuple) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FingerprintTuple.Unmarshal(m, b)
 }
 func (m *FingerprintTuple) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FingerprintTuple.Marshal(b, m, deterministic)
 }
-func (dst *FingerprintTuple) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FingerprintTuple.Merge(dst, src)
+func (m *FingerprintTuple) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintTuple.Merge(m, src)
 }
 func (m *FingerprintTuple) XXX_Size() int {
 	return xxx_messageInfo_FingerprintTuple.Size(m)
@@ -280,16 +289,17 @@ func (m *FingerprintRequest) Reset()         { *m = FingerprintRequest{} }
 func (m *FingerprintRequest) String() string { return proto.CompactTextString(m) }
 func (*FingerprintRequest) ProtoMessage()    {}
 func (*FingerprintRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{3}
+	return fileDescriptor_958480b1a11f31b5, []int{3}
 }
+
 func (m *FingerprintRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FingerprintRequest.Unmarshal(m, b)
 }
 func (m *FingerprintRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FingerprintRequest.Marshal(b, m, deterministic)
 }
-func (dst *FingerprintRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FingerprintRequest.Merge(dst, src)
+func (m *FingerprintRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintRequest.Merge(m, src)
 }
 func (m *FingerprintRequest) XXX_Size() int {
 	return xxx_messageInfo_FingerprintRequest.Size(m)
@@ -336,16 +346,17 @@ func (m *FingerprintResponse) Reset()         { *m = FingerprintResponse{} }
 func (m *FingerprintResponse) String() string { return proto.CompactTextString(m) }
 func (*FingerprintResponse) ProtoMessage()    {}
 func (*FingerprintResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{4}
+	return fileDescriptor_958480b1a11f31b5, []int{4}
 }
+
 func (m *FingerprintResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FingerprintResponse.Unmarshal(m, b)
 }
 func (m *FingerprintResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FingerprintResponse.Marshal(b, m, deterministic)
 }
-func (dst *FingerprintResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FingerprintResponse.Merge(dst, src)
+func (m *FingerprintResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FingerprintResponse.Merge(m, src)
 }
 func (m *FingerprintResponse) XXX_Size() int {
 	return xxx_messageInfo_FingerprintResponse.Size(m)
@@ -399,16 +410,17 @@ func (m *BufferReference) Reset()         { *m = BufferReference{} }
 func (m *BufferReference) String() string { return proto.CompactTextString(m) }
 func (*BufferReference) ProtoMessage()    {}
 func (*BufferReference) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fingerprint_e0d5a6c25e54754b, []int{5}
+	return fileDescriptor_958480b1a11f31b5, []int{5}
 }
+
 func (m *BufferReference) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_BufferReference.Unmarshal(m, b)
 }
 func (m *BufferReference) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_BufferReference.Marshal(b, m, deterministic)
 }
-func (dst *BufferReference) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_BufferReference.Merge(dst, src)
+func (m *BufferReference) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BufferReference.Merge(m, src)
 }
 func (m *BufferReference) XXX_Size() int {
 	return xxx_messageInfo_BufferReference.Size(m)
@@ -455,19 +467,19 @@ func (m *BufferReference) GetPathspec() *PathSpec {
 }
 
 func init() {
+	proto.RegisterEnum("proto.FingerprintTuple_Type", FingerprintTuple_Type_name, FingerprintTuple_Type_value)
+	proto.RegisterEnum("proto.FingerprintTuple_HashType", FingerprintTuple_HashType_name, FingerprintTuple_HashType_value)
 	proto.RegisterType((*Hash)(nil), "proto.Hash")
 	proto.RegisterType((*AuthenticodeSignedData)(nil), "proto.AuthenticodeSignedData")
 	proto.RegisterType((*FingerprintTuple)(nil), "proto.FingerprintTuple")
 	proto.RegisterType((*FingerprintRequest)(nil), "proto.FingerprintRequest")
 	proto.RegisterType((*FingerprintResponse)(nil), "proto.FingerprintResponse")
 	proto.RegisterType((*BufferReference)(nil), "proto.BufferReference")
-	proto.RegisterEnum("proto.FingerprintTuple_Type", FingerprintTuple_Type_name, FingerprintTuple_Type_value)
-	proto.RegisterEnum("proto.FingerprintTuple_HashType", FingerprintTuple_HashType_name, FingerprintTuple_HashType_value)
 }
 
-func init() { proto.RegisterFile("fingerprint.proto", fileDescriptor_fingerprint_e0d5a6c25e54754b) }
+func init() { proto.RegisterFile("fingerprint.proto", fileDescriptor_958480b1a11f31b5) }
 
-var fileDescriptor_fingerprint_e0d5a6c25e54754b = []byte{
+var fileDescriptor_958480b1a11f31b5 = []byte{
 	// 915 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x4d, 0x6f, 0xdb, 0x46,
 	0x13, 0x0e, 0x2d, 0x46, 0x96, 0x87, 0xfe, 0xd0, 0xbb, 0x2f, 0x90, 0x08, 0x6e, 0x83, 0x6c, 0x55,

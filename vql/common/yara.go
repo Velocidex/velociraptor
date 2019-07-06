@@ -109,8 +109,7 @@ func (self YaraScanPlugin) Call(
 				scope.Log("Failed to initialize YARA compiler: %s", err)
 				return
 			}
-			vql_subsystem.CacheSet(
-				scope, arg.Key, rules)
+			vql_subsystem.CacheSet(scope, arg.Key, rules)
 		}
 
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
@@ -224,6 +223,7 @@ type YaraProcPluginArgs struct {
 	Rules   string `vfilter:"required,field=rules,doc=Yara rules"`
 	Pid     int    `vfilter:"required,field=pid,doc=The pid to scan"`
 	Context int    `vfilter:"optional,field=context,doc=Return this many bytes either side of a hit"`
+	Key     string `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
 }
 
 type YaraProcPlugin struct{}
@@ -254,11 +254,20 @@ func (self YaraProcPlugin) Call(
 			return
 		}
 
-		variables := make(map[string]interface{})
-		rules, err := yara.Compile(arg.Rules, variables)
-		if err != nil {
-			scope.Log("Failed to initialize YARA compiler: %v", err)
-			return
+		if arg.Key == "" {
+			rule_hash := md5.Sum([]byte(arg.Rules))
+			arg.Key = string(rule_hash[:])
+		}
+		rules, ok := vql_subsystem.CacheGet(
+			scope, arg.Key).(*yara.Rules)
+		if !ok {
+			variables := make(map[string]interface{})
+			rules, err := yara.Compile(arg.Rules, variables)
+			if err != nil {
+				scope.Log("Failed to initialize YARA compiler: %v", err)
+				return
+			}
+			vql_subsystem.CacheSet(scope, arg.Key, rules)
 		}
 
 		matches, err := rules.ScanProc(

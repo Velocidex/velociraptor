@@ -3,10 +3,12 @@
 
 package proto
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "www.velocidex.com/golang/velociraptor/proto"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+	_ "www.velocidex.com/golang/velociraptor/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -17,7 +19,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type FileFinderContentsRegexMatchCondition_Mode int32
 
@@ -30,6 +32,7 @@ var FileFinderContentsRegexMatchCondition_Mode_name = map[int32]string{
 	0: "ALL_HITS",
 	1: "FIRST_HIT",
 }
+
 var FileFinderContentsRegexMatchCondition_Mode_value = map[string]int32{
 	"ALL_HITS":  0,
 	"FIRST_HIT": 1,
@@ -38,8 +41,9 @@ var FileFinderContentsRegexMatchCondition_Mode_value = map[string]int32{
 func (x FileFinderContentsRegexMatchCondition_Mode) String() string {
 	return proto.EnumName(FileFinderContentsRegexMatchCondition_Mode_name, int32(x))
 }
+
 func (FileFinderContentsRegexMatchCondition_Mode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{4, 0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{4, 0}
 }
 
 type FileFinderContentsLiteralMatchCondition_Mode int32
@@ -53,6 +57,7 @@ var FileFinderContentsLiteralMatchCondition_Mode_name = map[int32]string{
 	0: "ALL_HITS",
 	1: "FIRST_HIT",
 }
+
 var FileFinderContentsLiteralMatchCondition_Mode_value = map[string]int32{
 	"ALL_HITS":  0,
 	"FIRST_HIT": 1,
@@ -61,8 +66,9 @@ var FileFinderContentsLiteralMatchCondition_Mode_value = map[string]int32{
 func (x FileFinderContentsLiteralMatchCondition_Mode) String() string {
 	return proto.EnumName(FileFinderContentsLiteralMatchCondition_Mode_name, int32(x))
 }
+
 func (FileFinderContentsLiteralMatchCondition_Mode) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{5, 0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{5, 0}
 }
 
 type FileFinderHashActionOptions_OversizedFilePolicy int32
@@ -76,6 +82,7 @@ var FileFinderHashActionOptions_OversizedFilePolicy_name = map[int32]string{
 	0: "SKIP",
 	1: "HASH_TRUNCATED",
 }
+
 var FileFinderHashActionOptions_OversizedFilePolicy_value = map[string]int32{
 	"SKIP":           0,
 	"HASH_TRUNCATED": 1,
@@ -84,8 +91,9 @@ var FileFinderHashActionOptions_OversizedFilePolicy_value = map[string]int32{
 func (x FileFinderHashActionOptions_OversizedFilePolicy) String() string {
 	return proto.EnumName(FileFinderHashActionOptions_OversizedFilePolicy_name, int32(x))
 }
+
 func (FileFinderHashActionOptions_OversizedFilePolicy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{7, 0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{7, 0}
 }
 
 type FileFinderDownloadActionOptions_OversizedFilePolicy int32
@@ -101,6 +109,7 @@ var FileFinderDownloadActionOptions_OversizedFilePolicy_name = map[int32]string{
 	1: "HASH_TRUNCATED",
 	2: "DOWNLOAD_TRUNCATED",
 }
+
 var FileFinderDownloadActionOptions_OversizedFilePolicy_value = map[string]int32{
 	"SKIP":               0,
 	"HASH_TRUNCATED":     1,
@@ -110,8 +119,9 @@ var FileFinderDownloadActionOptions_OversizedFilePolicy_value = map[string]int32
 func (x FileFinderDownloadActionOptions_OversizedFilePolicy) String() string {
 	return proto.EnumName(FileFinderDownloadActionOptions_OversizedFilePolicy_name, int32(x))
 }
+
 func (FileFinderDownloadActionOptions_OversizedFilePolicy) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{8, 0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{8, 0}
 }
 
 type FileFinderArgs_XDev int32
@@ -127,6 +137,7 @@ var FileFinderArgs_XDev_name = map[int32]string{
 	1: "ALWAYS",
 	2: "LOCAL",
 }
+
 var FileFinderArgs_XDev_value = map[string]int32{
 	"NEVER":  0,
 	"ALWAYS": 1,
@@ -136,8 +147,9 @@ var FileFinderArgs_XDev_value = map[string]int32{
 func (x FileFinderArgs_XDev) String() string {
 	return proto.EnumName(FileFinderArgs_XDev_name, int32(x))
 }
+
 func (FileFinderArgs_XDev) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{11, 0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{11, 0}
 }
 
 // Next field ID: 7
@@ -153,16 +165,17 @@ func (m *FileFinderModificationTimeCondition) Reset()         { *m = FileFinderM
 func (m *FileFinderModificationTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderModificationTimeCondition) ProtoMessage()    {}
 func (*FileFinderModificationTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{0}
+	return fileDescriptor_49edf1cf4337ffb1, []int{0}
 }
+
 func (m *FileFinderModificationTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderModificationTimeCondition.Unmarshal(m, b)
 }
 func (m *FileFinderModificationTimeCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderModificationTimeCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderModificationTimeCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderModificationTimeCondition.Merge(dst, src)
+func (m *FileFinderModificationTimeCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderModificationTimeCondition.Merge(m, src)
 }
 func (m *FileFinderModificationTimeCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderModificationTimeCondition.Size(m)
@@ -200,16 +213,17 @@ func (m *FileFinderAccessTimeCondition) Reset()         { *m = FileFinderAccessT
 func (m *FileFinderAccessTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderAccessTimeCondition) ProtoMessage()    {}
 func (*FileFinderAccessTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{1}
+	return fileDescriptor_49edf1cf4337ffb1, []int{1}
 }
+
 func (m *FileFinderAccessTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderAccessTimeCondition.Unmarshal(m, b)
 }
 func (m *FileFinderAccessTimeCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderAccessTimeCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderAccessTimeCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderAccessTimeCondition.Merge(dst, src)
+func (m *FileFinderAccessTimeCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderAccessTimeCondition.Merge(m, src)
 }
 func (m *FileFinderAccessTimeCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderAccessTimeCondition.Size(m)
@@ -247,16 +261,17 @@ func (m *FileFinderInodeChangeTimeCondition) Reset()         { *m = FileFinderIn
 func (m *FileFinderInodeChangeTimeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderInodeChangeTimeCondition) ProtoMessage()    {}
 func (*FileFinderInodeChangeTimeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{2}
+	return fileDescriptor_49edf1cf4337ffb1, []int{2}
 }
+
 func (m *FileFinderInodeChangeTimeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderInodeChangeTimeCondition.Unmarshal(m, b)
 }
 func (m *FileFinderInodeChangeTimeCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderInodeChangeTimeCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderInodeChangeTimeCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderInodeChangeTimeCondition.Merge(dst, src)
+func (m *FileFinderInodeChangeTimeCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderInodeChangeTimeCondition.Merge(m, src)
 }
 func (m *FileFinderInodeChangeTimeCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderInodeChangeTimeCondition.Size(m)
@@ -294,16 +309,17 @@ func (m *FileFinderSizeCondition) Reset()         { *m = FileFinderSizeCondition
 func (m *FileFinderSizeCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderSizeCondition) ProtoMessage()    {}
 func (*FileFinderSizeCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{3}
+	return fileDescriptor_49edf1cf4337ffb1, []int{3}
 }
+
 func (m *FileFinderSizeCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderSizeCondition.Unmarshal(m, b)
 }
 func (m *FileFinderSizeCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderSizeCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderSizeCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderSizeCondition.Merge(dst, src)
+func (m *FileFinderSizeCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderSizeCondition.Merge(m, src)
 }
 func (m *FileFinderSizeCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderSizeCondition.Size(m)
@@ -345,16 +361,17 @@ func (m *FileFinderContentsRegexMatchCondition) Reset()         { *m = FileFinde
 func (m *FileFinderContentsRegexMatchCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderContentsRegexMatchCondition) ProtoMessage()    {}
 func (*FileFinderContentsRegexMatchCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{4}
+	return fileDescriptor_49edf1cf4337ffb1, []int{4}
 }
+
 func (m *FileFinderContentsRegexMatchCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderContentsRegexMatchCondition.Unmarshal(m, b)
 }
 func (m *FileFinderContentsRegexMatchCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderContentsRegexMatchCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderContentsRegexMatchCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderContentsRegexMatchCondition.Merge(dst, src)
+func (m *FileFinderContentsRegexMatchCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderContentsRegexMatchCondition.Merge(m, src)
 }
 func (m *FileFinderContentsRegexMatchCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderContentsRegexMatchCondition.Size(m)
@@ -426,16 +443,17 @@ func (m *FileFinderContentsLiteralMatchCondition) Reset() {
 func (m *FileFinderContentsLiteralMatchCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderContentsLiteralMatchCondition) ProtoMessage()    {}
 func (*FileFinderContentsLiteralMatchCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{5}
+	return fileDescriptor_49edf1cf4337ffb1, []int{5}
 }
+
 func (m *FileFinderContentsLiteralMatchCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Unmarshal(m, b)
 }
 func (m *FileFinderContentsLiteralMatchCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderContentsLiteralMatchCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Merge(dst, src)
+func (m *FileFinderContentsLiteralMatchCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Merge(m, src)
 }
 func (m *FileFinderContentsLiteralMatchCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderContentsLiteralMatchCondition.Size(m)
@@ -507,16 +525,17 @@ func (m *FileFinderCondition) Reset()         { *m = FileFinderCondition{} }
 func (m *FileFinderCondition) String() string { return proto.CompactTextString(m) }
 func (*FileFinderCondition) ProtoMessage()    {}
 func (*FileFinderCondition) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{6}
+	return fileDescriptor_49edf1cf4337ffb1, []int{6}
 }
+
 func (m *FileFinderCondition) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderCondition.Unmarshal(m, b)
 }
 func (m *FileFinderCondition) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderCondition.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderCondition) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderCondition.Merge(dst, src)
+func (m *FileFinderCondition) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderCondition.Merge(m, src)
 }
 func (m *FileFinderCondition) XXX_Size() int {
 	return xxx_messageInfo_FileFinderCondition.Size(m)
@@ -616,9 +635,9 @@ func (m *FileFinderCondition) GetContentsLiteralMatch() *FileFinderContentsLiter
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileFinderCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileFinderCondition_OneofMarshaler, _FileFinderCondition_OneofUnmarshaler, _FileFinderCondition_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileFinderCondition) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileFinderCondition_ModificationTime)(nil),
 		(*FileFinderCondition_AccessTime)(nil),
 		(*FileFinderCondition_InodeChangeTime)(nil),
@@ -626,144 +645,6 @@ func (*FileFinderCondition) XXX_OneofFuncs() (func(msg proto.Message, b *proto.B
 		(*FileFinderCondition_ContentsRegexMatch)(nil),
 		(*FileFinderCondition_ContentsLiteralMatch)(nil),
 	}
-}
-
-func _FileFinderCondition_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileFinderCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *FileFinderCondition_ModificationTime:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ModificationTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_AccessTime:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.AccessTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_InodeChangeTime:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.InodeChangeTime); err != nil {
-			return err
-		}
-	case *FileFinderCondition_Size:
-		b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Size); err != nil {
-			return err
-		}
-	case *FileFinderCondition_ContentsRegexMatch:
-		b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ContentsRegexMatch); err != nil {
-			return err
-		}
-	case *FileFinderCondition_ContentsLiteralMatch:
-		b.EncodeVarint(7<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.ContentsLiteralMatch); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileFinderCondition.UnionField has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileFinderCondition_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileFinderCondition)
-	switch tag {
-	case 2: // union_field.modification_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderModificationTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ModificationTime{msg}
-		return true, err
-	case 3: // union_field.access_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderAccessTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_AccessTime{msg}
-		return true, err
-	case 4: // union_field.inode_change_time
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderInodeChangeTimeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_InodeChangeTime{msg}
-		return true, err
-	case 5: // union_field.size
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderSizeCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_Size{msg}
-		return true, err
-	case 6: // union_field.contents_regex_match
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderContentsRegexMatchCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ContentsRegexMatch{msg}
-		return true, err
-	case 7: // union_field.contents_literal_match
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderContentsLiteralMatchCondition)
-		err := b.DecodeMessage(msg)
-		m.UnionField = &FileFinderCondition_ContentsLiteralMatch{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileFinderCondition_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileFinderCondition)
-	// union_field
-	switch x := m.UnionField.(type) {
-	case *FileFinderCondition_ModificationTime:
-		s := proto.Size(x.ModificationTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_AccessTime:
-		s := proto.Size(x.AccessTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_InodeChangeTime:
-		s := proto.Size(x.InodeChangeTime)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_Size:
-		s := proto.Size(x.Size)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_ContentsRegexMatch:
-		s := proto.Size(x.ContentsRegexMatch)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderCondition_ContentsLiteralMatch:
-		s := proto.Size(x.ContentsLiteralMatch)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Next field ID: 5
@@ -780,16 +661,17 @@ func (m *FileFinderHashActionOptions) Reset()         { *m = FileFinderHashActio
 func (m *FileFinderHashActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderHashActionOptions) ProtoMessage()    {}
 func (*FileFinderHashActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{7}
+	return fileDescriptor_49edf1cf4337ffb1, []int{7}
 }
+
 func (m *FileFinderHashActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderHashActionOptions.Unmarshal(m, b)
 }
 func (m *FileFinderHashActionOptions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderHashActionOptions.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderHashActionOptions) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderHashActionOptions.Merge(dst, src)
+func (m *FileFinderHashActionOptions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderHashActionOptions.Merge(m, src)
 }
 func (m *FileFinderHashActionOptions) XXX_Size() int {
 	return xxx_messageInfo_FileFinderHashActionOptions.Size(m)
@@ -835,16 +717,17 @@ func (m *FileFinderDownloadActionOptions) Reset()         { *m = FileFinderDownl
 func (m *FileFinderDownloadActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderDownloadActionOptions) ProtoMessage()    {}
 func (*FileFinderDownloadActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{8}
+	return fileDescriptor_49edf1cf4337ffb1, []int{8}
 }
+
 func (m *FileFinderDownloadActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderDownloadActionOptions.Unmarshal(m, b)
 }
 func (m *FileFinderDownloadActionOptions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderDownloadActionOptions.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderDownloadActionOptions) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderDownloadActionOptions.Merge(dst, src)
+func (m *FileFinderDownloadActionOptions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderDownloadActionOptions.Merge(m, src)
 }
 func (m *FileFinderDownloadActionOptions) XXX_Size() int {
 	return xxx_messageInfo_FileFinderDownloadActionOptions.Size(m)
@@ -888,16 +771,17 @@ func (m *FileFinderStatActionOptions) Reset()         { *m = FileFinderStatActio
 func (m *FileFinderStatActionOptions) String() string { return proto.CompactTextString(m) }
 func (*FileFinderStatActionOptions) ProtoMessage()    {}
 func (*FileFinderStatActionOptions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{9}
+	return fileDescriptor_49edf1cf4337ffb1, []int{9}
 }
+
 func (m *FileFinderStatActionOptions) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderStatActionOptions.Unmarshal(m, b)
 }
 func (m *FileFinderStatActionOptions) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderStatActionOptions.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderStatActionOptions) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderStatActionOptions.Merge(dst, src)
+func (m *FileFinderStatActionOptions) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderStatActionOptions.Merge(m, src)
 }
 func (m *FileFinderStatActionOptions) XXX_Size() int {
 	return xxx_messageInfo_FileFinderStatActionOptions.Size(m)
@@ -938,16 +822,17 @@ func (m *FileFinderAction) Reset()         { *m = FileFinderAction{} }
 func (m *FileFinderAction) String() string { return proto.CompactTextString(m) }
 func (*FileFinderAction) ProtoMessage()    {}
 func (*FileFinderAction) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{10}
+	return fileDescriptor_49edf1cf4337ffb1, []int{10}
 }
+
 func (m *FileFinderAction) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderAction.Unmarshal(m, b)
 }
 func (m *FileFinderAction) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderAction.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderAction) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderAction.Merge(dst, src)
+func (m *FileFinderAction) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderAction.Merge(m, src)
 }
 func (m *FileFinderAction) XXX_Size() int {
 	return xxx_messageInfo_FileFinderAction.Size(m)
@@ -1008,97 +893,13 @@ func (m *FileFinderAction) GetStat() *FileFinderStatActionOptions {
 	return nil
 }
 
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*FileFinderAction) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _FileFinderAction_OneofMarshaler, _FileFinderAction_OneofUnmarshaler, _FileFinderAction_OneofSizer, []interface{}{
+// XXX_OneofWrappers is for the internal use of the proto package.
+func (*FileFinderAction) XXX_OneofWrappers() []interface{} {
+	return []interface{}{
 		(*FileFinderAction_Hash)(nil),
 		(*FileFinderAction_Download)(nil),
 		(*FileFinderAction_Stat)(nil),
 	}
-}
-
-func _FileFinderAction_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*FileFinderAction)
-	// action
-	switch x := m.Action.(type) {
-	case *FileFinderAction_Hash:
-		b.EncodeVarint(3<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Hash); err != nil {
-			return err
-		}
-	case *FileFinderAction_Download:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Download); err != nil {
-			return err
-		}
-	case *FileFinderAction_Stat:
-		b.EncodeVarint(4<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Stat); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("FileFinderAction.Action has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _FileFinderAction_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*FileFinderAction)
-	switch tag {
-	case 3: // action.hash
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderHashActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Hash{msg}
-		return true, err
-	case 2: // action.download
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderDownloadActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Download{msg}
-		return true, err
-	case 4: // action.stat
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(FileFinderStatActionOptions)
-		err := b.DecodeMessage(msg)
-		m.Action = &FileFinderAction_Stat{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _FileFinderAction_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*FileFinderAction)
-	// action
-	switch x := m.Action.(type) {
-	case *FileFinderAction_Hash:
-		s := proto.Size(x.Hash)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderAction_Download:
-		s := proto.Size(x.Download)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *FileFinderAction_Stat:
-		s := proto.Size(x.Stat)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
 }
 
 // Next field ID: 11
@@ -1118,16 +919,17 @@ func (m *FileFinderArgs) Reset()         { *m = FileFinderArgs{} }
 func (m *FileFinderArgs) String() string { return proto.CompactTextString(m) }
 func (*FileFinderArgs) ProtoMessage()    {}
 func (*FileFinderArgs) Descriptor() ([]byte, []int) {
-	return fileDescriptor_file_finder_9c34582b30304666, []int{11}
+	return fileDescriptor_49edf1cf4337ffb1, []int{11}
 }
+
 func (m *FileFinderArgs) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FileFinderArgs.Unmarshal(m, b)
 }
 func (m *FileFinderArgs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_FileFinderArgs.Marshal(b, m, deterministic)
 }
-func (dst *FileFinderArgs) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_FileFinderArgs.Merge(dst, src)
+func (m *FileFinderArgs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FileFinderArgs.Merge(m, src)
 }
 func (m *FileFinderArgs) XXX_Size() int {
 	return xxx_messageInfo_FileFinderArgs.Size(m)
@@ -1181,6 +983,11 @@ func (m *FileFinderArgs) GetXdev() FileFinderArgs_XDev {
 }
 
 func init() {
+	proto.RegisterEnum("proto.FileFinderContentsRegexMatchCondition_Mode", FileFinderContentsRegexMatchCondition_Mode_name, FileFinderContentsRegexMatchCondition_Mode_value)
+	proto.RegisterEnum("proto.FileFinderContentsLiteralMatchCondition_Mode", FileFinderContentsLiteralMatchCondition_Mode_name, FileFinderContentsLiteralMatchCondition_Mode_value)
+	proto.RegisterEnum("proto.FileFinderHashActionOptions_OversizedFilePolicy", FileFinderHashActionOptions_OversizedFilePolicy_name, FileFinderHashActionOptions_OversizedFilePolicy_value)
+	proto.RegisterEnum("proto.FileFinderDownloadActionOptions_OversizedFilePolicy", FileFinderDownloadActionOptions_OversizedFilePolicy_name, FileFinderDownloadActionOptions_OversizedFilePolicy_value)
+	proto.RegisterEnum("proto.FileFinderArgs_XDev", FileFinderArgs_XDev_name, FileFinderArgs_XDev_value)
 	proto.RegisterType((*FileFinderModificationTimeCondition)(nil), "proto.FileFinderModificationTimeCondition")
 	proto.RegisterType((*FileFinderAccessTimeCondition)(nil), "proto.FileFinderAccessTimeCondition")
 	proto.RegisterType((*FileFinderInodeChangeTimeCondition)(nil), "proto.FileFinderInodeChangeTimeCondition")
@@ -1193,16 +1000,11 @@ func init() {
 	proto.RegisterType((*FileFinderStatActionOptions)(nil), "proto.FileFinderStatActionOptions")
 	proto.RegisterType((*FileFinderAction)(nil), "proto.FileFinderAction")
 	proto.RegisterType((*FileFinderArgs)(nil), "proto.FileFinderArgs")
-	proto.RegisterEnum("proto.FileFinderContentsRegexMatchCondition_Mode", FileFinderContentsRegexMatchCondition_Mode_name, FileFinderContentsRegexMatchCondition_Mode_value)
-	proto.RegisterEnum("proto.FileFinderContentsLiteralMatchCondition_Mode", FileFinderContentsLiteralMatchCondition_Mode_name, FileFinderContentsLiteralMatchCondition_Mode_value)
-	proto.RegisterEnum("proto.FileFinderHashActionOptions_OversizedFilePolicy", FileFinderHashActionOptions_OversizedFilePolicy_name, FileFinderHashActionOptions_OversizedFilePolicy_value)
-	proto.RegisterEnum("proto.FileFinderDownloadActionOptions_OversizedFilePolicy", FileFinderDownloadActionOptions_OversizedFilePolicy_name, FileFinderDownloadActionOptions_OversizedFilePolicy_value)
-	proto.RegisterEnum("proto.FileFinderArgs_XDev", FileFinderArgs_XDev_name, FileFinderArgs_XDev_value)
 }
 
-func init() { proto.RegisterFile("file_finder.proto", fileDescriptor_file_finder_9c34582b30304666) }
+func init() { proto.RegisterFile("file_finder.proto", fileDescriptor_49edf1cf4337ffb1) }
 
-var fileDescriptor_file_finder_9c34582b30304666 = []byte{
+var fileDescriptor_49edf1cf4337ffb1 = []byte{
 	// 2602 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0x4d, 0x70, 0x23, 0x47,
 	0xf5, 0xf7, 0x78, 0x65, 0xaf, 0xdd, 0xfe, 0x88, 0xdd, 0xde, 0xbf, 0xe3, 0x68, 0xff, 0x24, 0xcd,

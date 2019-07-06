@@ -32,6 +32,7 @@ type ServicesManager struct {
 	stats_collector   *StatsCollector
 	server_monitoring *EventTable
 	server_artifacts  *ServerArtifactsRunner
+	dyn_dns           *DynDNSService
 }
 
 func (self *ServicesManager) Close() {
@@ -41,6 +42,7 @@ func (self *ServicesManager) Close() {
 	self.stats_collector.Close()
 	self.server_monitoring.Close()
 	self.server_artifacts.Close()
+	self.dyn_dns.Close()
 }
 
 // Start all the server services.
@@ -89,6 +91,12 @@ func StartServices(
 	if err != nil {
 		return nil, err
 	}
+
+	dyndns, err := startDynDNSService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.dyn_dns = dyndns
 
 	return result, nil
 }
