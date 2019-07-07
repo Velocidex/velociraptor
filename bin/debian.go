@@ -1,5 +1,3 @@
-// +build linux
-
 // This command creates a customized server deb package which may be
 // used to automatically deploy Velociraptor server (e.g. in a Docker
 // container or on its own VM). The intention is to make this as self
@@ -39,6 +37,7 @@ package main
 import (
 	"archive/tar"
 	"compress/gzip"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -65,6 +64,9 @@ var (
 
 	server_debian_command_with_monitoring = server_debian_command.Flag(
 		"with_monitoring", "Also include Grafana and Prometheus").Bool()
+
+	server_debian_command_binary = server_debian_command.Flag(
+		"binary", "The binary to package").String()
 
 	service_definition = `
 [Unit]
@@ -124,8 +126,24 @@ func doServerDeb() {
 	res, err := yaml.Marshal(config_obj)
 	kingpin.FatalIfError(err, "marshal")
 
-	input, err := os.Executable()
+	input := *server_debian_command_binary
+
+	if input == "" {
+		input, err = os.Executable()
+		kingpin.FatalIfError(err, "Unable to open executable")
+	}
+
+	fd, err := os.Open(input)
 	kingpin.FatalIfError(err, "Unable to open executable")
+	defer fd.Close()
+
+	header := make([]byte, 4)
+	fd.Read(header)
+	if binary.LittleEndian.Uint32(header) != 0x464c457f {
+		kingpin.Fatalf("Binary does not appear to be an " +
+			"ELF binary. Please specify the linux binary " +
+			"using the --binary flag.")
+	}
 
 	deb := debpkg.New()
 	defer deb.Close()
