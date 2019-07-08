@@ -25,7 +25,7 @@ description: |
     windows API we will likely miss any settings for users not
     currently logged on.
 
-  {{% /notice }}
+  {{% /notice %}}
 
 precondition: SELECT OS From info() where OS = 'windows'
 

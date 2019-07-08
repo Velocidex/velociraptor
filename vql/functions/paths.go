@@ -19,7 +19,6 @@ package functions
 
 import (
 	"context"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -44,7 +43,7 @@ func (self *DirnameFunction) Call(ctx context.Context,
 
 	components := utils.SplitComponents(arg.Path)
 	if len(components) > 0 {
-		return strings.Join(components[:len(components)-1], "/")
+		return utils.JoinComponents(components[:len(components)-1], "/")
 	}
 	return vfilter.Null{}
 }

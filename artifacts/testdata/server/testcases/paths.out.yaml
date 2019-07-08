@@ -1,0 +1,33 @@
+SELECT basename(path="/foo/bar/baz") FROM scope()[
+ {
+  "basename(path=\"/foo/bar/baz\")": "baz"
+ }
+]SELECT dirname(path="/foo/bar/baz") FROM scope()[
+ {
+  "dirname(path=\"/foo/bar/baz\")": "foo/bar"
+ }
+]SELECT basename(path='/foo/bar/"http://www.google.com/"') FROM scope()[
+ {
+  "basename(path=\"/foo/bar/\\\"http://www.google.com/\\\"\")": "http://www.google.com/"
+ }
+]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"') FROM scope()[
+ {
+  "basename(path=\"c:\\\\foo\\\\bar\\\\\\\"http://www.google.com/\\\"\")": "http://www.google.com/"
+ }
+]SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()[
+ {
+  "basename(path=\"c:\\\\foo\\\\bar\\\\\\\"http://www.google.com/\\\"/Foobar\")": "Foobar"
+ }
+]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()[
+ {
+  "dirname(path=\"c:\\\\foo\\\\bar\\\\\\\"http://www.google.com/\\\"/Foobar\")": "c:/foo/bar/\"http://www.google.com/\""
+ }
+]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()[
+ {
+  "basename(path=\"c:\\\\foo\\\\bar\\\\\\\"F:\\\\foobar.txt\\\"\")": "F:\\foobar.txt"
+ }
+]SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"') FROM scope()[
+ {
+  "basename(path=\"c:\\\\foo\\\\bar\\\\\\\"F:\\\\foo/bar.txt\\\"\")": "F:\\foo/bar.txt"
+ }
+]

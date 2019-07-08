@@ -3,5 +3,9 @@ Windows Registry Editor Version 5.00
 [HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run]
 "c:\\windows\\system32\\msht.exe"="Hello"
 
+[HKEY_CURRENT_USER\Software\Microsoft\Office\16.0\Word\Security\Trusted Documents\TrustRecords]
+"%USERPROFILE%/Desktop/test.docx"=hex:36,5c,f6,9a,ea,6d,d1,01,00,00,00,00,00,\
+  00,00,00,b7,51,72,01,ff,ff,ff,7f
+
 [HKEY_CURRENT_USER\Software\Sysinternals\PsExec]
 "EulaAccepted"=1

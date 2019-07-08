@@ -224,6 +224,7 @@ func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
 
+	// Root directory is just the name of the hives.
 	if path == "/" || path == "\\" || path == "" {
 		for k, _ := range root_keys {
 			result = append(result,
@@ -274,11 +275,8 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		}
 		defer subkey.Close()
 
-		full_path := filepath.Join(hive_name, key_path, subkey_name)
-		// Handle the case where subkey_name contains slashes.
-		if strings.Contains(subkey_name, "/") {
-			full_path = hive_name + "\\" + key_path + "\"" + subkey_name + "\""
-		}
+		full_path := filepath.Join(hive_name, key_path)
+		full_path = self.PathJoin(full_path, subkey_name)
 
 		key_info, err := getKeyInfo(subkey, full_path, subkey_name)
 		if err != nil {
@@ -396,13 +394,6 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		key_modtime = key_stat.ModTime()
 	}
 
-	// Value names sometimes contain pathsep characters. We need
-	// to escape the entire name so the rest of the code would
-	// treat the name as a single unit and not try to break it up.
-	if strings.Contains(value_info_name, "\\") {
-		value_info_name = "\"" + value_info_name + "\""
-	}
-
 	value_info := &RegValueInfo{
 		RegKeyInfo: RegKeyInfo{
 			// Values do not carry their own
@@ -412,7 +403,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			// copy the key's timestamp to each
 			// value.
 			_modtime:   key_modtime,
-			_full_path: key_path + "\\" + value_info_name,
+			_full_path: utils.PathJoin(key_path, value_info_name, "\\"),
 			_name:      value_info_name,
 		}}
 
@@ -512,24 +503,18 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 	return value_info, nil
 }
 
-func (self *RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
+func (self RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
 	components := utils.SplitComponents(path)
 	return "", strings.Join(components, "\\"), nil
 }
 
 // We accept both / and \ as a path separator
-func (self *RegFileSystemAccessor) PathSplit(path string) []string {
+func (self RegFileSystemAccessor) PathSplit(path string) []string {
 	return regparser.SplitComponents(path)
 }
 
-func (self *RegFileSystemAccessor) PathJoin(root, stem string) string {
-	// If any of the subsequent components contain
-	// a slash then escape them together.
-	if strings.Contains(stem, "/") {
-		stem = "\"" + stem + "\""
-	}
-
-	return filepath.Join(root, stem)
+func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
+	return utils.PathJoin(root, stem, "\\")
 }
 
 func init() {

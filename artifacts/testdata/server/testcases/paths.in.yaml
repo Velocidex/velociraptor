@@ -1,0 +1,11 @@
+Queries:
+  - SELECT basename(path="/foo/bar/baz") FROM scope()
+  - SELECT dirname(path="/foo/bar/baz") FROM scope()
+
+  # Test we handle proper escaping
+  - SELECT basename(path='/foo/bar/"http://www.google.com/"') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()
+  - SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()
+  - SELECT basename(path='c:\\foo\\bar\\"F:\\foo/bar.txt"') FROM scope()

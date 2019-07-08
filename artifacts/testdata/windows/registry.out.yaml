@@ -85,6 +85,13 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\""
  }
+]SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath) FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="reg")[
+ {
+  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\\"%USERPROFILE%/Desktop/test.docx\"",
+  "Name": "%USERPROFILE%/Desktop/test.docx",
+  "basename(path=FullPath)": "%USERPROFILE%/Desktop/test.docx",
+  "dirname(path=FullPath)": "HKEY_CURRENT_USER/Software/Microsoft/Office/16.0/Word/Security/Trusted Documents/TrustRecords"
+ }
 ]SELECT * FROM Artifact.Windows.System.Amcache( amCacheGlob="c:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
   "BinFileVersion": "1.289.0.0",

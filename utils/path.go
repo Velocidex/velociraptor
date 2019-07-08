@@ -26,7 +26,7 @@ import (
 // values may contain path separators in their name, we need to ensure
 // such names are escaped using quotes. For example:
 // HKEY_USERS\S-1-5-21-546003962-2713609280-610790815-1003\Software\Microsoft\Windows\CurrentVersion\Run\"c:\windows\system32\mshta.exe"
-var component_quoted_regex = regexp.MustCompile(`^"([^"\\/]*(?:[\\/].[^"\\/]*)*)"`)
+var component_quoted_regex = regexp.MustCompile(`^"((?:[^"\\]*(?:\\"?)?)+)"`)
 var component_unquoted_regex = regexp.MustCompile(`^[\\/]?([^\\/]*)([\\/]?|$)`)
 
 func SplitComponents(path string) []string {
@@ -53,4 +53,30 @@ func SplitComponents(path string) []string {
 		return strings.Split(path, "\\")
 	}
 	return components
+}
+
+// The opposite of SplitComponents above.
+func JoinComponents(components []string, sep string) string {
+	result := []string{}
+	for _, component := range components {
+		// The component contains any separator then we must
+		// escape it.
+		if strings.Contains(component, "\\") ||
+			strings.Contains(component, "/") {
+			component = "\"" + component + "\""
+		}
+		result = append(result, component)
+	}
+
+	return strings.Join(result, sep)
+}
+
+func PathJoin(root, stem, sep string) string {
+	// If any of the subsequent components contain
+	// a slash then escape them together.
+	if strings.Contains(stem, "/") || strings.Contains(stem, "\\") {
+		stem = "\"" + stem + "\""
+	}
+
+	return root + sep + stem
 }
