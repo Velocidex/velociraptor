@@ -1,0 +1,43 @@
+name: Windows.Registry.EnabledMacro
+description: |
+  Checks for Registry key indicating macro was enabled by user.
+
+  HKEY_USERS\*\Software\Microsoft\Office\*\Security\Trusted Documents\TrustRecords reg keys for values ending in FFFFFF7F
+  http://az4n6.blogspot.com/2016/02/more-on-trust-records-macros-and.html
+
+  Author: @mgreen27
+  
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+ - name: KeyGlob
+   default: Software\Microsoft\Of fice\*\*\Security\Trusted Documents\TrustRecords\*
+
+sources:
+ - queries:
+      - |
+        LET UserProfiles = Select Name as Username, 
+            {
+                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+            } as NTUser,
+            expand(path=Directory) as Directory
+        FROM Artifact.Windows.Sys.Users()
+        WHERE Directory and NTUser
+      - |
+        SELECT * FROM foreach(
+          row={
+            SELECT Username,NTUser FROM UserProfiles
+          },
+          query={
+            SELECT Name as Document,
+              Username,
+              NTUser as Userhive,
+              dirname(path=url(parse=FullPath).fragment) as Key,
+              timestamp(epoch=Mtime.Sec) AS LastModified
+            FROM glob(
+              globs=url(scheme="ntfs",
+                path=NTUser,
+                fragment=KeyGlob).String,
+              accessor="raw_reg")
+            WHERE Data.type = "REG_BINARY" and encode(string=Data.value, type="hex") =~ "ffffff7f$"
+          })
