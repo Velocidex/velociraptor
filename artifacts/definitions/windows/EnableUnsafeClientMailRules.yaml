@@ -1,0 +1,48 @@
+name: Windows.Registry.EnableUnsafeClientMailRules
+description: |
+  Checks for Outlook EnableUnsafeClientMailRules = 1 (turned on).
+  This registry key enables execution from Outlook inbox rules which can be used as a persistence mechanism.
+  Microsoft has released a patch to disable execution but attackers can reenable by changing this value to 1. 
+
+  HKEY_USERS\*\Software\Microsoft\Office\*\Outlook\Security\EnableUnsafeClientMailRules = 0 (expected)
+  https://support.microsoft.com/en-us/help/3191893/how-to-control-the-rule-actions-to-start-an-application-or-run-a-macro
+
+  Author: @mgreen27
+  
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+   - name: KeyGlob
+     default: Software\Microsoft\Office\*\Outlook\Security\
+
+sources:
+
+
+    queries:
+      - |
+        LET UserProfiles = Select Name as Username, 
+            {
+                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+            } as NTUser,
+            expand(path=Directory) as Directory
+        FROM Artifact.Windows.Sys.Users()
+        WHERE Directory and NTUser
+      - |
+         SELECT * FROM foreach(
+           row={
+              SELECT Username, NTUser FROM UserProfiles
+           },
+           query={
+              SELECT Username,
+                NTUser as Userhive,
+                url(parse=key.FullPath).fragment as Key,
+                timestamp(epoch=key.Mtime.Sec) AS LastModified,
+                EnableUnsafeClientMailRules,
+                OutlookSecureTempFolder
+              FROM read_reg_key(
+                 globs=url(scheme="ntfs",
+                    path=FullPath,
+                    fragment=KeyGlob).String,
+                 accessor="raw_reg")
+              WHERE EnableUnsafeClientMailRules = 1
+           })
