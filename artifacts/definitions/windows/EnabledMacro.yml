@@ -11,7 +11,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
  - name: KeyGlob
-   default: Software\Microsoft\Of fice\*\*\Security\Trusted Documents\TrustRecords\*
+   default: Software\Microsoft\Office\*\*\Security\Trusted Documents\TrustRecords\*
 
 sources:
  - queries:
