@@ -463,7 +463,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
 		func(path string, info os.FileInfo, err error) error {
-			if err == nil && strings.HasSuffix(path, ".yaml") {
+			if err == nil && strings.HasSuffix(path, ".yaml") ||
+				strings.HasSuffix(path, ".yml") {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
 					logger.Error(err)
