@@ -10,6 +10,8 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 	proto2 "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto3 "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -878,6 +880,110 @@ type APIServer interface {
 	// Service.
 	SetClientMonitoringState(context.Context, *proto1.ArtifactCollectorArgs) (*proto1.ArtifactCollectorArgs, error)
 	ListAvailableEventResults(context.Context, *ListAvailableEventResultsRequest) (*ListAvailableEventResultsResponse, error)
+}
+
+// UnimplementedAPIServer can be embedded to have forward compatible implementations.
+type UnimplementedAPIServer struct {
+}
+
+func (*UnimplementedAPIServer) CreateHunt(ctx context.Context, req *Hunt) (*StartFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateHunt not implemented")
+}
+func (*UnimplementedAPIServer) ListHunts(ctx context.Context, req *ListHuntsRequest) (*ListHuntsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListHunts not implemented")
+}
+func (*UnimplementedAPIServer) GetHunt(ctx context.Context, req *GetHuntRequest) (*Hunt, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHunt not implemented")
+}
+func (*UnimplementedAPIServer) ModifyHunt(ctx context.Context, req *Hunt) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifyHunt not implemented")
+}
+func (*UnimplementedAPIServer) GetHuntResults(ctx context.Context, req *GetHuntResultsRequest) (*GetTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetHuntResults not implemented")
+}
+func (*UnimplementedAPIServer) NotifyClients(ctx context.Context, req *NotificationRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NotifyClients not implemented")
+}
+func (*UnimplementedAPIServer) LabelClients(ctx context.Context, req *LabelClientsRequest) (*APIResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LabelClients not implemented")
+}
+func (*UnimplementedAPIServer) ListClients(ctx context.Context, req *SearchClientsRequest) (*SearchClientsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListClients not implemented")
+}
+func (*UnimplementedAPIServer) GetClient(ctx context.Context, req *GetClientRequest) (*ApiClient, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClient not implemented")
+}
+func (*UnimplementedAPIServer) GetClientFlows(ctx context.Context, req *ApiFlowRequest) (*ApiFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClientFlows not implemented")
+}
+func (*UnimplementedAPIServer) GetUserUITraits(ctx context.Context, req *empty.Empty) (*ApiGrrUser, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserUITraits not implemented")
+}
+func (*UnimplementedAPIServer) GetUserNotifications(ctx context.Context, req *GetUserNotificationsRequest) (*GetUserNotificationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserNotifications not implemented")
+}
+func (*UnimplementedAPIServer) GetUserNotificationCount(ctx context.Context, req *empty.Empty) (*UserNotificationCount, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserNotificationCount not implemented")
+}
+func (*UnimplementedAPIServer) VFSListDirectory(ctx context.Context, req *proto1.VFSListRequest) (*proto2.VQLResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VFSListDirectory not implemented")
+}
+func (*UnimplementedAPIServer) VFSRefreshDirectory(ctx context.Context, req *VFSRefreshDirectoryRequest) (*StartFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VFSRefreshDirectory not implemented")
+}
+func (*UnimplementedAPIServer) VFSGetBuffer(ctx context.Context, req *VFSFileBuffer) (*VFSFileBuffer, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VFSGetBuffer not implemented")
+}
+func (*UnimplementedAPIServer) GetTable(ctx context.Context, req *GetTableRequest) (*GetTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTable not implemented")
+}
+func (*UnimplementedAPIServer) LaunchFlow(ctx context.Context, req *proto1.FlowRunnerArgs) (*StartFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LaunchFlow not implemented")
+}
+func (*UnimplementedAPIServer) CancelFlow(ctx context.Context, req *ApiFlowRequest) (*StartFlowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelFlow not implemented")
+}
+func (*UnimplementedAPIServer) GetFlowDetails(ctx context.Context, req *ApiFlowRequest) (*ApiFlow, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFlowDetails not implemented")
+}
+func (*UnimplementedAPIServer) GetFlowRequests(ctx context.Context, req *ApiFlowRequest) (*ApiFlowRequestDetails, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFlowRequests not implemented")
+}
+func (*UnimplementedAPIServer) GetFlowDescriptors(ctx context.Context, req *empty.Empty) (*FlowDescriptors, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFlowDescriptors not implemented")
+}
+func (*UnimplementedAPIServer) DescribeTypes(ctx context.Context, req *empty.Empty) (*proto3.Types, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DescribeTypes not implemented")
+}
+func (*UnimplementedAPIServer) GetArtifacts(ctx context.Context, req *GetArtifactsRequest) (*proto3.ArtifactDescriptors, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtifacts not implemented")
+}
+func (*UnimplementedAPIServer) GetArtifactFile(ctx context.Context, req *GetArtifactRequest) (*GetArtifactResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtifactFile not implemented")
+}
+func (*UnimplementedAPIServer) SetArtifactFile(ctx context.Context, req *SetArtifactRequest) (*APIResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetArtifactFile not implemented")
+}
+func (*UnimplementedAPIServer) GetReport(ctx context.Context, req *GetReportRequest) (*GetReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReport not implemented")
+}
+func (*UnimplementedAPIServer) Query(req *proto2.VQLCollectorArgs, srv API_QueryServer) error {
+	return status.Errorf(codes.Unimplemented, "method Query not implemented")
+}
+func (*UnimplementedAPIServer) GetServerMonitoringState(ctx context.Context, req *empty.Empty) (*proto1.ArtifactCollectorArgs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServerMonitoringState not implemented")
+}
+func (*UnimplementedAPIServer) SetServerMonitoringState(ctx context.Context, req *proto1.ArtifactCollectorArgs) (*proto1.ArtifactCollectorArgs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetServerMonitoringState not implemented")
+}
+func (*UnimplementedAPIServer) GetClientMonitoringState(ctx context.Context, req *empty.Empty) (*proto1.ArtifactCollectorArgs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClientMonitoringState not implemented")
+}
+func (*UnimplementedAPIServer) SetClientMonitoringState(ctx context.Context, req *proto1.ArtifactCollectorArgs) (*proto1.ArtifactCollectorArgs, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetClientMonitoringState not implemented")
+}
+func (*UnimplementedAPIServer) ListAvailableEventResults(ctx context.Context, req *ListAvailableEventResultsRequest) (*ListAvailableEventResultsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAvailableEventResults not implemented")
 }
 
 func RegisterAPIServer(s *grpc.Server, srv APIServer) {

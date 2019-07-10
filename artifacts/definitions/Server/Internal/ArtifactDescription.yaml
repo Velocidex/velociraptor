@@ -9,6 +9,10 @@ reports:
 
       #### Type: {{ $artifact.Type }}
 
+      {{ if $artifact.Author }}
+      ##### by {{ $artifact.Author }}
+      {{end}}
+
       {{ $artifact.Description }}
 
       {{ if $artifact.Parameters }}

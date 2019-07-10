@@ -66,7 +66,8 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 				return errors.WithStack(err)
 			}
 
-			if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
+			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") ||
+				strings.HasSuffix(info.Name(), ".yml")) {
 				data, err := ioutil.ReadFile(file_path)
 				if err != nil {
 					return errors.WithStack(err)
@@ -463,8 +464,8 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
 		func(path string, info os.FileInfo, err error) error {
-			if err == nil && strings.HasSuffix(path, ".yaml") ||
-				strings.HasSuffix(path, ".yml") {
+			if err == nil && (strings.HasSuffix(path, ".yaml") ||
+				strings.HasSuffix(path, ".yml")) {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
 					logger.Error(err)

@@ -19,7 +19,7 @@ def main():
     for root, dirs, files in os.walk(root, topdown=False):
         for name in files:
             path_name = os.path.join(root, name)
-            if path_name.endswith(".yaml"):
+            if path_name.endswith(".yaml") or path_name.endswith(".yml"):
                 with open(path_name) as fd:
                     definition = yaml.safe_load(fd)
                     name = definition['name']

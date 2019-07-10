@@ -2,13 +2,13 @@ name: Windows.Registry.EnableUnsafeClientMailRules
 description: |
   Checks for Outlook EnableUnsafeClientMailRules = 1 (turned on).
   This registry key enables execution from Outlook inbox rules which can be used as a persistence mechanism.
-  Microsoft has released a patch to disable execution but attackers can reenable by changing this value to 1. 
+  Microsoft has released a patch to disable execution but attackers can reenable by changing this value to 1.
 
   HKEY_USERS\*\Software\Microsoft\Office\*\Outlook\Security\EnableUnsafeClientMailRules = 0 (expected)
   https://support.microsoft.com/en-us/help/3191893/how-to-control-the-rule-actions-to-start-an-application-or-run-a-macro
 
-  Author: @mgreen27
-  
+author: "@mgreen27"
+
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
@@ -16,11 +16,9 @@ parameters:
      default: Software\Microsoft\Office\*\Outlook\Security\
 
 sources:
-
-
-    queries:
+  - queries:
       - |
-        LET UserProfiles = Select Name as Username, 
+        LET UserProfiles = Select Name as Username,
             {
                 SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
             } as NTUser,

@@ -1,4 +1,4 @@
-name: Windows.Registery.AppCompatCache
+name: Windows.Registry.AppCompatCache
 description: |
   Parses the system's app compatibility cache.
 

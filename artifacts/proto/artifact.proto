@@ -126,6 +126,10 @@ message Artifact {
             description: "What the artifact is trying to collect."
         }];
 
+    string author = 12 [(sem_type) = {
+            description: "Author of the artifact."
+        }];
+
     repeated string reference = 5 [(sem_type) = {
             description: "A reference for this artifact."
         }];

@@ -5,8 +5,8 @@ description: |
   HKEY_USERS\*\Software\Microsoft\Office\*\Security\Trusted Documents\TrustRecords reg keys for values ending in FFFFFF7F
   http://az4n6.blogspot.com/2016/02/more-on-trust-records-macros-and.html
 
-  Author: @mgreen27
-  
+author: "@mgreen27"
+
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
@@ -16,7 +16,7 @@ parameters:
 sources:
  - queries:
       - |
-        LET UserProfiles = Select Name as Username, 
+        LET UserProfiles = Select Name as Username,
             {
                 SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
             } as NTUser,

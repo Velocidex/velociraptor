@@ -1,4 +1,5 @@
 <h5 class="preserve-linebreaks">{$ ::value.description $}</h5>
+<h5 ng-if="::value.author">by {$ ::value.author $}</h4>
 <table class="table table-bordered table-condensed">
   <tr ng-if="::value.error_message">
     <td class="col-md-3 proto_error">Error</td>
