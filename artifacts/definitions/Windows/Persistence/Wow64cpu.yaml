@@ -1,0 +1,23 @@
+name: Windows.Registry.wow64cpu
+description: |
+  Checks for wow64cpu.dll replacement Autorun in Windows 10.
+  Beyond Good Old RunKey 108
+  http://www.hexacorn.com/blog/2019/07/11/beyond-good-ol-run-key-part-108-2/
+Author: "@mgreen27"
+
+parameters:
+   - name: TargetRegKey
+     default: HKEY_LOCAL_MACHINE\Software\Microsoft\Wow64\x86\*
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    queries:
+    - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+    - |
+      SELECT dirname(path=FullPath) as KeyPath,
+        Name as KeyName,
+        Data.value as Value,
+        timestamp(epoch=Mtime.Sec) AS LastModified
+      FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
+      WHERE not (Name = "@" and Data.value = "wow64cpu.dll")
