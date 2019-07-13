@@ -1,9 +1,10 @@
-name: Windows.Registry.wow64cpu
+name: Windows.Persistence.wow64cpu
 description: |
   Checks for wow64cpu.dll replacement Autorun in Windows 10.
-  Beyond Good Old RunKey 108
+  HKLM\SOFTWARE\Microsoft\Wow64\x86\
   http://www.hexacorn.com/blog/2019/07/11/beyond-good-ol-run-key-part-108-2/
-Author: "@mgreen27"
+
+author: Matt Green - @mgreen27
 
 parameters:
    - name: TargetRegKey
