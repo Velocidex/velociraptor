@@ -1,0 +1,25 @@
+name: Windows.Persistence.wow64cpu
+description: |
+  Checks for wow64cpu.dll replacement Autorun in Windows 10.
+  http://www.hexacorn.com/blog/2019/07/11/beyond-good-ol-run-key-part-108-2/
+
+author: Matt Green - @mgreen27
+
+parameters:
+   - name: TargetRegKey
+     default: HKEY_LOCAL_MACHINE\Software\Microsoft\Wow64\**
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    queries:
+    - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+    - |
+      SELECT dirname(path=FullPath) as KeyPath,
+        Name as KeyName,
+        Data.value as Value,
+        timestamp(epoch=Mtime.Sec) AS LastModified
+      FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
+      WHERE Data.value and 
+        not (Name = "@" and (Data.value = "wow64cpu.dll"
+            or Data.value = "wowarmhw.dll" or Data.value = "xtajit.dll"))
