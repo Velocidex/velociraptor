@@ -1,7 +1,6 @@
 name: Windows.Persistence.wow64cpu
 description: |
   Checks for wow64cpu.dll replacement Autorun in Windows 10.
-  HKLM\SOFTWARE\Microsoft\Wow64\x86\
   http://www.hexacorn.com/blog/2019/07/11/beyond-good-ol-run-key-part-108-2/
 
 author: Matt Green - @mgreen27
@@ -21,4 +20,6 @@ sources:
         Data.value as Value,
         timestamp(epoch=Mtime.Sec) AS LastModified
       FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
-      WHERE not (Name = "@" and Data.value = "wow64cpu.dll") and Data.value
+      WHERE Data.value and 
+        not (Name = "@" and (Data.value = "wow64cpu.dll"
+            or Data.value = "wowarmhw.dll" or Data.value = "xtajit.dll"))
