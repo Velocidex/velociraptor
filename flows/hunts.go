@@ -122,7 +122,7 @@ func CreateHunt(
 			})
 	}
 
-	err = db.SetSubject(config_obj, constants.HUNTS_URN+hunt.HuntId, hunt)
+	err = db.SetSubject(config_obj, constants.GetHuntURN(hunt.HuntId), hunt)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt)
 
 			err = db.SetSubject(
 				config_obj,
-				constants.HUNTS_URN+hunt.HuntId, hunt)
+				constants.GetHuntURN(hunt.HuntId), hunt)
 			if err != nil {
 				return err
 			}

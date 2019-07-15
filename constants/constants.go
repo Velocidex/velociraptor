@@ -29,13 +29,12 @@ const (
 
 	FLOW_PREFIX             = "F."
 	FOREMAN_WELL_KNOWN_FLOW = "aff4:/flows/E.Foreman"
-	HUNTS_URN               = "aff4:/hunts/"
 	HUNT_PREFIX             = "H."
 
 	// The GUI uses this as the client index.
-	CLIENT_INDEX_URN = "aff4:/client_index/"
+	CLIENT_INDEX_URN = "/client_index/"
 
-	USER_URN = "aff4:/users/"
+	USER_URN = "/users/"
 
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
@@ -57,8 +56,8 @@ const (
 
 	// These store configuration for the server and client
 	// monitoring artifacts.
-	ServerMonitoringFlowURN = "aff4:/config/server_monitoring.json"
-	ClientMonitoringFlowURN = "aff4:/config/client_monitoring.json"
+	ServerMonitoringFlowURN = "/config/server_monitoring.json"
+	ClientMonitoringFlowURN = "/config/client_monitoring.json"
 )
 
 var (
