@@ -29,10 +29,10 @@ sources:
           query={
             SELECT Key.Name as ProgramName,
               Username,
-              NTUser as Userhive,
-              dirname(path=url(parse=Key.FullPath).fragment)+'/'+Key.Name as Key,
+              EulaAccepted,
               timestamp(epoch=Key.Mtime.Sec) AS LastModified,
-              EulaAccepted
+              NTUser as Userhive,
+              dirname(path=url(parse=Key.FullPath).fragment)+'/'+Key.Name as Key
             FROM read_reg_key(
               globs=url(scheme="ntfs",
                 path=NTUser,
