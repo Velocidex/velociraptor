@@ -5,27 +5,38 @@ description: |
   first run on a system, the EULA must be accepted. This writes a
   value called EulaAccepted under that key.
 
-  Note: This artifact uses HKEY_USERS and therefore will not detect
-  users that are not currently logged on.
+precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
-   - name: Sysinternals_Reg_Key
-     default: HKEY_USERS\*\Software\Sysinternals\*
+ - name: KeyGlob
+   default: Software\Sysinternals\**
 
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'windows'
-
-    queries:
-    - |
-      LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
-    - |
-      SELECT Key.Name as ProgramName,
-             Key.FullPath as Key,
-             timestamp(epoch=Key.Mtime.Sec) AS TimeAccepted,
-             {
-                SELECT Name FROM users WHERE UUID=regex_replace(
-                   source=Key.FullPath, re=".+\\\\(S-[^\\\\]+)\\\\.+", replace="$1")
-             } as User,
-             EulaAccepted
-      FROM read_reg_key(globs=split(string=Sysinternals_Reg_Key, sep=',[\\s]*'))
+ - queries:
+      - |
+        LET UserProfiles = Select Name as Username,
+            {
+                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+            } as NTUser,
+            expand(path=Directory) as Directory
+        FROM Artifact.Windows.Sys.Users()
+        WHERE Directory and NTUser
+      - |
+        SELECT * FROM foreach(
+          row={
+            SELECT Username,NTUser FROM UserProfiles
+          },
+          query={
+            SELECT Name as ProgramName,
+              Username,
+              NTUser as Userhive,
+              dirname(path=url(parse=FullPath).fragment) as Key,
+              timestamp(epoch=Mtime.Sec) AS LastModified,
+              EulaAccepted
+            FROM glob(
+              globs=url(scheme="ntfs",
+                path=NTUser,
+                fragment=KeyGlob).String,
+              accessor="raw_reg")
+            WHERE EulaAccepted
+          })
