@@ -81,7 +81,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 				arg.File, err)
 		} else if !stat.IsDir() {
 			upload_response, err := uploader.Upload(
-				scope, arg.File, arg.Accessor, arg.Name, file)
+				ctx, scope, arg.File, arg.Accessor, arg.Name, file)
 			if err != nil {
 				return &UploadResponse{
 					Error: err.Error(),
@@ -149,7 +149,7 @@ func (self *UploadPlugin) Call(
 			}
 
 			upload_response, err := uploader.Upload(
-				scope, filename, arg.Accessor, filename, file)
+				ctx, scope, filename, arg.Accessor, filename, file)
 			if err != nil {
 				scope.Log("upload: Failed to upload %s: %s",
 					filename, err.Error())

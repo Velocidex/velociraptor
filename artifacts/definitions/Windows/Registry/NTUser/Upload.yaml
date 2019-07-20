@@ -21,6 +21,6 @@ sources:
             WHERE Directory
 
       - |
-        SELECT upload(file="\\\\.\\" + HomeDir + "\\ntuser.dat",
+        SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",
                       accessor="ntfs") as Upload
         FROM users

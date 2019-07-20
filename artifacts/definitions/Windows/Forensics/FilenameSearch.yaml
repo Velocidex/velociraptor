@@ -33,5 +33,5 @@ sources:
         FROM yara(
              rules=yaraRule, files=Device + "/$MFT",
              end=10000000000,
-             number_of_hits=1000,
+             number=1000,
              accessor="ntfs")

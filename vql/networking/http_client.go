@@ -26,11 +26,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/tink-ab/tempfile"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -53,7 +55,8 @@ type _HttpPluginRequest struct {
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
-	DisableSSLSecurity bool `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	DisableSSLSecurity bool   `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	TempfileExtension  string `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
 }
 
 type _HttpPluginResponse struct {
@@ -69,11 +72,6 @@ func customVerifyPeerCert(
 	url_str string,
 	rawCerts [][]byte,
 	verifiedChains [][]*x509.Certificate) error {
-
-	url, err := url.Parse(url_str)
-	if err != nil {
-		return err
-	}
 
 	certs := make([]*x509.Certificate, len(rawCerts))
 	for i, rawCert := range rawCerts {
@@ -91,19 +89,18 @@ func customVerifyPeerCert(
 			}
 			opts.Intermediates.AddCert(cert)
 		}
-		_, err = certs[0].Verify(*opts)
+		_, err := certs[0].Verify(*opts)
 		return err
-	}
-
-	opts := &x509.VerifyOptions{
-		CurrentTime:   time.Now(),
-		Intermediates: x509.NewCertPool(),
 	}
 
 	// First check if the certs come from our CA - ignore the name
 	// in that case.
 	if config_obj != nil {
-		opts.Roots = x509.NewCertPool()
+		opts := &x509.VerifyOptions{
+			CurrentTime:   time.Now(),
+			Intermediates: x509.NewCertPool(),
+			Roots:         x509.NewCertPool(),
+		}
 		opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
 
 		// Yep its one of ours, just trust it.
@@ -112,16 +109,11 @@ func customVerifyPeerCert(
 		}
 	}
 
-	// It is not signed by our CA - check the system store
-	// and this time verify the Hostname.
-	rootCAs, err := x509.SystemCertPool()
-	if err != nil {
-		return err
-	}
-	opts.DNSName = url.Hostname()
-	opts.Roots = rootCAs
-
-	return verify_certs(opts)
+	// Perform normal verification.
+	return verify_certs(&x509.VerifyOptions{
+		CurrentTime:   time.Now(),
+		Intermediates: x509.NewCertPool(),
+	})
 }
 
 func getHttpClient(
@@ -288,6 +280,27 @@ func (self *_HttpPlugin) Call(
 		response := &_HttpPluginResponse{
 			Url:      arg.Url,
 			Response: http_resp.StatusCode,
+		}
+
+		if arg.TempfileExtension != "" {
+			tmpfile, err := tempfile.TempFile("", "tmp", arg.TempfileExtension)
+			if err != nil {
+				scope.Log("http_client: %v", err)
+				return
+			}
+			defer tmpfile.Close()
+
+			scope.AddDestructor(func() {
+				scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
+				os.Remove(tmpfile.Name())
+			})
+
+			response.Content = tmpfile.Name()
+			io.Copy(tmpfile, http_resp.Body)
+
+			output_chan <- response
+
+			return
 		}
 
 		buf := make([]byte, arg.Chunk)

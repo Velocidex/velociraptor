@@ -18,6 +18,7 @@
 package networking
 
 import (
+	"context"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
@@ -47,7 +48,8 @@ type UploadResponse struct {
 
 // Provide an uploader capable of uploading any reader object.
 type Uploader interface {
-	Upload(scope *vfilter.Scope,
+	Upload(ctx context.Context,
+		scope *vfilter.Scope,
 		filename string,
 		accessor string,
 		store_as_name string,
@@ -89,6 +91,7 @@ func (self *FileBasedUploader) sanitize_path(path string) string {
 }
 
 func (self *FileBasedUploader) Upload(
+	ctx context.Context,
 	scope *vfilter.Scope,
 	filename string,
 	accessor string,
@@ -153,6 +156,7 @@ type VelociraptorUploader struct {
 }
 
 func (self *VelociraptorUploader) Upload(
+	ctx context.Context,
 	scope *vfilter.Scope,
 	filename string,
 	accessor string,
@@ -195,13 +199,21 @@ func (self *VelociraptorUploader) Upload(
 			Offset: offset,
 			Data:   data,
 		}
-		// Send the packet to the server.
-		self.Responder.AddResponseToRequest(
-			constants.TransferWellKnownFlowId, packet)
+
+		select {
+		case <-ctx.Done():
+			return nil, errors.New("Cancelled!")
+
+		default:
+			// Send the packet to the server.
+			self.Responder.AddResponseToRequest(
+				constants.TransferWellKnownFlowId, packet)
+		}
 
 		offset += uint64(read_bytes)
 		if err != nil && err != io.EOF {
 			return nil, err
 		}
+
 	}
 }

@@ -109,7 +109,9 @@ func (self *Container) DumpRowsIntoContainer(
 	return nil
 }
 
-func (self *Container) Upload(scope *vfilter.Scope,
+func (self *Container) Upload(
+	ctx context.Context,
+	scope *vfilter.Scope,
 	filename string,
 	accessor string,
 	store_as_name string,

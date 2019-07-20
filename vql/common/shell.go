@@ -41,6 +41,7 @@ type ShellResult struct {
 	Stdout     string
 	Stderr     string
 	ReturnCode int64
+	Complete   bool
 }
 
 type ShellPlugin struct{}
@@ -140,17 +141,17 @@ func (self ShellPlugin) Call(
 						return
 					}
 
-					// Read some data into the buffer.
-					if n > 0 {
-						offset += n
-						continue
-					}
-
 					// The buffer is completely empty and
 					// the last read was an EOF.
 					if n == 0 && offset == 0 && err == io.EOF {
 						return
 					}
+
+					// Read some data into the buffer.
+					if n > 0 {
+						offset += n
+					}
+
 					if arg.Sep != "" {
 						for _, line := range strings.Split(
 							string(buff[:offset]), arg.Sep) {
@@ -160,17 +161,19 @@ func (self ShellPlugin) Call(
 
 							*output_member = line
 						}
+						offset = 0
 
-					} else {
+					} else if n == 0 {
 						if len(*output_member) > 0 {
 							output_chan <- response
 						}
 
 						*output_member = string(buff[:offset])
+
+						// Write over the same buffer with new data.
+						offset = 0
 					}
 
-					// Write over the same buffer with new data.
-					offset = 0
 				}
 			}
 		}
@@ -201,6 +204,7 @@ func (self ShellPlugin) Call(
 			}
 		}
 
+		response.Complete = true
 		output_chan <- response
 	}()
 

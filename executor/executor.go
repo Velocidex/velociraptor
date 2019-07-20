@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"runtime/debug"
 
 	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -100,6 +101,17 @@ func (self *ClientExecutor) processRequestPlugin(
 	ctx context.Context,
 	req *crypto_proto.GrrMessage) {
 
+	// If we panic we need to recover and report this to the
+	// server.
+	defer func() {
+		r := recover()
+		if r != nil {
+			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+			logger.Error(fmt.Sprintf("Panic %v: %v",
+				r, string(debug.Stack())))
+		}
+	}()
+
 	// Never serve unauthenticated requests.
 	if req.AuthState != crypto_proto.GrrMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
@@ -113,27 +125,9 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
-	receive_chan := make(chan *crypto_proto.GrrMessage)
-
 	// Run the plugin in the other thread and drain its messages
 	// to send to the server.
-	go func() {
-		defer close(receive_chan)
-		plugin.Run(config_obj, ctx, req, receive_chan)
-	}()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-
-		case msg, ok := <-receive_chan:
-			if !ok {
-				return
-			}
-			self.SendToServer(msg)
-		}
-	}
+	go plugin.Run(config_obj, ctx, req, self.Outbound)
 }
 
 func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
@@ -159,7 +153,6 @@ func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
 				go result.processRequestPlugin(config_obj, ctx, req)
 			}
 		}
-		panic("Boo")
 	}()
 
 	return result, nil

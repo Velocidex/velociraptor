@@ -1,0 +1,33 @@
+name: Windows.Memory.Acquisition
+description: |
+  Acquires a full memory image. We download winpmem and use it to
+  acquire a full memory image.
+
+  NOTE: This artifact usually takes a long time. You should increase
+  the default timeout to allow it to complete.
+
+  By default we download the winpmem binary from the Github release
+  page. If you want to host it on the Velociraptor server simply place
+  the binary in the frontend's public directory and use the following URL.
+
+  https://frontend:8000/public/winpmem.exe
+
+parameters:
+  - name: winPmemURL
+    default: https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc1/winpmem_v3.3.rc1.exe
+
+sources:
+  - queries:
+      - |
+        LET download = SELECT Content, Response, Complete, tempfile(data="X", extension=".aff4") AS Tempfile
+            FROM http_client(url=winPmemURL, tempfile_extension=".exe")
+      - |
+        SELECT * FROM foreach(
+          row=download,
+          query={
+            SELECT Stdout, Stderr,
+                   if(condition=Complete,
+                      then=upload(file=Tempfile)) As Upload
+                   FROM execve(argv=[Content, "-dd", "-o", Tempfile, "-t", "-c", "snappy"],
+                               sep="\r\n")
+        })

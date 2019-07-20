@@ -343,7 +343,9 @@ func (self *VFSDownloadFile) Start(
 		return errors.New("Expected args of type VFSDownloadFileRequest")
 	}
 
-	request := &actions_proto.VQLCollectorArgs{}
+	request := &actions_proto.VQLCollectorArgs{
+		Timeout: 6000,
+	}
 	paths := []string{}
 	accessor := ""
 	for _, vfs_path := range vfs_download_args.VfsPath {
@@ -422,7 +424,6 @@ func (self *VFSDownloadFile) ProcessMessage(
 }
 
 func init() {
-	impl := VFSListDirectory{}
 	default_args, _ := ptypes.MarshalAny(&flows_proto.VFSListRequest{})
 	desc := &flows_proto.FlowDescriptor{
 		Name:         "VFSListDirectory",
@@ -432,19 +433,17 @@ func init() {
 		ArgsType:     "VFSListRequest",
 		DefaultArgs:  default_args,
 	}
-	RegisterImplementation(desc, &impl)
+	RegisterImplementation(desc, &VFSListDirectory{})
 
-	{
-		impl := VFSDownloadFile{}
-		default_args, _ := ptypes.MarshalAny(&flows_proto.VFSDownloadFileRequest{})
-		desc := &flows_proto.FlowDescriptor{
-			Name:         "VFSDownloadFile",
-			FriendlyName: "Download VFS Files",
-			Category:     "Collectors",
-			Doc:          "Download files into the client's virtual filesystem.",
-			ArgsType:     "VFSDownloadFileRequest",
-			DefaultArgs:  default_args,
-		}
-		RegisterImplementation(desc, &impl)
+	default_args, _ = ptypes.MarshalAny(&flows_proto.VFSDownloadFileRequest{})
+	desc = &flows_proto.FlowDescriptor{
+		Name:         "VFSDownloadFile",
+		FriendlyName: "Download VFS Files",
+		Category:     "Collectors",
+		Doc:          "Download files into the client's virtual filesystem.",
+		ArgsType:     "VFSDownloadFileRequest",
+		DefaultArgs:  default_args,
 	}
+	RegisterImplementation(desc, &VFSDownloadFile{})
+
 }

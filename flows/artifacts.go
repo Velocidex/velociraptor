@@ -313,17 +313,24 @@ func appendDataToFile(
 	}
 	defer fd.Close()
 
-	fd.Seek(int64(file_buffer.Offset), 0)
-	fd.Write(file_buffer.Data)
-
 	// Keep track of all the files we uploaded.
 	if file_buffer.Offset == 0 {
+		fd.Truncate(0)
 		flow_obj.FlowContext.TotalUploadedFiles += 1
 		flow_obj.FlowContext.UploadedFiles = append(
 			flow_obj.FlowContext.UploadedFiles,
 			file_path)
 		flow_obj.dirty = true
 	}
+
+	fd.Seek(int64(file_buffer.Offset), 0)
+	_, err = fd.Write(file_buffer.Data)
+	if err != nil {
+		flow_obj.Log(config_obj, fmt.Sprintf("While writing to %v: %v",
+			file_path, err))
+		return nil
+	}
+
 	return nil
 }
 

@@ -170,12 +170,16 @@ func (self *VQLClientAction) StartQuery(
 					time.Now().Unix()-started)
 				scope.Log(msg)
 
+				// Queries that time out are an error on the server.
+				responder.RaiseError(msg)
+
 				// Cancel the sub ctx but do not exit
 				// - we need to wait for the sub query
 				// to finish after cancelling so we
 				// can at least return any data it
 				// has.
 				cancel()
+				scope.Close()
 
 				// Try again after a while to prevent spinning here.
 				deadline = time.After(time.Second * time.Duration(timeout))
