@@ -526,8 +526,10 @@ parseField:
 
 	// Check or update the expected fields per record.
 	if r.FieldsPerRecord > 0 {
-		if len(dst) != r.FieldsPerRecord && err == nil {
-			err = &ParseError{StartLine: recLine, Line: recLine, Err: ErrFieldCount}
+		if len(dst) > r.FieldsPerRecord {
+			dst = dst[:r.FieldsPerRecord]
+		} else if len(dst) < r.FieldsPerRecord {
+			dst = append(dst, make([]string, r.FieldsPerRecord-len(dst))...)
 		}
 	} else if r.FieldsPerRecord == 0 {
 		r.FieldsPerRecord = len(dst)

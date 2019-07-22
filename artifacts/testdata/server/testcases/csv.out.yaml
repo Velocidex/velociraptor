@@ -1,0 +1,41 @@
+SELECT * FROM parse_csv(filename=srcDir + "/artifacts/testdata/files/autoruns.csv")[
+ {
+  "Category": "Boot Execute",
+  "Company": "",
+  "Description": "",
+  "Enabled": "",
+  "Entry": "",
+  "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
+  "Image Path": "",
+  "Launch String": "",
+  "Profile": "System-wide",
+  "Time": "7/21/2019 5:23 PM",
+  "Version": ""
+ },
+ {
+  "Category": "Boot Execute",
+  "Company": "Microsoft Corporation",
+  "Description": "Auto Check Utility",
+  "Enabled": "enabled",
+  "Entry": "autocheck autochk *",
+  "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
+  "Image Path": "c:\\windows\\system32\\autochk.exe",
+  "Launch String": "autocheck autochk *",
+  "Profile": "System-wide",
+  "Time": "12/15/2017 3:07 PM",
+  "Version": "10.0.17134.137"
+ },
+ {
+  "Category": "Hijacks",
+  "Company": "",
+  "Description": "",
+  "Enabled": "",
+  "Entry": "",
+  "Entry Location": "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options",
+  "Image Path": "",
+  "Launch String": "",
+  "Profile": "System-wide",
+  "Time": "6/15/2019 6:56 AM",
+  "Version": ""
+ }
+]

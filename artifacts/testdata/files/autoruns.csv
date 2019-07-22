@@ -1,0 +1,4 @@
+Time,Entry Location,Entry,Enabled,Category,Profile,Description,Company,Image Path,Version,Launch String
+7/21/2019 5:23 PM,HKLM\System\CurrentControlSet\Control\Session Manager\BootExecute,,,"Boot Execute",System-wide,,,,,,
+12/15/2017 3:07 PM,"HKLM\System\CurrentControlSet\Control\Session Manager\BootExecute","autocheck autochk *",enabled,"Boot Execute",System-wide,"Auto Check Utility","Microsoft Corporation","c:\windows\system32\autochk.exe",10.0.17134.137,"autocheck autochk *"
+6/15/2019 6:56 AM,HKLM\Software\Microsoft\Windows NT\CurrentVersion\Image File Execution Options,,,"Hijacks",System-wide,,,,,,

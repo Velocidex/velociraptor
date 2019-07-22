@@ -1,0 +1,2 @@
+Queries:
+  - SELECT * FROM parse_csv(filename=srcDir + "/artifacts/testdata/files/autoruns.csv")

@@ -19,6 +19,7 @@ package parsers
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -75,6 +76,9 @@ func (self ParseCSVPlugin) Call(
 					row := vfilter.NewDict()
 					row_data, err := csv_reader.ReadAny()
 					if err != nil {
+						if err != io.EOF {
+							scope.Log("parse_csv: %v", err)
+						}
 						return
 					}
 
