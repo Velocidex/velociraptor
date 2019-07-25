@@ -347,6 +347,7 @@ func appendDataToFile(
 
 		row := vfilter.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("ClientId", flow_obj.RunnerArgs.ClientId).
 			Set("VFSPath", file_path).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
@@ -360,7 +361,7 @@ func appendDataToFile(
 				ClientId:  flow_obj.RunnerArgs.ClientId,
 				QueryName: "System.Upload.Completion",
 				Response:  string(serialized),
-				Columns: []string{"Timestamp",
+				Columns: []string{"Timestamp", "ClientId",
 					"VFSPath", "UploadName",
 					"Accessor", "Size"},
 			}

@@ -66,6 +66,8 @@ func (self *MonitoringFlow) ProcessMessage(
 		return err
 	}
 
+	flow_obj.RunnerArgs.ClientId = message.Source
+
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
 		return appendDataToFile(
