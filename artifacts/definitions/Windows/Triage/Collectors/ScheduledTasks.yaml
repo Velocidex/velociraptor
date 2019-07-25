@@ -4,20 +4,14 @@ description: |
 
 precondition: SELECT OS From info() where OS = 'windows'
 
+parameters:
+  - name: triageTable
+    default: |
+      Type,Accessor,Glob
+      XML,ntfs,C:\Windows\system32\Tasks\**
+      at SchedLgU.txt,ntfs,C:\Windows\SchedLgU.txt
+      at .job,ntfs,C:\Windows\Tasks\*.job
+
 sources:
   - queries:
-      - |
-        SELECT * FROM chain(
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="at .job",
-               path="C:\\Windows\\Tasks\\*.job")
-          },
-          a1={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="at SchedLgU.txt",
-               path="C:\\Windows\\SchedLgU.txt")
-          },
-          a2={ SELECT * FROM Artifact.Triage.Collection.Upload(
-               type="XML",
-               path="C:\\Windows\\system32\\Tasks\\**")
-          }
-        )
+      - SELECT * FROM Artifact.Triage.Collection.UploadTable(triageTable=triageTable)
