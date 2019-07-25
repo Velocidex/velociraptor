@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.3.1"
+	VERSION                    = "0.3.2"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 

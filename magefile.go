@@ -46,6 +46,11 @@ var (
 )
 
 func Xgo() error {
+	err := build_gui_files()
+	if err != nil {
+		return err
+	}
+
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "windows/*,darwin/amd64,linux/amd64",
@@ -196,6 +201,26 @@ func Clean() error {
 	}
 
 	return nil
+}
+
+func build_gui_files() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(cwd)
+
+	err = os.Chdir("gui/static")
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("gulp", "clean")
+	if err != nil {
+		return err
+	}
+
+	return sh.RunV("gulp", "compile")
 }
 
 func flags() string {
