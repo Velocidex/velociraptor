@@ -1,5 +1,11 @@
 name: Windows.Triage.Collectors.NTFSMetadata
 
+description: |
+  Collect NTFS file system metadata sources.
+
+  Credits: Thanks to Eric Zimmerman (@EricRZimmerman) for allowing us to leverage his work on NTFS metadata locations.
+  References: https://github.com/EricZimmerman/KapeFiles
+
 precondition: SELECT OS From info() where OS = 'windows'
 
 reference:
