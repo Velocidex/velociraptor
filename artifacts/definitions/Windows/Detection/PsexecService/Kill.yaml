@@ -15,7 +15,8 @@ parameters:
 
 sources:
   - queries:
-      - SELECT * FROM foreach(
+      - |
+        SELECT * FROM foreach(
           row={ SELECT * FROM Artifact.Windows.Detection.PsexecService() },
           query={
              SELECT ServiceName, PathName, Modified, FileSize, Timestamp,

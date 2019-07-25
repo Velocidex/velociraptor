@@ -17,7 +17,7 @@ sources:
         WHERE Executable =~ "wmic.exe"
   - name: ShimCache
     queries:
-      - SELECT * FROM Artifact.Windows.Registery.AppCompatCache()
+      - SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
         WHERE Name =~ "wmic.exe"
   - name: BAM
     queries:

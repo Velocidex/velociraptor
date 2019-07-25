@@ -21,7 +21,7 @@ sources:
 
   - name: ShimCache
     queries:
-      - SELECT * FROM Artifact.Windows.Registery.AppCompatCache()
+      - SELECT * FROM Artifact.Windows.Registry.AppCompatCache()
 
   - name: Prefetch
     queries:
