@@ -23,10 +23,13 @@ import (
 	"io"
 	"io/ioutil"
 	"path"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/sirupsen/logrus"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -42,6 +45,13 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	uploadCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "uploaded_files",
+		Help: "Total number of Uploaded Files.",
+	})
 )
 
 const (
@@ -329,6 +339,32 @@ func appendDataToFile(
 		flow_obj.Log(config_obj, fmt.Sprintf("While writing to %v: %v",
 			file_path, err))
 		return nil
+	}
+
+	// When the upload completes, we emit an event.
+	if file_buffer.Eof {
+		uploadCounter.Inc()
+
+		row := vfilter.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("VFSPath", file_path).
+			Set("UploadName", file_buffer.Pathspec.Path).
+			Set("Accessor", file_buffer.Pathspec.Accessor).
+			Set("Size", file_buffer.Offset+uint64(
+				len(file_buffer.Data)))
+
+		serialized, err := json.Marshal([]vfilter.Row{row})
+		if err == nil {
+			gJournalWriter.Channel <- &Event{
+				Config:    config_obj,
+				ClientId:  flow_obj.RunnerArgs.ClientId,
+				QueryName: "System.Upload.Completion",
+				Response:  string(serialized),
+				Columns: []string{"Timestamp",
+					"VFSPath", "UploadName",
+					"Accessor", "Size"},
+			}
+		}
 	}
 
 	return nil

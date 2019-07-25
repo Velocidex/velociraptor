@@ -180,13 +180,6 @@ func (self *VelociraptorUploader) Upload(
 
 	for {
 		read_bytes, err := reader.Read(buffer)
-		if read_bytes == 0 {
-			result.Size = offset
-			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
-			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
-			return result, nil
-		}
-
 		data := buffer[:read_bytes]
 		sha_sum.Write(data)
 		md5_sum.Write(data)
@@ -198,6 +191,7 @@ func (self *VelociraptorUploader) Upload(
 			},
 			Offset: offset,
 			Data:   data,
+			Eof:    err == io.EOF,
 		}
 
 		select {
@@ -215,5 +209,11 @@ func (self *VelociraptorUploader) Upload(
 			return nil, err
 		}
 
+		if read_bytes == 0 {
+			result.Size = offset
+			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
+			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
+			return result, nil
+		}
 	}
 }

@@ -19,10 +19,11 @@ package proto;
 // policies (since the filestore is just a directory on disk with
 // regular files and timestamps).
 message FileBuffer {
-     PathSpec pathspec = 1;
-     uint64 offset = 2 [(sem_type) = {
+    PathSpec pathspec = 1;
+    uint64 offset = 2 [(sem_type) = {
             description: "Offset of the buffer in the file."
         }];
-     bytes data = 3;
-     string flow_id = 4;
+    bytes data = 3;
+    string flow_id = 4;
+    bool eof = 5;
 }

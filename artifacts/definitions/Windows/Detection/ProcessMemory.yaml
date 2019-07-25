@@ -10,14 +10,7 @@ parameters:
   - name: processRegex
     default: notepad
   - name: yaraRule
-    default: |
-      rule Process {
-         strings:
-           $a = "this is a secret" nocase wide
-           $b = "this is a secret" nocase
-         condition:
-           any of them
-      }
+    default: "wide nocase ascii: this is a secret"
 
 sources:
   - queries:

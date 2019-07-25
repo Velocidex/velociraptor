@@ -1,0 +1,13 @@
+name: Windows.Detection.Service.Upload
+description: |
+  When a new service is installed, upload the service binary to the server
+
+type: CLIENT_EVENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - SELECT ServiceName, upload(file=ImagePath) as Upload,
+               Timestamp, _EventData, _System
+        FROM Artifact.Windows.Events.ServiceCreation()

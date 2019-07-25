@@ -6,32 +6,39 @@ description: |
   improves on this by scanning the service binary to detect the
   original psexec binary.
 
+  NOTE that if the service is very quick we are unable to examine
+  the service binary in time and will miss it.
+
 type: CLIENT_EVENT
 
 parameters:
   - name: yaraRule
-    default: |
-      rule PsExec {
-        strings:
-          $a = "psexec" nocase
-          $b = "psexec" nocase wide
-
-        condition:
-          any of them
-      }
+    default: "wide nocase ascii: psexec"
 
 sources:
   - queries:
       - |
-        LET file_scan = SELECT File, Rule, String, now() AS Timestamp,
-               Name, ServiceType
+        LET file_scan = SELECT  Name AS ServiceName,
+               PathName, File.ModTime AS Modified,
+               File.Size AS FileSize,
+               String.Offset AS StringOffset,
+               String.HexData AS StringContext,
+               now() AS Timestamp,
+               ServiceType, PID,
+               {
+                  SELECT Name, ExecutablePath, CommandLine
+                  FROM pslist() WHERE ParentProcessID = PID
+                  LIMIT 2
+               } AS ChildProcess
         FROM yara(rules=yaraRule, files=PathName)
         WHERE Rule
 
       - |
-        LET service_creation = SELECT Parse.TargetInstance.Name AS Name,
-               Parse.TargetInstance.PathName As PathName,
-               Parse.TargetInstance.ServiceType As ServiceType
+        LET service_creation = SELECT Parse,
+            Parse.TargetInstance.Name AS Name,
+            Parse.TargetInstance.PathName As PathName,
+            Parse.TargetInstance.ServiceType As ServiceType,
+            Parse.TargetInstance.ProcessId AS PID
         FROM wmi_events(
            query="SELECT * FROM __InstanceCreationEvent WITHIN 1 WHERE TargetInstance ISA 'Win32_Service'",
            wait=5000000,
