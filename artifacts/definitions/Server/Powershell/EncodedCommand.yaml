@@ -18,7 +18,7 @@ sources:
                 regex='-((?i)(en|enc|encode|encodedCommand)) (?P<Encoded>[^ ]+)'
              ).Encoded)) AS Script
         FROM watch_monitoring(artifact='Windows.Events.ProcessCreation')
-        WHERE CommandLine =~ '-encodedcommand'
+        WHERE CommandLine =~ '-(en|enc|encode|encodedCommand)'
 
 reports:
   - type: SERVER_EVENT

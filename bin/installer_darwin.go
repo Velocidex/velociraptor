@@ -27,6 +27,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -90,6 +91,23 @@ func doInstall() error {
 
 	logger.Info("Copied binary to %s", target_path)
 
+	// If the installer was invoked with the --config arg then we
+	// need to copy the config to the target path.
+	if *config_path != "" {
+		config_target_path := strings.TrimSuffix(
+			target_path, filepath.Ext(target_path)) + ".config.yaml"
+
+		logger.Info("Copying config to destination %s",
+			config_target_path)
+
+		err = utils.CopyFile(*config_path, config_target_path, 0755)
+		if err != nil {
+			logger.Info("Cant copy config to destination %s: %v",
+				config_target_path, err)
+			return err
+		}
+	}
+
 	plist_path := "/Library/LaunchDaemons/" + service_name + ".plist"
 	plist := fmt.Sprintf(`
 <?xml version="1.0" encoding="UTF-8"?>
@@ -102,11 +120,13 @@ func doInstall() error {
         <array>
                 <string>%v</string>
                 <string>client</string>
+                <string>--config</string>
+                <string>%v.config.yaml</string>
         </array>
         <key>KeepAlive</key>
         <true/>
 </dict>
-</plist>`, service_name, target_path)
+</plist>`, service_name, target_path, target_path)
 
 	err = ioutil.WriteFile(plist_path, []byte(plist), 0644)
 	kingpin.FatalIfError(err, "Can't write plist file.")
