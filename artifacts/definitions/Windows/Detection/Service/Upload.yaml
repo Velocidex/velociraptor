@@ -8,6 +8,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - SELECT ServiceName, upload(file=ImagePath) as Upload,
+      - |
+        SELECT ServiceName, upload(file=ImagePath) as Upload,
                Timestamp, _EventData, _System
         FROM Artifact.Windows.Events.ServiceCreation()
