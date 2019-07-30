@@ -697,7 +697,9 @@ func (self *CryptoManager) Encrypt(
 	} else {
 		public_key, pres := self.public_key_resolver.GetPublicKey(destination)
 		if !pres {
-			return nil, errors.New("No certificate found for destination")
+			return nil, errors.New(fmt.Sprintf(
+				"No certificate found for destination %v",
+				destination))
 		}
 
 		cipher, err := _NewCipher(self.source, self.private_key, public_key)

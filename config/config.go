@@ -171,10 +171,8 @@ func LoadConfig(filename string) (*api_proto.Config, error) {
 			result.Client.Version = default_config.Version
 
 			return result, nil
-
 		}
 	}
-
 	// Otherwise we try to read from the embedded config.
 	embedded_config := maybeReadEmbeddedConfig()
 	if embedded_config == nil {
