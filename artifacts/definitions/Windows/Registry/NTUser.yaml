@@ -33,20 +33,30 @@ parameters:
  - name: KeyGlob
    default: Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\**
 
- - name: UserHomes
-   default: C:\Users\*\NTUSER.DAT
-
 sources:
  - queries:
      - |
+        LET UserProfiles = SELECT Uid, 
+            Gid, 
+            Name as Username, 
+            Description, 
+            UUID,  
+            {
+                SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
+            } as FullPath,
+            expand(path=Directory) as Directory
+        FROM Artifact.Windows.Sys.Users()
+        WHERE Directory and FullPath
+     - |
        SELECT * FROM foreach(
-         row={
-            SELECT FullPath FROM glob(globs=UserHomes)
-         },
-         query={
-            SELECT FullPath, Data, Mtime.Sec AS Mtime FROM glob(
-               globs=url(scheme="ntfs",
-                  path=FullPath,
-                  fragment=KeyGlob).String,
-               accessor="raw_reg")
-         })
+            row={
+                SELECT * FROM UserProfiles
+            },
+            query={
+                SELECT FullPath, Data, Mtime.Sec AS Mtime, Username, Description, Uid, Gid, UUID, Directory
+                FROM glob(
+                    globs=url(scheme="ntfs",
+                    path=FullPath,
+                    fragment=KeyGlob).String,
+                    accessor="raw_reg")
+            })

@@ -13,7 +13,6 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     queries:
-    - LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
     - |
       SELECT dirname(path=FullPath) as KeyPath,
         Name as KeyName,
@@ -21,5 +20,4 @@ sources:
         timestamp(epoch=Mtime.Sec) AS LastModified
       FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
       WHERE Data.value and
-        not (Name = "@" and (Data.value = "wow64cpu.dll"
-            or Data.value = "wowarmhw.dll" or Data.value = "xtajit.dll"))
+        not (Name = "@" and (Data.value =~ "(wow64cpu.dll|wowarmhw.dll|xtajit.dll)"
