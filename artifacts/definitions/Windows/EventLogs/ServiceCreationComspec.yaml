@@ -1,0 +1,48 @@
+name: Windows.EventLogs.ServiceCreationComspec
+description: |
+
+  This Detection hts on the string "COMSPEC" (nocase) in Windows Service
+  Creation events. That is: EventID 7045 from the System event log. 
+
+  This detects many hack tools that leverage SCM based lateral movement 
+  including smbexec.
+
+author: Matt Green - @mgreen27
+
+parameters:
+  - name: eventLog
+    default: C:\Windows\system32\winevt\logs\System.evtx
+  - name: accessor
+    default: ntfs
+
+sources:
+  - name: ServiceCreation
+    queries:
+      - |
+        LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+      - |
+        LET files = SELECT * FROM glob(
+            globs=eventLog,
+            accessor=accessor)
+      - |
+        SELECT *
+        FROM foreach(
+          row=files,
+          query={
+            SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+              System.EventID.Value as EventID,
+              System.Computer as Computer,
+              System.Security.UserID as SecurityID,
+              EventData.AccountName as ServiceAccount,
+              EventData.ServiceName as ServiceName,
+              EventData.ImagePath as ImagePath,
+              EventData.ServiceType as ServiceType,
+              EventData.StartType as StartType,
+              System.EventRecordID as EventRecordID,
+              System.Level as Level,
+              System.Opcode as Opcode,
+              System.Task as Task
+            FROM parse_evtx(filename=FullPath, accessor=accessor)
+            WHERE System.EventID.Value = 7045 and 
+              EventData.ImagePath =~ "(?i)COMSPEC"
+        })
