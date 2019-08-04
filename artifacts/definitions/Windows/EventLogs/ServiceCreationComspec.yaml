@@ -19,8 +19,6 @@ sources:
   - name: ServiceCreation
     queries:
       - |
-        LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
-      - |
         LET files = SELECT * FROM glob(
             globs=eventLog,
             accessor=accessor)
