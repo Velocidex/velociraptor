@@ -170,7 +170,7 @@ func (self *Sender) Start(ctx context.Context) {
 func NewSender(
 	config_obj *api_proto.Config,
 	connector IConnector,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	enroller *Enroller,
 	logger *logging.LogContext,

@@ -49,7 +49,7 @@ import (
 // 406 HTTP codes.
 type Enroller struct {
 	config_obj           *api_proto.Config
-	manager              *crypto.CryptoManager
+	manager              crypto.ICryptoManager
 	executor             executor.Executor
 	logger               *logging.LogContext
 	last_enrollment_time time.Time
@@ -135,7 +135,7 @@ type HTTPConnector struct {
 	// URL. Note, when the URL is changed, the CryptoManager is
 	// initialized by a successful connection to the URL's
 	// server.pem endpoint.
-	manager *crypto.CryptoManager
+	manager crypto.ICryptoManager
 	logger  *logging.LogContext
 
 	minPoll, maxPoll time.Duration
@@ -153,7 +153,7 @@ type HTTPConnector struct {
 
 func NewHTTPConnector(
 	config_obj *api_proto.Config,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	logger *logging.LogContext) *HTTPConnector {
 
 	max_poll := config_obj.Client.MaxPoll
@@ -317,7 +317,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 type NotificationReader struct {
 	config_obj api_proto.Config
 	connector  IConnector
-	manager    *crypto.CryptoManager
+	manager    crypto.ICryptoManager
 	executor   executor.Executor
 	enroller   *Enroller
 	handler    string
@@ -332,7 +332,7 @@ type NotificationReader struct {
 func NewNotificationReader(
 	config_obj *api_proto.Config,
 	connector IConnector,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	enroller *Enroller,
 	logger *logging.LogContext,
@@ -456,9 +456,15 @@ process_response:
 		}
 	}
 
-	response_message_list, err := self.manager.DecryptMessageList(encrypted)
+	message_info, err := self.manager.Decrypt(cipher_text)
 	if err != nil {
 		return err
+	}
+
+	response_message_list := &crypto_proto.MessageList{}
+	err = proto.Unmarshal(message_info.Raw, response_message_list)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
 	for _, msg := range response_message_list.Job {
@@ -563,7 +569,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 
 func NewHTTPCommunicator(
 	config_obj *api_proto.Config,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {
 

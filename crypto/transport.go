@@ -161,6 +161,17 @@ func _NewCipher(
 	return result, nil
 }
 
+type ICryptoManager interface {
+	GetCSR() ([]byte, error)
+	AddCertificate(certificate_pem []byte) (*string, error)
+	/*	EncryptMessageList(
+		message_list *crypto_proto.MessageList,
+		destination string) ([]byte, error)
+	*/Encrypt(plain_text []byte, destination string) ([]byte, error)
+	Decrypt(cipher_text []byte) (*MessageInfo, error)
+	//DecryptMessageList(cipher_text []byte) (*crypto_proto.MessageList, error)
+}
+
 type CryptoManager struct {
 	config      *api_proto.Config
 	private_key *rsa.PrivateKey

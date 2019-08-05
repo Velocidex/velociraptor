@@ -3,8 +3,6 @@ package http_comms
 import (
 	"fmt"
 	"sync"
-
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Header struct {
@@ -93,11 +91,8 @@ func (self *RingBuffer) Commit() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	utils.Debug(self.total_length)
-	utils.Debug(self.leased_length)
-	utils.Debug(self.leased_idx)
-
-	utils.Debug(len(self.messages))
+	fmt.Printf("Total_length: %v, leased: %v, idx: %v",
+		self.total_length, self.leased_length, self.leased_idx)
 
 	if len(self.messages) > self.leased_idx {
 		self.messages = self.messages[self.leased_idx+1:]

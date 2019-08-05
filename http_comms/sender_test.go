@@ -35,9 +35,9 @@ import (
 )
 
 type MockExecutor struct {
-	to_send []*crypto_proto.GrrMessage
-	idx     int
-	wg      *sync.WaitGroup
+	to_send    []string
+	sent_count int
+	wg         sync.WaitGroup
 }
 
 func (self *MockExecutor) ReadFromServer() *crypto_proto.GrrMessage {
@@ -49,23 +49,41 @@ func (self *MockExecutor) ProcessRequest(message *crypto_proto.GrrMessage) {}
 func (self *MockExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
 	result := make(chan *crypto_proto.GrrMessage)
 
+	self.wg.Add(1)
 	go func() {
 		for _, item := range self.to_send {
-			wg.Add(1)
-			result <- item
+			self.wg.Add(1)
+			result <- &crypto_proto.GrrMessage{Name: item}
+			self.sent_count++
 		}
+		self.wg.Done()
 	}()
 
 	return result
 }
 
 type MockHTTPConnector struct {
-	wg *sync.WaitGroup
+	wg        *sync.WaitGroup
+	received  []string
+	connected bool
 }
 
 func (self *MockHTTPConnector) GetCurrentUrl() string { return "http://URL/" }
 func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response, error) {
-	utils.Debug(data)
+	// Emulate an error if we are not connected.
+	if !self.connected {
+		return &http.Response{
+			Body:       ioutil.NopCloser(bytes.NewBufferString("")),
+			StatusCode: 500,
+		}, nil
+	}
+
+	manager := crypto.NullCryptoManager{}
+	decrypted, _ := manager.DecryptMessageList(data)
+	for _, item := range decrypted.Job {
+		self.received = append(self.received, item.Name)
+	}
+
 	self.wg.Done()
 	return &http.Response{
 		Body:       ioutil.NopCloser(bytes.NewBufferString("")),
@@ -79,20 +97,12 @@ func TestSender(t *testing.T) {
 	config_obj, err := config.LoadConfig("test_data/client.config.yaml")
 	assert.NoError(t, err)
 
-	server_config_obj, err := config.LoadConfig("test_data/server.config.yaml")
-	assert.NoError(t, err)
-
-	private_key, err := crypto.GeneratePrivateKey()
-	assert.NoError(t, err)
-
-	manager, err := crypto.NewClientCryptoManager(config_obj, private_key)
-	assert.NoError(t, err)
-
-	manager.AddCertificate([]byte(server_config_obj.Frontend.Certificate))
-
-	exe := &MockExecutor{to_send: []*crypto_proto.GrrMessage{
-		&crypto_proto.GrrMessage{},
-	}}
+	manager := &crypto.NullCryptoManager{}
+	messages := []string{
+		"0123456789",
+		"0123456789",
+		"0123456789"}
+	exe := &MockExecutor{to_send: messages}
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 	enroller := &Enroller{
@@ -113,9 +123,34 @@ func TestSender(t *testing.T) {
 		}
 	}()
 
+	// The connector is not connected
+	connector.connected = false
+
 	sender := NewSender(
 		config_obj, connector, manager, exe, enroller,
 		logger, "Sender", "control")
+
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
+	sender.ring_buffer.Size = 10
 	sender.Start(ctx)
+
+	// Wait until everything stabilizes
+	time.Sleep(time.Second)
+
+	// We only sent one message since there is no room in the
+	// ring_buffer.
+	assert.Equal(t, 1, exe.sent_count)
+
+	// No messages are actually consumed.
+	assert.Nil(t, connector.received)
+
+	// Turn on the HTTP connector.
+	connector.connected = true
+
+	// Wait until all messages are sent.
 	wg.Wait()
+	assert.Equal(t, connector.received, messages)
+
+	utils.Debug(connector.received)
 }

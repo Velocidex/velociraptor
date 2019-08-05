@@ -53,7 +53,6 @@ message VQLCollectorArgs {
       description: "An Op is defined as some arbitrary unit of work. This allows work to be limited. Typically VQL plugins will count ops towards the query as appropriate."
     }];
 
-
     repeated Artifact artifacts = 5 [(sem_type) = {
             description: "Artifacts sent from the server to help with this query."
         }];
