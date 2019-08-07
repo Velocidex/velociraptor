@@ -26,41 +26,14 @@ import (
 	"testing"
 	"time"
 
+	errors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
-
-type MockExecutor struct {
-	to_send    []string
-	sent_count int
-	wg         sync.WaitGroup
-}
-
-func (self *MockExecutor) ReadFromServer() *crypto_proto.GrrMessage {
-	return nil
-}
-
-func (self *MockExecutor) SendToServer(message *crypto_proto.GrrMessage)   {}
-func (self *MockExecutor) ProcessRequest(message *crypto_proto.GrrMessage) {}
-func (self *MockExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
-	result := make(chan *crypto_proto.GrrMessage)
-
-	self.wg.Add(1)
-	go func() {
-		for _, item := range self.to_send {
-			self.wg.Add(1)
-			result <- &crypto_proto.GrrMessage{Name: item}
-			self.sent_count++
-		}
-		self.wg.Done()
-	}()
-
-	return result
-}
 
 type MockHTTPConnector struct {
 	wg        *sync.WaitGroup
@@ -72,10 +45,7 @@ func (self *MockHTTPConnector) GetCurrentUrl() string { return "http://URL/" }
 func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response, error) {
 	// Emulate an error if we are not connected.
 	if !self.connected {
-		return &http.Response{
-			Body:       ioutil.NopCloser(bytes.NewBufferString("")),
-			StatusCode: 500,
-		}, nil
+		return nil, errors.New("Unavailable")
 	}
 
 	manager := crypto.NullCryptoManager{}
@@ -93,64 +63,89 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 func (self *MockHTTPConnector) ReKeyNextServer()   {}
 func (self *MockHTTPConnector) ServerName() string { return "VelociraptorServer" }
 
+// Try to send the message immediately.
+func CanSendToExecutor(
+	wg *sync.WaitGroup,
+	exec *executor.ClientExecutor,
+	msg *crypto_proto.GrrMessage) bool {
+	select {
+	case exec.Outbound <- msg:
+		wg.Add(1)
+		return true
+	case <-time.After(500 * time.Millisecond):
+		return false
+	}
+}
+
 func TestSender(t *testing.T) {
-	config_obj, err := config.LoadConfig("test_data/client.config.yaml")
-	assert.NoError(t, err)
-
-	manager := &crypto.NullCryptoManager{}
-	messages := []string{
-		"0123456789",
-		"0123456789",
-		"0123456789"}
-	exe := &MockExecutor{to_send: messages}
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-
-	enroller := &Enroller{
-		config_obj: config_obj,
-		manager:    manager,
-		executor:   exe,
-		logger:     logger}
-
-	ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	connector := &MockHTTPConnector{wg: wg}
-	go func() {
-		select {
-		case <-ctx.Done():
-			wg.Done()
-		}
-	}()
-
-	// The connector is not connected
-	connector.connected = false
-
-	sender := NewSender(
-		config_obj, connector, manager, exe, enroller,
-		logger, "Sender", "control")
+	config_obj := config.GetDefaultConfig()
 
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
-	sender.ring_buffer.Size = 10
+	config_obj.Client.LocalBuffer.MemorySize = 10
+	config_obj.Client.MaxPoll = 1
+	config_obj.Client.MaxPollStd = 1
+
+	manager := &crypto.NullCryptoManager{}
+	exe := &executor.ClientExecutor{
+		Inbound:  make(chan *crypto_proto.GrrMessage),
+		Outbound: make(chan *crypto_proto.GrrMessage),
+	}
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+	// Set global timeout on the test.
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	wg := &sync.WaitGroup{}
+
+	connector := &MockHTTPConnector{wg: wg}
+
+	// The connector is not connected initially.
+	connector.connected = false
+
+	sender := NewSender(
+		config_obj, connector, manager, exe, nil, /* enroller */
+		logger, "Sender", "control")
 	sender.Start(ctx)
 
-	// Wait until everything stabilizes
-	time.Sleep(time.Second)
+	// This message results in a 14 byte message enqueued. The
+	// RingBuffer is allowed to go over the size slightly but will
+	// prevent more messages from being generated. This ensures
+	// that all messages will be written to disk in case of a
+	// crash.
+	msg := &crypto_proto.GrrMessage{
+		Name: "0123456789",
+	}
 
-	// We only sent one message since there is no room in the
-	// ring_buffer.
-	assert.Equal(t, 1, exe.sent_count)
+	// The first message will be enqueued.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), true)
 
-	// No messages are actually consumed.
-	assert.Nil(t, connector.received)
+	// These messages can not be sent since there is no room in
+	// the buffer.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
 
-	// Turn on the HTTP connector.
+	// Nothing is received yet since the connector is
+	// disconnected.
+	assert.Equal(t, len(connector.received), 0)
+
+	// The ring buffer is holding 14 bytes since none were
+	// successfully sent yet.
+	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(14))
+
+	// Turn the connector on - now sending will be successful. We
+	// need to wait for the communicator to retry sending.
 	connector.connected = true
 
-	// Wait until all messages are sent.
+	// Wait until the messages are delivered.
 	wg.Wait()
-	assert.Equal(t, connector.received, messages)
 
-	utils.Debug(connector.received)
+	// There is one message received
+	assert.Equal(t, len(connector.received), 1)
+
+	// The ring buffer is now truncated to 0.
+	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(0))
+
+	// We can send more messages.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), true)
 }

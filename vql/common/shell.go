@@ -184,26 +184,43 @@ func (self ShellPlugin) Call(
 		go read_from_pipe(stdout_pipe, &response.Stdout, &wg)
 		go read_from_pipe(stderr_pipe, &response.Stderr, &wg)
 
+		err_chan := make(chan error)
+		go func() {
+			err_chan <- command.Wait()
+		}()
+
 		// We need to wait here until the readers are done.
 		wg.Wait()
 
 		// Get the command status and combine with the last response.
-		err = command.Wait()
-		if err == nil {
-			// Successful termination.
-			response.ReturnCode = 0
-		} else {
-			response.ReturnCode = -1
+		select {
+		case <-ctx.Done():
+			// Cancelled - kill the child. This does not
+			// seem to work well on windows.
+			err := command.Process.Kill()
+			if err != nil {
+				scope.Log("timeout: failed to kill process with pid %v: %v",
+					command.Process.Pid, err)
+			} else {
+				scope.Log("process killed as timeout reached")
+			}
 
-			exiterr, ok := err.(*exec.ExitError)
-			if ok {
-				status, ok := exiterr.Sys().(syscall.WaitStatus)
+		case err := <-err_chan:
+			if err == nil {
+				// Successful termination.
+				response.ReturnCode = 0
+			} else {
+				response.ReturnCode = -1
+
+				exiterr, ok := err.(*exec.ExitError)
 				if ok {
-					response.ReturnCode = int64(status.ExitStatus())
+					status, ok := exiterr.Sys().(syscall.WaitStatus)
+					if ok {
+						response.ReturnCode = int64(status.ExitStatus())
+					}
 				}
 			}
 		}
-
 		response.Complete = true
 		output_chan <- response
 	}()

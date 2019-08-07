@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -42,7 +43,8 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	t := self.T()
-	config_obj, err := config.LoadClientConfig("../test_data/server.config.yaml")
+	config_obj, err := config.LoadClientConfig(
+		"../http_comms/test_data/server.config.yaml")
 	require.NoError(t, err)
 
 	utils.Debug(err)
@@ -84,8 +86,11 @@ func (self *TestSuite) TestEncDecServerToClient() {
 				Name: "OMG it's a string"})
 	}
 
-	cipher_text, err := self.server_manager.EncryptMessageList(
-		message_list, self.client_id)
+	serialized, err := proto.Marshal(message_list)
+	assert.NoError(t, err)
+
+	cipher_text, err := self.server_manager.Encrypt(
+		serialized, self.client_id)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)

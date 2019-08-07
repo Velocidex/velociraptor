@@ -164,12 +164,8 @@ func _NewCipher(
 type ICryptoManager interface {
 	GetCSR() ([]byte, error)
 	AddCertificate(certificate_pem []byte) (*string, error)
-	/*	EncryptMessageList(
-		message_list *crypto_proto.MessageList,
-		destination string) ([]byte, error)
-	*/Encrypt(plain_text []byte, destination string) ([]byte, error)
+	Encrypt(plain_text []byte, destination string) ([]byte, error)
 	Decrypt(cipher_text []byte) (*MessageInfo, error)
-	//DecryptMessageList(cipher_text []byte) (*crypto_proto.MessageList, error)
 }
 
 type CryptoManager struct {
@@ -657,7 +653,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 // GRR usually encodes a MessageList protobuf inside the encrypted
 // payload. This convenience method parses that type of payload after
 // decrypting it.
-func (self *CryptoManager) DecryptMessageList(cipher_text []byte) (
+func DecryptMessageList(self ICryptoManager, cipher_text []byte) (
 	*crypto_proto.MessageList, error) {
 	message_info, err := self.Decrypt(cipher_text)
 	if err != nil {

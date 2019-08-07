@@ -139,7 +139,7 @@ type HTTPConnector struct {
 	logger  *logging.LogContext
 
 	minPoll, maxPoll time.Duration
-
+	maxPollDev       uint64
 	// Used to cycle through the urls slice.
 	mu              sync.Mutex
 	current_url_idx int
@@ -159,6 +159,11 @@ func NewHTTPConnector(
 	max_poll := config_obj.Client.MaxPoll
 	if max_poll == 0 {
 		max_poll = 60
+	}
+
+	maxPollDev := config_obj.Client.MaxPollStd
+	if maxPollDev == 0 {
+		maxPollDev = 30
 	}
 
 	tls_config := &tls.Config{
@@ -183,8 +188,9 @@ func NewHTTPConnector(
 		manager: manager,
 		logger:  logger,
 
-		minPoll: time.Duration(1) * time.Second,
-		maxPoll: time.Duration(max_poll) * time.Second,
+		minPoll:    time.Duration(1) * time.Second,
+		maxPoll:    time.Duration(max_poll) * time.Second,
+		maxPollDev: maxPollDev,
 
 		urls: config_obj.Client.ServerUrls,
 
@@ -253,7 +259,7 @@ func (self *HTTPConnector) ReKeyNextServer() {
 		// Only wait once we go round the list a full time.
 		if self.current_url_idx == 0 {
 			wait := self.maxPoll + time.Duration(
-				rand.Intn(30))*time.Second
+				rand.Intn(int(self.maxPollDev)))*time.Second
 
 			self.logger.Info(
 				"Waiting for a reachable server: %v", wait)
@@ -325,6 +331,7 @@ type NotificationReader struct {
 	name       string
 
 	minPoll, maxPoll      time.Duration
+	maxPollDev            uint64
 	current_poll_duration time.Duration
 	IsPaused              int32
 }
@@ -338,18 +345,24 @@ func NewNotificationReader(
 	logger *logging.LogContext,
 	name string,
 	handler string) *NotificationReader {
-	return &NotificationReader{
-		config_obj: *config_obj,
-		connector:  connector,
-		manager:    manager,
-		executor:   executor,
-		enroller:   enroller,
-		name:       name,
-		handler:    handler,
-		logger:     logger,
-		minPoll:    time.Duration(1) * time.Second,
-		maxPoll:    time.Duration(config_obj.Client.MaxPoll) * time.Second,
 
+	maxPollDev := config_obj.Client.MaxPollStd
+	if maxPollDev == 0 {
+		maxPollDev = 30
+	}
+
+	return &NotificationReader{
+		config_obj:            *config_obj,
+		connector:             connector,
+		manager:               manager,
+		executor:              executor,
+		enroller:              enroller,
+		name:                  name,
+		handler:               handler,
+		logger:                logger,
+		minPoll:               time.Duration(1) * time.Second,
+		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
+		maxPollDev:            maxPollDev,
 		current_poll_duration: time.Second,
 	}
 }
@@ -378,7 +391,7 @@ func (self *NotificationReader) sendMessageList(
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		wait := self.maxPoll + time.Duration(
-			rand.Intn(30))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 
 		select {
 		case <-ctx.Done():
@@ -418,7 +431,9 @@ func (self *NotificationReader) sendToURL(
 	// Enrollment is pretty quick so we need to retry sooner -
 	// return no error so the next poll happens in minPoll.
 	if resp.StatusCode == 406 {
-		self.enroller.MaybeEnrol()
+		if self.enroller != nil {
+			self.enroller.MaybeEnrol()
+		}
 		return nil
 	}
 
@@ -456,15 +471,10 @@ process_response:
 		}
 	}
 
-	message_info, err := self.manager.Decrypt(cipher_text)
+	response_message_list, err := crypto.DecryptMessageList(
+		self.manager, encrypted)
 	if err != nil {
 		return err
-	}
-
-	response_message_list := &crypto_proto.MessageList{}
-	err = proto.Unmarshal(message_info.Raw, response_message_list)
-	if err != nil {
-		return errors.WithStack(err)
 	}
 
 	for _, msg := range response_message_list.Job {

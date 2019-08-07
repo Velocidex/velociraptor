@@ -72,6 +72,20 @@ message DarwinInstallerConfig {
         }];
 }
 
+message RingBufferConfig {
+    uint64 memory_size = 1 [(sem_type) = {
+       description: "How many bytes to store in the ring buffer in memory."
+    }];
+
+    uint64 disk_size = 2 [(sem_type) = {
+       description: "How many bytes to store in the ring buffer on disk (0 mean no disk file)."
+    }];
+
+    string filename = 3 [(sem_type) = {
+       description: "Name of file to store the ring buffer in (if empty we do not use a file)."
+    }];
+}
+
 message ClientConfig {
     repeated string labels = 6 [(sem_type) = {
             description: "A list of labels the client has. This allows selected groups of clients to be targetted in hunts."
@@ -106,6 +120,11 @@ message ClientConfig {
             default: "600",
         }];
 
+    uint64 max_poll_std = 27 [(sem_type) = {
+            description: "The standard deviation between polls."
+            default: "30",
+        }];
+
     WindowsInstallerConfig windows_installer = 16 [(sem_type) = {
             description: "Configuration of the windows installer.",
         }];
@@ -133,6 +152,10 @@ message ClientConfig {
 
     uint64 max_upload_size = 25 [(sem_type) = {
              description: "Maximum size in Bytes we will create uploads for (default 5mb)"
+        }];
+
+    RingBufferConfig local_buffer = 26 [(sem_type) = {
+             description: "Configure the local ring buffer."
         }];
 }
 

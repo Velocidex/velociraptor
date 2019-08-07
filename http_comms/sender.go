@@ -21,6 +21,7 @@ package http_comms
 import (
 	"context"
 	"runtime/debug"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -38,6 +39,7 @@ type Sender struct {
 	// Signalled when a packet is full and should be sent
 	// immediately - skip the minPoll wait when the queue is
 	// already full.
+	mu      sync.Mutex
 	release chan bool
 
 	ring_buffer *RingBuffer
@@ -52,7 +54,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) != 0 {
-			<-time.After(self.minPoll)
+			time.Sleep(self.minPoll)
 			continue
 		}
 
@@ -95,15 +97,17 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 			// We have just filled the message queue with
 			// enough data, trigger the sender to send
 			// this data out immediately.
-			if self.ring_buffer.AvailableBytes() > int(self.
-				config_obj.Client.MaxUploadSize) {
+			if self.ring_buffer.AvailableBytes() > self.
+				config_obj.Client.MaxUploadSize {
 
 				// Signal to
 				// PumpRingBufferToSendMessage() that
 				// it should not wait before sending
 				// the next packet.
+				self.mu.Lock()
 				close(self.release)
 				self.release = make(chan bool)
+				self.mu.Unlock()
 			}
 		}
 	}
@@ -118,7 +122,7 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			// Grab some messages from the ring buffer.
 			messages := self.ring_buffer.Lease(
-				int(self.config_obj.Client.MaxUploadSize))
+				self.config_obj.Client.MaxUploadSize)
 			if len(messages) > 0 {
 				// sendMessageList will block until
 				// the messages are successfully sent
@@ -179,7 +183,7 @@ func NewSender(
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler),
-		ring_buffer: NewRingBuffer(20 * 1024 * 1024),
+		ring_buffer: NewRingBuffer(config_obj),
 		release:     make(chan bool),
 	}
 

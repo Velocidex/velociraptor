@@ -14,7 +14,7 @@ description: |
 
 parameters:
   - name: winPmemURL
-    default: https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc1/winpmem_v3.3.rc1.exe
+    default: https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc2.exe
 
 sources:
   - queries:
