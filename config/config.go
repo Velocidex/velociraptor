@@ -65,6 +65,16 @@ func GetDefaultConfig() *api_proto.Config {
 				"velociraptor.writeback.yaml",
 			MaxPoll: 600,
 
+			// Local ring buffer to queue messages to the
+			// server. If the server is not available we
+			// write these to disk so we can send them
+			// next time we are online.
+			LocalBuffer: &api_proto.RingBufferConfig{
+				MemorySize: 50 * 1024 * 1024,
+				DiskSize:   1024 * 1024 * 1024,
+				Filename:   "$Temp/Velociraptor_Buffer.bin",
+			},
+
 			// Specific instructions for the
 			// windows service installer.
 			WindowsInstaller: &api_proto.WindowsInstallerConfig{
@@ -171,10 +181,8 @@ func LoadConfig(filename string) (*api_proto.Config, error) {
 			result.Client.Version = default_config.Version
 
 			return result, nil
-
 		}
 	}
-
 	// Otherwise we try to read from the embedded config.
 	embedded_config := maybeReadEmbeddedConfig()
 	if embedded_config == nil {

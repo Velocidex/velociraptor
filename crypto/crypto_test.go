@@ -21,6 +21,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TestSuite struct {
@@ -42,10 +42,9 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	t := self.T()
-	config_obj, err := config.LoadClientConfig("../test_data/server.config.yaml")
+	config_obj, err := config.LoadClientConfig(
+		"../http_comms/test_data/server.config.yaml")
 	require.NoError(t, err)
-
-	utils.Debug(err)
 
 	self.config_obj = config_obj
 	self.config_obj.Client.WritebackLinux = ""
@@ -84,15 +83,18 @@ func (self *TestSuite) TestEncDecServerToClient() {
 				Name: "OMG it's a string"})
 	}
 
-	cipher_text, err := self.server_manager.EncryptMessageList(
-		message_list, self.client_id)
+	serialized, err := proto.Marshal(message_list)
+	assert.NoError(t, err)
+
+	cipher_text, err := self.server_manager.Encrypt(
+		serialized, self.client_id)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		result, err := self.client_manager.DecryptMessageList(cipher_text)
+		result, err := DecryptMessageList(self.client_manager, cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -125,7 +127,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		result, err := self.server_manager.DecryptMessageList(cipher_text)
+		result, err := DecryptMessageList(self.server_manager, cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}

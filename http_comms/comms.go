@@ -28,7 +28,6 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -50,7 +49,7 @@ import (
 // 406 HTTP codes.
 type Enroller struct {
 	config_obj           *api_proto.Config
-	manager              *crypto.CryptoManager
+	manager              crypto.ICryptoManager
 	executor             executor.Executor
 	logger               *logging.LogContext
 	last_enrollment_time time.Time
@@ -123,17 +122,24 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 	return result
 }
 
+type IConnector interface {
+	GetCurrentUrl() string
+	Post(handler string, data []byte) (*http.Response, error)
+	ReKeyNextServer()
+	ServerName() string
+}
+
 // Responsible for using HTTP to talk with the end point.
 type HTTPConnector struct {
 	// The Crypto Manager for communicating with the current
 	// URL. Note, when the URL is changed, the CryptoManager is
 	// initialized by a successful connection to the URL's
 	// server.pem endpoint.
-	manager *crypto.CryptoManager
+	manager crypto.ICryptoManager
 	logger  *logging.LogContext
 
 	minPoll, maxPoll time.Duration
-
+	maxPollDev       uint64
 	// Used to cycle through the urls slice.
 	mu              sync.Mutex
 	current_url_idx int
@@ -147,12 +153,17 @@ type HTTPConnector struct {
 
 func NewHTTPConnector(
 	config_obj *api_proto.Config,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	logger *logging.LogContext) *HTTPConnector {
 
 	max_poll := config_obj.Client.MaxPoll
 	if max_poll == 0 {
 		max_poll = 60
+	}
+
+	maxPollDev := config_obj.Client.MaxPollStd
+	if maxPollDev == 0 {
+		maxPollDev = 30
 	}
 
 	tls_config := &tls.Config{
@@ -177,8 +188,9 @@ func NewHTTPConnector(
 		manager: manager,
 		logger:  logger,
 
-		minPoll: time.Duration(1) * time.Second,
-		maxPoll: time.Duration(max_poll) * time.Second,
+		minPoll:    time.Duration(1) * time.Second,
+		maxPoll:    time.Duration(max_poll) * time.Second,
+		maxPollDev: maxPollDev,
 
 		urls: config_obj.Client.ServerUrls,
 
@@ -223,6 +235,10 @@ func (self *HTTPConnector) Post(handler string, data []byte) (
 	return resp, nil
 }
 
+func (self *HTTPConnector) String() string {
+	return fmt.Sprintf("HTTP Connector to %v", self.urls)
+}
+
 // Contact the server and verify its public key. May block
 // indefinitely until a valid trusted server is found. After this
 // function completes the current URL is pointed at a valid server
@@ -243,7 +259,7 @@ func (self *HTTPConnector) ReKeyNextServer() {
 		// Only wait once we go round the list a full time.
 		if self.current_url_idx == 0 {
 			wait := self.maxPoll + time.Duration(
-				rand.Intn(30))*time.Second
+				rand.Intn(int(self.maxPollDev)))*time.Second
 
 			self.logger.Info(
 				"Waiting for a reachable server: %v", wait)
@@ -305,9 +321,9 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
-	config_obj *api_proto.Config
-	connector  *HTTPConnector
-	manager    *crypto.CryptoManager
+	config_obj api_proto.Config
+	connector  IConnector
+	manager    crypto.ICryptoManager
 	executor   executor.Executor
 	enroller   *Enroller
 	handler    string
@@ -315,31 +331,38 @@ type NotificationReader struct {
 	name       string
 
 	minPoll, maxPoll      time.Duration
+	maxPollDev            uint64
 	current_poll_duration time.Duration
 	IsPaused              int32
 }
 
 func NewNotificationReader(
 	config_obj *api_proto.Config,
-	connector *HTTPConnector,
-	manager *crypto.CryptoManager,
+	connector IConnector,
+	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
 	handler string) *NotificationReader {
-	return &NotificationReader{
-		config_obj: config_obj,
-		connector:  connector,
-		manager:    manager,
-		executor:   executor,
-		enroller:   enroller,
-		name:       name,
-		handler:    handler,
-		logger:     logger,
-		minPoll:    time.Duration(1) * time.Second,
-		maxPoll:    time.Duration(config_obj.Client.MaxPoll) * time.Second,
 
+	maxPollDev := config_obj.Client.MaxPollStd
+	if maxPollDev == 0 {
+		maxPollDev = 30
+	}
+
+	return &NotificationReader{
+		config_obj:            *config_obj,
+		connector:             connector,
+		manager:               manager,
+		executor:              executor,
+		enroller:              enroller,
+		name:                  name,
+		handler:               handler,
+		logger:                logger,
+		minPoll:               time.Duration(1) * time.Second,
+		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
+		maxPollDev:            maxPollDev,
 		current_poll_duration: time.Second,
 	}
 }
@@ -368,7 +391,7 @@ func (self *NotificationReader) sendMessageList(
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		wait := self.maxPoll + time.Duration(
-			rand.Intn(30))*time.Second
+			rand.Intn(int(self.maxPollDev)))*time.Second
 
 		select {
 		case <-ctx.Done():
@@ -408,7 +431,9 @@ func (self *NotificationReader) sendToURL(
 	// Enrollment is pretty quick so we need to retry sooner -
 	// return no error so the next poll happens in minPoll.
 	if resp.StatusCode == 406 {
-		self.enroller.MaybeEnrol()
+		if self.enroller != nil {
+			self.enroller.MaybeEnrol()
+		}
 		return nil
 	}
 
@@ -446,7 +471,8 @@ process_response:
 		}
 	}
 
-	response_message_list, err := self.manager.DecryptMessageList(encrypted)
+	response_message_list, err := crypto.DecryptMessageList(
+		self.manager, encrypted)
 	if err != nil {
 		return err
 	}
@@ -517,179 +543,6 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	return result
 }
 
-type Sender struct {
-	*NotificationReader
-
-	// We serialize messages into the message queue as they
-	// arrive. If the queue is too large we flush it to the
-	// server.
-	mu            sync.Mutex
-	message_queue []byte
-}
-
-// The sender simply sends any server bound messages to the server. We
-// only send messages when responses are pending.
-func (self *Sender) Start(ctx context.Context) {
-	// This channel will be signalled when the output queue is too
-	// large and needs to be flushed.
-	release := make(chan bool)
-
-	// Pump messages from the executor to the pending message list
-	// - this is our local queue of output pending messages.
-	go func() {
-		for {
-			// If we are paused we sleep here. Note that
-			// by not reading the executor we block it and
-			// therefore all processing should pause
-			// (since the executor channel itself has no
-			// buffer).
-			if atomic.LoadInt32(&self.IsPaused) != 0 {
-				<-time.After(self.minPoll)
-			} else {
-				select {
-				case <-ctx.Done():
-					return
-
-				case msg := <-self.executor.ReadResponse():
-					// Executor closed the channel.
-					if msg == nil {
-						return
-					}
-
-					// NOTE: This is kind of a
-					// hack. We hold in memory a
-					// bunch of GrrMessage proto
-					// objects and we want to
-					// serialize them into a
-					// MessageList proto one at
-					// the time (so we can track
-					// how large the final message
-					// is going to be). We use the
-					// special wire format
-					// property of protobufs that
-					// repeated fields can be
-					// appended on the wire, and
-					// then parsed as a single
-					// message. This saves us
-					// encoding the GrrMessage
-					// just to see how large it is
-					// going to be and then
-					// encoding it again.
-					item := &crypto_proto.MessageList{
-						Job: []*crypto_proto.GrrMessage{msg}}
-					serialized_msg, err := proto.Marshal(item)
-					if err != nil {
-						// Cant serialize the
-						// message - drop it
-						// on the floor.
-						continue
-					}
-
-					// We need to block here until
-					// there is room in the
-					// message queue. If the
-					// message queue is being sent
-					// to the server, the mutex
-					// will be locked and we wait
-					// here until the data is
-					// pushed through. While
-					// waiting here we block the
-					// executor channel.
-					self.mu.Lock()
-					self.message_queue = append(
-						self.message_queue, serialized_msg...)
-					length_of_message_queue := len(self.message_queue)
-					self.mu.Unlock()
-
-					// We have just filled the
-					// message queue with enough
-					// data, trigger the sender to
-					// send this data out
-					// immediately.
-					if length_of_message_queue > int(self.
-						config_obj.Client.MaxUploadSize) {
-						release <- true
-					}
-				}
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			if atomic.LoadInt32(&self.IsPaused) == 0 {
-				// If there is some data in the queues we send
-				// it immediately. If there is no data pending
-				// we send nothing.
-				self.mu.Lock()
-				if len(self.message_queue) > 0 {
-					// sendMessageList will block
-					// until the messages are
-					// successfully sent to the
-					// server. We hold the lock
-					// here which blocks the
-					// executor from adding more
-					// data to the message queue.
-					self.sendMessageList(ctx, self.message_queue)
-
-					// Clean the message_queue
-					self.message_queue = make([]byte, 0)
-
-					// We need to make sure our
-					// memory footprint is as
-					// small as possible. The
-					// Velociraptor client
-					// prioritizes low memory
-					// footprint over latency. We
-					// just sent data to the
-					// server and we wont need
-					// that for a while so we can
-					// free our memory to the OS.
-					debug.FreeOSMemory()
-				}
-				self.mu.Unlock()
-			}
-
-			// Wait a minimum time before sending the next
-			// one to give the executor a chance to fill
-			// the queue.
-			select {
-			case <-ctx.Done():
-				return
-
-				// If the queue is too large we need
-				// to flush it out immediately.
-			case <-release:
-				continue
-
-				// Wait a minimum amount of time to
-				// allow for responses to be queued in
-				// the same POST.
-			case <-time.After(self.minPoll):
-				continue
-			}
-		}
-	}()
-}
-
-func NewSender(
-	config_obj *api_proto.Config,
-	connector *HTTPConnector,
-	manager *crypto.CryptoManager,
-	executor executor.Executor,
-	enroller *Enroller,
-	logger *logging.LogContext,
-	name string,
-	handler string) *Sender {
-	result := &Sender{
-		NotificationReader: NewNotificationReader(config_obj, connector, manager,
-			executor, enroller, logger, name, handler),
-	}
-
-	return result
-
-}
-
 type HTTPCommunicator struct {
 	config_obj *api_proto.Config
 
@@ -716,7 +569,7 @@ func (self *HTTPCommunicator) SetPause(is_paused bool) {
 
 // Run forever.
 func (self *HTTPCommunicator) Run(ctx context.Context) {
-	self.logger.Info("Starting HTTPCommunicator: %v", self.receiver.connector.urls)
+	self.logger.Info("Starting HTTPCommunicator: %v", self.receiver.connector)
 
 	self.receiver.Start(ctx)
 	self.sender.Start(ctx)
@@ -726,7 +579,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 
 func NewHTTPCommunicator(
 	config_obj *api_proto.Config,
-	manager *crypto.CryptoManager,
+	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {
 
