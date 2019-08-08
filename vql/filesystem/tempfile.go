@@ -20,6 +20,7 @@ package filesystem
 import (
 	"context"
 	"os"
+	"time"
 
 	"github.com/tink-ab/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -64,7 +65,20 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	// Make sure the file is removed when the query is done.
 	scope.AddDestructor(func() {
 		scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
-		os.Remove(tmpfile.Name())
+
+		// On windows especially we can not remove files that
+		// are opened by something else, so we keep trying for
+		// a while.
+		go func() {
+			for i := 0; i < 100; i++ {
+				err := os.Remove(tmpfile.Name())
+				if err == nil {
+					return
+				}
+
+				time.Sleep(time.Second)
+			}
+		}()
 	})
 	return tmpfile.Name()
 }

@@ -131,12 +131,15 @@ func (self *ClientExecutor) processRequestPlugin(
 }
 
 func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
-	result := &ClientExecutor{}
-	result.Inbound = make(chan *crypto_proto.GrrMessage)
-	result.Outbound = make(chan *crypto_proto.GrrMessage)
-	result.plugins = actions.GetClientActionsMap()
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+	result := &ClientExecutor{
+		Inbound:  make(chan *crypto_proto.GrrMessage),
+		Outbound: make(chan *crypto_proto.GrrMessage),
+		plugins:  actions.GetClientActionsMap(),
+	}
+
 	go func() {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
 		for {
 			// Pump messages from input channel and
 			// process each request.
