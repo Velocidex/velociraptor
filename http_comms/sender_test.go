@@ -29,6 +29,7 @@ import (
 
 	errors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -57,7 +58,7 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 
 	manager := crypto.NullCryptoManager{}
 	decrypted, err := manager.DecryptMessageList(data)
-	assert.NoError(self.t, err)
+	require.NoError(self.t, err)
 
 	for _, item := range decrypted.Job {
 		self.received = append(self.received, item.Name)
@@ -177,17 +178,23 @@ func TestSender(t *testing.T) {
 func TestSenderWithFileBuffer(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 
+	tmpfile, err := ioutil.TempFile("", "test")
+	require.NoError(t, err)
+	defer os.Remove(tmpfile.Name())
+
+	tmpfile.Close()
+
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
 	os.Remove("/tmp/1.bin")
 
 	config_obj.Client.LocalBuffer.DiskSize = 10
-	config_obj.Client.LocalBuffer.Filename = "/tmp/1.bin"
+	config_obj.Client.LocalBuffer.Filename = tmpfile.Name()
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1
 
 	rb, err := NewFileBasedRingBuffer(config_obj)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	testRingBuffer(rb, config_obj, t)
 }
