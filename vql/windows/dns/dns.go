@@ -150,6 +150,9 @@ func (self *eventContext) ProcessEvent(packet []byte) {
 
 //export process_dns
 func process_dns(ctx *C.int, buff *C.char, length C.int) {
+	if ctx == nil {
+		return
+	}
 	go_ctx := pointer.Restore(unsafe.Pointer(ctx)).(*eventContext)
 	go_buff := (*[1 << 30]byte)(unsafe.Pointer(buff))[:length]
 	go_ctx.ProcessEvent(go_buff)

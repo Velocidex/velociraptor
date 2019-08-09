@@ -591,6 +591,8 @@ func NewHTTPCommunicator(
 		logger:     logger}
 	connector := NewHTTPConnector(config_obj, manager, logger)
 
+	rb := NewLocalBuffer(config_obj)
+
 	result := &HTTPCommunicator{
 		config_obj: config_obj,
 		logger:     logger,
@@ -601,7 +603,7 @@ func NewHTTPCommunicator(
 			logger:     logger,
 		},
 		sender: NewSender(
-			config_obj, connector, manager, executor, enroller,
+			config_obj, connector, manager, executor, rb, enroller,
 			logger, "Sender", "control"),
 		receiver: NewNotificationReader(
 			config_obj, connector, manager, executor, enroller,

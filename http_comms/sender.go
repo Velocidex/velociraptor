@@ -42,7 +42,7 @@ type Sender struct {
 	mu      sync.Mutex
 	release chan bool
 
-	ring_buffer *RingBuffer
+	ring_buffer IRingBuffer
 }
 
 // Persistant loop to pump messages from the executor to the ring
@@ -176,6 +176,7 @@ func NewSender(
 	connector IConnector,
 	manager crypto.ICryptoManager,
 	executor executor.Executor,
+	ring_buffer IRingBuffer,
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
@@ -183,10 +184,9 @@ func NewSender(
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler),
-		ring_buffer: NewRingBuffer(config_obj),
+		ring_buffer: ring_buffer,
 		release:     make(chan bool),
 	}
 
 	return result
-
 }

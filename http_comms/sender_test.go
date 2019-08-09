@@ -22,6 +22,7 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -49,7 +50,11 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 	}
 
 	manager := crypto.NullCryptoManager{}
-	decrypted, _ := manager.DecryptMessageList(data)
+	decrypted, err := manager.DecryptMessageList(data)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, item := range decrypted.Job {
 		self.received = append(self.received, item.Name)
 	}
@@ -103,8 +108,88 @@ func TestSender(t *testing.T) {
 	// The connector is not connected initially.
 	connector.connected = false
 
+	rb := NewRingBuffer(config_obj)
 	sender := NewSender(
-		config_obj, connector, manager, exe, nil, /* enroller */
+		config_obj, connector, manager, exe, rb, nil, /* enroller */
+		logger, "Sender", "control")
+	sender.Start(ctx)
+
+	// This message results in a 14 byte message enqueued. The
+	// RingBuffer is allowed to go over the size slightly but will
+	// prevent more messages from being generated. This ensures
+	// that all messages will be written to disk in case of a
+	// crash.
+	msg := &crypto_proto.GrrMessage{
+		Name: "0123456789",
+	}
+
+	// The first message will be enqueued.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), true)
+
+	// These messages can not be sent since there is no room in
+	// the buffer.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
+
+	// Nothing is received yet since the connector is
+	// disconnected.
+	assert.Equal(t, len(connector.received), 0)
+
+	// The ring buffer is holding 14 bytes since none were
+	// successfully sent yet.
+	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(14))
+
+	// Turn the connector on - now sending will be successful. We
+	// need to wait for the communicator to retry sending.
+	connector.connected = true
+
+	// Wait until the messages are delivered.
+	wg.Wait()
+
+	// There is one message received
+	assert.Equal(t, len(connector.received), 1)
+
+	// The ring buffer is now truncated to 0.
+	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(0))
+
+	// We can send more messages.
+	assert.Equal(t, CanSendToExecutor(wg, exe, msg), true)
+}
+
+func TestSenderWithFileBuffer(t *testing.T) {
+	config_obj := config.GetDefaultConfig()
+
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
+	os.Remove("/tmp/1.bin")
+
+	config_obj.Client.LocalBuffer.DiskSize = 10
+	config_obj.Client.LocalBuffer.Filename = "/tmp/1.bin"
+	config_obj.Client.MaxPoll = 1
+	config_obj.Client.MaxPollStd = 1
+
+	manager := &crypto.NullCryptoManager{}
+	exe := &executor.ClientExecutor{
+		Inbound:  make(chan *crypto_proto.GrrMessage),
+		Outbound: make(chan *crypto_proto.GrrMessage),
+	}
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+	// Set global timeout on the test.
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	wg := &sync.WaitGroup{}
+
+	connector := &MockHTTPConnector{wg: wg}
+
+	// The connector is not connected initially.
+	connector.connected = false
+
+	rb, err := NewFileBasedRingBuffer(config_obj)
+	assert.NoError(t, err)
+
+	sender := NewSender(
+		config_obj, connector, manager, exe, rb, nil, /* enroller */
 		logger, "Sender", "control")
 	sender.Start(ctx)
 
