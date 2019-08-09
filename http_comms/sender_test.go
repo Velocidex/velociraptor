@@ -22,12 +22,15 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"sync"
 	"testing"
 	"time"
 
 	errors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -37,19 +40,26 @@ import (
 
 type MockHTTPConnector struct {
 	wg        *sync.WaitGroup
+	mu        sync.Mutex
 	received  []string
 	connected bool
+	t         *testing.T
 }
 
 func (self *MockHTTPConnector) GetCurrentUrl() string { return "http://URL/" }
 func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Emulate an error if we are not connected.
 	if !self.connected {
 		return nil, errors.New("Unavailable")
 	}
 
 	manager := crypto.NullCryptoManager{}
-	decrypted, _ := manager.DecryptMessageList(data)
+	decrypted, err := manager.DecryptMessageList(data)
+	require.NoError(self.t, err)
+
 	for _, item := range decrypted.Job {
 		self.received = append(self.received, item.Name)
 	}
@@ -77,14 +87,11 @@ func CanSendToExecutor(
 	}
 }
 
-func TestSender(t *testing.T) {
-	config_obj := config.GetDefaultConfig()
-
-	// Make the ring buffer 10 bytes - this is enough for one
-	// message but no more.
-	config_obj.Client.LocalBuffer.MemorySize = 10
-	config_obj.Client.MaxPoll = 1
-	config_obj.Client.MaxPollStd = 1
+func testRingBuffer(
+	rb IRingBuffer,
+	config_obj *api_proto.Config,
+	t *testing.T) {
+	t.Parallel()
 
 	manager := &crypto.NullCryptoManager{}
 	exe := &executor.ClientExecutor{
@@ -98,13 +105,13 @@ func TestSender(t *testing.T) {
 
 	wg := &sync.WaitGroup{}
 
-	connector := &MockHTTPConnector{wg: wg}
+	connector := &MockHTTPConnector{wg: wg, t: t}
 
 	// The connector is not connected initially.
 	connector.connected = false
 
 	sender := NewSender(
-		config_obj, connector, manager, exe, nil, /* enroller */
+		config_obj, connector, manager, exe, rb, nil, /* enroller */
 		logger, "Sender", "control")
 	sender.Start(ctx)
 
@@ -135,7 +142,9 @@ func TestSender(t *testing.T) {
 
 	// Turn the connector on - now sending will be successful. We
 	// need to wait for the communicator to retry sending.
+	connector.mu.Lock()
 	connector.connected = true
+	connector.mu.Unlock()
 
 	// Wait until the messages are delivered.
 	wg.Wait()
@@ -143,9 +152,49 @@ func TestSender(t *testing.T) {
 	// There is one message received
 	assert.Equal(t, len(connector.received), 1)
 
+	// Wait for the messages to be committed in the ring buffer.
+	time.Sleep(500 * time.Millisecond)
+
 	// The ring buffer is now truncated to 0.
 	assert.Equal(t, sender.ring_buffer.AvailableBytes(), uint64(0))
 
 	// We can send more messages.
 	assert.Equal(t, CanSendToExecutor(wg, exe, msg), true)
+}
+
+func TestSender(t *testing.T) {
+	config_obj := config.GetDefaultConfig()
+
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
+	config_obj.Client.LocalBuffer.MemorySize = 10
+	config_obj.Client.MaxPoll = 1
+	config_obj.Client.MaxPollStd = 1
+
+	rb := NewRingBuffer(config_obj)
+	testRingBuffer(rb, config_obj, t)
+}
+
+func TestSenderWithFileBuffer(t *testing.T) {
+	config_obj := config.GetDefaultConfig()
+
+	tmpfile, err := ioutil.TempFile("", "test")
+	require.NoError(t, err)
+	defer os.Remove(tmpfile.Name())
+
+	tmpfile.Close()
+
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
+	os.Remove("/tmp/1.bin")
+
+	config_obj.Client.LocalBuffer.DiskSize = 10
+	config_obj.Client.LocalBuffer.Filename = tmpfile.Name()
+	config_obj.Client.MaxPoll = 1
+	config_obj.Client.MaxPollStd = 1
+
+	rb, err := NewFileBasedRingBuffer(config_obj)
+	require.NoError(t, err)
+
+	testRingBuffer(rb, config_obj, t)
 }
