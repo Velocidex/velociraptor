@@ -252,6 +252,9 @@ type RingBuffer struct {
 }
 
 func (self *RingBuffer) Enqueue(item []byte) {
+	self.c.L.Lock()
+	defer self.c.L.Unlock()
+
 	// Write the message immediately into the ring buffer. If we
 	// crash, the message will be written to disk and
 	// retransmitted on restart.
@@ -270,11 +273,9 @@ func (self *RingBuffer) Enqueue(item []byte) {
 	// the server, and enough room is available. This has the
 	// effect of blocking the executor and stopping the query
 	// until we return.
-	self.c.L.Lock()
 	for self.total_length > self.Size {
 		self.c.Wait()
 	}
-	defer self.c.L.Unlock()
 }
 
 func (self *RingBuffer) AvailableBytes() uint64 {
