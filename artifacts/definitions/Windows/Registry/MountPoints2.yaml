@@ -1,0 +1,25 @@
+name: Windows.Registry.MountPoints2
+description: |
+    This Detection will collect any items in the MountPoints2 registry key with a "$" in the share path. 
+    MountPoints2 is stored in the user hive and will store all remotely mapped drives unless removd.
+    This is a great datapoint to stack and hunt for simple admin $ mapping based lateral movement.
+    
+author: Matt Green - @mgreen27
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+ - name: KeyGlob
+   default: Software\Microsoft\Windows\CurrentVersion\Explorer\MountPoints2\*
+
+sources:
+ - queries:
+     - |
+        SELECT regex_replace(
+                   source=basename(path=FullPath), re="%23", replace="\\") as MountPoint,
+            timestamp(epoch=Mtime) as ModifiedTime,
+            Username,
+            url(parse=FullPath).Path as Hive,
+            url(parse=FullPath).Fragment as Key
+        FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
+        WHERE FullPath =~ "\\$"
