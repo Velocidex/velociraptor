@@ -92,12 +92,12 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "basename(path=FullPath)": "%USERPROFILE%/Desktop/test.docx",
   "dirname(path=FullPath)": "HKEY_CURRENT_USER/Software/Microsoft/Office/16.0/Word/Security/Trusted Documents/TrustRecords"
  }
-]SELECT * FROM Artifact.Windows.System.Amcache( amCacheGlob="c:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5[
+]SELECT * FROM Artifact.Windows.System.Amcache( amCacheGlob="c:/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
   "BinFileVersion": "1.289.0.0",
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",
   "FileId": "000085ec26beb5c422b02c5d059bbc966bf99eb3892a",
-  "Key": "ntfs:///C:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_base.exe%7C89cd9b0a99b0456e",
+  "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_base.exe%7C89cd9b0a99b0456e",
   "LastModified": "2019-03-02T08:21:12Z",
   "Name": "AM_Base.exe",
   "ProductName": "microsoft malware protection",
@@ -110,7 +110,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "BinFileVersion": "1.289.263.0",
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
   "FileId": "0000499688da430f3e0534a8c822154588c998062abb",
-  "Key": "ntfs:///C:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_delta.exe%7C9025d818d4db6f5e",
+  "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_delta.exe%7C9025d818d4db6f5e",
   "LastModified": "2019-03-02T08:21:18Z",
   "Name": "AM_Delta.exe",
   "ProductName": "microsoft malware protection",
@@ -123,7 +123,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "BinFileVersion": "1.1.15700.9",
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_engine.exe",
   "FileId": "000095e04fb4f1c8f64240970d1937323473cdc3b42d",
-  "Key": "ntfs:///C:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_engine.exe%7Cf8baa8d1048be37c",
+  "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_engine.exe%7Cf8baa8d1048be37c",
   "LastModified": "2019-03-02T08:20:48Z",
   "Name": "AM_Engine.exe",
   "ProductName": "microsoft malware protection",
@@ -136,7 +136,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "BinFileVersion": "10.0.17763.1",
   "Binary": "c:\\windows\\system32\\autochk.exe",
   "FileId": "00002e6c38958917fb86f09026d41337c7460efbe5f5",
-  "Key": "ntfs:///C:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/autochk.exe%7C62a87acc15a1c57f",
+  "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/autochk.exe%7C62a87acc15a1c57f",
   "LastModified": "2019-03-02T08:10:03Z",
   "Name": "autochk.exe",
   "ProductName": "microsoft® windows® operating system",
@@ -149,7 +149,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "BinFileVersion": "72.0.3626.121",
   "Binary": "c:\\program files (x86)\\google\\chrome\\application\\72.0.3626.121\\installer\\chrmstp.exe",
   "FileId": "00005417796e422db7aa90da0e7bdced0e3d609010e6",
-  "Key": "ntfs:///C:/gopath/src/www.velocidex.com/golang/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/chrmstp.exe%7C5d43f70c64b9b033",
+  "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/chrmstp.exe%7C5d43f70c64b9b033",
   "LastModified": "2019-03-02T08:11:12Z",
   "Name": "chrmstp.exe",
   "ProductName": "google chrome installer",

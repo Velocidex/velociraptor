@@ -25,6 +25,8 @@ github.com/Velocidex/cgofuse v1.1.2 h1:5zvc/Wonpou45AtdA4ZSDENYEKaaOFr8uyYoq6tdu
 github.com/Velocidex/cgofuse v1.1.2/go.mod h1:3uaCG9bbPLFSM6WqwcboehPaB4gAgRKx+zQ8M3nKNI4=
 github.com/Velocidex/go-yara v1.1.9 h1:XFtozFms5mruc6fXV9E+ov5V6rBYgcX3hUrsoLFfPIk=
 github.com/Velocidex/go-yara v1.1.9/go.mod h1:2QU3qksRdRiX8sde+Hy9CYudPRXza7i08u5r1/0al3s=
+github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0 h1:rFd07P9lqQPsmgPVvS0crnGpq63eFyd7qQyyvLgBrMY=
+github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0/go.mod h1:LVK71wXgKJYbhcGaK+QDA6QM+yLgcO21ZihAoxAdMak=
 github.com/Velocidex/yaml v2.1.0+incompatible h1:XtpJSzJ95+UbheJ5ZwHZOUH8sHhYpypGaL3zmaL2klc=
 github.com/Velocidex/yaml v2.1.0+incompatible/go.mod h1:CzH+PG+PA8o7RiH4/ZkHx5rHDWFZlzZVc3R6pe/gJMg=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=

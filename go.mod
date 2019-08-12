@@ -13,7 +13,7 @@ require (
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-yara v1.1.9
-	github.com/Velocidex/yaml v2.1.0+incompatible
+	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect

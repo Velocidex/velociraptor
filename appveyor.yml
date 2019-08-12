@@ -25,7 +25,7 @@ build_script:
     go run make.go -v appveyor
 
 test_script:
-- cmd: output\velociraptor.exe golden artifacts\testdata\windows\
+- cmd: output\velociraptor.exe golden artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 - cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
 
