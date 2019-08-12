@@ -1,6 +1,6 @@
 version: 1.0.{build}
 clone_depth: 1
-clone_folder: c:\gopath\src\www.velocidex.com\golang\velociraptor
+clone_folder: c:\velociraptor
 
 environment:
   GOPATH: c:\gopath
@@ -8,8 +8,7 @@ environment:
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\appveyor.config.yaml
 
 cache:
-  - c:\gopath\src\www.velocidex.com\golang\velociraptor\vendor -> Gopkg.lock
-  - c:\gopath\src\github.com -> Gopkg.lock
+  - c:\gopath\src\pkg\mod\ -> go.sum
 
 install:
 - cmd: |
@@ -27,7 +26,7 @@ build_script:
 
 test_script:
 - cmd: output\velociraptor.exe golden artifacts\testdata\windows\
-- cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\gopath\src\www.velocidex.com\golang\velociraptor
+- cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
 
 on_finish:
