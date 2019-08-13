@@ -10,7 +10,7 @@ environment:
 
 cache:
   - '%LocalAppData%\go-build'
-  - %GOPATH%/pkg/mod -> go.sum
+  - '%GOPATH%/pkg/mod -> go.sum'
 
 install:
 - cmd: |
