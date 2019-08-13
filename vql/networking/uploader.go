@@ -53,6 +53,7 @@ type Uploader interface {
 		filename string,
 		accessor string,
 		store_as_name string,
+		expected_size int64,
 		reader io.Reader) (*UploadResponse, error)
 }
 
@@ -161,6 +162,7 @@ func (self *VelociraptorUploader) Upload(
 	filename string,
 	accessor string,
 	store_as_name string,
+	expected_size int64,
 	reader io.Reader) (
 	*UploadResponse, error) {
 	result := &UploadResponse{
@@ -190,6 +192,7 @@ func (self *VelociraptorUploader) Upload(
 				Accessor: accessor,
 			},
 			Offset: offset,
+			Size:   uint64(expected_size),
 			Data:   data,
 			Eof:    err == io.EOF,
 		}

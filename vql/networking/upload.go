@@ -81,7 +81,11 @@ func (self *UploadFunction) Call(ctx context.Context,
 				arg.File, err)
 		} else if !stat.IsDir() {
 			upload_response, err := uploader.Upload(
-				ctx, scope, arg.File, arg.Accessor, arg.Name, file)
+				ctx, scope, arg.File,
+				arg.Accessor,
+				arg.Name,
+				stat.Size(), // Expected size.
+				file)
 			if err != nil {
 				return &UploadResponse{
 					Error: err.Error(),
@@ -141,6 +145,7 @@ func (self *UploadPlugin) Call(
 			return
 		}
 		for _, filename := range arg.Files {
+
 			file, err := accessor.Open(filename)
 			if err != nil {
 				scope.Log("upload: Unable to open %s: %s",
@@ -148,14 +153,24 @@ func (self *UploadPlugin) Call(
 				continue
 			}
 
-			upload_response, err := uploader.Upload(
-				ctx, scope, filename, arg.Accessor, filename, file)
+			stat, err := file.Stat()
 			if err != nil {
-				scope.Log("upload: Failed to upload %s: %s",
-					filename, err.Error())
-				continue
+				scope.Log("upload: Unable to stat %s: %v",
+					filename, err)
+			} else if !stat.IsDir() {
+				upload_response, err := uploader.Upload(
+					ctx, scope, filename,
+					arg.Accessor,
+					filename,
+					stat.Size(), // Expected size.
+					file)
+				if err != nil {
+					scope.Log("upload: Failed to upload %s: %s",
+						filename, err.Error())
+					continue
+				}
+				output_chan <- upload_response
 			}
-			output_chan <- upload_response
 		}
 	}()
 	return output_chan
