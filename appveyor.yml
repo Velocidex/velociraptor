@@ -10,7 +10,7 @@ environment:
 
 cache:
   - '%LocalAppData%\go-build'
-  - vendor -> go.sum
+  - '%GOPATH%/pkg/mod' -> go.sum
 
 install:
 - cmd: |
@@ -24,7 +24,6 @@ install:
 - go mod verify
 
 build_script:
-- set CGO_ENABLED=0
 - set GO111MODULE=on
 - cmd: |
     regedit /S artifacts/testdata/windows/init.reg
@@ -32,6 +31,7 @@ build_script:
     go run make.go -v appveyor
 
 test_script:
+- set GO111MODULE=on
 - cmd: output\velociraptor.exe golden artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 - cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
