@@ -28,7 +28,7 @@ import (
 	"time"
 
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -97,7 +97,7 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 	}, nil
 }
 
-func GenerateServerCert(config_obj *api_proto.Config, name string) (*CertBundle, error) {
+func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBundle, error) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err

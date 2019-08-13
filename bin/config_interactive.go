@@ -7,7 +7,7 @@ import (
 	"gopkg.in/AlecAivazis/survey.v1"
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -193,7 +193,7 @@ func doGenerateConfigInteractive() {
 	kingpin.FatalIfError(addUser(config_obj), "Add users")
 }
 
-func dynDNSConfig(config_obj *api_proto.Config, hostname string) error {
+func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 	dyndns := false
 	err := survey.AskOne(&survey.Confirm{
 		Message: "Are you using Google Domains DynDNS?"},
@@ -218,7 +218,7 @@ func dynDNSConfig(config_obj *api_proto.Config, hostname string) error {
 			return err
 		}
 
-		config_obj.Frontend.DynDns = &api_proto.DynDNSConfig{
+		config_obj.Frontend.DynDns = &config_proto.DynDNSConfig{
 			Hostname:     hostname,
 			DdnsUsername: username,
 			DdnsPassword: password,
@@ -228,7 +228,7 @@ func dynDNSConfig(config_obj *api_proto.Config, hostname string) error {
 	return nil
 }
 
-func getFileStoreLocation(config_obj *api_proto.Config) error {
+func getFileStoreLocation(config_obj *config_proto.Config) error {
 	err := survey.AskOne(data_store_question,
 		&config_obj.Datastore.Location, func(val interface{}) error {
 			// Check that the directory exists.
@@ -246,7 +246,7 @@ func getFileStoreLocation(config_obj *api_proto.Config) error {
 	return nil
 }
 
-func getLogLocation(config_obj *api_proto.Config) error {
+func getLogLocation(config_obj *config_proto.Config) error {
 	err := survey.AskOne(log_question,
 		&config_obj.Logging.OutputDirectory, func(val interface{}) error {
 			// Check that the directory exists.
@@ -264,7 +264,7 @@ func getLogLocation(config_obj *api_proto.Config) error {
 	return nil
 }
 
-func addUser(config_obj *api_proto.Config) error {
+func addUser(config_obj *config_proto.Config) error {
 	for {
 		username := ""
 		err := survey.AskOne(user_name_question, &username, nil)

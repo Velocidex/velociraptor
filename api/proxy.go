@@ -34,13 +34,14 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func AddProxyMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
+func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	for _, reverse_proxy_config := range config_obj.GUI.ReverseProxy {
@@ -82,7 +83,7 @@ func AddProxyMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 }
 
 // Prepares a mux by adding handler required for the GUI.
-func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
+func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	ctx := context.Background()
 	h, err := GetAPIHandler(ctx, config_obj)
 	if err != nil {
@@ -129,7 +130,7 @@ func PrepareMux(config_obj *api_proto.Config, mux *http.ServeMux) error {
 // not recommended to export the HTTP port to an external interface
 // since it is not encrypted. If you want to use HTTP you should
 // listen on localhost and port forward over ssh.
-func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
+func StartHTTPProxy(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 	if config_obj.GUI.BindAddress != "127.0.0.1" {
 		logger.Info("GUI is not encrypted and listening on public interface. " +
@@ -148,7 +149,7 @@ func StartHTTPProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
 	return http.ListenAndServe(listenAddr, mux)
 }
 
-func StartSelfSignedHTTPSProxy(config_obj *api_proto.Config, mux *http.ServeMux) error {
+func StartSelfSignedHTTPSProxy(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	cert, err := tls.X509KeyPair(
@@ -207,7 +208,7 @@ type _templateArgs struct {
 // gRPC client).
 func GetAPIHandler(
 	ctx context.Context,
-	config_obj *api_proto.Config) (http.Handler, error) {
+	config_obj *config_proto.Config) (http.Handler, error) {
 
 	// We need to tell when someone uses HEAD method on our grpc
 	// proxy so we need to pass this information from the request

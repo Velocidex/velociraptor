@@ -33,6 +33,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -90,7 +91,7 @@ func (self *DirCache) Set(key string, value []*api.FileInfoRow) {
 type VFSFs struct {
 	fuse.FileSystemBase
 
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	client_id  string
 	logger     *logging.LogContext
 
@@ -394,7 +395,7 @@ func fsPathToVFS(fs_path string) string {
 	return path.Join(components...)
 }
 
-func NewVFSFs(config_obj *api_proto.Config, client_id string) *VFSFs {
+func NewVFSFs(config_obj *config_proto.Config, client_id string) *VFSFs {
 	self := &VFSFs{
 		client_id:  client_id,
 		config_obj: config_obj,

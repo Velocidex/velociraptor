@@ -25,8 +25,8 @@ import (
 
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -66,7 +66,7 @@ func doPoolClient() {
 
 		client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 
-		existing_writeback := &api_proto.Writeback{}
+		existing_writeback := &config_proto.Writeback{}
 		data, err := ioutil.ReadFile(config.WritebackLocation(client_config))
 
 		// Failing to read the file is not an error - the file may not

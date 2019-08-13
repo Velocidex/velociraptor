@@ -1,3 +1,5 @@
+// +build server_vql
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -52,7 +54,7 @@ package server
 import (
 	"context"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -92,7 +94,7 @@ func (self SearchPlugin) Call(
 		}
 
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
+		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

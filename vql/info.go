@@ -20,8 +20,9 @@ package vql
 import (
 	"runtime"
 
-	"github.com/Showmax/go-fqdn"
+	fqdn "github.com/Showmax/go-fqdn"
 	"github.com/shirou/gopsutil/host"
+
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -61,7 +62,6 @@ func init() {
 						Set("Architecture", runtime.GOARCH)
 					result = append(result, item)
 				}
-
 				return result
 			},
 			Doc: "Get information about the running host.",

@@ -35,7 +35,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/crypto/acme/autocert"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -51,7 +51,7 @@ var (
 )
 
 func PrepareFrontendMux(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *Server,
 	router *http.ServeMux) {
 	router.Handle("/healthz", healthz())
@@ -71,7 +71,7 @@ func PrepareFrontendMux(
 // Starts the frontend over HTTP. Velociraptor uses its own encryption
 // protocol so using HTTP is quite safe.
 func StartFrontendHttp(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *Server,
 	router *http.ServeMux) error {
 	listenAddr := fmt.Sprintf(
@@ -107,7 +107,7 @@ func StartFrontendHttp(
 
 // Starts the frontend over HTTPS.
 func StartFrontendHttps(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *Server,
 	router *http.ServeMux) error {
 
@@ -165,7 +165,7 @@ func StartFrontendHttps(
 
 // Install a signal handler which will shutdown the server gracefully.
 func InstallSignalHandler(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *Server,
 	server *http.Server,
 	wg *sync.WaitGroup) {
@@ -224,7 +224,7 @@ func InstallSignalHandler(
 }
 
 func StartTLSServer(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *Server,
 	mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
@@ -294,7 +294,7 @@ func healthz() http.Handler {
 	})
 }
 
-func server_pem(config_obj *api_proto.Config) http.Handler {
+func server_pem(config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
@@ -424,7 +424,7 @@ func control(server_obj *Server) http.Handler {
 // connection will persist up to Client.MaxPoll so we always have a
 // channel to the client. This allows us to send the client jobs
 // immediately with low latency.
-func reader(config_obj *api_proto.Config, server_obj *Server) http.Handler {
+func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)

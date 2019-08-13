@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
@@ -136,6 +136,6 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 }
 
 func GetFileStoreFileSystemAccessor(
-	config_obj *api_proto.Config) *FileStoreFileSystemAccessor {
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
 	return &FileStoreFileSystemAccessor{&DirectoryFileStore{config_obj}}
 }

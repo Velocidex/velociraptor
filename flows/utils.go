@@ -22,12 +22,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 )
 
 func QueueMessageForClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	client_action_name string,
 	message proto.Message,
@@ -44,7 +45,7 @@ func QueueMessageForClient(
 }
 
 func QueueAndNotifyClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	flow_urn string,
 	client_action_name string,

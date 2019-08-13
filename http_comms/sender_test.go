@@ -30,8 +30,8 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -89,7 +89,7 @@ func CanSendToExecutor(
 
 func testRingBuffer(
 	rb IRingBuffer,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	t *testing.T) {
 	t.Parallel()
 

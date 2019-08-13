@@ -54,7 +54,7 @@ func Xgo() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "windows/*,darwin/amd64,linux/amd64",
-		"-tags", "release cgo",
+		"-tags", "release server_vql cgo",
 		"-go", "1.11",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
@@ -65,7 +65,7 @@ func WindowsRace() error {
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "windows/amd64",
 		"-go", "1.11",
-		"-tags", "release cgo", "-race",
+		"-tags", "release server_vql cgo", "-race",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 }
@@ -85,7 +85,7 @@ func Linux() error {
 		env,
 		mg.GoCmd(), "build",
 		"-o", filepath.Join("output", name),
-		"-tags", "release",
+		"-tags", "release server_vql ",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 
@@ -113,7 +113,7 @@ func Dev() error {
 		env,
 		mg.GoCmd(), "build", "-race",
 		"-o", filepath.Join("output", name),
-		"-tags", "devel",
+		"-tags", "devel server_vql ",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 
@@ -171,7 +171,7 @@ func Windows() error {
 		env,
 		mg.GoCmd(), "build",
 		"-o", filepath.Join("output", name+".exe"),
-		"-tags", "release",
+		"-tags", "release server_vql ",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 
@@ -188,7 +188,7 @@ func Darwin() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "darwin/amd64",
-		"-tags", "release",
+		"-tags", "release server_vql ",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 }

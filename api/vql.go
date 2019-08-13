@@ -23,6 +23,7 @@ import (
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/vfilter"
@@ -30,7 +31,7 @@ import (
 
 func RunVQL(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	env *vfilter.Dict,
 	query string) (*api_proto.GetTableResponse, error) {
 
@@ -79,7 +80,7 @@ func RunVQL(
 
 func StoreVQLAsCSVFile(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	env *vfilter.Dict,
 	query string,
 	writer io.Writer) error {

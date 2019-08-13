@@ -19,7 +19,6 @@ package artifacts
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -32,11 +31,8 @@ import (
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	logging "www.velocidex.com/golang/velociraptor/logging"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -417,11 +413,11 @@ func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
 }
 
-type init_function func(*api_proto.Config) error
+type init_function func(*config_proto.Config) error
 
 var init_registry []init_function
 
-func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
+func GetGlobalRepository(config_obj *config_proto.Config) (*Repository, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -429,71 +425,12 @@ func GetGlobalRepository(config_obj *api_proto.Config) (*Repository, error) {
 		return global_repository, nil
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	global_repository = NewRepository()
 	for _, function := range init_registry {
 		err := function(config_obj)
 		if err != nil {
 			return nil, err
 		}
-	}
-
-	if config_obj.Frontend.ArtifactsPath != "" {
-		count, err := global_repository.LoadDirectory(
-			config_obj.Frontend.ArtifactsPath)
-		switch errors.Cause(err).(type) {
-
-		// PathError is not fatal - it means we just
-		// cant load the directory.
-		case *os.PathError:
-			logger.Info("Unable to load artifacts from directory "+
-				"%s (skipping): %v",
-				config_obj.Frontend.ArtifactsPath, err)
-		case nil:
-			break
-		default:
-			// Other errors are fatal - they mean we cant
-			// parse the artifacts themselves.
-			return nil, err
-		}
-		logger.Info("Loaded %d artifacts from %s",
-			*count, config_obj.Frontend.ArtifactsPath)
-	}
-
-	// Load artifacts from the custom file store.
-	file_store_factory := file_store.GetFileStore(config_obj)
-	err := file_store_factory.Walk(constants.ARTIFACT_DEFINITION_PREFIX,
-		func(path string, info os.FileInfo, err error) error {
-			if err == nil && (strings.HasSuffix(path, ".yaml") ||
-				strings.HasSuffix(path, ".yml")) {
-				fd, err := file_store_factory.ReadFile(path)
-				if err != nil {
-					logger.Error(err)
-					return nil
-				}
-				defer fd.Close()
-
-				data, err := ioutil.ReadAll(
-					io.LimitReader(fd, constants.MAX_MEMORY))
-				if err != nil {
-					logger.Error(err)
-					return nil
-				}
-
-				artifact_obj, err := global_repository.LoadYaml(
-					string(data), false /* validate */)
-				if err != nil {
-					logger.Info("Unable to load custom "+
-						"artifact %s: %v", path, err)
-					return nil
-				}
-				artifact_obj.Raw = string(data)
-				logger.Info("Loaded %s", path)
-			}
-			return nil
-		})
-	if err != nil {
-		return nil, err
 	}
 
 	return global_repository, nil

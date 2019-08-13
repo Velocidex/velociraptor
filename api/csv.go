@@ -23,9 +23,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func getTable(config_obj *api_proto.Config, in *api_proto.GetTableRequest) (
+func getTable(config_obj *config_proto.Config, in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
 
 	rows := uint64(0)

@@ -7,11 +7,12 @@ import (
 	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 )
 
 func getReport(ctx context.Context,
-	config_obj *api_proto.Config, in *api_proto.GetReportRequest) (
+	config_obj *config_proto.Config, in *api_proto.GetReportRequest) (
 	*api_proto.GetReportResponse, error) {
 
 	template_engine, err := reporting.NewGuiTemplateEngine(

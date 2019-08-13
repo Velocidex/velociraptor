@@ -25,6 +25,7 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -32,7 +33,7 @@ import (
 )
 
 func GetApiClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
@@ -122,7 +123,7 @@ func GetApiClient(
 }
 
 func LabelClients(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {

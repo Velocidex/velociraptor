@@ -22,12 +22,12 @@ package actions
 import (
 	"context"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type ClientAction interface {
-	Run(config *api_proto.Config,
+	Run(config *config_proto.Config,
 		ctx context.Context,
 		args *crypto_proto.GrrMessage,
 		output chan<- *crypto_proto.GrrMessage)

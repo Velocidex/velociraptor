@@ -31,7 +31,7 @@ import (
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -91,7 +91,7 @@ func NewEventTable(
 type UpdateEventTable struct{}
 
 func (self *UpdateEventTable) Run(
-	config *api_proto.Config,
+	config *config_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {

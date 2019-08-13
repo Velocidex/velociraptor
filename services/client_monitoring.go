@@ -13,8 +13,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -49,7 +49,7 @@ func GetClientEventsFlowRunnerArgs() *flows_proto.FlowRunnerArgs {
 }
 
 func UpdateClientEventTable(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	args *flows_proto.ArtifactCollectorArgs) error {
 	return gEventTable.Update(config_obj, args)
 }
@@ -62,7 +62,7 @@ func (self *ClientEventTable) GetClientEventsFlowRunnerArgs() *flows_proto.FlowR
 }
 
 func (self *ClientEventTable) Update(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	arg *flows_proto.ArtifactCollectorArgs) error {
 
 	self.mu.Lock()
@@ -158,7 +158,7 @@ func (self *ClientEventTable) Update(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func startClientMonitoringService(config_obj *api_proto.Config) error {
+func startClientMonitoringService(config_obj *config_proto.Config) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

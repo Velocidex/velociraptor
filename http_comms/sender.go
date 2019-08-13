@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -172,7 +172,7 @@ func (self *Sender) Start(ctx context.Context) {
 }
 
 func NewSender(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	connector IConnector,
 	manager crypto.ICryptoManager,
 	executor executor.Executor,

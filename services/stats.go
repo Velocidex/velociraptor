@@ -8,8 +8,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -30,7 +30,7 @@ var (
 )
 
 type StatsCollector struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	done       chan bool
 }
 
@@ -97,7 +97,7 @@ func (self *StatsCollector) Close() {
 	close(self.done)
 }
 
-func startStatsCollector(config_obj *api_proto.Config) (*StatsCollector, error) {
+func startStatsCollector(config_obj *config_proto.Config) (*StatsCollector, error) {
 	result := &StatsCollector{
 		config_obj: config_obj,
 		done:       make(chan bool),

@@ -34,6 +34,7 @@ import (
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -52,7 +53,7 @@ func GetNewHuntId() string {
 }
 
 func FindCollectedArtifacts(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	hunt *api_proto.Hunt) {
 	if hunt == nil || hunt.StartRequest == nil {
 		return
@@ -79,7 +80,7 @@ func FindCollectedArtifacts(
 
 func CreateHunt(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	hunt *api_proto.Hunt) (*string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -135,7 +136,7 @@ func CreateHunt(
 	return &hunt.HuntId, nil
 }
 
-func ListHunts(config_obj *api_proto.Config, in *api_proto.ListHuntsRequest) (
+func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
 	result := &api_proto.ListHuntsResponse{}
@@ -163,7 +164,7 @@ func ListHunts(config_obj *api_proto.Config, in *api_proto.ListHuntsRequest) (
 	return result, nil
 }
 
-func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
+func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 	hunt *api_proto.Hunt, err error) {
 
 	var result *api_proto.Hunt
@@ -204,7 +205,7 @@ func GetHunt(config_obj *api_proto.Config, in *api_proto.GetHuntRequest) (
 // the same time, and just ignores clients that want to participate in
 // stopped hunts. It is not possible to go back and re-examine the
 // queue.
-func ModifyHunt(config_obj *api_proto.Config, hunt_modification *api_proto.Hunt) error {
+func ModifyHunt(config_obj *config_proto.Config, hunt_modification *api_proto.Hunt) error {
 	dispatcher := services.GetHuntDispatcher()
 	err := dispatcher.ModifyHunt(
 		hunt_modification.HuntId,

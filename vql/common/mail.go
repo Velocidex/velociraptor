@@ -22,7 +22,7 @@ import (
 	"time"
 
 	gomail "gopkg.in/gomail.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -54,7 +54,7 @@ func (self MailPlugin) Call(
 		defer close(output_chan)
 
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
+		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

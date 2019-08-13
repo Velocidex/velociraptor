@@ -25,7 +25,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -97,7 +97,7 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 }
 
 func (self *ClientExecutor) processRequestPlugin(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	ctx context.Context,
 	req *crypto_proto.GrrMessage) {
 
@@ -130,7 +130,7 @@ func (self *ClientExecutor) processRequestPlugin(
 	go plugin.Run(config_obj, ctx, req, self.Outbound)
 }
 
-func NewClientExecutor(config_obj *api_proto.Config) (*ClientExecutor, error) {
+func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{
 		Inbound:  make(chan *crypto_proto.GrrMessage),
 		Outbound: make(chan *crypto_proto.GrrMessage),

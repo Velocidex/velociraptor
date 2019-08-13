@@ -21,7 +21,7 @@
 package server
 
 import (
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func IncreaseLimits(config_obj *api_proto.Config) {}
+func IncreaseLimits(config_obj *config_proto.Config) {}

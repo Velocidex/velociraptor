@@ -34,6 +34,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -68,7 +69,7 @@ func (self *ArtifactCollector) New() Flow {
 }
 
 func (self *ArtifactCollector) Start(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	collector_args, ok := args.(*flows_proto.ArtifactCollectorArgs)
@@ -129,7 +130,7 @@ func (self *ArtifactCollector) Start(
 }
 
 func (self *ArtifactCollector) ProcessMessage(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -251,7 +252,7 @@ func (self *ArtifactCollector) ProcessMessage(
 // Adds any parameters set in the ArtifactCollectorArgs into the
 // VQLCollectorArgs.
 func AddArtifactCollectorArgs(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs,
 	collector_args *flows_proto.ArtifactCollectorArgs) error {
 
@@ -297,7 +298,7 @@ func AddArtifactCollectorArgs(
 }
 
 func appendDataToFile(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	base_urn string,
 	message *crypto_proto.GrrMessage) error {

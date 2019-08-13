@@ -6,8 +6,8 @@ import (
 	"time"
 
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -20,7 +20,7 @@ var (
 
 // What we write in the journal's channel.
 type Event struct {
-	Config    *api_proto.Config
+	Config    *config_proto.Config
 	Timestamp time.Time
 	ClientId  string
 	QueryName string

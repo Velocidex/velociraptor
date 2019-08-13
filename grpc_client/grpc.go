@@ -26,7 +26,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
@@ -36,7 +36,7 @@ var (
 	creds credentials.TransportCredentials
 )
 
-func getCreds(config_obj *api_proto.Config) credentials.TransportCredentials {
+func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -75,7 +75,7 @@ func getCreds(config_obj *api_proto.Config) credentials.TransportCredentials {
 }
 
 // TODO- Return a cluster dialer.
-func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
+func GetChannel(config_obj *config_proto.Config) *grpc.ClientConn {
 	address := GetAPIConnectionString(config_obj)
 	con, err := grpc.Dial(address, grpc.WithTransportCredentials(
 		getCreds(config_obj)))
@@ -85,7 +85,7 @@ func GetChannel(config_obj *api_proto.Config) *grpc.ClientConn {
 	return con
 }
 
-func GetAPIConnectionString(config_obj *api_proto.Config) string {
+func GetAPIConnectionString(config_obj *config_proto.Config) string {
 	switch config_obj.API.BindScheme {
 	case "tcp":
 		return fmt.Sprintf("%s:%d", config_obj.API.BindAddress,

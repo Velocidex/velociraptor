@@ -13,8 +13,8 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -58,13 +58,13 @@ func EvalQueryToTable(ctx context.Context,
 }
 
 type Expansions struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	rows       []vfilter.Row
 }
 
 // Support a number of expansions in description strings.
 func FormatDescription(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	description string,
 	rows []vfilter.Row) string {
 

@@ -26,8 +26,8 @@ import (
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -81,7 +81,7 @@ func doShowConfig() {
 	fmt.Printf("%v", string(res))
 }
 
-func generateNewKeys() (*api_proto.Config, error) {
+func generateNewKeys() (*config_proto.Config, error) {
 	config_obj := config.GetDefaultConfig()
 	ca_bundle, err := crypto.GenerateCACert(2048)
 	if err != nil {
@@ -166,10 +166,10 @@ func doRotateKeyConfig() {
 	fmt.Printf("%v", string(res))
 }
 
-func getClientConfig(config_obj *api_proto.Config) *api_proto.Config {
+func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 	// Copy only settings relevant to the client from the main
 	// config.
-	client_config := &api_proto.Config{
+	client_config := &config_proto.Config{
 		Version: config_obj.Version,
 		Client:  config_obj.Client,
 	}
@@ -207,7 +207,7 @@ func doDumpApiClientConfig() {
 		config_obj, *config_api_client_common_name)
 	kingpin.FatalIfError(err, "Unable to generate certificate.")
 
-	api_client_config := &api_proto.ApiClientConfig{
+	api_client_config := &config_proto.ApiClientConfig{
 		CaCertificate:    config_obj.Client.CaCertificate,
 		ClientCert:       bundle.Cert,
 		ClientPrivateKey: bundle.PrivateKey,

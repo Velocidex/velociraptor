@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 // Simple aes obfuscation. This is used in VQL obfuscation and so must
@@ -22,7 +22,7 @@ type Obfuscator struct {
 	crypter cipher.Block
 }
 
-func (self *Obfuscator) Encrypt(config_obj *api_proto.Config, name string) (
+func (self *Obfuscator) Encrypt(config_obj *config_proto.Config, name string) (
 	string, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -47,7 +47,7 @@ func (self *Obfuscator) Encrypt(config_obj *api_proto.Config, name string) (
 	return "$" + hex.EncodeToString(cipher_text), nil
 }
 
-func (self *Obfuscator) generateCrypter(config_obj *api_proto.Config) error {
+func (self *Obfuscator) generateCrypter(config_obj *config_proto.Config) error {
 	hash := sha256.Sum256([]byte(config_obj.Frontend.PrivateKey))
 	self.key = hash[:]
 	crypter, err := aes.NewCipher(self.key)
@@ -58,7 +58,7 @@ func (self *Obfuscator) generateCrypter(config_obj *api_proto.Config) error {
 	return nil
 }
 
-func (self *Obfuscator) Decrypt(config_obj *api_proto.Config, name string) (
+func (self *Obfuscator) Decrypt(config_obj *config_proto.Config, name string) (
 	string, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()

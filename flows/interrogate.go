@@ -30,6 +30,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -53,7 +54,7 @@ func (self *VInterrogate) New() Flow {
 }
 
 func (self *VInterrogate) Start(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	args proto.Message) error {
 	interrogate_args, ok := args.(*flows_proto.VInterrogateArgs)
@@ -118,7 +119,7 @@ func (self *VInterrogate) Start(
 }
 
 func (self *VInterrogate) ProcessMessage(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
 
@@ -187,7 +188,7 @@ func (self *VInterrogate) ProcessMessage(
 }
 
 func (self *VInterrogate) StoreClientInfo(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject) error {
 
 	client_info := flow_obj.GetState().(*actions_proto.ClientInfo)
@@ -278,7 +279,7 @@ func processSystemInfo(response *actions_proto.VQLResponse,
 }
 
 func processClientInfoQuery(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	response *actions_proto.VQLResponse,
 	client_info *actions_proto.ClientInfo) error {

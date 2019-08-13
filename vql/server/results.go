@@ -1,3 +1,5 @@
+// +build server_vql
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -24,8 +26,8 @@ import (
 	"strings"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -58,7 +60,7 @@ func (self SourcePlugin) Call(
 		defer close(output_chan)
 		arg := &SourcePluginArgs{}
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
+		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -157,7 +159,7 @@ func (self SourcePlugin) Call(
 
 func (self SourcePlugin) ScanLog(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	arg *SourcePluginArgs,
 	output_chan chan<- vfilter.Row,

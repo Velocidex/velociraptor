@@ -43,8 +43,8 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
@@ -169,7 +169,7 @@ type ICryptoManager interface {
 }
 
 type CryptoManager struct {
-	config      *api_proto.Config
+	config      *config_proto.Config
 	private_key *rsa.PrivateKey
 
 	source string
@@ -322,7 +322,7 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 	return &csr.Subject.CommonName, nil
 }
 
-func NewCryptoManager(config_obj *api_proto.Config, source string, pem_str []byte) (
+func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []byte) (
 	*CryptoManager, error) {
 	private_key, err := parseRsaPrivateKeyFromPemStr(pem_str)
 	if err != nil {
@@ -341,7 +341,7 @@ func NewCryptoManager(config_obj *api_proto.Config, source string, pem_str []byt
 	}, nil
 }
 
-func NewServerCryptoManager(config_obj *api_proto.Config) (*CryptoManager, error) {
+func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, error) {
 	cert, err := ParseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
 	if err != nil {
 		return nil, err
@@ -365,7 +365,7 @@ func NewServerCryptoManager(config_obj *api_proto.Config) (*CryptoManager, error
 	}, nil
 }
 
-func NewClientCryptoManager(config_obj *api_proto.Config, client_private_key_pem []byte) (
+func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_pem []byte) (
 	*CryptoManager, error) {
 	private_key, err := parseRsaPrivateKeyFromPemStr(client_private_key_pem)
 	if err != nil {

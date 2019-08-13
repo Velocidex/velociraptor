@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -112,7 +112,7 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 
 func GenerateArtifactDescriptionReport(
 	template_engine TemplateEngine,
-	config_obj *api_proto.Config) (
+	config_obj *config_proto.Config) (
 	string, error) {
 	artifact := template_engine.GetArtifact()
 
@@ -271,7 +271,7 @@ func GenerateHuntReport(template_engine TemplateEngine,
 }
 
 func newBaseTemplateEngine(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)

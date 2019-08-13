@@ -6,7 +6,7 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -108,7 +108,7 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 	return string(buffer.Bytes())
 }
 
-func NewTextTemplateEngine(config_obj *api_proto.Config,
+func NewTextTemplateEngine(config_obj *config_proto.Config,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
 		config_obj, artifact_name)

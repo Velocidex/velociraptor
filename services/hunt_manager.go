@@ -26,6 +26,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -53,7 +54,7 @@ type HuntManager struct {
 	writers    map[string]*csv.CSVWriter
 	wg         sync.WaitGroup
 	done       chan bool
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 }
 
 func (self *HuntManager) Start() error {
@@ -221,7 +222,7 @@ func (self *HuntManager) ProcessRow(
 	writer.Write(dict_row)
 }
 
-func startHuntManager(config_obj *api_proto.Config) (
+func startHuntManager(config_obj *config_proto.Config) (
 	*HuntManager, error) {
 	result := &HuntManager{
 		config_obj: config_obj,
@@ -233,7 +234,7 @@ func startHuntManager(config_obj *api_proto.Config) (
 	return result, err
 }
 
-func huntHasLabel(config_obj *api_proto.Config,
+func huntHasLabel(config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt,
 	client_id string) bool {
 

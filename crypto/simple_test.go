@@ -4,13 +4,13 @@ import (
 	"testing"
 
 	assert "github.com/stretchr/testify/assert"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 func TestObfuscation(t *testing.T) {
 	name := "Foobar"
-	config_obj := &api_proto.Config{
-		Frontend: &api_proto.FrontendConfig{
+	config_obj := &config_proto.Config{
+		Frontend: &config_proto.FrontendConfig{
 			PrivateKey: "hello",
 		},
 	}

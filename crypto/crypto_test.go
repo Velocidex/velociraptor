@@ -26,15 +26,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
 type TestSuite struct {
 	suite.Suite
-	config_obj     *api_proto.Config
+	config_obj     *config_proto.Config
 	server_manager *CryptoManager
 	client_manager *CryptoManager
 	client_id      string

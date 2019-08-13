@@ -15,7 +15,7 @@ import (
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -30,7 +30,7 @@ type Container struct {
 }
 
 func (self *Container) StoreArtifact(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL,
@@ -48,12 +48,11 @@ func (self *Container) StoreArtifact(
 
 		output_rows = append(output_rows, row)
 	}
-
 	return self.DumpRowsIntoContainer(config_obj, output_rows, scope, query)
 }
 
 func (self *Container) DumpRowsIntoContainer(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	output_rows []vfilter.Row,
 	scope *vfilter.Scope,
 	query *actions_proto.VQLRequest) error {

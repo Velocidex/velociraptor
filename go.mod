@@ -1,10 +1,9 @@
 module www.velocidex.com/golang/velociraptor
 
-replace gopkg.in/russross/blackfriday.v2 => github.com/russross/blackfriday/v2 v2.0.1
+// replace gopkg.in/russross/blackfriday.v2 => github.com/russross/blackfriday/v2 v2.0.1
 
 require (
 	cloud.google.com/go v0.41.0 // indirect
-	github.com/Depado/bfchroma v1.1.2
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/Masterminds/sprig v2.20.0+incompatible
@@ -14,8 +13,8 @@ require (
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
-	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
+	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/c-bata/go-prompt v0.2.3
@@ -80,7 +79,6 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20150902115704-41f357289737
 	gopkg.in/olivere/elastic.v5 v5.0.81
-	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
 	www.velocidex.com/golang/go-ntfs v0.0.0-20190701133924-d467c5e7dca0

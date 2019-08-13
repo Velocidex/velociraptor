@@ -1,3 +1,5 @@
+// +build server_vql
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -22,9 +24,5 @@ package plugins
 // themselves.
 
 import (
-	_ "www.velocidex.com/golang/velociraptor/vql/common"
-	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
-	_ "www.velocidex.com/golang/velociraptor/vql/functions"
-	_ "www.velocidex.com/golang/velociraptor/vql/networking"
-	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
+	_ "www.velocidex.com/golang/velociraptor/vql/server"
 )

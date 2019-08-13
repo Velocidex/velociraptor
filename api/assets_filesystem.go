@@ -30,11 +30,11 @@ import (
 	"net/http"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
+func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
 	logging.GetLogger(config_obj, &logging.FrontendComponent).
 		Info("GUI will serve files from directory gui/static")
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
@@ -44,7 +44,7 @@ func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
 			http.StatusMovedPermanently))
 }
 
-func GetTemplateHandler(config_obj *api_proto.Config,
+func GetTemplateHandler(config_obj *config_proto.Config,
 	template_name string) (http.Handler, error) {
 	tmpl, err := template.ParseFiles("gui" + template_name)
 	if err != nil {

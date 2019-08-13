@@ -8,7 +8,7 @@ import (
 
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -67,7 +67,7 @@ type ReadWriterAt interface {
 }
 
 type FileBasedRingBuffer struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 
 	mu sync.Mutex
 	c  *sync.Cond
@@ -184,7 +184,7 @@ func (self *FileBasedRingBuffer) Commit() {
 	self.c.Broadcast()
 }
 
-func NewFileBasedRingBuffer(config_obj *api_proto.Config) (*FileBasedRingBuffer, error) {
+func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuffer, error) {
 	filename := os.ExpandEnv(config_obj.Client.LocalBuffer.Filename)
 	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
@@ -233,7 +233,7 @@ func NewFileBasedRingBuffer(config_obj *api_proto.Config) (*FileBasedRingBuffer,
 }
 
 type RingBuffer struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 
 	// We serialize messages into the messages queue as they
 	// arrive.
@@ -349,7 +349,7 @@ func (self *RingBuffer) Commit() {
 	self.c.Broadcast()
 }
 
-func NewRingBuffer(config_obj *api_proto.Config) *RingBuffer {
+func NewRingBuffer(config_obj *config_proto.Config) *RingBuffer {
 	result := &RingBuffer{
 		messages:   make([][]byte, 0),
 		Size:       config_obj.Client.LocalBuffer.MemorySize,
@@ -360,7 +360,7 @@ func NewRingBuffer(config_obj *api_proto.Config) *RingBuffer {
 	return result
 }
 
-func NewLocalBuffer(config_obj *api_proto.Config) IRingBuffer {
+func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
 		config_obj.Client.LocalBuffer.Filename != "" {
 		rb, err := NewFileBasedRingBuffer(config_obj)

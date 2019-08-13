@@ -25,6 +25,7 @@ import (
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -67,7 +68,7 @@ type HuntDispatcher struct {
 	last_timestamp uint64
 
 	mu         sync.Mutex
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 
 	hunts map[string]*api_proto.Hunt
 	done  chan bool
@@ -232,7 +233,7 @@ func (self *HuntDispatcher) Refresh() error {
 	return nil
 }
 
-func startHuntDispatcher(config_obj *api_proto.Config) (*HuntDispatcher, error) {
+func startHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
