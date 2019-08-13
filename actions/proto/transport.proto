@@ -23,6 +23,9 @@ message FileBuffer {
     uint64 offset = 2 [(sem_type) = {
             description: "Offset of the buffer in the file."
         }];
+
+    // Expected size of file.
+    uint64 size = 7;
     bytes data = 3;
     string flow_id = 4;
     bool eof = 5;

@@ -1,6 +1,7 @@
 version: 1.0.{build}
 clone_depth: 1
 clone_folder: c:\velociraptor
+stack: Go 1.12
 
 environment:
   GOPATH: c:\gopath
@@ -8,17 +9,23 @@ environment:
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\appveyor.config.yaml
 
 cache:
-  - c:\gopath\src\pkg\mod\ -> go.sum
+  - '%LocalAppData%\go-build'
+  - vendor -> go.sum
 
 install:
 - cmd: |
     echo %PATH%
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
-    go version
-    go env
+- go version
+- go env
+- set GO111MODULE=on
+- go mod download
+- go mod verify
 
 build_script:
+- set CGO_ENABLED=0
+- set GO111MODULE=on
 - cmd: |
     regedit /S artifacts/testdata/windows/init.reg
     go get github.com/magefile/mage/mage

@@ -114,6 +114,7 @@ func (self *Container) Upload(
 	filename string,
 	accessor string,
 	store_as_name string,
+	expected_size int64,
 	reader io.Reader) (*vql_networking.UploadResponse, error) {
 	self.Lock()
 	defer self.Unlock()
@@ -138,7 +139,8 @@ func (self *Container) Upload(
 		return nil, err
 	}
 
-	scope.Log("Collecting file %s", store_as_name)
+	scope.Log("Collecting file %s (%v bytes)",
+		store_as_name, expected_size)
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
