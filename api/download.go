@@ -34,6 +34,7 @@ import (
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -47,7 +48,7 @@ func returnError(w http.ResponseWriter, code int, message string) {
 }
 
 func downloadFlowToZip(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	flow_id string,
 	zip_writer *zip.Writer) error {
@@ -128,7 +129,7 @@ func downloadFlowToZip(
 
 // URL format: /api/v1/download/<client_id>/<flow_id>
 func flowResultDownloadHandler(
-	config_obj *api_proto.Config) http.Handler {
+	config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		components := strings.Split(r.URL.Path, "/")
 		if len(components) < 2 {
@@ -157,7 +158,7 @@ func flowResultDownloadHandler(
 		w.WriteHeader(200)
 
 		// Log an audit event.
-		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+		userinfo := GetUserInfo(r.Context(), config_obj)
 
 		// This should never happen!
 		if userinfo.Name == "" {
@@ -197,7 +198,7 @@ func flowResultDownloadHandler(
 
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
-	config_obj *api_proto.Config) http.Handler {
+	config_obj *config_proto.Config) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		hunt_ids, pres := r.URL.Query()["hunt_id"]
@@ -229,7 +230,7 @@ func huntResultDownloadHandler(
 		w.WriteHeader(200)
 
 		// Log an audit event.
-		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+		userinfo := GetUserInfo(r.Context(), config_obj)
 		logging.GetLogger(config_obj, &logging.Audit).
 			WithFields(logrus.Fields{
 				"user":    userinfo.Name,
@@ -337,7 +338,7 @@ type vfsFileDownloadRequest struct {
 }
 
 func filestorePathForVFSPath(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) string {
 	vfs_path = path.Join("/", vfs_path)
@@ -365,7 +366,7 @@ func filestorePathForVFSPath(
 }
 
 func getFileForVFSPath(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (
 	file_store.ReadSeekCloser, error) {
@@ -377,7 +378,7 @@ func getFileForVFSPath(
 
 // URL format: /api/v1/DownloadVFSFile
 func vfsFileDownloadHandler(
-	config_obj *api_proto.Config) http.Handler {
+	config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := vfsFileDownloadRequest{}
 		decoder := schema.NewDecoder()
@@ -437,7 +438,7 @@ func vfsFileDownloadHandler(
 
 // URL format: /api/v1/DownloadVFSFolder
 func vfsFolderDownloadHandler(
-	config_obj *api_proto.Config) http.Handler {
+	config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := vfsFileDownloadRequest{}
 		decoder := schema.NewDecoder()
@@ -460,7 +461,7 @@ func vfsFolderDownloadHandler(
 		w.WriteHeader(200)
 
 		// Log an audit event.
-		userinfo := logging.GetUserInfo(r.Context(), config_obj)
+		userinfo := GetUserInfo(r.Context(), config_obj)
 
 		// This should never happen!
 		if userinfo.Name == "" {
@@ -509,7 +510,7 @@ func vfsFolderDownloadHandler(
 }
 
 func vfsGetBuffer(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string, vfs_path string, offset uint64, length uint32) (
 	*api_proto.VFSFileBuffer, error) {
 

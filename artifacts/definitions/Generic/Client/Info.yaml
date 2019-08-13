@@ -1,0 +1,7 @@
+name: Generic.Client.Info
+description: Collect basic information about the client.
+
+
+sources:
+  - queries:
+      - SELECT * FROM info()

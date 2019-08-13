@@ -28,7 +28,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -73,7 +73,7 @@ func (self FileStoreFileInfo) Name() string {
 }
 
 type DirectoryFileStore struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 }
 
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
@@ -214,6 +214,6 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 }
 
 // Currently we only support a DirectoryFileStore.
-func GetFileStore(config_obj *api_proto.Config) FileStore {
+func GetFileStore(config_obj *config_proto.Config) FileStore {
 	return &DirectoryFileStore{config_obj}
 }

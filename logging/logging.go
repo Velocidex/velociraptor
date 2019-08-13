@@ -33,7 +33,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -79,7 +79,7 @@ type LogManager struct {
 
 // Get the logger from cache - creating it if it needs to.
 func (self *LogManager) GetLogger(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	component *string) *LogContext {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -113,7 +113,7 @@ func (self *LogManager) GetLogger(
 }
 
 func getRotator(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	base_path string) *rotatelogs.RotateLogs {
 
 	max_age := config_obj.Logging.MaxAge
@@ -143,7 +143,7 @@ func getRotator(
 }
 
 func (self *LogManager) makeNewComponent(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	component *string) *LogContext {
 
 	Log := logrus.New()
@@ -218,7 +218,7 @@ func (self *logWriter) Write(b []byte) (int, error) {
 
 // A log compatible logger.
 func NewPlainLogger(
-	config *api_proto.Config,
+	config *config_proto.Config,
 	component *string) *log.Logger {
 	if !SuppressLogging {
 		return log.New(&logWriter{
@@ -228,7 +228,7 @@ func NewPlainLogger(
 	return log.New(ioutil.Discard, "", 0)
 }
 
-func GetLogger(config_obj *api_proto.Config, component *string) *LogContext {
+func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
 	return Manager.GetLogger(config_obj, component)
 }
 

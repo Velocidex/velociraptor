@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -25,7 +25,7 @@ type DynDNSService struct {
 	wg   sync.WaitGroup
 }
 
-func (self *DynDNSService) updateIP(config_obj *api_proto.Config) {
+func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Checking DNS")
 
@@ -69,7 +69,7 @@ func (self *DynDNSService) updateIP(config_obj *api_proto.Config) {
 	}
 }
 
-func (self *DynDNSService) Start(config_obj *api_proto.Config) {
+func (self *DynDNSService) Start(config_obj *config_proto.Config) {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the DynDNS service: Updating hostname %v",
 		config_obj.Frontend.DynDns.Hostname)
@@ -104,7 +104,7 @@ func (self *DynDNSService) Close() {
 	self.wg.Wait()
 }
 
-func startDynDNSService(config_obj *api_proto.Config) (*DynDNSService, error) {
+func startDynDNSService(config_obj *config_proto.Config) (*DynDNSService, error) {
 	result := &DynDNSService{
 		Done: make(chan bool),
 	}
@@ -150,7 +150,7 @@ func GetCurrentDDNSIp(fqdn string) ([]string, error) {
 	return ips, nil
 }
 
-func UpdateDDNSRecord(config_obj *api_proto.Config,
+func UpdateDDNSRecord(config_obj *config_proto.Config,
 	url, user, pw string) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

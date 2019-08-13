@@ -26,8 +26,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -36,7 +36,7 @@ var (
 )
 
 func checkUserCredentialsHandler(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 
 	// We are supposed to do the oauth thing.
@@ -81,21 +81,21 @@ func checkUserCredentialsHandler(
 
 		// Need to call logging after auth so it can access
 		// the USER value in the context.
-		logging.GetLoggingHandler(config_obj)(parent).ServeHTTP(
+		GetLoggingHandler(config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
 	})
 }
 
 // TODO: Implement this properly.
 func IsUserApprovedForClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	md *metadata.MD,
 	client_id string) bool {
 	return true
 }
 
 func getClientApprovalForUser(
-	config *api_proto.Config,
+	config *config_proto.Config,
 	md *metadata.MD,
 	client_id string) *api_proto.ApprovalList {
 	result := api_proto.ApprovalList{
@@ -138,7 +138,7 @@ func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 	return result
 }
 
-func NewDefaultUserObject(config_obj *api_proto.Config) *api_proto.ApiGrrUser {
+func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiGrrUser {
 	result := &api_proto.ApiGrrUser{
 		InterfaceTraits: &api_proto.ApiGrrUserInterfaceTraits{
 			CronJobsNavItemEnabled:                true,

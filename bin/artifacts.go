@@ -26,10 +26,11 @@ import (
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/server"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -82,7 +83,7 @@ func listArtifacts() []string {
 }
 
 func collectArtifact(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
@@ -146,7 +147,7 @@ func collectArtifact(
 }
 
 func collectArtifactToContainer(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
@@ -190,8 +191,8 @@ func collectArtifactToContainer(
 	}
 }
 
-func getRepository(config_obj *api_proto.Config) *artifacts.Repository {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+func getRepository(config_obj *config_proto.Config) *artifacts.Repository {
+	repository, err := server.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).

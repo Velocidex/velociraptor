@@ -33,7 +33,7 @@ import (
 	"time"
 
 	"github.com/tink-ab/tempfile"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -68,7 +68,7 @@ type _HttpPluginResponse struct {
 type _HttpPlugin struct{}
 
 func customVerifyPeerCert(
-	config_obj *api_proto.ClientConfig,
+	config_obj *config_proto.ClientConfig,
 	url_str string,
 	rawCerts [][]byte,
 	verifiedChains [][]*x509.Certificate) error {
@@ -117,7 +117,7 @@ func customVerifyPeerCert(
 }
 
 func getHttpClient(
-	config_obj *api_proto.ClientConfig,
+	config_obj *config_proto.ClientConfig,
 	arg *_HttpPluginRequest) *http.Client {
 
 	// If we deployed Velociraptor using self signed certificates
@@ -251,7 +251,7 @@ func (self *_HttpPlugin) Call(
 		defer close(output_chan)
 
 		any_config_obj, _ := scope.Resolve("config")
-		config_obj := any_config_obj.(*api_proto.ClientConfig)
+		config_obj := any_config_obj.(*config_proto.ClientConfig)
 
 		params := encodeParams(arg, scope)
 		client := getHttpClient(config_obj, arg)

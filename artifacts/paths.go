@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 const (
@@ -131,7 +131,7 @@ func GetUploadsFile(client_id, flow_id string) string {
 }
 
 func GetArtifactSources(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	artifact string) []string {
 	result := []string{}
 	repository, err := GetGlobalRepository(config_obj)

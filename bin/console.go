@@ -32,8 +32,8 @@ import (
 
 	prompt "github.com/c-bata/go-prompt"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -57,7 +57,7 @@ type consoleState struct {
 	History []string
 }
 
-func console_executor(config_obj *api_proto.Config,
+func console_executor(config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	state *consoleState,
 	t string) {
@@ -84,7 +84,7 @@ func console_executor(config_obj *api_proto.Config,
 }
 
 func executePRINT(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	state *consoleState,
 	t string) {
@@ -101,7 +101,7 @@ func executePRINT(
 }
 
 func executeSET(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	state *consoleState,
 	t string) {
@@ -117,7 +117,7 @@ func executeSET(
 }
 
 func executeHelp(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	state *consoleState,
 	t string) {
@@ -226,7 +226,7 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 }
 
 func executeVQL(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	state *consoleState,
 	t string) {
@@ -281,7 +281,7 @@ var toplevel_commands = []prompt.Suggest{
 }
 
 func console_completer(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	d prompt.Document) []prompt.Suggest {
 	if d.TextBeforeCursor() == "" {
@@ -346,7 +346,7 @@ func suggestVars(scope *vfilter.Scope) []prompt.Suggest {
 }
 
 func suggestPlugins(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	add_bracket bool) []prompt.Suggest {
 	result := []prompt.Suggest{}
@@ -411,7 +411,7 @@ func suggestLimit(scope *vfilter.Scope) []prompt.Suggest {
 }
 
 func completePRINT(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	args []string,
 	current_word string) []prompt.Suggest {
@@ -426,7 +426,7 @@ func completePRINT(
 }
 
 func completeSET(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	args []string,
 	current_word string) []prompt.Suggest {
@@ -444,7 +444,7 @@ func completeSET(
 }
 
 func completeHELP(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	args []string,
 	current_word string) []prompt.Suggest {
@@ -459,7 +459,7 @@ func completeHELP(
 }
 
 func completeLET(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	args []string,
 	current_word string) []prompt.Suggest {
@@ -487,7 +487,7 @@ func completeLET(
 }
 
 func completeSELECT(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	args []string,
 	current_word string) []prompt.Suggest {

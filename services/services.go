@@ -18,7 +18,7 @@
 package services
 
 import (
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/users"
 )
@@ -47,7 +47,7 @@ func (self *ServicesManager) Close() {
 
 // Start all the server services.
 func StartServices(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) (*ServicesManager, error) {
 	result := &ServicesManager{}
 

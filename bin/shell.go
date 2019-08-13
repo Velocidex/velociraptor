@@ -33,6 +33,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config "www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -53,7 +54,7 @@ const (
 	processVQLResponses uint64 = iota
 )
 
-func shell_executor(config_obj *api_proto.Config,
+func shell_executor(config_obj *config_proto.Config,
 	ctx context.Context,
 	t string) {
 
@@ -117,7 +118,7 @@ func shell_executor(config_obj *api_proto.Config,
 // Create a monitoring event query to receive shell responses and
 // write them in the terminal.
 func get_responses(ctx context.Context,
-	config_obj *api_proto.Config, client_id string) {
+	config_obj *config_proto.Config, client_id string) {
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -184,7 +185,7 @@ func completer(t prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
 }
 
-func getClientInfo(config_obj *api_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
+func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
 	channel := grpc_client.GetChannel(config_obj)
 	defer channel.Close()
 

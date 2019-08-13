@@ -1,3 +1,5 @@
+// +build server_vql
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -23,8 +25,8 @@ import (
 	"path"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -51,7 +53,7 @@ func (self MonitoringPlugin) Call(
 		}
 
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
+		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -103,7 +105,7 @@ func (self MonitoringPlugin) Call(
 }
 
 func (self MonitoringPlugin) ScanLog(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	output_chan chan<- vfilter.Row,
 	log_path string) error {
@@ -188,7 +190,7 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*api_proto.Config)
+		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -275,7 +277,7 @@ func (self WatchMonitoringPlugin) Call(
 
 func (self WatchMonitoringPlugin) ScanLog(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	dir_state state,
 	output_chan chan<- vfilter.Row,

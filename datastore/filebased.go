@@ -50,7 +50,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -64,7 +64,7 @@ type FileBaseDataStore struct {
 }
 
 func (self *FileBaseDataStore) GetClientTasks(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	result := []*crypto_proto.GrrMessage{}
@@ -103,7 +103,7 @@ func (self *FileBaseDataStore) GetClientTasks(
 }
 
 func (self *FileBaseDataStore) UnQueueMessageForClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	message *crypto_proto.GrrMessage) error {
 
@@ -114,7 +114,7 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 }
 
 func (self *FileBaseDataStore) QueueMessageForClient(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	flow_id string,
 	client_action string,
@@ -144,7 +144,7 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 }
 
 func (self *FileBaseDataStore) GetSubject(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	urn string,
 	message proto.Message) error {
 
@@ -163,7 +163,7 @@ func (self *FileBaseDataStore) GetSubject(
 }
 
 func (self *FileBaseDataStore) SetSubject(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	urn string,
 	message proto.Message) error {
 
@@ -187,7 +187,7 @@ func (self *FileBaseDataStore) SetSubject(
 }
 
 func (self *FileBaseDataStore) DeleteSubject(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	urn string) error {
 
 	filename, err := urnToFilename(config_obj, urn)
@@ -206,7 +206,7 @@ func (self *FileBaseDataStore) DeleteSubject(
 	return nil
 }
 
-func listChildren(config_obj *api_proto.Config,
+func listChildren(config_obj *config_proto.Config,
 	urn string) ([]os.FileInfo, error) {
 	filename, err := urnToFilename(config_obj, urn)
 	if err != nil {
@@ -225,7 +225,7 @@ func listChildren(config_obj *api_proto.Config,
 
 // Lists all the children of a URN.
 func (self *FileBaseDataStore) ListChildren(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
 	result := []string{}
@@ -258,7 +258,7 @@ func (self *FileBaseDataStore) ListChildren(
 // Update the posting list index. Searching for any of the
 // keywords will return the entity urn.
 func (self *FileBaseDataStore) SetIndex(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	index_urn string,
 	entity string,
 	keywords []string) error {
@@ -274,7 +274,7 @@ func (self *FileBaseDataStore) SetIndex(
 }
 
 func (self *FileBaseDataStore) UnsetIndex(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	index_urn string,
 	entity string,
 	keywords []string) error {
@@ -290,7 +290,7 @@ func (self *FileBaseDataStore) UnsetIndex(
 }
 
 func (self *FileBaseDataStore) CheckIndex(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	index_urn string,
 	entity string,
 	keywords []string) error {
@@ -308,7 +308,7 @@ func (self *FileBaseDataStore) CheckIndex(
 }
 
 func (self *FileBaseDataStore) SearchClients(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	index_urn string,
 	query string, query_type string,
 	offset uint64, limit uint64) []string {
@@ -477,7 +477,7 @@ func UnsanitizeComponent(component_str string) string {
 	}
 }
 
-func urnToFilename(config_obj *api_proto.Config, urn string) (string, error) {
+func urnToFilename(config_obj *config_proto.Config, urn string) (string, error) {
 	if config_obj.Datastore.Location == "" {
 		return "", errors.New("No Datastore_location is set in the config.")
 	}
@@ -507,7 +507,7 @@ func urnToFilename(config_obj *api_proto.Config, urn string) (string, error) {
 	return result, nil
 }
 
-func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) error {
+func writeContentToFile(config_obj *config_proto.Config, urn string, data []byte) error {
 	filename, err := urnToFilename(config_obj, urn)
 	if err != nil {
 		return err
@@ -537,7 +537,7 @@ func writeContentToFile(config_obj *api_proto.Config, urn string, data []byte) e
 }
 
 func readContentFromFile(
-	config_obj *api_proto.Config, urn string,
+	config_obj *config_proto.Config, urn string,
 	must_exist bool) ([]byte, error) {
 	filename, err := urnToFilename(config_obj, urn)
 	if err != nil {
@@ -559,7 +559,7 @@ func readContentFromFile(
 }
 
 // Convert a file name from the data store to a urn.
-func FilenameToURN(config_obj *api_proto.Config, filename string) (*string, error) {
+func FilenameToURN(config_obj *config_proto.Config, filename string) (*string, error) {
 	if config_obj.Datastore.Implementation != "FileBaseDataStore" {
 		return nil, errors.New("Unsupported data store")
 	}

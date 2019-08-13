@@ -27,8 +27,8 @@ import (
 
 	humanize "github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -38,7 +38,7 @@ import (
 )
 
 type LogWriter struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	responder  *responder.Responder
 }
 
@@ -54,7 +54,7 @@ func (self *LogWriter) Write(b []byte) (int, error) {
 type VQLClientAction struct{}
 
 func (self *VQLClientAction) Run(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
@@ -69,7 +69,7 @@ func (self *VQLClientAction) Run(
 }
 
 func (self *VQLClientAction) StartQuery(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	ctx context.Context,
 	responder *responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {

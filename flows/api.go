@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -33,7 +34,7 @@ import (
 )
 
 func GetFlows(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	offset uint64, length uint64) (*api_proto.ApiFlowResponse, error) {
 
@@ -85,7 +86,7 @@ func GetFlows(
 }
 
 func GetFlowDetails(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.ApiFlow{}, nil
@@ -112,7 +113,7 @@ func GetFlowDetails(
 }
 
 func CancelFlow(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string, flow_id string, username string) (
 	*api_proto.StartFlowResponse, error) {
 	if flow_id == "" || client_id == "" {
@@ -173,7 +174,7 @@ func CancelFlow(
 }
 
 func GetFlowRequests(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string, flow_id string,
 	offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error) {
 	if count == 0 {

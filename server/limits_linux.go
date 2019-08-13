@@ -23,7 +23,7 @@ package server
 import (
 	"syscall"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -35,7 +35,7 @@ import (
 
 // When running as root we may increase the limit ourselves. Otherwise
 // we may only increase it up to the hard limit.
-func IncreaseLimits(config_obj *api_proto.Config) {
+func IncreaseLimits(config_obj *config_proto.Config) {
 	var rLimit syscall.Rlimit
 
 	logger := logging.GetLogger(config_obj,

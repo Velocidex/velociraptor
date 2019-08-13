@@ -26,6 +26,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/vfilter"
@@ -39,7 +40,7 @@ var (
 type UserNotificationManager struct {
 	writers              map[string]*csv.CSVWriter
 	done                 chan bool
-	config_obj           *api_proto.Config
+	config_obj           *config_proto.Config
 	scope                *vfilter.Scope
 	notification_channel chan *api_proto.UserNotification
 }
@@ -108,7 +109,7 @@ func (self *UserNotificationManager) HandleNotification(
 		Set("Message", string(serialized)))
 }
 
-func StartUserNotificationManager(config_obj *api_proto.Config) (
+func StartUserNotificationManager(config_obj *config_proto.Config) (
 	*UserNotificationManager, error) {
 	mu.Lock()
 	defer mu.Unlock()

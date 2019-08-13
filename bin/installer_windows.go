@@ -36,8 +36,8 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -70,7 +70,7 @@ var (
 		"run", "Run as a service - only called by service manager.").Hidden()
 )
 
-func doInstall(config_obj *api_proto.Config) (err error) {
+func doInstall(config_obj *config_proto.Config) (err error) {
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -182,7 +182,7 @@ func checkServiceExists(name string) (bool, error) {
 }
 
 func installService(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	executable string,
 	logger *logging.LogContext) error {
 	m, err := mgr.Connect()
@@ -325,7 +325,7 @@ func getLogger(name string) (debug.Log, error) {
 	return elog, nil
 }
 
-func loadClientConfig() (*api_proto.Config, error) {
+func loadClientConfig() (*config_proto.Config, error) {
 	executable, err := os.Executable()
 	if err != nil {
 		return nil, err

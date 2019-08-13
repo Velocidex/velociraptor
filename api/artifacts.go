@@ -27,6 +27,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 )
@@ -61,7 +62,7 @@ reports:
 )
 
 func getArtifactFile(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	name string) (string, error) {
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
@@ -92,7 +93,7 @@ func getArtifactFile(
 	return artifact.Raw, nil
 }
 
-func setArtifactFile(config_obj *api_proto.Config,
+func setArtifactFile(config_obj *config_proto.Config,
 	in *api_proto.SetArtifactRequest) (
 	*artifacts_proto.Artifact, error) {
 
@@ -153,7 +154,7 @@ func setArtifactFile(config_obj *api_proto.Config,
 }
 
 func searchArtifact(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	terms []string,
 	artifact_type string,
 	number_of_results uint64) (

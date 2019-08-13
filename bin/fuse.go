@@ -21,6 +21,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -41,7 +42,7 @@ var (
 
 type VFSFs struct {
 	pathfs.FileSystem
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	client_id  string
 
 	// Cache directory listings.
@@ -293,7 +294,7 @@ type VFSFileReader struct {
 	client_id  string
 	VfsPath    string
 	attr       *fuse.Attr
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	logger     *logging.LogContext
 }
 
@@ -325,7 +326,7 @@ func (self *VFSFileReader) Read(dest []byte, off int64) (
 	return fuse.ReadResultData(response.Data), fuse.OK
 }
 
-func NewVFSFs(config_obj *api_proto.Config, client_id string) *VFSFs {
+func NewVFSFs(config_obj *config_proto.Config, client_id string) *VFSFs {
 	return &VFSFs{
 		FileSystem: pathfs.NewDefaultFileSystem(),
 		client_id:  client_id,

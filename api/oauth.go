@@ -34,6 +34,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -41,7 +42,7 @@ import (
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-func MaybeAddOAuthHandlers(config_obj *api_proto.Config, mux *http.ServeMux) error {
+func MaybeAddOAuthHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	if config_obj.GUI.GoogleOauthClientId != "" &&
 		config_obj.GUI.GoogleOauthClientSecret != "" {
 		mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
@@ -51,7 +52,7 @@ func MaybeAddOAuthHandlers(config_obj *api_proto.Config, mux *http.ServeMux) err
 	return nil
 }
 
-func oauthGoogleLogin(config_obj *api_proto.Config) http.Handler {
+func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var googleOauthConfig = &oauth2.Config{
 			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
@@ -84,7 +85,7 @@ func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
 	return &cookie
 }
 
-func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
+func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
@@ -150,7 +151,7 @@ func oauthGoogleCallback(config_obj *api_proto.Config) http.Handler {
 	})
 }
 
-func getUserDataFromGoogle(config_obj *api_proto.Config, code string) ([]byte, error) {
+func getUserDataFromGoogle(config_obj *config_proto.Config, code string) ([]byte, error) {
 	// Use code to get token and get user info from Google.
 	var googleOauthConfig = &oauth2.Config{
 		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
@@ -179,7 +180,7 @@ func getUserDataFromGoogle(config_obj *api_proto.Config, code string) ([]byte, e
 }
 
 func authenticateOAUTHCookie(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -281,7 +282,7 @@ to log in again:
 
 		// Need to call logging after auth so it can access
 		// the contextKeyUser value in the context.
-		logging.GetLoggingHandler(config_obj)(parent).ServeHTTP(
+		GetLoggingHandler(config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
 	})
 }

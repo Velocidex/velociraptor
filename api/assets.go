@@ -26,11 +26,11 @@ import (
 	"net/http"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 )
 
-func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
+func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
 	dir := "/static/"
 	mux.Handle(dir, http.FileServer(assets.HTTP))
 	mux.Handle("/favicon.png",
@@ -39,7 +39,7 @@ func install_static_assets(config_obj *api_proto.Config, mux *http.ServeMux) {
 }
 
 func GetTemplateHandler(
-	config_obj *api_proto.Config, template_name string) (http.Handler, error) {
+	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
 	data, err := assets.ReadFile(template_name)
 	if err != nil {
 		return nil, err

@@ -36,7 +36,7 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -48,7 +48,7 @@ import (
 // be done too frequently and should only be done in response for the
 // 406 HTTP codes.
 type Enroller struct {
-	config_obj           *api_proto.Config
+	config_obj           *config_proto.Config
 	manager              crypto.ICryptoManager
 	executor             executor.Executor
 	logger               *logging.LogContext
@@ -152,7 +152,7 @@ type HTTPConnector struct {
 }
 
 func NewHTTPConnector(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	manager crypto.ICryptoManager,
 	logger *logging.LogContext) *HTTPConnector {
 
@@ -321,7 +321,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
-	config_obj api_proto.Config
+	config_obj config_proto.Config
 	connector  IConnector
 	manager    crypto.ICryptoManager
 	executor   executor.Executor
@@ -337,7 +337,7 @@ type NotificationReader struct {
 }
 
 func NewNotificationReader(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	connector IConnector,
 	manager crypto.ICryptoManager,
 	executor executor.Executor,
@@ -544,7 +544,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 }
 
 type HTTPCommunicator struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 
 	logger *logging.LogContext
 
@@ -578,7 +578,7 @@ func (self *HTTPCommunicator) Run(ctx context.Context) {
 }
 
 func NewHTTPCommunicator(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	urls []string) (*HTTPCommunicator, error) {

@@ -28,13 +28,14 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 func streamQuery(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	arg *actions_proto.VQLCollectorArgs,
 	stream api_proto.API_QueryServer,
 	peer_name string) (err error) {

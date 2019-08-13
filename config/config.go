@@ -24,7 +24,7 @@ import (
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 )
 
@@ -36,7 +36,7 @@ var (
 )
 
 // Return the location of the writeback file.
-func WritebackLocation(self *api_proto.Config) string {
+func WritebackLocation(self *config_proto.Config) string {
 	switch runtime.GOOS {
 	case "darwin":
 		return os.ExpandEnv(self.Client.WritebackDarwin)
@@ -50,15 +50,15 @@ func WritebackLocation(self *api_proto.Config) string {
 }
 
 // Create a default configuration object.
-func GetDefaultConfig() *api_proto.Config {
-	result := &api_proto.Config{
-		Version: &api_proto.Version{
+func GetDefaultConfig() *config_proto.Config {
+	result := &config_proto.Config{
+		Version: &config_proto.Version{
 			Name:      "velociraptor",
 			Version:   constants.VERSION,
 			BuildTime: build_time,
 			Commit:    commit_hash,
 		},
-		Client: &api_proto.ClientConfig{
+		Client: &config_proto.ClientConfig{
 			WritebackDarwin: "/etc/velociraptor.writeback.yaml",
 			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
 			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
@@ -69,7 +69,7 @@ func GetDefaultConfig() *api_proto.Config {
 			// server. If the server is not available we
 			// write these to disk so we can send them
 			// next time we are online.
-			LocalBuffer: &api_proto.RingBufferConfig{
+			LocalBuffer: &config_proto.RingBufferConfig{
 				MemorySize: 50 * 1024 * 1024,
 				DiskSize:   1024 * 1024 * 1024,
 				Filename:   "$Temp/Velociraptor_Buffer.bin",
@@ -77,14 +77,14 @@ func GetDefaultConfig() *api_proto.Config {
 
 			// Specific instructions for the
 			// windows service installer.
-			WindowsInstaller: &api_proto.WindowsInstallerConfig{
+			WindowsInstaller: &config_proto.WindowsInstallerConfig{
 				ServiceName: "Velociraptor",
 				InstallPath: "$ProgramFiles\\Velociraptor\\" +
 					"Velociraptor.exe",
 				ServiceDescription: "Velociraptor service",
 			},
 
-			DarwinInstaller: &api_proto.DarwinInstallerConfig{
+			DarwinInstaller: &config_proto.DarwinInstallerConfig{
 				ServiceName: "com.velocidex.velociraptor",
 				InstallPath: "/usr/local/sbin/velociraptor",
 			},
@@ -95,14 +95,14 @@ func GetDefaultConfig() *api_proto.Config {
 			PreventExecve: false,
 			MaxUploadSize: constants.MAX_MEMORY,
 		},
-		API: &api_proto.APIConfig{
+		API: &config_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not
 			// normally be exposed.
 			BindAddress: "127.0.0.1",
 			BindPort:    8001,
 			BindScheme:  "tcp",
 		},
-		GUI: &api_proto.GUIConfig{
+		GUI: &config_proto.GUIConfig{
 			// Bind port for GUI. If you expose this on a
 			// reachable IP address you must enable TLS!
 			BindAddress: "127.0.0.1",
@@ -110,17 +110,17 @@ func GetDefaultConfig() *api_proto.Config {
 			InternalCidr: []string{
 				"127.0.0.1/12", "192.168.0.0/16",
 			},
-			ReverseProxy: []*api_proto.ReverseProxyConfig{},
+			ReverseProxy: []*config_proto.ReverseProxyConfig{},
 		},
-		CA: &api_proto.CAConfig{},
-		Frontend: &api_proto.FrontendConfig{
+		CA: &config_proto.CAConfig{},
+		Frontend: &config_proto.FrontendConfig{
 			// A public interface for clients to
 			// connect to.
 			BindAddress:   "0.0.0.0",
 			BindPort:      8000,
 			MaxUploadSize: constants.MAX_MEMORY * 2,
 		},
-		Datastore: &api_proto.DatastoreConfig{
+		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
 
 			// Users would probably need to change
@@ -128,15 +128,15 @@ func GetDefaultConfig() *api_proto.Config {
 			Location:           "/tmp/velociraptor",
 			FilestoreDirectory: "/tmp/velociraptor",
 		},
-		Flows:     &api_proto.FlowsConfig{},
-		Writeback: &api_proto.Writeback{},
-		Mail:      &api_proto.MailConfig{},
-		Logging:   &api_proto.LoggingConfig{},
-		Monitoring: &api_proto.MonitoringConfig{
+		Flows:     &config_proto.FlowsConfig{},
+		Writeback: &config_proto.Writeback{},
+		Mail:      &config_proto.MailConfig{},
+		Logging:   &config_proto.LoggingConfig{},
+		Monitoring: &config_proto.MonitoringConfig{
 			BindAddress: "127.0.0.1",
 			BindPort:    8003,
 		},
-		ApiConfig: &api_proto.ApiClientConfig{},
+		ApiConfig: &config_proto.ApiClientConfig{},
 
 		// Use SSL by default - there is no real reason not to.
 		DisableSelfSignedSsl: false,
@@ -151,7 +151,7 @@ func GetDefaultConfig() *api_proto.Config {
 	return result
 }
 
-func maybeReadEmbeddedConfig() *api_proto.Config {
+func maybeReadEmbeddedConfig() *config_proto.Config {
 	result := GetDefaultConfig()
 	err := yaml.Unmarshal(FileConfigDefaultYaml, result)
 	if err != nil {
@@ -162,7 +162,7 @@ func maybeReadEmbeddedConfig() *api_proto.Config {
 }
 
 // Load the config stored in the YAML file and returns a config object.
-func LoadConfig(filename string) (*api_proto.Config, error) {
+func LoadConfig(filename string) (*config_proto.Config, error) {
 	default_config := GetDefaultConfig()
 	result := GetDefaultConfig()
 
@@ -195,13 +195,13 @@ func LoadConfig(filename string) (*api_proto.Config, error) {
 	return embedded_config, nil
 }
 
-func LoadClientConfig(filename string) (*api_proto.Config, error) {
+func LoadClientConfig(filename string) (*config_proto.Config, error) {
 	client_config, err := LoadConfig(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	existing_writeback := &api_proto.Writeback{}
+	existing_writeback := &config_proto.Writeback{}
 	data, err := ioutil.ReadFile(WritebackLocation(client_config))
 	// Failing to read the file is not an error - the file may not
 	// exist yet.
@@ -217,7 +217,7 @@ func LoadClientConfig(filename string) (*api_proto.Config, error) {
 	return client_config, nil
 }
 
-func WriteConfigToFile(filename string, config *api_proto.Config) error {
+func WriteConfigToFile(filename string, config *config_proto.Config) error {
 	bytes, err := yaml.Marshal(config)
 	if err != nil {
 		return err
@@ -232,7 +232,7 @@ func WriteConfigToFile(filename string, config *api_proto.Config) error {
 }
 
 // Update the client's writeback file.
-func UpdateWriteback(config_obj *api_proto.Config) error {
+func UpdateWriteback(config_obj *config_proto.Config) error {
 	if WritebackLocation(config_obj) == "" {
 		return nil
 	}

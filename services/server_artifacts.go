@@ -11,8 +11,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -29,7 +29,7 @@ const (
 )
 
 type ServerArtifactsRunner struct {
-	config_obj *api_proto.Config
+	config_obj *config_proto.Config
 	mu         sync.Mutex
 	Done       chan bool
 	Scopes     []*vfilter.Scope
@@ -322,7 +322,7 @@ func ExtractVQLCollectorArgs(message *crypto_proto.GrrMessage) (
 	return result, nil
 }
 
-func startServerArtifactService(config_obj *api_proto.Config,
+func startServerArtifactService(config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) (
 
 	*ServerArtifactsRunner, error) {

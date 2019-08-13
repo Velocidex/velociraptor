@@ -28,8 +28,8 @@ import (
 	"fmt"
 
 	errors "github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
@@ -152,7 +152,7 @@ func PemToPublicKey(pem_str []byte) (*rsa.PublicKey, error) {
 }
 
 // Verify the configuration, possibly updating default settings.
-func VerifyConfig(config_obj *api_proto.Config) error {
+func VerifyConfig(config_obj *config_proto.Config) error {
 	if len(config_obj.Client.ServerUrls) == 0 {
 		return errors.New("No server URLs configured!")
 	}

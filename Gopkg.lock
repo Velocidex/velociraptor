@@ -911,14 +911,6 @@
   version = "v5.0.81"
 
 [[projects]]
-  digest = "1:2ee0f15eb0fb04f918db7c2dcf39745f40d69f798ef171610a730e8a56aaa4fd"
-  name = "gopkg.in/russross/blackfriday.v2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
-  version = "v2.0.1"
-
-[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -1083,7 +1075,6 @@
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
-    "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/go-pe",

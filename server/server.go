@@ -27,7 +27,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -45,7 +45,7 @@ var (
 )
 
 type Server struct {
-	config           *api_proto.Config
+	config           *config_proto.Config
 	manager          *crypto.CryptoManager
 	logger           *logging.LogContext
 	db               datastore.DataStore
@@ -72,7 +72,7 @@ func (self *Server) Close() {
 	self.NotificationPool.Shutdown()
 }
 
-func NewServer(config_obj *api_proto.Config) (*Server, error) {
+func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err

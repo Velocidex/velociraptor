@@ -30,8 +30,8 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -59,7 +59,7 @@ type testFixture struct {
 // collector client action. Therefore we build a vql_collector_args
 // from the fixture.
 func vqlCollectorArgsFromFixture(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	fixture *testFixture) *actions_proto.VQLCollectorArgs {
 	artifact_collector_args := &flows_proto.ArtifactCollectorArgs{
 		Parameters: &flows_proto.ArtifactParameters{},

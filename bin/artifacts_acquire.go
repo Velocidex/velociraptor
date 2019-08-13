@@ -28,8 +28,8 @@ import (
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -54,7 +54,7 @@ var (
 		Short('p').StringMap()
 )
 
-func acquireArtifact(ctx context.Context, config_obj *api_proto.Config,
+func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 	name string, request *actions_proto.VQLCollectorArgs) error {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	subdir := filepath.Join(*artifact_command_acquire_dump_dir, name)

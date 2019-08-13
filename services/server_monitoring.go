@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -70,7 +70,7 @@ func (self *EventTable) Close() {
 }
 
 func (self *EventTable) Update(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	arg *flows_proto.ArtifactCollectorArgs) error {
 	self.Close()
 
@@ -144,7 +144,7 @@ func (self *EventTable) Update(
 
 func (self *EventTable) GetWriter(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	artifact_name string,
 	source_name string) chan vfilter.Row {
@@ -221,7 +221,7 @@ func (self *EventTable) GetWriter(
 
 func (self *EventTable) RunQuery(
 	ctx context.Context,
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	artifact_name string,
 	source *artifacts_proto.ArtifactSource) error {
@@ -274,7 +274,7 @@ func (self *EventTable) RunQuery(
 }
 
 // Bring up the server monitoring service.
-func startServerMonitoringService(config_obj *api_proto.Config) (
+func startServerMonitoringService(config_obj *config_proto.Config) (
 	*EventTable, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {

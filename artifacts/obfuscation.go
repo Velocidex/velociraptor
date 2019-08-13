@@ -4,7 +4,7 @@ import (
 	"regexp"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -17,7 +17,7 @@ var (
 // Compile the artifact definition into a VQL Request.
 // TODO: Obfuscate let queries.
 func Obfuscate(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	result *actions_proto.VQLCollectorArgs) error {
 	scope := vql_subsystem.MakeScope()
 	var err error
@@ -53,7 +53,7 @@ func Obfuscate(
 
 var obfuscated_item = regexp.MustCompile("\\$[a-fA-F0-9]+")
 
-func DeobfuscateString(config_obj *api_proto.Config, in string) string {
+func DeobfuscateString(config_obj *config_proto.Config, in string) string {
 	if config_obj.Frontend.DoNotCompressArtifacts {
 		return in
 	}
@@ -68,7 +68,7 @@ func DeobfuscateString(config_obj *api_proto.Config, in string) string {
 }
 
 func Deobfuscate(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	response *actions_proto.VQLResponse) error {
 	var err error
 

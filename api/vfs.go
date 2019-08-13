@@ -37,6 +37,7 @@ import (
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -87,7 +88,7 @@ func renderRootVFS(client_id string) *actions_proto.VQLResponse {
 
 // Render VFS nodes with VQL collection + uploads.
 func renderDBVFS(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 
@@ -169,7 +170,7 @@ func renderDBVFS(
 
 // Render VFS nodes from the filestore.
 func renderFileStore(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	prefix string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 	var rows []*FileInfoRow
@@ -256,7 +257,7 @@ func getVFSPathPrefix(vfs_path string, client_id string) (prefix string, ok bool
 }
 
 func vfsListDirectory(
-	config_obj *api_proto.Config,
+	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (*actions_proto.VQLResponse, error) {
 	vfs_path = path.Join("/", vfs_path)

@@ -13,6 +13,7 @@ fi
 for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/artifacts/proto/ \
                      $CWD/actions/proto/ \
+                     $CWD/config/proto/ \
                      $CWD/flows/proto/ ; do
     echo Building protos in $i
     protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD --go_out=$i $i/*.proto

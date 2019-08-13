@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package logging
+package api
 
 import (
 	"context"
@@ -24,6 +24,8 @@ import (
 
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 // Record the status of the request so we can log it.
@@ -49,7 +51,7 @@ func (self *statusRecorder) Write(buf []byte) (int, error) {
 }
 
 func GetUserInfo(ctx context.Context,
-	config_obj *api_proto.Config) *api_proto.VelociraptorUser {
+	config_obj *config_proto.Config) *api_proto.VelociraptorUser {
 	result := &api_proto.VelociraptorUser{}
 
 	userinfo, ok := ctx.Value("USER").(string)
@@ -57,15 +59,15 @@ func GetUserInfo(ctx context.Context,
 		data := []byte(userinfo)
 		err := json.Unmarshal(data, result)
 		if err != nil {
-			GetLogger(config_obj, &GUIComponent).Error(
+			logging.GetLogger(config_obj, &logging.GUIComponent).Error(
 				"Unable to Unmarshal USER Token")
 		}
 	}
 	return result
 }
 
-func GetLoggingHandler(config_obj *api_proto.Config) func(http.Handler) http.Handler {
-	logger := GetLogger(config_obj, &GUIComponent)
+func GetLoggingHandler(config_obj *config_proto.Config) func(http.Handler) http.Handler {
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			rec := &statusRecorder{

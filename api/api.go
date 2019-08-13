@@ -38,6 +38,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -50,7 +51,7 @@ import (
 )
 
 type ApiServer struct {
-	config     *api_proto.Config
+	config     *config_proto.Config
 	server_obj *server.Server
 	ca_pool    *x509.CertPool
 }
@@ -624,7 +625,7 @@ func (self *ApiServer) SetClientMonitoringState(
 	return in, err
 }
 
-func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error {
+func StartServer(config_obj *config_proto.Config, server_obj *server.Server) error {
 	bind_addr := config_obj.API.BindAddress
 	switch config_obj.API.BindScheme {
 	case "tcp":
@@ -678,7 +679,7 @@ func StartServer(config_obj *api_proto.Config, server_obj *server.Server) error 
 	return nil
 }
 
-func StartMonitoringService(config_obj *api_proto.Config) {
+func StartMonitoringService(config_obj *config_proto.Config) {
 	bind_addr := fmt.Sprintf("%s:%d",
 		config_obj.Monitoring.BindAddress,
 		config_obj.Monitoring.BindPort)

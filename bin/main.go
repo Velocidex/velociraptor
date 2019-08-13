@@ -31,8 +31,8 @@ import (
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 
 	// Import all vql plugins.
@@ -67,7 +67,7 @@ var (
 	command_handlers []CommandHandler
 )
 
-func validateServerConfig(configuration *api_proto.Config) error {
+func validateServerConfig(configuration *config_proto.Config) error {
 	if configuration.Frontend.Certificate == "" {
 		return errors.New("Configuration does not specify a frontend certificate.")
 	}
@@ -112,7 +112,7 @@ func validateServerConfig(configuration *api_proto.Config) error {
 	return nil
 }
 
-func get_server_config(config_path string) (*api_proto.Config, error) {
+func get_server_config(config_path string) (*config_proto.Config, error) {
 	config_obj, err := config.LoadConfig(config_path)
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func get_server_config(config_path string) (*api_proto.Config, error) {
 	return config_obj, err
 }
 
-func maybe_parse_api_config(config_obj *api_proto.Config) {
+func maybe_parse_api_config(config_obj *config_proto.Config) {
 	if *api_config_path != "" {
 		fd, err := os.Open(*api_config_path)
 		kingpin.FatalIfError(err, "Unable to read api config.")
@@ -136,7 +136,7 @@ func maybe_parse_api_config(config_obj *api_proto.Config) {
 	}
 }
 
-func get_config_or_default() *api_proto.Config {
+func get_config_or_default() *config_proto.Config {
 	config_obj, err := config.LoadConfig(*config_path)
 	if err != nil {
 		config_obj = config.GetDefaultConfig()
