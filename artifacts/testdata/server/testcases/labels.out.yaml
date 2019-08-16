@@ -12,7 +12,7 @@ FROM clients(search='label:*') ORDER BY client_id
   })
 [
  {
-  "label(client_id=client_id, labels= [\"WinBoxes\"], op=\"set\")": {
+  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
    "ClientId": "C.11a3013cca8f826e",
    "Labels": [
     "WinBoxes"
@@ -22,7 +22,7 @@ FROM clients(search='label:*') ORDER BY client_id
   "os_info.system": "windows"
  },
  {
-  "label(client_id=client_id, labels= [\"WinBoxes\"], op=\"set\")": {
+  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
    "ClientId": "C.c916a7e445eb0868",
    "Labels": [
     "WinBoxes"
@@ -83,7 +83,7 @@ FROM clients(search='label:*') ORDER BY client_id
 [
  {
   "client_id": "C.11a3013cca8f826e",
-  "label(client_id=client_id, op=\"remove\", labels=labels)": {
+  "label(client_id=client_id, op='remove', labels=labels)": {
    "ClientId": "C.11a3013cca8f826e",
    "Labels": [
     "WinBoxes"
@@ -93,7 +93,7 @@ FROM clients(search='label:*') ORDER BY client_id
  },
  {
   "client_id": "C.c916a7e445eb0868",
-  "label(client_id=client_id, op=\"remove\", labels=labels)": {
+  "label(client_id=client_id, op='remove', labels=labels)": {
    "ClientId": "C.c916a7e445eb0868",
    "Labels": [
     "WinBoxes"
