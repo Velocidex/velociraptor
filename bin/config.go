@@ -46,7 +46,7 @@ var (
 
 	config_api_client_common_name = config_api_client_command.Flag(
 		"name", "The common name of the API Client.").
-		Default("Velociraptor API Client").String()
+		Default("VelociraptorAPIClient").String()
 
 	config_generate_command = config_command.Command(
 		"generate",

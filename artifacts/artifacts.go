@@ -435,3 +435,7 @@ func GetGlobalRepository(config_obj *config_proto.Config) (*Repository, error) {
 
 	return global_repository, nil
 }
+
+func RegisterArtifactSources(fn init_function) {
+	init_registry = append(init_registry, fn)
+}

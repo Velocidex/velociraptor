@@ -288,7 +288,6 @@ func (self *_HttpPlugin) Call(
 				scope.Log("http_client: %v", err)
 				return
 			}
-			defer tmpfile.Close()
 
 			scope.AddDestructor(func() {
 				scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
@@ -297,6 +296,10 @@ func (self *_HttpPlugin) Call(
 
 			response.Content = tmpfile.Name()
 			io.Copy(tmpfile, http_resp.Body)
+
+			// Force the file to be closed *before* we
+			// emit it to the VQL engine.
+			tmpfile.Close()
 
 			output_chan <- response
 

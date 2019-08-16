@@ -14,7 +14,6 @@ require (
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/participle v0.3.0
-	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/c-bata/go-prompt v0.2.3
@@ -86,6 +85,6 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20190811043245-099a571effd4
+	www.velocidex.com/golang/vfilter v0.0.0-20190814005900-bb01c624dcc9
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
