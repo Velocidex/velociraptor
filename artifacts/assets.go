@@ -59,5 +59,5 @@ func register(config_obj *config_proto.Config) error {
 
 // Load basic artifacts from our assets.
 func init() {
-	init_registry = append(init_registry, register)
+	RegisterArtifactSources(register)
 }

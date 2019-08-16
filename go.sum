@@ -25,6 +25,7 @@ github.com/Velocidex/go-yara v1.1.9 h1:XFtozFms5mruc6fXV9E+ov5V6rBYgcX3hUrsoLFfP
 github.com/Velocidex/go-yara v1.1.9/go.mod h1:2QU3qksRdRiX8sde+Hy9CYudPRXza7i08u5r1/0al3s=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0 h1:rFd07P9lqQPsmgPVvS0crnGpq63eFyd7qQyyvLgBrMY=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0/go.mod h1:LVK71wXgKJYbhcGaK+QDA6QM+yLgcO21ZihAoxAdMak=
+github.com/alecthomas/participle v0.2.0/go.mod h1:SW6HZGeZgSIpcUWX3fXpfZhuaWHnmoD5KCVaqSaNTkk=
 github.com/alecthomas/participle v0.3.0 h1:e8vhrYR1nDjzDxyDwpLO27TWOYWilaT+glkwbPadj50=
 github.com/alecthomas/participle v0.3.0/go.mod h1:SW6HZGeZgSIpcUWX3fXpfZhuaWHnmoD5KCVaqSaNTkk=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 h1:GDQdwm/gAcJcLAKQQZGOJ4knlw+7rfEQQcmwTbt4p5E=
@@ -42,6 +43,7 @@ github.com/beorn7/perks v1.0.0 h1:HWo1m869IqiPhD389kmkxeTalrjNbbJTC8LXupb+sl0=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/c-bata/go-prompt v0.2.3 h1:jjCS+QhG/sULBhAaBdjb2PlMRVaKXQgn+4yzaauvs2s=
 github.com/c-bata/go-prompt v0.2.3/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
+github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3/go.mod h1:507vXsotcZop7NZfBWdhPmVeOse4ko2R7AagJYrpoEg=
 github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73 h1:q1g9lSyo/nOIC3W5E3FK3Unrz8b9LdLXCyuC+ZcpPC0=
 github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73/go.mod h1:507vXsotcZop7NZfBWdhPmVeOse4ko2R7AagJYrpoEg=
 github.com/clbanning/mxj v1.8.4 h1:HuhwZtbyvyOw+3Z1AowPkU87JkJUSv751ELWaiTpj8I=
@@ -193,6 +195,7 @@ github.com/prometheus/procfs v0.0.3/go.mod h1:4A/X28fw3Fc593LaREMrKMqOKvUAntwMDa
 github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5 h1:mZHayPoR0lNmnHyvtYjDeq0zlVHn9K/ZXoy17ylucdo=
 github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5/go.mod h1:GEXHk5HgEKCvEIIrSpFI3ozzG5xOKA2DVlEX/gGnewM=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
+github.com/sebdah/goldie v0.0.0-20180424091453-8784dd1ab561/go.mod h1:lvjGftC8oe7XPtyrOidaMi0rp5B9+XY/ZRUynGnuaxQ=
 github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77 h1:Msb6XRY62jQOueNNlB5LGin1rljK7c49NLniGwJG2bg=
 github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77/go.mod h1:jXP4hmWywNEwZzhMuv2ccnqTSFpuq8iyQhtQdkkZBH4=
 github.com/sergi/go-diff v1.0.0 h1:Kpca3qRNrduNnOQeazBd0ysaKrUJiIuISHxogkT9RPQ=
@@ -349,7 +352,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20190811043245-099a571effd4 h1:zxzxgOpWfnYvyXQ83Dh8zbYR18pjPCQmU8WJJceScKU=
-www.velocidex.com/golang/vfilter v0.0.0-20190811043245-099a571effd4/go.mod h1:PY8zSWfvXRGr+89MPPgBRQCwpT+HEl6AaLv/kdJocqA=
+www.velocidex.com/golang/vfilter v0.0.0-20190814005900-bb01c624dcc9 h1:4O2lWu6/DFfU8cMvKxWNS/3v+r++PRKqHyHqZveMwgQ=
+www.velocidex.com/golang/vfilter v0.0.0-20190814005900-bb01c624dcc9/go.mod h1:doXqGsJBO/O1plrspT6pSsvYoSv5Y4yk5FunowaFQ0M=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=

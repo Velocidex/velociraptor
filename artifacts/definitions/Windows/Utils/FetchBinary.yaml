@@ -1,0 +1,31 @@
+name: Windows.Utils.FetchBinary
+description: A utility artifact which fetches a binary from a URL and caches it on disk.
+   We verify the hash of the binary on disk and if it does not match we fetch it again
+   from the source URL.
+
+   This artifact is designed to be called from other artifacts. The binary path will be
+   emitted in the FullPath column.
+
+parameters:
+  - name: binaryURL
+    default: https://live.sysinternals.com/tools/autorunsc64.exe
+  - name: expectedHash
+    default: "bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6"
+
+sources:
+  - queries:
+      - |
+        LET download = SELECT Content AS FullPath, hash(path=Content) as Hash, {
+           SELECT * FROM execve(
+               argv=["cmd.exe", "/c", "copy", Content,
+                     expand(path="%TEMP%\\") + basename(path=binaryURL)])
+        } AS CopyDetails
+        FROM http_client(url=binaryURL, tempfile_extension=".exe")
+        WHERE Hash.SHA256 = expectedHash
+
+      - |
+        LET existing = SELECT FullPath, hash(path=FullPath) AS Hash
+        FROM stat(filename=expand(path="%TEMP%\\") + basename(path=binaryURL))
+        WHERE Hash.SHA256 = expectedHash
+
+      - SELECT * FROM chain(a=existing, b=download) LIMIT 1
