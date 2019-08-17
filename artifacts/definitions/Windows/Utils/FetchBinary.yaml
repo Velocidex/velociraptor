@@ -10,22 +10,28 @@ parameters:
   - name: binaryURL
     default: https://live.sysinternals.com/tools/autorunsc64.exe
   - name: expectedHash
-    default: "bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6"
+    default: bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6
+  - name: binPath
+    default: "%TEMP%"
 
 sources:
   - queries:
       - |
-        LET download = SELECT Content AS FullPath, hash(path=Content) as Hash, {
-           SELECT * FROM execve(
-               argv=["cmd.exe", "/c", "copy", Content,
-                     expand(path="%TEMP%\\") + basename(path=binaryURL)])
-        } AS CopyDetails
+        LET download = SELECT FullPath as TempPath,
+            expand(path=binPath) + "\\" + basename(path=binaryURL) as FullPath,
+            hash(path=Content) as Hash, 
+            {
+                SELECT * FROM execve(
+                    argv=["cmd.exe", "/c", "copy", Content,
+                        expand(path=binPath) + "\\" + basename(path=binaryURL)])
+            } AS CopyDetails
         FROM http_client(url=binaryURL, tempfile_extension=".exe")
         WHERE Hash.SHA256 = expectedHash
 
       - |
-        LET existing = SELECT FullPath, hash(path=FullPath) AS Hash
-        FROM stat(filename=expand(path="%TEMP%\\") + basename(path=binaryURL))
+        LET existing = SELECT FullPath,
+            hash(path=FullPath) AS Hash
+        FROM stat(filename=expand(path=binPath) + "\\" + basename(path=binaryURL))
         WHERE Hash.SHA256 = expectedHash
 
       - SELECT * FROM chain(a=existing, b=download) LIMIT 1
