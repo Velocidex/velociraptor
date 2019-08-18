@@ -17,8 +17,7 @@ parameters:
 sources:
   - queries:
       - |
-        LET download = SELECT FullPath as TempPath,
-            expand(path=binPath) + "\\" + basename(path=binaryURL) as FullPath,
+        LET download = expand(path=binPath) + "\\" + basename(path=binaryURL) as FullPath,
             hash(path=Content) as Hash, 
             {
                 SELECT * FROM execve(
