@@ -23,6 +23,7 @@ package windows
 
 import (
 	"context"
+	"os"
 
 	"golang.org/x/sys/windows/registry"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -46,7 +47,10 @@ func (self _ExpandPath) Call(
 		return vfilter.Null{}
 	}
 
-	expanded_path, err := registry.ExpandString(arg.Path)
+	// Support both go style expandsions and windows style
+	// expansions.
+	path := os.ExpandEnv(arg.Path)
+	expanded_path, err := registry.ExpandString(path)
 	if err != nil {
 		scope.Log("expand: %v", err)
 		return vfilter.Null{}
