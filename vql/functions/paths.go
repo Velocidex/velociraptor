@@ -43,7 +43,7 @@ func (self *DirnameFunction) Call(ctx context.Context,
 
 	components := utils.SplitComponents(arg.Path)
 	if len(components) > 0 {
-		return utils.JoinComponents(components[:len(components)-1], "/")
+		return "/" + utils.JoinComponents(components[:len(components)-1], "/")
 	}
 	return vfilter.Null{}
 }

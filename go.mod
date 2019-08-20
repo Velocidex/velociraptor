@@ -87,4 +87,4 @@ require (
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 
-// replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter

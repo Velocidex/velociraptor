@@ -263,6 +263,8 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
+		scope.Log("Fetching %v\n", arg.Url)
+
 		http_resp, err := client.Do(req)
 		if http_resp != nil {
 			defer http_resp.Body.Close()
