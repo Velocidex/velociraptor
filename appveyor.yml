@@ -17,6 +17,7 @@ install:
     echo %PATH%
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
+    mkdir "C:\Program Files\Velociraptor"
 - go version
 - go env
 - set GO111MODULE=on

@@ -20,7 +20,7 @@ SELECT basename(path="/foo/bar/baz") FROM scope()[
  }
 ]SELECT dirname(path='c:\\foo\\bar\\"http://www.google.com/"/Foobar') FROM scope()[
  {
-  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar')": "/c:/foo/bar/\"http://www.google.com/\""
+  "dirname(path='c:\\\\foo\\\\bar\\\\\"http://www.google.com/\"/Foobar')": "c:/foo/bar/\"http://www.google.com/\""
  }
 ]SELECT basename(path='c:\\foo\\bar\\"F:\\foobar.txt"') FROM scope()[
  {
