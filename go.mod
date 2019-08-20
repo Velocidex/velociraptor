@@ -1,7 +1,5 @@
 module www.velocidex.com/golang/velociraptor
 
-// replace gopkg.in/russross/blackfriday.v2 => github.com/russross/blackfriday/v2 v2.0.1
-
 require (
 	cloud.google.com/go v0.41.0 // indirect
 	github.com/Masterminds/goutils v1.1.0 // indirect
@@ -9,6 +7,7 @@ require (
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
+	github.com/UnnoTed/fileb0x v1.1.3 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-yara v1.1.9
@@ -47,7 +46,6 @@ require (
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
 	github.com/mattn/go-isatty v0.0.8 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-runewidth v0.0.0-20181218000649-703b5e6b11ae // indirect
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
@@ -85,6 +83,8 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20190814005900-bb01c624dcc9
+	www.velocidex.com/golang/vfilter v0.0.0-20190819135421-24eb23ea486a
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
+
+// replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter

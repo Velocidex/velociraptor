@@ -263,12 +263,17 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
+		scope.Log("Fetching %v\n", arg.Url)
+
 		http_resp, err := client.Do(req)
 		if http_resp != nil {
 			defer http_resp.Body.Close()
 		}
 
 		if err != nil {
+			scope.Log("http_client: Error %v while fetching %v",
+				err, arg.Url)
+
 			output_chan <- &_HttpPluginResponse{
 				Url:      arg.Url,
 				Response: 500,
@@ -294,8 +299,14 @@ func (self *_HttpPlugin) Call(
 				os.Remove(tmpfile.Name())
 			})
 
+			scope.Log("http_client: Downloading %v into %v",
+				arg.Url, tmpfile.Name())
+
 			response.Content = tmpfile.Name()
-			io.Copy(tmpfile, http_resp.Body)
+			_, err = io.Copy(tmpfile, http_resp.Body)
+			if err != nil && err != io.EOF {
+				scope.Log("http_client: Reading error %v", err)
+			}
 
 			// Force the file to be closed *before* we
 			// emit it to the VQL engine.

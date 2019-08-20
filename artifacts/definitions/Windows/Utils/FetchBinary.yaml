@@ -8,24 +8,83 @@ description: A utility artifact which fetches a binary from a URL and caches it 
 
 parameters:
   - name: binaryURL
-    default: https://live.sysinternals.com/tools/autorunsc64.exe
-  - name: expectedHash
-    default: "bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6"
+    description: |
+      Specify this as the base of the binary store (if empty we use
+      the server's public directory).
+  - name: ToolName
+    default: Autorun
 
 sources:
   - queries:
-      - |
-        LET download = SELECT Content AS FullPath, hash(path=Content) as Hash, {
-           SELECT * FROM execve(
-               argv=["cmd.exe", "/c", "copy", Content,
-                     expand(path="%TEMP%\\") + basename(path=binaryURL)])
-        } AS CopyDetails
-        FROM http_client(url=binaryURL, tempfile_extension=".exe")
-        WHERE Hash.SHA256 = expectedHash
+      - LET info_cache <= SELECT * FROM info()
 
+      # Figure out our binary cache path based on arch. Fallback to
+      # the temp directory.
       - |
-        LET existing = SELECT FullPath, hash(path=FullPath) AS Hash
-        FROM stat(filename=expand(path="%TEMP%\\") + basename(path=binaryURL))
-        WHERE Hash.SHA256 = expectedHash
+        LET binpath = SELECT dirname(path=expand(path=Path)) AS Path FROM switch(
+          a={SELECT config.WritebackWindows AS Path FROM info_cache
+             WHERE OS="windows" AND Path},
+          b={SELECT config.WritebacLinux AS Path FROM info_cache
+             WHERE OS="linux" AND Path},
+          c={SELECT config.WritebackDarwin AS Path FROM info_cache
+             WHERE OS="darwin" AND Path},
+          d={SELECT expand(path="$Temp") AS Path FROM scope() WHERE Path},
+          e={SELECT "/tmp/XXX" AS Path FROM info_cache WHERE OS = "linux"}
+        )
 
-      - SELECT * FROM chain(a=existing, b=download) LIMIT 1
+      # Where should we download binaries from? Allow this to be
+      # overriden by the user.
+      - |
+        LET inventory_url = SELECT URL from switch(
+         a={SELECT binaryURL AS URL FROM info_cache WHERE URL},
+         b={SELECT get(item=config.ServerUrls + "public/",
+                       member="0") AS URL FROM scope() WHERE URL},
+         c={SELECT log(message="binaryURL not set and no server config."),
+            NULL AS URL FROM info_cache})
+
+      # Fetch the inventory from the repository.
+      - |
+        LET inventory_data = SELECT * FROM http_client(
+           url=inventory_url.URL + "inventory.csv")
+
+      # Parse the inventory: Tool,Type,URL,ExpectedHash
+      - |
+        LET inventory = SELECT * FROM parse_csv(
+           filename=inventory_data.Content, accessor="data")
+
+      # Figure out which tool we need based on the Architecture and
+      # the required tool.
+      - |
+        LET required_tool = SELECT * FROM foreach(
+         row=inventory,
+         query={
+           SELECT Tool, ExpectedHash, URL FROM info_cache
+           WHERE Architecture =~ Type AND Tool = ToolName
+         }) LIMIT 1
+
+      # Download the file from the binary URL and store in the local
+      # binary cache.
+      - |
+        LET download = SELECT hash(path=Content) as Hash,
+            "Downloaded" AS DownloadStatus,
+            copy(filename=Content,
+                 dest=binpath.Path+"/"+basename(path=URL)) AS FullPath
+        FROM http_client(
+            url=inventory_url.URL + URL,
+            tempfile_extension=".exe")
+        WHERE Hash.SHA256 = ExpectedHash
+
+      # Check if the existing file in the binary file cache matches
+      # the hash.
+      - |
+        LET existing = SELECT FullPath, hash(path=FullPath) AS Hash,
+                    "Cached" AS DownloadStatus
+        FROM stat(filename=binpath.Path + "/" + basename(path=URL))
+        WHERE Hash.SHA256 = ExpectedHash
+
+      # Find the required_tool either if in the local cache or
+      # download it (and put it in the cache for next time).
+      - |
+        SELECT * from foreach(row=required_tool, query={
+          SELECT * FROM switch(a=existing, b=download)
+        })
