@@ -45,6 +45,8 @@ message Writeback {
     uint64 last_server_serial_number = 14 [(sem_type) = {
             description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
         }];
+
+    VQLEventTable event_queries = 1;
 }
 
 // Configuration for the windows installer.

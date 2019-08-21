@@ -153,9 +153,13 @@ func process_dns(ctx *C.int, buff *C.char, length C.int) {
 	if ctx == nil {
 		return
 	}
-	go_ctx := pointer.Restore(unsafe.Pointer(ctx)).(*eventContext)
-	go_buff := (*[1 << 30]byte)(unsafe.Pointer(buff))[:length]
-	go_ctx.ProcessEvent(go_buff)
+
+	restored_ctx := pointer.Restore(unsafe.Pointer(ctx))
+	if restored_ctx != nil {
+		go_ctx := restored_ctx.(*eventContext)
+		go_buff := (*[1 << 30]byte)(unsafe.Pointer(buff))[:length]
+		go_ctx.ProcessEvent(go_buff)
+	}
 }
 
 type DNSEventPluginArgs struct{}

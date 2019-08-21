@@ -62,12 +62,14 @@ func RunClient(config_path *string) {
 		exe,
 		config_obj.Client.ServerUrls,
 	)
-	if err != nil {
-		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
-	}
+	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
+
+	// Wait for all services to properly start before we begin the
+	// comms.
+	executor.StartServices(config_obj, manager.ClientId, exe)
 
 	go comm.Run(context.Background())
 
