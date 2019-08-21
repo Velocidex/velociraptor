@@ -28,9 +28,11 @@ package actions
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -49,6 +51,12 @@ type EventTable struct {
 	// This will be closed to signal we need to abort the current
 	// event queries.
 	Done chan bool
+	wg   sync.WaitGroup
+}
+
+func (self *EventTable) Close() {
+	close(self.Done)
+	self.wg.Wait()
 }
 
 func GlobalEventTableVersion() uint64 {
@@ -67,7 +75,7 @@ func update(
 
 	// Close the old table.
 	if GlobalEventTable.Done != nil {
-		close(GlobalEventTable.Done)
+		GlobalEventTable.Close()
 	}
 
 	// Make a new table.
@@ -91,7 +99,7 @@ func NewEventTable(
 type UpdateEventTable struct{}
 
 func (self *UpdateEventTable) Run(
-	config *config_proto.Config,
+	config_obj *config_proto.Config,
 	ctx context.Context,
 	msg *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) {
@@ -117,16 +125,15 @@ func (self *UpdateEventTable) Run(
 		cancel()
 	}()
 
-	logger := logging.GetLogger(config, &logging.ClientComponent)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
-	var wg sync.WaitGroup
-	wg.Add(len(table.Events))
+	table.wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
 		go func(event *actions_proto.VQLCollectorArgs) {
-			defer wg.Done()
+			defer table.wg.Done()
 
 			name := ""
 			for _, q := range event.Query {
@@ -137,18 +144,25 @@ func (self *UpdateEventTable) Run(
 
 			logger.Info("Starting %s", name)
 			action_obj.StartQuery(
-				config, new_ctx, responder, event)
+				config_obj, new_ctx, responder, event)
 
 			logger.Info("Finished %s", name)
 		}(event)
 	}
 
-	// Return an OK status. This is needed to make sure the
-	// request is de-queued.
-	responder.Return()
+	// Store the event table in the Writeback file.
+	config_obj.Writeback.EventQueries = arg
+	err = config.UpdateWriteback(config_obj)
+	if err != nil {
+		responder.RaiseError(fmt.Sprintf(
+			"Unable to write events to writeback: %v", err))
+	}
 
-	// Wait here for all queries to finish - this forces the
-	// output channel to be open and allows us to write results to
-	// the server.
-	wg.Wait()
+	// Return an OK status. This is needed to make sure the
+	// request is de-queued. We do not block here in order to
+	// allow the EventTable service to run this plugin directly
+	// *before* starting the communicator. By the time the
+	// communicator is started the GlobalEventTable() is at the
+	// correct version.
+	go responder.Return()
 }
