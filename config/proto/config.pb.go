@@ -956,6 +956,7 @@ type FrontendConfig struct {
 	DoNotCompressArtifacts bool          `protobuf:"varint,10,opt,name=do_not_compress_artifacts,json=doNotCompressArtifacts,proto3" json:"do_not_compress_artifacts,omitempty"`
 	MaxUploadSize          uint64        `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
 	DynDns                 *DynDNSConfig `protobuf:"bytes,12,opt,name=dyn_dns,json=dynDns,proto3" json:"dyn_dns,omitempty"`
+	ProxyHeader            string        `protobuf:"bytes,13,opt,name=proxy_header,json=proxyHeader,proto3" json:"proxy_header,omitempty"`
 	XXX_NoUnkeyedLiteral   struct{}      `json:"-"`
 	XXX_unrecognized       []byte        `json:"-"`
 	XXX_sizecache          int32         `json:"-"`
@@ -1061,6 +1062,13 @@ func (m *FrontendConfig) GetDynDns() *DynDNSConfig {
 		return m.DynDns
 	}
 	return nil
+}
+
+func (m *FrontendConfig) GetProxyHeader() string {
+	if m != nil {
+		return m.ProxyHeader
+	}
+	return ""
 }
 
 type DatastoreConfig struct {
