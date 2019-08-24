@@ -34,6 +34,7 @@ import (
 
 	"github.com/tink-ab/tempfile"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -264,6 +265,8 @@ func (self *_HttpPlugin) Call(
 		}
 
 		scope.Log("Fetching %v\n", arg.Url)
+
+		req.Header.Set("User-Agent", constants.USER_AGENT)
 
 		http_resp, err := client.Do(req)
 		if http_resp != nil {

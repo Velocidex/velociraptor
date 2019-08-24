@@ -203,10 +203,17 @@ func NewHTTPConnector(
 				}).DialContext,
 				Proxy:                 http.ProxyFromEnvironment,
 				MaxIdleConns:          100,
-				IdleConnTimeout:       300 * time.Second,
+				IdleConnTimeout:       time.Duration(max_poll*2) * time.Second,
 				TLSHandshakeTimeout:   100 * time.Second,
 				ExpectContinueTimeout: 10 * time.Second,
-				ResponseHeaderTimeout: 100 * time.Second,
+
+				// If there is a reverse proxy before
+				// the server it will not send the
+				// headers until the request is
+				// complete - this will cause the
+				// client to timeout.
+				//				ResponseHeaderTimeout: time.Duration(max_poll*2) * time.Second,
+				ResponseHeaderTimeout: 10 * time.Second,
 				TLSClientConfig:       tls_config,
 			},
 		},
@@ -225,9 +232,14 @@ func (self *HTTPConnector) Post(handler string, data []byte) (
 	*http.Response, error) {
 
 	reader := bytes.NewReader(data)
-	resp, err := self.client.Post(self.GetCurrentUrl()+handler,
-		"application/binary", reader)
+	req, err := http.NewRequest("POST", self.GetCurrentUrl()+handler, reader)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	req.Header.Set("User-Agent", constants.USER_AGENT)
+	req.Header.Set("Content-Type", "application/binary")
 
+	resp, err := self.client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -286,7 +298,15 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 	// Try to fetch the server pem.
 	url := self.urls[self.current_url_idx]
-	resp, err := self.client.Get(url + "server.pem")
+
+	req, err := http.NewRequest("GET", url+"server.pem", nil)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	req.Header.Set("User-Agent", constants.USER_AGENT)
+	req.Header.Set("Content-Type", "application/binary")
+
+	resp, err := self.client.Do(req)
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
 		return err

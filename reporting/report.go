@@ -129,6 +129,7 @@ func GenerateArtifactDescriptionReport(
 			return template_engine.Execute(report.Template)
 		}
 	}
+
 	return "", nil
 }
 

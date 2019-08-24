@@ -12,10 +12,12 @@ import (
 	"sync"
 	"text/template"
 
+	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
 	"github.com/microcosm-cc/bluemonday"
 
-	//	blackfriday "github.com/russross/blackfriday/v2"
+	chroma_html "github.com/alecthomas/chroma/formatters/html"
+	blackfriday "gopkg.in/russross/blackfriday.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/vfilter"
@@ -193,21 +195,20 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 
 	// We expect the template to be in markdown format, so now
 	// generate the HTML
-	/*
-			output := blackfriday.Run(
-				buffer.Bytes(),
-				blackfriday.WithRenderer(bfchroma.NewRenderer(
-					bfchroma.ChromaOptions(
-						chroma_html.ClassPrefix("chroma"),
-						chroma_html.WithClasses(),
-						chroma_html.WithLineNumbers()),
-					bfchroma.Style("github"),
-				)))
-		output_string := string(output)
-	*/
-	output_string := ""
+	output := blackfriday.Run(
+		buffer.Bytes(),
+		blackfriday.WithRenderer(bfchroma.NewRenderer(
+			bfchroma.ChromaOptions(
+				chroma_html.ClassPrefix("chroma"),
+				chroma_html.WithClasses(),
+				chroma_html.WithLineNumbers()),
+			bfchroma.Style("github"),
+		)))
+
+	output_string := string(output)
+
 	/* This is used to dump out the CSS to be included in
-	/* reporting.scss.
+	   reporting.scss.
 
 	formatter := chroma_html.New(
 		chroma_html.ClassPrefix("chroma"),

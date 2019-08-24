@@ -264,6 +264,7 @@ func StartTLSServer(
 		WriteTimeout: 900 * time.Second,
 		IdleTimeout:  15 * time.Second,
 		TLSConfig: &tls.Config{
+			MinVersion:     tls.VersionTLS12,
 			GetCertificate: certManager.GetCertificate,
 		},
 	}
