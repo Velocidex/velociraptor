@@ -11,6 +11,7 @@ environment:
 cache:
   - '%LocalAppData%\go-build'
   - '%GOPATH%/pkg/mod -> go.sum'
+  - '%LocalAppData%\node-modules -> gui/static/package.json'
 
 install:
 - cmd: |

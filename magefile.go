@@ -137,21 +137,17 @@ func Appveyor() error {
 		return err
 	}
 
-	err = sh.RunV("npm", "install")
+	err = sh.RunV("npm", "install", "-g")
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("npm", "install", "node-sass")
+	err = sh.RunV("gulp", "compile")
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("node", "node_modules/gulp/bin/gulp.js",
-		"compile")
-	if err != nil {
-		return err
-	}
+	os.Chdir(cwd)
 
 	return Windows()
 }
