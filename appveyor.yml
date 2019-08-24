@@ -11,7 +11,7 @@ environment:
 cache:
   - '%LocalAppData%\go-build'
   - '%GOPATH%/pkg/mod -> go.sum'
-  - '%LocalAppData%\node-modules -> gui/static/package.json'
+  - C:\Users\appveyor\AppData\Roaming\npm\node-modules\
 
 install:
 - cmd: |
@@ -25,6 +25,7 @@ install:
 - go mod download
 - go mod verify
 - ps: Install-Product node 11.14 x64
+- npm root -g
 
 build_script:
 - set GO111MODULE=on
