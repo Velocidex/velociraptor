@@ -30,6 +30,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -343,9 +344,9 @@ func control(server_obj *Server) http.Handler {
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}
-		message_info.RemoteAddr = req.RemoteAddr
+		message_info.RemoteAddr = utils.RemoteAddr(req, server_obj.config.Frontend.GetProxyHeader())
 		logger.Debug("Received a post of length %v from %v (%v)", len(body),
-			req.RemoteAddr, message_info.Source)
+			message_info.RemoteAddr, message_info.Source)
 
 		// Very few Unauthenticated client messages are valid
 		// - currently only enrolment requests.

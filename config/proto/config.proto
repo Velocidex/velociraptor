@@ -322,6 +322,10 @@ message FrontendConfig {
     DynDNSConfig dyn_dns = 12 [(sem_type) = {
             description: "If set we start the dyn dns service.",
         }];
+
+    string proxy_header = 13 [(sem_type) = {
+            description: "Header defined by the proxy containing the remote address",
+        }];
 }
 
 
