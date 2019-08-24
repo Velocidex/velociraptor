@@ -141,19 +141,12 @@ func Appveyor() error {
 	if err != nil {
 		return err
 	}
-
-	/*
-		err = sh.RunV("npm", "install", "-g", "gulp-cli")
-		if err != nil {
-			return err
-		}
-	*/
-	err = sh.RunV("npm", "link", "gulp")
+	err = sh.RunV("npm", "link")
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("C:\\Users\\appveyor\\AppData\\Roaming\\npm\\gulp", "compile")
+	err = sh.RunV("gulp", "compile")
 	if err != nil {
 		return err
 	}
