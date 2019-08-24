@@ -58,6 +58,8 @@ const (
 	// monitoring artifacts.
 	ServerMonitoringFlowURN = "/config/server_monitoring.json"
 	ClientMonitoringFlowURN = "/config/client_monitoring.json"
+
+	USER_AGENT = "Velociraptor - Dig Deeper!"
 )
 
 var (

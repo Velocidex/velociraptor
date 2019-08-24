@@ -15,11 +15,10 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package parsers
+package event_logs
 
 import (
 	"context"
-	"time"
 
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -106,8 +105,8 @@ func (self _WatchEvtxPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-		defer close(output_chan)
-
+		// Do not close output_chan - The event log service
+		// owns it and it will be closed by it.
 		arg := &_ParseEvtxPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -115,80 +114,16 @@ func (self _WatchEvtxPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
-		if err != nil {
-			scope.Log("watch_evtx: %v", err)
-			return
-		}
-		event_counts := make(map[string]uint64)
-
-		// Parse the files once to get the last event
-		// id. After this we will watch for new events added
-		// to the file.
+		// Register the output channel as a listener to the
+		// global event.
 		for _, filename := range arg.Filenames {
-			func() {
-				fd, err := accessor.Open(filename)
-				if err != nil {
-					return
-				}
-				defer fd.Close()
-
-				chunks, err := evtx.GetChunks(fd)
-				if err != nil {
-					return
-				}
-				last_event := uint64(0)
-				for _, c := range chunks {
-					if c.Header.LastEventRecID > last_event {
-						last_event = c.Header.LastEventRecID
-					}
-				}
-				event_counts[filename] = last_event
-			}()
+			GlobalEventLogService.Register(
+				filename, arg.Accessor,
+				ctx, scope, output_chan)
 		}
 
-		for {
-			for _, filename := range arg.Filenames {
-				func() {
-					fd, err := accessor.Open(filename)
-					if err != nil {
-						scope.Log("Unable to open file %s: %v",
-							filename, err)
-						return
-					}
-					defer fd.Close()
-
-					last_event := event_counts[filename]
-					chunks, err := evtx.GetChunks(fd)
-					if err != nil {
-						return
-					}
-
-					new_last_event := last_event
-					for _, c := range chunks {
-						if c.Header.LastEventRecID <= last_event {
-							continue
-						}
-
-						records, _ := c.Parse(int(last_event))
-						for _, record := range records {
-							if record.Header.RecordID > new_last_event {
-								new_last_event = record.Header.RecordID
-							}
-							event_map, ok := record.Event.(map[string]interface{})
-							if ok {
-								output_chan <- event_map["Event"]
-							}
-						}
-					}
-
-					event_counts[filename] = new_last_event
-				}()
-			}
-
-			time.Sleep(10 * time.Second)
-		}
-
+		// Wait until the query is complete.
+		<-ctx.Done()
 	}()
 
 	return output_chan
@@ -196,9 +131,8 @@ func (self _WatchEvtxPlugin) Call(
 
 func (self _WatchEvtxPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "watch_evtx",
-		Doc: "Watch an EVTX file and stream events from it. " +
-			"Note: This is an event plugin which does not complete.",
+		Name:    "watch_evtx",
+		Doc:     "Watch an EVTX file and stream events from it. ",
 		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
 	}
 }
