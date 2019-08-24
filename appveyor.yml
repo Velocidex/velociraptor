@@ -12,6 +12,7 @@ cache:
   - '%LocalAppData%\go-build'
   - '%GOPATH%/pkg/mod -> go.sum'
   - gui/static/node_modules
+  - gui/static/dist
 
 install:
 - cmd: |
