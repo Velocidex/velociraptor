@@ -203,17 +203,10 @@ func NewHTTPConnector(
 				}).DialContext,
 				Proxy:                 http.ProxyFromEnvironment,
 				MaxIdleConns:          100,
-				IdleConnTimeout:       time.Duration(max_poll*2) * time.Second,
+				IdleConnTimeout:       300 * time.Second,
 				TLSHandshakeTimeout:   100 * time.Second,
 				ExpectContinueTimeout: 10 * time.Second,
-
-				// If there is a reverse proxy before
-				// the server it will not send the
-				// headers until the request is
-				// complete - this will cause the
-				// client to timeout.
-				//				ResponseHeaderTimeout: time.Duration(max_poll*2) * time.Second,
-				ResponseHeaderTimeout: 10 * time.Second,
+				ResponseHeaderTimeout: 100 * time.Second,
 				TLSClientConfig:       tls_config,
 			},
 		},
