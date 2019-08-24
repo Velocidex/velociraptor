@@ -11,7 +11,7 @@ environment:
 cache:
   - '%LocalAppData%\go-build'
   - '%GOPATH%/pkg/mod -> go.sum'
-  - C:\Users\appveyor\AppData\Roaming\npm
+  - gui/static/node_modules
 
 install:
 - cmd: |

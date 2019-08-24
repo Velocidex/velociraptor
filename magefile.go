@@ -137,16 +137,12 @@ func Appveyor() error {
 		return err
 	}
 
-	err = sh.RunV("npm", "install", "-g")
-	if err != nil {
-		return err
-	}
-	err = sh.RunV("npm", "install", "gulp")
+	err = sh.RunV("npm", "install")
 	if err != nil {
 		return err
 	}
 
-	err = sh.RunV("gulp", "compile")
+	err = sh.RunV("node", "node_modules/gulp/bin/gulp.js", "compile")
 	if err != nil {
 		return err
 	}
