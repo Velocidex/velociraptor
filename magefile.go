@@ -126,19 +126,27 @@ func Dev() error {
 
 // Build step for Appveyor.
 func Appveyor() error {
-	/*
-		// Appveyor can cache the vendor directory in which case we do
-		// not need to run dep ensure at all. If the toml file is
-		// changed though it wont do it and we end up with an empty
-		// vendor directory.
-		files, err := ioutil.ReadDir("vendor")
-		fmt.Printf("Directory vendor: %v (%v files)\n", err, len(files))
-		if err != nil || len(files) == 0 {
-			sh.RunV("go", "get", "github.com/golang/dep")
-			sh.RunV("go", "get", "-u", "github.com/golang/dep/cmd/dep")
-			sh.RunV("dep", "ensure")
-		}
-	*/
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	defer os.Chdir(cwd)
+
+	err = os.Chdir("gui/static")
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("npm", "install")
+	if err != nil {
+		return err
+	}
+
+	err = sh.RunV("gulp", "compile")
+	if err != nil {
+		return err
+	}
+
 	return Windows()
 }
 
