@@ -15,13 +15,12 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package parsers
+package csv
 
 import (
 	"context"
 	"io"
 	"os"
-	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -117,7 +116,8 @@ func (self _WatchCSVPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-		defer close(output_chan)
+		// Do not close output_chan - The event log service
+		// owns it and it will be closed by it.
 
 		arg := &ParseCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -126,84 +126,17 @@ func (self _WatchCSVPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
-		if err != nil {
-			scope.Log("watch_evtx: %v", err)
-			return
-		}
-
-		// A map between file name and the last offset we read.
-		last_offset_map := make(map[string]int64)
-
-		// Parse the files once to get the last event
-		// id. After this we will watch for new events added
-		// to the file.
+		// Register the output channel as a listener to the
+		// global event.
 		for _, filename := range arg.Filenames {
-			func() {
-				fd, err := accessor.Open(filename)
-				if err != nil {
-					return
-				}
-				defer fd.Close()
-
-				// Skip all the rows until the end.
-				csv_reader := csv.NewReader(fd)
-				for {
-					_, err := csv_reader.ReadAny()
-					if err != nil {
-						return
-					}
-				}
-
-				last_offset_map[filename] = csv_reader.ByteOffset
-			}()
+			GlobalCSVService.Register(
+				filename, arg.Accessor,
+				ctx, scope, output_chan)
 		}
 
-		for {
-			for _, filename := range arg.Filenames {
-				func() {
-					fd, err := accessor.Open(filename)
-					if err != nil {
-						scope.Log("Unable to open file %s: %v",
-							filename, err)
-						return
-					}
-					defer fd.Close()
+		// Wait until the query is complete.
+		<-ctx.Done()
 
-					csv_reader := csv.NewReader(fd)
-					headers, err := csv_reader.Read()
-					if err != nil {
-						return
-					}
-
-					last_offset := last_offset_map[filename]
-
-					// Seek to the last place we were.
-					fd.Seek(last_offset, 0)
-
-					for {
-						row_data, err := csv_reader.ReadAny()
-						if err != nil {
-							return
-						}
-
-						row := vfilter.NewDict()
-						for idx, row_item := range row_data {
-							if idx > len(headers) {
-								break
-							}
-							row.Set(headers[idx], row_item)
-						}
-
-						output_chan <- row
-					}
-
-					last_offset_map[filename] = csv_reader.ByteOffset
-				}()
-			}
-
-			time.Sleep(10 * time.Second)
-		}
 	}()
 
 	return output_chan
