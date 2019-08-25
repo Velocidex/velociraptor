@@ -1,0 +1,40 @@
+SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')[
+ {
+  "System": {
+   "Channel": "Security",
+   "Computer": "TestComputer",
+   "Correlation": {},
+   "EventID": {
+    "Value": 1102
+   },
+   "EventRecordID": 33072,
+   "Execution": {
+    "ProcessID": 1188,
+    "ThreadID": 6576
+   },
+   "Keywords": 4620693217682128896,
+   "Level": 4,
+   "Opcode": 0,
+   "Provider": {
+    "Guid": "{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}",
+    "Name": "Microsoft-Windows-Eventlog"
+   },
+   "Security": {},
+   "Task": 104,
+   "TimeCreated": {
+    "SystemTime": 1549731924.6727583
+   },
+   "Version": 0
+  },
+  "UserData": {
+   "LogFileCleared": {
+    "SubjectDomainName": "TESTCOMPUTER",
+    "SubjectLogonId": 135562,
+    "SubjectUserName": "test",
+    "SubjectUserSid": "S-1-5-21-546003962-2713609280-610790815-1001",
+    "xmlns": "http://manifests.microsoft.com/win/2004/08/windows/eventlog"
+   }
+  },
+  "xmlns": "http://schemas.microsoft.com/win/2004/08/events/event"
+ }
+]
