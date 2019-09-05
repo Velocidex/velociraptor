@@ -9,7 +9,7 @@ var ERROR_EVENT_NAME = 'ServerError';
 
 
 /** @type {number} */
-let AUTO_REFRESH_INTERVAL_MS = 1500 * 1000;
+let AUTO_REFRESH_INTERVAL_MS = 5 * 1000;
 
 /**
  * Sets the delay between automatic refreshes of the flow overview.

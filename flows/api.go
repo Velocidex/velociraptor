@@ -18,15 +18,18 @@
 package flows
 
 import (
+	"fmt"
 	"path"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -102,14 +105,55 @@ func GetFlowDetails(
 		return nil, err
 	}
 
+	availableDownloads, _ := availableDownloadFiles(config_obj, client_id, flow_id)
 	return &api_proto.ApiFlow{
-		Urn:        *flow_urn,
-		ClientId:   client_id,
-		FlowId:     flow_id,
-		Name:       flow_obj.RunnerArgs.FlowName,
-		RunnerArgs: flow_obj.RunnerArgs,
-		Context:    flow_obj.FlowContext,
+		Urn:                *flow_urn,
+		ClientId:           client_id,
+		FlowId:             flow_id,
+		Name:               flow_obj.RunnerArgs.FlowName,
+		RunnerArgs:         flow_obj.RunnerArgs,
+		Context:            flow_obj.FlowContext,
+		AvailableDownloads: availableDownloads,
 	}, nil
+}
+
+func availableDownloadFiles(config_obj *config_proto.Config,
+	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
+
+	result := &api_proto.AvailableDownloads{}
+	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
+	download_path := path.Dir(download_file)
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	files, err := file_store_factory.ListDirectory(download_path)
+	if err != nil {
+		return nil, err
+	}
+
+	is_complete := func(name string) bool {
+		for _, item := range files {
+			if item.Name() == name+".lock" {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, item := range files {
+		if strings.HasSuffix(item.Name(), ".lock") {
+			continue
+		}
+
+		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
+			Name:     item.Name(),
+			Path:     path.Join(download_path, item.Name()),
+			Size:     uint64(item.Size()),
+			Date:     fmt.Sprintf("%v", item.ModTime()),
+			Complete: is_complete(item.Name()),
+		})
+	}
+
+	return result, nil
 }
 
 func CancelFlow(

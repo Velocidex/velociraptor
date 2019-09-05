@@ -67,10 +67,24 @@
             <dt>Download Results</dt>
             <dd>
               <button class="btn btn-default"
-                      ng-click="controller.downloadFile()">
-                Download
+                      ng-click="controller.prepareDownload()">
+                Prepare Download
               </button>
             </dd>
+
+            <dt>Available Downloads</dt>
+            <dd>
+              <table class="table table-stiped table-condensed table-hover table-bordered">
+                <tbody>
+                  <tr ng-repeat="item in flow.available_downloads.files">
+                    <td>
+                      <a href="{{item.path}}" ng-if="item.complete">{{item.name}}</a>
+                      <div ng-if="!item.complete">{{item.name}}</div>
+                    </td><td>{{item.size}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            <dd>
           </dl>
 
         </div>

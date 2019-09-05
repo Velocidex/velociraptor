@@ -17,6 +17,8 @@ parameters:
       Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe
       Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe
       WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc2.exe
+      Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe
+      Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe
 
 sources:
   - queries:

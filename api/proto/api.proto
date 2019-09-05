@@ -16,6 +16,7 @@ import "hunts.proto";
 import "flows.proto";
 import "users.proto";
 import "csv.proto";
+import "download.proto";
 
 package proto;
 
@@ -293,6 +294,14 @@ service API {
         returns (ListAvailableEventResultsResponse) {
         option (google.api.http) = {
             get: "/api/v1/ListAvailableEventResults",
+        };
+    }
+
+    // Schedule downloads.
+    rpc CreateDownloadFile(CreateDownloadRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateDownload",
+            body: "*",
         };
     }
 }

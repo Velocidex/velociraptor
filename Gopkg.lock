@@ -10,14 +10,6 @@
   version = "v0.41.0"
 
 [[projects]]
-  digest = "1:67d6d3a5c17d6ce84e52b6512e35bc02fb8980a98e912556f1797d040f19a65f"
-  name = "github.com/AlecAivazis/survey"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3db8b5dd7b2875d268abf7c1feb59bd929f6b838"
-  version = "v1.8.5"
-
-[[projects]]
   digest = "1:98f992abe855183c4f7c870db2d0538439e023bda12278e87e3e26183c9dd499"
   name = "github.com/Depado/bfchroma"
   packages = ["."]
@@ -864,9 +856,10 @@
   version = "v1.22.0"
 
 [[projects]]
-  digest = "1:22e087496b8ce34eec437be90164627a08ebee5c563be3f0d656fa3f7c2c1cd6"
+  digest = "1:5cbcd7b7842e62d419d8e6fdaef4f95785e248337a565c25cbae238a585ac4e2"
   name = "gopkg.in/AlecAivazis/survey.v1"
   packages = [
+    ".",
     "core",
     "terminal",
   ]
@@ -909,6 +902,14 @@
   pruneopts = "UT"
   revision = "1b8e36857caf4b1e6113699ffb38d0981fc7bdae"
   version = "v5.0.81"
+
+[[projects]]
+  digest = "1:2ee0f15eb0fb04f918db7c2dcf39745f40d69f798ef171610a730e8a56aaa4fd"
+  name = "gopkg.in/russross/blackfriday.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
+  version = "v2.0.1"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -989,7 +990,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/AlecAivazis/survey",
     "github.com/Depado/bfchroma",
     "github.com/Masterminds/sprig",
     "github.com/Showmax/go-fqdn",
@@ -1072,9 +1072,11 @@
     "google.golang.org/grpc/peer",
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/status",
+    "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
+    "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/go-pe",

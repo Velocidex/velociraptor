@@ -21,6 +21,9 @@ windows_race:
 xgo:
 	go run make.go -v xgo
 
+xgo-linux:
+	go run make.go -v xgolinux
+
 clean:
 	go run make.go -v clean
 

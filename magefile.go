@@ -60,6 +60,21 @@ func Xgo() error {
 		"./bin/")
 }
 
+func XgoLinux() error {
+	err := build_gui_files()
+	if err != nil {
+		return err
+	}
+
+	return sh.RunV(
+		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
+		"--targets", "linux/amd64",
+		"-tags", "release server_vql cgo",
+		"-go", "1.11",
+		"-ldflags=-s -w "+flags(),
+		"./bin/")
+}
+
 func WindowsRace() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
@@ -215,6 +230,7 @@ func Clean() error {
 }
 
 func build_gui_files() error {
+	return nil
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err

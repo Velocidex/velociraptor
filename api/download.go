@@ -127,6 +127,69 @@ func downloadFlowToZip(
 	return err
 }
 
+func createDownloadFile(config_obj *config_proto.Config,
+	flow_id string, client_id string) error {
+	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+	logger.WithFields(logrus.Fields{
+		"flow_id":       flow_id,
+		"client_id":     client_id,
+		"download_file": download_file,
+	}).Error("CreateDownload")
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.WriteFile(download_file)
+	if err != nil {
+		return err
+	}
+
+	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
+	if err != nil {
+		return err
+	}
+	lock_file.Close()
+
+	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
+	if err != nil {
+		return err
+	}
+
+	marshaler := &jsonpb.Marshaler{Indent: " "}
+	flow_details_json, err := marshaler.MarshalToString(flow_details)
+	if err != nil {
+		fd.Close()
+		return err
+	}
+
+	// Do these first to ensure errors are returned if the zip file
+	// is not writable.
+	zip_writer := zip.NewWriter(fd)
+	f, err := zip_writer.Create("FlowDetails")
+	if err != nil {
+		fd.Close()
+		return err
+	}
+
+	_, err = f.Write([]byte(flow_details_json))
+	if err != nil {
+		zip_writer.Close()
+		fd.Close()
+		return err
+	}
+
+	// Write the bulk of the data asyncronously.
+	go func() {
+		defer file_store_factory.Delete(download_file + ".lock")
+		defer fd.Close()
+		defer zip_writer.Close()
+
+		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
+	}()
+
+	return nil
+}
+
 // URL format: /api/v1/download/<client_id>/<flow_id>
 func flowResultDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {

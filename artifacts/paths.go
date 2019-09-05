@@ -130,6 +130,13 @@ func GetUploadsFile(client_id, flow_id string) string {
 		flow_id, "uploads")
 }
 
+// Get the file store path for place the download zip for the flow.
+func GetDownloadsFile(client_id, flow_id string) string {
+	return path.Join(
+		"downloads", client_id, flow_id,
+		"download.zip")
+}
+
 func GetArtifactSources(
 	config_obj *config_proto.Config,
 	artifact string) []string {
