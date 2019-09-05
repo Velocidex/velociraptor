@@ -28,6 +28,7 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -208,6 +209,17 @@ func CancelFlow(
 	}
 
 	err = SetAFF4FlowObject(config_obj, flow_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Queue a cancellation message to the client for this flow
+	// id.
+	err = QueueAndNotifyClient(
+		config_obj, client_id, *flow_urn,
+		"Cancel",
+		&crypto_proto.GrrMessage{SessionId: session_id},
+		0)
 	if err != nil {
 		return nil, err
 	}

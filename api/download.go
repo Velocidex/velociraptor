@@ -105,11 +105,6 @@ func downloadFlowToZip(
 		return nil
 	}
 
-	// FIXME: Backwards compatibility.
-	for _, upload_name := range flow_details.Context.UploadedFiles {
-		copier(upload_name)
-	}
-
 	// File uploads are stored in their own CSV file.
 	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id))
 	fd, err := file_store_factory.ReadFile(file_path)
