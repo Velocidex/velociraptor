@@ -8,6 +8,18 @@ import "google/protobuf/any.proto";
 package proto;
 
 
+message AvailableDownloadFile {
+    string name = 1;
+    string path = 5;
+    bool complete = 2;
+    uint64 size = 3;
+    string date = 4;
+}
+
+message AvailableDownloads {
+    repeated AvailableDownloadFile files = 1;
+}
+
 // Next id: 16
 message ApiFlow {
     // Enum values here correspond to Flow.State values.
@@ -70,6 +82,8 @@ message ApiFlow {
             description: "An error that happened while reading the flow. This is "
             "not an error while executing the flow but an internal data issue."
         }];
+
+    AvailableDownloads available_downloads = 16;
 }
 
 // Since Velociraptor processes the responses immediately they are not

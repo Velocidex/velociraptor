@@ -30,6 +30,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
