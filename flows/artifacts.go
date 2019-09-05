@@ -328,9 +328,18 @@ func appendDataToFile(
 	if file_buffer.Offset == 0 {
 		fd.Truncate(0)
 		flow_obj.FlowContext.TotalUploadedFiles += 1
+		flow_obj.FlowContext.TotalExpectedUploadedBytes += file_buffer.Size
 		flow_obj.FlowContext.UploadedFiles = append(
 			flow_obj.FlowContext.UploadedFiles,
-			file_path)
+			&flows_proto.UploadedFileInfo{
+				Name: file_path,
+				Size: file_buffer.Size,
+			})
+		flow_obj.dirty = true
+	}
+
+	if len(file_buffer.Data) > 0 {
+		flow_obj.FlowContext.TotalUploadedBytes += uint64(len(file_buffer.Data))
 		flow_obj.dirty = true
 	}
 
