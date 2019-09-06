@@ -28,7 +28,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/users"
 )
 
 var (
@@ -43,6 +43,8 @@ func checkUserCredentialsHandler(
 	if config_obj.GUI.GoogleOauthClientId != "" &&
 		config_obj.GUI.GoogleOauthClientSecret != "" {
 		return authenticateOAUTHCookie(config_obj, parent)
+	} else if SAMLEnabled(config_obj) {
+		return authenticateSAML(config_obj, parent)
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

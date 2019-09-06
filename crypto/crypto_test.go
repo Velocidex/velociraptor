@@ -169,7 +169,7 @@ func (self *TestSuite) TestEncryption() {
 func (self *TestSuite) TestClientIDFromPublicKey() {
 	t := self.T()
 
-	client_private_key, err := parseRsaPrivateKeyFromPemStr(
+	client_private_key, err := ParseRsaPrivateKeyFromPemStr(
 		[]byte(self.config_obj.Writeback.PrivateKey))
 	if err != nil {
 		t.Fatal(err)

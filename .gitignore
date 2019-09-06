@@ -9,3 +9,7 @@ emacs.desktop
 ab0x.go
 output/
 .velociraptor_history.json
+.idea/
+xml
+node_modules/
+package-lock.json

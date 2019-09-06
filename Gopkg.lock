@@ -10,22 +10,6 @@
   version = "v0.41.0"
 
 [[projects]]
-  digest = "1:67d6d3a5c17d6ce84e52b6512e35bc02fb8980a98e912556f1797d040f19a65f"
-  name = "github.com/AlecAivazis/survey"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "3db8b5dd7b2875d268abf7c1feb59bd929f6b838"
-  version = "v1.8.5"
-
-[[projects]]
-  digest = "1:98f992abe855183c4f7c870db2d0538439e023bda12278e87e3e26183c9dd499"
-  name = "github.com/Depado/bfchroma"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "b3ac81f5aa0e881a9e9ab1f7d4983c12a3a5d37f"
-  version = "v1.1.2"
-
-[[projects]]
   digest = "1:3b10c6fd33854dc41de2cf78b7bae105da94c2789b6fa5b9ac9e593ea43484ac"
   name = "github.com/Masterminds/goutils"
   packages = ["."]
@@ -98,44 +82,6 @@
   version = "v2.2.3"
 
 [[projects]]
-  digest = "1:c8ecb1984606eb58419ab440aff4ee5b7ce3b42a1677b5c7d32a3c6864f79e43"
-  name = "github.com/alecthomas/chroma"
-  packages = [
-    ".",
-    "formatters/html",
-    "lexers",
-    "lexers/a",
-    "lexers/b",
-    "lexers/c",
-    "lexers/d",
-    "lexers/e",
-    "lexers/f",
-    "lexers/g",
-    "lexers/h",
-    "lexers/i",
-    "lexers/internal",
-    "lexers/j",
-    "lexers/k",
-    "lexers/l",
-    "lexers/m",
-    "lexers/n",
-    "lexers/o",
-    "lexers/p",
-    "lexers/q",
-    "lexers/r",
-    "lexers/s",
-    "lexers/t",
-    "lexers/v",
-    "lexers/w",
-    "lexers/x",
-    "lexers/y",
-    "styles",
-  ]
-  pruneopts = "UT"
-  revision = "3020e2ea8c6b1a9c2336022d847c4392c3997f02"
-  version = "v0.4.0"
-
-[[projects]]
   digest = "1:13650593fa8a6211b2aa4f256ebb7d65defeaeac910fdb8a93f399cd78a69b17"
   name = "github.com/alecthomas/participle"
   packages = [
@@ -174,6 +120,14 @@
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
 
 [[projects]]
+  digest = "1:bd8bc15ce3a9929e2777651cbc271fca5561c0d5f42187edb4720e638d24662d"
+  name = "github.com/beevik/etree"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8aee6516be3b1163bb6450c35c50e4969e3a3aa8"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -206,12 +160,17 @@
   version = "v1.8.4"
 
 [[projects]]
-  branch = "master"
-  digest = "1:710109527a119c813d4fac773712dd92f449ed7c2f7b81f49822f94d290c8f72"
-  name = "github.com/danwakefield/fnmatch"
-  packages = ["."]
+  digest = "1:e610436a5d9b5d550079be96841856ba331afe4ae4c12e2e4bf1724d1edede86"
+  name = "github.com/crewjam/saml"
+  packages = [
+    ".",
+    "logger",
+    "samlsp",
+    "xmlenc",
+  ]
   pruneopts = "UT"
-  revision = "cbb64ac3d964b81592e64f957ad53df015803288"
+  revision = "6b5dd2d26974f7f5e59132ef5921fab7993794d7"
+  version = "0.2.0"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -236,17 +195,6 @@
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
-
-[[projects]]
-  digest = "1:72dc2b6056e7097f829260e4a2ff08d32fec6017df1982a66e110ab4128486f8"
-  name = "github.com/dlclark/regexp2"
-  packages = [
-    ".",
-    "syntax",
-  ]
-  pruneopts = "UT"
-  revision = "487489b64fb796de2e55f4e8a4ad1e145f80e957"
-  version = "v1.1.6"
 
 [[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
@@ -365,6 +313,14 @@
   pruneopts = "UT"
   revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:75ab90ae3f5d876167e60f493beadfe66f0ed861a710f283fb06c86437a09538"
+  name = "github.com/jonboulle/clockwork"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2eee05ed794112d45db504eb05aa693efd2b8b09"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -587,6 +543,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:0265b97d8e046a03e71e06e5082eb42178d21dedc8f8248fa41c2b9d2f1ac504"
+  name = "github.com/russellhaering/goxmldsig"
+  packages = [
+    ".",
+    "etreeutils",
+    "types",
+  ]
+  pruneopts = "UT"
+  revision = "7acd5e4a6ef74fe1b082c20f119556adf70c3944"
+
+[[projects]]
+  branch = "master"
   digest = "1:03bf1ca37b9e2bcbe6e2a4d6ed7b6f024d2c9a206ba73e2702f33401c2a98f14"
   name = "github.com/sebdah/goldie"
   packages = ["."]
@@ -624,14 +592,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
-
-[[projects]]
-  digest = "1:9421f6e9e28ef86933e824b5caff441366f2b69bb281085b9dca40e1f27a1602"
-  name = "github.com/shurcooL/sanitized_anchor_name"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615"
-  version = "v1.0.0"
 
 [[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
@@ -683,7 +643,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4caed71649b3a89e4ee856e51b5e4b6cb425d2d534056a3935321616ad878f2c"
+  digest = "1:3cad7ad2674494f7d33179510c482e62d1512986cc82305ae79ac5bf3be8ed49"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -697,6 +657,7 @@
     "openpgp/packet",
     "openpgp/s2k",
     "pbkdf2",
+    "ripemd160",
     "scrypt",
     "ssh/terminal",
   ]
@@ -864,9 +825,10 @@
   version = "v1.22.0"
 
 [[projects]]
-  digest = "1:22e087496b8ce34eec437be90164627a08ebee5c563be3f0d656fa3f7c2c1cd6"
+  digest = "1:5cbcd7b7842e62d419d8e6fdaef4f95785e248337a565c25cbae238a585ac4e2"
   name = "gopkg.in/AlecAivazis/survey.v1"
   packages = [
+    ".",
     "core",
     "terminal",
   ]
@@ -989,8 +951,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/AlecAivazis/survey",
-    "github.com/Depado/bfchroma",
     "github.com/Masterminds/sprig",
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
@@ -998,11 +958,11 @@
     "github.com/Velocidex/cgofuse/fuse",
     "github.com/Velocidex/go-yara",
     "github.com/Velocidex/yaml",
-    "github.com/alecthomas/chroma/formatters/html",
     "github.com/alecthomas/participle",
     "github.com/alecthomas/participle/lexer",
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
+    "github.com/crewjam/saml/samlsp",
     "github.com/davecgh/go-spew/spew",
     "github.com/daviddengcn/go-colortext",
     "github.com/dgrijalva/jwt-go",
@@ -1072,6 +1032,7 @@
     "google.golang.org/grpc/peer",
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/status",
+    "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
