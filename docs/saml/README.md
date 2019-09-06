@@ -17,13 +17,6 @@ There are four configuration values that need to be set in order to activate the
 There is also an optional parameter `saml_user_attribute` to set which will be used as a user identificator. If it is not set, it will search for
 the `name` attribute in the SAML response from the identity provider.
 
-## Current shortcomings
-
-The SAML feature is still a work in progress and there are several things that are missing in the implementation:
-- linking of the Velociraptor local storage user with the SAML provided user
-- there are no roles implemented
-  - anyone who will successfully authenticate to velociraptor will have the same role
-
 ## Setting up testing environment
 
 ### Setting up Simple SAML
