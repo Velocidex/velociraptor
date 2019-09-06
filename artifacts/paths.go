@@ -134,7 +134,7 @@ func GetUploadsFile(client_id, flow_id string) string {
 func GetDownloadsFile(client_id, flow_id string) string {
 	return path.Join(
 		"downloads", client_id, flow_id,
-		"download.zip")
+		flow_id+".zip")
 }
 
 func GetArtifactSources(

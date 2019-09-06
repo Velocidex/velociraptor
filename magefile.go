@@ -230,7 +230,6 @@ func Clean() error {
 }
 
 func build_gui_files() error {
-	return nil
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
