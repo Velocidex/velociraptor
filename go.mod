@@ -1,19 +1,20 @@
 module www.velocidex.com/golang/velociraptor
 
-// replace gopkg.in/russross/blackfriday.v2 => github.com/russross/blackfriday/v2 v2.0.1
-
 require (
-	cloud.google.com/go v0.44.3 // indirect
+	cloud.google.com/go v0.41.0 // indirect
+	github.com/Depado/bfchroma v1.1.2
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
-	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d
+	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
+	github.com/UnnoTed/fileb0x v1.1.3 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
+	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
@@ -56,8 +57,7 @@ require (
 	github.com/mattn/go-colorable v0.1.2 // indirect
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-runewidth v0.0.0-20181218000649-703b5e6b11ae // indirect
-	github.com/mattn/go-sqlite3 v1.11.0
+	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/olekukonko/tablewriter v0.0.1
@@ -87,6 +87,7 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/olivere/elastic.v5 v5.0.81
+	gopkg.in/russross/blackfriday.v2 v2.0.1
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
 	www.velocidex.com/golang/go-ntfs v0.0.0-20190701133924-d467c5e7dca0
 	www.velocidex.com/golang/go-pe v0.1.0
@@ -96,5 +97,9 @@ require (
 	www.velocidex.com/golang/vfilter v0.0.0-20190819135421-24eb23ea486a
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
+
+// replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+
+replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1
 
 go 1.13

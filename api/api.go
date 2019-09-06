@@ -625,6 +625,15 @@ func (self *ApiServer) SetClientMonitoringState(
 	return in, err
 }
 
+func (self *ApiServer) CreateDownloadFile(ctx context.Context,
+	in *api_proto.CreateDownloadRequest) (*empty.Empty, error) {
+
+	err := createDownloadFile(self.config, in.FlowId, in.ClientId)
+
+	result := &empty.Empty{}
+	return result, err
+}
+
 func StartServer(config_obj *config_proto.Config, server_obj *server.Server) error {
 	bind_addr := config_obj.API.BindAddress
 	switch config_obj.API.BindScheme {

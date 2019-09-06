@@ -1,3 +1,7 @@
+Client:
+  writeback_linux: /tmp/foo.yaml
+  writeback_windows: c:/tmp/foo.yaml
+
 Datastore:
   filestore_directory: ./artifacts/testdata/server
   location: ./artifacts/testdata/server

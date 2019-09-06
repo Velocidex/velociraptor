@@ -113,17 +113,17 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 			continue
 		}
 
-		// Do not feed messages to flows that are terminated,
-		// just drop these on the floor.
-		if cached_flow.FlowContext != nil &&
-			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
-			continue
-		}
-
 		// Handle log messages automatically so flows do not
 		// need to all remember to do this.
 		if message.RequestId == constants.LOG_SINK {
 			cached_flow.LogMessage(self.config, message)
+			continue
+		}
+
+		// Do not feed messages to flows that are terminated,
+		// just drop these on the floor.
+		if cached_flow.FlowContext != nil &&
+			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
 			continue
 		}
 
@@ -204,17 +204,18 @@ func (self *FlowRunner) flushUploadedFiles(cached_flow *AFF4FlowObject) {
 
 	headers_written := length > 0
 	if !headers_written {
-		w.Write([]string{"timestamp", "vfs_path"})
+		w.Write([]string{"timestamp", "vfs_path", "expected_size"})
 	}
 
 	for _, row := range cached_flow.FlowContext.UploadedFiles {
 		w.Write([]string{
 			time.Now().UTC().String(),
-			row})
+			row.Name,
+			fmt.Sprintf("%v", row.Size)})
 	}
 
 	// Clear the logs from the flow object.
-	cached_flow.FlowContext.UploadedFiles = []string{}
+	cached_flow.FlowContext.UploadedFiles = nil
 }
 
 // Flush all the cached flows back to the DB.

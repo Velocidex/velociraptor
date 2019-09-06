@@ -10,6 +10,14 @@
   version = "v0.41.0"
 
 [[projects]]
+  digest = "1:98f992abe855183c4f7c870db2d0538439e023bda12278e87e3e26183c9dd499"
+  name = "github.com/Depado/bfchroma"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b3ac81f5aa0e881a9e9ab1f7d4983c12a3a5d37f"
+  version = "v1.1.2"
+
+[[projects]]
   digest = "1:3b10c6fd33854dc41de2cf78b7bae105da94c2789b6fa5b9ac9e593ea43484ac"
   name = "github.com/Masterminds/goutils"
   packages = ["."]
@@ -80,6 +88,44 @@
   pruneopts = "UT"
   revision = "841476fecdbcbc185db25640c78c17eea8db9fc3"
   version = "v2.2.3"
+
+[[projects]]
+  digest = "1:c8ecb1984606eb58419ab440aff4ee5b7ce3b42a1677b5c7d32a3c6864f79e43"
+  name = "github.com/alecthomas/chroma"
+  packages = [
+    ".",
+    "formatters/html",
+    "lexers",
+    "lexers/a",
+    "lexers/b",
+    "lexers/c",
+    "lexers/d",
+    "lexers/e",
+    "lexers/f",
+    "lexers/g",
+    "lexers/h",
+    "lexers/i",
+    "lexers/internal",
+    "lexers/j",
+    "lexers/k",
+    "lexers/l",
+    "lexers/m",
+    "lexers/n",
+    "lexers/o",
+    "lexers/p",
+    "lexers/q",
+    "lexers/r",
+    "lexers/s",
+    "lexers/t",
+    "lexers/v",
+    "lexers/w",
+    "lexers/x",
+    "lexers/y",
+    "styles",
+  ]
+  pruneopts = "UT"
+  revision = "3020e2ea8c6b1a9c2336022d847c4392c3997f02"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:13650593fa8a6211b2aa4f256ebb7d65defeaeac910fdb8a93f399cd78a69b17"
@@ -173,6 +219,14 @@
   version = "0.2.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:710109527a119c813d4fac773712dd92f449ed7c2f7b81f49822f94d290c8f72"
+  name = "github.com/danwakefield/fnmatch"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cbb64ac3d964b81592e64f957ad53df015803288"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -195,6 +249,17 @@
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
+
+[[projects]]
+  digest = "1:26d73f0911e537e89d04011f7a65a5cd2d28113d551d4366480b4706b2833e3a"
+  name = "github.com/dlclark/regexp2"
+  packages = [
+    ".",
+    "syntax",
+  ]
+  pruneopts = "UT"
+  revision = "92c702aa5812963ef9193a9624191932d44073d7"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
@@ -594,6 +659,14 @@
   revision = "bb4de0191aa41b5507caa14b0650cdbddcd9280b"
 
 [[projects]]
+  digest = "1:9421f6e9e28ef86933e824b5caff441366f2b69bb281085b9dca40e1f27a1602"
+  name = "github.com/shurcooL/sanitized_anchor_name"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7bfe4c7ecddb3666a94b053b422cdd8f5aaa3615"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:04457f9f6f3ffc5fea48e71d62f2ca256637dee0a04d710288e27e05c8b41976"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
@@ -873,6 +946,14 @@
   version = "v5.0.81"
 
 [[projects]]
+  digest = "1:2ee0f15eb0fb04f918db7c2dcf39745f40d69f798ef171610a730e8a56aaa4fd"
+  name = "gopkg.in/russross/blackfriday.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d3b5b032dc8e8927d31a5071b56e14c89f045135"
+  version = "v2.0.1"
+
+[[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -951,6 +1032,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Depado/bfchroma",
     "github.com/Masterminds/sprig",
     "github.com/Showmax/go-fqdn",
     "github.com/StackExchange/wmi",
@@ -958,6 +1040,7 @@
     "github.com/Velocidex/cgofuse/fuse",
     "github.com/Velocidex/go-yara",
     "github.com/Velocidex/yaml",
+    "github.com/alecthomas/chroma/formatters/html",
     "github.com/alecthomas/participle",
     "github.com/alecthomas/participle/lexer",
     "github.com/c-bata/go-prompt",
@@ -1036,6 +1119,7 @@
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
+    "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
     "www.velocidex.com/golang/go-ntfs",
     "www.velocidex.com/golang/go-pe",

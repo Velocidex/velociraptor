@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.3.2"
+	VERSION                    = "0.3.3"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -58,6 +58,8 @@ const (
 	// monitoring artifacts.
 	ServerMonitoringFlowURN = "/config/server_monitoring.json"
 	ClientMonitoringFlowURN = "/config/client_monitoring.json"
+
+	USER_AGENT = "Velociraptor - Dig Deeper!"
 )
 
 var (

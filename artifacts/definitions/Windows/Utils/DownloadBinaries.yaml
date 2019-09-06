@@ -1,0 +1,40 @@
+name: Windows.Utils.DownloadBinaries
+description: |
+  This server side artifact downloads the external binary blobs we
+  require into the server's public directory. We also update the
+  inventory and the hashes.
+
+  You need to run this artifact at least once after installation to
+  populate the third party binary store. Many client side artifacts
+  depend on this.
+
+type: SERVER
+
+parameters:
+  - name: binaryList
+    default: |
+      Tool,Type,URL
+      Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe
+      Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe
+      WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc2.exe
+      Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe
+      Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe
+
+sources:
+  - queries:
+      - LET binpath <= SELECT server_config.Frontend.public_path AS Path FROM scope()
+      - LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
+      - LET download = SELECT Tool, Type,
+            Content AS FullPath,
+            hash(path=Content) as Hash,
+            copy(filename=Content, dest=binpath.Path + "/" + basename(path=URL)),
+            URL
+        FROM http_client(url=URL, tempfile_extension=".exe")
+
+      # Write the inventory file.
+      - SELECT * FROM write_csv(
+          filename=binpath.Path + "/" + "inventory.csv",
+          query={
+             SELECT Tool, Type, basename(path=URL) AS URL, Hash.SHA256 AS ExpectedHash
+             FROM foreach(row=spec, query=download)
+          })

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/AlecAivazis/survey.v1"
 	"github.com/Velocidex/yaml"
@@ -243,6 +244,12 @@ func getFileStoreLocation(config_obj *config_proto.Config) error {
 	}
 
 	config_obj.Datastore.FilestoreDirectory = config_obj.Datastore.Location
+
+
+	// Put the public directory inside the file store.
+	config_obj.Frontend.PublicPath = filepath.Join(config_obj.Datastore.Location,
+		"public")
+
 	return nil
 }
 

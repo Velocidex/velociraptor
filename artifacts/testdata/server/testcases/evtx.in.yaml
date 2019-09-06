@@ -1,0 +1,2 @@
+Queries:
+  - SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')

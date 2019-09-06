@@ -47,6 +47,28 @@ FlowOverviewController.prototype.downloadFile = function() {
     );
 };
 
+
+FlowOverviewController.prototype.prepareDownload = function() {
+  // Sanitize filename for download.
+  var flow = this.scope_["flow"];
+  var url = 'v1/CreateDownload';
+  var params = {
+    flow_id: flow['flow_id'],
+    client_id: flow['client_id'],
+  };
+  this.grrApiService_.post(url, params).then(
+        function success() {}.bind(this),
+        function failure(response) {
+            if (angular.isUndefined(response.status)) {
+                this.rootScope_.$broadcast(
+                    ERROR_EVENT_NAME, {
+                        message: 'Couldn\'t download file.'
+                    });
+            }
+        }.bind(this)
+    );
+};
+
 /**
  * Directive for displaying log records of a flow with a given URN.
  *

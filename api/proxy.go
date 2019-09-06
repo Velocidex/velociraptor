@@ -66,7 +66,15 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 					r.URL.Scheme = target.Scheme
 					r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
 					r.Host = target.Host
-					r.Header.Del("Authorization")
+
+					// If we require auth we do
+					// not pass the auth header to
+					// the target of the
+					// proxy. Otherwise we leave
+					// authentication to it.
+					if reverse_proxy_config.RequireAuth {
+						r.Header.Del("Authorization")
+					}
 
 					httputil.NewSingleHostReverseProxy(target).ServeHTTP(w, r)
 				}))
@@ -103,6 +111,11 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 		config_obj, vfsFileDownloadHandler(config_obj)))
 	mux.Handle("/api/v1/DownloadVFSFolder", checkUserCredentialsHandler(
 		config_obj, vfsFolderDownloadHandler(config_obj)))
+
+	mux.Handle("/downloads/", checkUserCredentialsHandler(
+		config_obj, http.FileServer(http.Dir(
+			config_obj.Datastore.Location,
+		))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)

@@ -61,18 +61,37 @@
               {{ flow.context.artifacts_with_results || 0 }}
             </dd>
 
+            <dt>Uploaded Bytes</dt>
+            <dd>
+              {{ flow.context.total_uploaded_bytes || 0 }} / {{ flow.context.total_expected_uploaded_bytes || 0 }}
+            </dd>
+
             <dt>Files uploaded</dt>
             <dd> {{ flow.context.uploaded_files.length || flow.context.total_uploaded_files || 0 }} </dd>
 
             <dt>Download Results</dt>
             <dd>
               <button class="btn btn-default"
-                      ng-click="controller.downloadFile()">
-                Download
+                      ng-click="controller.prepareDownload()">
+                Prepare Download
               </button>
             </dd>
-          </dl>
 
+            <dt>Available Downloads</dt>
+            <dd>
+              <table class="table table-stiped table-condensed table-hover table-bordered">
+                <tbody>
+                  <tr ng-repeat="item in flow.available_downloads.files">
+                    <td>
+                      <a href="{{item.path}}" ng-if="item.complete">{{item.name}}</a>
+                      <div ng-if="!item.complete">{{item.name}}</div>
+                    </td><td>{{item.size}} Bytes</td>
+                    <td>{{item.date}}</td>
+                  </tr>
+                </tbody>
+              </table>
+            <dd>
+          </dl>
         </div>
       </div>
     </div>

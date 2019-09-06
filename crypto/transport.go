@@ -175,6 +175,7 @@ type CryptoManager struct {
 	source string
 
 	public_key_resolver publicKeyResolver
+	ClientId            string
 
 	// Cache output cipher sessions for each destination. Sending
 	// to the same destination will reuse the same cipher object
@@ -384,6 +385,7 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 
 	return &CryptoManager{
 		config:              config_obj,
+		ClientId:            client_id,
 		private_key:         private_key,
 		source:              client_id,
 		public_key_resolver: NewInMemoryPublicKeyResolver(),

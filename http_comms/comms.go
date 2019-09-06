@@ -225,9 +225,14 @@ func (self *HTTPConnector) Post(handler string, data []byte) (
 	*http.Response, error) {
 
 	reader := bytes.NewReader(data)
-	resp, err := self.client.Post(self.GetCurrentUrl()+handler,
-		"application/binary", reader)
+	req, err := http.NewRequest("POST", self.GetCurrentUrl()+handler, reader)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	req.Header.Set("User-Agent", constants.USER_AGENT)
+	req.Header.Set("Content-Type", "application/binary")
 
+	resp, err := self.client.Do(req)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -286,7 +291,15 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 	// Try to fetch the server pem.
 	url := self.urls[self.current_url_idx]
-	resp, err := self.client.Get(url + "server.pem")
+
+	req, err := http.NewRequest("GET", url+"server.pem", nil)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	req.Header.Set("User-Agent", constants.USER_AGENT)
+	req.Header.Set("Content-Type", "application/binary")
+
+	resp, err := self.client.Do(req)
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
 		return err

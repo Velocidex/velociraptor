@@ -15,13 +15,14 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package parsers
+package csv
 
 import (
 	"context"
 	"io"
-	"time"
+	"os"
 
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -115,7 +116,8 @@ func (self _WatchCSVPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-		defer close(output_chan)
+		// Do not close output_chan - The event log service
+		// owns it and it will be closed by it.
 
 		arg := &ParseCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -124,84 +126,17 @@ func (self _WatchCSVPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
-		if err != nil {
-			scope.Log("watch_evtx: %v", err)
-			return
-		}
-
-		// A map between file name and the last offset we read.
-		last_offset_map := make(map[string]int64)
-
-		// Parse the files once to get the last event
-		// id. After this we will watch for new events added
-		// to the file.
+		// Register the output channel as a listener to the
+		// global event.
 		for _, filename := range arg.Filenames {
-			func() {
-				fd, err := accessor.Open(filename)
-				if err != nil {
-					return
-				}
-				defer fd.Close()
-
-				// Skip all the rows until the end.
-				csv_reader := csv.NewReader(fd)
-				for {
-					_, err := csv_reader.ReadAny()
-					if err != nil {
-						return
-					}
-				}
-
-				last_offset_map[filename] = csv_reader.ByteOffset
-			}()
+			GlobalCSVService.Register(
+				filename, arg.Accessor,
+				ctx, scope, output_chan)
 		}
 
-		for {
-			for _, filename := range arg.Filenames {
-				func() {
-					fd, err := accessor.Open(filename)
-					if err != nil {
-						scope.Log("Unable to open file %s: %v",
-							filename, err)
-						return
-					}
-					defer fd.Close()
+		// Wait until the query is complete.
+		<-ctx.Done()
 
-					csv_reader := csv.NewReader(fd)
-					headers, err := csv_reader.Read()
-					if err != nil {
-						return
-					}
-
-					last_offset := last_offset_map[filename]
-
-					// Seek to the last place we were.
-					fd.Seek(last_offset, 0)
-
-					for {
-						row_data, err := csv_reader.ReadAny()
-						if err != nil {
-							return
-						}
-
-						row := vfilter.NewDict()
-						for idx, row_item := range row_data {
-							if idx > len(headers) {
-								break
-							}
-							row.Set(headers[idx], row_item)
-						}
-
-						output_chan <- row
-					}
-
-					last_offset_map[filename] = csv_reader.ByteOffset
-				}()
-			}
-
-			time.Sleep(10 * time.Second)
-		}
 	}()
 
 	return output_chan
@@ -216,7 +151,98 @@ func (self _WatchCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 	}
 }
 
+type WriteCSVPluginArgs struct {
+	Filename string              `vfilter:"required,field=filename,doc=CSV files to open"`
+	Query    vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
+}
+
+type WriteCSVPlugin struct{}
+
+func (self WriteCSVPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		// Check the config if we are allowed to execve at all.
+		scope_config, pres := scope.Resolve("config")
+		if pres {
+			config_obj, ok := scope_config.(*config_proto.ClientConfig)
+			if ok && config_obj.PreventExecve {
+				scope.Log("write_csv: Not allowed to write files by configuration.")
+				return
+			}
+		}
+
+		arg := &WriteCSVPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("write_csv: %s", err.Error())
+			return
+		}
+
+		file, err := os.OpenFile(arg.Filename, os.O_RDWR|os.O_CREATE, 0700)
+		if err != nil {
+			scope.Log("write_csv: Unable to open file %s: %s",
+				arg.Filename, err.Error())
+			return
+		}
+		defer file.Close()
+
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
+
+		columns := []string{}
+		for row := range arg.Query.Eval(ctx, scope) {
+			if len(columns) == 0 {
+				columns = scope.GetMembers(row)
+				if len(columns) > 0 {
+					file.Truncate(0)
+					err := writer.Write(columns)
+					if err != nil {
+						scope.Log("write_csv: %s", err.Error())
+						return
+					}
+				}
+			}
+
+			new_row := []interface{}{}
+			for _, column := range columns {
+				item, pres := scope.Associative(row, column)
+				if !pres {
+					item = vfilter.Null{}
+				}
+
+				new_row = append(new_row, item)
+			}
+
+			err := writer.WriteAny(new_row)
+			if err != nil {
+				scope.Log("write_csv: %s", err.Error())
+				return
+			}
+
+			output_chan <- row
+		}
+
+	}()
+
+	return output_chan
+}
+
+func (self WriteCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "write_csv",
+		Doc:     "Write a query into a CSV file.",
+		ArgType: type_map.AddType(scope, &WriteCSVPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&ParseCSVPlugin{})
 	vql_subsystem.RegisterPlugin(&_WatchCSVPlugin{})
+	vql_subsystem.RegisterPlugin(&WriteCSVPlugin{})
 }

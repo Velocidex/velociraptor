@@ -1,5 +1,3 @@
-// +build windows
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -17,56 +15,44 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
-// VQL plugins handy for registry parsing.
-package windows
+package functions
 
 import (
 	"context"
-	"os"
 
-	"golang.org/x/sys/windows/registry"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter"
 )
 
-type _ExpandPathArgs struct {
-	Path string `vfilter:"required,field=path,doc=A path with environment escapes"`
+type LogFunctionArgs struct {
+	Message string `vfilter:"required,field=message,doc=Message to log"`
 }
 
-type _ExpandPath struct{}
+type LogFunction struct{}
 
-func (self _ExpandPath) Call(
-	ctx context.Context,
+func (self *LogFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	arg := &_ExpandPathArgs{}
+	arg := &LogFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("expand: %s", err.Error())
-		return vfilter.Null{}
+		scope.Log("log: %s", err.Error())
+		return false
 	}
 
-	// Support both go style expandsions and windows style
-	// expansions.
-	path := os.ExpandEnv(arg.Path)
-	expanded_path, err := registry.ExpandString(path)
-	if err != nil {
-		scope.Log("expand: %v", err)
-		return vfilter.Null{}
-	}
+	scope.Log(arg.Message)
 
-	return expanded_path
+	return vfilter.Null{}
 }
 
-func (self _ExpandPath) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self LogFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "expand",
-		Doc:     "Expand the path using the environment.",
-		ArgType: type_map.AddType(scope, &_ExpandPathArgs{}),
+		Name:    "log",
+		Doc:     "Log the message.",
+		ArgType: type_map.AddType(scope, &LogFunctionArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterFunction(&_ExpandPath{})
+	vql_subsystem.RegisterFunction(&LogFunction{})
 }
