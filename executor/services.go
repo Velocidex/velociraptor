@@ -7,6 +7,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -24,7 +25,7 @@ func StartServices(
 			client_id),
 		RequestId: 1,
 		Name:      "UpdateEventTable",
-		Source:    "VelociraptorServer",
+		Source:    constants.FRONTEND_NAME,
 		AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
 	}
 
