@@ -78,6 +78,10 @@ func (self *Obfuscator) Decrypt(config_obj *config_proto.Config, name string) (
 		return "", err
 	}
 
+	if len(cipher_text) < 16 {
+		return "", errors.New("Cipher error")
+	}
+
 	if self.key == nil {
 		err := self.generateCrypter(config_obj)
 		if err != nil {
@@ -90,6 +94,13 @@ func (self *Obfuscator) Decrypt(config_obj *config_proto.Config, name string) (
 	mode.CryptBlocks(plain_text, cipher_text)
 
 	padding := int(plain_text[len(plain_text)-1])
+
+	// Invalid padding will occur when the crypto key has changed
+	// between the obfuscation and deobfuscation.
+	if padding < 0 || padding > 16 {
+		return "", errors.New("Padding error")
+	}
+
 	for i := len(plain_text) - padding; i < len(plain_text); i++ {
 		if int(plain_text[i]) != padding {
 			return "", errors.New("Padding error")
