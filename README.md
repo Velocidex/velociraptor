@@ -5,7 +5,7 @@ using Velocidex Query Language (VQL) queries.
 
 To learn more about Velociraptor, read the documentation on:
 
-   https://docs.velociraptor.velocidex.com
+   https://www.velocidex.com/docs/
 
 ## Quick start
 
