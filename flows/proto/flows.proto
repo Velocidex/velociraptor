@@ -6,7 +6,6 @@ import "google/protobuf/any.proto";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
-import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
@@ -188,26 +187,6 @@ message FlowDescriptor {
 
     bool internal = 8 [(sem_type) = {
             description: "Internal flows are not visible in the GUI."
-        }];
-}
-
-
-// Interrogate flow discovers information about the client.
-message VInterrogateArgs {
-    option (flow_metadata) = {
-            category: "Velociraptor";
-    };
-
-    // If set a light weight version of the flow is run.
-    bool lightweight = 1 [(sem_type) = {
-            description: "Collect only low resource information from the client.",
-            default: "true",
-        }];
-
-    // Additional VQL queries to run.
-    repeated VQLRequest queries = 2 [(sem_type) = {
-            description: "Additional custom VQL queries to run during interrogation.",
-            default: '[{"Name": "Hostname", "VQL": "select Fqdn from info()"}]',
         }];
 }
 

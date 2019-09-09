@@ -2,6 +2,8 @@ name: Server.Monitor.VeloMetrics
 description: |
   Get Velociraptor server metrics.
 
+type: SERVER
+
 parameters:
   - name: MetricsURL
     default: http://localhost:8003/metrics

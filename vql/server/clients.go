@@ -112,6 +112,7 @@ func (self ClientsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 
 type FlowsPluginArgs struct {
 	ClientId []string `vfilter:"required,field=client_id"`
+	FlowId   string   `vfilter:"optional,field=flow_id"`
 }
 
 type FlowsPlugin struct{}
@@ -145,7 +146,34 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
+		sender := func(urn string, client_id string) {
+			flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+			if err != nil {
+				return
+			}
+
+			if flow_obj.RunnerArgs != nil {
+				item := &api_proto.ApiFlow{
+					Urn:        urn,
+					ClientId:   client_id,
+					FlowId:     path.Base(urn),
+					Name:       flow_obj.RunnerArgs.FlowName,
+					RunnerArgs: flow_obj.RunnerArgs,
+					Context:    flow_obj.FlowContext,
+				}
+
+				output_chan <- item
+			}
+		}
+
 		for _, client_id := range arg.ClientId {
+			if arg.FlowId != "" {
+				urn := urns.BuildURN(
+					"clients", client_id, "flows", arg.FlowId)
+				sender(urn, client_id)
+				continue
+			}
+
 			flow_urns, err := db.ListChildren(
 				config_obj, urns.BuildURN(
 					"clients", client_id, "flows"),
@@ -155,23 +183,7 @@ func (self FlowsPlugin) Call(
 			}
 
 			for _, urn := range flow_urns {
-				flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
-				if err != nil {
-					continue
-				}
-
-				if flow_obj.RunnerArgs != nil {
-					item := &api_proto.ApiFlow{
-						Urn:        urn,
-						ClientId:   client_id,
-						FlowId:     path.Base(urn),
-						Name:       flow_obj.RunnerArgs.FlowName,
-						RunnerArgs: flow_obj.RunnerArgs,
-						Context:    flow_obj.FlowContext,
-					}
-
-					output_chan <- item
-				}
+				sender(urn, client_id)
 				vfilter.ChargeOp(scope)
 			}
 		}

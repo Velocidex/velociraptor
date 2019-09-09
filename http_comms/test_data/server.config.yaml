@@ -182,7 +182,6 @@ Datastore:
   implementation: FileBaseDataStore
   location: /tmp
   filestore_directory: /tmp
-Flows: {}
 Writeback: {}
 Mail: {}
 Logging:

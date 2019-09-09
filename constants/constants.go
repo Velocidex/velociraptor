@@ -60,6 +60,9 @@ const (
 	ClientMonitoringFlowURN = "/config/client_monitoring.json"
 
 	USER_AGENT = "Velociraptor - Dig Deeper!"
+
+	// Internal artifact names.
+	CLIENT_INFO_ARTIFACT = "Generic.Client.Info"
 )
 
 var (

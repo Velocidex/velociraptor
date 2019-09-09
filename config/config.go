@@ -128,7 +128,6 @@ func GetDefaultConfig() *config_proto.Config {
 			Location:           "/tmp/velociraptor",
 			FilestoreDirectory: "/tmp/velociraptor",
 		},
-		Flows:     &config_proto.FlowsConfig{},
 		Writeback: &config_proto.Writeback{},
 		Mail:      &config_proto.MailConfig{},
 		Logging:   &config_proto.LoggingConfig{},
@@ -141,6 +140,10 @@ func GetDefaultConfig() *config_proto.Config {
 		// Use SSL by default - there is no real reason not to.
 		DisableSelfSignedSsl: false,
 	}
+
+	// The client's version needs to keep in sync with the
+	// server's version.
+	result.Client.Version = result.Version
 
 	// On windows we need slightly different defaults.
 	if runtime.GOOS == "windows" {
@@ -191,7 +194,10 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 				"provide the --config flag.")
 	}
 
+	// Override version information from the config.
 	embedded_config.Version = default_config.Version
+	embedded_config.Client.Version = default_config.Version
+
 	return embedded_config, nil
 }
 

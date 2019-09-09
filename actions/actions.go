@@ -35,10 +35,7 @@ type ClientAction interface {
 
 func GetClientActionsMap() map[string]ClientAction {
 	result := make(map[string]ClientAction)
-	result["GetClientInfo"] = &GetClientInfo{}
 	result["VQLClientAction"] = &VQLClientAction{}
-	result["GetHostname"] = &GetHostname{}
-	result["GetPlatformInfo"] = &GetPlatformInfo{}
 	result["UpdateForeman"] = &UpdateForeman{}
 	result["UpdateEventTable"] = &UpdateEventTable{}
 

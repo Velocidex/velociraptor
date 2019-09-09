@@ -6,13 +6,6 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
 
-// Velociraptor implements a slightly different file store than
-// GRR. While GRR does block level de-duplication, velociraptor does
-// not (only file level deduplication). In practice block level
-// de-duplication does not save a lot but makes storage and
-// performance a lot more complex. Velociraptor only uses file level
-// deduplication.
-
 // The Velociraptor client sends back the buffer and the filename and
 // the server saves the entire file directly in the file storage
 // filesystem. This allows easy recovery as well as data expiration

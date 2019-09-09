@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -52,9 +53,15 @@ func enroll(server *Server, message *crypto_proto.GrrMessage) error {
 
 		flow_runner_args := &flows_proto.FlowRunnerArgs{
 			ClientId: client_id,
-			FlowName: "VInterrogate",
+			FlowName: "ArtifactCollector",
 		}
-		flow_args, err := ptypes.MarshalAny(&flows_proto.VInterrogateArgs{})
+
+		flow_args, err := ptypes.MarshalAny(&flows_proto.ArtifactCollectorArgs{
+			Artifacts: &flows_proto.Artifacts{
+				Names: []string{constants.CLIENT_INFO_ARTIFACT},
+			},
+			AllowCustomOverrides: true,
+		})
 		if err != nil {
 			return err
 		}
