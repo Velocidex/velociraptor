@@ -128,7 +128,6 @@ func GetDefaultConfig() *config_proto.Config {
 			Location:           "/tmp/velociraptor",
 			FilestoreDirectory: "/tmp/velociraptor",
 		},
-		Flows:     &config_proto.FlowsConfig{},
 		Writeback: &config_proto.Writeback{},
 		Mail:      &config_proto.MailConfig{},
 		Logging:   &config_proto.LoggingConfig{},

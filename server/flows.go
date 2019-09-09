@@ -60,6 +60,7 @@ func enroll(server *Server, message *crypto_proto.GrrMessage) error {
 			Artifacts: &flows_proto.Artifacts{
 				Names: []string{constants.CLIENT_INFO_ARTIFACT},
 			},
+			AllowCustomOverrides: true,
 		})
 		if err != nil {
 			return err
