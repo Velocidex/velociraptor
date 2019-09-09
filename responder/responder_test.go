@@ -18,8 +18,9 @@
 package responder_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -39,7 +40,7 @@ func GetResponsesFromChannel(c chan *crypto_proto.GrrMessage) []*crypto_proto.Gr
 
 func TestResponder(t *testing.T) {
 	args := &crypto_proto.GrrMessage{}
-	msg := &actions_proto.ClientInformation{
+	msg := &actions_proto.ClientInfo{
 		ClientName: "My name",
 	}
 	c := make(chan *crypto_proto.GrrMessage)

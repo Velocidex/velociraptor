@@ -142,6 +142,10 @@ func GetDefaultConfig() *config_proto.Config {
 		DisableSelfSignedSsl: false,
 	}
 
+	// The client's version needs to keep in sync with the
+	// server's version.
+	result.Client.Version = result.Version
+
 	// On windows we need slightly different defaults.
 	if runtime.GOOS == "windows" {
 		result.Datastore.Location = "C:\\Windows\\Temp"
@@ -191,7 +195,10 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 				"provide the --config flag.")
 	}
 
+	// Override version information from the config.
 	embedded_config.Version = default_config.Version
+	embedded_config.Client.Version = default_config.Version
+
 	return embedded_config, nil
 }
 

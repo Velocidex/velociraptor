@@ -33,6 +33,7 @@ type ServicesManager struct {
 	server_monitoring *EventTable
 	server_artifacts  *ServerArtifactsRunner
 	dyn_dns           *DynDNSService
+	interrogation     *InterrogationService
 }
 
 func (self *ServicesManager) Close() {
@@ -43,6 +44,7 @@ func (self *ServicesManager) Close() {
 	self.server_monitoring.Close()
 	self.server_artifacts.Close()
 	self.dyn_dns.Close()
+	self.interrogation.Close()
 }
 
 // Start all the server services.
@@ -97,6 +99,9 @@ func StartServices(
 		return nil, err
 	}
 	result.dyn_dns = dyndns
+
+	interrogation := startInterrogationService(config_obj)
+	result.interrogation = interrogation
 
 	return result, nil
 }

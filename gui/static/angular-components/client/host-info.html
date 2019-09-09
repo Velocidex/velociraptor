@@ -1,4 +1,5 @@
-<div ng-if="controller.client">
+<div ng-if="controller.client"
+     class="full-width-height">
   <!-- Toolbar -->
   <div class="client-info">
     <button class="btn btn-default"
@@ -29,13 +30,15 @@
         <input type="radio" name="show-client-details"> VQL Drilldown
       </label>
     </div>
-    <div class="clearfix"></div>
+  </div>
+  <div class="clearfix"></div>
 
-    <!-- Client Details -->
+  <!-- Client Details -->
+  <div ng-if="!controller.showDetails">
     <div class="card panel">
       <h5 class="card-header">{$ controller.client.os_info.fqdn $}</h5>
       <div class="card-body">
-        <div class="client-details" ng-if="!controller.showDetails"
+        <div class="client-details"
              grr-force-refresh refresh-trigger="controller.client">
 
           <dl class="dl-horizontal dl-flow">
@@ -80,16 +83,19 @@
 
           </dl>
         </div>
-        <!-- Shows the full view on the client with all properties and in full details -->
-        <div class="client-details"
-             ng-if="controller.showDetails"
-             grr-force-refresh refresh-trigger="controller.client">
-          <div ng-repeat="item in controller.client.info">
-            <grr-vql value="item">
-            </grr-vql>
-          </div>
-        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Shows Generic.Client.Info report -->
+  <div class="client-details dashboard"
+       ng-if="controller.showDetails"
+       class="dashboard"
+       grr-force-refresh
+       refresh-trigger="controller.client.last_interrogate_flow_id">
+
+    <grr-report-viewer
+      params="controller.report_params"/>
+
   </div>
 </div>

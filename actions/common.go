@@ -27,23 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
-type GetClientInfo struct{}
-
-func (self *GetClientInfo) Run(
-	config *config_proto.Config,
-	ctx context.Context,
-	args *crypto_proto.GrrMessage,
-	output chan<- *crypto_proto.GrrMessage) {
-	responder := responder.NewResponder(args, output)
-	info := &actions_proto.ClientInformation{
-		ClientName:    config.Version.Name,
-		ClientVersion: config.Version.Version,
-		Labels:        config.Client.Labels,
-	}
-	responder.AddResponse(info)
-	responder.Return()
-}
-
 type UpdateForeman struct{}
 
 func (self *UpdateForeman) Run(

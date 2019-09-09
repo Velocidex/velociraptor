@@ -64,7 +64,9 @@ const HostInfoController = function(
 
   // TODO(user): use grrApiService.poll for polling.
   this.scope_.$on('$destroy',
-      this.stopMonitorInterrogateOperation_.bind(this));
+                  this.stopMonitorInterrogateOperation_.bind(this));
+
+  this.report_params = {};
 };
 
 
@@ -78,23 +80,6 @@ const HostInfoController = function(
 HostInfoController.prototype.onClientIdChange_ = function(clientId) {
   if (angular.isDefined(clientId)) {
     this.clientId = clientId;
-    this.fetchClientDetails_();
-  }
-};
-
-/**
- * Handles changes to the client version.
- *
- * @param {?number} newValue
- * @private
- */
-HostInfoController.prototype.onClientVersionChange_ = function(newValue) {
-  if (angular.isUndefined(newValue)) {
-    return;
-  }
-
-  if (angular.isUndefined(this.client) ||
-      this.client['age'] !== newValue) {
     this.fetchClientDetails_();
   }
 };
@@ -120,16 +105,14 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
     }
 
     this.client = response.data;
-  }.bind(this));
-};
+    this.report_params = {
+      artifact: 'Custom.Generic.Client.Info',
+      client_id: this.client.client_id,
+      flowId: this.client.last_interrogate_flow_id,
+      type: 'CLIENT'
+    };
 
-/**
- * Requests a client approval.
- *
- * @export
- */
-HostInfoController.prototype.requestApproval = function() {
-//  this.grrAclDialogService_.openRequestClientApprovalDialog(this.clientId);
+  }.bind(this));
 };
 
 /**
@@ -139,9 +122,16 @@ HostInfoController.prototype.requestApproval = function() {
  */
 HostInfoController.prototype.interrogate = function() {
   var url = '/v1/LaunchFlow';
-  var params ={'client_id': this.clientId,
-               'flow_name': 'VInterrogate',
-               'args': {'@type': 'type.googleapis.com/proto.VInterrogateArgs'}};
+  var params ={
+    'client_id': this.clientId,
+    'flow_name': 'ArtifactCollector',
+    'args': {
+      '@type': 'type.googleapis.com/proto.ArtifactCollectorArgs',
+      'artifacts': {
+        names: ['Generic.Client.Info'],
+      },
+      allow_custom_overrides: true,
+    }};
 
   this.grrApiService_.post(url, params).then(
       function success(response) {
