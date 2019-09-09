@@ -125,4 +125,4 @@ File issues on https://gitlab.com/velocidex/velociraptor
 
 Read more about Velociraptor on our blog:
 
-https://docs.velociraptor.velocidex.com
+https://www.velocidex.com/docs/
