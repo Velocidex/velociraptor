@@ -144,6 +144,7 @@ message Hunt {
         PAUSED = 1 [(description) = "Hunt will not schedule new clients but can be started."];
         RUNNING = 2 [(description) = "Hunt is running and ready."];
         STOPPED = 3 [(description) = "Hunt has stopped."];
+        ARCHIVED = 4 [(description) = "Hunt has been archived."];
     };
 
     State state = 8 [(sem_type) = {
@@ -154,6 +155,7 @@ message Hunt {
 message ListHuntsRequest {
     uint64 offset = 1;
     uint64 count = 2;
+    bool include_archived = 3;
 }
 
 message ListHuntsResponse {

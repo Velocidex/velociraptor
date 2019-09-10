@@ -361,6 +361,38 @@ InfiniteTableController.prototype.refreshData_ = function() {
  * @private
  */
 InfiniteTableController.prototype.onAutoRefreshDataFetched_ = function(newItems) {
+  var in_items = function(item) {
+    for (var i=0; i<newItems.length; i++) {
+      if (newItems[i][InfiniteTableController.UNIQUE_HASH_NAME] ==
+          item[InfiniteTableController.ROW_HASH_NAME]) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // First remove all stale entries.
+  for (var k in this.elementScopes_) {
+    var item = this.elementScopes_[k];
+    if (!in_items(item)) {
+      var startComment = item[0];
+      var endComment = item[1];
+      var scope = item[2];
+
+      scope.$destroy();
+
+      // Remove elements between startComment and endComment.
+      var toRemove = [];
+      for (var e = startComment.nextSibling; e !== endComment; e = e.nextSibling) {
+        toRemove.push(e);
+      }
+      $(toRemove).remove();
+
+      delete this.elementScopes_[k];
+    };
+  }
+
+
   for (var i = newItems.items.length - 1; i >= 0; --i) {
     var newItem = newItems.items[i];
     var key = newItem[InfiniteTableController.UNIQUE_KEY_NAME];

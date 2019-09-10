@@ -86,6 +86,21 @@ ClientFlowsListController.prototype.cancelButtonClicked = function() {
 };
 
 /**
+ * Handles clicks on 'Delete Flow' button.
+ *
+ * @export
+ */
+ClientFlowsListController.prototype.deleteButtonClicked = function() {
+    this.grrApiService_.post('/v1/ArchiveFlow', {
+        client_id: this.scope_['clientId'],
+        flow_id: this.scope_['selectedFlowId'],
+    }).then(function() {
+        this.triggerUpdate();
+        this.scope_['selectedFlowId'] = undefined;
+    }.bind(this));
+};
+
+/**
  * Shows a 'New Hunt' dialog prefilled with the data of the currently selected
  * flow.
  *
@@ -198,9 +213,10 @@ ClientFlowsListController.prototype.newArtifactCollection = function() {
 exports.ClientFlowsListDirective = function() {
   return {
     scope: {
-        clientId: '=',
-        selectedFlowId: '=?',
-        triggerUpdate: '=?',
+      clientId: '=',
+      selectedFlowId: '=?',
+      selectedFlowState: '=?',
+      triggerUpdate: '=?',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/client-flows-list.html',
