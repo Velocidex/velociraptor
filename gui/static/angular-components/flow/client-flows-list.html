@@ -6,10 +6,17 @@
         <i class="fa fa-plus"></i>
       </button>
 
-      <button title="Cancel Artifact Collection" class="btn btn-default" name="cancel_flow"
-              ng-disabled="!selectedFlowId"
-              ng-click="controller.cancelButtonClicked()">
+      <button title="Delete Artifact Collection" class="btn btn-default"
+              name="delete_flow"
+              ng-disabled="selectedFlowState == 'RUNNING'"
+              ng-click="controller.deleteButtonClicked()">
         <i class="fa fa-trash"></i>
+      </button>
+
+      <button title="Cancel Artifact Collection" class="btn btn-default" name="cancel_flow"
+              ng-disabled="selectedFlowState != 'RUNNING'"
+              ng-click="controller.cancelButtonClicked()">
+        <i class="fa fa-stop"></i>
       </button>
 
       <button class="btn btn-default" name="copy_flow"
@@ -30,6 +37,7 @@
 <div class="fill-parent-with-toolbar">
   <grr-flows-list flows-url="controller.flowsUrl"
                   selected-flow-id="selectedFlowId"
+                  selected-flow-state="selectedFlowState"
                   trigger-update="controller.triggerUpdate">
   </grr-flows-list>
 </div>

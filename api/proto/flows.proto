@@ -106,6 +106,7 @@ message ApiFlowRequest {
     string flow_id = 2;
     uint64 offset = 3;
     uint64 count = 4;
+    bool include_archived = 5;
 }
 
 message ApiFlowResponse {

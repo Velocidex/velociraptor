@@ -92,6 +92,42 @@ func (self *ApiServer) CancelFlow(
 	return result, nil
 }
 
+func (self *ApiServer) ArchiveFlow(
+	ctx context.Context,
+	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
+	result := &api_proto.StartFlowResponse{}
+	user := GetGRPCUserInfo(ctx).Name
+
+	// Empty users are called internally.
+	if user != "" {
+		// If user is not found then reject it.
+		user_record, err := users.GetUser(self.config, user)
+		if err != nil {
+			return nil, err
+		}
+
+		if user_record.ReadOnly {
+			return nil, errors.New("User is not allowed to launch flows.")
+		}
+	}
+
+	result, err := flows.ArchiveFlow(self.config, in.ClientId, in.FlowId, user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Log this event as and Audit event.
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    user,
+			"client":  in.ClientId,
+			"flow_id": in.FlowId,
+			"details": fmt.Sprintf("%v", in),
+		}).Info("ArchiveFlow")
+
+	return result, nil
+}
+
 func (self *ApiServer) GetReport(
 	ctx context.Context,
 	in *api_proto.GetReportRequest) (*api_proto.GetReportResponse, error) {
@@ -217,7 +253,7 @@ func (self *ApiServer) ModifyHunt(
 			"details": fmt.Sprintf("%v", in),
 		}).Info("ModifyHunt")
 
-	err := flows.ModifyHunt(self.config, in)
+	err := flows.ModifyHunt(self.config, in, in.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -240,6 +276,10 @@ func (self *ApiServer) ListHunts(
 func (self *ApiServer) GetHunt(
 	ctx context.Context,
 	in *api_proto.GetHuntRequest) (*api_proto.Hunt, error) {
+	if in.HuntId == "" {
+		return &api_proto.Hunt{}, nil
+	}
+
 	result, err := flows.GetHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -372,7 +412,8 @@ func (self *ApiServer) DescribeTypes(
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
-	return flows.GetFlows(self.config, in.ClientId, in.Offset, in.Count)
+	return flows.GetFlows(self.config, in.ClientId,
+		in.IncludeArchived, in.Offset, in.Count)
 }
 
 func (self *ApiServer) GetFlowDetails(

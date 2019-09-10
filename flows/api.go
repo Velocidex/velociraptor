@@ -18,9 +18,11 @@
 package flows
 
 import (
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
@@ -35,11 +37,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func GetFlows(
 	config_obj *config_proto.Config,
-	client_id string,
+	client_id string, include_archived bool,
 	offset uint64, length uint64) (*api_proto.ApiFlowResponse, error) {
 
 	result := &api_proto.ApiFlowResponse{}
@@ -63,6 +66,11 @@ func GetFlows(
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).
 				Error("", err)
+			continue
+		}
+
+		if !include_archived && flow_obj.FlowContext != nil &&
+			flow_obj.FlowContext.State == flows_proto.FlowContext_ARCHIVED {
 			continue
 		}
 
@@ -220,6 +228,61 @@ func CancelFlow(
 		"Cancel",
 		&crypto_proto.GrrMessage{SessionId: session_id},
 		0)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api_proto.StartFlowResponse{
+		FlowId: flow_id,
+	}, nil
+}
+
+func ArchiveFlow(
+	config_obj *config_proto.Config,
+	client_id string, flow_id string, username string) (
+	*api_proto.StartFlowResponse, error) {
+	if flow_id == "" || client_id == "" {
+		return &api_proto.StartFlowResponse{}, nil
+	}
+
+	flow_urn, err := ValidateFlowId(client_id, flow_id)
+	if err != nil {
+		return nil, err
+	}
+
+	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
+	if err != nil {
+		return nil, err
+	}
+
+	if flow_obj.FlowContext != nil {
+		if flow_obj.FlowContext.State != flows_proto.FlowContext_TERMINATED &&
+			flow_obj.FlowContext.State != flows_proto.FlowContext_ERROR {
+			return nil, errors.New("Flow must be stopped before it can be archived.")
+		}
+
+		flow_obj.FlowContext.State = flows_proto.FlowContext_ARCHIVED
+		flow_obj.FlowContext.Status = "Archived by " + username
+		flow_obj.FlowContext.Backtrace = ""
+		flow_obj.dirty = true
+	}
+
+	// Keep track of archived flows so they can be purged later.
+	row := vfilter.NewDict().
+		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Flow", flow_obj)
+	serialized, err := json.Marshal([]vfilter.Row{row})
+	if err == nil {
+		gJournalWriter.Channel <- &Event{
+			Config:    config_obj,
+			ClientId:  client_id,
+			QueryName: "System.Flow.Archive",
+			Response:  string(serialized),
+			Columns:   []string{"Timestamp", "Flow"},
+		}
+	}
+
+	err = SetAFF4FlowObject(config_obj, flow_obj)
 	if err != nil {
 		return nil, err
 	}

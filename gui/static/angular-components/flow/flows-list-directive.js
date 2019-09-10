@@ -113,6 +113,7 @@ FlowsListController.prototype.transformItems = function(items) {
  */
 FlowsListController.prototype.selectItem = function(item) {
   this.selectedFlowId = item['flow_id'];
+  this.scope_['selectedFlowState'] = item['context']['state'];
 };
 
 /**
@@ -132,10 +133,11 @@ FlowsListController.prototype.triggerUpdate = function() {
 exports.FlowsListDirective = function() {
     return {
         scope: {
-            flowsUrl: '=',
-            selectedFlowId: '=?',
-            triggerUpdate: '=?',
-            clientId: '=',
+          flowsUrl: '=',
+          selectedFlowId: '=?',
+          selectedFlowState: '=?',
+          triggerUpdate: '=?',
+          clientId: '=',
         },
         restrict: 'E',
         templateUrl: '/static/angular-components/flow/flows-list.html',

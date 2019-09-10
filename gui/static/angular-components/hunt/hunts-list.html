@@ -21,6 +21,13 @@
                 ng-click="controller.stopHunt()">
           <i class="fa fa-stop"></i>
         </button>
+
+        <button class="btn btn-default" name="ArchiveHunt"
+                title="Delete Hunt"
+                ng-disabled="!controller.selectedHunt || controller.selectedHunt.state == 'RUNNING'"
+                ng-click="controller.deleteHunt()">
+          <i class="fa fa-trash"></i>
+        </button>
       </div>
     </li>
   </ul>
@@ -60,7 +67,7 @@
           ng-class="{'row-selected': item.hunt_id == selectedHuntId}"
           >
 
-        <td><grr-hunt-status-icon state="::controller.huntState(item)" /></td>
+        <td><grr-hunt-status-icon state="controller.huntState(item)" /></td>
         <td>{$ ::item.hunt_id $}</td>
         <td>{$ ::item.hunt_description $}</td>
         <td><grr-timestamp value="::item.create_time" /></td>

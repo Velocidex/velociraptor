@@ -267,10 +267,16 @@ HuntsListController.prototype.deleteHunt = function() {
   var modalPromise = this.grrDialogService_.openConfirmation(
       'Delete this hunt?',
       'Are you sure you want to delete this hunt?',
-      function() {
-        var promise = this.grrApiService_.delete(this.buildHuntUrl_());
-        return this.wrapApiPromise_(promise, 'Hunt deleted successfully!');
-      }.bind(this));
+    function() {
+      var selectedHuntId = this.scope_['selectedHuntId'];
+      this.scope_['selectedHuntId'] = "";
+
+      var promise = this.grrApiService_.post(
+        'v1/ModifyHunt', {state: 'ARCHIVED', hunt_id: selectedHuntId});
+
+
+      return this.wrapApiPromise_(promise, 'Hunt archived successfully!');
+    }.bind(this));
 
   // TODO(user): there's no need to trigger update on dismiss.
   // Doing so only to maintain compatibility with legacy GRR code.

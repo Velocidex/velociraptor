@@ -76,6 +76,7 @@ message FlowContext {
         RUNNING = 1;
         TERMINATED = 2;
         ERROR = 3;   // Flows which raise are marked as having an error.
+        ARCHIVED = 4;
     };
 
     State state = 14;
