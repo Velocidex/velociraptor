@@ -77,13 +77,3 @@ This worked for me, but of course I don't know what exactly you're doing so mile
 The notes were copied from the following [link](https://github.com/crewjam/saml/issues/5#issuecomment-501328253). 
 With this setup we've observed that the `saml_user_attribute` should be set to ` http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn`.
 
-## Other
-
-We've observed and issue when building a release with go 1.12. The error that is output by go build is
-
-```
-../api/saml.go:69:29: samlMiddleware.GetAuthorizationToken undefined (type *samlsp.Middleware has no field or method GetAuthorizationToken)
-../api/saml.go:105:17: samlMiddleware.RequireAccountHandler undefined (type *samlsp.Middleware has no field or method RequireAccountHandler)
-```
-
-Which was not observed when building a release with go 1.13.
