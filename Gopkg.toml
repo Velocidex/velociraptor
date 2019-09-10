@@ -39,3 +39,7 @@
 [[constraint]]
   name = "github.com/prometheus/client_golang"
   version = "0.9.2"
+
+[[constraint]]
+  name = "github.com/crewjam/saml"
+  revision = "344d075952c9343809f57f4e465504dd5e3068a4"

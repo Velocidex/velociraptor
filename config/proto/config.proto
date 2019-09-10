@@ -251,6 +251,26 @@ message GUIConfig {
     repeated GUILink links = 9 [(sem_type) = {
             description: "Additional links to present in the GUI."
         }];
+
+    string saml_certificate = 12 [(sem_type) = {
+            description: "SAML certificate."
+        }];
+
+    string saml_private_key = 13 [(sem_type) = {
+            description: "SAML private key."
+        }];
+
+    string saml_idp_metadata_url = 14 [(sem_type) = {
+            description: "SAML identity provider metadata URL."
+        }];
+
+    string saml_root_url = 15 [(sem_type) = {
+            description: "SAML root URL."
+        }];
+
+    string saml_user_attribute = 16 [(sem_type) = {
+            description: "SAML attribute containing value for user identification."
+        }];
 }
 
 message CAConfig {
@@ -409,7 +429,7 @@ message Config {
 
     APIConfig API = 2 [(sem_type) = {
             description: "Configuration for gRPC API endpoint."
-    }];
+        }];
 
     GUIConfig GUI = 3;
 

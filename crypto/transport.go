@@ -325,7 +325,7 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 
 func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []byte) (
 	*CryptoManager, error) {
-	private_key, err := parseRsaPrivateKeyFromPemStr(pem_str)
+	private_key, err := ParseRsaPrivateKeyFromPemStr(pem_str)
 	if err != nil {
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, er
 		return nil, err
 	}
 
-	private_key, err := parseRsaPrivateKeyFromPemStr([]byte(
+	private_key, err := ParseRsaPrivateKeyFromPemStr([]byte(
 		config_obj.Frontend.PrivateKey))
 	if err != nil {
 		return nil, err
@@ -368,7 +368,7 @@ func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, er
 
 func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_pem []byte) (
 	*CryptoManager, error) {
-	private_key, err := parseRsaPrivateKeyFromPemStr(client_private_key_pem)
+	private_key, err := ParseRsaPrivateKeyFromPemStr(client_private_key_pem)
 	if err != nil {
 		return nil, err
 	}

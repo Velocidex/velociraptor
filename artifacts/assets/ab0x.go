@@ -488,217 +488,28 @@ func Init() {
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Triage/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/EventLogs/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Triage/Collection/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Packs/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Demo/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/NTUser/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/Sysinternals/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Attack/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Persistence/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Events/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Memory/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Network/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Applications/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Applications/Chrome/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Forensics/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Utils/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Sys/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Analysis/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/System/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Search/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Triage/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Triage/Collectors/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/PsexecService/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/Service/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/Thumbdrives/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Forensic/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Forensic/Carving/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Applications/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Applications/Office/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Client/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Demo/Plugins/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
@@ -733,49 +544,7 @@ func Init() {
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Reporting/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Reporting/Hunts/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Demo/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Demo/Plugins/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Network/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
   err = FS.Mkdir(CTX, "artifacts/definitions/Linux/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Linux/Ssh/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
@@ -831,21 +600,14 @@ func Init() {
   
 
   
+  err = FS.Mkdir(CTX, "artifacts/definitions/Linux/Ssh/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
   err = FS.Mkdir(CTX, "artifacts/definitions/Server/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Monitor/", 0777)
-  if err != nil && err != os.ErrExist {
-    panic(err)
-  }
-  
-
-  
-  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Powershell/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
@@ -866,7 +628,28 @@ func Init() {
   
 
   
+  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Monitoring/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Powershell/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
   err = FS.Mkdir(CTX, "artifacts/definitions/Server/Hunts/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Monitor/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
@@ -887,14 +670,21 @@ func Init() {
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Monitoring/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Information/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Server/Information/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Reporting/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Reporting/Hunts/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
@@ -915,14 +705,224 @@ func Init() {
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Triage/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Network/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }
   
 
   
-  err = FS.Mkdir(CTX, "artifacts/definitions/Triage/Collection/", 0777)
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Persistence/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/Service/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/PsexecService/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Detection/Thumbdrives/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Packs/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Attack/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/EventLogs/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Forensics/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Triage/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Triage/Collectors/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/NTUser/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Registry/Sysinternals/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Utils/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Applications/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Applications/Chrome/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Analysis/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Search/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Events/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Sys/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/System/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Network/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Windows/Memory/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Forensic/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Forensic/Carving/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Applications/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Applications/Office/", 0777)
+  if err != nil && err != os.ErrExist {
+    panic(err)
+  }
+  
+
+  
+  err = FS.Mkdir(CTX, "artifacts/definitions/Generic/Client/", 0777)
   if err != nil && err != os.ErrExist {
     panic(err)
   }

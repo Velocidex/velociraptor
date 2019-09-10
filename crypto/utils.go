@@ -32,7 +32,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func parseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
+func ParseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
 	for {
 		block, rest := pem.Decode(pem_str)
 		if block == nil {

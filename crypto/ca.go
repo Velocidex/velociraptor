@@ -121,7 +121,7 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		return nil, err
 	}
 
-	ca_private_key, err := parseRsaPrivateKeyFromPemStr(
+	ca_private_key, err := ParseRsaPrivateKeyFromPemStr(
 		[]byte(config_obj.CA.PrivateKey))
 	if err != nil {
 		return nil, err

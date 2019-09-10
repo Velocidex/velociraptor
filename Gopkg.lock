@@ -166,6 +166,14 @@
   revision = "2efee857e7cfd4f3d0138cc3cbb1b4966962b93a"
 
 [[projects]]
+  digest = "1:bd8bc15ce3a9929e2777651cbc271fca5561c0d5f42187edb4720e638d24662d"
+  name = "github.com/beevik/etree"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8aee6516be3b1163bb6450c35c50e4969e3a3aa8"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:d6afaeed1502aa28e80a4ed0981d570ad91b2579193404256ce672ed0a609e0d"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -196,6 +204,18 @@
   pruneopts = "UT"
   revision = "b0d71e6effe1addc982453290a91f15ba0a50922"
   version = "v1.8.4"
+
+[[projects]]
+  digest = "1:a3a787c7ebc7305f56b09178a3c04cc4e2d1d2e5d5d15a6203272263ab7be079"
+  name = "github.com/crewjam/saml"
+  packages = [
+    ".",
+    "logger",
+    "samlsp",
+    "xmlenc",
+  ]
+  pruneopts = "UT"
+  revision = "344d075952c9343809f57f4e465504dd5e3068a4"
 
 [[projects]]
   branch = "master"
@@ -230,15 +250,15 @@
   version = "v3.2.0"
 
 [[projects]]
-  digest = "1:72dc2b6056e7097f829260e4a2ff08d32fec6017df1982a66e110ab4128486f8"
+  digest = "1:26d73f0911e537e89d04011f7a65a5cd2d28113d551d4366480b4706b2833e3a"
   name = "github.com/dlclark/regexp2"
   packages = [
     ".",
     "syntax",
   ]
   pruneopts = "UT"
-  revision = "487489b64fb796de2e55f4e8a4ad1e145f80e957"
-  version = "v1.1.6"
+  revision = "92c702aa5812963ef9193a9624191932d44073d7"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:6f9339c912bbdda81302633ad7e99a28dfa5a639c864061f1929510a9a64aa74"
@@ -357,6 +377,14 @@
   pruneopts = "UT"
   revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
   version = "v1.2.0"
+
+[[projects]]
+  digest = "1:75ab90ae3f5d876167e60f493beadfe66f0ed861a710f283fb06c86437a09538"
+  name = "github.com/jonboulle/clockwork"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2eee05ed794112d45db504eb05aa693efd2b8b09"
+  version = "v0.1.0"
 
 [[projects]]
   branch = "master"
@@ -579,6 +607,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:0265b97d8e046a03e71e06e5082eb42178d21dedc8f8248fa41c2b9d2f1ac504"
+  name = "github.com/russellhaering/goxmldsig"
+  packages = [
+    ".",
+    "etreeutils",
+    "types",
+  ]
+  pruneopts = "UT"
+  revision = "7acd5e4a6ef74fe1b082c20f119556adf70c3944"
+
+[[projects]]
+  branch = "master"
   digest = "1:03bf1ca37b9e2bcbe6e2a4d6ed7b6f024d2c9a206ba73e2702f33401c2a98f14"
   name = "github.com/sebdah/goldie"
   packages = ["."]
@@ -675,7 +715,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4caed71649b3a89e4ee856e51b5e4b6cb425d2d534056a3935321616ad878f2c"
+  digest = "1:3cad7ad2674494f7d33179510c482e62d1512986cc82305ae79ac5bf3be8ed49"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
@@ -689,6 +729,7 @@
     "openpgp/packet",
     "openpgp/s2k",
     "pbkdf2",
+    "ripemd160",
     "scrypt",
     "ssh/terminal",
   ]
@@ -1003,6 +1044,7 @@
     "github.com/alecthomas/participle/lexer",
     "github.com/c-bata/go-prompt",
     "github.com/clbanning/mxj",
+    "github.com/crewjam/saml/samlsp",
     "github.com/davecgh/go-spew/spew",
     "github.com/daviddengcn/go-colortext",
     "github.com/dgrijalva/jwt-go",

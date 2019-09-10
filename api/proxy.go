@@ -98,6 +98,10 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 		return err
 	}
 
+	if err = MaybeAddSAMLHandlers(config_obj, mux); err != nil {
+		return err
+	}
+
 	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
 	mux.Handle("/api/v1/download/", checkUserCredentialsHandler(
 		config_obj, flowResultDownloadHandler(config_obj)))
