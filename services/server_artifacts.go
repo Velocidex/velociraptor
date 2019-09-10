@@ -20,6 +20,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -137,7 +138,7 @@ func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) er
 
 	db.UnQueueMessageForClient(self.config_obj, source, task)
 
-	self.runQuery(task)
+	self.runQuery(task, flow_obj)
 
 	flow_obj.FlowContext.State = flows_proto.FlowContext_TERMINATED
 	flow_obj.FlowContext.ActiveTime = uint64(time.Now().UnixNano() / 1000)
@@ -145,7 +146,8 @@ func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) er
 }
 
 func (self *ServerArtifactsRunner) runQuery(
-	task *crypto_proto.GrrMessage) error {
+	task *crypto_proto.GrrMessage,
+	flow_obj *flows_proto.AFF4FlowObject) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -224,6 +226,13 @@ func (self *ServerArtifactsRunner) runQuery(
 				artifacts.MODE_SERVER)
 			write_chan = self.GetWriter(scope, log_path)
 			defer close(write_chan)
+
+			// Update the artifacts with results in the
+			// context.
+			if !utils.InString(&flow_obj.FlowContext.ArtifactsWithResults, name) {
+				flow_obj.FlowContext.ArtifactsWithResults = append(
+					flow_obj.FlowContext.ArtifactsWithResults, name)
+			}
 		}
 
 	process_query:

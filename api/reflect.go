@@ -45,7 +45,6 @@ var (
 		"Hunt",
 		"FlowRunnerArgs",
 		"FlowContext",
-		"VInterrogateArgs",
 		"VFSListRequest",
 		"FileFinderArgs",
 		"VFSDownloadFileRequest",

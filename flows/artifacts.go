@@ -34,6 +34,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -87,7 +88,6 @@ func (self *ArtifactCollector) Start(
 	}
 
 	// Update the flow's artifacts list.
-	flow_obj.FlowContext.Artifacts = collector_args.Artifacts.Names
 	flow_obj.SetContext(flow_obj.FlowContext)
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
@@ -95,8 +95,16 @@ func (self *ArtifactCollector) Start(
 		Timeout:      collector_args.Timeout,
 	}
 	for _, name := range collector_args.Artifacts.Names {
-		artifact, pres := repository.Get(name)
-		if !pres {
+		var artifact *artifacts_proto.Artifact = nil
+		if collector_args.AllowCustomOverrides {
+			artifact, _ = repository.Get("Custom." + name)
+		}
+
+		if artifact == nil {
+			artifact, _ = repository.Get(name)
+		}
+
+		if artifact == nil {
 			return errors.New("Unknown artifact " + name)
 		}
 
@@ -104,6 +112,9 @@ func (self *ArtifactCollector) Start(
 		if err != nil {
 			return err
 		}
+
+		flow_obj.FlowContext.Artifacts = append(flow_obj.FlowContext.Artifacts,
+			artifact.Name)
 	}
 
 	// Add any artifact dependencies.

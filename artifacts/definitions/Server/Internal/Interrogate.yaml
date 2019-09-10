@@ -1,0 +1,59 @@
+name: Server.Internal.Interrogate
+description: |
+  An internal artifact used track new client interrogations by the
+  Interrogation service.
+
+type: SERVER_EVENT
+
+sources:
+  - queries:
+      - |
+        SELECT * FROM foreach(
+          row={
+             SELECT ClientId, Flow, basename(path=Flow.Urn) AS FlowId
+             FROM watch_monitoring(artifact='System.Flow.Completion')
+             WHERE Flow.FlowContext.artifacts =~ 'Generic.Client.Info'
+          },
+          query={
+            SELECT * FROM switch(
+              a={
+                  SELECT ClientId,
+                    FlowId,
+                    Architecture,
+                    BuildTime,
+                    Fqdn,
+                    Hostname,
+                    KernelVersion,
+                    Labels,
+                    Name,
+                    OS,
+                    Platform,
+                    PlatformVersion
+                 FROM source(
+                    client_id=ClientId,
+                    flow_id=FlowId,
+                    source="BasicInformation",
+                    artifact="Custom.Generic.Client.Info",
+                    mode="CLIENT")
+               },
+            b={
+                SELECT ClientId,
+                  FlowId,
+                  Architecture,
+                  BuildTime,
+                  Fqdn,
+                  Hostname,
+                  KernelVersion,
+                  Labels,
+                  Name,
+                  OS,
+                  Platform,
+                  PlatformVersion
+               FROM source(
+                  client_id=ClientId,
+                  flow_id=FlowId,
+                  source="BasicInformation",
+                  artifact="Generic.Client.Info",
+                  mode="CLIENT")
+            })
+          })

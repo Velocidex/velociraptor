@@ -46,6 +46,10 @@ message ArtifactCollectorArgs {
             friendly_name: "Timeout",
             default: "600",
         }];
+
+    bool allow_custom_overrides = 8 [(sem_type) = {
+            description: "If true we will use a custom artifact if present instead of the named artifact.",
+        }];
 }
 
 

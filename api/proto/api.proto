@@ -201,6 +201,14 @@ service API {
         };
     }
 
+    rpc ArchiveFlow(ApiFlowRequest) returns (StartFlowResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/ArchiveFlow",
+            body: "*"
+        };
+    }
+
+
     rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails/{client_id}",

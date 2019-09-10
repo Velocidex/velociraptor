@@ -72,24 +72,17 @@ func GetApiClient(
 		return nil, err
 	}
 
-	if detailed {
-		result.Info = client_info.Info
-	}
-
+	result.LastInterrogateFlowId = client_info.LastInterrogateFlowId
 	result.AgentInformation = &api_proto.AgentInformation{
 		Version: client_info.ClientVersion,
 		Name:    client_info.ClientName,
 	}
 
-	result.OsInfo = &actions_proto.Uname{
+	result.OsInfo = &api_proto.Uname{
 		System:  client_info.System,
 		Release: client_info.Release,
 		Machine: client_info.Architecture,
 		Fqdn:    client_info.Fqdn,
-	}
-
-	if client_info.Knowledgebase != nil {
-		result.Users = append(result.Users, client_info.Knowledgebase.Users...)
 	}
 
 	err = db.GetSubject(

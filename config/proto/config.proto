@@ -364,13 +364,6 @@ message DatastoreConfig {
         }];
 }
 
-
-message FlowsConfig {
-    repeated VQLRequest interrogate_additional_queries = 1 [(sem_type) = {
-            description: "Additional queries to issue to Interrogate flows."
-        }];
-}
-
 // Configuration for the mail server.
 message MailConfig {
     string from = 1 [(sem_type) = {
@@ -445,8 +438,6 @@ message Config {
     FrontendConfig Frontend = 5;
 
     DatastoreConfig Datastore = 6;
-
-    FlowsConfig Flows = 7;
 
     Writeback Writeback = 9 [(sem_type) = {
             description: "Contents of the client's state as stored in the writeback file."

@@ -51,7 +51,7 @@ func TestAFF4FlowObject(t *testing.T) {
 	assert.Error(t, err)
 
 	runner_args = &flows_proto.FlowRunnerArgs{
-		FlowName: "VInterrogate",
+		FlowName: "ArtifactCollector",
 	}
 
 	flow_aff4_obj, err := NewAFF4FlowObject(config_obj, runner_args)
@@ -60,7 +60,7 @@ func TestAFF4FlowObject(t *testing.T) {
 	}
 
 	// Check that the correct implementation is selected.
-	assert.IsType(t, &VInterrogate{}, flow_aff4_obj.impl)
+	assert.IsType(t, &ArtifactCollector{}, flow_aff4_obj.impl)
 
 	// Check the initial state is nil
 	assert.Nil(t, flow_aff4_obj.flow_state)
@@ -129,9 +129,8 @@ func (self *MyTestFlow) ProcessMessage(
 	}
 
 	state := flow_obj.GetState().(*actions_proto.ClientInfo)
-	state.Info = append(state.Info, &actions_proto.VQLResponse{
-		Response: fmt.Sprintf("%d:%d", message.RequestId, message.ResponseId),
-	})
+	state.Labels = append(state.Labels,
+		fmt.Sprintf("%d:%d", message.RequestId, message.ResponseId))
 
 	flow_obj.SetState(state)
 
@@ -195,7 +194,7 @@ func TestFlowRunner(t *testing.T) {
 	flow_aff4_obj, err = GetAFF4FlowObject(config_obj, *flow_urn)
 	assert.NoError(t, err)
 
-	state := flow_aff4_obj.GetState().(*actions_proto.ClientInfo).Info
+	state := flow_aff4_obj.GetState().(*actions_proto.ClientInfo).Labels
 	assert.Equal(t, 3, len(state))
 
 	// A new flow runner to receive another batch of messages.
@@ -206,7 +205,7 @@ func TestFlowRunner(t *testing.T) {
 	flow_aff4_obj, err = GetAFF4FlowObject(config_obj, *flow_urn)
 	assert.NoError(t, err)
 
-	state = flow_aff4_obj.GetState().(*actions_proto.ClientInfo).Info
+	state = flow_aff4_obj.GetState().(*actions_proto.ClientInfo).Labels
 	assert.Equal(t, 6, len(state))
 
 	// Make sure the flow is still running.

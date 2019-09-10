@@ -25,6 +25,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"path"
 	"sort"
 	"time"
@@ -40,6 +41,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func GetNewHuntId() string {
@@ -150,10 +152,13 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 				return errors.New("Stop Iteration")
 			}
 
-			// FIXME: Backwards compatibility.
-			hunt.HuntId = path.Base(hunt.HuntId)
+			if in.IncludeArchived || hunt.State != api_proto.Hunt_ARCHIVED {
 
-			result.Items = append(result.Items, hunt)
+				// FIXME: Backwards compatibility.
+				hunt.HuntId = path.Base(hunt.HuntId)
+
+				result.Items = append(result.Items, hunt)
+			}
 			return nil
 		})
 
@@ -205,13 +210,32 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 // the same time, and just ignores clients that want to participate in
 // stopped hunts. It is not possible to go back and re-examine the
 // queue.
-func ModifyHunt(config_obj *config_proto.Config, hunt_modification *api_proto.Hunt) error {
+func ModifyHunt(config_obj *config_proto.Config,
+	hunt_modification *api_proto.Hunt,
+	user string) error {
 	dispatcher := services.GetHuntDispatcher()
 	err := dispatcher.ModifyHunt(
 		hunt_modification.HuntId,
 		func(hunt *api_proto.Hunt) error {
-			// We are trying to start the hunt.
-			if hunt_modification.State == api_proto.Hunt_RUNNING {
+			// Archive the hunt.
+			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
+				hunt.State = api_proto.Hunt_ARCHIVED
+
+				row := vfilter.NewDict().
+					Set("Timestamp", time.Now().UTC().Unix()).
+					Set("Hunt", hunt).
+					Set("User", user)
+				serialized, err := json.Marshal([]vfilter.Row{row})
+				if err == nil {
+					gJournalWriter.Channel <- &Event{
+						Config:    config_obj,
+						QueryName: "System.Hunt.Archive",
+						Response:  string(serialized),
+						Columns:   []string{"Timestamp", "Hunt"},
+					}
+				}
+				// We are trying to start the hunt.
+			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
 
 				// The hunt has been expired.
 				if hunt.Stats.Stopped {

@@ -1,7 +1,60 @@
 name: Generic.Client.Info
-description: Collect basic information about the client.
+description: |
+  Collect basic information about the client.
 
+  This artifact is collected when any new client is enrolled into the
+  system. Velociraptor will watch for this artifact and populate its
+  internal indexes from this artifact as well.
+
+  You can edit this artifact to enhance the client's interrogation
+  information as required.
 
 sources:
-  - queries:
-      - SELECT * FROM info()
+  - name: BasicInformation
+    description: |
+      This source is used internally to populate agent info. Do not
+      remove this query.
+    queries:
+      - |
+        SELECT config.Version.Name AS Name,
+               config.Version.BuildTime as BuildTime,
+               config.Labels AS Labels,
+               Hostname, OS, Architecture,
+               Platform, PlatformVersion, KernelVersion, Fqdn
+        FROM info()
+
+  - name: Users
+    precondition: SELECT OS From info() where OS = 'windows'
+    queries:
+      - SELECT Name, Description,
+               timestamp(epoch=Mtime) AS LastLogin
+        FROM Artifact.Windows.Sys.Users()
+
+reports:
+  - type: CLIENT
+    template: |
+      {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
+
+      {{ $flow_id := Query "SELECT timestamp(epoch=Context.ActiveTime / 1000000) AS Timestamp FROM flows(client_id=ClientId, flow_id=FlowId)" }}
+
+      # {{ Get $client_info "0.OsInfo.Fqdn" }} ( {{ Get $client_info "0.ClientId" }} ) @ {{ Get $flow_id "0.Timestamp" }}
+
+      {{ Query "SELECT * FROM source(source='BasicInformation')" | Table }}
+
+      # Memory and CPU footprint over the past 24 hours
+
+      {{ define "resources" }}
+           SELECT Timestamp, rate(x=CPU, y=Timestamp) * 100 As CPUPercent,
+                  RSS / 1000000 AS MemoryUse
+           FROM source(artifact="Generic.Client.Stats",
+                       client_id=ClientId,
+                       mode="CLIENT_EVENT",
+                       start_time=now() - 86400)
+           WHERE CPUPercent >= 0
+      {{ end }}
+
+      {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
+
+      # Active Users
+
+      {{ Query "SELECT * FROM source(source='Users')" | Table }}

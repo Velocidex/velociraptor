@@ -979,11 +979,10 @@ table.grr_flot_graph {
 }
 
 .dashboard {
-    margin: 20px;
+    padding-right: 20px;
     padding-left: 20px;
     // Height of dashboard toolbar + footer + scrollbars.
     padding-bottom: 70px;
-    margin-right: 0px;
     overflow-y: auto;
     height: -webkit-fill-available;
     height: -moz-available;
