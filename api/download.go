@@ -69,6 +69,9 @@ func downloadFlowToZip(
 		// Clean the name so it makes a reasonable zip member.
 		upload_name = path.Clean(strings.Replace(
 			upload_name, "\\", "/", -1))
+
+		// Zip files should not have absolute paths
+		upload_name = strings.TrimLeft(upload_name, "/")
 		f, err := zip_writer.Create(upload_name)
 		if err != nil {
 			return err
@@ -540,26 +543,30 @@ func vfsFolderDownloadHandler(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		file_store_factory.Walk(filestorePathForVFSPath(
 			config_obj, request.ClientId, request.VfsPath),
-			func(path string, info os.FileInfo, err error) error {
+			func(path_name string, info os.FileInfo, err error) error {
 				if err != nil || info.IsDir() {
 					return nil
 				}
 
-				fd, err := file_store_factory.ReadFile(path)
+				fd, err := file_store_factory.ReadFile(path_name)
 				if err != nil {
-					logger.Warn("Cant open %s: %v", path, err)
+					logger.Warn("Cant open %s: %v", path_name, err)
 					return nil
 				}
 
-				zh, err := zip_writer.Create(path)
+				path_name = path.Clean(strings.Replace(
+					path_name, "\\", "/", -1))
+
+				path_name = strings.TrimLeft(path_name, "/")
+				zh, err := zip_writer.Create(path_name)
 				if err != nil {
-					logger.Warn("Cant create zip %s: %v", path, err)
+					logger.Warn("Cant create zip %s: %v", path_name, err)
 					return nil
 				}
 
 				_, err = io.Copy(zh, fd)
 				if err != nil {
-					logger.Warn("Cant copy %s", path)
+					logger.Warn("Cant copy %s", path_name)
 					return nil
 				}
 				return nil
