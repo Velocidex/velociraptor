@@ -53,7 +53,7 @@ func _OLEVBAPlugin_ParseFile(
 
 	fd, err := accessor.Open(filename)
 	if err != nil {
-
+		return nil, err
 	}
 	defer fd.Close()
 

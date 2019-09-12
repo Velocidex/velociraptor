@@ -21,16 +21,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"path"
 	"runtime/debug"
-	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 type Executor interface {
@@ -53,9 +50,6 @@ type ClientExecutor struct {
 	Inbound  chan *crypto_proto.GrrMessage
 	Outbound chan *crypto_proto.GrrMessage
 	plugins  map[string]actions.ClientAction
-
-	mu                sync.Mutex
-	in_flight_context map[string]chan bool
 }
 
 // Blocks until a request is received from the server. Called by the
@@ -125,62 +119,16 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
-	flow_id := path.Base(req.SessionId)
-
-	// Handle cancellation requests especialy.
-	if req.Name == "Cancel" {
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
-		done, pres := self.in_flight_context[flow_id]
-		if pres {
-			responder := responder.NewResponder(req, self.Outbound)
-			responder.Log("Received cancellation request for flow id %v",
-				flow_id)
-
-			close(done)
-			delete(self.in_flight_context, flow_id)
-		}
-		return
-	}
-
 	plugin, pres := self.plugins[req.Name]
 	if !pres {
 		self.SendToServer(makeUnknownActionResponse(req))
 		return
 	}
 
-	// Install a cancellation channel to allow all queries from
-	// this flow to be cancelled by the server.
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	done, pres := self.in_flight_context[flow_id]
-	if !pres {
-		done = make(chan bool)
-		self.in_flight_context[flow_id] = done
-	}
-
-	sub_ctx, cancel := context.WithCancel(ctx)
-	go func() {
-		<-done
-		cancel()
-	}()
-
 	// Run the plugin in the other thread and drain its messages
 	// to send to the server.
 	go func() {
-		plugin.Run(config_obj, sub_ctx, req, self.Outbound)
-
-		// Remove cancellation channel.
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
-		done, pres := self.in_flight_context[flow_id]
-		if pres {
-			close(done)
-			delete(self.in_flight_context, flow_id)
-		}
+		plugin.Run(config_obj, ctx, req, self.Outbound)
 	}()
 }
 
@@ -189,8 +137,6 @@ func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error)
 		Inbound:  make(chan *crypto_proto.GrrMessage),
 		Outbound: make(chan *crypto_proto.GrrMessage),
 		plugins:  actions.GetClientActionsMap(),
-
-		in_flight_context: make(map[string]chan bool),
 	}
 
 	go func() {

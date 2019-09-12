@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"gopkg.in/AlecAivazis/survey.v1"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -104,7 +104,7 @@ func doGenerateConfigInteractive() {
 		kingpin.FatalIfError(err, "Question")
 
 		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.Required)
+		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
 		kingpin.FatalIfError(err, "Question")
 
 		config_obj.Client.ServerUrls = append(
@@ -119,7 +119,7 @@ func doGenerateConfigInteractive() {
 		config_obj.Frontend.BindAddress = "0.0.0.0"
 
 		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.Required)
+		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
 		kingpin.FatalIfError(err, "Question")
 
 		config_obj.Client.ServerUrls = []string{
@@ -138,7 +138,7 @@ func doGenerateConfigInteractive() {
 		config_obj.Frontend.BindAddress = "0.0.0.0"
 
 		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.Required)
+		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
 		kingpin.FatalIfError(err, "Question")
 
 		config_obj.GUI.PublicUrl = fmt.Sprintf("https://%s/", hostname)
@@ -148,11 +148,13 @@ func doGenerateConfigInteractive() {
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 
 		err = survey.AskOne(google_oauth_client_id_question,
-			&config_obj.GUI.GoogleOauthClientId, survey.Required)
+			&config_obj.GUI.GoogleOauthClientId,
+			survey.WithValidator(survey.Required))
 		kingpin.FatalIfError(err, "Question")
 
 		err = survey.AskOne(google_oauth_client_secret_question,
-			&config_obj.GUI.GoogleOauthClientSecret, survey.Required)
+			&config_obj.GUI.GoogleOauthClientSecret,
+			survey.WithValidator(survey.Required))
 		kingpin.FatalIfError(err, "Question")
 
 		err = dynDNSConfig(config_obj, hostname)
@@ -166,7 +168,7 @@ func doGenerateConfigInteractive() {
 	kingpin.FatalIfError(err, "getLogLocation")
 
 	path := ""
-	err = survey.AskOne(output_question, &path, survey.Required)
+	err = survey.AskOne(output_question, &path, survey.WithValidator(survey.Required))
 	kingpin.FatalIfError(err, "Question")
 
 	res, err := yaml.Marshal(config_obj)
@@ -178,7 +180,8 @@ func doGenerateConfigInteractive() {
 
 	fd.Write(res)
 
-	err = survey.AskOne(client_output_question, &path, survey.Required)
+	err = survey.AskOne(client_output_question, &path,
+		survey.WithValidator(survey.Required))
 	kingpin.FatalIfError(err, "Question")
 
 	client_config := getClientConfig(config_obj)
@@ -198,7 +201,7 @@ func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 	dyndns := false
 	err := survey.AskOne(&survey.Confirm{
 		Message: "Are you using Google Domains DynDNS?"},
-		&dyndns, survey.Required)
+		&dyndns, survey.WithValidator(survey.Required))
 	if err != nil {
 		return err
 	}
@@ -207,14 +210,14 @@ func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 		username := ""
 		err = survey.AskOne(
 			google_domains_username, &username,
-			survey.Required)
+			survey.WithValidator(survey.Required))
 		if err != nil {
 			return err
 		}
 
 		password := ""
 		err = survey.AskOne(google_domains_password, &password,
-			survey.Required)
+			survey.WithValidator(survey.Required))
 		if err != nil {
 			return err
 		}
@@ -231,20 +234,20 @@ func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 
 func getFileStoreLocation(config_obj *config_proto.Config) error {
 	err := survey.AskOne(data_store_question,
-		&config_obj.Datastore.Location, func(val interface{}) error {
+		&config_obj.Datastore.Location,
+		survey.WithValidator(func(val interface{}) error {
 			// Check that the directory exists.
 			stat, err := os.Stat(val.(string))
 			if err == nil && stat.IsDir() {
 				return nil
 			}
 			return err
-		})
+		}))
 	if err != nil {
 		return err
 	}
 
 	config_obj.Datastore.FilestoreDirectory = config_obj.Datastore.Location
-
 
 	// Put the public directory inside the file store.
 	config_obj.Frontend.PublicPath = filepath.Join(config_obj.Datastore.Location,
@@ -255,14 +258,15 @@ func getFileStoreLocation(config_obj *config_proto.Config) error {
 
 func getLogLocation(config_obj *config_proto.Config) error {
 	err := survey.AskOne(log_question,
-		&config_obj.Logging.OutputDirectory, func(val interface{}) error {
+		&config_obj.Logging.OutputDirectory,
+		survey.WithValidator(func(val interface{}) error {
 			// Check that the directory exists.
 			stat, err := os.Stat(val.(string))
 			if err == nil && stat.IsDir() {
 				return nil
 			}
 			return err
-		})
+		}))
 	if err != nil {
 		return err
 	}
@@ -293,7 +297,8 @@ func addUser(config_obj *config_proto.Config) error {
 				"therefore no password needs to be set.")
 		} else {
 			password := ""
-			err := survey.AskOne(password_question, &password, survey.Required)
+			err := survey.AskOne(password_question, &password,
+				survey.WithValidator(survey.Required))
 			if err != nil {
 				return err
 			}
