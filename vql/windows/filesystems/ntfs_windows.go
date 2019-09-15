@@ -34,22 +34,14 @@ import (
 	"sync"
 	"time"
 
-	ntfs "www.velocidex.com/golang/go-ntfs"
+	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vtypes"
 )
 
 var (
-	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
-	driveRegex = regexp.MustCompile(
-		"(?i)^[/\\\\]?([a-z]:)(.*)")
-	deviceDriveRegex = regexp.MustCompile(
-		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-zA-Z]:)(.*)")
-	deviceDirectoryRegex = regexp.MustCompile(
-		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
-
 	// Cache raw devices for a given time. Note that the cache is
 	// only alive for the duration of a single VQL query
 	// (including its subqueries). The query will close the cache
@@ -164,14 +156,10 @@ type PagedReader struct {
 	fd *os.File
 }
 
-type NTFSFileSystemAccessor struct {
-	profile *vtypes.Profile
-}
+type NTFSFileSystemAccessor struct{}
 
 func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &NTFSFileSystemAccessor{
-		profile: self.profile,
-	}
+	result := &NTFSFileSystemAccessor{}
 
 	// When the context is done, close all the files. The files
 	// must remain open until the entire VQL query is done.
@@ -191,11 +179,18 @@ func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 	return result
 }
 
-func (self *NTFSFileSystemAccessor) getRootMFTEntry(device string) (
+func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) (
 	*ntfs.MFT_ENTRY, error) {
+	return ntfs_ctx.GetMFT(5)
+}
+
+func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
+	*ntfs.NTFSContext, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// We cache the paged reader as well as the original file
+	// handle so we can safely close it when the query is done.
 	fd, pres := fd_cache[device]
 	if !pres || time.Now().After(timestamp.Add(10*time.Minute)) {
 		// Try to open the device and list its path.
@@ -217,18 +212,7 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(device string) (
 		timestamp = time.Now()
 	}
 
-	boot, err := ntfs.NewBootRecord(self.profile, fd, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	mft, err := boot.MFT()
-	if err != nil {
-		return nil, err
-	}
-
-	// Get the root directory.
-	return mft.MFTEntry(5)
+	return ntfs.GetNTFSContext(fd, 0)
 }
 
 func discoverVSS() ([]glob.FileInfo, error) {
@@ -300,19 +284,24 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error
 		return result, nil
 	}
 
-	root, err := self.getRootMFTEntry(device)
+	ntfs_ctx, err := self.getNTFSContext(device)
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := ntfs_ctx.GetMFT(5)
 	if err != nil {
 		return nil, err
 	}
 
 	// Open the device path from the root.
-	dir, err := root.Open(subpath)
+	dir, err := root.Open(ntfs_ctx, subpath)
 	if err != nil {
 		return nil, err
 	}
 
 	// List the directory.
-	for _, info := range ntfs.ListDir(dir) {
+	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
 		if info.Name == "" || info.Name == "." {
 			continue
 		}
@@ -335,7 +324,6 @@ type readAdapter struct {
 func (self *readAdapter) Read(buf []byte) (int, error) {
 	self.Lock()
 	defer self.Unlock()
-
 	res, err := self.reader.ReadAt(buf, self.pos)
 	self.pos += int64(res)
 
@@ -345,7 +333,6 @@ func (self *readAdapter) Read(buf []byte) (int, error) {
 func (self *readAdapter) ReadAt(buf []byte, offset int64) (int, error) {
 	self.Lock()
 	defer self.Unlock()
-
 	self.pos = offset
 
 	return self.reader.ReadAt(buf, offset)
@@ -380,23 +367,28 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 
 	components := self.PathSplit(subpath)
 
-	root, err := self.getRootMFTEntry(device)
+	ntfs_ctx, err := self.getNTFSContext(device)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := ntfs.GetDataForPath(subpath, root)
+	root, err := self.getRootMFTEntry(ntfs_ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := ntfs.GetDataForPath(ntfs_ctx, subpath)
 	if err != nil {
 		return nil, err
 	}
 
 	dirname := filepath.Dir(subpath)
-	dir, err := root.Open(dirname)
+	dir, err := root.Open(ntfs_ctx, dirname)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, info := range ntfs.ListDir(dir) {
+	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
 		if strings.ToLower(info.Name) == strings.ToLower(
 			components[len(components)-1]) {
 			return &readAdapter{
@@ -422,17 +414,22 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 
 	components := self.PathSplit(subpath)
 
-	root, err := self.getRootMFTEntry(device)
+	ntfs_ctx, err := self.getNTFSContext(device)
+	if err != nil {
+		return nil, err
+	}
+
+	root, err := self.getRootMFTEntry(ntfs_ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	dirname := filepath.Dir(subpath)
-	dir, err := root.Open(dirname)
+	dir, err := root.Open(ntfs_ctx, dirname)
 	if err != nil {
 		return nil, err
 	}
-	for _, info := range ntfs.ListDir(dir) {
+	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
 		if strings.ToLower(info.Name) == strings.ToLower(
 			components[len(components)-1]) {
 			return &NTFSFileInfo{
@@ -445,37 +442,9 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 	return nil, errors.New("File not found")
 }
 
-func clean(path string) string {
-	result := filepath.Clean(path)
-	if result == "." {
-		result = ""
-	}
-
-	return result
-}
-
-func (self *NTFSFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	// Make sure not to run filepath.Clean() because it will
-	// collapse multiple slashes (and prevent device names from
-	// being recognized).
-	path = strings.Replace(path, "/", "\\", -1)
-
-	m := deviceDriveRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
-	}
-
-	m = driveRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return "\\\\.\\" + m[1], clean(m[2]), nil
-	}
-
-	m = deviceDirectoryRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
-	}
-
-	return "/", path, errors.New("Unsupported device type")
+func (self *NTFSFileSystemAccessor) GetRoot(path string) (
+	device string, subpath string, err error) {
+	return parsers.GetDeviceAndSubpath(path)
 }
 
 // We accept both / and \ as a path separator
@@ -502,12 +471,7 @@ func unescape(path string) string {
 }
 
 func init() {
-	profile, err := ntfs.GetProfile()
-	if err == nil {
-		glob.Register("ntfs", &NTFSFileSystemAccessor{
-			profile: profile,
-		})
-	}
+	glob.Register("ntfs", &NTFSFileSystemAccessor{})
 
 	fd_cache = make(map[string]*PagedReader)
 	timestamp = time.Now()

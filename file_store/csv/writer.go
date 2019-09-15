@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 	"unicode/utf8"
 
@@ -61,6 +62,9 @@ func AnyToString(item vfilter.Any) string {
 
 	case float64:
 		value = strconv.FormatFloat(t, 'f', -1, 64)
+
+	case time.Time:
+		value = t.Format(time.RFC3339Nano)
 
 	case int, int16, int32, int64, uint16, uint32, uint64, bool:
 		value = fmt.Sprintf("%v", item)

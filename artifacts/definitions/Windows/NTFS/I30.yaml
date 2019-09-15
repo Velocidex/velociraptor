@@ -1,0 +1,42 @@
+name: Windows.NTFS.I30
+description: |
+  Carve the $I30 index stream for a directory.
+
+  This can reveal previously deleted files. Optionally upload the I30
+  stream to the server as well.
+
+parameters:
+ - name: DirectoryGlobs
+   default: C:\Users\
+
+precondition:
+  SELECT * FROM info() where OS = 'windows'
+
+sources:
+  - name: UploadI30Streams
+    queries:
+       - |
+         LET inodes = SELECT FullPath, Data.mft AS MFT,
+             parse_ntfs(device=FullPath, inode=Data.mft) AS MFTInfo
+         FROM glob(globs=DirectoryGlobs, accessor="ntfs")
+         WHERE IsDir
+       - |
+         LET upload_streams = SELECT * FROM foreach(
+            row=MFTInfo.Attributes,
+            query={
+              SELECT Type, TypeId, Id, Inode, Size, Name, FullPath,
+                     upload(accessor="mft", file=MFTInfo.Device + Inode) AS IndexUpload
+              FROM scope()
+              WHERE Type =~ "INDEX_"
+            })
+       - SELECT * FROM foreach(row=inodes, query=upload_streams)
+
+  - name: AnalyzeI30
+    queries:
+       - |
+         SELECT * FROM foreach(
+           row=inodes,
+           query={
+             SELECT FullPath, Mtime, Atime, Ctime, Name, NameType, MFTId
+             FROM parse_ntfs_i30(device=MFTInfo.Device, inode=MFT)
+           })

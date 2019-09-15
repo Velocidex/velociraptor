@@ -33,7 +33,6 @@ type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
 	mu         sync.Mutex
 	Done       chan bool
-	Scopes     []*vfilter.Scope
 	notifier   *notifications.NotificationPool
 	wg         sync.WaitGroup
 
@@ -44,17 +43,10 @@ func (self *ServerArtifactsRunner) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Close the old table.
-	if self.Done != nil {
-		close(self.Done)
-	}
+	close(self.Done)
 
 	// Wait here until all the old queries are cancelled.
 	self.wg.Wait()
-	// Clean up.
-	for _, scope := range self.Scopes {
-		scope.Close()
-	}
 }
 
 func (self *ServerArtifactsRunner) Start() {
@@ -69,11 +61,8 @@ func (self *ServerArtifactsRunner) Start() {
 
 	for {
 		select {
-		case <-self.Done:
-			return
-
-			// Check the queues anyway every minute in case we miss the
-			// notification.
+		// Check the queues anyway every minute in case we miss the
+		// notification.
 		case <-time.After(time.Duration(60) * time.Second):
 			self.process()
 
@@ -96,7 +85,6 @@ func (self *ServerArtifactsRunner) Start() {
 
 func (self *ServerArtifactsRunner) process() error {
 	self.wg.Add(1)
-	defer self.wg.Done()
 
 	logger := logging.GetLogger(
 		self.config_obj, &logging.FrontendComponent)
@@ -111,12 +99,16 @@ func (self *ServerArtifactsRunner) process() error {
 		return err
 	}
 
-	for _, task := range tasks {
-		err := self.processTask(task)
-		if err != nil {
-			logger.Error("ServerArtifactsRunner: %v", err)
+	defer func() {
+		defer self.wg.Done()
+
+		for _, task := range tasks {
+			err := self.processTask(task)
+			if err != nil {
+				logger.Error("ServerArtifactsRunner: %v", err)
+			}
 		}
-	}
+	}()
 
 	return nil
 }
@@ -190,7 +182,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	scope.Logger = logging.NewPlainLogger(
 		self.config_obj, &logging.FrontendComponent)
 
-	self.Scopes = append(self.Scopes, scope)
+	defer scope.Close()
 
 	// If we panic we need to recover and report this to the
 	// server.

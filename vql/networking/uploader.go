@@ -97,8 +97,10 @@ func (self *FileBasedUploader) Upload(
 	filename string,
 	accessor string,
 	store_as_name string,
+	expected_size int64,
 	reader io.Reader) (
 	*UploadResponse, error) {
+
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")
 		return nil, errors.New("UploadDir not set")
