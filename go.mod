@@ -72,6 +72,7 @@ require (
 	github.com/sergi/go-diff v1.0.0
 	github.com/shirou/gopsutil v0.0.0-20190627142359-4c8b404ee5c5
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
@@ -90,7 +91,7 @@ require (
 	gopkg.in/olivere/elastic.v5 v5.0.81
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
-	www.velocidex.com/golang/go-ntfs v0.0.0-20190915125008-b3ab40bda9b2
+	www.velocidex.com/golang/go-ntfs v0.0.0-20190915142106-3e8b925490bb
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
