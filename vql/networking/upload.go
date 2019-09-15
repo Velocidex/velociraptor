@@ -130,6 +130,8 @@ func (self *UploadPlugin) Call(
 	uploader_obj, _ := scope.Resolve("$uploader")
 	uploader, ok := uploader_obj.(Uploader)
 	if !ok {
+		scope.Log("upload: Uploader not configured.")
+
 		// If the uploader is not configured, we need to do
 		// nothing.
 		close(output_chan)
@@ -144,8 +146,8 @@ func (self *UploadPlugin) Call(
 			scope.Log("upload: %v", err)
 			return
 		}
-		for _, filename := range arg.Files {
 
+		for _, filename := range arg.Files {
 			file, err := accessor.Open(filename)
 			if err != nil {
 				scope.Log("upload: Unable to open %s: %s",
