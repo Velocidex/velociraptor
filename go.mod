@@ -11,6 +11,7 @@ require (
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
+	github.com/Velocidex/binparsergen v0.1.0 // indirect
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
@@ -91,7 +92,7 @@ require (
 	gopkg.in/olivere/elastic.v5 v5.0.81
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
-	www.velocidex.com/golang/go-ntfs v0.0.0-20190915142106-3e8b925490bb
+	www.velocidex.com/golang/go-ntfs v0.0.0-20190915152010-a30b0daf7439
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
