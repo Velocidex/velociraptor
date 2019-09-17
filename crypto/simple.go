@@ -18,7 +18,6 @@ import (
 type Obfuscator struct {
 	mu      sync.Mutex
 	key     []byte
-	iv      []byte
 	crypter cipher.Block
 }
 

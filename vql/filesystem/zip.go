@@ -417,16 +417,15 @@ func (self ZipFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccess
 
 	// When the context is done, close all the files.
 	go func() {
-		select {
-		case <-ctx.Done():
-			result.mu.Lock()
-			defer result.mu.Unlock()
+		<-ctx.Done()
 
-			for _, v := range result.fd_cache {
-				v.fd.Close()
-			}
-			result.fd_cache = make(map[string]*ZipFileCache)
+		result.mu.Lock()
+		defer result.mu.Unlock()
+
+		for _, v := range result.fd_cache {
+			v.fd.Close()
 		}
+		result.fd_cache = make(map[string]*ZipFileCache)
 	}()
 
 	return result
@@ -445,9 +444,9 @@ func (self *SeekableZip) Seek(offset int64, whence int) (int64, error) {
 		}
 
 	}
-	return 0, errors.New(fmt.Sprintf(
+	return 0, fmt.Errorf(
 		"Seeking to %v (%v) not supported on compressed files.",
-		offset, whence))
+		offset, whence)
 }
 
 func (self *SeekableZip) Stat() (os.FileInfo, error) {

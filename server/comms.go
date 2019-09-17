@@ -434,6 +434,8 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		ctx := req.Context()
+
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			panic("http handler is not a flusher")
@@ -521,13 +523,11 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
-		// Figure out when the client drops the connection so
-		// we can exit.
-		close_notify := w.(http.CloseNotifier).CloseNotify()
-
 		for {
 			select {
-			case <-close_notify:
+			// Figure out when the client drops the
+			// connection so we can exit.
+			case <-ctx.Done():
 				return
 
 			case quit := <-notification:

@@ -90,7 +90,7 @@ func FormatDescription(
 		return description
 	}
 
-	return string(buffer.Bytes())
+	return buffer.String()
 }
 
 func (self *Expansions) DocFrom(artifact string) string {
@@ -132,5 +132,5 @@ func (self *Expansions) Query(queries ...string) string {
 		table.Render()
 	}
 
-	return string(result.Bytes())
+	return result.String()
 }

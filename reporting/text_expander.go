@@ -29,7 +29,7 @@ func (self *TextTemplateEngine) Execute(template_string string) (string, error) 
 		return "", err
 	}
 
-	return string(buffer.Bytes()), nil
+	return buffer.String(), nil
 }
 
 func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
@@ -105,7 +105,7 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 
 	table.Render()
 
-	return string(buffer.Bytes())
+	return buffer.String()
 }
 
 func NewTextTemplateEngine(config_obj *config_proto.Config,

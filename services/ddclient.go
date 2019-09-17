@@ -5,6 +5,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -128,6 +129,10 @@ func GetExternalIp() (string, error) {
 	defer resp.Body.Close()
 	ip, err := ioutil.ReadAll(resp.Body)
 	result := strings.TrimSpace(string(ip))
+
+	if err != nil && err != io.EOF {
+		return result, err
+	}
 
 	return result, nil
 }

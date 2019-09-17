@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"sync"
@@ -57,8 +56,6 @@ func (self *Container) DumpRowsIntoContainer(
 	scope *vfilter.Scope,
 	query *actions_proto.VQLRequest) error {
 
-	writer := ioutil.Discard
-
 	if len(output_rows) == 0 {
 		return nil
 	}
@@ -67,11 +64,10 @@ func (self *Container) DumpRowsIntoContainer(
 	defer self.Unlock()
 
 	sanitized_name := datastore.SanitizeString(query.Name + ".csv")
-	container_writer, err := self.zip.Create(string(sanitized_name))
+	writer, err := self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err
 	}
-	writer = container_writer
 
 	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{writer})
 	if err != nil {
@@ -85,24 +81,24 @@ func (self *Container) DumpRowsIntoContainer(
 	csv_writer.Close()
 
 	sanitized_name = datastore.SanitizeString(query.Name + ".json")
-	container_writer, err = self.zip.Create(string(sanitized_name))
+	writer, err = self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err
 	}
 
-	err = json.NewEncoder(container_writer).Encode(output_rows)
+	err = json.NewEncoder(writer).Encode(output_rows)
 	if err != nil {
 		return err
 	}
 
 	// Format the description.
 	sanitized_name = datastore.SanitizeString(query.Name + ".txt")
-	container_writer, err = self.zip.Create(string(sanitized_name))
+	writer, err = self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(container_writer, "# %s\n\n%s", query.Name,
+	fmt.Fprintf(writer, "# %s\n\n%s", query.Name,
 		FormatDescription(config_obj, query.Description, output_rows))
 
 	return nil

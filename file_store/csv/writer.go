@@ -23,9 +23,6 @@ import (
 var (
 	number_regex = regexp.MustCompile(
 		`^(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)$`)
-	integer_regex = regexp.MustCompile(
-		"^[+-]?[0-9]+$")
-
 	protected_prefix = regexp.MustCompile(
 		`^( |\{|\[|true|false|base64:)`)
 )

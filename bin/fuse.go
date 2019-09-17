@@ -23,7 +23,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -48,8 +47,6 @@ type VFSFs struct {
 	// Cache directory listings.
 	cache  map[string][]*api.FileInfoRow
 	logger *logging.LogContext
-
-	file_store *file_store.DirectoryFileStore
 }
 
 func (self *VFSFs) fetchDir(vfs_name string) ([]*api.FileInfoRow, error) {
@@ -322,7 +319,6 @@ func (self *VFSFileReader) Read(dest []byte, off int64) (
 		return nil, fuse.ENOENT
 	}
 
-	dest = response.Data
 	return fuse.ReadResultData(response.Data), fuse.OK
 }
 

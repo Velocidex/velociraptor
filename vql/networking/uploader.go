@@ -63,14 +63,13 @@ type FileBasedUploader struct {
 
 // Turn the path which may have a device name into something which can
 // be created as a directory.
-var sanitize_re = regexp.MustCompile(`[^a-zA-Z0-9_@\(\)\. \-=\{\}\[\]]`)
+var sanitize_re = regexp.MustCompile(
+	`\\\\[\\.\\?]\\([{}a-zA-Z0-9]+).*?\\`)
 
 func (self *FileBasedUploader) sanitize_path(path string) string {
 	// Strip any leading devices, and make sure the device name
 	// consists of valid chars.
-	path = regexp.MustCompile(
-		`\\\\[\\.\\?]\\([{}a-zA-Z0-9]+).*?\\`).
-		ReplaceAllString(path, `$1\`)
+	path = sanitize_re.ReplaceAllString(path, `$1\`)
 
 	// Split the path into components and escape any non valid
 	// chars.

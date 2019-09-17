@@ -182,6 +182,9 @@ func (self *ArtifactCollector) ProcessMessage(
 						hunt.Stats.TotalClientsWithResults++
 						return nil
 					})
+				if err != nil {
+					return err
+				}
 			}
 
 			return flow_obj.Complete(config_obj)
