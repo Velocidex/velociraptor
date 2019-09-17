@@ -91,6 +91,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20150902115704-41f357289737
 	gopkg.in/olivere/elastic.v5 v5.0.81
 	gopkg.in/russross/blackfriday.v2 v2.0.1
+	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
 	www.velocidex.com/golang/go-ntfs v0.0.0-20190915152010-a30b0daf7439
 	www.velocidex.com/golang/go-pe v0.1.0

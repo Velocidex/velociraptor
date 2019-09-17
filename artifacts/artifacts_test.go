@@ -18,7 +18,6 @@
 package artifacts
 
 import (
-	"flag"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -26,9 +25,6 @@ import (
 )
 
 var (
-	environment = flag.String("test.env", "",
-		"The name of the test environment.")
-
 	// Artifacts 1 and 2 are invalid: cyclic
 	artifact1 = `
 name: Artifact1

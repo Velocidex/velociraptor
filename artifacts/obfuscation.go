@@ -51,7 +51,7 @@ func Obfuscate(
 	return nil
 }
 
-var obfuscated_item = regexp.MustCompile("\\$[a-fA-F0-9]+")
+var obfuscated_item = regexp.MustCompile(`\$[a-fA-F0-9]+`)
 
 func DeobfuscateString(config_obj *config_proto.Config, in string) string {
 	if config_obj.Frontend.DoNotCompressArtifacts {

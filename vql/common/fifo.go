@@ -83,18 +83,11 @@ func (self *_FIFOCache) Push(row vfilter.Row) {
 
 	// expire any items which are too old or if we have too many
 	// items.
-	for {
-		e := self.rows.Front()
-		if e == nil {
-			return
-		}
 
-		next := e.Next()
-
+	for e := self.rows.Front(); e != nil; e = e.Next() {
 		if self.count > self.max_rows {
 			self.rows.Remove(e)
 			self.count -= 1
-			e = next
 			continue
 		}
 
@@ -105,16 +98,10 @@ func (self *_FIFOCache) Push(row vfilter.Row) {
 			if time.Now().After(entry.time.Add(self.max_time)) {
 				self.rows.Remove(e)
 				self.count -= 1
-				e = next
 				continue
 			}
 		}
-
-		// If we get here the oldest item is still valid so we
-		// are done.
-		return
 	}
-
 }
 
 func NewFIFOCache(

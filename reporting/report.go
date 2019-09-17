@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -11,13 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	valid_report_types = []string{
-		"MONITORING_DAILY", "CLIENT",
-		"CLIENT_EVENT", "SERVER_EVENT", "HUNT",
-	}
 )
 
 // An expander is presented to the go templates to implement template
@@ -282,8 +274,8 @@ func newBaseTemplateEngine(
 
 	artifact, pres := repository.Get(artifact_name)
 	if !pres {
-		return nil, errors.New(
-			fmt.Sprintf("Artifact %v not known.", artifact_name))
+		return nil, fmt.Errorf(
+			"Artifact %v not known.", artifact_name)
 	}
 
 	env := vfilter.NewDict().

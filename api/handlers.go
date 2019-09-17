@@ -32,7 +32,6 @@ import (
 type statusRecorder struct {
 	http.ResponseWriter
 	http.Flusher
-	http.CloseNotifier
 	status int
 	error  []byte
 }
@@ -73,7 +72,6 @@ func GetLoggingHandler(config_obj *config_proto.Config) func(http.Handler) http.
 			rec := &statusRecorder{
 				w,
 				w.(http.Flusher),
-				w.(http.CloseNotifier),
 				200, nil}
 			defer func() {
 				if rec.status == 500 {

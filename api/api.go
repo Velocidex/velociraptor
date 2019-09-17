@@ -59,7 +59,6 @@ type ApiServer struct {
 func (self *ApiServer) CancelFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	result := &api_proto.StartFlowResponse{}
 	user := GetGRPCUserInfo(ctx).Name
 
 	// Empty users are called internally.
@@ -95,7 +94,6 @@ func (self *ApiServer) CancelFlow(
 func (self *ApiServer) ArchiveFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	result := &api_proto.StartFlowResponse{}
 	user := GetGRPCUserInfo(ctx).Name
 
 	// Empty users are called internally.

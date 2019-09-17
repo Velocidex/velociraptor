@@ -18,7 +18,6 @@
 package file_store
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -38,9 +37,9 @@ func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
 		}
 
 	}
-	return 0, errors.New(fmt.Sprintf(
+	return 0, fmt.Errorf(
 		"Seeking to %v (%v) not supported on compressed files.",
-		offset, whence))
+		offset, whence)
 }
 
 func (self SeekableGzip) Stat() (os.FileInfo, error) {

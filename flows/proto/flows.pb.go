@@ -172,7 +172,7 @@ type FlowContext struct {
 	NextProcessedRequest uint64                  `protobuf:"varint,9,opt,name=next_processed_request,json=nextProcessedRequest,proto3" json:"next_processed_request,omitempty"`
 	OutstandingRequests  uint64                  `protobuf:"varint,11,opt,name=outstanding_requests,json=outstandingRequests,proto3" json:"outstanding_requests,omitempty"`
 	TotalResults         uint64                  `protobuf:"varint,18,opt,name=total_results,json=totalResults,proto3" json:"total_results,omitempty"`
-	// Deprecated: Uploads are now stored in a csv file.
+	// Uploads are now permanently stored in a csv file.
 	UploadedFiles              []*UploadedFileInfo  `protobuf:"bytes,24,rep,name=uploaded_files,json=uploadedFiles,proto3" json:"uploaded_files,omitempty"`
 	TotalUploadedFiles         uint64               `protobuf:"varint,23,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
 	TotalExpectedUploadedBytes uint64               `protobuf:"varint,25,opt,name=total_expected_uploaded_bytes,json=totalExpectedUploadedBytes,proto3" json:"total_expected_uploaded_bytes,omitempty"`

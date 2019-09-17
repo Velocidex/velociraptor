@@ -33,11 +33,11 @@ import (
 var (
 	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
 	driveRegex = regexp.MustCompile(
-		"(?i)^[/\\\\]?([a-z]:)(.*)")
+		`(?i)^[/\\]?([a-z]:)(.*)`)
 	deviceDriveRegex = regexp.MustCompile(
-		"(?i)^(\\\\\\\\[\\?\\.]\\\\[a-zA-Z]:)(.*)")
+		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
 	deviceDirectoryRegex = regexp.MustCompile(
-		"(?i)^(\\\\\\\\[\\?\\.]\\\\GLOBALROOT\\\\Device\\\\[^/\\\\]+)([/\\\\]?.*)")
+		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
 )
 
 func GetDeviceAndSubpath(path string) (device string, subpath string, err error) {

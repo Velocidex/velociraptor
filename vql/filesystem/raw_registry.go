@@ -132,7 +132,7 @@ func (self RawRegKeyInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
-func (u *RawRegKeyInfo) UnmarshalJSON(data []byte) error {
+func (self *RawRegKeyInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
@@ -283,18 +283,17 @@ func (self *RawRegFileSystemAccessor) New(
 
 	// When the context is done, close all the files.
 	go func() {
-		select {
-		case <-ctx.Done():
-			result.mu.Lock()
-			defer result.mu.Unlock()
+		<-ctx.Done()
 
-			for _, v := range result.fd_cache {
-				v.fd.Close()
-			}
+		result.mu.Lock()
+		defer result.mu.Unlock()
 
-			result.fd_cache = make(
-				map[string]*RawRegistryFileCache)
+		for _, v := range result.fd_cache {
+			v.fd.Close()
 		}
+
+		result.fd_cache = make(
+			map[string]*RawRegistryFileCache)
 	}()
 
 	return result

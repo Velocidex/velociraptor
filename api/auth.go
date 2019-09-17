@@ -96,19 +96,6 @@ func IsUserApprovedForClient(
 	return true
 }
 
-func getClientApprovalForUser(
-	config *config_proto.Config,
-	md *metadata.MD,
-	client_id string) *api_proto.ApprovalList {
-	result := api_proto.ApprovalList{
-		Items: []*api_proto.Approval{
-			{Reason: "test"},
-		},
-	}
-
-	return &result
-}
-
 func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 	result := &api_proto.VelociraptorUser{}
 
