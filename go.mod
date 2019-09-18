@@ -80,9 +80,11 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
 	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
-	golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2
+	golang.org/x/net v0.0.0-20190916140828-c8589233b77d
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20190913121621-c3b328c6e5a7
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
+	golang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3
+	golang.org/x/tools v0.0.0-20190917215024-905c8ffbfa41 // indirect
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df
 	google.golang.org/grpc v1.22.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
@@ -98,11 +100,12 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20190915105631-ba64b11ca20e
+	www.velocidex.com/golang/vfilter v0.0.0-20190918040408-b3b291cdeaa9
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 
 replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1

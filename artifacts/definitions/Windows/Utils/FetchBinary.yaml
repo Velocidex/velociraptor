@@ -21,7 +21,7 @@ sources:
       # Figure out our binary cache path based on arch. Fallback to
       # the temp directory.
       - |
-        LET binpath = SELECT dirname(path=expand(path=Path)) AS Path FROM switch(
+        LET binpath <= SELECT dirname(path=expand(path=Path)) AS Path FROM switch(
           a={SELECT config.WritebackWindows AS Path FROM info_cache
              WHERE OS="windows" AND Path},
           b={SELECT config.WritebacLinux AS Path FROM info_cache
@@ -35,17 +35,17 @@ sources:
       # Where should we download binaries from? Allow this to be
       # overriden by the user.
       - |
-        LET inventory_url = SELECT URL from switch(
-         a={SELECT binaryURL AS URL FROM info_cache WHERE URL},
-         b={SELECT get(item=config.ServerUrls + "public/",
-                       member="0") AS URL FROM scope() WHERE URL},
+        LET inventory_url <= SELECT URL from switch(
+         a={SELECT binaryURL AS URL FROM scope() WHERE URL},
+         b={SELECT config.ServerUrls[0] + "public/" AS URL FROM scope() WHERE URL},
          c={SELECT log(message="binaryURL not set and no server config."),
             NULL AS URL FROM info_cache})
 
       # Fetch the inventory from the repository.
       - |
         LET inventory_data = SELECT * FROM http_client(
-           url=inventory_url.URL + "inventory.csv")
+           length=1000000,
+           url=(inventory_url[0]).URL + "inventory.csv")
 
       # Parse the inventory: Tool,Type,URL,ExpectedHash
       - |
@@ -68,9 +68,9 @@ sources:
         LET download = SELECT hash(path=Content) as Hash,
             "Downloaded" AS DownloadStatus,
             copy(filename=Content,
-                 dest=binpath.Path+"/"+basename(path=URL)) AS FullPath
+                 dest=(binpath[0]).Path + "/"+basename(path=URL)) AS FullPath
         FROM http_client(
-            url=inventory_url.URL + URL,
+            url=(inventory_url[0]).URL + URL,
             tempfile_extension=".exe")
         WHERE Hash.SHA256 = ExpectedHash
 
@@ -79,7 +79,7 @@ sources:
       - |
         LET existing = SELECT FullPath, hash(path=FullPath) AS Hash,
                     "Cached" AS DownloadStatus
-        FROM stat(filename=binpath.Path + "/" + basename(path=URL))
+        FROM stat(filename=(binpath[0]).Path + "/" + basename(path=URL))
         WHERE Hash.SHA256 = ExpectedHash
 
       # Find the required_tool either if in the local cache or

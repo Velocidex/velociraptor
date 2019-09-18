@@ -93,6 +93,39 @@ func (self ParseJsonArray) Call(
 	return result
 }
 
+type ParseJsonArrayPlugin struct{}
+
+func (self ParseJsonArrayPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		result := ParseJsonArray{}.Call(ctx, scope, args)
+		result_value := reflect.Indirect(reflect.ValueOf(result))
+		result_type := result_value.Type()
+		if result_type.Kind() != reflect.Slice {
+			for i := 0; i < result_value.Len(); i++ {
+				output_chan <- result_value.Index(i).Interface()
+			}
+		}
+
+	}()
+
+	return output_chan
+}
+
+func (self ParseJsonArrayPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "parse_json_array",
+		Doc:     "Parses events from a line oriented json file.",
+		ArgType: type_map.AddType(scope, &ParseJsonArrayPlugin{}),
+	}
+}
+
 // Associative protocol for map[string]interface{}
 type _MapInterfaceAssociativeProtocol struct{}
 
@@ -307,4 +340,5 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_MapInterfaceAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_ProtobufAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_IndexAssociativeProtocol{})
+	vql_subsystem.RegisterPlugin(&ParseJsonArrayPlugin{})
 }

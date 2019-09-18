@@ -32,21 +32,23 @@ precondition: SELECT OS From info() where OS = 'windows'
 parameters:
  - name: KeyGlob
    default: Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\**
+ - name: userRegex
+   default: .
 
 sources:
  - queries:
      - |
-        LET UserProfiles = SELECT Uid, 
-            Gid, 
-            Name as Username, 
-            Description, 
-            UUID,  
+        LET UserProfiles = SELECT Uid,
+            Gid,
+            Name as Username,
+            Description,
+            UUID,
             {
                 SELECT FullPath FROM glob(globs=expand(path=Directory) + "//NTUSER.DAT", accessor="file")
             } as FullPath,
             expand(path=Directory) as Directory
         FROM Artifact.Windows.Sys.Users()
-        WHERE Directory and FullPath
+        WHERE Directory and FullPath AND Name =~ userRegex
      - |
        SELECT * FROM foreach(
             row={

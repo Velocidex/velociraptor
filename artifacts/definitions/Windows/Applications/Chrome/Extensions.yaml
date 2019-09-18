@@ -14,6 +14,9 @@ description: |
 parameters:
   - name: extensionGlobs
     default: \AppData\Local\Google\Chrome\User Data\*\Extensions\*\*\manifest.json
+  - name: userRegex
+    default: .
+
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
@@ -23,7 +26,9 @@ sources:
            in their home directory. */
         LET extension_manifests = SELECT * from foreach(
           row={
-             SELECT Uid, Name AS User, Directory from Artifact.Windows.Sys.Users()
+             SELECT Uid, Name AS User, Directory
+             FROM Artifact.Windows.Sys.Users()
+             WHERE Name =~ userRegex
           },
           query={
              SELECT FullPath, Mtime, Ctime, User, Uid from glob(

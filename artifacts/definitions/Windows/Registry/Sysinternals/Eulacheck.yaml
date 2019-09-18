@@ -11,6 +11,8 @@ description: |
 parameters:
    - name: Sysinternals_Reg_Key
      default: HKEY_USERS\*\Software\Sysinternals\*
+   - name: userRegex
+     default: .
 
 sources:
   - precondition:
@@ -18,7 +20,9 @@ sources:
 
     queries:
     - |
-      LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+      LET users <= SELECT Name, UUID
+          FROM Artifact.Windows.Sys.Users()
+          WHERE Name =~ userRegex
     - |
       SELECT Key.Name as ProgramName,
              Key.FullPath as Key,
