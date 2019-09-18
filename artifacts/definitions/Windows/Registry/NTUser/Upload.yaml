@@ -11,6 +11,10 @@ description: |
   registry hives using raw NTFS parsing. We then just upload all hives
   to the server.
 
+parameters:
+  - name: userRegex
+    default: .
+
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
@@ -18,7 +22,7 @@ sources:
       - |
         LET users = SELECT Name, Directory as HomeDir
             FROM Artifact.Windows.Sys.Users()
-            WHERE Directory
+            WHERE Directory AND Name =~ userRegex
 
       - |
         SELECT upload(file=expand(path=HomeDir) + "\\ntuser.dat",

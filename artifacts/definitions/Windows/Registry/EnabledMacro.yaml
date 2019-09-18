@@ -12,6 +12,8 @@ precondition: SELECT OS From info() where OS = 'windows'
 parameters:
  - name: KeyGlob
    default: Software\Microsoft\Office\*\*\Security\Trusted Documents\TrustRecords\*
+ - name: userRegex
+   default: .
 
 sources:
  - queries:
@@ -22,7 +24,7 @@ sources:
             } as NTUser,
             expand(path=Directory) as Directory
         FROM Artifact.Windows.Sys.Users()
-        WHERE Directory and NTUser
+        WHERE Directory and NTUser and Name =~ userRegex
       - |
         SELECT * FROM foreach(
           row={

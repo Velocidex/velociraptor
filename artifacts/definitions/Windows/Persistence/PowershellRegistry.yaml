@@ -20,6 +20,8 @@ parameters:
         condition:
           any of them
       }
+  - name: userRegex
+    default: .
 
 sources:
   - precondition:
@@ -29,7 +31,7 @@ sources:
         SELECT * from foreach(
         row={
           SELECT Name, Directory as HomeDir from Artifact.Windows.Sys.Users()
-          WHERE Directory and Gid
+          WHERE Directory and Gid AND Name =~ userRegex
         },
         query={
           SELECT File.FullPath As FullPath,
