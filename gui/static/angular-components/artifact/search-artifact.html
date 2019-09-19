@@ -108,7 +108,8 @@
 </div>
 
 <table class="table table-condensed">
-  <tr ng-repeat="(k, v) in params ">
+  <tr ng-repeat="(k, v) in params "
+      ng-if="controller.param_types[k] != 'hidden'">
     <div data-placement="left"
          data-toggle="tooltip"
          title="{$ controller.param_descriptions[k] $}">

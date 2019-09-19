@@ -339,7 +339,9 @@ parameters:
     description: "iTunes Backups (by Tony Knutson): iTunes Backup Folder, iTunes Backup Folder"
     type: bool
 
-  - name: KapeTargets
+  - name: KapeRules
+    type: hidden
+    description: A CSV file controlling the different Kape Target Rules
     default: |
       Id,Name,Category,Glob,Comment
       1,AppData,UserData,C:\Users\*\AppData\/**,
@@ -637,121 +639,131 @@ parameters:
       293,IE 11 Metadata,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\WebCache,
       294,IE 11 Cache,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\INetCache\/**,
       295,IE 11 Cookies,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\INetCookies\/**,
+  - name: KapeTargets
+    type: hidden
+    description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
+    default: |
+      Group,RuleIds
+      _BasicCollection,"[17, 18, 19, 22, 23, 26, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 76, 77, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 92, 93, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 228]"
+      _Boot,[45]
+      _J,"[80, 81]"
+      _LogFile,[44]
+      _MFT,[77]
+      _SDS,[26]
+      _T,[118]
+      Amcache,"[22, 23]"
+      Ammyy,[129]
+      ApacheAccessLog,[229]
+      AppData,[1]
+      ApplicationEvents,"[24, 25]"
+      Avast,"[190, 191, 192, 193]"
+      AviraAVLogs,[187]
+      BCD,"[20, 21]"
+      Bitdefender,[213]
+      BoxDrive,"[147, 148, 149]"
+      Chrome,"[234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261]"
+      ChromeExtensions,"[232, 233]"
+      CiscoJabber,[146]
+      CloudStorage,"[132, 133, 134, 147, 148, 149, 150, 151, 152, 153, 154, 158, 159, 160]"
+      CombinedLogs,"[34, 67, 68, 69, 70, 71, 92, 93, 228]"
+      ComboFix,[202]
+      ConfluenceLogs,"[173, 174]"
+      DirectoryTraversalWildCardExample,[2]
+      Dropbox,"[150, 151, 152, 153, 154]"
+      ESET,"[214, 215]"
+      Edge,"[230, 231]"
+      EncapsulationLogging,"[39, 40]"
+      EventLogs_RDP,"[72, 73, 74, 75]"
+      EventLogs,"[92, 93]"
+      EventTraceLogs,"[67, 68, 69, 70, 71]"
+      EvidenceOfExecution,"[22, 23, 76, 86, 87, 88]"
+      Exchange,"[121, 144]"
+      ExchangeClientAccess,[121]
+      ExchangeTransport,[144]
+      FSecure,"[195, 196, 197]"
+      FileSystem,"[26, 44, 45, 77, 80, 81, 118]"
+      Firefox,"[262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279]"
+      Gigatribe,"[7, 8, 9]"
+      GoogleDrive,"[158, 159, 160]"
+      GroupPolicy,"[59, 60, 61]"
+      HitmanPro,"[203, 204, 205]"
+      IISLogFiles,"[223, 224, 225, 226]"
+      InternetExplorer,"[280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295]"
+      JavaWebCache,"[137, 138, 139, 140, 141, 142, 143]"
+      KapeTriage,"[17, 18, 19, 22, 23, 24, 25, 26, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 63, 64, 65, 66, 76, 77, 78, 80, 81, 86, 87, 88, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 216, 230, 231, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295]"
+      Kaseya,"[161, 162, 163, 164, 165, 166, 167]"
+      LinuxOnWindowsProfileFiles,"[27, 28, 29, 30]"
+      LiveUserFiles,"[3, 4, 5, 6]"
+      LnkFilesAndJumpLists,"[53, 54, 55, 56, 57, 58]"
+      LogFiles,[79]
+      LogMeIn,"[24, 25, 119, 120]"
+      MOF,[91]
+      MSSQLErrorLog,"[221, 222]"
+      Malwarebytes,"[182, 183, 184]"
+      McAfee,"[207, 208, 209, 210, 211]"
+      McAfee_ePO,[206]
+      MiniTimelineCollection,"[26, 44, 45, 46, 47, 48, 49, 50, 51, 52, 77, 80, 81, 92, 93, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118]"
+      NGINXLogs,[227]
+      Notepad__,[172]
+      OneDrive,"[132, 133, 134]"
+      OutlookPSTOST,"[168, 169, 170, 171]"
+      PowerShellConsole,[228]
+      Prefetch,[86]
+      RDPCache,"[94, 95]"
+      RDPLogs,"[63, 64, 65, 66]"
+      RecentFileCache,[76]
+      Recycle,"[84, 85]"
+      RegistryHives,"[46, 47, 48, 49, 50, 51, 52, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116]"
+      RegistryHivesSystem,"[96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116]"
+      RegistryHivesUser,"[46, 47, 48, 49, 50, 51, 52]"
+      RemoteAdmin,"[24, 25, 63, 64, 65, 66, 94, 95, 119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 216]"
+      RogueKiller,[212]
+      SDB,"[41, 42]"
+      SRUM,[78]
+      SUPERAntiSpyware,[194]
+      ScheduledTasks,"[17, 18, 19]"
+      ScreenConnect,"[24, 25, 130, 131]"
+      SignatureCatalog,[16]
+      Skype,"[123, 124, 125, 126, 127, 128]"
+      Sophos,"[24, 25, 185, 186]"
+      StartupInfo,[62]
+      Symantec_AV_Logs,"[24, 25, 175, 176, 177, 178]"
+      Syscache,"[87, 88]"
+      TeamViewerLogs,"[155, 156, 157]"
+      TeraCopy,[145]
+      ThumbCache,[15]
+      TorrentClients,"[10, 11, 12, 13]"
+      Torrents,[14]
+      TrendMicro,"[179, 180, 181]"
+      USBDevicesLogs,"[82, 83]"
+      VIPRE,"[198, 199, 200, 201]"
+      VNCLogs,"[24, 25, 122]"
+      VirtualDisks,"[217, 218, 219, 220]"
+      WBEM,[117]
+      WER,"[36, 37, 38]"
+      WebBrowsers,"[230, 231, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295]"
+      WindowsDefender,"[188, 189]"
+      WindowsFirewall,[34]
+      WindowsIndexSearch,[43]
+      WindowsNotifcationsDB,"[89, 90]"
+      WindowsTimeline,"[31, 32, 33]"
+      XPRestorePoints,[35]
+      iTunesBackup,"[135, 136]"
 
 sources:
   - queries:
+      # Select all the rules Ids to be included depending on the group selection.
       - |
-        LET targets <= SELECT if(condition=_BasicCollection, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 17, 18, 19, 22, 228, 23, 26, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 76, 77, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 92, 93, 96, 97, 98, 99))+
-            if(condition=_Boot, then=(45))+
-            if(condition=_J, then=(80, 81))+
-            if(condition=_LogFile, then=(44))+
-            if(condition=_MFT, then=(77))+
-            if(condition=_SDS, then=(26))+
-            if(condition=_T, then=(118))+
-            if(condition=Amcache, then=(22, 23))+
-            if(condition=Ammyy, then=(129))+
-            if(condition=ApacheAccessLog, then=(229))+
-            if(condition=AppData, then=(1))+
-            if(condition=ApplicationEvents, then=(24, 25))+
-            if(condition=Avast, then=(190, 191, 192, 193))+
-            if(condition=AviraAVLogs, then=(187))+
-            if(condition=BCD, then=(20, 21))+
-            if(condition=Bitdefender, then=(213))+
-            if(condition=BoxDrive, then=(147, 148, 149))+
-            if(condition=Chrome, then=(234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261))+
-            if(condition=ChromeExtensions, then=(232, 233))+
-            if(condition=CiscoJabber, then=(146))+
-            if(condition=CloudStorage, then=(132, 133, 134, 147, 148, 149, 150, 151, 152, 153, 154, 158, 159, 160))+
-            if(condition=CombinedLogs, then=(228, 34, 67, 68, 69, 70, 71, 92, 93))+
-            if(condition=ComboFix, then=(202))+
-            if(condition=ConfluenceLogs, then=(173, 174))+
-            if(condition=DirectoryTraversalWildCardExample, then=(2))+
-            if(condition=Dropbox, then=(150, 151, 152, 153, 154))+
-            if(condition=ESET, then=(214, 215))+
-            if(condition=Edge, then=(230, 231))+
-            if(condition=EncapsulationLogging, then=(39, 40))+
-            if(condition=EventLogs_RDP, then=(72, 73, 74, 75))+
-            if(condition=EventLogs, then=(92, 93))+
-            if(condition=EventTraceLogs, then=(67, 68, 69, 70, 71))+
-            if(condition=EvidenceOfExecution, then=(22, 23, 76, 86, 87, 88))+
-            if(condition=Exchange, then=(121, 144))+
-            if(condition=ExchangeClientAccess, then=(121))+
-            if(condition=ExchangeTransport, then=(144))+
-            if(condition=FSecure, then=(195, 196, 197))+
-            if(condition=FileSystem, then=(118, 26, 44, 45, 77, 80, 81))+
-            if(condition=Firefox, then=(262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279))+
-            if(condition=Gigatribe, then=(7, 8, 9))+
-            if(condition=GoogleDrive, then=(158, 159, 160))+
-            if(condition=GroupPolicy, then=(59, 60, 61))+
-            if(condition=HitmanPro, then=(203, 204, 205))+
-            if(condition=IISLogFiles, then=(223, 224, 225, 226))+
-            if(condition=InternetExplorer, then=(280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295))+
-            if(condition=JavaWebCache, then=(137, 138, 139, 140, 141, 142, 143))+
-            if(condition=KapeTriage, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 17, 18, 19, 216, 22, 23, 230, 231, 234, 235, 236, 237, 238, 239, 24, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 25, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 26, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 63, 64, 65, 66, 76, 77, 78, 80, 81, 86, 87, 88, 92, 93, 94, 95, 96, 97, 98, 99))+
-            if(condition=Kaseya, then=(161, 162, 163, 164, 165, 166, 167))+
-            if(condition=LinuxOnWindowsProfileFiles, then=(27, 28, 29, 30))+
-            if(condition=LiveUserFiles, then=(3, 4, 5, 6))+
-            if(condition=LnkFilesAndJumpLists, then=(53, 54, 55, 56, 57, 58))+
-            if(condition=LogFiles, then=(79))+
-            if(condition=LogMeIn, then=(119, 120, 24, 25))+
-            if(condition=MOF, then=(91))+
-            if(condition=MSSQLErrorLog, then=(221, 222))+
-            if(condition=Malwarebytes, then=(182, 183, 184))+
-            if(condition=McAfee, then=(207, 208, 209, 210, 211))+
-            if(condition=McAfee_ePO, then=(206))+
-            if(condition=MiniTimelineCollection, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 26, 44, 45, 46, 47, 48, 49, 50, 51, 52, 77, 80, 81, 92, 93, 96, 97, 98, 99))+
-            if(condition=NGINXLogs, then=(227))+
-            if(condition=Notepad__, then=(172))+
-            if(condition=OneDrive, then=(132, 133, 134))+
-            if(condition=OutlookPSTOST, then=(168, 169, 170, 171))+
-            if(condition=PowerShellConsole, then=(228))+
-            if(condition=Prefetch, then=(86))+
-            if(condition=RDPCache, then=(94, 95))+
-            if(condition=RDPLogs, then=(63, 64, 65, 66))+
-            if(condition=RecentFileCache, then=(76))+
-            if(condition=Recycle, then=(84, 85))+
-            if(condition=RegistryHives, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 46, 47, 48, 49, 50, 51, 52, 96, 97, 98, 99))+
-            if(condition=RegistryHivesSystem, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 96, 97, 98, 99))+
-            if(condition=RegistryHivesUser, then=(46, 47, 48, 49, 50, 51, 52))+
-            if(condition=RemoteAdmin, then=(119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 216, 24, 25, 63, 64, 65, 66, 94, 95))+
-            if(condition=RogueKiller, then=(212))+
-            if(condition=SDB, then=(41, 42))+
-            if(condition=SRUM, then=(78))+
-            if(condition=SUPERAntiSpyware, then=(194))+
-            if(condition=ScheduledTasks, then=(17, 18, 19))+
-            if(condition=ScreenConnect, then=(130, 131, 24, 25))+
-            if(condition=SignatureCatalog, then=(16))+
-            if(condition=Skype, then=(123, 124, 125, 126, 127, 128))+
-            if(condition=Sophos, then=(185, 186, 24, 25))+
-            if(condition=StartupInfo, then=(62))+
-            if(condition=Symantec_AV_Logs, then=(175, 176, 177, 178, 24, 25))+
-            if(condition=Syscache, then=(87, 88))+
-            if(condition=TeamViewerLogs, then=(155, 156, 157))+
-            if(condition=TeraCopy, then=(145))+
-            if(condition=ThumbCache, then=(15))+
-            if(condition=TorrentClients, then=(10, 11, 12, 13))+
-            if(condition=Torrents, then=(14))+
-            if(condition=TrendMicro, then=(179, 180, 181))+
-            if(condition=USBDevicesLogs, then=(82, 83))+
-            if(condition=VIPRE, then=(198, 199, 200, 201))+
-            if(condition=VNCLogs, then=(122, 24, 25))+
-            if(condition=VirtualDisks, then=(217, 218, 219, 220))+
-            if(condition=WBEM, then=(117))+
-            if(condition=WER, then=(36, 37, 38))+
-            if(condition=WebBrowsers, then=(230, 231, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295))+
-            if(condition=WindowsDefender, then=(188, 189))+
-            if(condition=WindowsFirewall, then=(34))+
-            if(condition=WindowsIndexSearch, then=(43))+
-            if(condition=WindowsNotifcationsDB, then=(89, 90))+
-            if(condition=WindowsTimeline, then=(31, 32, 33))+
-            if(condition=XPRestorePoints, then=(35))+
-            if(condition=iTunesBackup, then=(135, 136))
-        AS Ids FROM scope()
+        LET targets <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
+        WHERE get(item=scope(), member=Group)
 
+      # Filter only the rules in the rule table that have an Id we want.
       - |
-        LET specs <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
-        WHERE Id in (targets[0]).Ids
+        LET specs <= SELECT * FROM parse_csv(filename=KapeRules, accessor="data")
+        WHERE Id in array(array=targets.RuleIds)
 
+      # Join all the rules into a single Glob plugin. This ensure we
+      # only make one pass over the filesystem.
       - |
         LET result = SELECT timestamp(epoch=now()) AS CopiedOnTimestamp,
                FullPath AS SourceFile, Size,
