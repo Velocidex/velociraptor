@@ -26,6 +26,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -264,7 +265,15 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 	return result, nil
 }
 
-func (self *NTFSFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
+	}()
+
 	result := []glob.FileInfo{}
 
 	// The path must start with a valid device, otherwise we list
@@ -357,7 +366,15 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 	return self.pos, nil
 }
 
-func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
+	}()
+
 	// The path must start with a valid device, otherwise we list
 	// the devices.
 	device, subpath, err := self.GetRoot(path)
@@ -404,7 +421,15 @@ func (self *NTFSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, erro
 	return nil, errors.New("File not found")
 }
 
-func (self *NTFSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
+func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err error) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
+	}()
+
 	// The path must start with a valid device, otherwise we list
 	// the devices.
 	device, subpath, err := self.GetRoot(path)
