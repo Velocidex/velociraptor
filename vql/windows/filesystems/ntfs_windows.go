@@ -267,8 +267,11 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {
 	defer func() {
-		err, _ = recover().(error)
-		fmt.Printf("PANIC %v\n", err)
+		r = recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
 	}()
 
 	result := []glob.FileInfo{}
@@ -365,8 +368,11 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 
 func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
 	defer func() {
-		err, _ = recover().(error)
-		fmt.Printf("PANIC %v\n", err)
+		r = recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
 	}()
 
 	// The path must start with a valid device, otherwise we list
@@ -417,8 +423,11 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 
 func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err error) {
 	defer func() {
-		err, _ = recover().(error)
-		fmt.Printf("PANIC %v\n", err)
+		r = recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
 	}()
 
 	// The path must start with a valid device, otherwise we list
