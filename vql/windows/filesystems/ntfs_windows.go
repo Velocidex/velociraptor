@@ -267,7 +267,7 @@ func discoverLogicalDisks() ([]glob.FileInfo, error) {
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {
 	defer func() {
-		r = recover()
+		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
 			err, _ = r.(error)
@@ -368,7 +368,7 @@ func (self *readAdapter) Seek(offset int64, whence int) (int64, error) {
 
 func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
 	defer func() {
-		r = recover()
+		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
 			err, _ = r.(error)
@@ -423,7 +423,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 
 func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err error) {
 	defer func() {
-		r = recover()
+		r := recover()
 		if r != nil {
 			fmt.Printf("PANIC %v\n", r)
 			err, _ = r.(error)
