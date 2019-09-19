@@ -26,7 +26,6 @@ package parsers
 
 import (
 	"context"
-	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -35,6 +34,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/glob"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -214,7 +214,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 	}
 	defer file.Close()
 
-	_, err = io.Copy(tmpfile, file)
+	_, err = utils.Copy(ctx, tmpfile, file)
 	if err != nil {
 		return "", err
 	}

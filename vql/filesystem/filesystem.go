@@ -51,7 +51,6 @@ func (self GlobPlugin) Call(
 			scope.Log("glob: %s", err.Error())
 			return
 		}
-
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("glob: %v", err)

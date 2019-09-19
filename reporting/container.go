@@ -140,7 +140,8 @@ func (self *Container) Upload(
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
-	n, err := io.Copy(utils.NewTee(writer, sha_sum, md5_sum), reader)
+
+	n, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
 		return &vql_networking.UploadResponse{
 			Error: err.Error(),
@@ -161,7 +162,8 @@ func (self *Container) Close() error {
 }
 
 func NewContainer(path string) (*Container, error) {
-	fd, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err := os.OpenFile(
+		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		return nil, err
 	}

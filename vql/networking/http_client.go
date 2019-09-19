@@ -35,6 +35,7 @@ import (
 	"github.com/tink-ab/tempfile"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -306,7 +307,7 @@ func (self *_HttpPlugin) Call(
 				arg.Url, tmpfile.Name())
 
 			response.Content = tmpfile.Name()
-			_, err = io.Copy(tmpfile, http_resp.Body)
+			_, err = utils.Copy(ctx, tmpfile, http_resp.Body)
 			if err != nil && err != io.EOF {
 				scope.Log("http_client: Reading error %v", err)
 			}

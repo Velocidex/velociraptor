@@ -108,7 +108,8 @@
 </div>
 
 <table class="table table-condensed">
-  <tr ng-repeat="(k, v) in params ">
+  <tr ng-repeat="(k, v) in params "
+      ng-if="controller.param_types[k] != 'hidden'">
     <div data-placement="left"
          data-toggle="tooltip"
          title="{$ controller.param_descriptions[k] $}">
@@ -118,6 +119,7 @@
       <td>
         <grr-form type="controller.param_types[k]"
                   value="params"
+                  description="controller.param_descriptions[k]"
                   field="k"></grr-form>
       </td>
     </div>

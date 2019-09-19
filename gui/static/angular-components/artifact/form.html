@@ -21,13 +21,16 @@
     </p>
   </div>
 
-  <input class=""
-         ng-switch-when="bool"
-         type="checkbox"
-         ng-true-value="'Y'"
-         ng-false-value="'N'"
-         ng-model="value[field]"></input>
-
+  <div ng-switch-when="bool">
+     <input class=""
+            type="checkbox"
+            ng-true-value="'Y'"
+            ng-false-value="'N'"
+            ng-model="value[field]"></input>
+     <span class="description">
+       {{ description }}
+     </span>
+  </div>
   <div ng-switch-default>
     <input class="form-control"
            ng-model="value[field]"></input>

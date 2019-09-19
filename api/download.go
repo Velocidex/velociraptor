@@ -32,6 +32,7 @@ import (
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -39,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -48,6 +50,7 @@ func returnError(w http.ResponseWriter, code int, message string) {
 }
 
 func downloadFlowToZip(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string,
 	flow_id string,
@@ -77,7 +80,7 @@ func downloadFlowToZip(
 			return err
 		}
 
-		_, err = io.Copy(f, reader)
+		_, err = utils.Copy(ctx, f, reader)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{
@@ -182,7 +185,8 @@ func createDownloadFile(config_obj *config_proto.Config,
 		defer fd.Close()
 		defer zip_writer.Close()
 
-		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
+		downloadFlowToZip(context.Background(),
+			config_obj, client_id, flow_id, zip_writer)
 	}()
 
 	return nil
@@ -253,7 +257,8 @@ func flowResultDownloadHandler(
 			return
 		}
 
-		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
+		downloadFlowToZip(r.Context(),
+			config_obj, client_id, flow_id, zip_writer)
 	})
 }
 
@@ -373,6 +378,7 @@ func huntResultDownloadHandler(
 			}
 
 			err := downloadFlowToZip(
+				r.Context(),
 				config_obj,
 				client_id,
 				flow_id,
@@ -564,7 +570,7 @@ func vfsFolderDownloadHandler(
 					return nil
 				}
 
-				_, err = io.Copy(zh, fd)
+				_, err = utils.Copy(r.Context(), zh, fd)
 				if err != nil {
 					logger.Warn("Cant copy %s", path_name)
 					return nil

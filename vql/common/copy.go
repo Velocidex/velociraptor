@@ -19,11 +19,11 @@ package common
 
 import (
 	"context"
-	"io"
 	"os"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -84,7 +84,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer to.Close()
 
-	_, err = io.Copy(to, fd)
+	_, err = utils.Copy(ctx, to, fd)
 	if err != nil {
 		scope.Log("copy: Failed to copy: %v", err)
 		return vfilter.Null{}
