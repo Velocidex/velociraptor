@@ -30,6 +30,7 @@ exports.FormDirective = function() {
       field: '=',
       value: '=',
       type: '=',
+      description: '=',
     },
     templateUrl: '/static/angular-components/artifact/form.html',
     controller: FormController,

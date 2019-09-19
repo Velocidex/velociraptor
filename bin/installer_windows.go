@@ -71,6 +71,7 @@ var (
 )
 
 func doInstall(config_obj *config_proto.Config) (err error) {
+	ctx := context.Background()
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -95,7 +96,7 @@ func doInstall(config_obj *config_proto.Config) (err error) {
 	}
 
 	// Try to copy the executable to the target_path.
-	err = utils.CopyFile(executable, target_path, 0755)
+	err = utils.CopyFile(ctx, executable, target_path, 0755)
 	if err != nil && os.IsNotExist(errors.Cause(err)) {
 		dirname := filepath.Dir(target_path)
 		logger.Info("Attempting to create intermediate directory %s.",
@@ -105,7 +106,7 @@ func doInstall(config_obj *config_proto.Config) (err error) {
 			logger.Info("MkdirAll %s: %v", dirname, err)
 			return errors.Wrap(err, "Create intermediate directories")
 		}
-		err = utils.CopyFile(executable, target_path, 0755)
+		err = utils.CopyFile(ctx, executable, target_path, 0755)
 	}
 	if err != nil {
 		logger.Info("Cant copy binary to destination %s: %v", target_path, err)
@@ -123,7 +124,7 @@ func doInstall(config_obj *config_proto.Config) (err error) {
 		logger.Info("Copying config to destination %s",
 			config_target_path)
 
-		err = utils.CopyFile(*config_path, config_target_path, 0755)
+		err = utils.CopyFile(ctx, *config_path, config_target_path, 0755)
 		if err != nil {
 			logger.Info("Cant copy config to destination %s: %v",
 				config_target_path, err)

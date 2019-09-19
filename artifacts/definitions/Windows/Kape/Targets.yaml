@@ -1,0 +1,771 @@
+name: Windows.Kape.Targets
+description: |
+
+    Kape is a popular bulk collector tool for triaging a system
+    quickly. While KAPE itself is not an opensource tool, the logic it
+    uses to decide which files to collect is encoded in YAML files
+    hosted on the KapeFiles project
+    (https://github.com/EricZimmerman/KapeFiles) and released under an
+    MIT license.
+
+    This artifact is automatically generated from these YAML files,
+    contributed and maintained by the community. This artifact only
+    encapsulates the KAPE "Targets" - basically a bunch of glob
+    expressions used for collecting files on the endpoint. We do not
+    do any post processing these files - we just collect them.
+
+    We recommend that timeouts and upload limits be used
+    conservatively with this artifact because we can upload really
+    vast quantities of data very quickly.
+
+reference:
+  - https://www.kroll.com/en/insights/publications/cyber/kroll-artifact-parser-extractor-kape
+  - https://github.com/EricZimmerman/KapeFiles
+
+parameters:
+  - name: _BasicCollection
+    description: "Basic Collection (by Phill Moore): at .job, at SchedLgU.txt, XML, Amcache, Amcache transaction files, $SDS, WindowsIndexSearch, $LogFile, $Boot, ntuser.dat registry hive XP, ntuser.dat registry hive, ntuser.dat registry transaction files, ntuser.dat DEFAULT registry hive, ntuser.dat DEFAULT transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files, Lnk files from Recent, Lnk files from Microsoft Office Recent, Lnk files from Recent (XP), Desktop lnk files XP, Desktop lnk files, Restore point lnk files XP, RecentFileCache, $MFT, SRUM, $J, $Max, Setupapi.log XP, Setupapi.log Win7+, $Recycle.Bin, RECYCLER WinXP, Prefetch, Syscache, Syscache transaction files, Event logs XP, Event logs Win7+, SAM registry transaction files, SECURITY registry transaction files, SOFTWARE registry transaction files, SYSTEM registry transaction files, PowerShell Console Log, SAM registry hive, SECURITY registry hive, SOFTWARE registry hive, SYSTEM registry hive, RegBack registry transaction files, SAM registry hive (RegBack), SECURITY registry hive (RegBack), SOFTWARE registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), System Profile registry hive, System Profile registry transaction files, Local Service registry hive, Local Service registry transaction files, Network Service registry hive, Network Service registry transaction files, System Restore Points Registry Hives (XP), $T"
+    type: bool
+  - name: _Boot
+    description: "$Boot (by Eric Zimmerman): $Boot"
+    type: bool
+  - name: _J
+    description: "$J (by Eric Zimmerman): $J, $Max"
+    type: bool
+  - name: _LogFile
+    description: "$LogFile (by Eric Zimmerman): $LogFile"
+    type: bool
+  - name: _MFT
+    description: "$MFT (by Eric Zimmerman): $MFT"
+    type: bool
+  - name: _SDS
+    description: "$SDS (by Eric Zimmerman): $SDS"
+    type: bool
+  - name: _T
+    description: "$T (by Eric Zimmerman): $T"
+    type: bool
+  - name: Amcache
+    description: "Amcache.hve (by Eric Zimmerman): Amcache, Amcache transaction files"
+    type: bool
+  - name: Ammyy
+    description: "Ammyy Data (by Drew Ervin): Ammyy Program Data"
+    type: bool
+  - name: ApacheAccessLog
+    description: "Apache Access Log (by Hadar Yudovich): Apache Access Log"
+    type: bool
+  - name: AppData
+    description: "AppData (by Phill Moore): AppData"
+    type: bool
+  - name: ApplicationEvents
+    description: "Windows Application Event Log (by Drew Ervin): Application Event Log XP, Application Event Log Win7+"
+    type: bool
+  - name: Avast
+    description: "Avast Antivirus Data (by Drew Ervin): Avast AV User Logs, Avast AV Index, Avast AV Logs (XP), Avast AV Logs"
+    type: bool
+  - name: AviraAVLogs
+    description: "Avira Logs (by Fabian Murer): Avira Activity Logs"
+    type: bool
+  - name: BCD
+    description: "Boot Configuration Files (by Troy Larson): BCD, BCD Logs"
+    type: bool
+  - name: Bitdefender
+    description: "Bitdefender Antivirus Data (by Drew Ervin): Bitdefender Endpoint Security Logs"
+    type: bool
+  - name: BoxDrive
+    description: "Box Cloud Storage Files and Metadata (by Chad Tilbury): Box User Files, Box Drive Application Metadata, Box Sync Application Metadata"
+    type: bool
+  - name: Chrome
+    description: "Chrome (by Eric Zimmerman): Chrome Preferences, Chrome Shortcuts, Chrome Top Sites, Chrome bookmarks, Chrome Visited Links, Chrome Web Data, Chrome bookmarks XP, Chrome Cookies XP, Chrome Current Session XP, Chrome Current Tabs XP, Chrome Favicons XP, Chrome History XP, Chrome Last Session XP, Chrome Last Tabs XP, Chrome Preferences XP, Chrome Shortcuts XP, Chrome Top Sites XP, Chrome bookmarks XP, Chrome Visited Links XP, Chrome Web Data XP, Chrome bookmarks, Chrome Cookies, Chrome Current Session, Chrome Current Tabs, Chrome Favicons, Chrome History, Chrome Last Session, Chrome Last Tabs"
+    type: bool
+  - name: ChromeExtensions
+    description: "Chrome Extension Files (by piesecurity): Chrome Extension Files, Chrome Extension Files XP"
+    type: bool
+  - name: CiscoJabber
+    description: "Jabber (by Andrew Bannon): Cisco Jabber Database"
+    type: bool
+  - name: CloudStorage
+    description: "Cloud Storage Contents and Metadata (by Chad Tilbury): Google File Stream Metadata, OneDrive User Files, OneDrive Metadata Logs, OneDrive Metadata Settings, Box User Files, Box Drive Application Metadata, Box Sync Application Metadata, Dropbox User Files, Dropbox Metadata, Dropbox Metadata, Dropbox Metadata, Windows Protect Folder, Google Drive User Files, Google Drive Metadata"
+    type: bool
+  - name: CombinedLogs
+    description: "Collect Event logs, Trace logs, Windows Firewall and PowerShell console (by Mike Cary): Windows Firewall Logs, WDI Trace Logs 1, WDI Trace Logs 2, WMI Trace Logs, SleepStudy Trace Logs, Energy-NTKL Trace Logs, PowerShell Console Log, Event logs XP, Event logs Win7+"
+    type: bool
+  - name: ComboFix
+    description: "ComboFix Antivirus Data (by Drew Ervin): ComboFix"
+    type: bool
+  - name: ConfluenceLogs
+    description: "Confluence Log Files (by Eric Capuano): Confluence Wiki Log Files, Confluence Wiki Log Files"
+    type: bool
+  - name: DirectoryTraversalWildCardExample
+    description: "Find zip archives (by Eric Zimmerman): Zips"
+    type: bool
+  - name: Dropbox
+    description: "Dropbox Cloud Storage Files and Metadata (by Chad Tilbury): Dropbox User Files, Dropbox Metadata, Dropbox Metadata, Dropbox Metadata, Windows Protect Folder"
+    type: bool
+  - name: ESET
+    description: "ESET Antivirus Data (by Drew Ervin): ESET NOD32 AV Logs (XP), ESET NOD32 AV Logs"
+    type: bool
+  - name: Edge
+    description: "Edge (by Phill Moore): Edge folder, WebcacheV01.dat"
+    type: bool
+  - name: EncapsulationLogging
+    description: "EncapsulationLogging (by Troy Larson): EncapsulationLogging Logs, EncapsulationLogging"
+    type: bool
+  - name: EventLogs_RDP
+    description: "Collect Win7+ RDP related Event logs (by Mark Hallman): Event logs Win7+, Event logs Win7+, Event logs Win7+, Event logs Win7+"
+    type: bool
+  - name: EventLogs
+    description: "Event logs (by Eric Zimmerman): Event logs XP, Event logs Win7+"
+    type: bool
+  - name: EventTraceLogs
+    description: "Event Trace Logs (by Mark Hallman): WDI Trace Logs 1, WDI Trace Logs 2, WMI Trace Logs, SleepStudy Trace Logs, Energy-NTKL Trace Logs"
+    type: bool
+  - name: EvidenceOfExecution
+    description: "Evidence of execution related files (by Eric Zimmerman): RecentFileCache, Prefetch, Amcache transaction files, Syscache transaction files, Amcache, Syscache"
+    type: bool
+  - name: Exchange
+    description: "Exchange Log Files (by Keith Twombley): Exchange TransportRoles log files, Exchange client access log files"
+    type: bool
+  - name: ExchangeClientAccess
+    description: "Exchange Client Access Log Files (by Keith Twombley): Exchange client access log files"
+    type: bool
+  - name: ExchangeTransport
+    description: "Exchange Transport Log Files (by Keith Twombley): Exchange TransportRoles log files"
+    type: bool
+  - name: FSecure
+    description: "F-Secure Antivirus Data (by Drew Ervin): F-Secure Logs, F-Secure User Logs, F-Secure Scheduled Scan Reports"
+    type: bool
+  - name: FileSystem
+    description: "File system metadata (by Eric Zimmerman): $LogFile, $MFT, $Boot, $J, $Max, $T, $SDS"
+    type: bool
+  - name: Firefox
+    description: "Firefox (by Eric Zimmerman): Places, Downloads, Form history, Cookies, Signons, Webappstore, Favicons, Addons, Search, Places, Downloads, Form history, Cookies, Signons, Webappstore, Favicons, Addons, Search"
+    type: bool
+  - name: Gigatribe
+    description: "Gigatribe Files (by Linus Nissi): Gigatribe Files Windows XP, Gigatribe Files Windows XP, Gigatribe Files Windows Vista/7/8/10"
+    type: bool
+  - name: GoogleDrive
+    description: "Google Drive Storage Files and Metadata (by Chad Tilbury): Google File Stream Metadata, Google Drive User Files, Google Drive Metadata"
+    type: bool
+  - name: GroupPolicy
+    description: "Current Group Policy Enforcement (by piesecurity): Local Group Policy INI Files, Local Group Policy Files - Registry Policy Files, Local Group Policy Files - Startup/Shutdown Scripts"
+    type: bool
+  - name: HitmanPro
+    description: "HitmanPro Antivirus Data (by Drew Ervin): HitmanPro Logs, HitmanPro Alert Logs, HitmanPro Database"
+    type: bool
+  - name: IISLogFiles
+    description: "IIS Log Files (by Troy Larson): IIS log files, IIS log files, IIS log files, IIS log files"
+    type: bool
+  - name: InternetExplorer
+    description: "Internet Explorer (by Eric Zimmerman): Roaming Internet Explorer folder, IE 9/10 History, IE 9/10 Cache, IE 9/10 Cookies, IE 9/10 Download History, IE 11 Metadata, IE 11 Cache, IE 11 Cookies, Index.dat History, Index.dat History subdirectory, Index.dat temp internet files, Index.dat cookies, Index.dat UserData, Index.dat Office XP, Index.dat Office, Local Internet Explorer folder"
+    type: bool
+  - name: JavaWebCache
+    description: "Java WebStart Cache - (IDX Files) (by piesecurity): Java WebStart Cache User Level - Default, Java WebStart Cache User Level - IE Protected Mode, Java WebStart Cache System level, Java WebStart Cache System level - IE Protected Mode, Java WebStart Cache System level (SysWow64), Java WebStart Cache System level (SysWow64) - IE Protected Mode, Java WebStart Cache User Level - XP"
+    type: bool
+  - name: KapeTriage
+    description: "Kape Triage collections that will collect most of the files needed for a DFIR Investigation.  This module pulls evidence from File System files, Registry Hives, Event Logs, Scheduled Tasks, Evidence of Execution, SRUM data, Web Browser data (IE/Edge, Chrome, Mozilla history), LNK Files, Jump Lists, 3rd party remote access software logs, 3rd party antivirus software logs. (by Scott Downie): at .job, at SchedLgU.txt, XML, Amcache, Amcache transaction files, Application Event Log XP, Application Event Log Win7+, $SDS, $LogFile, $Boot, ntuser.dat registry hive XP, ntuser.dat registry hive, ntuser.dat registry transaction files, ntuser.dat DEFAULT registry hive, ntuser.dat DEFAULT transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files, Lnk files from Recent, Lnk files from Microsoft Office Recent, Lnk files from Recent (XP), Desktop lnk files XP, Desktop lnk files, Restore point lnk files XP, RemoteConnectionManager Event Logs, LocalSessionManager Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RecentFileCache, $MFT, SRUM, $J, $Max, Prefetch, Syscache, Syscache transaction files, Event logs XP, Event logs Win7+, RDP Cache Files, RDP Cache Files, SAM registry transaction files, SECURITY registry transaction files, SOFTWARE registry transaction files, SYSTEM registry transaction files, SAM registry hive, SECURITY registry hive, SOFTWARE registry hive, SYSTEM registry hive, RegBack registry transaction files, SAM registry hive (RegBack), SECURITY registry hive (RegBack), SOFTWARE registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), System Profile registry hive, System Profile registry transaction files, Local Service registry hive, Local Service registry transaction files, Network Service registry hive, Network Service registry transaction files, System Restore Points Registry Hives (XP), $T, LogMeIn ProgramData Logs, LogMeIn Application Logs, RealVNC Log, ScreenConnect Session Database, ScreenConnect Session Database, TeamViewer Connection Logs, TeamViewer Application Logs, TeamViewer Configuration Files, Kaseya Live Connect Logs (XP), Kaseya Live Connect Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Endpoint Service Logs, Kaseya Agent Service Log, Kaseya Setup Log, Kaseya Setup Log, Ammyy, Edge folder, WebcacheV01.dat, Chrome bookmarks XP, Chrome Cookies XP, Chrome Current Session XP, Chrome Current Tabs XP, Chrome Favicons XP, Chrome History XP, Chrome Last Session XP, Chrome Last Tabs XP, Chrome Preferences XP, Chrome Shortcuts XP, Chrome Top Sites XP, Chrome bookmarks XP, Chrome Visited Links XP, Chrome Web Data XP, Chrome bookmarks, Chrome Cookies, Chrome Current Session, Chrome Current Tabs, Chrome Favicons, Chrome History, Chrome Last Session, Chrome Last Tabs, Chrome Preferences, Chrome Shortcuts, Chrome Top Sites, Chrome bookmarks, Chrome Visited Links, Chrome Web Data, Index.dat History, Index.dat History subdirectory, Index.dat temp internet files, Index.dat cookies, Index.dat UserData, Index.dat Office XP, Index.dat Office, Local Internet Explorer folder, Roaming Internet Explorer folder, IE 9/10 History, IE 9/10 Cache, IE 9/10 Cookies, IE 9/10 Download History, IE 11 Metadata, IE 11 Cache, IE 11 Cookies"
+    type: bool
+  - name: Kaseya
+    description: "Kaseya Data (by Drew Ervin): Kaseya Live Connect Logs (XP), Kaseya Live Connect Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Endpoint Service Logs, Kaseya Agent Service Log, Kaseya Setup Log, Kaseya Setup Log"
+    type: bool
+  - name: LinuxOnWindowsProfileFiles
+    description: "Linux on Windows Profile Files (by Troy Larson): .bash_history, .bash_logout, .bashrc, .profile"
+    type: bool
+  - name: LiveUserFiles
+    description: "Live User Files (by Mark Hallman): User Files - Desktop, User Files - Documents, User Files - Downloads, User Files - Dropbox"
+    type: bool
+  - name: LnkFilesAndJumpLists
+    description: "Lnk files and jump lists (by Eric Zimmerman): Lnk files from Recent, Lnk files from Microsoft Office Recent, Lnk files from Recent (XP), Desktop lnk files XP, Desktop lnk files, Restore point lnk files XP"
+    type: bool
+  - name: LogFiles
+    description: "LogFiles (by Fabian Murer): LogFiles"
+    type: bool
+  - name: LogMeIn
+    description: "LogMeIn Data (by Drew Ervin): LogMeIn Application Logs, Application Event Log XP, Application Event Log Win7+, LogMeIn ProgramData Logs"
+    type: bool
+  - name: MOF
+    description: "MOF files (WMI) (by Eric Zimmerman): MOF files"
+    type: bool
+  - name: MSSQLErrorLog
+    description: "MS SQL ErrorLogs (by Troy Larson): MS SQL Errorlog, MS SQL Errorlogs"
+    type: bool
+  - name: Malwarebytes
+    description: "Malwarebytes Data (by Drew Ervin): MalwareBytes Anti-Malware Scan Logs, MalwareBytes Anti-Malware Logs, MalwareBytes Anti-Malware Service Logs"
+    type: bool
+  - name: McAfee
+    description: "McAfee Log Files (by Sam Smoker): McAfee Desktop Protection Logs XP, McAfee Desktop Protection Logs, McAfee Endpoint Security Logs, McAfee Endpoint Security Logs, McAfee VirusScan Logs"
+    type: bool
+  - name: McAfee_ePO
+    description: "McAfee ePO Log Files (by Doug Metz): McAfee ePO Logs"
+    type: bool
+  - name: MiniTimelineCollection
+    description: "MFT, Registry and Event Logs to generate a mini timeline (by Mari DeGrazia): $SDS, $LogFile, $Boot, ntuser.dat registry hive XP, ntuser.dat registry hive, ntuser.dat registry transaction files, ntuser.dat DEFAULT registry hive, ntuser.dat DEFAULT transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files, $MFT, $J, $Max, Event logs XP, Event logs Win7+, SAM registry transaction files, SECURITY registry transaction files, SOFTWARE registry transaction files, SYSTEM registry transaction files, SAM registry hive, SECURITY registry hive, SOFTWARE registry hive, SYSTEM registry hive, RegBack registry transaction files, SAM registry hive (RegBack), SECURITY registry hive (RegBack), SOFTWARE registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), System Profile registry hive, System Profile registry transaction files, Local Service registry hive, Local Service registry transaction files, Network Service registry hive, Network Service registry transaction files, System Restore Points Registry Hives (XP), $T"
+    type: bool
+  - name: NGINXLogs
+    description: "NGINX Log Files (by Eric Capuano): NGINX Log Files"
+    type: bool
+  - name: Notepad__
+    description: "Notepad++ backup (by Banaanhangwagen): Notepad++ backup"
+    type: bool
+  - name: OneDrive
+    description: "Microsoft OneDrive Storage Files and Metadata (by Chad Tilbury): OneDrive User Files, OneDrive Metadata Logs, OneDrive Metadata Settings"
+    type: bool
+  - name: OutlookPSTOST
+    description: "Outlook PST and OST files (by Eric Zimmerman): PST XP, OST XP, PST, OST"
+    type: bool
+  - name: PowerShellConsole
+    description: "PowerShell Console Log File (by Mike Cary): PowerShell Console Log"
+    type: bool
+  - name: Prefetch
+    description: "Prefetch files (by Eric Zimmerman): Prefetch"
+    type: bool
+  - name: RDPCache
+    description: "RDP Cache Files (by Hadar Yudovich): RDP Cache Files, RDP Cache Files"
+    type: bool
+  - name: RDPLogs
+    description: "RDP Logs (by Drew Ervin): LocalSessionManager Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, RemoteConnectionManager Event Logs"
+    type: bool
+  - name: RecentFileCache
+    description: "Amcache.hve (by Eric Zimmerman): RecentFileCache"
+    type: bool
+  - name: Recycle
+    description: "Recycle Bin (by Mark Hallman): $Recycle.Bin, RECYCLER WinXP"
+    type: bool
+  - name: RegistryHives
+    description: "System and user related Registry hives (by Eric Zimmerman): ntuser.dat registry hive XP, ntuser.dat registry hive, ntuser.dat registry transaction files, ntuser.dat DEFAULT registry hive, ntuser.dat DEFAULT transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files, SAM registry transaction files, SECURITY registry transaction files, SOFTWARE registry transaction files, SYSTEM registry transaction files, SAM registry hive, SECURITY registry hive, SOFTWARE registry hive, SYSTEM registry hive, RegBack registry transaction files, SAM registry hive (RegBack), SECURITY registry hive (RegBack), SOFTWARE registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), System Profile registry hive, System Profile registry transaction files, Local Service registry hive, Local Service registry transaction files, Network Service registry hive, Network Service registry transaction files, System Restore Points Registry Hives (XP)"
+    type: bool
+  - name: RegistryHivesSystem
+    description: "System level/related Registry hives (by Eric Zimmerman / Mark Hallman): SAM registry transaction files, SECURITY registry transaction files, SOFTWARE registry transaction files, SYSTEM registry transaction files, SAM registry hive, SECURITY registry hive, SOFTWARE registry hive, SYSTEM registry hive, RegBack registry transaction files, SAM registry hive (RegBack), SECURITY registry hive (RegBack), SOFTWARE registry hive (RegBack), SYSTEM registry hive (RegBack), SYSTEM registry hive (RegBack), System Profile registry hive, System Profile registry transaction files, Local Service registry hive, Local Service registry transaction files, Network Service registry hive, Network Service registry transaction files, System Restore Points Registry Hives (XP)"
+    type: bool
+  - name: RegistryHivesUser
+    description: "User Related Registry hives (by Eric Zimmerman / Mark Hallman): ntuser.dat registry hive XP, ntuser.dat registry hive, ntuser.dat registry transaction files, ntuser.dat DEFAULT registry hive, ntuser.dat DEFAULT transaction files, UsrClass.dat registry hive, UsrClass.dat registry transaction files"
+    type: bool
+  - name: RemoteAdmin
+    description: "Composite target for files related to remote administration tools (by Drew Ervin): ScreenConnect Session Database, ScreenConnect Session Database, Application Event Log XP, Application Event Log Win7+, TeamViewer Connection Logs, TeamViewer Application Logs, TeamViewer Configuration Files, Kaseya Live Connect Logs (XP), Kaseya Live Connect Logs, Kaseya Agent Endpoint Service Logs (XP), Kaseya Agent Endpoint Service Logs, Kaseya Agent Service Log, Kaseya Setup Log, Kaseya Setup Log, RemoteConnectionManager Event Logs, LocalSessionManager Event Logs, RDPClient Event Logs, RDPCoreTS Event Logs, Ammyy, RDP Cache Files, RDP Cache Files, LogMeIn ProgramData Logs, LogMeIn Application Logs, RealVNC Log"
+    type: bool
+  - name: RogueKiller
+    description: "RogueKiller Anti-Malware (by Adlice Software) (by Drew Ervin): RogueKiller Reports"
+    type: bool
+  - name: SDB
+    description: "Shim SDB FIles (by Troy Larson): SDB Files, SDB Files x64"
+    type: bool
+  - name: SRUM
+    description: "System Resource Usage Monitor (SRUM) Data (by Mark Hallman): SRUM"
+    type: bool
+  - name: SUPERAntiSpyware
+    description: "SUPERAntiSpyware Data (by Drew Ervin): SUPERAntiSpyware Logs"
+    type: bool
+  - name: ScheduledTasks
+    description: "Scheduled tasks (*.job and XML) (by Eric Zimmerman): at .job, at SchedLgU.txt, XML"
+    type: bool
+  - name: ScreenConnect
+    description: "ScreenConnect Data (now known as ConnectWise Control) (by Drew Ervin): Application Event Log XP, Application Event Log Win7+, ScreenConnect Session Database, ScreenConnect Session Database"
+    type: bool
+  - name: SignatureCatalog
+    description: "Obtain detached signature catalog files (by Mike Pilkington): SignatureCatalog"
+    type: bool
+  - name: Skype
+    description: "Skype (by Eric Zimmerman): leveldb (Skype for Desktop +v8), main.db (App <v12), skype.db (App +v12), main.db XP, main.db Win7+, s4l-[username].db (App +v8)"
+    type: bool
+  - name: Sophos
+    description: "Sophos Data (by Drew Ervin): Application Event Log XP, Sophos Logs (XP), Sophos Logs, Application Event Log Win7+"
+    type: bool
+  - name: StartupInfo
+    description: "StartupInfo XML Files (by Hadar Yudovich): StartupInfo XML Files"
+    type: bool
+  - name: Symantec_AV_Logs
+    description: "Symantec AV Logs (by Brian Maloney): Symantec Endpoint Protection Logs (XP), Symantec Endpoint Protection Logs, Symantec Endpoint Protection User Logs, Symantec Event Log Win7+, Application Event Log XP, Application Event Log Win7+"
+    type: bool
+  - name: Syscache
+    description: "syscache.hve (by Phill Moore): Syscache transaction files, Syscache"
+    type: bool
+  - name: TeamViewerLogs
+    description: "Team Viewer Logs (by Hadar Yudovich): TeamViewer Connection Logs, TeamViewer Application Logs, TeamViewer Configuration Files"
+    type: bool
+  - name: TeraCopy
+    description: "TeraCopy log history (by Kevin Pagano): TeraCopy"
+    type: bool
+  - name: ThumbCache
+    description: "Thumbcache DB (by Eric Zimmerman): Thumbcache DB"
+    type: bool
+  - name: TorrentClients
+    description: "Torrent Clients (by Banaanhangwagen): TorrentClients - qBittorrent, TorrentClients - qBittorrent, TorrentClients - uTorrent, TorrentClients - BitTorrent"
+    type: bool
+  - name: Torrents
+    description: "Torrent Files (by Tony Knutson): Torrents"
+    type: bool
+  - name: TrendMicro
+    description: "Trend Micro Data (by Drew Ervin): Trend Micro Logs, Trend Micro Security Agent Report Logs, Trend Micro Security Agent Connection Logs"
+    type: bool
+  - name: USBDevicesLogs
+    description: "USB devices log files (by Eric Zimmerman): Setupapi.log XP, Setupapi.log Win7+"
+    type: bool
+  - name: VIPRE
+    description: "VIPRE Data (by Drew Ervin): VIPRE Business User Logs (v5-v6), VIPRE Business User Logs (up to v4), VIPRE Business Agent Logs, VIPRE Business User Logs (v7+)"
+    type: bool
+  - name: VNCLogs
+    description: "VNC Logs (by Phill Moore): Application Event Log XP, Application Event Log Win7+, RealVNC Log"
+    type: bool
+  - name: VirtualDisks
+    description: "Virtual Disks (by Phill Moore): VHD, VHDX, VDI, VMDK"
+    type: bool
+  - name: WBEM
+    description: "Web-Based Enterprise Management (WBEM) (by Mark Hallman): WBEM"
+    type: bool
+  - name: WER
+    description: "Windows Error Reporting (by Troy Larson): WER Files, Crash Dumps, Crash Dumps"
+    type: bool
+  - name: WebBrowsers
+    description: "Web browser history, bookmarks, etc. (by Eric Zimmerman): Chrome Preferences, Chrome Shortcuts, Chrome Top Sites, Chrome bookmarks, Chrome Visited Links, Chrome Web Data, Index.dat History, Index.dat History subdirectory, Index.dat temp internet files, Index.dat cookies, Index.dat UserData, Index.dat Office XP, Index.dat Office, Local Internet Explorer folder, Roaming Internet Explorer folder, IE 9/10 History, IE 9/10 Cache, IE 9/10 Cookies, IE 9/10 Download History, IE 11 Metadata, IE 11 Cache, IE 11 Cookies, Edge folder, WebcacheV01.dat, Chrome bookmarks XP, Chrome Cookies XP, Chrome Current Session XP, Chrome Current Tabs XP, Chrome Favicons XP, Chrome History XP, Chrome Last Session XP, Chrome Last Tabs XP, Chrome Preferences XP, Chrome Shortcuts XP, Chrome Top Sites XP, Chrome bookmarks XP, Chrome Visited Links XP, Chrome Web Data XP, Chrome bookmarks, Chrome Cookies, Chrome Current Session, Chrome Current Tabs, Chrome Favicons, Chrome History, Chrome Last Session, Chrome Last Tabs"
+    type: bool
+  - name: WindowsDefender
+    description: "Windows Defender Data (by Drew Ervin): Windows Defender Logs, Windows Defender Event Logs"
+    type: bool
+  - name: WindowsFirewall
+    description: "Windows Firewall Logs (by Mike Cary): Windows Firewall Logs"
+    type: bool
+  - name: WindowsIndexSearch
+    description: "Windows Index Search (by Mark Hallman): WindowsIndexSearch"
+    type: bool
+  - name: WindowsNotifcationsDB
+    description: "Windows 10 Notification DB (by Hadar Yudovich): Windows 10 Notification DB, Windows 10 Notification DB"
+    type: bool
+  - name: WindowsTimeline
+    description: "ActivitiesCache.db collector (by Lee Whitfield): ActivitiesCache.db-shm, ActivitiesCache.db-wal, ActivitiesCache.db"
+    type: bool
+  - name: XPRestorePoints
+    description: "XP Restore Points - System Volume Information directory (by Phill Moore): System Volume Information"
+    type: bool
+  - name: iTunesBackup
+    description: "iTunes Backups (by Tony Knutson): iTunes Backup Folder, iTunes Backup Folder"
+    type: bool
+
+  - name: KapeTargets
+    default: |
+      Id,Name,Category,Glob,Comment
+      1,AppData,UserData,C:\Users\*\AppData\/**,
+      2,Zips,Archives,C:\/**/*.zip,This is an example of how to walk a drive for a file mask. Probably do not want to use this one as is
+      3,User Files - Desktop,LiveUserFiles,C:\Users\*\Desktop/**,
+      4,User Files - Documents,LiveUserFiles,C:\Users\*\Documents/**,
+      5,User Files - Downloads,LiveUserFiles,C:\Users\*\Downloads/**,
+      6,User Files - Dropbox,LiveUserFiles,C:\Users\*\Dropbox*\/**,
+      7,Gigatribe Files Windows Vista/7/8/10,FileDownload,C:\Users\*\AppData\Local\Shalsoft\*/**,Locates Gigatribe files and copies them
+      8,Gigatribe Files Windows XP,FileDownload,C:\Documents and settings\*\*\Application Data\Gigatribe\*/**,Locates Gigatribe files and copies them. Different path depending on the Operating System language. In Swedish the location is C:\Documents and settings\<username>\Lokala Inställningar\Application Data\Gigatribe
+      9,Gigatribe Files Windows XP,FileDownload,C:\Documents and settings\*\*\Application Data\Shalsoft\*/**,Locates Gigatribe files and copies them. Different path depending on the Operating System language. In Swedish the location is C:\Documents and settings\<username>\Lokala Inställningar\Application Data\Shalsoft
+      10,TorrentClients - qBittorrent,FileDownload,C:\Users\*\AppData\Roaming\qBittorrent\*.ini,Locates settings files and copies them
+      11,TorrentClients - qBittorrent,FileDownload,C:\Users\*\AppData\Local\qBittorrent\logs,Locates log files and copies them
+      12,TorrentClients - uTorrent,FileDownload,C:\Users\*\AppData\Roaming\uTorrent\*.dat,Locates settings files and copies them
+      13,TorrentClients - BitTorrent,FileDownload,C:\Users\*\AppData\Roaming\BitTorrent\*.dat,Locates settings files and copies them
+      14,Torrents,FileDownload,C:\/**/*.torrent,Locates .torrent files and copies them
+      15,Thumbcache DB,FileKnowledge,C:\Users\*\AppData\Local\Microsoft\Windows\Explorer\thumbcache_*.db,
+      16,SignatureCatalog,FileMetadata,C:\Windows*\System32\CatRoot/**,
+      17,at .job,Persistence,C:\Windows*\Tasks\*.job,
+      18,at SchedLgU.txt,Persistence,C:\Windows*\SchedLgU.txt,
+      19,XML,Persistence,C:\Windows*\system32\Tasks/**,
+      20,BCD,Registry,C:\Boot\BCD,
+      21,BCD Logs,Registry,C:\Boot\BCD.LOG*,
+      22,Amcache,ApplicationCompatibility,C:\Windows*\AppCompat\Programs\Amcache.hve,
+      23,Amcache transaction files,ApplicationCompatibility,C:\Windows*\AppCompat\Programs\Amcache.hve.LOG*,
+      24,Application Event Log XP,EventLogs,C:\Windows*\system32\config\AppEvent.evt,
+      25,Application Event Log Win7+,EventLogs,C:\Windows*\system32\winevt\logs\application.evtx,
+      26,$SDS,FileSystem,c:\$Secure:$SDS,
+      27,.bash_history,Windows Linux Profile,C:\Users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*\.bash_history,
+      28,.bash_logout,Windows Linux Profile,C:\Users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*\.bash_logout,
+      29,.bashrc,Windows Linux Profile,C:\Users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*\.bashrc,
+      30,.profile,Windows Linux Profile,C:\Users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*\.profile,
+      31,ActivitiesCache.db,FileFolderAccess,C:\Users\*\AppData\Local\ConnectedDevicesPlatform\*\ActivitiesCache.db,
+      32,ActivitiesCache.db-shm,FileFolderAccess,C:\Users\*\AppData\Local\ConnectedDevicesPlatform\*\ActivitiesCache.db-shm,
+      33,ActivitiesCache.db-wal,FileFolderAccess,C:\Users\*\AppData\Local\ConnectedDevicesPlatform\*\ActivitiesCache.db-wal,
+      34,Windows Firewall Logs,WindowsFirewallLogs,C:\Windows*\System32\LogFiles\Firewall\pfirewall.*,
+      35,System Volume Information,Folder capture,C:\System Volume Information/**,
+      36,WER Files,Executables,C:\ProgramData\Microsoft\Windows\WER/**,
+      37,Crash Dumps,SQL Exploitation,C:\Users\*\AppData\Local\CrashDumps\*.dmp,
+      38,Crash Dumps,SQL Exploitation,C:\Windows*\*.dmp,
+      39,EncapsulationLogging,Executables,C:\Windows*\Appcompat\Programs\EncapsulationLogging.hve,
+      40,EncapsulationLogging Logs,Executables,C:\Windows*\Appcompat\Programs\EncapsulationLogging.log*,
+      41,SDB Files,Executables,C:\Windows*\apppatch\Custom\*.sdb,
+      42,SDB Files x64,Executables,C:\Windows*\apppatch\Custom\Custom64\*.sdb,
+      43,WindowsIndexSearch,FileKnowledge,C:\programdata\microsoft\search\data\applications\windows\Windows.edb,
+      44,$LogFile,FileSystem,C:\$LogFile,
+      45,$Boot,FileSystem,c:\$Boot,
+      46,ntuser.dat registry hive XP,Registry,C:\Documents and Settings\*\ntuser.dat,
+      47,ntuser.dat registry hive,Registry,C:\Users\*\ntuser.dat,
+      48,ntuser.dat registry transaction files,Registry,C:\Users\*\ntuser.dat.LOG*,
+      49,ntuser.dat DEFAULT registry hive,Registry,C:\Windows*\System32\config\DEFAULT,
+      50,ntuser.dat DEFAULT transaction files,Registry,C:\Windows*\System32\config\DEFAULT.LOG*,
+      51,UsrClass.dat registry hive,Registry,C:\Users\*\AppData\Local\Microsoft\Windows\UsrClass.dat,
+      52,UsrClass.dat registry transaction files,Registry,C:\Users\*\AppData\Local\Microsoft\Windows\UsrClass.dat.LOG*,
+      53,Lnk files from Recent,LnkFiles,C:\Users\*\AppData\Roaming\Microsoft\Windows\Recent/**,Also includes automatic and custom jumplist directories
+      54,Lnk files from Microsoft Office Recent,LnkFiles,C:\Users\*\AppData\Roaming\Microsoft\Office\Recent/**,
+      55,Lnk files from Recent (XP),LnkFiles,C:\Documents and Settings\*\Recent/**,
+      56,Desktop lnk files XP,LnkFiles,C:\Documents and Settings\*\Desktop\*.lnk,
+      57,Desktop lnk files,LnkFiles,C:\Users\*\Desktop\*.lnk,
+      58,Restore point lnk files XP,LnkFiles,C:\System Volume Information\_restore*\RP*\*.lnk,
+      59,Local Group Policy INI Files,Communication,C:\Windows*\system32\grouppolicy\*.ini,
+      60,Local Group Policy Files - Registry Policy Files,Communication,C:\Windows*\system32\grouppolicy\*.pol,
+      61,Local Group Policy Files - Startup/Shutdown Scripts,Communication,C:\Windows*\system32\grouppolicy\*\Scripts/**,
+      62,StartupInfo XML Files,Persistence,C:\Windows*\System32\WDI\LogFiles\StartupInfo\*.xml,
+      63,RemoteConnectionManager Event Logs,EventLogs,C:\Windows*\system32\winevt\logs\Microsoft-Windows-TerminalServices-RemoteConnectionManager*,
+      64,LocalSessionManager Event Logs,EventLogs,C:\Windows*\system32\winevt\logs\Microsoft-Windows-TerminalServices-LocalSessionManager*,
+      65,RDPClient Event Logs,EventLogs,C:\Windows*\system32\winevt\logs\Microsoft-Windows-TerminalServices-RDPClient*,
+      66,RDPCoreTS Event Logs,EventLogs,C:\Windows*\system32\winevt\logs\Microsoft-Windows-RemoteDesktopServices-RdpCoreTS*,Can be used to correlate RDP logon failures by originating IP
+      67,WDI Trace Logs 1,Event Trace Logs,C:\Windows*\System32\WDI\LogFiles\*.etl*,
+      68,WDI Trace Logs 2,Event Trace Logs,C:\Windows*\System32\WDI\{*/**,
+      69,WMI Trace Logs,Event Trace Logs,C:\Windows*\System32\LogFiles\WMI\*/**,
+      70,SleepStudy Trace Logs,Event Trace Logs,C:\Windows*\System32\SleepStudy*/**,
+      71,Energy-NTKL Trace Logs,Event Trace Logs,C:\ProgramData\Microsoft\Windows\PowerEfficiency Diagnostics\energy-ntkl.etl,
+      72,Event logs Win7+,EventLogs,C:\Windows*\system32\winevt\logs\System.evtx,
+      73,Event logs Win7+,EventLogs,C:\Windows*\system32\winevt\logs\Security.evtx,
+      74,Event logs Win7+,EventLogs,G:\Windows\System32\winevt\Logs\Microsoft-Windows-TerminalServices-LocalSessionManager%4Operational.evtx,
+      75,Event logs Win7+,EventLogs,G:\Windows\System32\winevt\Logs\Microsoft-Windows-TerminalServices-RemoteConnectionManager%4Operational.evtx,
+      76,RecentFileCache,ApplicationCompatability,C:\Windows*\AppCompat\Programs\RecentFileCache.bcf,
+      77,$MFT,FileSystem,C:\$MFT,
+      78,SRUM,Execution,C:\Windows*\System32\SRU/**,
+      79,LogFiles,Logs,C:\Windows*\System32\LogFiles/**,
+      80,$J,FileSystem,c:\$Extend\$UsnJrnl:$J,
+      81,$Max,FileSystem,c:\$Extend\$UsnJrnl:$Max,
+      82,Setupapi.log XP,USBDevices,C:\Windows\setupapi.log,
+      83,Setupapi.log Win7+,USBDevices,C:\Windows*\inf\setupapi.dev.log,
+      84,$Recycle.Bin,Deleted Files,C:\$Recycle.Bin\*/**,
+      85,RECYCLER WinXP,Deleted Files,C:\RECYCLER\*/**,
+      86,Prefetch,Prefetch,C:\Windows*\prefetch\*.pf,
+      87,Syscache,Program Execution,C:\System Volume Information\Syscache.hve,
+      88,Syscache transaction files,Program Execution,C:\System Volume Information\Syscache.hve.LOG*,
+      89,Windows 10 Notification DB,Notifications,C:\Users\*\AppData\Local\Microsoft\Windows\Notifications\wpndatabase.db,Locates Windows notification db files
+      90,Windows 10 Notification DB,Notifications,C:\Users\*\AppData\Local\Microsoft\Windows\Notifications\appdb.dat,Locates Windows notification db files
+      91,MOF files,WMI,C:\/**/*.MOF,
+      92,Event logs XP,EventLogs,C:\Windows\system32\config\*.evt,
+      93,Event logs Win7+,EventLogs,C:\Windows*\system32\winevt\logs\*.evtx,
+      94,RDP Cache Files,FileSystem,C:\Users\*\AppData\Local\Microsoft\Terminal Server Client\Cache,
+      95,RDP Cache Files,FileSystem,C:\Documents and Settings\*\Local Settings\Application Data\Microsoft\Terminal Server Client\Cache,
+      96,SAM registry transaction files,Registry,C:\Windows*\System32\config\SAM.LOG*,
+      97,SECURITY registry transaction files,Registry,C:\Windows*\System32\config\SECURITY.LOG*,
+      98,SOFTWARE registry transaction files,Registry,C:\Windows*\System32\config\SOFTWARE.LOG*,
+      99,SYSTEM registry transaction files,Registry,C:\Windows*\System32\config\SYSTEM.LOG*,
+      100,SAM registry hive,Registry,C:\Windows*\System32\config\SAM,
+      101,SECURITY registry hive,Registry,C:\Windows*\System32\config\SECURITY,
+      102,SOFTWARE registry hive,Registry,C:\Windows*\System32\config\SOFTWARE,
+      103,SYSTEM registry hive,Registry,C:\Windows*\System32\config\SYSTEM,
+      104,RegBack registry transaction files,Registry,C:\Windows*\System32\config\RegBack\*.LOG*,
+      105,SAM registry hive (RegBack),Registry,C:\Windows*\System32\config\RegBack\SAM,
+      106,SECURITY registry hive (RegBack),Registry,C:\Windows*\System32\config\RegBack\SECURITY,
+      107,SOFTWARE registry hive (RegBack),Registry,C:\Windows*\System32\config\RegBack\SOFTWARE,
+      108,SYSTEM registry hive (RegBack),Registry,C:\Windows*\System32\config\RegBack\SYSTEM,
+      109,SYSTEM registry hive (RegBack),Registry,C:\Windows*\System32\config\RegBack\SYSTEM1,
+      110,System Profile registry hive,Registry,C:\Windows*\System32\config\systemprofile\ntuser.dat,
+      111,System Profile registry transaction files,Registry,C:\Windows*\System32\config\systemprofile\ntuser.dat.LOG*,
+      112,Local Service registry hive,Registry,C:\Windows*\ServiceProfiles\LocalService\ntuser.dat,
+      113,Local Service registry transaction files,Registry,C:\Windows*\ServiceProfiles\LocalService\ntuser.dat.LOG*,
+      114,Network Service registry hive,Registry,C:\Windows*\ServiceProfiles\NetworkService\ntuser.dat,
+      115,Network Service registry transaction files,Registry,C:\Windows*\ServiceProfiles\NetworkService\ntuser.dat.LOG*,
+      116,System Restore Points Registry Hives (XP),Registry,C:\System Volume Information\_restore*\RP*\snapshot\_REGISTRY_*,
+      117,WBEM,WBEM,C:\Windows*\System32\wbem\Repository/**,
+      118,$T,FileSystem,c:\$Extend\$RmMetadata\$TxfLog\$Tops:$T,
+      119,LogMeIn ProgramData Logs,ApplicationLogs,C:\ProgramData\LogMeIn\Logs/**,
+      120,LogMeIn Application Logs,ApplicationLogs,C:\Users\*\AppData\Local\temp\LogMeInLogs/**,"Contains RemoteAssist (formerly GoToAssist), GoToMeeting, and other GoTo* logs"
+      121,Exchange client access log files,Logs,C:\Program Files\Microsoft\Exchange Server\*\Logging/**/*.log,Highly dependent on Exchange configuration
+      122,RealVNC Log,ApplicationLogs,C:\Users\*\AppData\Local\RealVNC\vncserver.log,https://www.realvnc.com/en/connect/docs/logging.html#logging
+      123,main.db (App <v12),Communications,C:\Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*\main.db,
+      124,skype.db (App +v12),Communications,C:\Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\*\skype.db,
+      125,main.db XP,Communications,C:\Documents and Settings\*\Application Data\Skype\*\main.db,
+      126,main.db Win7+,Communications,C:\Users\*\AppData\Roaming\Skype\*\main.db,
+      127,s4l-[username].db (App +v8),Communications,C:\Users\*\AppData\Local\Packages\Microsoft.SkypeApp_*\LocalState\s4l-*.db,
+      128,leveldb (Skype for Desktop +v8),Communications,C:\Users\*\AppData\Roaming\Microsoft\Skype for Desktop\IndexedDB\*.leveldb\*.log,
+      129,Ammyy Program Data,ApplicationLogs,C:\ProgramData\Ammyy/**,"May not contain traditional log files, but presence of this folder may indicate historical usage"
+      130,ScreenConnect Session Database,ApplicationLogs,C:\Program Files*\ScreenConnect\App_Data\Session.db,SQLite database with session information
+      131,ScreenConnect Session Database,ApplicationLogs,C:\Program Files*\ScreenConnect\App_Data\User.xml,Contains each user's last authenticated time
+      132,OneDrive User Files,Apps,C:\Users\*\OneDrive*\/**,Caution -- This target will collect OneDrive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
+      133,OneDrive Metadata Logs,Apps,C:\Users\*\AppData\Local\Microsoft\OneDrive\logs\/**,
+      134,OneDrive Metadata Settings,Apps,C:\Users\*\AppData\Local\Microsoft\OneDrive\settings\/**,
+      135,iTunes Backup Folder,Communications,C:\Users\*\AppData\Roaming\Apple\Mobilesync\Backup/**,
+      136,iTunes Backup Folder,Communications,C:\Users\*\AppData\Roaming\Apple Computer\Mobilesync\Backup/**,
+      137,Java WebStart Cache User Level - Default,Communication,C:\Users\*\AppData\Local\Sun\Java\Deployment\cache\*\*\*.idx,
+      138,Java WebStart Cache User Level - IE Protected Mode,Communication,C:\Users\*\AppData\LocalLow\Sun\Java\Deployment\cache\*\*\*.idx,
+      139,Java WebStart Cache System level,Communication,C:\Windows*\System32\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*\*.idx,
+      140,Java WebStart Cache System level - IE Protected Mode,Communication,C:\Windows*\System32\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*\*.idx,
+      141,Java WebStart Cache System level (SysWow64),Communication,C:\Windows*\SysWOW64\config\systemprofile\AppData\Local\Sun\Java\Deployment\cache\*\*\*.idx,
+      142,Java WebStart Cache System level (SysWow64) - IE Protected Mode,Communication,C:\Windows*\SysWOW64\config\systemprofile\AppData\LocalLow\Sun\Java\Deployment\cache\*\*\*.idx,
+      143,Java WebStart Cache User Level - XP,Communications,C:\Documents and Settings\*\Application Data\Sun\Java\Deployment\cache\*\*\*.idx,
+      144,Exchange TransportRoles log files,Logs,C:\Program Files\Microsoft\Exchange Server\*\TransportRoles\Logs\/**/*.log,Highly dependent on Exchange configuration
+      145,TeraCopy,TeraCopy,C:\Users\*\AppData\Roaming\TeraCopy/**,
+      146,Cisco Jabber Database,Communications,C:\Users\*\AppData\Local\Cisco\Unified Communications\Jabber\CSF\History\*.db,The Cisco Jabber process needs to be killed before database can be copied.
+      147,Box User Files,Apps,C:\Users\*\Box*\/**,Caution -- This target will collect Box Drive contents from the local drive AND on-demand cloud files. Ensure your scope of authority permits cloud collections before use
+      148,Box Drive Application Metadata,Apps,C:\Users\*\AppData\Local\Box\Box\*\/**,
+      149,Box Sync Application Metadata,Apps,C:\Users\*\AppData\Local\Box Sync\*\/**,
+      150,Dropbox User Files,Apps,C:\Users\*\Dropbox*\/**,
+      151,Dropbox Metadata,Apps,C:\Users\*\AppData\Local\Dropbox\info.json,Getting individual files because folder may contain very large extraneous files
+      152,Dropbox Metadata,Apps,C:\Users\*\AppData\Local\Dropbox\*\filecache.dbx,Getting individual files because folder may contain very large extraneous files
+      153,Dropbox Metadata,Apps,C:\Users\*\AppData\Local\Dropbox\*\config.dbx,Getting individual files because folder may contain very large extraneous files
+      154,Windows Protect Folder,FileSystem,C:\Users\*\AppData\Roaming\Microsoft\Protect\*\/**,Required for offline decryption of Dropbox databases
+      155,TeamViewer Connection Logs,Communications,C:\Program Files*\TeamViewer\connections*.txt,Includes connections_incoming.txt and connections.txt
+      156,TeamViewer Application Logs,ApplicationLogs,C:\Program Files*\TeamViewer\TeamViewer*_Logfile*,Includes TeamViewer<version>_Logfile.log and TeamViewer<version>_Logfile_OLD.log
+      157,TeamViewer Configuration Files,ApplicationLogs,C:\Users\*\AppData\Roaming\TeamViewer\MRU\RemoteSupport/**,Includes miscellaneous config files
+      158,Google Drive User Files,Apps,C:\Users\*\Google Drive*\/**,Google Drive Backup and Sync Application
+      159,Google Drive Metadata,Apps,C:\Users\*\AppData\Local\Google\Drive\/**,Google Drive Backup and Sync Application
+      160,Google File Stream Metadata,Apps,C:\Users\*\AppData\Local\Google\DriveFS\/**,Google Drive File Stream Application
+      161,Kaseya Live Connect Logs (XP),ApplicationLogs,C:\Documents and Settings\*\Application Data\Kaseya\Log/**,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      162,Kaseya Live Connect Logs,ApplicationLogs,C:\Users\*\AppData\Local\Kaseya\Log\KaseyaLiveConnect/**,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      163,Kaseya Agent Endpoint Service Logs (XP),ApplicationLogs,C:\Documents and Settings\All Users\Application Data\Kaseya\Log\Endpoint/**,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      164,Kaseya Agent Endpoint Service Logs,ApplicationLogs,C:\ProgramData\Kaseya\Log\Endpoint/**,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      165,Kaseya Agent Service Log,ApplicationLogs,C:\Program Files*\Kaseya\*\agentmon.log*,https://helpdesk.kaseya.com/hc/en-gb/articles/229009708-Live-Connect-Log-File-Locations
+      166,Kaseya Setup Log,ApplicationLogs,C:\Users\*\AppData\Local\Temp\KASetup.log,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
+      167,Kaseya Setup Log,ApplicationLogs,C:\Windows*\Temp\KASetup.log,https://helpdesk.kaseya.com/hc/en-gb/articles/229011448
+      168,PST XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook\*.pst,
+      169,OST XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Microsoft\Outlook\*.ost,
+      170,PST,Communications,C:\Users\*\AppData\Local\Microsoft\Outlook\*.pst,
+      171,OST,Communications,C:\Users\*\AppData\Local\Microsoft\Outlook\*.ost,
+      172,Notepad++ backup,Text Editor,C:\Users\*\AppData\Roaming\Notepad++\backup/**,Locates non-saved Notepad++ files and copies them.
+      173,Confluence Wiki Log Files,Logs,C:\Atlassian\Application Data\Confluence\logs\*.log*,
+      174,Confluence Wiki Log Files,Logs,C:\Program Files\Atlassian\Confluence\logs\*.log,
+      175,Symantec Endpoint Protection Logs (XP),AntiVirus,C:\Documents and Settings\All Users\Application Data\Symantec\Symantec Endpoint Protection\Logs\AV/**,
+      176,Symantec Endpoint Protection Logs,AntiVirus,C:\ProgramData\Symantec\Symantec Endpoint Protection\CurrentVersion\Data\Logs/**,
+      177,Symantec Endpoint Protection User Logs,AntiVirus,C:\Users\*\AppData\Local\Symantec\Symantec Endpoint Protection\Logs/**,
+      178,Symantec Event Log Win7+,EventLogs,C:\Windows*\system32\winevt\logs\Symantec Endpoint Protection Client.evtx,Symantec specific Windows event log
+      179,Trend Micro Logs,Antivirus,C:\ProgramData\Trend Micro\/**,
+      180,Trend Micro Security Agent Report Logs,Antivirus,C:\Program Files*\Trend Micro\Security Agent\Report\*.log,
+      181,Trend Micro Security Agent Connection Logs,Antivirus,C:\Program Files*\Trend Micro\Security Agent\ConnLog\*.log,
+      182,MalwareBytes Anti-Malware Logs,Antivirus,C:\ProgramData\Malwarebytes\Malwarebytes Anti-Malware\Logs\mbam-log-*.xml,
+      183,MalwareBytes Anti-Malware Service Logs,Antivirus,C:\ProgramData\Malwarebytes\MBAMService\logs\mbamservice.log,
+      184,MalwareBytes Anti-Malware Scan Logs,Antivirus,C:\Users\*\AppData\Roaming\Malwarebytes\Malwarebytes Anti-Malware\Logs/**,
+      185,Sophos Logs (XP),Antivirus,C:\Documents and Settings\All Users\Application Data\Sophos\Sophos *\Logs\/**,"Includes Anti-Virus, Client Firewall, Data Control, Device Control, Endpoint Defense, Network Threat Detection, Management Communications System, Patch Control, Tamper Protection"
+      186,Sophos Logs,Antivirus,C:\ProgramData\Sophos\Sophos *\Logs\/**,"Includes Anti-Virus, Client Firewall, Data Control, Device Control, Endpoint Defense, Network Threat Detection, Management Communications System, Patch Control, Tamper Protection"
+      187,Avira Activity Logs,AntiVirus,C:\ProgramData\Avira\Antivirus\LOGFILES/**,Collects the scan logs of Avira AntiVirus
+      188,Windows Defender Logs,Antivirus,C:\ProgramData\Microsoft\Microsoft AntiMalware\Support\/**,
+      189,Windows Defender Event Logs,EventLogs,C:\Windows*\System32\winevt\Logs\Microsoft-Windows-WindowsDefender*.evtx,
+      190,Avast AV Logs (XP),Antivirus,C:\Documents And Settings\All Users\Application Data\Avast Software\Avast\Log/**,
+      191,Avast AV Logs,Antivirus,C:\ProgramData\Avast Software\Avast\Log\/**,
+      192,Avast AV User Logs,Antivirus,C:\Users\*\Avast Software\Avast\Log/**,
+      193,Avast AV Index,Antivirus,C:\ProgramData\Avast Software\Avast\Chest\index.xml,
+      194,SUPERAntiSpyware Logs,Antivirus,C:\Users\*\AppData\Roaming\SUPERAntiSpyware\Logs\/**,
+      195,F-Secure Logs,Antivirus,C:\ProgramData\F-Secure\Log\/**,
+      196,F-Secure User Logs,Antivirus,C:\Users\*\AppData\Local\F-Secure\Log\/**,
+      197,F-Secure Scheduled Scan Reports,Antivirus,C:\ProgramData\F-Secure\Antivirus\ScheduledScanReports\/**,
+      198,VIPRE Business Agent Logs,Antivirus,C:\ProgramData\VIPRE Business Agent\Logs\/**,
+      199,VIPRE Business User Logs (v7+),Antivirus,C:\Users\*\AppData\Roaming\VIPRE Business\/**,
+      200,VIPRE Business User Logs (v5-v6),Antivirus,C:\Users\*\AppData\Roaming\GFI Software\AntiMalware\Logs\/**,
+      201,VIPRE Business User Logs (up to v4),Antivirus,C:\Users\*\AppData\Roaming\Sunbelt Software\AntiMalware\Logs\/**,
+      202,ComboFix,Antivirus,C:\ComboFix.txt,
+      203,HitmanPro Logs,Antivirus,C:\ProgramData\HitmanPro\Logs/**,
+      204,HitmanPro Alert Logs,Antivirus,C:\ProgramData\HitmanPro.Alert\Logs/**,
+      205,HitmanPro Database,Antivirus,C:\ProgramData\HitmanPro.Alert\excalibur.db,SQl Lite DB
+      206,McAfee ePO Logs,AntiVirus,C:\ProgramData\McAfee\Endpoint Security\Logs/**,
+      207,McAfee Desktop Protection Logs XP,AntiVirus,C:\Users\All Users\Application Data\McAfee\DesktopProtection/**,
+      208,McAfee Desktop Protection Logs,AntiVirus,C:\ProgramData\McAfee\DesktopProtection/**,
+      209,McAfee Endpoint Security Logs,AntiVirus,C:\ProgramData\McAfee\Endpoint Security\Logs\/**,
+      210,McAfee Endpoint Security Logs,AntiVirus,C:\ProgramData\McAfee\Endpoint Security\Logs_Old\/**,
+      211,McAfee VirusScan Logs,AntiVirus,C:\ProgramData\Mcafee\VirusScan\/**,
+      212,RogueKiller Reports,Antivirus,C:\ProgramData\RogueKiller\logs\AdliceReport_*.json,
+      213,Bitdefender Endpoint Security Logs,Antivirus,C:\ProgramData\Bitdefender\Endpoint Security\Logs\/**,
+      214,ESET NOD32 AV Logs (XP),Antivirus,C:\Documents and Settings\All Users\Application Data\ESET\ESET NOD32 Antivirus\Logs\/**,
+      215,ESET NOD32 AV Logs,Antivirus,C:\ProgramData\ESET\ESET NOD32 Antivirus\Logs\/**,Parser available at https://github.com/laciKE/EsetLogParser
+      216,Ammyy,Ammyy.tkape,ApplicationLogs,
+      217,VHD,Disk Images,C:\/**/*.VHD,VHD
+      218,VHDX,Disk Images,C:\/**/*.VHDX,VHDX
+      219,VDI,Disk Images,C:\/**/*.VDI,VDI
+      220,VMDK,Disk Images,C:\/**/*.VMDK,VMDK
+      221,MS SQL Errorlog,SQL Exploitation,C:\Program Files\Microsoft SQL Server\*\MSSQL\LOG\ERRORLOG,
+      222,MS SQL Errorlogs,SQL Exploitation,C:\Program Files\Microsoft SQL Server\*\MSSQL\LOG\ERRORLOG.*,
+      223,IIS log files,Logs,C:\Windows*\system32\LogFiles\W3SVC*\*.log,
+      224,IIS log files,Logs,C:\inetpub\logs\LogFiles\*.log,
+      225,IIS log files,Logs,C:\inetpub\logs\LogFiles\W3SVC*\*.log,
+      226,IIS log files,Logs,C:\Resources\directory\* \LogFiles\Web\W3SVC*\*.log,
+      227,NGINX Log Files,Logs,C:\nginx\logs\*.log,
+      228,PowerShell Console Log,PowerShellConsleLog,C:\users\*\Appdata\Roaming\Microsoft\Windows\PowerShell\PSReadline\ConsoleHost_history.txt,
+      229,Apache Access Log,Webservers,C:\/**/access.log,Locates Apache access.log file
+      230,Edge folder,Communications,C:\Users\*\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe/**,
+      231,WebcacheV01.dat,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\WebCache,
+      232,Chrome Extension Files,Communication,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Extensions/**,
+      233,Chrome Extension Files XP,Communications,c:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Extensions/**,
+      234,Chrome bookmarks XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Bookmarks*,
+      235,Chrome Cookies XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Cookies*,
+      236,Chrome Current Session XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Current Session,
+      237,Chrome Current Tabs XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Current Tabs,
+      238,Chrome Favicons XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Favicons*,
+      239,Chrome History XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\History*,
+      240,Chrome Last Session XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Last Session,
+      241,Chrome Last Tabs XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Last Tabs,
+      242,Chrome Preferences XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Preferences,
+      243,Chrome Shortcuts XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Shortcuts*,
+      244,Chrome Top Sites XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Top Sites*,
+      245,Chrome bookmarks XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Bookmarks*,
+      246,Chrome Visited Links XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Visited Links,
+      247,Chrome Web Data XP,Communications,C:\Documents and Settings\*\Local Settings\Application Data\Google\Chrome\User Data\*\Web Data*,
+      248,Chrome bookmarks,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Bookmarks*,
+      249,Chrome Cookies,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Cookies*,
+      250,Chrome Current Session,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Current Session,
+      251,Chrome Current Tabs,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Current Tabs,
+      252,Chrome Favicons,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Favicons*,
+      253,Chrome History,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\History*,
+      254,Chrome Last Session,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Last Session,
+      255,Chrome Last Tabs,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Last Tabs,
+      256,Chrome Preferences,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Preferences,
+      257,Chrome Shortcuts,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Shortcuts*,
+      258,Chrome Top Sites,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Top Sites*,
+      259,Chrome bookmarks,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Bookmarks*,
+      260,Chrome Visited Links,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Visited Links,
+      261,Chrome Web Data,Communications,C:\Users\*\AppData\Local\Google\Chrome\User Data\*\Web Data*,
+      262,Places,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\places.sqlite*,
+      263,Downloads,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\downloads.sqlite*,
+      264,Form history,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\formhistory.sqlite*,
+      265,Cookies,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\cookies.sqlite*,
+      266,Signons,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\signons.sqlite*,
+      267,Webappstore,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\webappstore.sqlite*,
+      268,Favicons,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\favicons.sqlite*,
+      269,Addons,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\addons.sqlite*,
+      270,Search,Communications,C:\Users\*\AppData\Roaming\Mozilla\Firefox\Profiles\*\search.sqlite*,
+      271,Places,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\places.sqlite*,
+      272,Downloads,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\downloads.sqlite*,
+      273,Form history,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\formhistory.sqlite*,
+      274,Cookies,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\cookies.sqlite*,
+      275,Signons,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\signons.sqlite*,
+      276,Webappstore,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\webappstore.sqlite*,
+      277,Favicons,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\favicons.sqlite*,
+      278,Addons,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\addons.sqlite*,
+      279,Search,Communications,C:\Documents and Settings\*\Application Data\Mozilla\Firefox\Profiles\*\search.sqlite*,
+      280,Index.dat History,Communications,C:\Documents and Settings\*\Local Settings\History\History.IE5\index.dat,
+      281,Index.dat History subdirectory,Communications,C:\Documents and Settings\*\Local Settings\History\History.IE5\*\index.dat,
+      282,Index.dat temp internet files,Communications,C:\Documents and Settings\*\Local Settings\Temporary Internet Files\Content.IE5\index.dat,
+      283,Index.dat cookies,Communications,C:\Documents and Settings\*\Cookies\index.dat,
+      284,Index.dat UserData,Communications,C:\Documents and Settings\*\Application Data\Microsoft\Internet Explorer\UserData\index.dat,
+      285,Index.dat Office XP,Communications,C:\Documents and Settings\*\Application Data\Microsoft\Office\Recent\index.dat,
+      286,Index.dat Office,Communications,C:\Users\*\AppData\Roaming\Microsoft\Office\Recent\index.dat,
+      287,Local Internet Explorer folder,Communications,C:\Users\*\AppData\Local\Microsoft\Internet Explorer\/**,
+      288,Roaming Internet Explorer folder,Communications,C:\Users\*\AppData\Roaming\Microsoft\Internet Explorer\/**,
+      289,IE 9/10 History,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\History\/**,
+      290,IE 9/10 Cache,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\Temporary Internet Files\/**,
+      291,IE 9/10 Cookies,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\Cookies\/**,
+      292,IE 9/10 Download History,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\IEDownloadHistory\/**,
+      293,IE 11 Metadata,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\WebCache,
+      294,IE 11 Cache,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\INetCache\/**,
+      295,IE 11 Cookies,Communications,C:\Users\*\AppData\Local\Microsoft\Windows\INetCookies\/**,
+
+sources:
+  - queries:
+      - |
+        LET targets <= SELECT if(condition=_BasicCollection, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 17, 18, 19, 22, 228, 23, 26, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 76, 77, 78, 80, 81, 82, 83, 84, 85, 86, 87, 88, 92, 93, 96, 97, 98, 99))+
+            if(condition=_Boot, then=(45))+
+            if(condition=_J, then=(80, 81))+
+            if(condition=_LogFile, then=(44))+
+            if(condition=_MFT, then=(77))+
+            if(condition=_SDS, then=(26))+
+            if(condition=_T, then=(118))+
+            if(condition=Amcache, then=(22, 23))+
+            if(condition=Ammyy, then=(129))+
+            if(condition=ApacheAccessLog, then=(229))+
+            if(condition=AppData, then=(1))+
+            if(condition=ApplicationEvents, then=(24, 25))+
+            if(condition=Avast, then=(190, 191, 192, 193))+
+            if(condition=AviraAVLogs, then=(187))+
+            if(condition=BCD, then=(20, 21))+
+            if(condition=Bitdefender, then=(213))+
+            if(condition=BoxDrive, then=(147, 148, 149))+
+            if(condition=Chrome, then=(234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261))+
+            if(condition=ChromeExtensions, then=(232, 233))+
+            if(condition=CiscoJabber, then=(146))+
+            if(condition=CloudStorage, then=(132, 133, 134, 147, 148, 149, 150, 151, 152, 153, 154, 158, 159, 160))+
+            if(condition=CombinedLogs, then=(228, 34, 67, 68, 69, 70, 71, 92, 93))+
+            if(condition=ComboFix, then=(202))+
+            if(condition=ConfluenceLogs, then=(173, 174))+
+            if(condition=DirectoryTraversalWildCardExample, then=(2))+
+            if(condition=Dropbox, then=(150, 151, 152, 153, 154))+
+            if(condition=ESET, then=(214, 215))+
+            if(condition=Edge, then=(230, 231))+
+            if(condition=EncapsulationLogging, then=(39, 40))+
+            if(condition=EventLogs_RDP, then=(72, 73, 74, 75))+
+            if(condition=EventLogs, then=(92, 93))+
+            if(condition=EventTraceLogs, then=(67, 68, 69, 70, 71))+
+            if(condition=EvidenceOfExecution, then=(22, 23, 76, 86, 87, 88))+
+            if(condition=Exchange, then=(121, 144))+
+            if(condition=ExchangeClientAccess, then=(121))+
+            if(condition=ExchangeTransport, then=(144))+
+            if(condition=FSecure, then=(195, 196, 197))+
+            if(condition=FileSystem, then=(118, 26, 44, 45, 77, 80, 81))+
+            if(condition=Firefox, then=(262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279))+
+            if(condition=Gigatribe, then=(7, 8, 9))+
+            if(condition=GoogleDrive, then=(158, 159, 160))+
+            if(condition=GroupPolicy, then=(59, 60, 61))+
+            if(condition=HitmanPro, then=(203, 204, 205))+
+            if(condition=IISLogFiles, then=(223, 224, 225, 226))+
+            if(condition=InternetExplorer, then=(280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295))+
+            if(condition=JavaWebCache, then=(137, 138, 139, 140, 141, 142, 143))+
+            if(condition=KapeTriage, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 17, 18, 19, 216, 22, 23, 230, 231, 234, 235, 236, 237, 238, 239, 24, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 25, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 26, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 63, 64, 65, 66, 76, 77, 78, 80, 81, 86, 87, 88, 92, 93, 94, 95, 96, 97, 98, 99))+
+            if(condition=Kaseya, then=(161, 162, 163, 164, 165, 166, 167))+
+            if(condition=LinuxOnWindowsProfileFiles, then=(27, 28, 29, 30))+
+            if(condition=LiveUserFiles, then=(3, 4, 5, 6))+
+            if(condition=LnkFilesAndJumpLists, then=(53, 54, 55, 56, 57, 58))+
+            if(condition=LogFiles, then=(79))+
+            if(condition=LogMeIn, then=(119, 120, 24, 25))+
+            if(condition=MOF, then=(91))+
+            if(condition=MSSQLErrorLog, then=(221, 222))+
+            if(condition=Malwarebytes, then=(182, 183, 184))+
+            if(condition=McAfee, then=(207, 208, 209, 210, 211))+
+            if(condition=McAfee_ePO, then=(206))+
+            if(condition=MiniTimelineCollection, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 118, 26, 44, 45, 46, 47, 48, 49, 50, 51, 52, 77, 80, 81, 92, 93, 96, 97, 98, 99))+
+            if(condition=NGINXLogs, then=(227))+
+            if(condition=Notepad__, then=(172))+
+            if(condition=OneDrive, then=(132, 133, 134))+
+            if(condition=OutlookPSTOST, then=(168, 169, 170, 171))+
+            if(condition=PowerShellConsole, then=(228))+
+            if(condition=Prefetch, then=(86))+
+            if(condition=RDPCache, then=(94, 95))+
+            if(condition=RDPLogs, then=(63, 64, 65, 66))+
+            if(condition=RecentFileCache, then=(76))+
+            if(condition=Recycle, then=(84, 85))+
+            if(condition=RegistryHives, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 46, 47, 48, 49, 50, 51, 52, 96, 97, 98, 99))+
+            if(condition=RegistryHivesSystem, then=(100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 96, 97, 98, 99))+
+            if(condition=RegistryHivesUser, then=(46, 47, 48, 49, 50, 51, 52))+
+            if(condition=RemoteAdmin, then=(119, 120, 122, 130, 131, 155, 156, 157, 161, 162, 163, 164, 165, 166, 167, 216, 24, 25, 63, 64, 65, 66, 94, 95))+
+            if(condition=RogueKiller, then=(212))+
+            if(condition=SDB, then=(41, 42))+
+            if(condition=SRUM, then=(78))+
+            if(condition=SUPERAntiSpyware, then=(194))+
+            if(condition=ScheduledTasks, then=(17, 18, 19))+
+            if(condition=ScreenConnect, then=(130, 131, 24, 25))+
+            if(condition=SignatureCatalog, then=(16))+
+            if(condition=Skype, then=(123, 124, 125, 126, 127, 128))+
+            if(condition=Sophos, then=(185, 186, 24, 25))+
+            if(condition=StartupInfo, then=(62))+
+            if(condition=Symantec_AV_Logs, then=(175, 176, 177, 178, 24, 25))+
+            if(condition=Syscache, then=(87, 88))+
+            if(condition=TeamViewerLogs, then=(155, 156, 157))+
+            if(condition=TeraCopy, then=(145))+
+            if(condition=ThumbCache, then=(15))+
+            if(condition=TorrentClients, then=(10, 11, 12, 13))+
+            if(condition=Torrents, then=(14))+
+            if(condition=TrendMicro, then=(179, 180, 181))+
+            if(condition=USBDevicesLogs, then=(82, 83))+
+            if(condition=VIPRE, then=(198, 199, 200, 201))+
+            if(condition=VNCLogs, then=(122, 24, 25))+
+            if(condition=VirtualDisks, then=(217, 218, 219, 220))+
+            if(condition=WBEM, then=(117))+
+            if(condition=WER, then=(36, 37, 38))+
+            if(condition=WebBrowsers, then=(230, 231, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255, 256, 257, 258, 259, 260, 261, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294, 295))+
+            if(condition=WindowsDefender, then=(188, 189))+
+            if(condition=WindowsFirewall, then=(34))+
+            if(condition=WindowsIndexSearch, then=(43))+
+            if(condition=WindowsNotifcationsDB, then=(89, 90))+
+            if(condition=WindowsTimeline, then=(31, 32, 33))+
+            if(condition=XPRestorePoints, then=(35))+
+            if(condition=iTunesBackup, then=(135, 136))
+        AS Ids FROM scope()
+
+      - |
+        LET specs <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
+        WHERE Id in (targets[0]).Ids
+
+      - |
+        LET result = SELECT timestamp(epoch=now()) AS CopiedOnTimestamp,
+               FullPath AS SourceFile, Size,
+               timestamp(epoch=Ctime.Sec) AS CreatedOnUtc,
+               timestamp(epoch=Mtime.Sec) AS ModifiedOnUtc,
+               timestamp(epoch=Atime.Sec) AS LastAccessedOnUtc,
+               upload(file=FullPath) AS Upload
+        FROM glob(globs=specs.Glob)
+        WHERE NOT IsDir
+
+      - |
+        SELECT CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
+               Size AS FileSize, Upload.sha256 AS SourceFileSha256,
+               CreatedOnUtc, ModifiedOnUtc, LastAccessedOnUtc
+        FROM result
+
+

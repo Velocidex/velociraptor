@@ -289,5 +289,8 @@ func normalize_path(path string) string {
 }
 
 func init() {
-	glob.Register("file", &OSFileSystemAccessor{})
+	// We do not register the OSFileSystemAccessor directly - it
+	// is used through the AutoFilesystemAccessor: If we can not
+	// open the file with regular OS APIs we fallback to raw NTFS
+	// access. This is usually what we want.
 }

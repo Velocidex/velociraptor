@@ -22,10 +22,10 @@ package server
 import (
 	"compress/gzip"
 	"context"
-	"io"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -76,7 +76,7 @@ func (self *Compress) Call(ctx context.Context,
 
 			zw.Name = path
 
-			_, err = io.Copy(zw, fd)
+			_, err = utils.Copy(ctx, zw, fd)
 			if err != nil {
 				scope.Log("compress: %v", err)
 				err2 := file_store_factory.Delete(path + ".gz")
