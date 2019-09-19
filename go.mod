@@ -95,7 +95,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
-	www.velocidex.com/golang/go-ntfs v0.0.0-20190915152010-a30b0daf7439
+	www.velocidex.com/golang/go-ntfs v0.0.0-20190919131212-da25d00fb8f0
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
