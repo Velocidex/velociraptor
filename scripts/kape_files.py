@@ -72,7 +72,7 @@ def read_targets(ctx, project_path):
                 row_id,
                 target["Name"],
                 target.get("Category", ""),
-                glob,
+                strip_drive(glob),
                 target.get("Comment", "")])
 
     for i in range(3):
@@ -95,6 +95,9 @@ def sanitize(name):
     name = re.sub("[^a-zA-Z0-9]", "_", name)
     return name
 
+
+def strip_drive(name):
+    return re.sub("^[a-zA-Z]:\\\\", "", name)
 
 def get_csv(rows):
     out = io.StringIO()
@@ -153,6 +156,10 @@ parameters:
     description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
     default: |
 %(rules)s
+  - name: Device
+    default: C:\\
+  - name: Accessor
+    default: auto
 
 sources:
   - queries:
@@ -163,7 +170,8 @@ sources:
 
       # Filter only the rules in the rule table that have an Id we want.
       - |
-        LET specs <= SELECT * FROM parse_csv(filename=KapeRules, accessor="data")
+        LET specs <= SELECT Id, Device + Glob AS Glob
+        FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds)
 
       # Join all the rules into a single Glob plugin. This ensure we
@@ -174,8 +182,8 @@ sources:
                timestamp(epoch=Ctime.Sec) AS CreatedOnUtc,
                timestamp(epoch=Mtime.Sec) AS ModifiedOnUtc,
                timestamp(epoch=Atime.Sec) AS LastAccessedOnUtc,
-               upload(file=FullPath) AS Upload
-        FROM glob(globs=specs.Glob)
+               upload(file=FullPath, accessor=Accessor) AS Upload
+        FROM glob(globs=specs.Glob, accessor=Accessor)
         WHERE NOT IsDir
 
       - |
