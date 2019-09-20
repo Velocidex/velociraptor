@@ -64,4 +64,5 @@ func (self *AutoFilesystemAccessor) PathSplit(path string) []string {
 
 func init() {
 	glob.Register("file", &AutoFilesystemAccessor{})
+	glob.Register("auto", &AutoFilesystemAccessor{})
 }
