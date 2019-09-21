@@ -24,7 +24,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 	arg := &EncodeFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("encode: %s", err.Error())
+		scope.Log("serialize: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -46,7 +46,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 	case "", "json":
 		serialized_content, err := json.MarshalIndent(result, "", "")
 		if err != nil {
-			scope.Log("encode: %s", err.Error())
+			scope.Log("serialize: %s", err.Error())
 			return vfilter.Null{}
 		}
 
@@ -78,7 +78,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 
 func (self EncodeFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "encode",
+		Name:    "serialize",
 		Doc:     "Encode an object as a string (csv or json).",
 		ArgType: type_map.AddType(scope, &EncodeFunctionArgs{}),
 	}

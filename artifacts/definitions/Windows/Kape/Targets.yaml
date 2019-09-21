@@ -779,15 +779,13 @@ sources:
            then={
              SELECT * FROM Artifact.Windows.Collectors.VSS(
                 RootDevice=Device,
-                collectionSpec=encode(item=rule_specs, format="csv"))
+                collectionSpec=serialize(item=rule_specs, format="csv"))
            }, else={
              SELECT * FROM Artifact.Windows.Collectors.File(
                 RootDevice=Device,
-                collectionSpec=encode(item=rule_specs, format="csv"))
+                collectionSpec=serialize(item=rule_specs, format="csv"))
            })
       - SELECT * FROM all_results WHERE _Source =~ "Metadata"
   - name: Uploads
     queries:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
-
-
