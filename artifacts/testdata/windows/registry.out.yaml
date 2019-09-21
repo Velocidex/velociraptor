@@ -104,7 +104,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "Publisher": "microsoft corporation",
   "Size": 73585544,
   "Version": "1.289.0.0",
-  "_LastModified": 1551514872
+  "_LastModified": 1551514872,
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
   "BinFileVersion": "1.289.263.0",
@@ -117,7 +118,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "Publisher": "microsoft corporation",
   "Size": 1994928,
   "Version": "1.289.263.0",
-  "_LastModified": 1551514878
+  "_LastModified": 1551514878,
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
   "BinFileVersion": "1.1.15700.9",
@@ -130,7 +132,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "Publisher": "microsoft corporation",
   "Size": 5634728,
   "Version": "1.1.15700.9",
-  "_LastModified": 1551514848
+  "_LastModified": 1551514848,
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
   "BinFileVersion": "10.0.17763.1",
@@ -143,7 +146,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "Publisher": "microsoft corporation",
   "Size": 956416,
   "Version": "10.0.17763.1 (winbuild.160101.0800)",
-  "_LastModified": 1551514203
+  "_LastModified": 1551514203,
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
   "BinFileVersion": "72.0.3626.121",
@@ -156,7 +160,8 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "Publisher": "google inc.",
   "Size": 2640880,
   "Version": "72.0.3626.121",
-  "_LastModified": 1551514272
+  "_LastModified": 1551514272,
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  }
 ]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
  {

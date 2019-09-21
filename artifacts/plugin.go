@@ -26,6 +26,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -113,7 +114,12 @@ func (self *ArtifactRepositoryPlugin) Call(
 				if !ok {
 					break
 				}
-				output_chan <- row
+				dict_row := vql_subsystem.RowToDict(scope, row)
+				if query.Name != "" {
+					dict_row.Set("_Source", query.Name)
+				}
+
+				output_chan <- dict_row
 			}
 		}
 

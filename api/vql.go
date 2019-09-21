@@ -103,10 +103,7 @@ func StoreVQLAsCSVFile(
 		return err
 	}
 
-	csv_writer, err := csv.GetCSVAppender(scope, writer, true /* write_headers */)
-	if err != nil {
-		return err
-	}
+	csv_writer := csv.GetCSVAppender(scope, writer, true /* write_headers */)
 	defer csv_writer.Close()
 
 	sub_ctx, cancel := context.WithCancel(ctx)

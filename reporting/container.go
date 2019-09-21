@@ -63,7 +63,8 @@ func (self *Container) DumpRowsIntoContainer(
 	self.Lock()
 	defer self.Unlock()
 
-	sanitized_name := datastore.SanitizeString(query.Name + ".csv")
+	// In this instance we want to make / unescaped.
+	sanitized_name := query.Name + ".csv"
 	writer, err := self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err
@@ -80,7 +81,7 @@ func (self *Container) DumpRowsIntoContainer(
 
 	csv_writer.Close()
 
-	sanitized_name = datastore.SanitizeString(query.Name + ".json")
+	sanitized_name = query.Name + ".json"
 	writer, err = self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err
@@ -92,7 +93,7 @@ func (self *Container) DumpRowsIntoContainer(
 	}
 
 	// Format the description.
-	sanitized_name = datastore.SanitizeString(query.Name + ".txt")
+	sanitized_name = query.Name + ".txt"
 	writer, err = self.zip.Create(string(sanitized_name))
 	if err != nil {
 		return err

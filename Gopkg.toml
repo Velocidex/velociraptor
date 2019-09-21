@@ -43,3 +43,12 @@
 [[constraint]]
   name = "github.com/crewjam/saml"
   revision = "344d075952c9343809f57f4e465504dd5e3068a4"
+
+[[constraint]]
+  name="www.velocidex.com/golang/go-ntfs"
+  source="https://github.com/Velocidex/go-ntfs.git"
+
+[[constraint]]
+  name = "github.com/AlecAivazis/survey"
+  source = "https://github.com/AlecAivazis/survey.git"
+  revision = "4de88574e78145bdcfa6627ed766564231588b31"
