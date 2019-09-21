@@ -19,47 +19,39 @@ package functions
 
 import (
 	"context"
+	"strings"
 
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-type LogFunctionArgs struct {
-	Message string `vfilter:"required,field=message,doc=Message to log."`
+type StripArgs struct {
+	String string `vfilter:"required,field=string,doc=The string to strip"`
+	Prefix string `vfilter:"required,field=prefix,doc=The prefix to strip"`
 }
 
-var (
-	last_log string
-)
+type StripFunction struct{}
 
-type LogFunction struct{}
-
-func (self *LogFunction) Call(ctx context.Context,
+func (self *StripFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *vfilter.Dict) vfilter.Any {
-	arg := &LogFunctionArgs{}
+	arg := &StripArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("log: %s", err.Error())
+		scope.Log("strip: %s", err.Error())
 		return false
 	}
-
-	if arg.Message != last_log {
-		scope.Log(arg.Message)
-		last_log = arg.Message
-	}
-
-	return true
+	return strings.TrimPrefix(arg.String, arg.Prefix)
 }
 
-func (self LogFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self StripFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "log",
-		Doc:     "Log the message.",
-		ArgType: type_map.AddType(scope, &LogFunctionArgs{}),
+		Name:    "strip",
+		Doc:     "Strip a prefix from a string.",
+		ArgType: type_map.AddType(scope, &StripArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterFunction(&LogFunction{})
+	vql_subsystem.RegisterFunction(&StripFunction{})
 }

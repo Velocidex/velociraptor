@@ -78,7 +78,7 @@ func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 
 }
 
-func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) (*CSVWriter, error) {
+func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
@@ -136,7 +136,7 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) (*CS
 
 	}()
 
-	return result, nil
+	return result
 }
 
 func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
@@ -145,5 +145,5 @@ func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWrit
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(scope, fd, length == 0)
+	return GetCSVAppender(scope, fd, length == 0), nil
 }

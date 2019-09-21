@@ -71,15 +71,11 @@ Explore more of Velociraptor's options using the -h flag.
 ## Building from source.
 
 To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/:
+from https://golang.org/dl/ (Currently at least Go 11):
 
 ```bash
-    $ go get -u www.velocidex.com/golang/velociraptor
-    $ go get -u github.com/golang/dep/cmd/dep
-    $ cd $GO_PATH/go/src/www.velocidex.com/golang/velociraptor/
-
-    # This will download go dependencies.
-    $ dep ensure
+    $ git clone https://github.com/Velocidex/velociraptor.git
+    $ cd velociraptor
 
     # This will build the GUI elements. You will need to have node
     # installed first. For example on Windows get it from
@@ -97,7 +93,7 @@ from https://golang.org/dl/:
     # This builds a release (i.e. it will embed the GUI files in the
     # binary). If you dont care about the GUI a simple "make" will
     # build a bare binary.
-    $ go run make.go -v dev
+    $ go run make.go -v release
     $ go run make.go -v windows
 ```
 

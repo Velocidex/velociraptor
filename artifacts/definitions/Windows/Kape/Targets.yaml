@@ -750,39 +750,44 @@ parameters:
       XPRestorePoints,[35]
       iTunesBackup,"[135, 136]"
   - name: Device
-    default: C:\
+    default: \\.\C:\
   - name: Accessor
-    default: auto
+    default: ntfs
+  - name: VSSAnalysis
+    type: bool
+    default:
+    description: If set we run the collection across all VSS and collect only unique changes.
 
 sources:
-  - queries:
-      # Select all the rules Ids to be included depending on the group selection.
+  - name: All File Metadata
+    queries:
+      # Select all the rule Ids to be included depending on the group selection.
       - |
         LET targets <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
         WHERE get(item=scope(), member=Group)
 
       # Filter only the rules in the rule table that have an Id we want.
       - |
-        LET specs <= SELECT Id, Device + Glob AS Glob
+        LET rule_specs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds)
 
-      # Join all the rules into a single Glob plugin. This ensure we
-      # only make one pass over the filesystem.
+      # Call the generic VSS file collector with the globs we want in a new CSV file.
       - |
-        LET result = SELECT timestamp(epoch=now()) AS CopiedOnTimestamp,
-               FullPath AS SourceFile, Size,
-               timestamp(epoch=Ctime.Sec) AS CreatedOnUtc,
-               timestamp(epoch=Mtime.Sec) AS ModifiedOnUtc,
-               timestamp(epoch=Atime.Sec) AS LastAccessedOnUtc,
-               upload(file=FullPath, accessor=Accessor) AS Upload
-        FROM glob(globs=specs.Glob, accessor=Accessor)
-        WHERE NOT IsDir
-
-      - |
-        SELECT CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
-               Size AS FileSize, Upload.sha256 AS SourceFileSha256,
-               CreatedOnUtc, ModifiedOnUtc, LastAccessedOnUtc
-        FROM result
+        LET all_results <= SELECT * FROM if(
+           condition=VSSAnalysis,
+           then={
+             SELECT * FROM Artifact.Windows.Collectors.VSS(
+                RootDevice=Device,
+                collectionSpec=encode(item=rule_specs, format="csv"))
+           }, else={
+             SELECT * FROM Artifact.Windows.Collectors.File(
+                RootDevice=Device,
+                collectionSpec=encode(item=rule_specs, format="csv"))
+           })
+      - SELECT * FROM all_results WHERE _Source =~ "Metadata"
+  - name: Uploads
+    queries:
+      - SELECT * FROM all_results WHERE _Source =~ "Uploads"
 
 

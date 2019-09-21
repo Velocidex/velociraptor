@@ -225,8 +225,22 @@ func doArtifactCollect() {
 		err, fmt.Sprintf("Unable to compile artifact %s.",
 			*artifact_command_collect_name))
 
+	// Die if the user specified an unknown parameter.
+	valid_parameter := func(name string) bool {
+		for _, param := range artifact.Parameters {
+			if param.Name == name {
+				return true
+			}
+		}
+		return false
+	}
+
 	if env_map != nil {
 		for k, v := range *env_map {
+			if !valid_parameter(k) {
+				kingpin.Fatalf("Param %v not known for Artifact %s.",
+					k, *artifact_command_collect_name)
+			}
 			request.Env = append(
 				request.Env, &actions_proto.VQLEnv{
 					Key: k, Value: v,
