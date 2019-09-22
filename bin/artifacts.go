@@ -68,7 +68,10 @@ var (
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
-		Required().HintAction(listArtifacts).String()
+		Required().HintAction(listArtifacts).Strings()
+
+	artifact_command_collect_args = artifact_command_collect.Flag(
+		"args", "Artifact args.").Strings()
 )
 
 func listArtifacts() []string {
@@ -150,16 +153,12 @@ func collectArtifactToContainer(
 	config_obj *config_proto.Config,
 	repository *artifacts.Repository,
 	artifact_name string,
+	container *reporting.Container,
 	request *actions_proto.VQLCollectorArgs) {
 	env := vfilter.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
-
-	// Create an output container.
-	container, err := reporting.NewContainer(*artifact_command_collect_output)
-	kingpin.FatalIfError(err, "Can not create output container")
-	defer container.Close()
 
 	// Any uploads go into the container.
 	env.Set("$uploader", container)
@@ -208,51 +207,121 @@ func getRepository(config_obj *config_proto.Config) *artifacts.Repository {
 	return repository
 }
 
-func doArtifactCollect() {
-	config_obj := get_config_or_default()
-	repository := getRepository(config_obj)
-	artifact, pres := repository.Get(*artifact_command_collect_name)
-	if !pres {
-		kingpin.Fatalf("Artifact %v not known.", *artifact_command_collect_name)
+func printParameters(artifacts []string, repository *artifacts.Repository) {
+	for _, name := range artifacts {
+		artifact, _ := repository.Get(name)
+
+		fmt.Printf("Parameters for artifact %s\n", artifact.Name)
+		for _, arg := range artifact.Parameters {
+			truncate_len := 80
+			default_str := arg.Default
+
+			if default_str != "" {
+				if len(default_str) > truncate_len {
+					default_str = default_str[:truncate_len] + "..."
+				}
+
+				default_str = "( " + default_str + " )"
+			}
+
+			descr_str := arg.Description
+			if len(descr_str) > truncate_len {
+				descr_str = descr_str[:truncate_len] + "..."
+			}
+
+			fmt.Printf("%s: %s %s\n", arg.Name, descr_str,
+				default_str)
+		}
+
+		fmt.Printf("\n\n")
 	}
+}
 
-	request := &actions_proto.VQLCollectorArgs{
-		MaxWait: uint64(*max_wait),
-	}
-
-	err := repository.Compile(artifact, request)
-	kingpin.FatalIfError(
-		err, fmt.Sprintf("Unable to compile artifact %s.",
-			*artifact_command_collect_name))
-
-	// Die if the user specified an unknown parameter.
-	valid_parameter := func(name string) bool {
+// Check if the user specified an unknown parameter.
+func valid_parameter(param_name string, repository *artifacts.Repository) bool {
+	for _, name := range *artifact_command_collect_name {
+		artifact, _ := repository.Get(name)
 		for _, param := range artifact.Parameters {
-			if param.Name == name {
+			if param.Name == param_name {
 				return true
 			}
 		}
-		return false
 	}
 
-	if env_map != nil {
-		for k, v := range *env_map {
-			if !valid_parameter(k) {
-				kingpin.Fatalf("Param %v not known for Artifact %s.",
-					k, *artifact_command_collect_name)
+	return false
+}
+
+func doArtifactCollect() {
+	config_obj := get_config_or_default()
+	repository := getRepository(config_obj)
+
+	var container *reporting.Container
+	var err error
+
+	if *artifact_command_collect_output != "" {
+		// Create an output container.
+		container, err = reporting.NewContainer(*artifact_command_collect_output)
+		kingpin.FatalIfError(err, "Can not create output container")
+		defer container.Close()
+	}
+
+	for _, name := range *artifact_command_collect_name {
+		artifact, pres := repository.Get(name)
+		if !pres {
+			kingpin.Fatalf("Artifact %v not known.", name)
+		}
+
+		request := &actions_proto.VQLCollectorArgs{
+			MaxWait: uint64(*max_wait),
+		}
+
+		err := repository.Compile(artifact, request)
+		kingpin.FatalIfError(
+			err, fmt.Sprintf("Unable to compile artifact %s.",
+				name))
+
+		if env_map != nil {
+			for k, v := range *env_map {
+				if !valid_parameter(k, repository) {
+					kingpin.Fatalf(
+						"Param %v not known for %s.",
+						k, strings.Join(*artifact_command_collect_name, ","))
+				}
+				request.Env = append(
+					request.Env, &actions_proto.VQLEnv{
+						Key: k, Value: v,
+					})
+			}
+		}
+
+		for _, item := range *artifact_command_collect_args {
+			parts := strings.SplitN(item, "=", 2)
+			arg_name := parts[0]
+			var arg string
+
+			if len(parts) < 2 {
+				arg = "Y"
+			} else {
+				arg = parts[1]
+			}
+			if !valid_parameter(arg_name, repository) {
+				printParameters(*artifact_command_collect_name,
+					repository)
+				kingpin.Fatalf("Param %v not known for any artifacts.",
+					arg_name)
 			}
 			request.Env = append(
 				request.Env, &actions_proto.VQLEnv{
-					Key: k, Value: v,
+					Key: arg_name, Value: arg,
 				})
 		}
-	}
 
-	if *artifact_command_collect_output == "" {
-		collectArtifact(config_obj, repository, *artifact_command_collect_name, request)
-	} else {
-		collectArtifactToContainer(
-			config_obj, repository, *artifact_command_collect_name, request)
+		if *artifact_command_collect_output == "" {
+			collectArtifact(config_obj, repository, name, request)
+		} else {
+			collectArtifactToContainer(
+				config_obj, repository, name, container, request)
+		}
 	}
 }
 
@@ -309,6 +378,17 @@ func doArtifactList() {
 
 		fmt.Printf("VQLCollectorArgs %s:\n***********\n%v\n",
 			artifact.Name, string(res))
+	}
+}
+
+func load_config_artifacts(config_obj *config_proto.Config) {
+	if config_obj.Autoexec == nil {
+		return
+	}
+	repository := getRepository(config_obj)
+	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
+		_, err := repository.LoadYaml(definition, true /* validate */)
+		kingpin.FatalIfError(err, "Unable to parse config artifact")
 	}
 }
 

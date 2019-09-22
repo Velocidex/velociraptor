@@ -142,13 +142,22 @@ func get_config_or_default() *config_proto.Config {
 		config_obj = config.GetDefaultConfig()
 	}
 	maybe_parse_api_config(config_obj)
+	load_config_artifacts(config_obj)
 	return config_obj
 }
 
 func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
-	command := kingpin.MustParse(app.Parse(os.Args[1:]))
+	args := os.Args[1:]
+
+	// If not args are given check if there is an embedded config
+	// with autoexec.
+	if len(args) == 0 {
+		args = maybeUnpackConfig(args)
+	}
+
+	command := kingpin.MustParse(app.Parse(args))
 
 	// Just display everything in UTC.
 	os.Setenv("TZ", "Z")
