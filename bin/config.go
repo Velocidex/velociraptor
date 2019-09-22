@@ -18,10 +18,12 @@
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"regexp"
+	"io"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
@@ -67,9 +69,16 @@ func doShowConfig() {
 
 	// Dump out the embedded config as is.
 	if *config_path == "" {
-		content := string(config.FileConfigDefaultYaml)
-		content = regexp.MustCompile(`##[^\n]+\n`).ReplaceAllString(content, "")
-		fmt.Printf("%v", content)
+		idx := bytes.IndexByte(config.FileConfigDefaultYaml, '\n')
+		r, err := zlib.NewReader(bytes.NewReader(
+			config.FileConfigDefaultYaml[idx+1:]))
+		kingpin.FatalIfError(err, "Unable to load embedded config.")
+
+		b := &bytes.Buffer{}
+		io.Copy(b, r)
+		r.Close()
+
+		fmt.Printf("%v", b.String())
 		return
 	}
 

@@ -418,6 +418,12 @@ message MonitoringConfig {
         }];
 }
 
+message AutoExecConfig {
+    repeated string argv = 1;
+    repeated string artifact_definitions = 2;
+}
+
+
 message Config {
     Version version = 8 [(sem_type) = {
             description: "Version information."
@@ -475,5 +481,10 @@ message Config {
 
     ApiClientConfig api_config = 26 [(sem_type) = {
             description: "If we loaded the api config we load this into the global config.",
+        }];
+
+    AutoExecConfig autoexec = 28 [(sem_type) = {
+           description: "If this is specified we launch the binary with the given command "
+           "line automatically."
         }];
 }

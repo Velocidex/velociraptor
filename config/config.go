@@ -18,6 +18,9 @@
 package config
 
 import (
+	"bytes"
+	"compress/zlib"
+	"io"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -154,14 +157,30 @@ func GetDefaultConfig() *config_proto.Config {
 	return result
 }
 
-func maybeReadEmbeddedConfig() *config_proto.Config {
-	result := GetDefaultConfig()
-	err := yaml.Unmarshal(FileConfigDefaultYaml, result)
-	if err != nil {
-		return nil
+func ReadEmbeddedConfig() (*config_proto.Config, error) {
+	idx := bytes.IndexByte(FileConfigDefaultYaml, '\n')
+	if FileConfigDefaultYaml[idx+1] == '#' {
+		return nil, errors.New(
+			"No embedded config - try to pack one with the pack command or " +
+				"provide the --config flag.")
 	}
 
-	return result
+	r, err := zlib.NewReader(bytes.NewReader(FileConfigDefaultYaml[idx+1:]))
+	if err != nil {
+		return nil, err
+	}
+
+	b := &bytes.Buffer{}
+	io.Copy(b, r)
+	r.Close()
+
+	result := GetDefaultConfig()
+	err = yaml.Unmarshal(b.Bytes(), result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Load the config stored in the YAML file and returns a config object.
@@ -187,11 +206,9 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 		}
 	}
 	// Otherwise we try to read from the embedded config.
-	embedded_config := maybeReadEmbeddedConfig()
-	if embedded_config == nil {
-		return nil, errors.New(
-			"No embedded config - try to pack one with the pack command or " +
-				"provide the --config flag.")
+	embedded_config, err := ReadEmbeddedConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	// Override version information from the config.
