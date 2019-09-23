@@ -20,6 +20,10 @@ install:
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
     mkdir "C:\Program Files\Velociraptor"
+    echo Hello > C:\hello.txt
+    echo HelloADS > C:\hello.txt:myads
+    fsutil file setshortname C:\hello.txt hi.txt
+
 - go version
 - go env
 - set GO111MODULE=on
