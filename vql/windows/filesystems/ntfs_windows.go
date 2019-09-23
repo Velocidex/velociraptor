@@ -69,9 +69,14 @@ func (self *NTFSFileInfo) Size() int64 {
 }
 
 func (self *NTFSFileInfo) Data() interface{} {
-	return vfilter.NewDict().
+	result := vfilter.NewDict().
 		Set("mft", self.info.MFTId).
 		Set("name_type", self.info.NameType)
+	if self.info.ExtraNames != nil {
+		result.Set("extra_names", self.info.ExtraNames)
+	}
+
+	return result
 }
 
 func (self *NTFSFileInfo) Name() string {

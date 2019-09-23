@@ -80,7 +80,7 @@ def read_targets(ctx, project_path):
             for target in data["Targets"]:
                 glob = target.get("Path", "")
                 if ".tkape" in glob:
-                    deps = ctx.groups.get(glob)
+                    deps = find_kape_dependency(ctx, glob)
                     if deps is None:
                         sys.stderr.write("Unable to process dependency %s (%s)\n" %
                                          (name, glob))
@@ -89,6 +89,13 @@ def read_targets(ctx, project_path):
 
                     for dependency in deps:
                         ctx.groups[name].add(dependency)
+
+
+def find_kape_dependency(ctx, glob):
+    """ Case insensitive search for kape dependency."""
+    for k, v in ctx.groups.items():
+        if k.lower() == glob.lower():
+            return v
 
 def sanitize(name):
     name = name.replace(".tkape", "")
@@ -186,11 +193,11 @@ sources:
            then={
              SELECT * FROM Artifact.Windows.Collectors.VSS(
                 RootDevice=Device,
-                collectionSpec=encode(item=rule_specs, format="csv"))
+                collectionSpec=serialize(item=rule_specs, format="csv"))
            }, else={
              SELECT * FROM Artifact.Windows.Collectors.File(
                 RootDevice=Device,
-                collectionSpec=encode(item=rule_specs, format="csv"))
+                collectionSpec=serialize(item=rule_specs, format="csv"))
            })
       - SELECT * FROM all_results WHERE _Source =~ "Metadata"
   - name: Uploads

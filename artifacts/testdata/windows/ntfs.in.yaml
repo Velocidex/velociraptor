@@ -7,3 +7,6 @@ Queries:
     WHERE Name = "notepad.exe"
   - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs")
     WHERE Name = "notepad.exe"
+    # Expect to see an ADS and an alternative short file name.
+  - SELECT FullPath FROM glob(globs="c:\\*", accessor="ntfs")
+    WHERE Name =~ "txt"
