@@ -13,15 +13,22 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
 ]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs") WHERE Name = "notepad.exe"[
  {
   "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
- },
- {
-  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
  }
 ]SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs") WHERE Name = "notepad.exe"[
  {
   "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\*", accessor="ntfs") WHERE Name =~ "txt"[
+ {
+  "FullPath": "\\\\.\\c:\\HI.TXT"
  },
  {
-  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+  "FullPath": "\\\\.\\c:\\HI.TXT:myads"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt:myads"
  }
 ]
