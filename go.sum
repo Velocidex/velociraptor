@@ -409,6 +409,8 @@ www.velocidex.com/golang/go-ntfs v0.0.0-20190921133542-301e100035d0 h1:nlUya8Eah
 www.velocidex.com/golang/go-ntfs v0.0.0-20190921133542-301e100035d0/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
 www.velocidex.com/golang/go-ntfs v0.0.0-20190923111259-525352093fe8 h1:HDaWf54SK8Z2djHpnibBZBy18RUmpJtQRSlXDilhRWc=
 www.velocidex.com/golang/go-ntfs v0.0.0-20190923111259-525352093fe8/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
+www.velocidex.com/golang/go-ntfs v0.0.0-20190924105901-ddba091fd8d5 h1:jrYx+gMeZ6mS0bvuDpEdtToaG26XKXSmexzFWYoxeuQ=
+www.velocidex.com/golang/go-ntfs v0.0.0-20190924105901-ddba091fd8d5/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
 www.velocidex.com/golang/go-pe v0.1.0 h1:W5oYsEMz1GiBv84CyZzOzTHjLaGLv8oTaDfrRkcDB6E=
 www.velocidex.com/golang/go-pe v0.1.0/go.mod h1:BBNxoooAx/LA/F9rn3QliOCR2FtiDccxX3MVsJ4OX2g=
 www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf h1:MhCevuCZJLBXoiYjL2W7qy7OugVZm/LBB11D6iKYUMY=

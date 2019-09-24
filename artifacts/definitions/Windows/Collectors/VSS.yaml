@@ -29,7 +29,7 @@ parameters:
     description: The device to apply all the glob on.
     default: "C:"
   - name: Accessor
-    default: ntfs
+    default: lazy_ntfs
   - name: VSSDateRegex
     default: .
 
@@ -37,7 +37,7 @@ sources:
    - name: All Matches Metadata
      queries:
       - LET originating_machine <= SELECT Data.SystemName AS System
-            FROM glob(globs="/*", accessor="ntfs")
+            FROM glob(globs="/*", accessor=Accessor)
             WHERE Name = "\\\\.\\" + RootDevice
 
       # Generate the collection globs for each device
@@ -60,7 +60,7 @@ sources:
       # Get all volume shadows on this system.
       - LET volume_shadows = SELECT Data.InstallDate AS InstallDate,
                Data.DeviceObject + "\\" AS Device
-        FROM glob(globs='/*', accessor='ntfs')
+        FROM glob(globs='/*', accessor=Accessor)
         WHERE Device =~ 'VolumeShadowCopy' AND
               Data.OriginatingMachine = originating_machine.System[0] AND
               InstallDate =~ VSSDateRegex
