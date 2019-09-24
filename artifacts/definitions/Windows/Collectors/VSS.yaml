@@ -30,6 +30,8 @@ parameters:
     default: "C:"
   - name: Accessor
     default: ntfs
+  - name: VSSDateRegex
+    default: .
 
 sources:
    - name: All Matches Metadata
@@ -60,7 +62,8 @@ sources:
                Data.DeviceObject + "\\" AS Device
         FROM glob(globs='/*', accessor='ntfs')
         WHERE Device =~ 'VolumeShadowCopy' AND
-              Data.OriginatingMachine = originating_machine.System[0]
+              Data.OriginatingMachine = originating_machine.System[0] AND
+              InstallDate =~ VSSDateRegex
 
       # The target devices are the root device and all the VSS
       - LET target_devices = SELECT * FROM chain(

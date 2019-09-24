@@ -15,7 +15,7 @@ parameters:
        Users\*\NTUser.dat
   - name: RootDevice
     description: The device to apply all the glob on.
-    default: \\.\C:\
+    default: "C:"
   - name: Accessor
     default: ntfs
 
@@ -23,8 +23,8 @@ sources:
    - name: All Matches Metadata
      queries:
       # Generate the collection globs for each device
-      - LET specs = SELECT RootDevice + Glob AS Glob FROM parse_csv(
-            filename=collectionSpec, accessor="data")
+      - LET specs = SELECT "\\\\.\\" + RootDevice + "\\" + Glob AS Glob
+            FROM parse_csv(filename=collectionSpec, accessor="data")
             WHERE log(message="Processing Device " +RootDevice)
 
       # Join all the collection rules into a single Glob plugin. This ensure we

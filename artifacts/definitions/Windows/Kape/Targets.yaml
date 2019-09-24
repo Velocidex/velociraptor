@@ -750,13 +750,15 @@ parameters:
       XPRestorePoints,[35]
       iTunesBackup,"[135, 136]"
   - name: Device
-    default: \\.\C:\
+    default: "C:"
   - name: Accessor
     default: ntfs
   - name: VSSAnalysis
     type: bool
     default:
     description: If set we run the collection across all VSS and collect only unique changes.
+  - name: VSSDateRegex
+    default: .
 
 sources:
   - name: All File Metadata
@@ -779,6 +781,7 @@ sources:
            then={
              SELECT * FROM Artifact.Windows.Collectors.VSS(
                 RootDevice=Device,
+                VSSDateRegex=VSSDateRegex,
                 collectionSpec=serialize(item=rule_specs, format="csv"))
            }, else={
              SELECT * FROM Artifact.Windows.Collectors.File(
@@ -789,5 +792,3 @@ sources:
   - name: Uploads
     queries:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
-
-
