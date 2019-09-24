@@ -27,13 +27,17 @@ parameters:
        Users\*\NTUser.dat
   - name: RootDevice
     description: The device to apply all the glob on.
-    default: \\.\C:\
+    default: "C:"
   - name: Accessor
     default: ntfs
 
 sources:
    - name: All Matches Metadata
      queries:
+      - LET originating_machine <= SELECT Data.SystemName AS System
+            FROM glob(globs="/*", accessor="ntfs")
+            WHERE Name = "\\\\.\\" + RootDevice
+
       # Generate the collection globs for each device
       - LET specs = SELECT Device + Glob AS Glob FROM parse_csv(
             filename=collectionSpec, accessor="data")
@@ -49,17 +53,18 @@ sources:
                Device, strip(string=FullPath, prefix=Device) AS Path,
                Data.mft AS MFT, Data.name_type AS NameType
         FROM glob(globs=specs.Glob, accessor=Accessor)
-        WHERE NOT IsDir AND NameType =~ "Win32"
+        WHERE NOT IsDir
 
       # Get all volume shadows on this system.
       - LET volume_shadows = SELECT Data.InstallDate AS InstallDate,
                Data.DeviceObject + "\\" AS Device
         FROM glob(globs='/*', accessor='ntfs')
-        WHERE Device =~ 'VolumeShadowCopy'
+        WHERE Device =~ 'VolumeShadowCopy' AND
+              Data.OriginatingMachine = originating_machine.System[0]
 
       # The target devices are the root device and all the VSS
       - LET target_devices = SELECT * FROM chain(
-            a={SELECT RootDevice AS Device from scope()},
+            a={SELECT "\\\\.\\" + RootDevice + "\\" AS Device from scope()},
             b=volume_shadows)
 
       # Get all the paths matching the collection globs.
