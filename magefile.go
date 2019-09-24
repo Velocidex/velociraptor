@@ -96,6 +96,9 @@ func Linux() error {
 	}
 
 	env := make(map[string]string)
+	env["GOOS"] = "linux"
+	env["GOARCH"] = "amd64"
+
 	err = sh.RunWith(
 		env,
 		mg.GoCmd(), "build",
@@ -164,7 +167,12 @@ func Appveyor() error {
 
 	os.Chdir(cwd)
 
-	return Windows()
+	err = Windows()
+	if err != nil {
+		return err
+	}
+
+	return Linux()
 }
 
 // Cross compile the windows binary using mingw. Note that this does

@@ -31,4 +31,28 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
  {
   "FullPath": "\\\\.\\c:\\hello.txt:myads"
  }
+]SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\*", accessor="lazy_ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs") WHERE Name = "pagefile.sys"[
+ {
+  "FullPath": "\\\\.\\c:\\pagefile.sys"
+ }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs") WHERE Name = "notepad.exe"[
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs") WHERE Name = "notepad.exe"[
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\*", accessor="lazy_ntfs") WHERE Name =~ "txt"[
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt"
+ }
 ]
