@@ -48,7 +48,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 		_RecursiveComponent{`foo.*\z(?ms)`, 5},
 	}},
 	{"*.exe", []_PathFilterer{
-		_RegexComponent{`.*\.exe\z(?ms)`},
+		&_RegexComponent{regexp: `.*\.exe\z(?ms)`},
 	}},
 	{"/bin/ls", []_PathFilterer{
 		_LiteralComponent{"bin"},

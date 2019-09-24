@@ -78,7 +78,6 @@ func (self *LazyNTFSFileInfo) ensureCachedInfo() {
 		return
 	}
 
-	//fmt.Printf("ensureCachedInfo %v\n", self._full_path)
 	self.cached_info = &ntfs.FileInfo{}
 
 	mft_entry, err := self.ntfs_ctx.GetMFT(self.mft_id)
