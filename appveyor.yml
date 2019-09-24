@@ -10,7 +10,7 @@ environment:
 
 cache:
   - '%LocalAppData%\go-build'
-  - '%GOPATH%/pkg/mod -> go.sum'
+  - '%GOPATH%/pkg/mod'
   - gui/static/node_modules
   - gui/static/dist
 
@@ -49,3 +49,4 @@ on_finish:
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: Get-ChildItem artifacts/testdata/server/testcases/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: Get-ChildItem output/velociraptor.exe | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+  - ps: Get-ChildItem output/velociraptor | % { Push-AppveyorArtifact $_.FullName -FileName "velociraptor_linux.elf" }
