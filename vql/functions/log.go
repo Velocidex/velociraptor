@@ -45,7 +45,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	}
 
 	if arg.Message != last_log {
-		scope.Log(arg.Message)
+		scope.Log("%v", arg.Message)
 		last_log = arg.Message
 	}
 

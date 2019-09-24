@@ -17,7 +17,7 @@ parameters:
     description: The device to apply all the glob on.
     default: "C:"
   - name: Accessor
-    default: ntfs
+    default: lazy_ntfs
 
 sources:
    - name: All Matches Metadata
@@ -35,7 +35,7 @@ sources:
                timestamp(epoch=Mtime.Sec) AS Modified,
                timestamp(epoch=Atime.Sec) AS LastAccessed
         FROM glob(globs=specs.Glob, accessor=Accessor)
-        WHERE NOT IsDir
+        WHERE NOT IsDir AND log(message="Found " + SourceFile)
 
       # Create a unique key to group by - modification time and path name.
       # Order by device name so we get C:\ above the VSS device.

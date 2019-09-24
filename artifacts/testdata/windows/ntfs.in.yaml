@@ -10,3 +10,15 @@ Queries:
     # Expect to see an ADS and an alternative short file name.
   - SELECT FullPath FROM glob(globs="c:\\*", accessor="ntfs")
     WHERE Name =~ "txt"
+
+  - SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")
+  - SELECT FullPath FROM glob(globs="\\*", accessor="lazy_ntfs")
+  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs")
+    WHERE Name = "pagefile.sys"
+  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs")
+    WHERE Name = "notepad.exe"
+  - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs")
+    WHERE Name = "notepad.exe"
+    # Expect to see an ADS and an alternative short file name.
+  - SELECT FullPath FROM glob(globs="c:\\*", accessor="lazy_ntfs")
+    WHERE Name =~ "txt"

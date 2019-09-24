@@ -51,9 +51,17 @@ var (
 	// queries, the cache will refresh every 10 minutes to get a
 	// fresh view of the data.
 	mu        sync.Mutex
-	fd_cache  map[string]*PagedReader // Protected by mutex
-	timestamp time.Time               // Protected by mutex
+	fd_cache  map[string]*AccessorContext // Protected by mutex
+	timestamp time.Time                   // Protected by mutex
 )
+
+type AccessorContext struct {
+	reader   *ntfs.PagedReader
+	fd       *os.File
+	ntfs_ctx *ntfs.NTFSContext
+
+	path_to_mft_id_map map[string]int64
+}
 
 type NTFSFileInfo struct {
 	info       *ntfs.FileInfo
@@ -156,12 +164,6 @@ func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
-type PagedReader struct {
-	*ntfs.PagedReader
-
-	fd *os.File
-}
-
 type NTFSFileSystemAccessor struct{}
 
 func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
@@ -191,13 +193,13 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 }
 
 func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
-	*ntfs.NTFSContext, error) {
+	*AccessorContext, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	// We cache the paged reader as well as the original file
 	// handle so we can safely close it when the query is done.
-	fd, pres := fd_cache[device]
+	ctx, pres := fd_cache[device]
 	if !pres || time.Now().After(timestamp.Add(10*time.Minute)) {
 		// Try to open the device and list its path.
 		raw_fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
@@ -205,20 +207,27 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 			return nil, err
 		}
 
-		reader, _ := ntfs.NewPagedReader(raw_fd, 1024, 10000)
-		fd = &PagedReader{
-			PagedReader: reader,
-			fd:          raw_fd,
-		}
+		reader, _ := ntfs.NewPagedReader(raw_fd, 8*1024, 1000)
 		if err != nil {
 			return nil, err
 		}
 
-		fd_cache[device] = fd
+		ntfs_ctx, err := ntfs.GetNTFSContext(reader, 0)
+		if err != nil {
+			return nil, err
+		}
+
+		ctx = &AccessorContext{
+			reader:             reader,
+			fd:                 raw_fd,
+			ntfs_ctx:           ntfs_ctx,
+			path_to_mft_id_map: make(map[string]int64),
+		}
+		fd_cache[device] = ctx
 		timestamp = time.Now()
 	}
 
-	return ntfs.GetNTFSContext(fd, 0)
+	return ctx, nil
 }
 
 func discoverVSS() ([]glob.FileInfo, error) {
@@ -298,11 +307,12 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		return result, nil
 	}
 
-	ntfs_ctx, err := self.getNTFSContext(device)
+	accessor_ctx, err := self.getNTFSContext(device)
 	if err != nil {
 		return nil, err
 	}
 
+	ntfs_ctx := accessor_ctx.ntfs_ctx
 	root, err := ntfs_ctx.GetMFT(5)
 	if err != nil {
 		return nil, err
@@ -330,7 +340,7 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 type readAdapter struct {
 	sync.Mutex
 
-	info   *NTFSFileInfo
+	info   glob.FileInfo
 	reader io.ReaderAt
 	pos    int64
 }
@@ -389,11 +399,12 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 
 	components := self.PathSplit(subpath)
 
-	ntfs_ctx, err := self.getNTFSContext(device)
+	accessor_ctx, err := self.getNTFSContext(device)
 	if err != nil {
 		return nil, err
 	}
 
+	ntfs_ctx := accessor_ctx.ntfs_ctx
 	root, err := self.getRootMFTEntry(ntfs_ctx)
 	if err != nil {
 		return nil, err
@@ -444,11 +455,12 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 
 	components := self.PathSplit(subpath)
 
-	ntfs_ctx, err := self.getNTFSContext(device)
+	accessor_ctx, err := self.getNTFSContext(device)
 	if err != nil {
 		return nil, err
 	}
 
+	ntfs_ctx := accessor_ctx.ntfs_ctx
 	root, err := self.getRootMFTEntry(ntfs_ctx)
 	if err != nil {
 		return nil, err
@@ -503,6 +515,6 @@ func unescape(path string) string {
 func init() {
 	glob.Register("ntfs", &NTFSFileSystemAccessor{})
 
-	fd_cache = make(map[string]*PagedReader)
+	fd_cache = make(map[string]*AccessorContext)
 	timestamp = time.Now()
 }

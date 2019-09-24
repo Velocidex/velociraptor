@@ -22,6 +22,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -254,6 +255,14 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 func doArtifactCollect() {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
+
+	now := time.Now()
+	defer func() {
+		logging.GetLogger(config_obj, &logging.ToolComponent).
+			Info("Collection completed in %v Secondgs",
+				time.Now().Unix()-now.Unix())
+
+	}()
 
 	var container *reporting.Container
 	var err error

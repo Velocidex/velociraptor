@@ -88,13 +88,16 @@ func (self _RecursiveComponent) Match(f FileInfo) bool {
 }
 
 type _RegexComponent struct {
-	regexp string
+	regexp   string
+	compiled *regexp.Regexp
 }
 
-func (self _RegexComponent) Match(f FileInfo) bool {
-	re := regexp.MustCompile("^(?msi)" + self.regexp)
+func (self *_RegexComponent) Match(f FileInfo) bool {
+	if self.compiled == nil {
+		self.compiled = regexp.MustCompile("^(?msi)" + self.regexp)
+	}
 
-	return re.MatchString(f.Name())
+	return self.compiled.MatchString(f.Name())
 }
 
 func (self _RegexComponent) String() string {
@@ -382,7 +385,7 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 						return err
 					}
 				}
-				middle = append(middle, _RegexComponent{
+				middle = append(middle, &_RegexComponent{
 					regexp: fnmatch_translate("*"),
 				})
 			}
@@ -452,7 +455,7 @@ func convert_glob_into_path_components(pattern string, path_sep func(path string
 			})
 
 		} else if m := _GLOB_MAGIC_CHECK.FindString(path_component); len(m) > 0 {
-			result = append(result, _RegexComponent{
+			result = append(result, &_RegexComponent{
 				regexp: fnmatch_translate(path_component),
 			})
 		} else {

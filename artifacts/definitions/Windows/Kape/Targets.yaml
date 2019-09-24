@@ -752,7 +752,7 @@ parameters:
   - name: Device
     default: "C:"
   - name: Accessor
-    default: ntfs
+    default: lazy_ntfs
   - name: VSSAnalysis
     type: bool
     default:
@@ -772,7 +772,8 @@ sources:
       - |
         LET rule_specs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
-        WHERE Id in array(array=targets.RuleIds)
+        WHERE Id in array(array=targets.RuleIds) AND log(
+           message="Searching for glob " + Glob)
 
       # Call the generic VSS file collector with the globs we want in a new CSV file.
       - |
@@ -789,6 +790,7 @@ sources:
                 collectionSpec=serialize(item=rule_specs, format="csv"))
            })
       - SELECT * FROM all_results WHERE _Source =~ "Metadata"
+
   - name: Uploads
     queries:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
