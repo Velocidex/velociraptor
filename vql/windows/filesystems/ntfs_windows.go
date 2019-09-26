@@ -326,9 +326,26 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		return nil, err
 	}
 
+	// Only process each mft id once.
+	seen := []int64{}
+	in_seen := func(id int64) bool {
+		for _, i := range seen {
+			if i == id {
+				return true
+			}
+		}
+		return false
+	}
+
 	// List the directory.
 	for _, node := range dir.Dir(ntfs_ctx) {
 		node_mft_id := int64(node.MftReference())
+		if in_seen(node_mft_id) {
+			continue
+		}
+
+		seen = append(seen, node_mft_id)
+
 		node_mft, err := ntfs_ctx.GetMFT(node_mft_id)
 		if err != nil {
 			continue
