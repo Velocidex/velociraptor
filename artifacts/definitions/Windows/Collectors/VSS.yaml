@@ -43,7 +43,7 @@ sources:
       # Generate the collection globs for each device
       - LET specs = SELECT Device + Glob AS Glob FROM parse_csv(
             filename=collectionSpec, accessor="data")
-            WHERE log(message="Processing Device " + Device)
+            WHERE log(message="Processing Device " + Device + " With " + Accessor)
 
       # Join all the collection rules into a single Glob plugin. This ensure we
       # only make one pass over the filesystem. We only want LFNs.
@@ -90,7 +90,7 @@ sources:
 
       # Upload the files using the MFT accessor.
       - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, MFT, SourceFile, Size,
-               upload(file=Device+MFT, name=SourceFile, accessor="mft") AS Upload
+               upload(file=Device+MFT, name=Device + SourceFile, accessor="mft") AS Upload
         FROM unique_mtimes
 
       # Seperate the hashes into their own column.

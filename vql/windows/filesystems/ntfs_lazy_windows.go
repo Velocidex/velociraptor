@@ -28,6 +28,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
@@ -39,23 +40,43 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 	mft_entry *ntfs.MFT_ENTRY, path string) []glob.FileInfo {
 	result := []glob.FileInfo{}
 	ntfs_ctx := accessor_ctx.ntfs_ctx
-	for _, record := range mft_entry.Dir(ntfs_ctx) {
-		filename := record.File()
-		if filename.NameType().Name == "DOS" {
-			continue
+
+	var lru_map map[string]*cacheMFT
+	value, pres := accessor_ctx.path_listing.Get(path)
+	if pres {
+		lru_map = value.(cacheElement).children
+
+	} else {
+		lru_map = make(map[string]*cacheMFT)
+		for _, record := range mft_entry.Dir(ntfs_ctx) {
+			filename := record.File()
+			name_type := filename.NameType().Name
+			if name_type == "DOS" {
+				continue
+			}
+
+			component := filename.Name()
+			mft_id := int64(record.MftReference())
+			lru_map[strings.ToLower(component)] = &cacheMFT{
+				mft_id:    mft_id,
+				component: component,
+				name_type: name_type,
+			}
 		}
 
-		full_path := path + "\\" + filename.Name()
-		mft_id := int64(record.MftReference())
+		SetLRUMap(accessor_ctx, path, lru_map)
+	}
+
+	for _, item := range lru_map {
+		full_path := path + "\\" + item.component
+
 		result = append(result, &LazyNTFSFileInfo{
-			mft_id:     mft_id,
+			mft_id:     item.mft_id,
 			ntfs_ctx:   ntfs_ctx,
-			name:       filename.Name(),
-			nameType:   filename.NameType().Name,
+			name:       item.component,
+			nameType:   item.name_type,
 			_full_path: full_path,
 		})
-
-		accessor_ctx.path_to_mft_id_map[full_path] = mft_id
 	}
 
 	return result
@@ -258,26 +279,15 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 		return nil, err
 	}
 
-	var dir *ntfs.MFT_ENTRY
-	ntfs_ctx := accessor_ctx.ntfs_ctx
-	mft_id, pres := accessor_ctx.path_to_mft_id_map[path]
-	if pres {
-		dir, err = ntfs_ctx.GetMFT(mft_id)
-		if err != nil {
-			return nil, err
-		}
+	root, err := accessor_ctx.ntfs_ctx.GetMFT(5)
+	if err != nil {
+		return nil, err
+	}
 
-	} else {
-		root, err := ntfs_ctx.GetMFT(5)
-		if err != nil {
-			return nil, err
-		}
-
-		// Open the device path from the root.
-		dir, err = root.Open(ntfs_ctx, subpath)
-		if err != nil {
-			return nil, err
-		}
+	// Open the device path from the root.
+	dir, err := Open(root, accessor_ctx, device, subpath)
+	if err != nil {
+		return nil, err
 	}
 
 	return ExtractI30List(accessor_ctx, dir, path), nil
@@ -306,27 +316,16 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 		return nil, err
 	}
 
-	var mft_entry *ntfs.MFT_ENTRY
 	ntfs_ctx := accessor_ctx.ntfs_ctx
-	mft_id, pres := accessor_ctx.path_to_mft_id_map[path]
-	if pres {
-		mft_entry, err = ntfs_ctx.GetMFT(mft_id)
-		if err != nil {
-			return nil, err
-		}
+	root, err := ntfs_ctx.GetMFT(5)
+	if err != nil {
+		return nil, err
+	}
 
-	} else {
-		root, err := ntfs_ctx.GetMFT(5)
-		if err != nil {
-			return nil, err
-		}
-
-		// Open the device path from the root.
-		mft_entry, err = root.Open(ntfs_ctx, subpath)
-		if err != nil {
-			return nil, err
-		}
-		mft_id = int64(mft_entry.Record_number())
+	// Open the device path from the root.
+	mft_entry, err := Open(root, accessor_ctx, device, subpath)
+	if err != nil {
+		return nil, err
 	}
 
 	// Get the first data attribute.
@@ -337,7 +336,7 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 
 	return &readAdapter{
 		info: &LazyNTFSFileInfo{
-			mft_id:     mft_id,
+			mft_id:     int64(mft_entry.Record_number()),
 			ntfs_ctx:   ntfs_ctx,
 			name:       components[len(components)-1],
 			_full_path: path,

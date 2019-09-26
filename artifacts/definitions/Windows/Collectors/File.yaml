@@ -25,7 +25,7 @@ sources:
       # Generate the collection globs for each device
       - LET specs = SELECT "\\\\.\\" + RootDevice + "\\" + Glob AS Glob
             FROM parse_csv(filename=collectionSpec, accessor="data")
-            WHERE log(message="Processing Device " +RootDevice)
+            WHERE log(message="Processing Device " + RootDevice + " With " + Accessor)
 
       # Join all the collection rules into a single Glob plugin. This ensure we
       # only make one pass over the filesystem. We only want LFNs.
@@ -42,13 +42,14 @@ sources:
       - LET all_results <= SELECT Created, LastAccessed,
               Modified, Size, SourceFile
         FROM hits
+
       - SELECT * FROM all_results
 
    - name: Uploads
      queries:
       # Upload the files
       - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, SourceFile, Size,
-               upload(file=SourceFile, accessor=Accessor) AS Upload
+               upload(file=SourceFile, accessor=Accessor, name=SourceFile) AS Upload
         FROM all_results
 
       # Seperate the hashes into their own column.
