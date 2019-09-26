@@ -11,11 +11,11 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -105,6 +105,10 @@ func (self *Container) DumpRowsIntoContainer(
 	return nil
 }
 
+func sanitize(component string) string {
+	return strings.Replace(component, ":", "", -1)
+}
+
 func (self *Container) Upload(
 	ctx context.Context,
 	scope *vfilter.Scope,
@@ -116,19 +120,19 @@ func (self *Container) Upload(
 	self.Lock()
 	defer self.Unlock()
 
+	var components []string
 	if store_as_name == "" {
 		store_as_name = filename
+		components = []string{accessor}
 	}
 
 	// Normalize and clean up the path so the zip file is more
 	// usable by fragile zip programs like Windows explorer.
-	components := []string{accessor}
 	for _, component := range utils.SplitComponents(store_as_name) {
 		if component == "." || component == ".." {
 			continue
 		}
-		components = append(components,
-			string(datastore.SanitizeString(component)))
+		components = append(components, sanitize(component))
 	}
 	sanitized_name := path.Join(components...)
 	writer, err := self.zip.Create(sanitized_name)

@@ -315,21 +315,9 @@ func (self Globber) ExpandWithContext(
 				if is_sentinal(next) {
 					continue
 				}
-				child_chan := next.ExpandWithContext(ctx, next_path, accessor)
-
-			search_subdir:
-				for {
-					select {
-					case <-ctx.Done():
-						return
-
-					case f, ok := <-child_chan:
-						if !ok {
-							break search_subdir
-						}
-
-						output_chan <- f
-					}
+				for f := range next.ExpandWithContext(
+					ctx, next_path, accessor) {
+					output_chan <- f
 				}
 			}
 		}

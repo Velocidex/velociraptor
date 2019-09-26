@@ -82,6 +82,18 @@
   version = "v1.1.9"
 
 [[projects]]
+  digest = "1:815ee39a6bd120bdc36d608ac7cd316511d6580e0aba34eb0fae71d73cebb260"
+  name = "github.com/Velocidex/survey"
+  packages = [
+    ".",
+    "core",
+    "terminal",
+  ]
+  pruneopts = "UT"
+  revision = "2ff99cc7aa4934b914492b81dc2e3d16fc9b0b77"
+  version = "v2.0.5"
+
+[[projects]]
   digest = "1:abd552f55bd96b48f0b2442e49d95ffa3af6faa2a4473745e8b765618925f9c2"
   name = "github.com/Velocidex/yaml"
   packages = ["."]
@@ -897,18 +909,6 @@
   version = "v1.22.0"
 
 [[projects]]
-  digest = "1:5cbcd7b7842e62d419d8e6fdaef4f95785e248337a565c25cbae238a585ac4e2"
-  name = "gopkg.in/AlecAivazis/survey.v1"
-  packages = [
-    ".",
-    "core",
-    "terminal",
-  ]
-  pruneopts = "UT"
-  revision = "3db8b5dd7b2875d268abf7c1feb59bd929f6b838"
-  version = "v1.8.5"
-
-[[projects]]
   digest = "1:c06d9e11d955af78ac3bbb26bd02e01d2f61f689e1a3bce2ef6fb683ef8a7f2d"
   name = "gopkg.in/alecthomas/kingpin.v2"
   packages = ["."]
@@ -970,11 +970,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:48090b4a06ada9711773156a85042c7e010179479bf73880e3ede952ca4e0f6c"
+  digest = "1:83f271cc18d1edae7309a750c548042e8bce653a39388fdf4581d87ded7acaae"
   name = "www.velocidex.com/golang/go-ntfs"
-  packages = ["."]
+  packages = ["parser"]
   pruneopts = "UT"
-  revision = "d467c5e7dca0addc0e3746bc8f84b26494c2dee0"
+  revision = "c6e6548a412c733a84bb0eea2b7a46b5e63b06cf"
+  source = "https://github.com/Velocidex/go-ntfs.git"
 
 [[projects]]
   digest = "1:fee576f86f67d8a56d19d2612a7c7b95a966328637e3cac5dd0866884cef9586"
@@ -1038,6 +1039,7 @@
     "github.com/Velocidex/ahocorasick",
     "github.com/Velocidex/cgofuse/fuse",
     "github.com/Velocidex/go-yara",
+    "github.com/Velocidex/survey",
     "github.com/Velocidex/yaml",
     "github.com/alecthomas/chroma/formatters/html",
     "github.com/alecthomas/participle",
@@ -1114,13 +1116,12 @@
     "google.golang.org/grpc/peer",
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/status",
-    "gopkg.in/AlecAivazis/survey.v1",
     "gopkg.in/alecthomas/kingpin.v2",
     "gopkg.in/gomail.v2",
     "gopkg.in/olivere/elastic.v5",
     "gopkg.in/russross/blackfriday.v2",
     "www.velocidex.com/golang/evtx",
-    "www.velocidex.com/golang/go-ntfs",
+    "www.velocidex.com/golang/go-ntfs/parser",
     "www.velocidex.com/golang/go-pe",
     "www.velocidex.com/golang/go-prefetch",
     "www.velocidex.com/golang/oleparse",

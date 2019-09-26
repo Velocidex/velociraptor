@@ -47,8 +47,3 @@
 [[constraint]]
   name="www.velocidex.com/golang/go-ntfs"
   source="https://github.com/Velocidex/go-ntfs.git"
-
-[[constraint]]
-  name = "github.com/AlecAivazis/survey"
-  source = "https://github.com/AlecAivazis/survey.git"
-  revision = "4de88574e78145bdcfa6627ed766564231588b31"

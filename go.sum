@@ -30,6 +30,8 @@ github.com/Velocidex/cgofuse v1.1.2 h1:5zvc/Wonpou45AtdA4ZSDENYEKaaOFr8uyYoq6tdu
 github.com/Velocidex/cgofuse v1.1.2/go.mod h1:3uaCG9bbPLFSM6WqwcboehPaB4gAgRKx+zQ8M3nKNI4=
 github.com/Velocidex/go-yara v1.1.9 h1:XFtozFms5mruc6fXV9E+ov5V6rBYgcX3hUrsoLFfPIk=
 github.com/Velocidex/go-yara v1.1.9/go.mod h1:2QU3qksRdRiX8sde+Hy9CYudPRXza7i08u5r1/0al3s=
+github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
+github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0 h1:rFd07P9lqQPsmgPVvS0crnGpq63eFyd7qQyyvLgBrMY=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0/go.mod h1:LVK71wXgKJYbhcGaK+QDA6QM+yLgcO21ZihAoxAdMak=
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm+0dGI2AIUHY+w0BUc+4tn40djz7+6U=
@@ -405,12 +407,8 @@ honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWh
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163 h1:V7V2q7jlyUaJMdYMbugnIJobhCmOCMyU8zxhogVU51U=
 www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163/go.mod h1:6EBI36C3s9YR484Vfw7ZNQywHpDv/XHSaNbFF24xejs=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190921133542-301e100035d0 h1:nlUya8EahZHG6hwfjtVfBmrSukSm7LT3grulRxXuUXQ=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190921133542-301e100035d0/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190923111259-525352093fe8 h1:HDaWf54SK8Z2djHpnibBZBy18RUmpJtQRSlXDilhRWc=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190923111259-525352093fe8/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190924105901-ddba091fd8d5 h1:jrYx+gMeZ6mS0bvuDpEdtToaG26XKXSmexzFWYoxeuQ=
-www.velocidex.com/golang/go-ntfs v0.0.0-20190924105901-ddba091fd8d5/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
+www.velocidex.com/golang/go-ntfs v0.0.0-20190926065814-c6e6548a412c h1:HYUYb+oEP04/IWzVHw4/XzFNXpcWjouAPwSHiLafKU8=
+www.velocidex.com/golang/go-ntfs v0.0.0-20190926065814-c6e6548a412c/go.mod h1:PqtikStGr+veDXyoha9wqB/VImxtJDljK2+raRNURzg=
 www.velocidex.com/golang/go-pe v0.1.0 h1:W5oYsEMz1GiBv84CyZzOzTHjLaGLv8oTaDfrRkcDB6E=
 www.velocidex.com/golang/go-pe v0.1.0/go.mod h1:BBNxoooAx/LA/F9rn3QliOCR2FtiDccxX3MVsJ4OX2g=
 www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf h1:MhCevuCZJLBXoiYjL2W7qy7OugVZm/LBB11D6iKYUMY=

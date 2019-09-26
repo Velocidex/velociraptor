@@ -37,6 +37,8 @@ import (
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
@@ -60,7 +62,7 @@ type AccessorContext struct {
 	fd       *os.File
 	ntfs_ctx *ntfs.NTFSContext
 
-	path_to_mft_id_map map[string]int64
+	path_listing *cache.LRUCache
 }
 
 type NTFSFileInfo struct {
@@ -218,10 +220,10 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 		}
 
 		ctx = &AccessorContext{
-			reader:             reader,
-			fd:                 raw_fd,
-			ntfs_ctx:           ntfs_ctx,
-			path_to_mft_id_map: make(map[string]int64),
+			reader:       reader,
+			fd:           raw_fd,
+			ntfs_ctx:     ntfs_ctx,
+			path_listing: cache.NewLRUCache(2000),
 		}
 		fd_cache[device] = ctx
 		timestamp = time.Now()
@@ -319,20 +321,43 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 	}
 
 	// Open the device path from the root.
-	dir, err := root.Open(ntfs_ctx, subpath)
+	dir, err := Open(root, accessor_ctx, device, subpath)
 	if err != nil {
 		return nil, err
 	}
 
+	// Only process each mft id once.
+	seen := []int64{}
+	in_seen := func(id int64) bool {
+		for _, i := range seen {
+			if i == id {
+				return true
+			}
+		}
+		return false
+	}
+
 	// List the directory.
-	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
-		if info.Name == "" || info.Name == "." {
+	for _, node := range dir.Dir(ntfs_ctx) {
+		node_mft_id := int64(node.MftReference())
+		if in_seen(node_mft_id) {
 			continue
 		}
-		result = append(result, &NTFSFileInfo{
-			info:       info,
-			_full_path: device + subpath + "\\" + info.Name,
-		})
+
+		seen = append(seen, node_mft_id)
+
+		node_mft, err := ntfs_ctx.GetMFT(node_mft_id)
+		if err != nil {
+			continue
+		}
+		// Emit a result for each filename
+		for _, info := range ntfs.Stat(ntfs_ctx, node_mft) {
+			full_path := device + subpath + "\\" + info.Name
+			result = append(result, &NTFSFileInfo{
+				info:       info,
+				_full_path: full_path,
+			})
+		}
 	}
 	return result, nil
 }
@@ -416,7 +441,7 @@ func (self *NTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, 
 	}
 
 	dirname := filepath.Dir(subpath)
-	dir, err := root.Open(ntfs_ctx, dirname)
+	dir, err := Open(root, accessor_ctx, device, dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -467,7 +492,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 	}
 
 	dirname := filepath.Dir(subpath)
-	dir, err := root.Open(ntfs_ctx, dirname)
+	dir, err := Open(root, accessor_ctx, device, dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -510,6 +535,104 @@ func escape(path string) string {
 func unescape(path string) string {
 	result := strings.Replace(path, "%5c", "\\", -1)
 	return strings.Replace(result, "%2f", "/", -1)
+}
+
+// Open the MFT entry specified by a path name. Walks all directory
+// indexes in the path to find the right MFT entry.
+func Open(self *ntfs.MFT_ENTRY, accessor_ctx *AccessorContext, device, filename string) (
+	*ntfs.MFT_ENTRY, error) {
+
+	ntfs_ctx := accessor_ctx.ntfs_ctx
+
+	components := utils.SplitComponents(filename)
+
+	// Path is the relative path from the root of the device we want to list
+	// component: The name of the file we want (case insensitive)
+	// dir: The MFT entry to search.
+	get_path_in_dir := func(path string, component string, dir *ntfs.MFT_ENTRY) (
+		*ntfs.MFT_ENTRY, error) {
+
+		key := device + path
+		item, pres := GetDirLRU(accessor_ctx, key, component)
+		if pres {
+			return ntfs_ctx.GetMFT(item.mft_id)
+		}
+
+		lru_map := make(map[string]*cacheMFT)
+
+		// Populate the directory cache with all the mft ids.
+		lower_component := strings.ToLower(component)
+		for _, idx_record := range dir.Dir(ntfs_ctx) {
+			file := idx_record.File()
+			name_type := file.NameType().Name
+			if name_type == "DOS" {
+				continue
+			}
+			item_name := file.Name()
+			mft_id := int64(idx_record.MftReference())
+
+			lru_map[strings.ToLower(item_name)] = &cacheMFT{
+				mft_id:    mft_id,
+				component: item_name,
+				name_type: name_type,
+			}
+		}
+		SetLRUMap(accessor_ctx, key, lru_map)
+
+		for _, v := range lru_map {
+			if strings.ToLower(v.component) == lower_component {
+				return ntfs_ctx.GetMFT(v.mft_id)
+			}
+		}
+
+		return nil, errors.New("Not found")
+	}
+
+	directory := self
+	path := ""
+	for _, component := range components {
+		if component == "" {
+			continue
+		}
+		next, err := get_path_in_dir(
+			path, component, directory)
+		if err != nil {
+			return nil, err
+		}
+		directory = next
+		path = path + "\\" + component
+	}
+
+	return directory, nil
+}
+
+type cacheMFT struct {
+	component string
+	mft_id    int64
+	name_type string
+}
+
+type cacheElement struct {
+	children map[string]*cacheMFT
+}
+
+func (self cacheElement) Size() int {
+	return 1
+}
+
+func SetLRUMap(accessor_ctx *AccessorContext, path string, lru_map map[string]*cacheMFT) {
+	accessor_ctx.path_listing.Set(path, cacheElement{children: lru_map})
+}
+
+func GetDirLRU(accessor_ctx *AccessorContext, path string, component string) (
+	*cacheMFT, bool) {
+	value, pres := accessor_ctx.path_listing.Get(path)
+	if pres {
+		item, pres := value.(cacheElement).children[strings.ToLower(component)]
+		return item, pres
+	}
+
+	return nil, false
 }
 
 func init() {

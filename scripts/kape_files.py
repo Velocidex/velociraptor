@@ -28,7 +28,7 @@ BLACKLISTED = ["!ALL.tkape"]
 
 class KapeContext:
     groups = {}
-    rows = [["Id", "Name", "Category", "Glob", "Comment"]]
+    rows = [["Id", "Name", "Category", "Glob", "Accessor", "Comment"]]
     kape_files = []
     kape_data = {}
 
@@ -55,7 +55,7 @@ def read_targets(ctx, project_path):
             glob = target.get("Path", "")
 
             if target.get("Recursive"):
-                glob += "/**"
+                glob += "/**10"
 
             mask = target.get("FileMask")
             if mask:
@@ -68,11 +68,14 @@ def read_targets(ctx, project_path):
             row_id = len(ctx.rows)
             ctx.groups[name].add(row_id)
 
+            glob = strip_drive(glob)
+
             ctx.rows.append([
                 row_id,
                 target["Name"],
                 target.get("Category", ""),
-                strip_drive(glob),
+                glob,
+                "ntfs" if ":" in glob else "lazy_ntfs",
                 target.get("Comment", "")])
 
     for i in range(3):
@@ -114,18 +117,6 @@ def get_csv(rows):
 
     return out.getvalue()
 
-def get_yara(ctx):
-    result = []
-    for i, row in enumerate(ctx.rows[1:]):
-        glob = row[3]   # Glob
-        glob = re.sub("[/\\\\]+", "\\/", glob)
-        glob = glob.replace("**", ".*")
-        glob = re.sub("([^\\.])\\*", "\\1[^\\/]*", glob)
-
-        result.append("rule T%s {strings: $=/%s/ nocase condition: any of them}" % (
-            i, glob))
-    return "\n".join(result)
-
 def format(ctx):
     template = """name: Windows.Kape.Targets
 description: |
@@ -164,9 +155,7 @@ parameters:
     default: |
 %(rules)s
   - name: Device
-    default: \\\\.\\C:\\
-  - name: Accessor
-    default: ntfs
+    default: "C:"
   - name: VSSAnalysis
     type: bool
     default:
@@ -182,22 +171,41 @@ sources:
 
       # Filter only the rules in the rule table that have an Id we want.
       - |
-        LET rule_specs <= SELECT Id, Glob
+        LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
-        WHERE Id in array(array=targets.RuleIds)
+        WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
+
+      - |
+        LET rule_specs_lazy_ntfs <= SELECT Id, Glob
+        FROM parse_csv(filename=KapeRules, accessor="data")
+        WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
 
       # Call the generic VSS file collector with the globs we want in a new CSV file.
       - |
         LET all_results <= SELECT * FROM if(
            condition=VSSAnalysis,
            then={
-             SELECT * FROM Artifact.Windows.Collectors.VSS(
-                RootDevice=Device,
-                collectionSpec=serialize(item=rule_specs, format="csv"))
+             SELECT * FROM chain(
+               a={
+                   SELECT * FROM Artifact.Windows.Collectors.VSS(
+                      RootDevice=Device, Accessor="ntfs",
+                      collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
+               }, b={
+                   SELECT * FROM Artifact.Windows.Collectors.VSS(
+                      RootDevice=Device, Accessor="lazy_ntfs",
+                      collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
+               })
            }, else={
-             SELECT * FROM Artifact.Windows.Collectors.File(
-                RootDevice=Device,
-                collectionSpec=serialize(item=rule_specs, format="csv"))
+             SELECT * FROM chain(
+               a={
+                   SELECT * FROM Artifact.Windows.Collectors.File(
+                      RootDevice=Device, Accessor="ntfs",
+                      collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
+               }, b={
+                   SELECT * FROM Artifact.Windows.Collectors.File(
+                      RootDevice=Device, Accessor="lazy_ntfs",
+                      collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
+               })
            })
       - SELECT * FROM all_results WHERE _Source =~ "Metadata"
   - name: Uploads
@@ -223,7 +231,6 @@ sources:
         parameters=parameters_str,
         rules="\n".join(["      " + x for x in get_csv(rules).splitlines()]),
         csv="\n".join(["      " + x for x in get_csv(ctx.rows).splitlines()]),
-        yara="\n".join(["      " + x for x in get_yara(ctx).splitlines()]),
     ))
 
 
