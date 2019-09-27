@@ -7,4 +7,4 @@ Queries:
          scheme='file',
          path='c:/1.zip',
          fragment='/**').String,
-         accessor='zip')"
+         accessor='zip')
