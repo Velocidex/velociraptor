@@ -1,5 +1,3 @@
-// +build server_vql
-
 package tools
 
 import (
@@ -7,7 +5,7 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -37,15 +35,8 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		var config_obj *config_proto.Config
-		scope_config, pres := scope.Resolve(
-			"server_config")
-		if pres {
-			config_obj = scope_config.(*config_proto.Config)
-		}
-
-		container, err := reporting.NewContainer(
-			arg.Output)
+		config_obj := config.GetDefaultConfig()
+		container, err := reporting.NewContainer(arg.Output)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
