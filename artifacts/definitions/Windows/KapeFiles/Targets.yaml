@@ -1,4 +1,4 @@
-name: Windows.Kape.Targets
+name: Windows.KapeFiles.Targets
 description: |
 
     Kape is a popular bulk collector tool for triaging a system
@@ -806,5 +806,3 @@ sources:
   - name: Uploads
     queries:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
-
-
