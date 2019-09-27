@@ -4,7 +4,7 @@ Queries:
           args=dict(SearchFilesGlob='c:/Windows/notepad.exe', Upload_File='Y'),
           output='c:/1.zip')
   - SELECT FullPath from glob(globs=url(
-         scheme='file',
+         scheme='ntfs',
          path='c:/1.zip',
          fragment='/**').String,
          accessor='zip')
