@@ -118,7 +118,7 @@ def get_csv(rows):
     return out.getvalue()
 
 def format(ctx):
-    template = """name: Windows.Kape.Targets
+    template = """name: Windows.KapeFiles.Targets
 description: |
 
     Kape is a popular bulk collector tool for triaging a system

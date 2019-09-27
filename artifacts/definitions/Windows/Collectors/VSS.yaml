@@ -90,7 +90,7 @@ sources:
 
       # Upload the files using the MFT accessor.
       - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, MFT, SourceFile, Size,
-               upload(file=Device+MFT, name=Device + SourceFile, accessor="mft") AS Upload
+               upload(file=Device+MFT, name=SourceFile, accessor="mft") AS Upload
         FROM unique_mtimes
 
       # Seperate the hashes into their own column.

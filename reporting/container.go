@@ -106,7 +106,9 @@ func (self *Container) DumpRowsIntoContainer(
 }
 
 func sanitize(component string) string {
-	return strings.Replace(component, ":", "", -1)
+	component = strings.Replace(component, ":", "", -1)
+	component = strings.Replace(component, "?", "", -1)
+	return component
 }
 
 func (self *Container) Upload(
@@ -134,7 +136,7 @@ func (self *Container) Upload(
 		}
 		components = append(components, sanitize(component))
 	}
-	sanitized_name := path.Join(components...)
+	sanitized_name := "/" + path.Join(components...)
 	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
 		return nil, err
