@@ -1,7 +1,7 @@
 Queries:
   # Make sure we can collect artifacts with uploads
   - SELECT * FROM collect(artifacts='Windows.Search.FileFinder',
-          args=dict(globs='c:/Windows/notepad.exe', Upload_File='Y'),
+          args=dict(SearchFilesGlob='c:/Windows/notepad.exe', Upload_File='Y'),
           output='c:/1.zip')
   - SELECT FullPath from glob(globs=url(
          scheme='file',

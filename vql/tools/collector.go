@@ -86,8 +86,23 @@ func (self CollectPlugin) Call(
 				env.Set(e.Key, e.Value)
 			}
 
+			in_params := func(key string) bool {
+				for _, param := range artifact.Parameters {
+					if param.Name == key {
+						return true
+					}
+				}
+				return false
+			}
+
 			// Now override provided parameters
 			for _, key := range subscope.GetMembers(arg.Args) {
+				if !in_params(key) {
+					scope.Log("Unknown arg %v to artifact collector",
+						key)
+					return
+				}
+
 				value, pres := subscope.Associative(arg.Args,
 					key)
 				if pres {
