@@ -223,7 +223,7 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 			reader:       reader,
 			fd:           raw_fd,
 			ntfs_ctx:     ntfs_ctx,
-			path_listing: cache.NewLRUCache(2000),
+			path_listing: cache.NewLRUCache(200),
 		}
 		fd_cache[device] = ctx
 		timestamp = time.Now()
@@ -588,6 +588,7 @@ func Open(self *ntfs.MFT_ENTRY, accessor_ctx *AccessorContext, device, filename 
 		return nil, errors.New("Not found")
 	}
 
+	// NOTE: This refreshes each parent directory in the LRU.
 	directory := self
 	path := ""
 	for _, component := range components {

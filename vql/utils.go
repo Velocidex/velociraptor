@@ -19,6 +19,7 @@ package vql
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -60,4 +61,29 @@ func RowToDict(scope *vfilter.Scope, row vfilter.Row) *vfilter.Dict {
 	}
 
 	return result
+}
+
+// A writer which periodically reports how much has been
+// written. Useful for tee with another writer.
+type LogWriter struct {
+	Scope   *vfilter.Scope
+	Message string
+	Period  time.Duration
+
+	next_log   time.Time
+	total_size int
+}
+
+func (self *LogWriter) Write(buff []byte) (int, error) {
+	if self.Period == 0 {
+		self.Period = 5 * time.Second
+	}
+
+	self.total_size += len(buff)
+	if time.Now().After(self.next_log) {
+		self.next_log = time.Now().Add(self.Period)
+		self.Scope.Log("%s: Uploaded %v bytes",
+			self.Message, self.total_size)
+	}
+	return len(buff), nil
 }
