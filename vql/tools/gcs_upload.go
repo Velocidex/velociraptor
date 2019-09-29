@@ -5,14 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"hash"
 	"io"
-	"time"
 
 	"cloud.google.com/go/storage"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -107,60 +106,31 @@ func upload_gcs(ctx context.Context, scope *vfilter.Scope,
 
 	obj := bucket_handle.Object(name)
 	writer := obj.NewWriter(ctx)
-	md5_sum, sha_sum, offset, err := copyWithHashes(ctx, scope, reader, writer)
+
+	sha_sum := sha256.New()
+	md5_sum := md5.New()
+	log_writer := &vql_subsystem.LogWriter{
+		Scope:   scope,
+		Message: "upload_gcs " + name}
+
+	n, err := utils.Copy(ctx, utils.NewTee(
+		writer, sha_sum, md5_sum, log_writer), reader)
 	if err != nil {
-		return nil, err
+		return &networking.UploadResponse{
+			Error: err.Error(),
+		}, err
 	}
 
 	return &networking.UploadResponse{
 		Path:   name,
-		Size:   uint64(offset),
+		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
 }
 
-func copyWithHashes(ctx context.Context, scope *vfilter.Scope,
-	reader io.Reader, writer io.WriteCloser) (
-	md5_sum hash.Hash, sha_sum hash.Hash, size int, err error) {
-	offset := 0
-	md5_sum = md5.New()
-	sha_sum = sha256.New()
-	buf := make([]byte, 64*1024)
-
-	defer func() {
-		err = writer.Close()
-	}()
-
-	next_log := time.Now().Add(5 * time.Second)
-	for {
-		if time.Now().After(next_log) {
-			next_log = time.Now().Add(5 * time.Second)
-			scope.Log("upload_gcs: Uploaded %v bytes", offset)
-		}
-
-		select {
-		case <-ctx.Done():
-			return md5_sum, sha_sum, offset, nil
-
-		default:
-			n, _ := reader.Read(buf)
-			if n == 0 {
-				return md5_sum, sha_sum, offset, nil
-			}
-			data := buf[:n]
-
-			writer.Write(data)
-			md5_sum.Write(data)
-			sha_sum.Write(data)
-
-			offset += n
-		}
-	}
-
-}
-
-func (self GCSUploadFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self GCSUploadFunction) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upload_gcs",
 		Doc:     "Upload files to GCS.",
