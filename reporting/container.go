@@ -136,7 +136,9 @@ func (self *Container) Upload(
 		}
 		components = append(components, sanitize(component))
 	}
-	sanitized_name := "/" + path.Join(components...)
+
+	// Zip members must not have absolute paths.
+	sanitized_name := path.Join(components...)
 	writer, err := self.zip.Create(sanitized_name)
 	if err != nil {
 		return nil, err

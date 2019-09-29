@@ -1,7 +1,7 @@
 module www.velocidex.com/golang/velociraptor
 
 require (
-	cloud.google.com/go v0.41.0 // indirect
+	cloud.google.com/go v0.41.0
 	github.com/Depado/bfchroma v1.1.2
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
@@ -77,10 +77,12 @@ require (
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
+	golang.org/x/arch v0.0.0-20190927153633-4e8777c89be4 // indirect
 	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
 	golang.org/x/net v0.0.0-20190921015927-1a5e07d1ff72
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20190920190810-ef0ce1748380
+	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df
 	google.golang.org/grpc v1.22.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

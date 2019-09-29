@@ -49,6 +49,10 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 	} else {
 		lru_map = make(map[string]*cacheMFT)
 		for _, record := range mft_entry.Dir(ntfs_ctx) {
+			if !record.IsValid() {
+				continue
+			}
+
 			filename := record.File()
 			name_type := filename.NameType().Name
 			if name_type == "DOS" {
@@ -56,6 +60,10 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 			}
 
 			component := filename.Name()
+			if component == "." || component == ".." {
+				continue
+			}
+
 			mft_id := int64(record.MftReference())
 			lru_map[strings.ToLower(component)] = &cacheMFT{
 				mft_id:    mft_id,
