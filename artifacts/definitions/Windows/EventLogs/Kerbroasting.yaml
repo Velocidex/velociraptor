@@ -40,8 +40,7 @@ sources:
     queries:
       - |
         LET files = SELECT * FROM glob(
-            globs=eventLog,
-            accessor=accessor)
+            globs=eventLog)
       - |
         SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
               System.EventID.Value as EventID,
