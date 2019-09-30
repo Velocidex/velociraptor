@@ -1,5 +1,5 @@
 Queries:
   - SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns(
          binaryURL="https://storage.googleapis.com/go.velocidex.com/",
-         AutorunArgs="-nobanner -a b -c *")
+         AutorunArgs="-nobanner -accepteula -a b -c *")
     WHERE Company =~ "Microsoft"
