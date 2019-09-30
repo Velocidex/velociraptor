@@ -28,6 +28,7 @@ const HuntResultsController = function(
     this.selectedArtifact;
 
   $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));
+  $scope.$watch('controller.selectedArtifact', this.onHuntIdChange.bind(this));
 };
 
 
@@ -44,7 +45,7 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
     this.artifactNames = this.scope_.hunt.artifact_sources;
 
     if (angular.isDefined(this.artifactNames) &&
-        this.artifactNames.length > 0) {
+        this.artifactNames.length > 0 && !this.selectedArtifact) {
         this.selectedArtifact = this.artifactNames[0];
     }
     this.queryParams = {'hunt_id': this.scope_.huntId,

@@ -44,8 +44,9 @@ sources:
       # Fetch the inventory from the repository.
       - |
         LET inventory_data = SELECT * FROM http_client(
-           length=1000000,
+           chunk_size=1000000,
            url=(inventory_url[0]).URL + "inventory.csv")
+           WHERE inventory_url
 
       # Parse the inventory: Tool,Type,URL,ExpectedHash
       - |

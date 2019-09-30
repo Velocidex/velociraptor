@@ -13,18 +13,24 @@ parameters:
     description: |
       Specify this as the base of the binary store (if empty we use
       the server's public directory).
+  - name: AutorunArgs
+    description: |
+      A space separated list of args to run with.
+    default: |
+      -nobanner -accepteula -t -a * -c *
 
 sources:
   - queries:
       # Get the path to the binary.
       - |
-        LET bin = SELECT * FROM Artifact.Windows.Utils.FetchBinary(
-              ToolName="Autorun")
+        LET bin <= SELECT * FROM Artifact.Windows.Utils.FetchBinary(
+              binaryURL=binaryURL, ToolName="Autorun")
 
       # Call the binary and return all its output in a single row.
       - |
-        LET output = SELECT * FROM execve(argv=[(bin[0]).FullPath, "-nobanner",
-           "-t", "-a", "*", "-c", "*"], length=10000000)
+        LET output = SELECT * FROM execve(argv=(bin[0]).FullPath +
+           split(string=AutorunArgs, sep=" "),
+           length=10000000)
 
       # Parse the CSV output and return it as rows. We can filter this further.
       - |
