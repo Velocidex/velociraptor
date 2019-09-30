@@ -8,8 +8,10 @@ Queries:
 
   # First time we retrive the tool we should bring it from the server.
   - SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary(
+       ToolName="WinPmem",
        binaryURL="https://storage.googleapis.com/go.velocidex.com/")
 
   # Second time it should be retrieved from the local system cache.
   - SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary(
+       ToolName="WinPmem",
        binaryURL="https://storage.googleapis.com/go.velocidex.com/")
