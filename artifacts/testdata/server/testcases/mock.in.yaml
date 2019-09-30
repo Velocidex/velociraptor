@@ -1,0 +1,5 @@
+Queries:
+  # Mock out the info plugin just for fun.
+  - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] )
+      FROM scope()
+  - SELECT * FROM info()
