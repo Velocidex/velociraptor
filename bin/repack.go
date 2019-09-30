@@ -61,12 +61,17 @@ func validate_config(config_data []byte) error {
 	if test_config.Autoexec != nil {
 		repository := artifacts.NewRepository()
 
-		for _, def := range test_config.Autoexec.ArtifactDefinitions {
-			_, err := repository.LoadYaml(def, true /* validate */)
+		for _, definition := range test_config.Autoexec.ArtifactDefinitions {
+			serialized, err := yaml.Marshal(definition)
+			if err != nil {
+				return err
+			}
+
+			_, err = repository.LoadYaml(string(serialized), true /* validate */)
 			if err != nil {
 				return errors.New(
 					fmt.Sprintf("While parsing artifact: %s\n%s",
-						err, def))
+						err, string(serialized)))
 			}
 		}
 	}

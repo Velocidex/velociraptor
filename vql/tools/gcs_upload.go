@@ -106,6 +106,7 @@ func upload_gcs(ctx context.Context, scope *vfilter.Scope,
 
 	obj := bucket_handle.Object(name)
 	writer := obj.NewWriter(ctx)
+	defer writer.Close()
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
