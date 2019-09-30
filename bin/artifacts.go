@@ -396,7 +396,10 @@ func load_config_artifacts(config_obj *config_proto.Config) {
 	}
 	repository := getRepository(config_obj)
 	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
-		_, err := repository.LoadYaml(definition, true /* validate */)
+		serialized, err := yaml.Marshal(definition)
+		kingpin.FatalIfError(err, "Unable to parse config artifact")
+
+		_, err = repository.LoadYaml(string(serialized), true /* validate */)
 		kingpin.FatalIfError(err, "Unable to parse config artifact")
 	}
 }

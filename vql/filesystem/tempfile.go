@@ -28,7 +28,7 @@ import (
 )
 
 type _TempfileRequest struct {
-	Data      []string `vfilter:"required,field=data,doc=Data to write in the tempfile."`
+	Data      []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
 	Extension string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
 }
 

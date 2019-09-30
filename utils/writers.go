@@ -8,8 +8,8 @@ type teeWriter struct {
 
 func (self *teeWriter) Write(p []byte) (n int, err error) {
 	for _, writer := range self.writers {
-		n, err := writer.Write(p)
-		if err != nil {
+		n, err = writer.Write(p)
+		if err != nil && err != io.EOF {
 			return n, err
 		}
 	}

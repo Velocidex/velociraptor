@@ -59,6 +59,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
