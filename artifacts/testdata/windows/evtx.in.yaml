@@ -1,3 +1,0 @@
-Queries:
-  # Kerbroasting VQL test
-  - SELECT * FROM Artifact.Windows.EventLogs.Kerbroasting(filename=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')
