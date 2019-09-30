@@ -165,6 +165,10 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  }
 ]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
  {
+  "ProgramName": "AutoRuns",
+  "User": "appveyor"
+ },
+ {
   "ProgramName": "PsExec",
   "User": "appveyor"
  }

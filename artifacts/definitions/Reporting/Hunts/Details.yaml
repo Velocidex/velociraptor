@@ -3,6 +3,8 @@ description: |
   Report details about which client ran each hunt, how long it took
   and if it has completed.
 
+type: SERVER
+
 sources:
   - precondition:
       SELECT server_config FROM scope()

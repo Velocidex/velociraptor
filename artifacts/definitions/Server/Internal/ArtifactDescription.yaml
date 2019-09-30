@@ -1,5 +1,7 @@
 name: Server.Internal.ArtifactDescription
 
+type: INTERNAL
+
 reports:
   - type: INTERNAL
     template: |

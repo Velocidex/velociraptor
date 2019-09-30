@@ -107,7 +107,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 		// By default use the client type.
 		artifact.Type = "client"
 
-	case "client", "client_event", "server", "server_event":
+	case "client", "client_event", "server", "server_event", "internal":
 		// These types are acceptable.
 
 	default:
