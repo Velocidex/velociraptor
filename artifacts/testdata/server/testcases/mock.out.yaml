@@ -1,0 +1,8 @@
+LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ) FROM scope()[]SELECT * FROM info()[
+ {
+  "foo": "bar"
+ },
+ {
+  "foo": "baz"
+ }
+]
