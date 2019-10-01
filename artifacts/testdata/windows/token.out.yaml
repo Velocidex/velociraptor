@@ -1,4 +1,4 @@
-SELECT token(pid=getpid()) from scope()[
+SELECT token(pid=getpid()).Username As Username from scope()[
  {
   "Username": "APPVYR-WIN\\appveyor"
  }
