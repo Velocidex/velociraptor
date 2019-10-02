@@ -1,7 +1,7 @@
-name: Windows.EventLogs.Kerbroasting
+name: Windows.Events.Kerbroasting
 description: |
 
-  This Artifact will monitor for all successful Kerberos TGS Ticket events for 
+  This Artifact will monitor all successful Kerberos TGS Ticket events for 
   Service Accounts (SPN attribute) implemented with weak encryption. These 
   tickets are vulnerable to brute force attack and this event is an indicator 
   of a Kerbroasting attack.  
@@ -22,13 +22,15 @@ description: |
   **Service Name**: NOT krbtgt or NOT a system account (account name ends in $)  
   **TargetUserName**: NOT a system account (*$@*)  
   
+  
+  Monitor and alert on unusual events from an unexpected IP.  
   Note: There are potential false positives so whitelist normal source IPs and 
   manage risk of insecure ticket generation.
 
 
 author: Matt Green - @mgreen27
 
-type: CLIENT
+type: CLIENT_EVENT
 
 parameters:
   - name: eventLog
@@ -58,29 +60,10 @@ sources:
           row=files,
           query={
             SELECT *
-            FROM parse_evtx(filename=FullPath)
+            FROM watch_evtx(filename=FullPath)
             WHERE System.EventID.Value = 4769
                 AND EventData.TicketEncryptionType = 23 
                 AND EventData.Status = 0
                 AND NOT EventData.ServiceName =~ "krbtgt|\\$$"
                 AND NOT EventData.TargetUserName =~ "\\$@"    
         })
-
-reports:
-  - type: HUNT
-    template: |
-
-      Kerbroasting: TGS Ticket events.
-      ===============================
-
-      {{ .Description }}
-      {{ Query "SELECT EventTime, Computer, ServiceName, TargetUserName, TargetDomainName, IpAddress FROM source(source='Kerbroasting')" | Table }}
-      
-  - type: CLIENT
-    template: |
-
-      Kerbroasting: TGS Ticket events.
-      ===============================
-
-      {{ .Description }}
-      {{ Query "SELECT EventTime, Computer, ServiceName, TargetUserName, TargetDomainName, IpAddress FROM source(source='Kerbroasting')" | Table }}
