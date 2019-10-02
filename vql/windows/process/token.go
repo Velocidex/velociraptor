@@ -56,11 +56,7 @@ func (self TokenFunction) Call(
 	token_groups, err := token.GetTokenGroups()
 	if err == nil {
 		for _, grp := range token_groups.AllGroups() {
-			group_name, err := grp.Sid.String()
-			if err != nil {
-				continue
-			}
-
+			group_name := grp.Sid.String()
 			groups = append(groups, group_name)
 		}
 	}
@@ -70,7 +66,7 @@ func (self TokenFunction) Call(
 		Set("ProfileDir", vfilter.Null{}).
 		Set("IsElevated", token.IsElevated()).
 		Set("Groups", groups).
-		Set("SID", vfilter.Null{}).
+		Set("SID", tokenUser.User.Sid.String()).
 		Set("PrimaryGroup", vfilter.Null{})
 
 	// look up domain account by sid
@@ -79,22 +75,14 @@ func (self TokenFunction) Call(
 		result.Set("Username", fmt.Sprintf("%s\\%s", domain, account))
 	}
 
-	user_sid, err := tokenUser.User.Sid.String()
-	if err == nil {
-		result.Set("SID", user_sid)
-	}
-
 	profile_dir, err := token.GetUserProfileDirectory()
 	if err == nil {
 		result.Set("ProfileDir", profile_dir)
 	}
-
 	pg, err := token.GetTokenPrimaryGroup()
 	if err == nil {
-		str, err := pg.PrimaryGroup.String()
-		if err == nil {
-			result.Set("PrimaryGroup", str)
-		}
+		str := pg.PrimaryGroup.String()
+		result.Set("PrimaryGroup", str)
 	}
 
 	return result
