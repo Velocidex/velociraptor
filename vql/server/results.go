@@ -79,6 +79,16 @@ func (self SourcePlugin) Call(
 			return
 		}
 
+		// If the artifact_name has a "/" it means an artifact and
+		// source - override the Source.
+		if strings.Contains(arg.Artifact, "/") {
+			components := strings.SplitN(arg.Artifact, "/", 2)
+			arg.Artifact = components[0]
+			arg.Source = components[1]
+		}
+
+		utils.Debug(arg)
+
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
 		if arg.Mode == "HUNT" {

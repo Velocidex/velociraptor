@@ -131,7 +131,7 @@ func Dev() error {
 		env,
 		mg.GoCmd(), "build", "-race",
 		"-o", filepath.Join("output", name),
-		"-tags", "devel server_vql ",
+		"-tags", "devel server_vql elsatic ",
 		"-ldflags=-s -w "+flags(),
 		"./bin/")
 

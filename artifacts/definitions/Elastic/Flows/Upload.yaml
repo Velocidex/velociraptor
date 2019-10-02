@@ -1,0 +1,44 @@
+name: Elastic.Flows.Upload
+description: |
+  This server side event monitoring artifact waits for new artifacts
+  to be collected from endpoints and automatically uploads those to an
+  elastic server.
+
+  We use the artifact name as the name of the index. This allows users
+  to adjust the index size/lifetime according to the artifact it is
+  holding.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: ArtifactNameRegex
+    default: .
+    description: Only upload these artifacts to elastic
+
+sources:
+  - queries:
+      - LET completions = SELECT * FROM watch_monitoring(
+             artifact="System.Flow.Completion")
+             WHERE Flow.FlowContext.artifacts_with_results =~ ArtifactNameRegex
+
+      - LET documents = SELECT * FROM foreach(row=completions,
+          query={
+             SELECT * FROM for(
+                 var="ArtifactWithResults",
+                 in=Flow.FlowContext.artifacts_with_results,
+                 query={
+                     SELECT *, ArtifactWithResults AS Artifact,
+                            timestamp(epoch=now()) AS timestamp,
+                            ClientId, basename(path=Flow.Urn) AS FlowId,
+                            "artifact_" + ArtifactWithResults as _index
+                     FROM source(
+                        client_id=ClientId,
+                        flow_id=basename(path=Flow.Urn),
+                        artifact=ArtifactWithResults)
+                 })
+          })
+
+      - SELECT * FROM elastic_upload(
+            query=documents,
+            index="velociraptor",
+            type="artifact")

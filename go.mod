@@ -11,13 +11,14 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
+	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190910110746-680d30ca3117 // indirect
+	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/cevaris/ordered_map v0.0.0-20190319150403-3adeae072e73 // indirect
@@ -27,8 +28,8 @@ require (
 	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/elastic/go-elasticsearch/v7 v7.3.0 // indirect
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
-	github.com/fortytw2/leaktest v1.3.0 // indirect
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/golang/protobuf v1.3.2
@@ -52,7 +53,7 @@ require (
 	github.com/lestrrat-go/strftime v0.0.0-20190725011945-5c849dd2c51d // indirect
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/magefile/mage v1.8.0
-	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
+	github.com/mailru/easyjson v0.7.0 // indirect
 	github.com/mattn/go-isatty v0.0.9 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-runewidth v0.0.4 // indirect
@@ -72,15 +73,19 @@ require (
 	github.com/sergi/go-diff v1.0.0
 	github.com/shirou/gopsutil v0.0.0-20190627142359-4c8b404ee5c5
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
-	golang.org/x/crypto v0.0.0-20190911031432-227b76d455e7
-	golang.org/x/net v0.0.0-20190921015927-1a5e07d1ff72
+	golang.org/x/arch v0.0.0-20190927153633-4e8777c89be4 // indirect
+	golang.org/x/crypto v0.0.0-20191001141032-4663e185863a
+	golang.org/x/net v0.0.0-20190930134127-c5a3c61f89f3
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	golang.org/x/sys v0.0.0-20190920190810-ef0ce1748380
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
+	golang.org/x/sys v0.0.0-20191001151750-bb3f8db39f24
+	golang.org/x/tools v0.0.0-20191001123449-8b695b21ef34 // indirect
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df
 	google.golang.org/grpc v1.22.0
@@ -88,21 +93,22 @@ require (
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20150902115704-41f357289737
-	gopkg.in/olivere/elastic.v5 v5.0.81
 	gopkg.in/russross/blackfriday.v2 v2.0.1
+	gopkg.in/yaml.v2 v2.2.3 // indirect
+	honnef.co/go/tools v0.0.1-2019.2.3 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
 	www.velocidex.com/golang/go-ntfs v0.0.0-20190926065814-c6e6548a412c
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20190930000641-decf26c12478
+	www.velocidex.com/golang/vfilter v0.0.0-20191001153514-5a4c4dcb1235
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
-
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
+// replace github.com/elastic/go-elasticsearch/v7 => /home/mic/projects/go-elasticsearch
 
 replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1
 
