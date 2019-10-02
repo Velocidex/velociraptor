@@ -79,10 +79,32 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 		})
 }
 
+var query_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET)`)
+
+// Fix common YAML errors.
+func sanitize_artifact_yaml(data string) string {
+	// YAML has two types of block level scalars. The default one
+	// (which is more intuitive to use) does not preserve white
+	// space. This leads to terrible rendering in the GUI and
+	// elsewhere because the query appears all on the one
+	// line. The user should use the literal scalar (i.e. '- |'
+	// form) but this is a difficult yaml rule to remember and
+	// makes the artifact look terrible.
+
+	// Therefore we just transform one form into the other in
+	// order to trick the yaml decoder to do the right thing.
+
+	return query_regexp.ReplaceAllStringFunc(data, func(m string) string {
+		parts := query_regexp.FindStringSubmatch(m)
+		return parts[1] + "|\n" + strings.Repeat(" ", len(parts[1])) +
+			parts[2]
+	})
+}
+
 func (self *Repository) LoadYaml(data string, validate bool) (
 	*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
-	err := yaml.UnmarshalStrict([]byte(data), artifact)
+	err := yaml.UnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
