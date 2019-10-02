@@ -57,13 +57,13 @@ type _ElasticPluginArgs struct {
 	Threads   int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
 	Index     string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
 	Type      string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
-	ChunkSize int64               `vfilter:"optional,field=chunk_size=The number of rows to send at the time."`
-	Addresses []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use.`
-	Username  string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication.`
-	Password  string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication.`
-	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud).`
-	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password.`
-	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec).`
+	ChunkSize int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	Addresses []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
+	Username  string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
+	Password  string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication."`
+	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
+	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
+	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
 }
 
 type _ElasticPlugin struct{}

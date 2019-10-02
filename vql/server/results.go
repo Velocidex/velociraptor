@@ -87,8 +87,6 @@ func (self SourcePlugin) Call(
 			arg.Source = components[1]
 		}
 
-		utils.Debug(arg)
-
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
 		if arg.Mode == "HUNT" {

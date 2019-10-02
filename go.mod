@@ -107,6 +107,7 @@ require (
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace github.com/elastic/go-elasticsearch/v7 => /home/mic/projects/go-elasticsearch
 
