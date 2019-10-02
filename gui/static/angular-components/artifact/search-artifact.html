@@ -34,7 +34,7 @@
                       controller.selectedName}">
           <td style="cursor: pointer; border: none"
               ng-dblclick="controller.add(descriptor.name)"
-              ng-click="controller.selectedName = descriptor.name">
+              ng-click="controller.selectArtifact(descriptor.name)">
             <div style="display:block" class="full-width-height">
               {$ ::descriptor.name $}
             </div>
@@ -104,7 +104,9 @@
 
 <div name="ArtifactInfo" class="col-md-7 artifact-description"
      grr-force-refresh refresh-trigger="controller.selectedName">
-  <grr-artifact-descriptor value="controller.descriptors[controller.selectedName]" />
+  <grr-report-viewer ng-if="controller.selectedName"
+                     params="controller.reportParams">
+  </grr-report-viewer>
 </div>
 
 <table class="table table-condensed">

@@ -27,6 +27,7 @@ const SearchArtifactController = function(
     // A list of descriptors that matched the search term.
     this.matchingDescriptors = [];
 
+  this.reportParams = {};
 
   this.param_types = {};
   this.param_descriptions = {};
@@ -141,6 +142,14 @@ SearchArtifactController.prototype.clear = function() {
   angular.forEach(angular.copy(this.scope_.names), function(name) {
     this.remove(name);
   }.bind(this));
+};
+
+SearchArtifactController.prototype.selectArtifact = function(name) {
+  this.selectedName = name;
+  this.reportParams= {
+    artifact: this.selectedName,
+    type: "ARTIFACT_DESCRIPTION",
+  };
 };
 
 SearchArtifactController.prototype.onSearchChange_ = function() {
