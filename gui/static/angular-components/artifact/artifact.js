@@ -3,8 +3,6 @@
 goog.module('grrUi.artifact.artifact');
 goog.module.declareLegacyNamespace();
 
-const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescriptorDirective');
-const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
 const {ArtifactsViewerDirective} = goog.require('grrUi.artifact.artifactViewerDirective');
 const {FormDirective} = goog.require('grrUi.artifact.formDirective');
 
@@ -27,9 +25,6 @@ exports.artifactModule = angular.module(
     'grrUi.artifact',
     [coreModule.name, formsModule.name, semanticModule.name,
      'ui.bootstrap']);
-
-exports.artifactModule.directive(
-    ArtifactDescriptorDirective.directive_name, ArtifactDescriptorDirective);
 
 exports.artifactModule.directive(
     ArtifactsViewerDirective.directive_name, ArtifactsViewerDirective);
@@ -64,12 +59,6 @@ exports.artifactModule.directive(
     SyntaxHighlightDirective.directive_name,
     SyntaxHighlightDirective);
 
-exports.artifactModule.service(
-    ArtifactDescriptorsService.service_name, ArtifactDescriptorsService);
-
 exports.artifactModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;
-
-  registry.registerDirective(
-      ArtifactDescriptorDirective.semantic_type, ArtifactDescriptorDirective);
 });
