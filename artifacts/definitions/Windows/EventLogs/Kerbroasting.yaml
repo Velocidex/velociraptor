@@ -1,7 +1,7 @@
 name: Windows.EventLogs.Kerbroasting
 description: |
 
-  This Artifact will monitor for all successful Kerberos TGS Ticket events for 
+  This Artifact will collect all successful Kerberos TGS Ticket events for 
   Service Accounts (SPN attribute) implemented with weak encryption. These 
   tickets are vulnerable to brute force attack and this event is an indicator 
   of a Kerbroasting attack.  
