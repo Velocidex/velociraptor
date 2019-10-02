@@ -14,6 +14,8 @@ parameters:
   - name: ArtifactNameRegex
     default: .
     description: Only upload these artifacts to elastic
+  - name: elasticAddresses
+    default: http://127.0.0.1:9200/
 
 sources:
   - queries:
@@ -40,5 +42,6 @@ sources:
 
       - SELECT * FROM elastic_upload(
             query=documents,
+            addresses=split(string=elasticAddresses, sep=","),
             index="velociraptor",
             type="artifact")

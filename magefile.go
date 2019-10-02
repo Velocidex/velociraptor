@@ -46,7 +46,12 @@ var (
 )
 
 func Xgo() error {
-	err := build_gui_files()
+	err := ensure_assets()
+	if err != nil {
+		return err
+	}
+
+	err = build_gui_files()
 	if err != nil {
 		return err
 	}
