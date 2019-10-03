@@ -22,10 +22,22 @@ reports:
       ### Parameters
 
       <table class="table table-striped table-hover">
-      <thead><tr><th>Name</th><th>Default</th></tr></thead>
+      <thead>
+         <tr>
+           <th>Name</th>
+           <th>Type</th>
+           <th>Default</th>
+         </tr>
+      </thead>
       <tbody>
       {{ range $item := $artifact.Parameters }}
-         <tr><td> {{ $item.Name }}</td><td><pre>{{ $item.Default }}</pre></td></tr>
+         {{ if not (eq $item.Type "hidden") }}
+           <tr>
+               <td> {{ $item.Name }}</td>
+               <td>{{ $item.Type }}</td>
+               <td><pre>{{ $item.Default }}</pre></td>
+           </tr>
+         {{ end }}
       {{ end }}
       </tbody></table>
 

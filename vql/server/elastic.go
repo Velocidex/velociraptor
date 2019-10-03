@@ -55,7 +55,7 @@ import (
 type _ElasticPluginArgs struct {
 	Query     vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
 	Threads   int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	Index     string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
+	Index     string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified ensure a column is named '_index'."`
 	Type      string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
 	ChunkSize int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
 	Addresses []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
