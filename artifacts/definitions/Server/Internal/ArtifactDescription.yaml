@@ -46,7 +46,7 @@ reports:
       {{ range $source := $artifact.Sources }}
 
       ### Source {{ $source.Name }}
-      ```sql
+      ```vql
       {{ range $query := $source.Queries -}}
       {{- $query -}}
       {{ end }}
