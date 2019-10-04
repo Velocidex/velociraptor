@@ -73,6 +73,7 @@ require (
 	github.com/sergi/go-diff v1.0.0
 	github.com/shirou/gopsutil v0.0.0-20190627142359-4c8b404ee5c5
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
@@ -90,8 +91,8 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20150902115704-41f357289737
 	gopkg.in/russross/blackfriday.v2 v2.0.1
-	gopkg.in/yaml.v2 v2.2.3 // indirect
-	www.velocidex.com/golang/evtx v0.0.0-20190210013513-b45fe1505163
+	gopkg.in/yaml.v2 v2.2.4 // indirect
+	www.velocidex.com/golang/evtx v0.0.0-20191004145223-59043b7b3e15
 	www.velocidex.com/golang/go-ntfs v0.0.0-20190926065814-c6e6548a412c
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
@@ -102,6 +103,10 @@ require (
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+
+// Replace chroma with our fork - we take out the lexers and styles we
+// dont care about to reduce the size of the binary significantly.
+replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20191004150416-dcd285bf46f1
 
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 
