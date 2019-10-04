@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"archive/zip"
 	"context"
 	"crypto/md5"
 	"crypto/sha256"
@@ -13,6 +12,8 @@ import (
 	"path"
 	"strings"
 	"sync"
+
+	"github.com/alexmullins/zip"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -26,6 +27,9 @@ type Container struct {
 	sync.Mutex // Serialize access to the zip file.
 	fd         io.WriteCloser
 	zip        *zip.Writer
+
+	Password     string
+	delegate_zip *zip.Writer
 }
 
 func (self *Container) StoreArtifact(
@@ -50,6 +54,28 @@ func (self *Container) StoreArtifact(
 	return self.DumpRowsIntoContainer(config_obj, output_rows, scope, query)
 }
 
+func (self *Container) getZipFileWriter(name string) (io.Writer, error) {
+	if self.Password == "" {
+		return self.zip.Create(string(name))
+	}
+
+	// Zip file encryption is not great because it only encrypts
+	// the content of the file, and not its directory. We want to
+	// do better than that - so we create another zip file inside
+	// the original zip file and encrypt that.
+	if self.delegate_zip == nil {
+		fd, err := self.zip.Encrypt("data.zip", self.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		self.delegate_zip = zip.NewWriter(fd)
+	}
+
+	w, err := self.delegate_zip.Create(string(name))
+	return w, err
+}
+
 func (self *Container) DumpRowsIntoContainer(
 	config_obj *config_proto.Config,
 	output_rows []vfilter.Row,
@@ -65,7 +91,7 @@ func (self *Container) DumpRowsIntoContainer(
 
 	// In this instance we want to make / unescaped.
 	sanitized_name := query.Name + ".csv"
-	writer, err := self.zip.Create(string(sanitized_name))
+	writer, err := self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -82,7 +108,7 @@ func (self *Container) DumpRowsIntoContainer(
 	csv_writer.Close()
 
 	sanitized_name = query.Name + ".json"
-	writer, err = self.zip.Create(string(sanitized_name))
+	writer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -94,7 +120,7 @@ func (self *Container) DumpRowsIntoContainer(
 
 	// Format the description.
 	sanitized_name = query.Name + ".txt"
-	writer, err = self.zip.Create(string(sanitized_name))
+	writer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -139,7 +165,7 @@ func (self *Container) Upload(
 
 	// Zip members must not have absolute paths.
 	sanitized_name := path.Join(components...)
-	writer, err := self.zip.Create(sanitized_name)
+	writer, err := self.getZipFileWriter(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +192,10 @@ func (self *Container) Upload(
 }
 
 func (self *Container) Close() error {
+	if self.delegate_zip != nil {
+		self.delegate_zip.Close()
+	}
+
 	self.zip.Close()
 	return self.fd.Close()
 }

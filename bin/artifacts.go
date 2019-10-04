@@ -59,6 +59,10 @@ var (
 			"store all output in it.").
 		Default("").String()
 
+	artifact_command_collect_output_password = artifact_command_collect.Flag(
+		"password", "When specified we encrypt zip file with this password.").
+		Default("").String()
+
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use.").
 		Default("json").Enum("text", "json", "csv")
@@ -272,6 +276,9 @@ func doArtifactCollect() {
 		container, err = reporting.NewContainer(*artifact_command_collect_output)
 		kingpin.FatalIfError(err, "Can not create output container")
 		defer container.Close()
+
+		// Set the password if there is one.
+		container.Password = *artifact_command_collect_output_password
 	}
 
 	for _, name := range *artifact_command_collect_name {
