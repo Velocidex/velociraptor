@@ -45,7 +45,8 @@ sources:
           async=TRUE,   // Required for event queries in foreach()
           query={
              SELECT *, "Artifact_" + Artifact as _index,
-                    Artifact
+                    Artifact,
+                    timestamp(epoch=now()) AS timestamp
              FROM watch_monitoring(artifact=Artifact)
           })
 
