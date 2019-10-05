@@ -19,7 +19,7 @@ sources:
          LET inodes = SELECT FullPath, Data.mft AS MFT,
              parse_ntfs(device=FullPath, inode=Data.mft) AS MFTInfo
          FROM glob(globs=DirectoryGlobs, accessor="ntfs")
-         WHERE IsDir AND Data.name_type =~ "Win32"
+         WHERE IsDir
        - |
          LET upload_streams = SELECT * FROM foreach(
             row=MFTInfo.Attributes,
