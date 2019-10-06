@@ -1,0 +1,17 @@
+name: Windows.Sysinternals.SysmonInstall
+description: |
+  Sysmon is a kernel level system monitor written by
+  Sysinternals. While we are not able to distribute Sysmon ourselves,
+  Velociraptor can help you manage its deployment and installation.
+
+  In order to deploy sysmon on the endpoint, you need to:
+
+  1. Ensure the server contains the latest Sysmon binaries. You will
+     need to download them yourself by running the
+     `Windows.Utils.DownloadBinaries` server artifact.
+
+  2. Ensure the sysmon configration is appropriate for your
+     deployment. If you edit the file in your public directory
+     (`<file store>/public/sysmon_config.xml`) you will need to run the
+     `Windows.Utils.UpdatePublicHashes` server artifact to update the
+     inventory file.

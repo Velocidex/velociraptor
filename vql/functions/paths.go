@@ -19,6 +19,7 @@ package functions
 
 import (
 	"context"
+	"runtime"
 
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -89,7 +90,49 @@ func (self BasenameFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
+type PathJoinArgs struct {
+	Components []string `vfilter:"required,field=components,doc=Path components to join."`
+}
+
+type PathJoinFunction struct{}
+
+func (self *PathJoinFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) vfilter.Any {
+	arg := &PathJoinArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("path_join: %s", err.Error())
+		return false
+	}
+	sep := "/"
+	if runtime.GOOS == "windows" {
+		sep = "\\"
+	}
+
+	var components []string
+	for _, x := range arg.Components {
+		components = append(components, utils.SplitComponents(x)...)
+	}
+
+	result := utils.JoinComponents(components, sep)
+	if runtime.GOOS != "windows" {
+		result = sep + result
+	}
+
+	return result
+}
+
+func (self PathJoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "path_join",
+		Doc:     "Build a path by joining all components.",
+		ArgType: type_map.AddType(scope, &PathJoinArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&DirnameFunction{})
 	vql_subsystem.RegisterFunction(&BasenameFunction{})
+	vql_subsystem.RegisterFunction(&PathJoinFunction{})
 }

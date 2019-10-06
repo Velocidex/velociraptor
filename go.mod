@@ -9,6 +9,7 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
+	github.com/UnnoTed/fileb0x v1.1.3 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
@@ -60,8 +61,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.9.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect

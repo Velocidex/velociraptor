@@ -13,30 +13,33 @@ type: SERVER
 parameters:
   - name: binaryList
     default: |
-      Tool,Type,URL
-      Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe
-      Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe
+      Tool,Type,URL,Filename
+      Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
+      Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
       WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc2.exe
-      Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe
-      Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe
+      Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
+      Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
+      SysmonConfig,.,https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/z-AlphaVersion.xml,sysmon_config.xml
 
 sources:
   - queries:
       - LET binpath <= SELECT server_config.Frontend.public_path AS Path FROM scope()
       - LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
-      - |
-        LET download = SELECT Tool, Type,
-            Content AS FullPath,
+
+      - LET download = SELECT Tool, Type, Filename,
             hash(path=Content) as Hash,
-            copy(filename=Content, dest=(binpath[0]).Path + "/" + basename(path=URL)),
-            URL
+            copy(filename=Content, dest=path_join(components=[
+                (binpath[0]).Path, Filename]))
         FROM http_client(url=URL, tempfile_extension=".exe")
 
       # Write the inventory file.
-      - |
-        SELECT * FROM write_csv(
-          filename=(binpath[0]).Path + "/" + "inventory.csv",
+      - SELECT * FROM write_csv(
+          filename=path_join(components=[
+              (binpath[0]).Path, "inventory.csv"]),
           query={
-             SELECT Tool, Type, basename(path=URL) AS URL, Hash.SHA256 AS ExpectedHash
-             FROM foreach(row=spec, query=download)
+            SELECT Tool, Type,
+                   Filename, Hash.SHA256 AS ExpectedHash
+            FROM foreach(
+                   row=spec,
+                   query=download)
           })

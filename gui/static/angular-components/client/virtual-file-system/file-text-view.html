@@ -9,14 +9,7 @@
     </ul>
 
     <div class="monospace">
-      <pre ng-if="controller.language">
-        <grr-syntax-highlight
-          language="{{controller.language}}"
-          code="controller.fileContent">
-        </grr-syntax-highlight>
-      </pre>
-
-      <pre ng-if="!controller.language">
+      <pre>
         {{controller.fileContent}}
       </pre>
     </div>

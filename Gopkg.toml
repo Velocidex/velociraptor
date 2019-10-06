@@ -47,3 +47,7 @@
 [[constraint]]
   name="www.velocidex.com/golang/go-ntfs"
   source="https://github.com/Velocidex/go-ntfs.git"
+
+[[constraint]]
+  name="github.com/Velocidex/go-elasticsearch"
+  version="v7.3.2"

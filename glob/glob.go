@@ -308,16 +308,22 @@ func (self Globber) ExpandWithContext(
 		}
 
 		for next_path, nexts := range children {
-			for _, next := range nexts {
-				// There is no point expanding this
-				// node if it is just a sentinal -
-				// special case it for efficiency.
-				if is_sentinal(next) {
-					continue
-				}
-				for f := range next.ExpandWithContext(
-					ctx, next_path, accessor) {
-					output_chan <- f
+			select {
+			case <-ctx.Done():
+				return
+
+			default:
+				for _, next := range nexts {
+					// There is no point expanding this
+					// node if it is just a sentinal -
+					// special case it for efficiency.
+					if is_sentinal(next) {
+						continue
+					}
+					for f := range next.ExpandWithContext(
+						ctx, next_path, accessor) {
+						output_chan <- f
+					}
 				}
 			}
 		}
@@ -426,7 +432,12 @@ func convert_glob_into_path_components(pattern string, path_sep func(path string
 		// match the pattern.
 		if groups := _RECURSION_REGEX.FindStringSubmatch(
 			path_component); len(groups) > 0 {
-			depth := 3
+
+			// Default depth: Previously this was set low
+			// to prevent run away globs but now we cancel
+			// the query based on time so it really does
+			// not matter.
+			depth := 30
 
 			// Allow the user to override the recursion depth.
 			if len(groups[1]) > 0 {

@@ -68,7 +68,7 @@ func JoinComponents(components []string, sep string) string {
 		result = append(result, component)
 	}
 
-	return strings.Join(result, sep)
+	return sep + strings.Join(result, sep)
 }
 
 func PathJoin(root, stem, sep string) string {

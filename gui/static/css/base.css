@@ -1,35 +1,11 @@
-//
-// Base class for all styles.
-//
-// Recursively includes all files in ../angular-components. Files in angular-components must not depend on order
-// of inclusion.
-//
-
-@import 'css/variables';
-@import 'css/mixins';
-
-// Directive style includes
-@import 'angular-components/artifact/reporting';
-@import 'angular-components/client/host-info';
-@import 'angular-components/client/virtual-file-system/breadcrumbs';
-@import 'angular-components/client/virtual-file-system/file-details';
-@import 'angular-components/client/virtual-file-system/file-hex-view';
-@import 'angular-components/client/virtual-file-system/file-text-view';
-@import 'angular-components/client/virtual-file-system/file-table';
-@import 'angular-components/core/global-notifications';
-@import 'angular-components/core/wizard-form';
-@import 'angular-components/forms/semantic-proto-form';
-@import 'angular-components/forms/semantic-proto-union-form';
-@import 'angular-components/sidebar/client-summary';
-@import 'angular-components/sidebar/client-warnings';
-@import 'angular-components/sidebar/navigator';
-@import 'angular-components/user/user-notification-item';
-
-//
-//
-// General element styles
-//
-//
+/*
+/* Base class for all styles.
+/*
+/*
+/*
+/* General element styles
+/*
+*/
 
 a {
   cursor:pointer;
@@ -39,43 +15,40 @@ label {
   font-weight: normal;
 }
 
-table {
-  th,
-  td {
+table  th,
+table  td {
     vertical-align: middle !important;
+}
+
+table  tr.row_selected td,
+table  tr.row-selected td {
+    background-color: var(--color-table-row-selected) !important;
   }
 
-  tr.row_selected td,
-  tr.row-selected td {
-    background-color: $color-table-row-selected !important;
+table  tr.highlighted td {
+    background-color: var(--color-table-row-highlighted);
   }
 
-  tr.highlighted td {
-    background-color: $color-table-row-highlighted;
+table  tr.config_modified {
+    color: var(--color-table-row-modified);
   }
 
-  tr.config_modified {
-    color: $color-table-row-modified;
-  }
-
-  // Fixed layout
-  &.fixed-layout {
+  /* Fixed layout */
+table.fixed-layout {
     table-layout: fixed;
   }
 
-  &.fixed-layout td {
+table.fixed-layout td {
     word-wrap: break-word;
   }
-}
 
 table.fixed-columns {
   table-layout: fixed;
-
-  th {
+}
+table.fixed-columns  th {
     word-wrap: break-word;
     vertical-align: middle;
   }
-}
 
 .table-row {
   display: table-row;
@@ -92,48 +65,45 @@ td.slider_area {
 
 button.btn,
 label.btn {
-  position: relative;
+    position: relative; }
 
-  i {
+button.btn i,
+label.btn i {
     padding: 2px;
     font-size: 1.3em;
-
-    &.annotation {
-      position: absolute;
-      font-size: 1.0em;
-      bottom: 2px;
-      right: 4px;
-      color: $color-grr-blue;
-      opacity: .8;
-    }
-  }
+}
+button.btn i.annotation,
+label.btn i.annotation {
+    position: absolute;
+    font-size: 1.0em;
+    bottom: 2px;
+    right: 4px;
+    color: var(--color-grr-blue);
+    opacity: .8;
 }
 
-.input-group.large {
-  input.form-control {
+.input-group.large  input.form-control {
     height: 32px;
     line-height: 32px;
   }
-}
 
 
-//
-//
-// Navbar styles
-//
-//
+/*
+/*
+/* Navbar styles
+/*
+*/
 
 .navbar-inner {
     width: 100%;
 }
 
 .navbar {
-  margin-bottom: 0; // Bootstrap tweaks
+  margin-bottom: 0; /* Bootstrap tweaks */
   padding: 0px;
-
-  .space-right {
+}
+.navbar  .space-right {
     margin-right: 10px;
-  }
 }
 
 .navbar.navbar-static-top {
@@ -178,21 +148,20 @@ img.velo-logo {
 
 
 
-//
-//
-// Content area
-//
-//
+/*
+/*
+/* Content area
+/*
+*/
 
 div[ui-view] {
   width: 100%;
   height: 100%;
-
-  > * {
+}
+div[ui-view]  > * {
     display: block;
     height: 100%;
   }
-}
 
 #content {
   position: absolute;
@@ -202,35 +171,32 @@ div[ui-view] {
   right: 0;
   min-width: 1024px;
   min-height: 400px;
-  background-color: $color-dashboard-background;
-  margin-left: $sidebar-collapsed-width;
+  background-color: var(--color-dashboard-background);
+  margin-left: var(--sidebar-collapsed-width);
 }
 
 .breadcrumb {
     margin-top: 20px;
     margin: 0px;
-  line-height: 25px;
-
-  .btn {
+    line-height: 25px;
+}
+.breadcrumb  .btn {
     margin-right: 0 !important;
-  }
+}
 
-  .btn-group {
+.breadcrumb  .btn-group {
     margin-right: 6px !important;
-
-    > .btn:first-child {
-      margin-right: 0;
-    }
-  }
+}
+.breadcrumb .btn-group    > .btn:first-child {
+    margin-right: 0;
 }
 
 
-
-//
-//
-// Dialogs / Wizards
-//
-//
+/*
+/*
+/* Dialogs / Wizards
+/*
+*/
 
 .WizardPage {
   position: absolute;
@@ -238,14 +204,12 @@ div[ui-view] {
   right: 0;
   top: 0;
   bottom: 0;
-
-  .modal-body {
+}
+.WizardPage  .modal-body {
     overflow: auto;
-
-    .rightPane {
+}
+.WizardPage .modal-body    .rightPane {
       overflow: auto;
-    }
-  }
 }
 
 .FormBody {
@@ -262,15 +226,14 @@ div[ui-view] {
   width: 60%;
 }
 
-.wide-modal.high-modal {
-  .modal-header {
+.wide-modal.high-modal  .modal-header {
     position: absolute;
     left: 0;
     right: 0;
     top: 0;
   }
 
-  .modal-body {
+.wide-modal.high-modal  .modal-body {
     position: absolute;
     left: 0;
     right: 0;
@@ -281,7 +244,7 @@ div[ui-view] {
     overflow: auto;
   }
 
-  .modal-footer {
+.wide-modal.high-modal  .modal-footer {
     position: absolute;
     left: 0;
     right: 0;
@@ -289,36 +252,33 @@ div[ui-view] {
     max-height: none;
   }
 
-  > .modal-dialog {
+.wide-modal.high-modal  > .modal-dialog {
     width: 60%;
     top: 5em;
     bottom: 5em;
     margin-left: 20%;
     position: absolute;
-
-    > .modal-content {
+}
+.wide-modal.high-modal > .modal-dialog   > .modal-content {
       position: absolute;
       left: 0;
       top: 0;
       right: 0;
       bottom: 0;
-    }
-  }
 }
 
 @media (max-width: 1440px) {
-  .wide-modal > .modal-dialog {
-    width: 90%;
-  }
-
-  .wide-modal.high-modal > .modal-dialog {
-    width: 90%;
-    top: 5em;
-    bottom: 5em;
-    margin-left: 5%;
-    position: absolute;
-    height: 80%;
-  }
+    .wide-modal > .modal-dialog {
+        width: 90%;
+    }
+    .wide-modal.high-modal > .modal-dialog {
+        width: 90%;
+        top: 5em;
+        bottom: 5em;
+        margin-left: 5%;
+        position: absolute;
+        height: 80%;
+    }
 }
 
 .high-modal > .modal-dialog {
@@ -327,43 +287,31 @@ div[ui-view] {
 
 
 
-//
-//
-// Controls
-//
-//
+/*
+/*
+/* Controls
+/*
+*/
 
 .controls {
-  margin-left: 180px;
-  margin-right: 1em;
-
-  input,
-  select,
-  div.input-group {
-    width: 206px;
-  }
-
-  input {
-    &[type=checkbox],
-    &.hasDatepicker {
-      width: auto;
-    }
-
-    &.pickerIcon {
-      width: 0;
-    }
-  }
-
-  span.glyphicon.form-control-feedback {
-    left: 177px;
-  }
-}
+    margin-left: 180px;
+    margin-right: 1em; }
+.controls input,
+.controls select,
+.controls div.input-group {
+    width: 206px; }
+.controls input[type=checkbox], .controls input.hasDatepicker {
+    width: auto; }
+.controls input.pickerIcon {
+    width: 0; }
+.controls span.glyphicon.form-control-feedback {
+    left: 177px; }
 
 .control-label {
-  float: left;
-  width: 160px;
-  padding-top: 5px;
-  text-align: right;
+    float: left;
+    width: 160px;
+    padding-top: 5px;
+    text-align: right;
 }
 
 input.pickerIcon {
@@ -373,16 +321,16 @@ input.pickerIcon {
 
 input.unset,
 select.unset {
-  background-color: $color-pristine;
+  background-color: var(--color-pristine);
 }
 
 
 
-//
-//
-// GRR-specific splitter css
-//
-//
+/*
+/*
+/* GRR-specific splitter css
+/*
+*/
 div[grr-splitter] {
   height: 100%;
 }
@@ -395,7 +343,7 @@ div[grr-splitter] {
   float: left;
   width: 15%;
   height: 100%;
-  background: $color-default-background;
+  background: var(--color-default-background);
   overflow: auto;
   position: relative;
 }
@@ -404,7 +352,7 @@ div[grr-splitter] {
   float: right;
   width: 85%;
   height: 100%;
-  background: $color-default-background;
+  background: var(--color-default-background);
   overflow: auto;
   position: absolute;
   right: 0;
@@ -413,32 +361,32 @@ div[grr-splitter] {
 .rightSplitterContainer {
   width: 100%;
   height: 100%;
-  background: $color-default-background;
+  background: var(--color-default-background);
   overflow: hidden;
 }
 
 .rightTopPane {
   width: 100%;
   height: 50%;
-  background: $color-default-background;
+  background: var(--color-default-background);
   overflow: auto;
   position: relative;
 }
 
 .rightBottomPane {
   width: 100%;
-  background: $color-default-background;
+  background: var(--color-default-background);
   overflow: auto;
   position: relative;
 }
 
 
 
-//
-//
-// GRR-specific jstree cs
-//
-//
+/*
+/*
+/* GRR-specific jstree cs
+/*
+*/
 
 i.jstree-icon.file {
   background-position: -4px -4px;
@@ -479,11 +427,11 @@ tr.tree_hidden {
 
 
 
-//
-//
-// Proto tables styling
-//
-//
+/*
+/*
+/* Proto tables styling
+/*
+*/
 
 .proto_header,
 .proto_key,
@@ -502,23 +450,24 @@ tr.tree_hidden {
 
 .proto_table,
 .proto-table {
-  width: 100%;
-  border: 1px solid $color-proto-table-border;
-  background: $color-proto-background;
+    width: 100%;
+    border: 1px solid var(--color-proto-table-border);
+    background: var(--color-proto-background);
+}
 
-  // Make sure nested tables don't have explicit background set.
-  .proto_table,
-  proto-table {
+.proto_table .proto_table,
+.proto_table proto-table,
+.proto-table .proto_table,
+.proto-table proto-table {
     background: none;
-  }
-
-  td {
-    border: 1px solid $color-proto-border;
-  }
-
-  &.no-cell-border td {
+}
+.proto_table td,
+.proto-table td {
+    border: 1px solid var(--color-proto-border);
+}
+.proto_table.no-cell-border td,
+.proto-table.no-cell-border td {
     border: 0;
-  }
 }
 
 .proto_separator {
@@ -526,64 +475,15 @@ tr.tree_hidden {
 }
 
 .proto_error {
-  color: $color-proto-error;
+  color: var(--color-proto-error);
 }
 
 
-
-//
-//
-// Documentation
-//
-//
-
-.doc-toc {
-  position: fixed;
-  min-width: 15em;
-  max-width: 20em;
-}
-
-.doc-item {
-  margin-bottom: 2em;
-
-  p.lead {
-    margin-bottom: .25em;
-  }
-
-  .query-parameters {
-    margin-top: 1em;
-  }
-
-  .json {
-    white-space: pre-wrap;
-    font-family: $font-json;
-    background-color: $color-doc-json;
-  }
-
-  .example {
-    th {
-      font-weight: normal;
-    }
-
-    .request-payload {
-      padding-right: 30em;
-      padding-bottom: 1em;
-
-      .method-label {
-        font-size: 90%;
-        font-style: italic;
-      }
-    }
-  }
-}
-
-
-
-//
-//
-// Common styles
-//
-//
+/*
+/*
+/* Common styles
+/*
+*/
 
 .client-checkbox {
   margin-top: 6px !important;
@@ -595,7 +495,7 @@ tr.tree_hidden {
 }
 
 .advanced-controls {
-  border-left: 5px solid $color-advanced-controls-border;
+  border-left: 5px solid var(--color-advanced-controls-border);
 }
 
 .toolbar-search-box {
@@ -644,12 +544,11 @@ img.toolbar-buttons {
 }
 
 dd.histogram {
-  margin-top: 1em;
-
-  > div {
+    margin-top: 1em;
+}
+dd.histogram  > div {
     width: 800px;
     height: 300px;
-  }
 }
 
 .indicator-label {
@@ -712,21 +611,20 @@ dd.histogram {
   right: 1em;
   top: 1em;
   bottom: 1em;
-
-  &.no-top-margin {
+}
+.fill-parent.no-top-margin {
     top: 0;
-  }
+}
 
-  &.no-margins {
+.fill-parent.no-margins {
     left: 0;
     right: 0;
     top: 0;
     bottom: 0;
-  }
+}
 
-  &.toolbar-margin {
+.fill-parent.toolbar-margin {
     top: 48px !important;
-  }
 }
 
 .no-overflow {
@@ -734,11 +632,11 @@ dd.histogram {
 }
 
 .toolbar {
-  border-bottom: 1px solid $color-proto-border;
+  border-bottom: 1px solid var(--color-proto-border);
   height: 48px;
   box-sizing: content-box;
   overflow: visible;
-//  z-index: 1025; // Toolbar should be below the modal background (1050) but above everything else.
+/*  z-index: 1025; /* Toolbar should be below the modal background (1050) but above everything else. */
 }
 
 .fill-parent-with-toolbar {
@@ -751,9 +649,9 @@ dd.histogram {
 }
 
 .monospace {
-  font-family: $font-monospace;
+  font-family: var(--font-monospace);
   font-size: 13px;
-  color: $color-monospace-color;
+  color: var(--color-monospace-color);
   padding: 0;
   margin: 0;
 }
@@ -792,22 +690,22 @@ dd.histogram {
 
 .headline {
   font-size: 14px;
-  color: $color-headline-color;
+  color: var(--color-headline-color);
   font-weight: bold;
   margin-bottom: 7px;
   margin-top: 3px;
 }
 
 .infoline {
-  color: $color-infoline-color;
+  color: var(--color-infoline-color);
 }
 
 td.leased {
-  background-color: $color-table-row-leased !important;
+  background-color: var(--color-table-row-leased) !important;
 }
 
 td.lease_available {
-  background-color: $color-table-row-lease-available !important;
+  background-color: var(--color-table-row-lease-available) !important;
 }
 
 .historical_view {
@@ -856,16 +754,18 @@ div.desc {
 }
 
 div.sort-dialog div.filter {
-  @include box-shadow(0, 2px, 4px, $color-sort-dialog-filter-box-shadow);
+  -webkit-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   padding-left: 20px;
   padding-right: 20px;
   margin-top: 6px;
-  border: 1px solid $color-sort-dialog-filter-border;
+  border: 1px solid var(--color-sort-dialog-filter-border);
 }
 
 pre.inline {
   display: inline;
-  font-family: $font-monospace
+  font-family: var(--font-monospace);
 }
 
 select.artifact_list {
@@ -890,81 +790,43 @@ abbr[title] {
   margin-bottom: 1em;
 }
 
-
-//
-//
-// Graphs: wrapper around jQuery Flot to provide graph title and axis labels
-//
-//
-
-table.grr_flot_graph {
-  width: 100%;
-
-  .title {
-    font-size: 1.2em;
-    font-weight: bold;
-    text-align: center;
-  }
-
-  .axis-x,
-  .axis-y {
-    font-weight: bold;
-    text-align: center;
-  }
-
-  .axis-y {
-    transform: rotate(-90deg);
-    width: 40px;
-  }
-
-  .graph-wrapper {
-    position: relative;
-  }
-
-  td.legendColorBox {
-    padding-right: 3px;
-  }
-}
-
-
-
-//
-//
-// Overwrite jQuery UI styles
-//
-//
+/*
+/*
+/* Overwrite jQuery UI styles
+/*
+*/
 
 .ui-autocomplete {
   max-height: 100px;
   max-width: 400px;
   overflow-y: auto;
-  overflow-x: hidden; // prevent horizontal scrollbar
-  z-index: 1100 !important; // ensure autocomplete is always shown above other UI elements
-  background-color: $color-default-background;
-  border: 1px solid $color-proto-border;
+  overflow-x: hidden; /* prevent horizontal scrollbar */
+  z-index: 1100 !important; /* ensure autocomplete is always shown above other UI elements */
+  background-color: var(--color-default-background);
+  border: 1px solid var(--color-proto-border);
 }
 
 * html .ui-autocomplete {
-  // IE 6 doesn't support max-height
-  // we use height instead, but this forces the menu to always be this tall
+  /* IE 6 doesn't support max-height */
+  /* we use height instead, but this forces the menu to always be this tall*/
   height: 100px;
 }
 
 
 
-//
-//
-// Overwrite Angular UI styles
-//
-//
+/*
+/*
+/* Overwrite Angular UI styles
+/*
+*/
 
 .modal.fade {
-  opacity: 1; // turn off Angular UI modal animations
+  opacity: 1; /* turn off Angular UI modal animations */
 }
 
 .modal.fade .modal-dialog,
 .modal.in .modal-dialog {
-  // turn off Angular UI modal animations
+  /* turn off Angular UI modal animations */
   -webkit-transform: translate(0, 0);
   -ms-transform: translate(0, 0);
   transform: translate(0, 0);
@@ -980,7 +842,7 @@ table.grr_flot_graph {
 .dashboard {
     padding-right: 20px;
     padding-left: 20px;
-    // Height of dashboard toolbar + footer + scrollbars.
+    /* Height of dashboard toolbar + footer + scrollbars. */
     padding-bottom: 70px;
     overflow-y: auto;
     height: -webkit-fill-available;
@@ -1025,12 +887,12 @@ table.table tbody {
 
 
 grr-navigator .nav-pills li.active .nav-link:hover {
-    background-color: $sidebar-icon-color;
+    background-color: var(--sidebar-icon-color);
 }
 
 grr-navigator .nav-pills li.active .nav-link {
     width: 200px;
-    background-color: $sidebar-icon-color;
+    background-color: var(--sidebar-icon-color);
 }
 
 button a.nav-link {
@@ -1105,7 +967,7 @@ h5.card-header {
 
 
 grr-client-list {
-    background-color: $color-default-background;
+    background-color: var(--color-default-background);
 }
 
 grr-client-events, grr-server-artifacts, grr-user-dashboard, grr-artifact-viewer {
@@ -1122,19 +984,19 @@ grr-client-events, grr-server-artifacts, grr-user-dashboard, grr-artifact-viewer
 .navicon {
     margin-right: 10px;
     font-size: 18px;
-    color: $sidebar-icon-color;
+    color: var(--sidebar-icon-color);
 }
 
 grr-navigator a {
-    color: $sidebar-icon-color;
+    color: var(--sidebar-icon-color);
 }
 
 grr-navigator li.active a {
-    color: $sidebar-icon-color-bg;
+    color: var(--sidebar-icon-color-bg);
 }
 
 li.active .navicon {
-    color: $sidebar-icon-color-bg;
+    color: var(--sidebar-icon-color-bg);
 }
 
 .hexdump {

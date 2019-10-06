@@ -13,7 +13,6 @@ const {SearchArtifactDirective} = goog.require('grrUi.artifact.searchArtifactDir
 const {ClientEventDirective} = goog.require('grrUi.artifact.clientEventDirective');
 const {ServerArtifactsDirective} = goog.require('grrUi.artifact.serverArtifactsDirective');
 const {ServerEventsDirective} = goog.require('grrUi.artifact.serverEventsDirective');
-const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
@@ -54,10 +53,6 @@ exports.artifactModule.directive(
 exports.artifactModule.directive(
     ServerEventsDirective.directive_name,
     ServerEventsDirective);
-
-exports.artifactModule.directive(
-    SyntaxHighlightDirective.directive_name,
-    SyntaxHighlightDirective);
 
 exports.artifactModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;
