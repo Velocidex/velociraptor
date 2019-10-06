@@ -45,10 +45,6 @@ func (self *DirnameFunction) Call(ctx context.Context,
 	components := utils.SplitComponents(arg.Path)
 	if len(components) > 0 {
 		result := utils.JoinComponents(components[:len(components)-1], "/")
-		if arg.Path[0] == '/' {
-			result = "/" + result
-		}
-
 		return result
 	}
 	return vfilter.Null{}
