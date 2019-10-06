@@ -9,10 +9,10 @@ environment:
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\appveyor.config.yaml
 
 cache:
-  - '%LocalAppData%\go-build' -> .appveyor_cache_clear
-  - '%GOPATH%/pkg/mod' -> .appveyor_cache_clear
-  - gui/static/node_modules -> .appveyor_cache_clear
-  - gui/static/dist -> .appveyor_cache_clear
+  - '%LocalAppData%\go-build -> .appveyor_cache_clear'
+  - '%GOPATH%/pkg/mod -> .appveyor_cache_clear'
+  - 'gui/static/node_modules -> .appveyor_cache_clear'
+  - 'gui/static/dist -> .appveyor_cache_clear'
 
 install:
 - cmd: |
