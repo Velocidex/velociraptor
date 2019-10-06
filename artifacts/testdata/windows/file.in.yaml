@@ -8,4 +8,4 @@ Queries:
 
   # Read symlinks.
   - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file")
-  - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file") WHERE FullPath =~ "drivers"
+  - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file") WHERE FullPath =~ "drivers\\"
