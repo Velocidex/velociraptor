@@ -166,7 +166,7 @@ func (self *FlowRunner) flushLogs(cached_flow *AFF4FlowObject) {
 
 	headers_written := length > 0
 	if !headers_written {
-		w.Write([]string{"timestamp", "time", "message"})
+		w.Write([]string{"Timestamp", "time", "message"})
 	}
 
 	for _, row := range cached_flow.FlowContext.Logs {
@@ -204,11 +204,12 @@ func (self *FlowRunner) flushUploadedFiles(cached_flow *AFF4FlowObject) {
 
 	headers_written := length > 0
 	if !headers_written {
-		w.Write([]string{"timestamp", "vfs_path", "expected_size"})
+		w.Write([]string{"Timestamp", "started", "vfs_path", "expected_size"})
 	}
 
 	for _, row := range cached_flow.FlowContext.UploadedFiles {
 		w.Write([]string{
+			fmt.Sprintf("%v", time.Now().UTC().Unix()),
 			time.Now().UTC().String(),
 			row.Name,
 			fmt.Sprintf("%v", row.Size)})
