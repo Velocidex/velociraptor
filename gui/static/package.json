@@ -22,7 +22,6 @@
     "font-awesome": "^4.7.0",
     "gulp-cli": "^2.0.1",
     "gulp-uglify": "^3.0.1",
-    "highlightjs": "^9.12.0",
     "jquery": "^3.4.0",
     "jquery-migrate": "^1.4.1",
     "jquery-ui-dist": "^1.12.1",
@@ -34,7 +33,6 @@
     "lodash.template": "^4.5.0",
     "moment": "^2.24.0",
     "node": "^11.14.0",
-    "node-sass": "^4.11.0",
     "npm": "^6.10.1",
     "sprintf": "^0.1.5",
     "tar": "^4.4.8",
@@ -55,13 +53,7 @@
     "gulp-less": "^4.0.1",
     "gulp-newer": "^1.2.0",
     "gulp-plumber": "^1.1.0",
-    "gulp-sass": "^4.0.2",
-    "gulp-sourcemaps": "^1.6.0",
-    "jasmine-core": "^2.99.1",
-    "karma": "^4.1.0",
-    "karma-chrome-launcher": "^2.2.0",
-    "karma-jasmine": "^1.1.1",
-    "karma-ng-html2js-preprocessor": "^1.0.0"
+    "gulp-sourcemaps": "^1.6.0"
   },
   "repository": {
     "type": "git",

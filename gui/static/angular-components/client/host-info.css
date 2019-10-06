@@ -1,0 +1,45 @@
+grr-host-info  div.client-info {
+    margin: 0px;
+    width: 100%;
+    padding: 10px;
+    background: var(--color-proto-background);
+    height: auto !important;
+}
+
+grr-host-info  div.client-info .btn-group {
+    float: right;
+    padding-bottom: 10px;
+}
+
+grr-host-info  div.client-info .btn-group label {
+    margin-top: 2px;
+}
+
+grr-host-info  table td, grr-host-info table th {
+    vertical-align: top !important;
+}
+
+grr-host-info  table td.mac-address {
+    font-family: var(--font-monospace);
+}
+
+grr-host-info  .client-details {
+    padding: 0 20px;
+}
+
+grr-host-info  h2 {
+    font-size: 18px;
+    margin: -10px -20px 0 -20px;
+    padding: 10px 20px;
+    background: var(--color-proto-background);
+}
+
+grr-host-info  h2 i {
+    margin-top: 0;
+    margin-right: 5px;
+}
+
+grr-host-info  h2 dd {
+    margin-bottom: 10px;
+    word-break: break-all;
+}

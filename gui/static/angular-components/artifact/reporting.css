@@ -1,7 +1,5 @@
-grr-report-viewer {
-    h1 {
+grr-report-viewer h1 {
         font-size: 3ex;
-    }
 }
 
 /* Error */  .chromaerr { color: #a61717; background-color: #e3d2d2 }

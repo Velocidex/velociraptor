@@ -1,0 +1,107 @@
+
+/*
+/*
+/* Sidebar navigation
+/*
+/*/
+
+grr-navigator  #navigator {
+    height: 100%;
+    position: fixed;
+    z-index: 2000; /* Must be above everything else; */
+    top: 51px;
+    left: 0;
+    overflow-x: hidden;
+    transition: 0.5s;
+    border-right: gray;
+    border-width: 3px;
+    border-right-style: solid;
+    background-color: var(--color-sidebar-background);
+}
+
+grr-navigator  #navigator div {
+    width: 200px;
+    overflow-x: hidden;
+}
+
+/*
+/*
+/* Navlist
+/*
+/*/
+
+grr-navigator  .nav-list {
+    padding-right: 15px;
+    margin-bottom: 0;
+    list-style: none;
+    margin-left: 10px;
+}
+grr-navigator  .nav-list    > li {
+    position: relative;
+}
+
+grr-navigator  .nav-list    > li > a {
+    padding: 3px 15px;
+
+    /* TODO(weghofer): Make the li disabled, not the link.*/
+}
+
+grr-navigator  .nav-list > li >  a.nav-link.disabled {
+    color: var(--color-infoline-color);
+}
+
+grr-navigator  .nav-list > li > a  i.fa-lock {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}
+
+grr-navigator  .nav-list    > li > a,
+grr-navigator  .nav-list    .nav-header {
+    margin-left: -15px;
+    margin-right: -15px;
+    text-shadow: 0 1px 0 var(--color-nav-link-default-shadow);
+}
+
+grr-navigator  .nav-list    > .active > a,
+grr-navigator  .nav-list    > .active       > a:hover,
+grr-navigator  .nav-list    > .active       > a:focus {
+    color: var(--color-nav-link-hover-color);
+    text-shadow: 0 -1px 0 var(--color-nav-link-active-shadow);
+    background-color: var(--color-nav-link-active-background);
+}
+
+grr-navigator  .nav-list    > .active       > a.nav-link.disabled {
+    color: var(--color-nav-link-hover-color);
+}
+
+
+/* Nested nav-lists (e.g. for nav-dropdowns) need different spacing. */
+grr-navigator  .nav-list     .nav-list {
+    padding-right: 0;
+}
+
+grr-navigator  section h1 {
+    padding: 3px 10px;
+    margin: 0;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 17px;
+    color: var(--color-nav-header-color);
+    text-shadow: 0 1px 0 var(--color-nav-link-default-shadow);
+    text-transform: uppercase;
+}
+
+grr-navigator  .collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+grr-navigator  .uncollapsed {
+    width: 200px;
+}
+
+grr-navigator  .hamburger {
+    float: left;
+    font-size: 30px;
+    cursor: pointer;
+}

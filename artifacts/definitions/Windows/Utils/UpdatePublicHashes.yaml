@@ -1,0 +1,49 @@
+name: Windows.Utils.UpdatePublicHashes
+description: |
+  The server maintains a public directory which can be served to all
+  endpoints. The public directory should be initially populated by
+  running the Windows.Utils.DownloadBinaries artifact. It is possible
+  to manually edit the content of this directory but you will need to
+  update the hashes.
+
+  Clients maintain their local cache of the files and they use the
+  hash to tell if their local copy is out of date.
+
+  This artifact will regenerate the inventory file by re-calculating
+  the hashes of all files in the public directory.
+
+  You need to run this artifact on the server if you manually edit the
+  content of the public directory.
+
+type: SERVER
+
+sources:
+  - queries:
+      - LET binpath <= SELECT server_config.Frontend.public_path AS Path
+        FROM scope()
+
+      # Get the old inventory.
+      - LET inventory <= SELECT * FROM parse_csv(
+            filename=path_join(components=[
+                (binpath[0]).Path, "inventory.csv"]))
+
+      # Calculate all the hashes of the files on disk and update the
+      # hash in the new inventory.
+      - LET hashes = SELECT Name,
+           hash(path=FullPath) as Hash,
+           { SELECT * FROM inventory
+             WHERE Filename = Name LIMIT 1 } AS OldData
+        FROM glob(globs=(binpath[0]).Path + "/*")
+        WHERE OldData.Tool
+
+      # Reconstruct a new inventory file.
+      - LET new_inventory = SELECT OldData.Tool AS Tool,
+               OldData.Type AS Type, Name AS Filename,
+               Hash.SHA256 AS ExpectedHash
+        FROM hashes
+
+      # Write the new inventory file.
+      - SELECT * FROM write_csv(
+          filename=path_join(components=[
+                (binpath[0]).Path, "inventory.csv"]),
+          query=new_inventory)

@@ -1,5 +1,5 @@
 grr-file-table .fa-download {
-  color: $color-dim-grey;
+  color: var(--color-dim-grey);
   opacity: .9;
 }
 

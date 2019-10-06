@@ -45,6 +45,8 @@ var (
 	version         = "v" + constants.VERSION
 )
 
+// Build releases using xgo:
+// go get src.techknowlogick.com/xgo
 func Xgo() error {
 	err := ensure_assets()
 	if err != nil {
@@ -220,9 +222,42 @@ func Windows() error {
 	return err
 }
 
+// Cross compile the windows binary using mingw. Note that this does
+// not run the race detector because the ubuntu distribution of mingw
+// does not include tsan. Use WindowsRace() to build with xgo.
+func Darwin() error {
+	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
+		return fmt.Errorf("failed to create output: %v", err)
+	}
+
+	err := ensure_assets()
+	if err != nil {
+		return err
+	}
+
+	env := make(map[string]string)
+	env["CGO_ENABLED"] = "0"
+	env["GOOS"] = "darwin"
+	env["GOARCH"] = "amd64"
+
+	err = sh.RunWith(
+		env,
+		mg.GoCmd(), "build",
+		"-o", filepath.Join("output", name+"-darwin-amd64"),
+		"-tags", "release server_vql ",
+		"-ldflags=-s -w "+flags(),
+		"./bin/")
+
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
 // We have to compile darwin executables with xgo otherwise many of
 // the cgo plugins wont work.
-func Darwin() error {
+func DarwinXgo() error {
 	return sh.RunV(
 		"xgo", "-out", filepath.Join("output", "velociraptor-"+version), "-v",
 		"--targets", "darwin/amd64",
