@@ -105,6 +105,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 		scope.Log("path_join: %s", err.Error())
 		return false
 	}
+
 	sep := "/"
 	if runtime.GOOS == "windows" {
 		sep = "\\"
@@ -116,10 +117,6 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	}
 
 	result := utils.JoinComponents(components, sep)
-	if runtime.GOOS != "windows" {
-		result = sep + result
-	}
-
 	return result
 }
 

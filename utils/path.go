@@ -28,6 +28,7 @@ import (
 // HKEY_USERS\S-1-5-21-546003962-2713609280-610790815-1003\Software\Microsoft\Windows\CurrentVersion\Run\"c:\windows\system32\mshta.exe"
 var component_quoted_regex = regexp.MustCompile(`^"((?:[^"\\]*(?:\\"?)?)+)"`)
 var component_unquoted_regex = regexp.MustCompile(`^[\\/]?([^\\/]*)([\\/]?|$)`)
+var drive_letter_regex = regexp.MustCompile(`^[a-zA-Z]:$`)
 
 func SplitComponents(path string) []string {
 	var components []string
@@ -68,7 +69,12 @@ func JoinComponents(components []string, sep string) string {
 		result = append(result, component)
 	}
 
-	return sep + strings.Join(result, sep)
+	if len(components) > 0 &&
+		drive_letter_regex.FindString(components[0]) == "" {
+		return sep + strings.Join(result, sep)
+	}
+
+	return strings.Join(result, sep)
 }
 
 func PathJoin(root, stem, sep string) string {
