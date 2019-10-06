@@ -22,6 +22,7 @@ package server
 import (
 	"context"
 	"io"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -30,11 +31,94 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type UploadsPluginsArgs struct {
+	ClientId string `vfilter:"optional,field=client_id,doc=The client id to extract"`
+	FlowId   string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
+}
+
+type UploadsPlugins struct{}
+
+func (self UploadsPlugins) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *vfilter.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		arg := &UploadsPluginsArgs{}
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*config_proto.Config)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		// Allow the plugin args to override the environment scope.
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+
+		flow_details, err := flows.GetFlowDetails(
+			config_obj, arg.ClientId, arg.FlowId)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+
+		// Get all file uploads
+		if flow_details.Context.TotalUploadedFiles == 0 {
+			return
+		}
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+		seen := []string{}
+
+		for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
+			artifact, _ := artifacts.SplitFullSourceName(artifact_source)
+			// We already did this one.
+			if utils.InString(&seen, artifact) {
+				continue
+			}
+			seen = append(seen, artifact)
+
+			// File uploads are stored in their own CSV file.
+			csv_file_path := artifacts.GetUploadsFile(
+				arg.ClientId, path.Base(arg.FlowId))
+			fd, err := file_store_factory.ReadFile(csv_file_path)
+			if err != nil {
+				scope.Log("uploads: %v", err)
+				continue
+			}
+			defer fd.Close()
+
+			for row := range csv.GetCSVReader(fd) {
+				utils.Debug(row)
+				output_chan <- row
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self UploadsPlugins) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "uploads",
+		Doc:     "Retrieve information about a flow's uploads.",
+		ArgType: type_map.AddType(scope, &UploadsPluginsArgs{}),
+	}
+}
 
 type SourcePluginArgs struct {
 	ClientId  string `vfilter:"optional,field=client_id,doc=The client id to extract"`
@@ -299,4 +383,5 @@ func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 
 func init() {
 	vql_subsystem.RegisterPlugin(&SourcePlugin{})
+	vql_subsystem.RegisterPlugin(&UploadsPlugins{})
 }
