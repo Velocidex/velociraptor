@@ -1,5 +1,8 @@
 all:
-	go run make.go -v dev
+	go run make.go -v autoDev
+
+auto:
+	go run make.go -v auto
 
 test:
 	go test ./...
@@ -7,22 +10,10 @@ test:
 	     golden artifacts/testdata/server/testcases/ --env srcDir=`pwd`
 
 release:
-	go run make.go -v linux
-
-darwin:
-	go run make.go -v darwin
+	go run make.go -v release
 
 windows:
-	go run make.go -v windows
-
-windows_race:
-	go run make.go -v windowsRace
-
-xgo:
-	go run make.go -v xgo
-
-xgo-linux:
-	go run make.go -v xgolinux
+	go run make.go -v windowsDev
 
 clean:
 	go run make.go -v clean

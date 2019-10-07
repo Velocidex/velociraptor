@@ -153,6 +153,11 @@ message ClientConfig {
             "NOTE: The self signed certificate must be signed by the Velociraptor CA which is embedded above."
         }];
 
+    string pinned_server_name = 28 [(sem_type) = {
+           description: "Name of the frontend's certificate. If we are using self signed "
+           "SSL the client will be pinned to this name (default VelociraptorServer)"
+        }];
+
     uint64 max_upload_size = 25 [(sem_type) = {
              description: "Maximum size in Bytes we will create uploads for (default 5mb)"
         }];
@@ -174,6 +179,12 @@ message APIConfig {
     string bind_scheme = 3 [(sem_type) = {
             description: "A scheme for the listening socket (e.g. tcp, unix).",
             default: "unix",
+        }];
+
+    string pinned_gw_name = 4 [(sem_type) = {
+            description: "Gateway certificate will carry this common name. Note that "
+            "this name is special because it allows auth bypass for internal gateway "
+            "calls. Default (GRPC_GW)"
         }];
 }
 
