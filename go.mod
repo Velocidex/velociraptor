@@ -17,8 +17,6 @@ require (
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
-	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
@@ -90,7 +88,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20191004145223-59043b7b3e15
-	www.velocidex.com/golang/go-ntfs v0.0.0-20190926065814-c6e6548a412c
+	www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db
 	www.velocidex.com/golang/go-pe v0.1.0
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
