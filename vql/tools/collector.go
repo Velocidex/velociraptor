@@ -15,6 +15,7 @@ type CollectPluginArgs struct {
 	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
 	Output    string      `vfilter:"required,field=output,doc=A path to write the output file on."`
 	Args      vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
+	Password  string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 }
 
 type CollectPlugin struct{}
@@ -46,6 +47,9 @@ func (self CollectPlugin) Call(
 			output_chan <- vfilter.NewDict().
 				Set("Container", arg.Output)
 		}()
+
+		// Should we encrypt it?
+		container.Password = arg.Password
 
 		// Any uploads go into the container.
 		subscope := scope.Copy()
