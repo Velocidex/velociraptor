@@ -57,6 +57,8 @@ type Builder struct {
 	extra_tags  string
 	extra_flags []string
 
+	disable_cgo bool
+
 	// Set to override the output filename.
 	filename string
 }
@@ -83,11 +85,11 @@ func (self *Builder) Env() map[string]string {
 	env["GOOS"] = self.goos
 	env["GOARCH"] = self.arch
 
-	// Force CGO to always be enabled so we break hard if
-	// compilers are not installed. We used to build this
-	// optionally but this can cause errors with incorrectly built
-	// binaries with missing features.
-	env["CGO_ENABLED"] = "1"
+	if self.disable_cgo {
+		env["CGO_ENABLED"] = "0"
+	} else {
+		env["CGO_ENABLED"] = "1"
+	}
 
 	// If we are cross compiling, set the right compiler.
 	if runtime.GOOS == "linux" && self.goos == "windows" {
@@ -140,6 +142,16 @@ func AutoDev() error {
 // Build all the release versions. Darwin we build separately on a
 // Mac.
 func Release() error {
+	err := Clean()
+	if err != nil {
+		return err
+	}
+
+	err = build_gui_files()
+	if err != nil {
+		return err
+	}
+
 	if runtime.GOOS == "linux" {
 		err := Linux()
 		if err != nil {
@@ -236,10 +248,14 @@ func Appveyor() error {
 		return err
 	}
 
+	// Build a linux binary on Appveyor without cgo. This is
+	// typically OK because it is mostly used for the server. It
+	// will be missing yara etc.
 	return Builder{
-		goos:     "linux",
-		arch:     "amd64",
-		filename: "velociraptor-linux.elf"}.Run()
+		goos:        "linux",
+		arch:        "amd64",
+		disable_cgo: true,
+		filename:    "velociraptor-linux.elf"}.Run()
 }
 
 func Clean() error {
