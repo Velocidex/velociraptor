@@ -35,7 +35,7 @@ parameters:
     default: |
       {
         "Win10": [0, {
-          "NumeberOfExecutions": [4, ["unsigned int"]],
+          "NumberOfExecutions": [4, ["unsigned int"]],
           "LastExecution": [60, ["unsigned long long"]]
         }]
       }
@@ -61,7 +61,7 @@ sources:
                   winfiletime=UserAssist.LastExecution.AsInteger) As LastExecution,
                timestamp(
                   winfiletime=UserAssist.LastExecution.AsInteger).Unix AS LastExecutionTS,
-               UserAssist.NumeberOfExecutions.AsInteger AS NumeberOfExecutions
+               UserAssist.NumberOfExecutions.AsInteger AS NumberOfExecutions
         FROM TMP
       - LET A1 = SELECT * FROM if(
           condition=UserFilter,

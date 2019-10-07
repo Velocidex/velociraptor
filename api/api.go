@@ -59,7 +59,7 @@ type ApiServer struct {
 func (self *ApiServer) CancelFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(ctx).Name
+	user := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty users are called internally.
 	if user != "" {
@@ -94,7 +94,7 @@ func (self *ApiServer) CancelFlow(
 func (self *ApiServer) ArchiveFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(ctx).Name
+	user := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty users are called internally.
 	if user != "" {
@@ -136,10 +136,10 @@ func (self *ApiServer) LaunchFlow(
 	ctx context.Context,
 	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
 	result := &api_proto.StartFlowResponse{}
-	creator := GetGRPCUserInfo(ctx).Name
+	creator := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Internal calls from the frontend can set the creator.
-	if creator != constants.FRONTEND_NAME {
+	if creator != self.config.Client.PinnedServerName {
 		in.Creator = creator
 
 		// If user is not found then reject it.
@@ -190,7 +190,7 @@ func (self *ApiServer) CreateHunt(
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 	in.HuntId = flows.GetNewHuntId()
 
 	// Empty creators are called internally.
@@ -229,7 +229,7 @@ func (self *ApiServer) ModifyHunt(
 	in *api_proto.Hunt) (*empty.Empty, error) {
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty creators are called internally.
 	if in.Creator != "" {
@@ -364,7 +364,7 @@ func (self *ApiServer) LabelClients(
 	ctx context.Context,
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
 
-	user_name := GetGRPCUserInfo(ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	if user_name != "" {
 		// If user is not found then reject it.
 		user_record, err := users.GetUser(self.config, user_name)
@@ -434,7 +434,7 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
-	user_info := GetGRPCUserInfo(ctx)
+	user_info := GetGRPCUserInfo(self.config, ctx)
 
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
@@ -447,14 +447,15 @@ func (self *ApiServer) GetUserNotifications(
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
 	result, err := users.GetUserNotifications(
-		self.config, GetGRPCUserInfo(ctx).Name, in.ClearPending)
+		self.config, GetGRPCUserInfo(self.config, ctx).Name, in.ClearPending)
 	return result, err
 }
 
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	n, err := users.GetUserNotificationCount(self.config, GetGRPCUserInfo(ctx).Name)
+	n, err := users.GetUserNotificationCount(
+		self.config, GetGRPCUserInfo(self.config, ctx).Name)
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
 
@@ -552,7 +553,7 @@ func (self *ApiServer) SetArtifactFile(
 	in *api_proto.SetArtifactRequest) (
 	*api_proto.APIResponse, error) {
 
-	user_name := GetGRPCUserInfo(ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	if user_name != "" {
 		// If user is not found then reject it.
 		user_record, err := users.GetUser(self.config, user_name)

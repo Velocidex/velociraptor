@@ -35,7 +35,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -246,22 +245,6 @@ func GetAPIHandler(
 			}),
 	)
 
-	// If there is no gw cert in the config file, this might be an
-	// old config file. We can generate a new one now for
-	// backwards compatibility.
-	if config_obj.GUI.GwCertificate == "" {
-		// Generate internal certificates so we can tell when
-		// a call came from internal.
-		gw_certificate, err := crypto.GenerateServerCert(
-			config_obj, constants.GRPC_GW_CLIENT_NAME)
-		if err != nil {
-			return nil, err
-		}
-
-		config_obj.GUI.GwCertificate = gw_certificate.Cert
-		config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
-	}
-
 	// We use a dedicated gw certificate. The gRPC server will
 	// only accept a relayed username from us.
 	cert, err := tls.X509KeyPair(
@@ -287,14 +270,14 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	if gw_cert.Subject.CommonName != constants.GRPC_GW_CLIENT_NAME {
+	if gw_cert.Subject.CommonName != config_obj.API.PinnedGwName {
 		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
 	}
 
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      CA_Pool,
-		ServerName:   constants.FRONTEND_NAME,
+		ServerName:   config_obj.Client.PinnedServerName,
 	})
 
 	opts := []grpc.DialOption{

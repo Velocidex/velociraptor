@@ -27,7 +27,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 var (
@@ -67,7 +66,7 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 		creds = credentials.NewTLS(&tls.Config{
 			Certificates: []tls.Certificate{cert},
 			RootCAs:      CA_Pool,
-			ServerName:   constants.FRONTEND_NAME,
+			ServerName:   config_obj.Client.PinnedServerName,
 		})
 	}
 

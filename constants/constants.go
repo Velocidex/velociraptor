@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.3.4"
+	VERSION                    = "0.3.5"
 	ENROLLMENT_WELL_KNOWN_FLOW = "aff4:/flows/E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -50,9 +50,6 @@ const (
 
 	// Messages to the client which we dont care about their responses.
 	IgnoreResponseState = uint64(101)
-
-	FRONTEND_NAME       = "VelociraptorServer"
-	GRPC_GW_CLIENT_NAME = "GRPC_GW"
 
 	// These store configuration for the server and client
 	// monitoring artifacts.

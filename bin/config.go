@@ -30,7 +30,6 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -111,7 +110,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 	// have a constant common name - clients will refuse to talk
 	// with another common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, constants.FRONTEND_NAME)
+		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
@@ -121,7 +120,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 
 	// Generate gRPC gateway certificate.
 	gw_certificate, err := crypto.GenerateServerCert(
-		config_obj, constants.GRPC_GW_CLIENT_NAME)
+		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
@@ -159,7 +158,7 @@ func doRotateKeyConfig() {
 
 	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, constants.FRONTEND_NAME)
+		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)
 		return
@@ -207,7 +206,7 @@ func doDumpApiClientConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	if *config_api_client_common_name == constants.FRONTEND_NAME {
+	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
 		kingpin.Fatalf("Name reserved! You may not name your " +
 			"api keys with this name.")
 	}

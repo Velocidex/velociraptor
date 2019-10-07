@@ -131,6 +131,8 @@ type IConnector interface {
 
 // Responsible for using HTTP to talk with the end point.
 type HTTPConnector struct {
+	config_obj *config_proto.Config
+
 	// The Crypto Manager for communicating with the current
 	// URL. Note, when the URL is changed, the CryptoManager is
 	// initialized by a successful connection to the URL's
@@ -178,15 +180,16 @@ func NewHTTPConnector(
 		CA_Pool := x509.NewCertPool()
 		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
 
-		tls_config.ServerName = constants.FRONTEND_NAME
+		tls_config.ServerName = config_obj.Client.PinnedServerName
 
 		// We only trust **our** root CA.
 		tls_config.RootCAs = CA_Pool
 	}
 
 	return &HTTPConnector{
-		manager: manager,
-		logger:  logger,
+		config_obj: config_obj,
+		manager:    manager,
+		logger:     logger,
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
@@ -321,7 +324,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
-	if *server_name != constants.FRONTEND_NAME {
+	if *server_name != self.config_obj.Client.PinnedServerName {
 		self.logger.Info("Invalid server certificate common name %v!", *server_name)
 		return errors.New("Invalid server certificate common name!")
 	}
