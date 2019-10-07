@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
+	"encoding/json"
 	"io"
 
 	"cloud.google.com/go/storage"
@@ -76,11 +76,6 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func objectURL(objAttrs *storage.ObjectAttrs) string {
-	return fmt.Sprintf("https://storage.googleapis.com/%s/%s",
-		objAttrs.Bucket, objAttrs.Name)
-}
-
 func upload_gcs(ctx context.Context, scope *vfilter.Scope,
 	reader io.Reader,
 	projectID, bucket, name string,
@@ -104,12 +99,32 @@ func upload_gcs(ctx context.Context, scope *vfilter.Scope,
 		bucket_handle = bucket_handle_cache.(*storage.BucketHandle)
 	}
 
+	scope.Log("upload_gcs: Uploading %v to %v", name, bucket)
 	obj := bucket_handle.Object(name)
 	writer := obj.NewWriter(ctx)
-	defer writer.Close()
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
+
+	defer func() {
+		err := writer.Close()
+		if err != nil {
+			scope.Log("upload_gcs: ERROR writing to object: %v", err)
+		} else {
+			attr := writer.Attrs()
+			serialized, _ := json.Marshal(attr)
+			scope.Log("upload_gcs: SUCCESS writing to object: %v",
+				string(serialized))
+
+			report := "Hash mismatch!!!"
+			if string(attr.MD5) == string(md5_sum.Sum(nil)) {
+				report = "Hash checks out."
+			}
+			scope.Log("upload_gcs: GCS Calculated MD5: %016x %v",
+				attr.MD5, report)
+		}
+	}()
+
 	log_writer := &vql_subsystem.LogWriter{
 		Scope:   scope,
 		Message: "upload_gcs " + name}

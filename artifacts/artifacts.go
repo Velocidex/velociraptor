@@ -94,11 +94,13 @@ func sanitize_artifact_yaml(data string) string {
 	// Therefore we just transform one form into the other in
 	// order to trick the yaml decoder to do the right thing.
 
-	return query_regexp.ReplaceAllStringFunc(data, func(m string) string {
+	result := query_regexp.ReplaceAllStringFunc(data, func(m string) string {
 		parts := query_regexp.FindStringSubmatch(m)
 		return parts[1] + "|\n" + strings.Repeat(" ", len(parts[1])) +
 			parts[2]
 	})
+	return result
+
 }
 
 func (self *Repository) LoadYaml(data string, validate bool) (
@@ -109,7 +111,11 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 		return nil, errors.WithStack(err)
 	}
 	artifact.Raw = data
+	return self.LoadProto(artifact, validate)
+}
 
+func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
+	*artifacts_proto.Artifact, error) {
 	// Validate the artifact.
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
