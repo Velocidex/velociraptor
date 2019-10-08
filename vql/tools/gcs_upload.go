@@ -150,7 +150,7 @@ func (self GCSUploadFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:    "upload_gcs",
 		Doc:     "Upload files to GCS.",
-		ArgType: type_map.AddType(scope, &GCSUploadFunction{}),
+		ArgType: type_map.AddType(scope, &GCSUploadArgs{}),
 	}
 }
 

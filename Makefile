@@ -23,3 +23,11 @@ generate:
 
 check:
 	staticcheck ./...
+
+build_docker:
+	echo Building the initial docker container.
+	docker build --tag velo_builder docker
+
+build_release: build_docker
+	echo Building release into output directory.
+	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder

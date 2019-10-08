@@ -216,28 +216,10 @@ func Darwin() error {
 
 // Build step for Appveyor.
 func Appveyor() error {
-	cwd, err := os.Getwd()
+	err := build_gui_files()
 	if err != nil {
 		return err
 	}
-	defer os.Chdir(cwd)
-
-	err = os.Chdir("gui/static")
-	if err != nil {
-		return err
-	}
-
-	err = sh.RunV("npm", "install")
-	if err != nil {
-		return err
-	}
-
-	err = sh.RunV("node", "node_modules/gulp/bin/gulp.js", "compile")
-	if err != nil {
-		return err
-	}
-
-	os.Chdir(cwd)
 
 	err = Builder{
 		goos:     "windows",
@@ -281,12 +263,12 @@ func build_gui_files() error {
 		return err
 	}
 
-	err = sh.RunV("gulp", "clean")
+	err = sh.RunV("npm", "install")
 	if err != nil {
 		return err
 	}
 
-	return sh.RunV("gulp", "compile")
+	return sh.RunV("node", "node_modules/gulp/bin/gulp.js", "compile")
 }
 
 func flags() string {
