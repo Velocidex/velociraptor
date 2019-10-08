@@ -30,7 +30,7 @@
                 Description="Velociraptor Service"
                 Start="auto"
                 Account="LocalSystem"
-                Arguments=' --config "[INSTALLDIR]/server.config.yaml" service run '
+                Arguments=' --config "[INSTALLDIR]/client.config.yaml" service run '
                 ErrorControl="normal"
                 Interactive="no"/>
 
@@ -42,8 +42,8 @@
                 Remove="uninstall" Wait="yes" />
           </Component>
           <Component Id='Config' Guid='d47dd101-3f53-45ef-889e-2b0db79e554c'>
-            <File Id='Config' Name='server.config.yaml'
-                  DiskId='1' Source='Output/server.config.yaml' KeyPath='yes'>
+            <File Id='Config' Name=client.config.yaml'
+                  DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
             </File>
           </Component>
         </Directory>
