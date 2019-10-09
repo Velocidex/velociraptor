@@ -65,6 +65,7 @@ require (
 	github.com/prometheus/client_golang v1.1.0
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/russellhaering/goxmldsig v0.0.0-20180430223755-7acd5e4a6ef7 // indirect
 	github.com/sebdah/goldie v0.0.0-20190531093107-d313ffb52c77
 	github.com/sergi/go-diff v1.0.0
@@ -87,6 +88,7 @@ require (
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20150902115704-41f357289737
 	gopkg.in/russross/blackfriday.v2 v2.0.1
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20191004145223-59043b7b3e15
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db
