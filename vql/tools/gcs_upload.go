@@ -1,3 +1,5 @@
+//+build extras
+
 package tools
 
 import (
