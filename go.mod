@@ -9,7 +9,6 @@ require (
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
-	github.com/UnnoTed/fileb0x v1.1.3 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
@@ -76,8 +75,9 @@ require (
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
-	golang.org/x/crypto v0.0.0-20191001141032-4663e185863a
-	golang.org/x/net v0.0.0-20190930134127-c5a3c61f89f3
+	github.com/yuin/gopher-lua v0.0.0-20190514113301-1cd887cd7036
+	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
+	golang.org/x/net v0.0.0-20191011234655-491137f69257
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9
 	google.golang.org/api v0.7.0

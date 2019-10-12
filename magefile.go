@@ -48,6 +48,7 @@ var (
 	mingw_xcompiler_32 = "i686-w64-mingw32-gcc"
 	name               = "velociraptor"
 	version            = "v" + constants.VERSION
+	base_tags          = " release server_vql extras "
 )
 
 type Builder struct {
@@ -113,7 +114,7 @@ func (self Builder) Run() error {
 		return err
 	}
 
-	tags := "release server_vql " + self.extra_tags
+	tags := base_tags + self.extra_tags
 	args := []string{
 		"build",
 		"-o", filepath.Join("output", self.Name()),
