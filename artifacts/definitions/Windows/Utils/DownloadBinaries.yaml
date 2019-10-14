@@ -16,7 +16,7 @@ parameters:
       Tool,Type,URL,Filename
       Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
       Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
-      WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc2.exe
+      WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc2/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
       Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
       Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
       SysmonConfig,.,https://raw.githubusercontent.com/SwiftOnSecurity/sysmon-config/master/z-AlphaVersion.xml,sysmon_config.xml

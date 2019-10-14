@@ -22,6 +22,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
+	"path"
 	"regexp"
 	"strings"
 
@@ -38,7 +39,8 @@ type UserRecord struct {
 
 func NewUserRecord(name string) (*UserRecord, error) {
 	if !regexp.MustCompile("^[a-zA-Z0-9@.-]+$").MatchString(name) {
-		return nil, errors.New("Unacceptable username")
+		return nil, errors.New(fmt.Sprintf(
+			"Unacceptable username %v", name))
 	}
 	return &UserRecord{&api_proto.VelociraptorUser{Name: name}}, nil
 }
@@ -74,6 +76,35 @@ func SetUser(config_obj *config_proto.Config, user_record *UserRecord) error {
 	}
 	return db.SetSubject(config_obj,
 		constants.USER_URN+user_record.Name, user_record)
+}
+
+func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	children, err := db.ListChildren(config_obj, constants.USER_URN, 0, 500)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*UserRecord, 0, len(children))
+	for _, child := range children {
+		username := path.Base(child)
+		user_record, err := NewUserRecord(username)
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.GetSubject(config_obj,
+			constants.USER_URN+username, user_record)
+		if err == nil {
+			result = append(result, user_record)
+		}
+	}
+
+	return result, nil
 }
 
 func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, error) {
