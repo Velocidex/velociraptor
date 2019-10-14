@@ -26,6 +26,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/users"
 )
@@ -39,10 +40,9 @@ func checkUserCredentialsHandler(
 	parent http.Handler) http.Handler {
 
 	// We are supposed to do the oauth thing.
-	if config_obj.GUI.GoogleOauthClientId != "" &&
-		config_obj.GUI.GoogleOauthClientSecret != "" {
+	if config.GoogleAuthEnabled(config_obj) {
 		return authenticateOAUTHCookie(config_obj, parent)
-	} else if SAMLEnabled(config_obj) {
+	} else if config.SAMLEnabled(config_obj) {
 		return authenticateSAML(config_obj, parent)
 	}
 

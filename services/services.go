@@ -34,6 +34,7 @@ type ServicesManager struct {
 	server_artifacts  *ServerArtifactsRunner
 	dyn_dns           *DynDNSService
 	interrogation     *InterrogationService
+	sanity_checker    *SanityChecks
 }
 
 func (self *ServicesManager) Close() {
@@ -45,6 +46,7 @@ func (self *ServicesManager) Close() {
 	self.server_artifacts.Close()
 	self.dyn_dns.Close()
 	self.interrogation.Close()
+	self.sanity_checker.Close()
 }
 
 // Start all the server services.
@@ -102,6 +104,12 @@ func StartServices(
 
 	interrogation := startInterrogationService(config_obj)
 	result.interrogation = interrogation
+
+	sanity_checker, err := startSanityCheckService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.sanity_checker = sanity_checker
 
 	return result, nil
 }
