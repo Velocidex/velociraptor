@@ -95,6 +95,8 @@ RestartSec=120
 LimitNOFILE=20000
 Environment=LANG=en_US.UTF-8
 ExecStart=%s --config %s frontend
+User=velociraptor
+Group=velociraptor
 
 [Install]
 WantedBy=multi-user.target
@@ -185,7 +187,7 @@ func doServerDeb() {
 	deb.SetArchitecture("amd64")
 	deb.SetMaintainer("Velocidex Innovations")
 	deb.SetMaintainerEmail("support@velocidex.com")
-	deb.SetHomepage("https://docs.velociraptor.velocidex.com")
+	deb.SetHomepage("https://www.velocidex.com/docs")
 	deb.SetShortDescription("Velociraptor server deployment.")
 
 	config_path := "/etc/velociraptor/server.config.yaml"
@@ -199,10 +201,27 @@ func doServerDeb() {
 
 	// Just a simple bare bones deb.
 	if !*server_debian_command_with_monitoring {
-		deb.AddControlExtraString("postinst", `
+		filestore_path := config_obj.Datastore.Location
+		deb.AddControlExtraString("postinst", fmt.Sprintf(`
+if ! getent group velociraptor >/dev/null; then
+   addgroup --system velociraptor
+fi
+
+if ! getent user velociraptor >/dev/null; then
+   adduser --system --home /etc/velociraptor/ --no-create-home \
+     --ingroup velociraptor velociraptor --shell /bin/false \
+     --gecos "Velociraptor Server"
+fi
+
+# Make the filestore path accessible to the user.
+mkdir -p '%s'
+chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
+chmod -R go-r /etc/velociraptor/
+
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
-`)
+`, filestore_path, filestore_path))
 
 		deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
