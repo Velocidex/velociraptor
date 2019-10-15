@@ -1,7 +1,6 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "objects.proto";
 
 package proto;
 
@@ -147,7 +146,6 @@ message UserNotification {
         }];
 
     string message = 5;
-    ObjectReference reference = 6;
 }
 
 message GetUserNotificationsResponse {
