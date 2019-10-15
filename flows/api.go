@@ -336,17 +336,6 @@ func GetFlowRequests(
 	return result, nil
 }
 
-func XXGetFlowDescriptors() (*api_proto.FlowDescriptors, error) {
-	result := &api_proto.FlowDescriptors{}
-	for _, item := range GetDescriptors() {
-		if !item.Internal {
-			result.Items = append(result.Items, item)
-		}
-	}
-
-	return result, nil
-}
-
 func ValidateFlowId(client_id string, flow_id string) (*string, error) {
 	base_flow := path.Base(flow_id)
 	if !strings.HasPrefix(base_flow, constants.FLOW_PREFIX) {

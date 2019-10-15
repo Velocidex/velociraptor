@@ -101,21 +101,6 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	return &result, nil
 }
 
-// Only process messages from the Velociraptor client.
-// FIXME: DELETE
-func (self *Server) processVelociraptorMessages(
-	ctx context.Context,
-	client_id string,
-	messages []*crypto_proto.GrrMessage) error {
-
-	runner := flows.NewFlowRunner(self.config, self.logger)
-	defer runner.Close()
-
-	runner.ProcessMessages(messages)
-
-	return nil
-}
-
 // We only process some messages when the client is not authenticated.
 func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,

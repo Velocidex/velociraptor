@@ -240,6 +240,10 @@ func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuff
 		}
 	}
 
+	// Will be non zero if the client rebooted with pending
+	// messages. We will then just drain the buffers.
+	header.AvailableBytes = header.WritePointer - header.ReadPointer
+
 	result := &FileBasedRingBuffer{
 		config_obj:     config_obj,
 		fd:             fd,

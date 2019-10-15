@@ -60,6 +60,11 @@ func (self CollectPlugin) Call(
 
 		repository, err := artifacts.GetGlobalRepository(
 			config_obj)
+		if err != nil {
+			scope.Log("collect: %v", err)
+			return
+		}
+
 		for _, name := range arg.Artifacts {
 			artifact, pres := repository.Get(name)
 			if !pres {

@@ -98,7 +98,7 @@ func testRingBuffer(
 	config_obj *config_proto.Config,
 	message string,
 	t *testing.T) {
-	//	t.Parallel()
+	t.Parallel()
 
 	manager := &crypto.NullCryptoManager{}
 	exe := &executor.ClientExecutor{
@@ -171,8 +171,8 @@ func testRingBuffer(
 func TestSender(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 
-	// Make the ring buffer 20 bytes - this is enough for one
-	// (compressed) message but no more.
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
 	config_obj.Client.LocalBuffer.MemorySize = 10
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1

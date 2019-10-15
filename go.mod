@@ -80,6 +80,7 @@ require (
 	golang.org/x/net v0.0.0-20191011234655-491137f69257
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9
+	golang.org/x/tools v0.0.0-20191014205221-18e3458ac98b // indirect
 	google.golang.org/api v0.7.0
 	google.golang.org/genproto v0.0.0-20190701230453-710ae3a149df
 	google.golang.org/grpc v1.22.0
@@ -90,6 +91,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
+	honnef.co/go/tools v0.0.0-20191003165122-a2fc4037bf9f // indirect
 	www.velocidex.com/golang/evtx v0.0.0-20191004145223-59043b7b3e15
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db
 	www.velocidex.com/golang/go-pe v0.1.0
