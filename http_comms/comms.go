@@ -302,12 +302,14 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	resp, err := self.client.Do(req)
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
+		self.server_name = ""
 		return err
 	}
 	defer resp.Body.Close()
 
 	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
+		self.server_name = ""
 		return errors.WithStack(err)
 	}
 
@@ -316,12 +318,14 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	server_name, err := self.manager.AddCertificate(pem)
 	if err != nil {
 		self.logger.Error(err)
+		self.server_name = ""
 		return err
 	}
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
 	if *server_name != self.config_obj.Client.PinnedServerName {
+		self.server_name = ""
 		self.logger.Info("Invalid server certificate common name %v!", *server_name)
 		return errors.New("Invalid server certificate common name!")
 	}

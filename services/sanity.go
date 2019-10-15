@@ -1,12 +1,14 @@
 package services
 
 import (
+	"encoding/hex"
 	"os"
 	"path/filepath"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -17,17 +19,28 @@ type SanityChecks struct{}
 func (self *SanityChecks) Close() {}
 
 func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
 	// If we are handling the authentication make sure there is at
 	// least one user account created.
 	if !config.GoogleAuthEnabled(config_obj) &&
 		!config.SAMLEnabled(config_obj) {
-		user_records, err := users.ListUsers(config_obj)
-		if err != nil {
-			return err
-		}
 
-		if len(user_records) == 0 {
-			return errors.New("Local authentication configured, but there are no user accounts defined. You need to make at least one admin user by running 'velociraptor --config server.config.yaml user add <username>'")
+		// Make sure all the users specified in the config
+		// file exist.
+		for _, user := range config_obj.GUI.InitialUsers {
+			user_record, err := users.GetUser(config_obj, user.Name)
+			if err != nil || user_record.Name != user.Name {
+				logger.Info("Initial user %v not present, creating",
+					user.Name)
+				new_user, _ := users.NewUserRecord(user.Name)
+				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
+				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
+				err := users.SetUser(config_obj, new_user)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 

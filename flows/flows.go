@@ -449,12 +449,6 @@ func (self *AFF4FlowObject) Complete(config_obj *config_proto.Config) error {
 				Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 				Message: fmt.Sprintf("Flow %s completed successfully.",
 					self.RunnerArgs.FlowName),
-				Reference: &api_proto.ObjectReference{
-					Flow: &api_proto.FlowReference{
-						FlowId:   path.Base(self.Urn),
-						ClientId: self.RunnerArgs.ClientId,
-					},
-				},
 			})
 		if err != nil {
 			return err
@@ -498,12 +492,6 @@ func (self *AFF4FlowObject) FailIfError(
 					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 					Message: fmt.Sprintf("Flow %s failed!.",
 						self.RunnerArgs.FlowName),
-					Reference: &api_proto.ObjectReference{
-						Flow: &api_proto.FlowReference{
-							FlowId:   path.Base(self.Urn),
-							ClientId: self.RunnerArgs.ClientId,
-						},
-					},
 				})
 			if err != nil {
 				return err

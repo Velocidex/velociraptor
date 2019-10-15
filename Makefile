@@ -31,3 +31,8 @@ build_docker:
 build_release: build_docker
 	echo Building release into output directory.
 	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder
+
+
+debug:
+	dlv debug --build-flags="-tags 'release server_vql extras'" \
+		./bin/ -- frontend -v

@@ -283,6 +283,17 @@ message GUIConfig {
     string saml_user_attribute = 16 [(sem_type) = {
             description: "SAML attribute containing value for user identification."
         }];
+
+    // These users are created if they do no already exist in the data
+    // store.
+    repeated GUIUser initial_users = 17;
+}
+
+message GUIUser {
+    string name = 1;
+    string password_hash = 2;
+    string password_salt = 3;
+
 }
 
 message CAConfig {
