@@ -42,6 +42,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -77,8 +78,6 @@ func (self *Enroller) MaybeEnrol() {
 		reply := &crypto_proto.GrrMessage{
 			SessionId:   constants.ENROLLMENT_WELL_KNOWN_FLOW,
 			ArgsRdfName: "Certificate",
-			Priority:    crypto_proto.GrrMessage_HIGH_PRIORITY,
-			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 		}
 
 		serialized_csr, err := proto.Marshal(csr)
@@ -105,8 +104,6 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 	reply := &crypto_proto.GrrMessage{
 		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
 		ArgsRdfName: "ForemanCheckin",
-		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
 	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
@@ -386,7 +383,7 @@ func NewNotificationReader(
 // Block until the messages are sent. Will retry, back off and rekey
 // the server.
 func (self *NotificationReader) sendMessageList(
-	ctx context.Context, message_list []byte) {
+	ctx context.Context, message_list [][]byte) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
@@ -423,7 +420,7 @@ func (self *NotificationReader) sendMessageList(
 }
 
 func (self *NotificationReader) sendToURL(
-	ctx context.Context, message_list []byte) error {
+	ctx context.Context, message_list [][]byte) error {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
@@ -459,45 +456,21 @@ func (self *NotificationReader) sendToURL(
 		return errors.New(resp.Status)
 	}
 
-	encrypted := []byte{}
-	buf := make([]byte, 4096)
+	encrypted := &bytes.Buffer{}
 
 	// We need to be able to cancel the read here so we do not use
 	// ioutil.ReadAll()
-process_response:
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("Cancelled")
-
-		default:
-			n, err := resp.Body.Read(buf)
-			if err != nil && err != io.EOF {
-				fmt.Printf("Error: %v\n", err)
-				return errors.WithStack(err)
-			}
-			if n == 0 {
-				break process_response
-			}
-
-			encrypted = append(encrypted, buf[:n]...)
-			if len(encrypted) > int(self.config_obj.Client.MaxUploadSize) {
-				return errors.New("Response too long")
-			}
-		}
+	_, err = utils.Copy(ctx, encrypted, resp.Body)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
-	response_message_list, err := crypto.DecryptMessageList(
-		self.manager, encrypted)
+	message_info, err := self.manager.Decrypt(encrypted.Bytes())
 	if err != nil {
 		return err
 	}
 
-	for _, msg := range response_message_list.Job {
-		self.executor.ProcessRequest(msg)
-	}
-
-	return nil
+	return message_info.IterateJobs(ctx, self.executor.ProcessRequest)
 }
 
 // The Receiver channel is used to receive commands from the server:
@@ -518,7 +491,9 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			message_list := self.GetMessageList()
 			serialized_message_list, err := proto.Marshal(message_list)
 			if err == nil {
-				self.sendMessageList(ctx, serialized_message_list)
+				self.sendMessageList(
+					ctx, [][]byte{
+						crypto.Compress(serialized_message_list)})
 			}
 
 			select {
@@ -541,8 +516,6 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	reply := &crypto_proto.GrrMessage{
 		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
 		ArgsRdfName: "ForemanCheckin",
-		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
 	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{

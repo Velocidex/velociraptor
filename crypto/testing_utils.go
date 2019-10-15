@@ -24,30 +24,39 @@ func (self *NullCryptoManager) EncryptMessageList(
 		return nil, errors.WithStack(err)
 	}
 
-	return plain_text, nil
+	cipher_text, err := self.Encrypt(
+		[][]byte{Compress(plain_text)}, destination)
+	return cipher_text, err
 }
 
-func (self *NullCryptoManager) Encrypt(plain_text []byte, destination string) (
+func (self *NullCryptoManager) Encrypt(
+	compressed_message_lists [][]byte, destination string) (
 	[]byte, error) {
-	return plain_text, nil
-}
+	packed_message_list := &crypto_proto.PackedMessageList{
+		MessageList: compressed_message_lists,
+	}
 
-func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
-	*MessageInfo, error) {
-	return &MessageInfo{
-		Raw:           cipher_text,
-		Authenticated: true,
-		Source:        "C.123456",
-	}, nil
-}
-
-func (self *NullCryptoManager) DecryptMessageList(cipher_text []byte) (
-	*crypto_proto.MessageList, error) {
-	result := &crypto_proto.MessageList{}
-	err := proto.Unmarshal(cipher_text, result)
+	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 
-	return result, nil
+	return serialized_packed_message_list, nil
+}
+
+func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
+	*MessageInfo, error) {
+
+	packed_message_list := &crypto_proto.PackedMessageList{}
+	err := proto.Unmarshal(cipher_text, packed_message_list)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return &MessageInfo{
+		RawCompressed: packed_message_list.MessageList,
+		Authenticated: true,
+		Source:        "C.123456",
+		Compression:   crypto_proto.PackedMessageList_ZCOMPRESSION,
+	}, nil
 }

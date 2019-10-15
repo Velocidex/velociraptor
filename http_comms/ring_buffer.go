@@ -9,6 +9,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -25,10 +26,10 @@ type IRingBuffer interface {
 }
 
 type Header struct {
-	ReadPointer    int64
-	WritePointer   int64
-	MaxSize        int64
-	AvailableBytes int64
+	ReadPointer    int64 // Leasing will start at this file offset.
+	WritePointer   int64 // Enqueue will write at this file position.
+	MaxSize        int64 // Block Enqueue once WritePointer goes past this.
+	AvailableBytes int64 // Available to be leased.
 }
 
 func (self *Header) MarshalBinary() ([]byte, error) {
@@ -78,8 +79,11 @@ type FileBasedRingBuffer struct {
 	read_buf  []byte
 	write_buf []byte
 
+	// The file offset where leases come from.
 	leased_pointer int64
-	leased_bytes   int64
+
+	// Total number of bytes currently leased.
+	leased_bytes int64
 }
 
 func (self *FileBasedRingBuffer) Enqueue(item []byte) {
@@ -97,8 +101,8 @@ func (self *FileBasedRingBuffer) Enqueue(item []byte) {
 
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 	logger.WithFields(logrus.Fields{
-		"header":        self.header,
-		"leased_length": self.leased_pointer,
+		"header":         self.header,
+		"leased_pointer": self.leased_pointer,
 	}).Info("File Ring Buffer: Enqueue")
 
 	// We need to block here until there is room in the message
@@ -119,13 +123,34 @@ func (self *FileBasedRingBuffer) AvailableBytes() uint64 {
 	return uint64(self.header.AvailableBytes)
 }
 
+// Call Lease() repeatadly and compress each result until we get
+// closer to the required size.
+func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
+	result := [][]byte{}
+	total_len := uint64(0)
+	step := size / 4
+
+	for total_len < size {
+		next_message_list := self.Lease(step)
+
+		// No more messages.
+		if len(next_message_list) == 0 {
+			break
+		}
+
+		compressed_message_list := crypto.Compress(next_message_list)
+		result = append(result, compressed_message_list)
+		total_len += uint64(len(compressed_message_list))
+	}
+
+	return result
+}
+
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	result := []byte{}
-
-	self.leased_bytes = 0
 
 	for self.header.WritePointer > self.leased_pointer {
 		n, err := self.fd.ReadAt(self.read_buf, self.leased_pointer)
@@ -137,8 +162,9 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 				result = append(result, item...)
 			}
 
-			self.leased_pointer += 8 + length
-			self.leased_bytes += length
+			self.leased_pointer += 8 + int64(n)
+			self.leased_bytes += int64(n)
+			self.header.AvailableBytes -= int64(n)
 
 			if uint64(len(result)) > size {
 				break
@@ -162,6 +188,7 @@ func (self *FileBasedRingBuffer) Commit() {
 		self.header.WritePointer = FirstRecordOffset
 		self.header.AvailableBytes = 0
 		self.leased_pointer = FirstRecordOffset
+		self.leased_bytes = 0
 
 		logger.WithFields(logrus.Fields{
 			"header":         self.header,
@@ -170,7 +197,7 @@ func (self *FileBasedRingBuffer) Commit() {
 
 	} else {
 		self.header.ReadPointer = self.leased_pointer
-		self.header.AvailableBytes -= self.leased_bytes
+		self.leased_bytes = 0
 
 		serialized, _ := self.header.MarshalBinary()
 		self.fd.WriteAt(serialized, 0)
@@ -193,8 +220,9 @@ func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuff
 
 	header := &Header{
 		// Pad the header a bit to allow for extensions.
-		WritePointer: FirstRecordOffset,
-		ReadPointer:  FirstRecordOffset,
+		WritePointer:   FirstRecordOffset,
+		AvailableBytes: 0,
+		ReadPointer:    FirstRecordOffset,
 		MaxSize: int64(config_obj.Client.LocalBuffer.DiskSize) +
 			FirstRecordOffset,
 	}
@@ -240,7 +268,13 @@ type RingBuffer struct {
 	mu       sync.Mutex
 	messages [][]byte
 
-	leased_idx    uint64
+	// The index in the messages array where messages before it
+	// are leased.
+	leased_idx uint64
+
+	// Total length in bytes that is currently leased (this will
+	// be several messages since only whole messages are ever
+	// leased).
 	leased_length uint64
 
 	// Protects total_length
@@ -293,13 +327,20 @@ func (self *RingBuffer) Lease(size uint64) []byte {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.leased_length = 0
+	// No more to lease.
+	if self.leased_idx >= uint64(len(self.messages)) {
+		return nil
+	}
+
 	leased := make([]byte, 0)
 
-	for idx, item := range self.messages {
+	for _, item := range self.messages[self.leased_idx:] {
 		leased = append(leased, item...)
 		self.leased_length += uint64(len(item))
-		self.leased_idx = uint64(idx)
+		if self.leased_length == 28 {
+			panic(1)
+		}
+		self.leased_idx += 1
 		if self.leased_length > size {
 			break
 		}
@@ -334,8 +375,8 @@ func (self *RingBuffer) Commit() {
 		"leased_length": self.leased_length,
 	}).Info("Ring Buffer: Commit")
 
-	if uint64(len(self.messages)) > self.leased_idx {
-		self.messages = self.messages[self.leased_idx+1:]
+	if uint64(len(self.messages)) >= self.leased_idx {
+		self.messages = self.messages[self.leased_idx:]
 	}
 
 	self.total_length -= self.leased_length

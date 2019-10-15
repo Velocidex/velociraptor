@@ -5,7 +5,6 @@ goog.module.declareLegacyNamespace();
 
 const {ClientFlowsListDirective} = goog.require('grrUi.flow.clientFlowsListDirective');
 const {ClientFlowsViewDirective} = goog.require('grrUi.flow.clientFlowsViewDirective');
-const {FlowDescriptorsTreeDirective} = goog.require('grrUi.flow.flowDescriptorsTreeDirective');
 const {FlowInfoDirective} = goog.require('grrUi.flow.flowInfoDirective');
 const {FlowInspectorDirective} = goog.require('grrUi.flow.flowInspectorDirective');
 const {FlowLogDirective} = goog.require('grrUi.flow.flowLogDirective');
@@ -29,8 +28,6 @@ exports.flowModule.directive(
     ClientFlowsListDirective.directive_name, ClientFlowsListDirective);
 exports.flowModule.directive(
     ClientFlowsViewDirective.directive_name, ClientFlowsViewDirective);
-exports.flowModule.directive(
-    FlowDescriptorsTreeDirective.directive_name, FlowDescriptorsTreeDirective);
 exports.flowModule.directive(
     FlowInfoDirective.directive_name, FlowInfoDirective);
 exports.flowModule.directive(

@@ -77,7 +77,6 @@ func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMe
 		RequestId:  req.RequestId,
 		ResponseId: 1,
 		Type:       crypto_proto.GrrMessage_STATUS,
-		ClientType: crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
 	reply.TaskId = req.TaskId

@@ -336,7 +336,7 @@ func GetFlowRequests(
 	return result, nil
 }
 
-func GetFlowDescriptors() (*api_proto.FlowDescriptors, error) {
+func XXGetFlowDescriptors() (*api_proto.FlowDescriptors, error) {
 	result := &api_proto.FlowDescriptors{}
 	for _, item := range GetDescriptors() {
 		if !item.Internal {

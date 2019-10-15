@@ -221,12 +221,6 @@ service API {
         };
     }
 
-    rpc GetFlowDescriptors(google.protobuf.Empty) returns (FlowDescriptors) {
-        option (google.api.http) = {
-            get: "/api/v1/flows/descriptors",
-        };
-    }
-
     rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
         option (google.api.http) = {
             get: "/api/v1/DescribeTypes",

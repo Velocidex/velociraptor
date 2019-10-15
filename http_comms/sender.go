@@ -89,7 +89,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 				continue
 			}
 
-			// RinggBuffer.Enqueue may block if there is
+			// RingBuffer.Enqueue may block if there is
 			// no room in the ring buffer. While waiting
 			// here we block the executor channel.
 			self.ring_buffer.Enqueue(serialized_msg)
@@ -121,16 +121,16 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			// Grab some messages from the ring buffer.
-			messages := self.ring_buffer.Lease(
+			compressed_messages := LeaseAndCompress(self.ring_buffer,
 				self.config_obj.Client.MaxUploadSize)
-			if len(messages) > 0 {
+			if len(compressed_messages) > 0 {
 				// sendMessageList will block until
 				// the messages are successfully sent
 				// to the server. When it returns we
 				// know the messages are sent so we
 				// can commit them from the ring
 				// buffer.
-				self.sendMessageList(ctx, messages)
+				self.sendMessageList(ctx, compressed_messages)
 				self.ring_buffer.Commit()
 
 				// We need to make sure our memory

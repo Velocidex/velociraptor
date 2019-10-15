@@ -56,15 +56,18 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 		return nil, errors.New("Unavailable")
 	}
 
+	defer self.wg.Done()
+
 	manager := crypto.NullCryptoManager{}
-	decrypted, err := manager.DecryptMessageList(data)
+
+	message_info, err := manager.Decrypt(data)
 	require.NoError(self.t, err)
 
-	for _, item := range decrypted.Job {
-		self.received = append(self.received, item.Name)
-	}
+	message_info.IterateJobs(context.Background(),
+		func(item *crypto_proto.GrrMessage) {
+			self.received = append(self.received, item.Name)
+		})
 
-	self.wg.Done()
 	return &http.Response{
 		Body:       ioutil.NopCloser(bytes.NewBufferString("")),
 		StatusCode: 200,
@@ -73,15 +76,18 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 func (self *MockHTTPConnector) ReKeyNextServer()   {}
 func (self *MockHTTPConnector) ServerName() string { return "VelociraptorServer" }
 
-// Try to send the message immediately.
+// Try to send the message immediately. If we get through we increase the wg.
 func CanSendToExecutor(
 	wg *sync.WaitGroup,
 	exec *executor.ClientExecutor,
 	msg *crypto_proto.GrrMessage) bool {
 	select {
 	case exec.Outbound <- msg:
+		// Add to the wg a task - this will be subtracted when
+		// the final post is made.
 		wg.Add(1)
 		return true
+
 	case <-time.After(500 * time.Millisecond):
 		return false
 	}
@@ -90,8 +96,9 @@ func CanSendToExecutor(
 func testRingBuffer(
 	rb IRingBuffer,
 	config_obj *config_proto.Config,
+	message string,
 	t *testing.T) {
-	t.Parallel()
+	//	t.Parallel()
 
 	manager := &crypto.NullCryptoManager{}
 	exe := &executor.ClientExecutor{
@@ -121,7 +128,7 @@ func testRingBuffer(
 	// that all messages will be written to disk in case of a
 	// crash.
 	msg := &crypto_proto.GrrMessage{
-		Name: "0123456789",
+		Name: message,
 	}
 
 	// The first message will be enqueued.
@@ -129,7 +136,6 @@ func testRingBuffer(
 
 	// These messages can not be sent since there is no room in
 	// the buffer.
-	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
 	assert.Equal(t, CanSendToExecutor(wg, exe, msg), false)
 
 	// Nothing is received yet since the connector is
@@ -165,14 +171,14 @@ func testRingBuffer(
 func TestSender(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 
-	// Make the ring buffer 10 bytes - this is enough for one
-	// message but no more.
+	// Make the ring buffer 20 bytes - this is enough for one
+	// (compressed) message but no more.
 	config_obj.Client.LocalBuffer.MemorySize = 10
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1
 
 	rb := NewRingBuffer(config_obj)
-	testRingBuffer(rb, config_obj, t)
+	testRingBuffer(rb, config_obj, "0123456789", t)
 }
 
 func TestSenderWithFileBuffer(t *testing.T) {
@@ -186,8 +192,6 @@ func TestSenderWithFileBuffer(t *testing.T) {
 
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
-	os.Remove("/tmp/1.bin")
-
 	config_obj.Client.LocalBuffer.DiskSize = 10
 	config_obj.Client.LocalBuffer.Filename = tmpfile.Name()
 	config_obj.Client.MaxPoll = 1
@@ -196,5 +200,5 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	rb, err := NewFileBasedRingBuffer(config_obj)
 	require.NoError(t, err)
 
-	testRingBuffer(rb, config_obj, t)
+	testRingBuffer(rb, config_obj, "0123456789", t)
 }

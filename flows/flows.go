@@ -92,9 +92,7 @@ func (self *FlowRunner) getFlow(flow_urn string) (*AFF4FlowObject, error) {
 	return cached_flow, nil
 }
 
-func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
-	var message *crypto_proto.GrrMessage
-
+func (self *FlowRunner) ProcessOneMessage(message *crypto_proto.GrrMessage) error {
 	defer func() {
 		if r := recover(); r != nil {
 			self.logger.Error(
@@ -104,40 +102,48 @@ func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
 		}
 	}()
 
-	for _, message = range messages {
-		cached_flow, err := self.getFlow(message.SessionId)
+	cached_flow, err := self.getFlow(message.SessionId)
+	if err != nil {
+		return errors.Errorf(
+			"FlowRunner: Can not find flow %s: %v ",
+			message.SessionId, err)
+
+	}
+
+	// Handle log messages automatically so flows do not
+	// need to all remember to do this.
+	if message.RequestId == constants.LOG_SINK {
+		cached_flow.LogMessage(self.config, message)
+		return nil
+	}
+
+	// Do not feed messages to flows that are terminated,
+	// just drop these on the floor.
+	if cached_flow.FlowContext != nil &&
+		cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
+		return nil
+	}
+
+	err = cached_flow.impl.ProcessMessage(
+		self.config, cached_flow, message)
+	if err != nil {
+		if cached_flow.FlowContext != nil {
+			cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
+			cached_flow.FlowContext.Status = err.Error()
+			cached_flow.FlowContext.Backtrace = ""
+			cached_flow.dirty = true
+		}
+		return errors.Errorf("FlowRunner %s: %v", message.SessionId, err)
+	}
+
+	return nil
+}
+
+func (self *FlowRunner) ProcessMessages(messages []*crypto_proto.GrrMessage) {
+	for _, message := range messages {
+		err := self.ProcessOneMessage(message)
 		if err != nil {
-			self.logger.Error(fmt.Sprintf(
-				"FlowRunner: Can not find flow %s: %v ",
-				message.SessionId, err))
-			continue
-		}
-
-		// Handle log messages automatically so flows do not
-		// need to all remember to do this.
-		if message.RequestId == constants.LOG_SINK {
-			cached_flow.LogMessage(self.config, message)
-			continue
-		}
-
-		// Do not feed messages to flows that are terminated,
-		// just drop these on the floor.
-		if cached_flow.FlowContext != nil &&
-			cached_flow.FlowContext.State != flows_proto.FlowContext_RUNNING {
-			continue
-		}
-
-		err = cached_flow.impl.ProcessMessage(
-			self.config, cached_flow, message)
-		if err != nil {
-			if cached_flow.FlowContext != nil {
-				cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
-				cached_flow.FlowContext.Status = err.Error()
-				cached_flow.FlowContext.Backtrace = ""
-				cached_flow.dirty = true
-			}
-			self.logger.Error(fmt.Sprintf("FlowRunner %s: ", message.SessionId), err)
-			return
+			self.logger.Error("Error: ", err)
 		}
 	}
 }

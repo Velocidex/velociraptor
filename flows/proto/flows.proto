@@ -10,14 +10,7 @@ import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
 
-message StartFlowRequest {
-    FlowRunnerArgs runner_args = 1;
-    google.protobuf.Any args = 3 [(sem_type) = {
-            description: "Flow Args",
-        }];
-}
-
-message uploaded_file_info {
+message UploadedFileInfo {
     string name = 1;
     string vfs_path = 2;
     uint64 size = 3;
@@ -28,7 +21,6 @@ message uploaded_file_info {
 // Next field: 19
 message FlowContext {
     string backtrace = 1;
-    ClientResources client_resources = 2;
     uint64 create_time = 3 [(sem_type) = {
             type: "RDFDatetime",
         }];
@@ -45,8 +37,9 @@ message FlowContext {
             description: "The total number of results in the flow's result collection",
         }];
 
-    // Uploads are now permanently stored in a csv file.
-    repeated uploaded_file_info uploaded_files = 24 [(sem_type) = {
+    // Uploads are now permanently stored in a csv file. This field is
+    // never serialized - it is just a place holder during processing.
+    repeated UploadedFileInfo uploaded_files = 24 [(sem_type) = {
             description: "A list of files uploaded as part of the flow."
         }];
 
@@ -62,6 +55,8 @@ message FlowContext {
             description: "How many bytes we received so far."
         }];
 
+    // Logs are stored in their own CSV file. This is just a
+    // placeholder during processing.
     repeated LogMessage logs = 20 [(sem_type) = {
             description: "List of logs.",
             label: HIDDEN,
@@ -76,7 +71,7 @@ message FlowContext {
         RUNNING = 1;
         TERMINATED = 2;
         ERROR = 3;   // Flows which raise are marked as having an error.
-        ARCHIVED = 4;
+        ARCHIVED = 4;  // Archived flows do not show up in the UI
     };
 
     State state = 14;
@@ -84,6 +79,7 @@ message FlowContext {
     string status = 15 [(sem_type) = {
             description: "Contents of an error status sent by the client."
         }];
+
     bool user_notified = 16;
 
     uint64 active_time = 17 [(sem_type) = {
@@ -191,20 +187,10 @@ message FlowDescriptor {
         }];
 }
 
-
+// A message serialized to disk between flow executions.
 message AFF4FlowObject {
     string urn = 1;
     FlowRunnerArgs runner_args = 2;
     FlowContext flow_context = 3;
     google.protobuf.Any flow_state = 4;
-}
-
-
-message VQLNameTags {
-    string name = 1;
-    string tag = 2;
-}
-
-message VQLNameTagsState {
-    repeated VQLNameTags tags = 1;
 }
