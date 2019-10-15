@@ -18,8 +18,7 @@
 package crypto
 
 import (
-	"bytes"
-	"compress/zlib"
+	"context"
 	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
@@ -33,8 +32,6 @@ import (
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"math/big"
 	"strings"
 	"time"
@@ -164,7 +161,7 @@ func _NewCipher(
 type ICryptoManager interface {
 	GetCSR() ([]byte, error)
 	AddCertificate(certificate_pem []byte) (*string, error)
-	Encrypt(plain_text []byte, destination string) ([]byte, error)
+	Encrypt(compressed_message_lists [][]byte, destination string) ([]byte, error)
 	Decrypt(cipher_text []byte) (*MessageInfo, error)
 }
 
@@ -398,10 +395,44 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 
 // Once a message is decoded the MessageInfo contains metadata about it.
 type MessageInfo struct {
-	Raw           []byte
+	// The compressed MessageList protobufs sent in each POST.
+	RawCompressed [][]byte
 	Authenticated bool
 	Source        string
 	RemoteAddr    string
+	Compression   crypto_proto.PackedMessageList_CompressionType
+}
+
+// Apply the callback on each job message. This saves memory since we
+// immediately use the decompressed buffer and not hold it around.
+func (self *MessageInfo) IterateJobs(
+	ctx context.Context,
+	processor func(msg *crypto_proto.GrrMessage)) error {
+	for _, raw := range self.RawCompressed {
+		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+			decompressed, err := Uncompress(ctx, raw)
+			if err != nil {
+				return errors.New("Unable to decompress MessageList")
+			}
+			raw = decompressed
+		}
+
+		message_list := &crypto_proto.MessageList{}
+		err := proto.Unmarshal(raw, message_list)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		for _, job := range message_list.Job {
+			if self.Authenticated {
+				job.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
+			}
+			job.Source = self.Source
+			processor(job)
+		}
+	}
+
+	return nil
 }
 
 /* Verify the HMAC protecting the cipher properties blob.
@@ -515,7 +546,7 @@ func (self *CryptoManager) getAuthState(
 	return true, nil
 }
 
-/* Decrypts an encrypted parcel. */
+/* Decrypts an encrypted parcel and produces a MessageInfo. */
 func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	var err error
 	// Parse the ClientCommunication protobuf.
@@ -525,7 +556,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	// An empty message is not an error but we cant figure out the
+	// An empty message is not an error but we can't figure out the
 	// source.
 	if len(communications.EncryptedCipher) == 0 {
 		return &MessageInfo{}, nil
@@ -627,57 +658,21 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 			"Client Nonce is not valid - rejecting message.")
 	}
 
-	serialized_message_list := packed_message_list.MessageList
-	if packed_message_list.Compression ==
-		crypto_proto.PackedMessageList_ZCOMPRESSION {
-		b := bytes.NewReader(serialized_message_list)
-		z, err := zlib.NewReader(b)
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-		defer z.Close()
-		p, err := ioutil.ReadAll(io.LimitReader(
-			z, int64(self.config.Frontend.MaxUploadSize*2)))
-		if err != nil {
-			return nil, errors.WithStack(err)
-		}
-
-		serialized_message_list = p
-	}
-
 	return &MessageInfo{
-		Raw:           serialized_message_list,
+		// Hold onto the compressed MessageList buffers.
+		RawCompressed: packed_message_list.MessageList,
 		Authenticated: auth_state,
 		Source:        packed_message_list.Source,
+		Compression:   packed_message_list.Compression,
 	}, nil
 }
 
-// GRR usually encodes a MessageList protobuf inside the encrypted
-// payload. This convenience method parses that type of payload after
-// decrypting it.
-func DecryptMessageList(self ICryptoManager, cipher_text []byte) (
-	*crypto_proto.MessageList, error) {
-	message_info, err := self.Decrypt(cipher_text)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &crypto_proto.MessageList{}
-	err = proto.Unmarshal(message_info.Raw, result)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	for _, message := range result.Job {
-		if message_info.Authenticated {
-			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
-		}
-		message.Source = message_info.Source
-	}
-
-	return result, nil
-}
-
+// Serialize, compress and encrypt a single message list proto. NOTE:
+// When the client sends back bulk data, they pack messages into the
+// MessageList proto and call this function. Since they dont know in
+// advance how large the compressed size is going to be, they need to
+// send multiple MessageList protos, each compressed separatly until
+// there are enough to send.
 func (self *CryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
 	destination string) ([]byte, error) {
@@ -687,12 +682,13 @@ func (self *CryptoManager) EncryptMessageList(
 		return nil, errors.WithStack(err)
 	}
 
-	cipher_text, err := self.Encrypt(plain_text, destination)
+	cipher_text, err := self.Encrypt(
+		[][]byte{Compress(plain_text)}, destination)
 	return cipher_text, err
 }
 
 func (self *CryptoManager) Encrypt(
-	plain_text []byte,
+	compressed_message_lists [][]byte,
 	destination string) (
 	[]byte, error) {
 	// The cipher is kept the same for all future communications
@@ -720,14 +716,10 @@ func (self *CryptoManager) Encrypt(
 		output_cipher = cipher
 	}
 
-	var b bytes.Buffer
-	w := zlib.NewWriter(&b)
-	w.Write([]byte(plain_text))
-	w.Close()
-
 	packed_message_list := &crypto_proto.PackedMessageList{
+		// We always compress the data.
 		Compression: crypto_proto.PackedMessageList_ZCOMPRESSION,
-		MessageList: b.Bytes(),
+		MessageList: compressed_message_lists,
 		Source:      self.source,
 		Nonce:       self.config.Client.Nonce,
 		Timestamp:   uint64(time.Now().UnixNano() / 1000),

@@ -459,13 +459,6 @@ func (self *ApiServer) GetUserNotificationCount(
 	return &api_proto.UserNotificationCount{Count: n}, err
 }
 
-func (self *ApiServer) GetFlowDescriptors(
-	ctx context.Context,
-	in *empty.Empty) (*api_proto.FlowDescriptors, error) {
-	result, err := flows.GetFlowDescriptors()
-	return result, err
-}
-
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {

@@ -22,8 +22,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -103,31 +101,12 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 	return &result, nil
 }
 
-// Only process messages from the Velociraptor client.
-func (self *Server) processVelociraptorMessages(
-	ctx context.Context,
-	client_id string,
-	messages []*crypto_proto.GrrMessage) error {
-
-	runner := flows.NewFlowRunner(self.config, self.logger)
-	defer runner.Close()
-
-	runner.ProcessMessages(messages)
-
-	return nil
-}
-
 // We only process some messages when the client is not authenticated.
 func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,
 	message_info *crypto.MessageInfo) error {
-	message_list := &crypto_proto.MessageList{}
-	err := proto.Unmarshal(message_info.Raw, message_list)
-	if err != nil {
-		return errors.WithStack(err)
-	}
 
-	for _, message := range message_list.Job {
+	return message_info.IterateJobs(ctx, func(message *crypto_proto.GrrMessage) {
 		switch message.SessionId {
 
 		case "aff4:/flows/E:Enrol":
@@ -136,9 +115,7 @@ func (self *Server) ProcessUnauthenticatedMessages(
 				self.logger.Error("Enrol Error: %s", err)
 			}
 		}
-	}
-
-	return nil
+	})
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
@@ -156,23 +133,17 @@ func (self *Server) Process(
 	message_info *crypto.MessageInfo,
 	drain_requests_for_client bool) (
 	[]byte, int, error) {
-	message_list := &crypto_proto.MessageList{}
-	err := proto.Unmarshal(message_info.Raw, message_list)
-	if err != nil {
-		return nil, 0, errors.WithStack(err)
-	}
 
-	var messages []*crypto_proto.GrrMessage
-	for _, message := range message_list.Job {
-		if message_info.Authenticated {
-			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
+	// Process the messages using the same flow runner.
+	runner := flows.NewFlowRunner(self.config, self.logger)
+	defer runner.Close()
+
+	err := message_info.IterateJobs(ctx, func(job *crypto_proto.GrrMessage) {
+		err := runner.ProcessOneMessage(job)
+		if err != nil {
+			self.Error("While processing job: %v", err)
 		}
-		message.Source = message_info.Source
-		messages = append(messages, message)
-	}
-
-	err = self.processVelociraptorMessages(
-		ctx, message_info.Source, messages)
+	})
 	if err != nil {
 		return nil, 0, err
 	}
@@ -191,7 +162,7 @@ func (self *Server) Process(
 		return nil, 0, err
 	}
 
-	message_list = &crypto_proto.MessageList{}
+	message_list := &crypto_proto.MessageList{}
 	if drain_requests_for_client {
 		message_list.Job = append(
 			message_list.Job,

@@ -68,7 +68,6 @@ func (self *Responder) AddResponseToRequest(
 		RequestId:   request_id,
 		ResponseId:  self.next_id,
 		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 	response.TaskId = self.request.TaskId
 
@@ -125,7 +124,6 @@ func (self *Responder) SendResponseToWellKnownFlow(
 		SessionId:   flow_name,
 		ResponseId:  1,
 		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
 	response.TaskId = self.request.TaskId
@@ -167,7 +165,6 @@ func NewRequest(message proto.Message) (*crypto_proto.GrrMessage, error) {
 		SessionId:   "XYZ",
 		RequestId:   1,
 		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
 	}
 
 	serialized_args, err := proto.Marshal(message)

@@ -33,11 +33,6 @@ message GrrMessage {
   // This field contains an encoded rdfvalue.
    bytes args = 5;
 
-  // Due to superceed the args field (not yet implemented). Contains the
-  // argument to the client action, or the response from the client action.
-  //  Not supported by velociraptor.
-  //   EmbeddedRDFValue arg = 20;
-
    string source = 6  [(sem_type) = {
       type: "RDFURN",
       description: "Client name where the message came from "
@@ -64,92 +59,19 @@ message GrrMessage {
    AuthorizationState auth_state = 7;
 
   enum Type {
-    MESSAGE = 0;
-    STATUS = 1;
-    ITERATOR = 2;
+      MESSAGE = 0; // The main kind of message.
+      STATUS = 1; //
   };
 
   // The final response to a request carries this type which indicates it is a
   // status message.
    Type type = 8;
 
-  enum Priority {
-    LOW_PRIORITY = 0;
-    MEDIUM_PRIORITY = 1;
-    HIGH_PRIORITY = 2;
-  };
-
-   Priority priority = 9 [(sem_type) = {
-      description: "The priority of this message - allows higher priority "
-      "messages to leap to the front of queues."
-    }];
-
-   uint32 ttl = 10 [(sem_type) = {
-      description: "Time to live - each time a request is retransmitted this "
-      "decrement until it expires."
-    }];
-
-   bool require_fastpoll = 11 [(sem_type) = {
-      description: "If this is true, the client will enter fast poll mode "
-      "after processing."
-    }];
-
-   float cpu_limit = 12 [(sem_type) = {
-      description: "Maximum number of CPU seconds to be used by this action."
-    }];
-
-   uint64 args_age = 13 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "The age of the args rdfvalue.",
-    }];
-
   // The rdfvalue class of the args.
    string args_rdf_name = 14;
 
   // The id of this message in the scheduler.
    uint64 task_id = 15;
-
-  // The ttl used in the task scheduler.
-   int32 task_ttl = 16;
-   string queue = 17  [(sem_type) = {
-      type: "RDFURN",
-      description: "The scheduler queue this message is in."
-    }];
-
-   uint64 eta = 18 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "The time when this message will become available "
-      "for leasing.",
-    }];
-
-  // Human readable info about the last process leasing this message.
-   string last_lease = 19;
-
-   uint64 network_bytes_limit = 21 [
-      (sem_type) = {
-      description: "Maximum number of network bytes to be sent, 10G default. "
-                   "All bytes charged against the flow session ID count "
-                   "towards the limit but only during TransferBuffer is the "
-                   "limit enforced. This means we can blockfile transfers but "
-                   "still communicate after the limit is reached.",
-      default: "10737418240",
-    }];
-   uint64 timestamp = 22 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "An  timestamp when this message was stored.",
-    }];
-
-    // Velociraptor specific messages.
-    enum ClientType {
-        GRR = 0;
-        VELOCIRAPTOR = 1;
-    };
-
-    // This is only set by the Velociraptor client to indicate special
-    // processing by the Velociraptor server.
-     ClientType client_type = 6600 [ (sem_type) = {
-            description: "The type of client that generated this message."
-        }];
 
     // Supercedes the args parameter.
     google.protobuf.Any payload = 23 [(sem_type) = {
@@ -170,15 +92,6 @@ message Certificate {
    string cn = 3;
 };
 
-message CpuSeconds {
-   float user_cpu_time = 1 [(sem_type) = {
-      friendly_name: "User cpu seconds used",
-    }];
-   float system_cpu_time = 2 [(sem_type) = {
-      friendly_name: "System cpu seconds used",
-    }];
-}
-
 // This is a status response that is sent for each complete
 // transaction. It is always the last message in the transaction.
 message GrrStatus {
@@ -198,8 +111,6 @@ message GrrStatus {
    string error_message = 2;
 
    string backtrace = 3;
-
-   CpuSeconds cpu_time_used = 4;
 
    string child_session_id = 5 [(sem_type) = {
       type: "SessionID",
@@ -225,7 +136,7 @@ message PackedMessageList {
   };
 
   // This is a serialized MessageList for signing
-   bytes message_list = 1;
+   repeated bytes message_list = 1;
 
    string source = 3 [(sem_type) = {
       type: "RDFURN",
@@ -352,18 +263,6 @@ message ClientCommunication {
 };
 
 
-message ClientResources {
-   string client_id = 1 [(sem_type) = {
-      type: "ClientURN"
-    }];
-   string session_id = 2 [(sem_type) = {
-      type: "SessionID"
-    }];
-   CpuSeconds cpu_usage = 3;
-   uint64 network_bytes_sent = 4;
-}
-
-
 message LogMessage {
     string message = 1 [(sem_type) = {
             description: "The message to send to the server.",
@@ -375,7 +274,8 @@ message LogMessage {
         }];
 }
 
-
+// Message written to the data store with the PEM of the client's
+// public key.
 message PublicKey {
     bytes pem = 1;
 }
