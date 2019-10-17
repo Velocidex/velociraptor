@@ -23,11 +23,11 @@ import (
 	"log"
 	"runtime/debug"
 
-	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 type Executor interface {
@@ -49,7 +49,6 @@ type Executor interface {
 type ClientExecutor struct {
 	Inbound  chan *crypto_proto.GrrMessage
 	Outbound chan *crypto_proto.GrrMessage
-	plugins  map[string]actions.ClientAction
 }
 
 // Blocks until a request is received from the server. Called by the
@@ -71,28 +70,16 @@ func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
 	return self.Outbound
 }
 
-func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
-	reply := &crypto_proto.GrrMessage{
+func makeErrorResponse(req *crypto_proto.GrrMessage, message string) *crypto_proto.GrrMessage {
+	return &crypto_proto.GrrMessage{
 		SessionId:  req.SessionId,
 		RequestId:  req.RequestId,
 		ResponseId: 1,
-		Type:       crypto_proto.GrrMessage_STATUS,
+		Status: &crypto_proto.GrrStatus{
+			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+			ErrorMessage: message,
+		},
 	}
-
-	reply.TaskId = req.TaskId
-	status := &crypto_proto.GrrStatus{
-		Status: crypto_proto.GrrStatus_GENERIC_ERROR,
-		ErrorMessage: fmt.Sprintf(
-			"Client action '%v' not known", req.Name),
-	}
-
-	status_marshalled, err := proto.Marshal(status)
-	if err == nil {
-		reply.Args = status_marshalled
-		reply.ArgsRdfName = "GrrStatus"
-	}
-
-	return reply
 }
 
 func (self *ClientExecutor) processRequestPlugin(
@@ -114,28 +101,42 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Never serve unauthenticated requests.
 	if req.AuthState != crypto_proto.GrrMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
-		self.SendToServer(makeUnknownActionResponse(req))
+		self.Outbound <- makeErrorResponse(
+			req, fmt.Sprintf("Unauthenticated message received: %v.", req))
 		return
 	}
 
-	plugin, pres := self.plugins[req.Name]
-	if !pres {
-		self.SendToServer(makeUnknownActionResponse(req))
+	// Handle the requests. This used to be a plugin registration
+	// process but there are very few plugins any more and so it
+	// is easier to hard code this.
+	responder := responder.NewResponder(config_obj, req, self.Outbound)
+
+	if req.VQLClientAction != nil {
+		go actions.VQLClientAction{}.StartQuery(
+			config_obj, ctx, responder, req.VQLClientAction)
 		return
 	}
 
-	// Run the plugin in the other thread and drain its messages
-	// to send to the server.
-	go func() {
-		plugin.Run(config_obj, ctx, req, self.Outbound)
-	}()
+	if req.UpdateEventTable != nil {
+		go actions.UpdateEventTable{}.Run(
+			config_obj, ctx, responder, req.UpdateEventTable)
+		return
+	}
+
+	if req.UpdateForeman != nil {
+		go actions.UpdateForeman{}.Run(
+			config_obj, ctx, responder, req.UpdateForeman)
+		return
+	}
+
+	self.Outbound <- makeErrorResponse(
+		req, fmt.Sprintf("Unsupported payload for message: %v", req))
 }
 
 func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{
 		Inbound:  make(chan *crypto_proto.GrrMessage),
 		Outbound: make(chan *crypto_proto.GrrMessage),
-		plugins:  actions.GetClientActionsMap(),
 	}
 
 	go func() {

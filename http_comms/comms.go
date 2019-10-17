@@ -70,28 +70,16 @@ func (self *Enroller) MaybeEnrol() {
 			return
 		}
 
-		csr := &crypto_proto.Certificate{
-			Type: crypto_proto.Certificate_CSR,
-			Pem:  csr_pem,
-		}
-
-		reply := &crypto_proto.GrrMessage{
-			SessionId:   constants.ENROLLMENT_WELL_KNOWN_FLOW,
-			ArgsRdfName: "Certificate",
-		}
-
-		serialized_csr, err := proto.Marshal(csr)
-		if err != nil {
-			return
-		}
-
-		reply.Args = serialized_csr
-
 		self.last_enrollment_time = time.Now()
 		self.logger.Info("Enrolling")
-		go func() {
-			self.executor.SendToServer(reply)
-		}()
+
+		go self.executor.SendToServer(&crypto_proto.GrrMessage{
+			SessionId: constants.ENROLLMENT_WELL_KNOWN_FLOW,
+			CSR: &crypto_proto.Certificate{
+				Type: crypto_proto.Certificate_CSR,
+				Pem:  csr_pem,
+			},
+		})
 	}
 }
 
@@ -99,24 +87,13 @@ func (self *Enroller) MaybeEnrol() {
 // last hunt timestamp the client provides to the server's last hunt
 // timestamp) so it is ok to send a foreman message in every receiver.
 func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
-	result := &crypto_proto.MessageList{}
-
-	reply := &crypto_proto.GrrMessage{
-		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
-		ArgsRdfName: "ForemanCheckin",
+	return &crypto_proto.MessageList{
+		Job: []*crypto_proto.GrrMessage{{
+			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
+			}}},
 	}
-
-	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
-	})
-	if err != nil {
-		return result
-	}
-
-	reply.Args = serialized_arg
-	result.Job = append(result.Job, reply)
-
-	return result
 }
 
 type IConnector interface {
@@ -516,24 +493,15 @@ func (self *NotificationReader) Start(ctx context.Context) {
 // server's last hunt timestamp). It is therefore ok to send a foreman
 // message in every reader message to improve hunt latency.
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
-	result := &crypto_proto.MessageList{}
-	reply := &crypto_proto.GrrMessage{
-		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
-		ArgsRdfName: "ForemanCheckin",
+	return &crypto_proto.MessageList{
+		Job: []*crypto_proto.GrrMessage{{
+			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastEventTableVersion: actions.GlobalEventTableVersion(),
+				LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
+			}},
+		},
 	}
-
-	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-		LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
-		LastEventTableVersion: actions.GlobalEventTableVersion(),
-	})
-	if err != nil {
-		return result
-	}
-
-	reply.Args = serialized_arg
-	result.Job = append(result.Job, reply)
-
-	return result
 }
 
 type HTTPCommunicator struct {

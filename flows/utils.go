@@ -23,52 +23,71 @@ import (
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 )
 
-func QueueMessageForClient(
-	config_obj *config_proto.Config,
-	flow_obj *AFF4FlowObject,
-	client_action_name string,
-	message proto.Message,
-	next_state uint64) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
+// ProduceBackwardCompatibleGrrMessage is used for messages going from
+// the server to the client. In order to support old clients we
+// duplicate the data in the extra fields.
+func ProduceBackwardCompatibleGrrMessage(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
+	var payload proto.Message
+
+	// Only bother for server -> client messages since this we
+	// only support older clients on newer servers.
+	if req.UpdateEventTable != nil {
+		payload = req.UpdateEventTable
+		req.Name = "UpdateEventTable"
+		req.ArgsRdfName = "VQLEventTable"
 	}
 
-	return db.QueueMessageForClient(
-		config_obj, flow_obj.RunnerArgs.ClientId,
-		flow_obj.Urn,
-		client_action_name, message, next_state)
+	if req.VQLClientAction != nil {
+		payload = req.VQLClientAction
+		req.Name = "VQLClientAction"
+		req.ArgsRdfName = "VQLCollectorArgs"
+	}
+
+	if req.UpdateForeman != nil {
+		payload = req.UpdateForeman
+		req.Name = "UpdateForeman"
+		req.ArgsRdfName = "ForemanCheckin"
+	}
+
+	if payload != nil {
+		serialized, err := proto.Marshal(payload)
+		if err == nil {
+			req.Args = serialized
+		}
+	}
+
+	return req
 }
 
-func QueueAndNotifyClient(
+func QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	flow_urn string,
-	client_action_name string,
-	message proto.Message,
-	next_state uint64) error {
+	req *crypto_proto.GrrMessage) error {
+
+	req = ProduceBackwardCompatibleGrrMessage(req)
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = db.QueueMessageForClient(
-		config_obj, client_id,
-		flow_urn, client_action_name,
-		message, next_state)
-	if err != nil {
-		return err
-	}
+	return db.QueueMessageForClient(config_obj, client_id, req)
+}
+
+func NotifyClient(
+	config_obj *config_proto.Config,
+	client_id string) error {
 
 	channel := grpc_client.GetChannel(config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	_, err = client.NotifyClients(context.Background(), &api_proto.NotificationRequest{
+	_, err := client.NotifyClients(context.Background(), &api_proto.NotificationRequest{
 		ClientId: client_id,
 	})
 

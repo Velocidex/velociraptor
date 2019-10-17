@@ -7,16 +7,3 @@ syntax = "proto3";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 
 package proto;
-
-// A message to encode a filesystem path (maybe for raw access)
-// Next field: 15
-message PathSpec {
-    string path = 2 [(sem_type) = {
-            description: "The path passed to the Filesystem accessor. "
-            "This value is interpreted by the accessor in its own way.",
-        }];
-
-    string accessor = 3 [(sem_type) = {
-            description: "The accessor used to retrieve the file.",
-        }];
-};

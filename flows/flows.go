@@ -44,7 +44,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/vfilter"
@@ -105,6 +104,7 @@ func (self *FlowRunner) ProcessOneMessage(message *crypto_proto.GrrMessage) erro
 	cached_flow, err := self.getFlow(message.SessionId)
 	if err != nil {
 		return errors.Errorf(
+
 			"FlowRunner: Can not find flow %s: %v ",
 			message.SessionId, err)
 
@@ -112,8 +112,8 @@ func (self *FlowRunner) ProcessOneMessage(message *crypto_proto.GrrMessage) erro
 
 	// Handle log messages automatically so flows do not
 	// need to all remember to do this.
-	if message.RequestId == constants.LOG_SINK {
-		cached_flow.LogMessage(self.config, message)
+	if message.RequestId == constants.LOG_SINK && message.LogMessage != nil {
+		cached_flow.LogMessage(self.config, message.LogMessage)
 		return nil
 	}
 
@@ -124,8 +124,7 @@ func (self *FlowRunner) ProcessOneMessage(message *crypto_proto.GrrMessage) erro
 		return nil
 	}
 
-	err = cached_flow.impl.ProcessMessage(
-		self.config, cached_flow, message)
+	err = cached_flow.impl.ProcessMessage(self.config, cached_flow, message)
 	if err != nil {
 		if cached_flow.FlowContext != nil {
 			cached_flow.FlowContext.State = flows_proto.FlowContext_ERROR
@@ -462,49 +461,27 @@ func (self *AFF4FlowObject) Complete(config_obj *config_proto.Config) error {
 func (self *AFF4FlowObject) FailIfError(
 	config_obj *config_proto.Config,
 	message *crypto_proto.GrrMessage) error {
-	if message.Type == crypto_proto.GrrMessage_STATUS {
-		status, ok := responder.ExtractGrrMessagePayload(
-			message).(*crypto_proto.GrrStatus)
-		if ok {
-			// If the status is OK then we do not fail the flow.
-			if status.Status == crypto_proto.GrrStatus_OK {
-				return nil
-			}
-
-			self.FlowContext.State = flows_proto.FlowContext_ERROR
-			self.FlowContext.Status = status.ErrorMessage
-			self.FlowContext.Backtrace = status.Backtrace
-			self.dirty = true
-
-			return errors.New(status.ErrorMessage)
-		}
-
-		// Notify to our user if we need to.
-		if self.RunnerArgs != nil && self.RunnerArgs.NotifyToUser &&
-			self.RunnerArgs.Creator != "" {
-			err := users.Notify(
-				config_obj,
-				&api_proto.UserNotification{
-					Username: self.RunnerArgs.Creator,
-					NotificationType: api_proto.
-						UserNotification_TYPE_FLOW_RUN_FAILED,
-					State:     api_proto.UserNotification_STATE_PENDING,
-					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-					Message: fmt.Sprintf("Flow %s failed!.",
-						self.RunnerArgs.FlowName),
-				})
-			if err != nil {
-				return err
-			}
-		}
+	// Not a status message
+	if message.Status == nil {
+		return nil
 	}
 
-	return nil
+	// If the status is OK then we do not fail the flow.
+	if message.Status.Status == crypto_proto.GrrStatus_OK {
+		return nil
+	}
+
+	self.FlowContext.State = flows_proto.FlowContext_ERROR
+	self.FlowContext.Status = message.Status.ErrorMessage
+	self.FlowContext.Backtrace = message.Status.Backtrace
+	self.dirty = true
+
+	return errors.New(message.Status.ErrorMessage)
 }
 
 // Checks if the message represents the last response to the request.
 func (self *AFF4FlowObject) IsRequestComplete(message *crypto_proto.GrrMessage) bool {
-	return message.Type == crypto_proto.GrrMessage_STATUS
+	return message.Status != nil
 }
 
 func (self *AFF4FlowObject) Log(config_obj *config_proto.Config, log_msg string) {
@@ -518,10 +495,8 @@ func (self *AFF4FlowObject) Log(config_obj *config_proto.Config, log_msg string)
 }
 
 func (self *AFF4FlowObject) LogMessage(config_obj *config_proto.Config,
-	message *crypto_proto.GrrMessage) {
-	log_msg, ok := responder.ExtractGrrMessagePayload(
-		message).(*crypto_proto.LogMessage)
-	if ok && self.FlowContext != nil {
+	log_msg *crypto_proto.LogMessage) {
+	if self.FlowContext != nil {
 		log_msg.Message = artifacts.DeobfuscateString(config_obj, log_msg.Message)
 		self.FlowContext.Logs = append(self.FlowContext.Logs, log_msg)
 		self.dirty = true

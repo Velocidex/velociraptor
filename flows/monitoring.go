@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -51,9 +50,11 @@ func (self *MonitoringFlow) Start(
 	}
 
 	return QueueMessageForClient(
-		config_obj, flow_obj,
-		"UpdateEventTable",
-		event_table, processVQLResponses)
+		config_obj, flow_obj.RunnerArgs.ClientId,
+		&crypto_proto.GrrMessage{
+			SessionId:        flow_obj.Urn,
+			RequestId:        processVQLResponses,
+			UpdateEventTable: event_table})
 }
 
 func (self *MonitoringFlow) ProcessMessage(
@@ -79,13 +80,8 @@ func (self *MonitoringFlow) ProcessMessage(
 			message)
 
 	case processVQLResponses:
-		payload := responder.ExtractGrrMessagePayload(message)
-		if payload == nil {
-			return nil
-		}
-
-		response, ok := payload.(*actions_proto.VQLResponse)
-		if !ok {
+		response := message.VQLResponse
+		if response == nil {
 			return nil
 		}
 

@@ -256,18 +256,13 @@ func TestFlowRunner2(t *testing.T) {
 	// flows expect client errors. In this flow the call to
 	// FailIfError() will fail the flow if the response to this
 	// request is a client error.
-	status := &crypto_proto.GrrStatus{
-		ErrorMessage: "error",
-		Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
-	}
-
 	message := &crypto_proto.GrrMessage{
-		Type:        crypto_proto.GrrMessage_STATUS,
-		ArgsRdfName: "GrrStatus",
-		SessionId:   *flow_urn,
+		SessionId: *flow_urn,
+		Status: &crypto_proto.GrrStatus{
+			ErrorMessage: "error",
+			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+		},
 	}
-	message.Args, err = proto.Marshal(status)
-	assert.NoError(t, err)
 
 	// When the flow receives a client error, it should store the
 	// error in the flow context.

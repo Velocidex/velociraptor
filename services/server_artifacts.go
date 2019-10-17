@@ -143,9 +143,9 @@ func (self *ServerArtifactsRunner) runQuery(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	arg, err := ExtractVQLCollectorArgs(task)
-	if err != nil {
-		return err
+	arg := task.VQLClientAction
+	if arg == nil {
+		return errors.New("VQLClientAction should be specified.")
 	}
 
 	if arg.Query == nil {
@@ -309,7 +309,7 @@ func (self *ServerArtifactsRunner) GetWriter(
 }
 
 // Unpack the GrrMessage payload. The return value should be type asserted.
-func ExtractVQLCollectorArgs(message *crypto_proto.GrrMessage) (
+func XXXExtractVQLCollectorArgs(message *crypto_proto.GrrMessage) (
 	*actions_proto.VQLCollectorArgs, error) {
 	if message.ArgsRdfName != "VQLCollectorArgs" {
 		return nil, errors.New("Unknown message - expected VQLCollectorArgs")

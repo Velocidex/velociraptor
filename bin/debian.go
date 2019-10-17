@@ -189,6 +189,7 @@ func doServerDeb() {
 	deb.SetMaintainerEmail("support@velocidex.com")
 	deb.SetHomepage("https://www.velocidex.com/docs")
 	deb.SetShortDescription("Velociraptor server deployment.")
+	deb.SetDepends("libcap2-bin, systemd")
 
 	config_path := "/etc/velociraptor/server.config.yaml"
 	velociraptor_bin := "/usr/local/bin/velociraptor"

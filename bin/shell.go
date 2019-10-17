@@ -35,6 +35,7 @@ import (
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/urns"
@@ -102,11 +103,15 @@ func shell_executor(config_obj *config_proto.Config,
 		"clients", *shell_client,
 		"flows", constants.MONITORING_WELL_KNOWN_FLOW)
 
-	err = flows.QueueAndNotifyClient(
+	err = flows.QueueMessageForClient(
 		config_obj, *shell_client,
-		urn, "VQLClientAction",
-		vql_request, processVQLResponses)
+		&crypto_proto.GrrMessage{
+			SessionId:       urn,
+			RequestId:       processVQLResponses,
+			VQLClientAction: vql_request})
+	kingpin.FatalIfError(err, "Sending client message ")
 
+	err = flows.NotifyClient(config_obj, *shell_client)
 	kingpin.FatalIfError(err, "Sending client message ")
 
 	// Wait until the response arrives. The client may not be

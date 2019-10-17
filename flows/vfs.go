@@ -32,7 +32,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -161,10 +160,11 @@ func (self *VFSListDirectory) Start(
 		MaxRow: uint64(10000),
 	}
 
-	err := QueueMessageForClient(
-		config_obj, flow_obj,
-		"VQLClientAction",
-		vql_collector_args, next_state)
+	err := QueueMessageForClient(config_obj, flow_obj.RunnerArgs.ClientId,
+		&crypto_proto.GrrMessage{
+			SessionId:       flow_obj.Urn,
+			RequestId:       next_state,
+			VQLClientAction: vql_collector_args})
 	if err != nil {
 		return err
 	}
@@ -223,10 +223,9 @@ func (self *VFSListDirectory) processSingleDirectoryListing(
 		return flow_obj.Complete(config_obj)
 	}
 
-	response, ok := responder.ExtractGrrMessagePayload(
-		message).(*actions_proto.VQLResponse)
-	if !ok {
-		return errors.New("Unexpected response type " + message.ArgsRdfName)
+	response := message.VQLResponse
+	if response == nil {
+		return errors.New("Unexpected response")
 	}
 
 	urn := urns.BuildURN(
@@ -255,10 +254,9 @@ func (self *VFSListDirectory) processRecursiveDirectoryListing(
 		return flow_obj.Complete(config_obj)
 	}
 
-	vql_response, ok := responder.ExtractGrrMessagePayload(
-		message).(*actions_proto.VQLResponse)
-	if !ok {
-		return errors.New("Unexpected response type " + message.ArgsRdfName)
+	vql_response := message.VQLResponse
+	if vql_response == nil {
+		return errors.New("Unexpected response type")
 	}
 
 	// Inspect each row and check if it belongs to the current
@@ -383,9 +381,11 @@ func (self *VFSDownloadFile) Start(
 	})
 
 	err := QueueMessageForClient(
-		config_obj, flow_obj,
-		"VQLClientAction",
-		request, processVQLResponses)
+		config_obj, flow_obj.RunnerArgs.ClientId,
+		&crypto_proto.GrrMessage{
+			SessionId:       flow_obj.Urn,
+			RequestId:       processVQLResponses,
+			VQLClientAction: request})
 	if err != nil {
 		return err
 	}

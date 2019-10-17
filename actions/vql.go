@@ -44,31 +44,13 @@ type LogWriter struct {
 
 func (self *LogWriter) Write(b []byte) (int, error) {
 	logging.GetLogger(self.config_obj, &logging.FrontendComponent).Info(string(b))
-	err := self.responder.Log("%s", string(b))
-	if err != nil {
-		return 0, err
-	}
+	self.responder.Log("%s", string(b))
 	return len(b), nil
 }
 
 type VQLClientAction struct{}
 
-func (self *VQLClientAction) Run(
-	config_obj *config_proto.Config,
-	ctx context.Context,
-	msg *crypto_proto.GrrMessage,
-	output chan<- *crypto_proto.GrrMessage) {
-	responder := responder.NewResponder(msg, output)
-	arg, pres := responder.GetArgs().(*actions_proto.VQLCollectorArgs)
-	if !pres {
-		responder.RaiseError("Request should be of type VQLCollectorArgs")
-		return
-	}
-
-	self.StartQuery(config_obj, ctx, responder, arg)
-}
-
-func (self *VQLClientAction) StartQuery(
+func (self VQLClientAction) StartQuery(
 	config_obj *config_proto.Config,
 	ctx context.Context,
 	responder *responder.Responder,
@@ -211,7 +193,8 @@ func (self *VQLClientAction) StartQuery(
 					)
 				}
 				response.Columns = result.Columns
-				responder.AddResponse(response)
+				responder.AddResponse(&crypto_proto.GrrMessage{
+					VQLResponse: response})
 			}
 		}
 	}

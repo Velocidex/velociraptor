@@ -37,7 +37,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -117,7 +116,7 @@ func renderItem(item proto.Message) error {
 		}
 		fmt.Println(str)
 		fmt.Println("\nGrrMessage decodes to:")
-		return renderItem(responder.ExtractGrrMessagePayload(t))
+		return renderItem(t)
 
 	case *actions_proto.VQLResponse:
 		err := renderTable(t)
