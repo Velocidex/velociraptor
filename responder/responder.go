@@ -29,7 +29,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Responder struct {
@@ -58,8 +57,6 @@ func NewResponder(
 func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 	self.Lock()
 	defer self.Unlock()
-
-	utils.Debug(message)
 
 	message.SessionId = self.request.SessionId
 	message.ResponseId = self.next_id
