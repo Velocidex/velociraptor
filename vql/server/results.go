@@ -102,7 +102,6 @@ func (self UploadsPlugins) Call(
 			defer fd.Close()
 
 			for row := range csv.GetCSVReader(fd) {
-				utils.Debug(row)
 				output_chan <- row
 			}
 		}
