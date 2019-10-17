@@ -31,6 +31,7 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -204,8 +205,9 @@ func (self *VelociraptorUploader) Upload(
 
 		default:
 			// Send the packet to the server.
-			self.Responder.AddResponseToRequest(
-				constants.TransferWellKnownFlowId, packet)
+			self.Responder.AddResponse(&crypto_proto.GrrMessage{
+				RequestId:  constants.TransferWellKnownFlowId,
+				FileBuffer: packet})
 		}
 
 		offset += uint64(read_bytes)

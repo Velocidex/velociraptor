@@ -44,6 +44,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 )
 
@@ -428,6 +429,10 @@ func (self *MessageInfo) IterateJobs(
 				job.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
 			}
 			job.Source = self.Source
+
+			// For backwards compatibility normalize old
+			// client messages to new format.
+			responder.NormalizeGrrMessageForBackwardCompatibility(job)
 			processor(job)
 		}
 	}

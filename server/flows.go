@@ -19,7 +19,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/golang/protobuf/ptypes"
@@ -28,16 +27,9 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/responder"
 )
 
-func enroll(server *Server, message *crypto_proto.GrrMessage) error {
-	csr, pres := responder.ExtractGrrMessagePayload(
-		message).(*crypto_proto.Certificate)
-	if !pres {
-		return errors.New("request should be of type Certificate")
-	}
-
+func enroll(server *Server, csr *crypto_proto.Certificate) error {
 	if csr.GetType() == crypto_proto.Certificate_CSR && csr.Pem != nil {
 		client_urn, err := server.manager.AddCertificateRequest(csr.Pem)
 		if err != nil {

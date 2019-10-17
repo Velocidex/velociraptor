@@ -45,10 +45,7 @@ type DataStore interface {
 	QueueMessageForClient(
 		config_obj *config_proto.Config,
 		client_id string,
-		flow_id string,
-		client_action string,
-		message proto.Message,
-		next_state uint64) error
+		message *crypto_proto.GrrMessage) error
 
 	GetSubject(
 		config_obj *config_proto.Config,

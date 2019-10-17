@@ -24,7 +24,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -35,7 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -223,11 +221,16 @@ func CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	err = QueueAndNotifyClient(
-		config_obj, client_id, *flow_urn,
-		"Cancel",
-		&crypto_proto.GrrMessage{SessionId: session_id},
-		0)
+	err = db.QueueMessageForClient(config_obj, client_id,
+		&crypto_proto.GrrMessage{
+			Cancel:    &crypto_proto.Cancel{},
+			SessionId: *flow_urn,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	err = NotifyClient(config_obj, client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -321,14 +324,6 @@ func GetFlowRequests(
 		}
 
 		if request.SessionId == session_id {
-			args := responder.ExtractGrrMessagePayload(request)
-			payload, err := ptypes.MarshalAny(args)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			request.Payload = payload
-			request.Args = nil
-			request.ArgsRdfName = ""
 			result.Items = append(result.Items, request)
 		}
 	}

@@ -106,16 +106,15 @@ func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,
 	message_info *crypto.MessageInfo) error {
 
-	return message_info.IterateJobs(ctx, func(message *crypto_proto.GrrMessage) {
-		switch message.SessionId {
-
-		case "aff4:/flows/E:Enrol":
-			err := enroll(self, message)
-			if err != nil {
-				self.logger.Error("Enrol Error: %s", err)
+	return message_info.IterateJobs(
+		ctx, func(message *crypto_proto.GrrMessage) {
+			if message.CSR != nil {
+				err := enroll(self, message.CSR)
+				if err != nil {
+					self.logger.Error("Enrol Error: %s", err)
+				}
 			}
-		}
-	})
+		})
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
@@ -141,7 +140,7 @@ func (self *Server) Process(
 	err := message_info.IterateJobs(ctx, func(job *crypto_proto.GrrMessage) {
 		err := runner.ProcessOneMessage(job)
 		if err != nil {
-			self.Error("While processing job: %v", err)
+			self.Error("While processing job", err)
 		}
 	})
 	if err != nil {

@@ -42,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -135,9 +134,11 @@ func (self *ArtifactCollector) Start(
 	}
 
 	return QueueMessageForClient(
-		config_obj, flow_obj,
-		"VQLClientAction",
-		vql_collector_args, processVQLResponses)
+		config_obj, flow_obj.RunnerArgs.ClientId,
+		&crypto_proto.GrrMessage{
+			SessionId:       flow_obj.Urn,
+			RequestId:       processVQLResponses,
+			VQLClientAction: vql_collector_args})
 }
 
 func (self *ArtifactCollector) ProcessMessage(
@@ -157,11 +158,6 @@ func (self *ArtifactCollector) ProcessMessage(
 		}
 
 		return err
-	}
-
-	payload := responder.ExtractGrrMessagePayload(message)
-	if payload == nil {
-		return nil
 	}
 
 	switch message.RequestId {
@@ -190,12 +186,12 @@ func (self *ArtifactCollector) ProcessMessage(
 			return flow_obj.Complete(config_obj)
 		}
 
-		response, ok := payload.(*actions_proto.VQLResponse)
-		if !ok {
-			return nil
+		// Restore strings from flow state.
+		response := message.VQLResponse
+		if response == nil {
+			return errors.New("Expected args of type VQLResponse")
 		}
 
-		// Restore strings from flow state.
 		err := artifacts.Deobfuscate(config_obj, response)
 		if err != nil {
 			return err
@@ -316,15 +312,11 @@ func appendDataToFile(
 	flow_obj *AFF4FlowObject,
 	base_urn string,
 	message *crypto_proto.GrrMessage) error {
-	payload := responder.ExtractGrrMessagePayload(message)
-	if payload == nil {
-		return nil
+	file_buffer := message.FileBuffer
+	if file_buffer == nil {
+		return errors.New("Expected args of type FileBuffer")
 	}
 
-	file_buffer, ok := payload.(*actions_proto.FileBuffer)
-	if !ok {
-		return nil
-	}
 	file_store_factory := file_store.GetFileStore(config_obj)
 	file_path := path.Join(base_urn, file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)

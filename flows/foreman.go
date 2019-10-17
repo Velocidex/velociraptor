@@ -46,7 +46,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 )
@@ -87,9 +86,9 @@ func (self *Foreman) ProcessMessage(
 	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
 	message *crypto_proto.GrrMessage) error {
-	foreman_checkin, ok := responder.ExtractGrrMessagePayload(
-		message).(*actions_proto.ForemanCheckin)
-	if !ok {
+
+	foreman_checkin := message.ForemanCheckin
+	if foreman_checkin == nil {
 		return errors.New("Expected args of type ForemanCheckin")
 	}
 
@@ -132,25 +131,30 @@ func (self *Foreman) ProcessMessage(
 			"clients", message.Source,
 			"flows", constants.MONITORING_WELL_KNOWN_FLOW)
 
-		err = QueueAndNotifyClient(
-			config_obj, message.Source, urn,
-			"VQLClientAction",
-			flow_condition_query,
-			processVQLResponses)
+		err = QueueMessageForClient(
+			config_obj, message.Source,
+			&crypto_proto.GrrMessage{
+				SessionId:       urn,
+				RequestId:       processVQLResponses,
+				VQLClientAction: flow_condition_query})
 		if err != nil {
 			return err
 		}
 
-		err = QueueAndNotifyClient(
-			config_obj, message.Source, urn,
-			"UpdateForeman",
-			&actions_proto.ForemanCheckin{
-				LastHuntTimestamp: hunt.StartTime,
-			}, constants.IgnoreResponseState)
+		err = QueueMessageForClient(
+			config_obj, message.Source,
+			&crypto_proto.GrrMessage{
+				SessionId: urn,
+				RequestId: constants.IgnoreResponseState,
+				UpdateForeman: &actions_proto.ForemanCheckin{
+					LastHuntTimestamp: hunt.StartTime,
+				},
+			})
 		if err != nil {
 			return err
 		}
-		return nil
+
+		return NotifyClient(config_obj, message.Source)
 	})
 }
 
