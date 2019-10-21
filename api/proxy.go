@@ -102,18 +102,25 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	}
 
 	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
+
+	// DEPRECATED: Download the flow result and uploads as a zip
+	// file generated on the fly. This is deprecated: Users now
+	// need to prepare the download first.
 	mux.Handle("/api/v1/download/", checkUserCredentialsHandler(
 		config_obj, flowResultDownloadHandler(config_obj)))
+
 	mux.Handle("/api/v1/DownloadHuntResults", checkUserCredentialsHandler(
 		config_obj, huntResultDownloadHandler(config_obj)))
-	mux.Handle("/api/v1/DownloadVFSFile/", checkUserCredentialsHandler(
+
+	mux.Handle("/api/v1/DownloadVFSFile", checkUserCredentialsHandler(
 		config_obj, vfsFileDownloadHandler(config_obj)))
 	mux.Handle("/api/v1/DownloadVFSFolder", checkUserCredentialsHandler(
 		config_obj, vfsFolderDownloadHandler(config_obj)))
 
+	// Serve prepared zip files.
 	mux.Handle("/downloads/", checkUserCredentialsHandler(
 		config_obj, http.FileServer(http.Dir(
-			config_obj.Datastore.Location,
+			config_obj.Datastore.FilestoreDirectory,
 		))))
 
 	// Assets etc do not need auth.

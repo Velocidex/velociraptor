@@ -414,11 +414,7 @@ func (self *VFSDownloadFile) ProcessMessage(
 
 		// Receive any file upload the client sent.
 	case constants.TransferWellKnownFlowId:
-		return appendDataToFile(
-			config_obj, flow_obj,
-			path.Join("clients", flow_obj.RunnerArgs.ClientId,
-				"vfs_files"),
-			message)
+		return appendDataToFile(config_obj, flow_obj, message)
 	}
 	return nil
 }

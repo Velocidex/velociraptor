@@ -519,4 +519,5 @@ func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
 
 func init() {
 	glob.Register("reg", &RegFileSystemAccessor{})
+	glob.Register("registry", &RegFileSystemAccessor{})
 }

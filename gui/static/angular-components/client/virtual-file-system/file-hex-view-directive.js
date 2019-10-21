@@ -105,7 +105,7 @@ FileHexViewController.prototype.fetchText_ = function() {
 
   this.pageCount = Math.ceil(total_size / this.chunkSize_);
 
-  var url = 'v1/DownloadVFSFile/' + clientId + '/' + filePath;
+  var url = 'v1/DownloadVFSFile';
   var params = {
     offset: this.offset_,
     length: this.chunkSize_,

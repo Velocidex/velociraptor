@@ -461,8 +461,16 @@ func (self *ApiServer) GetUserNotificationCount(
 
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
-	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
 	result, err := vfsListDirectory(
+		self.config, in.ClientId, in.VfsPath)
+	return result, err
+}
+
+func (self *ApiServer) VFSStatDirectory(
+	ctx context.Context,
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+	result, err := vfsStatDirectory(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err
 }

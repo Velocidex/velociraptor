@@ -177,12 +177,14 @@ func (self *VelociraptorUploader) Upload(
 
 	offset := uint64(0)
 	self.Count += 1
-	buffer := make([]byte, 1024*1024)
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 
 	for {
+		// Ensure there is a fresh allocation for every
+		// iteration to prevent overwriting in flight buffers.
+		buffer := make([]byte, 1024*1024)
 		read_bytes, err := reader.Read(buffer)
 		data := buffer[:read_bytes]
 		sha_sum.Write(data)

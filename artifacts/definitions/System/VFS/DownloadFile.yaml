@@ -1,0 +1,18 @@
+name: System.VFS.DownloadFile
+description: |
+  This is an internal artifact used by the GUI to populate the
+  VFS. You may run it manually if you like, but typically it is
+  launched by the GUI when the user clicks the "Collect from client"
+  button at the file "Stats" tab.
+
+parameters:
+  - name: Path
+    description: The path of the file to download.
+    default: /
+  - name: Accessor
+    default: file
+
+sources:
+  - queries:
+      - SELECT Path, Accessor, Size, Error, Sha256, Md5
+        FROM upload(files=Path, accessor=Accessor)
