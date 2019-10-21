@@ -98,7 +98,8 @@ func (self *VFSService) ProcessDownloadFile(
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		_, err := file_store_factory.StatFile(vfs_path)
 		if err != nil {
-
+			self.logger.Error("Unable to save flow %v", err)
+			return
 		}
 
 		// We store a place holder in the VFS pointing at the

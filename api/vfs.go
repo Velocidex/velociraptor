@@ -79,12 +79,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type DownloadInfo struct {
-	VfsPath string `json:"vfs_path"`
-	Size    int64  `json:"size"`
-	Mtime   int64  `json:"mtime"`
-}
-
 type FileInfoRow struct {
 	Name      string                       `json:"Name"`
 	Size      int64                        `json:"Size"`
@@ -101,14 +95,6 @@ type FileInfoRow struct {
 // Render the root level psuedo directory. This provides anchor points
 // for the other drivers in the navigation.
 func renderRootVFS(client_id string) *flows_proto.VFSListResponse {
-	if client_id == "" {
-		return &flows_proto.VFSListResponse{
-			Response: `
-   [
-    {"Mode": "drwxrwxrwx", "Name": "artifact_definitions"}
-   ]`,
-		}
-	}
 	return &flows_proto.VFSListResponse{
 		Response: `
    [
@@ -134,7 +120,9 @@ func renderDBVFS(
 	// Figure out where the download info files are.
 	download_info_path := utils.GetVFSDownloadInfoPath(client_id, accessor, client_path)
 	downloaded_files, err := db.ListChildren(config_obj, download_info_path, 0, 1000)
-
+	if err != nil {
+		return nil, err
+	}
 	result := &flows_proto.VFSListResponse{}
 
 	// Figure out where the directory info is.
