@@ -71,13 +71,7 @@ func (self *MonitoringFlow) ProcessMessage(
 
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
-		return appendDataToFile(
-			config_obj, flow_obj,
-			path.Join("clients",
-				flow_obj.RunnerArgs.ClientId,
-				"uploads",
-				path.Base(message.SessionId)),
-			message)
+		return appendDataToFile(config_obj, flow_obj, message)
 
 	case processVQLResponses:
 		response := message.VQLResponse

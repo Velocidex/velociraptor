@@ -7,8 +7,7 @@ type: SERVER_EVENT
 
 sources:
   - queries:
-      - |
-        SELECT * FROM foreach(
+      - SELECT * FROM foreach(
           row={
              SELECT ClientId, Flow, basename(path=Flow.Urn) AS FlowId
              FROM watch_monitoring(artifact='System.Flow.Completion')

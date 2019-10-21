@@ -18,6 +18,7 @@
 package utils
 
 import (
+	"path"
 	"regexp"
 	"strings"
 )
@@ -85,4 +86,21 @@ func PathJoin(root, stem, sep string) string {
 	}
 
 	return root + sep + stem
+}
+
+// Figure out where to store the VFSDownloadInfo file.
+func GetVFSDownloadInfoPath(client_id, accessor, client_path string) string {
+	return path.Join(
+		"clients", client_id,
+		"vfs_files", accessor,
+		Normalize_windows_path(client_path))
+}
+
+// GetVFSDownloadInfoPath returns the data store path to the directory
+// info file.
+func GetVFSDirectoryInfoPath(client_id, accessor, client_path string) string {
+	return path.Join(
+		"clients", client_id,
+		"vfs", accessor,
+		Normalize_windows_path(client_path))
 }

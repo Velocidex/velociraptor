@@ -41,6 +41,17 @@ const FileStatsViewController = function(
  *
  * @export
  */
+FileStatsViewController.prototype.getAccessorAndPath = function(path) {
+  var components = path.split('/').filter(function (x) {return x.length > 0;});
+  var accessor = 'file';
+  if (components.length > 0) {
+    accessor = components[0];
+    path = components.slice(1).join('/');
+  }
+
+  return {accessor: accessor, path: path};
+}
+
 FileStatsViewController.prototype.updateFile = function() {
   if (this.updateInProgress) {
     return;
@@ -48,13 +59,21 @@ FileStatsViewController.prototype.updateFile = function() {
 
   var clientId = this.fileContext['clientId'];
   var selectedFilePath = this.fileContext['selectedFilePath'];
+  var components = this.getAccessorAndPath(selectedFilePath);
+
   var url = 'v1/LaunchFlow';
   var params = {
     client_id: clientId,
-    flow_name: "VFSDownloadFile",
+    flow_name: "ArtifactCollector",
     args: {
-      '@type': 'type.googleapis.com/proto.VFSDownloadFileRequest',
-      vfs_path: [selectedFilePath],
+      '@type': 'type.googleapis.com/proto.ArtifactCollectorArgs',
+      artifacts: {
+        names: ["System.VFS.DownloadFile"],
+      },
+      parameters: {
+        env: [{key: "Path", value: components.path},
+              {key: "Accessor", value: components.accessor}],
+      }
     }
   };
 
@@ -125,15 +144,13 @@ FileStatsViewController.prototype.stopMonitorUpdateOperation_ = function() {
  * @export
  */
 FileStatsViewController.prototype.downloadFile = function() {
+  var filePath = this.fileContext.selectedRow.Download.vfs_path;
   var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
-  var filename = clientId + '/' + filePath;
 
-  // Sanitize filename for download.
-  var url = 'v1/DownloadVFSFile/' + filename.replace(/[^a-zA-Z0-9]+/g, '_');
+  var url = 'v1/DownloadVFSFile';
   var params = {
-    client_id: clientId,
     vfs_path: filePath,
+    client_id: clientId,
   };
   this.grrApiService_.downloadFile(url, params).then(
     function success() {}.bind(this),

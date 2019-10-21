@@ -162,7 +162,7 @@ service API {
     }
 
     // VFS
-    rpc VFSListDirectory(VFSListRequest) returns (VQLResponse) {
+    rpc VFSListDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSListDirectory/{client_id}",
         };
@@ -175,6 +175,13 @@ service API {
         };
     }
 
+  rpc VFSStatDirectory(VFSListRequest) returns (VFSListResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/VFSStatDirectory",
+        };
+  }
+
+  // This can be used by API clients to fetch file content.
     rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
         // Not accessible via the GUI - the gui can access the
         // download handlers directly.

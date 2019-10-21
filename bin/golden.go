@@ -70,11 +70,6 @@ func vqlCollectorArgsFromFixture(
 			artifact_collector_args.Parameters.Env,
 			&actions_proto.VQLEnv{Key: k, Value: v})
 	}
-	for k, v := range fixture.Files {
-		artifact_collector_args.Parameters.Files = append(
-			artifact_collector_args.Parameters.Files,
-			&actions_proto.VQLEnv{Key: k, Value: v})
-	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
 	err := flows.AddArtifactCollectorArgs(

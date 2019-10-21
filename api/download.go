@@ -112,7 +112,7 @@ func downloadFlowToZip(
 	}
 
 	// File uploads are stored in their own CSV file.
-	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id))
+	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id), "", "")
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -192,6 +192,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 	return nil
 }
 
+// DEPRECATED:
 // URL format: /api/v1/download/<client_id>/<flow_id>
 func flowResultDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -262,6 +263,7 @@ func flowResultDownloadHandler(
 	})
 }
 
+// To be deprecated.
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -422,8 +424,9 @@ func filestorePathForVFSPath(
 	// These VFS directories are mapped directly to the root of
 	// the filestore regardless of the client id.
 	if strings.HasPrefix(vfs_path, "/server_artifacts/") ||
-		strings.HasPrefix(vfs_path, "/hunts/") {
-		return vfs_path
+		strings.HasPrefix(vfs_path, "/hunts/") ||
+		strings.HasPrefix(vfs_path, "/clients/") {
+		return utils.Normalize_windows_path(vfs_path)
 	}
 
 	// Other folders live inside the client's vfs_files subdir.

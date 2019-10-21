@@ -63,6 +63,48 @@ func RowToDict(scope *vfilter.Scope, row vfilter.Row) *vfilter.Dict {
 	return result
 }
 
+// GetStringFromRow gets a string value from row. If it is not there
+// or not a string return ""
+func GetStringFromRow(scope *vfilter.Scope,
+	row vfilter.Row, key string) string {
+	value, pres := scope.Associative(row, key)
+	if pres {
+		value_str, ok := value.(string)
+		if ok {
+			return value_str
+		}
+	}
+	return ""
+}
+
+// GetIntFromRow gets a uint64 value from row. If it is not there
+// or not a string return 0. Floats etc are coerced to uint64.
+func GetIntFromRow(scope *vfilter.Scope,
+	row vfilter.Row, key string) uint64 {
+	value, pres := scope.Associative(row, key)
+	if pres {
+		switch t := value.(type) {
+		case int:
+			return uint64(t)
+		case int8:
+			return uint64(t)
+		case int16:
+			return uint64(t)
+		case int32:
+			return uint64(t)
+		case uint8:
+			return uint64(t)
+		case uint16:
+			return uint64(t)
+		case uint32:
+			return uint64(t)
+		case uint64:
+			return t
+		}
+	}
+	return 0
+}
+
 // A writer which periodically reports how much has been
 // written. Useful for tee with another writer.
 type LogWriter struct {

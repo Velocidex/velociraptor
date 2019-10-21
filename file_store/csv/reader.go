@@ -248,6 +248,7 @@ func (r *Reader) ReadAny() ([]interface{}, error) {
 			record[i] = value
 			continue
 		}
+		// Ambiguous strings include a space at the front.
 		if strings.HasPrefix(item, " ") {
 			record[i] = item[1:]
 			continue

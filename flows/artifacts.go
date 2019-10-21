@@ -20,8 +20,6 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"path"
 	"time"
 
@@ -30,7 +28,6 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/sirupsen/logrus"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -41,7 +38,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -162,12 +158,7 @@ func (self *ArtifactCollector) ProcessMessage(
 
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
-		log_path := path.Join(
-			"clients", flow_obj.RunnerArgs.ClientId,
-			"uploads", path.Base(message.SessionId))
-
-		return appendDataToFile(
-			config_obj, flow_obj, log_path, message)
+		return appendDataToFile(config_obj, flow_obj, message)
 
 	case processVQLResponses:
 		if flow_obj.IsRequestComplete(message) {
@@ -276,41 +267,12 @@ func AddArtifactCollectorArgs(
 			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
 	}
 
-	// Add any exported files.
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	for _, item := range collector_args.Parameters.Files {
-		file, err := file_store_factory.ReadFile(path.Join(
-			"/exported_files", item.Value))
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.ToolComponent)
-			logger.WithFields(
-				logrus.Fields{
-					"filename": item.Value,
-					"error":    fmt.Sprintf("%v", err),
-				}).Error("Unable to read VFS file")
-			return err
-		}
-		defer file.Close()
-
-		buf, err := ioutil.ReadAll(
-			io.LimitReader(file, constants.MAX_MEMORY))
-		if err != nil {
-			continue
-		}
-		vql_collector_args.Env = append(vql_collector_args.Env,
-			&actions_proto.VQLEnv{
-				Key:   item.Key,
-				Value: string(buf),
-			})
-	}
 	return nil
 }
 
 func appendDataToFile(
 	config_obj *config_proto.Config,
 	flow_obj *AFF4FlowObject,
-	base_urn string,
 	message *crypto_proto.GrrMessage) error {
 	file_buffer := message.FileBuffer
 	if file_buffer == nil {
@@ -318,8 +280,13 @@ func appendDataToFile(
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	file_path := path.Join(base_urn, file_buffer.Pathspec.Accessor,
+
+	// Figure out where to store the file.
+	file_path := artifacts.GetUploadsFile(
+		flow_obj.RunnerArgs.ClientId,
+		flow_obj.Urn, file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)
+
 	fd, err := file_store_factory.WriteFile(file_path)
 	if err != nil {
 		// If we fail to write this one file we keep going -

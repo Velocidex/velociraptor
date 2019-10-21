@@ -255,7 +255,8 @@ func (self *FlowRunner) Close() {
 
 			row := vfilter.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("Flow", cached_flow)
+				Set("Flow", cached_flow).
+				Set("FlowId", cached_flow.Urn)
 			serialized, err := json.Marshal([]vfilter.Row{row})
 			if err != nil {
 				continue
@@ -265,7 +266,8 @@ func (self *FlowRunner) Close() {
 				ClientId:  cached_flow.RunnerArgs.ClientId,
 				QueryName: "System.Flow.Completion",
 				Response:  string(serialized),
-				Columns:   []string{"Timestamp", "Flow"},
+				Columns: []string{
+					"Timestamp", "Flow", "FlowId"},
 			}
 
 		}

@@ -48,7 +48,7 @@ var (
 	mingw_xcompiler_32 = "i686-w64-mingw32-gcc"
 	name               = "velociraptor"
 	version            = "v" + constants.VERSION
-	base_tags          = " release server_vql extras "
+	base_tags          = " server_vql extras "
 )
 
 type Builder struct {
@@ -129,8 +129,9 @@ func (self Builder) Run() error {
 
 func Auto() error {
 	return Builder{goos: runtime.GOOS,
-		filename: "velociraptor",
-		arch:     runtime.GOARCH}.Run()
+		filename:   "velociraptor",
+		extra_tags: " release ",
+		arch:       runtime.GOARCH}.Run()
 }
 
 func AutoDev() error {
@@ -177,8 +178,9 @@ func Release() error {
 
 func Linux() error {
 	return Builder{
-		goos: "linux",
-		arch: "amd64"}.Run()
+		extra_tags: " release ",
+		goos:       "linux",
+		arch:       "amd64"}.Run()
 }
 
 // Builds a Development binary. This does not embed things like GUI
@@ -193,26 +195,30 @@ func Dev() error {
 // does not include tsan.
 func Windows() error {
 	return Builder{
-		goos: "windows",
-		arch: "amd64"}.Run()
+		extra_tags: " release ",
+		goos:       "windows",
+		arch:       "amd64"}.Run()
 }
 
 func WindowsDev() error {
 	return Builder{
-		goos:     "windows",
-		filename: "velociraptor.exe",
-		arch:     "amd64"}.Run()
+		goos:       "windows",
+		extra_tags: " release ",
+		filename:   "velociraptor.exe",
+		arch:       "amd64"}.Run()
 }
 
 func Windowsx86() error {
 	return Builder{
-		goos: "windows",
-		arch: "386"}.Run()
+		extra_tags: " release ",
+		goos:       "windows",
+		arch:       "386"}.Run()
 }
 
 func Darwin() error {
 	return Builder{goos: "darwin",
-		arch: "amd64"}.Run()
+		extra_tags: " release ",
+		arch:       "amd64"}.Run()
 }
 
 // Build step for Appveyor.
@@ -223,9 +229,10 @@ func Appveyor() error {
 	}
 
 	err = Builder{
-		goos:     "windows",
-		arch:     "amd64",
-		filename: "velociraptor.exe"}.Run()
+		goos:       "windows",
+		arch:       "amd64",
+		extra_tags: " release ",
+		filename:   "velociraptor.exe"}.Run()
 
 	if err != nil {
 		return err
@@ -237,6 +244,7 @@ func Appveyor() error {
 	return Builder{
 		goos:        "linux",
 		arch:        "amd64",
+		extra_tags:  " release ",
 		disable_cgo: true,
 		filename:    "velociraptor-linux.elf"}.Run()
 }

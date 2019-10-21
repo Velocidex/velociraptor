@@ -20,6 +20,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"reflect"
 	"strings"
 
@@ -50,7 +51,7 @@ func Normalize_windows_path(filename string) string {
 	if !strings.HasPrefix(filename, "/") {
 		filename = "/" + filename
 	}
-	return filename
+	return path.Clean(filename)
 }
 
 func hard_wrap(text string, colBreak int) string {

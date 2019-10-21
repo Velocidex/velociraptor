@@ -1,3 +1,6 @@
+// This file defines the schema of where various things go into the
+// filestore.
+
 package artifacts
 
 import (
@@ -8,6 +11,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -124,10 +128,13 @@ func GetCSVPath(
 }
 
 // Currently only CLIENT artifacts upload files.
-func GetUploadsFile(client_id, flow_id string) string {
+func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
+	flow_id = path.Base(flow_id)
+
 	return path.Join(
 		"clients", client_id, "flows",
-		flow_id, "uploads")
+		flow_id, "uploads", accessor,
+		utils.Normalize_windows_path(client_path))
 }
 
 // Get the file store path for place the download zip for the flow.
@@ -164,6 +171,12 @@ func SplitFullSourceName(artifact_source string) (artifact string, source string
 	return artifact_source, ""
 }
 
+// When an artifact is compiled into VQL, the final query in a source
+// sequence is given a name. The result set will carry this name as
+// the rows belonging to the named query. QueryNameToArtifactAndSource
+// will split the query name into an artifact and source. Some
+// artifacts do not have a named source, in which case the source name
+// will be ""
 func QueryNameToArtifactAndSource(query_name string) (
 	artifact_name, artifact_source string) {
 	components := strings.Split(query_name, "/")
