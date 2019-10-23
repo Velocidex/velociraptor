@@ -160,7 +160,7 @@ type RegValueInfo struct {
 }
 
 func (self *RegValueInfo) Sys() interface{} {
-	return self.Data
+	return self._data
 }
 
 func (self *RegValueInfo) IsDir() bool {
