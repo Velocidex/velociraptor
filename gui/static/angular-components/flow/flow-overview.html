@@ -11,23 +11,20 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::flow.context.artifacts" />
-              <grr-semantic-value
-                ng-if="!flow.context.artifacts"
-                value="::flow.name"/>
+              <grr-semantic-value value="::flow.context.request.request.artifacts.names" />
             </dd>
 
             <dt>Flow ID</dt>
-            <dd> {{ ::flow.flow_id }}</dd>
+            <dd> {{ ::flow.context.session_id }}</dd>
 
             <dt>Creator</dt>
-            <dd>{{ ::flow.runner_args.creator }}</dd>
+            <dd>{{ ::flow.context.request.creator }}</dd>
 
             <dt>Start Time</dt>
             <dd><grr-timestamp value="flow.context.create_time" /></dd>
 
             <dt>Last Active</dt>
-            <dd><grr-timestamp value="flow.context.active_time" /></dd>
+            <dd><grr-timestamp value="flow.context.kill_timestamp" /></dd>
 
             <dt>State</dt>
             <dd>{{::flow.context.state}}</dd>
@@ -38,13 +35,13 @@
             </div>
 
             <dt>Ops/Sec</dt>
-            <dd>{{::flow.runner_args.args.ops_per_second || 'Unlimited' }}</dd>
+            <dd>{{::flow.context.request.request.ops_per_second || 'Unlimited' }}</dd>
             <br>
           </dl>
 
           <h5> Parameters </h5>
           <dl class="dl-horizontal dl-flow">
-            <div ng-repeat="item in ::flow.runner_args.args.parameters.env">
+            <div ng-repeat="item in ::flow.context.request.request.parameters.env">
               <dt>{{item.key}}</dt>
               <dd>{{item.value}}</dd>
             </div>
@@ -58,7 +55,7 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifacts with Results</dt>
             <dd>
-              {{ flow.context.artifacts_with_results || 0 }}
+              {{ flow.context.artifacts_with_results || "-" }}
             </dd>
 
             <dt>Uploaded Bytes</dt>

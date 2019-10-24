@@ -57,16 +57,18 @@ func (self VQLClientAction) StartQuery(
 	arg *actions_proto.VQLCollectorArgs) {
 
 	// Set reasonable defaults.
-	if arg.MaxWait == 0 {
-		arg.MaxWait = config_obj.Client.DefaultMaxWait
+	max_wait := arg.MaxWait
+	if max_wait == 0 {
+		max_wait = config_obj.Client.DefaultMaxWait
 
-		if arg.MaxWait == 0 {
-			arg.MaxWait = 100
+		if max_wait == 0 {
+			max_wait = 100
 		}
 	}
 
-	if arg.MaxRow == 0 {
-		arg.MaxRow = 10000
+	max_row := arg.MaxRow
+	if max_row == 0 {
+		max_row = 10000
 	}
 
 	rate := arg.OpsPerSecond
@@ -143,7 +145,7 @@ func (self VQLClientAction) StartQuery(
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, sub_ctx, scope, int(arg.MaxRow), int(arg.MaxWait))
+			vql, sub_ctx, scope, int(max_row), int(max_wait))
 	run_query:
 		for {
 			select {

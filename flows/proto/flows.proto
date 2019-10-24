@@ -1,6 +1,3 @@
-// Copyright 2011 Google Inc. All Rights Reserved
-
-// These are the messages used in GRR encrypted communication protocol.
 syntax = "proto3";
 import "google/protobuf/any.proto";
 
@@ -10,12 +7,12 @@ import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
 
+
 message UploadedFileInfo {
     string name = 1;
     string vfs_path = 2;
     uint64 size = 3;
 }
-
 
 // The flow context.
 // Next field: 19
@@ -116,18 +113,8 @@ message FlowRunnerArgs {
       label: HIDDEN,
     }];
 
-   uint64 cpu_limit = 9 [(sem_type) = {
-      description: "A limit on the client cpu seconds used by this flow.",
-      label: ADVANCED,
-      default: "7200",
-    }];
 
-   uint64 network_bytes_limit = 13 [(sem_type) = {
-      description: "A limit on the total traffic used by this flow.",
-      label: ADVANCED,
-      default: "10000000",
-    }];
-
+    // DEPRECATED...
    string flow_name = 11 [(sem_type) = {
       description: "The name of the class implementing the flow to run.",
       label: HIDDEN,
@@ -145,14 +132,6 @@ message FlowRunnerArgs {
         }];
 }
 
-
-// This is a short lived protobuf to hold various flow state
-// information only valid between the start and end of the flow. It is
-// used to keep state over multiple client round trips.
-message VelociraptorFlowState {
-    string type = 1;
-    google.protobuf.Any payload = 2;
-}
 
 // Used to describe a flow. The UI uses this information to work out
 // how to render the flow and create its form.

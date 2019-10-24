@@ -21,21 +21,21 @@ sources:
   - queries:
       - LET completions = SELECT * FROM watch_monitoring(
              artifact="System.Flow.Completion")
-             WHERE Flow.FlowContext.artifacts_with_results =~ ArtifactNameRegex
+             WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
 
       - LET documents = SELECT * FROM foreach(row=completions,
           query={
              SELECT * FROM for(
                  var="ArtifactWithResults",
-                 in=Flow.FlowContext.artifacts_with_results,
+                 foreach=Flow.artifacts_with_results,
                  query={
                      SELECT *, ArtifactWithResults AS Artifact,
                             timestamp(epoch=now()) AS timestamp,
-                            ClientId, basename(path=Flow.Urn) AS FlowId,
+                            ClientId, Flow.session_id AS FlowId,
                             "artifact_" + ArtifactWithResults as _index
                      FROM source(
                         client_id=ClientId,
-                        flow_id=basename(path=Flow.Urn),
+                        flow_id=Flow.session_id,
                         artifact=ArtifactWithResults)
                  })
           })

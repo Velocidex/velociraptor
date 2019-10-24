@@ -89,16 +89,16 @@ const FlowsListController = function(
 FlowsListController.prototype.transformItems = function(items) {
   angular.forEach(items, function(item, index) {
     var state = 'BROKEN';
-    if (angular.isDefined(item['context']['state'])) {
-      state = item['context']['state'];
+    if (angular.isDefined(item['state'])) {
+      state = item['state'];
     }
 
     var last_active_at = 0;
-    if (angular.isDefined(item['context']['create_time'])) {
-      last_active_at = item['context']['create_time'];
+    if (angular.isDefined(item['create_time'])) {
+      last_active_at = item['create_time'];
     }
 
-    item[TABLE_KEY_NAME] = item['flow_id'];
+    item[TABLE_KEY_NAME] = item['session_id'];
     item[TABLE_ROW_HASH] = [state, last_active_at];
   }.bind(this));
 
@@ -112,8 +112,8 @@ FlowsListController.prototype.transformItems = function(items) {
  * @export
  */
 FlowsListController.prototype.selectItem = function(item) {
-  this.selectedFlowId = item['flow_id'];
-  this.scope_['selectedFlowState'] = item['context']['state'];
+  this.selectedFlowId = item['session_id'];
+  this.scope_['selectedFlowState'] = item['state'];
 };
 
 /**

@@ -28,7 +28,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
-	"github.com/golang/protobuf/ptypes"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -79,14 +78,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		}
 	}
 
-	flow_args, _ := ptypes.MarshalAny(request)
 	hunt_request := &api_proto.Hunt{
 		HuntDescription: arg.Description,
-		StartRequest: &flows_proto.FlowRunnerArgs{
-			FlowName: "ArtifactCollector",
-			Args:     flow_args,
-		},
-		State: api_proto.Hunt_RUNNING,
+		StartRequest:    request,
+		State:           api_proto.Hunt_RUNNING,
 	}
 
 	channel := grpc_client.GetChannel(config_obj)

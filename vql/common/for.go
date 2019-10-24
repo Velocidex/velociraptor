@@ -8,9 +8,9 @@ import (
 )
 
 type ForPluginArgs struct {
-	Var   string              `vfilter:"required,field=var,doc=The variable to assign."`
-	In    vfilter.Any         `vfilter:"required,field=in,doc=The variable to iterate over."`
-	Query vfilter.StoredQuery `vfilter:"optional,field=query,doc=Run this query over the item."`
+	Var     string              `vfilter:"required,field=var,doc=The variable to assign."`
+	Foreach vfilter.Any         `vfilter:"required,field=foreach,doc=The variable to iterate over."`
+	Query   vfilter.StoredQuery `vfilter:"optional,field=query,doc=Run this query over the item."`
 }
 
 type ForPlugin struct{}
@@ -32,15 +32,15 @@ func (self ForPlugin) Call(
 		}
 
 		// Expand lazy expressions.
-		lazy_v, ok := arg.In.(vfilter.LazyExpr)
+		lazy_v, ok := arg.Foreach.(vfilter.LazyExpr)
 		if ok {
-			arg.In = lazy_v.Reduce()
+			arg.Foreach = lazy_v.Reduce()
 		}
 
 		// Force the in parameter to be a query.
-		stored_query, ok := arg.In.(vfilter.StoredQuery)
+		stored_query, ok := arg.Foreach.(vfilter.StoredQuery)
 		if !ok {
-			wrapper := vfilter.StoredQueryWrapper{arg.In}
+			wrapper := vfilter.StoredQueryWrapper{arg.Foreach}
 			stored_query = &wrapper
 		}
 

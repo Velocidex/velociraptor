@@ -158,8 +158,9 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if participation_row.Participate {
-				flow_obj, err := flows.GetAFF4FlowObject(
-					config_obj, participation_row.FlowId)
+				collection_context, err := flows.LoadCollectionContext(
+					config_obj, participation_row.ClientId,
+					participation_row.FlowId)
 				if err != nil {
 					continue
 				}
@@ -168,10 +169,10 @@ func (self HuntResultsPlugin) Call(
 				// results. Artifacts are by
 				// definition client artifacts - hunts
 				// only run on client artifacts.
-				flow_id := path.Base(participation_row.FlowId)
 				result_path := artifacts.GetCSVPath(
 					participation_row.ClientId, "",
-					flow_id, arg.Artifact, arg.Source,
+					participation_row.FlowId,
+					arg.Artifact, arg.Source,
 					artifacts.MODE_CLIENT)
 				fd, err := file_store_factory.ReadFile(result_path)
 				if err != nil {
@@ -183,7 +184,7 @@ func (self HuntResultsPlugin) Call(
 				// some extra columns for context.
 				for row := range csv.GetCSVReader(fd) {
 					value := row.
-						Set("FlowId", flow_id).
+						Set("FlowId", participation_row.FlowId).
 						Set("ClientId",
 							participation_row.ClientId).
 						Set("Fqdn",
@@ -193,8 +194,8 @@ func (self HuntResultsPlugin) Call(
 						value.
 							Set("HuntId",
 								participation_row.HuntId).
-							Set("FlowContext",
-								flow_obj.FlowContext)
+							Set("Context",
+								collection_context)
 					}
 					output_chan <- value
 				}
@@ -268,10 +269,11 @@ func (self HuntFlowsPlugin) Call(
 				Set("Flow", vfilter.Null{})
 
 			if participation_row.Participate {
-				flow_obj, err := flows.GetAFF4FlowObject(
-					config_obj, participation_row.FlowId)
+				collection_context, err := flows.LoadCollectionContext(
+					config_obj, participation_row.ClientId,
+					participation_row.FlowId)
 				if err == nil {
-					result.Set("Flow", flow_obj)
+					result.Set("Flow", collection_context)
 				}
 			}
 

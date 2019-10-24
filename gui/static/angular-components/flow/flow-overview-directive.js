@@ -29,7 +29,7 @@ const FlowOverviewController = function(
 FlowOverviewController.prototype.downloadFile = function() {
     var flow = this.scope_["flow"];
     var clientId = flow['client_id'];
-    var flow_id = flow['flow_id'];
+    var flow_id = flow['session_id'];
     var filename = clientId + '/' + flow_id;
 
     // Sanitize filename for download.
@@ -53,7 +53,7 @@ FlowOverviewController.prototype.prepareDownload = function() {
   var flow = this.scope_["flow"];
   var url = 'v1/CreateDownload';
   var params = {
-    flow_id: flow['flow_id'],
+    flow_id: flow['session_id'],
     client_id: flow['client_id'],
   };
   this.grrApiService_.post(url, params).then(

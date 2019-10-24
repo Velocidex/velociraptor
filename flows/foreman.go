@@ -36,8 +36,6 @@
 package flows
 
 import (
-	"context"
-
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -45,58 +43,28 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
-type Foreman struct {
-	BaseFlow
-}
-
-func (self *Foreman) New() Flow {
-	return &Foreman{BaseFlow{}}
-}
-
-func (self *Foreman) ProcessEventTables(
+// ForemanProcessMessage processes a ForemanCheckin message from the
+// client.
+func ForemanProcessMessage(
 	config_obj *config_proto.Config,
-	flow_obj *AFF4FlowObject,
-	source string,
-	arg *actions_proto.ForemanCheckin) error {
+	client_id string,
+	foreman_checkin *actions_proto.ForemanCheckin) error {
 
-	// Need to update client's event table.
-	if arg.LastEventTableVersion < services.GetClientEventsVersion() {
-		channel := grpc_client.GetChannel(config_obj)
-		defer channel.Close()
-
-		client := api_proto.NewAPIClient(channel)
-		flow_runner_args := services.GetClientEventsFlowRunnerArgs()
-		flow_runner_args.Creator = "Foreman"
-		flow_runner_args.ClientId = source
-		_, err := client.LaunchFlow(context.Background(), flow_runner_args)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (self *Foreman) ProcessMessage(
-	config_obj *config_proto.Config,
-	flow_obj *AFF4FlowObject,
-	message *crypto_proto.GrrMessage) error {
-
-	foreman_checkin := message.ForemanCheckin
 	if foreman_checkin == nil {
 		return errors.New("Expected args of type ForemanCheckin")
 	}
 
 	// Update the client's event tables.
-	err := self.ProcessEventTables(config_obj, flow_obj, message.Source,
-		foreman_checkin)
-	if err != nil {
-		return err
+	if foreman_checkin.LastEventTableVersion < services.GetClientEventsVersion() {
+		err := QueueMessageForClient(
+			config_obj, client_id,
+			services.GetClientUpdateEventTableMessage())
+		if err != nil {
+			return err
+		}
 	}
 
 	// Process any needed hunts.
@@ -127,14 +95,10 @@ func (self *Foreman) ProcessMessage(
 			return err
 		}
 
-		urn := urns.BuildURN(
-			"clients", message.Source,
-			"flows", constants.MONITORING_WELL_KNOWN_FLOW)
-
 		err = QueueMessageForClient(
-			config_obj, message.Source,
+			config_obj, client_id,
 			&crypto_proto.GrrMessage{
-				SessionId:       urn,
+				SessionId:       constants.MONITORING_WELL_KNOWN_FLOW,
 				RequestId:       processVQLResponses,
 				VQLClientAction: flow_condition_query})
 		if err != nil {
@@ -142,9 +106,9 @@ func (self *Foreman) ProcessMessage(
 		}
 
 		err = QueueMessageForClient(
-			config_obj, message.Source,
+			config_obj, client_id,
 			&crypto_proto.GrrMessage{
-				SessionId: urn,
+				SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 				RequestId: constants.IgnoreResponseState,
 				UpdateForeman: &actions_proto.ForemanCheckin{
 					LastHuntTimestamp: hunt.StartTime,
@@ -154,7 +118,7 @@ func (self *Foreman) ProcessMessage(
 			return err
 		}
 
-		return NotifyClient(config_obj, message.Source)
+		return NotifyClient(config_obj, client_id)
 	})
 }
 

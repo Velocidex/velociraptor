@@ -21,7 +21,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/golang/protobuf/ptypes"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -43,23 +42,15 @@ func enroll(server *Server, csr *crypto_proto.Certificate) error {
 
 		client := api_proto.NewAPIClient(channel)
 
-		flow_runner_args := &flows_proto.FlowRunnerArgs{
+		request := &flows_proto.ArtifactCollectorRequest{
 			ClientId: client_id,
-			FlowName: "ArtifactCollector",
-		}
-
-		flow_args, err := ptypes.MarshalAny(&flows_proto.ArtifactCollectorArgs{
-			Artifacts: &flows_proto.Artifacts{
-				Names: []string{constants.CLIENT_INFO_ARTIFACT},
+			Request: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: &flows_proto.Artifacts{
+					Names: []string{constants.CLIENT_INFO_ARTIFACT},
+				},
 			},
-			AllowCustomOverrides: true,
-		})
-		if err != nil {
-			return err
 		}
-		flow_runner_args.Args = flow_args
-
-		_, err = client.LaunchFlow(context.Background(), flow_runner_args)
+		_, err = client.CollectArtifact(context.Background(), request)
 		if err != nil {
 			return err
 		}

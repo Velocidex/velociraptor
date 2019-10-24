@@ -137,7 +137,7 @@ func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
 		utils.Normalize_windows_path(client_path))
 }
 
-// Get the file store path for place the download zip for the flow.
+// Get the file store path for placing the download zip for the flow.
 func GetDownloadsFile(client_id, flow_id string) string {
 	return path.Join(
 		"downloads", client_id, flow_id,

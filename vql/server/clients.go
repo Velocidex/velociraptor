@@ -23,6 +23,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"path"
 
 	"www.velocidex.com/golang/velociraptor/api"
@@ -31,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/urns"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -146,44 +146,34 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		sender := func(urn string, client_id string) {
-			flow_obj, err := flows.GetAFF4FlowObject(config_obj, urn)
+		sender := func(flow_id string, client_id string) {
+			collection_context, err := flows.LoadCollectionContext(
+				config_obj, client_id, flow_id)
 			if err != nil {
+				scope.Log("Error: %v", err)
 				return
 			}
 
-			if flow_obj.RunnerArgs != nil {
-				item := &api_proto.ApiFlow{
-					Urn:        urn,
-					ClientId:   client_id,
-					FlowId:     path.Base(urn),
-					Name:       flow_obj.RunnerArgs.FlowName,
-					RunnerArgs: flow_obj.RunnerArgs,
-					Context:    flow_obj.FlowContext,
-				}
-
-				output_chan <- item
-			}
+			output_chan <- collection_context
 		}
 
 		for _, client_id := range arg.ClientId {
 			if arg.FlowId != "" {
-				urn := urns.BuildURN(
-					"clients", client_id, "flows", arg.FlowId)
-				sender(urn, client_id)
+				sender(arg.FlowId, client_id)
 				continue
 			}
 
-			flow_urns, err := db.ListChildren(
-				config_obj, urns.BuildURN(
-					"clients", client_id, "flows"),
-				0, 10000)
+			urn := path.Dir(flows.GetCollectionPath(client_id, "X"))
+			flow_urns, err := db.ListChildren(config_obj, urn, 0, 10000)
 			if err != nil {
+				scope.Log("Error: %v", err)
 				return
 			}
 
 			for _, urn := range flow_urns {
-				sender(urn, client_id)
+				fmt.Printf("Openning %v\n", urn)
+
+				sender(path.Base(urn), client_id)
 				vfilter.ChargeOp(scope)
 			}
 		}

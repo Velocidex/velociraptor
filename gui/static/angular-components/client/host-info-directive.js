@@ -121,16 +121,13 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
  * @export
  */
 HostInfoController.prototype.interrogate = function() {
-  var url = '/v1/LaunchFlow';
+  var url = '/v1/CollectArtifact';
   var params ={
     'client_id': this.clientId,
-    'flow_name': 'ArtifactCollector',
-    'args': {
-      '@type': 'type.googleapis.com/proto.ArtifactCollectorArgs',
+    'request': {
       'artifacts': {
-        names: ['Generic.Client.Info'],
-      },
-      allow_custom_overrides: true,
+        names: ['Generic.Client.Info']
+      }
     }};
 
   this.grrApiService_.post(url, params).then(
@@ -194,7 +191,7 @@ HostInfoController.prototype.stopMonitorInterrogateOperation_ = function() {
 exports.HostInfoDirective = function() {
   return {
     scope: {
-      'clientId': '=',
+      'clientId': '='
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/client/host-info.html',

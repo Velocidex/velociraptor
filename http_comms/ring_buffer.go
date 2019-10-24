@@ -341,9 +341,6 @@ func (self *RingBuffer) Lease(size uint64) []byte {
 	for _, item := range self.messages[self.leased_idx:] {
 		leased = append(leased, item...)
 		self.leased_length += uint64(len(item))
-		if self.leased_length == 28 {
-			panic(1)
-		}
 		self.leased_idx += 1
 		if self.leased_length > size {
 			break

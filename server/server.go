@@ -133,16 +133,7 @@ func (self *Server) Process(
 	drain_requests_for_client bool) (
 	[]byte, int, error) {
 
-	// Process the messages using the same flow runner.
-	runner := flows.NewFlowRunner(self.config, self.logger)
-	defer runner.Close()
-
-	err := message_info.IterateJobs(ctx, func(job *crypto_proto.GrrMessage) {
-		err := runner.ProcessOneMessage(job)
-		if err != nil {
-			self.Error("While processing job", err)
-		}
-	})
+	err := flows.ProcessMessages(ctx, self.config, message_info)
 	if err != nil {
 		return nil, 0, err
 	}

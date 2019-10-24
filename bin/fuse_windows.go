@@ -30,7 +30,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/cgofuse/fuse"
-	"github.com/golang/protobuf/ptypes"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -144,19 +143,12 @@ func (self *VFSFs) Read(file_path string, buff []byte, off int64, fd uint64) (n 
 	channel := grpc_client.GetChannel(self.config_obj)
 	defer channel.Close()
 
+	client_path, accessor := api.GetClientPath(vfs_name)
+
 	client := api_proto.NewAPIClient(channel)
-	flow_runner_args := &flows_proto.FlowRunnerArgs{
-		ClientId: self.client_id,
-		FlowName: "VFSDownloadFile",
-	}
-
-	flow_args, err := ptypes.MarshalAny(&flows_proto.VFSDownloadFileRequest{
-		ClientId: self.client_id,
-		VfsPath:  []string{"/" + vfs_name},
-	})
-	flow_runner_args.Args = flow_args
-
-	response, err := client.LaunchFlow(context.Background(), flow_runner_args)
+	response, err := client.CollectArtifact(context.Background(),
+		api.MakeCollectorRequest(self.client_id, "System.VFS.DownloadFile",
+			"Path", client_path, "Accessor", accessor))
 	if err != nil {
 		self.logger.Err("Fetching Error %s: %v", vfs_name, err)
 		return -fuse.EIO
@@ -340,7 +332,7 @@ func (self *VFSFs) isFlowComplete(flow_id, vfs_name string) (bool, int) {
 	}
 
 	// Not ready yet - try again later.
-	if response.Context.State == flows_proto.FlowContext_RUNNING {
+	if response.Context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		return false, 0
 	}
 	return true, 0

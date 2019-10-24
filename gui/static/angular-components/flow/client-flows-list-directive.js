@@ -150,7 +150,7 @@ ClientFlowsListController.prototype.copyFlow = function() {
   modalScope['clientId'] = this.scope_['clientId'];
   modalScope['flowId'] = this.scope_['selectedFlowId'];
   modalScope['resolve'] = function(newFlowObj) {
-    newFlowId = newFlowObj['flow_id'];
+    newFlowId = newFlowObj['session_id'];
     modalInstance.close();
   }.bind(this);
 

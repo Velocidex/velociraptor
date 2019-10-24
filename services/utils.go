@@ -32,7 +32,7 @@ func watchForFlowCompletion(
 
 	vql, err := vfilter.Parse("select * FROM " +
 		"watch_monitoring(artifact='System.Flow.Completion') " +
-		"WHERE Flow.FlowContext.artifacts =~ artifact_name")
+		"WHERE Flow.artifacts_with_results =~ artifact_name")
 	if err != nil {
 		return nil, err
 	}
