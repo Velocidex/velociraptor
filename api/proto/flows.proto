@@ -4,6 +4,7 @@ import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 import "google/protobuf/any.proto";
+import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
 
 package proto;
 
@@ -19,6 +20,12 @@ message AvailableDownloadFile {
 message AvailableDownloads {
     repeated AvailableDownloadFile files = 1;
 }
+
+message FlowDetails {
+    ArtifactCollectorContext context = 1;
+    AvailableDownloads available_downloads = 16;
+}
+
 
 // Next id: 16
 message ApiFlow {
@@ -110,7 +117,7 @@ message ApiFlowRequest {
 }
 
 message ApiFlowResponse {
-    repeated ApiFlow items = 1;
+    repeated ArtifactCollectorContext items = 2;
 }
 
 message FlowDescriptors {

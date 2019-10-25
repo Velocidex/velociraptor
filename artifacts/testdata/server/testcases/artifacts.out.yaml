@@ -1,10 +1,10 @@
-SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id='C.11a3013cca8f826e', flow_id="F.11cb737b", artifact='Windows.Applications.ChocolateyPackages')[
+SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id='C.abad2ac29511a9ac', flow_id="F.BMP93QMBDKOVA", artifact='Windows.Applications.ChocolateyPackages')[
  {
-  "Authors": "Facebook",
-  "FullPath": "C:\\ProgramData\\chocolatey\\lib\\osquery\\osquery.nuspec",
-  "License": "https://github.com/facebook/osquery/blob/master/LICENSE",
+  "Authors": "osquery",
+  "FullPath": "\\C:\\ProgramData\\chocolatey\\lib\\osquery\\osquery.nuspec",
+  "License": "https://github.com/osquery/osquery/blob/master/LICENSE",
   "Name": "osquery",
   "Summary": "osquery gives you the ability to query and log things like running\n      processes, logged in users, password changes, usb devices, firewall\n      exceptions, listening ports, and more.",
-  "Version": "2.9.0"
+  "Version": "4.0.2"
  }
 ]

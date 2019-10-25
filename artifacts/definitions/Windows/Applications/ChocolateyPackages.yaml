@@ -8,23 +8,21 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     queries:
-      - |
-        LET files =
-          SELECT FullPath, parse_xml(file=FullPath) AS Metadata
-          -- Use the ChocolateyInstall parameter if it is set.
+      - LET files = SELECT FullPath,
+              parse_xml(file=FullPath) AS Metadata
+              -- Use the ChocolateyInstall parameter if it is set.
+
           FROM glob(globs=if(
              condition=ChocolateyInstall,
              then=ChocolateyInstall,
+
              -- Otherwise just use the environment.
              else=environ(var='ChocolateyInstall')) + '/lib/*/*.nuspec')
-      - |
-        SELECT * FROM if(
-        condition={
-            SELECT * FROM if(
-               condition=ChocolateyInstall,
-               then=ChocolateyInstall,
-               else=environ(var="ChocolateyInstall"))
-          },
+
+      - SELECT * FROM if(
+        condition=if(condition=ChocolateyInstall,
+                     then=ChocolateyInstall,
+                     else=environ(var="ChocolateyInstall")),
         then={
             SELECT FullPath,
                    Metadata.package.metadata.id as Name,

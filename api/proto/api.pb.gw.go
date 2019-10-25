@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/status"
-	proto_3 "www.velocidex.com/golang/velociraptor/flows/proto"
+	proto_4 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
 var _ codes.Code
@@ -332,7 +332,7 @@ var (
 )
 
 func request_API_VFSListDirectory_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.VFSListRequest
+	var protoReq proto_4.VFSListRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -405,7 +405,7 @@ var (
 )
 
 func request_API_VFSStatDirectory_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.VFSListRequest
+	var protoReq proto_4.VFSListRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -440,8 +440,8 @@ func request_API_GetTable_0(ctx context.Context, marshaler runtime.Marshaler, cl
 
 }
 
-func request_API_LaunchFlow_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.FlowRunnerArgs
+func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq proto_4.ArtifactCollectorRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -452,7 +452,7 @@ func request_API_LaunchFlow_0(ctx context.Context, marshaler runtime.Marshaler, 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.LaunchFlow(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.CollectArtifact(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -671,7 +671,7 @@ func request_API_GetServerMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.ArtifactCollectorArgs
+	var protoReq proto_4.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -697,7 +697,7 @@ func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.ArtifactCollectorArgs
+	var protoReq proto_4.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1148,7 +1148,7 @@ func RegisterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
-	mux.Handle("POST", pattern_API_LaunchFlow_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("POST", pattern_API_CollectArtifact_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -1157,14 +1157,14 @@ func RegisterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_API_LaunchFlow_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_API_CollectArtifact_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_API_LaunchFlow_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_API_CollectArtifact_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1508,7 +1508,7 @@ var (
 
 	pattern_API_GetTable_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetTable"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_API_LaunchFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "LaunchFlow"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_API_CollectArtifact_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "CollectArtifact"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_API_CancelFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "CancelFlow"}, "", runtime.AssumeColonVerbOpt(true)))
 
@@ -1578,7 +1578,7 @@ var (
 
 	forward_API_GetTable_0 = runtime.ForwardResponseMessage
 
-	forward_API_LaunchFlow_0 = runtime.ForwardResponseMessage
+	forward_API_CollectArtifact_0 = runtime.ForwardResponseMessage
 
 	forward_API_CancelFlow_0 = runtime.ForwardResponseMessage
 

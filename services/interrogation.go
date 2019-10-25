@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/urns"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -52,7 +53,7 @@ func (self *InterrogationService) Start() error {
 		for row := range vql.Eval(ctx, scope) {
 			row_dict, ok := row.(*vfilter.Dict)
 			if ok {
-				err := self.ProcessRow(row_dict)
+				err := self.ProcessRow(scope, row_dict)
 				if err != nil {
 					logger.Error("Interrogation Service: %v", err)
 				}
@@ -63,17 +64,10 @@ func (self *InterrogationService) Start() error {
 	return nil
 }
 
-func (self *InterrogationService) ProcessRow(row *vfilter.Dict) error {
+func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
+	row *vfilter.Dict) error {
 	getter := func(field string) string {
-		result, pres := row.Get(field)
-		if pres {
-			result_str, ok := result.(string)
-			if ok {
-				return result_str
-			}
-		}
-
-		return ""
+		return vql_subsystem.GetStringFromRow(scope, row, field)
 	}
 
 	client_id := getter("ClientId")

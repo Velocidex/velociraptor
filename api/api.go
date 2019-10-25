@@ -132,10 +132,10 @@ func (self *ApiServer) GetReport(
 	return getReport(ctx, self.config, in)
 }
 
-func (self *ApiServer) LaunchFlow(
+func (self *ApiServer) CollectArtifact(
 	ctx context.Context,
-	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
-	result := &api_proto.StartFlowResponse{}
+	in *flows_proto.ArtifactCollectorRequest) (*flows_proto.ArtifactCollectorResponse, error) {
+	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 	creator := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Internal calls from the frontend can set the creator.
@@ -153,12 +153,12 @@ func (self *ApiServer) LaunchFlow(
 		}
 	}
 
-	flow_id, err := flows.StartFlow(self.config, in)
+	flow_id, err := flows.ScheduleArtifactCollection(self.config, in)
 	if err != nil {
 		return nil, err
 	}
-	result.FlowId = *flow_id
-	result.RunnerArgs = in
+
+	result.FlowId = flow_id
 
 	// Notify the client if it is listenning.
 	channel := grpc_client.GetChannel(self.config)
@@ -173,14 +173,14 @@ func (self *ApiServer) LaunchFlow(
 		return nil, err
 	}
 
-	// Log this event as and Audit event.
+	// Log this event as an Audit event.
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
 			"client":  in.ClientId,
 			"flow_id": flow_id,
 			"details": fmt.Sprintf("%v", in),
-		}).Info("LaunchFlow")
+		}).Info("CollectArtifact")
 
 	return result, nil
 }
@@ -416,7 +416,7 @@ func (self *ApiServer) GetClientFlows(
 
 func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
+	in *api_proto.ApiFlowRequest) (*api_proto.FlowDetails, error) {
 
 	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
@@ -478,7 +478,7 @@ func (self *ApiServer) VFSStatDirectory(
 func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
-	*api_proto.StartFlowResponse, error) {
+	*flows_proto.ArtifactCollectorResponse, error) {
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)

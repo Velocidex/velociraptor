@@ -158,9 +158,10 @@ func (self *HuntManager) ProcessRow(
 		self.writers[participation_row.HuntId] = writer
 	}
 
-	request := &flows_proto.FlowRunnerArgs{
+	request := &flows_proto.ArtifactCollectorRequest{
 		ClientId: participation_row.ClientId,
 		Creator:  participation_row.HuntId,
+		Request:  &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	// Get hunt information about this hunt.
@@ -195,7 +196,7 @@ func (self *HuntManager) ProcessRow(
 
 			// Use hunt information to launch the flow
 			// against this client.
-			proto.Merge(request, hunt_obj.StartRequest)
+			proto.Merge(request.Request, hunt_obj.StartRequest)
 			hunt_obj.Stats.TotalClientsScheduled += 1
 
 			return nil
@@ -211,7 +212,7 @@ func (self *HuntManager) ProcessRow(
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.LaunchFlow(context.Background(), request)
+	response, err := client.CollectArtifact(context.Background(), request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return

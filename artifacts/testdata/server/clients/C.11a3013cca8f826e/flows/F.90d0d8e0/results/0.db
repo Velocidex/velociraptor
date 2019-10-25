@@ -1,13 +1,0 @@
-
-1aff4:/clients/C.11a3013cca8f826e/flows/F.90d0d8e0*©
-«[
- {
-  "Authors": "Facebook",
-  "FullPath": "C:\\ProgramData\\chocolatey\\lib\\osquery\\osquery.nuspec",
-  "License": "https://github.com/facebook/osquery/blob/master/LICENSE",
-  "Name": "osquery",
-  "Summary": "osquery gives you the ability to query and log things like running\n      processes, logged in users, password changes, usb devices, firewall\n      exceptions, listening ports, and more.",
-  "Version": "2.9.0"
- }
-]FullPathNameVersionSummaryAuthorsLicense¹
-„SELECT * FROM if(then=Windows_Applications_ChocolateyPackages_0_1, condition=precondition_Windows_Applications_ChocolateyPackages_0)0Artifact Windows.Applications.ChocolateyPackages ’®‰º‚ÁÞ(2C.11a3013cca8f826e8rVQLResponsex¦Ê®Ø„ÁÞÀœ

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
@@ -77,7 +76,7 @@ func (self *VFSFs) fetchDir(vfs_name string) ([]*api.FileInfoRow, error) {
 			return nil, err
 		}
 
-		if response.Context.State != flows_proto.FlowContext_RUNNING {
+		if response.Context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 			break
 		}
 
@@ -93,23 +92,15 @@ func (self *VFSFs) fetchFile(vfs_name string) error {
 	channel := grpc_client.GetChannel(self.config_obj)
 	defer channel.Close()
 
+	client_path, accessor := api.GetClientPath(vfs_name)
+
 	client := api_proto.NewAPIClient(channel)
-	flow_runner_args := &flows_proto.FlowRunnerArgs{
-		ClientId: self.client_id,
-		FlowName: "VFSDownloadFile",
-	}
 
-	flow_args, err := ptypes.MarshalAny(&flows_proto.VFSDownloadFileRequest{
-		ClientId: self.client_id,
-		VfsPath:  []string{"/" + vfs_name},
-	})
+	request := api.MakeCollectorRequest(
+		self.client_id, "System.VFS.DownloadFile",
+		"Path", client_path, "Key", accessor)
 
-	if err != nil {
-		return err
-	}
-	flow_runner_args.Args = flow_args
-
-	response, err := client.LaunchFlow(context.Background(), flow_runner_args)
+	response, err := client.CollectArtifact(context.Background(), request)
 	if err != nil {
 		return err
 	}
@@ -127,7 +118,7 @@ func (self *VFSFs) fetchFile(vfs_name string) error {
 			return err
 		}
 
-		if response.Context.State != flows_proto.FlowContext_RUNNING {
+		if response.Context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 			// If there were no files uploaded we could
 			// not find the file on the client.
 			if response.Context.TotalUploadedFiles == 0 {

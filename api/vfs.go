@@ -67,15 +67,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -274,7 +271,7 @@ func vfsListDirectory(
 	}
 
 	// Break up the GUI's view of the VFS into client_path and accessor.
-	client_path, accessor := getClientPath(vfs_path)
+	client_path, accessor := GetClientPath(vfs_path)
 
 	return renderDBVFS(config_obj, client_id, client_path, accessor)
 }
@@ -293,8 +290,8 @@ func vfsStatDirectory(
 		return nil, err
 	}
 
-	vfs_path = utils.Normalize_windows_path(vfs_path)
-	vfs_urn := urns.BuildURN("clients", client_id, "vfs", vfs_path)
+	client_path, accessor := GetClientPath(vfs_path)
+	vfs_urn := utils.GetVFSDirectoryInfoPath(client_id, accessor, client_path)
 
 	result := &flows_proto.VFSListResponse{}
 
@@ -318,7 +315,7 @@ func vfsStatDirectory(
 // GUI organizes files. In the GUI, files are organized in a tree,
 // where the top level directory is the accessor, the rest of the path
 // is passed to the accessor directly.
-func getClientPath(vfs_path string) (client_path string, accessor string) {
+func GetClientPath(vfs_path string) (client_path string, accessor string) {
 	vfs_path = path.Clean(vfs_path)
 	if strings.HasPrefix(vfs_path, "/file") {
 		return strings.TrimPrefix(vfs_path, "/file"), "file"
@@ -345,34 +342,12 @@ func vfsRefreshDirectory(
 	ctx context.Context,
 	client_id string,
 	vfs_path string,
-	depth uint64) (*api_proto.StartFlowResponse, error) {
+	depth uint64) (*flows_proto.ArtifactCollectorResponse, error) {
 
 	vfs_path = path.Join("/", vfs_path)
-	client_path, accessor := getClientPath(vfs_path)
-
-	args := &flows_proto.FlowRunnerArgs{
-		ClientId: client_id,
-		FlowName: "ArtifactCollector",
-	}
-
-	flow_args := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"System.VFS.ListDirectory"},
-		},
-		Parameters: &flows_proto.ArtifactParameters{
-			Env: []*actions_proto.VQLEnv{
-				{Key: "Path", Value: client_path},
-				{Key: "Accessor", Value: accessor},
-			},
-		},
-	}
-	any_msg, err := ptypes.MarshalAny(flow_args)
-	if err != nil {
-		return nil, err
-	}
-
-	args.Args = any_msg
-
-	result, err := self.LaunchFlow(ctx, args)
+	client_path, accessor := GetClientPath(vfs_path)
+	result, err := self.CollectArtifact(ctx, MakeCollectorRequest(
+		client_id, "System.VFS.ListDirectory",
+		"Path", client_path, "Accessor", accessor))
 	return result, err
 }

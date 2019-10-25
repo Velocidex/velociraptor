@@ -75,7 +75,7 @@ func (self *VFSService) ProcessDownloadFile(
 
 	vql, err := vfilter.Parse(
 		"select Path, Accessor FROM source(" +
-			"flow_id=basename(path=Flow.Urn), " +
+			"flow_id=FlowId, " +
 			"artifact='System.VFS.DownloadFile', " +
 			"client_id=ClientId)")
 	if err != nil {
@@ -130,7 +130,7 @@ func (self *VFSService) ProcessListDirectory(
 
 	vql, err := vfilter.Parse("select * FROM " +
 		"source(artifact='System.VFS.ListDirectory', " +
-		"flow_id=basename(path=Flow.Urn), client_id=ClientId)")
+		"flow_id=FlowId, client_id=ClientId)")
 	if err != nil {
 		panic(err)
 	}
@@ -208,7 +208,7 @@ func (self *VFSService) flush_state(scope *vfilter.Scope,
 		})
 }
 
-// The inverse of getClientPath()
+// The inverse of GetClientPath()
 func getVfsPath(client_path string, accessor string) string {
 	prefix := "/file"
 	switch accessor {

@@ -168,7 +168,7 @@ service API {
         };
     }
 
-    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (StartFlowResponse) {
+    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
             post: "/api/v1/VFSRefreshDirectory/{client_id}",
             body: "*",
@@ -194,9 +194,9 @@ service API {
     }
 
     // Flows
-    rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
+    rpc CollectArtifact(ArtifactCollectorRequest) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
-            post: "/api/v1/LaunchFlow",
+            post: "/api/v1/CollectArtifact",
             body: "*"
         };
     }
@@ -216,7 +216,7 @@ service API {
     }
 
 
-    rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
+    rpc GetFlowDetails(ApiFlowRequest) returns (FlowDetails) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails/{client_id}",
         };

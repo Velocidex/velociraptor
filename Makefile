@@ -35,7 +35,7 @@ build_release: build_docker
 
 debug:
 	dlv debug --build-flags="-tags 'server_vql extras'" \
-		./bin/ -- frontend -v
+		./bin/ -- frontend -v --debug
 
 debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" \

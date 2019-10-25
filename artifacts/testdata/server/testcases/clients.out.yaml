@@ -1,86 +1,25 @@
 SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
  {
-  "ClientId": "C.c916a7e445eb0868",
-  "Hostname": "DESKTOP-IOME2K5",
-  "LastSeen": 1541049785.896051
- },
- {
-  "ClientId": "C.11a3013cca8f826e",
-  "Hostname": "TestComputer",
-  "LastSeen": 1542151833.433916
- },
- {
-  "ClientId": "C.952156a4b022ddee",
-  "Hostname": "trek",
-  "LastSeen": 1540368672.777812
+  "ClientId": "C.abad2ac29511a9ac",
+  "Hostname": "DESKTOP-6CBJ8MJ",
+  "LastSeen": 1571983851.82706
  }
-]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer') order by client_id[
+]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
  {
-  "ClientId": "C.11a3013cca8f826e",
-  "Hostname": "TestComputer",
-  "System": "windows"
- }
-]SELECT * from clients() order by client_id[
- {
-  "client_id": "C.11a3013cca8f826e",
-  "agent_information": {},
+  "client_id": "C.abad2ac29511a9ac",
+  "agent_information": {
+   "version": "2019-10-24T10:23:32+10:00",
+   "name": "velociraptor"
+  },
   "os_info": {
    "system": "windows",
-   "release": "Microsoft Windows 10 Pro N10.0.15063 Build 15063",
+   "release": "Microsoft Windows 10 Enterprise10.0.17763 Build 17763",
    "machine": "amd64",
-   "fqdn": "TestComputer"
+   "fqdn": "DESKTOP-6CBJ8MJ"
   },
-  "last_seen_at": 1542151833433916,
-  "last_ip": "192.168.0.11:51087",
-  "last_ip_class": 1
- },
- {
-  "client_id": "C.952156a4b022ddee",
-  "agent_information": {},
-  "os_info": {
-   "system": "linux",
-   "release": "ubuntu18.10",
-   "machine": "amd64",
-   "fqdn": "trek"
-  },
-  "last_seen_at": 1540368672777812,
-  "last_ip": "192.168.0.5:33510",
-  "last_ip_class": 1
- },
- {
-  "client_id": "C.c916a7e445eb0868",
-  "agent_information": {},
-  "os_info": {
-   "system": "windows",
-   "release": "Microsoft Windows 10 Pro N10.0.17134 Build 17134",
-   "machine": "amd64",
-   "fqdn": "DESKTOP-IOME2K5"
-  },
-  "last_seen_at": 1541049785896051,
-  "last_ip": "192.168.0.18:49749",
+  "last_seen_at": 1571983851827060,
+  "last_ip": "192.168.0.26:34300",
+  "last_interrogate_flow_id": "F.BMP93J55F83B6",
   "last_ip_class": 1
  }
-]SELECT client_id, context.create_time as CreateTime,
-       runner_args.args.artifacts.names as Artifacts,
-       runner_args.flow_name as Flow
-FROM flows(client_id='C.11a3013cca8f826e')
-WHERE Flow = 'ArtifactCollector' order by client_id
-[
- {
-  "Artifacts": [
-   "Windows.Applications.ChocolateyPackages"
-  ],
-  "CreateTime": 1544876976531608,
-  "Flow": "ArtifactCollector",
-  "client_id": "C.11a3013cca8f826e"
- },
- {
-  "Artifacts": [
-   "Windows.Applications.ChocolateyPackages",
-   "Windows.Applications.Chrome.Extensions"
-  ],
-  "CreateTime": 1541550146808437,
-  "Flow": "ArtifactCollector",
-  "client_id": "C.11a3013cca8f826e"
- }
-]
+]SELECT client_id, context.create_time as CreateTime, runner_args.args.artifacts.names as Artifacts, runner_args.flow_name as Flow FROM flows(client_id='C.11a3013cca8f826e') ORDER BY client_id[]

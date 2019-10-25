@@ -1,11 +1,0 @@
-
-1aff4:/clients/C.c916a7e445eb0868/flows/F.e40e9f26*ò
-à[
- {
-  "Error": "",
-  "Path": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1/Program Files/Git/LICENSE.txt",
-  "Size": 15083
- }
-]PathSizeErroro
-_SELECT Path, Size, Error
-                         FROM upload(files=[Path0], accessor=accessor)Upload files ∏Î¢¥˛ùﬁ2C.c916a7e445eb08688rVQLResponsexâ“°“Äûﬁ¿ú

@@ -46,7 +46,7 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
   var accessor = 'file';
   if (components.length > 0) {
     accessor = components[0];
-    path = components.slice(1).join('/');
+    path = '/'+components.slice(1).join('/');
   }
 
   return {accessor: accessor, path: path};
@@ -61,12 +61,10 @@ FileStatsViewController.prototype.updateFile = function() {
   var selectedFilePath = this.fileContext['selectedFilePath'];
   var components = this.getAccessorAndPath(selectedFilePath);
 
-  var url = 'v1/LaunchFlow';
+  var url = 'v1/CollectArtifact';
   var params = {
     client_id: clientId,
-    flow_name: "ArtifactCollector",
-    args: {
-      '@type': 'type.googleapis.com/proto.ArtifactCollectorArgs',
+    request: {
       artifacts: {
         names: ["System.VFS.DownloadFile"],
       },

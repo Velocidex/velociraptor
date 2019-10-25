@@ -64,9 +64,6 @@ exports.rewriteUrl = function(url) {
       var huntId = huntUrn ? huntUrn.split('/')[2] : '';
       return '/hunts/' + huntId;
 
-    case 'GlobalLaunchFlows':
-      return '/global-flows';
-
     case 'ServerLoadView':
       return '/server-load';
 

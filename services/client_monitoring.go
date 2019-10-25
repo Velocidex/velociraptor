@@ -10,12 +10,12 @@ import (
 	"sync/atomic"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -36,16 +36,11 @@ type ClientEventTable struct {
 	mu sync.Mutex
 
 	// Not a pointer - getter gets a copy.
-	flow_runner_args *flows_proto.FlowRunnerArgs
+	job *crypto_proto.GrrMessage
 }
 
 func GetClientEventsVersion() uint64 {
 	return atomic.LoadUint64(&gEventTable.version)
-}
-
-// Returns an immutable copy of the flow runner args.
-func GetClientEventsFlowRunnerArgs() *flows_proto.FlowRunnerArgs {
-	return gEventTable.GetClientEventsFlowRunnerArgs()
 }
 
 func UpdateClientEventTable(
@@ -54,11 +49,15 @@ func UpdateClientEventTable(
 	return gEventTable.Update(config_obj, args)
 }
 
-func (self *ClientEventTable) GetClientEventsFlowRunnerArgs() *flows_proto.FlowRunnerArgs {
+func GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
+	return gEventTable.GetClientUpdateEventTableMessage()
+}
+
+func (self *ClientEventTable) GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return proto.Clone(gEventTable.flow_runner_args).(*flows_proto.FlowRunnerArgs)
+	return proto.Clone(gEventTable.job).(*crypto_proto.GrrMessage)
 }
 
 func (self *ClientEventTable) Update(
@@ -130,15 +129,12 @@ func (self *ClientEventTable) Update(
 		}
 	}
 
-	self.flow_runner_args = &flows_proto.FlowRunnerArgs{
-		FlowName: "MonitoringFlow",
+	self.job = &crypto_proto.GrrMessage{
+		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
+		UpdateEventTable: event_table,
 	}
-	flow_args, err := ptypes.MarshalAny(event_table)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	self.flow_runner_args.Args = flow_args
 
+	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

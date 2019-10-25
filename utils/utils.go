@@ -47,11 +47,11 @@ func IsNil(a interface{}) bool {
 // Drive letters are preceeded with /
 // Example: c:\windows ->  /c:/windows
 func Normalize_windows_path(filename string) string {
-	filename = strings.Replace(filename, "\\", "/", -1)
+	filename = path.Clean(strings.Replace(filename, "\\", "/", -1))
 	if !strings.HasPrefix(filename, "/") {
 		filename = "/" + filename
 	}
-	return path.Clean(filename)
+	return filename
 }
 
 func hard_wrap(text string, colBreak int) string {
