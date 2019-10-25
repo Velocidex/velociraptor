@@ -1,1 +1,11 @@
-SELECT * from source(client_id='C.11a3013cca8f826e', artifact='Windows.Events.ProcessCreation') where Name =~ '(?i)psexesvc'[]
+SELECT * from source(client_id='C.abad2ac29511a9ac', artifact='Windows.Events.ProcessCreation') where Name =~ '(?i)psexesvc'[
+ {
+  "CommandLine": "C:\\WINDOWS\\PSEXESVC.exe",
+  "Name": "PSEXESVC.exe",
+  "PID": 7176,
+  "PPID": 604,
+  "ParentInfo": "",
+  "Timestamp": "2019-10-25T07:20:33Z",
+  "_ts": 1571988100
+ }
+]

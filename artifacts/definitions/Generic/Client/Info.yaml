@@ -27,7 +27,7 @@ sources:
     precondition: SELECT OS From info() where OS = 'windows'
     queries:
       - SELECT Name, Description,
-               timestamp(epoch=Mtime) AS LastLogin
+               if(condition=Mtime, then=timestamp(epoch=Mtime)) AS LastLogin
         FROM Artifact.Windows.Sys.Users()
 
 reports:

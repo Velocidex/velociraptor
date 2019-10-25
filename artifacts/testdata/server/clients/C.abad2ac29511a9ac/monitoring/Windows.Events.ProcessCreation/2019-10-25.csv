@@ -1,0 +1,7 @@
+_ts,Timestamp,PPID,PID,Name,CommandLine,ParentInfo
+1571988000,2019-10-25T07:18:20Z,4700,6884,velociraptor.exe,velociraptor.exe  --config client.config.yaml client -v --debug,"""C:\WINDOWS\system32\cmd.exe"" "
+1571988100,2019-10-25T07:20:32Z,3800,5276,PsExec.exe,bin\PsExec.exe  -s cmd.exe,"""C:\WINDOWS\system32\cmd.exe"" "
+1571988100,2019-10-25T07:20:33Z,604,7176,PSEXESVC.exe,C:\WINDOWS\PSEXESVC.exe,
+1571988100,2019-10-25T07:20:33Z,7176,6848,cmd.exe,"""cmd.exe"" ",C:\WINDOWS\PSEXESVC.exe
+1571988100,2019-10-25T07:20:33Z,6848,5660,conhost.exe,\??\C:\WINDOWS\system32\conhost.exe 0x4,"""cmd.exe"" "
+1571988100,2019-10-25T07:20:36Z,6848,5280,whoami.exe,,"""cmd.exe"" "

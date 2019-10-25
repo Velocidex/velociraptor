@@ -25,7 +25,7 @@ FROM clients(search='label:*') ORDER BY client_id
  {
   "client_id": "C.abad2ac29511a9ac",
   "agent_information": {
-   "version": "2019-10-22T10:45:40+10:00",
+   "version": "2019-10-24T10:23:32+10:00",
    "name": "velociraptor"
   },
   "os_info": {
@@ -34,9 +34,9 @@ FROM clients(search='label:*') ORDER BY client_id
    "machine": "amd64",
    "fqdn": "DESKTOP-6CBJ8MJ"
   },
-  "last_seen_at": 1571833225742159,
-  "last_ip": "192.168.2.129:37468",
-  "last_interrogate_flow_id": "F.BMO4ACOTH8U6E",
+  "last_seen_at": 1571983851827060,
+  "last_ip": "192.168.0.26:34300",
+  "last_interrogate_flow_id": "F.BMP93J55F83B6",
   "last_ip_class": 1,
   "labels": [
    "WinBoxes"
