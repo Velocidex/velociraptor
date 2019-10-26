@@ -172,12 +172,4 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "ProgramName": "PsExec",
   "User": "appveyor"
  }
-]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**',accessor='reg') WHERE Type
-[
- {
-  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
- },
- {
-  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
- }
 ]
