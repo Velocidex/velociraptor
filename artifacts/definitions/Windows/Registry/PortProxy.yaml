@@ -65,7 +65,8 @@ reports:
       {{ .Description }}
       
       {{ define "report" }}
-         LET report = SELECT Protocol, 
+         LET report = SELECT Fqdn,
+            Protocol, 
             ProxyType, 
             Listening, 
             Destination, 
@@ -75,4 +76,4 @@ reports:
          GROUP BY ServiceKey
       {{ end }}
       
-      {{ Query "report"  "SELECT ProxyType, Protocol, Listening, Destination, ModifiedTime FROM report" | Table }}
+      {{ Query "report"  "SELECT Fqdn, ProxyType, Protocol, Listening, Destination, ModifiedTime FROM report" | Table }}
