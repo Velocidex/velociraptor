@@ -18,6 +18,7 @@
 package flows
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path"
@@ -28,11 +29,11 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/vfilter"
@@ -146,7 +147,8 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 
 func CancelFlow(
 	config_obj *config_proto.Config,
-	client_id string, flow_id string, username string) (
+	client_id, flow_id, username string,
+	api_client_factory grpc_client.APIClientFactory) (
 	*api_proto.StartFlowResponse, error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.StartFlowResponse{}, nil
@@ -157,7 +159,7 @@ func CancelFlow(
 	if err != nil {
 		return nil, err
 	}
-	defer CloseContext(config_obj, collection_context)
+	defer closeContext(config_obj, collection_context)
 
 	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 		return nil, errors.New("Flow is not in the running state. " +
@@ -202,7 +204,13 @@ func CancelFlow(
 		return nil, err
 	}
 
-	err = NotifyClient(config_obj, client_id)
+	client, cancel := api_client_factory.GetAPIClient(config_obj)
+	defer cancel()
+
+	_, err = client.NotifyClients(context.Background(),
+		&api_proto.NotificationRequest{
+			ClientId: client_id,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +233,7 @@ func ArchiveFlow(
 	if err != nil {
 		return nil, err
 	}
-	defer CloseContext(config_obj, collection_context)
+	defer closeContext(config_obj, collection_context)
 
 	if collection_context.State != flows_proto.ArtifactCollectorContext_TERMINATED &&
 		collection_context.State != flows_proto.ArtifactCollectorContext_ERROR {
@@ -291,15 +299,4 @@ func GetFlowRequests(
 	}
 
 	return result, nil
-}
-
-func ValidateFlowId(client_id string, flow_id string) (*string, error) {
-	base_flow := path.Base(flow_id)
-	if !strings.HasPrefix(base_flow, constants.FLOW_PREFIX) {
-		return nil, errors.New(
-			"Flows must start with " + constants.FLOW_PREFIX)
-	}
-
-	rebuild_urn := urns.BuildURN("clients", client_id, "flows", base_flow)
-	return &rebuild_urn, nil
 }

@@ -30,6 +30,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/urns"
@@ -50,7 +51,8 @@ type Server struct {
 	NotificationPool *notifications.NotificationPool
 
 	// Limit concurrency for processing messages.
-	concurrency chan bool
+	concurrency      chan bool
+	APIClientFactory grpc_client.APIClientFactory
 }
 
 func (self *Server) StartConcurrencyControl() {
@@ -70,7 +72,8 @@ func (self *Server) Close() {
 	self.NotificationPool.Shutdown()
 }
 
-func NewServer(config_obj *config_proto.Config) (*Server, error) {
+func NewServer(
+	config_obj *config_proto.Config) (*Server, error) {
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err
@@ -96,25 +99,28 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 		NotificationPool: notifications.NewNotificationPool(),
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
-		concurrency: make(chan bool, concurrency),
+		concurrency:      make(chan bool, concurrency),
+		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 	return &result, nil
 }
 
-// We only process some messages when the client is not authenticated.
+// We only process enrollment messages when the client is not fully
+// authenticated.
+func (self *Server) ProcessSingleUnauthenticatedMessage(message *crypto_proto.GrrMessage) {
+	if message.CSR != nil {
+		err := enroll(self, message.CSR)
+		if err != nil {
+			self.logger.Error("Enrol Error: %s", err)
+		}
+	}
+}
+
 func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,
 	message_info *crypto.MessageInfo) error {
 
-	return message_info.IterateJobs(
-		ctx, func(message *crypto_proto.GrrMessage) {
-			if message.CSR != nil {
-				err := enroll(self, message.CSR)
-				if err != nil {
-					self.logger.Error("Enrol Error: %s", err)
-				}
-			}
-		})
+	return message_info.IterateJobs(ctx, self.ProcessSingleUnauthenticatedMessage)
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
@@ -133,7 +139,10 @@ func (self *Server) Process(
 	drain_requests_for_client bool) (
 	[]byte, int, error) {
 
-	err := flows.ProcessMessages(ctx, self.config, message_info)
+	runner := flows.NewFlowRunner(self.config)
+	defer runner.Close()
+
+	err := runner.ProcessMessages(ctx, message_info)
 	if err != nil {
 		return nil, 0, err
 	}

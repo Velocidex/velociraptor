@@ -63,7 +63,7 @@ func StartServices(
 	}
 	result.hunt_manager = hunt_manager
 
-	hunt_dispatcher, err := startHuntDispatcher(config_obj)
+	hunt_dispatcher, err := StartHuntDispatcher(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func StartServices(
 	}
 	result.server_artifacts = server_artifacts
 
-	err = startClientMonitoringService(config_obj)
+	err = StartClientMonitoringService(config_obj)
 	if err != nil {
 		return nil, err
 	}

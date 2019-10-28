@@ -114,7 +114,7 @@ func (self *ServerArtifactsRunner) process() error {
 }
 
 func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) error {
-	flow_id := path.Base(task.SessionId)
+	flow_id := task.SessionId
 	flow_path := path.Join("/clients/server/flows/", flow_id)
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -152,7 +152,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		return errors.New("Query should be specified")
 	}
 
-	flow_id := path.Base(task.SessionId)
+	flow_id := task.SessionId
 
 	// Cancel the query after this deadline
 	deadline := time.After(self.timeout)

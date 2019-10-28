@@ -43,6 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -72,7 +73,7 @@ func NewFlowId(client_id string) string {
 }
 
 func GetCollectionPath(client_id, flow_id string) string {
-	return path.Join("clients", client_id, "collections", flow_id)
+	return path.Join("/clients", client_id, "collections", flow_id)
 }
 
 func ScheduleArtifactCollection(
@@ -138,7 +139,7 @@ func ScheduleArtifactCollection(
 		State:      flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:    collector_request,
 	}
-	urn := GetCollectionPath(client_id, collection_context.SessionId)
+	collection_context.Urn = GetCollectionPath(client_id, collection_context.SessionId)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -146,7 +147,7 @@ func ScheduleArtifactCollection(
 	}
 
 	// Save the collection context.
-	err = db.SetSubject(config_obj, urn, collection_context)
+	err = db.SetSubject(config_obj, collection_context.Urn, collection_context)
 	if err != nil {
 		return "", err
 	}
@@ -159,7 +160,7 @@ func ScheduleArtifactCollection(
 			VQLClientAction: vql_collector_args})
 }
 
-func CloseContext(
+func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 	if !collection_context.Dirty {
@@ -176,7 +177,8 @@ func CloseContext(
 	}
 
 	if len(collection_context.UploadedFiles) > 0 {
-		err := flushContextUploadedFiles(config_obj, collection_context)
+		err := flushContextUploadedFiles(
+			config_obj, collection_context)
 		if err != nil {
 			return err
 		}
@@ -280,6 +282,7 @@ func LoadCollectionContext(
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
 		return &flows_proto.ArtifactCollectorContext{
+			Urn:       GetCollectionPath(client_id, flow_id),
 			SessionId: flow_id,
 		}, nil
 	}
@@ -297,6 +300,10 @@ func LoadCollectionContext(
 		return nil, err
 	}
 
+	if collection_context.SessionId == "" {
+		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
+	}
+
 	collection_context.Dirty = false
 	collection_context.Urn = urn
 
@@ -309,8 +316,6 @@ func ArtifactCollectorProcessOneMessage(
 	collection_context *flows_proto.ArtifactCollectorContext,
 	message *crypto_proto.GrrMessage) error {
 
-	message.SessionId = path.Base(message.SessionId)
-
 	err := FailIfError(config_obj, collection_context, message)
 	if err != nil {
 		return err
@@ -322,7 +327,7 @@ func ArtifactCollectorProcessOneMessage(
 		return appendUploadDataToFile(
 			config_obj, collection_context, message)
 
-	case processVQLResponses:
+	case constants.ProcessVQLResponses:
 		completed, err := IsRequestComplete(
 			config_obj, collection_context, message)
 		if err != nil {
@@ -585,59 +590,75 @@ func Log(config_obj *config_proto.Config,
 	collection_context.Dirty = true
 }
 
-func ProcessMessages(
-	ctx context.Context,
-	config_obj *config_proto.Config,
+type FlowRunner struct {
+	context_map map[string]*flows_proto.ArtifactCollectorContext
+	config_obj  *config_proto.Config
+}
+
+func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
+	return &FlowRunner{
+		config_obj:  config_obj,
+		context_map: make(map[string]*flows_proto.ArtifactCollectorContext),
+	}
+}
+
+func (self *FlowRunner) Close() {
+	for _, collection_context := range self.context_map {
+		closeContext(self.config_obj, collection_context)
+	}
+}
+
+func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
+	if job.ForemanCheckin != nil {
+		ForemanProcessMessage(
+			self.config_obj, job.Source, job.ForemanCheckin)
+		return
+	}
+
+	collection_context, pres := self.context_map[job.SessionId]
+	if !pres {
+		var err error
+
+		collection_context, err = LoadCollectionContext(
+			self.config_obj, job.Source, job.SessionId)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
+			return
+		}
+		self.context_map[job.SessionId] = collection_context
+	}
+
+	if collection_context == nil {
+		return
+	}
+
+	if job.LogMessage != nil {
+		Log(self.config_obj, collection_context, job.LogMessage.Message)
+		return
+	}
+
+	if job.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
+		err := MonitoringProcessMessage(self.config_obj, collection_context, job)
+		if err != nil {
+			Log(self.config_obj, collection_context,
+				fmt.Sprintf("MonitoringProcessMessage: %v", err))
+		}
+		return
+	}
+
+	err := ArtifactCollectorProcessOneMessage(
+		self.config_obj, collection_context, job)
+	if err != nil {
+		Log(self.config_obj, collection_context,
+			fmt.Sprintf("While processing job %v", err))
+	}
+}
+
+func (self *FlowRunner) ProcessMessages(ctx context.Context,
 	message_info *crypto.MessageInfo) (err error) {
 
-	// Process the messages using the same flow runner.
-	context_map := make(map[string]*flows_proto.ArtifactCollectorContext)
-	defer func() {
-		if err == nil {
-			for _, v := range context_map {
-				err = CloseContext(config_obj, v)
-			}
-		}
-	}()
-
-	return message_info.IterateJobs(ctx, func(job *crypto_proto.GrrMessage) {
-		if job.ForemanCheckin != nil {
-			ForemanProcessMessage(
-				config_obj, job.Source, job.ForemanCheckin)
-			return
-		}
-
-		collection_context, pres := context_map[job.SessionId]
-		if !pres {
-			collection_context, err = LoadCollectionContext(
-				config_obj, job.Source, job.SessionId)
-			if err != nil {
-				return
-			}
-			context_map[job.SessionId] = collection_context
-		}
-
-		if collection_context == nil {
-			return
-		}
-
-		if job.LogMessage != nil {
-			Log(config_obj, collection_context, job.LogMessage.Message)
-			return
-		}
-
-		if job.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
-			MonitoringProcessMessage(config_obj, collection_context, job)
-			return
-		}
-
-		err := ArtifactCollectorProcessOneMessage(
-			config_obj, collection_context, job)
-		if err != nil {
-			Log(config_obj, collection_context,
-				fmt.Sprintf("While processing job %v", err))
-		}
-	})
+	return message_info.IterateJobs(ctx, self.ProcessSingleMessage)
 }
 
 // Adds any parameters set in the ArtifactCollectorArgs into the

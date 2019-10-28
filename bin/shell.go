@@ -111,7 +111,12 @@ func shell_executor(config_obj *config_proto.Config,
 			VQLClientAction: vql_request})
 	kingpin.FatalIfError(err, "Sending client message ")
 
-	err = flows.NotifyClient(config_obj, *shell_client)
+	api_client_factory := grpc_client.GRPCAPIClient{}
+	client, cancel := api_client_factory.GetAPIClient(config_obj)
+	defer cancel()
+
+	_, err = client.NotifyClients(context.Background(),
+		&api_proto.NotificationRequest{ClientId: *shell_client})
 	kingpin.FatalIfError(err, "Sending client message ")
 
 	// Wait until the response arrives. The client may not be

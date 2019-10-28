@@ -54,6 +54,8 @@ type ApiServer struct {
 	config     *config_proto.Config
 	server_obj *server.Server
 	ca_pool    *x509.CertPool
+
+	api_client_factory grpc_client.APIClientFactory
 }
 
 func (self *ApiServer) CancelFlow(
@@ -74,7 +76,9 @@ func (self *ApiServer) CancelFlow(
 		}
 	}
 
-	result, err := flows.CancelFlow(self.config, in.ClientId, in.FlowId, user)
+	result, err := flows.CancelFlow(
+		self.config, in.ClientId, in.FlowId, user,
+		self.api_client_factory)
 	if err != nil {
 		return nil, err
 	}
@@ -161,15 +165,13 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Notify the client if it is listenning.
-	channel := grpc_client.GetChannel(self.config)
-	defer channel.Close()
+	client, cancel := self.api_client_factory.GetAPIClient(self.config)
+	defer cancel()
 
-	client := api_proto.NewAPIClient(channel)
 	_, err = client.NotifyClients(ctx, &api_proto.NotificationRequest{
 		ClientId: in.ClientId,
 	})
 	if err != nil {
-		fmt.Printf("Cant connect: %v\n", err)
 		return nil, err
 	}
 
@@ -710,9 +712,10 @@ func StartServer(config_obj *config_proto.Config, server_obj *server.Server) err
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
-			config:     config_obj,
-			server_obj: server_obj,
-			ca_pool:    CA_Pool,
+			config:             config_obj,
+			server_obj:         server_obj,
+			ca_pool:            CA_Pool,
+			api_client_factory: grpc_client.GRPCAPIClient{},
 		},
 	)
 	// Register reflection service.

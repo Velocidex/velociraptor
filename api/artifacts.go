@@ -275,7 +275,6 @@ func MakeCollectorRequest(
 			Artifacts: &flows_proto.Artifacts{
 				Names: []string{artifact_name},
 			},
-			Parameters: &flows_proto.ArtifactParameters{},
 		},
 	}
 
@@ -283,15 +282,18 @@ func MakeCollectorRequest(
 		parameters = parameters[:len(parameters)-len(parameters)%2]
 	}
 
-	for i := 0; i < len(parameters); {
-		k := parameters[i]
-		i++
-		v := parameters[i]
-		i++
-		result.Request.Parameters.Env = append(result.Request.Parameters.Env,
-			&actions_proto.VQLEnv{
-				Key: k, Value: v,
-			})
+	if parameters != nil {
+		result.Request.Parameters = &flows_proto.ArtifactParameters{}
+		for i := 0; i < len(parameters); {
+			k := parameters[i]
+			i++
+			v := parameters[i]
+			i++
+			result.Request.Parameters.Env = append(result.Request.Parameters.Env,
+				&actions_proto.VQLEnv{
+					Key: k, Value: v,
+				})
+		}
 	}
 
 	return result
