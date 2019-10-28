@@ -40,7 +40,6 @@
 package filesystem
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -53,6 +52,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"

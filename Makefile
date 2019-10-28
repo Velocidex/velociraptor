@@ -15,6 +15,9 @@ release:
 windows:
 	go run make.go -v windowsDev
 
+windowsx86:
+	go run make.go -v windowsx86
+
 clean:
 	go run make.go -v clean
 

@@ -18,7 +18,6 @@
 package parsers
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"io"
@@ -27,6 +26,7 @@ import (
 	"www.velocidex.com/golang/oleparse"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
