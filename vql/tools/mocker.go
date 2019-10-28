@@ -70,7 +70,7 @@ func (self MockFunction) Info(
 	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "mock",
-		Doc:     "Upload files to GCS.",
+		Doc:     "Mock a plugin.",
 		ArgType: type_map.AddType(scope, &MockerFunctionArgs{}),
 	}
 }

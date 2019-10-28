@@ -102,7 +102,7 @@ func downloadFlowToZip(
 	for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
 		artifact, source := artifacts.SplitFullSourceName(artifact_source)
 		copier(artifacts.GetCSVPath(
-			client_id, "", path.Base(flow_id),
+			client_id, "", flow_id,
 			artifact, source, artifacts.MODE_CLIENT))
 	}
 
@@ -112,7 +112,7 @@ func downloadFlowToZip(
 	}
 
 	// File uploads are stored in their own CSV file.
-	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id), "", "")
+	file_path := artifacts.GetUploadsFile(client_id, flow_id, "", "")
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -274,7 +274,7 @@ func huntResultDownloadHandler(
 			returnError(w, 404, "Hunt id should be specified.")
 			return
 		}
-		hunt_id := path.Base(hunt_ids[0])
+		hunt_id := hunt_ids[0]
 
 		hunt_details, err := flows.GetHunt(
 			config_obj,

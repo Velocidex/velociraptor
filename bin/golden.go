@@ -51,7 +51,6 @@ var (
 
 type testFixture struct {
 	Parameters map[string]string `json:"Parameters"`
-	Files      map[string]string `json:"Files"`
 	Queries    []string          `json:"Queries"`
 }
 

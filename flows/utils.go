@@ -18,14 +18,10 @@
 package flows
 
 import (
-	"context"
-
 	"github.com/golang/protobuf/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 )
 
 // ProduceBackwardCompatibleGrrMessage is used for messages going from
@@ -77,19 +73,4 @@ func QueueMessageForClient(
 	}
 
 	return db.QueueMessageForClient(config_obj, client_id, req)
-}
-
-func NotifyClient(
-	config_obj *config_proto.Config,
-	client_id string) error {
-
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
-	_, err := client.NotifyClients(context.Background(), &api_proto.NotificationRequest{
-		ClientId: client_id,
-	})
-
-	return err
 }

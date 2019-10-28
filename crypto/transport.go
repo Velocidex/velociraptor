@@ -197,8 +197,7 @@ func (self *CryptoManager) Clear() {
 
 func (self *CryptoManager) GetCSR() ([]byte, error) {
 	subj := pkix.Name{
-		CommonName: "aff4:/" + ClientIDFromPublicKey(
-			&self.private_key.PublicKey),
+		CommonName: ClientIDFromPublicKey(&self.private_key.PublicKey),
 	}
 
 	template := x509.CertificateRequest{

@@ -21,11 +21,9 @@ import (
 	"context"
 	"strings"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 )
 
 func enroll(server *Server, csr *crypto_proto.Certificate) error {
@@ -37,10 +35,9 @@ func enroll(server *Server, csr *crypto_proto.Certificate) error {
 
 		client_id := strings.TrimPrefix(*client_urn, "aff4:/")
 
-		channel := grpc_client.GetChannel(server.config)
-		defer channel.Close()
-
-		client := api_proto.NewAPIClient(channel)
+		client, closer := server.APIClientFactory.GetAPIClient(
+			server.config)
+		defer closer()
 
 		request := &flows_proto.ArtifactCollectorRequest{
 			ClientId: client_id,

@@ -213,7 +213,22 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 		})
 }
 
+var (
+	implementations map[string]FileStore = make(map[string]FileStore)
+)
+
 // Currently we only support a DirectoryFileStore.
 func GetFileStore(config_obj *config_proto.Config) FileStore {
+	if config_obj.Datastore.Implementation == "Test" {
+		impl, pres := implementations["Test"]
+		if !pres {
+			impl = &MemoryFileStore{
+				Data: make(map[string][]byte)}
+			implementations["Test"] = impl
+		}
+
+		return impl
+	}
+
 	return &DirectoryFileStore{config_obj}
 }

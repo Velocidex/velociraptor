@@ -154,7 +154,7 @@ func (self *ClientEventTable) Update(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func startClientMonitoringService(config_obj *config_proto.Config) error {
+func StartClientMonitoringService(config_obj *config_proto.Config) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

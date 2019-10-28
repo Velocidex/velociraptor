@@ -265,10 +265,8 @@ func ModifyHunt(config_obj *config_proto.Config,
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
+	client, cancel := dispatcher.APIClientFactory.GetAPIClient(config_obj)
+	defer cancel()
 	client.NotifyClients(
 		context.Background(), &api_proto.NotificationRequest{
 			NotifyAll: true,

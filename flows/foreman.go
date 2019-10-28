@@ -36,6 +36,8 @@
 package flows
 
 import (
+	"context"
+
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -118,7 +120,14 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		return NotifyClient(config_obj, client_id)
+		api_client, cancel := dispatcher.APIClientFactory.GetAPIClient(
+			config_obj)
+		defer cancel()
+
+		_, err = api_client.NotifyClients(
+			context.Background(), &api_proto.NotificationRequest{
+				ClientId: client_id})
+		return err
 	})
 }
 
