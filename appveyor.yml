@@ -7,6 +7,7 @@ environment:
   GOPATH: c:\gopath
   PATH: C:\msys64\mingw64\bin;%GOPATH%\bin;%PATH%
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\appveyor.config.yaml
+  GOPROXY: https://proxy.golang.org
 
 cache:
   - '%LocalAppData%\go-build -> .appveyor_cache_clear'

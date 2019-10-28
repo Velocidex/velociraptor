@@ -104,10 +104,37 @@ func (self *Builder) Env() map[string]string {
 	return env
 }
 
+// Make sure the correct version of the syso file is present. If we
+// are building for non windows platforms we need to remove it
+// completely.
+func (self Builder) ensureSyso() error {
+	sh.Rm("bin/rsrc.syso")
+
+	if self.goos == "windows" {
+		switch self.arch {
+		case "386":
+			err := sh.Copy("bin/rsrc.syso", "docs/rsrc_386.syso")
+			if err != nil {
+				return err
+			}
+		case "amd64":
+			err := sh.Copy("bin/rsrc.syso", "docs/rsrc_amd64.syso")
+			if err != nil {
+				return err
+			}
+
+		}
+	}
+
+	return nil
+}
+
 func (self Builder) Run() error {
 	if err := os.Mkdir("output", 0700); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("failed to create output: %v", err)
 	}
+
+	self.ensureSyso()
 
 	err := ensure_assets()
 	if err != nil {
