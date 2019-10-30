@@ -29,6 +29,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -58,6 +59,11 @@ func GetFlows(
 	}
 
 	for _, urn := range flow_urns {
+		// Hide the monitoring flow since it is not a real flow.
+		if strings.HasSuffix(urn, constants.MONITORING_WELL_KNOWN_FLOW) {
+			continue
+		}
+
 		collection_context := &flows_proto.ArtifactCollectorContext{}
 		err := db.GetSubject(config_obj, urn, collection_context)
 		if err != nil {

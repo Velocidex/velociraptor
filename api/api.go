@@ -477,6 +477,14 @@ func (self *ApiServer) VFSStatDirectory(
 	return result, err
 }
 
+func (self *ApiServer) VFSStatDownload(
+	ctx context.Context,
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSDownloadInfo, error) {
+	result, err := vfsStatDownload(
+		self.config, in.ClientId, in.VfsPath)
+	return result, err
+}
+
 func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (

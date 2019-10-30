@@ -181,6 +181,13 @@ service API {
         };
   }
 
+  rpc VFSStatDownload(VFSListRequest) returns (VFSDownloadInfo) {
+        option (google.api.http) = {
+            get: "/api/v1/VFSStatDownload",
+        };
+  }
+
+
   // This can be used by API clients to fetch file content.
     rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
         // Not accessible via the GUI - the gui can access the

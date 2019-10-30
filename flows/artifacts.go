@@ -172,7 +172,8 @@ func closeContext(
 	if len(collection_context.Logs) > 0 {
 		err := flushContextLogs(config_obj, collection_context)
 		if err != nil {
-			return err
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = err.Error()
 		}
 	}
 
@@ -180,14 +181,16 @@ func closeContext(
 		err := flushContextUploadedFiles(
 			config_obj, collection_context)
 		if err != nil {
-			return err
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = err.Error()
 		}
 	}
 	collection_context.Dirty = false
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return err
+		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+		collection_context.Status = err.Error()
 	}
 
 	return db.SetSubject(config_obj, collection_context.Urn,
@@ -238,7 +241,7 @@ func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
-	log_path := path.Join(collection_context.Urn, "uploads")
+	log_path := path.Join(collection_context.Urn, "uploads.csv")
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.WriteFile(log_path)
 	if err != nil {

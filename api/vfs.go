@@ -307,6 +307,34 @@ func vfsStatDirectory(
 	return result, nil
 }
 
+func vfsStatDownload(
+	config_obj *config_proto.Config,
+	client_id string,
+	vfs_path string) (*flows_proto.VFSDownloadInfo, error) {
+	vfs_path = path.Join("/", vfs_path)
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	client_path, accessor := GetClientPath(vfs_path)
+	vfs_urn := utils.GetVFSDownloadInfoPath(client_id, accessor, client_path)
+
+	result := &flows_proto.VFSDownloadInfo{}
+
+	// Regardless of error we return success - if the file does
+	// not exist yet then it will have no flow id associated with
+	// it. This allows the gui to watch for the VFS directory to
+	// appear for the first time.
+	err = db.GetSubject(config_obj, vfs_urn, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
 // Split the vfs path into a client path and an accessor. We only
 // support certain well defined prefixes which control the type of
 // accessor to use.
