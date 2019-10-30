@@ -71,7 +71,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		return buff.String()
 
 	default:
-		scope.Log("encode: Unknown format %s", arg.Format)
+		scope.Log("serialize: Unknown format %s", arg.Format)
 	}
 	return vfilter.Null{}
 }
