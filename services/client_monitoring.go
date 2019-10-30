@@ -93,39 +93,41 @@ func (self *ClientEventTable) Update(
 		rate = 100
 	}
 
-	for _, name := range arg.Artifacts.Names {
-		logger.Info("Collecting Client Monitoring Artifact: %s", name)
+	if arg.Artifacts != nil {
+		for _, name := range arg.Artifacts.Names {
+			logger.Info("Collecting Client Monitoring Artifact: %s", name)
 
-		vql_collector_args := &actions_proto.VQLCollectorArgs{
-			MaxWait:      100,
-			OpsPerSecond: rate,
+			vql_collector_args := &actions_proto.VQLCollectorArgs{
+				MaxWait:      100,
+				OpsPerSecond: rate,
 
-			// Event queries never time out on their own.
-			Timeout: 1000000000,
-		}
+				// Event queries never time out on their own.
+				Timeout: 1000000000,
+			}
 
-		artifact, pres := repository.Get(name)
-		if !pres {
-			return errors.New("Unknown artifact " + name)
-		}
+			artifact, pres := repository.Get(name)
+			if !pres {
+				return errors.New("Unknown artifact " + name)
+			}
 
-		err := repository.Compile(artifact, vql_collector_args)
-		if err != nil {
-			return err
-		}
+			err := repository.Compile(artifact, vql_collector_args)
+			if err != nil {
+				return err
+			}
 
-		// Add any artifact dependencies.
-		err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-		if err != nil {
-			return err
-		}
+			// Add any artifact dependencies.
+			err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			if err != nil {
+				return err
+			}
 
-		event_table.Event = append(event_table.Event, vql_collector_args)
+			event_table.Event = append(event_table.Event, vql_collector_args)
 
-		// Compress the VQL on the way out.
-		err = artifacts.Obfuscate(config_obj, vql_collector_args)
-		if err != nil {
-			return err
+			// Compress the VQL on the way out.
+			err = artifacts.Obfuscate(config_obj, vql_collector_args)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

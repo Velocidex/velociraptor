@@ -9,6 +9,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -156,6 +157,14 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 		n, err := self.fd.ReadAt(self.read_buf, self.leased_pointer)
 		if err == nil && n == len(self.read_buf) {
 			length := int64(binary.LittleEndian.Uint64(self.read_buf))
+			// File might be corrupt - just reset the
+			// entire file.
+			if length > constants.MAX_MEMORY*2 {
+				self.fd.Truncate(0)
+				self.leased_pointer = 0
+				self.header.WritePointer = 0
+				return nil
+			}
 			item := make([]byte, length)
 			n, err := self.fd.ReadAt(item, self.leased_pointer+8)
 			if err == nil && int64(n) == length {
