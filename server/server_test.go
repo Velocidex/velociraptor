@@ -447,7 +447,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 		"hello world")
 
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/"+flow_id+"/uploads",
+		"/clients/"+self.client_id+"/collections/"+flow_id+"/uploads.csv",
 		flow_id)
 }
 
