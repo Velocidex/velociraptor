@@ -70,7 +70,7 @@
             ng-class="{'row-selected': name == controller.selectedName}">
           <td style="cursor: pointer; border: none"
               ng-dblclick="controller.remove(name)"
-              ng-click="controller.selectedName = name"
+              ng-click="controller.selectArtifact(name)"
               ng-class="{'row-selected': name == controller.selectedName}">
             <div style="display:block" class="full-width-height">
               <strong>{$ ::name $}</strong>

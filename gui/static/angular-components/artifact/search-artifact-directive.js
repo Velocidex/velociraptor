@@ -48,8 +48,17 @@ const SearchArtifactController = function(
             function(response) {
                 var items = response['data'].items;
                 for(var i=0; i < items.length;i++) {
-                    var item = items[i];
-                    self.descriptors[item.name] = item;
+                  var item = items[i];
+                  self.descriptors[item.name] = item;
+
+                  var params = item.parameters;
+                  if (angular.isObject(params)) {
+                    for (var j=0; j<params.length; j++) {
+                      var param = params[j];
+
+                      self.param_types[param.name] = param.type;
+                    }
+                  }
                 }
             });
     }

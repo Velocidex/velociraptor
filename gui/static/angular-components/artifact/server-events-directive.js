@@ -83,7 +83,7 @@ ServerEventsController.prototype.onDateChange = function() {
 ServerEventsController.prototype.GetArtifactList = function() {
   var url = 'v1/ListAvailableEventResults';
   var params = {};
-  return this.grrApiService_.get(url, params).then(
+  return this.grrApiService_.post(url, params).then(
     function(response) {
       this.artifacts = response.data;
     }.bind(this));

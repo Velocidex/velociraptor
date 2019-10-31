@@ -29,7 +29,7 @@ Queries:
 
   # Check for PortProxy glob test parsing of fields and limit on type
   - SELECT FullPath
-    FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', 
+    FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**',
         accessor='reg')
     WHERE Type
-
+    ORDER BY FullPath

@@ -98,7 +98,7 @@ ClientEventController.prototype.onDateChange = function() {
 ClientEventController.prototype.GetArtifactList = function() {
   var url = 'v1/ListAvailableEventResults';
   var params = {"client_id": this.clientId};
-  return this.grrApiService_.get(url, params).then(
+  return this.grrApiService_.post(url, params).then(
     function(response) {
       this.artifacts = response.data;
     }.bind(this));
