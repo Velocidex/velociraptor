@@ -51,6 +51,7 @@
     <div class="pull-right">
       <button class="btn btn-default btn-sm form-add" style="margin-top: 0.5em" name="Add"
               id="add_artifact"
+              ng-disabled="!controller.selectedName"
               ng-click="controller.add(controller.selectedName)">
         Add
       </button>
@@ -94,6 +95,7 @@
 
     <div class="pull-right">
       <button class="btn btn-default btn-sm form-add" name="Add"
+              ng-disabled="!controller.selectedName"
               ng-click="controller.remove(controller.selectedName)">
         Remove
       </button>
