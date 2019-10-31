@@ -50,6 +50,12 @@ func ProduceBackwardCompatibleGrrMessage(req *crypto_proto.GrrMessage) *crypto_p
 		req.ArgsRdfName = "ForemanCheckin"
 	}
 
+	if req.Cancel != nil {
+		payload = req.Cancel
+		req.Name = "Cancel"
+		req.ArgsRdfName = "Cancel"
+	}
+
 	if payload != nil {
 		serialized, err := proto.Marshal(payload)
 		if err == nil {

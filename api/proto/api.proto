@@ -306,10 +306,11 @@ service API {
         };
     }
 
-    rpc ListAvailableEventResults(ListAvailableEventResultsRequest)
+  rpc ListAvailableEventResults(ListAvailableEventResultsRequest)
         returns (ListAvailableEventResultsResponse) {
         option (google.api.http) = {
-            get: "/api/v1/ListAvailableEventResults",
+            post: "/api/v1/ListAvailableEventResults",
+            body: "*",
         };
     }
 

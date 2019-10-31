@@ -4,8 +4,8 @@ description: |
   monitoring artifacts for new events and push those to an elastic
   index.
 
-  NOTE: You ensure you are collecting these artifacts from the clients
-  by adding them to the "Client Events" GUI.
+  NOTE: You must ensure you are collecting these artifacts from the
+  clients by adding them to the "Client Events" GUI.
 
 type: SERVER_EVENT
 
