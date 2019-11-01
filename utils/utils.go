@@ -101,13 +101,9 @@ func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
 	}
 
 	switch t := value.(type) {
+
 	case vfilter.Dict:
-		result := []string{}
-		iter := t.IterFunc()
-		for kv, ok := iter(); ok; kv, ok = iter() {
-			result = append(result, fmt.Sprintf("%v: %v", kv.Key, kv.Value))
-		}
-		return strings.Join(result, "\n")
+		return t.String()
 
 	case map[string]interface{}:
 		result := []string{}

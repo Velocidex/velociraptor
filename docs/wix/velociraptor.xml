@@ -35,14 +35,15 @@
                 Arguments='service run '
                 ErrorControl="normal"
                 Interactive="no">
-                                <util:ServiceConfig
-                                xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
-                                        FirstFailureActionType='restart'
-                                        SecondFailureActionType='restart'
-                                        ThirdFailureActionType='restart'
-                                        RestartServiceDelayInSeconds='30'
-                                        ResetPeriodInDays='0'/>
-                        </ServiceInstall>
+              <util:ServiceConfig
+                  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+                  FirstFailureActionType='restart'
+                  SecondFailureActionType='restart'
+                  ThirdFailureActionType='restart'
+                  RestartServiceDelayInSeconds='30'
+                  ResetPeriodInDays='0'/>
+            </ServiceInstall>
+
             <ServiceControl
                 Id="StartService"
                 Name="Velociraptor"
