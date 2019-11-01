@@ -183,13 +183,13 @@ func append_row_to_buffer(scope *vfilter.Scope,
 	row vfilter.Row, id int64, buf *bytes.Buffer,
 	arg *_ElasticPluginArgs) error {
 
-	row_dict := vfilter.RowToDict(scope, row)
+	row_dict := vfilter.RowToMap(scope, row)
 	index := arg.Index
-	index_any, pres := row_dict.Get("_index")
+	index_any, pres := row_dict["_index"]
 	if pres {
 		index = sanitize_index(
 			fmt.Sprintf("%v", index_any))
-		row_dict.Delete("_index")
+		delete(row_dict, "_index")
 	}
 
 	meta := []byte(fmt.Sprintf(
