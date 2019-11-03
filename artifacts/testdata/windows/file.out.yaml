@@ -18,4 +18,4 @@ SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  {
   "FullPath": "\\C:\\Users\\link\\System32\\drivers\\atapi.sys"
  }
-][]
+]
