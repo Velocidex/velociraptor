@@ -12,14 +12,14 @@ FROM clients(search='label:*') ORDER BY client_id
   })
 [
  {
+  "os_info.system": "windows",
   "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
    "ClientId": "C.abad2ac29511a9ac",
    "Labels": [
     "WinBoxes"
    ],
    "Op": "set"
-  },
-  "os_info.system": "windows"
+  }
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[
  {
@@ -54,13 +54,13 @@ FROM clients(search='label:*') ORDER BY client_id
 FROM clients(search='label:*') ORDER BY client_id
 [
  {
-  "client_id": "C.abad2ac29511a9ac",
   "label(client_id=client_id, op='remove', labels=labels)": {
    "ClientId": "C.abad2ac29511a9ac",
    "Labels": [
     "WinBoxes"
    ],
    "Op": "remove"
-  }
+  },
+  "client_id": "C.abad2ac29511a9ac"
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[]
