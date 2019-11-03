@@ -1,7 +1,7 @@
 SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
  {
-  "ClientId": "C.abad2ac29511a9ac",
   "Hostname": "DESKTOP-6CBJ8MJ",
+  "ClientId": "C.abad2ac29511a9ac",
   "LastSeen": 1571983851.82706
  }
 ]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
