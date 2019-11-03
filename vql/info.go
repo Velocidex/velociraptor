@@ -21,6 +21,7 @@ import (
 	"runtime"
 
 	fqdn "github.com/Showmax/go-fqdn"
+	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/host"
 
 	"www.velocidex.com/golang/vfilter"
@@ -32,8 +33,8 @@ type InfoStat struct {
 	Architecture string
 }
 
-func getInfo(host *host.InfoStat) *vfilter.Dict {
-	return vfilter.NewDict().
+func getInfo(host *host.InfoStat) *ordereddict.Dict {
+	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
 		Set("Uptime", host.Uptime).
 		Set("BootTime", host.BootTime).
@@ -54,7 +55,7 @@ func init() {
 			PluginName: "info",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				if info, err := host.Info(); err == nil {
 					item := getInfo(info).

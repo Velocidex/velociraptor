@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -38,7 +39,7 @@ type CopyFunction struct{}
 
 func (self *CopyFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	// Check the config if we are allowed to execve at all.
 	scope_config, pres := scope.Resolve("config")

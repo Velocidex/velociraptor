@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -14,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func MonitoringProcessMessage(
@@ -91,7 +91,7 @@ func MonitoringProcessMessage(
 		}
 
 		for _, row := range rows {
-			csv_row := vfilter.NewDict().Set(
+			csv_row := ordereddict.NewDict().Set(
 				"_ts", int(time.Now().Unix()))
 			for _, column := range response.Columns {
 				csv_row.Set(column, row[column])

@@ -6,6 +6,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -38,7 +39,7 @@ func (self *StatsCollector) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Stats Collector Service.")
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
 		Set("server_config", self.config_obj)
 

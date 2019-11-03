@@ -18,6 +18,7 @@
 package filesystem
 
 import (
+	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/disk"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -52,7 +53,7 @@ func init() {
 			PluginName: "partitions",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
 				arg := &PartitionsArgs{}

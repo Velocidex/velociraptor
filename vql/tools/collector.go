@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -23,7 +24,7 @@ type CollectPlugin struct{}
 func (self CollectPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -44,7 +45,7 @@ func (self CollectPlugin) Call(
 		}
 		defer func() {
 			container.Close()
-			output_chan <- vfilter.NewDict().
+			output_chan <- ordereddict.NewDict().
 				Set("Container", arg.Output)
 		}()
 
@@ -53,7 +54,7 @@ func (self CollectPlugin) Call(
 
 		// Any uploads go into the container.
 		subscope := scope.Copy()
-		env := vfilter.NewDict().
+		env := ordereddict.NewDict().
 			Set("$uploader", container)
 
 		subscope.AppendVars(env)

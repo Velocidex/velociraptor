@@ -20,6 +20,7 @@ package functions
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -32,7 +33,7 @@ type Rot13 struct{}
 
 func (self *Rot13) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &Rot13Args{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

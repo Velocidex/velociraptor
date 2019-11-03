@@ -35,12 +35,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -62,7 +62,7 @@ type RegKeyInfo struct {
 	_modtime   time.Time
 	_full_path string
 	_name      string
-	_data      *vfilter.Dict
+	_data      *ordereddict.Dict
 }
 
 func (self *RegKeyInfo) IsDir() bool {
@@ -376,7 +376,7 @@ func getKeyInfo(key registry.Key, key_path string, name string) (*RegKeyInfo, er
 		_name:      name,
 		_modtime:   stat.ModTime(),
 		_full_path: key_path,
-		_data:      vfilter.NewDict().Set("type", "key"),
+		_data:      ordereddict.NewDict().Set("type", "key"),
 	}, nil
 }
 
@@ -416,7 +416,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 
 	switch value_type {
 	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
-		value_info._data = vfilter.NewDict().
+		value_info._data = ordereddict.NewDict().
 			Set("type", value_info.Type)
 		data, _, err := key.GetIntegerValue(value_name)
 		if err != nil {
@@ -441,7 +441,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		}
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = vfilter.NewDict().
+			value_info._data = ordereddict.NewDict().
 				Set("type", "BINARY").
 				Set("value", data)
 		}
@@ -457,7 +457,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		value_info.Type = "MULTI_SZ"
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = vfilter.NewDict().
+			value_info._data = ordereddict.NewDict().
 				Set("type", "MULTI_SZ").
 				Set("value", values)
 		}
@@ -477,7 +477,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		value_info._binary_data = []byte(data)
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = vfilter.NewDict().
+			value_info._data = ordereddict.NewDict().
 				Set("type", value_info.Type).
 				// We do not expand the value data
 				// because this will depend on the
@@ -495,7 +495,7 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 		value_info.Type = fmt.Sprintf("%d", value_type)
 
 		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = vfilter.NewDict().
+			value_info._data = ordereddict.NewDict().
 				Set("type", value_info.Type).
 				Set("value", buf)
 		}

@@ -23,6 +23,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
@@ -92,7 +93,7 @@ type _BinaryParserPlugin struct{}
 func (self _BinaryParserPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	arg := &_BinaryParserPluginArg{}
@@ -223,7 +224,7 @@ type _BinaryParserFunction struct{}
 
 func (self *_BinaryParserFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	result := []vfilter.Row{}
 
 	arg := &_BinaryParserFunctionArg{}

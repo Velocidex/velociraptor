@@ -22,6 +22,7 @@ package server
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -42,7 +43,7 @@ type ScheduleCollectionFunction struct{}
 
 func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &ScheduleCollectionFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

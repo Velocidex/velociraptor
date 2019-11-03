@@ -30,6 +30,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	prompt "github.com/c-bata/go-prompt"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -112,7 +113,7 @@ func executeSET(
 	matches := set_re.FindStringSubmatch(t)
 	if len(matches) > 1 {
 		ConsoleLog.Info("Setting %v to %v\n", matches[1], matches[2])
-		scope.AppendVars(vfilter.NewDict().Set(matches[1], matches[2]))
+		scope.AppendVars(ordereddict.NewDict().Set(matches[1], matches[2]))
 	}
 }
 
@@ -602,7 +603,7 @@ func doConsole() {
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{

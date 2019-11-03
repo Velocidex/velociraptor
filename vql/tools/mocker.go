@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -14,7 +15,7 @@ type MockerPlugin struct {
 }
 
 func (self MockerPlugin) Call(ctx context.Context,
-	scope *vfilter.Scope, args *vfilter.Dict) <-chan vfilter.Row {
+	scope *vfilter.Scope, args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -52,7 +53,7 @@ type MockFunction struct{}
 
 func (self *MockFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &MockerFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

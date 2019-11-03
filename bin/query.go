@@ -24,6 +24,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -86,7 +87,7 @@ func outputCSV(ctx context.Context,
 		kingpin.FatalIfError(err, "outputCSV")
 
 		for _, row := range payload {
-			row_dict := vfilter.NewDict()
+			row_dict := ordereddict.NewDict()
 			for _, column := range result.Columns {
 				value, pres := row[column]
 				if pres {
@@ -106,7 +107,7 @@ func doQuery() {
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{
@@ -148,7 +149,7 @@ func doQuery() {
 }
 
 func doExplain(plugin string) {
-	result := vfilter.NewDict()
+	result := ordereddict.NewDict()
 	type_map := vfilter.NewTypeMap()
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()

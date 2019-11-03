@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -24,7 +25,7 @@ type TemplateEngine interface {
 // Everything needed to evaluate a template
 type BaseTemplateEngine struct {
 	Artifact *artifacts_proto.Artifact
-	Env      *vfilter.Dict
+	Env      *ordereddict.Dict
 	Scope    *vfilter.Scope
 	logger   *logging.LogContext
 }
@@ -278,7 +279,7 @@ func newBaseTemplateEngine(
 			"Artifact %v not known.", artifact_name)
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())

@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -41,7 +42,7 @@ func (self *CSVWriter) Close() {
 	self.wg.Wait()
 }
 
-type CSVReader chan *vfilter.Dict
+type CSVReader chan *ordereddict.Dict
 
 func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 	output_chan := make(CSVReader)
@@ -57,7 +58,7 @@ func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 
 	process_file:
 		for {
-			row := vfilter.NewDict()
+			row := ordereddict.NewDict()
 			row_data, err := csv_reader.ReadAny()
 			if err != nil {
 				break process_file

@@ -28,6 +28,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -107,7 +108,7 @@ func (self *ConnectionStat) TypeString() string {
 type NetstatArgs struct{}
 
 func runNetstat(scope *vfilter.Scope,
-	args *vfilter.Dict) []vfilter.Row {
+	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 	arg := &NetstatArgs{}
 

@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -252,7 +253,7 @@ func ArchiveFlow(
 	collection_context.Dirty = true
 
 	// Keep track of archived flows so they can be purged later.
-	row := vfilter.NewDict().
+	row := ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context)
 	serialized, err := json.Marshal([]vfilter.Row{row})

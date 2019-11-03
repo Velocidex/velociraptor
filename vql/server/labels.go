@@ -22,6 +22,7 @@ package server
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -39,7 +40,7 @@ type AddLabels struct{}
 
 func (self *AddLabels) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &AddLabelsArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -34,7 +35,7 @@ func (self *InterrogationService) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting interrogation service.")
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
 		Set("server_config", self.config_obj)
 
@@ -54,7 +55,7 @@ func (self *InterrogationService) Start() error {
 
 	go func() {
 		for row := range vql.Eval(ctx, scope) {
-			row_dict, ok := row.(*vfilter.Dict)
+			row_dict, ok := row.(*ordereddict.Dict)
 			if ok {
 				err := self.ProcessRow(scope, row_dict)
 				if err != nil {
@@ -68,7 +69,7 @@ func (self *InterrogationService) Start() error {
 }
 
 func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
-	row *vfilter.Dict) error {
+	row *ordereddict.Dict) error {
 	getter := func(field string) string {
 		return vql_subsystem.GetStringFromRow(scope, row, field)
 	}

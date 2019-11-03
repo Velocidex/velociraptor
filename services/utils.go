@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -20,7 +21,7 @@ func watchForFlowCompletion(
 	handler func(ctx context.Context,
 		scope *vfilter.Scope, row vfilter.Row)) (cancel func(), err error) {
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("server_config", config_obj).
 		Set("artifact_name", artifact_name)
 

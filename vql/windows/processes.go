@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/StackExchange/wmi"
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -189,7 +190,7 @@ func init() {
 		PluginName: "pslist",
 		Function: func(
 			scope *vfilter.Scope,
-			args *vfilter.Dict) []vfilter.Row {
+			args *ordereddict.Dict) []vfilter.Row {
 			var result []vfilter.Row
 
 			arg := &PslistArgs{}

@@ -21,6 +21,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -44,7 +45,7 @@ func (self _PEFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 
 func (self _PEFunction) Call(
 	ctx context.Context, scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_PEFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

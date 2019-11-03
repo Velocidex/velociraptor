@@ -50,12 +50,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 type _DiffCache struct {
-	rows         map[string][]*vfilter.Dict
+	rows         map[string][]*ordereddict.Dict
 	stored_query vfilter.StoredQuery
 	key          string
 	done         chan bool
@@ -64,7 +65,7 @@ type _DiffCache struct {
 func (self *_DiffCache) Eval(ctx context.Context, scope *vfilter.Scope) []vfilter.Row {
 	result := []vfilter.Row{}
 	old_rows_map := self.rows
-	self.rows = make(map[string][]*vfilter.Dict)
+	self.rows = make(map[string][]*ordereddict.Dict)
 
 	row_chan := self.stored_query.Eval(ctx, scope)
 	added_keys := []string{}
@@ -155,7 +156,7 @@ type _DiffPlugin struct{}
 
 func (self _DiffPlugin) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

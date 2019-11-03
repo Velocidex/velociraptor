@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/robertkrimen/otto"
 	_ "github.com/robertkrimen/otto/underscore"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -59,7 +60,7 @@ func getVM(ctx context.Context,
 
 func (self *JSCompile) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSCompileArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -98,7 +99,7 @@ type JSCall struct{}
 
 func (self *JSCall) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &JSCallArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -70,7 +71,7 @@ func _ParseFile(
 			if match != nil {
 				names := r.SubexpNames()
 				for _, hit := range match {
-					row := vfilter.NewDict().Set(
+					row := ordereddict.NewDict().Set(
 						"FullPath", filename)
 					for _, name := range arg.capture_vars {
 						if name != "" {
@@ -101,7 +102,7 @@ func _ParseFile(
 func (self _ParseFileWithRegex) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &_ParseFileWithRegexArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -158,14 +159,14 @@ type _ParseStringWithRegexFunction struct{}
 
 func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) (result vfilter.Any) {
+	args *ordereddict.Dict) (result vfilter.Any) {
 	arg := &_ParseStringWithRegexFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("parse_string_with_regex: %s", err.Error())
 		return vfilter.Null{}
 	}
-	row := vfilter.NewDict()
+	row := ordereddict.NewDict()
 	merged_names := []string{}
 	for _, regex := range arg.Regex {
 		r, err := regexp.Compile("(?i)" + regex)
@@ -228,7 +229,7 @@ type _RegexReplace struct{}
 func (self _RegexReplace) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_RegexReplaceArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

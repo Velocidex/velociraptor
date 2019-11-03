@@ -24,6 +24,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -95,7 +96,7 @@ func collectArtifact(
 	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -160,7 +161,7 @@ func collectArtifactToContainer(
 	artifact_name string,
 	container *reporting.Container,
 	request *actions_proto.VQLCollectorArgs) {
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())

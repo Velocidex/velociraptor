@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -34,7 +35,7 @@ type HumanizeFunction struct{}
 
 func (self *HumanizeFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &HumanizeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

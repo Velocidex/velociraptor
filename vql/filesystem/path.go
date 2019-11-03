@@ -21,6 +21,7 @@ import (
 	"context"
 	"regexp"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -36,7 +37,7 @@ type _Basename struct{}
 func (self _Basename) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_BasenameArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

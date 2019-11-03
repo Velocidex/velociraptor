@@ -28,6 +28,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -385,7 +386,7 @@ func ArtifactCollectorProcessOneMessage(
 			}
 
 			for _, row := range rows {
-				csv_row := vfilter.NewDict()
+				csv_row := ordereddict.NewDict()
 
 				for _, column := range response.Columns {
 					item, pres := row[column]
@@ -440,7 +441,7 @@ func IsRequestComplete(
 	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Dirty = true
 
-	row := vfilter.NewDict().
+	row := ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context).
 		Set("FlowId", collection_context.SessionId)
@@ -555,7 +556,7 @@ func appendUploadDataToFile(
 	if file_buffer.Eof {
 		uploadCounter.Inc()
 
-		row := vfilter.NewDict().
+		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("ClientId", collection_context.Request.ClientId).
 			Set("VFSPath", file_path).
