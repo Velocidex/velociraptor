@@ -1,30 +1,30 @@
 SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns( binaryURL="https://storage.googleapis.com/go.velocidex.com/", AutorunArgs="-nobanner -accepteula -a b -c *") WHERE Company =~ "Microsoft"[
  {
-  "Category": "Boot Execute",
-  "Company": "Microsoft Corporation",
-  "Description": "Auto Check Utility",
-  "Enabled": "enabled",
-  "Entry": "autocheck autochk /q /v *",
+  "﻿Time": "2/22/2014 12:17 PM",
   "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
-  "Image Path": "c:\\windows\\system32\\autochk.exe",
-  "Launch String": "autocheck autochk /q /v *",
+  "Entry": "autocheck autochk /q /v *",
+  "Enabled": "enabled",
+  "Category": "Boot Execute",
   "Profile": "System-wide",
+  "Description": "Auto Check Utility",
+  "Company": "Microsoft Corporation",
+  "Image Path": "c:\\windows\\system32\\autochk.exe",
   "Version": "6.3.9600.17031",
-  "_Source": "Windows.Sysinternals.Autoruns",
-  "﻿Time": "2/22/2014 12:17 PM"
+  "Launch String": "autocheck autochk /q /v *",
+  "_Source": "Windows.Sysinternals.Autoruns"
  },
  {
-  "Category": "Boot Execute",
-  "Company": "Microsoft Corporation",
-  "Description": "Service Control Manager Extension DLL for non-minwin",
-  "Enabled": "enabled",
-  "Entry": "%systemroot%\\system32\\scext.dll",
+  "﻿Time": "10/29/2014 1:28 AM",
   "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\ServiceControlManagerExtension",
-  "Image Path": "c:\\windows\\system32\\scext.dll",
-  "Launch String": "%systemroot%\\system32\\scext.dll",
+  "Entry": "%systemroot%\\system32\\scext.dll",
+  "Enabled": "enabled",
+  "Category": "Boot Execute",
   "Profile": "System-wide",
+  "Description": "Service Control Manager Extension DLL for non-minwin",
+  "Company": "Microsoft Corporation",
+  "Image Path": "c:\\windows\\system32\\scext.dll",
   "Version": "6.3.9600.17415",
-  "_Source": "Windows.Sysinternals.Autoruns",
-  "﻿Time": "10/29/2014 1:28 AM"
+  "Launch String": "%systemroot%\\system32\\scext.dll",
+  "_Source": "Windows.Sysinternals.Autoruns"
  }
 ]
