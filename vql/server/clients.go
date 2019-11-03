@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -46,7 +47,7 @@ type ClientsPlugin struct{}
 func (self ClientsPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -120,7 +121,7 @@ type FlowsPlugin struct{}
 func (self FlowsPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

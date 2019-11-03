@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -80,7 +81,7 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter
 
 func (self *ArrayFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	return flatten(ctx, scope, args)
 }
 
@@ -100,7 +101,7 @@ type JoinFunction struct{}
 
 func (self *JoinFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &JoinFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -132,7 +133,7 @@ type FilterFunction struct{}
 
 func (self *FilterFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &FilterFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

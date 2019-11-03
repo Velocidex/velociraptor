@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -75,7 +76,7 @@ func doLS(path string) {
 		path += "*"
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("accessor", *fs_command_accessor).
 		Set("path", path)
 
@@ -104,7 +105,7 @@ func doCp(path string, dump_dir string) {
 		path += "*"
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("accessor", *fs_command_accessor).
 		Set("path", path).
 		Set("$uploader", &vql_networking.FileBasedUploader{

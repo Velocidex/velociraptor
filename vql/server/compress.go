@@ -23,6 +23,7 @@ import (
 	"compress/gzip"
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -38,7 +39,7 @@ type Compress struct{}
 
 func (self *Compress) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &CompressArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

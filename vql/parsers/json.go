@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
@@ -47,7 +48,7 @@ func (self ParseJsonFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 
 func (self ParseJsonFunction) Call(
 	ctx context.Context, scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &ParseJsonFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -76,7 +77,7 @@ func (self ParseJsonArray) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 
 func (self ParseJsonArray) Call(
 	ctx context.Context, scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &ParseJsonFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -98,7 +99,7 @@ type ParseJsonArrayPlugin struct{}
 func (self ParseJsonArrayPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

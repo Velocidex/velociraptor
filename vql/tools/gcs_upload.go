@@ -10,6 +10,7 @@ import (
 	"io"
 
 	"cloud.google.com/go/storage"
+	"github.com/Velocidex/ordereddict"
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -32,7 +33,7 @@ type GCSUploadFunction struct{}
 
 func (self *GCSUploadFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &GCSUploadArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

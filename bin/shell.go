@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -149,7 +150,7 @@ func get_responses(ctx context.Context,
 		}
 	}()
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("server_config", config_obj).
 		Set("ClientId", client_id)
 

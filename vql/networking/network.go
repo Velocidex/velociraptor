@@ -19,6 +19,8 @@ package networking
 
 import (
 	"net"
+
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -29,7 +31,7 @@ func init() {
 			PluginName: "interfaces",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				if interfaces, err := net.Interfaces(); err == nil {
 					for _, item := range interfaces {

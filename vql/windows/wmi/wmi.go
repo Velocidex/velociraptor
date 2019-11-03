@@ -20,7 +20,7 @@
 
 We could not use that package directly because it only supports
 extracting the OLE data to a Go struct but we really need it in a
-vfilter.Dict().
+ordereddict.Dict().
 */
 
 package wmi
@@ -30,6 +30,7 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -46,7 +47,7 @@ var (
 // S_FALSE is returned by CoInitializeEx if it was already called on this thread.
 const S_FALSE = 0x00000001
 
-func Query(query string, namespace string) ([]*vfilter.Dict, error) {
+func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 	lock.Lock()
 	defer lock.Unlock()
 	runtime.LockOSThread()
@@ -94,7 +95,7 @@ func Query(query string, namespace string) ([]*vfilter.Dict, error) {
 	wmi_result := resultRaw.ToIDispatch()
 	defer wmi_result.Release()
 
-	result := []*vfilter.Dict{}
+	result := []*ordereddict.Dict{}
 	properties := []string{}
 
 	err = oleutil.ForEach(wmi_result,
@@ -110,7 +111,7 @@ func Query(query string, namespace string) ([]*vfilter.Dict, error) {
 				properties = item_properties
 			}
 
-			row := vfilter.NewDict().SetCaseInsensitive()
+			row := ordereddict.NewDict().SetCaseInsensitive()
 			for _, property := range properties {
 				property_raw, err := item.GetProperty(property)
 				if err != nil {
@@ -173,7 +174,7 @@ type WMIQueryArgs struct {
 }
 
 func runWMIQuery(scope *vfilter.Scope,
-	args *vfilter.Dict) []vfilter.Row {
+	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 	arg := &WMIQueryArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

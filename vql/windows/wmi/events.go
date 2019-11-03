@@ -36,6 +36,7 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	ole "github.com/go-ole/go-ole"
 	pointer "github.com/mattn/go-pointer"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -45,17 +46,17 @@ import (
 
 type WMIObject struct {
 	Raw    string
-	parsed *vfilter.Dict
+	parsed *ordereddict.Dict
 }
 
-func (self *WMIObject) Parse() (*vfilter.Dict, error) {
+func (self *WMIObject) Parse() (*ordereddict.Dict, error) {
 	if self.parsed != nil {
 		return self.parsed, nil
 	}
 
 	mof, err := wmi_parse.Parse(self.Raw)
 	if err != nil {
-		return vfilter.NewDict(), err
+		return ordereddict.NewDict(), err
 	}
 	self.parsed = mof.ToDict()
 	return self.parsed, nil
@@ -107,7 +108,7 @@ type WmiEventPlugin struct{}
 func (self WmiEventPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &WmiEventPluginArgs{}
 

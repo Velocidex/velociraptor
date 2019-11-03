@@ -31,9 +31,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func ExtractI30List(accessor_ctx *AccessorContext,
@@ -142,7 +142,7 @@ func (self *LazyNTFSFileInfo) Data() interface{} {
 		self.ensureCachedInfo()
 	}
 
-	result := vfilter.NewDict().
+	result := ordereddict.NewDict().
 		Set("mft", self.cached_info.MFTId).
 		Set("name_type", self.cached_info.NameType)
 	if self.cached_info.ExtraNames != nil {

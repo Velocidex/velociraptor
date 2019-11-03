@@ -15,6 +15,7 @@ require (
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.9
+	github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
@@ -104,7 +105,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20191101050819-54011a4f383b
+	www.velocidex.com/golang/vfilter v0.0.0-20191103013910-5fc6a2166885
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -165,7 +166,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		cancel()
 	}()
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("server_config", self.config_obj).
 		Set("config", self.config_obj.Client).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -293,7 +294,7 @@ func (self *ServerArtifactsRunner) GetWriter(
 
 			// First column is a row timestamp. This makes
 			// it easier to do a row scan for time ranges.
-			dict_row := vfilter.NewDict()
+			dict_row := ordereddict.NewDict()
 			for _, column := range columns {
 				value, pres := scope.Associative(row, column)
 				if pres {

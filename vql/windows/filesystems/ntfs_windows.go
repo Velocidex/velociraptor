@@ -35,13 +35,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -79,7 +79,7 @@ func (self *NTFSFileInfo) Size() int64 {
 }
 
 func (self *NTFSFileInfo) Data() interface{} {
-	result := vfilter.NewDict().
+	result := ordereddict.NewDict().
 		Set("mft", self.info.MFTId).
 		Set("name_type", self.info.NameType)
 	if self.info.ExtraNames != nil {

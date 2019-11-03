@@ -32,6 +32,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -233,7 +234,7 @@ func encodeParams(arg *_HttpPluginRequest, scope *vfilter.Scope) *url.Values {
 func (self *_HttpPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &_HttpPluginRequest{}
 	err := vfilter.ExtractArgs(scope, args, arg)

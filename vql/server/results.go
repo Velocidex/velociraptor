@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -47,7 +48,7 @@ type UploadsPlugins struct{}
 func (self UploadsPlugins) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -135,7 +136,7 @@ type SourcePlugin struct{}
 func (self SourcePlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -172,7 +173,7 @@ func (self SourcePlugin) Call(
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
 		if arg.Mode == "HUNT" {
-			args := vfilter.NewDict().
+			args := ordereddict.NewDict().
 				Set("hunt_id", arg.HuntId).
 				Set("artifact", arg.Artifact).
 				Set("source", arg.Source)
@@ -268,8 +269,8 @@ func (self SourcePlugin) ScanLog(
 		return err
 	}
 
-	row_to_dict := func(row_data []interface{}) *vfilter.Dict {
-		row := vfilter.NewDict()
+	row_to_dict := func(row_data []interface{}) *ordereddict.Dict {
+		row := ordereddict.NewDict()
 
 		for idx, row_item := range row_data {
 			if idx > len(headers) {

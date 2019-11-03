@@ -51,6 +51,8 @@ github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
 github.com/Velocidex/go-yara v1.1.9 h1:XFtozFms5mruc6fXV9E+ov5V6rBYgcX3hUrsoLFfPIk=
 github.com/Velocidex/go-yara v1.1.9/go.mod h1:2QU3qksRdRiX8sde+Hy9CYudPRXza7i08u5r1/0al3s=
+github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4 h1:0sJvmFhuTT8W/qOlka2y3L1FrbRcP9ZxXMKejTGMCno=
+github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0 h1:rFd07P9lqQPsmgPVvS0crnGpq63eFyd7qQyyvLgBrMY=
@@ -526,5 +528,7 @@ www.velocidex.com/golang/vfilter v0.0.0-20191101044156-ccae4a19c9b5 h1:blXk0PgyE
 www.velocidex.com/golang/vfilter v0.0.0-20191101044156-ccae4a19c9b5/go.mod h1:euitQEOef+bzprOVNUhHCIp5g41Kui0kFy/tyAFm8Y4=
 www.velocidex.com/golang/vfilter v0.0.0-20191101050819-54011a4f383b h1:TzkOf4BpftKKoS1qCqsWNHNvur1vpynIIAv1LyYuEWY=
 www.velocidex.com/golang/vfilter v0.0.0-20191101050819-54011a4f383b/go.mod h1:euitQEOef+bzprOVNUhHCIp5g41Kui0kFy/tyAFm8Y4=
+www.velocidex.com/golang/vfilter v0.0.0-20191103013910-5fc6a2166885 h1:GhMccdrr7LdI6LXsnl4e8YZw9u312hyTksBMYi4MpwU=
+www.velocidex.com/golang/vfilter v0.0.0-20191103013910-5fc6a2166885/go.mod h1:8G8/0EbJ/fzUKBC+mMe7UE61aC1VX8gLRCNmRxZ3p0A=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=

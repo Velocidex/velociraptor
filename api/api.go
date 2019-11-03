@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -47,7 +48,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	users "www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type ApiServer struct {
@@ -292,7 +292,7 @@ func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
 	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
 		Set("Artifact", artifact).
 		Set("Source", source)

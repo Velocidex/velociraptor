@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -66,7 +67,7 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 
 	logger.Info("Collecting artifact %v into subdir %v", name, subdir)
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{

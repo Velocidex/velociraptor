@@ -27,6 +27,7 @@ import (
 	"time"
 	"unicode/utf16"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -40,7 +41,7 @@ type _Base64Decode struct{}
 func (self _Base64Decode) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64DecodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -71,7 +72,7 @@ type _Base64Encode struct{}
 func (self _Base64Encode) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_Base64EncodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -100,7 +101,7 @@ type _ToLower struct{}
 func (self _ToLower) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -123,7 +124,7 @@ type _ToUpper struct{}
 func (self _ToUpper) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToLowerArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -150,7 +151,7 @@ type _ToInt struct{}
 func (self _ToInt) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -175,7 +176,7 @@ type _ParseFloat struct{}
 func (self _ParseFloat) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ToIntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -200,7 +201,7 @@ type _Now struct{}
 func (self _Now) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	return time.Now().Unix()
 }
 
@@ -217,7 +218,7 @@ type _UTF16 struct{}
 func (self _UTF16) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &_Base64DecodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -248,7 +249,7 @@ type _Scope struct{}
 func (self _Scope) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	return scope
 }

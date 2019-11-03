@@ -25,6 +25,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -123,7 +124,7 @@ func (self NTFSFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 
 func (self NTFSFunction) Call(
 	ctx context.Context, scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &NTFSFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -177,7 +178,7 @@ type NTFSI30ScanPlugin struct{}
 func (self NTFSI30ScanPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

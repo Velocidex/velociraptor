@@ -30,6 +30,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -213,7 +214,7 @@ func ModifyHunt(config_obj *config_proto.Config,
 			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
 				hunt.State = api_proto.Hunt_ARCHIVED
 
-				row := vfilter.NewDict().
+				row := ordereddict.NewDict().
 					Set("Timestamp", time.Now().UTC().Unix()).
 					Set("Hunt", hunt).
 					Set("User", user)

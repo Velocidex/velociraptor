@@ -20,6 +20,7 @@ package event_logs
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -36,7 +37,7 @@ type _ParseEvtxPlugin struct{}
 func (self _ParseEvtxPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -101,7 +102,7 @@ type _WatchEvtxPlugin struct{}
 func (self _WatchEvtxPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

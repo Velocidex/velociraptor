@@ -21,6 +21,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -38,7 +39,7 @@ type GlobPlugin struct{}
 func (self GlobPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
@@ -170,7 +171,7 @@ func (self ReadFilePlugin) processFile(
 func (self ReadFilePlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	arg := &ReadFileArgs{}
@@ -218,7 +219,7 @@ type StatPlugin struct{}
 func (self *StatPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -267,7 +268,7 @@ func init() {
 			PluginName: "filesystems",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				partitions, err := disk.Partitions(true)
 				if err == nil {

@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -99,7 +100,7 @@ func (self VQLClientAction) StartQuery(
 		Responder: responder,
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
 		Set("config", config_obj.Client).

@@ -12,6 +12,7 @@ import (
 
 	"text/template"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/olekukonko/tablewriter"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -115,7 +116,7 @@ func (self *Expansions) Query(queries ...string) string {
 		return fmt.Sprintf("Error: %v", err)
 	}
 
-	env := vfilter.NewDict().Set("Rows", self.rows)
+	env := ordereddict.NewDict().Set("Rows", self.rows)
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()

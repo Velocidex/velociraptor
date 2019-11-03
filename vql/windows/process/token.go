@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"syscall"
 
+	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -21,7 +22,7 @@ type TokenFunction struct{}
 func (self TokenFunction) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &TokenArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -63,7 +64,7 @@ func (self TokenFunction) Call(
 		}
 	}
 
-	result := vfilter.NewDict().
+	result := ordereddict.NewDict().
 		Set("Username", vfilter.Null{}).
 		Set("ProfileDir", vfilter.Null{}).
 		Set("IsElevated", token.IsElevated()).

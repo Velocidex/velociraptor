@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -61,7 +62,7 @@ func (self *HuntManager) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting hunt manager.")
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
 		Set("server_config", self.config_obj)
 

@@ -28,6 +28,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
@@ -41,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -338,7 +338,7 @@ func huntResultDownloadHandler(
 			query := "SELECT * FROM hunt_results(" +
 				"hunt_id=HuntId, artifact=Artifact, " +
 				"source=Source, brief=true)"
-			env := vfilter.NewDict().
+			env := ordereddict.NewDict().
 				Set("Artifact", artifact).
 				Set("HuntId", hunt_id).
 				Set("Source", source)

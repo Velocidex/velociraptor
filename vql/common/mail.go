@@ -21,6 +21,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	gomail "gopkg.in/gomail.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -47,7 +48,7 @@ type MailPlugin struct{}
 func (self MailPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

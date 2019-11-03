@@ -21,6 +21,7 @@ import (
 	"context"
 	"runtime"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -34,7 +35,7 @@ type DirnameFunction struct{}
 
 func (self *DirnameFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &DirnameArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -62,7 +63,7 @@ type BasenameFunction struct{}
 
 func (self *BasenameFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &DirnameArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -94,7 +95,7 @@ type PathJoinFunction struct{}
 
 func (self *PathJoinFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &PathJoinArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

@@ -25,6 +25,7 @@ import (
 	"path"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -39,7 +40,7 @@ type MonitoringPlugin struct{}
 func (self MonitoringPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -123,7 +124,7 @@ func (self MonitoringPlugin) ScanLog(
 	}
 
 	for {
-		row := vfilter.NewDict()
+		row := ordereddict.NewDict()
 		row_data, err := csv_reader.ReadAny()
 		if err != nil {
 			if err == io.EOF {
@@ -176,7 +177,7 @@ type WatchMonitoringPlugin struct{}
 func (self WatchMonitoringPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -331,7 +332,7 @@ func (self WatchMonitoringPlugin) ScanLog(
 				return
 
 			default:
-				row := vfilter.NewDict().
+				row := ordereddict.NewDict().
 					Set("ClientId", client_id).
 					Set("Artifact", artifact)
 

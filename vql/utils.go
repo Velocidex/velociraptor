@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -35,7 +36,7 @@ func ExtractRows(vql_response *actions_proto.VQLResponse) ([]vfilter.Row, error)
 	}
 
 	for _, row := range rows {
-		item := vfilter.NewDict()
+		item := ordereddict.NewDict()
 		for k, v := range row {
 			item.Set(k, v)
 		}
@@ -45,14 +46,14 @@ func ExtractRows(vql_response *actions_proto.VQLResponse) ([]vfilter.Row, error)
 	return result, nil
 }
 
-func RowToDict(scope *vfilter.Scope, row vfilter.Row) *vfilter.Dict {
+func RowToDict(scope *vfilter.Scope, row vfilter.Row) *ordereddict.Dict {
 	// If the row is already a dict nothing to do:
-	result, ok := row.(*vfilter.Dict)
+	result, ok := row.(*ordereddict.Dict)
 	if ok {
 		return result
 	}
 
-	result = vfilter.NewDict()
+	result = ordereddict.NewDict()
 	for _, column := range scope.GetMembers(row) {
 		value, pres := scope.Associative(row, column)
 		if pres {

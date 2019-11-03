@@ -18,6 +18,7 @@
 package vql
 
 import (
+	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/net"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -29,7 +30,7 @@ func init() {
 			PluginName: "connections",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 				if cons, err := net.Connections("all"); err == nil {
 					for _, item := range cons {

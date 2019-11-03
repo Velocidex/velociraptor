@@ -20,6 +20,7 @@ package functions
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -32,7 +33,7 @@ type IntFunction struct{}
 
 func (self *IntFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &IntArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -72,7 +73,7 @@ type StrFunction struct{}
 
 func (self *StrFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &StrFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -100,7 +101,7 @@ func (self *EventTable) Update(
 			return errors.New("Unknown artifact " + name)
 		}
 
-		env := vfilter.NewDict().
+		env := ordereddict.NewDict().
 			Set("server_config", config_obj).
 			Set("config", config_obj.Client).
 			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -203,7 +204,7 @@ func (self *EventTable) GetWriter(
 
 			// First column is a row timestamp. This makes
 			// it easier to do a row scan for time ranges.
-			dict_row := vfilter.NewDict().
+			dict_row := ordereddict.NewDict().
 				Set("_ts", int(time.Now().Unix()))
 			for _, column := range columns {
 				value, pres := scope.Associative(row, column)

@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -84,7 +85,7 @@ func runTest(fixture *testFixture) (string, error) {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())

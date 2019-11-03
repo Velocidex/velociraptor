@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -18,7 +19,7 @@ type ForPlugin struct{}
 func (self ForPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -47,7 +48,7 @@ func (self ForPlugin) Call(
 		for item := range stored_query.Eval(ctx, scope) {
 			// Evaluate the query on the new value
 			new_scope := scope.Copy()
-			new_scope.AppendVars(vfilter.NewDict().Set(
+			new_scope.AppendVars(ordereddict.NewDict().Set(
 				arg.Var, item))
 
 			for item := range arg.Query.Eval(ctx, new_scope) {

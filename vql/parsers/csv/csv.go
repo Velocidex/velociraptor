@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -39,7 +40,7 @@ type ParseCSVPlugin struct{}
 func (self ParseCSVPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -74,7 +75,7 @@ func (self ParseCSVPlugin) Call(
 				}
 
 				for {
-					row := vfilter.NewDict()
+					row := ordereddict.NewDict()
 					row_data, err := csv_reader.ReadAny()
 					if err != nil {
 						if err != io.EOF {
@@ -112,7 +113,7 @@ type _WatchCSVPlugin struct{}
 func (self _WatchCSVPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -161,7 +162,7 @@ type WriteCSVPlugin struct{}
 func (self WriteCSVPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

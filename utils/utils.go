@@ -24,6 +24,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -102,7 +103,7 @@ func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
 
 	switch t := value.(type) {
 
-	case vfilter.Dict:
+	case ordereddict.Dict:
 		return t.String()
 
 	case map[string]interface{}:

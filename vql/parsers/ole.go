@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/oleparse"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -112,7 +113,7 @@ func _OLEVBAPlugin_ParseFile(
 func (self _OLEVBAPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

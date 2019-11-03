@@ -30,6 +30,7 @@ import (
 	"time"
 
 	yara "github.com/Velocidex/go-yara"
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -68,7 +69,7 @@ type YaraScanPlugin struct{}
 func (self YaraScanPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -241,7 +242,7 @@ func (self YaraProcPlugin) Info(
 func (self YaraProcPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
