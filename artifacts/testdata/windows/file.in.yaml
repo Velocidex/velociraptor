@@ -7,5 +7,5 @@ Queries:
     WHERE Name =~ "pagefile.sys"
 
   # Read symlinks.
-  - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file")
-  - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file") WHERE FullPath =~ "drivers\\\\"
+  - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file_links")
+  - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file_links") WHERE FullPath =~ "drivers\\\\"
