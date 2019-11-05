@@ -12,21 +12,21 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
      "Name": ".text",
      "FileOffset": 512,
      "VMA": 8192,
-     "Size": 0
+     "Size": 7168
     },
     {
      "Perm": "-r-",
      "Name": ".rsrc",
      "FileOffset": 7680,
      "VMA": 16384,
-     "Size": 0
+     "Size": 1536
     },
     {
      "Perm": "-r-",
      "Name": ".reloc",
      "FileOffset": 9216,
      "VMA": 24576,
-     "Size": 0
+     "Size": 512
     }
    ],
    "VersionInformation": {

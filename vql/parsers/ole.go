@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -45,6 +46,8 @@ func _OLEVBAPlugin_ParseFile(
 	filename string,
 	scope *vfilter.Scope,
 	arg *_OLEVBAArgs) ([]*oleparse.VBAModule, error) {
+
+	defer utils.CheckForPanic("Parsing VBA file.")
 
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {

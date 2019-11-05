@@ -105,8 +105,14 @@ func GetGRPCUserInfo(
 		tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 		if ok {
 			v := tlsInfo.State.PeerCertificates[0].Subject.CommonName
-			// Calls from the gRPC gateway embed the
-			// authenticated web user in the metadata.
+
+			// Calls from the gRPC gateway are allowed to
+			// embed the authenticated web user in the
+			// metadata. This allows the API gateway to
+			// impersonate anyone - it must be trusted to
+			// convert web side authentication to a valid
+			// user name which it may pass in the call
+			// context.
 			if v == config_obj.API.PinnedGwName {
 				md, ok := metadata.FromIncomingContext(ctx)
 				if ok {
@@ -116,10 +122,11 @@ func GetGRPCUserInfo(
 						json.Unmarshal(data, result)
 					}
 				}
+			}
 
-			} else {
-				// Other callers will return the name
-				// on their certificate.
+			// Other callers will return the name on their
+			// certificate.
+			if result.Name == "" {
 				result.Name = v
 			}
 		}

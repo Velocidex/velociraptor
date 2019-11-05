@@ -437,6 +437,11 @@ func IsRequestComplete(
 		}
 	}
 
+	// Only terminate a running flow.
+	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		return true, nil
+	}
+
 	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
 	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Dirty = true
@@ -476,23 +481,46 @@ func FailIfError(
 		return nil
 	}
 
+	// Only terminate a running flows.
+	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		return errors.New(message.Status.ErrorMessage)
+	}
+
 	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Status = message.Status.ErrorMessage
 	collection_context.Backtrace = message.Status.Backtrace
 	collection_context.Dirty = true
 
-	err := errors.New(message.Status.ErrorMessage)
-
 	// Update the hunt stats if this is a hunt.
 	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		err = services.GetHuntDispatcher().ModifyHunt(
+		services.GetHuntDispatcher().ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
 				hunt.Stats.TotalClientsWithErrors++
 				return nil
 			})
 	}
-	return err
+
+	// Send the event to the flow completion artifact.
+	row := ordereddict.NewDict().
+		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Flow", collection_context).
+		Set("FlowId", collection_context.SessionId)
+	serialized, err := json.Marshal([]vfilter.Row{row})
+	if err != nil {
+		return err
+	}
+
+	gJournalWriter.Channel <- &Event{
+		Config:    config_obj,
+		ClientId:  collection_context.Request.ClientId,
+		QueryName: "System.Flow.Completion",
+		Response:  string(serialized),
+		Columns:   []string{"Timestamp", "Flow", "FlowId"},
+	}
+
+	return errors.New(message.Status.ErrorMessage)
 }
 
 func appendUploadDataToFile(
