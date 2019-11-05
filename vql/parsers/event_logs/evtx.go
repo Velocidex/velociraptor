@@ -75,9 +75,12 @@ func (self _ParseEvtxPlugin) Call(
 				for _, chunk := range chunks {
 					records, _ := chunk.Parse(0)
 					for _, i := range records {
-						event_map, ok := i.Event.(map[string]interface{})
+						event_map, ok := i.Event.(*ordereddict.Dict)
 						if ok {
-							output_chan <- event_map["Event"]
+							event, pres := event_map.Get("Event")
+							if pres {
+								output_chan <- event
+							}
 						}
 					}
 				}
