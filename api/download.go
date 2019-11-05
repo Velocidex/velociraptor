@@ -130,6 +130,10 @@ func downloadFlowToZip(
 
 func createDownloadFile(config_obj *config_proto.Config,
 	flow_id string, client_id string) error {
+	if client_id == "" || flow_id == "" {
+		return errors.New("Client Id and Flow Id should be specified.")
+	}
+
 	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)

@@ -12,6 +12,9 @@ test:
 release:
 	go run make.go -v release
 
+linux:
+	go run make.go -v linux
+
 windows:
 	go run make.go -v windowsDev
 
@@ -34,7 +37,6 @@ build_docker:
 build_release: build_docker
 	echo Building release into output directory.
 	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder
-
 
 debug:
 	dlv debug --build-flags="-tags 'server_vql extras'" \
