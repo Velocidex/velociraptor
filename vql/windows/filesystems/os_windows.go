@@ -31,6 +31,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	"golang.org/x/sys/windows/registry"
@@ -43,7 +44,6 @@ type OSFileInfo struct {
 
 	// Empty for files but may contain data for registry and
 	// resident NTFS.
-	_data      string
 	_full_path string
 }
 
@@ -52,7 +52,14 @@ func (self *OSFileInfo) FullPath() string {
 }
 
 func (self *OSFileInfo) Data() interface{} {
-	return self._data
+	if self.IsLink() {
+		target, err := self.GetLink()
+		if err == nil {
+			return ordereddict.NewDict().
+				Set("Link", target)
+		}
+	}
+	return ""
 }
 
 func (self *OSFileInfo) Mtime() glob.TimeVal {
@@ -154,10 +161,12 @@ func GetPath(path string) string {
 	return strings.TrimLeft(path, "\\")
 }
 
-type OSFileSystemAccessor struct{}
+type OSFileSystemAccessor struct {
+	follow_links bool
+}
 
 func (self OSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &OSFileSystemAccessor{}
+	result := &OSFileSystemAccessor{follow_links: self.follow_links}
 	return result
 }
 
@@ -227,6 +236,10 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 	// directory in case that directory itself is a link.
 	files, err := ioutil.ReadDir(dir_path)
 	if err != nil {
+		if !self.follow_links {
+			return nil, err
+		}
+
 		// Maybe it is a symlink
 		link_path := GetPath(path)
 		target, err := os.Readlink(link_path)
@@ -289,6 +302,10 @@ func normalize_path(path string) string {
 }
 
 func init() {
+	// Register a variant which allows following links - be
+	// careful with it - it can get stuck on loops.
+	glob.Register("file_links", &OSFileSystemAccessor{follow_links: true})
+
 	// We do not register the OSFileSystemAccessor directly - it
 	// is used through the AutoFilesystemAccessor: If we can not
 	// open the file with regular OS APIs we fallback to raw NTFS
