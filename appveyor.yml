@@ -12,7 +12,7 @@ environment:
 
 cache:
   - '%LocalAppData%\go-build -> .appveyor_cache_clear'
-  - '%GOPATH%/pkg/mod -> .appveyor_cache_clear'
+  - '%GOPATH%/pkg -> .appveyor_cache_clear'
   - 'gui/static/node_modules -> .appveyor_cache_clear'
   - 'gui/static/dist -> .appveyor_cache_clear'
 
