@@ -130,7 +130,7 @@ func doRepack() {
 	data, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to read executable")
 
-	if repack_command_append != nil {
+	if *repack_command_append != nil {
 		// A PE file - adjust the size of the .rsrc section to
 		// cover the entire binary.
 		if string(data[0:2]) == "MZ" {
