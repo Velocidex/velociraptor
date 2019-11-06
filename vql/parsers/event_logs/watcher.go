@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
@@ -169,39 +170,43 @@ func (self *EventLogWatcherService) monitorOnce(
 			if event_id > new_last_event {
 				new_last_event = event_id
 			}
-			event_map, ok := record.Event.(map[string]interface{})
-			if ok {
-				event := event_map["Event"]
-
-				new_handles := make([]*Handle, 0, len(handles))
-				for _, handle := range handles {
-					select {
-					case <-handle.ctx.Done():
-						// Remove and close
-						// handles that are
-						// not currently
-						// active.
-						handle.scope.Log(
-							"Removing watcher for %v",
-							filename)
-						close(handle.output_chan)
-
-					case handle.output_chan <- event:
-						new_handles = append(new_handles, handle)
-					}
-				}
-
-				// No more listeners - we dont care any more.
-				if len(new_handles) == 0 {
-					delete(self.registrations, key)
-					return new_last_event
-				}
-
-				// Update the registrations - possibly
-				// omitting finished listeners.
-				self.registrations[key] = new_handles
-				handles = new_handles
+			event_map, ok := record.Event.(*ordereddict.Dict)
+			if !ok {
+				continue
 			}
+			event, pres := event_map.Get("Event")
+			if !pres {
+				continue
+			}
+
+			new_handles := make([]*Handle, 0, len(handles))
+			for _, handle := range handles {
+				select {
+				case <-handle.ctx.Done():
+					// Remove and close handles
+					// that are not currently
+					// active.
+					handle.scope.Log(
+						"Removing watcher for %v",
+						filename)
+					close(handle.output_chan)
+
+				case handle.output_chan <- maybeEnrichEvent(
+					event.(*ordereddict.Dict)):
+					new_handles = append(new_handles, handle)
+				}
+			}
+
+			// No more listeners - we dont care any more.
+			if len(new_handles) == 0 {
+				delete(self.registrations, key)
+				return new_last_event
+			}
+
+			// Update the registrations - possibly
+			// omitting finished listeners.
+			self.registrations[key] = new_handles
+			handles = new_handles
 		}
 	}
 

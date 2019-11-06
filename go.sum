@@ -53,6 +53,8 @@ github.com/Velocidex/go-yara v1.1.9 h1:XFtozFms5mruc6fXV9E+ov5V6rBYgcX3hUrsoLFfP
 github.com/Velocidex/go-yara v1.1.9/go.mod h1:2QU3qksRdRiX8sde+Hy9CYudPRXza7i08u5r1/0al3s=
 github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4 h1:0sJvmFhuTT8W/qOlka2y3L1FrbRcP9ZxXMKejTGMCno=
 github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
+github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403 h1:IyE0Jbkgftu+no3dqzrQOKsISicXDk5ob6IYdXaxlS8=
+github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0 h1:rFd07P9lqQPsmgPVvS0crnGpq63eFyd7qQyyvLgBrMY=
@@ -426,6 +428,8 @@ golang.org/x/sys v0.0.0-20191008105621-543471e840be/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191010194322-b09406accb47/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c h1:S/FtSvpNLtFBgjTqcKsRpsa6aVsI6iztaz1bQd9BJwE=
 golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd h1:3x5uuvBgE6oaXJjCOvpCC1IpgJogqQ+PqGGU3ZxAgII=
+golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=
@@ -512,9 +516,10 @@ honnef.co/go/tools v0.0.1-2019.2.3 h1:3JgtbtFHMiCmsznwGVTUWbgGov+pVqnlf1dEJTNAXe
 honnef.co/go/tools v0.0.1-2019.2.3/go.mod h1:a3bituU0lyd329TUQxRnasdCoJDkEUEAqEt0JzvZhAg=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
+www.velocidex.com/golang/binparsergen v0.1.0 h1:oNsMHGnlb4jrGwxKxqqmsics6FgYin3HR5UNtLXc8S0=
 www.velocidex.com/golang/binparsergen v0.1.0/go.mod h1:UC43Ecj0mjsidlClTYZ3H4dXdyv7CVI0HsYi4yY3qtc=
-www.velocidex.com/golang/evtx v0.0.0-20191103233437-ed66e9bc366e h1:R2qYCOkgwlHH5xrEhs2gTUj3S8UZJYEup7vDjoPTvco=
-www.velocidex.com/golang/evtx v0.0.0-20191103233437-ed66e9bc366e/go.mod h1:8nidC7NBB/XMz66lTC03J2UjeT/1F5t3feEzLaaRM7A=
+www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780 h1:3lxyxSiGhnkUMIuA//QB5iawf8V43LonxxFfW25p9ow=
+www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780/go.mod h1:+u26IeGeVIwL9j5V0I/UafWFaMV61pQNwXZK/VQksLQ=
 www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db h1:KxrG77cDNesk56zDxYFAYt4o32nwx6xNjj19omdI5sU=
 www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db/go.mod h1:RURmuGxhf8w3yTlERqW1rpYZXgHQH5N2T8FQYkPYJUY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6 h1:t+4cuel1gs9H854UvXSVwL/Ph7wAhGUq8xNEiEuG7x4=
