@@ -79,7 +79,8 @@ func (self _ParseEvtxPlugin) Call(
 						if ok {
 							event, pres := event_map.Get("Event")
 							if pres {
-								output_chan <- event
+								output_chan <- maybeEnrichEvent(
+									event.(*ordereddict.Dict))
 							}
 						}
 					}

@@ -15,7 +15,7 @@ require (
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.9
-	github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4
+	github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
@@ -86,7 +86,7 @@ require (
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c
+	golang.org/x/sys v0.0.0-20191105231009-c1f44814a5cd
 	golang.org/x/tools v0.0.0-20191022074931-774d2ec196ee // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
@@ -99,7 +99,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
-	www.velocidex.com/golang/evtx v0.0.0-20191103233437-ed66e9bc366e
+	www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191007011621-167c7fa020db
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
@@ -116,6 +116,7 @@ require (
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20191004150416-dcd285bf46f1
 
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
+// replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 
 replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1
 
