@@ -81,29 +81,19 @@ func (self UploadsPlugins) Call(
 		}
 
 		file_store_factory := file_store.GetFileStore(config_obj)
-		seen := []string{}
 
-		for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
-			artifact, _ := artifacts.SplitFullSourceName(artifact_source)
-			// We already did this one.
-			if utils.InString(&seen, artifact) {
-				continue
-			}
-			seen = append(seen, artifact)
+		// File uploads are stored in their own CSV file.
+		csv_file_path := artifacts.GetUploadsMetadata(
+			arg.ClientId, arg.FlowId)
+		fd, err := file_store_factory.ReadFile(csv_file_path)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+		defer fd.Close()
 
-			// File uploads are stored in their own CSV file.
-			csv_file_path := artifacts.GetUploadsFile(
-				arg.ClientId, arg.FlowId, "", "")
-			fd, err := file_store_factory.ReadFile(csv_file_path)
-			if err != nil {
-				scope.Log("uploads: %v", err)
-				continue
-			}
-			defer fd.Close()
-
-			for row := range csv.GetCSVReader(fd) {
-				output_chan <- row
-			}
+		for row := range csv.GetCSVReader(fd) {
+			output_chan <- row
 		}
 	}()
 
