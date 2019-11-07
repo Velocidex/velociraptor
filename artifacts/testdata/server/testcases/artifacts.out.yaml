@@ -7,4 +7,17 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
   "Summary": "osquery gives you the ability to query and log things like running\n      processes, logged in users, password changes, usb devices, firewall\n      exceptions, listening ports, and more.",
   "Version": "4.0.2"
  }
+]SELECT * FROM uploads(client_id='C.abad2ac29511a9ac', flow_id='F.BMP95F2DRMK5O')[
+ {
+  "Timestamp": 1573086021,
+  "started": "2019-11-07 00:20:21.796282815 +0000 UTC",
+  "vfs_path": "/clients/C.abad2ac29511a9ac/collections/F.BMP95F2DRMK5O/uploads/lazy_ntfs/C:/Users/Public/Desktop/Image Transfer Utility.lnk",
+  "expected_size": 1259
+ },
+ {
+  "Timestamp": 1573086021,
+  "started": "2019-11-07 00:20:21.796319585 +0000 UTC",
+  "vfs_path": "/clients/C.abad2ac29511a9ac/collections/F.BMP95F2DRMK5O/uploads/lazy_ntfs/C:/Users/mic/AppData/Roaming/Microsoft/Windows/Recent/Foobar.lnk",
+  "expected_size": 337
+ }
 ]

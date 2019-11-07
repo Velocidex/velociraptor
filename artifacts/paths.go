@@ -135,6 +135,13 @@ func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
 		utils.Normalize_windows_path(client_path))
 }
 
+// GetUploadsMetadata returns the path to the metadata file that contains all the uploads.
+func GetUploadsMetadata(client_id, flow_id string) string {
+	return path.Join(
+		"/clients", client_id, "collections",
+		flow_id, "uploads.csv")
+}
+
 // Get the file store path for placing the download zip for the flow.
 func GetDownloadsFile(client_id, flow_id string) string {
 	return path.Join(

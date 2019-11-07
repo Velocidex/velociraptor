@@ -93,26 +93,20 @@ func downloadFlowToZip(
 	}
 
 	// Copy the flow's logs.
-	copier(path.Join("clients", client_id, "flows", flow_id, "logs"))
-
-	// This basically copies the CSV files from the
-	// filestore into the zip. We do not need to do any
-	// processing - just give the user the files as they
-	// are. Users can do their own post processing.
-	for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
-		artifact, source := artifacts.SplitFullSourceName(artifact_source)
-		copier(artifacts.GetCSVPath(
-			client_id, "", flow_id,
-			artifact, source, artifacts.MODE_CLIENT))
-	}
+	copier(path.Join(flow_details.Context.Urn, "logs"))
 
 	// Get all file uploads
 	if flow_details.Context.TotalUploadedFiles == 0 {
 		return nil
 	}
 
+	// This basically copies the CSV files from the
+	// filestore into the zip. We do not need to do any
+	// processing - just give the user the files as they
+	// are. Users can do their own post processing.
+
 	// File uploads are stored in their own CSV file.
-	file_path := artifacts.GetUploadsFile(client_id, flow_id, "", "")
+	file_path := artifacts.GetUploadsMetadata(client_id, flow_id)
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -125,6 +119,7 @@ func downloadFlowToZip(
 			err = copier(vfs_path_any.(string))
 		}
 	}
+
 	return err
 }
 
