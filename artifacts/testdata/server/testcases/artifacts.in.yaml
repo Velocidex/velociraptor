@@ -4,3 +4,5 @@ Queries:
        client_id='C.abad2ac29511a9ac',
        flow_id="F.BMP93QMBDKOVA",
        artifact='Windows.Applications.ChocolateyPackages')
+  - SELECT * FROM uploads(client_id='C.abad2ac29511a9ac',
+                          flow_id='F.BMP95F2DRMK5O')

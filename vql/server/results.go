@@ -21,6 +21,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -31,7 +32,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -68,23 +68,12 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
-		flow_details, err := flows.GetFlowDetails(
-			config_obj, arg.ClientId, arg.FlowId)
-		if err != nil {
-			scope.Log("uploads: %v", err)
-			return
-		}
-
-		// Get all file uploads
-		if flow_details.Context.TotalUploadedFiles == 0 {
-			return
-		}
-
 		file_store_factory := file_store.GetFileStore(config_obj)
 
 		// File uploads are stored in their own CSV file.
 		csv_file_path := artifacts.GetUploadsMetadata(
 			arg.ClientId, arg.FlowId)
+		fmt.Printf("csv_file_path %v\n", csv_file_path)
 		fd, err := file_store_factory.ReadFile(csv_file_path)
 		if err != nil {
 			scope.Log("uploads: %v", err)
