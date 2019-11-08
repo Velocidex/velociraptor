@@ -42,16 +42,15 @@ import (
 )
 
 var classifiers = map[string]proto.Message{
-	"/clients/C.[^/]+$":                            &actions_proto.ClientInfo{},
-	"/clients/C.[^/]+/ping$":                       &actions_proto.ClientInfo{},
-	"/clients/C.[^/]+/key$":                        &crypto_proto.PublicKey{},
-	"/clients/C.[^/]+/vfs/.+":                      &actions_proto.VQLResponse{},
-	"/clients/C.[^/]+/flows/F\\.[^/]+$":            &flows_proto.AFF4FlowObject{},
-	"/clients/C.[^/]+/flows/F\\.[^/]+/results/.+$": &crypto_proto.GrrMessage{},
-	"/clients/C.[^/]+/tasks/[^/]+$":                &crypto_proto.GrrMessage{},
-	constants.HUNTS_URN + "H.[^/]+$":               &api_proto.Hunt{},
-	"/users/[^/]+$":                                &api_proto.VelociraptorUser{},
-	"/users/[^/]+/notifications/.+$":               &api_proto.UserNotification{},
+	"/clients/C.[^/]+$":                       &actions_proto.ClientInfo{},
+	"/clients/C.[^/]+/ping$":                  &actions_proto.ClientInfo{},
+	"/clients/C.[^/]+/key$":                   &crypto_proto.PublicKey{},
+	"/clients/C.[^/]+/vfs/.+":                 &actions_proto.VQLResponse{},
+	"/clients/C.[^/]+/collections/F\\.[^/]+$": &flows_proto.ArtifactCollectorContext{},
+	"/clients/C.[^/]+/tasks/[^/]+$":           &crypto_proto.GrrMessage{},
+	constants.HUNTS_URN + "H.[^/]+$":          &api_proto.Hunt{},
+	"/users/[^/]+$":                           &api_proto.VelociraptorUser{},
+	"/users/[^/]+/notifications/.+$":          &api_proto.UserNotification{},
 }
 
 var (

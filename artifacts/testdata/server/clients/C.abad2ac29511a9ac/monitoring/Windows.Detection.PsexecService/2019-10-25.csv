@@ -1,9 +1,0 @@
-_ts,ServiceName,PathName,Modified,FileSize,StringOffset,StringContext,Timestamp,ServiceType,PID,ChildProcess
-1571988100,PSEXESVC,C:\WINDOWS\PSEXESVC.exe,2019-10-25T07:20:32.5609256Z,145568,123372,"[
- ""00000000  50 00 73 00 45 00 78 00  65 00 63 00              |P.s.E.x.e.c.|"",
- """"
-]",1571988033,Own Process,7176,"{
- ""CommandLine"": ""\""cmd.exe\"" "",
- ""ExecutablePath"": ""C:\\WINDOWS\\system32\\cmd.exe"",
- ""Name"": ""cmd.exe""
-}"

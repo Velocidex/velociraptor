@@ -79,7 +79,7 @@ func GetCollectionPath(client_id, flow_id string) string {
 
 func ScheduleArtifactCollection(
 	config_obj *config_proto.Config,
-	collector_request *flows_proto.ArtifactCollectorRequest) (string, error) {
+	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
 
 	client_id := collector_request.ClientId
 	if client_id == "" {
@@ -93,12 +93,12 @@ func ScheduleArtifactCollection(
 
 	// Update the flow's artifacts list.
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
-		OpsPerSecond: collector_request.Request.OpsPerSecond,
-		Timeout:      collector_request.Request.Timeout,
+		OpsPerSecond: collector_request.OpsPerSecond,
+		Timeout:      collector_request.Timeout,
 	}
-	for _, name := range collector_request.Request.Artifacts.Names {
+	for _, name := range collector_request.Artifacts {
 		var artifact *artifacts_proto.Artifact = nil
-		if collector_request.Request.AllowCustomOverrides {
+		if collector_request.AllowCustomOverrides {
 			artifact, _ = repository.Get("Custom." + name)
 		}
 
@@ -123,7 +123,7 @@ func ScheduleArtifactCollection(
 	}
 
 	err = AddArtifactCollectorArgs(
-		config_obj, vql_collector_args, collector_request.Request)
+		config_obj, vql_collector_args, collector_request)
 	if err != nil {
 		return "", err
 	}
@@ -153,12 +153,23 @@ func ScheduleArtifactCollection(
 		return "", err
 	}
 
+	// The task we will schedule for the client.
+	task := &crypto_proto.GrrMessage{
+		SessionId:       collection_context.SessionId,
+		RequestId:       processVQLResponses,
+		VQLClientAction: vql_collector_args}
+
+	// Record the tasks for provenance of what we actually did.
+	err = db.SetSubject(config_obj,
+		path.Join(collection_context.Urn, "task"),
+		&api_proto.ApiFlowRequestDetails{
+			Items: []*crypto_proto.GrrMessage{task}})
+	if err != nil {
+		return "", err
+	}
+
 	return collection_context.SessionId, QueueMessageForClient(
-		config_obj, client_id,
-		&crypto_proto.GrrMessage{
-			SessionId:       collection_context.SessionId,
-			RequestId:       processVQLResponses,
-			VQLClientAction: vql_collector_args})
+		config_obj, client_id, task)
 }
 
 func closeContext(
@@ -187,6 +198,28 @@ func closeContext(
 		}
 	}
 	collection_context.Dirty = false
+
+	// This is the final time we update the context - send a
+	// journal message.
+	if collection_context.Request != nil &&
+		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		row := ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Flow", collection_context).
+			Set("FlowId", collection_context.SessionId)
+		serialized, err := json.Marshal([]vfilter.Row{row})
+		if err != nil {
+			return err
+		}
+
+		gJournalWriter.Channel <- &Event{
+			Config:    config_obj,
+			ClientId:  collection_context.Request.ClientId,
+			QueryName: "System.Flow.Completion",
+			Response:  string(serialized),
+			Columns:   []string{"Timestamp", "Flow", "FlowId"},
+		}
+	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -446,23 +479,6 @@ func IsRequestComplete(
 	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Dirty = true
 
-	row := ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().Unix()).
-		Set("Flow", collection_context).
-		Set("FlowId", collection_context.SessionId)
-	serialized, err := json.Marshal([]vfilter.Row{row})
-	if err != nil {
-		return true, err
-	}
-
-	gJournalWriter.Channel <- &Event{
-		Config:    config_obj,
-		ClientId:  collection_context.Request.ClientId,
-		QueryName: "System.Flow.Completion",
-		Response:  string(serialized),
-		Columns:   []string{"Timestamp", "Flow", "FlowId"},
-	}
-
 	return true, nil
 }
 
@@ -500,24 +516,6 @@ func FailIfError(
 				hunt.Stats.TotalClientsWithErrors++
 				return nil
 			})
-	}
-
-	// Send the event to the flow completion artifact.
-	row := ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().Unix()).
-		Set("Flow", collection_context).
-		Set("FlowId", collection_context.SessionId)
-	serialized, err := json.Marshal([]vfilter.Row{row})
-	if err != nil {
-		return err
-	}
-
-	gJournalWriter.Channel <- &Event{
-		Config:    config_obj,
-		ClientId:  collection_context.Request.ClientId,
-		QueryName: "System.Flow.Completion",
-		Response:  string(serialized),
-		Columns:   []string{"Timestamp", "Flow", "FlowId"},
 	}
 
 	return errors.New(message.Status.ErrorMessage)

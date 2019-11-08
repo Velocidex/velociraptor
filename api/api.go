@@ -138,7 +138,7 @@ func (self *ApiServer) GetReport(
 
 func (self *ApiServer) CollectArtifact(
 	ctx context.Context,
-	in *flows_proto.ArtifactCollectorRequest) (*flows_proto.ArtifactCollectorResponse, error) {
+	in *flows_proto.ArtifactCollectorArgs) (*flows_proto.ArtifactCollectorResponse, error) {
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 	creator := GetGRPCUserInfo(self.config, ctx).Name
 

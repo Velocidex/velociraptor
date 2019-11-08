@@ -461,7 +461,7 @@ func request_API_GetTable_0(ctx context.Context, marshaler runtime.Marshaler, cl
 }
 
 func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_4.ArtifactCollectorRequest
+	var protoReq proto_4.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

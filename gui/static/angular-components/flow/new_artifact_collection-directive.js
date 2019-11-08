@@ -75,16 +75,12 @@ NewArtifactCollectionController.prototype.startClientFlow = function() {
 
     this.artifactCollectorRequest = {
         client_id: clientId,
-        request: {
-            artifacts: {
-                names: this.names
-            },
-            parameters: {
-                env: env
-            },
-            ops_per_second: this.ops_per_second,
-            timeout: this.timeout
-        }
+        artifacts: this.names,
+        parameters: {
+            env: env
+        },
+        ops_per_second: this.ops_per_second,
+        timeout: this.timeout
     };
 
     this.grrApiService_.post(

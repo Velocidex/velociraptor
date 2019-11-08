@@ -6,12 +6,6 @@ import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
 
-message Artifacts {
-    repeated string names = 1 [(sem_type) = {
-            description: "The artifacts to launch.",
-        }];
-}
-
 message ArtifactParameters {
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
@@ -21,7 +15,10 @@ message ArtifactParameters {
 
 
 message ArtifactCollectorArgs {
-    Artifacts artifacts = 1 [(sem_type) = {
+    string creator = 1;
+    string client_id = 3;
+
+    repeated string artifacts = 2 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Launch",
         }];
@@ -48,16 +45,9 @@ message ArtifactCollectorArgs {
         }];
 }
 
-message ArtifactCollectorRequest {
-    string creator = 1;
-    string client_id = 2;
-
-    ArtifactCollectorArgs request = 3;
-}
-
 message ArtifactCollectorResponse {
     string flow_id = 1;
-    ArtifactCollectorRequest request =2;
+    ArtifactCollectorArgs request =2;
 }
 
 message ArtifactUploadedFileInfo {
@@ -71,7 +61,7 @@ message ArtifactCollectorContext {
     // Where we are stored in the data store.
     string urn = 5;
     string session_id = 13;
-    ArtifactCollectorRequest request = 11;
+    ArtifactCollectorArgs request = 11;
 
     // If an error occurs this is the backtrace.
     string backtrace = 1;

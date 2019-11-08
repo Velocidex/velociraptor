@@ -150,9 +150,8 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	require.NoError(t, err)
 
 	new_table := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"Generic.Client.Stats"},
-		}}
+		Artifacts: []string{"Generic.Client.Stats"},
+	}
 
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
@@ -222,7 +221,7 @@ func (self *ServerTestSuite) TestForeman() {
 		context.Background(), self.config_obj,
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
-			StartRequest: expected.Request,
+			StartRequest: expected,
 		})
 	assert.NoError(t, err)
 
@@ -231,7 +230,7 @@ func (self *ServerTestSuite) TestForeman() {
 	err = db.GetSubject(self.config_obj, "/hunts/"+*hunt_id, hunt)
 	require.NoError(t, err)
 
-	assert.Equal(t, hunt.StartRequest, expected.Request)
+	assert.Equal(t, hunt.StartRequest, expected)
 
 	// Send a foreman checkin message from client with old hunt
 	// timestamp.
@@ -369,16 +368,12 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 func (self *ServerTestSuite) TestScheduleCollection() {
 	t := self.T()
 	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"Generic.Client.Info"},
-		},
+		ClientId:  self.client_id,
+		Artifacts: []string{"Generic.Client.Info"},
 	}
 
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, &flows_proto.ArtifactCollectorRequest{
-			ClientId: self.client_id,
-			Request:  request,
-		})
+		self.config_obj, request)
 
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(t, err)
@@ -395,22 +390,16 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		"/clients/"+self.client_id+"/collections/"+flow_id, collection_context)
 	require.NoError(t, err)
 
-	assert.Equal(t, collection_context.Request.Request, request)
+	assert.Equal(t, collection_context.Request, request)
 }
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
-	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"Generic.Client.Info"},
-		},
-	}
-
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, &flows_proto.ArtifactCollectorRequest{
-			ClientId: self.client_id,
-			Request:  request,
+		self.config_obj, &flows_proto.ArtifactCollectorArgs{
+			ClientId:  self.client_id,
+			Artifacts: []string{"Generic.Client.Info"},
 		})
 
 	return flow_id, err

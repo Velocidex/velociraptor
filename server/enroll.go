@@ -39,13 +39,9 @@ func enroll(server *Server, csr *crypto_proto.Certificate) error {
 			server.config)
 		defer closer()
 
-		request := &flows_proto.ArtifactCollectorRequest{
-			ClientId: client_id,
-			Request: &flows_proto.ArtifactCollectorArgs{
-				Artifacts: &flows_proto.Artifacts{
-					Names: []string{constants.CLIENT_INFO_ARTIFACT},
-				},
-			},
+		request := &flows_proto.ArtifactCollectorArgs{
+			ClientId:  client_id,
+			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
 		}
 		_, err = client.CollectArtifact(context.Background(), request)
 		if err != nil {

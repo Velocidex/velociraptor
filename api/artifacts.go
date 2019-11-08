@@ -265,17 +265,13 @@ func (self *ApiServer) ListAvailableEventResults(
 }
 
 // MakeCollectorRequest is a convenience function for creating
-// flows_proto.ArtifactCollectorRequest protobufs.
+// flows_proto.ArtifactCollectorArgs protobufs.
 func MakeCollectorRequest(
 	client_id string, artifact_name string,
-	parameters ...string) *flows_proto.ArtifactCollectorRequest {
-	result := &flows_proto.ArtifactCollectorRequest{
-		ClientId: client_id,
-		Request: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: &flows_proto.Artifacts{
-				Names: []string{artifact_name},
-			},
-		},
+	parameters ...string) *flows_proto.ArtifactCollectorArgs {
+	result := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  client_id,
+		Artifacts: []string{artifact_name},
 	}
 
 	if len(parameters)%2 != 0 {
@@ -283,13 +279,13 @@ func MakeCollectorRequest(
 	}
 
 	if parameters != nil {
-		result.Request.Parameters = &flows_proto.ArtifactParameters{}
+		result.Parameters = &flows_proto.ArtifactParameters{}
 		for i := 0; i < len(parameters); {
 			k := parameters[i]
 			i++
 			v := parameters[i]
 			i++
-			result.Request.Parameters.Env = append(result.Request.Parameters.Env,
+			result.Parameters.Env = append(result.Parameters.Env,
 				&actions_proto.VQLEnv{
 					Key: k, Value: v,
 				})

@@ -1,2 +1,2 @@
 Queries:
-  - SELECT * from source(client_id='C.abad2ac29511a9ac', artifact='Windows.Events.ProcessCreation') where Name =~ '(?i)psexesvc'
+  - SELECT * from source(client_id='C.4f5e52adf0a337a9', artifact='Windows.Events.ProcessCreation') where Name =~ '(?i)psexesvc'

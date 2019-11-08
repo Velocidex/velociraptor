@@ -1,0 +1,9 @@
+Name,Description,LastLogin
+Administrator,Built-in account for administering the computer/domain,
+DefaultAccount,A user account managed by the system.,
+Guest,Built-in account for guest access to the computer/domain,
+test,,2019-10-18T14:56:26Z
+WDAGUtilityAccount,A user account managed and used by the system for Windows Defender Application Guard scenarios.,
+SYSTEM,HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-18,2019-03-19T04:55:43Z
+LOCAL SERVICE,HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-19,2019-03-19T04:55:43Z
+NETWORK SERVICE,HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\S-1-5-20,2019-03-19T04:55:43Z

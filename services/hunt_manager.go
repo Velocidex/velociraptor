@@ -159,10 +159,9 @@ func (self *HuntManager) ProcessRow(
 		self.writers[participation_row.HuntId] = writer
 	}
 
-	request := &flows_proto.ArtifactCollectorRequest{
+	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId: participation_row.ClientId,
 		Creator:  participation_row.HuntId,
-		Request:  &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	// Get hunt information about this hunt.
@@ -197,7 +196,7 @@ func (self *HuntManager) ProcessRow(
 
 			// Use hunt information to launch the flow
 			// against this client.
-			proto.Merge(request.Request, hunt_obj.StartRequest)
+			proto.Merge(request, hunt_obj.StartRequest)
 			hunt_obj.Stats.TotalClientsScheduled += 1
 
 			return nil

@@ -72,7 +72,6 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 }
 
 func (self *Responder) RaiseError(message string) {
-	panic(message)
 	self.AddResponse(&crypto_proto.GrrMessage{
 		Status: &crypto_proto.GrrStatus{
 			Backtrace:    string(debug.Stack()),

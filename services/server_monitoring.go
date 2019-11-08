@@ -32,9 +32,7 @@ var (
 	}
 
 	DefaultServerMonitoringTable = flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"Server.Monitor.Health"},
-		},
+		Artifacts:  []string{"Server.Monitor.Health"},
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 )
@@ -95,7 +93,7 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	for _, name := range arg.Artifacts.Names {
+	for _, name := range arg.Artifacts {
 		artifact, pres := repository.Get(name)
 		if !pres {
 			return errors.New("Unknown artifact " + name)
@@ -283,7 +281,7 @@ func startServerMonitoringService(config_obj *config_proto.Config) (
 	}
 
 	artifacts := flows_proto.ArtifactCollectorArgs{
-		Artifacts:  &flows_proto.Artifacts{},
+		Artifacts:  []string{},
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 	err = db.GetSubject(

@@ -1,0 +1,9 @@
+
+ö
+F.BN2HP3OSS3LK6ÚÉg
+eLET precondition_Windows_Applications_ChocolateyPackages_0=SELECT OS FROM info() WHERE OS = 'windows'∆
+√LET files=SELECT FullPath, parse_xml(file=FullPath) AS Metadata FROM glob(globs=if(condition=ChocolateyInstall, then=ChocolateyInstall, else=environ(var='ChocolateyInstall')) + '/lib/*/*.nuspec')≥
+∞LET Windows_Applications_ChocolateyPackages_0_1=SELECT * FROM if(condition=if(condition=ChocolateyInstall, then=ChocolateyInstall, else=environ(var="ChocolateyInstall")), then= { SELECT FullPath, Metadata.package.metadata.id AS Name, Metadata.package.metadata.version AS Version, Metadata.package.metadata.summary AS Summary, Metadata.package.metadata.authors AS Authors, Metadata.package.metadata.licenseUrl AS License FROM files})Í
+ÑSELECT * FROM if(then=Windows_Applications_ChocolateyPackages_0_1, condition=precondition_Windows_Applications_ChocolateyPackages_0)a$871bdeb5aa36e076eedc1d7ece83222e60c40262061547884ba40adfca30adb74341fd643711633a059a562f105ea844
+ChocolateyInstall
+ChocolateyInstall»ÿ

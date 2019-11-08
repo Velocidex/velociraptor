@@ -59,9 +59,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: arg.Artifacts,
-		}}
+		Artifacts: arg.Artifacts,
+	}
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)

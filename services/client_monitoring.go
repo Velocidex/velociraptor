@@ -94,7 +94,7 @@ func (self *ClientEventTable) Update(
 	}
 
 	if arg.Artifacts != nil {
-		for _, name := range arg.Artifacts.Names {
+		for _, name := range arg.Artifacts {
 			logger.Info("Collecting Client Monitoring Artifact: %s", name)
 
 			vql_collector_args := &actions_proto.VQLCollectorArgs{
@@ -164,7 +164,7 @@ func StartClientMonitoringService(config_obj *config_proto.Config) error {
 
 	event_table := flows_proto.ClientEventTable{
 		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts:  &flows_proto.Artifacts{},
+			Artifacts:  []string{},
 			Parameters: &flows_proto.ArtifactParameters{},
 		},
 	}
@@ -175,7 +175,7 @@ func StartClientMonitoringService(config_obj *config_proto.Config) error {
 	if err != nil {
 		// No client monitoring rules found, install some
 		// defaults.
-		event_table.Artifacts.Artifacts.Names = []string{
+		event_table.Artifacts.Artifacts = []string{
 			// Essential for client resource telemetry.
 			"Generic.Client.Stats",
 

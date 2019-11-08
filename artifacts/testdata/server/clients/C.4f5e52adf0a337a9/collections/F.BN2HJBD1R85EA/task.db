@@ -1,0 +1,9 @@
+
+í
+F.BN2HJBD1R85EAòÖ¦
+£LET System_VFS_ListDirectory_0_0=SELECT FullPath AS _FullPath, Accessor AS _Accessor, Data AS _Data, Name, Size, Mode.String AS Mode, timestamp(epoch=Mtime.Sec) AS mtime, timestamp(epoch=Atime.Sec) AS atime, timestamp(epoch=Ctime.Sec) AS ctime FROM glob(globs=Path + '/*', accessor=Accessor)o
+*SELECT * FROM System_VFS_ListDirectory_0_0A$7d263bdf9355f3c93ae7467f6cb329014a04dea3b5fc0315725534106825a3a5	
+Path/
+Accessorfile
+Path/C:
+Accessorfile
