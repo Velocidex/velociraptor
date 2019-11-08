@@ -6,10 +6,11 @@ package mock_proto
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 	proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto0 "www.velocidex.com/golang/velociraptor/api/proto"
 	proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -80,7 +81,7 @@ func (mr *MockAPIClientMockRecorder) CancelFlow(arg0, arg1 interface{}, arg2 ...
 }
 
 // CollectArtifact mocks base method
-func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.ArtifactCollectorRequest, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
+func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

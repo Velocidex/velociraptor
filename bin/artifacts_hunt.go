@@ -47,9 +47,8 @@ var (
 
 func doArtifactsHunt() {
 	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: *artifact_command_hunt_names,
-		}}
+		Artifacts: *artifact_command_hunt_names,
+	}
 	for k, v := range *artifact_command_hunt_parameters {
 		request.Parameters.Env = append(request.Parameters.Env,
 			&actions_proto.VQLEnv{

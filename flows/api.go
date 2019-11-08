@@ -37,7 +37,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -279,30 +278,57 @@ func GetFlowRequests(
 	if count == 0 {
 		count = 50
 	}
-	result := &api_proto.ApiFlowRequestDetails{}
 
-	session_id := urns.BuildURN("clients", client_id, "flows", flow_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
+	}
+
+	result := &api_proto.ApiFlowRequestDetails{}
+
+	flow_details := &api_proto.ApiFlowRequestDetails{}
+	err = db.GetSubject(config_obj,
+		path.Join(GetCollectionPath(client_id, flow_id), "task"),
+		flow_details)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the task_id in the details protobuf.
+	set_task_id_in_details := func(request_id, task_id uint64) bool {
+		for _, item := range flow_details.Items {
+			if item.RequestId == request_id {
+				item.TaskId = task_id
+				return true
+			}
+		}
+
+		return false
 	}
 
 	requests, err := db.GetClientTasks(config_obj, client_id, true)
 	if err != nil {
 		return nil, err
 	}
-	for idx, request := range requests {
-		if idx < int(offset) {
-			continue
-		}
+	for _, request := range requests {
+		set_task_id_in_details(request.RequestId, request.TaskId)
+	}
 
-		if idx > int(offset+count) {
-			break
-		}
+	if offset > uint64(len(flow_details.Items)) {
+		return result, nil
+	}
 
-		if request.SessionId == session_id {
-			result.Items = append(result.Items, request)
-		}
+	end := offset + count
+	if end > uint64(len(flow_details.Items)) {
+		end = uint64(len(flow_details.Items))
+	}
+
+	result.Items = flow_details.Items[offset:end]
+
+	// Remove unimportant fields
+	for _, item := range result.Items {
+		item.SessionId = ""
+		item.RequestId = 0
 	}
 
 	return result, nil

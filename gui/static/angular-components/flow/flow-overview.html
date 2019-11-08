@@ -11,7 +11,7 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::flow.context.request.request.artifacts.names" />
+              <grr-semantic-value value="::flow.context.request.artifacts" />
             </dd>
 
             <dt>Flow ID</dt>
@@ -35,13 +35,13 @@
             </div>
 
             <dt>Ops/Sec</dt>
-            <dd>{{::flow.context.request.request.ops_per_second || 'Unlimited' }}</dd>
+            <dd>{{::flow.context.request.ops_per_second || 'Unlimited' }}</dd>
             <br>
           </dl>
 
           <h5> Parameters </h5>
           <dl class="dl-horizontal dl-flow">
-            <div ng-repeat="item in ::flow.context.request.request.parameters.env">
+            <div ng-repeat="item in ::flow.context.request.parameters.env">
               <dt>{{item.key}}</dt>
               <dd>{{item.value}}</dd>
             </div>

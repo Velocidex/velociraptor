@@ -121,23 +121,20 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
  * @export
  */
 HostInfoController.prototype.interrogate = function() {
-  var url = '/v1/CollectArtifact';
-  var params ={
-    'client_id': this.clientId,
-    'request': {
-      'artifacts': {
-        names: ['Generic.Client.Info']
-      }
-    }};
+    var url = '/v1/CollectArtifact';
+    var params ={
+        'client_id': this.clientId,
+        'artifacts': ['Generic.Client.Info'],
+    };
 
-  this.grrApiService_.post(url, params).then(
-      function success(response) {
-        this.interrogateOperationId = response['data']['flow_id'];
-        this.monitorInterrogateOperation_();
-      }.bind(this),
-      function failure(response) {
-        this.stopMonitorInterrogateOperation_();
-      }.bind(this));
+    this.grrApiService_.post(url, params).then(
+        function success(response) {
+            this.interrogateOperationId = response['data']['flow_id'];
+            this.monitorInterrogateOperation_();
+        }.bind(this),
+        function failure(response) {
+            this.stopMonitorInterrogateOperation_();
+        }.bind(this));
 };
 
 /**

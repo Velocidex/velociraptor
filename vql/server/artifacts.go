@@ -59,7 +59,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	request := api.MakeCollectorRequest(arg.ClientId, "")
-	request.Request.Artifacts.Names = arg.Artifacts
+	request.Artifacts = arg.Artifacts
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)
@@ -70,8 +70,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 				return vfilter.Null{}
 			}
 
-			request.Request.Parameters.Env = append(
-				request.Request.Parameters.Env,
+			request.Parameters.Env = append(
+				request.Parameters.Env,
 				&actions_proto.VQLEnv{
 					Key: k, Value: value_str,
 				})

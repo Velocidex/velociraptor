@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"path"
 	"runtime/debug"
 	"sync"
@@ -29,6 +30,20 @@ import (
 const (
 	source = "server"
 )
+
+type serverLogger struct {
+	config_obj *config_proto.Config
+	w          *csv.Writer
+}
+
+func (self *serverLogger) Write(b []byte) (int, error) {
+	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
+	self.w.Write([]string{
+		fmt.Sprintf("%v", time.Now().UTC().UnixNano()/1000),
+		time.Now().UTC().String(),
+		msg})
+	return len(b), nil
+}
 
 type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
@@ -115,32 +130,30 @@ func (self *ServerArtifactsRunner) process() error {
 }
 
 func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) error {
-	flow_id := task.SessionId
-	flow_path := path.Join("/clients/server/flows/", flow_id)
-
+	urn := path.Join("/clients", source, "collections", task.SessionId)
+	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	flow_obj := &flows_proto.AFF4FlowObject{}
-	err = db.GetSubject(self.config_obj, flow_path, flow_obj)
+	err = db.GetSubject(self.config_obj, urn, collection_context)
 	if err != nil {
 		return err
 	}
 
 	db.UnQueueMessageForClient(self.config_obj, source, task)
 
-	self.runQuery(task, flow_obj)
+	self.runQuery(task, collection_context)
 
-	flow_obj.FlowContext.State = flows_proto.FlowContext_TERMINATED
-	flow_obj.FlowContext.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	return db.SetSubject(self.config_obj, flow_path, flow_obj)
+	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+	return db.SetSubject(self.config_obj, urn, collection_context)
 }
 
 func (self *ServerArtifactsRunner) runQuery(
 	task *crypto_proto.GrrMessage,
-	flow_obj *flows_proto.AFF4FlowObject) error {
+	collection_context *flows_proto.ArtifactCollectorContext) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -180,10 +193,27 @@ func (self *ServerArtifactsRunner) runQuery(
 		return err
 	}
 	scope := artifacts.MakeScope(repository).AppendVars(env)
-	scope.Logger = logging.NewPlainLogger(
-		self.config_obj, &logging.FrontendComponent)
-
 	defer scope.Close()
+
+	// Set up the logger for writing query logs
+	log_path := path.Join(collection_context.Urn, "logs")
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	fd, err := file_store_factory.WriteFile(log_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	fd.Truncate(0)
+
+	w := csv.NewWriter(fd)
+	defer w.Flush()
+
+	// Write headers
+	w.Write([]string{"Timestamp", "time", "message"})
+
+	scope.Logger = log.New(&serverLogger{self.config_obj, w}, "server", 0)
 
 	// If we panic we need to recover and report this to the
 	// server.
@@ -196,7 +226,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
-	for _, query := range arg.Query {
+	for row_idx, query := range arg.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return err
@@ -205,6 +235,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		read_chan := vql.Eval(sub_ctx, scope)
 
 		var write_chan chan vfilter.Row
+
 		if query.Name != "" {
 			name := artifacts.DeobfuscateString(
 				self.config_obj, query.Name)
@@ -222,9 +253,10 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			// Update the artifacts with results in the
 			// context.
-			if !utils.InString(&flow_obj.FlowContext.ArtifactsWithResults, name) {
-				flow_obj.FlowContext.ArtifactsWithResults = append(
-					flow_obj.FlowContext.ArtifactsWithResults, name)
+			if !utils.InString(
+				&collection_context.ArtifactsWithResults, name) {
+				collection_context.ArtifactsWithResults = append(
+					collection_context.ArtifactsWithResults, name)
 			}
 		}
 
@@ -254,6 +286,10 @@ func (self *ServerArtifactsRunner) runQuery(
 					write_chan <- row
 				}
 			}
+		}
+
+		if query.Name != "" {
+			scope.Log("Query %v: Emitted %v rows", query.Name, row_idx)
 		}
 	}
 

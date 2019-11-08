@@ -47,15 +47,12 @@ var (
 )
 
 func doArtifactsSchedule() {
-	request := &flows_proto.ArtifactCollectorRequest{
-		ClientId: *artifact_command_schedule_client,
-		Request: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: &flows_proto.Artifacts{
-				Names: *artifact_command_schedule_names,
-			}}}
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  *artifact_command_schedule_client,
+		Artifacts: *artifact_command_schedule_names,
+	}
 	for k, v := range *artifact_command_schedule_parameters {
-		request.Request.Parameters.Env = append(
-			request.Request.Parameters.Env,
+		request.Parameters.Env = append(request.Parameters.Env,
 			&actions_proto.VQLEnv{
 				Key: k, Value: v,
 			})

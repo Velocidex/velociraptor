@@ -32,7 +32,7 @@
         {$ item.session_id $}
       </td>
       <td>
-        <div ng-repeat="name in item.request.request.artifacts.names track by $index">
+        <div ng-repeat="name in item.request.artifacts track by $index">
           {$ name $}
         </div>
       </td>

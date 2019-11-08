@@ -14,7 +14,7 @@ FROM clients(search='label:*') ORDER BY client_id
  {
   "os_info.system": "windows",
   "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
-   "ClientId": "C.abad2ac29511a9ac",
+   "ClientId": "C.4f5e52adf0a337a9",
    "Labels": [
     "WinBoxes"
    ],
@@ -23,20 +23,20 @@ FROM clients(search='label:*') ORDER BY client_id
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[
  {
-  "client_id": "C.abad2ac29511a9ac",
+  "client_id": "C.4f5e52adf0a337a9",
   "agent_information": {
-   "version": "2019-10-24T10:23:32+10:00",
+   "version": "2019-11-07T22:08:33+10:00",
    "name": "velociraptor"
   },
   "os_info": {
    "system": "windows",
-   "release": "Microsoft Windows 10 Enterprise10.0.17763 Build 17763",
+   "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
    "machine": "amd64",
-   "fqdn": "DESKTOP-6CBJ8MJ"
+   "fqdn": "DESKTOP-BP4S7TF"
   },
-  "last_seen_at": 1571983851827060,
-  "last_ip": "192.168.0.26:34300",
-  "last_interrogate_flow_id": "F.BMP93J55F83B6",
+  "last_seen_at": 1573215522537748,
+  "last_ip": "192.168.0.5:40933",
+  "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": 1,
   "labels": [
    "WinBoxes"
@@ -55,12 +55,12 @@ FROM clients(search='label:*') ORDER BY client_id
 [
  {
   "label(client_id=client_id, op='remove', labels=labels)": {
-   "ClientId": "C.abad2ac29511a9ac",
+   "ClientId": "C.4f5e52adf0a337a9",
    "Labels": [
     "WinBoxes"
    ],
    "Op": "remove"
   },
-  "client_id": "C.abad2ac29511a9ac"
+  "client_id": "C.4f5e52adf0a337a9"
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[]

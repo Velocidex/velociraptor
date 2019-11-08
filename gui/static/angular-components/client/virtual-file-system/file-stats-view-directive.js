@@ -42,14 +42,20 @@ const FileStatsViewController = function(
  * @export
  */
 FileStatsViewController.prototype.getAccessorAndPath = function(path) {
-  var components = path.split('/').filter(function (x) {return x.length > 0;});
-  var accessor = 'file';
-  if (components.length > 0) {
-    accessor = components[0];
-    path = '/'+components.slice(1).join('/');
-  }
+    var components = path.split('/').filter(function (x) {return x.length > 0;});
+    var accessor = 'file';
+    if (components.length > 0) {
+        accessor = components[0];
+        path = components.slice(1).join('/');
+    }
 
-  return {accessor: accessor, path: path};
+    // Some windows paths start with device name e.g. \\.\C: so we do
+    // not want to prepend a / to these.
+    if (path.substring(0,2) != '\\\\') {
+        path = '/' + path;
+    }
+
+    return {accessor: accessor, path: path};
 }
 
 FileStatsViewController.prototype.updateFile = function() {
@@ -70,16 +76,12 @@ FileStatsViewController.prototype.updateFile = function() {
 
   var url = 'v1/CollectArtifact';
   var params = {
-    client_id: clientId,
-    request: {
-      artifacts: {
-        names: ["System.VFS.DownloadFile"],
-      },
+      client_id: clientId,
+      artifacts: ["System.VFS.DownloadFile"],
       parameters: {
-        env: [{key: "Path", value: components.path},
-              {key: "Accessor", value: components.accessor}],
+          env: [{key: "Path", value: components.path},
+                {key: "Accessor", value: components.accessor}],
       }
-    }
   };
 
   this.updateInProgress = true;

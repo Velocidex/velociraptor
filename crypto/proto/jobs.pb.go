@@ -230,7 +230,8 @@ type GrrMessage struct {
 	ResponseId uint64                        `protobuf:"varint,3,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
 	Source     string                        `protobuf:"bytes,6,opt,name=source,proto3" json:"source,omitempty"`
 	AuthState  GrrMessage_AuthorizationState `protobuf:"varint,7,opt,name=auth_state,json=authState,proto3,enum=proto.GrrMessage_AuthorizationState" json:"auth_state,omitempty"`
-	// The id of this message in the scheduler. Based on the timestamp.
+	// The id of this message in the scheduler. Based on the
+	// timestamp. If this is 0 then the task is not scheduled.
 	TaskId uint64 `protobuf:"varint,15,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	// Generally only one of the following will be set.
 	// Client to server:
@@ -252,8 +253,10 @@ type GrrMessage struct {
 	// DEPRECATED: This field contains an encoded rdfvalue. The type of
 	// this value is in args_rdf_name.
 	Args []byte `protobuf:"bytes,5,opt,name=args,proto3" json:"args,omitempty"`
+	// DEPRECATED:
 	// The rdfvalue class of the args.
 	ArgsRdfName string `protobuf:"bytes,14,opt,name=args_rdf_name,json=argsRdfName,proto3" json:"args_rdf_name,omitempty"`
+	// DEPRECATED:
 	// The final response to a request carries this type which indicates it is a
 	// status message.
 	Type                 GrrMessage_Type `protobuf:"varint,8,opt,name=type,proto3,enum=proto.GrrMessage_Type" json:"type,omitempty"`

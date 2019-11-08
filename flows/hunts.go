@@ -61,9 +61,9 @@ func FindCollectedArtifacts(
 		return
 	}
 
-	hunt.Artifacts = hunt.StartRequest.Artifacts.Names
+	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
-	for _, artifact := range hunt.StartRequest.Artifacts.Names {
+	for _, artifact := range hunt.StartRequest.Artifacts {
 		for _, source := range artifacts.GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(

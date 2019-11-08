@@ -1,0 +1,4 @@
+Name,BuildTime,Labels,Hostname,OS,Architecture,Platform,PlatformVersion,KernelVersion,Fqdn
+velociraptor,2019-11-07T22:08:33+10:00,"[
+ ""Dev""
+]",DESKTOP-BP4S7TF,windows,amd64,Microsoft Windows 10 Enterprise Evaluation,10.0.18362 Build 18362,,DESKTOP-BP4S7TF

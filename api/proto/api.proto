@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
@@ -22,7 +21,6 @@ package proto;
 
 message StartFlowResponse {
     string flow_id = 1;
-    FlowRunnerArgs runner_args = 2;
 }
 
 message Approval {
@@ -201,7 +199,7 @@ service API {
     }
 
     // Flows
-    rpc CollectArtifact(ArtifactCollectorRequest) returns (ArtifactCollectorResponse) {
+    rpc CollectArtifact(ArtifactCollectorArgs) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
             post: "/api/v1/CollectArtifact",
             body: "*"

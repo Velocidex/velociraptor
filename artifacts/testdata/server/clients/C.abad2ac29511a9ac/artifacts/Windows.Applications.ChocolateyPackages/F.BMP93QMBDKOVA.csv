@@ -1,4 +1,0 @@
-FullPath,Name,Version,Summary,Authors,License
-\C:\ProgramData\chocolatey\lib\osquery\osquery.nuspec,osquery,4.0.2,"osquery gives you the ability to query and log things like running
-      processes, logged in users, password changes, usb devices, firewall
-      exceptions, listening ports, and more.",osquery,https://github.com/osquery/osquery/blob/master/LICENSE
