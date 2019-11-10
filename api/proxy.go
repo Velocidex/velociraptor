@@ -54,7 +54,6 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 
 		var handler http.Handler
 		if target.Scheme == "file" {
-			fmt.Printf(target.Path)
 			handler = http.StripPrefix(reverse_proxy_config.Route,
 				http.FileServer(http.Dir(target.Path)))
 
