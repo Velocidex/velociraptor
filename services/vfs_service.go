@@ -141,6 +141,11 @@ func (self *VFSService) ProcessListDirectory(
 	for row := range vql.Eval(ctx, sub_scope) {
 		full_path := vql_subsystem.GetStringFromRow(scope, row, "_FullPath")
 		accessor := vql_subsystem.GetStringFromRow(scope, row, "_Accessor")
+		name := vql_subsystem.GetStringFromRow(scope, row, "Name")
+
+		if name == "." || name == ".." {
+			continue
+		}
 
 		vfs_path := getVfsPath(full_path, accessor)
 
