@@ -217,7 +217,7 @@ func (self *VFSService) flush_state(scope *vfilter.Scope,
 func getVfsPath(client_path string, accessor string) string {
 	prefix := "/file"
 	switch accessor {
-	case "reg":
+	case "reg", "registry":
 		prefix = "/registry"
 	case "ntfs":
 		prefix = "/ntfs"

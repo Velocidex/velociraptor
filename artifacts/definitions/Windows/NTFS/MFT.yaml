@@ -1,0 +1,17 @@
+name: Windows.NTFS.MFT
+description: |
+  This artifact scans the $MFT file on the host showing all files
+  within the MFT.  This is useful in order to try and recover deleted
+  files. Take the MFT ID of a file of interest and provide it to the
+  Windows.NTFS.Recover artifact.
+
+parameters:
+  - name: MFTFilename
+    default: "C:/$MFT"
+
+  - name: Accessor
+    default: ntfs
+
+sources:
+  - queries:
+      - SELECT * FROM parse_mft(filename=MFTFilename, accessor=Accessor)
