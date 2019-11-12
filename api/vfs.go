@@ -350,7 +350,7 @@ func GetClientPath(vfs_path string) (client_path string, accessor string) {
 	}
 
 	if strings.HasPrefix(vfs_path, "/registry") {
-		return strings.TrimPrefix(vfs_path, "/registry"), "reg"
+		return strings.TrimPrefix(vfs_path, "/registry"), "registry"
 	}
 
 	if strings.HasPrefix(vfs_path, "/ntfs/") {

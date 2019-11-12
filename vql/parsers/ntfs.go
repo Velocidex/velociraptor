@@ -27,6 +27,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/glob"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -173,6 +175,74 @@ func (self NTFSFunction) Call(
 	return &NTFSModel{NTFSFileInformation: result, Device: device}
 }
 
+type MFTScanPluginArgs struct {
+	Filename string `vfilter:"required,field=filename,doc=A list of event log files to parse."`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+}
+
+type MFTScanPlugin struct{}
+
+func (self MFTScanPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &MFTScanPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("parse_mft: %v", err)
+			return
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("parse_mft: %v", err)
+			return
+		}
+		fd, err := accessor.Open(arg.Filename)
+		if err != nil {
+			scope.Log("parse_mft: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+		defer fd.Close()
+
+		reader, err := ntfs.NewPagedReader(
+			utils.ReaderAtter{fd}, 1024, 10000)
+		if err != nil {
+			scope.Log("parse_mft: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+
+		st, err := fd.Stat()
+		if err != nil {
+			scope.Log("parse_mft: Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+
+		for item := range ntfs.ParseMFTFile(
+			reader, st.Size(), 0x1000, 0x400) {
+			output_chan <- item
+		}
+	}()
+
+	return output_chan
+}
+
+func (self MFTScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "parse_mft",
+		Doc:     "Scan the $MFT from an NTFS volume.",
+		ArgType: type_map.AddType(scope, &MFTScanPluginArgs{}),
+	}
+}
+
 type NTFSI30ScanPlugin struct{}
 
 func (self NTFSI30ScanPlugin) Call(
@@ -235,4 +305,5 @@ func (self NTFSI30ScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 func init() {
 	vql_subsystem.RegisterFunction(&NTFSFunction{})
 	vql_subsystem.RegisterPlugin(&NTFSI30ScanPlugin{})
+	vql_subsystem.RegisterPlugin(&MFTScanPlugin{})
 }
