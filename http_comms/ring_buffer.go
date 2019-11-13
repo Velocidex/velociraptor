@@ -161,8 +161,8 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			// entire file.
 			if length > constants.MAX_MEMORY*2 {
 				self.fd.Truncate(0)
-				self.leased_pointer = 0
-				self.header.WritePointer = 0
+				self.leased_pointer = FirstRecordOffset
+				self.header.WritePointer = FirstRecordOffset
 				return nil
 			}
 			item := make([]byte, length)

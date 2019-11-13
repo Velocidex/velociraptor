@@ -95,6 +95,16 @@ func downloadFlowToZip(
 	// Copy the flow's logs.
 	copier(path.Join(flow_details.Context.Urn, "logs"))
 
+	// Copy CSV files
+	for _, artifacts_with_results := range flow_details.Context.ArtifactsWithResults {
+		artifact_name, source := artifacts.SplitFullSourceName(artifacts_with_results)
+		csv_path := artifacts.GetCSVPath(
+			flow_details.Context.Request.ClientId, "*",
+			flow_details.Context.SessionId,
+			artifact_name, source, artifacts.MODE_CLIENT)
+		copier(csv_path)
+	}
+
 	// Get all file uploads
 	if flow_details.Context.TotalUploadedFiles == 0 {
 		return nil
