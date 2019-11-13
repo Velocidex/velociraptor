@@ -95,6 +95,7 @@ func ScheduleArtifactCollection(
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
 		OpsPerSecond: collector_request.OpsPerSecond,
 		Timeout:      collector_request.Timeout,
+		MaxRow:       1000,
 	}
 	for _, name := range collector_request.Artifacts {
 		var artifact *artifacts_proto.Artifact = nil
