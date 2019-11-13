@@ -50,7 +50,7 @@
                 Remove="uninstall" Wait="yes" />
           </Component>
           <Component Id='Config' Guid='d47dd101-3f53-45ef-889e-2b0db79e554c'>
-            <File Id='Config' Name=client.config.yaml'
+            <File Id='Config' Name='client.config.yaml'
                   DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
             </File>
           </Component>
