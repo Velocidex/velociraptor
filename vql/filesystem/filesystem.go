@@ -19,11 +19,13 @@ package filesystem
 
 import (
 	"context"
-	"io"
-
+	"crypto"
+	"fmt"
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
+	"io"
+	"strings"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -260,6 +262,103 @@ func (self StatPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
+type HashArgs struct {
+	Filename  []string `vfilter:"required,field=filename,doc=One or more files to hash."`
+	Accessor  string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Algorithm []string `vfilter:"required,field=algorithm,doc=One or more hashing algorithms."`
+}
+
+type HashResponse map[string]string
+
+type HashPlugin struct{}
+
+func (self *HashPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	algorithms := map[string]crypto.Hash{
+		"MD4":         crypto.MD4,
+		"MD5":         crypto.MD5,
+		"SHA1":        crypto.SHA1,
+		"SHA224":      crypto.SHA224,
+		"SHA256":      crypto.SHA256,
+		"SHA384":      crypto.SHA384,
+		"SHA512":      crypto.SHA512,
+		"MD5SHA1":     crypto.MD5SHA1,
+		"RIPEMD160":   crypto.RIPEMD160,
+		"SHA3_224":    crypto.SHA3_224,
+		"SHA3_256":    crypto.SHA3_256,
+		"SHA3_384":    crypto.SHA3_384,
+		"SHA3_512":    crypto.SHA3_512,
+		"SHA512_224":  crypto.SHA512_224,
+		"SHA512_256":  crypto.SHA512_256,
+		"BLAKE2s_256": crypto.BLAKE2s_256,
+		"BLAKE2b_256": crypto.BLAKE2b_256,
+		"BLAKE2b_384": crypto.BLAKE2b_384,
+		"BLAKE2b_512": crypto.BLAKE2b_512,
+	}
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &HashArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("%s: %s", self.Name(), err.Error())
+			return
+		}
+		for _, filename := range arg.Filename {
+			f, err := accessor.Open(filename)
+			if err == nil {
+				hashes := HashResponse{}
+				for _, algorithm := range arg.Algorithm {
+					algorithm := strings.ToUpper(algorithm)
+					if hash, ok := algorithms[algorithm]; ok {
+						if hash.Available() {
+							if _, err = f.Seek(0, io.SeekStart); err == nil {
+								h := hash.New()
+								if _, err = io.Copy(h, f); err == nil {
+									hashes[algorithm] = fmt.Sprintf("%x", h.Sum(nil))
+								} else {
+									scope.Log("%s: %s", self.Name(), err.Error())
+								}
+							} else {
+								scope.Log("%s: %s", self.Name(), err.Error())
+							}
+						}
+					}
+				}
+				_ = f.Close()
+				output_chan <- hashes
+			} else {
+				scope.Log("%s: %s", self.Name(), err.Error())
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self HashPlugin) Name() string {
+	return "hash"
+}
+
+func (self HashPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "hash",
+		Doc:     "Get file hashes. Unlike glob() this does not support wildcards.",
+		RowType: type_map.AddType(scope, HashResponse{}),
+		ArgType: type_map.AddType(scope, &HashArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&GlobPlugin{})
 	vql_subsystem.RegisterPlugin(&ReadFilePlugin{})
@@ -281,4 +380,5 @@ func init() {
 			RowType: disk.PartitionStat{},
 		})
 	vql_subsystem.RegisterPlugin(&StatPlugin{})
+	vql_subsystem.RegisterPlugin(&HashPlugin{})
 }
