@@ -106,13 +106,18 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 	start_time := time.Now()
 	end_time := start_time.Add(365 * 24 * time.Hour)
 
-	serial_number := big.NewInt(1)
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, err
+	}
 	old_cert, err := ParseX509CertFromPemStr([]byte(
 		config_obj.Frontend.Certificate))
 	if err == nil {
-		serial_number.Add(serial_number, old_cert.SerialNumber)
+		serialNumber.Add(big.NewInt(1), old_cert.SerialNumber)
+		serialNumber.Mod(serialNumber, serialNumberLimit)
 		logging.GetLogger(config_obj, &logging.FrontendComponent).Info(
-			"Incremented server serial number to %v", serial_number)
+			"Incremented server serial number to %v", serialNumber)
 	}
 
 	ca_cert, err := ParseX509CertFromPemStr([]byte(
@@ -128,7 +133,7 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 	}
 
 	template := x509.Certificate{
-		SerialNumber: serial_number,
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
 			CommonName:   name,
 			Organization: []string{"Velociraptor"},
