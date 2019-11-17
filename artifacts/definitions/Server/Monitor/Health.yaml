@@ -84,3 +84,8 @@ reports:
           </span>
         </span>
       </span>
+
+
+      ## Users
+
+      {{ Query "SELECT Name, ReadOnly FROM users()" | Table }}

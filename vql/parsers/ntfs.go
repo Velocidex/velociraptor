@@ -227,7 +227,7 @@ func (self MFTScanPlugin) Call(
 		}
 
 		for item := range ntfs.ParseMFTFile(
-			reader, st.Size(), 0x1000, 0x400) {
+			ctx, reader, st.Size(), 0x1000, 0x400) {
 			output_chan <- item
 		}
 	}()
