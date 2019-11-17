@@ -19,6 +19,7 @@ package vql
 
 import (
 	"encoding/json"
+	"runtime/debug"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -129,4 +130,12 @@ func (self *LogWriter) Write(buff []byte) (int, error) {
 			self.Message, self.total_size)
 	}
 	return len(buff), nil
+}
+
+func CheckForPanic(scope *vfilter.Scope, msg string, vals ...interface{}) {
+	r := recover()
+	if r != nil {
+		scope.Log(msg, vals...)
+		scope.Log("PANIC %v\n%v", r, string(debug.Stack()))
+	}
 }

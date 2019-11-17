@@ -1,0 +1,29 @@
+name: Windows.System.DLLs
+description: |
+  Enumerate the DLLs loaded by a running process. Note that this is
+  similar to the output of `Windows.System.VAD` but less detailed. It
+  only includes DLLs loaded via conventional means.
+
+parameters:
+  - name: processRegex
+    description: A regex applied to process names.
+    default: .
+  - name: dllRegex
+    description: A regex applied to the full dll path (e.g. whitelist all system dlls)
+    default: .
+
+sources:
+  - queries:
+      - LET processes = SELECT Pid, Name
+        FROM pslist()
+        WHERE Name =~ processRegex
+      - SELECT * FROM foreach(
+          row=processes,
+          query={
+            SELECT Pid, Name,
+                format(format='%x-%x', args=[ModuleBaseAddress,
+                     ModuleBaseAddress+ModuleBaseSize]) AS Range,
+                ModuleName, ExePath
+            FROM modules(pid=Pid)
+            WHERE ExePath =~ dllRegex
+          })
