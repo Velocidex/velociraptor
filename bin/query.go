@@ -105,7 +105,10 @@ func doQuery() {
 	config_obj := get_config_or_default()
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
-	repository.LoadDirectory(*artifact_definitions_dir)
+
+	if *artifact_definitions_dir != "" {
+		repository.LoadDirectory(*artifact_definitions_dir)
+	}
 
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).

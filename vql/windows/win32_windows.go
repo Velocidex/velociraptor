@@ -17,10 +17,9 @@
 */
 package windows
 
-//go:generate go run ../../tools/mksyscall_windows.go -output zwin32_windows.go win32_windows.go
-
 import (
 	"reflect"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -143,8 +142,79 @@ const (
 	LG_INCLUDE_INDIRECT = (0x0001)
 
 	ERROR_MORE_DATA = (234)
+
+	// OpenProcess
+	PROCESS_VM_READ           = 0x0010
+	PROCESS_QUERY_INFORMATION = 0x0400
+
+	// Memory protection constants
+	PAGE_EXECUTE           = 0x10
+	PAGE_EXECUTE_READ      = 0x20
+	PAGE_EXECUTE_READWRITE = 0x40
+	PAGE_EXECUTE_WRITECOPY = 0x80
+	PAGE_NOACCESS          = 0x1
+	PAGE_READONLY          = 0x2
+	PAGE_READWRITE         = 0x4
+	PAGE_WRITECOPY         = 0x8
+
+	// CreateToolhelp32Snapshot
+	TH32CS_SNAPHEAPLIST = 0x1
+	TH32CS_SNAPMODULE   = 0x00000008
+	TH32CS_SNAPMODULE32 = 0x10
+	TH32CS_SNAPPROCESS  = 0x2
+	TH32CS_SNAPTHREAD   = 0x4
+
+	MAX_MODULE_NAME32 = 255
+	MAX_PATH          = 260
 )
 
+type SYSTEM_INFO struct {
+	ProcessorArchitecture     uint16
+	Reserved                  uint16
+	PageSize                  uint32
+	MinimumApplicationAddress uint64
+	MaximumApplicationAddress uint64
+	ActiveProcessorMask       uintptr
+	NumberOfProcessors        uint32
+	ProcessorType             uint32
+	AllocationGranularity     uint32
+	ProcessorLevel            uint16
+	ProcessorRevision         uint16
+}
+
+type MEMORY_BASIC_INFORMATION struct {
+	BaseAddress       uint64
+	AllocationBase    uint64
+	AllocationProtect uint32
+	Allignment        uint32
+	RegionSize        uint64
+	State             uint32
+	Protect           uint32
+	Type              uint32
+	Allignment2       uint32
+}
+
+type MODULEENTRY32W struct {
+	Size         uint32
+	ModuleID     uint32
+	ProcessID    uint32
+	GlblcntUsage uint32
+	ProccntUsage uint32
+	ModBaseAddr  uint64
+	ModBaseSize  uint32
+	Module       syscall.Handle
+	ModuleName   [MAX_MODULE_NAME32 + 1]uint16
+	ExePath      [MAX_PATH]uint16
+}
+
+//sys CloseHandle(h syscall.Handle) (err error) = kernel32.CloseHandle
+//sys OpenProcess(dwDesiredAccess uint32, bInheritHandle bool, dwProcessId uint32) (handle syscall.Handle, err error) = kernel32.OpenProcess
+//sys GetSystemInfo(lpSystemInfo *SYSTEM_INFO) (err error) = kernel32.GetSystemInfo
+//sys Module32Next(hSnapshot syscall.Handle, me *MODULEENTRY32W) (err error) = kernel32.Module32NextW
+//sys Module32First(hSnapshot syscall.Handle, me *MODULEENTRY32W) (err error) = kernel32.Module32FirstW
+//sys CreateToolhelp32Snapshot(dwFlags uint32, th32ProcessID uint32) (handle syscall.Handle, err error) = kernel32.CreateToolhelp32Snapshot
+//sys GetMappedFileNameW(hProcess syscall.Handle, address uint64, lpFilename *uint16 , nSize uint32) (len uint32, err error) = psapi.GetMappedFileNameW
+//sys VirtualQueryEx(handle syscall.Handle, address uint64, info *MEMORY_BASIC_INFORMATION, info_size uintptr) (size int32, err error) = kernel32.VirtualQueryEx
 //sys NetApiBufferFree(Buffer uintptr) (status NET_API_STATUS) = netapi32.NetApiBufferFree
 //sys NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintptr, prefmaxlen uint32, entriesread *uint32, totalentries *uint32, resume_handle *uint32) (status NET_API_STATUS) = netapi32.NetUserEnum
 //sys NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) = netapi32.NetUserGetGroups
