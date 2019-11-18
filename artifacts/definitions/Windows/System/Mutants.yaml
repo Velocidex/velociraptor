@@ -1,0 +1,23 @@
+name: Windows.System.Mutants
+description: |
+  Enumerate the mutants from selected processes.
+
+  Mutants are often used by malware to prevent re-infection.
+
+parameters:
+  - name: processRegex
+    description: A regex applied to process names.
+    default: .
+
+sources:
+  - queries:
+      - LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe
+        FROM pslist()
+        WHERE ProcName =~ processRegex AND ProcPid > 0
+
+      - SELECT * FROM foreach(
+          row=processes,
+          query={
+            SELECT ProcPid, ProcName, Exe, Type, Name, Handle
+            FROM handles(pid=ProcPid, types="Mutant")
+          })
