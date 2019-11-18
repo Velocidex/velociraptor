@@ -131,9 +131,8 @@ func GetHandles(scope *vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter
 			// Open a handle to this process.
 			if pid != my_pid {
 				h, err := windows.OpenProcess(
-					windows.PROCESS_ALL_ACCESS|
-						windows.PROCESS_DUP_HANDLE,
-					true, uint32(pid))
+					windows.PROCESS_DUP_HANDLE,
+					false, uint32(pid))
 				if err != nil {
 					scope.Log("OpenProcess for pid %v: %v\n", pid, err)
 					return
