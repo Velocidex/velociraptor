@@ -144,8 +144,10 @@ const (
 	ERROR_MORE_DATA = (234)
 
 	// OpenProcess
+	PROCESS_ALL_ACCESS        = 0x1F0FFF
 	PROCESS_VM_READ           = 0x0010
 	PROCESS_QUERY_INFORMATION = 0x0400
+	PROCESS_DUP_HANDLE        = 0x0040
 
 	// Memory protection constants
 	PAGE_EXECUTE           = 0x10
@@ -166,7 +168,85 @@ const (
 
 	MAX_MODULE_NAME32 = 255
 	MAX_PATH          = 260
+
+	// NtQuerySystemInformation
+	SystemHandleInformation = 0x10
+	SystemObjectInformation = 0x11
+
+	// NtQueryObject
+	ObjectBasicInformation = 0x0
+	ObjectNameInformation  = 0x1
+	ObjectTypeInformation  = 0x2
+
+	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 )
+
+type UNICODE_STRING struct {
+	Length        uint16
+	AllocatedSize uint16
+	WString       *byte
+}
+
+func (self UNICODE_STRING) String() string {
+	defer recover()
+
+	var data []uint16
+
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(&data))
+	sh.Data = uintptr(unsafe.Pointer(self.WString))
+	sh.Len = int(self.Length * 2)
+	sh.Cap = int(self.Length * 2)
+
+	return windows.UTF16ToString(data[:])
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryobject
+type OBJECT_BASIC_INFORMATION struct {
+	Attributes             uint32
+	GrantedAccess          uint32
+	HandleCount            uint32
+	PointerCount           uint32
+	PagedPoolCharge        uint32
+	NonPagedPoolCharge     uint32
+	Reserved               [3]uint32
+	NameInfoSize           uint32
+	TypeInfoSize           uint32
+	SecurityDescriptorSize uint32
+	CreationTime           uint64
+}
+
+type OBJECT_TYPE_INFORMATION struct {
+	TypeName               UNICODE_STRING
+	TotalNumberOfObjects   uint32
+	TotalNumberOfHandles   uint32
+	TotalPagedPoolUsage    uint32
+	TotalNonPagedPoolUsage uint32
+}
+
+type SYSTEM_HANDLE_TABLE_ENTRY_INFO64 struct {
+	UniqueProcessId       uint16
+	CreatorBackTraceIndex uint16
+	ObjectTypeIndex       uint8
+	HandleAttributes      uint8
+	HandleValue           uint16
+	Object                uint64
+	GrantedAccess         uint32
+}
+
+type SYSTEM_OBJECTTYPE_INFORMATION64 struct {
+	NextEntryOffset   uint32
+	NumberOfObjects   uint32
+	NumberOfHandles   uint32
+	TypeIndex         uint32
+	InvalidAttributes uint32
+	GenericMapping    uint64
+	GenericMapping2   uint64
+	ValidAccessMask   uint32
+	PoolType          uint32
+	SecurityRequired  uint8
+	WaitableObject    uint8
+	TypeName          UNICODE_STRING
+}
 
 type SYSTEM_INFO struct {
 	ProcessorArchitecture     uint16
@@ -207,6 +287,11 @@ type MODULEENTRY32W struct {
 	ExePath      [MAX_PATH]uint16
 }
 
+//sys AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) = Advapi32.AdjustTokenPrivileges
+//sys LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) = Advapi32.LookupPrivilegeValueW
+//sys NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) = ntdll.NtDuplicateObject
+//sys NtQueryObject(Handle syscall.Handle, ObjectInformationClass uint32, ObjectInformation *byte, ObjectInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryObject
+//sys NtQuerySystemInformation(SystemInformationClass uint32, SystemInformation *byte, SystemInformationLength uint32, ReturnLength *uint32) (status uint32) = ntdll.NtQuerySystemInformation
 //sys CloseHandle(h syscall.Handle) (err error) = kernel32.CloseHandle
 //sys OpenProcess(dwDesiredAccess uint32, bInheritHandle bool, dwProcessId uint32) (handle syscall.Handle, err error) = kernel32.OpenProcess
 //sys GetSystemInfo(lpSystemInfo *SYSTEM_INFO) (err error) = kernel32.GetSystemInfo
@@ -240,4 +325,8 @@ func PointerToString(ptr uintptr, len int) string {
 	hdr.Len = len
 
 	return s
+}
+
+func NtCurrentProcess() syscall.Handle {
+	return syscall.Handle(0xFFFFFFFFFFFFFFFF)
 }

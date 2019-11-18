@@ -35,10 +35,17 @@ func errnoErr(e syscall.Errno) error {
 }
 
 var (
+	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
+	modntdll    = NewLazySystemDLL("ntdll.dll")
 	modkernel32 = NewLazySystemDLL("kernel32.dll")
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 
+	procAdjustTokenPrivileges    = modAdvapi32.NewProc("AdjustTokenPrivileges")
+	procLookupPrivilegeValueW    = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procNtDuplicateObject        = modntdll.NewProc("NtDuplicateObject")
+	procNtQueryObject            = modntdll.NewProc("NtQueryObject")
+	procNtQuerySystemInformation = modntdll.NewProc("NtQuerySystemInformation")
 	procCloseHandle              = modkernel32.NewProc("CloseHandle")
 	procOpenProcess              = modkernel32.NewProc("OpenProcess")
 	procGetSystemInfo            = modkernel32.NewProc("GetSystemInfo")
@@ -51,6 +58,61 @@ var (
 	procNetUserEnum              = modnetapi32.NewProc("NetUserEnum")
 	procNetUserGetGroups         = modnetapi32.NewProc("NetUserGetGroups")
 )
+
+func AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) {
+	var _p0 uint32
+	if DisableAllPrivileges {
+		_p0 = 1
+	} else {
+		_p0 = 0
+	}
+	r1, _, e1 := syscall.Syscall6(procAdjustTokenPrivileges.Addr(), 6, uintptr(TokenHandle), uintptr(_p0), uintptr(NewState), uintptr(BufferLength), uintptr(PreviousState), uintptr(unsafe.Pointer(ReturnLength)))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) {
+	r1, _, e1 := syscall.Syscall(procLookupPrivilegeValueW.Addr(), 3, uintptr(lpSystemName), uintptr(lpName), uintptr(out))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) {
+	r0, _, _ := syscall.Syscall9(procNtDuplicateObject.Addr(), 7, uintptr(SourceProcessHandle), uintptr(SourceHandle), uintptr(TargetProcessHandle), uintptr(unsafe.Pointer(TargetHandle)), uintptr(DesiredAccess), uintptr(InheritHandle), uintptr(Options), 0, 0)
+	status = uint32(r0)
+	return
+}
+
+func NtQueryObject(Handle syscall.Handle, ObjectInformationClass uint32, ObjectInformation *byte, ObjectInformationLength uint32, ReturnLength *uint32) (status uint32, err error) {
+	r0, _, e1 := syscall.Syscall6(procNtQueryObject.Addr(), 5, uintptr(Handle), uintptr(ObjectInformationClass), uintptr(unsafe.Pointer(ObjectInformation)), uintptr(ObjectInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0)
+	status = uint32(r0)
+	if status == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func NtQuerySystemInformation(SystemInformationClass uint32, SystemInformation *byte, SystemInformationLength uint32, ReturnLength *uint32) (status uint32) {
+	r0, _, _ := syscall.Syscall6(procNtQuerySystemInformation.Addr(), 4, uintptr(SystemInformationClass), uintptr(unsafe.Pointer(SystemInformation)), uintptr(SystemInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0, 0)
+	status = uint32(r0)
+	return
+}
 
 func CloseHandle(h syscall.Handle) (err error) {
 	r1, _, e1 := syscall.Syscall(procCloseHandle.Addr(), 1, uintptr(h), 0, 0)
