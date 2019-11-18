@@ -86,7 +86,7 @@ require (
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20191110163157-d32e6e3b99c4
+	golang.org/x/sys v0.0.0-20191118090420-b5d5184f72d2
 	golang.org/x/tools v0.0.0-20191022074931-774d2ec196ee // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
@@ -99,7 +99,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.5 // indirect
-	www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780
+	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191114150551-9268b64dc996
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
