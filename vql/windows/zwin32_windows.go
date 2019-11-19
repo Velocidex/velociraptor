@@ -41,22 +41,24 @@ var (
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 
-	procAdjustTokenPrivileges    = modAdvapi32.NewProc("AdjustTokenPrivileges")
-	procLookupPrivilegeValueW    = modAdvapi32.NewProc("LookupPrivilegeValueW")
-	procNtDuplicateObject        = modntdll.NewProc("NtDuplicateObject")
-	procNtQueryObject            = modntdll.NewProc("NtQueryObject")
-	procNtQuerySystemInformation = modntdll.NewProc("NtQuerySystemInformation")
-	procCloseHandle              = modkernel32.NewProc("CloseHandle")
-	procOpenProcess              = modkernel32.NewProc("OpenProcess")
-	procGetSystemInfo            = modkernel32.NewProc("GetSystemInfo")
-	procModule32NextW            = modkernel32.NewProc("Module32NextW")
-	procModule32FirstW           = modkernel32.NewProc("Module32FirstW")
-	procCreateToolhelp32Snapshot = modkernel32.NewProc("CreateToolhelp32Snapshot")
-	procGetMappedFileNameW       = modpsapi.NewProc("GetMappedFileNameW")
-	procVirtualQueryEx           = modkernel32.NewProc("VirtualQueryEx")
-	procNetApiBufferFree         = modnetapi32.NewProc("NetApiBufferFree")
-	procNetUserEnum              = modnetapi32.NewProc("NetUserEnum")
-	procNetUserGetGroups         = modnetapi32.NewProc("NetUserGetGroups")
+	procAdjustTokenPrivileges     = modAdvapi32.NewProc("AdjustTokenPrivileges")
+	procLookupPrivilegeValueW     = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procNtDuplicateObject         = modntdll.NewProc("NtDuplicateObject")
+	procNtQueryInformationProcess = modntdll.NewProc("NtQueryInformationProcess")
+	procNtQueryInformationThread  = modntdll.NewProc("NtQueryInformationThread")
+	procNtQueryObject             = modntdll.NewProc("NtQueryObject")
+	procNtQuerySystemInformation  = modntdll.NewProc("NtQuerySystemInformation")
+	procCloseHandle               = modkernel32.NewProc("CloseHandle")
+	procOpenProcess               = modkernel32.NewProc("OpenProcess")
+	procGetSystemInfo             = modkernel32.NewProc("GetSystemInfo")
+	procModule32NextW             = modkernel32.NewProc("Module32NextW")
+	procModule32FirstW            = modkernel32.NewProc("Module32FirstW")
+	procCreateToolhelp32Snapshot  = modkernel32.NewProc("CreateToolhelp32Snapshot")
+	procGetMappedFileNameW        = modpsapi.NewProc("GetMappedFileNameW")
+	procVirtualQueryEx            = modkernel32.NewProc("VirtualQueryEx")
+	procNetApiBufferFree          = modnetapi32.NewProc("NetApiBufferFree")
+	procNetUserEnum               = modnetapi32.NewProc("NetUserEnum")
+	procNetUserGetGroups          = modnetapi32.NewProc("NetUserGetGroups")
 )
 
 func AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) {
@@ -92,6 +94,32 @@ func LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (er
 func NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) {
 	r0, _, _ := syscall.Syscall9(procNtDuplicateObject.Addr(), 7, uintptr(SourceProcessHandle), uintptr(SourceHandle), uintptr(TargetProcessHandle), uintptr(unsafe.Pointer(TargetHandle)), uintptr(DesiredAccess), uintptr(InheritHandle), uintptr(Options), 0, 0)
 	status = uint32(r0)
+	return
+}
+
+func NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32, err error) {
+	r0, _, e1 := syscall.Syscall6(procNtQueryInformationProcess.Addr(), 5, uintptr(Handle), uintptr(ObjectInformationClass), uintptr(unsafe.Pointer(ProcessInformation)), uintptr(ProcessInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0)
+	status = uint32(r0)
+	if status == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func NtQueryInformationThread(Handle syscall.Handle, ObjectInformationClass uint32, ThreadInformation *byte, ThreadInformationLength uint32, ReturnLength *uint32) (status uint32, err error) {
+	r0, _, e1 := syscall.Syscall6(procNtQueryInformationThread.Addr(), 5, uintptr(Handle), uintptr(ObjectInformationClass), uintptr(unsafe.Pointer(ThreadInformation)), uintptr(ThreadInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0)
+	status = uint32(r0)
+	if status == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
 	return
 }
 

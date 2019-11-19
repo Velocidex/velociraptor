@@ -46,6 +46,7 @@ func (self TokenFunction) Call(
 		scope.Log("token: %s", err.Error())
 		return vfilter.Null{}
 	}
+	defer token.Close()
 
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
@@ -53,7 +54,6 @@ func (self TokenFunction) Call(
 		scope.Log("token: %s", err.Error())
 		return vfilter.Null{}
 	}
-	defer token.Close()
 
 	groups := []string{}
 	token_groups, err := token.GetTokenGroups()
