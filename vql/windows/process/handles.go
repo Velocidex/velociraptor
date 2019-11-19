@@ -7,6 +7,7 @@ package process
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"runtime"
 	"syscall"
@@ -14,16 +15,41 @@ import (
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
+	gowin "golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
 )
 
+type ThreadHandleInfo struct {
+	ThreadId  uint64
+	ProcessId uint64
+}
+
+type ProcessHandleInfo struct {
+	TargetPid uint32 `json:"Pid,omitempty"`
+	Binary    string `json:"Binary,omitempty"`
+}
+
+type TokenHandleInfo struct {
+	IsElevated       bool     `json:"IsElevated"`
+	User             string   `json:"User,omitempty"`
+	Username         string   `json:"Username,omitempty"`
+	ProfileDir       string   `json:"ProfileDir,omitempty"`
+	Owner            string   `json:"Owner,omitempty"`
+	PrimaryGroup     string   `json:"PrimaryGroup,omitempty"`
+	PrimaryGroupName string   `json:"PrimaryGroupName,omitempty"`
+	Groups           []string `json:"Groups,omitempty"`
+}
+
 type HandleInfo struct {
-	Pid    uint32
-	Type   string
-	Name   string
-	Handle uint32
+	Pid         uint32             `json:"Pid"`
+	Type        string             `json:"Type"`
+	Name        string             `json:"Name,omitempty"`
+	Handle      uint32             `json:"Handle"`
+	ProcessInfo *ProcessHandleInfo `json:"ProcessInfo,omitempty"`
+	ThreadInfo  *ThreadHandleInfo  `json:"ThreadInfo,omitempty"`
+	TokenInfo   *TokenHandleInfo   `json:"TokenInfo,omitempty"`
 }
 
 type HandlesPluginArgs struct {
@@ -155,7 +181,9 @@ func GetHandles(scope *vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter
 						process_handle, handle_value,
 						windows.NtCurrentProcess(),
 						&dup_handle,
-						windows.PROCESS_QUERY_LIMITED_INFORMATION, 0, 0)
+						windows.PROCESS_QUERY_LIMITED_INFORMATION|
+							syscall.TOKEN_QUERY|
+							windows.THREAD_QUERY_LIMITED_INFORMATION, 0, 0)
 					if status == windows.STATUS_SUCCESS {
 						SendHandleInfo(
 							arg, scope,
@@ -193,9 +221,19 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 		defer cancel()
 
 		result.Type = GetObjectType(handle, scope)
+		// Lazily skip handles we are not going to send anyway.
 		if is_type_chosen(arg.Types, result.Type) {
 			to_send = true
-			result.Name = GetObjectName(handle, scope)
+			switch result.Type {
+			case "Process":
+				GetProcessName(scope, handle, result)
+			case "Thread":
+				GetThreadInfo(scope, handle, result)
+			case "Token":
+				GetTokenInfo(scope, handle, result)
+			default:
+				GetObjectName(scope, handle, result)
+			}
 		}
 	}()
 
@@ -209,7 +247,109 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 	}
 }
 
-func GetObjectName(handle syscall.Handle, scope *vfilter.Scope) string {
+func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+	token := gowin.Token(handle)
+	result.TokenInfo = &TokenHandleInfo{
+		IsElevated: token.IsElevated(),
+	}
+
+	// Find the token user
+	tokenUser, err := token.GetTokenUser()
+	if err == nil {
+		result.TokenInfo.User = tokenUser.User.Sid.String()
+	}
+
+	token_groups, err := token.GetTokenGroups()
+	if err == nil {
+		for _, grp := range token_groups.AllGroups() {
+			group_name := grp.Sid.String()
+			result.TokenInfo.Groups = append(
+				result.TokenInfo.Groups, group_name)
+		}
+	}
+
+	// look up domain account by sid
+	result.TokenInfo.Username = getUsernameFromSid(scope, tokenUser.User.Sid)
+
+	profile_dir, err := token.GetUserProfileDirectory()
+	if err == nil {
+		result.TokenInfo.ProfileDir = profile_dir
+	}
+	pg, err := token.GetTokenPrimaryGroup()
+	if err == nil {
+		result.TokenInfo.PrimaryGroup = pg.PrimaryGroup.String()
+		result.TokenInfo.PrimaryGroupName = getUsernameFromSid(
+			scope, pg.PrimaryGroup)
+	}
+}
+
+func getUsernameFromSid(scope *vfilter.Scope, sid *gowin.SID) string {
+	key := sid.String()
+	username := vql_subsystem.CacheGet(scope, key)
+	if username != nil {
+		return username.(string)
+	}
+
+	account, domain, _, err := sid.LookupAccount("localhost")
+	if err == nil && account != "" {
+		username = fmt.Sprintf("%s\\%s", domain, account)
+	}
+	vql_subsystem.CacheSet(scope, key, username)
+	return username.(string)
+}
+
+func GetThreadInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+	handle_info := windows.THREAD_BASIC_INFORMATION{}
+	var length uint32
+
+	status, _ := windows.NtQueryInformationThread(
+		handle, windows.ThreadBasicInformation,
+		(*byte)(unsafe.Pointer(&handle_info)),
+		uint32(unsafe.Sizeof(handle_info)), &length)
+
+	if status != windows.STATUS_SUCCESS {
+		scope.Log("windows.NtQueryInformationProcess status %v", windows.NTStatus_String(status))
+		return
+	}
+
+	result.ThreadInfo = &ThreadHandleInfo{
+		ThreadId:  handle_info.UniqueThreadId,
+		ProcessId: handle_info.UniqueProcessId,
+	}
+}
+
+func GetProcessName(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+	buffer := make([]byte, 1024*2)
+
+	handle_info := windows.PROCESS_BASIC_INFORMATION{}
+	var length uint32
+
+	status, _ := windows.NtQueryInformationProcess(
+		handle, windows.ProcessBasicInformation,
+		(*byte)(unsafe.Pointer(&handle_info)),
+		uint32(unsafe.Sizeof(handle_info)), &length)
+
+	if status != windows.STATUS_SUCCESS {
+		scope.Log("windows.NtQueryInformationProcess status %v", windows.NTStatus_String(status))
+		return
+	}
+
+	result.ProcessInfo = &ProcessHandleInfo{TargetPid: handle_info.UniqueProcessId}
+
+	// Fetch the binary image
+	status, _ = windows.NtQueryInformationProcess(
+		handle, windows.ProcessImageFileName,
+		(*byte)(unsafe.Pointer(&buffer[0])),
+		uint32(len(buffer)), &length)
+
+	if status != windows.STATUS_SUCCESS {
+		return
+	}
+
+	result.ProcessInfo.Binary = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+}
+
+func GetObjectName(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
 	buffer := make([]byte, 1024*2)
 
 	var length uint32
@@ -217,11 +357,11 @@ func GetObjectName(handle syscall.Handle, scope *vfilter.Scope) string {
 	status, _ := windows.NtQueryObject(handle, windows.ObjectNameInformation,
 		&buffer[0], uint32(len(buffer)), &length)
 
-	if status == windows.STATUS_SUCCESS {
-		return (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+	if status != windows.STATUS_SUCCESS {
+		scope.Log("GetObjectName status %v", windows.NTStatus_String(status))
 	}
-	scope.Log("GetObjectName status %v", windows.NTStatus_String(status))
-	return ""
+
+	result.Name = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
 }
 
 func GetObjectType(handle syscall.Handle, scope *vfilter.Scope) string {

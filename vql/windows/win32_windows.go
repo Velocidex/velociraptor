@@ -178,7 +178,15 @@ const (
 	ObjectNameInformation  = 0x1
 	ObjectTypeInformation  = 0x2
 
+	// NtQueryInformationProcess
+	ProcessBasicInformation = 0x0
+	ProcessImageFileName    = 27
+
+	// NtQueryInformationThread
+	ThreadBasicInformation = 0
+
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+	THREAD_QUERY_LIMITED_INFORMATION  = 0x0800
 )
 
 type UNICODE_STRING struct {
@@ -213,6 +221,27 @@ type OBJECT_BASIC_INFORMATION struct {
 	TypeInfoSize           uint32
 	SecurityDescriptorSize uint32
 	CreationTime           uint64
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess
+type PROCESS_BASIC_INFORMATION struct {
+	ExitStatus                   uint64
+	PebBaseAddress               uint64
+	AffinityMask                 uint64
+	BasePriority                 uint64
+	UniqueProcessId              uint32
+	InheritedFromUniqueProcessId uint64
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationthread
+type THREAD_BASIC_INFORMATION struct {
+	ExitStatus      uint64
+	TebBaseAddress  uint64
+	UniqueProcessId uint64
+	UniqueThreadId  uint64
+	AffinityMask    uint64
+	Priority        uint32
+	BasePriority    uint32
 }
 
 type OBJECT_TYPE_INFORMATION struct {
@@ -290,6 +319,8 @@ type MODULEENTRY32W struct {
 //sys AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) = Advapi32.AdjustTokenPrivileges
 //sys LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) = Advapi32.LookupPrivilegeValueW
 //sys NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) = ntdll.NtDuplicateObject
+//sys NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryInformationProcess
+//sys NtQueryInformationThread(Handle syscall.Handle, ObjectInformationClass uint32, ThreadInformation *byte, ThreadInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryInformationThread
 //sys NtQueryObject(Handle syscall.Handle, ObjectInformationClass uint32, ObjectInformation *byte, ObjectInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryObject
 //sys NtQuerySystemInformation(SystemInformationClass uint32, SystemInformation *byte, SystemInformationLength uint32, ReturnLength *uint32) (status uint32) = ntdll.NtQuerySystemInformation
 //sys CloseHandle(h syscall.Handle) (err error) = kernel32.CloseHandle
