@@ -179,8 +179,9 @@ const (
 	ObjectTypeInformation  = 0x2
 
 	// NtQueryInformationProcess
-	ProcessBasicInformation = 0x0
-	ProcessImageFileName    = 27
+	ProcessBasicInformation       = 0x0
+	ProcessImageFileName          = 27
+	ProcessCommandLineInformation = 60
 
 	// NtQueryInformationThread
 	ThreadBasicInformation = 0
@@ -331,11 +332,40 @@ type OBJECT_ATTRIBUTES struct {
 	SecurityQualityOfService uintptr
 }
 
+type TOKEN_ELEVATION struct {
+	TokenIsElevated uint32
+}
+
+type IO_COUNTERS struct {
+	ReadOperationCount  uint64
+	WriteOperationCount uint64
+	OtherOperationCount uint64
+	ReadTransferCount   uint64
+	WriteTransferCount  uint64
+	OtherTransferCount  uint64
+}
+
+type PROCESS_MEMORY_COUNTERS struct {
+	cb                         uint32
+	PageFaultCount             uint32
+	PeakWorkingSetSize         uintptr
+	WorkingSetSize             uintptr
+	QuotaPeakPagedPoolUsage    uintptr
+	QuotaPagedPoolUsage        uintptr
+	QuotaPeakNonPagedPoolUsage uintptr
+	QuotaNonPagedPoolUsage     uintptr
+	PagefileUsage              uintptr
+	PeakPagefileUsage          uintptr
+}
+
+//sys	GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) = psapi.GetProcessMemoryInfo
+//sys GetProcessIoCounters(hProcess syscall.Handle, lpIoCounters *IO_COUNTERS) (ok bool) = kernel32.GetProcessIoCounters
+//sys QueryFullProcessImageName(handle syscall.Handle, dwFlags uint32, buffer *byte, length *uint32) (ok bool) = kernel32.QueryFullProcessImageNameW
 //sys NtOpenDirectoryObject(DirectoryHandle *uint32,DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) = ntdll.NtOpenDirectoryObject
 //sys AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) = Advapi32.AdjustTokenPrivileges
 //sys LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) = Advapi32.LookupPrivilegeValueW
 //sys NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) = ntdll.NtDuplicateObject
-//sys NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryInformationProcess
+//sys NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32) = ntdll.NtQueryInformationProcess
 //sys NtQueryInformationThread(Handle syscall.Handle, ObjectInformationClass uint32, ThreadInformation *byte, ThreadInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryInformationThread
 //sys NtQueryObject(Handle syscall.Handle, ObjectInformationClass uint32, ObjectInformation *byte, ObjectInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryObject
 //sys NtQuerySystemInformation(SystemInformationClass uint32, SystemInformation *byte, SystemInformationLength uint32, ReturnLength *uint32) (status uint32) = ntdll.NtQuerySystemInformation

@@ -324,7 +324,7 @@ func GetProcessName(scope *vfilter.Scope, handle syscall.Handle) *ProcessHandleI
 	handle_info := windows.PROCESS_BASIC_INFORMATION{}
 	var length uint32
 
-	status, _ := windows.NtQueryInformationProcess(
+	status := windows.NtQueryInformationProcess(
 		handle, windows.ProcessBasicInformation,
 		(*byte)(unsafe.Pointer(&handle_info)),
 		uint32(unsafe.Sizeof(handle_info)), &length)
@@ -337,7 +337,7 @@ func GetProcessName(scope *vfilter.Scope, handle syscall.Handle) *ProcessHandleI
 	result := &ProcessHandleInfo{TargetPid: handle_info.UniqueProcessId}
 
 	// Fetch the binary image
-	status, _ = windows.NtQueryInformationProcess(
+	status = windows.NtQueryInformationProcess(
 		handle, windows.ProcessImageFileName,
 		(*byte)(unsafe.Pointer(&buffer[0])),
 		uint32(len(buffer)), &length)

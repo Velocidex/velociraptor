@@ -14,7 +14,7 @@ sources:
     queries:
       - |
         // Cache the pslist output in memory.
-        LET processes <= SELECT * FROM pslist()
+        LET processes <= SELECT Pid, Name FROM pslist()
 
       - |
         // Get the pids of all procecesses named services.exe
