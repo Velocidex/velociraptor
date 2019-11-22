@@ -44,7 +44,7 @@ type LogWriter struct {
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
-	logging.GetLogger(self.config_obj, &logging.FrontendComponent).Info(string(b))
+	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
 	self.responder.Log("%s", string(b))
 	return len(b), nil
 }

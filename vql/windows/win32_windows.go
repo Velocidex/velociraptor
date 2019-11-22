@@ -187,6 +187,12 @@ const (
 
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 	THREAD_QUERY_LIMITED_INFORMATION  = 0x0800
+
+	// NtOpenDirectoryObject
+	DIRECTORY_QUERY    = 1
+	DIRECTORY_TRAVERSE = 2
+
+	SYMBOLIC_LINK_QUERY = 1
 )
 
 type UNICODE_STRING struct {
@@ -316,6 +322,16 @@ type MODULEENTRY32W struct {
 	ExePath      [MAX_PATH]uint16
 }
 
+type OBJECT_ATTRIBUTES struct {
+	Length                   uint32
+	RootDirectory            syscall.Handle
+	ObjectName               uintptr // UNICODE_STRING
+	Attributes               uint32
+	SecurityDescriptor       uintptr
+	SecurityQualityOfService uintptr
+}
+
+//sys NtOpenDirectoryObject(DirectoryHandle *uint32,DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) = ntdll.NtOpenDirectoryObject
 //sys AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) = Advapi32.AdjustTokenPrivileges
 //sys LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) = Advapi32.LookupPrivilegeValueW
 //sys NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) = ntdll.NtDuplicateObject
@@ -359,5 +375,5 @@ func PointerToString(ptr uintptr, len int) string {
 }
 
 func NtCurrentProcess() syscall.Handle {
-	return syscall.Handle(0xFFFFFFFFFFFFFFFF)
+	return syscall.Handle(windows.CurrentProcess())
 }

@@ -45,6 +45,7 @@ require (
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hanwen/go-fuse v1.0.0
+	github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
@@ -87,7 +88,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/sys v0.0.0-20191118090420-b5d5184f72d2
-	golang.org/x/tools v0.0.0-20191022074931-774d2ec196ee // indirect
+	golang.org/x/tools v0.0.0-20191121040551-947d4aa89328 // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
