@@ -15,8 +15,8 @@ sources:
          },
          query={
            SELECT UnixNano / 1000000000 as Timestamp,
-                  Times.user + Times.system as CPU,
-                  MemoryInfo.RSS as RSS
+                  User + System as CPU,
+                  Memory.WorkingSetSize as RSS
            FROM pslist(pid=getpid())
          })
 

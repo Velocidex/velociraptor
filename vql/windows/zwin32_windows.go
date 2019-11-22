@@ -35,32 +35,59 @@ func errnoErr(e syscall.Errno) error {
 }
 
 var (
+	modpsapi    = NewLazySystemDLL("psapi.dll")
+	modkernel32 = NewLazySystemDLL("kernel32.dll")
 	modntdll    = NewLazySystemDLL("ntdll.dll")
 	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
-	modkernel32 = NewLazySystemDLL("kernel32.dll")
-	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 
-	procNtOpenDirectoryObject     = modntdll.NewProc("NtOpenDirectoryObject")
-	procAdjustTokenPrivileges     = modAdvapi32.NewProc("AdjustTokenPrivileges")
-	procLookupPrivilegeValueW     = modAdvapi32.NewProc("LookupPrivilegeValueW")
-	procNtDuplicateObject         = modntdll.NewProc("NtDuplicateObject")
-	procNtQueryInformationProcess = modntdll.NewProc("NtQueryInformationProcess")
-	procNtQueryInformationThread  = modntdll.NewProc("NtQueryInformationThread")
-	procNtQueryObject             = modntdll.NewProc("NtQueryObject")
-	procNtQuerySystemInformation  = modntdll.NewProc("NtQuerySystemInformation")
-	procCloseHandle               = modkernel32.NewProc("CloseHandle")
-	procOpenProcess               = modkernel32.NewProc("OpenProcess")
-	procGetSystemInfo             = modkernel32.NewProc("GetSystemInfo")
-	procModule32NextW             = modkernel32.NewProc("Module32NextW")
-	procModule32FirstW            = modkernel32.NewProc("Module32FirstW")
-	procCreateToolhelp32Snapshot  = modkernel32.NewProc("CreateToolhelp32Snapshot")
-	procGetMappedFileNameW        = modpsapi.NewProc("GetMappedFileNameW")
-	procVirtualQueryEx            = modkernel32.NewProc("VirtualQueryEx")
-	procNetApiBufferFree          = modnetapi32.NewProc("NetApiBufferFree")
-	procNetUserEnum               = modnetapi32.NewProc("NetUserEnum")
-	procNetUserGetGroups          = modnetapi32.NewProc("NetUserGetGroups")
+	procGetProcessMemoryInfo       = modpsapi.NewProc("GetProcessMemoryInfo")
+	procGetProcessIoCounters       = modkernel32.NewProc("GetProcessIoCounters")
+	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
+	procNtOpenDirectoryObject      = modntdll.NewProc("NtOpenDirectoryObject")
+	procAdjustTokenPrivileges      = modAdvapi32.NewProc("AdjustTokenPrivileges")
+	procLookupPrivilegeValueW      = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procNtDuplicateObject          = modntdll.NewProc("NtDuplicateObject")
+	procNtQueryInformationProcess  = modntdll.NewProc("NtQueryInformationProcess")
+	procNtQueryInformationThread   = modntdll.NewProc("NtQueryInformationThread")
+	procNtQueryObject              = modntdll.NewProc("NtQueryObject")
+	procNtQuerySystemInformation   = modntdll.NewProc("NtQuerySystemInformation")
+	procCloseHandle                = modkernel32.NewProc("CloseHandle")
+	procOpenProcess                = modkernel32.NewProc("OpenProcess")
+	procGetSystemInfo              = modkernel32.NewProc("GetSystemInfo")
+	procModule32NextW              = modkernel32.NewProc("Module32NextW")
+	procModule32FirstW             = modkernel32.NewProc("Module32FirstW")
+	procCreateToolhelp32Snapshot   = modkernel32.NewProc("CreateToolhelp32Snapshot")
+	procGetMappedFileNameW         = modpsapi.NewProc("GetMappedFileNameW")
+	procVirtualQueryEx             = modkernel32.NewProc("VirtualQueryEx")
+	procNetApiBufferFree           = modnetapi32.NewProc("NetApiBufferFree")
+	procNetUserEnum                = modnetapi32.NewProc("NetUserEnum")
+	procNetUserGetGroups           = modnetapi32.NewProc("NetUserGetGroups")
 )
+
+func GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) {
+	r1, _, e1 := syscall.Syscall(procGetProcessMemoryInfo.Addr(), 3, uintptr(handle), uintptr(unsafe.Pointer(memCounters)), uintptr(cb))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func GetProcessIoCounters(hProcess syscall.Handle, lpIoCounters *IO_COUNTERS) (ok bool) {
+	r0, _, _ := syscall.Syscall(procGetProcessIoCounters.Addr(), 2, uintptr(hProcess), uintptr(unsafe.Pointer(lpIoCounters)), 0)
+	ok = r0 != 0
+	return
+}
+
+func QueryFullProcessImageName(handle syscall.Handle, dwFlags uint32, buffer *byte, length *uint32) (ok bool) {
+	r0, _, _ := syscall.Syscall6(procQueryFullProcessImageNameW.Addr(), 4, uintptr(handle), uintptr(dwFlags), uintptr(unsafe.Pointer(buffer)), uintptr(unsafe.Pointer(length)), 0, 0)
+	ok = r0 != 0
+	return
+}
 
 func NtOpenDirectoryObject(DirectoryHandle *uint32, DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) {
 	r0, _, _ := syscall.Syscall(procNtOpenDirectoryObject.Addr(), 3, uintptr(unsafe.Pointer(DirectoryHandle)), uintptr(DesiredAccess), uintptr(unsafe.Pointer(ObjectAttributes)))
@@ -104,16 +131,9 @@ func NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.
 	return
 }
 
-func NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32, err error) {
-	r0, _, e1 := syscall.Syscall6(procNtQueryInformationProcess.Addr(), 5, uintptr(Handle), uintptr(ObjectInformationClass), uintptr(unsafe.Pointer(ProcessInformation)), uintptr(ProcessInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0)
+func NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32) {
+	r0, _, _ := syscall.Syscall6(procNtQueryInformationProcess.Addr(), 5, uintptr(Handle), uintptr(ObjectInformationClass), uintptr(unsafe.Pointer(ProcessInformation)), uintptr(ProcessInformationLength), uintptr(unsafe.Pointer(ReturnLength)), 0)
 	status = uint32(r0)
-	if status == 0 {
-		if e1 != 0 {
-			err = errnoErr(e1)
-		} else {
-			err = syscall.EINVAL
-		}
-	}
 	return
 }
 

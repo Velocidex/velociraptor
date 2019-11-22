@@ -12,6 +12,6 @@ sources:
         SELECT Pid, Ppid, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
                authenticode(filename=Exe) AS Authenticode,
-               Username, WorkingSetSize
+               Username, Memory.WorkingSetSize AS WorkingSetSize
         FROM pslist()
         WHERE Name =~ processRegex
