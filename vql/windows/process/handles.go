@@ -226,7 +226,7 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 			to_send = true
 			switch result.Type {
 			case "Process":
-				GetProcessName(scope, handle, result)
+				result.ProcessInfo = GetProcessName(scope, handle)
 			case "Thread":
 				GetThreadInfo(scope, handle, result)
 			case "Token":
@@ -318,7 +318,7 @@ func GetThreadInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleIn
 	}
 }
 
-func GetProcessName(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+func GetProcessName(scope *vfilter.Scope, handle syscall.Handle) *ProcessHandleInfo {
 	buffer := make([]byte, 1024*2)
 
 	handle_info := windows.PROCESS_BASIC_INFORMATION{}
@@ -331,10 +331,10 @@ func GetProcessName(scope *vfilter.Scope, handle syscall.Handle, result *HandleI
 
 	if status != windows.STATUS_SUCCESS {
 		scope.Log("windows.NtQueryInformationProcess status %v", windows.NTStatus_String(status))
-		return
+		return nil
 	}
 
-	result.ProcessInfo = &ProcessHandleInfo{TargetPid: handle_info.UniqueProcessId}
+	result := &ProcessHandleInfo{TargetPid: handle_info.UniqueProcessId}
 
 	// Fetch the binary image
 	status, _ = windows.NtQueryInformationProcess(
@@ -343,10 +343,12 @@ func GetProcessName(scope *vfilter.Scope, handle syscall.Handle, result *HandleI
 		uint32(len(buffer)), &length)
 
 	if status != windows.STATUS_SUCCESS {
-		return
+		return result
 	}
 
-	result.ProcessInfo.Binary = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+	result.Binary = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+
+	return result
 }
 
 func GetObjectName(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {

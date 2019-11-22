@@ -35,12 +35,13 @@ func errnoErr(e syscall.Errno) error {
 }
 
 var (
-	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
 	modntdll    = NewLazySystemDLL("ntdll.dll")
+	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
 	modkernel32 = NewLazySystemDLL("kernel32.dll")
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 
+	procNtOpenDirectoryObject     = modntdll.NewProc("NtOpenDirectoryObject")
 	procAdjustTokenPrivileges     = modAdvapi32.NewProc("AdjustTokenPrivileges")
 	procLookupPrivilegeValueW     = modAdvapi32.NewProc("LookupPrivilegeValueW")
 	procNtDuplicateObject         = modntdll.NewProc("NtDuplicateObject")
@@ -60,6 +61,12 @@ var (
 	procNetUserEnum               = modnetapi32.NewProc("NetUserEnum")
 	procNetUserGetGroups          = modnetapi32.NewProc("NetUserGetGroups")
 )
+
+func NtOpenDirectoryObject(DirectoryHandle *uint32, DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) {
+	r0, _, _ := syscall.Syscall(procNtOpenDirectoryObject.Addr(), 3, uintptr(unsafe.Pointer(DirectoryHandle)), uintptr(DesiredAccess), uintptr(unsafe.Pointer(ObjectAttributes)))
+	status = uint32(r0)
+	return
+}
 
 func AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) {
 	var _p0 uint32

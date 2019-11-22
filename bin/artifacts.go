@@ -264,7 +264,7 @@ func doArtifactCollect() {
 	now := time.Now()
 	defer func() {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
-			Info("Collection completed in %v Secondgs",
+			Info("Collection completed in %v Seconds",
 				time.Now().Unix()-now.Unix())
 
 	}()
