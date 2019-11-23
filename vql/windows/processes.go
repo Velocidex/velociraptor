@@ -196,7 +196,8 @@ func (self PslistPlugin) Call(
 		}
 
 		for {
-			if arg.Pid == 0 || arg.Pid == int64(entry.ProcessID) {
+			if entry.ProcessID != 0 &&
+				(arg.Pid == 0 || arg.Pid == int64(entry.ProcessID)) {
 				info := &Win32_Process{
 					Pid:     entry.ProcessID,
 					Ppid:    entry.ParentProcessID,

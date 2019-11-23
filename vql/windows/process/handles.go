@@ -24,6 +24,7 @@ import (
 type ThreadHandleInfo struct {
 	ThreadId  uint64
 	ProcessId uint64
+	TokenInfo *TokenHandleInfo
 }
 
 type ProcessHandleInfo struct {
@@ -230,7 +231,7 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 			case "Thread":
 				GetThreadInfo(scope, handle, result)
 			case "Token":
-				GetTokenInfo(scope, handle, result)
+				result.TokenInfo = GetTokenInfo(scope, handle)
 			default:
 				GetObjectName(scope, handle, result)
 			}
@@ -247,40 +248,42 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope *vfilter.Scope,
 	}
 }
 
-func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleInfo) {
+func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle) *TokenHandleInfo {
 	token := gowin.Token(handle)
-	result.TokenInfo = &TokenHandleInfo{
+	result := &TokenHandleInfo{
 		IsElevated: token.IsElevated(),
 	}
 
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
 	if err == nil {
-		result.TokenInfo.User = tokenUser.User.Sid.String()
+		result.User = tokenUser.User.Sid.String()
 	}
 
 	token_groups, err := token.GetTokenGroups()
 	if err == nil {
 		for _, grp := range token_groups.AllGroups() {
 			group_name := grp.Sid.String()
-			result.TokenInfo.Groups = append(
-				result.TokenInfo.Groups, group_name)
+			result.Groups = append(
+				result.Groups, group_name)
 		}
 	}
 
 	// look up domain account by sid
-	result.TokenInfo.Username = getUsernameFromSid(scope, tokenUser.User.Sid)
+	result.Username = getUsernameFromSid(scope, tokenUser.User.Sid)
 
 	profile_dir, err := token.GetUserProfileDirectory()
 	if err == nil {
-		result.TokenInfo.ProfileDir = profile_dir
+		result.ProfileDir = profile_dir
 	}
 	pg, err := token.GetTokenPrimaryGroup()
 	if err == nil {
-		result.TokenInfo.PrimaryGroup = pg.PrimaryGroup.String()
-		result.TokenInfo.PrimaryGroupName = getUsernameFromSid(
+		result.PrimaryGroup = pg.PrimaryGroup.String()
+		result.PrimaryGroupName = getUsernameFromSid(
 			scope, pg.PrimaryGroup)
 	}
+
+	return result
 }
 
 func getUsernameFromSid(scope *vfilter.Scope, sid *gowin.SID) string {
@@ -315,6 +318,17 @@ func GetThreadInfo(scope *vfilter.Scope, handle syscall.Handle, result *HandleIn
 	result.ThreadInfo = &ThreadHandleInfo{
 		ThreadId:  handle_info.UniqueThreadId,
 		ProcessId: handle_info.UniqueProcessId,
+	}
+
+	// Try to get the token from the thread.
+	token_handle := syscall.Handle(0)
+
+	status = windows.NtOpenThreadToken(handle,
+		syscall.TOKEN_READ, true, &token_handle)
+
+	if status == windows.STATUS_SUCCESS {
+		result.ThreadInfo.TokenInfo = GetTokenInfo(scope, token_handle)
+		windows.CloseHandle(token_handle)
 	}
 }
 

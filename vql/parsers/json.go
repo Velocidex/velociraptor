@@ -20,6 +20,7 @@ package parsers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -277,11 +278,36 @@ func (self _ProtobufAssociativeProtocol) GetMembers(
 	return result
 }
 
+type _nilAssociativeProtocol struct{}
+
+func (self _nilAssociativeProtocol) Applicable(
+	a vfilter.Any, b vfilter.Any) bool {
+
+	value := reflect.ValueOf(a)
+	return value.Kind() == reflect.Ptr && value.IsNil()
+}
+
+func (self _nilAssociativeProtocol) Associative(
+	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (
+	vfilter.Any, bool) {
+
+	return vfilter.Null{}, false
+}
+
+func (self _nilAssociativeProtocol) GetMembers(
+	scope *vfilter.Scope, a vfilter.Any) []string {
+	return []string{}
+}
+
 // Allow a slice to be accessed by a field
 type _IndexAssociativeProtocol struct{}
 
 func (self _IndexAssociativeProtocol) Applicable(
 	a vfilter.Any, b vfilter.Any) bool {
+
+	if a == nil {
+		fmt.Printf("%v\n", a)
+	}
 
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()
@@ -338,6 +364,7 @@ func (self _IndexAssociativeProtocol) GetMembers(
 func init() {
 	vql_subsystem.RegisterFunction(&ParseJsonFunction{})
 	vql_subsystem.RegisterFunction(&ParseJsonArray{})
+	vql_subsystem.RegisterProtocol(&_nilAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_MapInterfaceAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_ProtobufAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_IndexAssociativeProtocol{})
