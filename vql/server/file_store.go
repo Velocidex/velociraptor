@@ -22,6 +22,7 @@ package server
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -36,7 +37,7 @@ type FileStore struct{}
 
 func (self *FileStore) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &FileStoreArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

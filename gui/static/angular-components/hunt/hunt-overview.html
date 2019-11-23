@@ -12,7 +12,7 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::hunt.start_request.args.artifacts.names" />
+              <grr-semantic-value value="::hunt.start_request.artifacts" />
             </dd>
 
             <dt>Hunt ID</dt>
@@ -31,13 +31,13 @@
             <dd>{{::hunt.state}}</dd>
 
             <dt>Ops/Sec</dt>
-            <dd>{{::hunt.start_request.args.ops_per_second || 'Unlimited' }}</dd>
+            <dd>{{::hunt.start_request.ops_per_second || 'Unlimited' }}</dd>
             <br>
           </dl>
 
           <h5> Parameters </h5>
           <dl class="dl-horizontal dl-flow">
-            <div ng-repeat="item in ::hunt.start_request.args.parameters.env">
+            <div ng-repeat="item in ::hunt.start_request.parameters.env">
               <dt>{{::item.key}}</dt>
               <dd>{{::item.value}}</dd>
             </div>

@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/Velocidex/ordereddict"
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -105,7 +106,7 @@ func processFile(
 						fmt.Sprintf("Column%d", idx))
 				}
 			}
-			result := vfilter.NewDict()
+			result := ordereddict.NewDict()
 			for idx, column := range arg.Columns {
 				if idx < len(items) {
 					result.Set(column, items[idx])
@@ -121,7 +122,7 @@ func processFile(
 func (self _SplitRecordParser) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	var compiled_regex *regexp.Regexp
 

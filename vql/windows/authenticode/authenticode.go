@@ -30,6 +30,7 @@ import (
 	"context"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/filesystems"
@@ -44,7 +45,7 @@ type AuthenticodeFunction struct{}
 
 func (self *AuthenticodeFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &AuthenticodeArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -66,7 +67,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 
 	C.verify_file_authenticode((*C.wchar_t)(&filename[0]), &data)
 
-	return vfilter.NewDict().
+	return ordereddict.NewDict().
 		Set("Filename", _WCharToString(data.filename)).
 		Set("ProgramName", _WCharToString(data.program_name)).
 		Set("PublisherLink", _WCharToString(data.publisher_link)).

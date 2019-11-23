@@ -41,6 +41,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -62,7 +63,7 @@ func (self *RawRegKeyInfo) IsDir() bool {
 }
 
 func (self *RawRegKeyInfo) Data() interface{} {
-	return vfilter.NewDict().Set("type", "Key")
+	return ordereddict.NewDict().Set("type", "Key")
 }
 
 func (self *RawRegKeyInfo) Size() int64 {
@@ -164,7 +165,7 @@ func (self *RawRegValueInfo) Size() int64 {
 
 func (self *RawRegValueInfo) Data() interface{} {
 	value_data := self.value.ValueData()
-	result := vfilter.NewDict().
+	result := ordereddict.NewDict().
 		Set("type", self.value.TypeString()).
 		Set("data_len", len(value_data.Data))
 
@@ -388,7 +389,7 @@ type ReadKeyValues struct{}
 func (self ReadKeyValues) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	globber := make(glob.Globber)
 	output_chan := make(chan vfilter.Row)
 
@@ -436,7 +437,7 @@ func (self ReadKeyValues) Call(
 					return
 				}
 				if f.IsDir() {
-					res := vfilter.NewDict().
+					res := ordereddict.NewDict().
 						SetDefault(&vfilter.Null{}).
 						SetCaseInsensitive().
 						Set("Key", f)
@@ -448,7 +449,7 @@ func (self ReadKeyValues) Call(
 					for _, item := range values {
 						value_info, ok := item.(glob.FileInfo)
 						if ok {
-							value_data, ok := value_info.Data().(*vfilter.Dict)
+							value_data, ok := value_info.Data().(*ordereddict.Dict)
 							if ok && value_data != nil {
 								value, pres := value_data.Get("value")
 								if pres {

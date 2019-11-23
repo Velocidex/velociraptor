@@ -1,0 +1,59 @@
+name: Windows.Collectors.File
+description: |
+   Collects files using a set of globs. All globs must be on the same
+   device. The globs will be searched in one pass - so you can provide
+   many globs at the same time.
+
+parameters:
+  - name: collectionSpec
+    description: |
+       A CSV file with a Glob column with all the globs to collect.
+       NOTE: Globs must not have a leading device since the device
+       will depend on the VSS.
+    default: |
+       Glob
+       Users\*\NTUser.dat
+  - name: RootDevice
+    description: The device to apply all the glob on.
+    default: "C:"
+  - name: Accessor
+    default: lazy_ntfs
+
+sources:
+   - name: All Matches Metadata
+     queries:
+      # Generate the collection globs for each device
+      - LET specs = SELECT "\\\\.\\" + RootDevice + "\\" + Glob AS Glob
+            FROM parse_csv(filename=collectionSpec, accessor="data")
+            WHERE log(message="Processing Device " + RootDevice + " With " + Accessor)
+
+      # Join all the collection rules into a single Glob plugin. This ensure we
+      # only make one pass over the filesystem. We only want LFNs.
+      - |
+        LET hits = SELECT FullPath AS SourceFile, Size,
+               timestamp(epoch=Ctime.Sec) AS Created,
+               timestamp(epoch=Mtime.Sec) AS Modified,
+               timestamp(epoch=Atime.Sec) AS LastAccessed
+        FROM glob(globs=specs.Glob, accessor=Accessor)
+        WHERE NOT IsDir AND log(message="Found " + SourceFile)
+
+      # Create a unique key to group by - modification time and path name.
+      # Order by device name so we get C:\ above the VSS device.
+      - LET all_results <= SELECT Created, LastAccessed,
+              Modified, Size, SourceFile
+        FROM hits
+
+      - SELECT * FROM all_results
+
+   - name: Uploads
+     queries:
+      # Upload the files
+      - LET uploaded_tiles = SELECT Created, LastAccessed, Modified, SourceFile, Size,
+               upload(file=SourceFile, accessor=Accessor, name=SourceFile) AS Upload
+        FROM all_results
+
+      # Seperate the hashes into their own column.
+      - SELECT now() AS CopiedOnTimestamp, SourceFile, Upload.Path AS DestinationFile,
+               Size AS FileSize, Upload.sha256 AS SourceFileSha256,
+               Created, Modified, LastAccessed
+        FROM uploaded_tiles

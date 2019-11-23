@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -61,7 +62,7 @@ func (self *HuntManager) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting hunt manager.")
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
 		Set("server_config", self.config_obj)
 
@@ -158,7 +159,7 @@ func (self *HuntManager) ProcessRow(
 		self.writers[participation_row.HuntId] = writer
 	}
 
-	request := &flows_proto.FlowRunnerArgs{
+	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId: participation_row.ClientId,
 		Creator:  participation_row.HuntId,
 	}
@@ -211,7 +212,7 @@ func (self *HuntManager) ProcessRow(
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.LaunchFlow(context.Background(), request)
+	response, err := client.CollectArtifact(context.Background(), request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return

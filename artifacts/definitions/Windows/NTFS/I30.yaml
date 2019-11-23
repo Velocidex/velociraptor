@@ -15,28 +15,29 @@ precondition:
 sources:
   - name: UploadI30Streams
     queries:
-       - |
-         LET inodes = SELECT FullPath, Data.mft AS MFT,
+       - LET inodes = SELECT FullPath, Data.mft AS MFT,
              parse_ntfs(device=FullPath, inode=Data.mft) AS MFTInfo
          FROM glob(globs=DirectoryGlobs, accessor="ntfs")
          WHERE IsDir
-       - |
-         LET upload_streams = SELECT * FROM foreach(
+
+       - LET upload_streams = SELECT * FROM foreach(
             row=MFTInfo.Attributes,
             query={
               SELECT Type, TypeId, Id, Inode, Size, Name, FullPath,
-                     upload(accessor="mft", file=MFTInfo.Device + Inode) AS IndexUpload
+                     upload(accessor="mft", file=MFTInfo.Device + Inode,
+                            name=FullPath + "/" + Inode) AS IndexUpload
               FROM scope()
               WHERE Type =~ "INDEX_"
             })
+
        - SELECT * FROM foreach(row=inodes, query=upload_streams)
 
   - name: AnalyzeI30
     queries:
-       - |
-         SELECT * FROM foreach(
+       - SELECT * FROM foreach(
            row=inodes,
            query={
-             SELECT FullPath, Mtime, Atime, Ctime, Name, NameType, MFTId
+             SELECT FullPath, Name, NameType, Size, AllocatedSize,
+                    IsSlack, SlackOffset, Mtime, Atime, Ctime, Btime, MFTId
              FROM parse_ntfs_i30(device=MFTInfo.Device, inode=MFT)
            })

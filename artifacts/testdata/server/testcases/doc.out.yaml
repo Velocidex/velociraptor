@@ -1,5 +1,8 @@
 SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexContext FROM Artifact.Generic.Applications.Office.Keywords( searchGlob=srcDir + '/artifacts/testdata/files')[
  {
+  "OfficePath": "test.docx",
+  "OfficeSize": 4172,
+  "InternalMtime": "2019-02-12T13:28:32Z",
   "HexContext": [
    "00000000  61 77 69 6e 67 22 20 78  6d 6c 6e 73 3a 77 31 34  |awing\" xmlns:w14|",
    "00000010  3d 22 68 74 74 70 3a 2f  2f 73 63 68 65 6d 61 73  |=\"http://schemas|",
@@ -28,12 +31,12 @@ SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexCo
    "00000180  70 50 72 3e 3c 77 3a 72  3e 3c 77 3a 72 50 72 3e  |pPr\u003e\u003cw:r\u003e\u003cw:rPr\u003e|",
    "00000190  3c 2f 77 3a 72 50                                 |\u003c/w:rP|",
    ""
-  ],
-  "InternalMtime": "2019-02-12T13:28:32Z",
-  "OfficePath": "test.docx",
-  "OfficeSize": 4172
+  ]
  },
  {
+  "OfficePath": "test.odt",
+  "OfficeSize": 8678,
+  "InternalMtime": "2019-02-12T13:34:12Z",
   "HexContext": [
    "00000000  74 3a 73 65 71 75 65 6e  63 65 2d 64 65 63 6c 20  |t:sequence-decl |",
    "00000010  74 65 78 74 3a 64 69 73  70 6c 61 79 2d 6f 75 74  |text:display-out|",
@@ -62,9 +65,6 @@ SELECT basename(path=OfficePath) as OfficePath, OfficeSize, InternalMtime, HexCo
    "00000180  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|",
    "00000190  00 00 00 00 00 00                                 |......|",
    ""
-  ],
-  "InternalMtime": "2019-02-12T13:34:12Z",
-  "OfficePath": "test.odt",
-  "OfficeSize": 8678
+  ]
  }
 ]

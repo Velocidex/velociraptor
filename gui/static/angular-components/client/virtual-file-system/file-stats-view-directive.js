@@ -22,8 +22,8 @@ const FileStatsViewController = function(
     /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
     this.fileContext;
 
-    /** @type {?string} */
-    this.updateOperationId;
+    /** @type {?object} */
+    this.updateOperation = {};
 
     /** @private {!angular.$q.Promise} */
     this.updateOperationInterval_;
@@ -41,27 +41,56 @@ const FileStatsViewController = function(
  *
  * @export
  */
+FileStatsViewController.prototype.getAccessorAndPath = function(path) {
+    var components = path.split('/').filter(function (x) {return x.length > 0;});
+    var accessor = 'file';
+    if (components.length > 0) {
+        accessor = components[0];
+        path = components.slice(1).join('/');
+    }
+
+    // Some windows paths start with device name e.g. \\.\C: so we do
+    // not want to prepend a / to these.
+    if (path.substring(0,2) != '\\\\') {
+        path = '/' + path;
+    }
+
+    return {accessor: accessor, path: path};
+}
+
 FileStatsViewController.prototype.updateFile = function() {
   if (this.updateInProgress) {
     return;
   }
 
+  var current_mtime = 0;
+  if (angular.isObject(this.fileContext) &&
+      angular.isObject(this.fileContext.selectedRow) &&
+      angular.isObject(this.fileContext.selectedRow.Download)) {
+    current_mtime = this.fileContext.selectedRow.Download.mtime;
+  }
+
   var clientId = this.fileContext['clientId'];
   var selectedFilePath = this.fileContext['selectedFilePath'];
-  var url = 'v1/LaunchFlow';
+  var components = this.getAccessorAndPath(selectedFilePath);
+
+  var url = 'v1/CollectArtifact';
   var params = {
-    client_id: clientId,
-    flow_name: "VFSDownloadFile",
-    args: {
-      '@type': 'type.googleapis.com/proto.VFSDownloadFileRequest',
-      vfs_path: [selectedFilePath],
-    }
+      client_id: clientId,
+      artifacts: ["System.VFS.DownloadFile"],
+      parameters: {
+          env: [{key: "Path", value: components.path},
+                {key: "Accessor", value: components.accessor}],
+      }
   };
 
   this.updateInProgress = true;
   this.grrApiService_.post(url, params).then(
       function success(response) {
-        this.updateOperationId = response['data']['flow_id'];
+        this.updateOperation = {
+          mtime:    current_mtime,
+          vfs_path: selectedFilePath
+        };
         this.monitorUpdateOperation_();
       }.bind(this),
       function failure(response) {
@@ -87,25 +116,33 @@ FileStatsViewController.prototype.monitorUpdateOperation_ = function() {
  */
 FileStatsViewController.prototype.pollUpdateOperationState_ = function() {
   var clientId = this.fileContext['clientId'];
-  var url = 'v1/GetFlowDetails/' + clientId;
+  var url = 'v1/VFSStatDownload';
   var params = {
-    flow_id: this.updateOperationId,
+    client_id: clientId,
+    vfs_path: this.updateOperation.vfs_path
   };
   this.grrApiService_.get(url, params).then(
     function success(response) {
-        if (response['data']['context']['state'] != 'RUNNING') {
-            this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT);
-            this.rootScope_.$broadcast(REFRESH_FILE_EVENT);
+      // The mtime changed - stop the polling.
+      var mtime = 0;
+      if (angular.isDefined(response.data.mtime)) {
+        mtime = response.data.mtime;
+      }
 
-            // Force a refresh on the file table which is watching this
-            // parameter.
-            this.fileContext.flowId = this.updateOperationId;
-            this.stopMonitorUpdateOperation_();
-        }
+      if (mtime != this.updateOperation.mtime) {
+
+        this.fileContext.selectedRow.Download = response.data;
+        this.stopMonitorUpdateOperation_();
+
+        // Force a refresh on the file table which is watching this
+        // parameter.
+        this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT);
+        this.rootScope_.$broadcast(REFRESH_FILE_EVENT);
+      }
     }.bind(this),
-      function failure(response) {
-          this.stopMonitorUpdateOperation_();
-      }.bind(this));
+    function failure(response) {
+      this.stopMonitorUpdateOperation_();
+    }.bind(this));
 };
 
 /**
@@ -114,7 +151,7 @@ FileStatsViewController.prototype.pollUpdateOperationState_ = function() {
  * @private
  */
 FileStatsViewController.prototype.stopMonitorUpdateOperation_ = function() {
-  this.updateOperationId = null;
+  this.updateOperation = {};
   this.updateInProgress = false;
   this.interval_.cancel(this.updateOperationInterval_);
 };
@@ -125,15 +162,13 @@ FileStatsViewController.prototype.stopMonitorUpdateOperation_ = function() {
  * @export
  */
 FileStatsViewController.prototype.downloadFile = function() {
+  var filePath = this.fileContext.selectedRow.Download.vfs_path;
   var clientId = this.fileContext['clientId'];
-  var filePath = this.fileContext['selectedFilePath'];
-  var filename = clientId + '/' + filePath;
 
-  // Sanitize filename for download.
-  var url = 'v1/DownloadVFSFile/' + filename.replace(/[^a-zA-Z0-9]+/g, '_');
+  var url = 'v1/DownloadVFSFile';
   var params = {
-    client_id: clientId,
     vfs_path: filePath,
+    client_id: clientId,
   };
   this.grrApiService_.downloadFile(url, params).then(
     function success() {}.bind(this),

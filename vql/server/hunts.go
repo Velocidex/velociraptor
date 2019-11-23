@@ -25,6 +25,7 @@ import (
 	"context"
 	"path"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -45,7 +46,7 @@ type HuntsPlugin struct{}
 func (self HuntsPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -118,7 +119,7 @@ type HuntResultsPlugin struct{}
 func (self HuntResultsPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -138,8 +139,7 @@ func (self HuntResultsPlugin) Call(
 		}
 
 		// Backwards compatibility.
-		hunt_id := path.Base(arg.HuntId)
-		file_path := path.Join("hunts", hunt_id+".csv")
+		file_path := path.Join("hunts", arg.HuntId+".csv")
 		file_store_factory := file_store.GetFileStore(config_obj)
 		fd, err := file_store_factory.ReadFile(file_path)
 		if err != nil {
@@ -158,8 +158,9 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if participation_row.Participate {
-				flow_obj, err := flows.GetAFF4FlowObject(
-					config_obj, participation_row.FlowId)
+				collection_context, err := flows.LoadCollectionContext(
+					config_obj, participation_row.ClientId,
+					participation_row.FlowId)
 				if err != nil {
 					continue
 				}
@@ -168,10 +169,10 @@ func (self HuntResultsPlugin) Call(
 				// results. Artifacts are by
 				// definition client artifacts - hunts
 				// only run on client artifacts.
-				flow_id := path.Base(participation_row.FlowId)
 				result_path := artifacts.GetCSVPath(
 					participation_row.ClientId, "",
-					flow_id, arg.Artifact, arg.Source,
+					participation_row.FlowId,
+					arg.Artifact, arg.Source,
 					artifacts.MODE_CLIENT)
 				fd, err := file_store_factory.ReadFile(result_path)
 				if err != nil {
@@ -183,7 +184,7 @@ func (self HuntResultsPlugin) Call(
 				// some extra columns for context.
 				for row := range csv.GetCSVReader(fd) {
 					value := row.
-						Set("FlowId", flow_id).
+						Set("FlowId", participation_row.FlowId).
 						Set("ClientId",
 							participation_row.ClientId).
 						Set("Fqdn",
@@ -193,8 +194,8 @@ func (self HuntResultsPlugin) Call(
 						value.
 							Set("HuntId",
 								participation_row.HuntId).
-							Set("FlowContext",
-								flow_obj.FlowContext)
+							Set("Context",
+								collection_context)
 					}
 					output_chan <- value
 				}
@@ -223,7 +224,7 @@ type HuntFlowsPlugin struct{}
 func (self HuntFlowsPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -260,7 +261,7 @@ func (self HuntFlowsPlugin) Call(
 				return
 			}
 
-			result := vfilter.NewDict().
+			result := ordereddict.NewDict().
 				Set("HuntId", participation_row.HuntId).
 				Set("ClientId", participation_row.ClientId).
 				Set("Fqdn", participation_row.Fqdn).
@@ -268,10 +269,11 @@ func (self HuntFlowsPlugin) Call(
 				Set("Flow", vfilter.Null{})
 
 			if participation_row.Participate {
-				flow_obj, err := flows.GetAFF4FlowObject(
-					config_obj, participation_row.FlowId)
+				collection_context, err := flows.LoadCollectionContext(
+					config_obj, participation_row.ClientId,
+					participation_row.FlowId)
 				if err == nil {
-					result.Set("Flow", flow_obj)
+					result.Set("Flow", collection_context)
 				}
 			}
 

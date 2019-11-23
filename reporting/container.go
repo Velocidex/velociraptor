@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"archive/zip"
 	"context"
 	"crypto/md5"
 	"crypto/sha256"
@@ -11,11 +10,13 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 	"sync"
+
+	"github.com/alexmullins/zip"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
@@ -26,6 +27,9 @@ type Container struct {
 	sync.Mutex // Serialize access to the zip file.
 	fd         io.WriteCloser
 	zip        *zip.Writer
+
+	Password     string
+	delegate_zip *zip.Writer
 }
 
 func (self *Container) StoreArtifact(
@@ -50,6 +54,28 @@ func (self *Container) StoreArtifact(
 	return self.DumpRowsIntoContainer(config_obj, output_rows, scope, query)
 }
 
+func (self *Container) getZipFileWriter(name string) (io.Writer, error) {
+	if self.Password == "" {
+		return self.zip.Create(string(name))
+	}
+
+	// Zip file encryption is not great because it only encrypts
+	// the content of the file, and not its directory. We want to
+	// do better than that - so we create another zip file inside
+	// the original zip file and encrypt that.
+	if self.delegate_zip == nil {
+		fd, err := self.zip.Encrypt("data.zip", self.Password)
+		if err != nil {
+			return nil, err
+		}
+
+		self.delegate_zip = zip.NewWriter(fd)
+	}
+
+	w, err := self.delegate_zip.Create(string(name))
+	return w, err
+}
+
 func (self *Container) DumpRowsIntoContainer(
 	config_obj *config_proto.Config,
 	output_rows []vfilter.Row,
@@ -63,8 +89,9 @@ func (self *Container) DumpRowsIntoContainer(
 	self.Lock()
 	defer self.Unlock()
 
-	sanitized_name := datastore.SanitizeString(query.Name + ".csv")
-	writer, err := self.zip.Create(string(sanitized_name))
+	// In this instance we want to make / unescaped.
+	sanitized_name := query.Name + ".csv"
+	writer, err := self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -80,8 +107,8 @@ func (self *Container) DumpRowsIntoContainer(
 
 	csv_writer.Close()
 
-	sanitized_name = datastore.SanitizeString(query.Name + ".json")
-	writer, err = self.zip.Create(string(sanitized_name))
+	sanitized_name = query.Name + ".json"
+	writer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -92,8 +119,8 @@ func (self *Container) DumpRowsIntoContainer(
 	}
 
 	// Format the description.
-	sanitized_name = datastore.SanitizeString(query.Name + ".txt")
-	writer, err = self.zip.Create(string(sanitized_name))
+	sanitized_name = query.Name + ".txt"
+	writer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -102,6 +129,12 @@ func (self *Container) DumpRowsIntoContainer(
 		FormatDescription(config_obj, query.Description, output_rows))
 
 	return nil
+}
+
+func sanitize(component string) string {
+	component = strings.Replace(component, ":", "", -1)
+	component = strings.Replace(component, "?", "", -1)
+	return component
 }
 
 func (self *Container) Upload(
@@ -115,22 +148,24 @@ func (self *Container) Upload(
 	self.Lock()
 	defer self.Unlock()
 
+	var components []string
 	if store_as_name == "" {
 		store_as_name = filename
+		components = []string{accessor}
 	}
 
 	// Normalize and clean up the path so the zip file is more
 	// usable by fragile zip programs like Windows explorer.
-	components := []string{accessor}
 	for _, component := range utils.SplitComponents(store_as_name) {
 		if component == "." || component == ".." {
 			continue
 		}
-		components = append(components,
-			string(datastore.SanitizeString(component)))
+		components = append(components, sanitize(component))
 	}
+
+	// Zip members must not have absolute paths.
 	sanitized_name := path.Join(components...)
-	writer, err := self.zip.Create(sanitized_name)
+	writer, err := self.getZipFileWriter(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +175,8 @@ func (self *Container) Upload(
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
-	n, err := io.Copy(utils.NewTee(writer, sha_sum, md5_sum), reader)
+
+	n, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
 		return &vql_networking.UploadResponse{
 			Error: err.Error(),
@@ -156,12 +192,17 @@ func (self *Container) Upload(
 }
 
 func (self *Container) Close() error {
+	if self.delegate_zip != nil {
+		self.delegate_zip.Close()
+	}
+
 	self.zip.Close()
 	return self.fd.Close()
 }
 
 func NewContainer(path string) (*Container, error) {
-	fd, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0700)
+	fd, err := os.OpenFile(
+		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		return nil, err
 	}

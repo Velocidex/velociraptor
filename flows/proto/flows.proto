@@ -1,52 +1,32 @@
-// Copyright 2011 Google Inc. All Rights Reserved
-
-// These are the messages used in GRR encrypted communication protocol.
 syntax = "proto3";
-import "google/protobuf/any.proto";
-
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
 import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
 
-message StartFlowRequest {
-    FlowRunnerArgs runner_args = 1;
-    google.protobuf.Any args = 3 [(sem_type) = {
-            description: "Flow Args",
-        }];
-}
 
-message uploaded_file_info {
+message UploadedFileInfo {
     string name = 1;
     string vfs_path = 2;
     uint64 size = 3;
 }
 
-
 // The flow context.
 // Next field: 19
 message FlowContext {
     string backtrace = 1;
-    ClientResources client_resources = 2;
     uint64 create_time = 3 [(sem_type) = {
             type: "RDFDatetime",
         }];
-    string current_state = 5;
     uint64 kill_timestamp = 6 [(sem_type) = {
             type: "RDFDatetime",
         }];
     uint64 network_bytes_sent = 7;
-    uint64 next_outbound_id = 8;
-    uint64 next_processed_request = 9;
-    uint64 outstanding_requests = 11;
 
-    uint64 total_results = 18 [(sem_type) = {
-            description: "The total number of results in the flow's result collection",
-        }];
-
-    // Uploads are now permanently stored in a csv file.
-    repeated uploaded_file_info uploaded_files = 24 [(sem_type) = {
+    // Uploads are now permanently stored in a csv file. This field is
+    // never serialized - it is just a place holder during processing.
+    repeated UploadedFileInfo uploaded_files = 24 [(sem_type) = {
             description: "A list of files uploaded as part of the flow."
         }];
 
@@ -62,21 +42,20 @@ message FlowContext {
             description: "How many bytes we received so far."
         }];
 
+    // Logs are stored in their own CSV file. This is just a
+    // placeholder during processing.
     repeated LogMessage logs = 20 [(sem_type) = {
             description: "List of logs.",
             label: HIDDEN,
         }];
 
-    string session_id = 13 [(sem_type) = {
-            type: "SessionID"
-        }];
-
-    enum State {
+	string session_id = 13;
+	enum State {
         UNSET = 0;
         RUNNING = 1;
         TERMINATED = 2;
         ERROR = 3;   // Flows which raise are marked as having an error.
-        ARCHIVED = 4;
+        ARCHIVED = 4;  // Archived flows do not show up in the UI
     };
 
     State state = 14;
@@ -84,6 +63,7 @@ message FlowContext {
     string status = 15 [(sem_type) = {
             description: "Contents of an error status sent by the client."
         }];
+
     bool user_notified = 16;
 
     uint64 active_time = 17 [(sem_type) = {
@@ -99,112 +79,4 @@ message FlowContext {
             description: "The full path to the artifacts with their results. "
             "This takes the form artifact name/source name."
         }];
-}
-
-// Next field: 23
-message FlowRunnerArgs {
-    string creator = 1 [(sem_type) = {
-            description: "The entity that created this flow. This can be a username or hunt id";
-            label: HIDDEN,
-        }];
-
-    bool notify_to_user = 2 [(sem_type) = {
-      description: "Should a notification be sent to the initiator.",
-      friendly_name: "Notify at Completion",
-      default: "true",
-    }];
-
-   string client_id = 5 [(sem_type) = {
-      type: "ClientURN",
-      description: "The client id this flow operates on.",
-      label: HIDDEN,
-    }];
-
-   uint64 cpu_limit = 9 [(sem_type) = {
-      description: "A limit on the client cpu seconds used by this flow.",
-      label: ADVANCED,
-      default: "7200",
-    }];
-
-   uint64 network_bytes_limit = 13 [(sem_type) = {
-      description: "A limit on the total traffic used by this flow.",
-      label: ADVANCED,
-      default: "10000000",
-    }];
-
-   string flow_name = 11 [(sem_type) = {
-      description: "The name of the class implementing the flow to run.",
-      label: HIDDEN,
-    }];
-
-   uint64 start_time = 15 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "Do not process this flow until this time. ",
-      label: HIDDEN,
-    }];
-
-    google.protobuf.Any args = 24 [(sem_type) = {
-            description: "The request this flow was started with.",
-            label: HIDDEN,
-        }];
-}
-
-
-// This is a short lived protobuf to hold various flow state
-// information only valid between the start and end of the flow. It is
-// used to keep state over multiple client round trips.
-message VelociraptorFlowState {
-    string type = 1;
-    google.protobuf.Any payload = 2;
-}
-
-// Used to describe a flow. The UI uses this information to work out
-// how to render the flow and create its form.
-message FlowDescriptor {
-    string name = 1 [(sem_type) = {
-            description: "Flow name as registered in GRR."
-        }];
-    string friendly_name = 2 [(sem_type) = {
-            description: "Friendly flow name."
-        }];
-    string category = 3 [(sem_type) = {
-            description: "Flow category."
-        }];
-    string doc = 4 [(sem_type) = {
-            description: "Flow documentation string."
-        }];
-
-    string args_type = 5 [(sem_type) = {
-            description: "Flow arguments type name."
-        }];
-
-    google.protobuf.Any default_args = 6 [(sem_type) = {
-            description: "Default flow arguments.",
-        }];
-
-    string behaviours = 7 [(sem_type) = {
-            description: "Flow behaviours."
-        }];
-
-    bool internal = 8 [(sem_type) = {
-            description: "Internal flows are not visible in the GUI."
-        }];
-}
-
-
-message AFF4FlowObject {
-    string urn = 1;
-    FlowRunnerArgs runner_args = 2;
-    FlowContext flow_context = 3;
-    google.protobuf.Any flow_state = 4;
-}
-
-
-message VQLNameTags {
-    string name = 1;
-    string tag = 2;
-}
-
-message VQLNameTagsState {
-    repeated VQLNameTags tags = 1;
 }

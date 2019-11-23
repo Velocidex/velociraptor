@@ -41,9 +41,6 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
  },
  {
-  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
- },
- {
   "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
  },
  {
@@ -58,9 +55,6 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
 ]SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
- },
- {
-  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
  },
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
@@ -87,80 +81,96 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  }
 ]SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath) FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="reg")[
  {
-  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\\"%USERPROFILE%/Desktop/test.docx\"",
   "Name": "%USERPROFILE%/Desktop/test.docx",
+  "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\\"%USERPROFILE%/Desktop/test.docx\"",
   "basename(path=FullPath)": "%USERPROFILE%/Desktop/test.docx",
-  "dirname(path=FullPath)": "HKEY_CURRENT_USER/Software/Microsoft/Office/16.0/Word/Security/Trusted Documents/TrustRecords"
+  "dirname(path=FullPath)": "/HKEY_CURRENT_USER/Software/Microsoft/Office/16.0/Word/Security/Trusted Documents/TrustRecords"
  }
 ]SELECT * FROM Artifact.Windows.System.Amcache( amCacheGlob="c:/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
-  "BinFileVersion": "1.289.0.0",
-  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",
   "FileId": "000085ec26beb5c422b02c5d059bbc966bf99eb3892a",
   "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_base.exe%7C89cd9b0a99b0456e",
   "LastModified": "2019-03-02T08:21:12Z",
+  "_LastModified": 1551514872,
+  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",
   "Name": "AM_Base.exe",
+  "Size": 73585544,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Size": 73585544,
   "Version": "1.289.0.0",
-  "_LastModified": 1551514872
+  "BinFileVersion": "1.289.0.0",
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
-  "BinFileVersion": "1.289.263.0",
-  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
   "FileId": "0000499688da430f3e0534a8c822154588c998062abb",
   "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_delta.exe%7C9025d818d4db6f5e",
   "LastModified": "2019-03-02T08:21:18Z",
+  "_LastModified": 1551514878,
+  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
   "Name": "AM_Delta.exe",
+  "Size": 1994928,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Size": 1994928,
   "Version": "1.289.263.0",
-  "_LastModified": 1551514878
+  "BinFileVersion": "1.289.263.0",
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
-  "BinFileVersion": "1.1.15700.9",
-  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_engine.exe",
   "FileId": "000095e04fb4f1c8f64240970d1937323473cdc3b42d",
   "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/am_engine.exe%7Cf8baa8d1048be37c",
   "LastModified": "2019-03-02T08:20:48Z",
+  "_LastModified": 1551514848,
+  "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_engine.exe",
   "Name": "AM_Engine.exe",
+  "Size": 5634728,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Size": 5634728,
   "Version": "1.1.15700.9",
-  "_LastModified": 1551514848
+  "BinFileVersion": "1.1.15700.9",
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
-  "BinFileVersion": "10.0.17763.1",
-  "Binary": "c:\\windows\\system32\\autochk.exe",
   "FileId": "00002e6c38958917fb86f09026d41337c7460efbe5f5",
   "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/autochk.exe%7C62a87acc15a1c57f",
   "LastModified": "2019-03-02T08:10:03Z",
+  "_LastModified": 1551514203,
+  "Binary": "c:\\windows\\system32\\autochk.exe",
   "Name": "autochk.exe",
+  "Size": 956416,
   "ProductName": "microsoft® windows® operating system",
   "Publisher": "microsoft corporation",
-  "Size": 956416,
   "Version": "10.0.17763.1 (winbuild.160101.0800)",
-  "_LastModified": 1551514203
+  "BinFileVersion": "10.0.17763.1",
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  },
  {
-  "BinFileVersion": "72.0.3626.121",
-  "Binary": "c:\\program files (x86)\\google\\chrome\\application\\72.0.3626.121\\installer\\chrmstp.exe",
   "FileId": "00005417796e422db7aa90da0e7bdced0e3d609010e6",
   "Key": "ntfs:///C:/velociraptor/artifacts/testdata/files/Amcache.hve#Root/InventoryApplicationFile/chrmstp.exe%7C5d43f70c64b9b033",
   "LastModified": "2019-03-02T08:11:12Z",
+  "_LastModified": 1551514272,
+  "Binary": "c:\\program files (x86)\\google\\chrome\\application\\72.0.3626.121\\installer\\chrmstp.exe",
   "Name": "chrmstp.exe",
+  "Size": 2640880,
   "ProductName": "google chrome installer",
   "Publisher": "google inc.",
-  "Size": 2640880,
   "Version": "72.0.3626.121",
-  "_LastModified": 1551514272
+  "BinFileVersion": "72.0.3626.121",
+  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
  }
 ]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
  {
-  "ProgramName": "PsExec",
-  "User": "appveyor"
+  "User": "appveyor",
+  "ProgramName": "AutoRuns"
+ },
+ {
+  "User": "appveyor",
+  "ProgramName": "PsExec"
+ }
+]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='reg') WHERE Type ORDER BY FullPath[
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
  }
 ]

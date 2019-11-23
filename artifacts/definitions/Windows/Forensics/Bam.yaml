@@ -13,13 +13,17 @@ reference:
 parameters:
     - name: bamKeys
       default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\UserSettings\*\*,HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\bam\State\UserSettings\*\*
+    - name: userRegex
+      default: .
 
 sources:
   - precondition:
       SELECT OS from info() where OS = "windows"
     queries:
       - |
-        LET users <= SELECT Name, UUID FROM Artifact.Windows.Sys.Users()
+        LET users <= SELECT Name, UUID
+            FROM Artifact.Windows.Sys.Users()
+            WHERE Name =~ userRegex
       - |
         SELECT basename(path=dirname(path=FullPath)) as SID, {
             SELECT Name FROM users

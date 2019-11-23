@@ -7,12 +7,14 @@ environment:
   GOPATH: c:\gopath
   PATH: C:\msys64\mingw64\bin;%GOPATH%\bin;%PATH%
   VELOCIRAPTOR_CONFIG: artifacts\testdata\windows\appveyor.config.yaml
+  GOPROXY: https://proxy.golang.org
+  GOCACHE: C:\Users\appveyor\AppData\Local\go-build
 
 cache:
-  - '%LocalAppData%\go-build'
-  - '%GOPATH%/pkg/mod -> go.sum'
-  - gui/static/node_modules
-  - gui/static/dist
+  - '%LocalAppData%\go-build -> .appveyor_cache_clear'
+  - '%GOPATH%/pkg -> .appveyor_cache_clear'
+  - 'gui/static/node_modules -> .appveyor_cache_clear'
+  - 'gui/static/dist -> .appveyor_cache_clear'
 
 install:
 - cmd: |
@@ -20,6 +22,10 @@ install:
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
     mkdir "C:\Program Files\Velociraptor"
+    echo Hello > C:\hello.txt
+    echo HelloADS > C:\hello.txt:myads
+    fsutil file setshortname C:\hello.txt hi.txt
+
 - go version
 - go env
 - set GO111MODULE=on
@@ -45,3 +51,4 @@ on_finish:
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: Get-ChildItem artifacts/testdata/server/testcases/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: Get-ChildItem output/velociraptor.exe | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+  - ps: Get-ChildItem output/velociraptor-linux.elf | % { Push-AppveyorArtifact $_.FullName -FileName "velociraptor-linux.elf" }

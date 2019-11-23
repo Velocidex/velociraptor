@@ -54,7 +54,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/urns"
 )
@@ -116,31 +115,14 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 func (self *FileBaseDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
-	flow_id string,
-	client_action string,
-	message proto.Message,
-	next_state uint64) error {
+	req *crypto_proto.GrrMessage) error {
 
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	subject := urns.BuildURN("clients", client_id, "tasks",
 		fmt.Sprintf("/%d", now))
 
-	req, err := responder.NewRequest(message)
-	if err != nil {
-		return err
-	}
-
-	req.Name = client_action
-	req.SessionId = flow_id
-	req.RequestId = uint64(next_state)
 	req.TaskId = uint64(now)
-
-	value, err := proto.Marshal(req)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
-	return writeContentToFile(config_obj, subject, value)
+	return self.SetSubject(config_obj, subject, req)
 }
 
 func (self *FileBaseDataStore) GetSubject(

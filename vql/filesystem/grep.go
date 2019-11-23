@@ -22,6 +22,7 @@ import (
 	"io"
 
 	"github.com/Velocidex/ahocorasick"
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -39,7 +40,7 @@ type GrepFunction struct{}
 // The Grep VQL function searches for a literal or regex match inside the file
 func (self *GrepFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &GrepFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -75,7 +76,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	hits := []*vfilter.Dict{}
+	hits := []*ordereddict.Dict{}
 
 	for {
 		select {
@@ -103,7 +104,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 					max_bound = n
 				}
 
-				hits = append(hits, vfilter.NewDict().
+				hits = append(hits, ordereddict.NewDict().
 					Set("type", "GrepHit").
 					Set("offset", offset+hit).
 					Set("min_bound", min_bound).

@@ -88,13 +88,16 @@ func (self _RecursiveComponent) Match(f FileInfo) bool {
 }
 
 type _RegexComponent struct {
-	regexp string
+	regexp   string
+	compiled *regexp.Regexp
 }
 
-func (self _RegexComponent) Match(f FileInfo) bool {
-	re := regexp.MustCompile("^(?msi)" + self.regexp)
+func (self *_RegexComponent) Match(f FileInfo) bool {
+	if self.compiled == nil {
+		self.compiled = regexp.MustCompile("^(?msi)" + self.regexp)
+	}
 
-	return re.MatchString(f.Name())
+	return self.compiled.MatchString(f.Name())
 }
 
 func (self _RegexComponent) String() string {
@@ -305,26 +308,20 @@ func (self Globber) ExpandWithContext(
 		}
 
 		for next_path, nexts := range children {
-			for _, next := range nexts {
-				// There is no point expanding this
-				// node if it is just a sentinal -
-				// special case it for efficiency.
-				if is_sentinal(next) {
-					continue
-				}
-				child_chan := next.ExpandWithContext(ctx, next_path, accessor)
+			select {
+			case <-ctx.Done():
+				return
 
-			search_subdir:
-				for {
-					select {
-					case <-ctx.Done():
-						return
-
-					case f, ok := <-child_chan:
-						if !ok {
-							break search_subdir
-						}
-
+			default:
+				for _, next := range nexts {
+					// There is no point expanding this
+					// node if it is just a sentinal -
+					// special case it for efficiency.
+					if is_sentinal(next) {
+						continue
+					}
+					for f := range next.ExpandWithContext(
+						ctx, next_path, accessor) {
 						output_chan <- f
 					}
 				}
@@ -382,7 +379,7 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 						return err
 					}
 				}
-				middle = append(middle, _RegexComponent{
+				middle = append(middle, &_RegexComponent{
 					regexp: fnmatch_translate("*"),
 				})
 			}
@@ -435,7 +432,12 @@ func convert_glob_into_path_components(pattern string, path_sep func(path string
 		// match the pattern.
 		if groups := _RECURSION_REGEX.FindStringSubmatch(
 			path_component); len(groups) > 0 {
-			depth := 3
+
+			// Default depth: Previously this was set low
+			// to prevent run away globs but now we cancel
+			// the query based on time so it really does
+			// not matter.
+			depth := 30
 
 			// Allow the user to override the recursion depth.
 			if len(groups[1]) > 0 {
@@ -452,7 +454,7 @@ func convert_glob_into_path_components(pattern string, path_sep func(path string
 			})
 
 		} else if m := _GLOB_MAGIC_CHECK.FindString(path_component); len(m) > 0 {
-			result = append(result, _RegexComponent{
+			result = append(result, &_RegexComponent{
 				regexp: fnmatch_translate(path_component),
 			})
 		} else {

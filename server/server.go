@@ -22,8 +22,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/proto"
-	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -32,6 +30,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/urns"
@@ -52,7 +51,8 @@ type Server struct {
 	NotificationPool *notifications.NotificationPool
 
 	// Limit concurrency for processing messages.
-	concurrency chan bool
+	concurrency      chan bool
+	APIClientFactory grpc_client.APIClientFactory
 }
 
 func (self *Server) StartConcurrencyControl() {
@@ -72,7 +72,8 @@ func (self *Server) Close() {
 	self.NotificationPool.Shutdown()
 }
 
-func NewServer(config_obj *config_proto.Config) (*Server, error) {
+func NewServer(
+	config_obj *config_proto.Config) (*Server, error) {
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err
@@ -98,47 +99,28 @@ func NewServer(config_obj *config_proto.Config) (*Server, error) {
 		NotificationPool: notifications.NewNotificationPool(),
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
-		concurrency: make(chan bool, concurrency),
+		concurrency:      make(chan bool, concurrency),
+		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 	return &result, nil
 }
 
-// Only process messages from the Velociraptor client.
-func (self *Server) processVelociraptorMessages(
-	ctx context.Context,
-	client_id string,
-	messages []*crypto_proto.GrrMessage) error {
-
-	runner := flows.NewFlowRunner(self.config, self.logger)
-	defer runner.Close()
-
-	runner.ProcessMessages(messages)
-
-	return nil
+// We only process enrollment messages when the client is not fully
+// authenticated.
+func (self *Server) ProcessSingleUnauthenticatedMessage(message *crypto_proto.GrrMessage) {
+	if message.CSR != nil {
+		err := enroll(self, message.CSR)
+		if err != nil {
+			self.logger.Error("Enrol Error: %s", err)
+		}
+	}
 }
 
-// We only process some messages when the client is not authenticated.
 func (self *Server) ProcessUnauthenticatedMessages(
 	ctx context.Context,
 	message_info *crypto.MessageInfo) error {
-	message_list := &crypto_proto.MessageList{}
-	err := proto.Unmarshal(message_info.Raw, message_list)
-	if err != nil {
-		return errors.WithStack(err)
-	}
 
-	for _, message := range message_list.Job {
-		switch message.SessionId {
-
-		case "aff4:/flows/E:Enrol":
-			err := enroll(self, message)
-			if err != nil {
-				self.logger.Error("Enrol Error: %s", err)
-			}
-		}
-	}
-
-	return nil
+	return message_info.IterateJobs(ctx, self.ProcessSingleUnauthenticatedMessage)
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
@@ -156,23 +138,11 @@ func (self *Server) Process(
 	message_info *crypto.MessageInfo,
 	drain_requests_for_client bool) (
 	[]byte, int, error) {
-	message_list := &crypto_proto.MessageList{}
-	err := proto.Unmarshal(message_info.Raw, message_list)
-	if err != nil {
-		return nil, 0, errors.WithStack(err)
-	}
 
-	var messages []*crypto_proto.GrrMessage
-	for _, message := range message_list.Job {
-		if message_info.Authenticated {
-			message.AuthState = crypto_proto.GrrMessage_AUTHENTICATED
-		}
-		message.Source = message_info.Source
-		messages = append(messages, message)
-	}
+	runner := flows.NewFlowRunner(self.config)
+	defer runner.Close()
 
-	err = self.processVelociraptorMessages(
-		ctx, message_info.Source, messages)
+	err := runner.ProcessMessages(ctx, message_info)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -191,7 +161,7 @@ func (self *Server) Process(
 		return nil, 0, err
 	}
 
-	message_list = &crypto_proto.MessageList{}
+	message_list := &crypto_proto.MessageList{}
 	if drain_requests_for_client {
 		message_list.Job = append(
 			message_list.Job,

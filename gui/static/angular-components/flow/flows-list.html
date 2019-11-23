@@ -25,28 +25,25 @@
         trigger-update="controller.triggerTableUpdate"
         auto-refresh-interval="controller.autoRefreshInterval"
         ng-click="controller.selectItem(item)"
-        ng-class="{'row-selected': item.flow_id == controller.selectedFlowId}"
+        ng-class="{'row-selected': item.session_id == controller.selectedFlowId}"
         >
       <td><grr-flow-status-icon flow="item" /></td>
       <td>
-        {$ item.flow_id $}
+        {$ item.session_id $}
       </td>
       <td>
-        <div ng-repeat="name in item.context.artifacts track by $index">
+        <div ng-repeat="name in item.request.artifacts track by $index">
           {$ name $}
         </div>
-        <div ng-if="!item.context.artifacts">
-          {$ item.name $}
-        </div>
       </td>
       <td>
-        <grr-timestamp value="item.context.create_time" />
+        <grr-timestamp value="item.create_time" />
       </td>
       <td>
-        <grr-timestamp value="item.context.active_time" />
+        <grr-timestamp value="item.kill_timestamp" />
       </td>
       <td>
-        {{item.runner_args.creator}}
+        {{ item.request.creator }}
       </td>
     </tr>
 

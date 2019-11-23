@@ -21,11 +21,13 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -35,6 +37,66 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type UploadsPluginsArgs struct {
+	ClientId string `vfilter:"optional,field=client_id,doc=The client id to extract"`
+	FlowId   string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
+}
+
+type UploadsPlugins struct{}
+
+func (self UploadsPlugins) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		arg := &UploadsPluginsArgs{}
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*config_proto.Config)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		// Allow the plugin args to override the environment scope.
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+
+		// File uploads are stored in their own CSV file.
+		csv_file_path := artifacts.GetUploadsMetadata(
+			arg.ClientId, arg.FlowId)
+		fmt.Printf("csv_file_path %v\n", csv_file_path)
+		fd, err := file_store_factory.ReadFile(csv_file_path)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+		defer fd.Close()
+
+		for row := range csv.GetCSVReader(fd) {
+			output_chan <- row
+		}
+	}()
+
+	return output_chan
+}
+
+func (self UploadsPlugins) Info(
+	scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "uploads",
+		Doc:     "Retrieve information about a flow's uploads.",
+		ArgType: type_map.AddType(scope, &UploadsPluginsArgs{}),
+	}
+}
 
 type SourcePluginArgs struct {
 	ClientId  string `vfilter:"optional,field=client_id,doc=The client id to extract"`
@@ -53,7 +115,7 @@ type SourcePlugin struct{}
 func (self SourcePlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
@@ -79,10 +141,18 @@ func (self SourcePlugin) Call(
 			return
 		}
 
+		// If the artifact_name has a "/" it means an artifact and
+		// source - override the Source.
+		if strings.Contains(arg.Artifact, "/") {
+			components := strings.SplitN(arg.Artifact, "/", 2)
+			arg.Artifact = components[0]
+			arg.Source = components[1]
+		}
+
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
 		if arg.Mode == "HUNT" {
-			args := vfilter.NewDict().
+			args := ordereddict.NewDict().
 				Set("hunt_id", arg.HuntId).
 				Set("artifact", arg.Artifact).
 				Set("source", arg.Source)
@@ -178,8 +248,8 @@ func (self SourcePlugin) ScanLog(
 		return err
 	}
 
-	row_to_dict := func(row_data []interface{}) *vfilter.Dict {
-		row := vfilter.NewDict()
+	row_to_dict := func(row_data []interface{}) *ordereddict.Dict {
+		row := ordereddict.NewDict()
 
 		for idx, row_item := range row_data {
 			if idx > len(headers) {
@@ -291,4 +361,5 @@ func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 
 func init() {
 	vql_subsystem.RegisterPlugin(&SourcePlugin{})
+	vql_subsystem.RegisterPlugin(&UploadsPlugins{})
 }

@@ -34,6 +34,8 @@ type ServicesManager struct {
 	server_artifacts  *ServerArtifactsRunner
 	dyn_dns           *DynDNSService
 	interrogation     *InterrogationService
+	sanity_checker    *SanityChecks
+	vfs_service       *VFSService
 }
 
 func (self *ServicesManager) Close() {
@@ -45,6 +47,8 @@ func (self *ServicesManager) Close() {
 	self.server_artifacts.Close()
 	self.dyn_dns.Close()
 	self.interrogation.Close()
+	self.sanity_checker.Close()
+	self.vfs_service.Close()
 }
 
 // Start all the server services.
@@ -59,7 +63,7 @@ func StartServices(
 	}
 	result.hunt_manager = hunt_manager
 
-	hunt_dispatcher, err := startHuntDispatcher(config_obj)
+	hunt_dispatcher, err := StartHuntDispatcher(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +93,7 @@ func StartServices(
 	}
 	result.server_artifacts = server_artifacts
 
-	err = startClientMonitoringService(config_obj)
+	err = StartClientMonitoringService(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +106,18 @@ func StartServices(
 
 	interrogation := startInterrogationService(config_obj)
 	result.interrogation = interrogation
+
+	sanity_checker, err := startSanityCheckService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.sanity_checker = sanity_checker
+
+	vfs_service, err := startVFSService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	result.vfs_service = vfs_service
 
 	return result, nil
 }

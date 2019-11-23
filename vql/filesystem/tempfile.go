@@ -22,13 +22,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type _TempfileRequest struct {
-	Data      []string `vfilter:"required,field=data,doc=Data to write in the tempfile."`
+	Data      []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
 	Extension string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
 }
 
@@ -36,7 +37,7 @@ type TempfileFunction struct{}
 
 func (self *TempfileFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_TempfileRequest{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

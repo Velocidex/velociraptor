@@ -14,9 +14,9 @@ import (
 
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
-	"github.com/microcosm-cc/bluemonday"
-
+	"github.com/Velocidex/ordereddict"
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
+	"github.com/microcosm-cc/bluemonday"
 	blackfriday "gopkg.in/russross/blackfriday.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -47,9 +47,9 @@ type GuiTemplateEngine struct {
 // always called last, so any options must come before it. This
 // function takes care of parsing the args in a consistent way -
 // keyword options are
-func parseOptions(values []interface{}) (*vfilter.Dict, []interface{}) {
+func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 	result := []interface{}{}
-	dict := vfilter.NewDict()
+	dict := ordereddict.NewDict()
 	for i := 0; i < len(values); i++ {
 		value := values[i]
 
@@ -204,7 +204,6 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 				chroma_html.WithLineNumbers()),
 			bfchroma.Style("github"),
 		)))
-
 	output_string := string(output)
 
 	/* This is used to dump out the CSS to be included in

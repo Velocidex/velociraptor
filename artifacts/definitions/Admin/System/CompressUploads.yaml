@@ -31,14 +31,12 @@ sources:
   - precondition:
       SELECT server_config FROM scope()
     queries:
-      - |
-        LET files = SELECT ClientId,
-            Flow.Urn as Flow,
-            Flow.FlowContext.uploaded_files as Files
+      - LET files = SELECT ClientId,
+            Flow.session_id as Flow,
+            Flow.uploaded_files as Files
         FROM watch_monitoring(artifact='System.Flow.Completion')
         WHERE Files and not Files =~ blacklistCompressionFilename
 
-      - |
-        SELECT ClientId, Flow, Files,
+      - SELECT ClientId, Flow, Files,
                compress(path=Files) as CompressedFiles
         FROM files

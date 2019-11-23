@@ -2,7 +2,6 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
 import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
@@ -22,7 +21,6 @@ package proto;
 
 message StartFlowResponse {
     string flow_id = 1;
-    FlowRunnerArgs runner_args = 2;
 }
 
 message Approval {
@@ -162,19 +160,33 @@ service API {
     }
 
     // VFS
-    rpc VFSListDirectory(VFSListRequest) returns (VQLResponse) {
+    rpc VFSListDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSListDirectory/{client_id}",
         };
     }
 
-    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (StartFlowResponse) {
+    rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
             post: "/api/v1/VFSRefreshDirectory/{client_id}",
             body: "*",
         };
     }
 
+  rpc VFSStatDirectory(VFSListRequest) returns (VFSListResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/VFSStatDirectory",
+        };
+  }
+
+  rpc VFSStatDownload(VFSListRequest) returns (VFSDownloadInfo) {
+        option (google.api.http) = {
+            get: "/api/v1/VFSStatDownload",
+        };
+  }
+
+
+  // This can be used by API clients to fetch file content.
     rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
         // Not accessible via the GUI - the gui can access the
         // download handlers directly.
@@ -187,9 +199,9 @@ service API {
     }
 
     // Flows
-    rpc LaunchFlow(FlowRunnerArgs) returns (StartFlowResponse) {
+    rpc CollectArtifact(ArtifactCollectorArgs) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
-            post: "/api/v1/LaunchFlow",
+            post: "/api/v1/CollectArtifact",
             body: "*"
         };
     }
@@ -209,7 +221,7 @@ service API {
     }
 
 
-    rpc GetFlowDetails(ApiFlowRequest) returns (ApiFlow) {
+    rpc GetFlowDetails(ApiFlowRequest) returns (FlowDetails) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails/{client_id}",
         };
@@ -218,12 +230,6 @@ service API {
     rpc GetFlowRequests(ApiFlowRequest) returns (ApiFlowRequestDetails) {
         option (google.api.http) = {
             get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/requests",
-        };
-    }
-
-    rpc GetFlowDescriptors(google.protobuf.Empty) returns (FlowDescriptors) {
-        option (google.api.http) = {
-            get: "/api/v1/flows/descriptors",
         };
     }
 
@@ -298,10 +304,11 @@ service API {
         };
     }
 
-    rpc ListAvailableEventResults(ListAvailableEventResultsRequest)
+  rpc ListAvailableEventResults(ListAvailableEventResultsRequest)
         returns (ListAvailableEventResultsResponse) {
         option (google.api.http) = {
-            get: "/api/v1/ListAvailableEventResults",
+            post: "/api/v1/ListAvailableEventResults",
+            body: "*",
         };
     }
 

@@ -19,7 +19,9 @@ package functions
 
 import (
 	"context"
+	"runtime"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -33,7 +35,7 @@ type DirnameFunction struct{}
 
 func (self *DirnameFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &DirnameArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -44,10 +46,6 @@ func (self *DirnameFunction) Call(ctx context.Context,
 	components := utils.SplitComponents(arg.Path)
 	if len(components) > 0 {
 		result := utils.JoinComponents(components[:len(components)-1], "/")
-		if arg.Path[0] == '/' {
-			result = "/" + result
-		}
-
 		return result
 	}
 	return vfilter.Null{}
@@ -65,7 +63,7 @@ type BasenameFunction struct{}
 
 func (self *BasenameFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &DirnameArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -89,7 +87,46 @@ func (self BasenameFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
+type PathJoinArgs struct {
+	Components []string `vfilter:"required,field=components,doc=Path components to join."`
+}
+
+type PathJoinFunction struct{}
+
+func (self *PathJoinFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &PathJoinArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("path_join: %s", err.Error())
+		return false
+	}
+
+	sep := "/"
+	if runtime.GOOS == "windows" {
+		sep = "\\"
+	}
+
+	var components []string
+	for _, x := range arg.Components {
+		components = append(components, utils.SplitComponents(x)...)
+	}
+
+	result := utils.JoinComponents(components, sep)
+	return result
+}
+
+func (self PathJoinFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "path_join",
+		Doc:     "Build a path by joining all components.",
+		ArgType: type_map.AddType(scope, &PathJoinArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&DirnameFunction{})
 	vql_subsystem.RegisterFunction(&BasenameFunction{})
+	vql_subsystem.RegisterFunction(&PathJoinFunction{})
 }

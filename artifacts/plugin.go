@@ -23,9 +23,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -51,7 +53,7 @@ func (self *ArtifactRepositoryPlugin) Print() {
 // Define vfilter.PluginGeneratorInterface
 func (self *ArtifactRepositoryPlugin) Call(
 	ctx context.Context, scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	if self.leaf == nil {
@@ -73,7 +75,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		defer close(output_chan)
 
 		// We create a child scope for evaluating the artifact.
-		env := vfilter.NewDict()
+		env := ordereddict.NewDict()
 		for _, request_env := range request.Env {
 			env.Set(request_env.Key, request_env.Value)
 		}
@@ -113,7 +115,12 @@ func (self *ArtifactRepositoryPlugin) Call(
 				if !ok {
 					break
 				}
-				output_chan <- row
+				dict_row := vql_subsystem.RowToDict(scope, row)
+				if query.Name != "" {
+					dict_row.Set("_Source", query.Name)
+				}
+
+				output_chan <- dict_row
 			}
 		}
 

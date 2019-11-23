@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
@@ -154,7 +155,7 @@ func (self *CSVWatcherService) monitorOnce(
 		}
 		last_event = int(csv_reader.ByteOffset)
 
-		row := vfilter.NewDict()
+		row := ordereddict.NewDict()
 		for idx, row_item := range row_data {
 			if idx > len(headers) {
 				break

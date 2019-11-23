@@ -9,9 +9,8 @@ Queries:
 
   - SELECT * from clients() order by client_id
 
-  - |
-    SELECT client_id, context.create_time as CreateTime,
+  - SELECT client_id, context.create_time as CreateTime,
            runner_args.args.artifacts.names as Artifacts,
            runner_args.flow_name as Flow
     FROM flows(client_id='C.11a3013cca8f826e')
-    WHERE Flow = 'ArtifactCollector' order by client_id
+    ORDER BY client_id

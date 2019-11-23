@@ -52,7 +52,7 @@ const NewArtifactCollectionController = function(
 NewArtifactCollectionController.prototype.resolve = function() {
   var onResolve = this.scope_['onResolve'];
   if (onResolve && this.responseData) {
-      var flow_id = this.responseData['flow_id'];
+      var flow_id = this.responseData['session_id'];
       onResolve({flowId: flow_id});
   }
 };
@@ -73,25 +73,19 @@ NewArtifactCollectionController.prototype.startClientFlow = function() {
         }
     }
 
-    this.flowRunnerArguments = {
+    this.artifactCollectorRequest = {
         client_id: clientId,
-        "flow_name": "ArtifactCollector",
-        args: {
-            "@type": "type.googleapis.com/proto.ArtifactCollectorArgs",
-            artifacts: {
-                names: this.names,
-            },
-            parameters: {
-                env: env,
-            },
-            ops_per_second: this.ops_per_second,
-            timeout: this.timeout,
-        }
+        artifacts: this.names,
+        parameters: {
+            env: env
+        },
+        ops_per_second: this.ops_per_second,
+        timeout: this.timeout
     };
 
     this.grrApiService_.post(
-        'v1/LaunchFlow',
-        this.flowRunnerArguments).then(function success(response) {
+        'v1/CollectArtifact',
+        this.artifactCollectorRequest).then(function success(response) {
             this.responseData = response['data'];
         }.bind(this), function failure(response) {
             this.responseError = response['data']['error'] || 'Unknown error';

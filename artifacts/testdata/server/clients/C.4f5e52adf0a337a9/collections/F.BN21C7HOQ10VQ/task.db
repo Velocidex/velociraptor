@@ -1,0 +1,37 @@
+
+ç
+F.BN21C7HOQ10VQòÐê
+çLET Generic_Client_Info_BasicInformation_0_0=SELECT config.Version.Name AS Name, config.Version.BuildTime AS BuildTime, config.Labels AS Labels, Hostname, OS, Architecture, Platform, PlatformVersion, KernelVersion, Fqdn FROM info()›
+6SELECT * FROM Generic_Client_Info_BasicInformation_0_0a$4b72c8776cc906bdd1af52f209088ca487a9496816633e7c50a3365acdb749bc653c7668967b6ca6c5f694cbf9f5b74bY
+WLET precondition_Generic_Client_Info_Users_1=SELECT OS FROM info() WHERE OS = 'windows'ž
+›LET Generic_Client_Info_Users_1_0=SELECT Name, Description, if(condition=Mtime, then=timestamp(epoch=Mtime)) AS LastLogin FROM Artifact.Windows.Sys.Users()­
+hSELECT * FROM if(then=Generic_Client_Info_Users_1_0, condition=precondition_Generic_Client_Info_Users_1)A$4b72c8776cc906bdd1af52f209088ca4fed2c0dbffbf17fa7eaae71674d587ac*–	
+Windows.Sys.Users]
+remoteRegKeyMHKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*"¡
+*SELECT OS From info() where OS = 'windows'æLET roaming_users <= SELECT "" as Uid, "" as Gid,
+       lookupSID(
+         sid=basename(path=Key.FullPath)
+       ) as Name,
+       Key.FullPath as Description,
+       ProfileImagePath as Directory,
+       basename(path=Key.FullPath) as UUID,
+       Key.Mtime.Sec as Mtime,
+       "roaming" as Type
+   FROM read_reg_key(globs=remoteRegKey, accessor="reg")
+ÿLET local_users <= select User_id as Uid, Primary_group_id as Gid, Name,
+       Comment as Description, {
+         SELECT Directory from roaming_users WHERE User_sid = UUID
+       } as Directory, User_sid as UUID, 0 AS Mtime, "local" AS Type
+FROM users()
+ÂLET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
+    Directory, UUID, {
+        SELECT Mtime.Sec FROM stat(filename=expand(path=Directory))
+    } As Mtime, Type
+FROM local_users
+ÂSELECT * from chain(
+ q1=local_users_with_mtime,
+ q2={
+   -- Only show users not already shown in the local_users above.
+   SELECT * from roaming_users
+   where not UUID in local_users.UUID
+ })

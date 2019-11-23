@@ -17,6 +17,7 @@ custom:
     base: "gui/"
     exclude:
       - "**/*~"
+      - "**/*.map"
 
   # We need to bring the templates so just HTML, no JS code will be
   # used.
@@ -32,4 +33,5 @@ custom:
       - "**/*~"
       - "**/*.js"
       - "**/*.scss"
+      - "**/*.map"
 init: Init

@@ -148,35 +148,37 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
         depth: 0,
     };
 
-    // Setting this.lastRefreshOperationId means that the update button
-    // will get disabled immediately.
-    this.lastRefreshOperationId = 'unknown';
-    this.grrApiService_.post(url, params)
-        .then(
-            function success(response) {
-                this.lastRefreshOperationId = response.data['flow_id'];
-                var pollPromise = this.grrApiService_.poll(
-                    'v1/GetFlowDetails/' + clientId,
-                    OPERATION_POLL_INTERVAL_MS, {
-                        flow_id: this.lastRefreshOperationId,
-                    }, function(response) {
-                        if (response.data.context.state != 'RUNNING') {
-                            this.lastRefreshOperationId = undefined;
-                            return true;
-                        };
-                        return false;
-                    }.bind(this));
-                this.scope_.$on('$destroy', function() {
-                    this.grrApiService_.cancelPoll(pollPromise);
-                }.bind(this));
+  // Setting this.lastRefreshOperationId means that the update button
+  // will get disabled immediately.
+  this.lastRefreshOperationId = 'unknown';
+  this.grrApiService_.post(url, params)
+    .then(
+      function success(response) {
+        this.lastRefreshOperationId = response.data['flow_id'];
+        var pollPromise = this.grrApiService_.poll(
+          'v1/VFSStatDirectory',
+          OPERATION_POLL_INTERVAL_MS, {
+            vfs_path: selectedDirPath,
+            client_id: clientId,
+            flow_id: this.lastRefreshOperationId,
+          }, function(response) {
+            if (response.data.flow_id == this.lastRefreshOperationId) {
+              this.lastRefreshOperationId = undefined;
+              return true;
+            };
+            return false;
+          }.bind(this));
+        this.scope_.$on('$destroy', function() {
+          this.grrApiService_.cancelPoll(pollPromise);
+        }.bind(this));
 
-                return pollPromise;
-            }.bind(this))
-        .then(
-            function success() {
-                this.rootScope_.$broadcast(
-                    REFRESH_FOLDER_EVENT, selectedDirPath);
-            }.bind(this));
+        return pollPromise;
+      }.bind(this))
+    .then(
+      function success() {
+        this.rootScope_.$broadcast(
+          REFRESH_FOLDER_EVENT, selectedDirPath);
+      }.bind(this));
 };
 
 /**

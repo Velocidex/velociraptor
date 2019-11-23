@@ -25,6 +25,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
@@ -43,48 +44,32 @@ type LogWriter struct {
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
-	logging.GetLogger(self.config_obj, &logging.FrontendComponent).Info(string(b))
-	err := self.responder.Log("%s", string(b))
-	if err != nil {
-		return 0, err
-	}
+	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
+	self.responder.Log("%s", string(b))
 	return len(b), nil
 }
 
 type VQLClientAction struct{}
 
-func (self *VQLClientAction) Run(
-	config_obj *config_proto.Config,
-	ctx context.Context,
-	msg *crypto_proto.GrrMessage,
-	output chan<- *crypto_proto.GrrMessage) {
-	responder := responder.NewResponder(msg, output)
-	arg, pres := responder.GetArgs().(*actions_proto.VQLCollectorArgs)
-	if !pres {
-		responder.RaiseError("Request should be of type VQLCollectorArgs")
-		return
-	}
-
-	self.StartQuery(config_obj, ctx, responder, arg)
-}
-
-func (self *VQLClientAction) StartQuery(
+func (self VQLClientAction) StartQuery(
 	config_obj *config_proto.Config,
 	ctx context.Context,
 	responder *responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {
 
 	// Set reasonable defaults.
-	if arg.MaxWait == 0 {
-		arg.MaxWait = config_obj.Client.DefaultMaxWait
+	max_wait := arg.MaxWait
+	if max_wait == 0 {
+		max_wait = config_obj.Client.DefaultMaxWait
 
-		if arg.MaxWait == 0 {
-			arg.MaxWait = 100
+		if max_wait == 0 {
+			max_wait = 100
 		}
 	}
 
-	if arg.MaxRow == 0 {
-		arg.MaxRow = 10000
+	max_row := arg.MaxRow
+	if max_row == 0 {
+		max_row = 10000
 	}
 
 	rate := arg.OpsPerSecond
@@ -115,7 +100,7 @@ func (self *VQLClientAction) StartQuery(
 		Responder: responder,
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
 		Set("config", config_obj.Client).
@@ -161,7 +146,7 @@ func (self *VQLClientAction) StartQuery(
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, sub_ctx, scope, int(arg.MaxRow), int(arg.MaxWait))
+			vql, sub_ctx, scope, int(max_row), int(max_wait))
 	run_query:
 		for {
 			select {
@@ -211,7 +196,8 @@ func (self *VQLClientAction) StartQuery(
 					)
 				}
 				response.Columns = result.Columns
-				responder.AddResponse(response)
+				responder.AddResponse(&crypto_proto.GrrMessage{
+					VQLResponse: response})
 			}
 		}
 	}

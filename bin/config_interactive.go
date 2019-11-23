@@ -1,11 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 
-	"github.com/AlecAivazis/survey/v2"
+	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -167,6 +168,8 @@ func doGenerateConfigInteractive() {
 	err = getLogLocation(config_obj)
 	kingpin.FatalIfError(err, "getLogLocation")
 
+	kingpin.FatalIfError(addUser(config_obj), "Add users")
+
 	path := ""
 	err = survey.AskOne(output_question, &path, survey.WithValidator(survey.Required))
 	kingpin.FatalIfError(err, "Question")
@@ -174,11 +177,11 @@ func doGenerateConfigInteractive() {
 	res, err := yaml.Marshal(config_obj)
 	kingpin.FatalIfError(err, "Yaml Marshal")
 
-	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	kingpin.FatalIfError(err, "Open file %s", path)
-	defer fd.Close()
-
-	fd.Write(res)
+	_, err = fd.Write(res)
+	kingpin.FatalIfError(err, "Write file %s", path)
+	fd.Close()
 
 	err = survey.AskOne(client_output_question, &path,
 		survey.WithValidator(survey.Required))
@@ -188,13 +191,11 @@ func doGenerateConfigInteractive() {
 	res, err = yaml.Marshal(client_config)
 	kingpin.FatalIfError(err, "Yaml Marshal")
 
-	fd, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0600)
+	fd, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	kingpin.FatalIfError(err, "Open file %s", path)
-	defer fd.Close()
-
-	fd.Write(res)
-
-	kingpin.FatalIfError(addUser(config_obj), "Add users")
+	_, err = fd.Write(res)
+	kingpin.FatalIfError(err, "Write file %s", path)
+	fd.Close()
 }
 
 func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
@@ -305,10 +306,12 @@ func addUser(config_obj *config_proto.Config) error {
 
 			user_record.SetPassword(password)
 		}
-
-		err = users.SetUser(config_obj, user_record)
-		if err != nil {
-			return err
-		}
+		config_obj.GUI.InitialUsers = append(
+			config_obj.GUI.InitialUsers,
+			&config_proto.GUIUser{
+				Name:         user_record.Name,
+				PasswordHash: hex.EncodeToString(user_record.PasswordHash),
+				PasswordSalt: hex.EncodeToString(user_record.PasswordSalt),
+			})
 	}
 }

@@ -12,53 +12,31 @@ FROM clients(search='label:*') ORDER BY client_id
   })
 [
  {
+  "os_info.system": "windows",
   "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
-   "ClientId": "C.11a3013cca8f826e",
+   "ClientId": "C.4f5e52adf0a337a9",
    "Labels": [
     "WinBoxes"
    ],
    "Op": "set"
-  },
-  "os_info.system": "windows"
- },
- {
-  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
-   "ClientId": "C.c916a7e445eb0868",
-   "Labels": [
-    "WinBoxes"
-   ],
-   "Op": "set"
-  },
-  "os_info.system": "windows"
+  }
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[
  {
-  "client_id": "C.11a3013cca8f826e",
-  "agent_information": {},
+  "client_id": "C.4f5e52adf0a337a9",
+  "agent_information": {
+   "version": "2019-11-07T22:08:33+10:00",
+   "name": "velociraptor"
+  },
   "os_info": {
    "system": "windows",
-   "release": "Microsoft Windows 10 Pro N10.0.15063 Build 15063",
+   "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
    "machine": "amd64",
-   "fqdn": "TestComputer"
+   "fqdn": "DESKTOP-BP4S7TF"
   },
-  "last_seen_at": 1542151833433916,
-  "last_ip": "192.168.0.11:51087",
-  "last_ip_class": 1,
-  "labels": [
-   "WinBoxes"
-  ]
- },
- {
-  "client_id": "C.c916a7e445eb0868",
-  "agent_information": {},
-  "os_info": {
-   "system": "windows",
-   "release": "Microsoft Windows 10 Pro N10.0.17134 Build 17134",
-   "machine": "amd64",
-   "fqdn": "DESKTOP-IOME2K5"
-  },
-  "last_seen_at": 1541049785896051,
-  "last_ip": "192.168.0.18:49749",
+  "last_seen_at": 1573215522537748,
+  "last_ip": "192.168.0.5:40933",
+  "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": 1,
   "labels": [
    "WinBoxes"
@@ -66,13 +44,7 @@ FROM clients(search='label:*') ORDER BY client_id
  }
 ]SELECT label(client_id='C.11a3013cca8f826e', op='set', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
  {
-  "HasLabel": {
-   "ClientId": "C.11a3013cca8f826e",
-   "Labels": [
-    "WinBoxes"
-   ],
-   "Op": "check"
-  }
+  "HasLabel": null
  }
 ]SELECT label(client_id='C.11a3013cca8f826e', op='set', labels=['NoWinBoxes'], op='check') AS HasLabel FROM scope()[
  {
@@ -82,23 +54,13 @@ FROM clients(search='label:*') ORDER BY client_id
 FROM clients(search='label:*') ORDER BY client_id
 [
  {
-  "client_id": "C.11a3013cca8f826e",
   "label(client_id=client_id, op='remove', labels=labels)": {
-   "ClientId": "C.11a3013cca8f826e",
+   "ClientId": "C.4f5e52adf0a337a9",
    "Labels": [
     "WinBoxes"
    ],
    "Op": "remove"
-  }
- },
- {
-  "client_id": "C.c916a7e445eb0868",
-  "label(client_id=client_id, op='remove', labels=labels)": {
-   "ClientId": "C.c916a7e445eb0868",
-   "Labels": [
-    "WinBoxes"
-   ],
-   "Op": "remove"
-  }
+  },
+  "client_id": "C.4f5e52adf0a337a9"
  }
 ]SELECT * FROM clients(search='label:*') ORDER BY client_id[]

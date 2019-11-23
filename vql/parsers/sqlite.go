@@ -26,15 +26,16 @@ package parsers
 
 import (
 	"context"
-	"io"
 	"os"
 	"reflect"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/glob"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -51,7 +52,7 @@ type _SQLitePlugin struct{}
 func (self _SQLitePlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
@@ -99,7 +100,7 @@ func (self _SQLitePlugin) Call(
 		}
 
 		for rows.Next() {
-			row := vfilter.NewDict()
+			row := ordereddict.NewDict()
 			values, err := rows.SliceScan()
 			if err != nil {
 				scope.Log("sqlite: %v", err)
@@ -214,7 +215,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 	}
 	defer file.Close()
 
-	_, err = io.Copy(tmpfile, file)
+	_, err = utils.Copy(ctx, tmpfile, file)
 	if err != nil {
 		return "", err
 	}

@@ -31,6 +31,7 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -176,12 +177,14 @@ func (self *VelociraptorUploader) Upload(
 
 	offset := uint64(0)
 	self.Count += 1
-	buffer := make([]byte, 1024*1024)
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 
 	for {
+		// Ensure there is a fresh allocation for every
+		// iteration to prevent overwriting in flight buffers.
+		buffer := make([]byte, 1024*1024)
 		read_bytes, err := reader.Read(buffer)
 		data := buffer[:read_bytes]
 		sha_sum.Write(data)
@@ -204,8 +207,9 @@ func (self *VelociraptorUploader) Upload(
 
 		default:
 			// Send the packet to the server.
-			self.Responder.AddResponseToRequest(
-				constants.TransferWellKnownFlowId, packet)
+			self.Responder.AddResponse(&crypto_proto.GrrMessage{
+				RequestId:  constants.TransferWellKnownFlowId,
+				FileBuffer: packet})
 		}
 
 		offset += uint64(read_bytes)

@@ -1,15 +1,9 @@
 select * from search(query='host:*') ORDER BY Hit[
  {
-  "Hit": "C.11a3013cca8f826e"
- },
- {
-  "Hit": "C.c916a7e445eb0868"
+  "Hit": "C.4f5e52adf0a337a9"
  }
 ]select * from search(query='host:*', type='key') ORDER BY Hit[
  {
-  "Hit": "host:desktop-iome2k5"
- },
- {
-  "Hit": "host:testcomputer"
+  "Hit": "host:desktop-6cbj8mj"
  }
 ]

@@ -98,7 +98,7 @@ ClientEventController.prototype.onDateChange = function() {
 ClientEventController.prototype.GetArtifactList = function() {
   var url = 'v1/ListAvailableEventResults';
   var params = {"client_id": this.clientId};
-  return this.grrApiService_.get(url, params).then(
+  return this.grrApiService_.post(url, params).then(
     function(response) {
       this.artifacts = response.data;
     }.bind(this));
@@ -139,7 +139,7 @@ ClientEventController.prototype.updateClientMonitoringTable = function() {
     this.error = "";
     this.grrApiService_.get(url).then(function(response) {
         self.flowArguments = response['data'];
-        self.names = self.flowArguments.artifacts.names || [];
+        self.names = self.flowArguments.artifacts || [];
         self.modalInstance = self.uibModal_.open({
             templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
             scope: self.scope_,
@@ -159,7 +159,7 @@ ClientEventController.prototype.saveClientMonitoringArtifacts = function() {
             env.push({key: k, value: self.params[k]});
         }
     }
-    self.flowArguments.artifacts.names = self.names;
+    self.flowArguments.artifacts = self.names;
     self.flowArguments.parameters = {env: env};
 
     var url = 'v1/SetClientMonitoringState';

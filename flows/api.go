@@ -18,25 +18,25 @@
 package flows
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -52,80 +52,66 @@ func GetFlows(
 	}
 
 	flow_urns, err := db.ListChildren(
-		config_obj, urns.BuildURN(
-			"clients", client_id, "flows"),
+		config_obj, path.Dir(GetCollectionPath(client_id, "X")),
 		offset, length)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, urn := range flow_urns {
-		flow_obj, err := GetAFF4FlowObject(config_obj, urn)
+		// Hide the monitoring flow since it is not a real flow.
+		if strings.HasSuffix(urn, constants.MONITORING_WELL_KNOWN_FLOW) {
+			continue
+		}
+
+		collection_context := &flows_proto.ArtifactCollectorContext{}
+		err := db.GetSubject(config_obj, urn, collection_context)
 		if err != nil {
-			// Skip flows we can not load any more.
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).
-				Error("", err)
+				Error("Unable to open collection", err)
 			continue
 		}
 
-		if !include_archived && flow_obj.FlowContext != nil &&
-			flow_obj.FlowContext.State == flows_proto.FlowContext_ARCHIVED {
+		if !include_archived &&
+			collection_context.State ==
+				flows_proto.ArtifactCollectorContext_ARCHIVED {
 			continue
 		}
 
-		// Skip system flows - they are hidden from users
-		// because they are internal and users cant interact
-		// with them anyway.
-		flow_id := path.Base(urn)
-		if flow_id == "F.Monitoring" {
-			continue
-		}
-
-		if flow_obj.RunnerArgs != nil {
-			item := &api_proto.ApiFlow{
-				Urn:        urn,
-				ClientId:   client_id,
-				FlowId:     flow_id,
-				Name:       flow_obj.RunnerArgs.FlowName,
-				RunnerArgs: flow_obj.RunnerArgs,
-				Context:    flow_obj.FlowContext,
-			}
-			result.Items = append(result.Items, item)
-		}
+		result.Items = append(result.Items, collection_context)
 	}
 	return result, nil
 }
 
 func GetFlowDetails(
 	config_obj *config_proto.Config,
-	client_id string, flow_id string) (*api_proto.ApiFlow, error) {
+	client_id string, flow_id string) (*api_proto.FlowDetails, error) {
 	if flow_id == "" || client_id == "" {
-		return &api_proto.ApiFlow{}, nil
+		return &api_proto.FlowDetails{}, nil
 	}
 
-	flow_urn, err := ValidateFlowId(client_id, flow_id)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
+	urn := GetCollectionPath(client_id, flow_id)
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	err = db.GetSubject(config_obj, urn, collection_context)
 	if err != nil {
 		return nil, err
 	}
 
 	availableDownloads, _ := availableDownloadFiles(config_obj, client_id, flow_id)
-	return &api_proto.ApiFlow{
-		Urn:                *flow_urn,
-		ClientId:           client_id,
-		FlowId:             flow_id,
-		Name:               flow_obj.RunnerArgs.FlowName,
-		RunnerArgs:         flow_obj.RunnerArgs,
-		Context:            flow_obj.FlowContext,
+	return &api_proto.FlowDetails{
+		Context:            collection_context,
 		AvailableDownloads: availableDownloads,
 	}, nil
 }
 
+// availableDownloads returns the prepared zip downloads available to
+// be fetched by the user at this moment.
 func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
@@ -167,48 +153,45 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 
 func CancelFlow(
 	config_obj *config_proto.Config,
-	client_id string, flow_id string, username string) (
+	client_id, flow_id, username string,
+	api_client_factory grpc_client.APIClientFactory) (
 	*api_proto.StartFlowResponse, error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.StartFlowResponse{}, nil
 	}
 
-	flow_urn, err := ValidateFlowId(client_id, flow_id)
+	collection_context, err := LoadCollectionContext(
+		config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
+	defer closeContext(config_obj, collection_context)
 
-	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
-	if err != nil {
-		return nil, err
+	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		return nil, errors.New("Flow is not in the running state. " +
+			"Can only cancel running flows.")
 	}
 
-	if flow_obj.FlowContext != nil {
-		if flow_obj.FlowContext.State != flows_proto.FlowContext_RUNNING {
-			return nil, errors.New("Flow is not in the running state. " +
-				"Can only cancel running flows.")
-		}
+	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+	collection_context.Status = "Cancelled by " + username
+	collection_context.Backtrace = ""
+	collection_context.Dirty = true
 
-		flow_obj.FlowContext.State = flows_proto.FlowContext_ERROR
-		flow_obj.FlowContext.Status = "Cancelled by " + username
-		flow_obj.FlowContext.Backtrace = ""
-		flow_obj.dirty = true
-	}
-
+	// Get all queued tasks for the client and delete only those in this flow.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get all queued tasks for the client and delete only those in this flow.
-	tasks, err := db.GetClientTasks(config_obj, client_id, true /* do_not_lease */)
+	tasks, err := db.GetClientTasks(config_obj, client_id,
+		true /* do_not_lease */)
 	if err != nil {
 		return nil, err
 	}
 
-	session_id := urns.BuildURN("clients", client_id, "flows", flow_id)
+	// Cancel all the tasks
 	for _, task := range tasks {
-		if task.SessionId == session_id {
+		if task.SessionId == flow_id {
 			err = db.UnQueueMessageForClient(config_obj, client_id, task)
 			if err != nil {
 				return nil, err
@@ -216,18 +199,24 @@ func CancelFlow(
 		}
 	}
 
-	err = SetAFF4FlowObject(config_obj, flow_obj)
+	// Queue a cancellation message to the client for this flow
+	// id.
+	err = db.QueueMessageForClient(config_obj, client_id,
+		&crypto_proto.GrrMessage{
+			Cancel:    &crypto_proto.Cancel{},
+			SessionId: flow_id,
+		})
 	if err != nil {
 		return nil, err
 	}
 
-	// Queue a cancellation message to the client for this flow
-	// id.
-	err = QueueAndNotifyClient(
-		config_obj, client_id, *flow_urn,
-		"Cancel",
-		&crypto_proto.GrrMessage{SessionId: session_id},
-		0)
+	client, cancel := api_client_factory.GetAPIClient(config_obj)
+	defer cancel()
+
+	_, err = client.NotifyClients(context.Background(),
+		&api_proto.NotificationRequest{
+			ClientId: client_id,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -245,32 +234,27 @@ func ArchiveFlow(
 		return &api_proto.StartFlowResponse{}, nil
 	}
 
-	flow_urn, err := ValidateFlowId(client_id, flow_id)
+	collection_context, err := LoadCollectionContext(
+		config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
+	defer closeContext(config_obj, collection_context)
 
-	flow_obj, err := GetAFF4FlowObject(config_obj, *flow_urn)
-	if err != nil {
-		return nil, err
+	if collection_context.State != flows_proto.ArtifactCollectorContext_TERMINATED &&
+		collection_context.State != flows_proto.ArtifactCollectorContext_ERROR {
+		return nil, errors.New("Flow must be stopped before it can be archived.")
 	}
 
-	if flow_obj.FlowContext != nil {
-		if flow_obj.FlowContext.State != flows_proto.FlowContext_TERMINATED &&
-			flow_obj.FlowContext.State != flows_proto.FlowContext_ERROR {
-			return nil, errors.New("Flow must be stopped before it can be archived.")
-		}
-
-		flow_obj.FlowContext.State = flows_proto.FlowContext_ARCHIVED
-		flow_obj.FlowContext.Status = "Archived by " + username
-		flow_obj.FlowContext.Backtrace = ""
-		flow_obj.dirty = true
-	}
+	collection_context.State = flows_proto.ArtifactCollectorContext_ARCHIVED
+	collection_context.Status = "Archived by " + username
+	collection_context.Backtrace = ""
+	collection_context.Dirty = true
 
 	// Keep track of archived flows so they can be purged later.
-	row := vfilter.NewDict().
+	row := ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().Unix()).
-		Set("Flow", flow_obj)
+		Set("Flow", collection_context)
 	serialized, err := json.Marshal([]vfilter.Row{row})
 	if err == nil {
 		gJournalWriter.Channel <- &Event{
@@ -280,11 +264,6 @@ func ArchiveFlow(
 			Response:  string(serialized),
 			Columns:   []string{"Timestamp", "Flow"},
 		}
-	}
-
-	err = SetAFF4FlowObject(config_obj, flow_obj)
-	if err != nil {
-		return nil, err
 	}
 
 	return &api_proto.StartFlowResponse{
@@ -299,61 +278,58 @@ func GetFlowRequests(
 	if count == 0 {
 		count = 50
 	}
-	result := &api_proto.ApiFlowRequestDetails{}
 
-	session_id := urns.BuildURN("clients", client_id, "flows", flow_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
+	}
+
+	result := &api_proto.ApiFlowRequestDetails{}
+
+	flow_details := &api_proto.ApiFlowRequestDetails{}
+	err = db.GetSubject(config_obj,
+		path.Join(GetCollectionPath(client_id, flow_id), "task"),
+		flow_details)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the task_id in the details protobuf.
+	set_task_id_in_details := func(request_id, task_id uint64) bool {
+		for _, item := range flow_details.Items {
+			if item.RequestId == request_id {
+				item.TaskId = task_id
+				return true
+			}
+		}
+
+		return false
 	}
 
 	requests, err := db.GetClientTasks(config_obj, client_id, true)
 	if err != nil {
 		return nil, err
 	}
-	for idx, request := range requests {
-		if idx < int(offset) {
-			continue
-		}
+	for _, request := range requests {
+		set_task_id_in_details(request.RequestId, request.TaskId)
+	}
 
-		if idx > int(offset+count) {
-			break
-		}
+	if offset > uint64(len(flow_details.Items)) {
+		return result, nil
+	}
 
-		if request.SessionId == session_id {
-			args := responder.ExtractGrrMessagePayload(request)
-			payload, err := ptypes.MarshalAny(args)
-			if err != nil {
-				return nil, errors.WithStack(err)
-			}
-			request.Payload = payload
-			request.Args = nil
-			request.ArgsRdfName = ""
-			result.Items = append(result.Items, request)
-		}
+	end := offset + count
+	if end > uint64(len(flow_details.Items)) {
+		end = uint64(len(flow_details.Items))
+	}
+
+	result.Items = flow_details.Items[offset:end]
+
+	// Remove unimportant fields
+	for _, item := range result.Items {
+		item.SessionId = ""
+		item.RequestId = 0
 	}
 
 	return result, nil
-}
-
-func GetFlowDescriptors() (*api_proto.FlowDescriptors, error) {
-	result := &api_proto.FlowDescriptors{}
-	for _, item := range GetDescriptors() {
-		if !item.Internal {
-			result.Items = append(result.Items, item)
-		}
-	}
-
-	return result, nil
-}
-
-func ValidateFlowId(client_id string, flow_id string) (*string, error) {
-	base_flow := path.Base(flow_id)
-	if !strings.HasPrefix(base_flow, constants.FLOW_PREFIX) {
-		return nil, errors.New(
-			"Flows must start with " + constants.FLOW_PREFIX)
-	}
-
-	rebuild_urn := urns.BuildURN("clients", client_id, "flows", base_flow)
-	return &rebuild_urn, nil
 }

@@ -23,6 +23,7 @@
 package vql
 
 import (
+	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/process"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -76,7 +77,7 @@ func init() {
 			PluginName: "pslist",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
 				arg := &PslistArgs{}

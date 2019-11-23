@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -49,21 +48,14 @@ var (
 
 func doArtifactsSchedule() {
 	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: *artifact_command_schedule_names,
-		}}
+		ClientId:  *artifact_command_schedule_client,
+		Artifacts: *artifact_command_schedule_names,
+	}
 	for k, v := range *artifact_command_schedule_parameters {
 		request.Parameters.Env = append(request.Parameters.Env,
 			&actions_proto.VQLEnv{
 				Key: k, Value: v,
 			})
-	}
-
-	flow_args, _ := ptypes.MarshalAny(request)
-	flow_request := &flows_proto.FlowRunnerArgs{
-		ClientId: *artifact_command_schedule_client,
-		FlowName: "ArtifactCollector",
-		Args:     flow_args,
 	}
 
 	// Just start an artifact collector flow using the gRPC API.
@@ -72,7 +64,8 @@ func doArtifactsSchedule() {
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.LaunchFlow(context.Background(), flow_request)
+	response, err := client.CollectArtifact(context.Background(), request)
+
 	kingpin.FatalIfError(err, "Starting Artifact collector flow ")
 
 	fmt.Printf("Started a new flow (%v)\n", response.FlowId)

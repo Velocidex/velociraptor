@@ -28,6 +28,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -67,8 +68,9 @@ type HuntDispatcher struct {
 	// https://github.com/golang/go/issues/13868
 	last_timestamp uint64
 
-	mu         sync.Mutex
-	config_obj *config_proto.Config
+	mu               sync.Mutex
+	config_obj       *config_proto.Config
+	APIClientFactory grpc_client.APIClientFactory
 
 	hunts map[string]*api_proto.Hunt
 	done  chan bool
@@ -104,7 +106,7 @@ func (self *HuntDispatcher) ModifyHunt(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	hunt_obj, pres := self.hunts[path.Base(hunt_id)]
+	hunt_obj, pres := self.hunts[hunt_id]
 	if !pres {
 		return errors.New("not found")
 	}
@@ -233,7 +235,7 @@ func (self *HuntDispatcher) Refresh() error {
 	return nil
 }
 
-func startHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, error) {
+func StartHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -241,9 +243,10 @@ func startHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, erro
 	logger.Info("Starting Hunt Dispatcher Service.")
 
 	result := &HuntDispatcher{
-		config_obj: config_obj,
-		hunts:      make(map[string]*api_proto.Hunt),
-		done:       make(chan bool),
+		config_obj:       config_obj,
+		hunts:            make(map[string]*api_proto.Hunt),
+		done:             make(chan bool),
+		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 
 	// flush the hunts every 10 seconds.

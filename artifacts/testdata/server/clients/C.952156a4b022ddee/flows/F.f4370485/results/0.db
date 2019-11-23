@@ -1,11 +1,0 @@
-
-1aff4:/clients/C.952156a4b022ddee/flows/F.f4370485*Ï
-@[
- {
-  "Error": "",
-  "Path": "/bin/grep",
-  "Size": 207168
- }
-]PathSizeErroro
-_SELECT Path, Size, Error
-                         FROM upload(files=[Path0], accessor=accessor)Upload files æˆıÀùŞ2C.952156a4b022ddee8rVQLResponsex×ë‰ßûŞÀœ

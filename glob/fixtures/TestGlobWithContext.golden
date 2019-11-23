@@ -16,10 +16,11 @@
   "/usr/bin/diff",
   "/usr/bin/X11/diff"
  ],
- "005 Depth of 3": [
+ "005 Depth of 30": [
   "/usr/bin/diff",
   "/usr/bin/X11/diff",
-  "/usr/bin/X11/X11/diff"
+  "/usr/bin/X11/X11/diff",
+  "/usr/bin/X11/X11/X11/diff"
  ],
  "006 Depth of 4": [
   "/usr/bin/diff",

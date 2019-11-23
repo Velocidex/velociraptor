@@ -34,6 +34,7 @@ import (
 	"unicode/utf16"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/mattn/go-pointer"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -146,7 +147,7 @@ func (self *CertContext) HexSerialNumber() string {
 }
 
 func runCertificates(scope *vfilter.Scope,
-	args *vfilter.Dict) []vfilter.Row {
+	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	// The context is passed to the cert walker.

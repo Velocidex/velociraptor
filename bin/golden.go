@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -51,7 +52,6 @@ var (
 
 type testFixture struct {
 	Parameters map[string]string `json:"Parameters"`
-	Files      map[string]string `json:"Files"`
 	Queries    []string          `json:"Queries"`
 }
 
@@ -70,11 +70,6 @@ func vqlCollectorArgsFromFixture(
 			artifact_collector_args.Parameters.Env,
 			&actions_proto.VQLEnv{Key: k, Value: v})
 	}
-	for k, v := range fixture.Files {
-		artifact_collector_args.Parameters.Files = append(
-			artifact_collector_args.Parameters.Files,
-			&actions_proto.VQLEnv{Key: k, Value: v})
-	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
 	err := flows.AddArtifactCollectorArgs(
@@ -90,7 +85,7 @@ func runTest(fixture *testFixture) (string, error) {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -138,7 +133,7 @@ func runTest(fixture *testFixture) (string, error) {
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, context.Background(), scope, 1000, 100)
+			vql, context.Background(), scope, 1000, 1000)
 		for {
 			query_result, ok := <-result_chan
 			if !ok {

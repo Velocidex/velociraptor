@@ -18,6 +18,9 @@
 package crypto
 
 import (
+	"bytes"
+	"compress/zlib"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -26,10 +29,12 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"io"
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func ParseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
@@ -172,4 +177,32 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 	}
 
 	return nil
+}
+
+func Compress(plain_text []byte) []byte {
+	var b bytes.Buffer
+	w := zlib.NewWriter(&b)
+	w.Write([]byte(plain_text))
+	w.Close()
+
+	return b.Bytes()
+}
+
+func Uncompress(
+	ctx context.Context, compressed []byte) ([]byte, error) {
+
+	result := bytes.NewBuffer(make([]byte, 0, len(compressed)*2))
+	var reader io.Reader = bytes.NewReader(compressed)
+	z, err := zlib.NewReader(reader)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	defer z.Close()
+
+	_, err = utils.Copy(ctx, result, z)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return result.Bytes(), nil
 }

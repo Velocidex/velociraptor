@@ -1,29 +1,21 @@
 {
- "TIME_CREATED": "131834423287753198",
+ "__Type": "__InstanceCreationEvent",
  "TargetInstance": {
- "AcceptPause": true,
- "AcceptStop": true,
- "CSCreationClassName": "Win32_ComputerSystem",
- "CSName": "DESKTOP-IOME2K5",
+ "__Type": "Win32_Process",
  "Caption": "notepad.exe",
  "CommandLine": "notepad",
  "CreationClassName": "Win32_Process",
  "CreationDate": "20181007201847.788310-420",
+ "CSCreationClassName": "Win32_ComputerSystem",
+ "CSName": "DESKTOP-IOME2K5",
  "Description": "notepad.exe",
  "ExecutablePath": "C:\\Windows\\system32\\notepad.exe",
- "Foo": [
- 1,
- 2,
- 3,
- 4
- ],
  "Handle": "984",
  "HandleCount": 236,
  "KernelModeTime": "468750",
  "MaximumWorkingSetSize": 1380,
  "MinimumWorkingSetSize": 200,
  "Name": "notepad.exe",
- "NullDescription": null,
  "OSCreationClassName": "Win32_OperatingSystem",
  "OSName": "Microsoft Windows 10 Pro N|C:\\WINDOWS|\\Device\\Harddisk0\\Partition2",
  "OtherOperationCount": "151",
@@ -51,7 +43,15 @@
  "WorkingSetSize": "15560704",
  "WriteOperationCount": "0",
  "WriteTransferCount": "0",
- "__Type": "Win32_Process"
+ "Foo": [
+ 1,
+ 2,
+ 3,
+ 4
+ ],
+ "AcceptPause": true,
+ "AcceptStop": true,
+ "NullDescription": null
  },
- "__Type": "__InstanceCreationEvent"
+ "TIME_CREATED": "131834423287753198"
  }

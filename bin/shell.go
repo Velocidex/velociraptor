@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	prompt "github.com/c-bata/go-prompt"
 	"github.com/google/shlex"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -35,6 +36,7 @@ import (
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/urns"
@@ -102,11 +104,20 @@ func shell_executor(config_obj *config_proto.Config,
 		"clients", *shell_client,
 		"flows", constants.MONITORING_WELL_KNOWN_FLOW)
 
-	err = flows.QueueAndNotifyClient(
+	err = flows.QueueMessageForClient(
 		config_obj, *shell_client,
-		urn, "VQLClientAction",
-		vql_request, processVQLResponses)
+		&crypto_proto.GrrMessage{
+			SessionId:       urn,
+			RequestId:       processVQLResponses,
+			VQLClientAction: vql_request})
+	kingpin.FatalIfError(err, "Sending client message ")
 
+	api_client_factory := grpc_client.GRPCAPIClient{}
+	client, cancel := api_client_factory.GetAPIClient(config_obj)
+	defer cancel()
+
+	_, err = client.NotifyClients(context.Background(),
+		&api_proto.NotificationRequest{ClientId: *shell_client})
 	kingpin.FatalIfError(err, "Sending client message ")
 
 	// Wait until the response arrives. The client may not be
@@ -139,7 +150,7 @@ func get_responses(ctx context.Context,
 		}
 	}()
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("server_config", config_obj).
 		Set("ClientId", client_id)
 

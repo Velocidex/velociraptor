@@ -27,5 +27,5 @@ func BuildURN(elem ...string) string {
 	if strings.HasPrefix(elem[0], "aff4:") {
 		return base_path
 	}
-	return "aff4:/" + base_path
+	return "/" + base_path
 }

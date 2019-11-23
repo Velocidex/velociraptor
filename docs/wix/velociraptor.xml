@@ -3,9 +3,9 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
   <Product Name='Velociraptor' Manufacturer='Velocidex Innovations'
-           Id='8316dc94-3c0f-46a0-b54b-aeb484dd533d'
+           Id='*'
            UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
-           Language='1033' Codepage='1252' Version='0.32.0'>
+           Language='1033' Codepage='1252' Version='0.36.0'>
     <Package Id='*' Keywords='Installer' Description="Velociraptor Service Installer"
              Comments='This installs the Velociraptor service.'
              Manufacturer='Velocidex Innovations'
@@ -35,14 +35,15 @@
                 Arguments='service run '
                 ErrorControl="normal"
                 Interactive="no">
-                                <util:ServiceConfig
-                                xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
-                                        FirstFailureActionType='restart'
-                                        SecondFailureActionType='restart'
-                                        ThirdFailureActionType='restart'
-                                        RestartServiceDelayInSeconds='30'
-                                        ResetPeriodInDays='0'/>
-                        </ServiceInstall>
+              <util:ServiceConfig
+                  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+                  FirstFailureActionType='restart'
+                  SecondFailureActionType='restart'
+                  ThirdFailureActionType='restart'
+                  RestartServiceDelayInSeconds='30'
+                  ResetPeriodInDays='0'/>
+            </ServiceInstall>
+
             <ServiceControl
                 Id="StartService"
                 Name="Velociraptor"

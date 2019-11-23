@@ -24,12 +24,14 @@ import (
 	"strings"
 
 	context "golang.org/x/net/context"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
 const (
@@ -260,4 +262,35 @@ func (self *ApiServer) ListAvailableEventResults(
 	}
 
 	return result, nil
+}
+
+// MakeCollectorRequest is a convenience function for creating
+// flows_proto.ArtifactCollectorArgs protobufs.
+func MakeCollectorRequest(
+	client_id string, artifact_name string,
+	parameters ...string) *flows_proto.ArtifactCollectorArgs {
+	result := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  client_id,
+		Artifacts: []string{artifact_name},
+	}
+
+	if len(parameters)%2 != 0 {
+		parameters = parameters[:len(parameters)-len(parameters)%2]
+	}
+
+	if parameters != nil {
+		result.Parameters = &flows_proto.ArtifactParameters{}
+		for i := 0; i < len(parameters); {
+			k := parameters[i]
+			i++
+			v := parameters[i]
+			i++
+			result.Parameters.Env = append(result.Parameters.Env,
+				&actions_proto.VQLEnv{
+					Key: k, Value: v,
+				})
+		}
+	}
+
+	return result
 }

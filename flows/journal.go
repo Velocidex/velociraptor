@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -96,7 +96,7 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	}
 
 	for _, row := range rows {
-		csv_row := vfilter.NewDict().
+		csv_row := ordereddict.NewDict().
 			Set("_ts", int(time.Now().Unix())).
 			Set("ClientId", event.ClientId)
 

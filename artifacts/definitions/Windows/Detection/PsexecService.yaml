@@ -26,8 +26,8 @@ sources:
                now() AS Timestamp,
                ServiceType, PID,
                {
-                  SELECT Name, ExecutablePath, CommandLine
-                  FROM pslist() WHERE ParentProcessID = PID
+                  SELECT Name, Exe, CommandLine
+                  FROM pslist() WHERE Ppid = PID
                   LIMIT 2
                } AS ChildProcess
         FROM yara(rules=yaraRule, files=PathName)

@@ -18,6 +18,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +31,8 @@ import (
 // CopyFile copies a file from src to dst. If src and dst files exist, and are
 // the same, then return success. Otherise, attempt to create a hard link
 // between the two files. If that fail, copy the file contents from src to dst.
-func CopyFile(src, dst string, mode os.FileMode) (err error) {
+func CopyFile(ctx context.Context,
+	src, dst string, mode os.FileMode) (err error) {
 	sfi, err := os.Stat(src)
 	if err != nil {
 		return errors.WithStack(err)
@@ -66,7 +68,7 @@ func CopyFile(src, dst string, mode os.FileMode) (err error) {
 
 	// This may not work if the files are on different filesystems
 	// or the filesystem does not support it.
-	return copyFileContents(src, dst, mode)
+	return copyFileContents(ctx, src, dst, mode)
 
 }
 
@@ -74,7 +76,8 @@ func CopyFile(src, dst string, mode os.FileMode) (err error) {
 // by dst. The file will be created if it does not already exist. If the
 // destination file exists, all it's contents will be replaced by the contents
 // of the source file.
-func copyFileContents(src, dst string, mode os.FileMode) (err error) {
+func copyFileContents(ctx context.Context,
+	src, dst string, mode os.FileMode) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
 		return errors.WithStack(err)
@@ -93,7 +96,7 @@ func copyFileContents(src, dst string, mode os.FileMode) (err error) {
 		}
 	}()
 
-	if _, err = io.Copy(out, in); err != nil {
+	if _, err = Copy(ctx, out, in); err != nil {
 		return errors.WithStack(err)
 	}
 

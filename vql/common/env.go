@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -38,7 +39,7 @@ type EnvFunction struct{}
 
 func (self *EnvFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &EnvFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -64,7 +65,7 @@ func init() {
 			PluginName: "environ",
 			Function: func(
 				scope *vfilter.Scope,
-				args *vfilter.Dict) []vfilter.Row {
+				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
 				arg := &EnvPluginArgs{}
@@ -74,7 +75,7 @@ func init() {
 					return result
 				}
 
-				row := vfilter.NewDict().
+				row := ordereddict.NewDict().
 					SetDefault(&vfilter.Null{}).
 					SetCaseInsensitive()
 				if len(arg.Vars) == 0 {

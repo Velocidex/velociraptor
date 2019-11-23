@@ -48,7 +48,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 		_RecursiveComponent{`foo.*\z(?ms)`, 5},
 	}},
 	{"*.exe", []_PathFilterer{
-		_RegexComponent{`.*\.exe\z(?ms)`},
+		&_RegexComponent{regexp: `.*\.exe\z(?ms)`},
 	}},
 	{"/bin/ls", []_PathFilterer{
 		_LiteralComponent{"bin"},
@@ -56,7 +56,7 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 	}},
 	{"/bin/**/ls", []_PathFilterer{
 		_LiteralComponent{"bin"},
-		_RecursiveComponent{path: `.*\z(?ms)`, depth: 3},
+		_RecursiveComponent{path: `.*\z(?ms)`, depth: 30},
 		_LiteralComponent{"ls"},
 	}},
 }
@@ -179,7 +179,7 @@ var _GlobFixture = []struct {
 	{"Inverted range", []string{"/bin/[!a-b]ash"}},
 	{"Brace expansion.", []string{"/bin/{b,d}ash"}},
 	{"Depth of 2", []string{"/usr/**2/diff"}},
-	{"Depth of 3", []string{"/usr/**/diff"}},
+	{"Depth of 30", []string{"/usr/**/diff"}},
 	{"Depth of 4", []string{"/usr/**4/diff"}},
 	{"Breadth first traversal", []string{"/tmp/1/*", "/tmp/1/*/*"}},
 	{"Breadth first traversal", []string{"/tmp/1/**5"}},

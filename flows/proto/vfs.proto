@@ -5,6 +5,25 @@ import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
 
 package proto;
 
+message VFSDownloadInfo {
+  string vfs_path = 1;
+  uint64 size = 2;
+  uint64 mtime = 3;
+}
+
+message VFSListResponse {
+  string Response = 1;
+  repeated string Columns = 2;
+  VQLRequest Query = 3;
+  uint64 timestamp = 4;
+  uint64 total_rows = 7;
+  repeated VQLTypeMap types = 8;
+
+  // The actual artifact that contains the data.
+  string client_id = 9;
+  string flow_id = 10;
+}
+
 message VFSListRequest {
     string client_id = 1 [(sem_type) = {
             description: "The client to list",

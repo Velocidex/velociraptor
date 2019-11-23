@@ -23,18 +23,32 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type ArrayFunction struct{}
 
-func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
+func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 	var result []vfilter.Any
 
-	lazy_a, ok := a.(vfilter.LazyExpr)
-	if ok {
-		a = lazy_a.Reduce()
+	switch t := a.(type) {
+	case vfilter.LazyExpr:
+		a = t.Reduce()
+
+	case vfilter.StoredQuery:
+		for row := range t.Eval(ctx, scope) {
+			// Special case a single column means the
+			// value is taken directly.
+			members := scope.GetMembers(row)
+			if len(members) == 1 {
+				row, _ = scope.Associative(row, members[0])
+			}
+			flattened := flatten(ctx, scope, row)
+			result = append(result, flattened...)
+		}
+		return result
 	}
 
 	a_value := reflect.Indirect(reflect.ValueOf(a))
@@ -43,7 +57,7 @@ func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			flattened := flatten(scope, element)
+			flattened := flatten(ctx, scope, element)
 
 			result = append(result, flattened...)
 		}
@@ -55,7 +69,7 @@ func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 		for _, item := range members {
 			value, pres := scope.Associative(a, item)
 			if pres {
-				result = append(result, flatten(scope, value)...)
+				result = append(result, flatten(ctx, scope, value)...)
 			}
 		}
 
@@ -67,8 +81,8 @@ func flatten(scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
 
 func (self *ArrayFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
-	return flatten(scope, args)
+	args *ordereddict.Dict) vfilter.Any {
+	return flatten(ctx, scope, args)
 }
 
 func (self ArrayFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -87,7 +101,7 @@ type JoinFunction struct{}
 
 func (self *JoinFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &JoinFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
@@ -119,7 +133,7 @@ type FilterFunction struct{}
 
 func (self *FilterFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &FilterFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

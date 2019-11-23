@@ -83,7 +83,7 @@ ServerEventsController.prototype.onDateChange = function() {
 ServerEventsController.prototype.GetArtifactList = function() {
   var url = 'v1/ListAvailableEventResults';
   var params = {};
-  return this.grrApiService_.get(url, params).then(
+  return this.grrApiService_.post(url, params).then(
     function(response) {
       this.artifacts = response.data;
     }.bind(this));
@@ -125,7 +125,7 @@ ServerEventsController.prototype.updateServerMonitoringTable = function() {
     this.grrApiService_.get(url).then(function(response) {
         self.flowArguments = response['data'];
         if (angular.isObject(self.flowArguments.artifacts)) {
-            self.names = self.flowArguments.artifacts.names || [];
+            self.names = self.flowArguments.artifacts || [];
             self.params = {};
             var parameters = self.flowArguments.parameters.env || {};
             for (var i=0; i<parameters.length;i++) {
@@ -153,7 +153,7 @@ ServerEventsController.prototype.saveServerArtifacts = function() {
         }
     }
 
-    self.flowArguments.artifacts = {names: self.names};
+    self.flowArguments.artifacts = self.names;
     self.flowArguments.parameters = {env: env};
 
     var url = 'v1/SetServerMonitoringState';

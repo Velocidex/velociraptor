@@ -23,6 +23,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
@@ -103,7 +104,7 @@ type _UsersPlugin struct{}
 func (self _UsersPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	arg := &_UsersPluginArg{}

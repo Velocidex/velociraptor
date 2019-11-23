@@ -20,6 +20,7 @@ package networking
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -37,7 +38,7 @@ type UploadFunction struct{}
 
 func (self *UploadFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	uploader_obj, ok := scope.Resolve("$uploader")
 	if !ok {
@@ -117,7 +118,7 @@ type UploadPlugin struct{}
 func (self *UploadPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &UploadPluginArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)

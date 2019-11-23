@@ -1,0 +1,56 @@
+name: Elastic.Events.Clients
+description: |
+  This server monitoring artifact will watch a selection of client
+  monitoring artifacts for new events and push those to an elastic
+  index.
+
+  NOTE: You must ensure you are collecting these artifacts from the
+  clients by adding them to the "Client Events" GUI.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: WindowsDetectionPsexecService
+    description: Upload Windows.Detection.PsexecService to Elastic
+    type: bool
+  - name: WindowsEventsDNSQueries
+    description: Upload Windows.Events.DNSQueries to Elastic
+    type: bool
+  - name: WindowsEventsProcessCreation
+    description: Upload Windows.Events.ProcessCreation to Elastic
+    type: bool
+  - name: WindowsEventsServiceCreation
+    description: Upload Windows.Events.ServiceCreation to Elastic
+    type: bool
+  - name: ElasticAddresses
+    default: http://127.0.0.1:9200/
+  - name: artifactParameterMap
+    type: hidden
+    default: |
+      Artifact,Parameter
+      Windows.Detection.PsexecService,WindowsDetectionPsexecService
+      Windows.Events.DNSQueries,WindowsEventsDNSQueries
+      Windows.Events.ProcessCreation,WindowsEventsProcessCreation
+      Windows.Events.ServiceCreation,WindowsEventsServiceCreation
+
+sources:
+  - queries:
+      - LET artifacts_to_watch = SELECT Artifact FROM parse_csv(
+             filename=artifactParameterMap, accessor='data')
+        WHERE get(item=scope(), member=Parameter) = "Y" AND log(
+          message="Uploading artifact " + Artifact + " to Elastic")
+
+      - LET events = SELECT * FROM foreach(
+          row=artifacts_to_watch,
+          async=TRUE,   // Required for event queries in foreach()
+          query={
+             SELECT *, "Artifact_" + Artifact as _index,
+                    Artifact,
+                    timestamp(epoch=now()) AS timestamp
+             FROM watch_monitoring(artifact=Artifact)
+          })
+
+      - SELECT * FROM elastic_upload(
+          query=events,
+          type="ClientEvents",
+          addresses=split(string=ElasticAddresses, sep=","))

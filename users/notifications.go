@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/jsonpb"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -104,7 +105,7 @@ func (self *UserNotificationManager) HandleNotification(
 		return
 	}
 
-	writer.Write(vfilter.NewDict().
+	writer.Write(ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Message", string(serialized)))
 }

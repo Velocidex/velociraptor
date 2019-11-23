@@ -18,6 +18,9 @@
 package config
 
 import (
+	"bytes"
+	"compress/zlib"
+	"io"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -92,15 +95,17 @@ func GetDefaultConfig() *config_proto.Config {
 			// If set to true this will stop
 			// arbitrary code execution on the
 			// client.
-			PreventExecve: false,
-			MaxUploadSize: constants.MAX_MEMORY,
+			PreventExecve:    false,
+			MaxUploadSize:    constants.MAX_MEMORY,
+			PinnedServerName: "VelociraptorServer",
 		},
 		API: &config_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not
 			// normally be exposed.
-			BindAddress: "127.0.0.1",
-			BindPort:    8001,
-			BindScheme:  "tcp",
+			BindAddress:  "127.0.0.1",
+			BindPort:     8001,
+			BindScheme:   "tcp",
+			PinnedGwName: "GRPC_GW",
 		},
 		GUI: &config_proto.GUIConfig{
 			// Bind port for GUI. If you expose this on a
@@ -154,20 +159,51 @@ func GetDefaultConfig() *config_proto.Config {
 	return result
 }
 
-func maybeReadEmbeddedConfig() *config_proto.Config {
-	result := GetDefaultConfig()
-	err := yaml.Unmarshal(FileConfigDefaultYaml, result)
-	if err != nil {
-		return nil
+func ReadEmbeddedConfig() (*config_proto.Config, error) {
+	idx := bytes.IndexByte(FileConfigDefaultYaml, '\n')
+	if FileConfigDefaultYaml[idx+1] == '#' {
+		return nil, errors.New(
+			"No embedded config - try to pack one with the pack command or " +
+				"provide the --config flag.")
 	}
 
-	return result
+	r, err := zlib.NewReader(bytes.NewReader(FileConfigDefaultYaml[idx+1:]))
+	if err != nil {
+		return nil, err
+	}
+
+	b := &bytes.Buffer{}
+	io.Copy(b, r)
+	r.Close()
+
+	result := GetDefaultConfig()
+	err = yaml.Unmarshal(b.Bytes(), result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // Load the config stored in the YAML file and returns a config object.
 func LoadConfig(filename string) (*config_proto.Config, error) {
 	default_config := GetDefaultConfig()
 	result := GetDefaultConfig()
+
+	verify_config := func(config_obj *config_proto.Config) {
+		// TODO: Check if the config version is compatible with our
+		// version. We always set the result's version to our version.
+		config_obj.Version = default_config.Version
+		config_obj.Client.Version = default_config.Version
+
+		if config_obj.API.PinnedGwName == "" {
+			config_obj.API.PinnedGwName = "GRPC_GW"
+		}
+
+		if config_obj.Client.PinnedServerName == "" {
+			config_obj.Client.PinnedServerName = "VelociraptorServer"
+		}
+	}
 
 	// If filename is specified we try to read from it.
 	if filename != "" {
@@ -178,25 +214,19 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 				return nil, errors.WithStack(err)
 			}
 
-			// TODO: Check if the config version is compatible with our
-			// version. We always set the result's version to our version.
-			result.Version = default_config.Version
-			result.Client.Version = default_config.Version
+			verify_config(result)
 
 			return result, nil
 		}
 	}
+
 	// Otherwise we try to read from the embedded config.
-	embedded_config := maybeReadEmbeddedConfig()
-	if embedded_config == nil {
-		return nil, errors.New(
-			"No embedded config - try to pack one with the pack command or " +
-				"provide the --config flag.")
+	embedded_config, err := ReadEmbeddedConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	// Override version information from the config.
-	embedded_config.Version = default_config.Version
-	embedded_config.Client.Version = default_config.Version
+	verify_config(embedded_config)
 
 	return embedded_config, nil
 }
@@ -220,6 +250,7 @@ func LoadClientConfig(filename string) (*config_proto.Config, error) {
 
 	// Merge the writeback with the config.
 	client_config.Writeback = existing_writeback
+
 	return client_config, nil
 }
 

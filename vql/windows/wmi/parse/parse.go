@@ -15,11 +15,12 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// Parse the event into a vfilter.Dict. This is a rudimentary parser
+// Parse the event into a ordereddict.Dict. This is a rudimentary parser
 // for MOF the is emitted by IWbemClassObject::GetObjectText.
 package wmi
 
 import (
+	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/participle"
 	"github.com/alecthomas/participle/lexer"
 	"www.velocidex.com/golang/vfilter"
@@ -59,7 +60,7 @@ type MOF struct {
 	MOF *Instance ` @@ ";" `
 }
 
-func (self *MOF) ToDict() *vfilter.Dict {
+func (self *MOF) ToDict() *ordereddict.Dict {
 	return self.MOF.ToDict()
 }
 
@@ -68,8 +69,8 @@ type Instance struct {
 	Fields   []*Field ` { @@ } "}" `
 }
 
-func (self *Instance) ToDict() *vfilter.Dict {
-	result := vfilter.NewDict().Set("__Type", self.Instance)
+func (self *Instance) ToDict() *ordereddict.Dict {
+	result := ordereddict.NewDict().Set("__Type", self.Instance)
 	if self.Fields != nil {
 		for _, field := range self.Fields {
 			result.Set(field.Name, field.Value.Interface())

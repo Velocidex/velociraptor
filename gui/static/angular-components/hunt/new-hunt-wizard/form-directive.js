@@ -35,13 +35,8 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
 
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
-            start_request: {
-                "flow_name": "ArtifactCollector",
-                args: {
-                    "@type": "type.googleapis.com/proto.ArtifactCollectorArgs",
-                },
-            },
-            condition: {},
+            start_request: {},
+            condition: {}
         };
     }
 };
@@ -56,10 +51,10 @@ FormController.prototype.onValueChange_ = function(page_index) {
     }
 
     var createHuntArgs = this.scope_['createHuntArgs'];
-    createHuntArgs.start_request.args.artifacts = {names: this.names};
-    createHuntArgs.start_request.args.parameters = {env: env};
-    createHuntArgs.start_request.args.ops_per_second = this.ops_per_second;
-    createHuntArgs.start_request.args.timeout = this.timeout;
+    createHuntArgs.start_request.artifacts = this.names;
+    createHuntArgs.start_request.parameters = {env: env};
+    createHuntArgs.start_request.ops_per_second = this.ops_per_second;
+    createHuntArgs.start_request.timeout = this.timeout;
 };
 
 

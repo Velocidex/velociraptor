@@ -26,8 +26,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -40,10 +40,9 @@ func checkUserCredentialsHandler(
 	parent http.Handler) http.Handler {
 
 	// We are supposed to do the oauth thing.
-	if config_obj.GUI.GoogleOauthClientId != "" &&
-		config_obj.GUI.GoogleOauthClientSecret != "" {
+	if config.GoogleAuthEnabled(config_obj) {
 		return authenticateOAUTHCookie(config_obj, parent)
-	} else if SAMLEnabled(config_obj) {
+	} else if config.SAMLEnabled(config_obj) {
 		return authenticateSAML(config_obj, parent)
 	}
 
@@ -96,7 +95,9 @@ func IsUserApprovedForClient(
 	return true
 }
 
-func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
+func GetGRPCUserInfo(
+	config_obj *config_proto.Config,
+	ctx context.Context) *api_proto.VelociraptorUser {
 	result := &api_proto.VelociraptorUser{}
 
 	peer, ok := peer.FromContext(ctx)
@@ -104,9 +105,15 @@ func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 		tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 		if ok {
 			v := tlsInfo.State.PeerCertificates[0].Subject.CommonName
-			// Calls from the gRPC gateway embed the
-			// authenticated web user in the metadata.
-			if v == constants.GRPC_GW_CLIENT_NAME {
+
+			// Calls from the gRPC gateway are allowed to
+			// embed the authenticated web user in the
+			// metadata. This allows the API gateway to
+			// impersonate anyone - it must be trusted to
+			// convert web side authentication to a valid
+			// user name which it may pass in the call
+			// context.
+			if v == config_obj.API.PinnedGwName {
 				md, ok := metadata.FromIncomingContext(ctx)
 				if ok {
 					userinfo := md.Get("USER")
@@ -115,10 +122,11 @@ func GetGRPCUserInfo(ctx context.Context) *api_proto.VelociraptorUser {
 						json.Unmarshal(data, result)
 					}
 				}
+			}
 
-			} else {
-				// Other callers will return the name
-				// on their certificate.
+			// Other callers will return the name on their
+			// certificate.
+			if result.Name == "" {
 				result.Name = v
 			}
 		}

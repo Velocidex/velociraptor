@@ -28,10 +28,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -39,7 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -48,6 +50,7 @@ func returnError(w http.ResponseWriter, code int, message string) {
 }
 
 func downloadFlowToZip(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string,
 	flow_id string,
@@ -77,7 +80,7 @@ func downloadFlowToZip(
 			return err
 		}
 
-		_, err = io.Copy(f, reader)
+		_, err = utils.Copy(ctx, f, reader)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{
@@ -90,17 +93,16 @@ func downloadFlowToZip(
 	}
 
 	// Copy the flow's logs.
-	copier(path.Join("clients", client_id, "flows", flow_id, "logs"))
+	copier(path.Join(flow_details.Context.Urn, "logs"))
 
-	// This basically copies the CSV files from the
-	// filestore into the zip. We do not need to do any
-	// processing - just give the user the files as they
-	// are. Users can do their own post processing.
-	for _, artifact_source := range flow_details.Context.ArtifactsWithResults {
-		artifact, source := artifacts.SplitFullSourceName(artifact_source)
-		copier(artifacts.GetCSVPath(
-			client_id, "", path.Base(flow_id),
-			artifact, source, artifacts.MODE_CLIENT))
+	// Copy CSV files
+	for _, artifacts_with_results := range flow_details.Context.ArtifactsWithResults {
+		artifact_name, source := artifacts.SplitFullSourceName(artifacts_with_results)
+		csv_path := artifacts.GetCSVPath(
+			flow_details.Context.Request.ClientId, "*",
+			flow_details.Context.SessionId,
+			artifact_name, source, artifacts.MODE_CLIENT)
+		copier(csv_path)
 	}
 
 	// Get all file uploads
@@ -108,8 +110,13 @@ func downloadFlowToZip(
 		return nil
 	}
 
+	// This basically copies the CSV files from the
+	// filestore into the zip. We do not need to do any
+	// processing - just give the user the files as they
+	// are. Users can do their own post processing.
+
 	// File uploads are stored in their own CSV file.
-	file_path := artifacts.GetUploadsFile(client_id, path.Base(flow_id))
+	file_path := artifacts.GetUploadsMetadata(client_id, flow_id)
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -122,11 +129,16 @@ func downloadFlowToZip(
 			err = copier(vfs_path_any.(string))
 		}
 	}
+
 	return err
 }
 
 func createDownloadFile(config_obj *config_proto.Config,
 	flow_id string, client_id string) error {
+	if client_id == "" || flow_id == "" {
+		return errors.New("Client Id and Flow Id should be specified.")
+	}
+
 	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
@@ -182,12 +194,14 @@ func createDownloadFile(config_obj *config_proto.Config,
 		defer fd.Close()
 		defer zip_writer.Close()
 
-		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
+		downloadFlowToZip(context.Background(),
+			config_obj, client_id, flow_id, zip_writer)
 	}()
 
 	return nil
 }
 
+// DEPRECATED:
 // URL format: /api/v1/download/<client_id>/<flow_id>
 func flowResultDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -253,10 +267,12 @@ func flowResultDownloadHandler(
 			return
 		}
 
-		downloadFlowToZip(config_obj, client_id, flow_id, zip_writer)
+		downloadFlowToZip(r.Context(),
+			config_obj, client_id, flow_id, zip_writer)
 	})
 }
 
+// To be deprecated.
 // URL format: /api/v1/DownloadHuntResults
 func huntResultDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -267,7 +283,7 @@ func huntResultDownloadHandler(
 			returnError(w, 404, "Hunt id should be specified.")
 			return
 		}
-		hunt_id := path.Base(hunt_ids[0])
+		hunt_id := hunt_ids[0]
 
 		hunt_details, err := flows.GetHunt(
 			config_obj,
@@ -331,7 +347,7 @@ func huntResultDownloadHandler(
 			query := "SELECT * FROM hunt_results(" +
 				"hunt_id=HuntId, artifact=Artifact, " +
 				"source=Source, brief=true)"
-			env := vfilter.NewDict().
+			env := ordereddict.NewDict().
 				Set("Artifact", artifact).
 				Set("HuntId", hunt_id).
 				Set("Source", source)
@@ -373,6 +389,7 @@ func huntResultDownloadHandler(
 			}
 
 			err := downloadFlowToZip(
+				r.Context(),
 				config_obj,
 				client_id,
 				flow_id,
@@ -407,7 +424,7 @@ func filestorePathForVFSPath(
 	// monitoring and artifacts vfs folders are in the client's
 	// space.
 	if strings.HasPrefix(vfs_path, "/monitoring/") ||
-		strings.HasPrefix(vfs_path, "/flows/") ||
+		strings.HasPrefix(vfs_path, "/collections/") ||
 		strings.HasPrefix(vfs_path, "/artifacts/") {
 		return path.Join(
 			"clients", client_id, vfs_path)
@@ -416,8 +433,9 @@ func filestorePathForVFSPath(
 	// These VFS directories are mapped directly to the root of
 	// the filestore regardless of the client id.
 	if strings.HasPrefix(vfs_path, "/server_artifacts/") ||
-		strings.HasPrefix(vfs_path, "/hunts/") {
-		return vfs_path
+		strings.HasPrefix(vfs_path, "/hunts/") ||
+		strings.HasPrefix(vfs_path, "/clients/") {
+		return utils.Normalize_windows_path(vfs_path)
 	}
 
 	// Other folders live inside the client's vfs_files subdir.
@@ -564,7 +582,7 @@ func vfsFolderDownloadHandler(
 					return nil
 				}
 
-				_, err = io.Copy(zh, fd)
+				_, err = utils.Copy(r.Context(), zh, fd)
 				if err != nil {
 					logger.Warn("Cant copy %s", path_name)
 					return nil

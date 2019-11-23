@@ -25,6 +25,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows/registry"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -39,7 +40,7 @@ type _ExpandPath struct{}
 func (self _ExpandPath) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &_ExpandPathArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

@@ -2,30 +2,23 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
 
 package proto;
-
-message Artifacts {
-    repeated string names = 1 [(sem_type) = {
-            description: "The artifacts to launch.",
-        }];
-}
 
 message ArtifactParameters {
     repeated VQLEnv env = 3 [(sem_type) = {
             description: "Environment variables to be provided for the query.",
             friendly_name: "Params",
         }];
-
-    repeated VQLEnv files = 4 [(sem_type) = {
-            description: "Parameters to be filled in from exported files.",
-            friendly_name: "Exported Files",
-        }];
 }
 
 
 message ArtifactCollectorArgs {
-    Artifacts artifacts = 1 [(sem_type) = {
+    string creator = 1;
+    string client_id = 3;
+
+    repeated string artifacts = 2 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Launch",
         }];
@@ -50,6 +43,68 @@ message ArtifactCollectorArgs {
     bool allow_custom_overrides = 8 [(sem_type) = {
             description: "If true we will use a custom artifact if present instead of the named artifact.",
         }];
+}
+
+message ArtifactCollectorResponse {
+    string flow_id = 1;
+    ArtifactCollectorArgs request =2;
+}
+
+message ArtifactUploadedFileInfo {
+    string name = 1;
+    string vfs_path = 2;
+    uint64 size = 3;
+}
+
+// This context is serialized into the data store.
+message ArtifactCollectorContext {
+    // Where we are stored in the data store.
+    string urn = 5;
+    string session_id = 13;
+    ArtifactCollectorArgs request = 11;
+
+    // If an error occurs this is the backtrace.
+    string backtrace = 1;
+    uint64 create_time = 3;
+    uint64 active_time = 17;
+    uint64 kill_timestamp = 4;
+
+    // Uploads are now permanently stored in a csv file. This field is
+    // never serialized - it is just a place holder during processing.
+    repeated ArtifactUploadedFileInfo uploaded_files = 24;
+
+    // A total count of files uploaded by this query.
+    uint64 total_uploaded_files = 23;
+    uint64 total_expected_uploaded_bytes = 25;
+    uint64 total_uploaded_bytes = 26;
+
+    // Logs are stored in their own CSV file. This is just a
+    // placeholder during processing.
+    repeated LogMessage logs = 20;
+
+    enum State {
+        UNSET = 0;
+        RUNNING = 1;
+        TERMINATED = 2;
+        ERROR = 3;   // Flows which raise are marked as having an error.
+        ARCHIVED = 4;  // Archived flows do not show up in the UI
+    };
+
+    State state = 14;
+
+    string status = 15 [(sem_type) = {
+            description: "Contents of an error status sent by the client."
+        }];
+
+    bool user_notified = 16;
+
+    // Some of the collected artifacts may not have results.
+    repeated string artifacts_with_results = 22 [(sem_type) = {
+            description: "The full path to the artifacts with their results. "
+            "This takes the form artifact name/source name."
+        }];
+
+    bool dirty = 2;
 }
 
 

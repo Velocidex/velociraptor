@@ -1,0 +1,30 @@
+SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns( binaryURL="https://storage.googleapis.com/go.velocidex.com/", AutorunArgs="-nobanner -accepteula -a b -c *") WHERE Company =~ "Microsoft"[
+ {
+  "﻿Time": "2/22/2014 12:17 PM",
+  "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\Session Manager\\BootExecute",
+  "Entry": "autocheck autochk /q /v *",
+  "Enabled": "enabled",
+  "Category": "Boot Execute",
+  "Profile": "System-wide",
+  "Description": "Auto Check Utility",
+  "Company": "Microsoft Corporation",
+  "Image Path": "c:\\windows\\system32\\autochk.exe",
+  "Version": "6.3.9600.17031",
+  "Launch String": "autocheck autochk /q /v *",
+  "_Source": "Windows.Sysinternals.Autoruns"
+ },
+ {
+  "﻿Time": "10/29/2014 1:28 AM",
+  "Entry Location": "HKLM\\System\\CurrentControlSet\\Control\\ServiceControlManagerExtension",
+  "Entry": "%systemroot%\\system32\\scext.dll",
+  "Enabled": "enabled",
+  "Category": "Boot Execute",
+  "Profile": "System-wide",
+  "Description": "Service Control Manager Extension DLL for non-minwin",
+  "Company": "Microsoft Corporation",
+  "Image Path": "c:\\windows\\system32\\scext.dll",
+  "Version": "6.3.9600.17415",
+  "Launch String": "%systemroot%\\system32\\scext.dll",
+  "_Source": "Windows.Sysinternals.Autoruns"
+ }
+]

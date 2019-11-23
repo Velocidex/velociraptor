@@ -10,12 +10,12 @@ import (
 	"sync/atomic"
 
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -36,16 +36,11 @@ type ClientEventTable struct {
 	mu sync.Mutex
 
 	// Not a pointer - getter gets a copy.
-	flow_runner_args *flows_proto.FlowRunnerArgs
+	job *crypto_proto.GrrMessage
 }
 
 func GetClientEventsVersion() uint64 {
 	return atomic.LoadUint64(&gEventTable.version)
-}
-
-// Returns an immutable copy of the flow runner args.
-func GetClientEventsFlowRunnerArgs() *flows_proto.FlowRunnerArgs {
-	return gEventTable.GetClientEventsFlowRunnerArgs()
 }
 
 func UpdateClientEventTable(
@@ -54,11 +49,15 @@ func UpdateClientEventTable(
 	return gEventTable.Update(config_obj, args)
 }
 
-func (self *ClientEventTable) GetClientEventsFlowRunnerArgs() *flows_proto.FlowRunnerArgs {
+func GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
+	return gEventTable.GetClientUpdateEventTableMessage()
+}
+
+func (self *ClientEventTable) GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return proto.Clone(gEventTable.flow_runner_args).(*flows_proto.FlowRunnerArgs)
+	return proto.Clone(gEventTable.job).(*crypto_proto.GrrMessage)
 }
 
 func (self *ClientEventTable) Update(
@@ -94,51 +93,50 @@ func (self *ClientEventTable) Update(
 		rate = 100
 	}
 
-	for _, name := range arg.Artifacts.Names {
-		logger.Info("Collecting Client Monitoring Artifact: %s", name)
+	if arg.Artifacts != nil {
+		for _, name := range arg.Artifacts {
+			logger.Info("Collecting Client Monitoring Artifact: %s", name)
 
-		vql_collector_args := &actions_proto.VQLCollectorArgs{
-			MaxWait:      100,
-			OpsPerSecond: rate,
+			vql_collector_args := &actions_proto.VQLCollectorArgs{
+				MaxWait:      100,
+				OpsPerSecond: rate,
 
-			// Event queries never time out on their own.
-			Timeout: 1000000000,
-		}
+				// Event queries never time out on their own.
+				Timeout: 1000000000,
+			}
 
-		artifact, pres := repository.Get(name)
-		if !pres {
-			return errors.New("Unknown artifact " + name)
-		}
+			artifact, pres := repository.Get(name)
+			if !pres {
+				return errors.New("Unknown artifact " + name)
+			}
 
-		err := repository.Compile(artifact, vql_collector_args)
-		if err != nil {
-			return err
-		}
+			err := repository.Compile(artifact, vql_collector_args)
+			if err != nil {
+				return err
+			}
 
-		// Add any artifact dependencies.
-		err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-		if err != nil {
-			return err
-		}
+			// Add any artifact dependencies.
+			err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+			if err != nil {
+				return err
+			}
 
-		event_table.Event = append(event_table.Event, vql_collector_args)
+			event_table.Event = append(event_table.Event, vql_collector_args)
 
-		// Compress the VQL on the way out.
-		err = artifacts.Obfuscate(config_obj, vql_collector_args)
-		if err != nil {
-			return err
+			// Compress the VQL on the way out.
+			err = artifacts.Obfuscate(config_obj, vql_collector_args)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	self.flow_runner_args = &flows_proto.FlowRunnerArgs{
-		FlowName: "MonitoringFlow",
+	self.job = &crypto_proto.GrrMessage{
+		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
+		UpdateEventTable: event_table,
 	}
-	flow_args, err := ptypes.MarshalAny(event_table)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-	self.flow_runner_args.Args = flow_args
 
+	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -158,7 +156,7 @@ func (self *ClientEventTable) Update(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func startClientMonitoringService(config_obj *config_proto.Config) error {
+func StartClientMonitoringService(config_obj *config_proto.Config) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -166,7 +164,7 @@ func startClientMonitoringService(config_obj *config_proto.Config) error {
 
 	event_table := flows_proto.ClientEventTable{
 		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts:  &flows_proto.Artifacts{},
+			Artifacts:  []string{},
 			Parameters: &flows_proto.ArtifactParameters{},
 		},
 	}
@@ -177,7 +175,7 @@ func startClientMonitoringService(config_obj *config_proto.Config) error {
 	if err != nil {
 		// No client monitoring rules found, install some
 		// defaults.
-		event_table.Artifacts.Artifacts.Names = []string{
+		event_table.Artifacts.Artifacts = []string{
 			// Essential for client resource telemetry.
 			"Generic.Client.Stats",
 

@@ -22,13 +22,13 @@ package server
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
-	"github.com/golang/protobuf/ptypes"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -43,7 +43,7 @@ type ScheduleCollectionFunction struct{}
 
 func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &ScheduleCollectionFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -58,10 +58,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: arg.Artifacts,
-		}}
+	request := api.MakeCollectorRequest(arg.ClientId, "")
+	request.Artifacts = arg.Artifacts
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)
@@ -72,25 +70,20 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 				return vfilter.Null{}
 			}
 
-			request.Parameters.Env = append(request.Parameters.Env,
+			request.Parameters.Env = append(
+				request.Parameters.Env,
 				&actions_proto.VQLEnv{
 					Key: k, Value: value_str,
 				})
 		}
 	}
 
-	flow_args, _ := ptypes.MarshalAny(request)
-	flow_request := &flows_proto.FlowRunnerArgs{
-		ClientId: arg.ClientId,
-		FlowName: "ArtifactCollector",
-		Args:     flow_args,
-	}
-
 	channel := grpc_client.GetChannel(config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.LaunchFlow(context.Background(), flow_request)
+	response, err := client.CollectArtifact(ctx, request)
+
 	if err != nil {
 		scope.Log("collect: %s", err.Error())
 		return vfilter.Null{}

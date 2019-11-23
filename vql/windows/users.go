@@ -25,6 +25,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -100,7 +101,7 @@ func ParseUserRecord(a *USER_INFO_3) *UserRecord {
 }
 
 func getUsers(scope *vfilter.Scope,
-	args *vfilter.Dict) []vfilter.Row {
+	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
 	level := uint32(3)
@@ -147,7 +148,7 @@ type LookupSidFunction struct{}
 
 func (self *LookupSidFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 	arg := &LookupSidFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {

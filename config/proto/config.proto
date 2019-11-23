@@ -3,6 +3,7 @@ syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
 import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
 
 package proto;
 
@@ -152,6 +153,11 @@ message ClientConfig {
             "NOTE: The self signed certificate must be signed by the Velociraptor CA which is embedded above."
         }];
 
+    string pinned_server_name = 28 [(sem_type) = {
+           description: "Name of the frontend's certificate. If we are using self signed "
+           "SSL the client will be pinned to this name (default VelociraptorServer)"
+        }];
+
     uint64 max_upload_size = 25 [(sem_type) = {
              description: "Maximum size in Bytes we will create uploads for (default 5mb)"
         }];
@@ -173,6 +179,12 @@ message APIConfig {
     string bind_scheme = 3 [(sem_type) = {
             description: "A scheme for the listening socket (e.g. tcp, unix).",
             default: "unix",
+        }];
+
+    string pinned_gw_name = 4 [(sem_type) = {
+            description: "Gateway certificate will carry this common name. Note that "
+            "this name is special because it allows auth bypass for internal gateway "
+            "calls. Default (GRPC_GW)"
         }];
 }
 
@@ -271,6 +283,17 @@ message GUIConfig {
     string saml_user_attribute = 16 [(sem_type) = {
             description: "SAML attribute containing value for user identification."
         }];
+
+    // These users are created if they do no already exist in the data
+    // store.
+    repeated GUIUser initial_users = 17;
+}
+
+message GUIUser {
+    string name = 1;
+    string password_hash = 2;
+    string password_salt = 3;
+
 }
 
 message CAConfig {
@@ -418,6 +441,12 @@ message MonitoringConfig {
         }];
 }
 
+message AutoExecConfig {
+    repeated string argv = 1;
+    repeated Artifact artifact_definitions = 2;
+}
+
+
 message Config {
     Version version = 8 [(sem_type) = {
             description: "Version information."
@@ -475,5 +504,10 @@ message Config {
 
     ApiClientConfig api_config = 26 [(sem_type) = {
             description: "If we loaded the api config we load this into the global config.",
+        }];
+
+    AutoExecConfig autoexec = 28 [(sem_type) = {
+           description: "If this is specified we launch the binary with the given command "
+           "line automatically."
         }];
 }

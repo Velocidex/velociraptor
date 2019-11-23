@@ -22,6 +22,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -33,7 +34,7 @@ var (
 	fs_command          = app.Command("fs", "Run filesystem commands.")
 	fs_command_accessor = fs_command.Flag(
 		"accessor", "The FS accessor to use").Default("file").Enum(
-		"file", "ntfs", "reg", "zip", "raw_reg")
+		"file", "ntfs", "reg", "zip", "raw_reg", "lazy_ntfs", "file_links")
 	fs_command_verbose = fs_command.Flag(
 		"details", "Show more verbose info").Short('d').
 		Default("false").Bool()
@@ -75,7 +76,7 @@ func doLS(path string) {
 		path += "*"
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("accessor", *fs_command_accessor).
 		Set("path", path)
 
@@ -104,7 +105,7 @@ func doCp(path string, dump_dir string) {
 		path += "*"
 	}
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("accessor", *fs_command_accessor).
 		Set("path", path).
 		Set("$uploader", &vql_networking.FileBasedUploader{

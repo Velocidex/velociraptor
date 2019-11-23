@@ -18,17 +18,18 @@
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"regexp"
+	"io"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -67,9 +68,16 @@ func doShowConfig() {
 
 	// Dump out the embedded config as is.
 	if *config_path == "" {
-		content := string(config.FileConfigDefaultYaml)
-		content = regexp.MustCompile(`##[^\n]+\n`).ReplaceAllString(content, "")
-		fmt.Printf("%v", content)
+		idx := bytes.IndexByte(config.FileConfigDefaultYaml, '\n')
+		r, err := zlib.NewReader(bytes.NewReader(
+			config.FileConfigDefaultYaml[idx+1:]))
+		kingpin.FatalIfError(err, "Unable to load embedded config.")
+
+		b := &bytes.Buffer{}
+		io.Copy(b, r)
+		r.Close()
+
+		fmt.Printf("%v", b.String())
 		return
 	}
 
@@ -102,7 +110,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 	// have a constant common name - clients will refuse to talk
 	// with another common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, constants.FRONTEND_NAME)
+		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
@@ -112,7 +120,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 
 	// Generate gRPC gateway certificate.
 	gw_certificate, err := crypto.GenerateServerCert(
-		config_obj, constants.GRPC_GW_CLIENT_NAME)
+		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to create Frontend cert")
 	}
@@ -150,7 +158,7 @@ func doRotateKeyConfig() {
 
 	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, constants.FRONTEND_NAME)
+		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
 		logger.Error("Unable to create Frontend cert", err)
 		return
@@ -198,7 +206,7 @@ func doDumpApiClientConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	if *config_api_client_common_name == constants.FRONTEND_NAME {
+	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
 		kingpin.Fatalf("Name reserved! You may not name your " +
 			"api keys with this name.")
 	}

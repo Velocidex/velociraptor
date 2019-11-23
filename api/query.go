@@ -23,6 +23,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -67,7 +68,7 @@ func streamQuery(
 		}
 	}()
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", config_obj).
 		Set("server_config", config_obj).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())

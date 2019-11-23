@@ -22,9 +22,12 @@ import (
 
 var (
 	number_regex = regexp.MustCompile(
-		`^(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)$`)
+		`^(?i)(?P<Number>[-+]?\d*\.?\d+([eE][-+]?\d+)?)$`)
+
+	// Strings that look like this will be escaped because they
+	// might be confused with other things.
 	protected_prefix = regexp.MustCompile(
-		`^( |\{|\[|true|false|base64:)`)
+		`(?i)^( |\{|\[|true|false|[+-]?inf|base64:)`)
 )
 
 // A Writer writes records to a CSV encoded file.

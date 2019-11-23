@@ -3,8 +3,6 @@
 goog.module('grrUi.artifact.artifact');
 goog.module.declareLegacyNamespace();
 
-const {ArtifactDescriptorDirective} = goog.require('grrUi.artifact.artifactDescriptorDirective');
-const {ArtifactDescriptorsService} = goog.require('grrUi.artifact.artifactDescriptorsService');
 const {ArtifactsViewerDirective} = goog.require('grrUi.artifact.artifactViewerDirective');
 const {FormDirective} = goog.require('grrUi.artifact.formDirective');
 
@@ -15,7 +13,6 @@ const {SearchArtifactDirective} = goog.require('grrUi.artifact.searchArtifactDir
 const {ClientEventDirective} = goog.require('grrUi.artifact.clientEventDirective');
 const {ServerArtifactsDirective} = goog.require('grrUi.artifact.serverArtifactsDirective');
 const {ServerEventsDirective} = goog.require('grrUi.artifact.serverEventsDirective');
-const {SyntaxHighlightDirective} = goog.require('grrUi.artifact.syntaxHighlightDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {formsModule} = goog.require('grrUi.forms.forms');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
@@ -27,9 +24,6 @@ exports.artifactModule = angular.module(
     'grrUi.artifact',
     [coreModule.name, formsModule.name, semanticModule.name,
      'ui.bootstrap']);
-
-exports.artifactModule.directive(
-    ArtifactDescriptorDirective.directive_name, ArtifactDescriptorDirective);
 
 exports.artifactModule.directive(
     ArtifactsViewerDirective.directive_name, ArtifactsViewerDirective);
@@ -60,16 +54,6 @@ exports.artifactModule.directive(
     ServerEventsDirective.directive_name,
     ServerEventsDirective);
 
-exports.artifactModule.directive(
-    SyntaxHighlightDirective.directive_name,
-    SyntaxHighlightDirective);
-
-exports.artifactModule.service(
-    ArtifactDescriptorsService.service_name, ArtifactDescriptorsService);
-
 exports.artifactModule.run(function(grrSemanticValueDirectivesRegistryService) {
   var registry = grrSemanticValueDirectivesRegistryService;
-
-  registry.registerDirective(
-      ArtifactDescriptorDirective.semantic_type, ArtifactDescriptorDirective);
 });

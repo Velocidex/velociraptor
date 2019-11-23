@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -48,9 +47,8 @@ var (
 
 func doArtifactsHunt() {
 	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: *artifact_command_hunt_names,
-		}}
+		Artifacts: *artifact_command_hunt_names,
+	}
 	for k, v := range *artifact_command_hunt_parameters {
 		request.Parameters.Env = append(request.Parameters.Env,
 			&actions_proto.VQLEnv{
@@ -58,13 +56,9 @@ func doArtifactsHunt() {
 			})
 	}
 
-	flow_args, _ := ptypes.MarshalAny(request)
 	hunt_request := &api_proto.Hunt{
-		StartRequest: &flows_proto.FlowRunnerArgs{
-			FlowName: "ArtifactCollector",
-			Args:     flow_args,
-		},
-		State: api_proto.Hunt_RUNNING,
+		StartRequest: request,
+		State:        api_proto.Hunt_RUNNING,
 	}
 
 	if artifact_command_hunt_condition != nil {

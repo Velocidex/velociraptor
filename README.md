@@ -21,7 +21,7 @@ To learn more about Velociraptor, read the documentation on:
 3. Start the server:
 
 ```bash
- $ velociraptor --config /etc/velociraptor.config.yaml frontend
+ $ velociraptor --config /etc/velociraptor.config.yaml frontend -v
 ```
 
 4. Point a browser at the GUI port that you set in the config
@@ -30,7 +30,7 @@ To learn more about Velociraptor, read the documentation on:
 5. Launch the client on any system with the generated client config file.
 
 ```bash
- $ velociraptor --config client.conf.yaml client
+ $ velociraptor --config client.conf.yaml client -v
 ```
 
 6. You should be able to search for the client in the GUI, browse VFS,
@@ -40,7 +40,11 @@ To deploy the windows executable:
 
 1. Install the released MSI installer.
 
-2. Drop the client configuration into `C:\Program Files\Velociraptor\Velociraptor.config.yaml` using any system administration method (e.g. group policy, SCCM etc).
+2. Drop the client configuration into `C:\Program Files\Velociraptor\Velociraptor.config.yaml`
+using any system administration method (e.g. group policy, SCCM etc).
+
+See more information for deployment options at
+https://www.velocidex.com/docs/getting-started
 
 ## Running Velociraptor locally.
 
@@ -62,8 +66,8 @@ collect artifacts by using the "artifacts collect" command:
     $ velociraptor artifacts list -v Linux.Debian.AptSources
     .... displays the artifacts
 
-    $ velociraptor artifacts collect Linux.Debian.AptSources
-    ... Collects all the named artifacts
+    $ velociraptor artifacts collect -v Linux.Debian.AptSources --output myfile.zip
+    ... Collects all the named artifacts into myfile.zip
 ```
 
 Explore more of Velociraptor's options using the -h flag.
@@ -71,15 +75,13 @@ Explore more of Velociraptor's options using the -h flag.
 ## Building from source.
 
 To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/:
+from https://golang.org/dl/ (Currently at least Go 11 but Go 13 is
+recommended):
 
 ```bash
-    $ go get -u www.velocidex.com/golang/velociraptor
-    $ go get -u github.com/golang/dep/cmd/dep
-    $ cd $GO_PATH/go/src/www.velocidex.com/golang/velociraptor/
 
-    # This will download go dependencies.
-    $ dep ensure
+    $ git clone https://github.com/Velocidex/velociraptor.git
+    $ cd velociraptor
 
     # This will build the GUI elements. You will need to have node
     # installed first. For example on Windows get it from
@@ -96,8 +98,8 @@ from https://golang.org/dl/:
 
     # This builds a release (i.e. it will embed the GUI files in the
     # binary). If you dont care about the GUI a simple "make" will
-    # build a bare binary.
-    $ go run make.go -v dev
+    # build a bare debug binary.
+    $ go run make.go -v release
     $ go run make.go -v windows
 ```
 
@@ -105,6 +107,7 @@ If you want to rebuild the protobuf you will need to install protobuf
 compiler (This is only necessary when editing any `*.proto` file):
 
 ```bash
+
    $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.8.0/protoc-3.8.0-linux-x86_64.zip
    $ unzip protoc-3.8.0-linux-x86_64.zip
    $ sudo mv include/google/ /usr/local/include/
@@ -114,15 +117,30 @@ compiler (This is only necessary when editing any `*.proto` file):
    $ go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
    $ go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
    $ ./make_proto.sh
+
 ```
+
+## Getting the latest version
+
+We have a pretty frequent release schedule but if you see a new
+feature submitted that you are really interested in, we would love to
+have more testing prior to the official release.
+
+We have a CI pipeline at https://www.velocidex.com/ci managed by
+AppVeyor. The pipeline produces a complete windows and linux binary
+built at each commit poiint - simply click on the `artifacts` tab,
+scroll down and download `velociraptor.exe` or
+`velociraptor_linux.elf`
 
 
 ## Getting help
 
 Questions and feedback are welcome at velociraptor-discuss@googlegroups.com
 
-File issues on https://gitlab.com/velocidex/velociraptor
+You can also chat with us directly on discord https://www.velocidex.com/discord
+
+File issues on https://github.com/Velocidex/velociraptor
 
 Read more about Velociraptor on our blog:
 
-https://www.velocidex.com/docs/
+https://www.velocidex.com/blog/

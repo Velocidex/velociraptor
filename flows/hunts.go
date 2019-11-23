@@ -30,15 +30,14 @@ import (
 	"sort"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/ptypes"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
@@ -57,25 +56,19 @@ func GetNewHuntId() string {
 func FindCollectedArtifacts(
 	config_obj *config_proto.Config,
 	hunt *api_proto.Hunt) {
-	if hunt == nil || hunt.StartRequest == nil {
+	if hunt == nil || hunt.StartRequest == nil ||
+		hunt.StartRequest.Artifacts == nil {
 		return
 	}
 
-	switch hunt.StartRequest.FlowName {
-	case "ArtifactCollector":
-		flow_args := &flows_proto.ArtifactCollectorArgs{}
-		err := ptypes.UnmarshalAny(hunt.StartRequest.Args, flow_args)
-		if err == nil {
-			hunt.Artifacts = flow_args.Artifacts.Names
-			hunt.ArtifactSources = []string{}
-			for _, artifact := range flow_args.Artifacts.Names {
-				for _, source := range artifacts.GetArtifactSources(
-					config_obj, artifact) {
-					hunt.ArtifactSources = append(
-						hunt.ArtifactSources,
-						path.Join(artifact, source))
-				}
-			}
+	hunt.Artifacts = hunt.StartRequest.Artifacts
+	hunt.ArtifactSources = []string{}
+	for _, artifact := range hunt.StartRequest.Artifacts {
+		for _, source := range artifacts.GetArtifactSources(
+			config_obj, artifact) {
+			hunt.ArtifactSources = append(
+				hunt.ArtifactSources,
+				path.Join(artifact, source))
 		}
 	}
 }
@@ -221,7 +214,7 @@ func ModifyHunt(config_obj *config_proto.Config,
 			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
 				hunt.State = api_proto.Hunt_ARCHIVED
 
-				row := vfilter.NewDict().
+				row := ordereddict.NewDict().
 					Set("Timestamp", time.Now().UTC().Unix()).
 					Set("Hunt", hunt).
 					Set("User", user)
@@ -273,10 +266,8 @@ func ModifyHunt(config_obj *config_proto.Config,
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
+	client, cancel := dispatcher.APIClientFactory.GetAPIClient(config_obj)
+	defer cancel()
 	client.NotifyClients(
 		context.Background(), &api_proto.NotificationRequest{
 			NotifyAll: true,

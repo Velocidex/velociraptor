@@ -26,8 +26,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 var (
@@ -67,11 +67,24 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 		creds = credentials.NewTLS(&tls.Config{
 			Certificates: []tls.Certificate{cert},
 			RootCAs:      CA_Pool,
-			ServerName:   constants.FRONTEND_NAME,
+			ServerName:   config_obj.Client.PinnedServerName,
 		})
 	}
 
 	return creds
+}
+
+type APIClientFactory interface {
+	GetAPIClient(config_obj *config_proto.Config) (api_proto.APIClient, func() error)
+}
+
+type GRPCAPIClient struct{}
+
+func (self GRPCAPIClient) GetAPIClient(config_obj *config_proto.Config) (
+	api_proto.APIClient, func() error) {
+	channel := GetChannel(config_obj)
+
+	return api_proto.NewAPIClient(channel), channel.Close
 }
 
 // TODO- Return a cluster dialer.

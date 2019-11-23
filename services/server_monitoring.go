@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -31,9 +32,7 @@ var (
 	}
 
 	DefaultServerMonitoringTable = flows_proto.ArtifactCollectorArgs{
-		Artifacts: &flows_proto.Artifacts{
-			Names: []string{"Server.Monitor.Health"},
-		},
+		Artifacts:  []string{"Server.Monitor.Health"},
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 )
@@ -94,13 +93,13 @@ func (self *EventTable) Update(
 		return err
 	}
 
-	for _, name := range arg.Artifacts.Names {
+	for _, name := range arg.Artifacts {
 		artifact, pres := repository.Get(name)
 		if !pres {
 			return errors.New("Unknown artifact " + name)
 		}
 
-		env := vfilter.NewDict().
+		env := ordereddict.NewDict().
 			Set("server_config", config_obj).
 			Set("config", config_obj.Client).
 			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -203,7 +202,7 @@ func (self *EventTable) GetWriter(
 
 			// First column is a row timestamp. This makes
 			// it easier to do a row scan for time ranges.
-			dict_row := vfilter.NewDict().
+			dict_row := ordereddict.NewDict().
 				Set("_ts", int(time.Now().Unix()))
 			for _, column := range columns {
 				value, pres := scope.Associative(row, column)
@@ -282,7 +281,7 @@ func startServerMonitoringService(config_obj *config_proto.Config) (
 	}
 
 	artifacts := flows_proto.ArtifactCollectorArgs{
-		Artifacts:  &flows_proto.Artifacts{},
+		Artifacts:  []string{},
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 	err = db.GetSubject(

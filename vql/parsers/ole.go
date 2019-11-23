@@ -18,15 +18,17 @@
 package parsers
 
 import (
-	"archive/zip"
 	"context"
 	"errors"
 	"io"
 	"io/ioutil"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/oleparse"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -44,6 +46,8 @@ func _OLEVBAPlugin_ParseFile(
 	filename string,
 	scope *vfilter.Scope,
 	arg *_OLEVBAArgs) ([]*oleparse.VBAModule, error) {
+
+	defer utils.CheckForPanic("Parsing VBA file.")
 
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
@@ -112,7 +116,7 @@ func _OLEVBAPlugin_ParseFile(
 func (self _OLEVBAPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

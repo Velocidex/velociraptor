@@ -1,23 +1,23 @@
-SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/autorunsc64.exe"]) WHERE Complete}, a={SELECT Complete FROM execve(argv=[ "cmd.exe", "/c", "del /Q C:\\tmp\\autorunsc64.exe"]) WHERE Complete})[
+SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/autorunsc64.exe", "/tmp/winpmem_v3.3.rc2.exe"]) WHERE Complete}, a={SELECT Complete FROM execve(argv=[ "cmd.exe", "/c", "del /Q C:\\tmp\\autorunsc64.exe C:\\tmp\\winpmem_v3.3.rc2.exe"]) WHERE Complete})[
  {
   "Complete": true
  }
-]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
+]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
  {
   "DownloadStatus": "Downloaded",
   "Hash": {
-   "MD5": "6002c7bb0516ebbcba2af0259fce2468",
-   "SHA1": "e2bb955324e7848ccc9240e67d54cec18453cc2e",
-   "SHA256": "bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6"
+   "MD5": "be60b58acd9db3f665faef7f38801bae",
+   "SHA1": "34b42846e62ba5302928611fcbc766f2f101a956",
+   "SHA256": "6ca71c13f98eeed8ffc0a9edb8eea787624b90018bd4f64672439af35c3ec820"
   }
  }
-]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
+]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
  {
   "DownloadStatus": "Cached",
   "Hash": {
-   "MD5": "6002c7bb0516ebbcba2af0259fce2468",
-   "SHA1": "e2bb955324e7848ccc9240e67d54cec18453cc2e",
-   "SHA256": "bea5da8b6487dac6e0c7ab5a4c6f0dc0c2b89d6870199dc6f75ae425bde896a6"
+   "MD5": "be60b58acd9db3f665faef7f38801bae",
+   "SHA1": "34b42846e62ba5302928611fcbc766f2f101a956",
+   "SHA256": "6ca71c13f98eeed8ffc0a9edb8eea787624b90018bd4f64672439af35c3ec820"
   }
  }
 ]

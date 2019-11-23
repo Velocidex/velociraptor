@@ -1,0 +1,9 @@
+Queries:
+  - SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
+
+  - SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value = 1102
+
+  - SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value != 1102
+  
+  # Kerbroasting VQL test
+  - SELECT * FROM Artifact.Windows.EventLogs.Kerbroasting(eventLog=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')

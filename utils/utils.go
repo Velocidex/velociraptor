@@ -20,9 +20,11 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"path"
 	"reflect"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -46,7 +48,7 @@ func IsNil(a interface{}) bool {
 // Drive letters are preceeded with /
 // Example: c:\windows ->  /c:/windows
 func Normalize_windows_path(filename string) string {
-	filename = strings.Replace(filename, "\\", "/", -1)
+	filename = path.Clean(strings.Replace(filename, "\\", "/", -1))
 	if !strings.HasPrefix(filename, "/") {
 		filename = "/" + filename
 	}
@@ -100,13 +102,9 @@ func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
 	}
 
 	switch t := value.(type) {
-	case vfilter.Dict:
-		result := []string{}
-		iter := t.IterFunc()
-		for kv, ok := iter(); ok; kv, ok = iter() {
-			result = append(result, fmt.Sprintf("%v: %v", kv.Key, kv.Value))
-		}
-		return strings.Join(result, "\n")
+
+	case ordereddict.Dict:
+		return t.String()
 
 	case map[string]interface{}:
 		result := []string{}

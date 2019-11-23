@@ -1,0 +1,9 @@
+
+Ç
+F.BN2HJCPOF5U7Uò°|
+zLET System_VFS_DownloadFile_0_0=SELECT Path, Accessor, Size, Error, Sha256, Md5 FROM upload(files=Path, accessor=Accessor)n
+)SELECT * FROM System_VFS_DownloadFile_0_0A$ecc982c205f19eb6124ac2304b1a118a129eb214120f79599490a51babd61a97	
+Path/
+Accessorfile
+Path	/C:/1.zip
+Accessorfile

@@ -42,6 +42,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Responsible for maybe enrolling the client. Enrollments should not
@@ -69,30 +70,16 @@ func (self *Enroller) MaybeEnrol() {
 			return
 		}
 
-		csr := &crypto_proto.Certificate{
-			Type: crypto_proto.Certificate_CSR,
-			Pem:  csr_pem,
-		}
-
-		reply := &crypto_proto.GrrMessage{
-			SessionId:   constants.ENROLLMENT_WELL_KNOWN_FLOW,
-			ArgsRdfName: "Certificate",
-			Priority:    crypto_proto.GrrMessage_HIGH_PRIORITY,
-			ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
-		}
-
-		serialized_csr, err := proto.Marshal(csr)
-		if err != nil {
-			return
-		}
-
-		reply.Args = serialized_csr
-
 		self.last_enrollment_time = time.Now()
 		self.logger.Info("Enrolling")
-		go func() {
-			self.executor.SendToServer(reply)
-		}()
+
+		go self.executor.SendToServer(&crypto_proto.GrrMessage{
+			SessionId: constants.ENROLLMENT_WELL_KNOWN_FLOW,
+			CSR: &crypto_proto.Certificate{
+				Type: crypto_proto.Certificate_CSR,
+				Pem:  csr_pem,
+			},
+		})
 	}
 }
 
@@ -100,26 +87,13 @@ func (self *Enroller) MaybeEnrol() {
 // last hunt timestamp the client provides to the server's last hunt
 // timestamp) so it is ok to send a foreman message in every receiver.
 func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
-	result := &crypto_proto.MessageList{}
-
-	reply := &crypto_proto.GrrMessage{
-		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
-		ArgsRdfName: "ForemanCheckin",
-		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+	return &crypto_proto.MessageList{
+		Job: []*crypto_proto.GrrMessage{{
+			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
+			}}},
 	}
-
-	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-		LastHuntTimestamp: self.config_obj.Writeback.HuntLastTimestamp,
-	})
-	if err != nil {
-		return result
-	}
-
-	reply.Args = serialized_arg
-	result.Job = append(result.Job, reply)
-
-	return result
 }
 
 type IConnector interface {
@@ -131,6 +105,8 @@ type IConnector interface {
 
 // Responsible for using HTTP to talk with the end point.
 type HTTPConnector struct {
+	config_obj *config_proto.Config
+
 	// The Crypto Manager for communicating with the current
 	// URL. Note, when the URL is changed, the CryptoManager is
 	// initialized by a successful connection to the URL's
@@ -178,15 +154,16 @@ func NewHTTPConnector(
 		CA_Pool := x509.NewCertPool()
 		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
 
-		tls_config.ServerName = constants.FRONTEND_NAME
+		tls_config.ServerName = config_obj.Client.PinnedServerName
 
 		// We only trust **our** root CA.
 		tls_config.RootCAs = CA_Pool
 	}
 
 	return &HTTPConnector{
-		manager: manager,
-		logger:  logger,
+		config_obj: config_obj,
+		manager:    manager,
+		logger:     logger,
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
@@ -302,12 +279,14 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	resp, err := self.client.Do(req)
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
+		self.server_name = ""
 		return err
 	}
 	defer resp.Body.Close()
 
 	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
+		self.server_name = ""
 		return errors.WithStack(err)
 	}
 
@@ -316,12 +295,14 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	server_name, err := self.manager.AddCertificate(pem)
 	if err != nil {
 		self.logger.Error(err)
+		self.server_name = ""
 		return err
 	}
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
-	if *server_name != constants.FRONTEND_NAME {
+	if *server_name != self.config_obj.Client.PinnedServerName {
+		self.server_name = ""
 		self.logger.Info("Invalid server certificate common name %v!", *server_name)
 		return errors.New("Invalid server certificate common name!")
 	}
@@ -383,7 +364,7 @@ func NewNotificationReader(
 // Block until the messages are sent. Will retry, back off and rekey
 // the server.
 func (self *NotificationReader) sendMessageList(
-	ctx context.Context, message_list []byte) {
+	ctx context.Context, message_list [][]byte) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
@@ -420,7 +401,7 @@ func (self *NotificationReader) sendMessageList(
 }
 
 func (self *NotificationReader) sendToURL(
-	ctx context.Context, message_list []byte) error {
+	ctx context.Context, message_list [][]byte) error {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
@@ -456,45 +437,21 @@ func (self *NotificationReader) sendToURL(
 		return errors.New(resp.Status)
 	}
 
-	encrypted := []byte{}
-	buf := make([]byte, 4096)
+	encrypted := &bytes.Buffer{}
 
 	// We need to be able to cancel the read here so we do not use
 	// ioutil.ReadAll()
-process_response:
-	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("Cancelled")
-
-		default:
-			n, err := resp.Body.Read(buf)
-			if err != nil && err != io.EOF {
-				fmt.Printf("Error: %v\n", err)
-				return errors.WithStack(err)
-			}
-			if n == 0 {
-				break process_response
-			}
-
-			encrypted = append(encrypted, buf[:n]...)
-			if len(encrypted) > int(self.config_obj.Client.MaxUploadSize) {
-				return errors.New("Response too long")
-			}
-		}
+	_, err = utils.Copy(ctx, encrypted, resp.Body)
+	if err != nil {
+		return errors.WithStack(err)
 	}
 
-	response_message_list, err := crypto.DecryptMessageList(
-		self.manager, encrypted)
+	message_info, err := self.manager.Decrypt(encrypted.Bytes())
 	if err != nil {
 		return err
 	}
 
-	for _, msg := range response_message_list.Job {
-		self.executor.ProcessRequest(msg)
-	}
-
-	return nil
+	return message_info.IterateJobs(ctx, self.executor.ProcessRequest)
 }
 
 // The Receiver channel is used to receive commands from the server:
@@ -515,7 +472,9 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			message_list := self.GetMessageList()
 			serialized_message_list, err := proto.Marshal(message_list)
 			if err == nil {
-				self.sendMessageList(ctx, serialized_message_list)
+				self.sendMessageList(
+					ctx, [][]byte{
+						crypto.Compress(serialized_message_list)})
 			}
 
 			select {
@@ -534,26 +493,15 @@ func (self *NotificationReader) Start(ctx context.Context) {
 // server's last hunt timestamp). It is therefore ok to send a foreman
 // message in every reader message to improve hunt latency.
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
-	result := &crypto_proto.MessageList{}
-	reply := &crypto_proto.GrrMessage{
-		SessionId:   constants.FOREMAN_WELL_KNOWN_FLOW,
-		ArgsRdfName: "ForemanCheckin",
-		Priority:    crypto_proto.GrrMessage_LOW_PRIORITY,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+	return &crypto_proto.MessageList{
+		Job: []*crypto_proto.GrrMessage{{
+			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastEventTableVersion: actions.GlobalEventTableVersion(),
+				LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
+			}},
+		},
 	}
-
-	serialized_arg, err := proto.Marshal(&actions_proto.ForemanCheckin{
-		LastHuntTimestamp:     self.config_obj.Writeback.HuntLastTimestamp,
-		LastEventTableVersion: actions.GlobalEventTableVersion(),
-	})
-	if err != nil {
-		return result
-	}
-
-	reply.Args = serialized_arg
-	result.Job = append(result.Job, reply)
-
-	return result
 }
 
 type HTTPCommunicator struct {

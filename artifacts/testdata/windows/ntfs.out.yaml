@@ -13,15 +13,46 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
 ]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs") WHERE Name = "notepad.exe"[
  {
   "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
- },
- {
-  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
  }
 ]SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs") WHERE Name = "notepad.exe"[
  {
   "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\*", accessor="ntfs") WHERE Name =~ "txt"[
+ {
+  "FullPath": "\\\\.\\c:\\HI.TXT"
  },
  {
+  "FullPath": "\\\\.\\c:\\HI.TXT:myads"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt"
+ },
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt:myads"
+ }
+]SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\*", accessor="lazy_ntfs")[
+ {
+  "FullPath": "\\\\.\\C:"
+ }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs") WHERE Name = "pagefile.sys"[
+ {
+  "FullPath": "\\\\.\\c:\\pagefile.sys"
+ }
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs") WHERE Name = "notepad.exe"[
+ {
   "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs") WHERE Name = "notepad.exe"[
+ {
+  "FullPath": "\\\\.\\c:\\Windows\\notepad.exe"
+ }
+]SELECT FullPath FROM glob(globs="c:\\*", accessor="lazy_ntfs") WHERE Name =~ "txt"[
+ {
+  "FullPath": "\\\\.\\c:\\hello.txt"
  }
 ]

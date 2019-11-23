@@ -15,6 +15,9 @@
 // Invoke by:
 // velociraptor --config server.config.yaml debian server
 
+// Additionally the "debian client" command will create a similar deb
+// package with the client configuration.
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -47,6 +50,7 @@ import (
 	"github.com/Velocidex/yaml"
 	"github.com/xor-gate/debpkg"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
@@ -68,7 +72,18 @@ var (
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
 
-	service_definition = `
+	client_debian_command = debian_command.Command(
+		"client", "Create a client package from a client config file.")
+
+	client_debian_command_output = client_debian_command.Flag(
+		"output", "Filename to output").Default(
+		fmt.Sprintf("velociraptor_%s_client.deb", constants.VERSION)).
+		String()
+
+	client_debian_command_binary = client_debian_command.Flag(
+		"binary", "The binary to package").String()
+
+	server_service_definition = `
 [Unit]
 Description=Velociraptor linux amd64
 After=syslog.target network.target
@@ -80,10 +95,29 @@ RestartSec=120
 LimitNOFILE=20000
 Environment=LANG=en_US.UTF-8
 ExecStart=%s --config %s frontend
+User=velociraptor
+Group=velociraptor
 
 [Install]
 WantedBy=multi-user.target
 `
+	client_service_definition = `
+[Unit]
+Description=Velociraptor linux client
+After=syslog.target network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=120
+LimitNOFILE=20000
+Environment=LANG=en_US.UTF-8
+ExecStart=%s --config %s client
+
+[Install]
+WantedBy=multi-user.target
+`
+
 	prometheus_service_definition = `
 [Unit]
 Description=Velociraptor prometheus service
@@ -153,23 +187,42 @@ func doServerDeb() {
 	deb.SetArchitecture("amd64")
 	deb.SetMaintainer("Velocidex Innovations")
 	deb.SetMaintainerEmail("support@velocidex.com")
-	deb.SetHomepage("https://docs.velociraptor.velocidex.com")
+	deb.SetHomepage("https://www.velocidex.com/docs")
 	deb.SetShortDescription("Velociraptor server deployment.")
+	deb.SetDepends("libcap2-bin, systemd")
 
 	config_path := "/etc/velociraptor/server.config.yaml"
 	velociraptor_bin := "/usr/local/bin/velociraptor"
 
 	deb.AddFileString(string(res), config_path)
-	deb.AddFileString(fmt.Sprintf(service_definition, velociraptor_bin, config_path),
+	deb.AddFileString(fmt.Sprintf(
+		server_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_server.service")
 	deb.AddFile(input, velociraptor_bin)
 
 	// Just a simple bare bones deb.
 	if !*server_debian_command_with_monitoring {
-		deb.AddControlExtraString("postinst", `
+		filestore_path := config_obj.Datastore.Location
+		deb.AddControlExtraString("postinst", fmt.Sprintf(`
+if ! getent group velociraptor >/dev/null; then
+   addgroup --system velociraptor
+fi
+
+if ! getent passwd velociraptor >/dev/null; then
+   adduser --system --home /etc/velociraptor/ --no-create-home \
+     --ingroup velociraptor velociraptor --shell /bin/false \
+     --gecos "Velociraptor Server"
+fi
+
+# Make the filestore path accessible to the user.
+mkdir -p '%s'
+chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
+chmod -R go-r /etc/velociraptor/
+
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
-`)
+`, filestore_path, filestore_path))
 
 		deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
@@ -240,6 +293,65 @@ scrape_configs:
 	kingpin.FatalIfError(err, "Deb write")
 }
 
+func doClientDeb() {
+	config_obj, err := config.LoadConfig(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config file")
+
+	res, err := yaml.Marshal(getClientConfig(config_obj))
+	kingpin.FatalIfError(err, "marshal")
+
+	input := *client_debian_command_binary
+
+	if input == "" {
+		input, err = os.Executable()
+		kingpin.FatalIfError(err, "Unable to open executable")
+	}
+
+	fd, err := os.Open(input)
+	kingpin.FatalIfError(err, "Unable to open executable")
+	defer fd.Close()
+
+	header := make([]byte, 4)
+	fd.Read(header)
+	if binary.LittleEndian.Uint32(header) != 0x464c457f {
+		kingpin.Fatalf("Binary does not appear to be an " +
+			"ELF binary. Please specify the linux binary " +
+			"using the --binary flag.")
+	}
+
+	deb := debpkg.New()
+	defer deb.Close()
+
+	deb.SetName("velociraptor-client")
+	deb.SetVersion(constants.VERSION)
+	deb.SetArchitecture("amd64")
+	deb.SetMaintainer("Velocidex Innovations")
+	deb.SetMaintainerEmail("support@velocidex.com")
+	deb.SetHomepage("https://www.velocidex.com")
+	deb.SetShortDescription("Velociraptor client package.")
+
+	config_path := "/etc/velociraptor/client.config.yaml"
+	velociraptor_bin := "/usr/local/bin/velociraptor"
+
+	deb.AddFileString(string(res), config_path)
+	deb.AddFileString(fmt.Sprintf(
+		client_service_definition, velociraptor_bin, config_path),
+		"/etc/systemd/system/velociraptor_client.service")
+	deb.AddFile(input, velociraptor_bin)
+
+	deb.AddControlExtraString("postinst", `
+/bin/systemctl enable velociraptor_client
+/bin/systemctl start velociraptor_client
+`)
+
+	deb.AddControlExtraString("prerm", `
+/bin/systemctl disable velociraptor_client
+/bin/systemctl stop velociraptor_client
+`)
+	err = deb.Write(*client_debian_command_output)
+	kingpin.FatalIfError(err, "Deb write")
+}
+
 // Download a tar/gz and unpack it into the deb package.
 func include_package(url, deb_path string, deb *debpkg.DebPkg) error {
 	filename := path.Base(url)
@@ -301,6 +413,9 @@ func init() {
 		switch command {
 		case server_debian_command.FullCommand():
 			doServerDeb()
+
+		case client_debian_command.FullCommand():
+			doClientDeb()
 
 		default:
 			return false

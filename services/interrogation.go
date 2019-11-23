@@ -4,14 +4,18 @@ import (
 	"context"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/urns"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -19,8 +23,9 @@ import (
 type InterrogationService struct {
 	mu sync.Mutex
 
-	config_obj *config_proto.Config
-	cancel     func()
+	APIClientFactory grpc_client.APIClientFactory
+	config_obj       *config_proto.Config
+	cancel           func()
 }
 
 func (self *InterrogationService) Start() error {
@@ -30,7 +35,7 @@ func (self *InterrogationService) Start() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting interrogation service.")
 
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
 		Set("server_config", self.config_obj)
 
@@ -50,9 +55,9 @@ func (self *InterrogationService) Start() error {
 
 	go func() {
 		for row := range vql.Eval(ctx, scope) {
-			row_dict, ok := row.(*vfilter.Dict)
+			row_dict, ok := row.(*ordereddict.Dict)
 			if ok {
-				err := self.ProcessRow(row_dict)
+				err := self.ProcessRow(scope, row_dict)
 				if err != nil {
 					logger.Error("Interrogation Service: %v", err)
 				}
@@ -63,17 +68,10 @@ func (self *InterrogationService) Start() error {
 	return nil
 }
 
-func (self *InterrogationService) ProcessRow(row *vfilter.Dict) error {
+func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
+	row *ordereddict.Dict) error {
 	getter := func(field string) string {
-		result, pres := row.Get(field)
-		if pres {
-			result_str, ok := result.(string)
-			if ok {
-				return result_str
-			}
-		}
-
-		return ""
+		return vql_subsystem.GetStringFromRow(scope, row, field)
 	}
 
 	client_id := getter("ClientId")
@@ -118,15 +116,30 @@ func (self *InterrogationService) ProcessRow(row *vfilter.Dict) error {
 		return err
 	}
 
+	if len(client_info.Labels) > 0 {
+		client, cancel := self.APIClientFactory.GetAPIClient(self.config_obj)
+		defer cancel()
+
+		_, err := client.LabelClients(context.Background(),
+			&api_proto.LabelClientsRequest{
+				ClientIds: []string{client_id},
+				Labels:    client_info.Labels,
+				Operation: "set",
+			})
+		if err != nil {
+			return err
+		}
+	}
+
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
-	keywords := append(client_info.Labels, []string{
+	keywords := []string{
 		"all", // This is used for "." search
 		client_id,
 		client_info.Hostname,
 		client_info.Fqdn,
 		"host:" + client_info.Hostname,
-	}...)
+	}
 
 	return db.SetIndex(self.config_obj,
 		constants.CLIENT_INDEX_URN,
@@ -145,7 +158,10 @@ func (self *InterrogationService) Close() {
 
 func startInterrogationService(
 	config_obj *config_proto.Config) *InterrogationService {
-	result := &InterrogationService{config_obj: config_obj}
+	result := &InterrogationService{
+		config_obj:       config_obj,
+		APIClientFactory: grpc_client.GRPCAPIClient{},
+	}
 	go result.Start()
 
 	return result

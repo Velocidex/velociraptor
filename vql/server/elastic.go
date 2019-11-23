@@ -1,10 +1,16 @@
-// +build elastic
-
-// This module addes a dependency on elsatic.v5 which turns out to be
-// huge! Disabling for now:
+// This module addes a dependency on go-elasticsearch which turns out to be
+// huge!
 
 // $ goweight ./bin/
-// 7.8 MB www.velocidex.com/golang/velociraptor/vendor/gopkg.in/olivere/elastic.v5
+//    15 MB github.com/elastic/go-elasticsearch/v7/esapi
+
+// We observe a 6mb increase in the binary for this dependency which
+// was deemed unacceptable. Further investigation revealed the size
+// was because the API Surface is huge and the client library supports
+// it all. Since we only actually bulk upload data to elastic we do
+// not need the entire API anyway. We therefore maintain a fork of the
+// client library for now. This allows us to include it in all builds
+// with a very minimal footprint.
 
 /*
    Velociraptor - Hunting Evil
@@ -31,42 +37,63 @@
 package server
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
-	elastic "gopkg.in/olivere/elastic.v5"
+	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 type _ElasticPluginArgs struct {
-	Query   vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	Threads int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	Index   string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
-	Type    string              `vfilter:"required,field=type,doc=The name of the type to use."`
+	Query     vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	Threads   int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
+	Index     string              `vfilter:"optional,field=index,doc=The name of the index to upload to. If not specified ensure a column is named '_index'."`
+	Type      string              `vfilter:"required,field=type,doc=The type of the index to upload to."`
+	ChunkSize int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	Addresses []string            `vfilter:"optional,field=addresses,doc=A list of Elasticsearch nodes to use."`
+	Username  string              `vfilter:"optional,field=username,doc=Username for HTTP Basic Authentication."`
+	Password  string              `vfilter:"optional,field=password,doc=Password for HTTP Basic Authentication."`
+	CloudID   string              `vfilter:"optional,field=cloud_id,doc=Endpoint for the Elastic Service (https://elastic.co/cloud)."`
+	APIKey    string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
+	WaitTime  int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
 }
 
 type _ElasticPlugin struct{}
 
 func (self _ElasticPlugin) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
 		defer close(output_chan)
 
-		arg := &_ElasticPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		arg := _ElasticPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, &arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
 		}
 
 		if arg.Threads == 0 {
-			arg.Threads = 2
+			arg.Threads = 1
+		}
+
+		if arg.ChunkSize == 0 {
+			arg.ChunkSize = 1000
+		}
+
+		if arg.WaitTime == 0 {
+			arg.WaitTime = 2
 		}
 
 		wg := sync.WaitGroup{}
@@ -74,34 +101,148 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 		for i := 0; i < int(arg.Threads); i++ {
 			wg.Add(1)
 
-			go func() {
-				defer wg.Done()
+			// Separate the IDs from each thread.
+			id := time.Now().UnixNano() + int64(i)*100000000
 
-				client, err := elastic.NewClient()
-				if err != nil {
-					scope.Log("elastic: %v", err)
-					return
-				}
-
-				id := time.Now().UnixNano() + int64(i)*10000000
-
-				for row := range row_chan {
-					id = id + 1
-					_, err := client.Index().Index(arg.Index).
-						Type(arg.Type).
-						Id(fmt.Sprintf("%d", id)).
-						BodyJson(vql_subsystem.RowToDict(scope, row)).
-						Do(ctx)
-					if err != nil {
-						scope.Log("elastic: %v", err)
-					}
-				}
-			}()
+			// Start an uploader on a thread.
+			go upload_rows(scope, output_chan, row_chan, id, &wg,
+				&arg)
 		}
 
 		wg.Wait()
 	}()
 	return output_chan
+}
+
+// Copy rows from row_chan to a local buffer and push it up to elastic.
+func upload_rows(scope *vfilter.Scope, output_chan chan vfilter.Row,
+	row_chan <-chan vfilter.Row,
+	id int64,
+	wg *sync.WaitGroup,
+	arg *_ElasticPluginArgs) {
+	defer wg.Done()
+
+	var buf bytes.Buffer
+
+	cfg := elasticsearch.Config{
+		Addresses: arg.Addresses,
+		Username:  arg.Username,
+		Password:  arg.Password,
+		CloudID:   arg.CloudID,
+		APIKey:    arg.APIKey,
+	}
+
+	client, err := elasticsearch.NewClient(cfg)
+	if err != nil {
+		scope.Log("elastic: %v", err)
+		return
+	}
+
+	wait_time := time.Duration(arg.WaitTime) * time.Second
+	next_send_id := id + arg.ChunkSize
+	next_send_time := time.After(wait_time)
+
+	// Flush any remaining rows
+	defer send_to_elastic(scope, output_chan, client, &buf)
+
+	// Batch sending to elastic: Either
+	// when we get to chuncksize or wait
+	// time whichever comes first.
+	for {
+		select {
+		case row, ok := <-row_chan:
+			if !ok {
+				return
+			}
+
+			// FIXME: Find a better way to interleave id's
+			// to avoid collisions.
+			id = id + 3
+			err := append_row_to_buffer(scope, row, id, &buf, arg)
+			if err != nil {
+				scope.Log("elastic: %v", err)
+				continue
+			}
+
+			if id > next_send_id {
+				send_to_elastic(scope, output_chan,
+					client, &buf)
+				next_send_id = id + arg.ChunkSize
+				next_send_time = time.After(wait_time)
+			}
+
+		case <-next_send_time:
+			send_to_elastic(scope, output_chan,
+				client, &buf)
+			next_send_id = id + arg.ChunkSize
+			next_send_time = time.After(wait_time)
+		}
+	}
+}
+
+func append_row_to_buffer(scope *vfilter.Scope,
+	row vfilter.Row, id int64, buf *bytes.Buffer,
+	arg *_ElasticPluginArgs) error {
+
+	row_dict := vfilter.RowToMap(scope, row)
+	index := arg.Index
+	index_any, pres := row_dict["_index"]
+	if pres {
+		index = sanitize_index(
+			fmt.Sprintf("%v", index_any))
+		delete(row_dict, "_index")
+	}
+
+	meta := []byte(fmt.Sprintf(
+		`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s" } }%s`,
+		id, arg.Type, index, "\n"))
+	data, err := json.Marshal(row_dict)
+	if err != nil {
+		return err
+	}
+
+	data = append(data, "\n"...)
+
+	buf.Grow(len(meta) + len(data))
+	buf.Write(meta)
+	buf.Write(data)
+
+	return nil
+}
+
+func send_to_elastic(scope *vfilter.Scope,
+	output_chan chan vfilter.Row,
+	client *elasticsearch.Client, buf *bytes.Buffer) {
+	b := buf.Bytes()
+	if len(b) == 0 {
+		return
+	}
+
+	res, err := client.Bulk(bytes.NewReader(b))
+	if err != nil {
+		scope.Log("elastic: %v", err)
+		return
+	}
+
+	response := make(map[string]interface{})
+	b1, err := ioutil.ReadAll(res.Body)
+	if err == nil {
+		json.Unmarshal(b1, &response)
+	}
+
+	output_chan <- ordereddict.NewDict().
+		Set("StatusCode", res.StatusCode).
+		Set("Response", response)
+
+	buf.Reset()
+
+}
+
+var sanitize_index_re = regexp.MustCompile("[^a-zA-Z0-9]")
+
+func sanitize_index(name string) string {
+	return sanitize_index_re.ReplaceAllLiteralString(
+		strings.ToLower(name), "_")
 }
 
 func (self _ElasticPlugin) Info(

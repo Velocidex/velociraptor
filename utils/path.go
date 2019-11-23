@@ -18,6 +18,7 @@
 package utils
 
 import (
+	"path"
 	"regexp"
 	"strings"
 )
@@ -28,6 +29,7 @@ import (
 // HKEY_USERS\S-1-5-21-546003962-2713609280-610790815-1003\Software\Microsoft\Windows\CurrentVersion\Run\"c:\windows\system32\mshta.exe"
 var component_quoted_regex = regexp.MustCompile(`^"((?:[^"\\]*(?:\\"?)?)+)"`)
 var component_unquoted_regex = regexp.MustCompile(`^[\\/]?([^\\/]*)([\\/]?|$)`)
+var drive_letter_regex = regexp.MustCompile(`^[a-zA-Z]:$`)
 
 func SplitComponents(path string) []string {
 	var components []string
@@ -68,6 +70,11 @@ func JoinComponents(components []string, sep string) string {
 		result = append(result, component)
 	}
 
+	if len(components) > 0 &&
+		drive_letter_regex.FindString(components[0]) == "" {
+		return sep + strings.Join(result, sep)
+	}
+
 	return strings.Join(result, sep)
 }
 
@@ -79,4 +86,21 @@ func PathJoin(root, stem, sep string) string {
 	}
 
 	return root + sep + stem
+}
+
+// Figure out where to store the VFSDownloadInfo file.
+func GetVFSDownloadInfoPath(client_id, accessor, client_path string) string {
+	return path.Join(
+		"clients", client_id,
+		"vfs_files", accessor,
+		Normalize_windows_path(client_path))
+}
+
+// GetVFSDownloadInfoPath returns the data store path to the directory
+// info file.
+func GetVFSDirectoryInfoPath(client_id, accessor, client_path string) string {
+	return path.Join(
+		"clients", client_id,
+		"vfs", accessor,
+		Normalize_windows_path(client_path))
 }

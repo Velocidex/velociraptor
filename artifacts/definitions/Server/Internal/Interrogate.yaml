@@ -7,12 +7,11 @@ type: SERVER_EVENT
 
 sources:
   - queries:
-      - |
-        SELECT * FROM foreach(
+      - SELECT * FROM foreach(
           row={
-             SELECT ClientId, Flow, basename(path=Flow.Urn) AS FlowId
+             SELECT ClientId, Flow, FlowId
              FROM watch_monitoring(artifact='System.Flow.Completion')
-             WHERE Flow.FlowContext.artifacts =~ 'Generic.Client.Info'
+             WHERE Flow.artifacts_with_results =~ 'Generic.Client.Info'
           },
           query={
             SELECT * FROM switch(

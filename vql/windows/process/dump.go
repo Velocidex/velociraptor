@@ -34,6 +34,7 @@ import (
 	"runtime"
 	"unsafe"
 
+	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -47,7 +48,7 @@ type ProcDumpPlugin struct{}
 func (self ProcDumpPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 	arg := &ProcDumpArgs{}
 
@@ -90,7 +91,7 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
-		output_chan <- vfilter.NewDict().
+		output_chan <- ordereddict.NewDict().
 			Set("FullPath", filename).
 			Set("Pid", arg.Pid)
 	}()

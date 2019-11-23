@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	prefetch "www.velocidex.com/golang/go-prefetch"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -38,7 +39,7 @@ type _PrefetchPlugin struct{}
 func (self _PrefetchPlugin) Call(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) <-chan vfilter.Row {
+	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {

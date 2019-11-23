@@ -18,7 +18,7 @@
       </uib-tab>
 
       <uib-tab heading="TextView" index="'textview'"
-               disable="controller.fileIsDirectory">
+               disable="!controller.fileHasContent">
         <div ng-if="controller.currentTab === 'textview'">
           <grr-file-text-view
             ng-if="controller.fileHasContent"
@@ -32,7 +32,7 @@
       </uib-tab>
 
       <uib-tab heading="HexView" index="'hexview'"
-               disable="controller.fileIsDirectory">
+               disable="!controller.fileHasContent">
         <div ng-if="controller.currentTab === 'hexview'">
           <grr-file-hex-view
             ng-if="controller.fileHasContent">

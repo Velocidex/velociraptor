@@ -19,11 +19,12 @@ package common
 
 import (
 	"context"
-	"io"
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -38,7 +39,7 @@ type CopyFunction struct{}
 
 func (self *CopyFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	// Check the config if we are allowed to execve at all.
 	scope_config, pres := scope.Resolve("config")
@@ -84,7 +85,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer to.Close()
 
-	_, err = io.Copy(to, fd)
+	_, err = utils.Copy(ctx, to, fd)
 	if err != nil {
 		scope.Log("copy: Failed to copy: %v", err)
 		return vfilter.Null{}

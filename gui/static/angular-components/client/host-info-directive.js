@@ -121,26 +121,20 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
  * @export
  */
 HostInfoController.prototype.interrogate = function() {
-  var url = '/v1/LaunchFlow';
-  var params ={
-    'client_id': this.clientId,
-    'flow_name': 'ArtifactCollector',
-    'args': {
-      '@type': 'type.googleapis.com/proto.ArtifactCollectorArgs',
-      'artifacts': {
-        names: ['Generic.Client.Info'],
-      },
-      allow_custom_overrides: true,
-    }};
+    var url = '/v1/CollectArtifact';
+    var params ={
+        'client_id': this.clientId,
+        'artifacts': ['Generic.Client.Info'],
+    };
 
-  this.grrApiService_.post(url, params).then(
-      function success(response) {
-        this.interrogateOperationId = response['data']['flow_id'];
-        this.monitorInterrogateOperation_();
-      }.bind(this),
-      function failure(response) {
-        this.stopMonitorInterrogateOperation_();
-      }.bind(this));
+    this.grrApiService_.post(url, params).then(
+        function success(response) {
+            this.interrogateOperationId = response['data']['flow_id'];
+            this.monitorInterrogateOperation_();
+        }.bind(this),
+        function failure(response) {
+            this.stopMonitorInterrogateOperation_();
+        }.bind(this));
 };
 
 /**
@@ -194,7 +188,7 @@ HostInfoController.prototype.stopMonitorInterrogateOperation_ = function() {
 exports.HostInfoDirective = function() {
   return {
     scope: {
-      'clientId': '=',
+      'clientId': '='
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/client/host-info.html',

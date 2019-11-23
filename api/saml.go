@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	_ "fmt"
-	"github.com/crewjam/saml/samlsp"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/url"
+
+	"github.com/crewjam/saml/samlsp"
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -19,7 +20,7 @@ import (
 var samlMiddleware *samlsp.Middleware
 
 func MaybeAddSAMLHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	if SAMLEnabled(config_obj) {
+	if config.SAMLEnabled(config_obj) {
 		key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))
 		if err != nil {
 			return err
@@ -57,11 +58,6 @@ func userAttr(config_obj *config_proto.Config) string {
 		return "name"
 	}
 	return config_obj.GUI.SamlUserAttribute
-}
-
-func SAMLEnabled(config_obj *config_proto.Config) bool {
-	return config_obj.GUI.SamlCertificate != "" && config_obj.GUI.SamlPrivateKey != "" &&
-		   config_obj.GUI.SamlIdpMetadataUrl != "" && config_obj.GUI.SamlRootUrl != ""
 }
 
 func authenticateSAML(config_obj *config_proto.Config, parent http.Handler) http.Handler {

@@ -20,8 +20,7 @@ sources:
 
       # Figure out our binary cache path based on arch. Fallback to
       # the temp directory.
-      - |
-        LET binpath = SELECT dirname(path=expand(path=Path)) AS Path FROM switch(
+      - LET binpath <= SELECT dirname(path=expand(path=Path)) AS Path FROM switch(
           a={SELECT config.WritebackWindows AS Path FROM info_cache
              WHERE OS="windows" AND Path},
           b={SELECT config.WritebacLinux AS Path FROM info_cache
@@ -34,57 +33,51 @@ sources:
 
       # Where should we download binaries from? Allow this to be
       # overriden by the user.
-      - |
-        LET inventory_url = SELECT URL from switch(
-         a={SELECT binaryURL AS URL FROM info_cache WHERE URL},
-         b={SELECT get(item=config.ServerUrls + "public/",
-                       member="0") AS URL FROM scope() WHERE URL},
+      - LET inventory_url <= SELECT URL from switch(
+         a={SELECT binaryURL AS URL FROM scope() WHERE URL},
+         b={SELECT config.ServerUrls[0] + "public/" AS URL FROM scope() WHERE URL},
          c={SELECT log(message="binaryURL not set and no server config."),
             NULL AS URL FROM info_cache})
 
       # Fetch the inventory from the repository.
-      - |
-        LET inventory_data = SELECT * FROM http_client(
-           url=inventory_url.URL + "inventory.csv")
+      - LET inventory_data = SELECT * FROM http_client(
+           chunk_size=1000000,
+           url=(inventory_url[0]).URL + "inventory.csv")
+           WHERE inventory_url
 
-      # Parse the inventory: Tool,Type,URL,ExpectedHash
-      - |
-        LET inventory = SELECT * FROM parse_csv(
+      # Parse the inventory: Tool,Type,Filename,ExpectedHash
+      - LET inventory = SELECT * FROM parse_csv(
            filename=inventory_data.Content, accessor="data")
 
       # Figure out which tool we need based on the Architecture and
       # the required tool.
-      - |
-        LET required_tool = SELECT * FROM foreach(
+      - LET required_tool = SELECT * FROM foreach(
          row=inventory,
          query={
-           SELECT Tool, ExpectedHash, URL FROM info_cache
+           SELECT Tool, ExpectedHash, Filename FROM info_cache
            WHERE Architecture =~ Type AND Tool = ToolName
          }) LIMIT 1
 
       # Download the file from the binary URL and store in the local
       # binary cache.
-      - |
-        LET download = SELECT hash(path=Content) as Hash,
+      - LET download = SELECT hash(path=Content) as Hash,
             "Downloaded" AS DownloadStatus,
             copy(filename=Content,
-                 dest=binpath.Path+"/"+basename(path=URL)) AS FullPath
+                 dest=path_join(components=[(binpath[0]).Path, Filename])) AS FullPath
         FROM http_client(
-            url=inventory_url.URL + URL,
+            url=(inventory_url[0]).URL + Filename,
             tempfile_extension=".exe")
         WHERE Hash.SHA256 = ExpectedHash
 
       # Check if the existing file in the binary file cache matches
       # the hash.
-      - |
-        LET existing = SELECT FullPath, hash(path=FullPath) AS Hash,
+      - LET existing = SELECT FullPath, hash(path=FullPath) AS Hash,
                     "Cached" AS DownloadStatus
-        FROM stat(filename=binpath.Path + "/" + basename(path=URL))
+        FROM stat(filename=path_join(components=[(binpath[0]).Path, Filename]))
         WHERE Hash.SHA256 = ExpectedHash
 
       # Find the required_tool either if in the local cache or
       # download it (and put it in the cache for next time).
-      - |
-        SELECT * from foreach(row=required_tool, query={
+      - SELECT * from foreach(row=required_tool, query={
           SELECT * FROM switch(a=existing, b=download)
         })

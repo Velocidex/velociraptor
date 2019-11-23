@@ -3,6 +3,8 @@ description: |
   Report details about which client ran each hunt, how long it took
   and if it has completed.
 
+type: SERVER
+
 sources:
   - precondition:
       SELECT server_config FROM scope()
@@ -19,10 +21,10 @@ sources:
           Fqdn,
           ClientId,
           { SELECT os_info.system FROM clients(search=ClientId) } as OS,
-          timestamp(epoch=Flow.FlowContext.create_time/1000000) as create_time,
-          basename(path=Flow.Urn) as flow_id,
-          (Flow.FlowContext.active_time - Flow.FlowContext.create_time) / 1000000 as Duration,
-          format(format='%v', args=[Flow.FlowContext.state]) as State
+          timestamp(epoch=Flow.create_time/1000000) as create_time,
+          basename(path=Flow.session_id) as flow_id,
+          (Flow.active_time - Flow.create_time) / 1000000 as Duration,
+          format(format='%v', args=[Flow.state]) as State
         FROM hunt_flows(hunt_id=hunt_id) order by create_time desc
       - |
         SELECT * from foreach(row=hunts, query=flows)

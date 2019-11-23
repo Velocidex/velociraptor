@@ -18,6 +18,7 @@
 package crypto
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -28,7 +29,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -87,21 +87,22 @@ func (self *TestSuite) TestEncDecServerToClient() {
 	assert.NoError(t, err)
 
 	cipher_text, err := self.server_manager.Encrypt(
-		serialized, self.client_id)
+		[][]byte{serialized}, self.client_id)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		result, err := DecryptMessageList(self.client_manager, cipher_text)
+		message_info, err := self.client_manager.Decrypt(cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, item := range result.Job {
-			assert.Equal(t, item.Name, "OMG it's a string")
-			assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
-		}
+		message_info.IterateJobs(context.Background(),
+			func(item *crypto_proto.GrrMessage) {
+				assert.Equal(t, item.Name, "OMG it's a string")
+				assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
+			})
 	}
 
 	// This should only do the RSA operation once since it should
@@ -119,22 +120,26 @@ func (self *TestSuite) TestEncDecClientToServer() {
 				Name: "OMG it's a string"})
 	}
 
+	config_obj := config.GetDefaultConfig()
 	cipher_text, err := self.client_manager.EncryptMessageList(
-		message_list, constants.FRONTEND_NAME)
+		message_list, config_obj.Client.PinnedServerName)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 
 	// Decrypt the same message 100 times.
 	for i := 0; i < 100; i++ {
-		result, err := DecryptMessageList(self.server_manager, cipher_text)
+		message_info, err := self.server_manager.Decrypt(cipher_text)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, item := range result.Job {
-			assert.Equal(t, item.Name, "OMG it's a string")
-			assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
-		}
+
+		message_info.IterateJobs(context.Background(),
+			func(item *crypto_proto.GrrMessage) {
+				assert.Equal(t, item.Name, "OMG it's a string")
+				assert.Equal(
+					t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
+			})
 	}
 
 	// This should only do the RSA operation once since it should
@@ -147,10 +152,12 @@ func (self *TestSuite) TestEncryption() {
 	t := self.T()
 	plain_text := []byte("hello world")
 
+	config_obj := config.GetDefaultConfig()
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		cipher_text, err := self.client_manager.Encrypt(
-			plain_text, constants.FRONTEND_NAME)
+			[][]byte{Compress(plain_text)},
+			config_obj.Client.PinnedServerName)
 		assert.NoError(t, err)
 
 		result, err := self.server_manager.Decrypt(cipher_text)
@@ -158,7 +165,7 @@ func (self *TestSuite) TestEncryption() {
 
 		assert.Equal(t, self.client_id, result.Source)
 		assert.Equal(t, result.Authenticated, true)
-		assert.Equal(t, result.Raw, plain_text)
+		assert.Equal(t, result.RawCompressed[0], Compress(plain_text))
 	}
 
 	// We should encrypt this only once since we cache the cipher in the output LRU.

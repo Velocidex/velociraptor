@@ -73,8 +73,10 @@ func doInstall() error {
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	target_path := os.ExpandEnv(config_obj.Client.DarwinInstaller.InstallPath)
 
+	ctx := context.Background()
+
 	// Try to copy the executable to the target_path.
-	err = utils.CopyFile(executable, target_path, 0755)
+	err = utils.CopyFile(ctx, executable, target_path, 0755)
 	if err != nil && os.IsNotExist(errors.Cause(err)) {
 		dirname := filepath.Dir(target_path)
 		logger.Info("Attempting to create intermediate directory %s.",
@@ -83,7 +85,7 @@ func doInstall() error {
 		if err != nil {
 			return errors.Wrap(err, "Create intermediate directories")
 		}
-		err = utils.CopyFile(executable, target_path, 0755)
+		err = utils.CopyFile(ctx, executable, target_path, 0755)
 	}
 	if err != nil {
 		return errors.Wrap(err, "Cant copy binary into destination dir.")
@@ -100,7 +102,7 @@ func doInstall() error {
 		logger.Info("Copying config to destination %s",
 			config_target_path)
 
-		err = utils.CopyFile(*config_path, config_target_path, 0755)
+		err = utils.CopyFile(ctx, *config_path, config_target_path, 0755)
 		if err != nil {
 			logger.Info("Cant copy config to destination %s: %v",
 				config_target_path, err)

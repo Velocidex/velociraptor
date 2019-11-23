@@ -40,7 +40,6 @@
 package filesystem
 
 import (
-	"archive/zip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -54,8 +53,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
+
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type ZipFileInfo struct {
@@ -77,7 +78,7 @@ func (self *ZipFileInfo) Size() int64 {
 }
 
 func (self *ZipFileInfo) Data() interface{} {
-	result := vfilter.NewDict()
+	result := ordereddict.NewDict()
 	if self.info != nil {
 		result.Set("CompressedSize", self.info.CompressedSize64)
 		switch self.info.Method {

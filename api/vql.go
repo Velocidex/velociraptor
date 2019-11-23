@@ -20,6 +20,7 @@ package api
 import (
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -32,7 +33,7 @@ import (
 func RunVQL(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	env *vfilter.Dict,
+	env *ordereddict.Dict,
 	query string) (*api_proto.GetTableResponse, error) {
 
 	result := &api_proto.GetTableResponse{}
@@ -81,7 +82,7 @@ func RunVQL(
 func StoreVQLAsCSVFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	env *vfilter.Dict,
+	env *ordereddict.Dict,
 	query string,
 	writer io.Writer) error {
 
@@ -103,10 +104,7 @@ func StoreVQLAsCSVFile(
 		return err
 	}
 
-	csv_writer, err := csv.GetCSVAppender(scope, writer, true /* write_headers */)
-	if err != nil {
-		return err
-	}
+	csv_writer := csv.GetCSVAppender(scope, writer, true /* write_headers */)
 	defer csv_writer.Close()
 
 	sub_ctx, cancel := context.WithCancel(ctx)

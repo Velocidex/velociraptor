@@ -1,0 +1,15 @@
+grr-file-table .fa-download {
+  color: var(--color-dim-grey);
+  opacity: .9;
+}
+
+grr-file-table .navbar button.dropdown-toggle {
+  height: 32px;
+}
+
+.no-content {
+  text-align: center;
+  margin-top: 50px;
+  font-size: 2.0em;
+  color: #e0e0e0;
+}

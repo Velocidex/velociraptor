@@ -61,6 +61,8 @@ func PrepareFrontendMux(
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
 
+	// FIXME: Use a handler which works on the file store. This
+	// will stop working when we have a distributed file store.
 	if config_obj.Frontend.PublicPath != "" {
 		router.Handle(
 			"/public/", http.StripPrefix("/public/",

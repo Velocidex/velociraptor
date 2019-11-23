@@ -19,15 +19,16 @@ package responder
 
 import (
 	"fmt"
-	"reflect"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 type Responder struct {
@@ -36,145 +37,116 @@ type Responder struct {
 	sync.Mutex
 	request *crypto_proto.GrrMessage
 	next_id uint64
+	logger  *logging.LogContext
 }
 
 // NewResponder returns a new Responder.
 func NewResponder(
+	config_obj *config_proto.Config,
 	request *crypto_proto.GrrMessage,
 	output chan<- *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
 		request: request,
 		next_id: 0,
 		output:  output,
+		logger:  logging.GetLogger(config_obj, &logging.ClientComponent),
 	}
 	return result
 }
 
-func (self *Responder) AddResponse(message proto.Message) error {
-	return self.AddResponseToRequest(self.request.RequestId, message)
-}
-
-func (self *Responder) AddResponseToRequest(
-	request_id uint64, message proto.Message) error {
-
+func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 	self.Lock()
 	defer self.Unlock()
 
-	components := strings.Split(proto.MessageName(message), ".")
-	rdf_name := components[len(components)-1]
-	self.next_id = self.next_id + 1
-	response := &crypto_proto.GrrMessage{
-		SessionId:   self.request.SessionId,
-		RequestId:   request_id,
-		ResponseId:  self.next_id,
-		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+	message.SessionId = self.request.SessionId
+	message.ResponseId = self.next_id
+	self.next_id++
+	if message.RequestId == 0 {
+		message.RequestId = self.request.RequestId
 	}
-	response.TaskId = self.request.TaskId
+	message.TaskId = self.request.TaskId
 
-	serialized_args, err := proto.Marshal(message)
-	if err != nil {
-		return err
+	if self.output != nil {
+		self.output <- message
 	}
-	response.Args = serialized_args
-
-	if rdf_name == "GrrStatus" {
-		response.Type = crypto_proto.GrrMessage_STATUS
-	}
-
-	self.output <- response
-
-	return nil
 }
 
 func (self *Responder) RaiseError(message string) {
-	backtrace := string(debug.Stack())
-	status := &crypto_proto.GrrStatus{
-		Backtrace:    backtrace,
-		ErrorMessage: message,
-		Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
-	}
-	self.AddResponse(status)
+	self.AddResponse(&crypto_proto.GrrMessage{
+		Status: &crypto_proto.GrrStatus{
+			Backtrace:    string(debug.Stack()),
+			ErrorMessage: message,
+			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+		}})
 }
 
 func (self *Responder) Return() {
-	status := &crypto_proto.GrrStatus{
-		Status: crypto_proto.GrrStatus_OK,
-	}
-	self.AddResponse(status)
+	self.AddResponse(&crypto_proto.GrrMessage{
+		Status: &crypto_proto.GrrStatus{
+			Status: crypto_proto.GrrStatus_OK,
+		}})
 }
 
 // Send a log message to the server.
-func (self *Responder) Log(format string, v ...interface{}) error {
-	msg := &crypto_proto.LogMessage{
-		Message:   fmt.Sprintf(format, v...),
-		Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-	}
-	return self.AddResponseToRequest(constants.LOG_SINK, msg)
-}
-
-func (self *Responder) SendResponseToWellKnownFlow(
-	flow_name string, message proto.Message) error {
-
-	self.Lock()
-	defer self.Unlock()
-
-	components := strings.Split(proto.MessageName(message), ".")
-	rdf_name := components[len(components)-1]
-	response := &crypto_proto.GrrMessage{
-		SessionId:   flow_name,
-		ResponseId:  1,
-		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
-	}
-
-	response.TaskId = self.request.TaskId
-	serialized_args, err := proto.Marshal(message)
-	if err != nil {
-		return err
-	}
-	response.Args = serialized_args
-	self.output <- response
-	return nil
-}
-
-func (self *Responder) GetArgs() proto.Message {
-	return ExtractGrrMessagePayload(self.request)
+func (self *Responder) Log(format string, v ...interface{}) {
+	self.AddResponse(&crypto_proto.GrrMessage{
+		RequestId: constants.LOG_SINK,
+		LogMessage: &crypto_proto.LogMessage{
+			Message:   fmt.Sprintf(format, v...),
+			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+		}})
 }
 
 func (self *Responder) SessionId() string {
 	return self.request.SessionId
 }
 
-// Unpack the GrrMessage payload. The return value should be type asserted.
-func ExtractGrrMessagePayload(message *crypto_proto.GrrMessage) proto.Message {
-	message_type := proto.MessageType("proto." + message.ArgsRdfName)
-	if message_type != nil {
-		new_message := reflect.New(message_type.Elem()).Interface().(proto.Message)
-		err := proto.Unmarshal(message.Args, new_message)
-		if err != nil {
-			return nil
-		}
-		return new_message
-	}
-	return nil
-}
-
-func NewRequest(message proto.Message) (*crypto_proto.GrrMessage, error) {
-	components := strings.Split(proto.MessageName(message), ".")
-	rdf_name := components[len(components)-1]
-	response := &crypto_proto.GrrMessage{
-		SessionId:   "XYZ",
-		RequestId:   1,
-		ArgsRdfName: rdf_name,
-		ClientType:  crypto_proto.GrrMessage_VELOCIRAPTOR,
+// If a message was received from an old client we convert it into the
+// proper form.
+func NormalizeGrrMessageForBackwardCompatibility(msg *crypto_proto.GrrMessage) error {
+	if msg.UpdateEventTable != nil ||
+		msg.VQLClientAction != nil ||
+		msg.Cancel != nil ||
+		msg.UpdateForeman != nil ||
+		msg.Status != nil ||
+		msg.ForemanCheckin != nil ||
+		msg.FileBuffer != nil ||
+		msg.CSR != nil ||
+		msg.VQLResponse != nil ||
+		msg.LogMessage != nil {
+		return nil
 	}
 
-	serialized_args, err := proto.Marshal(message)
-	if err != nil {
-		return nil, err
-	}
-	response.Args = serialized_args
+	switch msg.ArgsRdfName {
+	case "":
+		return nil
 
-	return response, nil
+	// Messages from client to server here.
+	case "GrrStatus":
+		msg.Status = &crypto_proto.GrrStatus{}
+		return proto.Unmarshal(msg.Args, msg.Status)
+
+	case "ForemanCheckin":
+		msg.ForemanCheckin = &actions_proto.ForemanCheckin{}
+		return proto.Unmarshal(msg.Args, msg.ForemanCheckin)
+
+	case "FileBuffer":
+		msg.FileBuffer = &actions_proto.FileBuffer{}
+		return proto.Unmarshal(msg.Args, msg.FileBuffer)
+
+	case "Certificate":
+		msg.CSR = &crypto_proto.Certificate{}
+		return proto.Unmarshal(msg.Args, msg.CSR)
+
+	case "VQLResponse":
+		msg.VQLResponse = &actions_proto.VQLResponse{}
+		return proto.Unmarshal(msg.Args, msg.VQLResponse)
+
+	case "LogMessage":
+		msg.LogMessage = &crypto_proto.LogMessage{}
+		return proto.Unmarshal(msg.Args, msg.LogMessage)
+
+	default:
+		panic("Unable to handle message " + msg.String())
+	}
 }

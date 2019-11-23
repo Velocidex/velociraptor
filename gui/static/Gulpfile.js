@@ -8,9 +8,7 @@ var gulpInsert = require('gulp-insert');
 var gulpLess = require('gulp-less');
 var gulpNewer = require('gulp-newer');
 var gulpPlumber = require('gulp-plumber');
-var gulpSass = require('gulp-sass');
 var sourcemaps = require('gulp-sourcemaps');
-var karma = require('karma');
 var uglify = require('gulp-uglify');
 var del = require('del');
 
@@ -85,7 +83,6 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
-                   config.nodeModulesDir + '/highlightjs/highlight.pack.js',
                    'third-party/jquery.splitter.js',
                    config.nodeModulesDir + '/sprintf/lib/sprintf.js',
                   ])
@@ -148,12 +145,36 @@ gulp.task('compile-third-party-css', function() {
                      config.nodeModulesDir + '/datatables/media/css/jquery.dataTables.css',
                      config.nodeModulesDir + '/vis/dist/vis.min.css',
                      config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.theme.css',
-                     config.nodeModulesDir + '/highlightjs/styles/atom-one-light.css',
                      config.tempDir + '/grr-bootstrap.css',
                      'third-party/splitter.css'])
         .pipe(gulpNewer(config.distDir + '/third-party.bundle.css'))
         .pipe(gulpConcat('third-party.bundle.css'))
         .pipe(gulp.dest(config.distDir));
+});
+
+gulp.task('compile-css', function() {
+  return gulp.src([
+    'css/_variables.css',
+    'angular-components/sidebar/navigator.css',
+    'css/base.css',
+    'angular-components/artifact/reporting.css',
+    'angular-components/client/host-info.css',
+    'angular-components/client/virtual-file-system/breadcrumbs.css',
+    'angular-components/client/virtual-file-system/file-details.css',
+    'angular-components/client/virtual-file-system/file-hex-view.css',
+    'angular-components/client/virtual-file-system/file-text-view.css',
+    'angular-components/client/virtual-file-system/file-table.css',
+    'angular-components/core/global-notifications.css',
+    'angular-components/core/wizard-form.css',
+    'angular-components/forms/semantic-proto-form.css',
+    'angular-components/forms/semantic-proto-union-form.css',
+    'angular-components/sidebar/client-summary.css',
+    'angular-components/sidebar/client-warnings.css',
+    'angular-components/user/user-notification-item.css'
+  ])
+    .pipe(gulpNewer(config.distDir + '/grr-ui.bundle.css'))
+    .pipe(gulpConcat('grr-ui.bundle.css'))
+    .pipe(gulp.dest(config.distDir));
 });
 
 
@@ -197,79 +218,27 @@ gulp.task(
               }
             }
           }))
-            .pipe(sourcemaps.init())
-            .pipe(closureCompiler(
-                Object.assign({}, closureCompilerFlags, {
-                    js_output_file: 'grr-ui.bundle.js',
-                    create_source_map: config.distDir + '/grr-ui.bundle.js.map',
-                    source_map_location_mapping:
-                         '|/static/angular-components/',
-                    angular_pass: true,
-                    entry_point: 'grrUi.appController',
-                    externs: [
-                        'angular-components/externs.js',
-                    ],
-                })))
-            .pipe(sourcemaps.write("."))
-            .pipe(gulp.dest(config.distDir));
-    });
-
-
-gulp.task('compile-grr-ui-tests', function() {
-  return gulp.src(['angular-components/**/*_test.js'])
-      .pipe(gulpNewer(config.distDir + '/grr-ui-test.bundle.js'))
-      .pipe(gulpPlumber({
-        errorHandler: function(err) {
-          console.log(err);
-          this.emit('end');
-          if (!isWatching) {
-            process.exit(1);
-          }
-        }
-      }))
+        .pipe(sourcemaps.init())
         .pipe(closureCompiler(
-            Object.assign({}, closureCompilerFlags, {
-                js_output_file: 'grr-ui.bundle.js',
-                create_source_map: config.distDir + 'grr-ui.bundle.js.map',
-                source_map_location_mapping: 'angular-components/|/static/angular-components/',
-                angular_pass: true,
-                entry_point: 'grrUi.appController',
-                externs: [
-                    'angular-components/externs.js',
-                ],
-            })))
-      .pipe(gulpInsert.append('//# sourceMappingURL=grr-ui-test.bundle.js.map'))
-      .pipe(gulp.dest(config.distDir));
-});
-
+          Object.assign({}, closureCompilerFlags, {
+            js_output_file: 'grr-ui.bundle.js',
+            create_source_map: config.distDir + '/grr-ui.bundle.js.map',
+            source_map_location_mapping:
+            '|/static/angular-components/',
+            angular_pass: true,
+            entry_point: 'grrUi.appController',
+            externs: [
+              'angular-components/externs.js',
+            ],
+          })))
+        .pipe(sourcemaps.write("."))
+        .pipe(gulp.dest(config.distDir));
+    });
 
 gulp.task('compile-grr-ui-js',
           gulp.series(
               'compile-grr-angular-template-cache',
               'compile-grr-closure-ui-js'));
-
-gulp.task('compile-grr-ui-css', function() {
-  return gulp.src(['css/base.scss'])
-      .pipe(gulpNewer(config.distDir + '/grr-ui.bundle.css'))
-      .pipe(gulpPlumber({
-        errorHandler: function(err) {
-          console.log(err);
-          this.emit('end');
-
-          if (!isWatching) {
-            process.exit(1);
-          }
-        }
-      }))
-      .pipe(gulpSass({
-          includePaths: [
-            '../../../../../'
-          ]
-      }).on('error', gulpSass.logError))
-      .pipe(gulpConcat('grr-ui.bundle.css'))
-      .pipe(gulp.dest(config.distDir));
-});
-
 
 /**
  * Combined compile tasks.
@@ -286,7 +255,7 @@ gulp.task('compile-third-party',
                       'compile-third-party-bootstrap-css'));
 
 gulp.task('compile-grr-ui',
-          gulp.series('compile-grr-ui-js', 'compile-grr-ui-css'));
+          gulp.series('compile-grr-ui-js', 'compile-css'));
 
 gulp.task('compile',
           gulp.series('compile-third-party', 'compile-grr-ui'));
@@ -300,30 +269,10 @@ gulp.task('watch', function() {
 
   gulp.watch(['javascript/**/*.js', 'angular-components/**/*.js'],
              gulp.series('compile-grr-ui-js'));
-  gulp.watch(['css/**/*.css', 'css/**/*.scss', 'angular-components/**/*.scss'],
-             gulp.series('compile-grr-ui-css'));
+  gulp.watch(['css/**/*.css', 'angular-components/**/*.css'],
+             gulp.series('compile-css'));
 });
 
-
-gulp.task('test', gulp.series('compile', function(done) {
-  let config = {
-    configFile: __dirname + '/karma.conf.js',
-    browsers: ['ChromeHeadlessNoSandbox'],
-    singleRun: true,
-  };
-
-  new karma.Server(config, done).start();
-}));
-
-
-gulp.task('test-debug', gulp.series('compile', function(done) {
-  let config = {
-    configFile: __dirname + '/karma.conf.js',
-    browsers: ['Chrome'],
-  };
-
-  new karma.Server(config, done).start();
-}));
 
 gulp.task('clean', function() {
     return del([

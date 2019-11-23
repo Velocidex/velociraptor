@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -41,7 +42,7 @@ func (self *CSVWriter) Close() {
 	self.wg.Wait()
 }
 
-type CSVReader chan *vfilter.Dict
+type CSVReader chan *ordereddict.Dict
 
 func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 	output_chan := make(CSVReader)
@@ -57,7 +58,7 @@ func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 
 	process_file:
 		for {
-			row := vfilter.NewDict()
+			row := ordereddict.NewDict()
 			row_data, err := csv_reader.ReadAny()
 			if err != nil {
 				break process_file
@@ -78,7 +79,7 @@ func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
 
 }
 
-func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) (*CSVWriter, error) {
+func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
@@ -136,7 +137,7 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) (*CS
 
 	}()
 
-	return result, nil
+	return result
 }
 
 func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
@@ -145,5 +146,5 @@ func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWrit
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(scope, fd, length == 0)
+	return GetCSVAppender(scope, fd, length == 0), nil
 }

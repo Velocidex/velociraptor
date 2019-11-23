@@ -22,12 +22,14 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
+	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 type Executor interface {
@@ -46,10 +48,82 @@ type Executor interface {
 
 // A concerete implementation of a client executor.
 
+// _FlowContext keeps track of all the queries running as part of a
+// given flow. When the flow is cancelled we cancel all these queries.
+type _FlowContext struct {
+	cancel  func()
+	id      int
+	flow_id string
+}
+
 type ClientExecutor struct {
 	Inbound  chan *crypto_proto.GrrMessage
 	Outbound chan *crypto_proto.GrrMessage
-	plugins  map[string]actions.ClientAction
+
+	// Map all the contexts with the flow id.
+	mu         sync.Mutex
+	config_obj *config_proto.Config
+	in_flight  map[string][]*_FlowContext
+	next_id    int
+}
+
+func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responder) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	contexts, ok := self.in_flight[flow_id]
+	if ok {
+		responder.Log("Cancelling %v in flight queries", len(contexts))
+		for _, flow_ctx := range contexts {
+			flow_ctx.cancel()
+		}
+	}
+}
+
+func (self *ClientExecutor) _FlowContext(flow_id string) (context.Context, *_FlowContext) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	result := &_FlowContext{
+		flow_id: flow_id,
+		cancel:  cancel,
+		id:      self.next_id,
+	}
+	self.next_id++
+
+	contexts, ok := self.in_flight[flow_id]
+	if ok {
+		contexts = append(contexts, result)
+	} else {
+		contexts = []*_FlowContext{result}
+	}
+	self.in_flight[flow_id] = contexts
+
+	return ctx, result
+}
+
+// _CloseContext removes the flow_context from the in_flight map.
+func (self *ClientExecutor) _CloseContext(flow_context *_FlowContext) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	contexts, ok := self.in_flight[flow_context.flow_id]
+	if ok {
+		new_context := make([]*_FlowContext, 0, len(contexts))
+		for i := 0; i < len(contexts); i++ {
+			if contexts[i].id != flow_context.id {
+				new_context = append(new_context, contexts[i])
+			}
+		}
+
+		if len(new_context) == 0 {
+			delete(self.in_flight, flow_context.flow_id)
+		} else {
+			self.in_flight[flow_context.flow_id] = new_context
+		}
+	}
 }
 
 // Blocks until a request is received from the server. Called by the
@@ -71,29 +145,16 @@ func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.GrrMessage {
 	return self.Outbound
 }
 
-func makeUnknownActionResponse(req *crypto_proto.GrrMessage) *crypto_proto.GrrMessage {
-	reply := &crypto_proto.GrrMessage{
+func makeErrorResponse(req *crypto_proto.GrrMessage, message string) *crypto_proto.GrrMessage {
+	return &crypto_proto.GrrMessage{
 		SessionId:  req.SessionId,
 		RequestId:  req.RequestId,
 		ResponseId: 1,
-		Type:       crypto_proto.GrrMessage_STATUS,
-		ClientType: crypto_proto.GrrMessage_VELOCIRAPTOR,
+		Status: &crypto_proto.GrrStatus{
+			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+			ErrorMessage: message,
+		},
 	}
-
-	reply.TaskId = req.TaskId
-	status := &crypto_proto.GrrStatus{
-		Status: crypto_proto.GrrStatus_GENERIC_ERROR,
-		ErrorMessage: fmt.Sprintf(
-			"Client action '%v' not known", req.Name),
-	}
-
-	status_marshalled, err := proto.Marshal(status)
-	if err == nil {
-		reply.Args = status_marshalled
-		reply.ArgsRdfName = "GrrStatus"
-	}
-
-	return reply
 }
 
 func (self *ClientExecutor) processRequestPlugin(
@@ -115,28 +176,52 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Never serve unauthenticated requests.
 	if req.AuthState != crypto_proto.GrrMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
-		self.SendToServer(makeUnknownActionResponse(req))
+		self.Outbound <- makeErrorResponse(
+			req, fmt.Sprintf("Unauthenticated message received: %v.", req))
 		return
 	}
 
-	plugin, pres := self.plugins[req.Name]
-	if !pres {
-		self.SendToServer(makeUnknownActionResponse(req))
+	// Handle the requests. This used to be a plugin registration
+	// process but there are very few plugins any more and so it
+	// is easier to hard code this.
+	responder := responder.NewResponder(config_obj, req, self.Outbound)
+
+	if req.VQLClientAction != nil {
+		actions.VQLClientAction{}.StartQuery(
+			config_obj, ctx, responder, req.VQLClientAction)
 		return
 	}
 
-	// Run the plugin in the other thread and drain its messages
-	// to send to the server.
-	go func() {
-		plugin.Run(config_obj, ctx, req, self.Outbound)
-	}()
+	if req.UpdateEventTable != nil {
+		actions.UpdateEventTable{}.Run(
+			config_obj, ctx, responder, req.UpdateEventTable)
+		return
+	}
+
+	if req.UpdateForeman != nil {
+		actions.UpdateForeman{}.Run(
+			config_obj, ctx, responder, req.UpdateForeman)
+		return
+	}
+
+	if req.Cancel != nil {
+		self.Cancel(req.SessionId, responder)
+		self.Outbound <- makeErrorResponse(
+			req, fmt.Sprintf("Cancelled all inflight queries: %v",
+				req.SessionId))
+		return
+	}
+
+	self.Outbound <- makeErrorResponse(
+		req, fmt.Sprintf("Unsupported payload for message: %v", req))
 }
 
 func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{
-		Inbound:  make(chan *crypto_proto.GrrMessage),
-		Outbound: make(chan *crypto_proto.GrrMessage),
-		plugins:  actions.GetClientActionsMap(),
+		Inbound:    make(chan *crypto_proto.GrrMessage),
+		Outbound:   make(chan *crypto_proto.GrrMessage),
+		in_flight:  make(map[string][]*_FlowContext),
+		config_obj: config_obj,
 	}
 
 	go func() {
@@ -151,11 +236,13 @@ func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error)
 			// server should never send us those.
 			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
 				// Each request has its own context.
-				ctx := context.Background()
+				ctx, flow_context := result._FlowContext(req.SessionId)
 				logger.Info("Received request: %v", req)
 
-				// Process the request asynchronously.
-				go result.processRequestPlugin(config_obj, ctx, req)
+				go func() {
+					result.processRequestPlugin(config_obj, ctx, req)
+					result._CloseContext(flow_context)
+				}()
 			}
 		}
 	}()

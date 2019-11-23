@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
@@ -47,19 +48,20 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	users "www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type ApiServer struct {
 	config     *config_proto.Config
 	server_obj *server.Server
 	ca_pool    *x509.CertPool
+
+	api_client_factory grpc_client.APIClientFactory
 }
 
 func (self *ApiServer) CancelFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(ctx).Name
+	user := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty users are called internally.
 	if user != "" {
@@ -74,7 +76,9 @@ func (self *ApiServer) CancelFlow(
 		}
 	}
 
-	result, err := flows.CancelFlow(self.config, in.ClientId, in.FlowId, user)
+	result, err := flows.CancelFlow(
+		self.config, in.ClientId, in.FlowId, user,
+		self.api_client_factory)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +98,7 @@ func (self *ApiServer) CancelFlow(
 func (self *ApiServer) ArchiveFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(ctx).Name
+	user := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty users are called internally.
 	if user != "" {
@@ -132,14 +136,14 @@ func (self *ApiServer) GetReport(
 	return getReport(ctx, self.config, in)
 }
 
-func (self *ApiServer) LaunchFlow(
+func (self *ApiServer) CollectArtifact(
 	ctx context.Context,
-	in *flows_proto.FlowRunnerArgs) (*api_proto.StartFlowResponse, error) {
-	result := &api_proto.StartFlowResponse{}
-	creator := GetGRPCUserInfo(ctx).Name
+	in *flows_proto.ArtifactCollectorArgs) (*flows_proto.ArtifactCollectorResponse, error) {
+	result := &flows_proto.ArtifactCollectorResponse{Request: in}
+	creator := GetGRPCUserInfo(self.config, ctx).Name
 
 	// Internal calls from the frontend can set the creator.
-	if creator != constants.FRONTEND_NAME {
+	if creator != self.config.Client.PinnedServerName {
 		in.Creator = creator
 
 		// If user is not found then reject it.
@@ -153,34 +157,32 @@ func (self *ApiServer) LaunchFlow(
 		}
 	}
 
-	flow_id, err := flows.StartFlow(self.config, in)
+	flow_id, err := flows.ScheduleArtifactCollection(self.config, in)
 	if err != nil {
 		return nil, err
 	}
-	result.FlowId = *flow_id
-	result.RunnerArgs = in
+
+	result.FlowId = flow_id
 
 	// Notify the client if it is listenning.
-	channel := grpc_client.GetChannel(self.config)
-	defer channel.Close()
+	client, cancel := self.api_client_factory.GetAPIClient(self.config)
+	defer cancel()
 
-	client := api_proto.NewAPIClient(channel)
 	_, err = client.NotifyClients(ctx, &api_proto.NotificationRequest{
 		ClientId: in.ClientId,
 	})
 	if err != nil {
-		fmt.Printf("Cant connect: %v\n", err)
 		return nil, err
 	}
 
-	// Log this event as and Audit event.
+	// Log this event as an Audit event.
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
 			"client":  in.ClientId,
 			"flow_id": flow_id,
 			"details": fmt.Sprintf("%v", in),
-		}).Info("LaunchFlow")
+		}).Info("CollectArtifact")
 
 	return result, nil
 }
@@ -190,7 +192,7 @@ func (self *ApiServer) CreateHunt(
 	in *api_proto.Hunt) (*api_proto.StartFlowResponse, error) {
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 	in.HuntId = flows.GetNewHuntId()
 
 	// Empty creators are called internally.
@@ -229,7 +231,7 @@ func (self *ApiServer) ModifyHunt(
 	in *api_proto.Hunt) (*empty.Empty, error) {
 
 	// Log this event as an Audit event.
-	in.Creator = GetGRPCUserInfo(ctx).Name
+	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 
 	// Empty creators are called internally.
 	if in.Creator != "" {
@@ -290,7 +292,7 @@ func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
 	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
-	env := vfilter.NewDict().
+	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
 		Set("Artifact", artifact).
 		Set("Source", source)
@@ -364,7 +366,7 @@ func (self *ApiServer) LabelClients(
 	ctx context.Context,
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
 
-	user_name := GetGRPCUserInfo(ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	if user_name != "" {
 		// If user is not found then reject it.
 		user_record, err := users.GetUser(self.config, user_name)
@@ -416,7 +418,7 @@ func (self *ApiServer) GetClientFlows(
 
 func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlow, error) {
+	in *api_proto.ApiFlowRequest) (*api_proto.FlowDetails, error) {
 
 	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
@@ -434,7 +436,7 @@ func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.ApiGrrUser, error) {
 	result := NewDefaultUserObject(self.config)
-	user_info := GetGRPCUserInfo(ctx)
+	user_info := GetGRPCUserInfo(self.config, ctx)
 
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
@@ -447,28 +449,38 @@ func (self *ApiServer) GetUserNotifications(
 	in *api_proto.GetUserNotificationsRequest) (
 	*api_proto.GetUserNotificationsResponse, error) {
 	result, err := users.GetUserNotifications(
-		self.config, GetGRPCUserInfo(ctx).Name, in.ClearPending)
+		self.config, GetGRPCUserInfo(self.config, ctx).Name, in.ClearPending)
 	return result, err
 }
 
 func (self *ApiServer) GetUserNotificationCount(
 	ctx context.Context,
 	in *empty.Empty) (*api_proto.UserNotificationCount, error) {
-	n, err := users.GetUserNotificationCount(self.config, GetGRPCUserInfo(ctx).Name)
+	n, err := users.GetUserNotificationCount(
+		self.config, GetGRPCUserInfo(self.config, ctx).Name)
 	return &api_proto.UserNotificationCount{Count: n}, err
-}
-
-func (self *ApiServer) GetFlowDescriptors(
-	ctx context.Context,
-	in *empty.Empty) (*api_proto.FlowDescriptors, error) {
-	result, err := flows.GetFlowDescriptors()
-	return result, err
 }
 
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
-	in *flows_proto.VFSListRequest) (*actions_proto.VQLResponse, error) {
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
 	result, err := vfsListDirectory(
+		self.config, in.ClientId, in.VfsPath)
+	return result, err
+}
+
+func (self *ApiServer) VFSStatDirectory(
+	ctx context.Context,
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+	result, err := vfsStatDirectory(
+		self.config, in.ClientId, in.VfsPath)
+	return result, err
+}
+
+func (self *ApiServer) VFSStatDownload(
+	ctx context.Context,
+	in *flows_proto.VFSListRequest) (*flows_proto.VFSDownloadInfo, error) {
+	result, err := vfsStatDownload(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err
 }
@@ -476,7 +488,7 @@ func (self *ApiServer) VFSListDirectory(
 func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
-	*api_proto.StartFlowResponse, error) {
+	*flows_proto.ArtifactCollectorResponse, error) {
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)
@@ -552,7 +564,7 @@ func (self *ApiServer) SetArtifactFile(
 	in *api_proto.SetArtifactRequest) (
 	*api_proto.APIResponse, error) {
 
-	user_name := GetGRPCUserInfo(ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	if user_name != "" {
 		// If user is not found then reject it.
 		user_record, err := users.GetUser(self.config, user_name)
@@ -708,9 +720,10 @@ func StartServer(config_obj *config_proto.Config, server_obj *server.Server) err
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
-			config:     config_obj,
-			server_obj: server_obj,
-			ca_pool:    CA_Pool,
+			config:             config_obj,
+			server_obj:         server_obj,
+			ca_pool:            CA_Pool,
+			api_client_factory: grpc_client.GRPCAPIClient{},
 		},
 	)
 	// Register reflection service.
