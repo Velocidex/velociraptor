@@ -21,6 +21,7 @@ var samlMiddleware *samlsp.Middleware
 
 func MaybeAddSAMLHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	if config.SAMLEnabled(config_obj) {
+		logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 		key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))
 		if err != nil {
 			return err
@@ -40,14 +41,17 @@ func MaybeAddSAMLHandlers(config_obj *config_proto.Config, mux *http.ServeMux) e
 		if err != nil {
 			return err
 		}
-
-		samlMiddleware, _ = samlsp.New(samlsp.Options{
+		samlMiddleware, err = samlsp.New(samlsp.Options{
 			IDPMetadataURL: idpMetadataURL,
 			URL:            *rootURL,
 			Key:            key,
 			Certificate:    cert,
 		})
+		if err != nil {
+			return err
+		}
 		mux.Handle("/saml/", samlMiddleware)
+		logger.Info("Authentication via SAML enabled")
 	}
 
 	return nil
