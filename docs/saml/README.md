@@ -14,6 +14,8 @@ There are four configuration values that need to be set in order to activate the
 - `saml_root_url`
   - Velociraptor URL
 
+These are expected to be set inside `server.config.yaml` under `GUI` key.
+
 There is also an optional parameter `saml_user_attribute` to set which will be used as a user identificator. If it is not set, it will search for
 the `name` attribute in the SAML response from the identity provider.
 
@@ -33,10 +35,17 @@ The docker image provides with two users which you can use to test the feature o
 - user1:user1pass
 - user2:user2pass
 
+Therefore, you need to have these users present in the Velociraptor users database.
+
 ### Configuring Velociraptor
 
-To configure velociraptor for SAML logins you would need to generate your own SAML certificate and private key. 
-This should be put into the Velociraptor server configuration in PEM format.
+To configure velociraptor for SAML logins you would need to generate your own SAML certificate and private key.
+You can generate it with (courtesy of crewjam's SAML Go guide \[1\]):
+```
+openssl req -x509 -newkey rsa:2048 -keyout myservice.key -out myservice.cert -days 365 -nodes -subj "/CN=myservice.example.com"
+```
+This should be put into the Velociraptor server configuration in PEM format. The `myservice.cert` content is set as `saml_certificate` and `myservice.key` is set as `saml_private_key`.
+
 If we assume that you've set up the Simple SAML on `localhost:8080`, you should be able to get the IDP metadata URL at `http://localhost:8080/simplesaml/saml2/idp/metadata.php?output=xhtml`. This URL should be specified as the `saml_idp_metadata_url` value. The `saml_root_url` is specified as the Velociraptor root URL which should be `https://localhost:8889` when testing locally.
 
 At this point, you should be presented with Simple SAML login page when trying to visit the Velociraptor home page.
@@ -77,3 +86,6 @@ This worked for me, but of course I don't know what exactly you're doing so mile
 The notes were copied from the following [link](https://github.com/crewjam/saml/issues/5#issuecomment-501328253). 
 With this setup we've observed that the `saml_user_attribute` should be set to ` http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn`.
 
+## Useful resources
+
+1. SAML Go Library: https://github.com/crewjam/saml
