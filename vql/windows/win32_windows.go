@@ -184,7 +184,8 @@ const (
 	ProcessCommandLineInformation = 60
 
 	// NtQueryInformationThread
-	ThreadBasicInformation = 0
+	ThreadBasicInformation   = 0
+	ThreadImpersonationToken = 5
 
 	PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
 	THREAD_QUERY_LIMITED_INFORMATION  = 0x0800
@@ -358,7 +359,8 @@ type PROCESS_MEMORY_COUNTERS struct {
 	PeakPagefileUsage          uintptr
 }
 
-//sys	GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) = psapi.GetProcessMemoryInfo
+//sys NtOpenThreadToken(thread_handle syscall.Handle, DesiredAccess uint32, open_as_self bool, token_handle *syscall.Handle) (status uint32) = ntdll.NtOpenThreadToken
+//sys GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) = psapi.GetProcessMemoryInfo
 //sys GetProcessIoCounters(hProcess syscall.Handle, lpIoCounters *IO_COUNTERS) (ok bool) = kernel32.GetProcessIoCounters
 //sys QueryFullProcessImageName(handle syscall.Handle, dwFlags uint32, buffer *byte, length *uint32) (ok bool) = kernel32.QueryFullProcessImageNameW
 //sys NtOpenDirectoryObject(DirectoryHandle *uint32,DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) = ntdll.NtOpenDirectoryObject

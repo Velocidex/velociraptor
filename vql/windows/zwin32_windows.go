@@ -35,12 +35,13 @@ func errnoErr(e syscall.Errno) error {
 }
 
 var (
+	modntdll    = NewLazySystemDLL("ntdll.dll")
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modkernel32 = NewLazySystemDLL("kernel32.dll")
-	modntdll    = NewLazySystemDLL("ntdll.dll")
 	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 
+	procNtOpenThreadToken          = modntdll.NewProc("NtOpenThreadToken")
 	procGetProcessMemoryInfo       = modpsapi.NewProc("GetProcessMemoryInfo")
 	procGetProcessIoCounters       = modkernel32.NewProc("GetProcessIoCounters")
 	procQueryFullProcessImageNameW = modkernel32.NewProc("QueryFullProcessImageNameW")
@@ -64,6 +65,18 @@ var (
 	procNetUserEnum                = modnetapi32.NewProc("NetUserEnum")
 	procNetUserGetGroups           = modnetapi32.NewProc("NetUserGetGroups")
 )
+
+func NtOpenThreadToken(thread_handle syscall.Handle, DesiredAccess uint32, open_as_self bool, token_handle *syscall.Handle) (status uint32) {
+	var _p0 uint32
+	if open_as_self {
+		_p0 = 1
+	} else {
+		_p0 = 0
+	}
+	r0, _, _ := syscall.Syscall6(procNtOpenThreadToken.Addr(), 4, uintptr(thread_handle), uintptr(DesiredAccess), uintptr(_p0), uintptr(unsafe.Pointer(token_handle)), 0, 0)
+	status = uint32(r0)
+	return
+}
 
 func GetProcessMemoryInfo(handle syscall.Handle, memCounters *PROCESS_MEMORY_COUNTERS, cb uint32) (err error) {
 	r1, _, e1 := syscall.Syscall(procGetProcessMemoryInfo.Addr(), 3, uintptr(handle), uintptr(unsafe.Pointer(memCounters)), uintptr(cb))

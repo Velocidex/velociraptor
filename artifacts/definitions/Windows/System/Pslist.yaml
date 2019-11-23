@@ -9,7 +9,7 @@ parameters:
 sources:
   - queries:
       - |
-        SELECT Pid, Ppid, Name, CommandLine, Exe,
+        SELECT Pid, Ppid, TokenIsElevated, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
                authenticode(filename=Exe) AS Authenticode,
                Username, Memory.WorkingSetSize AS WorkingSetSize
