@@ -1,16 +1,16 @@
 Select Name, Uid, Gid, Directory, Type  from Artifact.Windows.Sys.Users() WHERE Name in ("appveyor", "Administrator") ORDER BY Name[
  {
   "Name": "Administrator",
-  "Uid": "",
-  "Gid": "",
+  "Uid": 500,
+  "Gid": 513,
   "Directory": "C:\\Users\\Administrator",
-  "Type": "roaming"
+  "Type": "local"
  },
  {
   "Name": "appveyor",
-  "Uid": "",
-  "Gid": "",
+  "Uid": 1001,
+  "Gid": 513,
   "Directory": "C:\\Users\\appveyor",
-  "Type": "roaming"
+  "Type": "local"
  }
 ]

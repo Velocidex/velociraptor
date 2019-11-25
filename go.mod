@@ -10,7 +10,6 @@ require (
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
-	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
@@ -106,7 +105,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20191116223914-f3a02f5f06db
+	www.velocidex.com/golang/vfilter v0.0.0-20191125055649-382b059e63b7
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

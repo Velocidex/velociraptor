@@ -50,7 +50,7 @@ func getInfo(host *host.InfoStat) *ordereddict.Dict {
 }
 
 func init() {
-	exportedPlugins = append(exportedPlugins,
+	RegisterPlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "info",
 			Function: func(

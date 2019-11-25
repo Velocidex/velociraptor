@@ -61,8 +61,8 @@
     </uib-tab>
 
     <uib-tab heading="Reports" index="'reports'"
-             disable="!controller.flow.context.artifacts">
-      <grr-flow-report artifact-names="controller.flow.context.artifacts"
+             disable="!controller.flow.context.request.artifacts">
+      <grr-flow-report artifact-names="controller.flow.context.request.artifacts"
                        flow-id="flowId"
                        ng-if="controller.tabsShown['reports']"
                        client-id="clientId"

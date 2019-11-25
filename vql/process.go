@@ -71,41 +71,40 @@ type PslistArgs struct {
 }
 
 func init() {
-	exportedProtocolImpl = append(exportedProtocolImpl, &_ProcessFieldImpl{})
-	exportedPlugins = append(exportedPlugins,
-		vfilter.GenericListPlugin{
-			PluginName: "pslist",
-			Function: func(
-				scope *vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
+	RegisterProtocol(&_ProcessFieldImpl{})
+	RegisterPlugin(vfilter.GenericListPlugin{
+		PluginName: "pslist",
+		Function: func(
+			scope *vfilter.Scope,
+			args *ordereddict.Dict) []vfilter.Row {
+			var result []vfilter.Row
 
-				arg := &PslistArgs{}
-				err := vfilter.ExtractArgs(scope, args, arg)
-				if err != nil {
-					scope.Log("pslist: %s", err.Error())
-					return result
-				}
+			arg := &PslistArgs{}
+			err := vfilter.ExtractArgs(scope, args, arg)
+			if err != nil {
+				scope.Log("pslist: %s", err.Error())
+				return result
+			}
 
-				// If the user asked for one process
-				// just return that one.
-				if arg.Pid != 0 {
-					process_obj, err := process.NewProcess(int32(arg.Pid))
-					if err == nil {
-						result = append(result, process_obj)
-					}
-					return result
-				}
-
-				processes, err := process.Processes()
+			// If the user asked for one process
+			// just return that one.
+			if arg.Pid != 0 {
+				process_obj, err := process.NewProcess(int32(arg.Pid))
 				if err == nil {
-					for _, item := range processes {
-						result = append(result, item)
-					}
+					result = append(result, process_obj)
 				}
 				return result
-			},
-			RowType: &process.Process{},
-			Doc:     "List processes",
-		})
+			}
+
+			processes, err := process.Processes()
+			if err == nil {
+				for _, item := range processes {
+					result = append(result, item)
+				}
+			}
+			return result
+		},
+		RowType: &process.Process{},
+		Doc:     "List processes",
+	})
 }

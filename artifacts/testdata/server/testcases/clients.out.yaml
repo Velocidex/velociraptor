@@ -17,7 +17,11 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
    "machine": "amd64",
    "fqdn": "DESKTOP-BP4S7TF"
   },
+  "first_seen_at": 0,
   "last_seen_at": 1573215522537748,
+  "last_booted_at": 0,
+  "last_clock": 0,
+  "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": 1

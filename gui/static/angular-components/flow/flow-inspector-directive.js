@@ -119,6 +119,9 @@ FlowInspectorController.prototype.onTabChange_ = function(newValue, oldValue) {
     if (newValue !== oldValue) {
         this.scope_['activeTab'] = newValue;
     }
+
+    // Clear the tabsShown object.
+    this.tabsShown = {};
     this.tabsShown[newValue] = true;
 };
 

@@ -436,8 +436,6 @@ golang.org/x/sys v0.0.0-20191008105621-543471e840be/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191010194322-b09406accb47/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c h1:S/FtSvpNLtFBgjTqcKsRpsa6aVsI6iztaz1bQd9BJwE=
 golang.org/x/sys v0.0.0-20191029155521-f43be2a4598c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20191110163157-d32e6e3b99c4 h1:Hynbrlo6LbYI3H1IqXpkVDOcX/3HiPdhVEuyj5a59RM=
-golang.org/x/sys v0.0.0-20191110163157-d32e6e3b99c4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191118090420-b5d5184f72d2 h1:LEXoa2mfx+ZHKVuyzu3/fnknuCCoTfywJVHMkWECH3Y=
 golang.org/x/sys v0.0.0-20191118090420-b5d5184f72d2/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
@@ -464,8 +462,6 @@ golang.org/x/tools v0.0.0-20190917162342-3b4f30a44f3b/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20190927191325-030b2cf1153e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191010171213-8abd42400456/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191012152004-8de300cfc20a/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
-golang.org/x/tools v0.0.0-20191022074931-774d2ec196ee h1:ZLYwrbapYXNQ3n6e8thW6VN7mHoao8ig10ydUi8VO4Q=
-golang.org/x/tools v0.0.0-20191022074931-774d2ec196ee/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20191121040551-947d4aa89328 h1:t3X42h9e6xdbrCD/gPyWqAXr2BEpdJqRd1brThaaxII=
 golang.org/x/tools v0.0.0-20191121040551-947d4aa89328/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
@@ -530,8 +526,6 @@ rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
 www.velocidex.com/golang/binparsergen v0.1.0 h1:oNsMHGnlb4jrGwxKxqqmsics6FgYin3HR5UNtLXc8S0=
 www.velocidex.com/golang/binparsergen v0.1.0/go.mod h1:UC43Ecj0mjsidlClTYZ3H4dXdyv7CVI0HsYi4yY3qtc=
-www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780 h1:3lxyxSiGhnkUMIuA//QB5iawf8V43LonxxFfW25p9ow=
-www.velocidex.com/golang/evtx v0.0.0-20191106094253-bdccd0816780/go.mod h1:+u26IeGeVIwL9j5V0I/UafWFaMV61pQNwXZK/VQksLQ=
 www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf h1:bZjQMbFTUf5ZA+no3sxvxeNCwOmHKZFBDgLdlkWdVQU=
 www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf/go.mod h1:+u26IeGeVIwL9j5V0I/UafWFaMV61pQNwXZK/VQksLQ=
 www.velocidex.com/golang/go-ntfs v0.0.0-20191114150551-9268b64dc996 h1:LJdm/ZAoxATIXI4NSIlkosvPMGtTWrmdYR29FBWdft4=
@@ -544,7 +538,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20191116223914-f3a02f5f06db h1:F6ZrG0yXhYP1RuaEub3Mqa5rEKHmxIYJ67KQ+420/7s=
-www.velocidex.com/golang/vfilter v0.0.0-20191116223914-f3a02f5f06db/go.mod h1:8G8/0EbJ/fzUKBC+mMe7UE61aC1VX8gLRCNmRxZ3p0A=
+www.velocidex.com/golang/vfilter v0.0.0-20191125055649-382b059e63b7 h1:cXqUfzYYw+YM5a6yJoJDf0olN68Gu5oGFllj6DI3qsc=
+www.velocidex.com/golang/vfilter v0.0.0-20191125055649-382b059e63b7/go.mod h1:8G8/0EbJ/fzUKBC+mMe7UE61aC1VX8gLRCNmRxZ3p0A=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=
