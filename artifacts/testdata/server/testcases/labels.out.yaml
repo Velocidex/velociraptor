@@ -34,13 +34,14 @@ FROM clients(search='label:*') ORDER BY client_id
    "machine": "amd64",
    "fqdn": "DESKTOP-BP4S7TF"
   },
+  "first_seen_at": 0,
   "last_seen_at": 1573215522537748,
+  "last_booted_at": 0,
+  "last_clock": 0,
+  "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_ip_class": 1,
-  "labels": [
-   "WinBoxes"
-  ]
+  "last_ip_class": 1
  }
 ]SELECT label(client_id='C.11a3013cca8f826e', op='set', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
  {

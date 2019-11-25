@@ -11,4 +11,4 @@ Queries:
   - SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits
 
   # Make sure we can read the contents of zip members.
-  - SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT * from read_file(filenames=FullPath, accessor='zip')})
+  - SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')})
