@@ -1,4 +1,4 @@
-name: Windows.System.Mutants
+name: Windows.Detection.Mutants
 description: |
   Enumerate the mutants from selected processes.
 
@@ -8,9 +8,13 @@ parameters:
   - name: processRegex
     description: A regex applied to process names.
     default: .
+  - name: MutantNameRegex
+    default: .+
 
 sources:
-  - queries:
+  - name: Handles
+    description: Open handles to mutants. This shows processes owning a handle open to the mutant.
+    queries:
       - LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe
         FROM pslist()
         WHERE ProcName =~ processRegex AND ProcPid > 0
@@ -21,3 +25,10 @@ sources:
             SELECT ProcPid, ProcName, Exe, Type, Name, Handle
             FROM handles(pid=ProcPid, types="Mutant")
           })
+        WHERE Name =~ MutantNameRegex
+
+  - name: ObjectTree
+    description: Reveals all Mutant objects in the Windows Object Manager namespace.
+    queries:
+      - SELECT Name, Type FROM winobj()
+        WHERE Type = 'Mutant' AND Name =~ MutantNameRegex

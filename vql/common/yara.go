@@ -104,7 +104,7 @@ func (self YaraScanPlugin) Call(
 			scope, arg.Key).(*yara.Rules)
 		if !ok {
 			variables := make(map[string]interface{})
-			generated_rules := RuleGenerator(arg.Rules)
+			generated_rules := RuleGenerator(scope, arg.Rules)
 			rules, err = yara.Compile(generated_rules, variables)
 			if err != nil {
 				scope.Log("Failed to initialize YARA compiler: %s", err)
@@ -263,11 +263,13 @@ func (self YaraProcPlugin) Call(
 			scope, arg.Key).(*yara.Rules)
 		if !ok {
 			variables := make(map[string]interface{})
-			rules, err := yara.Compile(arg.Rules, variables)
+			generated_rules := RuleGenerator(scope, arg.Rules)
+			rules, err = yara.Compile(generated_rules, variables)
 			if err != nil {
 				scope.Log("Failed to initialize YARA compiler: %v", err)
 				return
 			}
+
 			vql_subsystem.CacheSet(scope, arg.Key, rules)
 		}
 
@@ -290,7 +292,7 @@ func (self YaraProcPlugin) Call(
 }
 
 // Provide a shortcut way to define common rules.
-func RuleGenerator(rule string) string {
+func RuleGenerator(scope *vfilter.Scope, rule string) string {
 	rule = strings.TrimSpace(rule)
 
 	// Just a normal yara rule
@@ -310,6 +312,7 @@ func RuleGenerator(rule string) string {
 			item = strings.TrimSpace(item)
 			string_clause += fmt.Sprintf(
 				" $ = \"%s\" %s\n", item, method)
+			scope.Log("Compiling shorthand yara rule %v", string_clause)
 		}
 
 		return fmt.Sprintf(
