@@ -31,17 +31,29 @@ import (
 )
 
 var (
-	exportedPlugins      []vfilter.PluginGeneratorInterface
+	exportedPlugins      = make(map[string]vfilter.PluginGeneratorInterface)
 	exportedProtocolImpl []vfilter.Any
-	exportedFunctions    []vfilter.FunctionInterface
+	exportedFunctions    = make(map[string]vfilter.FunctionInterface)
 )
 
 func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
-	exportedPlugins = append(exportedPlugins, plugin)
+	name := plugin.Info(nil, nil).Name
+	_, pres := exportedPlugins[name]
+	if pres {
+		panic("Multiple plugins defined")
+	}
+
+	exportedPlugins[name] = plugin
 }
 
 func RegisterFunction(plugin vfilter.FunctionInterface) {
-	exportedFunctions = append(exportedFunctions, plugin)
+	name := plugin.Info(nil, nil).Name
+	_, pres := exportedFunctions[name]
+	if pres {
+		panic("Multiple plugins defined")
+	}
+
+	exportedFunctions[name] = plugin
 }
 
 func RegisterProtocol(plugin vfilter.Any) {

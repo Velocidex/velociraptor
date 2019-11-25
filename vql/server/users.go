@@ -46,7 +46,7 @@ func (self UsersPlugin) Call(
 
 func (self UsersPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "users",
+		Name: "gui_users",
 		Doc:  "Retrieve the list of users on the server.",
 	}
 }

@@ -88,4 +88,4 @@ reports:
 
       ## Users
 
-      {{ Query "SELECT Name, ReadOnly FROM users()" | Table }}
+      {{ Query "SELECT Name, ReadOnly FROM gui_users()" | Table }}
