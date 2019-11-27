@@ -189,7 +189,20 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 		return result, errors.New("Not found")
 	}
 
+	result.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
+
 	return result, nil
+}
+
+// availableHuntDownloadFiles returns the prepared zip downloads available to
+// be fetched by the user at this moment.
+func availableHuntDownloadFiles(config_obj *config_proto.Config,
+	hunt_id string) (*api_proto.AvailableDownloads, error) {
+
+	download_file := artifacts.GetHuntDownloadsFile(hunt_id)
+	download_path := path.Dir(download_file)
+
+	return getAvailableDownloadFiles(config_obj, download_path)
 }
 
 // This method modifies the hunt. Only the following modifications are allowed:

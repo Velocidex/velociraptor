@@ -121,6 +121,7 @@ func (self VQLClientAction) StartQuery(
 
 	scope.Logger = log.New(&LogWriter{config_obj, responder},
 		"vql: ", log.Lshortfile)
+	scope.Log("Starting query execution.")
 
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
 

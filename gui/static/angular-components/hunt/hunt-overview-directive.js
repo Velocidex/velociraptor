@@ -29,26 +29,25 @@ const HuntOverviewController = function($scope, grrApiService) {
  *
  * @export
  */
-HuntOverviewController.prototype.downloadFile = function() {
-    var url = 'v1/DownloadHuntResults';
-    var hunt = this.scope_["hunt"];
-    if (angular.isDefined(hunt)) {
-        var params = {hunt_id: hunt.hunt_id};
-        this.grrApiService_.downloadFile(url, params).then(
-            function success() {}.bind(this),
-            function failure(response) {
-                if (angular.isUndefined(response.status)) {
-                    this.rootScope_.$broadcast(
-                        ERROR_EVENT_NAME, {
-                            message: 'Couldn\'t download file.'
-                        });
-                }
-            }.bind(this)
-        );
-    }
+HuntOverviewController.prototype.prepareDownload = function() {
+  // Sanitize filename for download.
+  var hunt = this.scope_["hunt"];
+  var url = 'v1/CreateDownload';
+  var params = {
+    hunt_id: hunt.hunt_id,
+  };
+  this.grrApiService_.post(url, params).then(
+        function success() {}.bind(this),
+        function failure(response) {
+            if (angular.isUndefined(response.status)) {
+                this.rootScope_.$broadcast(
+                    ERROR_EVENT_NAME, {
+                        message: 'Couldn\'t download file.'
+                    });
+            }
+        }.bind(this)
+    );
 };
-
-
 
 /**
  * Directive for displaying log records of a hunt with a given URN.

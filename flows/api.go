@@ -115,9 +115,15 @@ func GetFlowDetails(
 func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
-	result := &api_proto.AvailableDownloads{}
 	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
 	download_path := path.Dir(download_file)
+
+	return getAvailableDownloadFiles(config_obj, download_path)
+}
+
+func getAvailableDownloadFiles(config_obj *config_proto.Config,
+	download_path string) (*api_proto.AvailableDownloads, error) {
+	result := &api_proto.AvailableDownloads{}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	files, err := file_store_factory.ListDirectory(download_path)

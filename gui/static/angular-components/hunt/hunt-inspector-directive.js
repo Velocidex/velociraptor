@@ -6,7 +6,7 @@ goog.module.declareLegacyNamespace();
 
 
 /** @type {number} */
-let AUTO_REFRESH_INTERVAL_MS = 15 * 1000;
+let AUTO_REFRESH_INTERVAL_MS = 5 * 1000;
 
 /**
  * Sets the delay between automatic refreshes.

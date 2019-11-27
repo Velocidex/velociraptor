@@ -679,7 +679,21 @@ func (self *ApiServer) SetClientMonitoringState(
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	in *api_proto.CreateDownloadRequest) (*empty.Empty, error) {
 
-	err := createDownloadFile(self.config, in.FlowId, in.ClientId)
+	// Log an audit event.
+	userinfo := GetUserInfo(ctx, self.config)
+	logging.GetLogger(self.config, &logging.Audit).
+		WithFields(logrus.Fields{
+			"user":    userinfo.Name,
+			"request": in,
+		}).Info("CreateDownloadRequest")
+
+	var err error
+
+	if in.FlowId != "" && in.ClientId != "" {
+		err = createDownloadFile(self.config, in.FlowId, in.ClientId)
+	} else if in.HuntId != "" {
+		err = createHuntDownloadFile(self.config, in.HuntId)
+	}
 
 	result := &empty.Empty{}
 	return result, err

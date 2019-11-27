@@ -20,4 +20,4 @@ sources:
         timestamp(epoch=Mtime.Sec) AS LastModified
       FROM glob(globs=split(string=TargetRegKey, sep=","), accessor="reg")
       WHERE Data.value and
-        not (Name = "@" and (Data.value =~ "(wow64cpu.dll|wowarmhw.dll|xtajit.dll)"
+        not (Name = "@" and (Data.value =~ "(wow64cpu.dll|wowarmhw.dll|xtajit.dll)"))

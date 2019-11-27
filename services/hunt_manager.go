@@ -44,6 +44,7 @@ type ParticipationRecord struct {
 	Fqdn        string `vfilter:"optional,field=Fqdn"`
 	FlowId      string `vfilter:"optional,field=FlowId"`
 	Participate bool   `vfilter:"required,field=Participate"`
+	Timestamp   uint64 `vfilter:"optional,field=Timestamp"`
 }
 
 type HuntManager struct {
