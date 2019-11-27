@@ -21,8 +21,8 @@ sources:
              'stats_client_seven_day_actives{version="[^"]+"} (?P<seven_day_active>[^\\s]+)'
            ]) AS Stat, {
               // On Windows Prometheus does not provide these so we get our own.
-              SELECT User + System as CPU,
-                     Memory.WorkingSetSize as RSS
+              SELECT Times.user + Times.system as CPU,
+                     MemoryInfo.RSS as RSS
               FROM pslist(pid=getpid())
            } AS PslistStats
         FROM  http_client(url=MetricsURL, chunk_size=50000)

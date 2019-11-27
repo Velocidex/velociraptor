@@ -5,4 +5,6 @@ package proto;
 message CreateDownloadRequest {
     string flow_id = 1;
     string client_id = 2;
+
+    string hunt_id = 3;
 }

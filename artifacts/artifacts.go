@@ -152,6 +152,12 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				}
 			}
 
+			if len(source.Queries) == 0 {
+				return nil, errors.New(fmt.Sprintf(
+					"Source %s in artifact %s contains no queries!",
+					source.Name, artifact.Name))
+			}
+
 			for _, query := range source.Queries {
 				_, err := vfilter.Parse(query)
 				if err != nil {

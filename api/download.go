@@ -27,6 +27,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/jsonpb"
@@ -270,6 +271,136 @@ func flowResultDownloadHandler(
 		downloadFlowToZip(r.Context(),
 			config_obj, client_id, flow_id, zip_writer)
 	})
+}
+
+func createHuntDownloadFile(
+	config_obj *config_proto.Config, hunt_id string) error {
+	if hunt_id == "" {
+		return errors.New("Hunt Id should be specified.")
+	}
+	download_file := artifacts.GetHuntDownloadsFile(hunt_id)
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+	logger.WithFields(logrus.Fields{
+		"hunt_id":       hunt_id,
+		"download_file": download_file,
+	}).Info("CreateHuntDownload")
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
+	if err != nil {
+		return err
+	}
+	lock_file.Close()
+
+	fd, err := file_store_factory.WriteFile(download_file)
+	if err != nil {
+		return err
+	}
+
+	hunt_details, err := flows.GetHunt(config_obj,
+		&api_proto.GetHuntRequest{HuntId: hunt_id})
+	if err != nil {
+		return err
+	}
+
+	marshaler := &jsonpb.Marshaler{Indent: " "}
+	hunt_details_json, err := marshaler.MarshalToString(hunt_details)
+	if err != nil {
+		fd.Close()
+		return err
+	}
+
+	// Do these first to ensure errors are returned if the zip file
+	// is not writable.
+	zip_writer := zip.NewWriter(fd)
+	f, err := zip_writer.Create("HuntDetails")
+	if err != nil {
+		fd.Close()
+		return err
+	}
+
+	_, err = f.Write([]byte(hunt_details_json))
+	if err != nil {
+		zip_writer.Close()
+		fd.Close()
+		return err
+	}
+
+	// Write the bulk of the data asyncronously.
+	go func() {
+		defer file_store_factory.Delete(download_file + ".lock")
+		defer fd.Close()
+		defer zip_writer.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
+		defer cancel()
+
+		// Export aggregate CSV files for all clients.
+		for _, artifact_source := range hunt_details.ArtifactSources {
+			artifact, source := artifacts.SplitFullSourceName(
+				artifact_source)
+
+			query := "SELECT * FROM hunt_results(" +
+				"hunt_id=HuntId, artifact=Artifact, " +
+				"source=Source, brief=true)"
+			env := ordereddict.NewDict().
+				Set("Artifact", artifact).
+				Set("HuntId", hunt_id).
+				Set("Source", source)
+
+			f, err := zip_writer.Create("All " +
+				path.Join(artifact, source) + ".csv")
+			if err != nil {
+				continue
+			}
+
+			err = StoreVQLAsCSVFile(ctx, config_obj, env, query, f)
+			if err != nil {
+				logging.GetLogger(config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"artifact": artifact,
+						"error":    err,
+					}).Error("ExportHuntArtifact")
+			}
+		}
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+		file_path := path.Join("hunts", hunt_id+".csv")
+		fd, err := file_store_factory.ReadFile(file_path)
+		if err != nil {
+			return
+		}
+		defer fd.Close()
+
+		for row := range csv.GetCSVReader(fd) {
+			flow_id_any, _ := row.Get("FlowId")
+			flow_id, ok := flow_id_any.(string)
+			if !ok {
+				continue
+			}
+			client_id_any, _ := row.Get("ClientId")
+			client_id, ok := client_id_any.(string)
+			if !ok {
+				continue
+			}
+
+			err := downloadFlowToZip(
+				ctx, config_obj, client_id, flow_id, zip_writer)
+			if err != nil {
+				logging.GetLogger(config_obj, &logging.FrontendComponent).
+					WithFields(logrus.Fields{
+						"hunt_id": hunt_id,
+						"error":   err.Error(),
+						"bt":      logging.GetStackTrace(err),
+					}).Info("DownloadHuntResults")
+				continue
+			}
+		}
+	}()
+
+	return nil
 }
 
 // To be deprecated.

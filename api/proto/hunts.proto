@@ -8,6 +8,8 @@ import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
 
 package proto;
 
+import "flows.proto";
+
 
 message HuntConditionGeneric {
     VQLCollectorArgs flow_condition_query = 4 [(sem_type) = {
@@ -82,6 +84,8 @@ message HuntStats {
             description: "If this is set then the hunt is stopped. This field "
             "is manipulated by the hunt manager."
         }];
+
+    AvailableDownloads available_downloads = 2;
 }
 
 
