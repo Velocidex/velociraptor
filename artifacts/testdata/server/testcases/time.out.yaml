@@ -1,0 +1,13 @@
+SELECT timestamp(string='3 weeks ago') < timestamp(epoch=now()) from scope()[
+ {
+  "timestamp(string='3 weeks ago') \u003c timestamp(epoch=now)": true
+ }
+]SELECT timestamp(string='3 weeks ago') > timestamp(epoch=now()) from scope()[
+ {
+  "timestamp(string='3 weeks ago') \u003e timestamp(epoch=now)": false
+ }
+]SELECT timestamp(string='25/12/2019 5pm').Unix from scope()[
+ {
+  "timestamp(string='25/12/2019 5pm').Unix": 1577293200
+ }
+]
