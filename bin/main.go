@@ -64,6 +64,8 @@ var (
 	trace_flag = app.Flag(
 		"trace", "Write trace information to this file.").String()
 
+	trace_vql_flag = app.Flag("trace_vql", "Enable VQL tracing.").Bool()
+
 	command_handlers []CommandHandler
 )
 

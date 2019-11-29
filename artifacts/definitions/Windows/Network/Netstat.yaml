@@ -4,14 +4,16 @@ description: |
   socket was first bound is also shown.
 
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'windows'
-    queries:
-      - |
-        SELECT Pid, FamilyString as Family,
-               TypeString as Type,
-               Status,
-               Laddr.IP, Laddr.Port,
-               Raddr.IP, Raddr.Port,
-               Timestamp
-               FROM netstat()
+- precondition: SELECT OS From info() where OS = 'windows'
+  queries:
+  - LET processes <= SELECT Name, Pid AS ProcPid FROM pslist()
+  - SELECT Pid, {
+        SELECT Name from processes
+        WHERE Pid = ProcPid
+      } AS Name, FamilyString as Family,
+      TypeString as Type,
+      Status,
+      Laddr.IP, Laddr.Port,
+      Raddr.IP, Raddr.Port,
+      Timestamp
+    FROM netstat()
