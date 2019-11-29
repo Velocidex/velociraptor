@@ -1,0 +1,4 @@
+Queries:
+  - SELECT timestamp(string='3 weeks ago') < timestamp(epoch=now()) from scope()
+  - SELECT timestamp(string='3 weeks ago') > timestamp(epoch=now()) from scope()
+  - SELECT timestamp(string='25/12/2019 5pm').Unix from scope()

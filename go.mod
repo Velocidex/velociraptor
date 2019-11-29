@@ -4,6 +4,7 @@ require (
 	cloud.google.com/go v0.47.0 // indirect
 	cloud.google.com/go/bigquery v1.1.0 // indirect
 	cloud.google.com/go/storage v1.1.1
+	github.com/AlekSi/pointer v1.1.0 // indirect
 	github.com/Depado/bfchroma v1.1.2
 	github.com/Masterminds/goutils v1.1.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
@@ -20,6 +21,7 @@ require (
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
+	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/clbanning/mxj v1.8.4
@@ -65,6 +67,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
+	github.com/olebedev/when v0.0.0-20190311101825-c3b538a97254
 	github.com/olekukonko/tablewriter v0.0.2
 	github.com/pkg/errors v0.8.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
