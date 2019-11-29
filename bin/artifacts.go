@@ -111,6 +111,11 @@ func collectArtifact(
 	scope.Logger = logging.NewPlainLogger(config_obj,
 		&logging.ToolComponent)
 
+	if *trace_vql_flag {
+		scope.Tracer = logging.NewPlainLogger(config_obj,
+			&logging.ToolComponent)
+	}
+
 	ctx := InstallSignalHandler(scope)
 
 	for _, query := range request.Query {
