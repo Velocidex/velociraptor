@@ -47,40 +47,8 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    }
   }
  }
-]SELECT * FROM Artifact.Windows.EventLogs.Kerbroasting(eventLog=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')[
- {
-  "EventTime": "2019-09-30T01:58:40Z",
-  "EventID": 4769,
-  "Computer": "DC2016.dfir.lab",
-  "ServiceName": "SVC-APP03",
-  "ServiceSid": "S-1-5-21-3673242659-2809345135-1169127309-1110",
-  "TargetUserName": "matt@DFIR.LAB",
-  "Status": "0x0",
-  "TargetDomainName": "DFIR.LAB",
-  "TicketEncryptionType": "0x17",
-  "TicketOptions": "0x40810010",
-  "TransmittedServices": "-",
-  "IpAddress": "::ffff:192.168.63.1",
-  "IpPort": "52562",
-  "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
- },
- {
-  "EventTime": "2019-09-30T01:58:40Z",
-  "EventID": 4769,
-  "Computer": "DC2016.dfir.lab",
-  "ServiceName": "SVC-SQL02",
-  "ServiceSid": "S-1-5-21-3673242659-2809345135-1169127309-1109",
-  "TargetUserName": "matt@DFIR.LAB",
-  "Status": "0x0",
-  "TargetDomainName": "DFIR.LAB",
-  "TicketEncryptionType": "0x17",
-  "TicketOptions": "0x40810010",
-  "TransmittedServices": "-",
-  "IpAddress": "::ffff:192.168.63.1",
-  "IpPort": "52564",
-  "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
- }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + '/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx')[
+]
+SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + '/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx')[
  {
   "EventTime": "2019-12-02T11:39:33Z",
   "Computer": "DESKTOP-687T2NR",
