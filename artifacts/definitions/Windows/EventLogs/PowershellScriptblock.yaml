@@ -25,9 +25,11 @@ parameters:
     default: (?i).
   - name: dateAfter
     description: "search for events after this date."
+    type: timestamp
     default: "2000-01-01"
   - name: dateBefore
     description: "search for events before this date."
+    type: timestamp
     default: "2029-12-31"
   - name: stringWhitelist
     description: "search for events before this date."
@@ -40,11 +42,9 @@ parameters:
 sources:
   - name: PowershellScriptBlock
     queries:
-      - |
-        LET files = SELECT * FROM glob(
+      - LET files = SELECT * FROM glob(
             globs=eventLog)
-      - |
-        SELECT *
+      - SELECT *
         FROM foreach(
           row=files,
           query={
@@ -59,8 +59,8 @@ sources:
               System.Opcode as Opcode,
               System.Task as Task
             FROM parse_evtx(filename=FullPath)
-            WHERE EventTime.string > dateAfter
-                and EventTime.string < dateBefore
+            WHERE EventTime > timestamp(string=dateAfter)
+                and EventTime < timestamp(string=dateBefore)
                 and System.EventID.Value = 4104
                 and ScriptBlockText =~ searchStrings
                 and not ScriptBlockText =~ stringWhitelist
@@ -70,7 +70,6 @@ sources:
 reports:
   - type: HUNT
     template: |
-
       Powershell: Scriptblock
       =======================
       Powershell is commonly used by attackers accross all stages of the attack 
