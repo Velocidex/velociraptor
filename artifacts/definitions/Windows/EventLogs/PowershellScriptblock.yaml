@@ -1,0 +1,83 @@
+name: Windows.EventLogs.PowershellScriptblock
+description: |
+  This Artifact will search and extract ScriptBlock events (Event ID 4104) from 
+  Powershell-Operational Event Logs.
+  
+  Powershell is commonly used by attackers accross all stages of the attack 
+  lifecycle. A valuable hunt is to search Scriptblock logs for signs of 
+  malicious content.
+  
+  There are several parameter's availible for search leveraging regex.    
+    - SearchStrings enables regex search over scriptblock text field.  
+    - stringWhiteList enables a regex whitelist for scriptblock text field.  
+    - pathWhitelist enables a regex whitelist for path of scriptblock.  
+    - dateAfter enables search for events after this date.  
+    - dateBefore enables search for events before this date.  
+  
+
+author: Matt Green - @mgreen27
+
+parameters:
+  - name: eventLog
+    default: C:\Windows\system32\winevt\logs\Microsoft-Windows-PowerShell%4Operational.evtx
+  - name: searchStrings
+    description: "regex search over scriptblock text field."
+    default: (?i).
+  - name: dateAfter
+    description: "search for events after this date."
+    default: "2000-01-01"
+  - name: dateBefore
+    description: "search for events before this date."
+    default: "2029-12-31"
+  - name: stringWhitelist
+    description: "search for events before this date."
+    default: "(?i)Microsoft Corporation"
+  - name: pathWhitelist
+    description: "search for events before this date."
+    default: "(?i)CL_Utility.ps1"
+
+
+sources:
+  - name: PowershellScriptBlock
+    queries:
+      - |
+        LET files = SELECT * FROM glob(
+            globs=eventLog)
+      - |
+        SELECT *
+        FROM foreach(
+          row=files,
+          query={
+            SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+              System.Computer as Computer,
+              System.Security.UserID as SecurityID,
+              EventData.Path as Path,
+              EventData.ScriptBlockId as ScriptBlockId,
+              EventData.ScriptBlockText as ScriptBlockText,
+              System.EventRecordID as EventRecordID,
+              System.Level as Level,
+              System.Opcode as Opcode,
+              System.Task as Task
+            FROM parse_evtx(filename=FullPath)
+            WHERE EventTime.string > dateAfter
+                and EventTime.string < dateBefore
+                and System.EventID.Value = 4104
+                and ScriptBlockText =~ searchStrings
+                and not ScriptBlockText =~ stringWhitelist
+                and not Path =~ pathWhitelist
+        })
+
+reports:
+  - type: HUNT
+    template: |
+
+      Powershell: Scriptblock
+      =======================
+      Powershell is commonly used by attackers accross all stages of the attack 
+      lifecycle.  
+      A valuable hunt is to search Scriptblock logs for signs of malicious 
+      content. Stack ranking these events can provide valuable leads from which 
+      to start an investigation.
+      
+      {{ Query "SELECT count(items=ScriptBlockText) as Count, ScriptBlockText FROM source(source='PowershellScriptBlock') GROUP BY ScriptBlockText ORDER BY Count"  | Table }}
+      
