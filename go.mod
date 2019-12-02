@@ -21,7 +21,6 @@ require (
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
-	github.com/araddon/dateparse v0.0.0-20190622164848-0fb0a474d195
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/clbanning/mxj v1.8.4
@@ -103,6 +102,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
+	www.velocidex.com/golang/go-ese v0.0.0-20191202151737-8fdbb54dedda
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191114150551-9268b64dc996
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
@@ -120,6 +120,7 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.201
 
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
+// replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 
 replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1
 
