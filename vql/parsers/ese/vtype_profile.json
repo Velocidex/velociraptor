@@ -1,0 +1,16 @@
+{
+    "SID": [16, {
+        "Revision": [0, ["unsigned char"]],
+        "SubAuthCount": [1, ["unsigned char"]],
+        "Authority": [2, ["unsigned short"]],
+        "Authority2": [4, ["unsigned long"]],
+        "Subauthority": [8, ["Array", {
+            "target": "unsigned long",
+            "count": 2
+        }]]
+    }],
+
+    "Misc": [0, {
+        "Misc": [0, ["UnicodeString"]]
+    }]
+}

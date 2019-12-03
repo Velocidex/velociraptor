@@ -5,10 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/olebedev/when"
-	"github.com/olebedev/when/rules"
-	"github.com/olebedev/when/rules/common"
-	"github.com/olebedev/when/rules/en"
+	"github.com/kierdavis/dateparser"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -47,14 +44,12 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	if arg.String != "" {
-		w := when.New(nil)
-		w.Add(SlashMDY(rules.Override, arg.UsStyle))
-		w.Add(en.All...)
-		w.Add(common.All...)
-
-		r, err := w.Parse(arg.String, time.Now())
-		if err == nil && r != nil {
-			return r.Time
+		parser := dateparser.Parser{Fuzzy: true,
+			DayFirst: true,
+			IgnoreTZ: true}
+		r, err := parser.Parse(arg.String)
+		if err == nil {
+			return r
 		}
 		scope.Log("timestamp: %v", err)
 	}

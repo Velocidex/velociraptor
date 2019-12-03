@@ -1,0 +1,81 @@
+name: Windows.Forensics.SRUM
+description: |
+  Process the SRUM database.
+
+  references:
+    * https://www.sans.org/cyber-security-summit/archives/file/summit-archive-1492184583.pdf
+    * https://cyberforensicator.com/2017/08/06/windows-srum-forensics/
+
+type: client
+
+parameters:
+  - name: SRUMLocation
+    default: c:\windows\system32\sru\srudb.dat
+  - name: accessor
+    default: ntfs
+  - name: ExecutableRegex
+    default: .
+  - name: NetworkConnectionsGUID
+    default: "{DD6636C4-8929-4683-974E-22C046A43763}"
+    type: hidden
+  - name: ApplicationResourceUsageGUID
+    default: "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}"
+    type: hidden
+  - name: ExecutionGUID
+    default: "{5C8CF1C7-7257-4F13-B223-970EF5939312}"
+    type: hidden
+
+
+sources:
+  - name: Upload
+    queries:
+      - SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
+        FROM scope()
+
+  - name: Execution Stats
+    queries:
+      - SELECT  AutoIncId AS ID,
+                TimeStamp,
+                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
+                srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+                timestamp(winfiletime=EndTime) AS EndTime,
+                DurationMS,
+                NetworkBytesRaw
+        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ExecutionGUID)
+        WHERE App =~ ExecutableRegex
+
+  - name: Application Resource Usage
+    queries:
+      - SELECT AutoIncId as SRUMId,
+               TimeStamp,
+               srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
+               srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+               ForegroundCycleTime,
+               BackgroundCycleTime,
+               FaceTime,
+               ForegroundContextSwitches,
+               BackgroundContextSwitches,
+               ForegroundBytesRead,
+               ForegroundBytesWritten,
+               ForegroundNumReadOperations,
+               ForegroundNumWriteOperations,
+               ForegroundNumberOfFlushes,
+               BackgroundBytesRead,
+               BackgroundBytesWritten,
+               BackgroundNumReadOperations,
+               BackgroundNumWriteOperations,
+               BackgroundNumberOfFlushes
+        FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ApplicationResourceUsageGUID)
+        WHERE App =~ ExecutableRegex
+
+  - name: Network Connections
+    queries:
+    - SELECT AutoIncId as SRUMId,
+             TimeStamp,
+             srum_lookup_id(file=SRUMLocation, accessor=accessor, id=AppId) AS App,
+             srum_lookup_id(file=SRUMLocation, accessor=accessor, id=UserId) AS User,
+             InterfaceLuid,
+             ConnectedTime,
+             timestamp(winfiletime=ConnectStartTime) AS StartTime
+      FROM parse_ese(file=SRUMLocation, accessor=accessor, table=NetworkConnectionsGUID)
+      WHERE App =~ ExecutableRegex

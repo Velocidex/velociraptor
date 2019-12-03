@@ -127,6 +127,7 @@ func runTest(fixture *testFixture) (string, error) {
 	result := ""
 	for _, query := range fixture.Queries {
 		result += query
+		scope.Log("Running query %v", query)
 		vql, err := vfilter.Parse(query)
 		if err != nil {
 			return "", err
@@ -170,7 +171,7 @@ func doGolden() {
 		outfile := strings.Replace(filename, ".in.", ".out.", -1)
 		old_data, err := ioutil.ReadFile(outfile)
 		if err == nil {
-			if string(old_data) != result {
+			if strings.TrimSpace(string(old_data)) != strings.TrimSpace(result) {
 				dmp := diffmatchpatch.New()
 				diffs := dmp.DiffMain(
 					string(old_data), result, false)
