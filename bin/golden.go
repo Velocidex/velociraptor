@@ -127,6 +127,7 @@ func runTest(fixture *testFixture) (string, error) {
 	result := ""
 	for _, query := range fixture.Queries {
 		result += query
+		scope.Log("Running query %v", query)
 		vql, err := vfilter.Parse(query)
 		if err != nil {
 			return "", err
