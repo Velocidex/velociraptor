@@ -27,11 +27,12 @@ const SearchArtifactController = function(
     // A list of descriptors that matched the search term.
     this.matchingDescriptors = [];
 
-  this.reportParams = {};
+    this.reportParams = {};
 
-  this.param_types = {};
-  this.param_descriptions = {};
-  this.paramDescriptors = {};
+    this.param_types = {};
+    this.param_info = {};
+    this.param_descriptions = {};
+    this.paramDescriptors = {};
 
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
@@ -54,9 +55,10 @@ const SearchArtifactController = function(
                   var params = item.parameters;
                   if (angular.isObject(params)) {
                     for (var j=0; j<params.length; j++) {
-                      var param = params[j];
+                        var param = params[j];
 
-                      self.param_types[param.name] = param.type;
+                        self.param_types[param.name] = param.type;
+                        self.param_info[param.name] = param;
                     }
                   }
                 }
@@ -94,11 +96,12 @@ SearchArtifactController.prototype.add = function(name) {
         for (var j=0; j<params.length; j++) {
           var param = params[j];
 
-          if (!angular.isDefined(self.scope_.params[param.name])) {
-            self.scope_.params[param.name]= param.default || "";
-            self.param_types[param.name] = param.type;
-            self.param_descriptions[param.name] = param.description;
-          }
+            if (!angular.isDefined(self.scope_.params[param.name])) {
+                self.scope_.params[param.name]= param.default || "";
+                self.param_types[param.name] = param.type;
+                self.param_info[param.name] = param;
+                self.param_descriptions[param.name] = param.description;
+            }
         }
       }
     }

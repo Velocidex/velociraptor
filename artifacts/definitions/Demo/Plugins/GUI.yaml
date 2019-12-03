@@ -1,0 +1,23 @@
+name: Demo.Plugins.GUI
+description: |
+  A demo plugin showing some GUI features.
+
+
+parameters:
+  - name: ChoiceSelector
+    type: choices
+    default: First Choice
+    choices:
+      - First Choice
+      - Second Choice
+      - Third Choice
+
+  - name: Flag
+    type: bool
+    default: Y
+
+  - name: OffFlag
+    type: bool
+
+  - name: StartDate
+    type: timestamp
