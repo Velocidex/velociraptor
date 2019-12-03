@@ -102,7 +102,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
-	www.velocidex.com/golang/go-ese v0.0.0-20191202151737-8fdbb54dedda
+	www.velocidex.com/golang/go-ese v0.0.0-20191203002841-0c80dd255d97
 	www.velocidex.com/golang/go-ntfs v0.0.0-20191114150551-9268b64dc996
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf

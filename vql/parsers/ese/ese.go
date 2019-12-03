@@ -21,6 +21,7 @@ package ese
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/go-ese/parser"
@@ -226,11 +227,16 @@ func (self _ESEPlugin) Call(
 		}
 
 		err = catalog.DumpTable(arg.Table, func(row *ordereddict.Dict) error {
-			output_chan <- row
+			select {
+			case <-ctx.Done():
+				return errors.New("Query is cancelled")
+			default:
+				output_chan <- row
+			}
 			return nil
 		})
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Log("parse_ese: Unable to dump file %s: %v",
 				arg.Filename, err)
 			return
 		}
