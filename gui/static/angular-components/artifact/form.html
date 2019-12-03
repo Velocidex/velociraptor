@@ -7,10 +7,10 @@
              uib-datepicker-popup="{{format}}"
              ng-model="controller.date_time"
              is-open="controller.popup_opened"
-             datepicker-options="dateOptions"
-             ng-required="true"
+             datepicker-options="controller.dateOptions"
+             ng-required="false"
              close-text="Close"
-             alt-input-formats="altInputFormats" />
+             alt-input-formats="controller.altInputFormats" />
       <span class="input-group-btn">
         <button type="button"
                 class="btn btn-default"
@@ -18,6 +18,16 @@
           <i class="fa fa-calendar"></i>
         </button>
       </span>
+    </p>
+  </div>
+
+  <div class="form-group"
+       ng-switch-when="choices">
+    <p class="input-group">
+      <select class="form-control pull-left"
+              ng-options="choice for choice in info.choices"
+              ng-model="value[field]">
+      </select>
     </p>
   </div>
 

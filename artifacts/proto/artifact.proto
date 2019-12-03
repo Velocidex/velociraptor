@@ -50,7 +50,6 @@ message Types {
     repeated TypeDescriptor items = 1;
 }
 
-
 message ArtifactParameter {
     option (semantic) = {
         description: "Artifacts may accept parameters which are added to the "
@@ -62,6 +61,10 @@ message ArtifactParameter {
     string default = 2;
     string description = 3;
     string type = 4;
+
+    // For type = choice
+    repeated string choices = 6;
+
     string friendly_name = 5;
 }
 
