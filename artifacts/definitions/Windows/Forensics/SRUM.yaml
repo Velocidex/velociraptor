@@ -13,6 +13,8 @@ parameters:
     default: c:\windows\system32\sru\srudb.dat
   - name: accessor
     default: ntfs
+  - name: ExecutableRegex
+    default: .
   - name: NetworkConnectionsGUID
     default: "{DD6636C4-8929-4683-974E-22C046A43763}"
     type: hidden
@@ -40,6 +42,7 @@ sources:
                 DurationMS,
                 NetworkBytesRaw
         FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ExecutionGUID)
+        WHERE App =~ ExecutableRegex
 
   - name: Application Resource Usage
     queries:
@@ -63,6 +66,7 @@ sources:
                BackgroundNumWriteOperations,
                BackgroundNumberOfFlushes
         FROM parse_ese(file=SRUMLocation, accessor=accessor, table=ApplicationResourceUsageGUID)
+        WHERE App =~ ExecutableRegex
 
   - name: Network Connections
     queries:
@@ -74,3 +78,4 @@ sources:
              ConnectedTime,
              timestamp(winfiletime=ConnectStartTime) AS StartTime
       FROM parse_ese(file=SRUMLocation, accessor=accessor, table=NetworkConnectionsGUID)
+      WHERE App =~ ExecutableRegex

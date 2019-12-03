@@ -170,7 +170,7 @@ func doGolden() {
 		outfile := strings.Replace(filename, ".in.", ".out.", -1)
 		old_data, err := ioutil.ReadFile(outfile)
 		if err == nil {
-			if string(old_data) != result {
+			if strings.TrimSpace(string(old_data)) != strings.TrimSpace(result) {
 				dmp := diffmatchpatch.New()
 				diffs := dmp.DiffMain(
 					string(old_data), result, false)
