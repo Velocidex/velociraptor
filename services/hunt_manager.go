@@ -243,7 +243,7 @@ func startHuntManager(config_obj *config_proto.Config) (
 		wg:                  sync.WaitGroup{},
 		hunt_dispatch_cache: make(map[string]bool),
 	}
-	err = result.Start()
+	err := result.Start()
 	return result, err
 }
 
