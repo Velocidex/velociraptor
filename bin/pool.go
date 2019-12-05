@@ -50,7 +50,9 @@ func doPoolClient() {
 	kingpin.FatalIfError(err, "Unable to load config file")
 	server.IncreaseLimits(client_config)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	number_of_clients := *pool_client_number
 	if number_of_clients <= 0 {
 		number_of_clients = 2

@@ -55,7 +55,10 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 			return result
 		}
 
-		for row := range vql.Eval(context.Background(), self.Scope) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		for row := range vql.Eval(ctx, self.Scope) {
 			result = append(result, row)
 		}
 	}

@@ -147,7 +147,10 @@ func GetCurrentDDNSIp(fqdn string) ([]string, error) {
 		PreferGo: true,
 		Dial:     GoogleDNSDialer,
 	}
-	ctx := context.Background()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	ips, err := r.LookupHost(ctx, fqdn)
 	if err != nil {
 		return nil, err

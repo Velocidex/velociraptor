@@ -88,7 +88,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.CreateHunt(context.Background(), hunt_request)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	response, err := client.CreateHunt(ctx, hunt_request)
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}

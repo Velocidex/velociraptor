@@ -70,8 +70,10 @@ func RunClient(config_path *string) {
 	// Wait for all services to properly start before we begin the
 	// comms.
 	executor.StartServices(config_obj, manager.ClientId, exe)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	go comm.Run(context.Background())
+	go comm.Run(ctx)
 
 	<-quit
 

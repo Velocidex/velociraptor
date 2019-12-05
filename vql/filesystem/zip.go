@@ -183,6 +183,7 @@ type _CDLookup struct {
 
 type ZipFileCache struct {
 	zip_file *zip.Reader
+	cancel   func()
 	fd       glob.ReadSeekCloser
 	lookup   []_CDLookup
 }
@@ -199,11 +200,6 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		return nil, nil, err
 	}
 
-	accessor, err := glob.GetAccessor(url.Scheme, context.Background())
-	if err != nil {
-		return nil, nil, err
-	}
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -212,6 +208,13 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 
 	zip_file_cache, pres := self.fd_cache[base_url.String()]
 	if !pres {
+		ctx, cancel := context.WithCancel(context.Background())
+
+		accessor, err := glob.GetAccessor(url.Scheme, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		fd, err := accessor.Open(url.Path)
 		if err != nil {
 			return nil, nil, err
@@ -235,6 +238,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		zip_file_cache = &ZipFileCache{
 			zip_file: zip_file,
 			fd:       fd,
+			cancel:   cancel,
 		}
 
 		self.fd_cache[url.String()] = zip_file_cache
@@ -424,6 +428,7 @@ func (self ZipFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccess
 		defer result.mu.Unlock()
 
 		for _, v := range result.fd_cache {
+			v.cancel()
 			v.fd.Close()
 		}
 		result.fd_cache = make(map[string]*ZipFileCache)

@@ -73,7 +73,8 @@ func doInstall() error {
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	target_path := os.ExpandEnv(config_obj.Client.DarwinInstaller.InstallPath)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Try to copy the executable to the target_path.
 	err = utils.CopyFile(ctx, executable, target_path, 0755)

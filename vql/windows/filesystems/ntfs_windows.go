@@ -219,6 +219,10 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 			return nil, err
 		}
 
+		if ctx != nil {
+			ctx.fd.Close()
+		}
+
 		ctx = &AccessorContext{
 			reader:       reader,
 			fd:           raw_fd,

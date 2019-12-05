@@ -197,8 +197,10 @@ func createDownloadFile(config_obj *config_proto.Config,
 		defer fd.Close()
 		defer zip_writer.Close()
 
-		downloadFlowToZip(context.Background(),
-			config_obj, client_id, flow_id, zip_writer)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
+		defer cancel()
+
+		downloadFlowToZip(ctx, config_obj, client_id, flow_id, zip_writer)
 	}()
 
 	return nil
@@ -337,7 +339,8 @@ func createHuntDownloadFile(
 		defer fd.Close()
 		defer zip_writer.Close()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
+		// Allow one hour to write the zip
+		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 		defer cancel()
 
 		// Export aggregate CSV files for all clients.
