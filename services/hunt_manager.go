@@ -145,13 +145,10 @@ func (self *HuntManager) ProcessRow(
 	key := participation_row.ClientId + participation_row.HuntId
 	key_int := utils.GetLRUHash(key)
 	value, pres := self.hunt_dispatch_cache.Get(key_int)
-	if pres {
-		if value.(string) == key {
-			return
-		}
-
-		self.hunt_dispatch_cache.Add(key_int, key)
+	if pres && value.(string) == key {
+		return
 	}
+	self.hunt_dispatch_cache.Add(key_int, key)
 
 	// Fetch the CSV writer for this hunt or create a new one and
 	// cache it.
