@@ -239,7 +239,10 @@ func (self *HuntManager) ProcessRow(
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	response, err := client.CollectArtifact(context.Background(), request)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	response, err := client.CollectArtifact(ctx, request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return
@@ -266,6 +269,9 @@ func huntHasLabel(config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt,
 	client_id string) bool {
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition != nil && len(label_condition.Label) > 0 {
 		channel := grpc_client.GetChannel(config_obj)
@@ -277,8 +283,7 @@ func huntHasLabel(config_obj *config_proto.Config,
 			Labels:    label_condition.Label,
 			Operation: "check",
 		}
-		_, err := client.LabelClients(
-			context.Background(), request)
+		_, err := client.LabelClients(ctx, request)
 
 		if err != nil {
 			return false

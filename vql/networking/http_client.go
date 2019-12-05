@@ -139,7 +139,7 @@ func getHttpClient(
 		arg.Url = "http://unix" + components[1]
 
 		return &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
 				MaxIdleConnsPerHost: 10,
 				DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
@@ -158,7 +158,7 @@ func getHttpClient(
 		}
 
 		http_client_no_ssl = &http.Client{
-			Timeout: time.Second * 1000,
+			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
 				MaxIdleConns: 10,
 				TLSClientConfig: &tls.Config{
@@ -175,7 +175,7 @@ func getHttpClient(
 	}
 
 	http_client = &http.Client{
-		Timeout: time.Second * 1000,
+		Timeout: time.Second * 10000,
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
 				KeepAlive: 600 * time.Second,

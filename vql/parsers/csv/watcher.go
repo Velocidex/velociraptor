@@ -65,13 +65,22 @@ func (self *CSVWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *CSVWatcherService) StartMonitoring(
-	filename string, accessor string) {
+	filename string, accessor_name string) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	accessor, err := glob.GetAccessor(accessor_name, ctx)
+	if err != nil {
+		return
+	}
+
 	last_event := self.findLastEvent(filename, accessor)
 	no_handlers := false
 
 	for {
 		last_event, no_handlers = self.monitorOnce(
-			filename, accessor, last_event)
+			filename, accessor_name, accessor, last_event)
 		if no_handlers {
 			break
 		}
@@ -82,13 +91,7 @@ func (self *CSVWatcherService) StartMonitoring(
 
 func (self *CSVWatcherService) findLastEvent(
 	filename string,
-	accessor_name string) int {
-
-	accessor, err := glob.GetAccessor(
-		accessor_name, context.Background())
-	if err != nil {
-		return 0
-	}
+	accessor glob.FileSystemAccessor) int {
 
 	fd, err := accessor.Open(filename)
 	if err != nil {
@@ -111,6 +114,7 @@ func (self *CSVWatcherService) findLastEvent(
 func (self *CSVWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
+	accessor glob.FileSystemAccessor,
 	last_event int) (int, bool) {
 
 	self.mu.Lock()
@@ -119,12 +123,6 @@ func (self *CSVWatcherService) monitorOnce(
 	key := filename + accessor_name
 	handles, pres := self.registrations[key]
 	if !pres {
-		return 0, false
-	}
-
-	accessor, err := glob.GetAccessor(
-		accessor_name, context.Background())
-	if err != nil {
 		return 0, false
 	}
 

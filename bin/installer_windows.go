@@ -71,7 +71,9 @@ var (
 )
 
 func doInstall(config_obj *config_proto.Config) (err error) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -510,7 +512,9 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 			result.comms = comm
 			result.mu.Unlock()
 
-			ctx := context.Background()
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
 			comm.Run(ctx)
 			return
 		}

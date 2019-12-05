@@ -128,8 +128,10 @@ func (self *Expansions) Query(queries ...string) string {
 		if err != nil {
 			return fmt.Sprintf("Error: %v", err)
 		}
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-		table := EvalQueryToTable(context.Background(), scope, vql, result)
+		table := EvalQueryToTable(ctx, scope, vql, result)
 		table.Render()
 	}
 

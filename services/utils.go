@@ -39,8 +39,7 @@ func watchForFlowCompletion(
 	}
 
 	wg.Add(1)
-	ctx, cancel := context.WithCancel(
-		context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {
 		defer wg.Done()

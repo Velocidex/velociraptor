@@ -226,6 +226,7 @@ func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
 type RawRegistryFileCache struct {
 	registry *regparser.Registry
 	fd       glob.ReadSeekCloser
+	cancel   func()
 }
 
 type RawRegFileSystemAccessor struct {
@@ -240,10 +241,6 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 		return nil, nil, err
 	}
 
-	accessor, err := glob.GetAccessor(url.Scheme, context.Background())
-	if err != nil {
-		return nil, nil, err
-	}
 	base_url := *url
 	base_url.Fragment = ""
 
@@ -252,6 +249,13 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 
 	file_cache, pres := self.fd_cache[base_url.String()]
 	if !pres {
+		ctx, cancel := context.WithCancel(context.Background())
+
+		accessor, err := glob.GetAccessor(url.Scheme, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		fd, err := accessor.Open(url.Path)
 		if err != nil {
 			return nil, nil, err
@@ -268,7 +272,9 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 		}
 
 		file_cache = &RawRegistryFileCache{
-			registry: registry, fd: fd}
+			registry: registry,
+			cancel:   cancel,
+			fd:       fd}
 
 		self.fd_cache[url.String()] = file_cache
 	}
@@ -290,6 +296,7 @@ func (self *RawRegFileSystemAccessor) New(
 		defer result.mu.Unlock()
 
 		for _, v := range result.fd_cache {
+			v.cancel()
 			v.fd.Close()
 		}
 

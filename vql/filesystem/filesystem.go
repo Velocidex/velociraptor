@@ -117,15 +117,11 @@ func (self ReadFilePlugin) processFile(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	arg *ReadFileArgs,
+	accessor glob.FileSystemAccessor,
 	file string,
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
-	if err != nil {
-		scope.Log("read_file: %v", err)
-		return
-	}
 	fd, err := accessor.Open(file)
 
 	if err != nil {
@@ -188,8 +184,17 @@ func (self ReadFilePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		if err != nil {
+			scope.Log("read_file: %v", err)
+			return
+		}
+
 		for _, file := range arg.Filenames {
-			self.processFile(ctx, scope, arg, file, output_chan)
+			self.processFile(
+				ctx, scope, arg, accessor,
+				file, output_chan)
 		}
 	}()
 

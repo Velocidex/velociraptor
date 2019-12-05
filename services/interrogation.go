@@ -120,7 +120,10 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 		client, cancel := self.APIClientFactory.GetAPIClient(self.config_obj)
 		defer cancel()
 
-		_, err := client.LabelClients(context.Background(),
+		ctx, ctx_cancel := context.WithCancel(context.Background())
+		defer ctx_cancel()
+
+		_, err := client.LabelClients(ctx,
 			&api_proto.LabelClientsRequest{
 				ClientIds: []string{client_id},
 				Labels:    client_info.Labels,

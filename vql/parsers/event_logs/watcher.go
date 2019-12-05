@@ -53,6 +53,7 @@ func (self *EventLogWatcherService) Register(
 	if !pres {
 		registration = []*Handle{}
 		self.registrations[key] = registration
+
 		go self.StartMonitoring(filename, accessor)
 	}
 
@@ -65,9 +66,19 @@ func (self *EventLogWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *EventLogWatcherService) StartMonitoring(
-	filename string, accessor string) {
+	filename string, accessor_name string) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	accessor, err := glob.GetAccessor(accessor_name, ctx)
+	if err != nil {
+		//scope.Log("Registering watcher error: %v", err)
+		return
+	}
+
 	last_event := self.findLastEvent(filename, accessor)
-	key := filename + accessor
+	key := filename + accessor_name
 	for {
 		self.mu.Lock()
 		registration, pres := self.registrations[key]
@@ -79,7 +90,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 		}
 
 		last_event = self.monitorOnce(
-			filename, accessor, last_event)
+			filename, accessor_name, accessor, last_event)
 
 		time.Sleep(FREQUENCY)
 	}
@@ -87,14 +98,8 @@ func (self *EventLogWatcherService) StartMonitoring(
 
 func (self *EventLogWatcherService) findLastEvent(
 	filename string,
-	accessor_name string) int {
+	accessor glob.FileSystemAccessor) int {
 	last_event := 0
-
-	accessor, err := glob.GetAccessor(
-		accessor_name, context.Background())
-	if err != nil {
-		return 0
-	}
 
 	fd, err := accessor.Open(filename)
 	if err != nil {
@@ -126,6 +131,7 @@ func (self *EventLogWatcherService) findLastEvent(
 func (self *EventLogWatcherService) monitorOnce(
 	filename string,
 	accessor_name string,
+	accessor glob.FileSystemAccessor,
 	last_event int) int {
 
 	self.mu.Lock()
@@ -134,12 +140,6 @@ func (self *EventLogWatcherService) monitorOnce(
 	key := filename + accessor_name
 	handles, pres := self.registrations[key]
 	if !pres {
-		return 0
-	}
-
-	accessor, err := glob.GetAccessor(
-		accessor_name, context.Background())
-	if err != nil {
 		return 0
 	}
 
