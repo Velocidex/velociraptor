@@ -1,4 +1,4 @@
-// +build windows
+// +build windows,amd64
 
 // References
 // http://blogs.microsoft.co.il/pavely/2014/02/05/creating-a-winobj-like-tool/

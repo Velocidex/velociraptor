@@ -1,4 +1,4 @@
-// +build windows
+// +build windows,amd64
 
 package process
 

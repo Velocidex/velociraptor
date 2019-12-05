@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -135,6 +136,31 @@ func (self *HuntManager) ProcessRow(
 
 	// The client will not participate in this hunt - nothing to do.
 	if !participation_row.Participate {
+		return
+	}
+
+	// Check if we already launched it on this client. We maintain
+	// a data store index of all the clients and hunts so be able
+	// to quickly check if a certain hunt ran on a particular
+	// client. We dont care too much how fast this is because the
+	// hunt manager is running as an independent service and not
+	// in the critical path.
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return
+	}
+
+	hunt_ids := []string{participation_row.HuntId}
+	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		participation_row.ClientId, hunt_ids)
+	if err == nil {
+		return
+	}
+
+	err = db.SetIndex(self.config_obj, constants.HUNT_INDEX,
+		participation_row.ClientId, hunt_ids)
+	if err != nil {
+		scope.Log("Setting hunt index: %v", err)
 		return
 	}
 

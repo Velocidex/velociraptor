@@ -5,41 +5,26 @@ description: |
   NOTE: The updates can be pulled from any web server. You need to
   ensure they are properly secured with SSL and at least a random
   nonce in their path. You may configure the Velociraptor server to
-  serve these through the public directory.
+  serve these through the public directory. Simply place the MSI in
+  the public directory within the data store and set the URL below.
 
 parameters:
   - name: clientURL
-    default: http://127.0.0.1:8000/public/velociraptor.exe
-  - name: configURL
-    default: http://127.0.0.1:8000/public/client.config.yaml
+    description: The URL to fetch the MSI package.
+    default: http://127.0.0.1:8000/public/velociraptor.msi
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     queries:
-      - |
-        /* This query fetches the binary and config and stores them in
-         temp files. Note that tempfiles will be automatically
-         cleaned at query end.
-         */
-        LET tmpfiles <= SELECT tempfile(
-           data=query(vql={
-             SELECT Content
-             FROM http_client(url=clientURL, chunk_size=30000000)
-           }),
-           extension=".exe") as Binary,
-        tempfile(
-           data=query(vql={
-             SELECT Content
-             FROM http_client(url=configURL)
-           })) as Config from scope()
-
-      - |
-        // Run the installer.
+      - // Run the installer on the downloaded file.
         SELECT * from foreach(
-         row=tmpfiles,
+         row={
+            SELECT Content AS Binary
+            FROM http_client(url=clientURL, tempfile_extension=".msi")
+         },
          query={
             SELECT * from execve(
-               argv=[Binary, "--config", Config, "-v", "service", "install"]
+               argv=["msiexec.exe", "/i", Binary]
             )
          })
