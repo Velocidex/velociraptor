@@ -158,7 +158,7 @@ func getHttpClient(
 		}
 
 		http_client_no_ssl = &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: time.Second * 1000,
 			Transport: &http.Transport{
 				MaxIdleConns: 10,
 				TLSClientConfig: &tls.Config{
@@ -175,7 +175,7 @@ func getHttpClient(
 	}
 
 	http_client = &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 1000,
 		Transport: &http.Transport{
 			Dial: (&net.Dialer{
 				KeepAlive: 600 * time.Second,
@@ -265,6 +265,11 @@ func (self *_HttpPlugin) Call(
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return
 		}
+
+		// Incorporate the context into the request so it can
+		// be timed out properly when the VQL query is
+		// aborted.
+		req = req.WithContext(ctx)
 
 		scope.Log("Fetching %v\n", arg.Url)
 

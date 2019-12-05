@@ -4,18 +4,18 @@ description: |
 
 parameters:
   - name: AppCompatCacheKey
-    default: HKEY_LOCAL_MACHINE/System/CurrentControlSet/Control/Session Manager/AppCompatCache/AppCompatCache
+    default: HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/AppCompatCache
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - queries:
-      - |
+      - LET AppCompatKeys = SELECT * FROM glob(globs=AppCompatCacheKey, accessor='reg')
         SELECT * FROM foreach(
           row={
-              SELECT Data FROM read_file(
-                  filenames=AppCompatCacheKey, accessor='reg')
+              SELECT Filename, Data FROM read_file(
+                  filenames=AppCompatKey.FullPath, accessor='reg')
           }, query={
-              SELECT name as Name, epoch, time
+              SELECT Filename AS Key, name as Name, epoch, time
               FROM appcompatcache(value=Data)
         }) WHERE epoch < 2000000000

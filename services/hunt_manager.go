@@ -34,6 +34,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -57,6 +58,8 @@ type HuntManager struct {
 	wg         sync.WaitGroup
 	done       chan bool
 	config_obj *config_proto.Config
+
+	hunt_dispatch_cache *utils.LRU
 }
 
 func (self *HuntManager) Start() error {
@@ -136,6 +139,18 @@ func (self *HuntManager) ProcessRow(
 	// The client will not participate in this hunt - nothing to do.
 	if !participation_row.Participate {
 		return
+	}
+
+	// Check if we already launched it on this client.
+	key := participation_row.ClientId + participation_row.HuntId
+	key_int := utils.GetLRUHash(key)
+	value, pres := self.hunt_dispatch_cache.Get(key_int)
+	if pres {
+		if value.(string) == key {
+			return
+		}
+
+		self.hunt_dispatch_cache.Add(key_int, key)
 	}
 
 	// Fetch the CSV writer for this hunt or create a new one and
@@ -226,13 +241,19 @@ func (self *HuntManager) ProcessRow(
 
 func startHuntManager(config_obj *config_proto.Config) (
 	*HuntManager, error) {
-	result := &HuntManager{
-		config_obj: config_obj,
-		writers:    make(map[string]*csv.CSVWriter),
-		done:       make(chan bool),
-		wg:         sync.WaitGroup{},
+	lru, err := utils.NewLRU(20000, nil)
+	if err != nil {
+		return nil, err
 	}
-	err := result.Start()
+
+	result := &HuntManager{
+		config_obj:          config_obj,
+		writers:             make(map[string]*csv.CSVWriter),
+		done:                make(chan bool),
+		wg:                  sync.WaitGroup{},
+		hunt_dispatch_cache: lru,
+	}
+	err = result.Start()
 	return result, err
 }
 

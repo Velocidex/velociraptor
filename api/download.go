@@ -155,6 +155,8 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return err
 	}
 
+	fd.Truncate(0)
+
 	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
 	if err != nil {
 		return err
@@ -298,6 +300,7 @@ func createHuntDownloadFile(
 	if err != nil {
 		return err
 	}
+	fd.Truncate(0)
 
 	hunt_details, err := flows.GetHunt(config_obj,
 		&api_proto.GetHuntRequest{HuntId: hunt_id})

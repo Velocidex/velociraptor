@@ -138,17 +138,17 @@ func calculateFlowConditionQuery(
 
 	// TODO.
 
-	default_query := getDefaultCollectorArgs(hunt.HuntId)
+	default_query := getDefaultCollectorArgs(hunt)
 	err := artifacts.Obfuscate(config_obj, default_query)
 	return default_query, err
 }
 
-func getDefaultCollectorArgs(hunt_id string) *actions_proto.VQLCollectorArgs {
+func getDefaultCollectorArgs(hunt *api_proto.Hunt) *actions_proto.VQLCollectorArgs {
 	return &actions_proto.VQLCollectorArgs{
 		Env: []*actions_proto.VQLEnv{
 			&actions_proto.VQLEnv{
 				Key:   "HuntId",
-				Value: hunt_id,
+				Value: hunt.HuntId,
 			},
 		},
 		Query: []*actions_proto.VQLRequest{
