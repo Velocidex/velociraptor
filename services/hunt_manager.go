@@ -34,7 +34,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -59,7 +58,7 @@ type HuntManager struct {
 	done       chan bool
 	config_obj *config_proto.Config
 
-	hunt_dispatch_cache *utils.LRU
+	hunt_dispatch_cache map[string]bool
 }
 
 func (self *HuntManager) Start() error {
@@ -143,12 +142,11 @@ func (self *HuntManager) ProcessRow(
 
 	// Check if we already launched it on this client.
 	key := participation_row.ClientId + participation_row.HuntId
-	key_int := utils.GetLRUHash(key)
-	value, pres := self.hunt_dispatch_cache.Get(key_int)
-	if pres && value.(string) == key {
+	_, pres := self.hunt_dispatch_cache[key]
+	if pres {
 		return
 	}
-	self.hunt_dispatch_cache.Add(key_int, key)
+	self.hunt_dispatch_cache[key] = true
 
 	// Fetch the CSV writer for this hunt or create a new one and
 	// cache it.
@@ -238,17 +236,12 @@ func (self *HuntManager) ProcessRow(
 
 func startHuntManager(config_obj *config_proto.Config) (
 	*HuntManager, error) {
-	lru, err := utils.NewLRU(20000, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	result := &HuntManager{
 		config_obj:          config_obj,
 		writers:             make(map[string]*csv.CSVWriter),
 		done:                make(chan bool),
 		wg:                  sync.WaitGroup{},
-		hunt_dispatch_cache: lru,
+		hunt_dispatch_cache: make(map[string]bool),
 	}
 	err = result.Start()
 	return result, err

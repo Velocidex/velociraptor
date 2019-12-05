@@ -11,7 +11,7 @@ import (
 )
 
 type SleepArgs struct {
-	Sleep int64 `vfilter:"optional,field=sleep,doc=The number of seconds to sleep"`
+	Sleep int64 `vfilter:"optional,field=time,doc=The number of seconds to sleep"`
 }
 
 type SleepFunction struct{}
