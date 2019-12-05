@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -57,8 +58,6 @@ type HuntManager struct {
 	wg         sync.WaitGroup
 	done       chan bool
 	config_obj *config_proto.Config
-
-	hunt_dispatch_cache map[string]bool
 }
 
 func (self *HuntManager) Start() error {
@@ -140,13 +139,30 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	// Check if we already launched it on this client.
-	key := participation_row.ClientId + participation_row.HuntId
-	_, pres := self.hunt_dispatch_cache[key]
-	if pres {
+	// Check if we already launched it on this client. We maintain
+	// a data store index of all the clients and hunts so be able
+	// to quickly check if a certain hunt ran on a particular
+	// client. We dont care too much how fast this is because the
+	// hunt manager is running as an independent service and not
+	// in the critical path.
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
 		return
 	}
-	self.hunt_dispatch_cache[key] = true
+
+	hunt_ids := []string{participation_row.HuntId}
+	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		participation_row.ClientId, hunt_ids)
+	if err == nil {
+		return
+	}
+
+	err = db.SetIndex(self.config_obj, constants.HUNT_INDEX,
+		participation_row.ClientId, hunt_ids)
+	if err != nil {
+		scope.Log("Setting hunt index: %v", err)
+		return
+	}
 
 	// Fetch the CSV writer for this hunt or create a new one and
 	// cache it.
@@ -237,11 +253,10 @@ func (self *HuntManager) ProcessRow(
 func startHuntManager(config_obj *config_proto.Config) (
 	*HuntManager, error) {
 	result := &HuntManager{
-		config_obj:          config_obj,
-		writers:             make(map[string]*csv.CSVWriter),
-		done:                make(chan bool),
-		wg:                  sync.WaitGroup{},
-		hunt_dispatch_cache: make(map[string]bool),
+		config_obj: config_obj,
+		writers:    make(map[string]*csv.CSVWriter),
+		done:       make(chan bool),
+		wg:         sync.WaitGroup{},
 	}
 	err := result.Start()
 	return result, err

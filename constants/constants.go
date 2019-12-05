@@ -34,6 +34,9 @@ const (
 	// The GUI uses this as the client index.
 	CLIENT_INDEX_URN = "/client_index/"
 
+	// An index of all the hunts and clients.
+	HUNT_INDEX = "/hunt_index/"
+
 	USER_URN = "/users/"
 
 	// Well known flows - Request ID:

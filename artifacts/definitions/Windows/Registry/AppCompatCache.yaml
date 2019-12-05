@@ -11,10 +11,10 @@ precondition: SELECT OS From info() where OS = 'windows'
 sources:
   - queries:
       - LET AppCompatKeys = SELECT * FROM glob(globs=AppCompatCacheKey, accessor='reg')
-        SELECT * FROM foreach(
+      - SELECT * FROM foreach(
           row={
               SELECT Filename, Data FROM read_file(
-                  filenames=AppCompatKey.FullPath, accessor='reg')
+                  filenames=AppCompatKeys.FullPath, accessor='reg')
           }, query={
               SELECT Filename AS Key, name as Name, epoch, time
               FROM appcompatcache(value=Data)
