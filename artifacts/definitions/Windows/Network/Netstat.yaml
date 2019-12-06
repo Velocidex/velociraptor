@@ -13,7 +13,7 @@ sources:
       } AS Name, FamilyString as Family,
       TypeString as Type,
       Status,
-      Laddr.IP, Laddr.Port,
-      Raddr.IP, Raddr.Port,
+      LaddrIP, LaddrPort,
+      RaddrIP, RaddrPort,
       Timestamp
     FROM netstat()

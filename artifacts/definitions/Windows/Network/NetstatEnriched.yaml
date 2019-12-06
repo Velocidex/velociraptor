@@ -145,8 +145,8 @@ sources:
             FamilyString as Family,
             TypeString as Type,
             Status,
-            Laddr.IP, Laddr.Port,
-            Raddr.IP, Raddr.Port,
+            LaddrIP, LaddrPort,
+            RaddrIP, RaddrPort,
             Timestamp
         FROM netstat()
         WHERE Path =~ ProcessPathRegex 
@@ -162,7 +162,7 @@ sources:
             and Status =~ StatusRegex.Regex[0]
             and Family =~ FamilyRegex.Regex[0]
             and Type =~ TypeRegex.Regex[0]
-            and ( format(format="%v", args=Laddr.IP) =~ IPRegex
-                or format(format="%v", args=Raddr.IP) =~ IPRegex )
-            and ( format(format="%v", args=Laddr.Port) =~ PortRegex
-                or format(format="%v", args=Raddr.Port) =~ PortRegex )
+            and ( format(format="%v", args=LaddrIP) =~ IPRegex
+                or format(format="%v", args=RaddrIP) =~ IPRegex )
+            and ( format(format="%v", args=LaddrPort) =~ PortRegex
+                or format(format="%v", args=RaddrPort) =~ PortRegex )
