@@ -145,8 +145,8 @@ sources:
             FamilyString as Family,
             TypeString as Type,
             Status,
-            LaddrIP, LaddrPort,
-            RaddrIP, RaddrPort,
+            Laddr.IP AS LaddrIP, Laddr.Port AS LaddrPort,
+            Raddr.IP AS RaddrIP, Raddr.Port AS RaddrPort,
             Timestamp
         FROM netstat()
         WHERE Path =~ ProcessPathRegex 
