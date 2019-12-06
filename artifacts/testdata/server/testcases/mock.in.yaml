@@ -27,11 +27,49 @@ Parameters:
        "_Source": "Windows.Network.Netstat"
       }
      ]
-
+  NetstatEnrichedMock: |
+    [{
+      "Pid": 7028,
+      "Ppid": 2120,
+      "Name": "nc.exe",
+      "Path": "C:\\Users\\yolo\\Desktop\\nc.exe",
+      "CommandLine": "C:\\Users\\yolo\\Desktop\\nc.exe  -L -p 3889 -s 0.0.0.0",
+      "Hash": {
+       "MD5": "5dcf26e3fbce71902b0cd7c72c60545b",
+       "SHA1": "970bbe298c8ec673fe2257ad6363d29942171fd1",
+       "SHA256": "e8fbec25db4f9d95b5e8f41cca51a4b32be8674a4dea7a45b6f7aeb22dbc38db"
+      },
+      "Username": "DESKTOP-687T2NR\\yolo",
+      "Authenticode": {
+       "Filename": "C:\\Users\\yolo\\Desktop\\nc.exe",
+       "ProgramName": "",
+       "PublisherLink": "",
+       "MoreInfoLink": "",
+       "SerialNumber": "010000000001307a27872d",
+       "IssuerName": "GlobalSign ObjectSign CA",
+       "SubjectName": "Jernej Simoncic",
+       "TimestampIssuerName": "GlobalSign Timestamping CA",
+       "TimestampSubjectName": "GlobalSign Time Stamping Authority",
+       "Timestamp": "2011/09/16 22:52:48",
+       "Trusted": "trusted"
+      },
+      "Family": "IPv4",
+      "Type": "TCP",
+      "Status": "LISTEN",
+      "Laddr.IP": "0.0.0.0",
+      "Laddr.Port": 3889,
+      "Raddr.IP": "0.0.0.0",
+      "Raddr.Port": 0,
+      "Timestamp": "2019-12-06T05:24:30Z",
+      "_Source": "Windows.Network.NetstatEnriched/Netstat"
+     }
+    ]
 Queries:
   # Mock out the info plugin just for fun.
   - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ),
-      mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=NetstatMock))
+      mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=NetstatMock)),
+      mock(artifact=Artifact.Windows.Network.NetstatEnriched, results=parse_json_array(data=NetstatEnrichedMock))
       FROM scope()
   - SELECT * FROM info()
   - SELECT * FROM Artifact.Windows.Network.Netstat()
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched()

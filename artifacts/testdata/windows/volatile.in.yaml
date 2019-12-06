@@ -1,8 +1,0 @@
-Queries:
-  - SELECT Name, Path, CommandLine, 
-      Hash, Username, Authenticode, 
-      Family, Type, Status,
-      Laddr.IP AS LaddrIP, Laddr.Port AS LaddrPort,
-      Raddr.IP AS RaddrIP, Raddr.Port AS RaddrPort,
-    FROM Artifact.Windows.Network.NetstatEnriched()
-    WHERE Name = "nc.exe"

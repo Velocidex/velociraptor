@@ -25,8 +25,6 @@ install:
     echo Hello > C:\hello.txt
     echo HelloADS > C:\hello.txt:myads
     fsutil file setshortname C:\hello.txt hi.txt
-    SCHTASKS /Create /F /SC ONCE /ST 00:00 /TN "NetCat test" /TR "cmd /c c:\velociraptor\artifacts\testdata\files\nc.exe -L -p 3889 -s 0.0.0.0"
-    SCHTASKS /Run /I /TN "NetCat test"
 
 - go version
 - go env
