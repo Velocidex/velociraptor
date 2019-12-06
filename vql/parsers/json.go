@@ -57,8 +57,8 @@ func (self ParseJsonFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	result := make(map[string]interface{})
-	err = json.Unmarshal([]byte(arg.Data), &result)
+	result := ordereddict.NewDict()
+	err = json.Unmarshal([]byte(arg.Data), result)
 	if err != nil {
 		scope.Log("parse_json: %v", err)
 		return &vfilter.Null{}
@@ -86,12 +86,25 @@ func (self ParseJsonArray) Call(
 		return &vfilter.Null{}
 	}
 
-	result := []interface{}{}
-	err = json.Unmarshal([]byte(arg.Data), &result)
+	result_array := []json.RawMessage{}
+	err = json.Unmarshal([]byte(arg.Data), &result_array)
 	if err != nil {
 		scope.Log("parse_json_array: %v", err)
 		return &vfilter.Null{}
 	}
+
+	result := make([]*ordereddict.Dict, 0, len(result_array))
+	for _, item := range result_array {
+		dict := ordereddict.NewDict()
+		err = json.Unmarshal(item, dict)
+		if err != nil {
+			scope.Log("parse_json_array: %v", err)
+			return &vfilter.Null{}
+		}
+
+		result = append(result, dict)
+	}
+
 	return result
 }
 
