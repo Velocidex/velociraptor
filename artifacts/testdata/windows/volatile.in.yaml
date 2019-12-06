@@ -5,4 +5,4 @@ Queries:
       Laddr.IP, Laddr.Port,
       Raddr.IP, Raddr.Port
     FROM Artifact.Windows.Network.NetstatEnriched()
-    WHERE Name = nc.exe
+    WHERE Name = "nc.exe"
