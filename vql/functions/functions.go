@@ -261,6 +261,63 @@ func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 	}
 }
 
+type _GetFunctionArgs struct {
+	Item   vfilter.Any `vfilter:"optional,field=item"`
+	Member string      `vfilter:"optional,field=member"`
+	Field  string      `vfilter:"optional,field=field"`
+}
+
+type _GetFunction struct{}
+
+func (self _GetFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "get",
+		Doc:     "Gets the member field from item.",
+		ArgType: type_map.AddType(scope, _GetFunctionArgs{}),
+	}
+}
+
+func (self _GetFunction) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &_GetFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("get: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	result := arg.Item
+	if result == nil {
+		result = scope
+	}
+
+	var pres bool
+
+	if arg.Field == "" && arg.Member == "" {
+		scope.Log("get: either Field or Member should be specified.")
+		return vfilter.Null{}
+	}
+
+	if arg.Field != "" {
+		result, pres = scope.Associative(result, arg.Field)
+		if !pres {
+			return vfilter.Null{}
+		}
+		return result
+	}
+
+	for _, member := range strings.Split(arg.Member, ".") {
+		result, pres = scope.Associative(result, member)
+		if !pres {
+			return vfilter.Null{}
+		}
+	}
+
+	return result
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
 	vql_subsystem.RegisterFunction(&_Base64Encode{})
@@ -271,4 +328,5 @@ func init() {
 	vql_subsystem.RegisterFunction(&_ToLower{})
 	vql_subsystem.RegisterFunction(&_ToUpper{})
 	vql_subsystem.RegisterFunction(&_UTF16{})
+	vql_subsystem.RegisterFunction(&_GetFunction{})
 }
