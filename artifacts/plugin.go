@@ -36,6 +36,11 @@ type ArtifactRepositoryPlugin struct {
 	children   map[string]vfilter.PluginGeneratorInterface
 	prefix     []string
 	leaf       *artifacts_proto.Artifact
+	mock       []vfilter.Row
+}
+
+func (self *ArtifactRepositoryPlugin) SetMock(mock []vfilter.Row) {
+	self.mock = mock
 }
 
 func (self *ArtifactRepositoryPlugin) Print() {
@@ -56,23 +61,29 @@ func (self *ArtifactRepositoryPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
-	if self.leaf == nil {
-		scope.Log("Artifact %s not found", strings.Join(self.prefix, "."))
-		close(output_chan)
-		return output_chan
-	}
-
-	request := &actions_proto.VQLCollectorArgs{}
-	err := self.repository.Compile(self.leaf, request)
-	if err != nil {
-		scope.Log("Artifact %s invalid: %s",
-			strings.Join(self.prefix, "."), err.Error())
-		close(output_chan)
-		return output_chan
-	}
-
 	go func() {
 		defer close(output_chan)
+
+		if self.mock != nil {
+			for _, row := range self.mock {
+				output_chan <- row
+			}
+
+			return
+		}
+
+		if self.leaf == nil {
+			scope.Log("Artifact %s not found", strings.Join(self.prefix, "."))
+			return
+		}
+
+		request := &actions_proto.VQLCollectorArgs{}
+		err := self.repository.Compile(self.leaf, request)
+		if err != nil {
+			scope.Log("Artifact %s invalid: %s",
+				strings.Join(self.prefix, "."), err.Error())
+			return
+		}
 
 		// We create a child scope for evaluating the artifact.
 		env := ordereddict.NewDict()
