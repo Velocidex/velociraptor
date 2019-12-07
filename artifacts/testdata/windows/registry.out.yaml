@@ -41,6 +41,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
  },
  {
+  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
+ },
+ {
   "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
  },
  {
@@ -55,6 +58,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
 ]SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
+ },
+ {
+  "FullPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
  },
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
