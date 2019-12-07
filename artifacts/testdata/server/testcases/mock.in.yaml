@@ -25,20 +25,7 @@ Parameters:
        "Raddr.Port": 0,
        "Timestamp": "2019-11-27T02:55:17Z",
        "_Source": "Windows.Network.Netstat"
-      }, 
-      {
-       "Pid": 7028,
-       "Name": "nc.exe",
-       "Family": "IPv4",
-       "Type": "TCP",
-       "Status": "LISTEN",
-       "Laddr.IP": "0.0.0.0",
-       "Laddr.Port": 3889,
-       "Raddr.IP": "0.0.0.0",
-       "Raddr.Port": 0,
-       "Timestamp": "2019-12-06T05:24:30Z",
-       "_Source": "Windows.Network.Netstat"
-     }
+      }
     [
 
 ]
