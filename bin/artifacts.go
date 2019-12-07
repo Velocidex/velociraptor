@@ -65,8 +65,8 @@ var (
 		Default("").String()
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
-		"format", "Output format to use.").
-		Default("json").Enum("text", "json", "csv")
+		"format", "Output format to use  (text,json,csv,jsonl).").
+		Default("json").Enum("text", "json", "csv", "jsonl")
 
 	artifact_command_collect_details = artifact_command_collect.Flag(
 		"details", "Show more details (Use -d -dd for even more)").
@@ -153,6 +153,9 @@ func collectArtifact(
 
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)
+
+		case "jsonl":
+			outputJSONL(ctx, scope, vql, os.Stdout)
 
 		case "csv":
 			outputCSV(ctx, scope, vql, os.Stdout)

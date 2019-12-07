@@ -42,8 +42,8 @@ var (
 
 	rate = app.Flag("ops_per_second", "Rate of execution").
 		Default("1000000").Float64()
-	format = query.Flag("format", "Output format to use.").
-		Default("json").Enum("text", "json", "csv")
+	format = query.Flag("format", "Output format to use (text,json,csv,jsonl).").
+		Default("json").Enum("text", "json", "csv", "jsonl")
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
 
@@ -68,6 +68,46 @@ func outputJSON(ctx context.Context,
 			return
 		}
 		out.Write(result.Payload)
+	}
+}
+
+func outputJSONL(ctx context.Context,
+	scope *vfilter.Scope,
+	vql *vfilter.VQL,
+	out io.Writer) {
+	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
+rows:
+	for {
+		result, ok := <-result_chan
+		if !ok {
+			return
+		}
+
+		result_array := []json.RawMessage{}
+		err := json.Unmarshal(result.Payload, &result_array)
+		if err != nil {
+			continue rows
+		}
+
+		for _, item := range result_array {
+			// Decode the row into an ordered dict to maintain ordering.
+			row := ordereddict.NewDict()
+			err = json.Unmarshal(item, row)
+			if err != nil {
+				continue
+			}
+
+			// Re-serialize it as compact json.
+			serialized, err := json.Marshal(row)
+			if err != nil {
+				continue
+			}
+
+			out.Write(serialized)
+
+			// Separate lines with \n
+			out.Write([]byte("\n"))
+		}
 	}
 }
 
@@ -148,6 +188,10 @@ func doQuery() {
 			table.Render()
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)
+
+		case "jsonl":
+			outputJSONL(ctx, scope, vql, os.Stdout)
+
 		case "csv":
 			outputCSV(ctx, scope, vql, os.Stdout)
 		}
