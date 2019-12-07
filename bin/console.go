@@ -45,8 +45,8 @@ import (
 var (
 	// Command line interface for VQL commands.
 	console        = app.Command("console", "Enter the interactive console")
-	console_format = console.Flag("format", "Output format to use.").
-			Default("json").Enum("text", "json", "csv")
+	console_format = console.Flag("format", "Output format to use  (text,json,csv,jsonl).").
+			Default("json").Enum("text", "json", "csv", "jsonl")
 	console_dump_dir = console.Flag("dump_dir", "Directory to dump output files.").
 				Default(".").String()
 
@@ -266,6 +266,10 @@ func executeVQL(
 		table.Render()
 	case "json":
 		outputJSON(ctx, scope, vql, out)
+
+	case "jsonl":
+		outputJSONL(ctx, scope, vql, out)
+
 	case "csv":
 		outputCSV(ctx, scope, vql, out)
 	default:

@@ -38,8 +38,8 @@ var (
 	fs_command_verbose = fs_command.Flag(
 		"details", "Show more verbose info").Short('d').
 		Default("false").Bool()
-	fs_command_format = fs_command.Flag("format", "Output format to use.").
-				Default("text").Enum("text", "json")
+	fs_command_format = fs_command.Flag("format", "Output format to use  (text,json,jsonl).").
+				Default("text").Enum("text", "json", "jsonl")
 
 	fs_command_ls      = fs_command.Command("ls", "List files")
 	fs_command_ls_path = fs_command_ls.Arg(
@@ -65,6 +65,10 @@ func eval_query(query string, scope *vfilter.Scope) {
 	case "text":
 		table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
 		table.Render()
+
+	case "jsonl":
+		outputJSONL(ctx, scope, vql, os.Stdout)
+
 	case "json":
 		outputJSON(ctx, scope, vql, os.Stdout)
 	}
