@@ -1,4 +1,4 @@
-LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ), mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=NetstatMock)), mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock)) FROM scope()[]SELECT * FROM info()[
+LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ), mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)), mock(plugin='netstat', results=parse_json_array(data=NetstatMock)), mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock)) FROM scope()[]SELECT * FROM info()[
  {
   "foo": "bar"
  },
@@ -45,4 +45,112 @@ LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] )
   "Timestamp": "2019-12-06T05:24:30Z",
   "_Source": "Windows.Network.Netstat"
  }
-]SELECT * FROM Artifact.Windows.Network.NetstatEnriched(AuthenticodeVerified="TRUSTED",Status="LISTENING",PortRegex="3889")[]
+]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( AuthenticodeVerified="TRUSTED", Status="LISTENING", PortRegex="3889")[
+ {
+  "Pid": 7028,
+  "Ppid": 2120,
+  "Name": "nc.exe",
+  "Path": "C:\\Users\\yolo\\Desktop\\nc.exe",
+  "CommandLine": "C:\\Users\\yolo\\Desktop\\nc.exe  -L -p 3889 -s 0.0.0.0",
+  "Hash": {
+   "MD5": "5dcf26e3fbce71902b0cd7c72c60545b",
+   "SHA1": "970bbe298c8ec673fe2257ad6363d29942171fd1",
+   "SHA256": "e8fbec25db4f9d95b5e8f41cca51a4b32be8674a4dea7a45b6f7aeb22dbc38db"
+  },
+  "Username": "DESKTOP-687T2NR\\yolo",
+  "Authenticode": {
+   "Filename": "C:\\Users\\yolo\\Desktop\\nc.exe",
+   "ProgramName": "",
+   "PublisherLink": "",
+   "MoreInfoLink": "",
+   "SerialNumber": "010000000001307a27872d",
+   "IssuerName": "GlobalSign ObjectSign CA",
+   "SubjectName": "Jernej Simoncic",
+   "TimestampIssuerName": "GlobalSign Timestamping CA",
+   "TimestampSubjectName": "GlobalSign Time Stamping Authority",
+   "Timestamp": "2011/09/16 22:52:48",
+   "Trusted": "trusted"
+  },
+  "Family": "IPv6",
+  "Type": "TCP",
+  "Status": "LISTEN",
+  "Laddr.IP": "::",
+  "Laddr.Port": 3889,
+  "Raddr.IP": "::",
+  "Raddr.Port": 0,
+  "Timestamp": "2019-11-27T01:18:15Z",
+  "_Source": "Windows.Network.NetstatEnriched/Netstat"
+ }
+]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv4", PortRegex="3889")[]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( AuthenticodeVerified="TRUSTED", Status="LISTENING", Family="IPv6", PortRegex="3889")[
+ {
+  "Pid": 7028,
+  "Ppid": 2120,
+  "Name": "nc.exe",
+  "Path": "C:\\Users\\yolo\\Desktop\\nc.exe",
+  "CommandLine": "C:\\Users\\yolo\\Desktop\\nc.exe  -L -p 3889 -s 0.0.0.0",
+  "Hash": {
+   "MD5": "5dcf26e3fbce71902b0cd7c72c60545b",
+   "SHA1": "970bbe298c8ec673fe2257ad6363d29942171fd1",
+   "SHA256": "e8fbec25db4f9d95b5e8f41cca51a4b32be8674a4dea7a45b6f7aeb22dbc38db"
+  },
+  "Username": "DESKTOP-687T2NR\\yolo",
+  "Authenticode": {
+   "Filename": "C:\\Users\\yolo\\Desktop\\nc.exe",
+   "ProgramName": "",
+   "PublisherLink": "",
+   "MoreInfoLink": "",
+   "SerialNumber": "010000000001307a27872d",
+   "IssuerName": "GlobalSign ObjectSign CA",
+   "SubjectName": "Jernej Simoncic",
+   "TimestampIssuerName": "GlobalSign Timestamping CA",
+   "TimestampSubjectName": "GlobalSign Time Stamping Authority",
+   "Timestamp": "2011/09/16 22:52:48",
+   "Trusted": "trusted"
+  },
+  "Family": "IPv6",
+  "Type": "TCP",
+  "Status": "LISTEN",
+  "Laddr.IP": "::",
+  "Laddr.Port": 3889,
+  "Raddr.IP": "::",
+  "Raddr.Port": 0,
+  "Timestamp": "2019-11-27T01:18:15Z",
+  "_Source": "Windows.Network.NetstatEnriched/Netstat"
+ }
+]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( Status="ESTABLISHED")[
+ {
+  "Pid": 4888,
+  "Ppid": 4856,
+  "Name": "explorer.exe",
+  "Path": "C:\\Windows\\explorer.exe",
+  "CommandLine": "C:\\Windows\\Explorer.EXE",
+  "Hash": {
+   "MD5": "4e196cea0c9c46a7d656c67e52e8c7c7",
+   "SHA1": "726c9d759c5f02080fa003b50466a3be0c959865",
+   "SHA256": "ed5f36137d09e1cfc0ccf2675fb5d460e7eed135ba36d3259d2c510592047f28"
+  },
+  "Username": "DESKTOP-BP4S7TF\\test",
+  "Authenticode": {
+   "Filename": "C:\\Windows\\explorer.exe",
+   "ProgramName": "Microsoft Windows",
+   "PublisherLink": "",
+   "MoreInfoLink": "http://www.microsoft.com/windows",
+   "SerialNumber": "330000023241fb59996dcc4dff000000000232",
+   "IssuerName": "Microsoft Windows Production PCA 2011",
+   "SubjectName": "Microsoft Windows",
+   "TimestampIssuerName": "",
+   "TimestampSubjectName": "",
+   "Timestamp": "",
+   "Trusted": "trusted"
+  },
+  "Family": "IPv4",
+  "Type": "TCP",
+  "Status": "ESTAB",
+  "Laddr.IP": null,
+  "Laddr.Port": null,
+  "Raddr.IP": null,
+  "Raddr.Port": null,
+  "Timestamp": "2019-12-07T03:30:58Z",
+  "_Source": "Windows.Network.NetstatEnriched/Netstat"
+ }
+]SELECT * FROM Artifact.Windows.Network.NetstatEnriched( AuthenticodeVerified="NOT TRUSTED", Status="ESTABLISHED")[]
