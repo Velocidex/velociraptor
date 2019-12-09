@@ -5,6 +5,7 @@ package tools
 import (
 	"io"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -30,7 +31,7 @@ type S3UploadFunction struct{}
 
 func (self *S3UploadFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
-	args *vfilter.Dict) vfilter.Any {
+	args *ordereddict.Dict) vfilter.Any {
 
 	arg := &S3UploadArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
