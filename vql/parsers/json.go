@@ -93,13 +93,21 @@ func (self ParseJsonArray) Call(
 		return &vfilter.Null{}
 	}
 
-	result := make([]*ordereddict.Dict, 0, len(result_array))
+	result := make([]vfilter.Any, 0, len(result_array))
 	for _, item := range result_array {
 		dict := ordereddict.NewDict()
 		err = json.Unmarshal(item, dict)
 		if err != nil {
-			scope.Log("parse_json_array: %v", err)
-			return &vfilter.Null{}
+			// It might not be a dict - support any value.
+			var any_value interface{}
+			err = json.Unmarshal(item, &any_value)
+			if err != nil {
+				scope.Log("parse_json_array: %v", err)
+				return &vfilter.Null{}
+			}
+
+			result = append(result, any_value)
+			continue
 		}
 
 		result = append(result, dict)
