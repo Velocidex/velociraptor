@@ -3,7 +3,7 @@ description: |
   NetstatEnhanced adds addtional data points to the Netstat artifact and
   enables verbose search options.
 
-  Examples include: Process name and path, authenticode information or 
+  Examples include: Process name and path, authenticode information or
   network connection details.
 
 author: "Matthew Green - @mgreen27"
@@ -110,29 +110,29 @@ parameters:
 sources:
   - name: Netstat
     queries:
-      - LET VerifiedRegex <= SELECT Regex 
+      - LET VerifiedRegex <= SELECT Regex
             FROM parse_csv(filename=AuthenticodeVerifiedMap, accessor="data")
             WHERE Choice=AuthenticodeVerified LIMIT 1
-      - LET StatusRegex <= SELECT Regex 
+      - LET StatusRegex <= SELECT Regex
             FROM parse_csv(filename=StatusMap, accessor="data")
             WHERE Choice=Status LIMIT 1
-      - LET FamilyRegex <= SELECT Regex 
+      - LET FamilyRegex <= SELECT Regex
             FROM parse_csv(filename=FamilyMap, accessor="data")
             WHERE Choice=Family LIMIT 1
-      - LET TypeRegex <= SELECT Regex 
+      - LET TypeRegex <= SELECT Regex
             FROM parse_csv(filename=TypeMap, accessor="data")
             WHERE Choice=Type LIMIT 1
-            
+
       - LET process <= SELECT Pid as PsId,
             Ppid,
-            Name, 
-            CommandLine, 
-            Exe, 
+            Name,
+            CommandLine,
+            Exe,
             Hash,
             Authenticode,
             Username
         FROM Artifact.Windows.System.Pslist()
-        WHERE Name =~ ProcessNameRegex 
+        WHERE Name =~ ProcessNameRegex
 
       - SELECT Pid,
             { SELECT Ppid FROM process WHERE PsId = Pid } as Ppid,
@@ -149,16 +149,16 @@ sources:
             Raddr.IP, Raddr.Port,
             Timestamp
         FROM netstat()
-        WHERE Path =~ ProcessPathRegex 
-            and CommandLine =~ CommandLineRegex 
-            and Username =~ UsernameRegex 
-            and ( Hash.MD5 =~ HashRegex 
+        WHERE Path =~ ProcessPathRegex
+            and CommandLine =~ CommandLineRegex
+            and Username =~ UsernameRegex
+            and ( Hash.MD5 =~ HashRegex
               or Hash.SHA1 =~ HashRegex
-              or Hash.SHA256 =~ HashRegex 
+              or Hash.SHA256 =~ HashRegex
               or not Hash )
-            and ( Authenticode.IssuerName =~ AuthenticodeIssuerRegex or not Authenticode ) 
-            and ( Authenticode.SubjectName =~ AuthenticodeSubjectRegex or not Authenticode ) 
-            and ( Authenticode.Trusted =~ VerifiedRegex.Regex[0] or not Authenticode ) 
+            and ( Authenticode.IssuerName =~ AuthenticodeIssuerRegex or not Authenticode )
+            and ( Authenticode.SubjectName =~ AuthenticodeSubjectRegex or not Authenticode )
+            and ( Authenticode.Trusted =~ VerifiedRegex.Regex[0] or not Authenticode )
             and Status =~ StatusRegex.Regex[0]
             and Family =~ FamilyRegex.Regex[0]
             and Type =~ TypeRegex.Regex[0]
