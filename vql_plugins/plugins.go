@@ -30,5 +30,6 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/ese"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/event_logs"
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers/syslog"
 	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )

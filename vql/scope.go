@@ -19,6 +19,8 @@
 package vql
 
 import (
+	"sync"
+
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -28,12 +30,17 @@ const (
 
 type ScopeCache struct {
 	cache map[string]interface{}
+
+	mu sync.Mutex
 }
 
 func CacheGet(scope *vfilter.Scope, key string) interface{} {
 	any_obj, _ := scope.Resolve(CACHE_VAR)
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
+		cache.mu.Lock()
+		defer cache.mu.Unlock()
+
 		return cache.cache[key]
 	}
 	return nil
@@ -43,6 +50,9 @@ func CacheSet(scope *vfilter.Scope, key string, value interface{}) {
 	any_obj, _ := scope.Resolve(CACHE_VAR)
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
+		cache.mu.Lock()
+		defer cache.mu.Unlock()
+
 		cache.cache[key] = value
 	}
 }

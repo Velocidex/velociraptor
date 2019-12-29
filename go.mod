@@ -22,6 +22,7 @@ require (
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.3.0
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
+	github.com/aws/aws-sdk-go v1.26.7
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
 	github.com/clbanning/mxj v1.8.4
@@ -83,6 +84,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/tebeka/strftime v0.1.3 // indirect
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
+	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
@@ -110,7 +112,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20191129072118-57f81a973126
+	www.velocidex.com/golang/vfilter v0.0.0-20191229050130-26f5e7ca4024
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

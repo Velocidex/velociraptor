@@ -1,0 +1,54 @@
+name: Linux.Events.SSHBruteforce
+description: |
+  This is a monitoring artifact which detects a successful SSH login
+  preceeded by some failed attempts within the last hour.
+
+  This is particularly important in the case of ssh brute forcers. If
+  one of the brute force password attempts succeeded the password
+  guessing program will likely report the success and move on. This
+  alert might provide sufficient time for admins to lock down the
+  account before attackers can exploit the weak password.
+
+reference:
+  - https://www.elastic.co/blog/grokking-the-linux-authorization-logs
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: syslogAuthLogPath
+    default: /var/log/auth.log
+
+  - name: SSHGrok
+    description: A Grok expression for parsing SSH auth lines.
+    default: >-
+      %{SYSLOGTIMESTAMP:timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}: %{DATA:event} %{DATA:method} for (invalid user )?%{DATA:user} from %{IPORHOST:ip} port %{NUMBER:port} ssh2(: %{GREEDYDATA:system.auth.ssh.signature})?
+
+  - name: MinimumFailedLogins
+    description: Minimum number of failed logins before a successful login.
+    default: 2
+
+sources:
+  - queries:
+      # Basic syslog parsing via GROK expressions.
+      - LET failed_login = SELECT grok(grok=SSHGrok, data=Line) AS FailedEvent,
+            Line as FailedLine
+        FROM watch_syslog(filename=syslogAuthLogPath)
+        WHERE FailedEvent.program = "sshd" AND FailedEvent.event = "Failed"
+              AND FailedEvent.method = "password"
+
+      - LET last_failed_events = SELECT * FROM fifo(
+              query=failed_login, max_rows=50, max_age=3600)
+
+      - LET _ <= SELECT * FROM last_failed_events
+
+      - LET success_login = SELECT grok(grok=SSHGrok, data=Line) AS Event, Line
+        FROM watch_syslog(filename=syslogAuthLogPath)
+        WHERE Event.program = "sshd" AND Event.event = "Accepted"
+              AND Event.method = "password"
+
+      - SELECT Event, Line, {
+           SELECT FailedLine FROM last_failed_events
+           WHERE Event.user = FailedEvent.user
+        } AS Failures
+        FROM success_login
+        WHERE len(list=Failures) > int(int=MinimumFailedLogins)
