@@ -1,0 +1,3810 @@
+- name: appcompatcache
+  description: Parses the appcompatcache.
+  type: Plugin
+  args: []
+  category: ""
+- name: array
+  description: |
+    Create an array with all the args.
+
+    This function accepts arbitrary arguments and creates an array by
+    flattening the arguments. For example `array(a=1, b=2)` will return
+    `[1, 2]`.
+
+    You can use this to flatten a subquery as well:
+
+    ```sql
+    SELECT array(a1={ SELECT User FROM Artifact.Windows.System.Users() }) as Users FROM scope()
+    ```
+
+    Will return a single row with Users being an array of names.
+
+  type: Function
+  args: []
+  category: ""
+- name: atoi
+  description: Convert a string to an int.
+  type: Function
+  args:
+  - name: string
+    description: A string to convert to int
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: authenticode
+  description: |
+    This plugin uses the Windows API to extract authenticode signature
+    details from PE files.
+
+    Since we use the windows API this can only work with the "file"
+    accessor.
+
+  type: Function
+  args:
+  - name: filename
+    description: The filename to parse.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: base64decode
+  description: Decodes a base64 encoded string.
+  type: Function
+  args:
+  - name: string
+    description: A string to decode
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: base64encode
+  description: Encodes a string into base64.
+  type: Function
+  args:
+  - name: string
+    description: A string to decode
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: basename
+  description: Return the basename of the path.
+  type: Function
+  args:
+  - name: path
+    description: Extract directory name of path
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: binary_parse
+  description: |
+    Parse a binary string with profile based parser.
+
+    This plugin extract binary data from strings. It works by applying
+    a profile to the binary string and generating an object from
+    that. Profiles use the same syntax as Rekall or Volatility. For
+    example a profile might be:
+
+    ```json
+    {
+      "StructName": [10, {
+         "field1": [2, ["unsigned int"]],
+         "field2": [6, ["unsigned long long"]],
+      }]
+    }
+    ```
+
+    The profile is compiled and overlayed on top of the offset specified,
+    then the object is emitted with its required fields.
+
+  type: Function
+  args:
+  - name: offset
+    description: Start parsing from this offset.
+    type: ""
+    repeated: false
+    required: false
+  - name: string
+    description: The string to parse.
+    type: ""
+    repeated: false
+    required: true
+  - name: profile
+    description: The profile to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: iterator
+    description: An iterator to begin with.
+    type: ""
+    repeated: false
+    required: false
+  - name: target
+    description: The target type to fetch.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: binary_parse
+  description: Parse binary files using a profile.
+  type: Plugin
+  args:
+  - name: offset
+    description: Start parsing from this offset
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: Filename to parse
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: Accessor to use (e.g. ntfs, data)
+    type: ""
+    repeated: false
+    required: false
+  - name: profile
+    description: Profile to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: target
+    description: The target to fetch.
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: Args for the target class.
+    type: ""
+    repeated: false
+    required: false
+  - name: start
+    description: The initial field in the target to fetch.
+    type: ""
+    repeated: false
+    required: false
+  - name: target
+    description: The target to fetch.
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: Args for the target class.
+    type: ""
+    repeated: false
+    required: false
+  - name: start
+    description: The initial field in the target to fetch.
+    type: ""
+    repeated: false
+    required: false
+  - name: offset
+    description: Start parsing from this offset
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: Filename to parse
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: Accessor to use (e.g. ntfs, data)
+    type: ""
+    repeated: false
+    required: false
+  - name: profile
+    description: Profile to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: certificates
+  description: Collect certificate from the system trust store.
+  type: Plugin
+  args: []
+  category: ""
+- name: chain
+  description: |
+    Chain the output of several queries into the same table. This plugin
+    takes any args and chains them.
+
+    ### Example
+
+    The following returns the rows from the first query then the rows from
+    the second query.
+
+    ```sql
+    SELECT * FROM chain(
+    a={ SELECT ...},
+    b={ SELECT ...})
+    ```
+  type: Plugin
+  args: []
+  category: ""
+- name: clients
+  description: Retrieve the list of clients.
+  type: Plugin
+  args:
+  - name: search
+    description: 'Client search string. Can have the following prefixes: ''lable:'',
+      ''host:'''
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: search
+    description: 'Client search string. Can have the following prefixes: ''lable:'',
+      ''host:'''
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: clock
+  description: |
+    Generate a timestamp periodically. This is mostly useful for event
+    queries.
+
+    This plugin generates events periodically. The periodicity can be
+    controlled either via the `period` or the `ms` parameter. Each row
+    will be a go [time.Time](https://golang.org/pkg/time/#Time)
+    object. You can access its unix epoch time with the Sec column.
+
+    ### Example
+
+    The following will generate an event every 10 seconds.
+
+    ```sql
+    SELECT Sec FROM clock(period=10)
+    ```
+
+  type: Plugin
+  args:
+  - name: period
+    description: Wait this many seconds between events.
+    type: ""
+    repeated: false
+    required: false
+  - name: ms
+    description: Wait this many ms between events.
+    type: ""
+    repeated: false
+    required: false
+  - name: period
+    description: Wait this many seconds between events.
+    type: ""
+    repeated: false
+    required: false
+  - name: ms
+    description: Wait this many ms between events.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: collect
+  description: Collect artifacts into a local file.
+  type: Plugin
+  args:
+  - name: artifacts
+    description: A list of artifacts to collect.
+    type: ""
+    repeated: true
+    required: true
+  - name: output
+    description: A path to write the output file on.
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: Optional parameters.
+    type: ""
+    repeated: false
+    required: false
+  - name: password
+    description: An optional password to encrypt the collection zip.
+    type: ""
+    repeated: false
+    required: false
+  - name: args
+    description: Optional parameters.
+    type: ""
+    repeated: false
+    required: false
+  - name: password
+    description: An optional password to encrypt the collection zip.
+    type: ""
+    repeated: false
+    required: false
+  - name: artifacts
+    description: A list of artifacts to collect.
+    type: ""
+    repeated: true
+    required: true
+  - name: output
+    description: A path to write the output file on.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: collect
+  description: Launch an artifact collection against a client.
+  type: Function
+  args:
+  - name: client_id
+    description: The client id to schedule a collection on
+    type: ""
+    repeated: false
+    required: true
+  - name: artifacts
+    description: A list of artifacts to collect
+    type: ""
+    repeated: true
+    required: true
+  - name: env
+    description: Parameters to apply to the artifacts
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: compress
+  description: |
+    Compress a file in the server's FileStore. A compressed
+    file is archived so it takes less space. It is still possible to see
+    the file and read it but not to seek within it.
+
+  type: Function
+  args:
+  - name: path
+    description: A VFS path to compress
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: copy
+  description: Copy a file.
+  type: Function
+  args:
+  - name: filename
+    description: The file to copy from.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: dest
+    description: The destination file to write.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: count
+  description: Counts the items.
+  type: Function
+  args:
+  - name: items
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: dict
+  description: Construct a dict from arbitrary keyword args.
+  type: Function
+  args: []
+  category: ""
+- name: diff
+  description: |
+    Executes 'query' periodically and emit differences from the last query.
+
+    The `diff()` plugin runs a non-event query periodically and calculates
+    the difference between its result set from the last run.
+
+    This can be used to create event queries which watch for changes from
+    simpler non-event queries.
+
+    The `key` parameter is the name of the column which is used to
+    determine row equivalency.
+
+    {{% notice note %}}
+
+    There is only a single equivalence row specified by the `key`
+    parameter, and it must be a string. If you need to watch multiple
+    columns you need to create a new column which is the concatenation of
+    other columns. For example `format(format="%s%d", args=[Name, Pid])`
+
+    {{% /notice %}}
+
+    ### Example
+
+    The following VQL monitors all removable drives and lists files on
+    newly inserted drives, or files that have been added to removable
+    drives.
+
+    ```sql
+    LET removable_disks = SELECT Name AS Drive, Size
+    FROM glob(globs="/*", accessor="file")
+    WHERE Data.Description =~ "Removable"
+
+    LET file_listing = SELECT FullPath, timestamp(epoch=Mtime.Sec) As Modified, Size
+    FROM glob(globs=Drive+"\\**", accessor="file") LIMIT 1000
+
+    SELECT * FROM diff(
+      query={ SELECT * FROM foreach(row=removable_disks, query=file_listing) },
+      key="FullPath",
+      period=10)
+      WHERE Diff = "added"
+    ```
+
+  type: Plugin
+  args:
+  - name: query
+    description: Source for cached rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: key
+    description: The column to use as key.
+    type: ""
+    repeated: false
+    required: true
+  - name: period
+    description: Number of seconds between evaluation of the query.
+    type: ""
+    repeated: false
+    required: false
+  - name: period
+    description: Number of seconds between evaluation of the query.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: Source for cached rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: key
+    description: The column to use as key.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: dirname
+  description: Return the directory path.
+  type: Function
+  args:
+  - name: path
+    description: Extract directory name of path
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: dns
+  description: |
+    Monitor dns queries.
+
+    This plugin opens a raw socket and monitors network traffic for
+    DNS questions and answers.
+
+    {{% notice note %}}
+
+    When Velociraptor attempts to open a raw socket, sometimes Windows
+    Defender treats that as suspicious behavior and quarantines the
+    Velociraptor binary. This can be avoided by signing the binary which
+    signals to Windows Defender that the binary is legitimate.
+
+    If you do not intend to build Velociraptor from source, use the
+    official signed Velociraptor binaries which should not trigger alerts
+    from Windows Defender.
+
+    {{% /notice %}}
+
+  type: Plugin
+  args: []
+  category: ""
+- name: elastic_upload
+  description: Upload rows to elastic.
+  type: Plugin
+  args:
+  - name: type
+    description: The type of the index to upload to.
+    type: ""
+    repeated: false
+    required: true
+  - name: addresses
+    description: A list of Elasticsearch nodes to use.
+    type: ""
+    repeated: true
+    required: false
+  - name: password
+    description: Password for HTTP Basic Authentication.
+    type: ""
+    repeated: false
+    required: false
+  - name: api_key
+    description: Base64-encoded token for authorization; if set, overrides username
+      and password.
+    type: ""
+    repeated: false
+    required: false
+  - name: wait_time
+    description: Batch elastic upload this long (2 sec).
+    type: ""
+    repeated: false
+    required: false
+  - name: cloud_id
+    description: Endpoint for the Elastic Service (https://elastic.co/cloud).
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: Source for rows to upload.
+    type: ""
+    repeated: false
+    required: true
+  - name: threads
+    description: How many threads to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: index
+    description: The name of the index to upload to. If not specified ensure a column
+      is named '_index'.
+    type: ""
+    repeated: false
+    required: false
+  - name: chunk_size
+    description: The number of rows to send at the time.
+    type: ""
+    repeated: false
+    required: false
+  - name: username
+    description: Username for HTTP Basic Authentication.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: Source for rows to upload.
+    type: ""
+    repeated: false
+    required: true
+  - name: threads
+    description: How many threads to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: chunk_size
+    description: The number of rows to send at the time.
+    type: ""
+    repeated: false
+    required: false
+  - name: username
+    description: Username for HTTP Basic Authentication.
+    type: ""
+    repeated: false
+    required: false
+  - name: cloud_id
+    description: Endpoint for the Elastic Service (https://elastic.co/cloud).
+    type: ""
+    repeated: false
+    required: false
+  - name: wait_time
+    description: Batch elastic upload this long (2 sec).
+    type: ""
+    repeated: false
+    required: false
+  - name: index
+    description: The name of the index to upload to. If not specified ensure a column
+      is named '_index'.
+    type: ""
+    repeated: false
+    required: false
+  - name: type
+    description: The type of the index to upload to.
+    type: ""
+    repeated: false
+    required: true
+  - name: addresses
+    description: A list of Elasticsearch nodes to use.
+    type: ""
+    repeated: true
+    required: false
+  - name: password
+    description: Password for HTTP Basic Authentication.
+    type: ""
+    repeated: false
+    required: false
+  - name: api_key
+    description: Base64-encoded token for authorization; if set, overrides username
+      and password.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: encode
+  description: Encodes a string as as different type. Currently supported types include
+    'hex', 'base64'.
+  type: Function
+  args:
+  - name: string
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: type
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: enumerate
+  description: Collect all the items in each group by bin.
+  type: Function
+  args:
+  - name: items
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: environ
+  description: |
+    The row returned will have all environment variables as
+    columns. If the var parameter is provided, only those variables
+    will be provided.
+  type: Plugin
+  args:
+  - name: vars
+    description: Extract these variables from the environment and return them one
+      per row
+    type: ""
+    repeated: true
+    required: false
+  - name: vars
+    description: Extract these variables from the environment and return them one
+      per row
+    type: ""
+    repeated: true
+    required: false
+  category: ""
+- name: environ
+  description: Get an environment variable.
+  type: Function
+  args:
+  - name: var
+    description: Extract the var from the environment.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: execve
+  description: |
+    This plugin launches an external command and captures its STDERR,
+    STDOUT and return code. The command's stdout is split using the `sep`
+    parameter as required.
+
+    This plugin is mostly useful for running arbitrary code on the
+    client. If you do not want to allow arbitrary code to run, you can
+    disable this by setting the `prevent_execve` flag in the client's
+    config file. Be aware than many artifacts require running external
+    commands to collect their output though.
+
+    We do not actually transfer the external program to the system
+    automatically. If you need to run programs which are not usually
+    installed (e.g. Sysinternal's autoruns.exe) you will need to map them
+    from a share (requiring direct access to the AD domain) or download
+    them using the `http_client()` plugin.
+
+  type: Plugin
+  args:
+  - name: length
+    description: Size of buffer to capture output per row.
+    type: ""
+    repeated: false
+    required: false
+  - name: argv
+    description: Argv to run the command with.
+    type: ""
+    repeated: true
+    required: true
+  - name: sep
+    description: The serparator that will be used to split the stdout into rows.
+    type: ""
+    repeated: false
+    required: false
+  - name: argv
+    description: Argv to run the command with.
+    type: ""
+    repeated: true
+    required: true
+  - name: sep
+    description: The serparator that will be used to split the stdout into rows.
+    type: ""
+    repeated: false
+    required: false
+  - name: length
+    description: Size of buffer to capture output per row.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: expand
+  description: |
+    Expand the path using the environment.
+
+    This function expands environment variables into the path. It is
+    normally needed after using registry values of type REG_EXPAND_SZ as
+    they typically contain environment strings. Velociraptor does not
+    automatically expand such values since environment variables typically
+    depend on the specific user account which reads the registry value
+    (different user accounts can have different environment variables).
+
+  type: Function
+  args:
+  - name: path
+    description: A path with environment escapes
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: fifo
+  description: |
+    Executes 'query' and cache a number of rows from it. For each invocation
+    we present the set of past rows.
+
+    The `fifo()` plugin allows for VQL queries to apply across historical
+    data. The fifo plugin accepts another event query as parameter, then
+    retains the last `max_rows` rows from it in an internal queue. Every
+    subsequent evaluation from the query will return the full set of rows
+    in the queue. Older rows are expired from the queue according to the
+    `max_age` parameter.
+
+    Fifos are usually used to form queries that look for specific pattern
+    of behavior. For example, a successful logon followed by failed
+    logons. In this case the fifo retains the recent history of failed
+    logons in its internal queue, then when a successful logon occurs we
+    can check the recent failed ones in its queue.
+
+    ### Example
+
+    The following checks for 5 failed logons followed by a successful
+    logon.
+
+    ```sql
+    LET failed_logon = SELECT EventData as FailedEventData,
+       System as FailedSystem
+    FROM watch_evtx(filename=securityLogFile)
+    WHERE System.EventID.Value = 4625
+
+    LET last_5_events = SELECT FailedEventData, FailedSystem
+        FROM fifo(query=failed_logon,
+                  max_rows=500,
+                  max_age=atoi(string=failedLogonTimeWindow))
+
+    LET success_logon = SELECT EventData as SuccessEventData,
+       System as SuccessSystem
+    FROM watch_evtx(filename=securityLogFile)
+    WHERE System.EventID.Value = 4624
+
+    SELECT * FROM foreach(
+      row=success_logon,
+      query={
+       SELECT SuccessSystem.TimeCreated.SystemTime AS LogonTime,
+              SuccessSystem, SuccessEventData,
+              enumerate(items=FailedEventData) as FailedEventData,
+              FailedSystem, count(items=SuccessSystem) as Count
+       FROM last_5_events
+       WHERE FailedEventData.SubjectUserName = SuccessEventData.SubjectUserName
+       GROUP BY LogonTime
+          })  WHERE Count > atoi(string=failureCount)
+    ```
+  type: Plugin
+  args:
+  - name: query
+    description: Source for cached rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: max_age
+    description: Maximum number of seconds to hold rows in the fifo.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_rows
+    description: Maximum number of rows to hold in the fifo.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: Source for cached rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: max_age
+    description: Maximum number of seconds to hold rows in the fifo.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_rows
+    description: Maximum number of rows to hold in the fifo.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: file_store
+  description: |
+    Resolves file store paths into full filesystem paths.
+
+    This function is only available on the server. It can be used to
+    find the backing file behind a filestore path so it can be passed
+    on to an external program.
+
+    Velociraptor uses the concept of a Virtual File System to manage the
+    information about clients etc. The VFS path is a path into the file
+    store. Of course ultimately (at least in the current implementation)
+    the file store is storing files on disk, but the disk filename is not
+    necessarily the same as the VFS path (for example non representable
+    characters are escaped).
+
+    You can use the `file_store()` function to return the real file path
+    on disk. This probably only makes sense for VQL queries running on the
+    server which can independently open the file.
+
+    In future the file store may be abstracted (e.g. files may not be
+    locally stored at all) and this function may stop working.
+
+  type: Function
+  args:
+  - name: path
+    description: A VFS path to convert
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: filesystems
+  description: ""
+  type: Plugin
+  args: []
+  category: ""
+- name: filter
+  description: |
+    Filters a strings array by regex.
+
+  type: Function
+  args:
+  - name: list
+    description: A list of items to filter
+    type: ""
+    repeated: true
+    required: true
+  - name: regex
+    description: A regex to test each item
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: flatten
+  description: Flatten the columns in query. If any column repeats then we repeat
+    the entire row once for each item.
+  type: Plugin
+  args:
+  - name: Name
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: Name
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: flows
+  description: Retrieve the flows launched on each client.
+  type: Plugin
+  args:
+  - name: client_id
+    description: ""
+    type: ""
+    repeated: true
+    required: true
+  - name: flow_id
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: flow_id
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: ""
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: for
+  description: Iterate over a list.
+  type: Plugin
+  args:
+  - name: var
+    description: The variable to assign.
+    type: ""
+    repeated: false
+    required: true
+  - name: foreach
+    description: The variable to iterate over.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Run this query over the item.
+    type: ""
+    repeated: false
+    required: false
+  - name: var
+    description: The variable to assign.
+    type: ""
+    repeated: false
+    required: true
+  - name: foreach
+    description: The variable to iterate over.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Run this query over the item.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: foreach
+  description: Executes 'query' once for each row in the 'row' query.
+  type: Plugin
+  args:
+  - name: row
+    description: A query or slice which generates rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Run this query for each row.
+    type: ""
+    repeated: false
+    required: true
+  - name: async
+    description: If set we run all queries asyncronously.
+    type: ""
+    repeated: false
+    required: false
+  - name: row
+    description: A query or slice which generates rows.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Run this query for each row.
+    type: ""
+    repeated: false
+    required: true
+  - name: async
+    description: If set we run all queries asyncronously.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: format
+  description: Format one or more items according to a format string.
+  type: Function
+  args:
+  - name: args
+    description: An array of elements to apply into the format string.
+    type: ""
+    repeated: false
+    required: false
+  - name: format
+    description: Format string to use
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: get
+  description: |
+    Gets the member field from item.
+
+    This is useful to index an item from an array. For example:
+
+    ### Example
+
+    ```sql
+    select get(item=[dict(foo=3), 2, 3, 4], member='0.foo') AS Foo from scope()
+
+    [
+     {
+       "Foo": 3
+     }
+    ]
+    ```
+
+  type: Function
+  args:
+  - name: item
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: member
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: field
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: getpid
+  description: Returns the current pid of the process.
+  type: Function
+  args: []
+  category: ""
+- name: glob
+  description: |
+    Retrieve files based on a list of glob expressions
+
+    The `glob()` plugin is one of the most used plugins. It applies a glob
+    expression in order to search for files by file name. The glob
+    expression allows for wildcards, alternatives and character
+    classes. Globs support both forward and backslashes as path
+    separators. They also support quoting to delimit components.
+
+    A glob expression consists of a sequence of components separated by
+    path separators. If a separator is included within a component it is
+    possible to quote the component to keep it together. For example, the
+    windows registry contains keys with forward slash in their
+    names. Therefore we may use these to prevent the glob from getting
+    confused:
+
+    ```
+    HKEY_LOCAL_MACHINE\Microsoft\Windows\"Some Key With http://www.microsoft.com/"\Some Value
+    ```
+
+    Glob expressions are case insensitive and may contain the following wild cards:
+
+    * The `*` matches one or more characters.
+    * The `?` matches a single character.
+    * Alternatives are denoted by braces and comma delimited: `{a,b}`
+    * Recursive search is denoted by a `**`. By default this searches 3 directories deep. If you need to increase it you can add a depth number (e.g. `**10`)
+
+    By default globs do not expand environment variables. If you need to
+    expand environment variables use the `expand()` function explicitly:
+
+    ```sql
+    glob(globs=expand(string="%SystemRoot%\System32\Winevt\Logs\*"))
+    ```
+
+    ### Example
+
+    The following searches the raw NTFS disk for event logs.
+
+    ```sql
+    SELECT FullPath FROM glob(
+    globs="C:\Windows\System32\Winevt\Logs\*.evtx",
+    accessor="ntfs")
+    ```
+  type: Plugin
+  args:
+  - name: globs
+    description: One or more glob patterns to apply to the filesystem.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: An accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: globs
+    description: One or more glob patterns to apply to the filesystem.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: An accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: grep
+  description: Search a file for keywords.
+  type: Function
+  args:
+  - name: path
+    description: path to open.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: An accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: keywords
+    description: Keywords to search for.
+    type: ""
+    repeated: true
+    required: true
+  - name: context
+    description: Extract this many bytes as context around hits.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: grok
+  description: Parse a string using a Grok expression.
+  type: Function
+  args:
+  - name: data
+    description: String to parse.
+    type: ""
+    repeated: false
+    required: true
+  - name: patterns
+    description: Additional patterns.
+    type: ""
+    repeated: false
+    required: false
+  - name: grok
+    description: Grok pattern.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: gui_users
+  description: Retrieve the list of users on the server.
+  type: Plugin
+  args: []
+  category: ""
+- name: handles
+  description: Enumerate process handles.
+  type: Plugin
+  args:
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: hash
+  description: |
+    Calculate the hash of a file.
+
+    This function calculates the MD5, SHA1 and SHA256 hashes of the file.
+
+  type: Function
+  args:
+  - name: path
+    description: Path to open and hash.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: http_client
+  description: |
+    Make a http request.
+
+    This plugin makes a HTTP connection using the specified method. The
+    headers and parameters may be specified. The plugin reads the
+    specified number of bytes per returned row.
+
+    If `disable_ssl_security` is specified we do not enforce SSL
+    integrity. This is required to connect to self signed ssl web
+    sites. For example many API handlers are exposed over such
+    connections.
+
+    {{% notice note %}}
+
+    When connecting to the Velociraptor frontend itself, even in self
+    signed mode, we will ensure certs are properly verified. You can
+    therefore safely export files from the Frontend's public directory
+    over self signed SSL. When connecting to a self signed Velociraptor
+    frontend, we ensure the self signed certificate was issued by the
+    Velociraptor internal CA - i.e. we pin the Frontend's certificate in
+    the binary.
+
+    {{% /notice %}}
+
+    The `http_client()` plugin allows use to interact with any web
+    services. If the web service returns a json blob, we can parse it with
+    the `parse_json()` function (or `parse_xml()` for SOAP
+    endpoints). Using the parameters with a POST method we may actually
+    invoke actions from within VQL (e.g. send an SMS via an SMS gateway
+    when a VQL event is received).So this is a very powerful plugin.
+
+    ### Example
+
+    The following VQL returns the client's external IP as seen by the
+    externalip service.
+
+    ```sql
+    SELECT Content as IP from http_client(url='http://www.myexternalip.com/raw')
+    ```
+  type: Plugin
+  args:
+  - name: chunk_size
+    description: Read input with this chunk size and send each chunk as a row
+    type: ""
+    repeated: false
+    required: false
+  - name: disable_ssl_security
+    description: Disable ssl certificate verifications.
+    type: ""
+    repeated: false
+    required: false
+  - name: tempfile_extension
+    description: If specified we write to a tempfile. The content field will contain
+      the full path to the tempfile.
+    type: ""
+    repeated: false
+    required: false
+  - name: url
+    description: The URL to fetch
+    type: ""
+    repeated: false
+    required: true
+  - name: params
+    description: Parameters to encode as POST or GET query strings
+    type: ""
+    repeated: false
+    required: false
+  - name: headers
+    description: A dict of headers to send.
+    type: ""
+    repeated: false
+    required: false
+  - name: method
+    description: HTTP method to use (GET, POST)
+    type: ""
+    repeated: false
+    required: false
+  - name: disable_ssl_security
+    description: Disable ssl certificate verifications.
+    type: ""
+    repeated: false
+    required: false
+  - name: tempfile_extension
+    description: If specified we write to a tempfile. The content field will contain
+      the full path to the tempfile.
+    type: ""
+    repeated: false
+    required: false
+  - name: url
+    description: The URL to fetch
+    type: ""
+    repeated: false
+    required: true
+  - name: params
+    description: Parameters to encode as POST or GET query strings
+    type: ""
+    repeated: false
+    required: false
+  - name: headers
+    description: A dict of headers to send.
+    type: ""
+    repeated: false
+    required: false
+  - name: method
+    description: HTTP method to use (GET, POST)
+    type: ""
+    repeated: false
+    required: false
+  - name: chunk_size
+    description: Read input with this chunk size and send each chunk as a row
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: humanize
+  description: |
+    Format items in human readable way.
+
+    Formats a byte count in human readable way (e.g. Mb, Gb etc).
+
+  type: Function
+  args:
+  - name: bytes
+    description: Format bytes with units
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: hunt
+  description: Launch an artifact collection against a client.
+  type: Function
+  args:
+  - name: description
+    description: Description of the hunt
+    type: ""
+    repeated: false
+    required: true
+  - name: artifacts
+    description: A list of artifacts to collect
+    type: ""
+    repeated: true
+    required: true
+  - name: env
+    description: Parameters to apply to the artifacts
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: hunt_flows
+  description: Retrieve the flows launched by a hunt.
+  type: Plugin
+  args:
+  - name: hunt_id
+    description: The hunt id to inspect.
+    type: ""
+    repeated: false
+    required: true
+  - name: hunt_id
+    description: The hunt id to inspect.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: hunt_results
+  description: Retrieve the results of a hunt.
+  type: Plugin
+  args:
+  - name: source
+    description: An optional source within the artifact.
+    type: ""
+    repeated: false
+    required: false
+  - name: hunt_id
+    description: The hunt id to read.
+    type: ""
+    repeated: false
+    required: true
+  - name: brief
+    description: If set we return less columns.
+    type: ""
+    repeated: false
+    required: false
+  - name: artifact
+    description: The artifact to retrieve
+    type: ""
+    repeated: false
+    required: true
+  - name: artifact
+    description: The artifact to retrieve
+    type: ""
+    repeated: false
+    required: true
+  - name: source
+    description: An optional source within the artifact.
+    type: ""
+    repeated: false
+    required: false
+  - name: hunt_id
+    description: The hunt id to read.
+    type: ""
+    repeated: false
+    required: true
+  - name: brief
+    description: If set we return less columns.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: hunts
+  description: Retrieve the list of hunts.
+  type: Plugin
+  args: []
+  category: ""
+- name: if
+  description: |
+    Conditional execution of query
+
+    This function evaluates a condition. Note that the values used in the
+    `then` or `else` clause are evaluated lazily. They may be expressions
+    that involve stored queries (i.e. queries stored using the `LET`
+    keyword). These queries will not be evaluated if they are not needed.
+
+    This allows a query to cheaply branch. For example, if a parameter is
+    given, then perform hash or upload to the server. See the
+    `Windows.Search.FileFinder` for an example of how `if()` is used.
+
+  type: Plugin
+  args:
+  - name: condition
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: then
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: else
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: condition
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: then
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: else
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: if
+  description: If condition is true, return the 'then' value otherwise the 'else'
+    value.
+  type: Function
+  args:
+  - name: condition
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: then
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: else
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: info
+  description: |
+    Get information about the running host.
+
+    This plugin returns a single row with information about the current
+    system. The information includes the Hostname, Uptime, OS, Platform
+    etc.
+
+    This plugin is very useful in preconditions as it restricts a query to
+    certain OS or versions.
+
+  type: Plugin
+  args: []
+  category: ""
+- name: int
+  description: Truncate to an integer.
+  type: Function
+  args:
+  - name: int
+    description: The integer to round
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: interfaces
+  description: List all active interfaces.
+  type: Plugin
+  args: []
+  category: ""
+- name: ip
+  description: |
+    Format an IP address.
+
+    Converts an ip address encoded in various ways. If the IP address is
+    encoded as 32 bit integer we can use netaddr4_le or netaddr4_be to
+    print it in a human readable way.
+
+    This currently does not support IPv6 addresses. Those are usually
+    encoded as an array of 8 bytes which makes it easy to format using the
+    `format()` function:
+
+    ```
+      format(format="%x:%x:%x:%x:%x:%x:%x:%x", value)
+    ```
+
+  type: Function
+  args:
+  - name: netaddr4_le
+    description: A network order IPv4 address (as little endian).
+    type: ""
+    repeated: false
+    required: false
+  - name: netaddr4_be
+    description: A network order IPv4 address (as big endian).
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: join
+  description: |
+    Join all the args on a separator.
+
+    Joins the array into a string separated by the sep character.
+
+  type: Function
+  args:
+  - name: array
+    description: The array to join
+    type: ""
+    repeated: true
+    required: true
+  - name: sep
+    description: The separator
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: js
+  description: Compile and run javascript code.
+  type: Function
+  args:
+  - name: js
+    description: The body of the javascript code.
+    type: ""
+    repeated: false
+    required: true
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: js_call
+  description: Compile and run javascript code.
+  type: Function
+  args:
+  - name: func
+    description: JS function to call.
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: Positional args for the function.
+    type: ""
+    repeated: false
+    required: true
+  - name: key
+    description: If set use this key to cache the JS VM.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: label
+  description: |
+    Add the labels to the client. If op is 'remove' then remove these labels.
+
+  type: Function
+  args:
+  - name: client_id
+    description: Client ID to label.
+    type: ""
+    repeated: false
+    required: true
+  - name: labels
+    description: A list of labels to apply
+    type: ""
+    repeated: true
+    required: true
+  - name: op
+    description: An operation on the labels (add, remove)
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: len
+  description: Returns the length of an object.
+  type: Function
+  args:
+  - name: list
+    description: A list of items too filter
+    type: ""
+    repeated: true
+    required: true
+  - name: regex
+    description: A regex to test each item
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: log
+  description: Log the message.
+  type: Function
+  args:
+  - name: message
+    description: Message to log.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: lookupSID
+  description: Get information about the SID.
+  type: Function
+  args: []
+  category: ""
+- name: lowcase
+  description: ""
+  type: Function
+  args:
+  - name: string
+    description: A string to lower
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: mail
+  description: Send Email to a remote server.
+  type: Plugin
+  args:
+  - name: to
+    description: Receipient of the mail
+    type: ""
+    repeated: true
+    required: true
+  - name: cc
+    description: A cc for the mail
+    type: ""
+    repeated: true
+    required: false
+  - name: subject
+    description: The subject.
+    type: ""
+    repeated: false
+    required: false
+  - name: body
+    description: The body of the mail.
+    type: ""
+    repeated: false
+    required: true
+  - name: period
+    description: How long to wait before sending the next mail - help to throttle
+      mails.
+    type: ""
+    repeated: false
+    required: true
+  - name: subject
+    description: The subject.
+    type: ""
+    repeated: false
+    required: false
+  - name: body
+    description: The body of the mail.
+    type: ""
+    repeated: false
+    required: true
+  - name: period
+    description: How long to wait before sending the next mail - help to throttle
+      mails.
+    type: ""
+    repeated: false
+    required: true
+  - name: to
+    description: Receipient of the mail
+    type: ""
+    repeated: true
+    required: true
+  - name: cc
+    description: A cc for the mail
+    type: ""
+    repeated: true
+    required: false
+  category: ""
+- name: max
+  description:
+    Finds the largest item in the aggregate.
+
+    It is only meaningful in a group by query.
+
+    ### Example
+
+    The following query lists all the processes and shows the largest
+    bash pid of all bash processes.
+
+    ```SQL
+    SELECT Name, max(items=Pid) as LargestPid from pslist() Where Name =~ 'bash' group by Name
+    ```
+
+  type: Function
+  args:
+  - name: items
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: min
+  description: |
+    Finds the smallest item in the aggregate.
+
+    It is only meaningful in a group by query.
+
+    ### Example
+
+    The following query lists all the processes and shows the smallest
+    bash pid of all bash processes.
+
+    ```SQL
+    SELECT Name, min(items=Pid) as SmallestPid from pslist() Where Name =~ 'bash' group by Name
+    ```
+
+  type: Function
+  args:
+  - name: items
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: mock
+  description: Mock a plugin.
+  type: Function
+  args:
+  - name: plugin
+    description: The plugin to mock
+    type: ""
+    repeated: false
+    required: false
+  - name: artifact
+    description: The plugin to mock
+    type: ""
+    repeated: false
+    required: false
+  - name: results
+    description: The result to return
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: modules
+  description: Enumerate Loaded DLLs.
+  type: Plugin
+  args:
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: monitoring
+  description: Extract monitoring log from a client. If client_id is not specified
+    we watch the global journal which contains event logs from all clients.
+  type: Plugin
+  args:
+  - name: client_id
+    description: A list of client ids to watch. If not provided we watch all clients.
+    type: ""
+    repeated: true
+    required: false
+  - name: artifact
+    description: The event artifact name to watch
+    type: ""
+    repeated: false
+    required: true
+  - name: source
+    description: An optional artifact named source
+    type: ""
+    repeated: false
+    required: false
+  - name: artifact
+    description: The event artifact name to watch
+    type: ""
+    repeated: false
+    required: true
+  - name: source
+    description: An optional artifact named source
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: A list of client ids to watch. If not provided we watch all clients.
+    type: ""
+    repeated: true
+    required: false
+  category: ""
+- name: netstat
+  description: Collect network information.
+  type: Plugin
+  args: []
+  category: ""
+- name: now
+  description: Returns current time in seconds since epoch.
+  type: Function
+  args:
+  - name: string
+    description: A string to convert to int
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: olevba
+  description: |
+    Extracts VBA Macros from Office documents.
+
+    This plugin parses the provided files as OLE documents in order to
+    recover VB macro code. A single document can have multiple code
+    objects, and each such code object is emitted as a row.
+
+  type: Plugin
+  args:
+  - name: file
+    description: A list of filenames to open as OLE files.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_size
+    description: Maximum size of file we load into memory.
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: A list of filenames to open as OLE files.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_size
+    description: Maximum size of file we load into memory.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_csv
+  description: |
+    Parses events from a CSV file.
+
+    Parses records from a CSV file. We expect the first row of the CSV
+    file to contain column names.  This parser specifically supports
+    Velociraptor's own CSV dialect and so it is perfect for post
+    processing already existing CSV files.
+
+    The types of each value in each column is deduced based on
+    Velociraptor's standard encoding scheme. Therefore types are properly
+    preserved when read from the CSV file.
+
+    For example, downloading the results of a hunt in the GUI will produce
+    a CSV file containing artifact rows collected from all clients.  We
+    can then use the `parse_csv()` plugin to further filter the CSV file,
+    or to stack using group by.
+
+    ### Example
+
+    The following stacks the result from a
+    `Windows.Applications.Chrome.Extensions` artifact:
+
+    ```sql
+    SELECT count(items=User) As TotalUsers, Name
+    FROM parse_csv(filename="All Windows.Applications.Chrome.Extensions.csv")
+    Order By TotalUsers
+    Group By Name
+    ```
+
+  type: Plugin
+  args:
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_ese
+  description: Opens an ESE file and dump a table.
+  type: Plugin
+  args:
+  - name: file
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: table
+    description: A table name to dump
+    type: ""
+    repeated: false
+    required: true
+  - name: file
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: table
+    description: A table name to dump
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: parse_evtx
+  description: |
+    Parses events from an EVTX file.
+
+    This plugin parses windows events from the Windows Event log files (EVTX).
+
+    A windows event typically contains two columns. The `EventData`
+    contains event specific structured data while the `System` column
+    contains common data for all events - including the Event ID.
+
+    You should probably almost always filter by one or more event ids
+    (using the `System.EventID.Value` field).
+
+    ### Example
+
+    ```sql
+    SELECT System.TimeCreated.SystemTime as Timestamp,
+           System.EventID.Value as EventID,
+           EventData.ImagePath as ImagePath,
+           EventData.ServiceName as ServiceName,
+           EventData.ServiceType as Type,
+           System.Security.UserID as UserSID,
+           EventData as _EventData,
+           System as _System
+    FROM watch_evtx(filename=systemLogFile) WHERE EventID = 7045
+    ```
+
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_float
+  description: Convert a string to a float.
+  type: Function
+  args:
+  - name: string
+    description: A string to convert to int
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: parse_json
+  description: |
+    Parse a JSON string into an object.
+
+    Note that when VQL dereferences fields in a dict it returns a Null for
+    those fields that do not exist. Thus there is no error in actually
+    accessing missing fields, the column will just return nil.
+
+  type: Function
+  args:
+  - name: data
+    description: Json encoded string.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: parse_json_array
+  description: |
+    Parse a JSON string into an array.
+
+    This function is similar to `parse_json()` but works for a JSON list
+    instead of an object.
+
+  type: Function
+  args:
+  - name: data
+    description: Json encoded string.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: parse_json_array
+  description: Parses events from a line oriented json file.
+  type: Plugin
+  args: []
+  category: ""
+- name: parse_lines
+  description: Parse a file separated into lines.
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: A list of log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: parse_mft
+  description: Scan the $MFT from an NTFS volume.
+  type: Plugin
+  args:
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: false
+    required: true
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_ntfs
+  description: Parse an NTFS image file.
+  type: Function
+  args:
+  - name: device
+    description: The device file to open. This may be a full path - we will figure
+      out the device automatically.
+    type: ""
+    repeated: false
+    required: true
+  - name: inode
+    description: The MFT entry to parse in inode notation (5-144-1).
+    type: ""
+    repeated: false
+    required: false
+  - name: mft
+    description: The MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  - name: mft_offset
+    description: The offset to the MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_ntfs_i30
+  description: Scan the $I30 stream from an NTFS MFT entry.
+  type: Plugin
+  args:
+  - name: device
+    description: The device file to open. This may be a full path - we will figure
+      out the device automatically.
+    type: ""
+    repeated: false
+    required: true
+  - name: inode
+    description: The MFT entry to parse in inode notation (5-144-1).
+    type: ""
+    repeated: false
+    required: false
+  - name: mft
+    description: The MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  - name: mft_offset
+    description: The offset to the MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  - name: inode
+    description: The MFT entry to parse in inode notation (5-144-1).
+    type: ""
+    repeated: false
+    required: false
+  - name: mft
+    description: The MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  - name: mft_offset
+    description: The offset to the MFT entry to parse.
+    type: ""
+    repeated: false
+    required: false
+  - name: device
+    description: The device file to open. This may be a full path - we will figure
+      out the device automatically.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: parse_pe
+  description: Parse a PE file.
+  type: Function
+  args:
+  - name: file
+    description: The PE file to open.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_records_with_regex
+  description: |
+    Parses a file with a set of regexp and yields matches as records.  The
+    file is read into a large buffer. Then each regular expression is
+    applied to the buffer, and all matches are emitted as rows.
+
+    The regular expressions are specified in the [Go
+    syntax](https://golang.org/pkg/regexp/syntax/). They are expected to
+    contain capture variables to name the matches extracted.
+
+    For example, consider a HTML file with simple links. The regular
+    expression might be:
+
+    ```
+    regex='<a.+?href="(?P<Link>[^"]+?)"'
+    ```
+
+    To produce rows with a column Link.
+
+    The aim of this plugin is to split the file into records which can be
+    further parsed. For example, if the file consists of multiple records,
+    this plugin can be used to extract each record, while
+    parse_string_with_regex() can be used to further split each record
+    into elements. This works better than trying to write a more complex
+    regex which tries to capture a lot of details in one pass.
+
+
+    ### Example
+
+    Here is an example of parsing the /var/lib/dpkg/status files. These
+    files consist of records separated by empty lines:
+
+    ```
+    Package: ubuntu-advantage-tools
+    Status: install ok installed
+    Priority: important
+    Section: misc
+    Installed-Size: 74
+    Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+    Architecture: all
+    Version: 17
+    Conffiles:
+     /etc/cron.daily/ubuntu-advantage-tools 36de53e7c2d968f951b11c64be101b91
+     /etc/update-motd.d/80-esm 6ffbbf00021b4ea4255cff378c99c898
+     /etc/update-motd.d/80-livepatch 1a3172ffaa815d12b58648f117ffb67e
+    Description: management tools for Ubuntu Advantage
+     Ubuntu Advantage is the professional package of tooling, technology
+     and expertise from Canonical, helping organisations around the world
+     manage their Ubuntu deployments.
+     .
+     Subscribers to Ubuntu Advantage will find helpful tools for accessing
+     services in this package.
+    Homepage: https://buy.ubuntu.com
+    ```
+
+    The following query extracts the fields in two passes. The first pass
+    uses parse_records_with_regex() to extract records in blocks, while
+    using parse_string_with_regex() to further break the block into
+    fields.
+
+    ```sql
+    SELECT parse_string_with_regex(
+       string=Record,
+       regex=['Package:\\s(?P<Package>.+)',
+         'Installed-Size:\\s(?P<InstalledSize>.+)',
+         'Version:\\s(?P<Version>.+)',
+         'Source:\\s(?P<Source>.+)',
+         'Architecture:\\s(?P<Architecture>.+)']) as Record
+       FROM parse_records_with_regex(
+         file=linuxDpkgStatus,
+         regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
+    ```
+
+  type: Plugin
+  args:
+  - name: file
+    description: A list of files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: regex
+    description: A list of regex to apply to the file data.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: A list of files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: regex
+    description: A list of regex to apply to the file data.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: parse_string_with_regex
+  description: Parse a string with a set of regex and extract fields. Returns a dict
+    with fields populated from all regex capture variables.
+  type: Function
+  args:
+  - name: string
+    description: A string to parse.
+    type: ""
+    repeated: false
+    required: true
+  - name: regex
+    description: The regex to apply.
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: parse_xml
+  description: |
+    Parse an XML document into a dict like object.
+  type: Function
+  args:
+  - name: file
+    description: XML file to open.
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: partitions
+  description: List all partititions
+  type: Plugin
+  args:
+  - name: all
+    description: If specified list all Partitions
+    type: ""
+    repeated: false
+    required: false
+  - name: all
+    description: If specified list all Partitions
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: path_join
+  description: Build a path by joining all components.
+  type: Function
+  args:
+  - name: components
+    description: Path components to join.
+    type: ""
+    repeated: true
+    required: true
+  category: ""
+- name: prefetch
+  description: Parses a prefetch file.
+  type: Plugin
+  args: []
+  category: ""
+- name: proc_dump
+  description: |
+    Dumps process memory.
+
+    Dumps a process into a crashdump. The crashdump file can be opened
+    with the windows debugger as normal. The plugin returns the filename
+    of the crash dump which is a temporary file - the file will be removed
+    when the query completes, so if you want to hold on to it, you should
+    use the upload() plugin to upload it to the server or otherwise copy
+    it.
+
+  type: Plugin
+  args:
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: proc_yara
+  description: |
+    Scan processes using yara rules.
+
+    This plugin uses yara's own engine to scan process memory for the signatures.
+
+    {{% notice note %}}
+
+    Process memory access depends on having the [SeDebugPrivilege](https://support.microsoft.com/en-au/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege) which depends on how Velociraptor was started. Even when running as System, some processes are not accessible.
+
+    {{% /notice %}}
+
+  type: Plugin
+  args:
+  - name: rules
+    description: Yara rules in the yara DSL.
+    type: ""
+    repeated: false
+    required: true
+  - name: context
+    description: How many bytes to include around each hit
+    type: ""
+    repeated: false
+    required: false
+  - name: start
+    description: The start offset to scan
+    type: ""
+    repeated: false
+    required: false
+  - name: end
+    description: End scanning at this offset (100mb)
+    type: ""
+    repeated: false
+    required: false
+  - name: number
+    description: Stop after this many hits (1).
+    type: ""
+    repeated: false
+    required: false
+  - name: key
+    description: If set use this key to cache the  yara rules.
+    type: ""
+    repeated: false
+    required: false
+  - name: files
+    description: The list of files to scan.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: Accessor (e.g. NTFS)
+    type: ""
+    repeated: false
+    required: false
+  - name: blocksize
+    description: Blocksize for scanning (1mb).
+    type: ""
+    repeated: false
+    required: false
+  - name: files
+    description: The list of files to scan.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: Accessor (e.g. NTFS)
+    type: ""
+    repeated: false
+    required: false
+  - name: number
+    description: Stop after this many hits (1).
+    type: ""
+    repeated: false
+    required: false
+  - name: key
+    description: If set use this key to cache the  yara rules.
+    type: ""
+    repeated: false
+    required: false
+  - name: rules
+    description: Yara rules in the yara DSL.
+    type: ""
+    repeated: false
+    required: true
+  - name: context
+    description: How many bytes to include around each hit
+    type: ""
+    repeated: false
+    required: false
+  - name: start
+    description: The start offset to scan
+    type: ""
+    repeated: false
+    required: false
+  - name: end
+    description: End scanning at this offset (100mb)
+    type: ""
+    repeated: false
+    required: false
+  - name: blocksize
+    description: Blocksize for scanning (1mb).
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: pslist
+  description: |
+    Enumerate running processes.
+
+    When specifying the pid this operation is much faster so if you are
+    interested in specific processes, the pid should be
+    specified. Otherwise, the plugin returns all processes one on each
+    row.
+
+  type: Plugin
+  args:
+  - name: pid
+    description: A process ID to list. If not provided list all processes.
+    type: ""
+    repeated: false
+    required: false
+  - name: pid
+    description: A process ID to list. If not provided list all processes.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: query
+  description: Launch a subquery and materialize it into a list of rows.
+  type: Function
+  args:
+  - name: vql
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: rand
+  description: Selects a random number.
+  type: Function
+  args:
+  - name: range
+    description: Selects a random number up to this range.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: rate
+  description: |
+    Calculates the rate (derivative) between two quantities.
+
+    For example if a monitoring plugin returns an absolute value
+    sampled in time (e.g. bytes transferred sampled every second) then
+    the rate() plugin can calculate the average bytes/sec.
+
+    This function works by remembering the values of x and y from the
+    previous row and applying the current rows values.
+
+  type: Function
+  args:
+  - name: x
+    description: The X float
+    type: ""
+    repeated: false
+    required: true
+  - name: "y"
+    description: The Y float
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: read_file
+  description: |
+    Read files in chunks.
+
+    This plugin reads a file in chunks and returns each chunks as a separate row.
+
+    It is useful when we want to report file contents for small files like
+    configuration files etc.
+
+    The returned row contains the following columns: data, offset, filename
+
+  type: Plugin
+  args:
+  - name: chunk
+    description: length of each chunk to read from the file.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_length
+    description: Max length of the file to read.
+    type: ""
+    repeated: false
+    required: false
+  - name: filenames
+    description: One or more files to open.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: An accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: chunk
+    description: length of each chunk to read from the file.
+    type: ""
+    repeated: false
+    required: false
+  - name: max_length
+    description: Max length of the file to read.
+    type: ""
+    repeated: false
+    required: false
+  - name: filenames
+    description: One or more files to open.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: An accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: read_reg_key
+  description: |
+    This is a convenience plugin which applies the globs to the registry
+    accessor to find keys. For each key the plugin then lists all the
+    values within it, and returns a row which has the value names as
+    columns, while the cells contain the value's stat info (and data
+    content available in the `Data` field).
+
+    This makes it easier to access a bunch of related values at once.
+
+  type: Plugin
+  args:
+  - name: globs
+    description: Glob expressions to apply.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: globs
+    description: Glob expressions to apply.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: regex_replace
+  description: Search and replace a string with a regexp. Note you can use $1 to replace
+    the capture string.
+  type: Function
+  args:
+  - name: source
+    description: The source string to replace.
+    type: ""
+    repeated: false
+    required: true
+  - name: replace
+    description: The substitute string.
+    type: ""
+    repeated: false
+    required: true
+  - name: re
+    description: A regex to apply
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: rot13
+  description: Apply rot13 deobfuscation to the string.
+  type: Function
+  args:
+  - name: string
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: sample
+  description: |
+    Executes 'query' and samples every n'th row.
+
+    This is most useful on the server in order to downsample event
+    artifact results.
+
+  type: Plugin
+  args:
+  - name: "n"
+    description: Pick every n row from query.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Source query.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: Source query.
+    type: ""
+    repeated: false
+    required: true
+  - name: "n"
+    description: Pick every n row from query.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: scope
+  description: |
+    The scope plugin returns the current scope as a single row.
+
+    The main use for this plugin is as a NOOP plugin in those cases we
+    dont want to actually run anything.
+
+    ### Example
+
+    ```sql
+    SELECT 1+1 As Two FROM scop()
+    ```
+
+  type: Plugin
+  args: []
+  category: ""
+- name: scope
+  description: return the scope.
+  type: Function
+  args: []
+  category: ""
+- name: search
+  description: Search the server client's index.
+  type: Plugin
+  args:
+  - name: limit
+    description: Only return limited results
+    type: ""
+    repeated: false
+    required: false
+  - name: type
+    description: The type of search (e.g. 'key')
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: The query string.
+    type: ""
+    repeated: false
+    required: false
+  - name: offset
+    description: Skip this many results.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: The query string.
+    type: ""
+    repeated: false
+    required: false
+  - name: offset
+    description: Skip this many results.
+    type: ""
+    repeated: false
+    required: false
+  - name: limit
+    description: Only return limited results
+    type: ""
+    repeated: false
+    required: false
+  - name: type
+    description: The type of search (e.g. 'key')
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: serialize
+  description: Encode an object as a string (csv or json).
+  type: Function
+  args:
+  - name: item
+    description: The item to encode
+    type: ""
+    repeated: false
+    required: true
+  - name: format
+    description: Encoding format (csv,json)
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: sleep
+  description: Sleep for the specified number of seconds. Always returns true.
+  type: Function
+  args:
+  - name: time
+    description: The number of seconds to sleep
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: source
+  description: |
+    Retrieve rows from an artifact's source.
+
+    This plugin is mostly useful in reports. It attempts to do the
+    right thing automatically by inferring most parameters from its
+    execution environment.
+
+    For example when called within a CLIENT report context, it will
+    automatically fill its flow id, client id etc. Typically this
+    means that you only need to specify the source name (for
+    multi-source artifacts).
+
+  type: Plugin
+  args:
+  - name: end_time
+    description: Stop end events reach this time (event sources).
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: The client id to extract
+    type: ""
+    repeated: false
+    required: false
+  - name: day_name
+    description: Only extract this day's Monitoring logs (deprecated)
+    type: ""
+    repeated: false
+    required: false
+  - name: start_time
+    description: Start return events from this date (for event sources)
+    type: ""
+    repeated: false
+    required: false
+  - name: flow_id
+    description: A flow ID (client or server artifacts)
+    type: ""
+    repeated: false
+    required: false
+  - name: hunt_id
+    description: Retrieve sources from this hunt (combines all results from all clients)
+    type: ""
+    repeated: false
+    required: false
+  - name: artifact
+    description: The name of the artifact collection to fetch
+    type: ""
+    repeated: false
+    required: false
+  - name: source
+    description: An optional named source within the artifact
+    type: ""
+    repeated: false
+    required: false
+  - name: mode
+    description: HUNT or CLIENT mode can be empty
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: The client id to extract
+    type: ""
+    repeated: false
+    required: false
+  - name: day_name
+    description: Only extract this day's Monitoring logs (deprecated)
+    type: ""
+    repeated: false
+    required: false
+  - name: start_time
+    description: Start return events from this date (for event sources)
+    type: ""
+    repeated: false
+    required: false
+  - name: source
+    description: An optional named source within the artifact
+    type: ""
+    repeated: false
+    required: false
+  - name: mode
+    description: HUNT or CLIENT mode can be empty
+    type: ""
+    repeated: false
+    required: false
+  - name: end_time
+    description: Stop end events reach this time (event sources).
+    type: ""
+    repeated: false
+    required: false
+  - name: flow_id
+    description: A flow ID (client or server artifacts)
+    type: ""
+    repeated: false
+    required: false
+  - name: hunt_id
+    description: Retrieve sources from this hunt (combines all results from all clients)
+    type: ""
+    repeated: false
+    required: false
+  - name: artifact
+    description: The name of the artifact collection to fetch
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: split
+  description: Splits a string into an array based on a regexp separator.
+  type: Function
+  args:
+  - name: epoch
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: winfiletime
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: split_records
+  description: Parses files by splitting lines into records.
+  type: Plugin
+  args:
+  - name: filenames
+    description: Files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: regex
+    description: The split regular expression (e.g. a comma)
+    type: ""
+    repeated: false
+    required: true
+  - name: columns
+    description: If the first row is not the headers, this arg must provide a list
+      of column names for each value.
+    type: ""
+    repeated: true
+    required: false
+  - name: first_row_is_headers
+    description: A bool indicating if we should get column names from the first row.
+    type: ""
+    repeated: false
+    required: false
+  - name: count
+    description: Only split into this many columns if possible.
+    type: ""
+    repeated: false
+    required: false
+  - name: filenames
+    description: Files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: regex
+    description: The split regular expression (e.g. a comma)
+    type: ""
+    repeated: false
+    required: true
+  - name: columns
+    description: If the first row is not the headers, this arg must provide a list
+      of column names for each value.
+    type: ""
+    repeated: true
+    required: false
+  - name: first_row_is_headers
+    description: A bool indicating if we should get column names from the first row.
+    type: ""
+    repeated: false
+    required: false
+  - name: count
+    description: Only split into this many columns if possible.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: sqlite
+  description: Opens an SQLite file and run a query against it.
+  type: Plugin
+  args:
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: args
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: file
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: srum_lookup_id
+  description: Lookup a SRUM id.
+  type: Function
+  args:
+  - name: file
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: id
+    description: ""
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: stat
+  description: Get file information. Unlike glob() this does not support wildcards.
+  type: Plugin
+  args: []
+  category: ""
+- name: str
+  description: Normalize a String.
+  type: Function
+  args:
+  - name: str
+    description: The string to normalize
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: strip
+  description: Strip a prefix from a string.
+  type: Function
+  args:
+  - name: string
+    description: The string to strip
+    type: ""
+    repeated: false
+    required: true
+  - name: prefix
+    description: The prefix to strip
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: switch
+  description: Executes each query. The first query to return any rows will be emitted.
+  type: Plugin
+  args: []
+  category: ""
+- name: tempfile
+  description: |
+    Create a temporary file and write some data into it.
+
+    The file will be automatically removed when the query completes.
+
+  type: Function
+  args:
+  - name: extension
+    description: An extension to place in the tempfile.
+    type: ""
+    repeated: false
+    required: false
+  - name: data
+    description: Data to write in the tempfile.
+    type: ""
+    repeated: true
+    required: false
+  category: ""
+- name: timestamp
+  description: Convert from different types to a time.Time.
+  type: Function
+  args:
+  - name: epoch
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: winfiletime
+    description: ""
+    type: ""
+    repeated: false
+    required: false
+  - name: string
+    description: Guess a timestamp from a string
+    type: ""
+    repeated: false
+    required: false
+  - name: us_style
+    description: US Style Month/Day/Year
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: token
+  description: Extract process token.
+  type: Function
+  args:
+  - name: pid
+    description: The PID to get the token for.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: upcase
+  description: ""
+  type: Function
+  args:
+  - name: string
+    description: A string to lower
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: upload
+  description: |
+    Upload files to the server.
+
+    This plugin uploads the specified file to the server. If Velociraptor
+    is run locally the file will be copied tothe `--dump_dir` path or
+    added to the triage evidence container.
+
+    This functionality is also available using the upload() function which
+    might be somewhat easier to use.
+
+  type: Plugin
+  args:
+  - name: files
+    description: A list of files to upload
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: files
+    description: A list of files to upload
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: upload
+  description: |
+    Upload a file to the upload service. For a Velociraptor client this
+    will upload the file into the flow and store it in the server's file store.
+
+    If Velociraptor is run locally the file will be copied to the
+    `--dump_dir` path or added to the triage evidence container.
+
+  type: Function
+  args:
+  - name: file
+    description: The file to upload
+    type: ""
+    repeated: false
+    required: true
+  - name: name
+    description: The name of the file that should be stored on the server
+    type: ""
+    repeated: false
+    required: false
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: upload_gcs
+  description: Upload files to GCS.
+  type: Function
+  args:
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: bucket
+    description: The bucket to upload to
+    type: ""
+    repeated: false
+    required: true
+  - name: project
+    description: The project to upload to
+    type: ""
+    repeated: false
+    required: true
+  - name: credentials
+    description: The credentials to use
+    type: ""
+    repeated: false
+    required: true
+  - name: file
+    description: The file to upload
+    type: ""
+    repeated: false
+    required: true
+  - name: name
+    description: The name of the file that should be stored on the server
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: upload_s3
+  description: Upload files to S3.
+  type: Function
+  args:
+  - name: region
+    description: The region the bucket is in
+    type: ""
+    repeated: false
+    required: true
+  - name: credentialskey
+    description: The AWS key credentials to use
+    type: ""
+    repeated: false
+    required: true
+  - name: credentialssecret
+    description: The AWS secret credentials to use
+    type: ""
+    repeated: false
+    required: true
+  - name: file
+    description: The file to upload
+    type: ""
+    repeated: false
+    required: true
+  - name: name
+    description: The name of the file that should be stored on the server
+    type: ""
+    repeated: false
+    required: false
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: bucket
+    description: The bucket to upload to
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: uploads
+  description: Retrieve information about a flow's uploads.
+  type: Plugin
+  args:
+  - name: client_id
+    description: The client id to extract
+    type: ""
+    repeated: false
+    required: false
+  - name: flow_id
+    description: A flow ID (client or server artifacts)
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: The client id to extract
+    type: ""
+    repeated: false
+    required: false
+  - name: flow_id
+    description: A flow ID (client or server artifacts)
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: url
+  description: |
+    Construct a URL or parse one.
+
+    This function parses or constructs URLs. A URL may be constructed from
+    scratch by providing all the components or it may be parsed from an
+    existing URL.
+
+    The returned object is a [golang
+    URL](https://golang.org/pkg/net/url/#URL) and can be serialized again
+    using its `String` method.
+
+    This function is important when constructing parameters for certain
+    accessors which receive a URL. For example the `zip` accessor requires
+    its file names to consist of URLs. The Zip accessor interprets the URL
+    in the following way:
+
+    - The scheme is the delegate accessor to use.
+    - The path is the delegate accessor's filename
+    - The fragment is used by the zip accessor to retrieve the zip member itself.
+
+    In this case it is critical to properly escape each level - it is not
+    possible in the general case to simply append strings. You need to use
+    the `url()` function to build the proper url.
+
+  type: Function
+  args:
+  - name: path
+    description: The path component
+    type: ""
+    repeated: false
+    required: false
+  - name: fragment
+    description: The fragment
+    type: ""
+    repeated: false
+    required: false
+  - name: parse
+    description: A url to parse
+    type: ""
+    repeated: false
+    required: false
+  - name: scheme
+    description: The scheme to use
+    type: ""
+    repeated: false
+    required: false
+  - name: host
+    description: The host component
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: users
+  description: Display information about workstation local users. This is obtained
+    through the NetUserEnum() API.
+  type: Plugin
+  args: []
+  category: ""
+- name: utf16
+  description: Parse input from utf16.
+  type: Function
+  args:
+  - name: string
+    description: A string to decode
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: vad
+  description: Enumerate process memory regions.
+  type: Plugin
+  args:
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  - name: pid
+    description: The PID to dump out.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: watch_csv
+  description: |
+    Watch a CSV file and stream events from it. Note: This is an event
+    plugin which does not complete.
+
+    This plugin is the event version of `parse_csv()`. When the CSV file
+    grows this plugin will emit the new rows.
+
+  type: Plugin
+  args:
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: true
+    required: true
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: watch_evtx
+  description: |
+    Watch an EVTX file and stream events from it.
+
+    This is the Event plugin version of `parse_evtx()`.
+
+    {{% notice note %}}
+
+    It often takes several seconds for events to be flushed to the event
+    log and so this plugin's event may be delayed. For some applications
+    this results in a race condition with the event itself - for example,
+    files mentioned in the event may already be removed by the time the
+    event is triggered.
+
+    {{% /notice %}}
+
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: A list of event log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: watch_monitoring
+  description: |
+    Watch clients' monitoring log. This is an event plugin. If client_id
+    is not provided we watch the global journal which contains events from all clients.
+
+  type: Plugin
+  args:
+  - name: client_id
+    description: A list of client ids to watch. If not provided we watch all clients.
+    type: ""
+    repeated: true
+    required: false
+  - name: artifact
+    description: The event artifact name to watch
+    type: ""
+    repeated: false
+    required: true
+  - name: source
+    description: An optional artifact named source
+    type: ""
+    repeated: false
+    required: false
+  - name: client_id
+    description: A list of client ids to watch. If not provided we watch all clients.
+    type: ""
+    repeated: true
+    required: false
+  - name: artifact
+    description: The event artifact name to watch
+    type: ""
+    repeated: false
+    required: true
+  - name: source
+    description: An optional artifact named source
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: watch_syslog
+  description: 'Watch a syslog file and stream events from it. '
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  - name: filename
+    description: A list of log files to parse.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: winobj
+  description: Enumerate The Windows Object Manager namespace.
+  type: Plugin
+  args:
+  - name: path
+    description: Object namespace path.
+    type: ""
+    repeated: false
+    required: false
+  - name: path
+    description: Object namespace path.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: wmi
+  description: |
+    Execute simple WMI queries synchronously.
+
+    This plugin issues a WMI query and returns its rows directly. The
+    exact format of the returned row depends on the WMI query issued.
+
+    This plugin creates a bridge between WMI and VQL and it is a very
+    commonly used plugin for inspecting the state of windows systems.
+
+  type: Plugin
+  args:
+  - name: query
+    description: The WMI query to issue.
+    type: ""
+    repeated: false
+    required: true
+  - name: namespace
+    description: The WMI namespace to use (ROOT/CIMV2)
+    type: ""
+    repeated: false
+    required: false
+  - name: query
+    description: The WMI query to issue.
+    type: ""
+    repeated: false
+    required: true
+  - name: namespace
+    description: The WMI namespace to use (ROOT/CIMV2)
+    type: ""
+    repeated: false
+    required: false
+  category: ""
+- name: wmi_events
+  description: |
+    Executes an evented WMI queries asynchronously.
+
+    This plugin sets up a [WMI event](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/receiving-a-wmi-event) listener query.
+
+  type: Plugin
+  args:
+  - name: query
+    description: WMI query to run.
+    type: ""
+    repeated: false
+    required: true
+  - name: namespace
+    description: WMI namespace
+    type: ""
+    repeated: false
+    required: true
+  - name: wait
+    description: Wait this many seconds for events and then quit.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: WMI query to run.
+    type: ""
+    repeated: false
+    required: true
+  - name: namespace
+    description: WMI namespace
+    type: ""
+    repeated: false
+    required: true
+  - name: wait
+    description: Wait this many seconds for events and then quit.
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: write_csv
+  description: Write a query into a CSV file.
+  type: Plugin
+  args:
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: query to write into the file.
+    type: ""
+    repeated: false
+    required: true
+  - name: query
+    description: query to write into the file.
+    type: ""
+    repeated: false
+    required: true
+  - name: filename
+    description: CSV files to open
+    type: ""
+    repeated: false
+    required: true
+  category: ""
+- name: yara
+  description: |
+    Scan files using yara rules.
+
+    The `yara()` plugin applies a signature consisting of multiple rules
+    across files. You can read more about [yara rules](https://yara.readthedocs.io/en/v3.4.0/writingrules.html). The
+    accessor is used to open the various files which allows this plugin to
+    work across raw ntfs, zip members etc.
+
+    Scanning proceeds by reading a block from the file, then applying the
+    yara rule on the block. This will fail if the signature is split
+    across block boundary. You can choose the block size to be
+    appropriate.
+
+    Note that because we are just scanning the file data, yara plugins
+    like the pe plugin will not work. You can emulate all the yara plugins
+    with VQL anyway (e.g. to test for pe headers)
+
+    Typically the yara rule does not change for the life of the query, so
+    we cache it to avoid having to recompile it each time. The `key`
+    variable can be used to uniquely identify the cache key for the
+    rule. If the `key` variable is not specified, we use the rule text
+    itself to generate the cache key. It is recommended that the `key`
+    parameter be specified because it makes it more efficient.
+
+    ### Shorthand rules
+
+    This plugin accepts yara rules in the `rules` parameter. But typically
+    we only search for keywords so writing a full yara syntax rule is
+    tedious. Therefore we provide a shorthand way to specify the
+    keywords. For example:
+
+    ```
+    wide nocase:foo,bar,baz
+    ```
+
+    When the rule is provided in the above form, the plugin will
+    automatically generate a yara rule which matches any of the specified
+    keywords. The specification before the `:` means the same thing as the
+    yara DSL and the following combinations are supported `wide`, `wide
+    ascii`, `wide nocase`, `wide nocase ascii`.
+
+
+    {{% notice note %}}
+
+    By default only the first 100mb of the file are scanned and
+    scanning stops after one hit is found.
+
+    {{% /notice %}}
+
+  type: Plugin
+  args:
+  - name: start
+    description: The start offset to scan
+    type: ""
+    repeated: false
+    required: false
+  - name: end
+    description: End scanning at this offset (100mb)
+    type: ""
+    repeated: false
+    required: false
+  - name: number
+    description: Stop after this many hits (1).
+    type: ""
+    repeated: false
+    required: false
+  - name: key
+    description: If set use this key to cache the  yara rules.
+    type: ""
+    repeated: false
+    required: false
+  - name: rules
+    description: Yara rules in the yara DSL.
+    type: ""
+    repeated: false
+    required: true
+  - name: context
+    description: How many bytes to include around each hit
+    type: ""
+    repeated: false
+    required: false
+  - name: blocksize
+    description: Blocksize for scanning (1mb).
+    type: ""
+    repeated: false
+    required: false
+  - name: files
+    description: The list of files to scan.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: Accessor (e.g. NTFS)
+    type: ""
+    repeated: false
+    required: false
+  - name: rules
+    description: Yara rules in the yara DSL.
+    type: ""
+    repeated: false
+    required: true
+  - name: context
+    description: How many bytes to include around each hit
+    type: ""
+    repeated: false
+    required: false
+  - name: start
+    description: The start offset to scan
+    type: ""
+    repeated: false
+    required: false
+  - name: end
+    description: End scanning at this offset (100mb)
+    type: ""
+    repeated: false
+    required: false
+  - name: blocksize
+    description: Blocksize for scanning (1mb).
+    type: ""
+    repeated: false
+    required: false
+  - name: files
+    description: The list of files to scan.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: Accessor (e.g. NTFS)
+    type: ""
+    repeated: false
+    required: false
+  - name: number
+    description: Stop after this many hits (1).
+    type: ""
+    repeated: false
+    required: false
+  - name: key
+    description: If set use this key to cache the  yara rules.
+    type: ""
+    repeated: false
+    required: false
+  category: ""
