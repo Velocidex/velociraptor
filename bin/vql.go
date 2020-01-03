@@ -55,7 +55,13 @@ func formatPlugins(
 		if pres {
 			record += "Arg | Description | Type\n"
 			record += "----|-------------|-----\n"
-			for k, v := range arg_desc.Fields {
+			for _, k := range arg_desc.Fields.Keys() {
+				v_any, _ := arg_desc.Fields.Get(k)
+				v, ok := v_any.(*vfilter.TypeReference)
+				if !ok {
+					continue
+				}
+
 				target := v.Target
 				if v.Repeated {
 					target = " list of " + target
@@ -102,7 +108,13 @@ func formatFunctions(
 		if pres {
 			record += "Arg | Description | Type\n"
 			record += "----|-------------|-----\n"
-			for k, v := range arg_desc.Fields {
+			for _, k := range arg_desc.Fields.Keys() {
+				v_any, _ := arg_desc.Fields.Get(k)
+				v, ok := v_any.(*vfilter.TypeReference)
+				if !ok {
+					continue
+				}
+
 				target := v.Target
 				if v.Repeated {
 					target = " list of " + target
@@ -209,11 +221,20 @@ func doVQLExport() {
 				Description: item.Doc,
 				Type:        "Plugin",
 			}
+		} else {
+			// Override the args
+			new_item.Args = nil
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
-			for k, v := range arg_desc.Fields {
+			for _, k := range arg_desc.Fields.Keys() {
+				v_any, _ := arg_desc.Fields.Get(k)
+				v, ok := v_any.(*vfilter.TypeReference)
+				if !ok {
+					continue
+				}
+
 				arg := &ArgDesc{
 					Repeated: v.Repeated,
 					Name:     k,
@@ -244,11 +265,20 @@ func doVQLExport() {
 				Description: item.Doc,
 				Type:        "Function",
 			}
+		} else {
+			// Override the args
+			new_item.Args = nil
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
 		if pres {
-			for k, v := range arg_desc.Fields {
+			for _, k := range arg_desc.Fields.Keys() {
+				v_any, _ := arg_desc.Fields.Get(k)
+				v, ok := v_any.(*vfilter.TypeReference)
+				if !ok {
+					continue
+				}
+
 				arg := &ArgDesc{
 					Repeated: v.Repeated,
 					Name:     k,

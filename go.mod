@@ -20,7 +20,7 @@ require (
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
 	github.com/alecthomas/chroma v0.6.0
-	github.com/alecthomas/participle v0.3.0
+	github.com/alecthomas/participle v0.4.1
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/beevik/etree v1.1.0 // indirect
@@ -112,7 +112,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20191229050130-26f5e7ca4024
+	www.velocidex.com/golang/vfilter v0.0.0-20200103034321-3135d0de1394
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

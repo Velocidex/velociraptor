@@ -18,7 +18,6 @@
     ```
 
     Will return a single row with Users being an array of names.
-
   type: Function
   args: []
   category: ""
@@ -39,7 +38,6 @@
 
     Since we use the windows API this can only work with the "file"
     accessor.
-
   type: Function
   args:
   - name: filename
@@ -80,55 +78,9 @@
   category: ""
 - name: binary_parse
   description: |
-    Parse a binary string with profile based parser.
+    Parse binary files using a profile.
 
-    This plugin extract binary data from strings. It works by applying
-    a profile to the binary string and generating an object from
-    that. Profiles use the same syntax as Rekall or Volatility. For
-    example a profile might be:
-
-    ```json
-    {
-      "StructName": [10, {
-         "field1": [2, ["unsigned int"]],
-         "field2": [6, ["unsigned long long"]],
-      }]
-    }
-    ```
-
-    The profile is compiled and overlayed on top of the offset specified,
-    then the object is emitted with its required fields.
-
-  type: Function
-  args:
-  - name: offset
-    description: Start parsing from this offset.
-    type: ""
-    repeated: false
-    required: false
-  - name: string
-    description: The string to parse.
-    type: ""
-    repeated: false
-    required: true
-  - name: profile
-    description: The profile to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: iterator
-    description: An iterator to begin with.
-    type: ""
-    repeated: false
-    required: false
-  - name: target
-    description: The target type to fetch.
-    type: ""
-    repeated: false
-    required: false
-  category: ""
-- name: binary_parse
-  description: Parse binary files using a profile.
+    This is the plugin version of the `binary_parse()` function.
   type: Plugin
   args:
   - name: offset
@@ -166,38 +118,51 @@
     type: ""
     repeated: false
     required: false
-  - name: target
-    description: The target to fetch.
-    type: ""
-    repeated: false
-    required: true
-  - name: args
-    description: Args for the target class.
-    type: ""
-    repeated: false
-    required: false
-  - name: start
-    description: The initial field in the target to fetch.
-    type: ""
-    repeated: false
-    required: false
+  category: ""
+- name: binary_parse
+  description: |
+    Parse a binary string with profile based parser.
+
+    This plugin extract binary data from strings. It works by applying
+    a profile to the binary string and generating an object from
+    that. Profiles use the same syntax as Rekall or Volatility. For
+    example a profile might be:
+
+    ```json
+    {
+      "StructName": [10, {
+         "field1": [2, ["unsigned int"]],
+         "field2": [6, ["unsigned long long"]],
+      }]
+    }
+    ```
+
+    The profile is compiled and overlayed on top of the offset specified,
+    then the object is emitted with its required fields.
+  type: Function
+  args:
   - name: offset
-    description: Start parsing from this offset
+    description: Start parsing from this offset.
     type: ""
     repeated: false
     required: false
-  - name: file
-    description: Filename to parse
+  - name: string
+    description: The string to parse.
     type: ""
     repeated: false
     required: true
-  - name: accessor
-    description: Accessor to use (e.g. ntfs, data)
+  - name: profile
+    description: The profile to use.
     type: ""
     repeated: false
     required: false
-  - name: profile
-    description: Profile to use.
+  - name: iterator
+    description: An iterator to begin with.
+    type: ""
+    repeated: false
+    required: false
+  - name: target
+    description: The target type to fetch.
     type: ""
     repeated: false
     required: false
@@ -240,17 +205,6 @@
     type: ""
     repeated: false
     required: false
-  - name: search
-    description: 'Client search string. Can have the following prefixes: ''lable:'',
-      ''host:'''
-    type: ""
-    repeated: false
-    required: false
-  - name: client_id
-    description: ""
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: clock
   description: |
@@ -269,19 +223,8 @@
     ```sql
     SELECT Sec FROM clock(period=10)
     ```
-
   type: Plugin
   args:
-  - name: period
-    description: Wait this many seconds between events.
-    type: ""
-    repeated: false
-    required: false
-  - name: ms
-    description: Wait this many ms between events.
-    type: ""
-    repeated: false
-    required: false
   - name: period
     description: Wait this many seconds between events.
     type: ""
@@ -317,26 +260,6 @@
     type: ""
     repeated: false
     required: false
-  - name: args
-    description: Optional parameters.
-    type: ""
-    repeated: false
-    required: false
-  - name: password
-    description: An optional password to encrypt the collection zip.
-    type: ""
-    repeated: false
-    required: false
-  - name: artifacts
-    description: A list of artifacts to collect.
-    type: ""
-    repeated: true
-    required: true
-  - name: output
-    description: A path to write the output file on.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: collect
   description: Launch an artifact collection against a client.
@@ -363,7 +286,6 @@
     Compress a file in the server's FileStore. A compressed
     file is archived so it takes less space. It is still possible to see
     the file and read it but not to seek within it.
-
   type: Function
   args:
   - name: path
@@ -449,7 +371,6 @@
       period=10)
       WHERE Diff = "added"
     ```
-
   type: Plugin
   args:
   - name: query
@@ -467,21 +388,6 @@
     type: ""
     repeated: false
     required: false
-  - name: period
-    description: Number of seconds between evaluation of the query.
-    type: ""
-    repeated: false
-    required: false
-  - name: query
-    description: Source for cached rows.
-    type: ""
-    repeated: false
-    required: true
-  - name: key
-    description: The column to use as key.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: dirname
   description: Return the directory path.
@@ -512,7 +418,6 @@
     from Windows Defender.
 
     {{% /notice %}}
-
   type: Plugin
   args: []
   category: ""
@@ -520,37 +425,6 @@
   description: Upload rows to elastic.
   type: Plugin
   args:
-  - name: type
-    description: The type of the index to upload to.
-    type: ""
-    repeated: false
-    required: true
-  - name: addresses
-    description: A list of Elasticsearch nodes to use.
-    type: ""
-    repeated: true
-    required: false
-  - name: password
-    description: Password for HTTP Basic Authentication.
-    type: ""
-    repeated: false
-    required: false
-  - name: api_key
-    description: Base64-encoded token for authorization; if set, overrides username
-      and password.
-    type: ""
-    repeated: false
-    required: false
-  - name: wait_time
-    description: Batch elastic upload this long (2 sec).
-    type: ""
-    repeated: false
-    required: false
-  - name: cloud_id
-    description: Endpoint for the Elastic Service (https://elastic.co/cloud).
-    type: ""
-    repeated: false
-    required: false
   - name: query
     description: Source for rows to upload.
     type: ""
@@ -567,33 +441,28 @@
     type: ""
     repeated: false
     required: false
-  - name: chunk_size
-    description: The number of rows to send at the time.
-    type: ""
-    repeated: false
-    required: false
-  - name: username
-    description: Username for HTTP Basic Authentication.
-    type: ""
-    repeated: false
-    required: false
-  - name: query
-    description: Source for rows to upload.
+  - name: type
+    description: The type of the index to upload to.
     type: ""
     repeated: false
     required: true
-  - name: threads
-    description: How many threads to use.
-    type: ""
-    repeated: false
-    required: false
   - name: chunk_size
     description: The number of rows to send at the time.
     type: ""
     repeated: false
     required: false
+  - name: addresses
+    description: A list of Elasticsearch nodes to use.
+    type: ""
+    repeated: true
+    required: false
   - name: username
     description: Username for HTTP Basic Authentication.
+    type: ""
+    repeated: false
+    required: false
+  - name: password
+    description: Password for HTTP Basic Authentication.
     type: ""
     repeated: false
     required: false
@@ -602,35 +471,14 @@
     type: ""
     repeated: false
     required: false
-  - name: wait_time
-    description: Batch elastic upload this long (2 sec).
-    type: ""
-    repeated: false
-    required: false
-  - name: index
-    description: The name of the index to upload to. If not specified ensure a column
-      is named '_index'.
-    type: ""
-    repeated: false
-    required: false
-  - name: type
-    description: The type of the index to upload to.
-    type: ""
-    repeated: false
-    required: true
-  - name: addresses
-    description: A list of Elasticsearch nodes to use.
-    type: ""
-    repeated: true
-    required: false
-  - name: password
-    description: Password for HTTP Basic Authentication.
-    type: ""
-    repeated: false
-    required: false
   - name: api_key
     description: Base64-encoded token for authorization; if set, overrides username
       and password.
+    type: ""
+    repeated: false
+    required: false
+  - name: wait_time
+    description: Batch elastic upload this long (2 sec).
     type: ""
     repeated: false
     required: false
@@ -674,12 +522,6 @@
     type: ""
     repeated: true
     required: false
-  - name: vars
-    description: Extract these variables from the environment and return them one
-      per row
-    type: ""
-    repeated: true
-    required: false
   category: ""
 - name: environ
   description: Get an environment variable.
@@ -708,24 +550,8 @@
     installed (e.g. Sysinternal's autoruns.exe) you will need to map them
     from a share (requiring direct access to the AD domain) or download
     them using the `http_client()` plugin.
-
   type: Plugin
   args:
-  - name: length
-    description: Size of buffer to capture output per row.
-    type: ""
-    repeated: false
-    required: false
-  - name: argv
-    description: Argv to run the command with.
-    type: ""
-    repeated: true
-    required: true
-  - name: sep
-    description: The serparator that will be used to split the stdout into rows.
-    type: ""
-    repeated: false
-    required: false
   - name: argv
     description: Argv to run the command with.
     type: ""
@@ -752,7 +578,6 @@
     automatically expand such values since environment variables typically
     depend on the specific user account which reads the registry value
     (different user accounts can have different environment variables).
-
   type: Function
   args:
   - name: path
@@ -829,21 +654,6 @@
     type: ""
     repeated: false
     required: false
-  - name: query
-    description: Source for cached rows.
-    type: ""
-    repeated: false
-    required: true
-  - name: max_age
-    description: Maximum number of seconds to hold rows in the fifo.
-    type: ""
-    repeated: false
-    required: false
-  - name: max_rows
-    description: Maximum number of rows to hold in the fifo.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: file_store
   description: |
@@ -866,7 +676,6 @@
 
     In future the file store may be abstracted (e.g. files may not be
     locally stored at all) and this function may stop working.
-
   type: Function
   args:
   - name: path
@@ -883,11 +692,10 @@
 - name: filter
   description: |
     Filters a strings array by regex.
-
   type: Function
   args:
   - name: list
-    description: A list of items to filter
+    description: A list of items too filter
     type: ""
     repeated: true
     required: true
@@ -902,11 +710,6 @@
     the entire row once for each item.
   type: Plugin
   args:
-  - name: Name
-    description: ""
-    type: ""
-    repeated: false
-    required: false
   - name: Name
     description: ""
     type: ""
@@ -927,36 +730,11 @@
     type: ""
     repeated: false
     required: false
-  - name: flow_id
-    description: ""
-    type: ""
-    repeated: false
-    required: false
-  - name: client_id
-    description: ""
-    type: ""
-    repeated: true
-    required: true
   category: ""
 - name: for
   description: Iterate over a list.
   type: Plugin
   args:
-  - name: var
-    description: The variable to assign.
-    type: ""
-    repeated: false
-    required: true
-  - name: foreach
-    description: The variable to iterate over.
-    type: ""
-    repeated: false
-    required: true
-  - name: query
-    description: Run this query over the item.
-    type: ""
-    repeated: false
-    required: false
   - name: var
     description: The variable to assign.
     type: ""
@@ -992,36 +770,21 @@
     type: ""
     repeated: false
     required: false
-  - name: row
-    description: A query or slice which generates rows.
-    type: ""
-    repeated: false
-    required: true
-  - name: query
-    description: Run this query for each row.
-    type: ""
-    repeated: false
-    required: true
-  - name: async
-    description: If set we run all queries asyncronously.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: format
   description: Format one or more items according to a format string.
   type: Function
   args:
-  - name: args
-    description: An array of elements to apply into the format string.
-    type: ""
-    repeated: false
-    required: false
   - name: format
     description: Format string to use
     type: ""
     repeated: false
     required: true
+  - name: args
+    description: An array of elements to apply into the format string.
+    type: ""
+    repeated: false
+    required: false
   category: ""
 - name: get
   description: |
@@ -1040,7 +803,6 @@
      }
     ]
     ```
-
   type: Function
   args:
   - name: item
@@ -1120,16 +882,6 @@
     type: ""
     repeated: false
     required: false
-  - name: globs
-    description: One or more glob patterns to apply to the filesystem.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: An accessor to use.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: grep
   description: Search a file for keywords.
@@ -1160,6 +912,11 @@
   description: Parse a string using a Grok expression.
   type: Function
   args:
+  - name: grok
+    description: Grok pattern.
+    type: ""
+    repeated: false
+    required: true
   - name: data
     description: String to parse.
     type: ""
@@ -1170,11 +927,6 @@
     type: ""
     repeated: false
     required: false
-  - name: grok
-    description: Grok pattern.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: gui_users
   description: Retrieve the list of users on the server.
@@ -1190,18 +942,12 @@
     type: ""
     repeated: false
     required: true
-  - name: pid
-    description: The PID to dump out.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: hash
   description: |
     Calculate the hash of a file.
 
     This function calculates the MD5, SHA1 and SHA256 hashes of the file.
-
   type: Function
   args:
   - name: path
@@ -1257,53 +1003,6 @@
     ```
   type: Plugin
   args:
-  - name: chunk_size
-    description: Read input with this chunk size and send each chunk as a row
-    type: ""
-    repeated: false
-    required: false
-  - name: disable_ssl_security
-    description: Disable ssl certificate verifications.
-    type: ""
-    repeated: false
-    required: false
-  - name: tempfile_extension
-    description: If specified we write to a tempfile. The content field will contain
-      the full path to the tempfile.
-    type: ""
-    repeated: false
-    required: false
-  - name: url
-    description: The URL to fetch
-    type: ""
-    repeated: false
-    required: true
-  - name: params
-    description: Parameters to encode as POST or GET query strings
-    type: ""
-    repeated: false
-    required: false
-  - name: headers
-    description: A dict of headers to send.
-    type: ""
-    repeated: false
-    required: false
-  - name: method
-    description: HTTP method to use (GET, POST)
-    type: ""
-    repeated: false
-    required: false
-  - name: disable_ssl_security
-    description: Disable ssl certificate verifications.
-    type: ""
-    repeated: false
-    required: false
-  - name: tempfile_extension
-    description: If specified we write to a tempfile. The content field will contain
-      the full path to the tempfile.
-    type: ""
-    repeated: false
-    required: false
   - name: url
     description: The URL to fetch
     type: ""
@@ -1326,6 +1025,17 @@
     required: false
   - name: chunk_size
     description: Read input with this chunk size and send each chunk as a row
+    type: ""
+    repeated: false
+    required: false
+  - name: disable_ssl_security
+    description: Disable ssl certificate verifications.
+    type: ""
+    repeated: false
+    required: false
+  - name: tempfile_extension
+    description: If specified we write to a tempfile. The content field will contain
+      the full path to the tempfile.
     type: ""
     repeated: false
     required: false
@@ -1335,7 +1045,6 @@
     Format items in human readable way.
 
     Formats a byte count in human readable way (e.g. Mb, Gb etc).
-
   type: Function
   args:
   - name: bytes
@@ -1373,36 +1082,11 @@
     type: ""
     repeated: false
     required: true
-  - name: hunt_id
-    description: The hunt id to inspect.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: hunt_results
   description: Retrieve the results of a hunt.
   type: Plugin
   args:
-  - name: source
-    description: An optional source within the artifact.
-    type: ""
-    repeated: false
-    required: false
-  - name: hunt_id
-    description: The hunt id to read.
-    type: ""
-    repeated: false
-    required: true
-  - name: brief
-    description: If set we return less columns.
-    type: ""
-    repeated: false
-    required: false
-  - name: artifact
-    description: The artifact to retrieve
-    type: ""
-    repeated: false
-    required: true
   - name: artifact
     description: The artifact to retrieve
     type: ""
@@ -1430,35 +1114,10 @@
   args: []
   category: ""
 - name: if
-  description: |
-    Conditional execution of query
-
-    This function evaluates a condition. Note that the values used in the
-    `then` or `else` clause are evaluated lazily. They may be expressions
-    that involve stored queries (i.e. queries stored using the `LET`
-    keyword). These queries will not be evaluated if they are not needed.
-
-    This allows a query to cheaply branch. For example, if a parameter is
-    given, then perform hash or upload to the server. See the
-    `Windows.Search.FileFinder` for an example of how `if()` is used.
-
-  type: Plugin
+  description: If condition is true, return the 'then' value otherwise the 'else'
+    value.
+  type: Function
   args:
-  - name: condition
-    description: ""
-    type: ""
-    repeated: false
-    required: true
-  - name: then
-    description: ""
-    type: ""
-    repeated: false
-    required: true
-  - name: else
-    description: ""
-    type: ""
-    repeated: false
-    required: false
   - name: condition
     description: ""
     type: ""
@@ -1476,9 +1135,18 @@
     required: false
   category: ""
 - name: if
-  description: If condition is true, return the 'then' value otherwise the 'else'
-    value.
-  type: Function
+  description: |
+    Conditional execution of query
+
+    This function evaluates a condition. Note that the values used in the
+    `then` or `else` clause are evaluated lazily. They may be expressions
+    that involve stored queries (i.e. queries stored using the `LET`
+    keyword). These queries will not be evaluated if they are not needed.
+
+    This allows a query to cheaply branch. For example, if a parameter is
+    given, then perform hash or upload to the server. See the
+    `Windows.Search.FileFinder` for an example of how `if()` is used.
+  type: Plugin
   args:
   - name: condition
     description: ""
@@ -1506,7 +1174,6 @@
 
     This plugin is very useful in preconditions as it restricts a query to
     certain OS or versions.
-
   type: Plugin
   args: []
   category: ""
@@ -1540,7 +1207,6 @@
     ```
       format(format="%x:%x:%x:%x:%x:%x:%x:%x", value)
     ```
-
   type: Function
   args:
   - name: netaddr4_le
@@ -1559,7 +1225,6 @@
     Join all the args on a separator.
 
     Joins the array into a string separated by the sep character.
-
   type: Function
   args:
   - name: array
@@ -1611,7 +1276,6 @@
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
-
   type: Function
   args:
   - name: client_id
@@ -1700,35 +1364,9 @@
     type: ""
     repeated: false
     required: true
-  - name: subject
-    description: The subject.
-    type: ""
-    repeated: false
-    required: false
-  - name: body
-    description: The body of the mail.
-    type: ""
-    repeated: false
-    required: true
-  - name: period
-    description: How long to wait before sending the next mail - help to throttle
-      mails.
-    type: ""
-    repeated: false
-    required: true
-  - name: to
-    description: Receipient of the mail
-    type: ""
-    repeated: true
-    required: true
-  - name: cc
-    description: A cc for the mail
-    type: ""
-    repeated: true
-    required: false
   category: ""
 - name: max
-  description:
+  description: |
     Finds the largest item in the aggregate.
 
     It is only meaningful in a group by query.
@@ -1741,7 +1379,6 @@
     ```SQL
     SELECT Name, max(items=Pid) as LargestPid from pslist() Where Name =~ 'bash' group by Name
     ```
-
   type: Function
   args:
   - name: items
@@ -1764,7 +1401,6 @@
     ```SQL
     SELECT Name, min(items=Pid) as SmallestPid from pslist() Where Name =~ 'bash' group by Name
     ```
-
   type: Function
   args:
   - name: items
@@ -1802,11 +1438,6 @@
     type: ""
     repeated: false
     required: true
-  - name: pid
-    description: The PID to dump out.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: monitoring
   description: Extract monitoring log from a client. If client_id is not specified
@@ -1827,21 +1458,6 @@
     description: An optional artifact named source
     type: ""
     repeated: false
-    required: false
-  - name: artifact
-    description: The event artifact name to watch
-    type: ""
-    repeated: false
-    required: true
-  - name: source
-    description: An optional artifact named source
-    type: ""
-    repeated: false
-    required: false
-  - name: client_id
-    description: A list of client ids to watch. If not provided we watch all clients.
-    type: ""
-    repeated: true
     required: false
   category: ""
 - name: netstat
@@ -1866,24 +1482,8 @@
     This plugin parses the provided files as OLE documents in order to
     recover VB macro code. A single document can have multiple code
     objects, and each such code object is emitted as a row.
-
   type: Plugin
   args:
-  - name: file
-    description: A list of filenames to open as OLE files.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: max_size
-    description: Maximum size of file we load into memory.
-    type: ""
-    repeated: false
-    required: false
   - name: file
     description: A list of filenames to open as OLE files.
     type: ""
@@ -1929,19 +1529,8 @@
     Order By TotalUsers
     Group By Name
     ```
-
   type: Plugin
   args:
-  - name: filename
-    description: CSV files to open
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use
-    type: ""
-    repeated: false
-    required: false
   - name: filename
     description: CSV files to open
     type: ""
@@ -1957,21 +1546,6 @@
   description: Opens an ESE file and dump a table.
   type: Plugin
   args:
-  - name: file
-    description: ""
-    type: ""
-    repeated: false
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: table
-    description: A table name to dump
-    type: ""
-    repeated: false
-    required: true
   - name: file
     description: ""
     type: ""
@@ -2014,19 +1588,8 @@
            System as _System
     FROM watch_evtx(filename=systemLogFile) WHERE EventID = 7045
     ```
-
   type: Plugin
   args:
-  - name: filename
-    description: A list of event log files to parse.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
   - name: filename
     description: A list of event log files to parse.
     type: ""
@@ -2055,7 +1618,6 @@
     Note that when VQL dereferences fields in a dict it returns a Null for
     those fields that do not exist. Thus there is no error in actually
     accessing missing fields, the column will just return nil.
-
   type: Function
   args:
   - name: data
@@ -2070,7 +1632,6 @@
 
     This function is similar to `parse_json()` but works for a JSON list
     instead of an object.
-
   type: Function
   args:
   - name: data
@@ -2098,31 +1659,11 @@
     type: ""
     repeated: false
     required: false
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: filename
-    description: A list of log files to parse.
-    type: ""
-    repeated: true
-    required: true
   category: ""
 - name: parse_mft
   description: Scan the $MFT from an NTFS volume.
   type: Plugin
   args:
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: filename
-    description: A list of event log files to parse.
-    type: ""
-    repeated: false
-    required: true
   - name: filename
     description: A list of event log files to parse.
     type: ""
@@ -2185,27 +1726,6 @@
     type: ""
     repeated: false
     required: false
-  - name: inode
-    description: The MFT entry to parse in inode notation (5-144-1).
-    type: ""
-    repeated: false
-    required: false
-  - name: mft
-    description: The MFT entry to parse.
-    type: ""
-    repeated: false
-    required: false
-  - name: mft_offset
-    description: The offset to the MFT entry to parse.
-    type: ""
-    repeated: false
-    required: false
-  - name: device
-    description: The device file to open. This may be a full path - we will figure
-      out the device automatically.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: parse_pe
   description: Parse a PE file.
@@ -2294,24 +1814,8 @@
          file=linuxDpkgStatus,
          regex='(?sm)^(?P<Record>Package:.+?)\\n\\n')
     ```
-
   type: Plugin
   args:
-  - name: file
-    description: A list of files to parse.
-    type: ""
-    repeated: true
-    required: true
-  - name: regex
-    description: A list of regex to apply to the file data.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
   - name: file
     description: A list of files to parse.
     type: ""
@@ -2369,11 +1873,6 @@
     type: ""
     repeated: false
     required: false
-  - name: all
-    description: If specified list all Partitions
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: path_join
   description: Build a path by joining all components.
@@ -2400,14 +1899,8 @@
     when the query completes, so if you want to hold on to it, you should
     use the upload() plugin to upload it to the server or otherwise copy
     it.
-
   type: Plugin
   args:
-  - name: pid
-    description: The PID to dump out.
-    type: ""
-    repeated: false
-    required: true
   - name: pid
     description: The PID to dump out.
     type: ""
@@ -2425,7 +1918,6 @@
     Process memory access depends on having the [SeDebugPrivilege](https://support.microsoft.com/en-au/help/131065/how-to-obtain-a-handle-to-any-process-with-sedebugprivilege) which depends on how Velociraptor was started. Even when running as System, some processes are not accessible.
 
     {{% /notice %}}
-
   type: Plugin
   args:
   - name: rules
@@ -2433,6 +1925,16 @@
     type: ""
     repeated: false
     required: true
+  - name: files
+    description: The list of files to scan.
+    type: ""
+    repeated: true
+    required: true
+  - name: accessor
+    description: Accessor (e.g. NTFS)
+    type: ""
+    repeated: false
+    required: false
   - name: context
     description: How many bytes to include around each hit
     type: ""
@@ -2453,68 +1955,13 @@
     type: ""
     repeated: false
     required: false
-  - name: key
-    description: If set use this key to cache the  yara rules.
-    type: ""
-    repeated: false
-    required: false
-  - name: files
-    description: The list of files to scan.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: Accessor (e.g. NTFS)
-    type: ""
-    repeated: false
-    required: false
   - name: blocksize
     description: Blocksize for scanning (1mb).
     type: ""
     repeated: false
     required: false
-  - name: files
-    description: The list of files to scan.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: Accessor (e.g. NTFS)
-    type: ""
-    repeated: false
-    required: false
-  - name: number
-    description: Stop after this many hits (1).
-    type: ""
-    repeated: false
-    required: false
   - name: key
     description: If set use this key to cache the  yara rules.
-    type: ""
-    repeated: false
-    required: false
-  - name: rules
-    description: Yara rules in the yara DSL.
-    type: ""
-    repeated: false
-    required: true
-  - name: context
-    description: How many bytes to include around each hit
-    type: ""
-    repeated: false
-    required: false
-  - name: start
-    description: The start offset to scan
-    type: ""
-    repeated: false
-    required: false
-  - name: end
-    description: End scanning at this offset (100mb)
-    type: ""
-    repeated: false
-    required: false
-  - name: blocksize
-    description: Blocksize for scanning (1mb).
     type: ""
     repeated: false
     required: false
@@ -2527,14 +1974,8 @@
     interested in specific processes, the pid should be
     specified. Otherwise, the plugin returns all processes one on each
     row.
-
   type: Plugin
   args:
-  - name: pid
-    description: A process ID to list. If not provided list all processes.
-    type: ""
-    repeated: false
-    required: false
   - name: pid
     description: A process ID to list. If not provided list all processes.
     type: ""
@@ -2571,7 +2012,6 @@
 
     This function works by remembering the values of x and y from the
     previous row and applying the current rows values.
-
   type: Function
   args:
   - name: x
@@ -2595,29 +2035,8 @@
     configuration files etc.
 
     The returned row contains the following columns: data, offset, filename
-
   type: Plugin
   args:
-  - name: chunk
-    description: length of each chunk to read from the file.
-    type: ""
-    repeated: false
-    required: false
-  - name: max_length
-    description: Max length of the file to read.
-    type: ""
-    repeated: false
-    required: false
-  - name: filenames
-    description: One or more files to open.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: An accessor to use.
-    type: ""
-    repeated: false
-    required: false
   - name: chunk
     description: length of each chunk to read from the file.
     type: ""
@@ -2648,19 +2067,8 @@
     content available in the `Data` field).
 
     This makes it easier to access a bunch of related values at once.
-
   type: Plugin
   args:
-  - name: globs
-    description: Glob expressions to apply.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
   - name: globs
     description: Glob expressions to apply.
     type: ""
@@ -2709,19 +2117,8 @@
 
     This is most useful on the server in order to downsample event
     artifact results.
-
   type: Plugin
   args:
-  - name: "n"
-    description: Pick every n row from query.
-    type: ""
-    repeated: false
-    required: true
-  - name: query
-    description: Source query.
-    type: ""
-    repeated: false
-    required: true
   - name: query
     description: Source query.
     type: ""
@@ -2745,7 +2142,6 @@
     ```sql
     SELECT 1+1 As Two FROM scop()
     ```
-
   type: Plugin
   args: []
   category: ""
@@ -2758,26 +2154,6 @@
   description: Search the server client's index.
   type: Plugin
   args:
-  - name: limit
-    description: Only return limited results
-    type: ""
-    repeated: false
-    required: false
-  - name: type
-    description: The type of search (e.g. 'key')
-    type: ""
-    repeated: false
-    required: false
-  - name: query
-    description: The query string.
-    type: ""
-    repeated: false
-    required: false
-  - name: offset
-    description: Skip this many results.
-    type: ""
-    repeated: false
-    required: false
   - name: query
     description: The query string.
     type: ""
@@ -2836,14 +2212,8 @@
     automatically fill its flow id, client id etc. Typically this
     means that you only need to specify the source name (for
     multi-source artifacts).
-
   type: Plugin
   args:
-  - name: end_time
-    description: Stop end events reach this time (event sources).
-    type: ""
-    repeated: false
-    required: false
   - name: client_id
     description: The client id to extract
     type: ""
@@ -2856,6 +2226,11 @@
     required: false
   - name: start_time
     description: Start return events from this date (for event sources)
+    type: ""
+    repeated: false
+    required: false
+  - name: end_time
+    description: Stop end events reach this time (event sources).
     type: ""
     repeated: false
     required: false
@@ -2881,51 +2256,6 @@
     required: false
   - name: mode
     description: HUNT or CLIENT mode can be empty
-    type: ""
-    repeated: false
-    required: false
-  - name: client_id
-    description: The client id to extract
-    type: ""
-    repeated: false
-    required: false
-  - name: day_name
-    description: Only extract this day's Monitoring logs (deprecated)
-    type: ""
-    repeated: false
-    required: false
-  - name: start_time
-    description: Start return events from this date (for event sources)
-    type: ""
-    repeated: false
-    required: false
-  - name: source
-    description: An optional named source within the artifact
-    type: ""
-    repeated: false
-    required: false
-  - name: mode
-    description: HUNT or CLIENT mode can be empty
-    type: ""
-    repeated: false
-    required: false
-  - name: end_time
-    description: Stop end events reach this time (event sources).
-    type: ""
-    repeated: false
-    required: false
-  - name: flow_id
-    description: A flow ID (client or server artifacts)
-    type: ""
-    repeated: false
-    required: false
-  - name: hunt_id
-    description: Retrieve sources from this hunt (combines all results from all clients)
-    type: ""
-    repeated: false
-    required: false
-  - name: artifact
-    description: The name of the artifact collection to fetch
     type: ""
     repeated: false
     required: false
@@ -2980,67 +2310,11 @@
     type: ""
     repeated: false
     required: false
-  - name: filenames
-    description: Files to parse.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use
-    type: ""
-    repeated: false
-    required: false
-  - name: regex
-    description: The split regular expression (e.g. a comma)
-    type: ""
-    repeated: false
-    required: true
-  - name: columns
-    description: If the first row is not the headers, this arg must provide a list
-      of column names for each value.
-    type: ""
-    repeated: true
-    required: false
-  - name: first_row_is_headers
-    description: A bool indicating if we should get column names from the first row.
-    type: ""
-    repeated: false
-    required: false
-  - name: count
-    description: Only split into this many columns if possible.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
   args:
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: query
-    description: ""
-    type: ""
-    repeated: false
-    required: true
-  - name: args
-    description: ""
-    type: ""
-    repeated: false
-    required: false
-  - name: file
-    description: ""
-    type: ""
-    repeated: false
-    required: true
-  - name: args
-    description: ""
-    type: ""
-    repeated: false
-    required: false
   - name: file
     description: ""
     type: ""
@@ -3056,6 +2330,11 @@
     type: ""
     repeated: false
     required: true
+  - name: args
+    description: ""
+    type: ""
+    repeated: false
+    required: false
   category: ""
 - name: srum_lookup_id
   description: Lookup a SRUM id.
@@ -3117,18 +2396,17 @@
     Create a temporary file and write some data into it.
 
     The file will be automatically removed when the query completes.
-
   type: Function
   args:
-  - name: extension
-    description: An extension to place in the tempfile.
-    type: ""
-    repeated: false
-    required: false
   - name: data
     description: Data to write in the tempfile.
     type: ""
     repeated: true
+    required: false
+  - name: extension
+    description: An extension to place in the tempfile.
+    type: ""
+    repeated: false
     required: false
   category: ""
 - name: timestamp
@@ -3186,19 +2464,8 @@
 
     This functionality is also available using the upload() function which
     might be somewhat easier to use.
-
   type: Plugin
   args:
-  - name: files
-    description: A list of files to upload
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use
-    type: ""
-    repeated: false
-    required: false
   - name: files
     description: A list of files to upload
     type: ""
@@ -3217,7 +2484,6 @@
 
     If Velociraptor is run locally the file will be copied to the
     `--dump_dir` path or added to the triage evidence container.
-
   type: Function
   args:
   - name: file
@@ -3240,6 +2506,16 @@
   description: Upload files to GCS.
   type: Function
   args:
+  - name: file
+    description: The file to upload
+    type: ""
+    repeated: false
+    required: true
+  - name: name
+    description: The name of the file that should be stored on the server
+    type: ""
+    repeated: false
+    required: false
   - name: accessor
     description: The accessor to use
     type: ""
@@ -3260,36 +2536,11 @@
     type: ""
     repeated: false
     required: true
-  - name: file
-    description: The file to upload
-    type: ""
-    repeated: false
-    required: true
-  - name: name
-    description: The name of the file that should be stored on the server
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: upload_s3
   description: Upload files to S3.
   type: Function
   args:
-  - name: region
-    description: The region the bucket is in
-    type: ""
-    repeated: false
-    required: true
-  - name: credentialskey
-    description: The AWS key credentials to use
-    type: ""
-    repeated: false
-    required: true
-  - name: credentialssecret
-    description: The AWS secret credentials to use
-    type: ""
-    repeated: false
-    required: true
   - name: file
     description: The file to upload
     type: ""
@@ -3310,21 +2561,26 @@
     type: ""
     repeated: false
     required: true
+  - name: region
+    description: The region the bucket is in
+    type: ""
+    repeated: false
+    required: true
+  - name: credentialskey
+    description: The AWS key credentials to use
+    type: ""
+    repeated: false
+    required: true
+  - name: credentialssecret
+    description: The AWS secret credentials to use
+    type: ""
+    repeated: false
+    required: true
   category: ""
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
   args:
-  - name: client_id
-    description: The client id to extract
-    type: ""
-    repeated: false
-    required: false
-  - name: flow_id
-    description: A flow ID (client or server artifacts)
-    type: ""
-    repeated: false
-    required: false
   - name: client_id
     description: The client id to extract
     type: ""
@@ -3360,9 +2616,18 @@
     In this case it is critical to properly escape each level - it is not
     possible in the general case to simply append strings. You need to use
     the `url()` function to build the proper url.
-
   type: Function
   args:
+  - name: scheme
+    description: The scheme to use
+    type: ""
+    repeated: false
+    required: false
+  - name: host
+    description: The host component
+    type: ""
+    repeated: false
+    required: false
   - name: path
     description: The path component
     type: ""
@@ -3375,16 +2640,6 @@
     required: false
   - name: parse
     description: A url to parse
-    type: ""
-    repeated: false
-    required: false
-  - name: scheme
-    description: The scheme to use
-    type: ""
-    repeated: false
-    required: false
-  - name: host
-    description: The host component
     type: ""
     repeated: false
     required: false
@@ -3414,11 +2669,6 @@
     type: ""
     repeated: false
     required: true
-  - name: pid
-    description: The PID to dump out.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: watch_csv
   description: |
@@ -3427,19 +2677,8 @@
 
     This plugin is the event version of `parse_csv()`. When the CSV file
     grows this plugin will emit the new rows.
-
   type: Plugin
   args:
-  - name: accessor
-    description: The accessor to use
-    type: ""
-    repeated: false
-    required: false
-  - name: filename
-    description: CSV files to open
-    type: ""
-    repeated: true
-    required: true
   - name: filename
     description: CSV files to open
     type: ""
@@ -3466,19 +2705,8 @@
     event is triggered.
 
     {{% /notice %}}
-
   type: Plugin
   args:
-  - name: filename
-    description: A list of event log files to parse.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
   - name: filename
     description: A list of event log files to parse.
     type: ""
@@ -3494,24 +2722,8 @@
   description: |
     Watch clients' monitoring log. This is an event plugin. If client_id
     is not provided we watch the global journal which contains events from all clients.
-
   type: Plugin
   args:
-  - name: client_id
-    description: A list of client ids to watch. If not provided we watch all clients.
-    type: ""
-    repeated: true
-    required: false
-  - name: artifact
-    description: The event artifact name to watch
-    type: ""
-    repeated: false
-    required: true
-  - name: source
-    description: An optional artifact named source
-    type: ""
-    repeated: false
-    required: false
   - name: client_id
     description: A list of client ids to watch. If not provided we watch all clients.
     type: ""
@@ -3542,26 +2754,11 @@
     type: ""
     repeated: false
     required: false
-  - name: filename
-    description: A list of log files to parse.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: winobj
   description: Enumerate The Windows Object Manager namespace.
   type: Plugin
   args:
-  - name: path
-    description: Object namespace path.
-    type: ""
-    repeated: false
-    required: false
   - name: path
     description: Object namespace path.
     type: ""
@@ -3577,19 +2774,8 @@
 
     This plugin creates a bridge between WMI and VQL and it is a very
     commonly used plugin for inspecting the state of windows systems.
-
   type: Plugin
   args:
-  - name: query
-    description: The WMI query to issue.
-    type: ""
-    repeated: false
-    required: true
-  - name: namespace
-    description: The WMI namespace to use (ROOT/CIMV2)
-    type: ""
-    repeated: false
-    required: false
   - name: query
     description: The WMI query to issue.
     type: ""
@@ -3606,24 +2792,8 @@
     Executes an evented WMI queries asynchronously.
 
     This plugin sets up a [WMI event](https://docs.microsoft.com/en-us/windows/desktop/wmisdk/receiving-a-wmi-event) listener query.
-
   type: Plugin
   args:
-  - name: query
-    description: WMI query to run.
-    type: ""
-    repeated: false
-    required: true
-  - name: namespace
-    description: WMI namespace
-    type: ""
-    repeated: false
-    required: true
-  - name: wait
-    description: Wait this many seconds for events and then quit.
-    type: ""
-    repeated: false
-    required: true
   - name: query
     description: WMI query to run.
     type: ""
@@ -3651,16 +2821,6 @@
     required: true
   - name: query
     description: query to write into the file.
-    type: ""
-    repeated: false
-    required: true
-  - name: query
-    description: query to write into the file.
-    type: ""
-    repeated: false
-    required: true
-  - name: filename
-    description: CSV files to open
     type: ""
     repeated: false
     required: true
@@ -3714,44 +2874,13 @@
     scanning stops after one hit is found.
 
     {{% /notice %}}
-
   type: Plugin
   args:
-  - name: start
-    description: The start offset to scan
-    type: ""
-    repeated: false
-    required: false
-  - name: end
-    description: End scanning at this offset (100mb)
-    type: ""
-    repeated: false
-    required: false
-  - name: number
-    description: Stop after this many hits (1).
-    type: ""
-    repeated: false
-    required: false
-  - name: key
-    description: If set use this key to cache the  yara rules.
-    type: ""
-    repeated: false
-    required: false
   - name: rules
     description: Yara rules in the yara DSL.
     type: ""
     repeated: false
     required: true
-  - name: context
-    description: How many bytes to include around each hit
-    type: ""
-    repeated: false
-    required: false
-  - name: blocksize
-    description: Blocksize for scanning (1mb).
-    type: ""
-    repeated: false
-    required: false
   - name: files
     description: The list of files to scan.
     type: ""
@@ -3762,11 +2891,6 @@
     type: ""
     repeated: false
     required: false
-  - name: rules
-    description: Yara rules in the yara DSL.
-    type: ""
-    repeated: false
-    required: true
   - name: context
     description: How many bytes to include around each hit
     type: ""
@@ -3782,23 +2906,13 @@
     type: ""
     repeated: false
     required: false
-  - name: blocksize
-    description: Blocksize for scanning (1mb).
-    type: ""
-    repeated: false
-    required: false
-  - name: files
-    description: The list of files to scan.
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: Accessor (e.g. NTFS)
-    type: ""
-    repeated: false
-    required: false
   - name: number
     description: Stop after this many hits (1).
+    type: ""
+    repeated: false
+    required: false
+  - name: blocksize
+    description: Blocksize for scanning (1mb).
     type: ""
     repeated: false
     required: false
@@ -3808,3 +2922,4 @@
     repeated: false
     required: false
   category: ""
+
