@@ -202,7 +202,13 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 	required_re := regexp.MustCompile("(^|,)required(,|$)")
 
 	ConsoleLog.Markup("Args:\n")
-	for field, desc := range type_desc.Fields {
+	for _, field := range type_desc.Fields.Keys() {
+		v_any, _ := type_desc.Fields.Get(field)
+		desc, ok := v_any.(*vfilter.TypeReference)
+		if !ok {
+			continue
+		}
+
 		repeated := ""
 		if desc.Repeated {
 			repeated = "<repeated>repeated</>"
