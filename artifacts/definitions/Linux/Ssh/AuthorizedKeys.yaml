@@ -3,13 +3,14 @@ description: Find and parse ssh authorized keys files.
 parameters:
   - name: sshKeyFiles
     default: '.ssh/authorized_keys*'
+    description: Glob of authorized_keys file relative to a user's home directory.
+
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
+
     queries:
-      - |
-        // For each user on the system, search for authorized_keys files.
-        LET authorized_keys = SELECT * from foreach(
+      - LET authorized_keys = SELECT * from foreach(
           row={
              SELECT Uid, User, Homedir from Artifact.Linux.Sys.Users()
           },
@@ -17,12 +18,13 @@ sources:
              SELECT FullPath, Mtime, Ctime, User, Uid from glob(
                globs=Homedir + '/' + sshKeyFiles)
           })
-      - |
-        // For each authorized keys file, extract each line on a different row.
-        // Note: This duplicates the path, user and uid on each key line.
-        SELECT * from foreach(
+
+      - SELECT * from foreach(
           row=authorized_keys,
           query={
-            SELECT Uid, User, FullPath, Key from split_records(
-               filenames=FullPath, regex="\n", columns=["Key"])
+            SELECT Uid, User, FullPath, Key, Comment,
+                   timestamp(epoch=Mtime.sec) AS Mtime
+            FROM split_records(
+               filenames=FullPath, regex=" +", columns=["Type", "Key", "Comment"])
+               WHERE Type =~ "ssh"
           })
