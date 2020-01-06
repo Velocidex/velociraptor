@@ -27,7 +27,7 @@
   args:
   - name: string
     description: A string to convert to int
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -42,7 +42,7 @@
   args:
   - name: filename
     description: The filename to parse.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -52,7 +52,7 @@
   args:
   - name: string
     description: A string to decode
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -62,7 +62,7 @@
   args:
   - name: string
     description: A string to decode
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -72,52 +72,9 @@
   args:
   - name: path
     description: Extract directory name of path
-    type: ""
+    type: string
     repeated: false
     required: true
-  category: ""
-- name: binary_parse
-  description: |
-    Parse binary files using a profile.
-
-    This is the plugin version of the `binary_parse()` function.
-  type: Plugin
-  args:
-  - name: offset
-    description: Start parsing from this offset
-    type: ""
-    repeated: false
-    required: false
-  - name: file
-    description: Filename to parse
-    type: ""
-    repeated: false
-    required: true
-  - name: accessor
-    description: Accessor to use (e.g. ntfs, data)
-    type: ""
-    repeated: false
-    required: false
-  - name: profile
-    description: Profile to use.
-    type: ""
-    repeated: false
-    required: false
-  - name: target
-    description: The target to fetch.
-    type: ""
-    repeated: false
-    required: true
-  - name: args
-    description: Args for the target class.
-    type: ""
-    repeated: false
-    required: false
-  - name: start
-    description: The initial field in the target to fetch.
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: binary_parse
   description: |
@@ -143,27 +100,70 @@
   args:
   - name: offset
     description: Start parsing from this offset.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: string
     description: The string to parse.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: profile
     description: The profile to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: iterator
     description: An iterator to begin with.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: target
     description: The target type to fetch.
-    type: ""
+    type: string
+    repeated: false
+    required: false
+  category: ""
+- name: binary_parse
+  description: |
+    Parse binary files using a profile.
+
+    This is the plugin version of the `binary_parse()` function.
+  type: Plugin
+  args:
+  - name: offset
+    description: Start parsing from this offset
+    type: int64
+    repeated: false
+    required: false
+  - name: file
+    description: Filename to parse
+    type: string
+    repeated: false
+    required: true
+  - name: accessor
+    description: Accessor to use (e.g. ntfs, data)
+    type: string
+    repeated: false
+    required: false
+  - name: profile
+    description: Profile to use.
+    type: string
+    repeated: false
+    required: false
+  - name: target
+    description: The target to fetch.
+    type: string
+    repeated: false
+    required: true
+  - name: args
+    description: Args for the target class.
+    type: vfilter.Any
+    repeated: false
+    required: false
+  - name: start
+    description: The initial field in the target to fetch.
+    type: string
     repeated: false
     required: false
   category: ""
@@ -197,12 +197,12 @@
   - name: search
     description: 'Client search string. Can have the following prefixes: ''lable:'',
       ''host:'''
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: client_id
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -227,37 +227,12 @@
   args:
   - name: period
     description: Wait this many seconds between events.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: ms
     description: Wait this many ms between events.
-    type: ""
-    repeated: false
-    required: false
-  category: ""
-- name: collect
-  description: Collect artifacts into a local file.
-  type: Plugin
-  args:
-  - name: artifacts
-    description: A list of artifacts to collect.
-    type: ""
-    repeated: true
-    required: true
-  - name: output
-    description: A path to write the output file on.
-    type: ""
-    repeated: false
-    required: true
-  - name: args
-    description: Optional parameters.
-    type: ""
-    repeated: false
-    required: false
-  - name: password
-    description: An optional password to encrypt the collection zip.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -267,17 +242,42 @@
   args:
   - name: client_id
     description: The client id to schedule a collection on
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: artifacts
     description: A list of artifacts to collect
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: env
     description: Parameters to apply to the artifacts
-    type: ""
+    type: vfilter.Any
+    repeated: false
+    required: false
+  category: ""
+- name: collect
+  description: Collect artifacts into a local file.
+  type: Plugin
+  args:
+  - name: artifacts
+    description: A list of artifacts to collect.
+    type: string
+    repeated: true
+    required: true
+  - name: output
+    description: A path to write the output file on.
+    type: string
+    repeated: false
+    required: true
+  - name: args
+    description: Optional parameters.
+    type: vfilter.Any
+    repeated: false
+    required: false
+  - name: password
+    description: An optional password to encrypt the collection zip.
+    type: string
     repeated: false
     required: false
   category: ""
@@ -290,7 +290,7 @@
   args:
   - name: path
     description: A VFS path to compress
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -300,17 +300,17 @@
   args:
   - name: filename
     description: The file to copy from.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: dest
     description: The destination file to write.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -320,7 +320,7 @@
   args:
   - name: items
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   category: ""
@@ -375,17 +375,17 @@
   args:
   - name: query
     description: Source for cached rows.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: key
     description: The column to use as key.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: period
     description: Number of seconds between evaluation of the query.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -395,7 +395,7 @@
   args:
   - name: path
     description: Extract directory name of path
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -427,59 +427,59 @@
   args:
   - name: query
     description: Source for rows to upload.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: threads
     description: How many threads to use.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: index
     description: The name of the index to upload to. If not specified ensure a column
       is named '_index'.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: type
     description: The type of the index to upload to.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: chunk_size
     description: The number of rows to send at the time.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: addresses
     description: A list of Elasticsearch nodes to use.
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: username
     description: Username for HTTP Basic Authentication.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: password
     description: Password for HTTP Basic Authentication.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: cloud_id
     description: Endpoint for the Elastic Service (https://elastic.co/cloud).
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: api_key
     description: Base64-encoded token for authorization; if set, overrides username
       and password.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: wait_time
     description: Batch elastic upload this long (2 sec).
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -490,12 +490,12 @@
   args:
   - name: string
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: type
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -505,7 +505,17 @@
   args:
   - name: items
     description: ""
-    type: ""
+    type: vfilter.Any
+    repeated: false
+    required: true
+  category: ""
+- name: environ
+  description: Get an environment variable.
+  type: Function
+  args:
+  - name: var
+    description: Extract the var from the environment.
+    type: string
     repeated: false
     required: true
   category: ""
@@ -519,19 +529,9 @@
   - name: vars
     description: Extract these variables from the environment and return them one
       per row
-    type: ""
+    type: string
     repeated: true
     required: false
-  category: ""
-- name: environ
-  description: Get an environment variable.
-  type: Function
-  args:
-  - name: var
-    description: Extract the var from the environment.
-    type: ""
-    repeated: false
-    required: true
   category: ""
 - name: execve
   description: |
@@ -554,17 +554,17 @@
   args:
   - name: argv
     description: Argv to run the command with.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: sep
     description: The serparator that will be used to split the stdout into rows.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: length
     description: Size of buffer to capture output per row.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -582,7 +582,7 @@
   args:
   - name: path
     description: A path with environment escapes
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -641,17 +641,17 @@
   args:
   - name: query
     description: Source for cached rows.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: max_age
     description: Maximum number of seconds to hold rows in the fifo.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: max_rows
     description: Maximum number of rows to hold in the fifo.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -680,7 +680,7 @@
   args:
   - name: path
     description: A VFS path to convert
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -696,12 +696,12 @@
   args:
   - name: list
     description: A list of items too filter
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: regex
     description: A regex to test each item
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -712,7 +712,7 @@
   args:
   - name: Name
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -722,12 +722,12 @@
   args:
   - name: client_id
     description: ""
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: flow_id
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -737,17 +737,17 @@
   args:
   - name: var
     description: The variable to assign.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: foreach
     description: The variable to iterate over.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: query
     description: Run this query over the item.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: false
   category: ""
@@ -757,17 +757,17 @@
   args:
   - name: row
     description: A query or slice which generates rows.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: query
     description: Run this query for each row.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: async
     description: If set we run all queries asyncronously.
-    type: ""
+    type: bool
     repeated: false
     required: false
   category: ""
@@ -777,12 +777,12 @@
   args:
   - name: format
     description: Format string to use
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: args
     description: An array of elements to apply into the format string.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -807,17 +807,17 @@
   args:
   - name: item
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   - name: member
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: field
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -874,12 +874,12 @@
   args:
   - name: globs
     description: One or more glob patterns to apply to the filesystem.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: An accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -889,22 +889,22 @@
   args:
   - name: path
     description: path to open.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: An accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: keywords
     description: Keywords to search for.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: context
     description: Extract this many bytes as context around hits.
-    type: ""
+    type: int
     repeated: false
     required: false
   category: ""
@@ -914,17 +914,17 @@
   args:
   - name: grok
     description: Grok pattern.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: data
     description: String to parse.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: patterns
     description: Additional patterns.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -939,7 +939,7 @@
   args:
   - name: pid
     description: The PID to dump out.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -952,12 +952,12 @@
   args:
   - name: path
     description: Path to open and hash.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1005,38 +1005,38 @@
   args:
   - name: url
     description: The URL to fetch
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: params
     description: Parameters to encode as POST or GET query strings
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   - name: headers
     description: A dict of headers to send.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   - name: method
     description: HTTP method to use (GET, POST)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: chunk_size
     description: Read input with this chunk size and send each chunk as a row
-    type: ""
+    type: int
     repeated: false
     required: false
   - name: disable_ssl_security
     description: Disable ssl certificate verifications.
-    type: ""
+    type: bool
     repeated: false
     required: false
   - name: tempfile_extension
     description: If specified we write to a tempfile. The content field will contain
       the full path to the tempfile.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1049,7 +1049,7 @@
   args:
   - name: bytes
     description: Format bytes with units
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -1059,17 +1059,17 @@
   args:
   - name: description
     description: Description of the hunt
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: artifacts
     description: A list of artifacts to collect
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: env
     description: Parameters to apply to the artifacts
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -1079,7 +1079,7 @@
   args:
   - name: hunt_id
     description: The hunt id to inspect.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1089,22 +1089,22 @@
   args:
   - name: artifact
     description: The artifact to retrieve
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: source
     description: An optional source within the artifact.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: hunt_id
     description: The hunt id to read.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: brief
     description: If set we return less columns.
-    type: ""
+    type: bool
     repeated: false
     required: false
   category: ""
@@ -1114,23 +1114,31 @@
   args: []
   category: ""
 - name: if
-  description: If condition is true, return the 'then' value otherwise the 'else'
-    value.
+  description: |
+    Conditional execution of query
+
+    This function evaluates a condition. Note that the values used in the
+    `then` or `else` clause are evaluated lazily. They may be expressions
+    that involve stored queries (i.e. queries stored using the `LET`
+    keyword). These queries will not be evaluated if they are not needed.
+
+    This allows a query to cheaply branch. For example, if a parameter is
+    given, then perform hash or upload to the server. See the
   type: Function
   args:
   - name: condition
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: then
     description: ""
-    type: ""
+    type: vfilter.LazyExpr
     repeated: false
     required: true
   - name: else
     description: ""
-    type: ""
+    type: vfilter.LazyExpr
     repeated: false
     required: false
   category: ""
@@ -1150,17 +1158,17 @@
   args:
   - name: condition
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: then
     description: ""
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: else
     description: ""
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: false
   category: ""
@@ -1183,7 +1191,7 @@
   args:
   - name: int
     description: The integer to round
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -1211,12 +1219,12 @@
   args:
   - name: netaddr4_le
     description: A network order IPv4 address (as little endian).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: netaddr4_be
     description: A network order IPv4 address (as big endian).
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -1229,12 +1237,12 @@
   args:
   - name: array
     description: The array to join
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: sep
     description: The separator
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1244,12 +1252,12 @@
   args:
   - name: js
     description: The body of the javascript code.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: key
     description: If set use this key to cache the JS VM.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1259,17 +1267,17 @@
   args:
   - name: func
     description: JS function to call.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: args
     description: Positional args for the function.
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: key
     description: If set use this key to cache the JS VM.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1280,17 +1288,17 @@
   args:
   - name: client_id
     description: Client ID to label.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: labels
     description: A list of labels to apply
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: op
     description: An operation on the labels (add, remove)
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1300,12 +1308,12 @@
   args:
   - name: list
     description: A list of items too filter
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: regex
     description: A regex to test each item
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -1315,7 +1323,7 @@
   args:
   - name: message
     description: Message to log.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1330,7 +1338,7 @@
   args:
   - name: string
     description: A string to lower
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1340,28 +1348,28 @@
   args:
   - name: to
     description: Receipient of the mail
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: cc
     description: A cc for the mail
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: subject
     description: The subject.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: body
     description: The body of the mail.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: period
     description: How long to wait before sending the next mail - help to throttle
       mails.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -1383,7 +1391,7 @@
   args:
   - name: items
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   category: ""
@@ -1405,7 +1413,7 @@
   args:
   - name: items
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   category: ""
@@ -1415,17 +1423,17 @@
   args:
   - name: plugin
     description: The plugin to mock
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: artifact
     description: The plugin to mock
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   - name: results
     description: The result to return
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   category: ""
@@ -1435,7 +1443,7 @@
   args:
   - name: pid
     description: The PID to dump out.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -1446,17 +1454,17 @@
   args:
   - name: client_id
     description: A list of client ids to watch. If not provided we watch all clients.
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: artifact
     description: The event artifact name to watch
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: source
     description: An optional artifact named source
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1471,7 +1479,7 @@
   args:
   - name: string
     description: A string to convert to int
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1486,17 +1494,32 @@
   args:
   - name: file
     description: A list of filenames to open as OLE files.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: max_size
     description: Maximum size of file we load into memory.
-    type: ""
+    type: int64
+    repeated: false
+    required: false
+  category: ""
+- name: parse_auditd
+  description: Parse log files generated by auditd.
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of log files to parse.
+    type: string
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1533,12 +1556,12 @@
   args:
   - name: filename
     description: CSV files to open
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1548,17 +1571,17 @@
   args:
   - name: file
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: table
     description: A table name to dump
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1592,12 +1615,12 @@
   args:
   - name: filename
     description: A list of event log files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1607,7 +1630,7 @@
   args:
   - name: string
     description: A string to convert to int
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1622,7 +1645,7 @@
   args:
   - name: data
     description: Json encoded string.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1636,7 +1659,7 @@
   args:
   - name: data
     description: Json encoded string.
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -1651,12 +1674,12 @@
   args:
   - name: filename
     description: A list of log files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1666,12 +1689,12 @@
   args:
   - name: filename
     description: A list of event log files to parse.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1682,22 +1705,22 @@
   - name: device
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: inode
     description: The MFT entry to parse in inode notation (5-144-1).
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: mft
     description: The MFT entry to parse.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: mft_offset
     description: The offset to the MFT entry to parse.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -1708,22 +1731,22 @@
   - name: device
     description: The device file to open. This may be a full path - we will figure
       out the device automatically.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: inode
     description: The MFT entry to parse in inode notation (5-144-1).
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: mft
     description: The MFT entry to parse.
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: mft_offset
     description: The offset to the MFT entry to parse.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -1733,12 +1756,12 @@
   args:
   - name: file
     description: The PE file to open.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1818,17 +1841,17 @@
   args:
   - name: file
     description: A list of files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: regex
     description: A list of regex to apply to the file data.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1839,12 +1862,12 @@
   args:
   - name: string
     description: A string to parse.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: regex
     description: The regex to apply.
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -1855,12 +1878,12 @@
   args:
   - name: file
     description: XML file to open.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1870,7 +1893,7 @@
   args:
   - name: all
     description: If specified list all Partitions
-    type: ""
+    type: bool
     repeated: false
     required: false
   category: ""
@@ -1880,7 +1903,7 @@
   args:
   - name: components
     description: Path components to join.
-    type: ""
+    type: string
     repeated: true
     required: true
   category: ""
@@ -1903,7 +1926,7 @@
   args:
   - name: pid
     description: The PID to dump out.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -1922,47 +1945,47 @@
   args:
   - name: rules
     description: Yara rules in the yara DSL.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: files
     description: The list of files to scan.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: Accessor (e.g. NTFS)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: context
     description: How many bytes to include around each hit
-    type: ""
+    type: int
     repeated: false
     required: false
   - name: start
     description: The start offset to scan
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: end
     description: End scanning at this offset (100mb)
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: number
     description: Stop after this many hits (1).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: blocksize
     description: Blocksize for scanning (1mb).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: key
     description: If set use this key to cache the  yara rules.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -1978,7 +2001,7 @@
   args:
   - name: pid
     description: A process ID to list. If not provided list all processes.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -1988,7 +2011,7 @@
   args:
   - name: vql
     description: ""
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   category: ""
@@ -1998,7 +2021,7 @@
   args:
   - name: range
     description: Selects a random number up to this range.
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -2016,12 +2039,12 @@
   args:
   - name: x
     description: The X float
-    type: ""
+    type: float64
     repeated: false
     required: true
   - name: "y"
     description: The Y float
-    type: ""
+    type: float64
     repeated: false
     required: true
   category: ""
@@ -2039,22 +2062,22 @@
   args:
   - name: chunk
     description: length of each chunk to read from the file.
-    type: ""
+    type: int
     repeated: false
     required: false
   - name: max_length
     description: Max length of the file to read.
-    type: ""
+    type: int
     repeated: false
     required: false
   - name: filenames
     description: One or more files to open.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: An accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2071,12 +2094,12 @@
   args:
   - name: globs
     description: Glob expressions to apply.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2087,17 +2110,17 @@
   args:
   - name: source
     description: The source string to replace.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: replace
     description: The substitute string.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: re
     description: A regex to apply
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -2107,7 +2130,7 @@
   args:
   - name: string
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2121,14 +2144,19 @@
   args:
   - name: query
     description: Source query.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   - name: "n"
     description: Pick every n row from query.
-    type: ""
+    type: int64
     repeated: false
     required: true
+  category: ""
+- name: scope
+  description: return the scope.
+  type: Function
+  args: []
   category: ""
 - name: scope
   description: |
@@ -2145,33 +2173,28 @@
   type: Plugin
   args: []
   category: ""
-- name: scope
-  description: return the scope.
-  type: Function
-  args: []
-  category: ""
 - name: search
   description: Search the server client's index.
   type: Plugin
   args:
   - name: query
     description: The query string.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: offset
     description: Skip this many results.
-    type: ""
+    type: uint64
     repeated: false
     required: false
   - name: limit
     description: Only return limited results
-    type: ""
+    type: uint64
     repeated: false
     required: false
   - name: type
     description: The type of search (e.g. 'key')
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2181,12 +2204,12 @@
   args:
   - name: item
     description: The item to encode
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   - name: format
     description: Encoding format (csv,json)
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2196,7 +2219,7 @@
   args:
   - name: time
     description: The number of seconds to sleep
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -2216,47 +2239,47 @@
   args:
   - name: client_id
     description: The client id to extract
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: day_name
     description: Only extract this day's Monitoring logs (deprecated)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: start_time
     description: Start return events from this date (for event sources)
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: end_time
     description: Stop end events reach this time (event sources).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: flow_id
     description: A flow ID (client or server artifacts)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: hunt_id
     description: Retrieve sources from this hunt (combines all results from all clients)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: artifact
     description: The name of the artifact collection to fetch
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: source
     description: An optional named source within the artifact
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: mode
     description: HUNT or CLIENT mode can be empty
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2266,12 +2289,12 @@
   args:
   - name: epoch
     description: ""
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: winfiletime
     description: ""
-    type: ""
+    type: int64
     repeated: false
     required: false
   category: ""
@@ -2281,33 +2304,33 @@
   args:
   - name: filenames
     description: Files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: regex
     description: The split regular expression (e.g. a comma)
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: columns
     description: If the first row is not the headers, this arg must provide a list
       of column names for each value.
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: first_row_is_headers
     description: A bool indicating if we should get column names from the first row.
-    type: ""
+    type: bool
     repeated: false
     required: false
   - name: count
     description: Only split into this many columns if possible.
-    type: ""
+    type: int
     repeated: false
     required: false
   category: ""
@@ -2317,22 +2340,22 @@
   args:
   - name: file
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: query
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: args
     description: ""
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -2342,17 +2365,17 @@
   args:
   - name: file
     description: ""
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: id
     description: ""
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -2367,7 +2390,7 @@
   args:
   - name: str
     description: The string to normalize
-    type: ""
+    type: vfilter.Any
     repeated: false
     required: true
   category: ""
@@ -2377,12 +2400,12 @@
   args:
   - name: string
     description: The string to strip
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: prefix
     description: The prefix to strip
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -2400,12 +2423,12 @@
   args:
   - name: data
     description: Data to write in the tempfile.
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: extension
     description: An extension to place in the tempfile.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2415,22 +2438,22 @@
   args:
   - name: epoch
     description: ""
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: winfiletime
     description: ""
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: string
     description: Guess a timestamp from a string
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: us_style
     description: US Style Month/Day/Year
-    type: ""
+    type: bool
     repeated: false
     required: false
   category: ""
@@ -2440,7 +2463,7 @@
   args:
   - name: pid
     description: The PID to get the token for.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -2450,32 +2473,9 @@
   args:
   - name: string
     description: A string to lower
-    type: ""
+    type: string
     repeated: false
     required: true
-  category: ""
-- name: upload
-  description: |
-    Upload files to the server.
-
-    This plugin uploads the specified file to the server. If Velociraptor
-    is run locally the file will be copied tothe `--dump_dir` path or
-    added to the triage evidence container.
-
-    This functionality is also available using the upload() function which
-    might be somewhat easier to use.
-  type: Plugin
-  args:
-  - name: files
-    description: A list of files to upload
-    type: ""
-    repeated: true
-    required: true
-  - name: accessor
-    description: The accessor to use
-    type: ""
-    repeated: false
-    required: false
   category: ""
 - name: upload
   description: |
@@ -2488,17 +2488,40 @@
   args:
   - name: file
     description: The file to upload
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: name
     description: The name of the file that should be stored on the server
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
+    repeated: false
+    required: false
+  category: ""
+- name: upload
+  description: |
+    Upload files to the server.
+
+    This plugin uploads the specified file to the server. If Velociraptor
+    is run locally the file will be copied to the `--dump_dir` path or
+    added to the triage evidence container.
+
+    This functionality is also available using the upload() function which
+    might be somewhat easier to use.
+  type: Plugin
+  args:
+  - name: files
+    description: A list of files to upload
+    type: string
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2508,32 +2531,32 @@
   args:
   - name: file
     description: The file to upload
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: name
     description: The name of the file that should be stored on the server
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: bucket
     description: The bucket to upload to
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: project
     description: The project to upload to
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: credentials
     description: The credentials to use
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -2543,37 +2566,37 @@
   args:
   - name: file
     description: The file to upload
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: name
     description: The name of the file that should be stored on the server
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: bucket
     description: The bucket to upload to
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: region
     description: The region the bucket is in
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: credentialskey
     description: The AWS key credentials to use
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: credentialssecret
     description: The AWS secret credentials to use
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -2583,12 +2606,12 @@
   args:
   - name: client_id
     description: The client id to extract
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: flow_id
     description: A flow ID (client or server artifacts)
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2620,27 +2643,27 @@
   args:
   - name: scheme
     description: The scheme to use
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: host
     description: The host component
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: path
     description: The path component
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: fragment
     description: The fragment
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: parse
     description: A url to parse
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2656,7 +2679,7 @@
   args:
   - name: string
     description: A string to decode
-    type: ""
+    type: string
     repeated: false
     required: true
   category: ""
@@ -2666,9 +2689,24 @@
   args:
   - name: pid
     description: The PID to dump out.
-    type: ""
+    type: int64
     repeated: false
     required: true
+  category: ""
+- name: watch_auditd
+  description: Watch log files generated by auditd.
+  type: Plugin
+  args:
+  - name: filename
+    description: A list of log files to parse.
+    type: string
+    repeated: true
+    required: true
+  - name: accessor
+    description: The accessor to use.
+    type: string
+    repeated: false
+    required: false
   category: ""
 - name: watch_csv
   description: |
@@ -2681,12 +2719,12 @@
   args:
   - name: filename
     description: CSV files to open
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2709,12 +2747,12 @@
   args:
   - name: filename
     description: A list of event log files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2726,17 +2764,17 @@
   args:
   - name: client_id
     description: A list of client ids to watch. If not provided we watch all clients.
-    type: ""
+    type: string
     repeated: true
     required: false
   - name: artifact
     description: The event artifact name to watch
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: source
     description: An optional artifact named source
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2746,12 +2784,12 @@
   args:
   - name: filename
     description: A list of log files to parse.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: The accessor to use.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2761,7 +2799,7 @@
   args:
   - name: path
     description: Object namespace path.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2778,12 +2816,12 @@
   args:
   - name: query
     description: The WMI query to issue.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: namespace
     description: The WMI namespace to use (ROOT/CIMV2)
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
@@ -2796,17 +2834,17 @@
   args:
   - name: query
     description: WMI query to run.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: namespace
     description: WMI namespace
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: wait
     description: Wait this many seconds for events and then quit.
-    type: ""
+    type: int64
     repeated: false
     required: true
   category: ""
@@ -2816,12 +2854,12 @@
   args:
   - name: filename
     description: CSV files to open
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: query
     description: query to write into the file.
-    type: ""
+    type: vfilter.StoredQuery
     repeated: false
     required: true
   category: ""
@@ -2878,48 +2916,47 @@
   args:
   - name: rules
     description: Yara rules in the yara DSL.
-    type: ""
+    type: string
     repeated: false
     required: true
   - name: files
     description: The list of files to scan.
-    type: ""
+    type: string
     repeated: true
     required: true
   - name: accessor
     description: Accessor (e.g. NTFS)
-    type: ""
+    type: string
     repeated: false
     required: false
   - name: context
     description: How many bytes to include around each hit
-    type: ""
+    type: int
     repeated: false
     required: false
   - name: start
     description: The start offset to scan
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: end
     description: End scanning at this offset (100mb)
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: number
     description: Stop after this many hits (1).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: blocksize
     description: Blocksize for scanning (1mb).
-    type: ""
+    type: int64
     repeated: false
     required: false
   - name: key
     description: If set use this key to cache the  yara rules.
-    type: ""
+    type: string
     repeated: false
     required: false
   category: ""
-

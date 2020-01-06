@@ -89,8 +89,7 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(
-		config_obj, &logging.ToolComponent)
+	AddLogger(scope, get_config_or_default())
 
 	now := time.Now()
 	fd, err := os.OpenFile(

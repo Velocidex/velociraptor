@@ -1,3 +1,5 @@
+// +build !aix
+
 // This command creates a customized server deb package which may be
 // used to automatically deploy Velociraptor server (e.g. in a Docker
 // container or on its own VM). The intention is to make this as self
@@ -331,7 +333,7 @@ func doClientDeb() {
 	deb.SetShortDescription("Velociraptor client package.")
 
 	config_path := "/etc/velociraptor/client.config.yaml"
-	velociraptor_bin := "/usr/local/bin/velociraptor"
+	velociraptor_bin := "/usr/local/bin/velociraptor_client"
 
 	deb.AddFileString(string(res), config_path)
 	deb.AddFileString(fmt.Sprintf(

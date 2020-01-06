@@ -172,7 +172,7 @@ func doQuery() {
 
 	ctx := InstallSignalHandler(scope)
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	AddLogger(scope, get_config_or_default())
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", log.Lshortfile)
 	}
