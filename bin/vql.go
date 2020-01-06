@@ -238,6 +238,7 @@ func doVQLExport() {
 				arg := &ArgDesc{
 					Repeated: v.Repeated,
 					Name:     k,
+					Type:     v.Target,
 				}
 
 				if strings.Contains(v.Tag, "required") {
@@ -281,6 +282,7 @@ func doVQLExport() {
 
 				arg := &ArgDesc{
 					Repeated: v.Repeated,
+					Type:     v.Target,
 					Name:     k,
 				}
 
@@ -318,6 +320,10 @@ func doVQLExport() {
 
 	// Sort to maintain stable output.
 	sort.Slice(new_data, func(i, j int) bool {
+		if new_data[i].Name == new_data[j].Name {
+			return new_data[i].Type < new_data[j].Type
+		}
+
 		return new_data[i].Name < new_data[j].Name
 	})
 

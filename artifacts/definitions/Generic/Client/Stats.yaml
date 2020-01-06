@@ -7,9 +7,9 @@ parameters:
 type: CLIENT_EVENT
 
 sources:
-  - queries:
-      - |
-        SELECT * from foreach(
+  - precondition: SELECT OS From info() where OS = 'windows'
+    queries:
+      - SELECT * from foreach(
          row={
            SELECT UnixNano FROM clock(period=atoi(string=Frequency))
          },
@@ -17,6 +17,19 @@ sources:
            SELECT UnixNano / 1000000000 as Timestamp,
                   User + System as CPU,
                   Memory.WorkingSetSize as RSS
+           FROM pslist(pid=getpid())
+         })
+
+  - precondition: SELECT OS From info() where OS = 'linux'
+    queries:
+      - SELECT * from foreach(
+         row={
+           SELECT UnixNano FROM clock(period=atoi(string=Frequency))
+         },
+         query={
+           SELECT UnixNano / 1000000000 as Timestamp,
+                  Times.system + Times.user as CPU,
+                  MemoryInfo.RSS as RSS
            FROM pslist(pid=getpid())
          })
 
