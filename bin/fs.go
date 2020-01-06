@@ -18,7 +18,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strings"
 
@@ -87,7 +86,7 @@ func doLS(path string) {
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	AddLogger(scope, get_config_or_default())
 
 	query := "SELECT Name, Size, Mode.String AS Mode, " +
 		"timestamp(epoch=Mtime.Sec) as mtime, Data " +
@@ -120,7 +119,7 @@ func doCp(path string, dump_dir string) {
 	scope := vql_subsystem.MakeScope().AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	AddLogger(scope, get_config_or_default())
 
 	eval_query(`SELECT * from foreach(
   row={

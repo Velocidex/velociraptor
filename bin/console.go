@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"regexp"
@@ -632,7 +631,7 @@ func doConsole() {
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	AddLogger(scope, get_config_or_default())
 
 	state := load_state()
 	defer save_state(state)
