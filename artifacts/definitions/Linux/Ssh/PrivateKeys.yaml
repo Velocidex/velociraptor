@@ -1,13 +1,13 @@
 name: Linux.Ssh.PrivateKeys
 description: |
-  SSH Private keys can be either encryted or unencrypted. Unencrypted
+  SSH Private keys can be either encrypted or unencrypted. Unencrypted
   private keys are more risky because an attacker can use them without
   needing to unlock them with a password.
 
   This artifact searches for private keys in the usual locations and
   also records if they are encrypted or not.
 
-reference:
+  ## references
   - https://attack.mitre.org/techniques/T1145/
 
 precondition: SELECT OS From info() where OS = 'linux'
