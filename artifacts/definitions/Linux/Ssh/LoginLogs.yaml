@@ -5,7 +5,7 @@ description: |
 reference:
   - https://www.elastic.co/blog/grokking-the-linux-authorization-logs
 
-type: CLIENT_EVENT
+type: CLIENT
 
 parameters:
   - name: syslogAuthLogPath
