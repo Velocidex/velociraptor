@@ -210,6 +210,15 @@ func Linux() error {
 		arch:       "amd64"}.Run()
 }
 
+func Aix() error {
+	return Builder{
+		extra_tags:  " release ",
+		goos:        "aix",
+		disable_cgo: true,
+		arch:        "ppc64",
+	}.Run()
+}
+
 // Builds a Development binary. This does not embed things like GUI
 // resources to allow them to be loaded from the local directory.
 func Dev() error {

@@ -108,8 +108,7 @@ func collectArtifact(
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
+	AddLogger(scope, get_config_or_default())
 
 	if *trace_vql_flag {
 		scope.Tracer = logging.NewPlainLogger(config_obj,
@@ -184,8 +183,7 @@ func collectArtifactToContainer(
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
+	AddLogger(scope, get_config_or_default())
 
 	ctx := InstallSignalHandler(scope)
 
