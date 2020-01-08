@@ -8,6 +8,7 @@ package services
 import (
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
@@ -80,8 +81,7 @@ func (self *ClientEventTable) Update(
 
 	// Increment the version to force clients to update their copy
 	// of the event table.
-	current_version := atomic.LoadUint64(&self.version)
-	current_version += 1
+	current_version := uint64(time.Now().Unix())
 	atomic.StoreUint64(&self.version, current_version)
 
 	event_table := &actions_proto.VQLEventTable{
