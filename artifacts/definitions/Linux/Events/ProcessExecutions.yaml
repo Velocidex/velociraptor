@@ -23,15 +23,15 @@ sources:
         FROM audit()
         WHERE "procmon" in Tags AND Result = 'success'
 
-      # Cache Uid -> Username mapping.
-      - LET users <= SELECT User, atoi(string=Uid) AS Uid
-        FROM Artifact.Linux.Sys.Users()
+     # Cache Uid -> Username mapping.
+     - LET users <= SELECT User, atoi(string=Uid) AS Uid
+       FROM Artifact.Linux.Sys.Users()
 
-      # Enrich the original artifact with more data.
-      - SELECT Time, Pid, Ppid, UserId, 
-               { SELECT User from users WHERE Uid = UserId} AS User,
-               regex_replace(source=read_file(filename= "/proc/" + PPID + "/cmdline"),
-                             replace=" ", re="[\\0]") AS Parent,
-               CmdLine,
-               Exe, CWD
-        FROM exec_log
+     # Enrich the original artifact with more data.
+     - SELECT Time, Pid, Ppid, UserId,
+              { SELECT User from users WHERE Uid = UserId} AS User,
+              regex_replace(source=read_file(filename= "/proc/" + PPID + "/cmdline"),
+                            replace=" ", re="[\\0]") AS Parent,
+              CmdLine,
+              Exe, CWD
+       FROM exec_log
