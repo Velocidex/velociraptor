@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -29,8 +30,16 @@ var (
 )
 
 func doUnzip() {
+	filename, err := filepath.Abs(*unzip_cmd_file)
+	kingpin.FatalIfError(err, "File does not exist")
+
+	_, err = os.Stat(filename)
+	if os.IsNotExist(err) {
+		kingpin.FatalIfError(err, "File does not exist")
+	}
+
 	env := ordereddict.NewDict().
-		Set("ZipPath", *unzip_cmd_file).
+		Set("ZipPath", filename).
 		Set("MemberGlob", *unzip_cmd_member)
 
 	var query string
