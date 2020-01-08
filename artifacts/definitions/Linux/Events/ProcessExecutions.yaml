@@ -4,6 +4,8 @@ description: |
 
 precondition: SELECT OS From info() where OS = 'linux'
 
+type: CLIENT_EVENT
+
 parameters:
   - name: pathToAuditctl
     default: /usr/sbin/auditctl
