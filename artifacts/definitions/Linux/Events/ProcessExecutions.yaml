@@ -1,0 +1,25 @@
+name: Linux.Events.ProcessExecutions
+description: |
+  This artifact collects process execution logs from the Linux kernel.
+
+precondition: SELECT OS From info() where OS = 'linux'
+
+parameters:
+  - name: pathToAuditctl
+    default: /usr/sbin/auditctl
+
+sources:
+  - queries:
+     - LET _ = SELECT * FROM execve(argv=[pathToAuditctl, "-a",
+               "exit,always", "-F", "arch=b64", "-S", "execve", "-k", "procmon"])
+     - SELECT timestamp(string=Timestamp) AS Time, Sequence,
+              atoi(string=Process.PID) AS Pid,
+              atoi(string=Process.PPID) AS Ppid,
+              // Get the parent's command line if possible (It's null separated).
+              regex_replace(source=read_file(filename= "/proc/" + Process.PPID + "/cmdline"),
+                            replace=" ", re="[\\0]") AS Parent,
+              Process.Title AS CmdLine,
+              Process.Exe AS Exe,
+              Process.CWD AS CWD
+       FROM audit()
+       WHERE "procmon" in Tags AND Result = 'success'
