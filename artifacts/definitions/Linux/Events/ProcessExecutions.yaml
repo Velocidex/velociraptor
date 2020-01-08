@@ -12,16 +12,20 @@ parameters:
 
 sources:
   - queries:
+     # Install the auditd rule if possible.
+     - LET _ = SELECT * FROM execve(argv=[pathToAuditctl, "-a",
+          "exit,always", "-F", "arch=b64", "-S", "execve", "-k", "procmon"])
+
      - LET exec_log = SELECT timestamp(string=Timestamp) AS Time, Sequence,
-               atoi(string=Process.PID) AS Pid,
-               atoi(string=Process.PPID) AS Ppid,
-               Process.PPID AS PPID,
-               atoi(string=Summary.Actor.Primary) AS UserId,
-               Process.Title AS CmdLine,
-               Process.Exe AS Exe,
-               Process.CWD AS CWD
-        FROM audit()
-        WHERE "procmon" in Tags AND Result = 'success'
+           atoi(string=Process.PID) AS Pid,
+           atoi(string=Process.PPID) AS Ppid,
+           Process.PPID AS PPID,
+           atoi(string=Summary.Actor.Primary) AS UserId,
+           Process.Title AS CmdLine,
+           Process.Exe AS Exe,
+           Process.CWD AS CWD
+       FROM audit()
+       WHERE "procmon" in Tags AND Result = 'success'
 
      # Cache Uid -> Username mapping.
      - LET users <= SELECT User, atoi(string=Uid) AS Uid
