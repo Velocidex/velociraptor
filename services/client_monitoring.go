@@ -90,7 +90,7 @@ func (self *ClientEventTable) Update(
 
 	rate := arg.OpsPerSecond
 	if rate == 0 {
-		rate = 100
+		rate = 1000
 	}
 
 	if arg.Artifacts != nil {
