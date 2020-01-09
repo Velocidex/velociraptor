@@ -314,7 +314,7 @@ func (self StatPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.PluginInfo{
 		Name:    "stat",
 		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
-		ArgType: "StatArgs",
+		ArgType: type_map.AddType(scope, &StatArgs{}),
 	}
 }
 

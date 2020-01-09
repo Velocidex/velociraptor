@@ -2,6 +2,13 @@ name: Linux.Events.ProcessExecutions
 description: |
   This artifact collects process execution logs from the Linux kernel.
 
+  This artifact relied on the presence of `auditctl` usually included
+  in the auditd package. On Ubuntu you can install it using:
+
+  ```
+  apt-get install auditd
+  ```
+
 precondition: SELECT OS From info() where OS = 'linux'
 
 type: CLIENT_EVENT
@@ -9,6 +16,7 @@ type: CLIENT_EVENT
 parameters:
   - name: pathToAuditctl
     default: /usr/sbin/auditctl
+    description: We depend on auditctl to install the correct process execution rules.
 
 sources:
   - queries:
