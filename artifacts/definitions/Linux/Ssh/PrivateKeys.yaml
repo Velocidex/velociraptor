@@ -1,0 +1,26 @@
+name: Linux.Ssh.PrivateKeys
+description: |
+  SSH Private keys can be either encrypted or unencrypted. Unencrypted
+  private keys are more risky because an attacker can use them without
+  needing to unlock them with a password.
+
+  This artifact searches for private keys in the usual locations and
+  also records if they are encrypted or not.
+
+  ## references
+  - https://attack.mitre.org/techniques/T1145/
+
+precondition: SELECT OS From info() where OS = 'linux'
+
+parameters:
+  - name: KeyGlobs
+    default: /home/*/.ssh/id_{rsa,dsa}
+
+sources:
+  - queries:
+      - SELECT FullPath,
+               timestamp(epoch=Mtime.Sec) AS Mtime,
+               if(condition={
+                     SELECT * from yara(rules="wide ascii:ENCRYPTED", files=FullPath)
+                  }, then="Yes", else="No") AS Encrypted
+        FROM glob(globs=KeyGlobs)

@@ -2,7 +2,9 @@ package syslog
 
 import (
 	"bufio"
+	"compress/gzip"
 	"context"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -40,15 +42,9 @@ func (self ScannerPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
-		if err != nil {
-			scope.Log("parse_lines: %v", err)
-			return
-		}
-
 		for _, filename := range arg.Filenames {
 			func() {
-				fd, err := accessor.Open(filename)
+				fd, err := maybeOpenGzip(ctx, arg.Accessor, filename)
 				if err != nil {
 					scope.Log("parse_lines: %v", err)
 					return
@@ -111,6 +107,27 @@ func (self _WatchSyslogPlugin) Info(scope *vfilter.Scope, type_map *vfilter.Type
 		Doc:     "Watch a syslog file and stream events from it. ",
 		ArgType: type_map.AddType(scope, &ScannerPluginArgs{}),
 	}
+}
+
+func maybeOpenGzip(ctx context.Context, accessor_name, filename string) (io.ReadCloser, error) {
+	accessor, err := glob.GetAccessor(accessor_name, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	fd, err := accessor.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	defer fd.Seek(0, 0)
+
+	zr, err := gzip.NewReader(fd)
+	if err == nil {
+		return zr, nil
+	}
+
+	return fd, nil
 }
 
 func init() {

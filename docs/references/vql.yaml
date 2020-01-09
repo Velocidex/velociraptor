@@ -2,7 +2,7 @@
   description: Parses the appcompatcache.
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: array
   description: |
     Create an array with all the args.
@@ -20,7 +20,7 @@
     Will return a single row with Users being an array of names.
   type: Function
   args: []
-  category: ""
+  category: "basic"
 - name: atoi
   description: Convert a string to an int.
   type: Function
@@ -30,7 +30,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: authenticode
   description: |
     This plugin uses the Windows API to extract authenticode signature
@@ -45,7 +45,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: base64decode
   description: Decodes a base64 encoded string.
   type: Function
@@ -55,7 +55,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: base64encode
   description: Encodes a string into base64.
   type: Function
@@ -65,7 +65,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: basename
   description: Return the basename of the path.
   type: Function
@@ -75,7 +75,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: binary_parse
   description: |
     Parse a binary string with profile based parser.
@@ -123,7 +123,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: binary_parse
   description: |
     Parse binary files using a profile.
@@ -166,12 +166,12 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: certificates
   description: Collect certificate from the system trust store.
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: chain
   description: |
     Chain the output of several queries into the same table. This plugin
@@ -189,7 +189,7 @@
     ```
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: clients
   description: Retrieve the list of clients.
   type: Plugin
@@ -205,7 +205,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: clock
   description: |
     Generate a timestamp periodically. This is mostly useful for event
@@ -235,7 +235,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: collect
   description: Launch an artifact collection against a client.
   type: Function
@@ -255,7 +255,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: collect
   description: Collect artifacts into a local file.
   type: Plugin
@@ -280,7 +280,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: compress
   description: |
     Compress a file in the server's FileStore. A compressed
@@ -293,7 +293,7 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "server"
 - name: copy
   description: Copy a file.
   type: Function
@@ -313,7 +313,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: count
   description: Counts the items.
   type: Function
@@ -323,12 +323,12 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: dict
   description: Construct a dict from arbitrary keyword args.
   type: Function
   args: []
-  category: ""
+  category: "basic"
 - name: diff
   description: |
     Executes 'query' periodically and emit differences from the last query.
@@ -388,7 +388,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: dirname
   description: Return the directory path.
   type: Function
@@ -398,7 +398,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: dns
   description: |
     Monitor dns queries.
@@ -420,7 +420,7 @@
     {{% /notice %}}
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: elastic_upload
   description: Upload rows to elastic.
   type: Plugin
@@ -482,7 +482,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: encode
   description: Encodes a string as as different type. Currently supported types include
     'hex', 'base64'.
@@ -498,7 +498,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: enumerate
   description: Collect all the items in each group by bin.
   type: Function
@@ -508,7 +508,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: environ
   description: Get an environment variable.
   type: Function
@@ -518,7 +518,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: environ
   description: |
     The row returned will have all environment variables as
@@ -532,7 +532,7 @@
     type: string
     repeated: true
     required: false
-  category: ""
+  category: "plugin"
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -567,7 +567,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: expand
   description: |
     Expand the path using the environment.
@@ -585,7 +585,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: fifo
   description: |
     Executes 'query' and cache a number of rows from it. For each invocation
@@ -654,7 +654,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: file_store
   description: |
     Resolves file store paths into full filesystem paths.
@@ -683,12 +683,12 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "server"
 - name: filesystems
   description: ""
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: filter
   description: |
     Filters a strings array by regex.
@@ -704,7 +704,7 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "basic"
 - name: flatten
   description: Flatten the columns in query. If any column repeats then we repeat
     the entire row once for each item.
@@ -715,7 +715,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: flows
   description: Retrieve the flows launched on each client.
   type: Plugin
@@ -730,7 +730,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: for
   description: Iterate over a list.
   type: Plugin
@@ -750,7 +750,7 @@
     type: vfilter.StoredQuery
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: foreach
   description: Executes 'query' once for each row in the 'row' query.
   type: Plugin
@@ -770,7 +770,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: format
   description: Format one or more items according to a format string.
   type: Function
@@ -785,7 +785,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: get
   description: |
     Gets the member field from item.
@@ -820,12 +820,12 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: getpid
   description: Returns the current pid of the process.
   type: Function
   args: []
-  category: ""
+  category: "basic"
 - name: glob
   description: |
     Retrieve files based on a list of glob expressions
@@ -882,7 +882,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: grep
   description: Search a file for keywords.
   type: Function
@@ -907,7 +907,7 @@
     type: int
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: grok
   description: Parse a string using a Grok expression.
   type: Function
@@ -927,12 +927,12 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: gui_users
   description: Retrieve the list of users on the server.
   type: Plugin
   args: []
-  category: ""
+  category: "server"
 - name: handles
   description: Enumerate process handles.
   type: Plugin
@@ -942,7 +942,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: hash
   description: |
     Calculate the hash of a file.
@@ -960,7 +960,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: http_client
   description: |
     Make a http request.
@@ -1039,7 +1039,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: humanize
   description: |
     Format items in human readable way.
@@ -1052,7 +1052,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: hunt
   description: Launch an artifact collection against a client.
   type: Function
@@ -1072,7 +1072,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: hunt_flows
   description: Retrieve the flows launched by a hunt.
   type: Plugin
@@ -1082,7 +1082,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "server"
 - name: hunt_results
   description: Retrieve the results of a hunt.
   type: Plugin
@@ -1107,12 +1107,12 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: hunts
   description: Retrieve the list of hunts.
   type: Plugin
   args: []
-  category: ""
+  category: "server"
 - name: if
   description: |
     Conditional execution of query
@@ -1141,7 +1141,7 @@
     type: vfilter.LazyExpr
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: if
   description: |
     Conditional execution of query
@@ -1171,7 +1171,7 @@
     type: vfilter.StoredQuery
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: info
   description: |
     Get information about the running host.
@@ -1184,7 +1184,7 @@
     certain OS or versions.
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: int
   description: Truncate to an integer.
   type: Function
@@ -1194,12 +1194,12 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: interfaces
   description: List all active interfaces.
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: ip
   description: |
     Format an IP address.
@@ -1227,7 +1227,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: join
   description: |
     Join all the args on a separator.
@@ -1245,7 +1245,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: js
   description: Compile and run javascript code.
   type: Function
@@ -1260,7 +1260,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "experimental"
 - name: js_call
   description: Compile and run javascript code.
   type: Function
@@ -1280,7 +1280,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "experimental"
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
@@ -1301,7 +1301,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: len
   description: Returns the length of an object.
   type: Function
@@ -1316,7 +1316,7 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "basic"
 - name: log
   description: Log the message.
   type: Function
@@ -1326,12 +1326,12 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: lookupSID
   description: Get information about the SID.
   type: Function
   args: []
-  category: ""
+  category: "windows"
 - name: lowcase
   description: ""
   type: Function
@@ -1341,7 +1341,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: mail
   description: Send Email to a remote server.
   type: Plugin
@@ -1372,7 +1372,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "server"
 - name: max
   description: |
     Finds the largest item in the aggregate.
@@ -1394,7 +1394,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: min
   description: |
     Finds the smallest item in the aggregate.
@@ -1416,7 +1416,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: mock
   description: Mock a plugin.
   type: Function
@@ -1436,7 +1436,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "utils"
 - name: modules
   description: Enumerate Loaded DLLs.
   type: Plugin
@@ -1446,7 +1446,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: monitoring
   description: Extract monitoring log from a client. If client_id is not specified
     we watch the global journal which contains event logs from all clients.
@@ -1467,12 +1467,12 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: netstat
   description: Collect network information.
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: now
   description: Returns current time in seconds since epoch.
   type: Function
@@ -1482,7 +1482,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: olevba
   description: |
     Extracts VBA Macros from Office documents.
@@ -1507,7 +1507,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_auditd
   description: Parse log files generated by auditd.
   type: Plugin
@@ -1522,7 +1522,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_csv
   description: |
     Parses events from a CSV file.
@@ -1564,7 +1564,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_ese
   description: Opens an ESE file and dump a table.
   type: Plugin
@@ -1584,7 +1584,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "parsers"
 - name: parse_evtx
   description: |
     Parses events from an EVTX file.
@@ -1623,7 +1623,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_float
   description: Convert a string to a float.
   type: Function
@@ -1633,7 +1633,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "parsers"
 - name: parse_json
   description: |
     Parse a JSON string into an object.
@@ -1648,7 +1648,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "parsers"
 - name: parse_json_array
   description: |
     Parse a JSON string into an array.
@@ -1662,12 +1662,12 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "parsers"
 - name: parse_json_array
   description: Parses events from a line oriented json file.
   type: Plugin
   args: []
-  category: ""
+  category: "parsers"
 - name: parse_lines
   description: Parse a file separated into lines.
   type: Plugin
@@ -1682,7 +1682,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_mft
   description: Scan the $MFT from an NTFS volume.
   type: Plugin
@@ -1697,7 +1697,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_ntfs
   description: Parse an NTFS image file.
   type: Function
@@ -1723,7 +1723,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_ntfs_i30
   description: Scan the $I30 stream from an NTFS MFT entry.
   type: Plugin
@@ -1749,7 +1749,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_pe
   description: Parse a PE file.
   type: Function
@@ -1764,7 +1764,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_records_with_regex
   description: |
     Parses a file with a set of regexp and yields matches as records.  The
@@ -1854,7 +1854,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: parse_string_with_regex
   description: Parse a string with a set of regex and extract fields. Returns a dict
     with fields populated from all regex capture variables.
@@ -1870,7 +1870,7 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "parsers"
 - name: parse_xml
   description: |
     Parse an XML document into a dict like object.
@@ -1886,7 +1886,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: partitions
   description: List all partititions
   type: Plugin
@@ -1896,7 +1896,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: "windows"
 - name: path_join
   description: Build a path by joining all components.
   type: Function
@@ -1906,12 +1906,12 @@
     type: string
     repeated: true
     required: true
-  category: ""
+  category: "basic"
 - name: prefetch
   description: Parses a prefetch file.
   type: Plugin
   args: []
-  category: ""
+  category: "parsers"
 - name: proc_dump
   description: |
     Dumps process memory.
@@ -1929,7 +1929,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: proc_yara
   description: |
     Scan processes using yara rules.
@@ -1988,7 +1988,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "windows"
 - name: pslist
   description: |
     Enumerate running processes.
@@ -2004,7 +2004,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
   type: Function
@@ -2014,7 +2014,7 @@
     type: vfilter.StoredQuery
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: rand
   description: Selects a random number.
   type: Function
@@ -2024,7 +2024,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: rate
   description: |
     Calculates the rate (derivative) between two quantities.
@@ -2047,7 +2047,7 @@
     type: float64
     repeated: false
     required: true
-  category: ""
+  category: "server"
 - name: read_file
   description: |
     Read files in chunks.
@@ -2080,7 +2080,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: read_reg_key
   description: |
     This is a convenience plugin which applies the globs to the registry
@@ -2102,7 +2102,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "windows"
 - name: regex_replace
   description: Search and replace a string with a regexp. Note you can use $1 to replace
     the capture string.
@@ -2123,7 +2123,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "parsers"
 - name: rot13
   description: Apply rot13 deobfuscation to the string.
   type: Function
@@ -2133,7 +2133,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: sample
   description: |
     Executes 'query' and samples every n'th row.
@@ -2152,12 +2152,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
-- name: scope
-  description: return the scope.
-  type: Function
-  args: []
-  category: ""
+  category: "server"
 - name: scope
   description: |
     The scope plugin returns the current scope as a single row.
@@ -2172,7 +2167,7 @@
     ```
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: search
   description: Search the server client's index.
   type: Plugin
@@ -2197,7 +2192,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: serialize
   description: Encode an object as a string (csv or json).
   type: Function
@@ -2212,7 +2207,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -2222,7 +2217,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: source
   description: |
     Retrieve rows from an artifact's source.
@@ -2282,7 +2277,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: split
   description: Splits a string into an array based on a regexp separator.
   type: Function
@@ -2297,7 +2292,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: split_records
   description: Parses files by splitting lines into records.
   type: Plugin
@@ -2333,7 +2328,7 @@
     type: int
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
@@ -2358,7 +2353,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: "parsers"
 - name: srum_lookup_id
   description: Lookup a SRUM id.
   type: Function
@@ -2378,12 +2373,12 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: stat
   description: Get file information. Unlike glob() this does not support wildcards.
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: str
   description: Normalize a String.
   type: Function
@@ -2393,7 +2388,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: strip
   description: Strip a prefix from a string.
   type: Function
@@ -2408,12 +2403,12 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: switch
   description: Executes each query. The first query to return any rows will be emitted.
   type: Plugin
   args: []
-  category: ""
+  category: "plugin"
 - name: tempfile
   description: |
     Create a temporary file and write some data into it.
@@ -2431,7 +2426,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: timestamp
   description: Convert from different types to a time.Time.
   type: Function
@@ -2456,7 +2451,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: token
   description: Extract process token.
   type: Function
@@ -2466,7 +2461,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: upcase
   description: ""
   type: Function
@@ -2476,7 +2471,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: upload
   description: |
     Upload a file to the upload service. For a Velociraptor client this
@@ -2501,7 +2496,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: upload
   description: |
     Upload files to the server.
@@ -2524,7 +2519,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"
 - name: upload_gcs
   description: Upload files to GCS.
   type: Function
@@ -2559,7 +2554,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "plugin"
 - name: upload_s3
   description: Upload files to S3.
   type: Function
@@ -2599,7 +2594,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "plugin"
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
@@ -2614,7 +2609,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "server"
 - name: url
   description: |
     Construct a URL or parse one.
@@ -2666,13 +2661,13 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "basic"
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
   type: Plugin
   args: []
-  category: ""
+  category: "windows"
 - name: utf16
   description: Parse input from utf16.
   type: Function
@@ -2682,7 +2677,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: "basic"
 - name: vad
   description: Enumerate process memory regions.
   type: Plugin
@@ -2692,7 +2687,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "windows"
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -2707,7 +2702,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: watch_csv
   description: |
     Watch a CSV file and stream events from it. Note: This is an event
@@ -2727,7 +2722,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: watch_evtx
   description: |
     Watch an EVTX file and stream events from it.
@@ -2755,7 +2750,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: watch_monitoring
   description: |
     Watch clients' monitoring log. This is an event plugin. If client_id
@@ -2777,7 +2772,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: watch_syslog
   description: 'Watch a syslog file and stream events from it. '
   type: Plugin
@@ -2792,7 +2787,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "event"
 - name: winobj
   description: Enumerate The Windows Object Manager namespace.
   type: Plugin
@@ -2802,7 +2797,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "windows"
 - name: wmi
   description: |
     Execute simple WMI queries synchronously.
@@ -2824,7 +2819,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "windows"
 - name: wmi_events
   description: |
     Executes an evented WMI queries asynchronously.
@@ -2847,7 +2842,7 @@
     type: int64
     repeated: false
     required: true
-  category: ""
+  category: "event"
 - name: write_csv
   description: Write a query into a CSV file.
   type: Plugin
@@ -2862,7 +2857,7 @@
     type: vfilter.StoredQuery
     repeated: false
     required: true
-  category: ""
+  category: "plugin"
 - name: yara
   description: |
     Scan files using yara rules.
@@ -2959,4 +2954,4 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: "plugin"

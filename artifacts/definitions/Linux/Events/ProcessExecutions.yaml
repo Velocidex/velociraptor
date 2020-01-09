@@ -1,0 +1,49 @@
+name: Linux.Events.ProcessExecutions
+description: |
+  This artifact collects process execution logs from the Linux kernel.
+
+  This artifact relied on the presence of `auditctl` usually included
+  in the auditd package. On Ubuntu you can install it using:
+
+  ```
+  apt-get install auditd
+  ```
+
+precondition: SELECT OS From info() where OS = 'linux'
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: pathToAuditctl
+    default: /usr/sbin/auditctl
+    description: We depend on auditctl to install the correct process execution rules.
+
+sources:
+  - queries:
+     # Install the auditd rule if possible.
+     - LET _ = SELECT * FROM execve(argv=[pathToAuditctl, "-a",
+          "exit,always", "-F", "arch=b64", "-S", "execve", "-k", "procmon"])
+
+     - LET exec_log = SELECT timestamp(string=Timestamp) AS Time, Sequence,
+           atoi(string=Process.PID) AS Pid,
+           atoi(string=Process.PPID) AS Ppid,
+           Process.PPID AS PPID,
+           atoi(string=Summary.Actor.Primary) AS UserId,
+           Process.Title AS CmdLine,
+           Process.Exe AS Exe,
+           Process.CWD AS CWD
+       FROM audit()
+       WHERE "procmon" in Tags AND Result = 'success'
+
+     # Cache Uid -> Username mapping.
+     - LET users <= SELECT User, atoi(string=Uid) AS Uid
+       FROM Artifact.Linux.Sys.Users()
+
+     # Enrich the original artifact with more data.
+     - SELECT Time, Pid, Ppid, UserId,
+              { SELECT User from users WHERE Uid = UserId} AS User,
+              regex_replace(source=read_file(filename= "/proc/" + PPID + "/cmdline"),
+                            replace=" ", re="[\\0]") AS Parent,
+              CmdLine,
+              Exe, CWD
+       FROM exec_log

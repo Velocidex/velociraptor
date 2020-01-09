@@ -132,6 +132,10 @@ func (self _SplitRecordParser) Call(
 		goto error
 	}
 
+	if arg.Regex == "" {
+		arg.Regex = "\\s+"
+	}
+
 	compiled_regex, err = regexp.Compile(arg.Regex)
 	if err != nil {
 		goto error

@@ -159,7 +159,7 @@ func (self _ToInt) Call(
 		return vfilter.Null{}
 	}
 
-	result, _ := strconv.Atoi(arg.String)
+	result, _ := strconv.ParseInt(arg.String, 0, 64)
 	return result
 }
 

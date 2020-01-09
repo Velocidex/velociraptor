@@ -123,9 +123,7 @@ func (self ReadFilePlugin) processFile(
 	total_len := int64(0)
 
 	fd, err := accessor.Open(file)
-
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
 		return
 	}
 	defer fd.Close()
@@ -214,6 +212,61 @@ func (self ReadFilePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 	}
 }
 
+type ReadFileFunctionArgs struct {
+	Length   int    `vfilter:"optional,field=length,doc=Max length of the file to read."`
+	Filename string `vfilter:"required,field=filename,doc=One or more files to open."`
+	Accessor string `vfilter:"optional,field=accessor,doc=An accessor to use."`
+}
+
+type ReadFileFunction struct{}
+
+func (self *ReadFileFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &ReadFileFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("read_file: %s", err.Error())
+		return ""
+	}
+
+	if arg.Length == 0 {
+		arg.Length = 4 * 1024 * 1024
+	}
+
+	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	if err != nil {
+		scope.Log("read_file: %v", err)
+		return ""
+	}
+
+	buf := make([]byte, arg.Length)
+
+	fd, err := accessor.Open(arg.Filename)
+	if err != nil {
+		return ""
+	}
+	defer fd.Close()
+
+	n, err := io.ReadAtLeast(fd, buf, len(buf))
+	if err != nil &&
+		errors.Cause(err) != io.ErrUnexpectedEOF &&
+		errors.Cause(err) != io.EOF {
+		scope.Log("read_file: %v", err)
+		return ""
+	}
+
+	return string(buf[:n])
+}
+
+func (self ReadFileFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "read_file",
+		Doc:     "Read a file into a string.",
+		ArgType: type_map.AddType(scope, &ReadFileArgs{}),
+	}
+}
+
 type StatArgs struct {
 	Filename []string `vfilter:"required,field=filename,doc=One or more files to open."`
 	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
@@ -261,7 +314,7 @@ func (self StatPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.PluginInfo{
 		Name:    "stat",
 		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
-		ArgType: "StatArgs",
+		ArgType: type_map.AddType(scope, &StatArgs{}),
 	}
 }
 
@@ -286,4 +339,5 @@ func init() {
 			RowType: disk.PartitionStat{},
 		})
 	vql_subsystem.RegisterPlugin(&StatPlugin{})
+	vql_subsystem.RegisterFunction(&ReadFileFunction{})
 }
