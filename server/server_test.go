@@ -241,7 +241,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 			// We do not want to triggen an event table
 			// update in this test.
-			LastEventTableVersion: 100000,
+			LastEventTableVersion: 10000000000,
 		},
 	})
 

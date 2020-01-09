@@ -26,7 +26,6 @@ import (
 	"runtime/pprof"
 	"runtime/trace"
 	"strings"
-	"time"
 
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
@@ -148,6 +147,11 @@ func get_config_or_default() *config_proto.Config {
 	return config_obj
 }
 
+func init() {
+	// Just display everything in UTC.
+	os.Setenv("TZ", "Z")
+}
+
 func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
@@ -160,10 +164,6 @@ func main() {
 	}
 
 	command := kingpin.MustParse(app.Parse(args))
-
-	// Just display everything in UTC.
-	os.Setenv("TZ", "Z")
-	time.Local = time.UTC
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true
