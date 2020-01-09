@@ -2154,11 +2154,6 @@
     required: true
   category: "server"
 - name: scope
-  description: return the scope.
-  type: Function
-  args: []
-  category: "basic"
-- name: scope
   description: |
     The scope plugin returns the current scope as a single row.
 
