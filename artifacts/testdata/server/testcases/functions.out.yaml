@@ -1,0 +1,7 @@
+SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)) FROM scope()[
+ {
+  "len(list= [\"a\", \"b\"])": 2,
+  "len(list=\"hello\")": 0,
+  "len(list=dict(foo=1, bar=2, baz=3))": 0
+ }
+]
