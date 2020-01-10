@@ -47,7 +47,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	arg := &ScheduleCollectionFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("collect: %s", err.Error())
+		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -66,7 +66,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		if pres {
 			value_str, ok := value.(string)
 			if !ok {
-				scope.Log("collect: Env must be a dict of strings")
+				scope.Log("collect_client: Env must be a dict of strings")
 				return vfilter.Null{}
 			}
 
@@ -85,7 +85,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	response, err := client.CollectArtifact(ctx, request)
 
 	if err != nil {
-		scope.Log("collect: %s", err.Error())
+		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -94,7 +94,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 func (self ScheduleCollectionFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "collect",
+		Name:    "collect_client",
 		Doc:     "Launch an artifact collection against a client.",
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
 	}
