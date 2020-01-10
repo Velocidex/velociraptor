@@ -187,9 +187,18 @@ func (self *LenFunction) Call(ctx context.Context,
 	}
 
 	slice := reflect.ValueOf(arg.List)
-	// A slice of strings.
-	if slice.Type().Kind() == reflect.Slice {
+	// A slice of strings. Only the following are supported
+	// https://golang.org/pkg/reflect/#Value.Len
+	if slice.Type().Kind() == reflect.Slice ||
+		slice.Type().Kind() == reflect.Map ||
+		slice.Type().Kind() == reflect.Array ||
+		slice.Type().Kind() == reflect.String {
 		return slice.Len()
+	}
+
+	dict, ok := arg.List.(*ordereddict.Dict)
+	if ok {
+		return dict.Len()
 	}
 
 	return 0

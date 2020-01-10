@@ -1,0 +1,6 @@
+Queries:
+  - LET rows <= SELECT * FROM scope()
+  # Test the len function.
+  - SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)),
+           len(list=rows)
+    FROM scope()
