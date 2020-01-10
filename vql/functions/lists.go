@@ -196,6 +196,11 @@ func (self *LenFunction) Call(ctx context.Context,
 		return slice.Len()
 	}
 
+	dict, ok := arg.List.(*ordereddict.Dict)
+	if ok {
+		return dict.Len()
+	}
+
 	return 0
 }
 
