@@ -17,6 +17,7 @@ type CollectPluginArgs struct {
 	Output    string      `vfilter:"required,field=output,doc=A path to write the output file on."`
 	Args      vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
 	Password  string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
+	Format    string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
 }
 
 type CollectPlugin struct{}
@@ -37,6 +38,15 @@ func (self CollectPlugin) Call(
 			return
 		}
 
+		switch arg.Format {
+		case "jsonl", "csv", "json":
+		case "":
+			arg.Format = "jsonl"
+		default:
+			scope.Log("collect: format %v not supported", arg.Format)
+			return
+		}
+
 		config_obj := config.GetDefaultConfig()
 		container, err := reporting.NewContainer(arg.Output)
 		if err != nil {
@@ -52,13 +62,6 @@ func (self CollectPlugin) Call(
 		// Should we encrypt it?
 		container.Password = arg.Password
 
-		// Any uploads go into the container.
-		subscope := scope.Copy()
-		env := ordereddict.NewDict().
-			Set("$uploader", container)
-
-		subscope.AppendVars(env)
-
 		repository, err := artifacts.GetGlobalRepository(
 			config_obj)
 		if err != nil {
@@ -67,6 +70,14 @@ func (self CollectPlugin) Call(
 		}
 
 		for _, name := range arg.Artifacts {
+			// Make a new scope for each artifact.
+			// Any uploads go into the container.
+			subscope := scope.Copy()
+			env := ordereddict.NewDict().
+				Set("$uploader", container)
+
+			subscope.AppendVars(env)
+
 			artifact, pres := repository.Get(name)
 			if !pres {
 				subscope.Log("collect: Unknown artifact %v", name)
@@ -120,7 +131,7 @@ func (self CollectPlugin) Call(
 
 				err = container.StoreArtifact(
 					config_obj,
-					ctx, subscope, vql, query)
+					ctx, subscope, vql, query, arg.Format)
 				if err != nil {
 					subscope.Log("collect: %v", err)
 					return

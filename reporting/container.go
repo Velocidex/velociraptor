@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -37,21 +38,61 @@ func (self *Container) StoreArtifact(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL,
-	query *actions_proto.VQLRequest) error {
+	query *actions_proto.VQLRequest,
+	format string) error {
 
-	// Store the entire result set in memory because we might need
-	// to re-query it when formatting the description field.
-	var output_rows []vfilter.Row
+	// Dont store un named queries but run them anyway.
+	if query.Name == "" {
+		for _ = range vql.Eval(ctx, scope) {
+		}
+		return nil
+	}
 
-	columns := vql.Columns(scope)
-	for row := range vql.Eval(ctx, scope) {
-		if len(*columns) == 0 {
-			*columns = scope.GetMembers(row)
+	switch format {
+	case "csv", "":
+		// In this instance we want to make / unescaped.
+		sanitized_name := query.Name + ".csv"
+		writer, err := self.getZipFileWriter(string(sanitized_name))
+		if err != nil {
+			return err
 		}
 
-		output_rows = append(output_rows, row)
+		csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{writer})
+		if err != nil {
+			return err
+		}
+		defer csv_writer.Close()
+
+		for row := range vql.Eval(ctx, scope) {
+			csv_writer.Write(row)
+		}
+
+	case "jsonl", "json":
+		// In this instance we want to make / unescaped.
+		sanitized_name := query.Name + ".json"
+		writer, err := self.getZipFileWriter(string(sanitized_name))
+		if err != nil {
+			return err
+		}
+
+		for row := range vql.Eval(ctx, scope) {
+			// Re-serialize it as compact json.
+			serialized, err := json.Marshal(row)
+			if err != nil {
+				continue
+			}
+
+			writer.Write(serialized)
+
+			// Separate lines with \n
+			writer.Write([]byte("\n"))
+		}
+
+	default:
+		return errors.New("Format not supported")
 	}
-	return self.DumpRowsIntoContainer(config_obj, output_rows, scope, query)
+
+	return nil
 }
 
 func (self *Container) getZipFileWriter(name string) (io.Writer, error) {

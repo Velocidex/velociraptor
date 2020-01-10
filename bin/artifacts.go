@@ -167,6 +167,7 @@ func collectArtifactToContainer(
 	repository *artifacts.Repository,
 	artifact_name string,
 	container *reporting.Container,
+	format string,
 	request *actions_proto.VQLCollectorArgs) {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
@@ -192,7 +193,9 @@ func collectArtifactToContainer(
 		kingpin.FatalIfError(err, "Parse VQL")
 
 		// Store query output in the container.
-		err = container.StoreArtifact(config_obj, ctx, scope, vql, query)
+		err = container.StoreArtifact(
+			config_obj, ctx, scope, vql, query,
+			format)
 		kingpin.FatalIfError(err, "container.StoreArtifact")
 
 		if query.Name != "" {
@@ -343,7 +346,8 @@ func doArtifactCollect() {
 			collectArtifact(config_obj, repository, name, request)
 		} else {
 			collectArtifactToContainer(
-				config_obj, repository, name, container, request)
+				config_obj, repository, name, container,
+				*artifact_command_collect_format, request)
 		}
 	}
 }
