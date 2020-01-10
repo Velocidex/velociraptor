@@ -4,12 +4,6 @@ SELECT * FROM collect(artifacts='Windows.Search.FileFinder', args=dict(SearchFil
  }
 ]SELECT FullPath from glob(globs="file:///c:/1.zip#/*", accessor='zip') WHERE not IsDir[
  {
-  "FullPath": "file:///c:/1.zip#Windows.Search.FileFinder.csv"
- },
- {
   "FullPath": "file:///c:/1.zip#Windows.Search.FileFinder.json"
- },
- {
-  "FullPath": "file:///c:/1.zip#Windows.Search.FileFinder.txt"
  }
 ]
