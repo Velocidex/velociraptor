@@ -21,7 +21,7 @@ parameters:
 sources:
   - queries:
      # Install the auditd rule if possible.
-     - LET _ = SELECT * FROM execve(argv=[pathToAuditctl, "-a",
+     - LET _ <= SELECT * FROM execve(argv=[pathToAuditctl, "-a",
           "exit,always", "-F", "arch=b64", "-S", "execve", "-k", "procmon"])
 
      - LET exec_log = SELECT timestamp(string=Timestamp) AS Time, Sequence,
