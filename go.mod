@@ -10,6 +10,7 @@ require (
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
+	github.com/UnnoTed/fileb0x v1.1.4 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
@@ -104,8 +105,8 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
-	www.velocidex.com/golang/go-ese v0.0.0-20191203002841-0c80dd255d97
-	www.velocidex.com/golang/go-ntfs v0.0.0-20191114150551-9268b64dc996
+	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
+	www.velocidex.com/golang/go-ntfs v0.0.0-20200110083657-950cbe916617
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
