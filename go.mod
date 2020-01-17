@@ -18,6 +18,7 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
+	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.6.0
 	github.com/alecthomas/participle v0.4.1
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0

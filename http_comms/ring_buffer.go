@@ -30,7 +30,12 @@ type Header struct {
 	ReadPointer    int64 // Leasing will start at this file offset.
 	WritePointer   int64 // Enqueue will write at this file position.
 	MaxSize        int64 // Block Enqueue once WritePointer goes past this.
-	AvailableBytes int64 // Available to be leased.
+	AvailableBytes int64 // Available to be leased.  Size of data
+
+	// that is currently leased. If the client crashes we replay
+	// the leased data again. This should be 0 when we open a
+	// file.
+	LeasedBytes int64
 }
 
 func (self *Header) MarshalBinary() ([]byte, error) {
@@ -41,13 +46,14 @@ func (self *Header) MarshalBinary() ([]byte, error) {
 	binary.LittleEndian.PutUint64(data[12:20], uint64(self.WritePointer))
 	binary.LittleEndian.PutUint64(data[20:28], uint64(self.MaxSize))
 	binary.LittleEndian.PutUint64(data[28:36], uint64(self.AvailableBytes))
+	binary.LittleEndian.PutUint64(data[36:44], uint64(self.LeasedBytes))
 
 	return data, nil
 }
 
 func (self *Header) UnmarshalBinary(data []byte) error {
 	if len(data) < FirstRecordOffset {
-		return errors.New("Invalid data")
+		return errors.New("Invalid header length")
 	}
 
 	if string(data[:4]) != FileMagic {
@@ -58,6 +64,7 @@ func (self *Header) UnmarshalBinary(data []byte) error {
 	self.WritePointer = int64(binary.LittleEndian.Uint64(data[12:20]))
 	self.MaxSize = int64(binary.LittleEndian.Uint64(data[20:28]))
 	self.AvailableBytes = int64(binary.LittleEndian.Uint64(data[28:36]))
+	self.LeasedBytes = int64(binary.LittleEndian.Uint64(data[36:44]))
 
 	return nil
 }
@@ -74,7 +81,7 @@ type FileBasedRingBuffer struct {
 	mu sync.Mutex
 	c  *sync.Cond
 
-	fd     ReadWriterAt
+	fd     *os.File
 	header *Header
 
 	read_buf  []byte
@@ -83,8 +90,7 @@ type FileBasedRingBuffer struct {
 	// The file offset where leases come from.
 	leased_pointer int64
 
-	// Total number of bytes currently leased.
-	leased_bytes int64
+	log_ctx *logging.LogContext
 }
 
 func (self *FileBasedRingBuffer) Enqueue(item []byte) {
@@ -160,28 +166,55 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			// File might be corrupt - just reset the
 			// entire file.
 			if length > constants.MAX_MEMORY*2 {
-				self.fd.Truncate(0)
-				self.leased_pointer = FirstRecordOffset
-				self.header.WritePointer = FirstRecordOffset
+				self.log_ctx.Error("Possible corruption detected - item length is too large.")
+				self._Truncate()
 				return nil
 			}
 			item := make([]byte, length)
-			n, err := self.fd.ReadAt(item, self.leased_pointer+8)
-			if err == nil && int64(n) == length {
-				result = append(result, item...)
+			n, _ := self.fd.ReadAt(item, self.leased_pointer+8)
+			if int64(n) != length {
+				self.log_ctx.Errorf(
+					"Possible corruption detected - expected item of length %v received %v.",
+					length, n)
+				self._Truncate()
+				return nil
 			}
+			result = append(result, item...)
 
 			self.leased_pointer += 8 + int64(n)
-			self.leased_bytes += int64(n)
+			self.header.LeasedBytes += int64(n)
 			self.header.AvailableBytes -= int64(n)
 
 			if uint64(len(result)) > size {
 				break
 			}
+
+		} else {
+			self.log_ctx.Error("Possible corruption detected: file too short.")
+			self._Truncate()
 		}
 	}
 
 	return result
+}
+
+// _Truncate returns the file to a virgin state. Assumes
+// FileBasedRingBuffer is already under lock.
+func (self *FileBasedRingBuffer) _Truncate() {
+	self.fd.Truncate(0)
+	self.header.ReadPointer = FirstRecordOffset
+	self.header.WritePointer = FirstRecordOffset
+	self.header.AvailableBytes = 0
+	self.header.LeasedBytes = 0
+
+	self.leased_pointer = FirstRecordOffset
+	serialized, _ := self.header.MarshalBinary()
+	self.fd.WriteAt(serialized, 0)
+	self.c.Broadcast()
+}
+
+func (self *FileBasedRingBuffer) Close() {
+	self.fd.Close()
 }
 
 func (self *FileBasedRingBuffer) Commit() {
@@ -192,35 +225,24 @@ func (self *FileBasedRingBuffer) Commit() {
 
 	// We read up to the write pointer, we may truncate the file now.
 	if self.leased_pointer == self.header.WritePointer {
-		self.fd.Truncate(0)
-		self.header.ReadPointer = FirstRecordOffset
-		self.header.WritePointer = FirstRecordOffset
-		self.header.AvailableBytes = 0
-		self.leased_pointer = FirstRecordOffset
-		self.leased_bytes = 0
-
-		logger.WithFields(logrus.Fields{
-			"header":         self.header,
-			"leased_pointer": self.leased_pointer,
-		}).Info("File Ring Buffer: Commit / Truncate")
-
-	} else {
-		self.header.ReadPointer = self.leased_pointer
-		self.leased_bytes = 0
-
-		serialized, _ := self.header.MarshalBinary()
-		self.fd.WriteAt(serialized, 0)
-
-		logger.WithFields(logrus.Fields{
-			"header":         self.header,
-			"leased_pointer": self.leased_pointer,
-		}).Info("File Ring Buffer: Commit")
+		self._Truncate()
+		return
 	}
 
-	self.c.Broadcast()
+	self.header.ReadPointer = self.leased_pointer
+	self.header.LeasedBytes = 0
+
+	serialized, _ := self.header.MarshalBinary()
+	self.fd.WriteAt(serialized, 0)
+
+	logger.WithFields(logrus.Fields{
+		"header": self.header,
+	}).Info("File Ring Buffer: Commit")
 }
 
-func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuffer, error) {
+func NewFileBasedRingBuffer(
+	config_obj *config_proto.Config,
+	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 	filename := os.ExpandEnv(config_obj.Client.LocalBuffer.Filename)
 	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
@@ -231,17 +253,27 @@ func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuff
 		// Pad the header a bit to allow for extensions.
 		WritePointer:   FirstRecordOffset,
 		AvailableBytes: 0,
+		LeasedBytes:    0,
 		ReadPointer:    FirstRecordOffset,
 		MaxSize: int64(config_obj.Client.LocalBuffer.DiskSize) +
 			FirstRecordOffset,
 	}
 	data := make([]byte, FirstRecordOffset)
 	n, err := fd.ReadAt(data, 0)
-	if err == nil {
+	if n > 0 && n < FirstRecordOffset && err == io.EOF {
+		log_ctx.Error("Possible corruption detected: file too short.")
+		err = fd.Truncate(0)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if n > 0 && (err == nil || err == io.EOF) {
 		err := header.UnmarshalBinary(data[:n])
 		// The header is not valid, truncate the file and
 		// start again.
 		if err != nil {
+			log_ctx.Errorf("Possible corruption detected: %v.", err)
 			err = fd.Truncate(0)
 			if err != nil {
 				return nil, err
@@ -249,9 +281,13 @@ func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuff
 		}
 	}
 
-	// Will be non zero if the client rebooted with pending
-	// messages. We will then just drain the buffers.
-	header.AvailableBytes = header.WritePointer - header.ReadPointer
+	// If we opened a file which is not yet fully committed adjust
+	// the available bytes again so we can replay the lost
+	// messages.
+	if header.LeasedBytes != 0 {
+		header.AvailableBytes += header.LeasedBytes
+		header.LeasedBytes = 0
+	}
 
 	result := &FileBasedRingBuffer{
 		config_obj:     config_obj,
@@ -260,12 +296,12 @@ func NewFileBasedRingBuffer(config_obj *config_proto.Config) (*FileBasedRingBuff
 		read_buf:       make([]byte, 8),
 		write_buf:      make([]byte, 8),
 		leased_pointer: header.ReadPointer,
+		log_ctx:        log_ctx,
 	}
 
 	result.c = sync.NewCond(&result.mu)
 
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.WithFields(logrus.Fields{
+	log_ctx.WithFields(logrus.Fields{
 		"filename": filename,
 		"max_size": result.header.MaxSize,
 	}).Info("Ring Buffer: Creation")
@@ -414,11 +450,12 @@ func NewRingBuffer(config_obj *config_proto.Config) *RingBuffer {
 func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
 		config_obj.Client.LocalBuffer.Filename != "" {
-		rb, err := NewFileBasedRingBuffer(config_obj)
+
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		rb, err := NewFileBasedRingBuffer(config_obj, logger)
 		if err == nil {
 			return rb
 		}
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Error("Unable to create a file based ring buffer - using in memory only.")
 	}
 	return NewRingBuffer(config_obj)
