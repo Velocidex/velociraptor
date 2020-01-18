@@ -56,6 +56,11 @@ var (
 		Name: "uploaded_files",
 		Help: "Total number of Uploaded Files.",
 	})
+
+	uploadBytes = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "uploaded_bytes",
+		Help: "Total bytes of Uploaded Files.",
+	})
 )
 
 const (
@@ -583,14 +588,16 @@ func appendUploadDataToFile(
 	if file_buffer.Eof {
 		uploadCounter.Inc()
 
+		size := file_buffer.Offset + uint64(len(file_buffer.Data))
+		uploadBytes.Add(float64(size))
+
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("ClientId", collection_context.Request.ClientId).
 			Set("VFSPath", file_path).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
-			Set("Size", file_buffer.Offset+uint64(
-				len(file_buffer.Data)))
+			Set("Size", size)
 
 		serialized, err := json.Marshal([]vfilter.Row{row})
 		if err == nil {
