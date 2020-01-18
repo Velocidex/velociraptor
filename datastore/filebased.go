@@ -184,6 +184,14 @@ func (self *FileBaseDataStore) DeleteSubject(
 		return errors.WithStack(err)
 	}
 
+	filename += ".gz"
+	err = os.Remove(filename)
+
+	// It is ok to remove a file that does not exist.
+	if err != nil && os.IsExist(err) {
+		return errors.WithStack(err)
+	}
+
 	// Note: We do not currently remove empty intermediate
 	// directories.
 	return nil
@@ -228,12 +236,12 @@ func (self *FileBaseDataStore) ListChildren(
 		}
 
 		name := UnsanitizeComponent(children[i].Name())
+		name = strings.TrimSuffix(name, ".gz")
 		if !strings.HasSuffix(name, ".db") {
 			continue
 		}
-		result = append(
-			result,
-			urn+"/"+strings.TrimSuffix(name, ".db"))
+		name = strings.TrimSuffix(name, ".db")
+		result = append(result, urn+"/"+name)
 	}
 	return result, nil
 }
@@ -311,8 +319,9 @@ func (self *FileBaseDataStore) SearchClients(
 		}
 
 		for _, child_urn := range children {
-			name := strings.TrimSuffix(
-				UnsanitizeComponent(child_urn.Name()), ".db")
+			name := UnsanitizeComponent(child_urn.Name())
+			name = strings.TrimSuffix(name, ".gz")
+			name = strings.TrimSuffix(name, ".db")
 			seen[name] = true
 
 			if uint64(len(seen)) > offset+limit {
@@ -330,9 +339,9 @@ func (self *FileBaseDataStore) SearchClients(
 			return result
 		}
 		for _, set := range sets {
-			name := strings.TrimSuffix(
-				UnsanitizeComponent(set.Name()), ".db")
-
+			name := UnsanitizeComponent(set.Name())
+			name = strings.TrimSuffix(name, ".gz")
+			name = strings.TrimSuffix(name, ".db")
 			matched, err := path.Match(query, name)
 			if err != nil {
 				// Can only happen if pattern is invalid.
@@ -574,6 +583,8 @@ func FilenameToURN(config_obj *config_proto.Config, filename string) (*string, e
 		components = append(components, UnsanitizeComponent(component))
 	}
 
-	result := strings.TrimSuffix("aff4:"+strings.Join(components, "/"), ".db")
+	result := "aff4:" + strings.Join(components, "/")
+	result = strings.TrimSuffix(result, ".gz")
+	result = strings.TrimSuffix(result, ".db")
 	return &result, nil
 }
