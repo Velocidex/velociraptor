@@ -93,7 +93,7 @@ func (self _PrefetchPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 	return &vfilter.PluginInfo{
 		Name:    "prefetch",
 		Doc:     "Parses a prefetch file.",
-		ArgType: type_map.AddType(scope, &_PrefetchPlugin{}),
+		ArgType: type_map.AddType(scope, &_PrefetchPluginArgs{}),
 	}
 }
 

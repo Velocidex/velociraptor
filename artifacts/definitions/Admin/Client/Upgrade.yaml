@@ -17,8 +17,12 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     queries:
-      - // Run the installer on the downloaded file.
-        SELECT * from foreach(
+      # Wait a random amount of time so this can be run in a
+      # hunt. Otherwise all clients will attempt to download the same
+      # file at the same time probably overloading the server.
+      - LET _ = <= SELECT sleep(time=rand(range=600)) FROM scope()
+
+      - SELECT * from foreach(
          row={
             SELECT Content AS Binary
             FROM http_client(url=clientURL, tempfile_extension=".msi")

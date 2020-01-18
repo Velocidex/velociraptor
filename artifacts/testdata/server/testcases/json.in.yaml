@@ -1,0 +1,11 @@
+Parameters:
+  JSONArrayWithDicts: |
+    [{"foo": 1}, {"baz": 2}]
+
+  JSONArrayWithStrings: |
+    ["foo", "baz"]
+
+
+Queries:
+  - SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()
+  - SELECT parse_json_array(data=JSONArrayWithStrings) FROM scope()

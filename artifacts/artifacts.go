@@ -79,7 +79,7 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 		})
 }
 
-var query_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET)`)
+var query_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
 
 // Fix common YAML errors.
 func sanitize_artifact_yaml(data string) string {

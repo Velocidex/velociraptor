@@ -65,8 +65,8 @@ var (
 		Default("").String()
 
 	artifact_command_collect_format = artifact_command_collect.Flag(
-		"format", "Output format to use.").
-		Default("json").Enum("text", "json", "csv")
+		"format", "Output format to use  (text,json,csv,jsonl).").
+		Default("json").Enum("text", "json", "csv", "jsonl")
 
 	artifact_command_collect_details = artifact_command_collect.Flag(
 		"details", "Show more details (Use -d -dd for even more)").
@@ -108,8 +108,7 @@ func collectArtifact(
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
+	AddLogger(scope, get_config_or_default())
 
 	if *trace_vql_flag {
 		scope.Tracer = logging.NewPlainLogger(config_obj,
@@ -154,6 +153,9 @@ func collectArtifact(
 		case "json":
 			outputJSON(ctx, scope, vql, os.Stdout)
 
+		case "jsonl":
+			outputJSONL(ctx, scope, vql, os.Stdout)
+
 		case "csv":
 			outputCSV(ctx, scope, vql, os.Stdout)
 		}
@@ -165,6 +167,7 @@ func collectArtifactToContainer(
 	repository *artifacts.Repository,
 	artifact_name string,
 	container *reporting.Container,
+	format string,
 	request *actions_proto.VQLCollectorArgs) {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
@@ -181,8 +184,7 @@ func collectArtifactToContainer(
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
+	AddLogger(scope, get_config_or_default())
 
 	ctx := InstallSignalHandler(scope)
 
@@ -191,7 +193,9 @@ func collectArtifactToContainer(
 		kingpin.FatalIfError(err, "Parse VQL")
 
 		// Store query output in the container.
-		err = container.StoreArtifact(config_obj, ctx, scope, vql, query)
+		err = container.StoreArtifact(
+			config_obj, ctx, scope, vql, query,
+			format)
 		kingpin.FatalIfError(err, "container.StoreArtifact")
 
 		if query.Name != "" {
@@ -342,7 +346,8 @@ func doArtifactCollect() {
 			collectArtifact(config_obj, repository, name, request)
 		} else {
 			collectArtifactToContainer(
-				config_obj, repository, name, container, request)
+				config_obj, repository, name, container,
+				*artifact_command_collect_format, request)
 		}
 	}
 }

@@ -171,8 +171,50 @@ func (self FilterFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 	}
 }
 
+type LenFunctionArgs struct {
+	List vfilter.Any `vfilter:"required,field=list,doc=A list of items too filter"`
+}
+type LenFunction struct{}
+
+func (self *LenFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &LenFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("len: %s", err.Error())
+		return &vfilter.Null{}
+	}
+
+	slice := reflect.ValueOf(arg.List)
+	// A slice of strings. Only the following are supported
+	// https://golang.org/pkg/reflect/#Value.Len
+	if slice.Type().Kind() == reflect.Slice ||
+		slice.Type().Kind() == reflect.Map ||
+		slice.Type().Kind() == reflect.Array ||
+		slice.Type().Kind() == reflect.String {
+		return slice.Len()
+	}
+
+	dict, ok := arg.List.(*ordereddict.Dict)
+	if ok {
+		return dict.Len()
+	}
+
+	return 0
+}
+
+func (self LenFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "len",
+		Doc:     "Returns the length of an object.",
+		ArgType: type_map.AddType(scope, &FilterFunctionArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&FilterFunction{})
 	vql_subsystem.RegisterFunction(&ArrayFunction{})
 	vql_subsystem.RegisterFunction(&JoinFunction{})
+	vql_subsystem.RegisterFunction(&LenFunction{})
 }

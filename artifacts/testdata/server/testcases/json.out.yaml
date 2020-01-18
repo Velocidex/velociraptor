@@ -1,0 +1,19 @@
+SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
+ {
+  "parse_json_array(data=JSONArrayWithDicts)": [
+   {
+    "foo": 1
+   },
+   {
+    "baz": 2
+   }
+  ]
+ }
+]SELECT parse_json_array(data=JSONArrayWithStrings) FROM scope()[
+ {
+  "parse_json_array(data=JSONArrayWithStrings)": [
+   "foo",
+   "baz"
+  ]
+ }
+]

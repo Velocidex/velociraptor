@@ -1,0 +1,35 @@
+name: Linux.Syslog.SSHLogin
+description: |
+  Parses the auth logs to determine all SSH login attempts.
+
+reference:
+  - https://www.elastic.co/blog/grokking-the-linux-authorization-logs
+
+type: CLIENT
+
+parameters:
+  - name: syslogAuthLogPath
+    default: /var/log/auth.log*
+
+  - name: SSHGrok
+    description: A Grok expression for parsing SSH auth lines.
+    default: >-
+      %{SYSLOGTIMESTAMP:Timestamp} (?:%{SYSLOGFACILITY} )?%{SYSLOGHOST:logsource} %{SYSLOGPROG}: %{DATA:event} %{DATA:method} for (invalid user )?%{DATA:user} from %{IPORHOST:ip} port %{NUMBER:port} ssh2(: %{GREEDYDATA:system.auth.ssh.signature})?
+
+sources:
+  - queries:
+      # Basic syslog parsing via GROK expressions.
+      - SELECT timestamp(string=Event.Timestamp) AS Time,
+               Event.IP AS IP,
+               Event.event AS Result,
+               Event.method AS Method,
+               Event.user AS AttemptedUser,
+               FullPath
+        FROM foreach(
+          row={
+              SELECT FullPath FROM glob(globs=syslogAuthLogPath)
+          }, query={
+              SELECT grok(grok=SSHGrok, data=Line) AS Event, FullPath
+              FROM parse_lines(filename=FullPath)
+              WHERE Event.program = "sshd"
+          })

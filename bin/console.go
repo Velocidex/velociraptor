@@ -1,3 +1,5 @@
+// +build !aix
+
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -23,7 +25,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"regexp"
@@ -45,8 +46,8 @@ import (
 var (
 	// Command line interface for VQL commands.
 	console        = app.Command("console", "Enter the interactive console")
-	console_format = console.Flag("format", "Output format to use.").
-			Default("json").Enum("text", "json", "csv")
+	console_format = console.Flag("format", "Output format to use  (text,json,csv,jsonl).").
+			Default("json").Enum("text", "json", "csv", "jsonl")
 	console_dump_dir = console.Flag("dump_dir", "Directory to dump output files.").
 				Default(".").String()
 
@@ -202,7 +203,13 @@ func renderArgs(type_desc *vfilter.TypeDescription) {
 	required_re := regexp.MustCompile("(^|,)required(,|$)")
 
 	ConsoleLog.Markup("Args:\n")
-	for field, desc := range type_desc.Fields {
+	for _, field := range type_desc.Fields.Keys() {
+		v_any, _ := type_desc.Fields.Get(field)
+		desc, ok := v_any.(*vfilter.TypeReference)
+		if !ok {
+			continue
+		}
+
 		repeated := ""
 		if desc.Repeated {
 			repeated = "<repeated>repeated</>"
@@ -266,6 +273,10 @@ func executeVQL(
 		table.Render()
 	case "json":
 		outputJSON(ctx, scope, vql, out)
+
+	case "jsonl":
+		outputJSONL(ctx, scope, vql, out)
+
 	case "csv":
 		outputCSV(ctx, scope, vql, out)
 	default:
@@ -620,7 +631,7 @@ func doConsole() {
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	AddLogger(scope, get_config_or_default())
 
 	state := load_state()
 	defer save_state(state)

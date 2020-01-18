@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"time"
 
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -76,6 +77,8 @@ func (self *OSFileInfo) GetLink() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	return "", errors.New("Links not supported")
 	return target, nil
 }
 

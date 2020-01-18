@@ -6,6 +6,6 @@ Queries:
   - SELECT FullPath FROM glob(globs="c:\\*", accessor="file")
     WHERE Name =~ "pagefile.sys"
 
-  # Read symlinks.
-  - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file_links")
-  - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file_links") WHERE FullPath =~ "drivers\\\\"
+  # Read symlinks - These tests are slow and symlinks is not usually used.
+  # - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file_links")
+  # - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file_links") WHERE FullPath =~ "drivers\\\\"

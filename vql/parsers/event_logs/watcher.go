@@ -19,8 +19,8 @@ var (
 	GlobalEventLogService = NewEventLogWatcherService()
 )
 
-// This service watches one or more many event logs files and
-// multiplexes events to multiple readers.
+// This service watches one or more event logs files and multiplexes
+// events to multiple readers.
 type EventLogWatcherService struct {
 	mu sync.Mutex
 
@@ -47,6 +47,16 @@ func (self *EventLogWatcherService) Register(
 		ctx:         ctx,
 		output_chan: output_chan,
 		scope:       scope}
+
+	go func() {
+		select {
+		case <-handle.ctx.Done():
+			// Remove and close handles that are not
+			// currently active.
+			handle.scope.Log("Removing watcher for %v", filename)
+			close(handle.output_chan)
+		}
+	}()
 
 	key := filename + accessor
 	registration, pres := self.registrations[key]
@@ -183,13 +193,7 @@ func (self *EventLogWatcherService) monitorOnce(
 			for _, handle := range handles {
 				select {
 				case <-handle.ctx.Done():
-					// Remove and close handles
-					// that are not currently
-					// active.
-					handle.scope.Log(
-						"Removing watcher for %v",
-						filename)
-					close(handle.output_chan)
+					// If context is done, drop the event.
 
 				case handle.output_chan <- maybeEnrichEvent(
 					event.(*ordereddict.Dict)):
@@ -215,7 +219,7 @@ func (self *EventLogWatcherService) monitorOnce(
 
 // A handle is given for each interested party. We write the event on
 // to the output_chan unless the context is done. When all interested
-// party are done we may destroy the monitoring go routine and remove
+// parties are done we may destroy the monitoring go routine and remove
 // the registration.
 type Handle struct {
 	ctx         context.Context

@@ -1,3 +1,5 @@
+// +build !aix
+
 package main
 
 import (

@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -45,8 +46,9 @@ func (self *MockerPlugin) Info(scope *vfilter.Scope,
 
 // Replace a VQL function with a mock
 type MockerFunctionArgs struct {
-	Plugin  string      `vfilter:"required,field=plugin,doc=The plugin to mock"`
-	Results vfilter.Any `vfilter:"required,field=results,doc=The result to return"`
+	Plugin   string      `vfilter:"optional,field=plugin,doc=The plugin to mock"`
+	Artifact vfilter.Any `vfilter:"optional,field=artifact,doc=The plugin to mock"`
+	Results  vfilter.Any `vfilter:"required,field=results,doc=The result to return"`
 }
 
 type MockFunction struct{}
@@ -62,7 +64,31 @@ func (self *MockFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	scope.AppendPlugins(&MockerPlugin{result: arg.Results, name: arg.Plugin})
+	rt := reflect.TypeOf(arg.Results)
+	if rt == nil || rt.Kind() != reflect.Slice {
+		scope.Log("mock: results should be a list")
+		return vfilter.Null{}
+	}
+
+	rows := []vfilter.Row{}
+	value := reflect.ValueOf(arg.Results)
+	for i := 0; i < value.Len(); i++ {
+		rows = append(rows, value.Index(i).Interface())
+	}
+
+	if arg.Plugin != "" {
+		scope.AppendPlugins(&MockerPlugin{result: arg.Results, name: arg.Plugin})
+	} else if arg.Artifact != nil {
+		artifact_plugin, ok := arg.Artifact.(*artifacts.ArtifactRepositoryPlugin)
+		if !ok {
+			scope.Log("mock: artifact is not defined")
+			return vfilter.Null{}
+		}
+		artifact_plugin.SetMock(rows)
+	} else {
+		scope.Log("mock: either plugin or artifact should be specified")
+		return vfilter.Null{}
+	}
 
 	return vfilter.Null{}
 }

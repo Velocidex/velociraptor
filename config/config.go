@@ -66,7 +66,7 @@ func GetDefaultConfig() *config_proto.Config {
 			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
 			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
 				"velociraptor.writeback.yaml",
-			MaxPoll: 600,
+			MaxPoll: 60,
 
 			// Local ring buffer to queue messages to the
 			// server. If the server is not available we
@@ -75,7 +75,7 @@ func GetDefaultConfig() *config_proto.Config {
 			LocalBuffer: &config_proto.RingBufferConfig{
 				MemorySize: 50 * 1024 * 1024,
 				DiskSize:   1024 * 1024 * 1024,
-				Filename:   "$Temp/Velociraptor_Buffer.bin",
+				Filename:   "/tmp/Velociraptor_Buffer.bin",
 			},
 
 			// Specific instructions for the
@@ -154,6 +154,7 @@ func GetDefaultConfig() *config_proto.Config {
 	if runtime.GOOS == "windows" {
 		result.Datastore.Location = "C:\\Windows\\Temp"
 		result.Datastore.FilestoreDirectory = "C:\\Windows\\Temp"
+		result.Client.LocalBuffer.Filename = "C:\\Windows\\Temp\\Velociraptor_Buffer.bin"
 	}
 
 	return result

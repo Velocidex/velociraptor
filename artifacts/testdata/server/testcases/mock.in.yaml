@@ -1,5 +1,178 @@
+Parameters:
+  ArtifactNetstatMock: |
+    [{
+       "Pid": 2432,
+       "Name": "svchost.exe",
+       "Family": "IPv6",
+       "Type": "UDP",
+       "Status": "",
+       "Laddr.IP": "::",
+       "Laddr.Port": 58542,
+       "Raddr.IP": "",
+       "Raddr.Port": 0,
+       "Timestamp": "2019-11-27T01:17:34Z",
+       "_Source": "Windows.Network.Netstat"
+      },
+      {
+       "Pid": 5224,
+       "Name": "SkypeApp.exe",
+       "Family": "IPv6",
+       "Type": "UDP",
+       "Status": "",
+       "Laddr.IP": "::",
+       "Laddr.Port": 65065,
+       "Raddr.IP": "",
+       "Raddr.Port": 0,
+       "Timestamp": "2019-11-27T02:55:17Z",
+       "_Source": "Windows.Network.Netstat"
+      },
+      {
+       "Pid": 7028,
+       "Name": "nc.exe",
+       "Family": "IPv4",
+       "Type": "TCP",
+       "Status": "LISTEN",
+       "Laddr.IP": "0.0.0.0",
+       "Laddr.Port": 3889,
+       "Raddr.IP": "0.0.0.0",
+       "Raddr.Port": 0,
+       "Timestamp": "2019-12-06T05:24:30Z",
+       "_Source": "Windows.Network.Netstat"
+      }
+     ]
+  PSListMock: |
+    [{
+      "Pid": 7028,
+      "Ppid": 2120,
+      "TokenIsElevated": false,
+      "Name": "nc.exe",
+      "CommandLine": "C:\\Users\\yolo\\Desktop\\nc.exe  -L -p 3889 -s 0.0.0.0",
+      "Exe": "C:\\Users\\yolo\\Desktop\\nc.exe",
+      "Hash": {
+       "MD5": "5dcf26e3fbce71902b0cd7c72c60545b",
+       "SHA1": "970bbe298c8ec673fe2257ad6363d29942171fd1",
+       "SHA256": "e8fbec25db4f9d95b5e8f41cca51a4b32be8674a4dea7a45b6f7aeb22dbc38db"
+      },
+      "Authenticode": {
+       "Filename": "C:\\Users\\yolo\\Desktop\\nc.exe",
+       "ProgramName": "",
+       "PublisherLink": "",
+       "MoreInfoLink": "",
+       "SerialNumber": "010000000001307a27872d",
+       "IssuerName": "GlobalSign ObjectSign CA",
+       "SubjectName": "Jernej Simoncic",
+       "TimestampIssuerName": "GlobalSign Timestamping CA",
+       "TimestampSubjectName": "GlobalSign Time Stamping Authority",
+       "Timestamp": "2011/09/16 22:52:48",
+       "Trusted": "trusted"
+      },
+      "Username": "DESKTOP-687T2NR\\yolo",
+      "WorkingSetSize": 135168,
+      "_Source": "Windows.System.Pslist"
+     },
+     {
+       "Pid": 4888,
+       "Ppid": 4856,
+       "TokenIsElevated": false,
+       "Name": "explorer.exe",
+       "CommandLine": "C:\\Windows\\Explorer.EXE",
+       "Exe": "C:\\Windows\\explorer.exe",
+       "Hash": {
+        "MD5": "4e196cea0c9c46a7d656c67e52e8c7c7",
+        "SHA1": "726c9d759c5f02080fa003b50466a3be0c959865",
+        "SHA256": "ed5f36137d09e1cfc0ccf2675fb5d460e7eed135ba36d3259d2c510592047f28"
+       },
+       "Authenticode": {
+        "Filename": "C:\\Windows\\explorer.exe",
+        "ProgramName": "Microsoft Windows",
+        "PublisherLink": "",
+        "MoreInfoLink": "http://www.microsoft.com/windows",
+        "SerialNumber": "330000023241fb59996dcc4dff000000000232",
+        "IssuerName": "Microsoft Windows Production PCA 2011",
+        "SubjectName": "Microsoft Windows",
+        "TimestampIssuerName": "",
+        "TimestampSubjectName": "",
+        "Timestamp": "",
+        "Trusted": "trusted"
+       },
+       "Username": "DESKTOP-BP4S7TF\\test",
+       "WorkingSetSize": 458055680,
+       "_Source": "Windows.System.Pslist"
+      }
+    ]
+
+  NetstatMock: |
+    [{
+       "Fd": 0,
+       "Family": 23,
+       "Type": 1,
+       "Laddr": {
+        "IP": "::",
+        "Port": 3889
+       },
+       "Raddr": {
+        "IP": "::",
+        "Port": 0
+       },
+       "Status": "LISTEN",
+       "Pid": 7028,
+       "Timestamp": "2019-11-27T01:18:15Z",
+       "FamilyString": "IPv6",
+       "TypeString": "TCP"
+      },
+      {
+       "Fd": 0,
+       "Family": 2,
+       "Type": 1,
+       "Laddr": {
+        "ip": "172.168.101.128",
+        "port": 64371
+       },
+       "Raddr": {
+        "ip": "10.179.67.176",
+        "port": 443
+       },
+       "Status": "ESTAB",
+       "Pid": 4888,
+       "Timestamp": "2019-12-07T03:30:58Z",
+       "FamilyString": "IPv4",
+       "TypeString": "TCP"
+      }]
+
 Queries:
   # Mock out the info plugin just for fun.
-  - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] )
+  - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ),
+      mock(artifact=Artifact.Windows.Network.Netstat, results=parse_json_array(data=ArtifactNetstatMock)),
+      mock(plugin='netstat', results=parse_json_array(data=NetstatMock)),
+      mock(artifact=Artifact.Windows.System.Pslist, results=parse_json_array(data=PSListMock))
       FROM scope()
   - SELECT * FROM info()
+  - SELECT * FROM Artifact.Windows.Network.Netstat()
+
+  # Netcat is trusted because it is signed should show up here.
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          AuthenticodeVerified="TRUSTED",
+          Status="LISTENING",
+          PortRegex="3889")
+
+  # Netcat is listening over IPv6 so not hits here.
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          AuthenticodeVerified="TRUSTED",
+          Status="LISTENING", Family="IPv4",
+          PortRegex="3889")
+
+  # Netcat is listening over IPv6
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          AuthenticodeVerified="TRUSTED",
+          Status="LISTENING", Family="IPv6",
+          PortRegex="3889")
+
+  # Explorer has an established connection
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          Status="ESTABLISHED")
+
+  # Explorer has an established connection but it is trusted so wont
+  # show up here.
+  - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          AuthenticodeVerified="NOT TRUSTED",
+          Status="ESTABLISHED")

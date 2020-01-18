@@ -197,7 +197,9 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1
 
-	rb, err := NewFileBasedRingBuffer(config_obj)
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+	rb, err := NewFileBasedRingBuffer(config_obj, logger)
 	require.NoError(t, err)
 
 	testRingBuffer(rb, config_obj, "0123456789", t)

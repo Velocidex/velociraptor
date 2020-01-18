@@ -27,9 +27,9 @@ reports:
 
       {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
 
-      # Hunt participation for {{ Get $client_info "0.OsInfo.Fqdn" }}
+      # Hunt participation for {{ Get $client_info "0.os_info.fqdn" }}
 
-      The client with a client ID of {{ Get $client_info "0.ClientId" }} participated in some hunts today.
+      The client with a client ID of {{ Get $client_info "0.client_id" }} participated in some hunts today.
 
       {{ Query "all_hunts" "hunts" | Table }}
 

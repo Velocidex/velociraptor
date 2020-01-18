@@ -105,8 +105,10 @@ func (self *Win32_Process) getTimes(handle syscall.Handle) {
 		&u.UserTime)
 	if err == nil {
 		self.CreateTime = time.Unix(0, u.CreationTime.Nanoseconds())
-		self.User = float64(u.UserTime.LowDateTime)
-		self.System = float64(u.KernelTime.LowDateTime)
+		self.User = float64(int64(u.UserTime.HighDateTime<<32)+
+			int64(u.UserTime.LowDateTime)) / 1e7
+		self.System = float64(int64(u.KernelTime.HighDateTime<<32)+
+			int64(u.KernelTime.LowDateTime)) / 1e7
 	}
 }
 
