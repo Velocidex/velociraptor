@@ -37,6 +37,7 @@
 package datastore
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -527,17 +528,33 @@ func readContentFromFile(
 	}
 
 	file, err := os.Open(filename)
-	if err != nil {
-		if !must_exist && os.IsNotExist(err) {
-			return []byte{}, nil
-		}
-		return nil, errors.WithStack(err)
-	}
-	defer file.Close()
+	if err == nil {
+		defer file.Close()
 
-	result, err := ioutil.ReadAll(
-		io.LimitReader(file, constants.MAX_MEMORY))
-	return result, errors.WithStack(err)
+		result, err := ioutil.ReadAll(
+			io.LimitReader(file, constants.MAX_MEMORY))
+		return result, errors.WithStack(err)
+	}
+
+	// File does not exist - try the gzip version
+	if os.IsNotExist(err) {
+		file, err = os.Open(filename + ".gz")
+		if err == nil {
+			zr, err := gzip.NewReader(file)
+			if err != nil {
+				return nil, errors.WithStack(err)
+			}
+			result, err := ioutil.ReadAll(
+				io.LimitReader(zr, constants.MAX_MEMORY))
+			return result, errors.WithStack(err)
+		}
+	}
+
+	// Its ok if the file does not exist - no error.
+	if !must_exist && os.IsNotExist(err) {
+		return []byte{}, nil
+	}
+	return nil, errors.WithStack(err)
 }
 
 // Convert a file name from the data store to a urn.
