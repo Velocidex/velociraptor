@@ -7,36 +7,48 @@ description: |
    the machine for example.
 
 parameters:
-  - name: namespace
-    default: root/subscription
+   - name: namespaces
+     default: |
+       namespace
+       root/subscription
+       root/default
 
 sources:
- - precondition:
-     SELECT OS from info() where OS = "windows"
-   queries:
-   - |
-     LET FilterToConsumerBinding = SELECT parse_string_with_regex(
-        string=Consumer,
-        regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Consumer,
-          parse_string_with_regex(
-        string=Filter,
-        regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Filter
-     FROM wmi(
-         query="SELECT * FROM __FilterToConsumerBinding",
-         namespace=namespace)
-   - |
-     SELECT {
-         SELECT * FROM wmi(
-           query="SELECT * FROM " + Consumer.Type,
-           namespace=if(condition=Consumer.namespace,
-              then=Consumer.namespace,
-              else=namespace)) WHERE Name = Consumer.Name
-       } AS ConsumerDetails,
-       {
-         SELECT * FROM wmi(
-           query="SELECT * FROM " + Filter.Type,
-           namespace=if(condition=Filter.namespace,
-              then=Filter.namespace,
-              else=namespace)) WHERE Name = Filter.Name
-       } AS FilterDetails
-     FROM FilterToConsumerBinding
+ - queries:
+     - LET FilterToConsumerBinding = SELECT * FROM foreach(
+        row={
+                SELECT * 
+                FROM parse_csv(filename=namespaces, accessor='data')
+        },
+        query={
+                SELECT parse_string_with_regex(string=Consumer,
+                    regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Consumer,
+                    parse_string_with_regex(string=Filter,regex=['((?P<namespace>^[^:]+):)?(?P<Type>.+?)\\.Name="(?P<Name>.+)"']) as Filter
+                FROM wmi(
+                    query="SELECT * FROM __FilterToConsumerBinding",namespace=namespace)
+        })
+
+     - SELECT * FROM foreach(
+            row={
+                    SELECT * 
+                    FROM parse_csv(filename=namespaces, accessor='data')
+            },
+            query={
+                 SELECT {
+                     SELECT * FROM wmi(
+                       query="SELECT * FROM " + Consumer.Type,
+                       namespace=if(condition=Consumer.namespace,
+                          then=Consumer.namespace,
+                          else=namespace)) WHERE Name = Consumer.Name
+                   } AS ConsumerDetails,
+                   {
+                     SELECT * FROM wmi(
+                       query="SELECT * FROM " + Filter.Type,
+                       namespace=if(condition=Filter.namespace,
+                          then=Filter.namespace,
+                          else=namespace)) WHERE Name = Filter.Name
+                   } AS FilterDetails,
+                   namespace as Namespace
+                 FROM FilterToConsumerBinding
+                 WHERE (FilterDetails AND ConsumerDetails)
+            })
