@@ -49,7 +49,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.Kerbroasting(eventLog=srcDir + '/artifacts/testdata/files/EID4769_Kerbroasting.evtx')[
  {
-  "EventTime": "2019-09-30T01:58:40Z",
+  "EventTime": "2019-09-30T01:58:40.481092691Z",
   "EventID": 4769,
   "Computer": "DC2016.dfir.lab",
   "ServiceName": "SVC-APP03",
@@ -65,7 +65,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
  },
  {
-  "EventTime": "2019-09-30T01:58:40Z",
+  "EventTime": "2019-09-30T01:58:40.489011287Z",
   "EventID": 4769,
   "Computer": "DC2016.dfir.lab",
   "ServiceName": "SVC-SQL02",
@@ -82,7 +82,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + '/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx')[
  {
-  "EventTime": "2019-12-02T11:39:33Z",
+  "EventTime": "2019-12-02T11:39:33.719111919Z",
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",
@@ -95,7 +95,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
  },
  {
-  "EventTime": "2019-12-02T11:39:35Z",
+  "EventTime": "2019-12-02T11:39:35.74373126Z",
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",

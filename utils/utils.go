@@ -149,3 +149,38 @@ func SlicesEqual(a []string, b []string) bool {
 
 	return true
 }
+
+// Force coersion to int64
+func ToInt64(x interface{}) (int64, bool) {
+	switch t := x.(type) {
+	case bool:
+		if t {
+			return 1, true
+		} else {
+			return 0, true
+		}
+	case int:
+		return int64(t), true
+	case uint8:
+		return int64(t), true
+	case int8:
+		return int64(t), true
+	case uint16:
+		return int64(t), true
+	case int16:
+		return int64(t), true
+	case uint32:
+		return int64(t), true
+	case int32:
+		return int64(t), true
+	case uint64:
+		return int64(t), true
+	case int64:
+		return t, true
+	case float64:
+		return int64(t), true
+
+	default:
+		return 0, false
+	}
+}

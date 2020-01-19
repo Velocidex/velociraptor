@@ -262,9 +262,10 @@ func (self _Scope) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 }
 
 type _GetFunctionArgs struct {
-	Item   vfilter.Any `vfilter:"optional,field=item"`
-	Member string      `vfilter:"optional,field=member"`
-	Field  string      `vfilter:"optional,field=field"`
+	Item    vfilter.Any `vfilter:"optional,field=item"`
+	Member  string      `vfilter:"optional,field=member"`
+	Field   string      `vfilter:"optional,field=field"`
+	Default vfilter.Any `vfilter:"optional,field=default"`
 }
 
 type _GetFunction struct{}
@@ -288,6 +289,10 @@ func (self _GetFunction) Call(
 		return vfilter.Null{}
 	}
 
+	if arg.Default == nil {
+		arg.Default = vfilter.Null{}
+	}
+
 	result := arg.Item
 	if result == nil {
 		result = scope
@@ -303,7 +308,7 @@ func (self _GetFunction) Call(
 	if arg.Field != "" {
 		result, pres = scope.Associative(result, arg.Field)
 		if !pres {
-			return vfilter.Null{}
+			return arg.Default
 		}
 		return result
 	}
@@ -311,7 +316,7 @@ func (self _GetFunction) Call(
 	for _, member := range strings.Split(arg.Member, ".") {
 		result, pres = scope.Associative(result, member)
 		if !pres {
-			return vfilter.Null{}
+			return arg.Default
 		}
 	}
 

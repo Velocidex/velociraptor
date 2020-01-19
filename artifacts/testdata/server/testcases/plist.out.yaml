@@ -1,0 +1,14 @@
+SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/testdata/files/vagrant.plist')[
+ {
+  "Name": "vagrant",
+  "RealName": "vagrant",
+  "UserShell": "/bin/bash",
+  "HomeDir": "/Users/vagrant",
+  "AppleId": null,
+  "CreationTime": null,
+  "FailedLoginCount": 0,
+  "FailedLoginTimestamp": null,
+  "PasswordLastSetTime": "2017-11-25T00:36:29.728411912Z",
+  "_Source": "MacOS.System.Users"
+ }
+]

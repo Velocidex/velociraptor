@@ -2,19 +2,21 @@ package functions
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/kierdavis/dateparser"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type _TimestampArg struct {
-	Epoch       int64  `vfilter:"optional,field=epoch"`
-	WinFileTime int64  `vfilter:"optional,field=winfiletime"`
-	String      string `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
-	UsStyle     bool   `vfilter:"optional,field=us_style,doc=US Style Month/Day/Year"`
+	Epoch       vfilter.Any `vfilter:"optional,field=epoch"`
+	WinFileTime int64       `vfilter:"optional,field=winfiletime"`
+	String      string      `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
+	UsStyle     bool        `vfilter:"optional,field=us_style,doc=US Style Month/Day/Year"`
 }
 type _Timestamp struct{}
 
@@ -35,10 +37,6 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 		return vfilter.Null{}
 	}
 
-	if arg.Epoch > 0 {
-		return time.Unix(arg.Epoch, 0)
-	}
-
 	if arg.WinFileTime > 0 {
 		return time.Unix((arg.WinFileTime/10000000)-11644473600, 0)
 	}
@@ -54,7 +52,23 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 		scope.Log("timestamp: %v", err)
 	}
 
-	return vfilter.Null{}
+	sec := int64(0)
+	dec := int64(0)
+	switch t := arg.Epoch.(type) {
+	case float64:
+		sec_f, dec_f := math.Modf(t)
+		sec = int64(sec_f)
+		dec = int64(dec_f * 1e9)
+	default:
+		sec, _ = utils.ToInt64(arg.Epoch)
+	}
+
+	// Propagate a null to output.
+	if sec == 0 && dec == 0 {
+		return vfilter.Null{}
+	}
+
+	return time.Unix(int64(sec), int64(dec))
 }
 
 // Time aware operators.
