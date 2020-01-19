@@ -1,0 +1,2 @@
+Queries:
+- SELECT * FROM Artifact.MacOS.System.Users(UserPlistGlob=srcDir + '/artifacts/testdata/files/vagrant.plist')
