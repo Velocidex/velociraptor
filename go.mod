@@ -105,6 +105,7 @@ require (
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
+	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.0.0-20200110083657-950cbe916617
@@ -116,7 +117,7 @@ require (
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 
-// replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 
 // Replace chroma with our fork - we take out the lexers and styles we
 // dont care about to reduce the size of the binary significantly.
