@@ -257,6 +257,13 @@ func Darwin() error {
 		arch:       "amd64"}.Run()
 }
 
+func DarwinBase() error {
+	return Builder{goos: "darwin",
+		extra_tags:  " release ",
+		disable_cgo: true,
+		arch:        "amd64"}.Run()
+}
+
 // Build step for Appveyor.
 func Appveyor() error {
 	err := build_gui_files()

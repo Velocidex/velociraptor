@@ -27,8 +27,17 @@ jobs:
     - name: Build
       run: |
         mkdir ./output/
-        go build -o output/velociraptor -v ./bin/
-        
+        go run make.go -v Linux
+        go run make.go -v Windows
+        go run make.go -v DarwinBase
+        zip Binaries.zip output/*
+
+    - name: StoreBinaries
+      uses: actions/upload-artifact@v1
+      with:
+        name: Binaries.zip
+        path: Binaries.zip
+
     - name: Test
       run: |
         go test ./...
