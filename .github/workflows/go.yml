@@ -27,9 +27,10 @@ jobs:
     - name: Use Node.js v12
       uses: actions/setup-node@v1
       with:
-        node-version: v12
-        - name: npm install and npm test
-          run: |
+        node-version: 12
+
+    - name: npm install gui
+      run: |
             cd static/gui/
             npm install
             node node_modules/gulp/bin/gulp.js compile
