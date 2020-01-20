@@ -6,16 +6,16 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
 	"sync"
 
 	"github.com/alexmullins/zip"
-
+	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -41,25 +41,33 @@ func (self *Container) StoreArtifact(
 	query *actions_proto.VQLRequest,
 	format string) error {
 
-	// Dont store un named queries but run them anyway.
+	// Dont store un-named queries but run them anyway.
 	if query.Name == "" {
 		for _ = range vql.Eval(ctx, scope) {
 		}
 		return nil
 	}
 
+	// Queue the query into a temp file in order to allow
+	// interleaved uploaded files to be written to the zip
+	// file. Zip files only support a single writer at a time.
+	tmpfile, err := ioutil.TempFile("", "vel")
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	var sanitized_name string
+
 	switch format {
 	case "csv", "":
 		// In this instance we want to make / unescaped.
-		sanitized_name := query.Name + ".csv"
-		writer, err := self.getZipFileWriter(string(sanitized_name))
-		if err != nil {
-			return err
-		}
+		sanitized_name = query.Name + ".csv"
 
-		csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{writer})
+		csv_writer, err := csv.GetCSVWriter(scope, tmpfile)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
 		defer csv_writer.Close()
 
@@ -69,11 +77,7 @@ func (self *Container) StoreArtifact(
 
 	case "jsonl", "json":
 		// In this instance we want to make / unescaped.
-		sanitized_name := query.Name + ".json"
-		writer, err := self.getZipFileWriter(string(sanitized_name))
-		if err != nil {
-			return err
-		}
+		sanitized_name = query.Name + ".json"
 
 		for row := range vql.Eval(ctx, scope) {
 			// Re-serialize it as compact json.
@@ -82,17 +86,28 @@ func (self *Container) StoreArtifact(
 				continue
 			}
 
-			writer.Write(serialized)
+			_, err = tmpfile.Write(serialized)
+			if err != nil {
+				return errors.WithStack(err)
+			}
 
 			// Separate lines with \n
-			writer.Write([]byte("\n"))
+			tmpfile.Write([]byte("\n"))
 		}
 
 	default:
 		return errors.New("Format not supported")
 	}
 
-	return nil
+	writer, err := self.getZipFileWriter(string(sanitized_name))
+	if err != nil {
+		return err
+	}
+
+	tmpfile.Seek(0, 0)
+
+	_, err = utils.Copy(ctx, writer, tmpfile)
+	return err
 }
 
 func (self *Container) getZipFileWriter(name string) (io.Writer, error) {
