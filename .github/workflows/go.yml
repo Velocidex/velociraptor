@@ -25,4 +25,9 @@ jobs:
         fi
 
     - name: Build
-      run: go build -o velociraptor -v ./bin/
+      run: |
+        mkdir ./output/
+        go build -o output/velociraptor -v ./bin/
+        
+    - name: Test
+      run: make test
