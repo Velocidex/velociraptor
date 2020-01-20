@@ -30,4 +30,6 @@ jobs:
         go build -o output/velociraptor -v ./bin/
         
     - name: Test
-      run: make test
+      run: |
+        go test ./...
+        ./output/velociraptor golden ./artifacts/testdata./server./testcases/ --env srcDir=./
