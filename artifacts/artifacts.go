@@ -28,6 +28,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -172,8 +173,28 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
-	res, pres := self.Data[name]
-	return res, pres
+	artifact_name, source_name := SplitFullSourceName(name)
+
+	res, pres := self.Data[artifact_name]
+	if !pres || source_name == "" {
+		return res, pres
+	}
+
+	// Caller asked for only a specific source in the artifact -
+	// we therefore hand them back a copy with other sources
+	// removed.
+	new_artifact := proto.Clone(res).(*artifacts_proto.Artifact)
+	new_artifact.Sources = nil
+
+	for _, source := range res.Sources {
+		if source.Name == source_name {
+			new_artifact.Sources = append(new_artifact.Sources, source)
+			return new_artifact, true
+		}
+	}
+
+	// If we get here the source is not found in the artifact.
+	return nil, false
 }
 
 func (self *Repository) Del(name string) {

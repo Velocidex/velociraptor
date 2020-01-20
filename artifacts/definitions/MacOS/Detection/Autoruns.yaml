@@ -1,4 +1,9 @@
 name: MacOS.Detection.Autoruns
+description: |
+   Thie artifact collects evidence of autoruns. We also capture the files and upload them.
+
+   This code is based on
+   https://github.com/CrowdStrike/automactc/blob/master/modules/mod_autoruns_v102.py
 
 precondition: SELECT OS FROM info() WHERE OS =~ 'darwin'
 
@@ -23,13 +28,28 @@ parameters:
       ["/System/Library/ScriptingAdditions/*.osax","/Library/ScriptingAdditions/*.osax",
        "/System/Library/ScriptingAdditions/.*.osax","/Library/ScriptingAdditions/.*.osax"]
 
+- name: StartupItemsGlobs
+  default: |
+       ["/System/Library/StartupItems/*/*","/Library/StartupItems/*/*"]
+
+- name: MiscItemsGlobs
+  default: |
+      ["/private/etc/periodic.conf", "/private/etc/periodic/*/*", "/private/etc/*.local",
+       "/private/etc/rc.common",
+       "/private/etc/emond.d/*","/private/etc/emond.d/*/*"]
+
+- name: LoginItemsGlobs
+  default: |
+      ["/Users/*/Library/Preferences/com.apple.loginitems.plist",
+       "/private/var/*/Library/Preferences/com.apple.loginitems.plist"]
 
 sources:
 - name: Sandboxed Loginitems
   queries:
   - SELECT FullPath,
            timestamp(epoch=Mtime.Sec) AS Mtime,
-           plist(file=FullPath) AS Disabled
+           plist(file=FullPath) AS Disabled,
+           upload(path=FullPath) AS Upload
     FROM glob(globs=sandboxed_loginitems)
 
 - name: crontabs
@@ -37,11 +57,12 @@ sources:
       - LET raw = SELECT * FROM foreach(
           row={
             SELECT FullPath, Name,
-                   timestamp(epoch=Mtime.Sec) AS Mtime
+                   timestamp(epoch=Mtime.Sec) AS Mtime,
+                   upload(path=FullPath) AS Upload
             FROM glob(globs=split(string=cronTabGlob, sep=","))
           },
           query={
-            SELECT FullPath, Name, Mtime,
+            SELECT FullPath, Name, Mtime, Upload,
               data, parse_string_with_regex(
                string=data,
                regex=[
@@ -71,14 +92,16 @@ sources:
                Record.Month AS Month,
                Record.DayOfWeek AS DayOfWeek,
                Record.Command AS Command,
-               FullPath AS Path
+               FullPath AS Path,
+               Upload
         FROM raw
 
 - name: LaunchAgentsDaemons
   queries:
   - LET launchd_config = SELECT FullPath,
            timestamp(epoch=Mtime.Sec) AS Mtime,
-           plist(file=FullPath) AS LaunchdConfig
+           plist(file=FullPath) AS LaunchdConfig,
+           upload(path=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=LaunchAgentsDaemonsGlob))
 
   - LET programs = SELECT FullPath, Mtime, LaunchdConfig,
@@ -86,10 +109,36 @@ sources:
                default=get(member="LaunchdConfig.ProgramArguments.0")) AS Program
     FROM launchd_config
 
-  - SELECT FullPath, Mtime, LaunchdConfig, Program, hash(path=Program) AS Hash FROM programs
+  - SELECT FullPath, Mtime, LaunchdConfig,
+           Program, hash(path=Program) AS Hash,
+           upload(path=FullPath) AS Upload
+    FROM programs
 
 - name: ScriptingAdditions
   queries:
   - SELECT FullPath,
-           timestamp(epoch=Mtime.Sec) AS Mtime
+           timestamp(epoch=Mtime.Sec) AS Mtime,
+           upload(path=FullPath) AS Upload
     FROM glob(globs=parse_json_array(data=ScriptingAdditionsGlobs))
+
+- name: StartupItems
+  queries:
+  - SELECT FullPath,
+           timestamp(epoch=Mtime.Sec) AS Mtime,
+           upload(path=FullPath) AS Upload
+    FROM glob(globs=parse_json_array(data=StartupItemsGlobs))
+
+- name: MiscItems
+  queries:
+  - SELECT FullPath,
+           timestamp(epoch=Mtime.Sec) AS Mtime,
+           upload(path=FullPath) AS Upload
+    FROM glob(globs=parse_json_array(data=MiscItemsGlobs))
+
+- name: LoginItems
+  queries:
+  - SELECT FullPath,
+           timestamp(epoch=Mtime.Sec) AS Mtime,
+           plist(file=FullPath) AS LoginItemConfig,
+           upload(path=FullPath) AS Upload
+    FROM glob(globs=parse_json_array(data=LoginItemsGlobs))
