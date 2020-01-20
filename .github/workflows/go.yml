@@ -24,10 +24,10 @@ jobs:
             dep ensure
         fi
 
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js v12
       uses: actions/setup-node@v1
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: v12
         - name: npm install and npm test
           run: |
             cd static/gui/
