@@ -23,6 +23,7 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
+        sudo apt-get install mingw-w64-x86-64-dev
 
     - name: Use Node.js v12
       uses: actions/setup-node@v1
