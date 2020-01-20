@@ -27,7 +27,7 @@ jobs:
     - name: Build
       run: |
         mkdir ./output/
-        export PATH=PATH:~/go/bin/
+        export PATH=$PATH:~/go/bin/
         go run make.go -v Linux
         go run make.go -v Windows
         go run make.go -v DarwinBase
