@@ -55,4 +55,4 @@ jobs:
     - name: Test
       run: |
         go test ./...
-        ./output/velociraptor golden ./artifacts/testdata./server./testcases/ --env srcDir=./
+        ./output/velociraptor*linux* golden ./artifacts/testdata./server./testcases/ --env srcDir=./
