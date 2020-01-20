@@ -31,7 +31,7 @@ jobs:
 
     - name: npm install gui
       run: |
-            cd static/gui/
+            cd gui/static/
             npm install
             node node_modules/gulp/bin/gulp.js compile
             cd ../../
