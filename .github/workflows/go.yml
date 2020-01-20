@@ -42,7 +42,7 @@ jobs:
     - name: Test
       run: |
         go test ./...
-        ./output/velociraptor*linux* golden ./artifacts/testdata./server./testcases/ --env srcDir=./
+        ./output/velociraptor*linux* golden -v ./artifacts/testdata./server./testcases/ --env srcDir=./
 
     - name: Build All Architectures
       run: |
