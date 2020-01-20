@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -214,12 +215,16 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 }
 
 var (
+	mu              sync.Mutex
 	implementations map[string]FileStore = make(map[string]FileStore)
 )
 
 // Currently we only support a DirectoryFileStore.
 func GetFileStore(config_obj *config_proto.Config) FileStore {
 	if config_obj.Datastore.Implementation == "Test" {
+		mu.Lock()
+		defer mu.Unlock()
+
 		impl, pres := implementations["Test"]
 		if !pres {
 			impl = &MemoryFileStore{
