@@ -42,6 +42,14 @@ jobs:
         mkdir ./output/
         export PATH=$PATH:~/go/bin/
         go run make.go -v Linux
+
+    - name: Test
+      run: |
+        go test ./...
+        ./output/velociraptor*linux* golden ./artifacts/testdata./server./testcases/ --env srcDir=./
+
+    - name: BuildOthers
+      run: |
         go run make.go -v Windows
         go run make.go -v DarwinBase
         zip Binaries.zip output/*
