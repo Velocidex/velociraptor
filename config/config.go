@@ -124,6 +124,10 @@ func GetDefaultConfig() *config_proto.Config {
 			BindAddress:   "0.0.0.0",
 			BindPort:      8000,
 			MaxUploadSize: constants.MAX_MEMORY * 2,
+			DefaultClientMonitoringArtifacts: []string{
+				// Essential for client resource telemetry.
+				"Generic.Client.Stats",
+			},
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",

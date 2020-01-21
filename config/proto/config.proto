@@ -369,6 +369,10 @@ message FrontendConfig {
     string proxy_header = 13 [(sem_type) = {
             description: "Header defined by the proxy containing the remote address",
         }];
+
+    repeated string default_client_monitoring_artifacts = 14 [(sem_type) ={
+            description: "The initial set of client monitoring artifacts."
+        }];
 }
 
 

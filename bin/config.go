@@ -24,10 +24,12 @@ import (
 	"compress/zlib"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 
 	"github.com/Velocidex/yaml"
+	jsonpatch "github.com/evanphx/json-patch"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -58,6 +60,10 @@ var (
 	config_generate_command_interactive = config_generate_command.Flag(
 		"interactive", "Interactively fill in configuration.").
 		Short('i').Bool()
+
+	config_generate_command_merge = config_generate_command.Flag(
+		"merge", "Merge this json config into the generated config").
+		Strings()
 
 	config_rotate_server_key = config_command.Command(
 		"rotate_key",
@@ -143,6 +149,27 @@ func doGenerateConfigNonInteractive() {
 	if err != nil {
 		logger.Error("Unable to create config", err)
 		return
+	}
+
+	for _, merge_patch := range *config_generate_command_merge {
+		serialized, err := json.Marshal(config_obj)
+		if err != nil {
+			logger.Error("Marshal config_obj")
+			return
+		}
+
+		patched, err := jsonpatch.MergePatch(
+			serialized, []byte(merge_patch))
+		if err != nil {
+			logger.Error("Invalid merge patch:", err)
+			return
+		}
+
+		err = json.Unmarshal(patched, &config_obj)
+		if err != nil {
+			logger.Error("Patched object produces an invalid config: ", err)
+			return
+		}
 	}
 
 	res, err := yaml.Marshal(config_obj)
