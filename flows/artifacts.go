@@ -541,7 +541,7 @@ func appendUploadDataToFile(
 
 	// Figure out where to store the file.
 	file_path := artifacts.GetUploadsFile(
-		collection_context.Request.ClientId,
+		message.Source,
 		collection_context.SessionId,
 		file_buffer.Pathspec.Accessor,
 		file_buffer.Pathspec.Path)
@@ -593,7 +593,7 @@ func appendUploadDataToFile(
 
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("ClientId", collection_context.Request.ClientId).
+			Set("ClientId", message.Source).
 			Set("VFSPath", file_path).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
@@ -603,7 +603,7 @@ func appendUploadDataToFile(
 		if err == nil {
 			gJournalWriter.Channel <- &Event{
 				Config:    config_obj,
-				ClientId:  collection_context.Request.ClientId,
+				ClientId:  message.Source,
 				QueryName: "System.Upload.Completion",
 				Response:  string(serialized),
 				Columns: []string{"Timestamp", "ClientId",

@@ -326,6 +326,28 @@ func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
 		"invalid character")
 }
 
+// Monitoring queries which upload data.
+func (self *ServerTestSuite) TestMonitoringWithUpload() {
+	runner := flows.NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
+		Source:    self.client_id,
+		SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+		RequestId: constants.TransferWellKnownFlowId,
+		FileBuffer: &actions_proto.FileBuffer{
+			Pathspec: &actions_proto.PathSpec{
+				Path: "/etc/passwd",
+			},
+			Data: []byte("Hello"),
+			Size: 10000,
+		},
+	})
+	runner.Close()
+
+	self.RequiredFilestoreContains(
+		"/clients/"+self.client_id+"/collections/F.Monitoring/uploads/etc/passwd",
+		"Hello")
+}
+
 // Test that log messages are written to the flow
 func (self *ServerTestSuite) TestLog() {
 	t := self.T()

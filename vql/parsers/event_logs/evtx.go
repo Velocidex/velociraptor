@@ -110,6 +110,8 @@ func (self _WatchEvtxPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
+		defer close(output_chan)
+
 		// Do not close output_chan - The event log service
 		// owns it and it will be closed by it.
 		arg := &_ParseEvtxPluginArgs{}
@@ -122,9 +124,10 @@ func (self _WatchEvtxPlugin) Call(
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
-			GlobalEventLogService.Register(
+			cancel := GlobalEventLogService.Register(
 				filename, arg.Accessor,
 				ctx, scope, output_chan)
+			defer cancel()
 		}
 
 		// Wait until the query is complete.
