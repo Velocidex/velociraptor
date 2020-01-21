@@ -194,13 +194,7 @@ func StartClientMonitoringService(config_obj *config_proto.Config) error {
 		// No client monitoring rules found, install some
 		// defaults.
 		artifacts := &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{
-				// Essential for client resource telemetry.
-				"Generic.Client.Stats",
-
-				// Very useful for process execution logging.
-				"Windows.Events.ProcessCreation",
-			},
+			Artifacts: config_obj.Frontend.DefaultClientMonitoringArtifacts,
 		}
 		logger.Info("Creating default Client Monitoring Service")
 		return gEventTable.Update(config_obj, artifacts)

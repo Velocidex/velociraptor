@@ -63,7 +63,7 @@ var (
 
 	config_generate_command_merge = config_generate_command.Flag(
 		"merge", "Merge this json config into the generated config").
-		String()
+		Strings()
 
 	config_rotate_server_key = config_command.Command(
 		"rotate_key",
@@ -151,7 +151,7 @@ func doGenerateConfigNonInteractive() {
 		return
 	}
 
-	if *config_generate_command_merge != "" {
+	for _, merge_patch := range *config_generate_command_merge {
 		serialized, err := json.Marshal(config_obj)
 		if err != nil {
 			logger.Error("Marshal config_obj")
@@ -159,7 +159,7 @@ func doGenerateConfigNonInteractive() {
 		}
 
 		patched, err := jsonpatch.MergePatch(
-			serialized, []byte(*config_generate_command_merge))
+			serialized, []byte(merge_patch))
 		if err != nil {
 			logger.Error("Invalid merge patch:", err)
 			return
