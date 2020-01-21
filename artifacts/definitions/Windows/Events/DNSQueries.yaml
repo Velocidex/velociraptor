@@ -45,7 +45,7 @@ reports:
 
     {{ $client_info := Query "SELECT * FROM clients(client_id=ClientId) LIMIT 1" }}
 
-    # DNS Questions for {{ Get $client_info "0.os_info.fqdn }}
+    # DNS Questions for {{ Get $client_info "0.os_info.fqdn" }}
 
     The 1000 most common DNS Queries on this day are listed in the
     below table. Typically we are looking for two interesting
