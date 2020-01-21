@@ -61,8 +61,10 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage() *crypto_proto.G
 	return proto.Clone(gEventTable.job).(*crypto_proto.GrrMessage)
 }
 
-func (self *ClientEventTable) Update(
+// Start a new ClientEventTable with new rules.
+func (self *ClientEventTable) Start(
 	config_obj *config_proto.Config,
+	version uint64,
 	arg *flows_proto.ArtifactCollectorArgs) error {
 
 	self.mu.Lock()
@@ -79,13 +81,8 @@ func (self *ClientEventTable) Update(
 		return err
 	}
 
-	// Increment the version to force clients to update their copy
-	// of the event table.
-	current_version := uint64(time.Now().Unix())
-	atomic.StoreUint64(&self.version, current_version)
-
 	event_table := &actions_proto.VQLEventTable{
-		Version: current_version,
+		Version: version,
 	}
 
 	rate := arg.OpsPerSecond
@@ -136,6 +133,24 @@ func (self *ClientEventTable) Update(
 		UpdateEventTable: event_table,
 	}
 
+	return nil
+}
+
+// Update the ClientEventTable with new rules then save them permanently.
+func (self *ClientEventTable) Update(
+	config_obj *config_proto.Config,
+	arg *flows_proto.ArtifactCollectorArgs) error {
+
+	// Increment the version to force clients to update their copy
+	// of the event table.
+	current_version := uint64(time.Now().Unix())
+	atomic.StoreUint64(&self.version, current_version)
+
+	err := self.Start(config_obj, current_version, arg)
+	if err != nil {
+		return err
+	}
+
 	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -157,6 +172,9 @@ func (self *ClientEventTable) Update(
 
 // Runs at frontend start to initialize the client monitoring table.
 func StartClientMonitoringService(config_obj *config_proto.Config) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -175,24 +193,20 @@ func StartClientMonitoringService(config_obj *config_proto.Config) error {
 	if err != nil {
 		// No client monitoring rules found, install some
 		// defaults.
-		event_table.Artifacts.Artifacts = []string{
-			// Essential for client resource telemetry.
-			"Generic.Client.Stats",
+		artifacts := &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{
+				// Essential for client resource telemetry.
+				"Generic.Client.Stats",
 
-			// Very useful for process execution logging.
-			"Windows.Events.ProcessCreation",
+				// Very useful for process execution logging.
+				"Windows.Events.ProcessCreation",
+			},
 		}
-
-		err = db.SetSubject(
-			config_obj, constants.ClientMonitoringFlowURN,
-			&event_table)
-		if err != nil {
-			return err
-		}
+		logger.Info("Creating default Client Monitoring Service")
+		return gEventTable.Update(config_obj, artifacts)
 	}
 
-	logger := logging.GetLogger(
-		config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Client Monitoring Service")
-	return gEventTable.Update(config_obj, event_table.Artifacts)
+	return gEventTable.Start(
+		config_obj, event_table.Version, event_table.Artifacts)
 }
