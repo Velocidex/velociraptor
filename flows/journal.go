@@ -76,6 +76,7 @@ func NewJournalWriter() *JournalWriter {
 		// file. This allows the file to be rotated properly.
 		for {
 			result.mu.Lock()
+			fmt.Printf("Flushing writers\n")
 			for _, writer := range result.writers {
 				writer.closer()
 			}
