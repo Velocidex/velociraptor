@@ -59,6 +59,17 @@ type JournalWriter struct {
 	mu sync.Mutex
 }
 
+func (self *JournalWriter) Flush() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, writer := range self.writers {
+		writer.closer()
+	}
+
+	self.writers = make(map[string]*Writer)
+}
+
 func NewJournalWriter() *JournalWriter {
 	result := &JournalWriter{
 		Channel: make(chan *Event, 10),
@@ -75,15 +86,7 @@ func NewJournalWriter() *JournalWriter {
 		// Every minute flush all the writers and close the
 		// file. This allows the file to be rotated properly.
 		for {
-			result.mu.Lock()
-			fmt.Printf("Flushing writers\n")
-			for _, writer := range result.writers {
-				writer.closer()
-			}
-
-			result.writers = make(map[string]*Writer)
-			result.mu.Unlock()
-
+			result.Flush()
 			time.Sleep(60 * time.Second)
 		}
 	}()
