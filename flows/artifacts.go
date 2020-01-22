@@ -663,6 +663,10 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
+			if starings.HasPrefix(job.SessionId, "C.") {
+				utils.Debug(job)
+			}
+
 			// Just quickly send a cancel to the client.
 			db, err := datastore.GetDB(self.config_obj)
 			if err == nil {
