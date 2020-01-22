@@ -658,7 +658,7 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 	if !pres {
 		var err error
 
-		if !strings.HasPrefix("F.", job.SessionId) {
+		if !strings.HasPrefix(job.SessionId, "F.") {
 			utils.Debug(job)
 			return
 		}
