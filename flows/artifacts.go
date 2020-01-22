@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -663,7 +664,7 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
-			if starings.HasPrefix(job.SessionId, "C.") {
+			if strings.HasPrefix(job.SessionId, "C.") {
 				utils.Debug(job)
 			}
 
