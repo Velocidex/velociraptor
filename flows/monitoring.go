@@ -91,7 +91,7 @@ func MonitoringProcessMessage(
 			return errors.WithStack(err)
 		}
 
-		for _, row := range rows {
+		for i, row := range rows {
 			csv_row := ordereddict.NewDict().Set(
 				"_ts", int(time.Now().Unix()))
 			for _, column := range response.Columns {
@@ -100,6 +100,7 @@ func MonitoringProcessMessage(
 
 			writer.Write(csv_row)
 		}
+		fmt.Printf("Write %d rows to %s\n", i, log_path)
 	}
 
 	return nil
