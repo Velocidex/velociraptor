@@ -25,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
+	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/clbanning/mxj v1.8.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/crewjam/saml v0.0.0-20190521120225-344d075952c9

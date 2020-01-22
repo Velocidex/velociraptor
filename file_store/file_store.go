@@ -28,11 +28,25 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	openCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "file_store_open",
+		Help: "Total number of filestore open operations.",
+	})
+
+	listCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "file_store_list",
+		Help: "Total number of filestore list children operations.",
+	})
 )
 
 const (
@@ -79,6 +93,9 @@ type DirectoryFileStore struct {
 
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	[]os.FileInfo, error) {
+
+	listCounter.Inc()
+
 	file_path := self.FilenameToFileStorePath(dirname)
 	files, err := ioutil.ReadDir(file_path)
 	if err != nil {
@@ -114,6 +131,7 @@ func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error
 		return getCompressed(file_path)
 	}
 
+	openCounter.Inc()
 	file, err := os.Open(file_path)
 	if os.IsNotExist(err) {
 		return getCompressed(file_path + ".gz")
@@ -145,6 +163,7 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 		return nil, err
 	}
 
+	openCounter.Inc()
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.FrontendComponent).Error(
