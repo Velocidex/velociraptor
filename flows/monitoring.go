@@ -55,8 +55,9 @@ func MonitoringProcessMessage(
 		Columns:   response.Columns,
 	}
 
+	// Todo: Remove this into a service.
 	// Store the event log in the client's VFS.
-	if response.Query.Name != "" {
+	if false && response.Query.Name != "" {
 		file_store_factory := file_store.GetFileStore(config_obj)
 
 		artifact_name, source_name := artifacts.

@@ -658,8 +658,8 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 	if !pres {
 		var err error
 
+		// Only process real flows.
 		if !strings.HasPrefix(job.SessionId, "F.") {
-			utils.Debug(job)
 			return
 		}
 
