@@ -658,25 +658,17 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 	if !pres {
 		var err error
 
+		if !strings.HasPrefix("F.", job.SessionId) {
+			utils.Debug(job)
+			return
+		}
+
 		collection_context, err = LoadCollectionContext(
 			self.config_obj, job.Source, job.SessionId)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
-			if strings.HasPrefix("C.", job.SessionId) {
-				utils.Debug(job)
-			}
-
-			// Just quickly send a cancel to the client.
-			db, err := datastore.GetDB(self.config_obj)
-			if err == nil {
-				db.QueueMessageForClient(self.config_obj, job.Source,
-					&crypto_proto.GrrMessage{
-						Cancel:    &crypto_proto.Cancel{},
-						SessionId: job.SessionId,
-					})
-			}
 			return
 		}
 		self.context_map[job.SessionId] = collection_context
