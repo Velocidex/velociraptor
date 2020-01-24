@@ -269,8 +269,6 @@ func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex st
 		self.T().FailNow()
 	}
 
-	fmt.Printf("file %v: %v", filename, string(value))
-
 	require.Regexp(self.T(), regexp.MustCompile(regex), string(value))
 }
 
@@ -295,8 +293,8 @@ func (self *ServerTestSuite) TestMonitoring() {
 	runner.Close()
 
 	// Wait for the journal writer
-	flows.GJournalWriter.Flush()
 	time.Sleep(time.Second)
+	flows.GJournalWriter.Flush()
 
 	self.RequiredFilestoreContains(
 		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
