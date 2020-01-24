@@ -269,6 +269,8 @@ func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex st
 		self.T().FailNow()
 	}
 
+	fmt.Printf("file %v: %v", filename, value)
+
 	require.Regexp(self.T(), regexp.MustCompile(regex), string(value))
 }
 
