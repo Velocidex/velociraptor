@@ -18,6 +18,7 @@
 package api
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -146,8 +147,14 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	// No Auth on / which is a redirect to app.html anyway.
 	mux.Handle("/", h)
 
+	// Derive a CSRF key from the hash of the server's public key.
+	hasher := sha256.New()
+	hasher.Write([]byte(config_obj.Frontend.Certificate))
+	token := hasher.Sum(nil)
+
 	err = MaybeAddOAuthHandlers(config_obj, mux)
-	return csrf.Protect([]byte("32-byte-long-auth-key"))(mux), err
+
+	return csrf.Protect(token, csrf.Path("/"))(mux), err
 }
 
 // Starts a HTTP Server (non encrypted) using the passed in mux. It is
