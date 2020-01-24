@@ -46,7 +46,7 @@ func MonitoringProcessMessage(
 	}
 
 	// Write the response on the journal.
-	gJournalWriter.Channel <- &Event{
+	GJournalWriter.Channel <- &Event{
 		Config:    config_obj,
 		Timestamp: time.Now(),
 		ClientId:  message.Source,

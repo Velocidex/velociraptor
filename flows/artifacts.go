@@ -219,7 +219,7 @@ func closeContext(
 			return err
 		}
 
-		gJournalWriter.Channel <- &Event{
+		GJournalWriter.Channel <- &Event{
 			Config:    config_obj,
 			ClientId:  collection_context.Request.ClientId,
 			QueryName: "System.Flow.Completion",
@@ -602,7 +602,7 @@ func appendUploadDataToFile(
 
 		serialized, err := json.Marshal([]vfilter.Row{row})
 		if err == nil {
-			gJournalWriter.Channel <- &Event{
+			GJournalWriter.Channel <- &Event{
 				Config:    config_obj,
 				ClientId:  message.Source,
 				QueryName: "System.Upload.Completion",

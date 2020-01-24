@@ -162,7 +162,7 @@ func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
 	message_list := crypto_proto.MessageList{}
 	err := proto.Unmarshal(item, &message_list)
 	if err != nil || len(message_list.Job) == 0 {
-		return true
+		return false
 	}
 	return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
 }

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	gJournalWriter = NewJournalWriter()
+	GJournalWriter = NewJournalWriter()
 )
 
 // What we write in the journal's channel.

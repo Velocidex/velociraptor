@@ -233,7 +233,7 @@ func ModifyHunt(config_obj *config_proto.Config,
 					Set("User", user)
 				serialized, err := json.Marshal([]vfilter.Row{row})
 				if err == nil {
-					gJournalWriter.Channel <- &Event{
+					GJournalWriter.Channel <- &Event{
 						Config:    config_obj,
 						QueryName: "System.Hunt.Archive",
 						Response:  string(serialized),

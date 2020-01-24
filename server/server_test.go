@@ -297,6 +297,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 		self.client_id)
 
 	// Wait for the journal writer
+	flows.GJournalWriter.Flush()
 	time.Sleep(time.Second / 20)
 
 	self.RequiredFilestoreContains(

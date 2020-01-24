@@ -262,7 +262,7 @@ func ArchiveFlow(
 		Set("Flow", collection_context)
 	serialized, err := json.Marshal([]vfilter.Row{row})
 	if err == nil {
-		gJournalWriter.Channel <- &Event{
+		GJournalWriter.Channel <- &Event{
 			Config:    config_obj,
 			ClientId:  client_id,
 			QueryName: "System.Flow.Archive",
