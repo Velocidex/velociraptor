@@ -149,7 +149,7 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 
 	// Derive a CSRF key from the hash of the server's public key.
 	hasher := sha256.New()
-	hasher.Write([]byte(config_obj.Frontend.Certificate))
+	hasher.Write([]byte(config_obj.Frontend.PrivateKey))
 	token := hasher.Sum(nil)
 
 	err = MaybeAddOAuthHandlers(config_obj, mux)

@@ -55,7 +55,9 @@ func MonitoringProcessMessage(
 		Columns:   response.Columns,
 	}
 
-	// Todo: Remove this into a service.
+	// Todo: Remove this into a service - It is slowing down
+	// processing and takes up a concurrency slot.
+
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {
 		file_store_factory := file_store.GetFileStore(config_obj)
@@ -100,7 +102,6 @@ func MonitoringProcessMessage(
 
 			writer.Write(csv_row)
 		}
-		fmt.Printf("Write %d rows to %s\n", len(rows), log_path)
 	}
 
 	return nil
