@@ -3,6 +3,7 @@ package flows
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	gJournalWriter = NewJournalWriter()
+	GJournalWriter = NewJournalWriter()
 )
 
 // What we write in the journal's channel.
@@ -26,6 +27,12 @@ type Event struct {
 	QueryName string
 	Response  string
 	Columns   []string
+}
+
+type Writer struct {
+	*csv.CSVWriter
+
+	closer func()
 }
 
 // The journal is a common CSV file which collects events from all
@@ -43,11 +50,30 @@ type Event struct {
 // global writer so it can be used asyncronously.
 type JournalWriter struct {
 	Channel chan *Event
+
+	// We keep a cache of writers to write the output of each
+	// monitoring artifact. Note that each writer is responsible
+	// for its own flushing etc.
+	writers map[string]*Writer
+
+	mu sync.Mutex
+}
+
+func (self *JournalWriter) Flush() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, writer := range self.writers {
+		writer.closer()
+	}
+
+	self.writers = make(map[string]*Writer)
 }
 
 func NewJournalWriter() *JournalWriter {
 	result := &JournalWriter{
 		Channel: make(chan *Event, 10),
+		writers: make(map[string]*Writer),
 	}
 
 	go func() {
@@ -56,11 +82,21 @@ func NewJournalWriter() *JournalWriter {
 		}
 	}()
 
+	go func() {
+		// Every minute flush all the writers and close the
+		// file. This allows the file to be rotated properly.
+		for {
+			result.Flush()
+			time.Sleep(60 * time.Second)
+		}
+	}()
+
 	return result
 }
 
 func (self *JournalWriter) WriteEvent(event *Event) error {
-	file_store_factory := file_store.GetFileStore(event.Config)
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	artifact_name, source_name := artifacts.
 		QueryNameToArtifactAndSource(event.QueryName)
@@ -72,25 +108,39 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 		artifact_name, source_name,
 		artifacts.MODE_JOURNAL_DAILY)
 
-	fd, err := file_store_factory.WriteFile(log_path)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return err
-	}
-	defer fd.Close()
+	// Fetch the CSV writer for this journal file
+	writer, pres := self.writers[log_path]
+	if !pres {
+		file_store_factory := file_store.GetFileStore(event.Config)
 
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
+		fd, err := file_store_factory.WriteFile(log_path)
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+			return err
+		}
 
-	writer, err := csv.GetCSVWriter(scope, fd)
-	if err != nil {
-		return err
+		scope := vql_subsystem.MakeScope()
+
+		csv_writer, err := csv.GetCSVWriter(scope, fd)
+		if err != nil {
+			return err
+		}
+
+		writer = &Writer{
+			csv_writer,
+			func() {
+				fmt.Printf("Closing %v\n", log_path)
+				scope.Close()
+				csv_writer.Close()
+				fd.Close()
+			}}
+
+		self.writers[log_path] = writer
 	}
-	defer writer.Close()
 
 	// Decode the VQLResponse and write into the CSV file.
 	var rows []map[string]interface{}
-	err = json.Unmarshal([]byte(event.Response), &rows)
+	err := json.Unmarshal([]byte(event.Response), &rows)
 	if err != nil {
 		return errors.WithStack(err)
 	}

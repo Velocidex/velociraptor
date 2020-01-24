@@ -168,20 +168,19 @@ func CancelFlow(
 
 	collection_context, err := LoadCollectionContext(
 		config_obj, client_id, flow_id)
-	if err != nil {
-		return nil, err
-	}
-	defer closeContext(config_obj, collection_context)
+	if err == nil {
+		defer closeContext(config_obj, collection_context)
 
-	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-		return nil, errors.New("Flow is not in the running state. " +
-			"Can only cancel running flows.")
-	}
+		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+			return nil, errors.New("Flow is not in the running state. " +
+				"Can only cancel running flows.")
+		}
 
-	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-	collection_context.Status = "Cancelled by " + username
-	collection_context.Backtrace = ""
-	collection_context.Dirty = true
+		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+		collection_context.Status = "Cancelled by " + username
+		collection_context.Backtrace = ""
+		collection_context.Dirty = true
+	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
 	db, err := datastore.GetDB(config_obj)
@@ -263,7 +262,7 @@ func ArchiveFlow(
 		Set("Flow", collection_context)
 	serialized, err := json.Marshal([]vfilter.Row{row})
 	if err == nil {
-		gJournalWriter.Channel <- &Event{
+		GJournalWriter.Channel <- &Event{
 			Config:    config_obj,
 			ClientId:  client_id,
 			QueryName: "System.Flow.Archive",

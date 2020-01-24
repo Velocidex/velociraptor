@@ -46,7 +46,7 @@ func MonitoringProcessMessage(
 	}
 
 	// Write the response on the journal.
-	gJournalWriter.Channel <- &Event{
+	GJournalWriter.Channel <- &Event{
 		Config:    config_obj,
 		Timestamp: time.Now(),
 		ClientId:  message.Source,
@@ -54,6 +54,9 @@ func MonitoringProcessMessage(
 		Response:  response.Response,
 		Columns:   response.Columns,
 	}
+
+	// Todo: Remove this into a service - It is slowing down
+	// processing and takes up a concurrency slot.
 
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {

@@ -25,6 +25,7 @@ require (
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
+	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/clbanning/mxj v1.8.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/crewjam/saml v0.0.0-20190521120225-344d075952c9
@@ -38,6 +39,7 @@ require (
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
+	github.com/gogo/protobuf v1.1.1
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
@@ -46,6 +48,7 @@ require (
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/shlex v0.0.0-20181106134648-c34317bd91bf
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hanwen/go-fuse v1.0.0

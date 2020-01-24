@@ -82,13 +82,14 @@ func init() {
 				// frontends on the same port. The
 				// ACME protocol requires ports 80 and
 				// 443 for all services.
-				router := http.NewServeMux()
-				err := api.PrepareMux(config_obj, router)
-				kingpin.FatalIfError(
-					err, "Unable to start API server")
+				mux := http.NewServeMux()
 
 				// Add Comms handlers.
-				server.PrepareFrontendMux(config_obj, server_obj, router)
+				server.PrepareFrontendMux(config_obj, server_obj, mux)
+
+				router, err := api.PrepareMux(config_obj, mux)
+				kingpin.FatalIfError(
+					err, "Unable to start API server")
 
 				// Block here until done.
 				err = server.StartTLSServer(config_obj, server_obj, router)
@@ -103,8 +104,8 @@ func init() {
 				// the GUI must only be accessed over
 				// 127.0.0.1 without TLS.
 				go func() {
-					router := http.NewServeMux()
-					err := api.PrepareMux(config_obj, router)
+					mux := http.NewServeMux()
+					router, err := api.PrepareMux(config_obj, mux)
 					kingpin.FatalIfError(
 						err, "Unable to start API server")
 
@@ -126,22 +127,28 @@ func init() {
 			} else {
 				// Otherwise by default we use self signed SSL.
 
-				router := http.NewServeMux()
+				var err error
+				var router http.Handler
+
+				mux := http.NewServeMux()
+
+				// Add Comms handlers.
+				server.PrepareFrontendMux(config_obj, server_obj, mux)
 
 				// If the GUI and Frontend need to be
 				// on the same server we just merge
 				// the handlers.
 				if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
 					config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
-					err := api.PrepareMux(config_obj, router)
+					router, err = api.PrepareMux(config_obj, mux)
 					kingpin.FatalIfError(
 						err, "Unable to start API server")
 				} else {
 
 					go func() {
 						// Launch a new server for the GUI.
-						router := http.NewServeMux()
-						err := api.PrepareMux(config_obj, router)
+						mux := http.NewServeMux()
+						router, err = api.PrepareMux(config_obj, mux)
 						kingpin.FatalIfError(
 							err, "Unable to start API server")
 
@@ -154,8 +161,6 @@ func init() {
 					}()
 
 				}
-				// Add Comms handlers.
-				server.PrepareFrontendMux(config_obj, server_obj, router)
 
 				// Start comms over http.
 				err = server.StartFrontendHttps(config_obj, server_obj, router)

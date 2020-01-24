@@ -69,6 +69,8 @@ var encodeUrlPath = exports.encodeUrlPath;
  * @return {*} Same RDFValue but with all type information stripped.
  */
 exports.stripTypeInfo = function(richlyTypedValue) {
+  return richlyTypedValue;
+
   var recursiveStrip = function(value) {
     if (angular.isArray(value)) {
       value = value.map(recursiveStrip);
@@ -163,6 +165,9 @@ exports.ApiService = function(
 
   /** @private {!angular.$q.Deferred} */
   this.authDeferred_ = this.q_.defer();
+
+  // Automatically pass the CSRF token to every request.
+  $http.defaults.headers.common["X-CSRF-Token"] = window.CsrfToken;
 };
 var ApiService = exports.ApiService;
 

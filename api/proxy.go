@@ -18,6 +18,7 @@
 package api
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -27,6 +28,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/gorilla/csrf"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -89,15 +91,15 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 }
 
 // Prepares a mux by adding handler required for the GUI.
-func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
+func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
 	ctx := context.Background()
 	h, err := GetAPIHandler(ctx, config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = MaybeAddSAMLHandlers(config_obj, mux); err != nil {
-		return err
+		return nil, err
 	}
 
 	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
@@ -128,31 +130,38 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	// Add reverse proxy support.
 	err = AddProxyMux(config_obj, mux)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/app.html")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	mux.Handle("/app.html", checkUserCredentialsHandler(config_obj, h))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// No Auth on / which is a redirect to app.html anyway.
 	mux.Handle("/", h)
 
-	return MaybeAddOAuthHandlers(config_obj, mux)
+	// Derive a CSRF key from the hash of the server's public key.
+	hasher := sha256.New()
+	hasher.Write([]byte(config_obj.Frontend.PrivateKey))
+	token := hasher.Sum(nil)
+
+	err = MaybeAddOAuthHandlers(config_obj, mux)
+
+	return csrf.Protect(token, csrf.Path("/"))(mux), err
 }
 
 // Starts a HTTP Server (non encrypted) using the passed in mux. It is
 // not recommended to export the HTTP port to an external interface
 // since it is not encrypted. If you want to use HTTP you should
 // listen on localhost and port forward over ssh.
-func StartHTTPProxy(config_obj *config_proto.Config, mux *http.ServeMux) error {
+func StartHTTPProxy(config_obj *config_proto.Config, mux http.Handler) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 	if config_obj.GUI.BindAddress != "127.0.0.1" {
 		logger.Info("GUI is not encrypted and listening on public interface. " +
@@ -171,7 +180,7 @@ func StartHTTPProxy(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	return http.ListenAndServe(listenAddr, mux)
 }
 
-func StartSelfSignedHTTPSProxy(config_obj *config_proto.Config, mux *http.ServeMux) error {
+func StartSelfSignedHTTPSProxy(config_obj *config_proto.Config, mux http.Handler) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	cert, err := tls.X509KeyPair(
@@ -224,6 +233,7 @@ type _templateArgs struct {
 	Help_url   string
 	Report_url string
 	Version    string
+	CsrfToken  string
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a

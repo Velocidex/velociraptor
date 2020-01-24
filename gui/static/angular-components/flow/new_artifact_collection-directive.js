@@ -2,7 +2,7 @@
 
 goog.module('grrUi.flow.newArtifactCollectionDirective');
 
-const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {ApiService} = goog.require('grrUi.core.apiService');
 
 
 /**

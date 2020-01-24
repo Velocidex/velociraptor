@@ -292,12 +292,13 @@ func (self *ServerTestSuite) TestMonitoring() {
 	})
 	runner.Close()
 
+	// Wait for the journal writer
+	time.Sleep(time.Second)
+	flows.GJournalWriter.Flush()
+
 	self.RequiredFilestoreContains(
 		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
 		self.client_id)
-
-	// Wait for the journal writer
-	time.Sleep(time.Second / 20)
 
 	self.RequiredFilestoreContains(
 		"/journals/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",

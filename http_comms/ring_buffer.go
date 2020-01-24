@@ -6,11 +6,14 @@ import (
 	"os"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -153,6 +156,17 @@ func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
 	return result
 }
 
+// Determine if the item is blacklisted. Items are blacklisted when
+// their corresponding flow is cancelled.
+func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
+	message_list := crypto_proto.MessageList{}
+	err := proto.Unmarshal(item, &message_list)
+	if err != nil || len(message_list.Job) == 0 {
+		return false
+	}
+	return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
+}
+
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -179,7 +193,9 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 				self._Truncate()
 				return nil
 			}
-			result = append(result, item...)
+			if !self.IsItemBlackListed(item) {
+				result = append(result, item...)
+			}
 
 			self.leased_pointer += 8 + int64(n)
 			self.header.LeasedBytes += int64(n)
