@@ -67,9 +67,7 @@ func RegisterProtocol(plugin vfilter.Any) {
 	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
 }
 
-func MakeScope() *vfilter.Scope {
-	scopeCounter.Inc()
-
+func _makeRootScope() *vfilter.Scope {
 	result := vfilter.NewScope()
 	for _, plugin := range exportedPlugins {
 		result.AppendPlugins(plugin)
@@ -83,7 +81,11 @@ func MakeScope() *vfilter.Scope {
 		result.AppendFunctions(function)
 	}
 
-	result.SetContext("", "")
-
 	return result
+}
+
+func MakeScope() *vfilter.Scope {
+	scopeCounter.Inc()
+
+	return _makeRootScope()
 }

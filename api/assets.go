@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/csrf"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 )
@@ -53,6 +54,7 @@ func GetTemplateHandler(
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		args := _templateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
+			CsrfToken: csrf.Token(r),
 			Heading:   "Heading",
 		}
 		err := tmpl.Execute(w, args)

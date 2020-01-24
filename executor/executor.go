@@ -25,12 +25,45 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/constants"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
+
+var (
+	Canceller = &canceller{
+		cancelled: make(map[string]bool),
+	}
+)
+
+// Keep track of cancelled flows client side.
+type canceller struct {
+	mu        sync.Mutex
+	cancelled map[string]bool
+}
+
+func (self *canceller) Cancel(flow_id string) {
+	// Some flows are non-cancellable.
+	switch flow_id {
+	case constants.MONITORING_WELL_KNOWN_FLOW:
+		return
+	}
+
+	self.mu.Lock()
+	self.cancelled[flow_id] = true
+	self.mu.Unlock()
+}
+
+func (self *canceller) IsCancelled(flow_id string) bool {
+	self.mu.Lock()
+	_, pres := self.cancelled[flow_id]
+	self.mu.Unlock()
+
+	return pres
+}
 
 type Executor interface {
 	// These are called by the executor code.
@@ -77,6 +110,8 @@ func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responde
 		for _, flow_ctx := range contexts {
 			flow_ctx.cancel()
 		}
+
+		Canceller.Cancel(flow_id)
 	}
 }
 

@@ -669,6 +669,14 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
+			db, err := datastore.GetDB(self.config_obj)
+			if err == nil {
+				db.QueueMessageForClient(self.config_obj, job.Source,
+					&crypto_proto.GrrMessage{
+						Cancel:    &crypto_proto.Cancel{},
+						SessionId: job.SessionId,
+					})
+			}
 			return
 		}
 		self.context_map[job.SessionId] = collection_context

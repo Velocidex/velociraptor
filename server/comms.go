@@ -113,7 +113,7 @@ func StartFrontendHttp(
 func StartFrontendHttps(
 	config_obj *config_proto.Config,
 	server_obj *Server,
-	router *http.ServeMux) error {
+	router http.Handler) error {
 
 	cert, err := tls.X509KeyPair(
 		[]byte(config_obj.Frontend.Certificate),
@@ -230,7 +230,7 @@ func InstallSignalHandler(
 func StartTLSServer(
 	config_obj *config_proto.Config,
 	server_obj *Server,
-	mux *http.ServeMux) error {
+	mux http.Handler) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	if config_obj.GUI.BindPort != 443 {
