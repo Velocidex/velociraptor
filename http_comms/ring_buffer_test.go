@@ -6,8 +6,11 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
+	"github.com/golang/protobuf/proto"
 	"github.com/sirupsen/logrus/hooks/test"
 	"www.velocidex.com/golang/velociraptor/config"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -286,4 +289,45 @@ func checkLogMessage(hook *test.Hook, msg string) bool {
 	}
 
 	return false
+}
+
+func TestRingBufferCancellation(t *testing.T) {
+	filename := getTempFile(t)
+	defer os.Remove(filename)
+
+	message_list := &crypto_proto.MessageList{
+		Job: []*crypto_proto.GrrMessage{{
+			SessionId: "F.1234",
+		}},
+	}
+
+	serialized_message_list, err := proto.Marshal(message_list)
+	assert.NoError(t, err)
+
+	// Queue the message
+	ring_buffer := createRB(t, filename)
+	ring_buffer.Enqueue([]byte(serialized_message_list))
+	ring_buffer.Close()
+
+	// Try to lease the message.
+	ring_buffer = createRB(t, filename)
+	lease := ring_buffer.Lease(1)
+	assert.NotNil(t, lease)
+
+	assert.Equal(t, lease, serialized_message_list)
+
+	// Queue the message
+	ring_buffer.Enqueue([]byte(serialized_message_list))
+	ring_buffer.Close()
+
+	// Now cancel this flow ID.
+	executor.Canceller.Cancel(message_list.Job[0].SessionId)
+
+	// Try to lease the message.
+	ring_buffer = createRB(t, filename)
+	lease = ring_buffer.Lease(1)
+	assert.NotNil(t, lease)
+
+	// Should not lease the message any more since it is cancelled.
+	assert.Equal(t, lease, []byte{})
 }
