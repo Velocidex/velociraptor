@@ -10,7 +10,6 @@ require (
 	github.com/Masterminds/sprig v2.20.0+incompatible
 	github.com/Netflix/go-expect v0.0.0-20190729225929-0e00d9168667 // indirect
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
-	github.com/UnnoTed/fileb0x v1.1.4 // indirect
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
@@ -68,14 +67,14 @@ require (
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/magefile/mage v1.9.0
 	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/mattn/go-isatty v0.0.10 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
-	github.com/mattn/go-runewidth v0.0.6 // indirect
+	github.com/mattn/go-runewidth v0.0.8 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
 	github.com/olekukonko/tablewriter v0.0.2
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
 	github.com/prometheus/client_golang v1.2.1
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
@@ -91,12 +90,12 @@ require (
 	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
-	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c
+	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad
 	golang.org/x/exp v0.0.0-20191014171548-69215a2ee97e // indirect
-	golang.org/x/net v0.0.0-20191126235420-ef20fe5d7933
+	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200103143344-a1369afcdac7
+	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9
 	golang.org/x/tools v0.0.0-20191121040551-947d4aa89328 // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
@@ -108,7 +107,7 @@ require (
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/russross/blackfriday.v2 v2.0.1
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
-	gopkg.in/yaml.v2 v2.2.7 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
