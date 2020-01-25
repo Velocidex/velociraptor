@@ -26,6 +26,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -36,6 +37,13 @@ import (
 type TimeVal struct {
 	Sec  int64 `json:"sec"`
 	Nsec int64 `json:"usec"`
+}
+
+func (self TimeVal) Time() time.Time {
+	if self.Nsec > 0 {
+		return time.Unix(0, self.Nsec)
+	}
+	return time.Unix(self.Sec, 0)
 }
 
 type FileInfo interface {
