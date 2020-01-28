@@ -270,7 +270,13 @@ func (self NTFSI30ScanPlugin) Call(
 			arg.MFT = mft_idx
 		}
 
-		ntfs_ctx, err := GetNTFSContext(scope, arg.Device)
+		device, _, err := GetDeviceAndSubpath(arg.Device)
+		if err != nil {
+			scope.Log("parse_ntfs_i30: %v", err)
+			return
+		}
+
+		ntfs_ctx, err := GetNTFSContext(scope, device)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return

@@ -496,7 +496,7 @@ message Config {
             description: "Path to store autocert certificates.",
         }];
 
-    bool disable_self_signed_ssl = 27 [(sem_type) = {
+    bool DEPRECATED_disable_self_signed_ssl = 27 [(sem_type) = {
             description: "If set this disables use of self signed SSL and allows http only "
             "client comms and GUI console."
             default: "false",

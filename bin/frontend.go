@@ -96,33 +96,6 @@ func init() {
 				kingpin.FatalIfError(err, "StartTLSServer")
 
 				// Should we disable SSL?
-			} else if config_obj.DisableSelfSignedSsl {
-
-				// For non TLS we separate the GUI and
-				// frontend ports because the frontend
-				// must be publically accessible but
-				// the GUI must only be accessed over
-				// 127.0.0.1 without TLS.
-				go func() {
-					mux := http.NewServeMux()
-					router, err := api.PrepareMux(config_obj, mux)
-					kingpin.FatalIfError(
-						err, "Unable to start API server")
-
-					// Start the GUI separately on
-					// a different port.
-					err = api.StartHTTPProxy(config_obj, router)
-					kingpin.FatalIfError(
-						err, "Unable to start GUI server")
-				}()
-
-				// Add Frontend Comms handlers.
-				router := http.NewServeMux()
-				server.PrepareFrontendMux(config_obj, server_obj, router)
-
-				// Start comms over http.
-				err = server.StartFrontendHttp(config_obj, server_obj, router)
-				kingpin.FatalIfError(err, "StartFrontendHttp")
 
 			} else {
 				// Otherwise by default we use self signed SSL.
@@ -130,24 +103,27 @@ func init() {
 				var err error
 				var router http.Handler
 
-				mux := http.NewServeMux()
-
-				// Add Comms handlers.
-				server.PrepareFrontendMux(config_obj, server_obj, mux)
-
 				// If the GUI and Frontend need to be
 				// on the same server we just merge
 				// the handlers.
 				if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
 					config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
+
+					mux := http.NewServeMux()
+					server.PrepareFrontendMux(config_obj, server_obj, mux)
 					router, err = api.PrepareMux(config_obj, mux)
 					kingpin.FatalIfError(
 						err, "Unable to start API server")
-				} else {
 
+					// Start comms over https.
+					err = server.StartFrontendHttps(config_obj, server_obj, router)
+					kingpin.FatalIfError(err, "StartFrontendHttps")
+
+				} else {
+					// Launch a new server for the GUI.
 					go func() {
-						// Launch a new server for the GUI.
 						mux := http.NewServeMux()
+
 						router, err = api.PrepareMux(config_obj, mux)
 						kingpin.FatalIfError(
 							err, "Unable to start API server")
@@ -160,12 +136,16 @@ func init() {
 
 					}()
 
+					// Launch a server for the frontend.
+					mux := http.NewServeMux()
+
+					// Add Comms handlers.
+					server.PrepareFrontendMux(config_obj, server_obj, mux)
+
+					// Start comms over https.
+					err = server.StartFrontendHttps(config_obj, server_obj, mux)
+					kingpin.FatalIfError(err, "StartFrontendHttps")
 				}
-
-				// Start comms over http.
-				err = server.StartFrontendHttps(config_obj, server_obj, router)
-				kingpin.FatalIfError(err, "StartFrontendHttps")
-
 			}
 			return true
 		}
