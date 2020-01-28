@@ -18,7 +18,6 @@
 package api
 
 import (
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -28,7 +27,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gorilla/csrf"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -102,27 +100,34 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 		return nil, err
 	}
 
-	mux.Handle("/api/", checkUserCredentialsHandler(config_obj, h))
+	mux.Handle("/api/", csrfProtect(config_obj,
+		checkUserCredentialsHandler(config_obj, h)))
 
 	// DEPRECATED: Download the flow result and uploads as a zip
 	// file generated on the fly. This is deprecated: Users now
 	// need to prepare the download first.
-	mux.Handle("/api/v1/download/", checkUserCredentialsHandler(
-		config_obj, flowResultDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/download/", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, flowResultDownloadHandler(config_obj))))
 
-	mux.Handle("/api/v1/DownloadHuntResults", checkUserCredentialsHandler(
-		config_obj, huntResultDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/DownloadHuntResults", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, huntResultDownloadHandler(config_obj))))
 
-	mux.Handle("/api/v1/DownloadVFSFile", checkUserCredentialsHandler(
-		config_obj, vfsFileDownloadHandler(config_obj)))
-	mux.Handle("/api/v1/DownloadVFSFolder", checkUserCredentialsHandler(
-		config_obj, vfsFolderDownloadHandler(config_obj)))
+	mux.Handle("/api/v1/DownloadVFSFile", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, vfsFileDownloadHandler(config_obj))))
+
+	mux.Handle("/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, vfsFolderDownloadHandler(config_obj))))
 
 	// Serve prepared zip files.
-	mux.Handle("/downloads/", checkUserCredentialsHandler(
-		config_obj, http.FileServer(http.Dir(
-			config_obj.Datastore.FilestoreDirectory,
-		))))
+	mux.Handle("/downloads/", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, http.FileServer(http.Dir(
+				config_obj.Datastore.FilestoreDirectory,
+			)))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -137,7 +142,8 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle("/app.html", checkUserCredentialsHandler(config_obj, h))
+	mux.Handle("/app.html", csrfProtect(config_obj,
+		checkUserCredentialsHandler(config_obj, h)))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
 	if err != nil {
@@ -147,14 +153,8 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	// No Auth on / which is a redirect to app.html anyway.
 	mux.Handle("/", h)
 
-	// Derive a CSRF key from the hash of the server's public key.
-	hasher := sha256.New()
-	hasher.Write([]byte(config_obj.Frontend.PrivateKey))
-	token := hasher.Sum(nil)
-
 	err = MaybeAddOAuthHandlers(config_obj, mux)
-
-	return csrf.Protect(token, csrf.Path("/"))(mux), err
+	return mux, err
 }
 
 // Starts a HTTP Server (non encrypted) using the passed in mux. It is

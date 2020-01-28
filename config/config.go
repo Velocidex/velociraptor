@@ -145,9 +145,6 @@ func GetDefaultConfig() *config_proto.Config {
 			BindPort:    8003,
 		},
 		ApiConfig: &config_proto.ApiClientConfig{},
-
-		// Use SSL by default - there is no real reason not to.
-		DisableSelfSignedSsl: false,
 	}
 
 	// The client's version needs to keep in sync with the

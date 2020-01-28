@@ -211,9 +211,8 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 		Client:  config_obj.Client,
 	}
 
-	// Only allow self signed certs if we do not use autocerts or
-	// ssl at all.
-	if !config_obj.DisableSelfSignedSsl && config_obj.AutocertDomain == "" {
+	// Only allow self signed certs if we do not use autocerts
+	if config_obj.AutocertDomain == "" {
 		client_config.Client.UseSelfSignedSsl = true
 	}
 	return client_config

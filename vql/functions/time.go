@@ -7,10 +7,23 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/kierdavis/dateparser"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+var (
+	lru *cache.LRUCache = cache.NewLRUCache(100)
+)
+
+type cachedTime struct {
+	time.Time
+}
+
+func (self cachedTime) Size() int {
+	return 1
+}
 
 type _TimestampArg struct {
 	Epoch       vfilter.Any `vfilter:"optional,field=epoch"`
@@ -42,14 +55,21 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	if arg.String != "" {
+		time_value_any, pres := lru.Get(arg.String)
+		if pres {
+			return time_value_any.(cachedTime).Time
+		}
+
 		parser := dateparser.Parser{Fuzzy: true,
 			DayFirst: true,
 			IgnoreTZ: true}
-		r, err := parser.Parse(arg.String)
+		time_value, err := parser.Parse(arg.String)
 		if err == nil {
-			return r
+			lru.Set(arg.String, cachedTime{time_value})
+			return time_value
 		}
 		scope.Log("timestamp: %v", err)
+		return vfilter.Null{}
 	}
 
 	sec := int64(0)
@@ -88,6 +108,68 @@ func (self _TimeLt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok && b_ok
 }
 
+type _TimeLtInt struct{}
+
+func (self _TimeLtInt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := a.(time.Time)
+	var b_time time.Time
+
+	switch t := b.(type) {
+	case float64:
+		sec_f, dec_f := math.Modf(t)
+		dec_f *= 1e9
+		b_time = time.Unix(int64(sec_f), int64(dec_f))
+	default:
+		sec, _ := utils.ToInt64(b)
+		b_time = time.Unix(sec, 0)
+	}
+
+	return a_time.Before(b_time)
+}
+
+func (self _TimeLtInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := a.(time.Time)
+	if !a_ok {
+		return false
+	}
+
+	_, ok := utils.ToInt64(b)
+	return ok
+}
+
+type _TimeLtString struct{}
+
+func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := a.(time.Time)
+	b_str, _ := b.(string)
+	var b_time time.Time
+
+	time_value_any, pres := lru.Get(b_str)
+	if pres {
+		b_time = time_value_any.(cachedTime).Time
+
+	} else {
+		parser := dateparser.Parser{Fuzzy: true,
+			DayFirst: true,
+			IgnoreTZ: true}
+		b_time, err := parser.Parse(b_str)
+		if err != nil {
+			b_time = time.Time{}
+		}
+
+		lru.Set(b_str, cachedTime{b_time})
+	}
+
+	return a_time.Before(b_time)
+}
+
+func (self _TimeLtString) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := a.(time.Time)
+	_, b_ok := b.(string)
+
+	return a_ok && b_ok
+}
+
 type _TimeEq struct{}
 
 func (self _TimeEq) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
@@ -104,8 +186,40 @@ func (self _TimeEq) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	return a_ok && b_ok
 }
 
+type _TimeEqInt struct{}
+
+func (self _TimeEqInt) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
+	a_time, _ := a.(time.Time)
+	var b_time time.Time
+
+	switch t := b.(type) {
+	case float64:
+		sec_f, dec_f := math.Modf(t)
+		dec_f *= 1e9
+		b_time = time.Unix(int64(sec_f), int64(dec_f))
+	default:
+		sec, _ := utils.ToInt64(b)
+		b_time = time.Unix(sec, 0)
+	}
+
+	return a_time.UnixNano() == b_time.UnixNano()
+}
+
+func (self _TimeEqInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
+	_, a_ok := a.(time.Time)
+	if !a_ok {
+		return false
+	}
+
+	_, ok := utils.ToInt64(b)
+	return ok
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&_Timestamp{})
 	vql_subsystem.RegisterProtocol(&_TimeLt{})
+	vql_subsystem.RegisterProtocol(&_TimeLtInt{})
+	vql_subsystem.RegisterProtocol(&_TimeLtString{})
 	vql_subsystem.RegisterProtocol(&_TimeEq{})
+	vql_subsystem.RegisterProtocol(&_TimeEqInt{})
 }
