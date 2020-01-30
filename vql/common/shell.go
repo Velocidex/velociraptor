@@ -25,7 +25,6 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -87,7 +86,11 @@ func (self ShellPlugin) Call(
 			arg.Length = 10240
 		}
 
-		command := exec.CommandContext(ctx, arg.Argv[0], arg.Argv[1:]...)
+		// Kill subprocess when the scope is destroyed.
+		sub_ctx, cancel := context.WithCancel(ctx)
+		scope.AddDestructor(cancel)
+
+		command := exec.CommandContext(sub_ctx, arg.Argv[0], arg.Argv[1:]...)
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {
 			scope.Log("shell: no command to run")
@@ -110,24 +113,6 @@ func (self ShellPlugin) Call(
 			return
 
 		}
-
-		scope.AddDestructor(func() {
-			// Repeatadly try to kill subprocess.
-			for i := 0; i < 100; i++ {
-				// Cancelled - kill the child. This does not
-				// seem to work well on windows.
-				err := command.Process.Kill()
-				if err != nil {
-					scope.Log("timeout: failed to kill process with pid %v: %v",
-						command.Process.Pid, err)
-				} else {
-					// Ok it worked...
-					scope.Log("subprocess killed due to cancellation.")
-					return
-				}
-				time.Sleep(time.Second)
-			}
-		})
 
 		// We need to combine the status code with the stdout
 		// to minimize the total number of responses.  Send a
