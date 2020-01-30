@@ -39,17 +39,16 @@ func InstallSignalHandler(
 	signal.Notify(quit, os.Interrupt)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	scope.AddDestructor(func() {
-		cancel()
-	})
-
 	go func() {
-		defer cancel()
-
 		// Wait for the signal on this channel.
 		<-quit
 		scope.Log("Shutting down due to interrupt.")
+
 		scope.Close()
+		// Only cancel the context once the scope is fully
+		// destroyed. This ensures all the destructors have
+		// enougb time to finish when we exit the program
+		cancel()
 	}()
 
 	return ctx

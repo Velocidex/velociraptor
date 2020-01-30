@@ -63,8 +63,15 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		scope.Log("upload_S3: Unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
+		// Abort uploading when the scope is destroyed.
+		sub_ctx, cancel := context.WithCancel(ctx)
+		scope.AddDestructor(func() {
+			// Cancel the s3 upload when the scope destroys.
+			cancel()
+		})
+
 		upload_response, err := upload_S3(
-			ctx, scope, file,
+			sub_ctx, scope, file,
 			arg.Bucket,
 			arg.Name, arg.CredentialsKey, arg.CredentialsSecret, arg.Region)
 		if err != nil {
@@ -98,11 +105,12 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	sess := session.New(conf)
 	uploader := s3manager.NewUploader(sess)
 
-	result, err := uploader.Upload(&s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(name),
-		Body:   reader,
-	})
+	result, err := uploader.UploadWithContext(
+		ctx, &s3manager.UploadInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(name),
+			Body:   reader,
+		})
 	if err != nil {
 		return &networking.UploadResponse{
 			Error: err.Error(),

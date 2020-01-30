@@ -86,7 +86,11 @@ func (self ShellPlugin) Call(
 			arg.Length = 10240
 		}
 
-		command := exec.CommandContext(ctx, arg.Argv[0], arg.Argv[1:]...)
+		// Kill subprocess when the scope is destroyed.
+		sub_ctx, cancel := context.WithCancel(ctx)
+		scope.AddDestructor(cancel)
+
+		command := exec.CommandContext(sub_ctx, arg.Argv[0], arg.Argv[1:]...)
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {
 			scope.Log("shell: no command to run")
@@ -196,15 +200,7 @@ func (self ShellPlugin) Call(
 		// Get the command status and combine with the last response.
 		select {
 		case <-ctx.Done():
-			// Cancelled - kill the child. This does not
-			// seem to work well on windows.
-			err := command.Process.Kill()
-			if err != nil {
-				scope.Log("timeout: failed to kill process with pid %v: %v",
-					command.Process.Pid, err)
-			} else {
-				scope.Log("process killed as timeout reached")
-			}
+			return
 
 		case err := <-err_chan:
 			if err == nil {
