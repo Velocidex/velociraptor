@@ -77,8 +77,31 @@ func (self *ArtifactRepositoryPlugin) Call(
 			return
 		}
 
+		artifact_definition := self.leaf
+		v, pres := args.Get("source")
+		if pres {
+			lazy_v, ok := v.(vfilter.LazyExpr)
+			if ok {
+				v = lazy_v.Reduce()
+			}
+
+			source, ok := v.(string)
+			if !ok {
+				scope.Log("Source must be a string")
+				return
+			}
+
+			artifact_definition, pres = self.repository.Get(
+				self.leaf.Name + "/" + source)
+			if !pres {
+				scope.Log("Source %v not found in artifact %v",
+					source, self.leaf.Name)
+				return
+			}
+		}
+
 		request := &actions_proto.VQLCollectorArgs{}
-		err := self.repository.Compile(self.leaf, request)
+		err := self.repository.Compile(artifact_definition, request)
 		if err != nil {
 			scope.Log("Artifact %s invalid: %s",
 				strings.Join(self.prefix, "."), err.Error())
@@ -93,6 +116,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Allow the args to override the artifact defaults.
 		for k, v := range *args.ToDict() {
+			if k == "source" {
+				continue
+			}
 			_, pres := env.Get(k)
 			if !pres {
 				scope.Log(fmt.Sprintf(

@@ -44,6 +44,13 @@ var (
 	artifact_command_list = artifact_command.Command(
 		"list", "Print all artifacts")
 
+	artifact_command_show = artifact_command.Command(
+		"show", "Show an artifact")
+
+	artifact_command_show_name = artifact_command_list.Arg(
+		"name", "Name to show.").
+		HintAction(listArtifacts).String()
+
 	artifact_command_list_name = artifact_command_list.Arg(
 		"regex", "Regex of names to match.").
 		HintAction(listArtifacts).String()
@@ -358,6 +365,19 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 	return regexp.Compile(pattern)
 }
 
+func doArtifactShow() {
+	config_obj := get_config_or_default()
+	repository := getRepository(config_obj)
+
+	artifact, pres := repository.Get(*artifact_command_show_name)
+	if !pres {
+		kingpin.Fatalf("Artifact %s not found",
+			*artifact_command_show_name)
+	}
+
+	fmt.Println(artifact.Raw)
+}
+
 func doArtifactList() {
 	config_obj := get_config_or_default()
 	repository := getRepository(config_obj)
@@ -389,8 +409,7 @@ func doArtifactList() {
 		res, err := yaml.Marshal(artifact)
 		kingpin.FatalIfError(err, "Unable to encode artifact.")
 
-		fmt.Printf("Definition %s:\n***********\n%v\n",
-			artifact.Name, string(res))
+		fmt.Println(artifact.Raw)
 
 		if *artifact_command_list_verbose_count <= 1 {
 			continue
@@ -424,6 +443,9 @@ func init() {
 		switch command {
 		case artifact_command_list.FullCommand():
 			doArtifactList()
+
+		case artifact_command_show.FullCommand():
+			doArtifactShow()
 
 		case artifact_command_collect.FullCommand():
 			doArtifactCollect()

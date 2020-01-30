@@ -70,16 +70,13 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		// On windows especially we can not remove files that
 		// are opened by something else, so we keep trying for
 		// a while.
-		go func() {
-			for i := 0; i < 100; i++ {
-				err := os.Remove(tmpfile.Name())
-				if err == nil {
-					return
-				}
-
-				time.Sleep(time.Second)
+		for i := 0; i < 100; i++ {
+			err := os.Remove(tmpfile.Name())
+			if err == nil {
+				break
 			}
-		}()
+			time.Sleep(time.Second)
+		}
 	})
 	return tmpfile.Name()
 }
