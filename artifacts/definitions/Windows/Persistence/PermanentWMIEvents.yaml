@@ -16,6 +16,7 @@ parameters:
 sources:
  - precondition:
      SELECT OS from info() where OS = "windows"
+
  - queries:
      - LET FilterToConsumerBinding = SELECT * FROM foreach(
         row={
