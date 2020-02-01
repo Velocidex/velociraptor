@@ -4,8 +4,10 @@ all:
 auto:
 	go run make.go -v auto
 
-test:
+test: golden
 	go test ./...
+
+golden:
 	./output/velociraptor --config artifacts/testdata/windows/test.config.yaml \
 	     golden artifacts/testdata/server/testcases/ --env srcDir=`pwd`
 

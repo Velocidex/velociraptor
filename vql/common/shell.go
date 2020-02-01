@@ -200,7 +200,7 @@ func (self ShellPlugin) Call(
 		// Get the command status and combine with the last response.
 		select {
 		case <-ctx.Done():
-			return
+			break
 
 		case err := <-err_chan:
 			if err == nil {

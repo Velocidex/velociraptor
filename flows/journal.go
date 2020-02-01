@@ -129,7 +129,6 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 		writer = &Writer{
 			csv_writer,
 			func() {
-				fmt.Printf("Closing %v\n", log_path)
 				scope.Close()
 				csv_writer.Close()
 				fd.Close()
