@@ -1,0 +1,115 @@
+name: Windows.Detection.RemoteYara.Process
+description: |
+  Scanning process memory for signals is powerfull technique. This
+  artifact scans processes with a remote yara rule.
+  
+  The User can define a rule URL or use the default Velociraptor "Public" share:
+  https://\<server\>/public/remote.yar
+  
+  This content also provides the user the option to dump any process with hits, 
+  and the rule summary information.
+  
+  Outout of the rule is process information, Yara rule name, metadata and hit 
+  data.
+  
+author: "@mgreen27"
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: processRegex
+    description: "Process name to scan as regex. Default All."
+    default: .
+  - name: pidRegex
+    description: "Process PID to scan as regex. Default All."
+    default: .
+  - name: yaraURL
+    description: |
+        URL of yara rule to scan with. If empty we use
+        the server's public directory/remote.yar"
+  - name: collectProcess
+    description: |
+        Upload process of each successful hit for for 
+        further analysis.
+    type: bool
+  - name: printRule
+    description: "Report yara rule collection summary"
+    type: bool
+
+sources:
+  - queries:
+      - |
+        LET yara_url <= SELECT URL
+          FROM switch(
+            a={
+                SELECT yaraURL AS URL 
+                FROM scope() 
+                WHERE URL
+              },
+            b={
+                SELECT config.ServerUrls[0] + "public/remote.yar" AS URL 
+                FROM scope()
+                WHERE URL
+              },
+            c={
+                SELECT log(
+                    message="yaraURL not set and no server config."), 
+                  NULL AS URL
+                FROM info_cache
+              })
+      - |
+        LET yara_data <= SELECT Url, 
+                format(format="%s", args=Content) as Content, 
+                Response 
+              FROM http_client(
+                chunk_size=1000000, url=(yara_url[0]).URL)
+          WHERE yara_url
+      - |
+        LET me <= SELECT Pid FROM pslist(pid=getpid())
+      - |
+        LET processes <= SELECT Name as ProcessName, CommandLine, Pid
+            FROM pslist()
+            WHERE Name =~ processRegex
+                AND format(format="%d", args=Pid) =~ pidRegex
+                AND NOT Pid in me.Pid
+      - |
+        LET hits <= SELECT * FROM foreach(
+          row=processes,
+          query={
+             SELECT ProcessName, 
+                CommandLine,
+                Pid, 
+                Strings.Offset as Offsets,
+                Namespace,
+                Rule,
+                Meta,
+                Strings.Name as IOCname,
+                format(format='%#v %s', args=[Strings.Data, Strings.Data]) as IOCdata
+             FROM proc_yara(rules=yara_data.Content, pid=Pid)
+          })
+      - |
+        SELECT * FROM hits
+
+  - name: Rule
+    queries:
+      - SELECT * FROM if(
+                condition=printRule,
+                then={ SELECT * FROM yara_data }
+            )
+            
+  - name: Upload
+    queries:
+      - |
+        SELECT * FROM if(condition=collectProcess,
+            then={
+                SELECT * FROM foreach(
+                  row=hits,
+                  query={
+                    SELECT ProcessName,
+                        Pid, 
+                        format(format="%d.dmp", args=Pid) as UploadName,
+                        upload(file=FullPath,name=format(format="%d.dmp", args=Pid)) as MiniProcDump
+                    FROM proc_dump(pid=Pid)
+                    GROUP BY Pid
+                })
+            })
