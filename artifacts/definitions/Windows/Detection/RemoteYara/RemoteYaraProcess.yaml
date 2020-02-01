@@ -3,12 +3,14 @@ description: |
   Scanning process memory for signals is powerfull technique. This
   artifact scans processes with a remote yara rule.
   
-  The User can define a rule URL or use the default Velociraptor "Public" 
-  share: https://\<server\>/public/remote.yar
+  The User can define a rule URL or use the default Velociraptor "Public" share:
+  https://\<server\>/public/remote.yar
   
-  Output of the rule hits are process information, Yara rule name, metadata 
-  and hit data. This content also provides the user the option to dump any 
-  process with hits, and the rule summary information.
+  This content also provides the user the option to dump any process with hits, 
+  and the rule summary information.
+  
+  Outout of the rule is process information, Yara rule name, metadata and hit 
+  data.
   
 author: "@mgreen27"
 
@@ -94,6 +96,7 @@ sources:
                 condition=printRule,
                 then={ SELECT * FROM yara_data }
             )
+            
   - name: Upload
     queries:
       - |
@@ -107,5 +110,6 @@ sources:
                         format(format="%d.dmp", args=Pid) as UploadName,
                         upload(file=FullPath,name=format(format="%d.dmp", args=Pid)) as MiniProcDump
                     FROM proc_dump(pid=Pid)
+                    GROUP BY Pid
                 })
             })
