@@ -2,16 +2,16 @@ name: Windows.Detection.RemoteYara.Process
 description: |
   Scanning process memory for signals is powerfull technique. This
   artifact scans processes with a remote yara rule.
-  
+
   The User can define a rule URL or use the default Velociraptor "Public" share:
   https://\<server\>/public/remote.yar
-  
-  This content also provides the user the option to dump any process with hits, 
+
+  This content also provides the user the option to dump any process with hits,
   and the rule summary information.
-  
-  Outout of the rule is process information, Yara rule name, metadata and hit 
+
+  Outout of the rule is process information, Yara rule name, metadata and hit
   data.
-  
+
 author: "@mgreen27"
 
 precondition: SELECT OS From info() where OS = 'windows'
@@ -29,7 +29,7 @@ parameters:
         the server's public directory/remote.yar"
   - name: collectProcess
     description: |
-        Upload process of each successful hit for for 
+        Upload process of each successful hit for for
         further analysis.
     type: bool
   - name: printRule
@@ -42,25 +42,25 @@ sources:
         LET yara_url <= SELECT URL
           FROM switch(
             a={
-                SELECT yaraURL AS URL 
-                FROM scope() 
+                SELECT yaraURL AS URL
+                FROM scope()
                 WHERE URL
               },
             b={
-                SELECT config.ServerUrls[0] + "public/remote.yar" AS URL 
+                SELECT config.ServerUrls[0] + "public/remote.yar" AS URL
                 FROM scope()
                 WHERE URL
               },
             c={
                 SELECT log(
-                    message="yaraURL not set and no server config."), 
+                    message="yaraURL not set and no server config."),
                   NULL AS URL
-                FROM info_cache
+                FROM scope()
               })
       - |
-        LET yara_data <= SELECT Url, 
-                format(format="%s", args=Content) as Content, 
-                Response 
+        LET yara_data <= SELECT Url,
+                format(format="%s", args=Content) as Content,
+                Response
               FROM http_client(
                 chunk_size=1000000, url=(yara_url[0]).URL)
           WHERE yara_url
@@ -76,9 +76,9 @@ sources:
         LET hits <= SELECT * FROM foreach(
           row=processes,
           query={
-             SELECT ProcessName, 
+             SELECT ProcessName,
                 CommandLine,
-                Pid, 
+                Pid,
                 Strings.Offset as Offsets,
                 Namespace,
                 Rule,
@@ -96,7 +96,7 @@ sources:
                 condition=printRule,
                 then={ SELECT * FROM yara_data }
             )
-            
+
   - name: Upload
     queries:
       - |
@@ -106,7 +106,7 @@ sources:
                   row=hits,
                   query={
                     SELECT ProcessName,
-                        Pid, 
+                        Pid,
                         format(format="%d.dmp", args=Pid) as UploadName,
                         upload(file=FullPath,name=format(format="%d.dmp", args=Pid)) as MiniProcDump
                     FROM proc_dump(pid=Pid)
