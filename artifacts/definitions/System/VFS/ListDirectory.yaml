@@ -13,6 +13,9 @@ parameters:
   - name: Accessor
     default: file
 
+  - name: Depth
+    default: 0
+
 sources:
   - queries:
       - SELECT FullPath as _FullPath,
@@ -22,4 +25,6 @@ sources:
            timestamp(epoch=Mtime.Sec) as mtime,
            timestamp(epoch=Atime.Sec) as atime,
            timestamp(epoch=Ctime.Sec) as ctime
-        FROM glob(globs=Path + '/*', accessor=Accessor)
+        FROM glob(globs=Path + if(condition=atoi(string=Depth),
+             then='/**' + Depth, else='/*'),
+             accessor=Accessor)
