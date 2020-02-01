@@ -63,6 +63,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -376,6 +377,8 @@ func vfsRefreshDirectory(
 	client_path, accessor := GetClientPath(vfs_path)
 	result, err := self.CollectArtifact(ctx, MakeCollectorRequest(
 		client_id, "System.VFS.ListDirectory",
-		"Path", client_path, "Accessor", accessor))
+		"Path", client_path,
+		"Accessor", accessor,
+		"Depth", fmt.Sprintf("%v", depth)))
 	return result, err
 }
