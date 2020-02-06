@@ -104,6 +104,7 @@ func init() {
 			}
 			return result
 		},
+		ArgType: &PslistArgs{},
 		RowType: &process.Process{},
 		Doc:     "List processes",
 	})
