@@ -101,6 +101,10 @@ func GetObjects(ctx context.Context,
 	status = ntdll.NtQueryDirectoryObject(
 		dir_handle, &buffer[0], uint32(len(buffer)),
 		false, true, &index, &length)
+	if status == ntdll.STATUS_NO_MORE_ENTRIES {
+		return
+	}
+
 	if status != ntdll.STATUS_SUCCESS {
 		scope.Log("winobj: %v for %v", status, path)
 		return
