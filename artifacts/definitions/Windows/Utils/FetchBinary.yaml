@@ -77,7 +77,17 @@ sources:
         WHERE Hash.SHA256 = ExpectedHash
 
       # Find the required_tool either if in the local cache or
-      # download it (and put it in the cache for next time).
+      # download it (and put it in the cache for next time). If we
+      # have to download the file we sleep for a random time to
+      # stagger server bandwidth load.
       - SELECT * from foreach(row=required_tool, query={
-          SELECT * FROM switch(a=existing, b=download)
+          SELECT * FROM switch(
+            a=existing,
+            b={
+               SELECT rand(range=20) AS timeout
+               FROM scope()
+               WHERE log(message=format(format='Sleeping %v Seconds',
+                   args=[timeout])) AND sleep(time=timeout) AND FALSE
+            },
+            c=download)
         })

@@ -244,6 +244,39 @@ func (self _UTF16) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilte
 	}
 }
 
+type _UTF16Encode struct{}
+
+func (self _UTF16Encode) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &_Base64EncodeArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("utf16_encode: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	buf := bytes.NewBuffer(nil)
+	ints := utf16.Encode([]rune(arg.String))
+	err = binary.Write(buf, binary.LittleEndian, &ints)
+	if err != nil {
+		scope.Log("utf16_encode: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return buf.String()
+}
+
+func (self _UTF16Encode) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "utf16_encode",
+		Doc:     "Encode a string to utf16 bytes.",
+		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
+	}
+}
+
 type _Scope struct{}
 
 func (self _Scope) Call(
@@ -333,5 +366,6 @@ func init() {
 	vql_subsystem.RegisterFunction(&_ToLower{})
 	vql_subsystem.RegisterFunction(&_ToUpper{})
 	vql_subsystem.RegisterFunction(&_UTF16{})
+	vql_subsystem.RegisterFunction(&_UTF16Encode{})
 	vql_subsystem.RegisterFunction(&_GetFunction{})
 }

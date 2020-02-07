@@ -11,6 +11,10 @@ golden:
 	./output/velociraptor --config artifacts/testdata/windows/test.config.yaml \
 	     golden artifacts/testdata/server/testcases/ --env srcDir=`pwd`
 
+references:
+	./output/velociraptor vql export docs/references/vql.yaml > docs/references/vql.yaml.tmp
+	mv docs/references/vql.yaml.tmp docs/references/vql.yaml
+
 release:
 	go run make.go -v release
 

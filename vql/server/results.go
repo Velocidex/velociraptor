@@ -21,7 +21,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -73,7 +72,6 @@ func (self UploadsPlugins) Call(
 		// File uploads are stored in their own CSV file.
 		csv_file_path := artifacts.GetUploadsMetadata(
 			arg.ClientId, arg.FlowId)
-		fmt.Printf("csv_file_path %v\n", csv_file_path)
 		fd, err := file_store_factory.ReadFile(csv_file_path)
 		if err != nil {
 			scope.Log("uploads: %v", err)
