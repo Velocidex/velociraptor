@@ -81,7 +81,7 @@ sources:
       - |
         LET me <= SELECT Pid FROM pslist(pid=getpid())
       - |
-        LET whitelist <= SELECT Path
+        LET whitelist <= SELECT upcase(string=Path) AS Path
                 FROM parse_csv(filename=pathWhitelist, accessor='data')
       - |
         LET processes <= SELECT Name as ProcessName, CommandLine, Pid
@@ -89,7 +89,7 @@ sources:
             WHERE Name =~ processRegex
                 AND format(format="%d", args=Pid) =~ pidRegex
                 AND NOT Pid in me.Pid
-                AND NOT upcase(string=Exe) in upcase(string=whitelist.Path)
+                AND NOT upcase(string=Exe) in whitelist.Path
       - |
         LET hits <= SELECT * FROM foreach(
           row=processes,
