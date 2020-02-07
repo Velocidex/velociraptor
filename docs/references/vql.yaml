@@ -2448,16 +2448,16 @@
   description: Splits a string into an array based on a regexp separator.
   type: Function
   args:
-  - name: epoch
-    description: ""
-    type: int64
+  - name: string
+    description: The value to split
+    type: string
     repeated: false
-    required: false
-  - name: winfiletime
-    description: ""
-    type: int64
+    required: true
+  - name: sep
+    description: The serparator that will be used to split
+    type: string
     repeated: false
-    required: false
+    required: string
   category: basic
 - name: split_records
   description: Parses files by splitting lines into records.
