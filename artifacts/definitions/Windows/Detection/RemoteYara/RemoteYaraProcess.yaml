@@ -28,7 +28,7 @@ parameters:
     type: hidden
     default: |
       Path
-      C:\Program Files\Microsoft Security Client\
+      C:\Program Files\Microsoft Security Client\MsMpEng.exe
       C:\Program Files\Cybereason ActiveProbe\AmSvc.exe
       C:\Program Files\Common Files\McAfee\AMCore\mcshield.exe
   - name: processRegex
