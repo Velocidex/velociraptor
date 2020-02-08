@@ -18,6 +18,9 @@
 package services
 
 import (
+	"context"
+	"sync"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/users"
@@ -25,99 +28,99 @@ import (
 
 // A manager responsible for starting and shutting down all the
 // services in an orderly fashion.
-type ServicesManager struct {
-	hunt_manager      *HuntManager
-	hunt_dispatcher   *HuntDispatcher
-	user_manager      *users.UserNotificationManager
-	stats_collector   *StatsCollector
-	server_monitoring *EventTable
-	server_artifacts  *ServerArtifactsRunner
-	dyn_dns           *DynDNSService
-	interrogation     *InterrogationService
-	sanity_checker    *SanityChecks
-	vfs_service       *VFSService
-}
+type ServicesManager struct{}
 
-func (self *ServicesManager) Close() {
-	self.hunt_manager.Close()
-	self.hunt_dispatcher.Close()
-	self.user_manager.Close()
-	self.stats_collector.Close()
-	self.server_monitoring.Close()
-	self.server_artifacts.Close()
-	self.dyn_dns.Close()
-	self.interrogation.Close()
-	self.sanity_checker.Close()
-	self.vfs_service.Close()
-}
+func (self *ServicesManager) Close() {}
 
 // Start all the server services.
 func StartServices(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) (*ServicesManager, error) {
 	result := &ServicesManager{}
 
-	hunt_manager, err := startHuntManager(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	result.hunt_manager = hunt_manager
-
-	hunt_dispatcher, err := StartHuntDispatcher(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	result.hunt_dispatcher = hunt_dispatcher
-
-	user_manager, err := users.StartUserNotificationManager(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	result.user_manager = user_manager
-
-	stats_collector, err := startStatsCollector(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	result.stats_collector = stats_collector
-
-	server_monitoring, err := startServerMonitoringService(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	result.server_monitoring = server_monitoring
-
-	server_artifacts, err := startServerArtifactService(config_obj, notifier)
-	if err != nil {
-		return nil, err
-	}
-	result.server_artifacts = server_artifacts
-
-	err = StartClientMonitoringService(config_obj)
-	if err != nil {
-		return nil, err
+	if config_obj.ServerServices.HuntManager {
+		err := startHuntManager(ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	dyndns, err := startDynDNSService(config_obj)
-	if err != nil {
-		return nil, err
+	if config_obj.ServerServices.HuntDispatcher {
+		_, err := StartHuntDispatcher(ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
 	}
-	result.dyn_dns = dyndns
 
-	interrogation := startInterrogationService(config_obj)
-	result.interrogation = interrogation
-
-	sanity_checker, err := startSanityCheckService(config_obj)
-	if err != nil {
-		return nil, err
+	if config_obj.ServerServices.UserManager {
+		err := users.StartUserNotificationManager(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
 	}
-	result.sanity_checker = sanity_checker
 
-	vfs_service, err := startVFSService(config_obj)
-	if err != nil {
-		return nil, err
+	if config_obj.ServerServices.StatsCollector {
+		err := startStatsCollector(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
 	}
-	result.vfs_service = vfs_service
+
+	if config_obj.ServerServices.ServerMonitoring {
+		err := startServerMonitoringService(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if config_obj.ServerServices.ServerArtifacts {
+		err := startServerArtifactService(
+			ctx, wg, config_obj, notifier)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if config_obj.ServerServices.ClientMonitoring {
+		err := StartClientMonitoringService(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if config_obj.ServerServices.DynDns {
+		err := startDynDNSService(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if config_obj.ServerServices.Interrogation {
+		startInterrogationService(ctx, wg, config_obj)
+	}
+
+	if config_obj.ServerServices.SanityChecker {
+		err := startSanityCheckService(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if config_obj.ServerServices.VfsService {
+		err := startVFSService(
+			ctx, wg, config_obj)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return result, nil
 }

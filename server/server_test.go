@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sync"
 	"testing"
 	"time"
 
@@ -146,7 +147,11 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	t := self.T()
 
-	err := services.StartClientMonitoringService(self.config_obj)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	wg := &sync.WaitGroup{}
+	err := services.StartClientMonitoringService(ctx, wg, self.config_obj)
 	require.NoError(t, err)
 
 	new_table := &flows_proto.ArtifactCollectorArgs{
@@ -155,9 +160,8 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
-	dispatcher, err := services.StartHuntDispatcher(self.config_obj)
+	_, err = services.StartHuntDispatcher(ctx, wg, self.config_obj)
 	require.NoError(t, err)
-	defer dispatcher.Close()
 
 	// Send a foreman checkin message from client with old event
 	// table version.
@@ -197,9 +201,12 @@ func (self *ServerTestSuite) TestForeman() {
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
 
-	dispatcher, err := services.StartHuntDispatcher(self.config_obj)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	wg := &sync.WaitGroup{}
+
+	dispatcher, err := services.StartHuntDispatcher(ctx, wg, self.config_obj)
 	require.NoError(t, err)
-	defer dispatcher.Close()
 
 	// Launching the hunt on the client will result in client
 	// notification for that client only.

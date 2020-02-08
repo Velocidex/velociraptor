@@ -4,6 +4,7 @@ package services
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -32,10 +33,11 @@ var (
 
 type StatsCollector struct {
 	config_obj *config_proto.Config
-	done       chan bool
 }
 
-func (self *StatsCollector) Start() error {
+func (self *StatsCollector) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Stats Collector Service.")
 
@@ -57,53 +59,48 @@ func (self *StatsCollector) Start() error {
 	// are not very important. Rate limit to 10 clients per second.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(10)))
 
-	collect_stats := func(gauge *prometheus.GaugeVec, vql *vfilter.VQL, scope *vfilter.Scope) {
-		for {
-			row_chan := vql.Eval(context.Background(), scope)
-		run_query:
-			for {
-				select {
-				case <-self.done:
-					return
+	collect_stats := func(gauge *prometheus.GaugeVec,
+		vql *vfilter.VQL, scope *vfilter.Scope) {
+		defer wg.Done()
 
-				case row, ok := <-row_chan:
-					if !ok {
-						break run_query
-					}
-					count_any, _ := scope.Associative(row, "Count")
-					version_any, _ := scope.Associative(row, "Version")
-					gauge.WithLabelValues(version_any.(string)).
-						Set(float64(count_any.(uint64)))
-				}
+		for row := range vql.Eval(ctx, scope) {
+			count_any, _ := scope.Associative(row, "Count")
+			version_any, _ := scope.Associative(row, "Version")
+			gauge.WithLabelValues(version_any.(string)).
+				Set(float64(count_any.(uint64)))
+
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-time.After(60 * time.Second):
+				break
 			}
-
-			time.Sleep(60 * time.Second)
 		}
 	}
 
 	vql, _ := vfilter.Parse("SELECT count(items=client_id) AS Count, " +
 		"agent_information.version AS Version FROM clients() " +
 		"WHERE last_seen_at / 1000000 > now() - 60 * 60 * 24 group by Version")
+	wg.Add(1)
 	go collect_stats(one_day_active, vql, scope)
 
 	vql, _ = vfilter.Parse("SELECT count(items=client_id) AS Count, " +
 		"agent_information.version AS Version FROM clients() " +
 		"WHERE last_seen_at / 1000000 > now() - 60 * 60 * 24 * 7 group by Version")
+
+	wg.Add(1)
 	go collect_stats(seven_day_active, vql, scope)
 
 	return nil
 }
 
-func (self *StatsCollector) Close() {
-	close(self.done)
-}
-
-func startStatsCollector(config_obj *config_proto.Config) (*StatsCollector, error) {
+func startStatsCollector(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	result := &StatsCollector{
 		config_obj: config_obj,
-		done:       make(chan bool),
 	}
-
-	err := result.Start()
-	return result, err
+	return result.Start(ctx, wg)
 }

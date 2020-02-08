@@ -10,9 +10,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -48,24 +46,16 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
 	mu         sync.Mutex
-	Done       chan bool
 	notifier   *notifications.NotificationPool
-	wg         sync.WaitGroup
 
 	timeout time.Duration
 }
 
-func (self *ServerArtifactsRunner) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *ServerArtifactsRunner) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) {
+	defer wg.Done()
 
-	close(self.Done)
-
-	// Wait here until all the old queries are cancelled.
-	self.wg.Wait()
-}
-
-func (self *ServerArtifactsRunner) Start() {
 	logger := logging.GetLogger(
 		self.config_obj, &logging.FrontendComponent)
 
@@ -73,21 +63,24 @@ func (self *ServerArtifactsRunner) Start() {
 	notification, _ := self.notifier.Listen(source)
 	defer self.notifier.Notify(source)
 
-	self.process()
+	self.process(ctx, wg)
 
 	for {
 		select {
 		// Check the queues anyway every minute in case we miss the
 		// notification.
 		case <-time.After(time.Duration(60) * time.Second):
-			self.process()
+			self.process(ctx, wg)
+
+		case <-ctx.Done():
+			return
 
 		case quit := <-notification:
 			if quit {
 				logger.Info("ServerArtifactsRunner: quit.")
 				return
 			}
-			err := self.process()
+			err := self.process(ctx, wg)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
 				return
@@ -99,8 +92,9 @@ func (self *ServerArtifactsRunner) Start() {
 	}
 }
 
-func (self *ServerArtifactsRunner) process() error {
-	self.wg.Add(1)
+func (self *ServerArtifactsRunner) process(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(
 		self.config_obj, &logging.FrontendComponent)
@@ -115,11 +109,12 @@ func (self *ServerArtifactsRunner) process() error {
 		return err
 	}
 
+	wg.Add(1)
 	defer func() {
-		defer self.wg.Done()
+		defer wg.Done()
 
 		for _, task := range tasks {
-			err := self.processTask(task)
+			err := self.processTask(ctx, task)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
 			}
@@ -129,7 +124,9 @@ func (self *ServerArtifactsRunner) process() error {
 	return nil
 }
 
-func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) error {
+func (self *ServerArtifactsRunner) processTask(
+	ctx context.Context,
+	task *crypto_proto.GrrMessage) error {
 	urn := path.Join("/clients", source, "collections", task.SessionId)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(self.config_obj)
@@ -144,7 +141,7 @@ func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) er
 
 	db.UnQueueMessageForClient(self.config_obj, source, task)
 
-	self.runQuery(task, collection_context)
+	self.runQuery(ctx, task, collection_context)
 
 	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
@@ -152,6 +149,7 @@ func (self *ServerArtifactsRunner) processTask(task *crypto_proto.GrrMessage) er
 }
 
 func (self *ServerArtifactsRunner) runQuery(
+	ctx context.Context,
 	task *crypto_proto.GrrMessage,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 	self.mu.Lock()
@@ -171,13 +169,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	// Cancel the query after this deadline
 	deadline := time.After(self.timeout)
 	started := time.Now().Unix()
-	sub_ctx, cancel := context.WithCancel(context.Background())
-
-	// Cancel the context when the cancel channel is closed.
-	go func() {
-		<-self.Done
-		cancel()
-	}()
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	env := ordereddict.NewDict().
 		Set("server_config", self.config_obj).
@@ -345,28 +338,13 @@ func (self *ServerArtifactsRunner) GetWriter(
 	return row_chan
 }
 
-// Unpack the GrrMessage payload. The return value should be type asserted.
-func XXXExtractVQLCollectorArgs(message *crypto_proto.GrrMessage) (
-	*actions_proto.VQLCollectorArgs, error) {
-	if message.ArgsRdfName != "VQLCollectorArgs" {
-		return nil, errors.New("Unknown message - expected VQLCollectorArgs")
-	}
-
-	result := &actions_proto.VQLCollectorArgs{}
-	err := proto.Unmarshal(message.Args, result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-func startServerArtifactService(config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) (
-
-	*ServerArtifactsRunner, error) {
+func startServerArtifactService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config,
+	notifier *notifications.NotificationPool) error {
 	result := &ServerArtifactsRunner{
 		config_obj: config_obj,
-		Done:       make(chan bool),
 		notifier:   notifier,
 		timeout:    time.Second * time.Duration(600),
 	}
@@ -375,6 +353,8 @@ func startServerArtifactService(config_obj *config_proto.Config,
 		config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Server Artifact Runner Service")
 
-	go result.Start()
-	return result, nil
+	wg.Add(1)
+	go result.Start(ctx, wg)
+
+	return nil
 }

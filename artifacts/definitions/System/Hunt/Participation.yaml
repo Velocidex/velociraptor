@@ -5,6 +5,8 @@ description: |
 
      Note: This is an automated system hunt. You do not need to start it.
 
+type: SERVER_EVENT
+
 reports:
   - type: MONITORING_DAILY
     template: |

@@ -25,6 +25,8 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -699,7 +701,11 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	return result, err
 }
 
-func StartServer(config_obj *config_proto.Config, server_obj *server.Server) error {
+func StartServer(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config,
+	server_obj *server.Server) error {
 	bind_addr := config_obj.API.BindAddress
 	switch config_obj.API.BindScheme {
 	case "tcp":
@@ -746,15 +752,34 @@ func StartServer(config_obj *config_proto.Config, server_obj *server.Server) err
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Launched gRPC API server on %v ", bind_addr)
 
-	err = grpcServer.Serve(lis)
-	if err != nil {
-		return err
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err = grpcServer.Serve(lis)
+		if err != nil {
+			logger.Error("gRPC Server error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		<-ctx.Done()
+		logger.Info("Shutting down gRPC API server")
+		grpcServer.Stop()
+	}()
 
 	return nil
 }
 
-func StartMonitoringService(config_obj *config_proto.Config) {
+func StartMonitoringService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	bind_addr := fmt.Sprintf("%s:%d",
 		config_obj.Monitoring.BindAddress,
 		config_obj.Monitoring.BindPort)
@@ -767,13 +792,33 @@ func StartMonitoringService(config_obj *config_proto.Config) {
 		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		err := server.ListenAndServe()
-		if err != nil {
-			panic("Unable to listen on monitoring")
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("Prometheus monitoring server: ", err)
 		}
 	}()
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// Wait for context to become cancelled.
+		<-ctx.Done()
+
+		logger.Info("Shutting down Prometheus monitoring service")
+		timeout_ctx, cancel := context.WithTimeout(
+			context.Background(), 10*time.Second)
+		defer cancel()
+
+		err := server.Shutdown(timeout_ctx)
+		if err != nil {
+			logger.Error("Prometheus shutdown error ", err)
+		}
+	}()
+
 	logger.Info("Launched Prometheus monitoring server on %v ", bind_addr)
 }
