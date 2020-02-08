@@ -20,13 +20,11 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"os/signal"
 	"regexp"
 	"sort"
 	"strings"
@@ -587,25 +585,6 @@ func save_state(state *consoleState) {
 	}
 
 	fd.Write(serialized)
-}
-
-func install_sig_handler() (context.Context, context.CancelFunc) {
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func() {
-		select {
-		case <-quit:
-			cancel()
-
-		case <-ctx.Done():
-			return
-		}
-	}()
-
-	return ctx, cancel
-
 }
 
 func doConsole() {

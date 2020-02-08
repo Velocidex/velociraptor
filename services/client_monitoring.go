@@ -6,6 +6,7 @@
 package services
 
 import (
+	"context"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -171,7 +172,10 @@ func (self *ClientEventTable) Update(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func StartClientMonitoringService(config_obj *config_proto.Config) error {
+func StartClientMonitoringService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

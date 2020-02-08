@@ -28,36 +28,28 @@ import (
 type VFSService struct {
 	mu sync.Mutex
 
-	wg              sync.WaitGroup
-	config_obj      *config_proto.Config
-	download_cancel func()
-	list_cancel     func()
-	logger          *logging.LogContext
+	config_obj *config_proto.Config
+	logger     *logging.LogContext
 }
 
-func (self *VFSService) Close() {
-	// Wait for orderly shutdown.
-	self.list_cancel()
-	self.download_cancel()
-	self.wg.Wait()
-}
-
-func (self *VFSService) Start() error {
+func (self *VFSService) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
 	self.logger.Info("Starting VFS writing service.")
 
-	cancel, err := watchForFlowCompletion(self.config_obj, self.wg, "System.VFS.ListDirectory",
+	err := watchForFlowCompletion(
+		ctx, wg, self.config_obj, "System.VFS.ListDirectory",
 		self.ProcessListDirectory)
 	if err != nil {
 		return err
 	}
-	self.list_cancel = cancel
 
-	cancel, err = watchForFlowCompletion(self.config_obj, self.wg, "System.VFS.DownloadFile",
+	err = watchForFlowCompletion(
+		ctx, wg, self.config_obj, "System.VFS.DownloadFile",
 		self.ProcessDownloadFile)
 	if err != nil {
 		return err
 	}
-	self.download_cancel = cancel
 
 	return nil
 }
@@ -226,12 +218,14 @@ func getVfsPath(client_path string, accessor string) string {
 	return prefix + utils.Normalize_windows_path(client_path)
 }
 
-func startVFSService(config_obj *config_proto.Config) (
-	*VFSService, error) {
+func startVFSService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	vfs_service := &VFSService{
 		config_obj: config_obj,
 		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
 	}
 
-	return vfs_service, vfs_service.Start()
+	return vfs_service.Start(ctx, wg)
 }

@@ -1,9 +1,11 @@
 package services
 
 import (
+	"context"
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -15,8 +17,6 @@ import (
 // This service checks the running server environment for sane
 // conditions.
 type SanityChecks struct{}
-
-func (self *SanityChecks) Close() {}
 
 func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -65,9 +65,11 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func startSanityCheckService(config_obj *config_proto.Config) (
-	*SanityChecks, error) {
-	result := &SanityChecks{}
+func startSanityCheckService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 
-	return result, result.Check(config_obj)
+	result := &SanityChecks{}
+	return result.Check(config_obj)
 }

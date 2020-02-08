@@ -55,14 +55,14 @@ type HuntManager struct {
 	// hunt. Note that each writer is responsible for its own
 	// flushing etc.
 	writers    map[string]*csv.CSVWriter
-	wg         sync.WaitGroup
-	done       chan bool
 	config_obj *config_proto.Config
 }
 
-func (self *HuntManager) Start() error {
+func (self *HuntManager) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Starting hunt manager.")
+	logger.Info("Starting the hunt manager service.")
 
 	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
@@ -83,26 +83,14 @@ func (self *HuntManager) Start() error {
 	if err != nil {
 		return err
 	}
-	self.wg.Add(1)
 
+	wg.Add(1)
 	go func() {
-		defer self.wg.Done()
+		defer wg.Done()
+		defer self.Close()
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		row_chan := vql.Eval(ctx, scope)
-		for {
-			select {
-			case <-self.done:
-				return
-
-			case row, ok := <-row_chan:
-				if !ok {
-					return
-				}
-				self.ProcessRow(scope, row)
-			}
+		for row := range vql.Eval(ctx, scope) {
+			self.ProcessRow(scope, row)
 		}
 	}()
 
@@ -116,8 +104,9 @@ func (self *HuntManager) Close() {
 	for _, v := range self.writers {
 		v.Close()
 	}
-	close(self.done)
-	self.wg.Wait()
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("Shutting down hunt manager service.")
 }
 
 func (self *HuntManager) ProcessRow(
@@ -253,16 +242,15 @@ func (self *HuntManager) ProcessRow(
 	writer.Write(dict_row)
 }
 
-func startHuntManager(config_obj *config_proto.Config) (
-	*HuntManager, error) {
+func startHuntManager(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	result := &HuntManager{
 		config_obj: config_obj,
 		writers:    make(map[string]*csv.CSVWriter),
-		done:       make(chan bool),
-		wg:         sync.WaitGroup{},
 	}
-	err := result.Start()
-	return result, err
+	return result.Start(ctx, wg)
 }
 
 func huntHasLabel(config_obj *config_proto.Config,

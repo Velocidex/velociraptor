@@ -25,8 +25,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -41,7 +39,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -72,45 +69,10 @@ func PrepareFrontendMux(
 	}
 }
 
-// Starts the frontend over HTTP. Velociraptor uses its own encryption
-// protocol so using HTTP is quite safe.
-func StartFrontendHttp(
-	config_obj *config_proto.Config,
-	server_obj *Server,
-	router *http.ServeMux) error {
-	listenAddr := fmt.Sprintf(
-		"%s:%d",
-		config_obj.Frontend.BindAddress,
-		config_obj.Frontend.BindPort)
-
-	server := &http.Server{
-		Addr:     listenAddr,
-		Handler:  router,
-		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
-
-		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  500 * time.Second,
-		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  15 * time.Second,
-	}
-
-	wg := &sync.WaitGroup{}
-	InstallSignalHandler(config_obj, server_obj, server, wg)
-	server_obj.Info("Frontend is ready to handle client requests at %s", listenAddr)
-
-	err := server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		return err
-	}
-
-	wg.Wait()
-	server_obj.Info("Server stopped")
-
-	return nil
-}
-
 // Starts the frontend over HTTPS.
 func StartFrontendHttps(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *Server,
 	router http.Handler) error {
@@ -152,82 +114,45 @@ func StartFrontendHttps(
 		},
 	}
 
-	wg := &sync.WaitGroup{}
-	InstallSignalHandler(config_obj, server_obj, server, wg)
-	server_obj.Info("Frontend is ready to handle client TLS requests at %s", listenAddr)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		server_obj.Info("Frontend is ready to handle client TLS requests at %s", listenAddr)
+		atomic.StoreInt32(&healthy, 1)
 
-	err = server.ListenAndServeTLS("", "")
-	if err != nil && err != http.ErrServerClosed {
-		return err
-	}
+		err = server.ListenAndServeTLS("", "")
+		if err != nil && err != http.ErrServerClosed {
+			server_obj.Error("Frontend server error", err)
+		}
+	}()
 
-	wg.Wait()
-	server_obj.Info("Server stopped")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		server_obj.Info("Shutting down frontend")
+		atomic.StoreInt32(&healthy, 0)
+
+		time_ctx, cancel := context.WithTimeout(
+			context.Background(), 10*time.Second)
+		defer cancel()
+
+		server.SetKeepAlivesEnabled(false)
+		server_obj.NotificationPool.NotifyAll()
+		err := server.Shutdown(time_ctx)
+		if err != nil {
+			server_obj.Error("Frontend server error", err)
+		}
+		server_obj.Info("Shut down frontend")
+	}()
 
 	return nil
 }
 
-// Install a signal handler which will shutdown the server gracefully.
-func InstallSignalHandler(
-	config_obj *config_proto.Config,
-	server_obj *Server,
-	server *http.Server,
-	wg *sync.WaitGroup) {
-
-	// Wait for signal. When signal is received we shut down the
-	// server.
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-
-		// Start all the services and shut them down when we
-		// are done.
-		logger := logging.Manager.GetLogger(
-			config_obj, &logging.GUIComponent)
-
-		// When we exit from here, unwind the server.
-		defer func() {
-			atomic.StoreInt32(&healthy, 0)
-
-			// Server must shutdown in a reasonable time.
-			ctx, cancel := context.WithTimeout(
-				context.Background(), 10*time.Second)
-			defer cancel()
-
-			server.SetKeepAlivesEnabled(false)
-			logger.Info("Server is shutting down...")
-
-			// Notify all the currently connected clients we need
-			// to shut down.
-			server_obj.NotificationPool.NotifyAll()
-			err := server.Shutdown(ctx)
-			if err != nil {
-				logger.Error(
-					"Could not gracefully shutdown the server: ",
-					err)
-			}
-		}()
-
-		manager, err := services.StartServices(
-			config_obj,
-			server_obj.NotificationPool)
-		if err != nil {
-			logger.Error("Failed starting services: ", err)
-			return
-		}
-		defer manager.Close()
-
-		// Wait for the signal on this channel then return.
-		<-quit
-	}()
-
-	atomic.StoreInt32(&healthy, 1)
-}
-
 func StartTLSServer(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *Server,
 	mux http.Handler) error {
@@ -275,17 +200,39 @@ func StartTLSServer(
 	// We must have port 80 open to serve the HTTP 01 challenge.
 	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
 
-	wg := &sync.WaitGroup{}
-	InstallSignalHandler(config_obj, server_obj, server, wg)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		server_obj.Info("Frontend is ready to handle client requests using HTTPS")
+		atomic.StoreInt32(&healthy, 1)
 
-	server_obj.Info("Frontend is ready to handle client requests using HTTPS")
-	err := server.ListenAndServeTLS("", "")
-	if err != nil && err != http.ErrServerClosed {
-		return err
-	}
+		err := server.ListenAndServeTLS("", "")
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("Frontend server error", err)
+		}
+	}()
 
-	wg.Wait()
-	server_obj.Info("Server stopped")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		server_obj.Info("Stopping Frontend Server")
+		atomic.StoreInt32(&healthy, 0)
+
+		timeout_ctx, cancel := context.WithTimeout(
+			context.Background(), 10*time.Second)
+		defer cancel()
+
+		server.SetKeepAlivesEnabled(false)
+		server_obj.NotificationPool.NotifyAll()
+		err := server.Shutdown(timeout_ctx)
+		if err != nil {
+			logger.Error("Frontend shutdown error ", err)
+		}
+		server_obj.Info("Shutdown frontend")
+	}()
+
 	return nil
 }
 

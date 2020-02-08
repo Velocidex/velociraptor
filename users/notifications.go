@@ -20,6 +20,7 @@
 package users
 
 import (
+	"context"
 	"path"
 	"sync"
 	"time"
@@ -40,16 +41,28 @@ var (
 
 type UserNotificationManager struct {
 	writers              map[string]*csv.CSVWriter
-	done                 chan bool
 	config_obj           *config_proto.Config
 	scope                *vfilter.Scope
 	notification_channel chan *api_proto.UserNotification
 }
 
-func (self *UserNotificationManager) Start() error {
+func (self *UserNotificationManager) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
+
+	wg.Add(1)
 	go func() {
-		for notification := range self.notification_channel {
-			self.HandleNotification(notification)
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				self.Close()
+				return
+
+			case notification := <-self.notification_channel:
+				self.HandleNotification(notification)
+			}
 		}
 	}()
 
@@ -57,7 +70,6 @@ func (self *UserNotificationManager) Start() error {
 }
 
 func (self *UserNotificationManager) Close() {
-	close(self.done)
 	close(self.notification_channel)
 	self.scope.Close()
 	for _, v := range self.writers {
@@ -66,13 +78,7 @@ func (self *UserNotificationManager) Close() {
 }
 
 func (self *UserNotificationManager) Notify(message *api_proto.UserNotification) {
-	select {
-	case <-self.done:
-		return
-
-	default:
-		self.notification_channel <- message
-	}
+	self.notification_channel <- message
 }
 
 func (self *UserNotificationManager) HandleNotification(
@@ -110,23 +116,23 @@ func (self *UserNotificationManager) HandleNotification(
 		Set("Message", string(serialized)))
 }
 
-func StartUserNotificationManager(config_obj *config_proto.Config) (
-	*UserNotificationManager, error) {
+func StartUserNotificationManager(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	mu.Lock()
 	defer mu.Unlock()
 
 	result := &UserNotificationManager{
 		config_obj:           config_obj,
 		writers:              make(map[string]*csv.CSVWriter),
-		done:                 make(chan bool),
 		scope:                vfilter.NewScope(),
 		notification_channel: make(chan *api_proto.UserNotification),
 	}
-	err := result.Start()
 
 	if gUserNotificationManager == nil {
 		gUserNotificationManager = result
 	}
 
-	return result, err
+	return result.Start(ctx, wg)
 }

@@ -134,3 +134,22 @@ func DownloadFile(filepath string, url string) error {
 
 	return nil
 }
+
+func install_sig_handler() (context.Context, context.CancelFunc) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func() {
+		select {
+		case <-quit:
+			cancel()
+
+		case <-ctx.Done():
+			return
+		}
+	}()
+
+	return ctx, cancel
+
+}

@@ -82,7 +82,7 @@ func (self ParseJsonArray) Call(
 	arg := &ParseJsonFunctionArg{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("parse_json: %v", err)
+		scope.Log("parse_json_array: %v", err)
 		return &vfilter.Null{}
 	}
 

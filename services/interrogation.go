@@ -28,7 +28,11 @@ type InterrogationService struct {
 	cancel           func()
 }
 
-func (self *InterrogationService) Start() error {
+func (self *InterrogationService) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
+	defer wg.Done()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -50,9 +54,6 @@ func (self *InterrogationService) Start() error {
 		&logging.FrontendComponent)
 
 	vql, _ := vfilter.Parse("SELECT * FROM Artifact.Server.Internal.Interrogate()")
-	ctx, cancel := context.WithCancel(context.Background())
-	self.cancel = cancel
-
 	go func() {
 		for row := range vql.Eval(ctx, scope) {
 			row_dict, ok := row.(*ordereddict.Dict)
@@ -150,22 +151,15 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 	)
 }
 
-func (self *InterrogationService) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	if self.cancel != nil {
-		self.cancel()
-	}
-}
-
 func startInterrogationService(
-	config_obj *config_proto.Config) *InterrogationService {
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) {
 	result := &InterrogationService{
 		config_obj:       config_obj,
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
-	go result.Start()
 
-	return result
+	wg.Add(1)
+	go result.Start(ctx, wg)
 }

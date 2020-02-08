@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -157,37 +158,18 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	return mux, err
 }
 
-// Starts a HTTP Server (non encrypted) using the passed in mux. It is
-// not recommended to export the HTTP port to an external interface
-// since it is not encrypted. If you want to use HTTP you should
-// listen on localhost and port forward over ssh.
-func StartHTTPProxy(config_obj *config_proto.Config, mux http.Handler) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-	if config_obj.GUI.BindAddress != "127.0.0.1" {
-		logger.Info("GUI is not encrypted and listening on public interface. " +
-			"This is not secure. Please enable TLS.")
-	}
-
-	listenAddr := fmt.Sprintf("%s:%d",
-		config_obj.GUI.BindAddress,
-		config_obj.GUI.BindPort)
-
-	logger.WithFields(
-		logrus.Fields{
-			"listenAddr": listenAddr,
-		}).Info("GUI is ready to handle requests")
-
-	return http.ListenAndServe(listenAddr, mux)
-}
-
-func StartSelfSignedHTTPSProxy(config_obj *config_proto.Config, mux http.Handler) error {
+func StartSelfSignedHTTPSProxy(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config, mux http.Handler) {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	cert, err := tls.X509KeyPair(
 		[]byte(config_obj.Frontend.Certificate),
 		[]byte(config_obj.Frontend.PrivateKey))
 	if err != nil {
-		return err
+		logger.Error("GUI Error", err)
+		return
 	}
 
 	listenAddr := fmt.Sprintf("%s:%d",
@@ -224,7 +206,33 @@ func StartSelfSignedHTTPSProxy(config_obj *config_proto.Config, mux http.Handler
 			"listenAddr": listenAddr,
 		}).Info("GUI is ready to handle TLS requests")
 
-	return server.ListenAndServeTLS("", "")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err := server.ListenAndServeTLS("", "")
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("GUI Server error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		logger.Info("Stopping GUI Server")
+		timeout_ctx, cancel := context.WithTimeout(
+			context.Background(), 10*time.Second)
+		defer cancel()
+
+		server.SetKeepAlivesEnabled(false)
+		err := server.Shutdown(timeout_ctx)
+		if err != nil {
+			logger.Error("GUI shutdown error ", err)
+		}
+		logger.Info("Shutdown GUI")
+	}()
 }
 
 type _templateArgs struct {

@@ -450,6 +450,24 @@ message AutoExecConfig {
     repeated Artifact artifact_definitions = 2;
 }
 
+message ServerServicesConfig {
+   bool hunt_manager = 1;
+   bool hunt_dispatcher = 2;
+   bool stats_collector = 3;
+   bool server_monitoring = 4;
+   bool server_artifacts = 5;
+   bool dyn_dns = 6;
+   bool interrogation = 7;
+   bool sanity_checker = 8;
+   bool vfs_service = 9;
+   bool user_manager = 10;
+   bool client_monitoring = 11;
+   bool monitoring_service = 12;
+   bool api_server = 13;
+   bool frontend_server = 14;
+   bool gui_server = 15;
+}
+
 
 message Config {
     Version version = 8 [(sem_type) = {
@@ -496,12 +514,6 @@ message Config {
             description: "Path to store autocert certificates.",
         }];
 
-    bool DEPRECATED_disable_self_signed_ssl = 27 [(sem_type) = {
-            description: "If set this disables use of self signed SSL and allows http only "
-            "client comms and GUI console."
-            default: "false",
-        }];
-
     MonitoringConfig Monitoring = 25 [(sem_type) = {
             description: "Where to bind prometheus monitoring endpoint.",
         }];
@@ -514,4 +526,6 @@ message Config {
            description: "If this is specified we launch the binary with the given command "
            "line automatically."
         }];
+
+   ServerServicesConfig server_services = 29;
 }

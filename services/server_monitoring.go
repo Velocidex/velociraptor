@@ -273,11 +273,13 @@ func (self *EventTable) RunQuery(
 }
 
 // Bring up the server monitoring service.
-func startServerMonitoringService(config_obj *config_proto.Config) (
-	*EventTable, error) {
+func startServerMonitoringService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	artifacts := flows_proto.ArtifactCollectorArgs{
@@ -294,17 +296,12 @@ func startServerMonitoringService(config_obj *config_proto.Config) (
 		err = db.SetSubject(
 			config_obj, constants.ServerMonitoringFlowURN, &artifacts)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	logger := logging.GetLogger(
 		config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Server Monitoring Service")
-	err = GlobalEventTable.Update(config_obj, &artifacts)
-	if err != nil {
-		return nil, err
-	}
-
-	return GlobalEventTable, nil
+	return GlobalEventTable.Update(config_obj, &artifacts)
 }

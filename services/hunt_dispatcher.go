@@ -18,6 +18,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"path"
 	"sync"
@@ -73,7 +74,6 @@ type HuntDispatcher struct {
 	APIClientFactory grpc_client.APIClientFactory
 
 	hunts map[string]*api_proto.Hunt
-	done  chan bool
 	dirty bool
 }
 
@@ -160,7 +160,6 @@ func (self *HuntDispatcher) Close() {
 	atomic.SwapUint64(&self.last_timestamp, 0)
 
 	self._flush_stats()
-	close(self.done)
 }
 
 // Check for new hunts from the db. This could take a while and be
@@ -235,7 +234,10 @@ func (self *HuntDispatcher) Refresh() error {
 	return nil
 }
 
-func StartHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, error) {
+func StartHuntDispatcher(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (*HuntDispatcher, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -245,15 +247,18 @@ func StartHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, erro
 	result := &HuntDispatcher{
 		config_obj:       config_obj,
 		hunts:            make(map[string]*api_proto.Hunt),
-		done:             make(chan bool),
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 
 	// flush the hunts every 10 seconds.
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+
 		for {
 			select {
-			case <-result.done:
+			case <-ctx.Done():
+				result.Close()
 				return
 
 			case <-time.After(10 * time.Second):
@@ -262,11 +267,6 @@ func StartHuntDispatcher(config_obj *config_proto.Config) (*HuntDispatcher, erro
 		}
 	}()
 
-	err := result.Refresh()
-	if err != nil {
-		return nil, err
-	}
 	global_hunt_dispatcher = result
-
-	return result, nil
+	return result, result.Refresh()
 }

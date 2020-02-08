@@ -21,10 +21,7 @@ var (
 	ddns_service = "domains.google.com"
 )
 
-type DynDNSService struct {
-	Done chan bool
-	wg   sync.WaitGroup
-}
+type DynDNSService struct{}
 
 func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -70,12 +67,17 @@ func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 	}
 }
 
-func (self *DynDNSService) Start(config_obj *config_proto.Config) {
+func (self *DynDNSService) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) {
+
+	// Start is called in a go routine.
+	defer wg.Done()
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the DynDNS service: Updating hostname %v",
 		config_obj.Frontend.DynDns.Hostname)
-
-	defer self.wg.Done()
 
 	min_update_wait := config_obj.Frontend.DynDns.Frequency
 	if min_update_wait == 0 {
@@ -87,7 +89,7 @@ func (self *DynDNSService) Start(config_obj *config_proto.Config) {
 
 	for {
 		select {
-		case <-self.Done:
+		case <-ctx.Done():
 			return
 
 			// Do not try to update sooner than this or we
@@ -99,26 +101,21 @@ func (self *DynDNSService) Start(config_obj *config_proto.Config) {
 	}
 }
 
-func (self *DynDNSService) Close() {
-	close(self.Done)
-
-	self.wg.Wait()
-}
-
-func startDynDNSService(config_obj *config_proto.Config) (*DynDNSService, error) {
-	result := &DynDNSService{
-		Done: make(chan bool),
-	}
+func startDynDNSService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+	result := &DynDNSService{}
 
 	if config_obj.Frontend.DynDns == nil ||
 		config_obj.Frontend.DynDns.Hostname == "" {
-		return result, nil
+		return nil
 	}
 
-	result.wg.Add(1)
-	go result.Start(config_obj)
+	wg.Add(1)
+	go result.Start(ctx, wg, config_obj)
 
-	return result, nil
+	return nil
 }
 
 func GetExternalIp() (string, error) {

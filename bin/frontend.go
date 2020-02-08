@@ -19,6 +19,7 @@ package main
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -26,6 +27,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/services"
+
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -35,118 +39,199 @@ var (
 		"Disables artifact compressions").Bool()
 )
 
-func init() {
-	command_handlers = append(command_handlers, func(command string) bool {
-		if command == frontend.FullCommand() {
-			config_obj, err := get_server_config(*config_path)
-			kingpin.FatalIfError(err, "Unable to load config file")
+func doFrontend() {
+	config_obj, err := get_server_config(*config_path)
+	kingpin.FatalIfError(err, "Unable to load config file")
 
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.WithFields(logrus.Fields{
-				"version":    config_obj.Version.Version,
-				"build_time": config_obj.Version.BuildTime,
-				"commit":     config_obj.Version.Commit,
-			}).Info("Starting Frontend.")
+	// Use both context and WaitGroup to control life time of
+	// services.
+	wg := &sync.WaitGroup{}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
 
-			if *compression_flag {
-				logger.Info("Disabling artifact compression.")
-				config_obj.Frontend.DoNotCompressArtifacts = true
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.WithFields(logrus.Fields{
+		"version":    config_obj.Version.Version,
+		"build_time": config_obj.Version.BuildTime,
+		"commit":     config_obj.Version.Commit,
+	}).Info("Starting Frontend.")
+
+	if *compression_flag {
+		logger.Info("Disabling artifact compression.")
+		config_obj.Frontend.DoNotCompressArtifacts = true
+	}
+
+	// If not specified at all, start all services on this instance.
+	if config_obj.ServerServices == nil {
+		config_obj.ServerServices = &config_proto.ServerServicesConfig{
+			HuntManager:       true,
+			HuntDispatcher:    true,
+			StatsCollector:    true,
+			ServerMonitoring:  true,
+			ServerArtifacts:   true,
+			DynDns:            true,
+			Interrogation:     true,
+			SanityChecker:     true,
+			VfsService:        true,
+			UserManager:       true,
+			ClientMonitoring:  true,
+			MonitoringService: true,
+			ApiServer:         true,
+			FrontendServer:    true,
+			GuiServer:         true,
+		}
+	}
+
+	// Parse the artifacts database to detect errors early.
+	getRepository(config_obj)
+
+	// Load the assets into memory.
+	assets.Init()
+
+	// Increase resource limits.
+	server.IncreaseLimits(config_obj)
+
+	// Create a new server
+	server_obj, err := server.NewServer(config_obj)
+	kingpin.FatalIfError(err, "Unable to create server")
+	defer server_obj.Close()
+
+	// Start Server Services
+	manager, err := services.StartServices(
+		ctx, wg, config_obj,
+		server_obj.NotificationPool)
+	if err != nil {
+		logger.Error("Failed starting services: ", err)
+		return
+	}
+	defer manager.Close()
+
+	// Start monitoring.
+	if config_obj.ServerServices.MonitoringService {
+		api.StartMonitoringService(ctx, wg, config_obj)
+	}
+
+	// Start the gRPC API server.
+	if config_obj.ServerServices.ApiServer {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			err := api.StartServer(ctx, wg, config_obj, server_obj)
+			kingpin.FatalIfError(
+				err, "Unable to start API server")
+		}()
+	}
+
+	// Are we in autocert mode?
+	if config_obj.AutocertDomain != "" {
+		// For autocert we combine the GUI and
+		// frontends on the same port. The
+		// ACME protocol requires ports 80 and
+		// 443 for all services.
+		mux := http.NewServeMux()
+
+		// Add Comms handlers.
+		if config_obj.ServerServices.FrontendServer {
+			server.PrepareFrontendMux(
+				config_obj, server_obj, mux)
+		}
+
+		router, err := api.PrepareMux(config_obj, mux)
+		kingpin.FatalIfError(
+			err, "Unable to start API server")
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			err = server.StartTLSServer(
+				ctx, wg, config_obj, server_obj, router)
+			kingpin.FatalIfError(err, "StartTLSServer")
+		}()
+	} else {
+		// Otherwise by default we use self signed SSL.
+		// If the GUI and Frontend need to be on the same
+		// server we just merge the handlers.
+		if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
+			config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
+
+			mux := http.NewServeMux()
+
+			if config_obj.ServerServices.FrontendServer {
+				server.PrepareFrontendMux(
+					config_obj, server_obj, mux)
 			}
 
-			server_obj, err := server.NewServer(config_obj)
-			kingpin.FatalIfError(err, "Unable to create server")
-			defer server_obj.Close()
+			router, err := api.PrepareMux(config_obj, mux)
+			kingpin.FatalIfError(
+				err, "Unable to start API server")
 
-			// Parse the artifacts database to detect errors early.
-			getRepository(config_obj)
+			// Start comms over https.
+			if config_obj.ServerServices.FrontendServer ||
+				config_obj.ServerServices.GuiServer {
 
-			// Load the assets into memory.
-			assets.Init()
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					err = server.StartFrontendHttps(
+						ctx, wg,
+						config_obj, server_obj, router)
+					kingpin.FatalIfError(
+						err, "StartFrontendHttps")
+				}()
+			}
 
-			// Increase resource limits.
-			server.IncreaseLimits(config_obj)
+		} else {
+			// Launch a new server for the GUI.
+			if config_obj.ServerServices.GuiServer {
+				wg.Add(1)
 
-			// Start monitoring.
-			api.StartMonitoringService(config_obj)
-
-			// Start the gRPC API server.
-			go func() {
-				err := api.StartServer(config_obj, server_obj)
-				kingpin.FatalIfError(
-					err, "Unable to start API server")
-			}()
-
-			// Are we in autocert mode?
-			if config_obj.AutocertDomain != "" {
-				// For autocert we combine the GUI and
-				// frontends on the same port. The
-				// ACME protocol requires ports 80 and
-				// 443 for all services.
-				mux := http.NewServeMux()
-
-				// Add Comms handlers.
-				server.PrepareFrontendMux(config_obj, server_obj, mux)
-
-				router, err := api.PrepareMux(config_obj, mux)
-				kingpin.FatalIfError(
-					err, "Unable to start API server")
-
-				// Block here until done.
-				err = server.StartTLSServer(config_obj, server_obj, router)
-				kingpin.FatalIfError(err, "StartTLSServer")
-
-				// Should we disable SSL?
-
-			} else {
-				// Otherwise by default we use self signed SSL.
-
-				var err error
-				var router http.Handler
-
-				// If the GUI and Frontend need to be
-				// on the same server we just merge
-				// the handlers.
-				if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
-					config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
-
+				go func() {
+					defer wg.Done()
 					mux := http.NewServeMux()
-					server.PrepareFrontendMux(config_obj, server_obj, mux)
-					router, err = api.PrepareMux(config_obj, mux)
+
+					router, err := api.PrepareMux(config_obj, mux)
 					kingpin.FatalIfError(
 						err, "Unable to start API server")
 
-					// Start comms over https.
-					err = server.StartFrontendHttps(config_obj, server_obj, router)
-					kingpin.FatalIfError(err, "StartFrontendHttps")
+					// Start the GUI separately on
+					// a different port.
+					api.StartSelfSignedHTTPSProxy(
+						ctx, wg, config_obj, router)
+				}()
+			}
 
-				} else {
-					// Launch a new server for the GUI.
-					go func() {
-						mux := http.NewServeMux()
+			// Add Comms handlers if required.
+			if config_obj.ServerServices.FrontendServer {
+				wg.Add(1)
 
-						router, err = api.PrepareMux(config_obj, mux)
-						kingpin.FatalIfError(
-							err, "Unable to start API server")
-
-						// Start the GUI separately on
-						// a different port.
-						err = api.StartSelfSignedHTTPSProxy(config_obj, router)
-						kingpin.FatalIfError(
-							err, "Unable to start GUI server")
-
-					}()
-
+				go func() {
+					defer wg.Done()
 					// Launch a server for the frontend.
 					mux := http.NewServeMux()
 
-					// Add Comms handlers.
-					server.PrepareFrontendMux(config_obj, server_obj, mux)
+					server.PrepareFrontendMux(
+						config_obj, server_obj, mux)
 
 					// Start comms over https.
-					err = server.StartFrontendHttps(config_obj, server_obj, mux)
+					err := server.StartFrontendHttps(
+						ctx, wg,
+						config_obj, server_obj, mux)
 					kingpin.FatalIfError(err, "StartFrontendHttps")
-				}
+				}()
 			}
+		}
+	}
+
+	// Wait here until everything is done.
+	wg.Wait()
+}
+
+func init() {
+	command_handlers = append(command_handlers, func(command string) bool {
+		if command == frontend.FullCommand() {
+			doFrontend()
 			return true
 		}
 		return false

@@ -32,10 +32,10 @@ var (
 func doDebug() {
 	config_obj := get_config_or_default()
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting debug server on http://0.0.0.0:6060/debug/pprof")
+	logger.Info("Starting debug server on http://127.0.0.1:6060/debug/pprof")
 
 	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:6060", nil))
+		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
 	}()
 }
 
