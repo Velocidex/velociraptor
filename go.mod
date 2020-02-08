@@ -12,7 +12,6 @@ require (
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
-	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.9
 	github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403
@@ -25,7 +24,6 @@ require (
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/clbanning/mxj v1.8.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/crewjam/saml v0.0.0-20190521120225-344d075952c9
@@ -93,13 +91,15 @@ require (
 	github.com/vjeantet/grok v1.0.0
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v0.0.0-20181217150151-a0c70a3d4213
-	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad
+	golang.org/x/crypto v0.0.0-20200206161412-a0c6ece9d31a
 	golang.org/x/exp v0.0.0-20191014171548-69215a2ee97e // indirect
-	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
+	golang.org/x/mod v0.2.0 // indirect
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9
-	golang.org/x/tools v0.0.0-20191121040551-947d4aa89328 // indirect
+	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
+	golang.org/x/tools v0.0.0-20200207131002-533eb2654509 // indirect
+	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
@@ -119,7 +119,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20200201083351-4891b96ddc4b
+	www.velocidex.com/golang/vfilter v0.0.0-20200207163103-9e5a5bedcc5e
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

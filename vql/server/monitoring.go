@@ -22,7 +22,6 @@ package server
 import (
 	"context"
 	"io"
-	"path"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -64,10 +63,18 @@ func (self MonitoringPlugin) Call(
 			arg.DayName = "*"
 		}
 
+		// Allow the source to be specified in
+		// artifact_name/Source notation.
+		artifact_name := arg.Artifact
+		source := arg.Source
+		if arg.Source == "" {
+			artifact_name, source = artifacts.SplitFullSourceName(arg.Artifact)
+		}
+
 		// Figure out the mode by looking at the artifact type.
 		if arg.Mode == "" {
 			repository, _ := artifacts.GetGlobalRepository(config_obj)
-			artifact, pres := repository.Get(arg.Artifact)
+			artifact, pres := repository.Get(artifact_name)
 			if !pres {
 				scope.Log("Artifact %s not known", arg.Artifact)
 				return
@@ -83,8 +90,8 @@ func (self MonitoringPlugin) Call(
 
 		log_path := artifacts.GetCSVPath(
 			arg.ClientId, arg.DayName,
-			arg.FlowId, arg.Artifact,
-			arg.Source, mode)
+			arg.FlowId, artifact_name,
+			source, mode)
 
 		globber := make(glob.Globber)
 		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
@@ -165,9 +172,9 @@ type info struct {
 }
 
 type MonitoringPluginArgs struct {
-	ClientId []string `vfilter:"optional,field=client_id,doc=A list of client ids to watch. If not provided we watch all clients."`
-	Artifact string   `vfilter:"required,field=artifact,doc=The event artifact name to watch"`
-	Source   string   `vfilter:"optional,field=source,doc=An optional artifact named source"`
+	ClientId string `vfilter:"optional,field=client_id,doc=A list of client ids to watch. If not provided we watch all clients."`
+	Artifact string `vfilter:"required,field=artifact,doc=The event artifact name to watch"`
+	Source   string `vfilter:"optional,field=source,doc=An optional artifact named source"`
 }
 
 // The watch_monitoring plugin watches for new rows written to the
@@ -197,7 +204,32 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		file_store_factory := file_store.GetFileStore(config_obj)
+		// Allow the source to be specified in
+		// artifact_name/Source notation.
+		artifact_name := arg.Artifact
+		source := arg.Source
+		if arg.Source == "" {
+			artifact_name, source = artifacts.SplitFullSourceName(arg.Artifact)
+		}
+
+		repository, _ := artifacts.GetGlobalRepository(config_obj)
+		artifact, pres := repository.Get(artifact_name)
+		if !pres {
+			scope.Log("Artifact %s not known", arg.Artifact)
+			return
+		}
+		mode := artifacts.ModeNameToMode(artifact.Type)
+		switch mode {
+		case 0:
+			scope.Log("Unknown mode %v", artifact.Type)
+			return
+		case artifacts.MODE_CLIENT, artifacts.MODE_SERVER:
+			scope.Log("watch_monitoring only supports monitoring event artifacts")
+			return
+		}
+
+		globber := make(glob.Globber)
+		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
 
 		// dir_state contains the initial state of the log
 		// files when we first start watching. If the file
@@ -205,60 +237,25 @@ func (self WatchMonitoringPlugin) Call(
 		// events.
 		dir_state := make(state)
 
-		// The list of paths to watch.
-		watched_paths := []string{}
-
-		// If no client id is specified, we watch the journal
-		// which combine events from all clients at the same
-		// time.
-		if len(arg.ClientId) == 0 {
-			watched_paths = append(watched_paths, path.Join(
-				"journals", arg.Artifact))
-
-		} else {
-
-			// Otherwise we watch the per client log
-			// directory for each client.
-			for _, client_id := range arg.ClientId {
-				watched_paths = append(watched_paths, path.Join(
-					"clients", client_id, "monitoring",
-					arg.Artifact))
-			}
-		}
+		// Otherwise we watch the per client log
+		// directory for each client.
+		log_path := artifacts.GetCSVPath(
+			arg.ClientId, "*", "", artifact_name,
+			source, mode)
+		globber.Add(log_path, accessor.PathSplit)
 
 		// Capture the initial state of the files. We will
 		// only monitor events after this point.
-		for _, log_path := range watched_paths {
-			listing, err := file_store_factory.ListDirectory(log_path)
-			if err != nil {
-				continue
-			}
-
-			for _, item := range listing {
-				file_path := path.Join(log_path, item.Name())
-				dir_state[file_path] = info{item.ModTime(), item.Size()}
-			}
+		for item := range globber.ExpandWithContext(ctx, "", accessor) {
+			dir_state[item.FullPath()] = info{item.ModTime(), item.Size()}
 		}
 
 		// Spin forever here and emit new files or events.
 		for {
-			// Just scan the journal once.
-			if len(arg.ClientId) == 0 {
-				log_path := path.Join(
-					"journals",
-					arg.Artifact)
-				self.ScanLog(ctx, config_obj, scope,
-					dir_state, output_chan,
-					log_path, "", arg.Artifact)
-
-			} else {
-				// Scan all clients and their watched path.
-				for idx, client_id := range arg.ClientId {
-					log_path := watched_paths[idx]
-					self.ScanLog(ctx, config_obj,
-						scope, dir_state, output_chan,
-						log_path, client_id, arg.Artifact)
-				}
+			for item := range globber.ExpandWithContext(ctx, "", accessor) {
+				self.ScanLog(ctx, config_obj,
+					scope, dir_state, output_chan,
+					item, arg.ClientId, arg.Artifact)
 			}
 
 			// Wait and reparse the directory again each second.
@@ -282,79 +279,73 @@ func (self WatchMonitoringPlugin) ScanLog(
 	scope *vfilter.Scope,
 	dir_state state,
 	output_chan chan<- vfilter.Row,
-	log_path string,
+	item glob.FileInfo,
 	client_id string,
 	artifact string) {
 
+	file_path := item.FullPath()
+	last_info, pres := dir_state[file_path]
+	// This is a new file we have not seen before.
+	if !pres {
+		last_info = info{}
+	}
+
+	// Item was not modified since last time, skip it.
+	if !item.ModTime().After(last_info.age) {
+		return
+	}
+
+	// Read the file and parse events from it.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	listing, err := file_store_factory.ListDirectory(log_path)
+	fd, err := file_store_factory.ReadFile(file_path)
+	if err != nil {
+		scope.Log("Error %v: %v\n", err, file_path)
+		return
+	}
+	defer fd.Close()
+
+	// Read the headers.
+	csv_reader := csv.NewReader(fd)
+	headers, err := csv_reader.Read()
 	if err != nil {
 		return
 	}
 
-	for _, item := range listing {
-		file_path := path.Join(log_path, item.Name())
-		last_info, pres := dir_state[file_path]
-		// This is a new file we have not seen before.
-		if !pres {
-			last_info = info{}
-		}
+	// Seek to the place we left the file last time.
+	if last_info.offset > 0 {
+		csv_reader.Seek(last_info.offset)
+	}
 
-		// Item was not modified since last time, skip it.
-		if !item.ModTime().After(last_info.age) {
-			continue
-		}
-
-		// Read the file and parse events from it.
-		fd, err := file_store_factory.ReadFile(file_path)
-		if err != nil {
-			scope.Log("Error %v: %v\n", err, file_path)
-			continue
-		}
-		defer fd.Close()
-
-		// Read the headers.
-		csv_reader := csv.NewReader(fd)
-		headers, err := csv_reader.Read()
-		if err != nil {
-			continue
-		}
-
-		// Seek to the place we left the file last time.
-		if last_info.offset > 0 {
-			csv_reader.Seek(last_info.offset)
-		}
-
-	process_file:
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			default:
-				row := ordereddict.NewDict().
-					Set("ClientId", client_id).
-					Set("Artifact", artifact)
-
-				row_data, err := csv_reader.ReadAny()
-				if err != nil {
-					break process_file
-				}
-
-				for idx, row_item := range row_data {
-					if idx > len(headers) {
-						break
-					}
-					row.Set(headers[idx], row_item)
-				}
-
-				output_chan <- row
-			}
-		}
-
+	defer func() {
 		// Save the current offset for next time.
 		dir_state[file_path] = info{
 			item.ModTime(), csv_reader.ByteOffset}
+	}()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		default:
+			row_data, err := csv_reader.ReadAny()
+			if err != nil {
+				return
+			}
+
+			row := ordereddict.NewDict().
+				Set("ClientId", client_id).
+				Set("Artifact", artifact)
+
+			for idx, row_item := range row_data {
+				if idx > len(headers) {
+					break
+				}
+				row.Set(headers[idx], row_item)
+			}
+
+			output_chan <- row
+		}
 	}
 
 }
