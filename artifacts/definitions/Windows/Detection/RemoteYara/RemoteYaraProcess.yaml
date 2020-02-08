@@ -1,7 +1,7 @@
 name: Windows.Detection.RemoteYara.Process
 description: |
-  Scanning process memory for signals is powerfull technique. This
-  artifact scans processes with a remote yara rule.
+  Scanning process memory for signals is powerful technique. This
+  artefact scans processes with a remote yara rule.
 
   The User can define a rule URL or use the default Velociraptor "Public" share:
   https://\<server\>/public/remote.yar
@@ -9,7 +9,10 @@ description: |
   This content also provides the user the option to dump any process with hits,
   and the rule summary information.
 
-  Outout of the rule is process information, Yara rule name, metadata and hit
+  The user is also recommended to add any endpoint agents that may cause a false 
+  positive into the hidden parameters pathWhitelist.
+
+  Output of the rule is process information, Yara rule name, metadata and hit
   data.
 
 author: "@mgreen27"
@@ -17,6 +20,17 @@ author: "@mgreen27"
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
+  - name: pathWhitelist
+    description: |
+        Process paths to exclude. Default is common
+        AntiVirus we have seen cause false positives with 
+        signitures in memory.
+    type: hidden
+    default: |
+      Path
+      C:\Program Files\Microsoft Security Client\MsMpEng.exe
+      C:\Program Files\Cybereason ActiveProbe\AmSvc.exe
+      C:\Program Files\Common Files\McAfee\AMCore\mcshield.exe
   - name: processRegex
     description: "Process name to scan as regex. Default All."
     default: .
@@ -67,11 +81,15 @@ sources:
       - |
         LET me <= SELECT Pid FROM pslist(pid=getpid())
       - |
+        LET whitelist <= SELECT upcase(string=Path) AS Path
+                FROM parse_csv(filename=pathWhitelist, accessor='data')
+      - |
         LET processes <= SELECT Name as ProcessName, CommandLine, Pid
             FROM pslist()
             WHERE Name =~ processRegex
                 AND format(format="%d", args=Pid) =~ pidRegex
                 AND NOT Pid in me.Pid
+                AND NOT upcase(string=Exe) in whitelist.Path
       - |
         LET hits <= SELECT * FROM foreach(
           row=processes,
