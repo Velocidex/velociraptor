@@ -343,6 +343,12 @@ func startServerArtifactService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) error {
+
+	if notifier == nil {
+		return errors.New(
+			"Server artifacts service must run on the frontend.")
+	}
+
 	result := &ServerArtifactsRunner{
 		config_obj: config_obj,
 		notifier:   notifier,

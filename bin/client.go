@@ -19,8 +19,7 @@ package main
 
 import (
 	"context"
-	"os"
-	"os/signal"
+	"sync"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -35,7 +34,10 @@ var (
 	client = app.Command("client", "Run the velociraptor client")
 )
 
-func RunClient(config_path *string) {
+func RunClient(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_path *string) {
 	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
@@ -64,27 +66,38 @@ func RunClient(config_path *string) {
 	)
 	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-
 	// Wait for all services to properly start before we begin the
 	// comms.
 	executor.StartServices(config_obj, manager.ClientId, exe)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	go comm.Run(ctx)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	<-quit
+		comm.Run(ctx)
+	}()
 
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("Interrupted! Shutting down\n")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Info("Interrupted! Shutting down\n")
+	}()
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		if command == client.FullCommand() {
-			RunClient(config_path)
+			wg := &sync.WaitGroup{}
+			ctx, cancel := install_sig_handler()
+			defer cancel()
+
+			RunClient(ctx, wg, config_path)
+
+			wg.Wait()
+
 			return true
 		}
 		return false

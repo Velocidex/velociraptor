@@ -30,27 +30,24 @@ import (
 // services in an orderly fashion.
 type ServicesManager struct{}
 
-func (self *ServicesManager) Close() {}
-
 // Start all the server services.
 func StartServices(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) (*ServicesManager, error) {
-	result := &ServicesManager{}
+	notifier *notifications.NotificationPool) error {
 
 	if config_obj.ServerServices.HuntManager {
 		err := startHuntManager(ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	if config_obj.ServerServices.HuntDispatcher {
 		_, err := StartHuntDispatcher(ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -58,7 +55,7 @@ func StartServices(
 		err := users.StartUserNotificationManager(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -66,7 +63,7 @@ func StartServices(
 		err := startStatsCollector(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -74,7 +71,7 @@ func StartServices(
 		err := startServerMonitoringService(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -82,7 +79,7 @@ func StartServices(
 		err := startServerArtifactService(
 			ctx, wg, config_obj, notifier)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -90,7 +87,7 @@ func StartServices(
 		err := StartClientMonitoringService(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -98,7 +95,7 @@ func StartServices(
 		err := startDynDNSService(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -110,7 +107,7 @@ func StartServices(
 		err := startSanityCheckService(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -118,9 +115,9 @@ func StartServices(
 		err := startVFSService(
 			ctx, wg, config_obj)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return result, nil
+	return nil
 }
