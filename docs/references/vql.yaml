@@ -1566,7 +1566,7 @@
   - name: client_id
     description: A list of client ids to watch. If not provided we watch all clients.
     type: string
-    repeated: true
+    repeated: false
     required: false
   - name: artifact
     description: The event artifact name to watch
@@ -1731,6 +1731,11 @@
     required: true
   - name: accessor
     description: The accessor to use.
+    type: string
+    repeated: false
+    required: false
+  - name: messagedb
+    description: A Message database from https://github.com/Velocidex/evtx-data.
     type: string
     repeated: false
     required: false
@@ -2942,6 +2947,11 @@
     type: string
     repeated: false
     required: false
+  - name: messagedb
+    description: A Message database from https://github.com/Velocidex/evtx-data.
+    type: string
+    repeated: false
+    required: false
   category: event
 - name: watch_monitoring
   description: |
@@ -2952,7 +2962,7 @@
   - name: client_id
     description: A list of client ids to watch. If not provided we watch all clients.
     type: string
-    repeated: true
+    repeated: false
     required: false
   - name: artifact
     description: The event artifact name to watch

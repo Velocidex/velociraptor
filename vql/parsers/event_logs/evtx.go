@@ -30,6 +30,7 @@ import (
 type _ParseEvtxPluginArgs struct {
 	Filenames []string `vfilter:"required,field=filename,doc=A list of event log files to parse."`
 	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Database  string   `vfilter:"optional,field=messagedb,doc=A Message database from https://github.com/Velocidex/evtx-data."`
 }
 
 type _ParseEvtxPlugin struct{}
@@ -48,6 +49,16 @@ func (self _ParseEvtxPlugin) Call(
 		if err != nil {
 			scope.Log("parse_evtx: %s", err.Error())
 			return
+		}
+
+		var database *DatabaseEnricher
+		if arg.Database != "" {
+			database, err = NewDatabaseEnricher(arg.Database)
+			if err != nil {
+				scope.Log("parse_evtx: %s", err.Error())
+				return
+			}
+			defer database.Close()
 		}
 
 		for _, filename := range arg.Filenames {
@@ -76,12 +87,21 @@ func (self _ParseEvtxPlugin) Call(
 					records, _ := chunk.Parse(0)
 					for _, i := range records {
 						event_map, ok := i.Event.(*ordereddict.Dict)
-						if ok {
-							event, pres := event_map.Get("Event")
-							if pres {
-								output_chan <- maybeEnrichEvent(
-									event.(*ordereddict.Dict))
-							}
+						if !ok {
+							continue
+						}
+						event, pres := event_map.Get("Event")
+						if !pres {
+							continue
+						}
+
+						if database != nil {
+							output_chan <- database.Enrich(
+								event.(*ordereddict.Dict))
+
+						} else {
+							output_chan <- maybeEnrichEvent(
+								event.(*ordereddict.Dict))
 						}
 					}
 				}
