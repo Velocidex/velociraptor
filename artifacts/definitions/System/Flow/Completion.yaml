@@ -3,4 +3,4 @@ description: |
   An internal artifact that produces events for every flow completion
   in the system.
 
-type: SERVER_EVENT
+type: CLIENT_EVENT
