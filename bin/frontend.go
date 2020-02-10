@@ -51,7 +51,9 @@ func doFrontend() {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	startFrontend(ctx, wg, config_obj)
+	server, err := startFrontend(ctx, wg, config_obj)
+	kingpin.FatalIfError(err, "startFrontend")
+	defer server.Close()
 
 	// Wait here until everything is done.
 	wg.Wait()
@@ -61,7 +63,7 @@ func doFrontend() {
 func startFrontend(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) {
+	config_obj *config_proto.Config) (*server.Server, error) {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
 		"version":    config_obj.Version.Version,
@@ -113,7 +115,6 @@ func startFrontend(
 		// Create a new server
 		server_obj, err = server.NewServer(config_obj)
 		kingpin.FatalIfError(err, "Unable to create server")
-		defer server_obj.Close()
 
 		notifier = server_obj.NotificationPool
 	}
@@ -123,7 +124,7 @@ func startFrontend(
 		ctx, wg, config_obj, notifier)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
-		return
+		return nil, err
 	}
 
 	// Start monitoring.
@@ -146,7 +147,7 @@ func startFrontend(
 	// The below configures the frontend or gui services.
 	if !config_obj.ServerServices.FrontendServer &&
 		!config_obj.ServerServices.GuiServer {
-		return
+		return server_obj, nil
 	}
 
 	// Are we in autocert mode? There are special requirements in
@@ -164,6 +165,8 @@ func startFrontend(
 	} else {
 		startSelfSignedFrontend(ctx, wg, config_obj, server_obj)
 	}
+
+	return server_obj, nil
 }
 
 // When the GUI and Frontend share the same port we start them with

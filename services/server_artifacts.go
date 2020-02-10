@@ -60,7 +60,11 @@ func (self *ServerArtifactsRunner) Start(
 		self.config_obj, &logging.FrontendComponent)
 
 	// Listen for notifications from the server.
-	notification, _ := self.notifier.Listen(source)
+	notification, err := self.notifier.Listen(source)
+	if err != nil {
+		logger.Error("ServerArtifactsRunner", err)
+		return
+	}
 	defer self.notifier.Notify(source)
 
 	self.process(ctx, wg)
@@ -219,7 +223,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
-	for row_idx, query := range arg.Query {
+	for _, query := range arg.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
 			return err
@@ -253,6 +257,8 @@ func (self *ServerArtifactsRunner) runQuery(
 			}
 		}
 
+		row_idx := 0
+
 	process_query:
 		for {
 			select {
@@ -276,6 +282,7 @@ func (self *ServerArtifactsRunner) runQuery(
 					break process_query
 				}
 				if write_chan != nil {
+					row_idx += 1
 					write_chan <- row
 				}
 			}
