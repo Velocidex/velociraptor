@@ -35,7 +35,9 @@ sources:
         FROM read_file(filenames=FullPath)
 
       - SELECT FullPath,
-            XML.Task.Actions.Exec.Command AS Command,
-            XML.Task.Actions.ComHandler.ClassId AS ComHandler,
-            XML.Task.Principals.Principal.UserId as UserId, XML AS _XML
+            XML.Task.Actions.Exec.Command as Command,
+            XML.Task.Actions.Exec.Arguments as Arguments,
+            XML.Task.Actions.ComHandler.ClassId as ComHandler,
+            XML.Task.Principals.Principal.UserId as UserId,
+            XML as _XML
         FROM foreach(row=Uploads, query=parse_task)
