@@ -129,7 +129,7 @@ func (self _SRUMLookupId) Call(
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
-		scope.Log("Parsd %v successfully with %v records", arg.Filename,
+		scope.Log("Parsed %v successfully with %v records", arg.Filename,
 			len(lookup_map))
 	}
 
