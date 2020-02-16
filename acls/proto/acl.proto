@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+
+package proto;
+
+message ApiClientACL {
+
+  bool all_query = 1 [(sem_type) = {
+    description: "Provides arbitrary query level access.",
+  }];
+
+  repeated string publish_queues = 2 [(sem_type)= {
+    description: "List of queues the client can publish to.",
+  }];
+}

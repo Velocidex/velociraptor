@@ -37,6 +37,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -597,6 +598,61 @@ func (self *ApiServer) SetArtifactFile(
 	return &api_proto.APIResponse{}, nil
 }
 
+func (self *ApiServer) WriteEvent(
+	ctx context.Context,
+	in *actions_proto.VQLResponse) (*empty.Empty, error) {
+
+	// Get the TLS context from the peer and verify its
+	// certificate.
+	peer, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("cant get peer info")
+	}
+
+	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
+	if !ok {
+		return nil, errors.New("unable to get credentials")
+	}
+
+	// Authenticate API clients using certificates.
+	for _, peer_cert := range tlsInfo.State.PeerCertificates {
+		chains, err := peer_cert.Verify(
+			x509.VerifyOptions{Roots: self.ca_pool})
+		if err != nil {
+			return nil, err
+		}
+
+		if len(chains) == 0 {
+			return nil, errors.New("no chains verified")
+		}
+
+		peer_name := peer_cert.Subject.CommonName
+
+		// Check that the principal is allowed to push to the queue.
+		ok, err := acls.CheckAccess(self.config, peer_name,
+			acls.PUBLISH, in.Query.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, errors.New("Permission denied: PUBLISH " + peer_name + " to " + in.Query.Name)
+		}
+
+		flows.GJournalWriter.Channel <- &flows.Event{
+			Config:    self.config,
+			Timestamp: time.Now(),
+			ClientId:  peer_name,
+			QueryName: in.Query.Name,
+			Response:  in.Response,
+			Columns:   in.Columns,
+		}
+		return &empty.Empty{}, nil
+	}
+
+	return nil, errors.New("no peer certs?")
+}
+
 func (self *ApiServer) Query(
 	in *actions_proto.VQLCollectorArgs,
 	stream api_proto.API_QueryServer) error {
@@ -626,6 +682,16 @@ func (self *ApiServer) Query(
 		}
 
 		peer_name := peer_cert.Subject.CommonName
+
+		// Check that the principal is allowed to issue queries.
+		ok, err := acls.CheckAccess(self.config, peer_name, acls.QUERY)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			return errors.New("Permission denied: QUERY " + peer_name)
+		}
 
 		// Cert is good enough for us, run the query.
 		return streamQuery(self.config, in, stream, peer_name)

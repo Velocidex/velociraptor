@@ -267,9 +267,6 @@ service API {
         };
     }
 
-    // Streaming free form VQL - Not available over http.
-    rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
-
     // Server Monitoring Artifacts - manage the Server Monitoring
     // Service..
     rpc GetServerMonitoringState(google.protobuf.Empty) returns (ArtifactCollectorArgs) {
@@ -319,4 +316,13 @@ service API {
             body: "*",
         };
     }
+
+
+    // The below are API client methods - not available over HTTP
+
+    // Streaming free form VQL.
+    rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}
+
+    // Push monitoring event to the server.
+    rpc WriteEvent(VQLResponse) returns (google.protobuf.Empty) {}
 }

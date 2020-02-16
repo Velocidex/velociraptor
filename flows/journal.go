@@ -12,6 +12,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -78,7 +79,13 @@ func NewJournalWriter() *JournalWriter {
 
 	go func() {
 		for event := range result.Channel {
-			result.WriteEvent(event)
+			err := result.WriteEvent(event)
+			if err != nil {
+				logging.GetLogger(event.Config,
+					&logging.FrontendComponent).
+					Error(fmt.Sprintf(
+						"Unable to write event: %v", err))
+			}
 		}
 	}()
 
