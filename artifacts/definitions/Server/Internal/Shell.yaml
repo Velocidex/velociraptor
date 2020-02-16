@@ -1,0 +1,4 @@
+name: Server.Internal.Shell
+description: An Internal artifact for running interactive shell commands.
+
+type: CLIENT_EVENT

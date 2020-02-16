@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -41,7 +42,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/urns"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -89,7 +89,7 @@ func shell_executor(config_obj *config_proto.Config,
 		},
 		Query: []*actions_proto.VQLRequest{
 			&actions_proto.VQLRequest{
-				Name: "Shell",
+				Name: "Server.Internal.Shell",
 				VQL: "SELECT now() as Timestamp, Argv, Stdout, " +
 					"Stderr, ReturnCode FROM execve(" +
 					"argv=parse_json(data=Argv).Argv)",
@@ -97,35 +97,47 @@ func shell_executor(config_obj *config_proto.Config,
 		},
 	}
 
-	// Obfuscate the artifact from the client. It will be
-	// automatically deobfuscated when the client replies to the
-	// monitoring flow.
-	artifacts.Obfuscate(config_obj, vql_request)
+	wg := &sync.WaitGroup{}
 
-	urn := urns.BuildURN(
-		"clients", *shell_client,
-		"flows", constants.MONITORING_WELL_KNOWN_FLOW)
+	// There is a race condition here - it takes a short time for
+	// watch_monitoring to get set up and the client may return
+	// results before then.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	err = flows.QueueMessageForClient(
-		config_obj, *shell_client,
-		&crypto_proto.GrrMessage{
-			SessionId:       urn,
-			RequestId:       processVQLResponses,
-			VQLClientAction: vql_request})
-	kingpin.FatalIfError(err, "Sending client message ")
+		// Wait until the response arrives. The client may not be
+		// online so this may block indefinitely!
+		// TODO: Implement a timeout for shell commands.
+		get_responses(ctx, config_obj, *shell_client)
+	}()
 
-	api_client_factory := grpc_client.GRPCAPIClient{}
-	client, cancel := api_client_factory.GetAPIClient(config_obj)
-	defer cancel()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// Obfuscate the artifact from the client. It will be
+		// automatically deobfuscated when the client replies to the
+		// monitoring flow.
+		artifacts.Obfuscate(config_obj, vql_request)
 
-	_, err = client.NotifyClients(context.Background(),
-		&api_proto.NotificationRequest{ClientId: *shell_client})
-	kingpin.FatalIfError(err, "Sending client message ")
+		err = flows.QueueMessageForClient(
+			config_obj, *shell_client,
+			&crypto_proto.GrrMessage{
+				SessionId:       constants.MONITORING_WELL_KNOWN_FLOW,
+				RequestId:       processVQLResponses,
+				VQLClientAction: vql_request})
+		kingpin.FatalIfError(err, "Sending client message ")
 
-	// Wait until the response arrives. The client may not be
-	// online so this may block indefinitely!
-	// TODO: Implement a timeout for shell commands.
-	get_responses(ctx, config_obj, *shell_client)
+		api_client_factory := grpc_client.GRPCAPIClient{}
+		client, cancel := api_client_factory.GetAPIClient(config_obj)
+		defer cancel()
+
+		_, err = client.NotifyClients(context.Background(),
+			&api_proto.NotificationRequest{ClientId: *shell_client})
+		kingpin.FatalIfError(err, "Sending client message ")
+	}()
+
+	wg.Wait()
 }
 
 // Create a monitoring event query to receive shell responses and
@@ -160,7 +172,7 @@ func get_responses(ctx context.Context,
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(`SELECT ReturnCode, Stdout, Stderr, Timestamp,
-           Argv FROM watch_monitoring(client_id=ClientId, artifact='Shell')`)
+           Argv FROM watch_monitoring(client_id=ClientId, artifact='Server.Internal.Shell')`)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse VQL Query")
 	}
@@ -213,6 +225,11 @@ func doShell() {
 	if err != nil {
 		config_obj = config.GetDefaultConfig()
 	}
+
+	// Preload the repository before we start querying it. Loading
+	// the repository later will result in a race condition.
+	_, err = artifacts.GetGlobalRepository(config_obj)
+	kingpin.FatalIfError(err, "Unable load global repository")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

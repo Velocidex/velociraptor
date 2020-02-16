@@ -653,6 +653,7 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 			self.config_obj, job.Source, job.ForemanCheckin)
 		return
 	}
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
 	collection_context, pres := self.context_map[job.SessionId]
 	if !pres {
@@ -660,13 +661,14 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 
 		// Only process real flows.
 		if !strings.HasPrefix(job.SessionId, "F.") {
+			logger.Error(fmt.Sprintf(
+				"Invalid job SessionId %v", job.SessionId))
 			return
 		}
 
 		collection_context, err = LoadCollectionContext(
 			self.config_obj, job.Source, job.SessionId)
 		if err != nil {
-			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
 			db, err := datastore.GetDB(self.config_obj)
