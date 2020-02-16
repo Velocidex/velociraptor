@@ -6,11 +6,10 @@ package mock_proto
 
 import (
 	context "context"
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
+	reflect "reflect"
 	proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto0 "www.velocidex.com/golang/velociraptor/api/proto"
 	proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -758,4 +757,24 @@ func (mr *MockAPIClientMockRecorder) VFSStatDownload(arg0, arg1 interface{}, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSStatDownload", reflect.TypeOf((*MockAPIClient)(nil).VFSStatDownload), varargs...)
+}
+
+// WriteEvent mocks base method
+func (m *MockAPIClient) WriteEvent(arg0 context.Context, arg1 *proto.VQLResponse, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "WriteEvent", varargs...)
+	ret0, _ := ret[0].(*empty.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WriteEvent indicates an expected call of WriteEvent
+func (mr *MockAPIClientMockRecorder) WriteEvent(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteEvent", reflect.TypeOf((*MockAPIClient)(nil).WriteEvent), varargs...)
 }
