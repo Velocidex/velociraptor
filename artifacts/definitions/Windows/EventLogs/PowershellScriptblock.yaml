@@ -7,12 +7,15 @@ description: |
   lifecycle. A valuable hunt is to search Scriptblock logs for signs of 
   malicious content.
   
-  There are several parameter's availible for search leveraging regex.    
+  There are several parameter's availible for search leveraging regex. 
+    - dateAfter enables search for events after this date.  
+    - dateBefore enables search for events before this date.   
     - SearchStrings enables regex search over scriptblock text field.  
     - stringWhiteList enables a regex whitelist for scriptblock text field.  
-    - pathWhitelist enables a regex whitelist for path of scriptblock.  
-    - dateAfter enables search for events after this date.  
-    - dateBefore enables search for events before this date.  
+    - pathWhitelist enables a regex whitelist for path of scriptblock. 
+    - LogLevel enables searching on type of log. Default is Warning level 
+      which is logged even if ScriptBlock logging is turned off when 
+      suspicious keywords detected in Powershell interpreter.   
   
 
 author: Matt Green - @mgreen27
@@ -20,28 +23,45 @@ author: Matt Green - @mgreen27
 parameters:
   - name: eventLog
     default: C:\Windows\system32\winevt\logs\Microsoft-Windows-PowerShell%4Operational.evtx
+  - name: dateAfter
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: dateBefore
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
   - name: searchStrings
     description: "regex search over scriptblock text field."
-    default: (?i).
-  - name: dateAfter
-    description: "search for events after this date."
-    type: timestamp
-    default: "2000-01-01"
-  - name: dateBefore
-    description: "search for events before this date."
-    type: timestamp
-    default: "2029-12-31"
   - name: stringWhitelist
-    description: "search for events before this date."
-    default: "(?i)Microsoft Corporation"
+    description: "Regex of string to witelist"
   - name: pathWhitelist
-    description: "search for events before this date."
-    default: "(?i)CL_Utility.ps1"
-
-
+    description: "Regex of path to whitelist."
+    
+  - name: LogLevel
+    description: "Log level. Warning is Powershell default bad keyword list."
+    type: choices
+    default: Warning
+    choices:
+       - All
+       - Warning
+       - Verbose
+  - name: LogLevelMap
+    type: hidden
+    default: |
+      Choice,Regex
+      All,"."
+      Warning,"3"
+      Verbose,"5"
+      
+      
 sources:
   - name: PowershellScriptBlock
     queries:
+      - LET time <= SELECT format(format="%v", args=Regex) as value
+            FROM parse_csv(filename=LogLevelMap, accessor="data")
+            WHERE Choice=LogLevel LIMIT 1
+      - LET LogLevelRegex <= SELECT format(format="%v", args=Regex) as value
+            FROM parse_csv(filename=LogLevelMap, accessor="data")
+            WHERE Choice=LogLevel LIMIT 1
       - LET files = SELECT * FROM glob(
             globs=eventLog)
       - SELECT *
@@ -59,12 +79,18 @@ sources:
               System.Opcode as Opcode,
               System.Task as Task
             FROM parse_evtx(filename=FullPath)
-            WHERE EventTime > timestamp(string=dateAfter)
-                and EventTime < timestamp(string=dateBefore)
-                and System.EventID.Value = 4104
-                and ScriptBlockText =~ searchStrings
-                and not ScriptBlockText =~ stringWhitelist
-                and not Path =~ pathWhitelist
+            WHERE System.EventID.Value = 4104 and
+                if(condition=dateAfter, then=EventTime > timestamp(string=dateAfter),
+                 else=TRUE) and
+                if(condition=dateBefore, then=EventTime < timestamp(string=dateBefore),
+                 else=TRUE) and
+                format(format="%d", args=System.Level) =~ LogLevelRegex.value[0] and
+                if(condition=searchStrings, then=ScriptBlockText =~ searchStrings,
+                 else=TRUE) and
+                if(condition=stringWhitelist, then=not ScriptBlockText =~ stringWhitelist,
+                 else=TRUE) and
+                if(condition=pathWhitelist, then=not Path =~ pathWhitelist,
+                 else=TRUE)
         })
 
 reports:
