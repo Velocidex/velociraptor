@@ -1,0 +1,119 @@
+name: Windows.Timeline.Prefetch
+description: |
+  Windows keeps a cache of prefetch files. When an executable is run,
+  the system records properties about the executable to make it faster
+  to run next time. By parsing this information we are able to
+  determine when binaries are run in the past. On Windows10 we can see
+  the last 8 execution times and creation time (9 potential executions).  
+    
+  This artefact is a timelined output version of the standard Prefetch 
+  artifact. There are several parameter's availible.  
+    - dateAfter enables search for prefetch evidence after this date.  
+    - dateBefore enables search for prefetch evidence before this date.   
+    - binaryRegex enables to filter on binary name, e.g evil.exe.  
+    - hashRegex enables to filter on prefetch hash.     
+
+reference:
+  - https://www.forensicswiki.org/wiki/Prefetch
+
+author: matthew.green@cybereason.com
+
+parameters:
+    - name: prefetchGlobs
+      default: C:\Windows\Prefetch\*.pf
+    - name: dateAfter
+      description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+      type: timestamp
+    - name: dateBefore
+      description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+      type: timestamp
+    - name: binaryRegex
+      description: "Regex of executable name."
+    - name: hashRegex
+      description: "Regex of prefetch hash."
+    - name: timeline
+      type: bool
+      description: Flattern output for timeline and include creation time as an execution.
+      
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - queries:
+      - LET hostname <= SELECT Fqdn FROM info()
+      - |
+        // Parse prefetch files and apply non time filters
+        LET pf <= SELECT * FROM foreach(
+              row={
+                 SELECT * FROM glob(globs=prefetchGlobs)
+              },
+              query={
+                SELECT
+                    Executable,
+                    FileSize,
+                    Hash,
+                    Version,
+                    LastRunTimes,
+                    RunCount,
+                    // FilesAccessed, 
+                    FullPath, 
+                    Name AS PrefetchFileName,
+                    timestamp(epoch=Ctime.sec) as CreationTime,
+                    timestamp(epoch=Mtime.sec) as ModificationTime
+                 FROM prefetch(filename=FullPath)
+                 WHERE  
+                    if(condition=binaryRegex, then= Executable =~ binaryRegex,
+                    else=TRUE) AND
+                    if(condition=hashRegex, then= Hash =~ hashRegex,
+                    else=TRUE)
+              })
+      - |
+        // Flattern and filter on time. 
+        LET executionTimes = SELECT * FROM flatten(
+                query = { 
+                    SELECT *,
+                        FullPath as FilteredPath,
+                        LastRunTimes as ExecutionTime
+                    FROM pf 
+                })
+            WHERE 
+                if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
+                    else=TRUE) AND
+                if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
+                    else=TRUE)
+      - |
+        LET creationTimes = SELECT * FROM flatten(
+                query = { 
+                    SELECT *,
+                        FullPath as FilteredPath,
+                        CreationTime as ExecutionTime
+                    FROM pf 
+                    WHERE RunCount > 8
+                })
+            WHERE
+                if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
+                    else=TRUE) AND
+                if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
+                        else=TRUE)
+            GROUP BY ExecutionTime
+                        
+      - |
+        // Output results ready for timeline
+        LET flatOutput = SELECT 
+                    ExecutionTime as event_time,
+                    hostname.Fqdn[0] as hostname,
+                    "Prefetch" as parser,
+                    "Evidence of Execution: " + Executable + format(format=" Prefetch run count %v", args=RunCount) as message,
+                    FilteredPath as source,
+                    Executable as file_name,
+                    CreationTime as prefetch_ctime,
+                    ModificationTime as prefetch_mtime,
+                    FileSize as prefetch_size,
+                    Hash as prefetch_hash,
+                    Version as prefetch_version, 
+                    PrefetchFileName as prefetch_file,
+                    RunCount as prefetch_count 
+            FROM chain(
+                    a = { SELECT * FROM executionTimes },
+                    b = { SELECT * FROM creationTimes  })
+      - SELECT * FROM flatOutput
+              
