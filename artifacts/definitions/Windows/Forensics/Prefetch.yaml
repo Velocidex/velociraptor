@@ -1,4 +1,4 @@
-name: Custom.Windows.Forensics.Prefetch
+name: Windows.Forensics.Prefetch
 description: |
   Windows keeps a cache of prefetch files. When an executable is run,
   the system records properties about the executable to make it faster
