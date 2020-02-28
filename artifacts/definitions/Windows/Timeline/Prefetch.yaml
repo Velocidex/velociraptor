@@ -31,9 +31,6 @@ parameters:
       description: "Regex of executable name."
     - name: hashRegex
       description: "Regex of prefetch hash."
-    - name: timeline
-      type: bool
-      description: Flattern output for timeline and include creation time as an execution.
       
 precondition: SELECT OS From info() where OS = 'windows'
 
