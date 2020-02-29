@@ -27,7 +27,7 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 			member_obj, _ := args.Get(member)
 			lazy_v, ok := member_obj.(vfilter.LazyExpr)
 			if ok {
-				member_obj = lazy_v.Reduce()
+				member_obj = lazy_v.ToStoredQuery(scope)
 			}
 
 			query, ok := member_obj.(vfilter.StoredQuery)

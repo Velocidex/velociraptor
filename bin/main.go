@@ -149,7 +149,7 @@ func get_config_or_default() *config_proto.Config {
 
 func init() {
 	// Just display everything in UTC.
-	os.Setenv("TZ", "Z")
+	os.Setenv("TZ", "UTC")
 }
 
 func main() {
