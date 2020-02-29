@@ -128,6 +128,7 @@ func GetDefaultConfig() *config_proto.Config {
 				// Essential for client resource telemetry.
 				"Generic.Client.Stats",
 			},
+			ExpectedClients: 10000,
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",

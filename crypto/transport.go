@@ -356,8 +356,8 @@ func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, er
 		private_key:         private_key,
 		source:              cert.Subject.CommonName,
 		public_key_resolver: NewServerPublicKeyResolver(config_obj),
-		output_cipher_cache: cache.NewLRUCache(1000),
-		input_cipher_cache:  cache.NewLRUCache(1000),
+		output_cipher_cache: cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
+		input_cipher_cache:  cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
 	}, nil

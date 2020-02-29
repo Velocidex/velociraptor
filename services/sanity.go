@@ -44,6 +44,10 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 		}
 	}
 
+	if config_obj.Frontend.ExpectedClients == 0 {
+		config_obj.Frontend.ExpectedClients = 10000
+	}
+
 	if config_obj.Frontend.PublicPath == "" {
 		return errors.New("Frontend is missing a public_path setting. This is required to serve third party VQL plugins.")
 	}
