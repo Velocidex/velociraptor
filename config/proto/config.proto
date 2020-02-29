@@ -373,6 +373,10 @@ message FrontendConfig {
     repeated string default_client_monitoring_artifacts = 14 [(sem_type) ={
             description: "The initial set of client monitoring artifacts."
         }];
+
+    int64 expected_clients = 15 [(sem_type) = {
+            description: "Expected number of clients in this deployment (default 10000)",
+        }];
 }
 
 

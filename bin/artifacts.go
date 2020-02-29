@@ -47,7 +47,7 @@ var (
 	artifact_command_show = artifact_command.Command(
 		"show", "Show an artifact")
 
-	artifact_command_show_name = artifact_command_list.Arg(
+	artifact_command_show_name = artifact_command_show.Arg(
 		"name", "Name to show.").
 		HintAction(listArtifacts).String()
 
