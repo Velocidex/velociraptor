@@ -193,7 +193,9 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
 	config_obj.Client.LocalBuffer.DiskSize = 10
-	config_obj.Client.LocalBuffer.Filename = tmpfile.Name()
+	config_obj.Client.LocalBuffer.FilenameLinux = tmpfile.Name()
+	config_obj.Client.LocalBuffer.FilenameWindows = tmpfile.Name()
+	config_obj.Client.LocalBuffer.FilenameDarwin = tmpfile.Name()
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1
 

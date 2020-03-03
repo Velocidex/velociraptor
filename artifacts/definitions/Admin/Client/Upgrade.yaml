@@ -20,7 +20,7 @@ sources:
       # Wait a random amount of time so this can be run in a
       # hunt. Otherwise all clients will attempt to download the same
       # file at the same time probably overloading the server.
-      - LET _ = <= SELECT sleep(time=rand(range=600)) FROM scope()
+      - LET _ <= SELECT sleep(time=rand(range=600)) FROM scope()
 
       - SELECT * from foreach(
          row={

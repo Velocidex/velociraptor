@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
@@ -259,7 +260,20 @@ func (self *FileBasedRingBuffer) Commit() {
 func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
-	filename := os.ExpandEnv(config_obj.Client.LocalBuffer.Filename)
+
+	var filename string
+
+	switch runtime.GOOS {
+	case "windows":
+		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
+	case "linux":
+		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
+	case "darwin":
+		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
+	default:
+		return nil, errors.New("Unsupport platform")
+	}
+
 	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		return nil, err

@@ -73,9 +73,11 @@ func GetDefaultConfig() *config_proto.Config {
 			// write these to disk so we can send them
 			// next time we are online.
 			LocalBuffer: &config_proto.RingBufferConfig{
-				MemorySize: 50 * 1024 * 1024,
-				DiskSize:   1024 * 1024 * 1024,
-				Filename:   "/tmp/Velociraptor_Buffer.bin",
+				MemorySize:      50 * 1024 * 1024,
+				DiskSize:        1024 * 1024 * 1024,
+				FilenameLinux:   "/tmp/Velociraptor_Buffer.bin",
+				FilenameWindows: "$TEMP/Velociraptor_Buffer.bin",
+				FilenameDarwin:  "/tmp/Velociraptor_Buffer.bin",
 			},
 
 			// Specific instructions for the
