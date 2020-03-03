@@ -84,9 +84,23 @@ message RingBufferConfig {
        description: "How many bytes to store in the ring buffer on disk (0 mean no disk file)."
     }];
 
+    // Deprecated
     string filename = 3 [(sem_type) = {
        description: "Name of file to store the ring buffer in (if empty we do not use a file)."
     }];
+
+    string filename_linux = 4 [(sem_type) = {
+       description: "Name of file to store the ring buffer in (if empty we do not use a file)."
+    }];
+
+    string filename_windows = 5 [(sem_type) = {
+       description: "Name of file to store the ring buffer in (if empty we do not use a file)."
+    }];
+
+    string filename_darwin = 6 [(sem_type) = {
+       description: "Name of file to store the ring buffer in (if empty we do not use a file)."
+    }];
+
 }
 
 message ClientConfig {
@@ -376,6 +390,10 @@ message FrontendConfig {
 
     int64 expected_clients = 15 [(sem_type) = {
             description: "Expected number of clients in this deployment (default 10000)",
+        }];
+
+    string run_as_user = 16 [(sem_type) = {
+            description: "The user that the frontend should run as. If set we refuse to run as a different user.",
         }];
 }
 

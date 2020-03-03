@@ -17,10 +17,10 @@ sources:
  - precondition:
      SELECT OS from info() where OS = "windows"
 
- - queries:
+   queries:
      - LET FilterToConsumerBinding = SELECT * FROM foreach(
         row={
-                SELECT * 
+                SELECT *
                 FROM parse_csv(filename=namespaces, accessor='data')
         },
         query={
@@ -33,7 +33,7 @@ sources:
 
      - SELECT * FROM foreach(
             row={
-                    SELECT * 
+                    SELECT *
                     FROM parse_csv(filename=namespaces, accessor='data')
             },
             query={

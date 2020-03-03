@@ -19,9 +19,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os/user"
 	"sync"
 
+	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
@@ -64,6 +67,12 @@ func startFrontend(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*server.Server, error) {
+
+	err := checkFrontendUser(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
 		"version":    config_obj.Version.Version,
@@ -108,7 +117,6 @@ func startFrontend(
 
 	var notifier *notifications.NotificationPool
 	var server_obj *server.Server
-	var err error
 
 	if config_obj.ServerServices.FrontendServer ||
 		config_obj.ServerServices.ApiServer {
@@ -280,6 +288,26 @@ func startAutoCertFrontend(
 			ctx, wg, config_obj, server_obj, router)
 		kingpin.FatalIfError(err, "StartTLSServer")
 	}()
+}
+
+func checkFrontendUser(config_obj *config_proto.Config) error {
+	if config_obj.Frontend.RunAsUser == "" {
+		return nil
+	}
+
+	user, err := user.Current()
+	if err != nil {
+		return err
+	}
+
+	if user.Username != config_obj.Frontend.RunAsUser {
+		return errors.New(fmt.Sprintf(
+			"Velociraptor should be running as the '%s' user but you are '%s'. "+
+				"Please change user with sudo first.",
+			config_obj.Frontend.RunAsUser, user.Username))
+	}
+
+	return nil
 }
 
 func init() {

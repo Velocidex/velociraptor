@@ -30,7 +30,7 @@ sources:
         SELECT Value,
                Record.Action as Action,
                Record.Name as Name,
-               Record.Desc as Desc,
+               get(item=Record, field="Desc") as Description,
                Record.App as App,
                Record.Action as Action,
                Record.Dir as Dir,
