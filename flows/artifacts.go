@@ -655,7 +655,7 @@ func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
 	}
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
-	if job.Status != nil &&
+	if false && job.Status != nil &&
 		job.Status.Status == crypto_proto.GrrStatus_GENERIC_ERROR {
 		logger.Error(fmt.Sprintf(
 			"Client Error %v: %v",
