@@ -55,6 +55,20 @@ func Normalize_windows_path(filename string) string {
 	return filename
 }
 
+func StringSliceEq(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func hard_wrap(text string, colBreak int) string {
 	text = strings.TrimSpace(text)
 	text = strings.Replace(text, "\r\n", "\n", -1)

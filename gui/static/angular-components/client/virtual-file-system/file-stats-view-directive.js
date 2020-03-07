@@ -4,6 +4,7 @@ goog.module('grrUi.client.virtualFileSystem.fileStatsViewDirective');
 
 const {REFRESH_FILE_EVENT, REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
+const {SplitPathComponents} = goog.require('grrUi.core.utils');
 
 
 var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
@@ -42,7 +43,7 @@ const FileStatsViewController = function(
  * @export
  */
 FileStatsViewController.prototype.getAccessorAndPath = function(path) {
-    var components = path.split('/').filter(function (x) {return x.length > 0;});
+    var components = SplitPathComponents(path);
     var accessor = 'file';
     if (components.length > 0) {
         accessor = components[0];

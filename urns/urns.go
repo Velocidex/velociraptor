@@ -18,14 +18,9 @@
 package urns
 
 import (
-	"path"
-	"strings"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func BuildURN(elem ...string) string {
-	base_path := path.Join(elem...)
-	if strings.HasPrefix(elem[0], "aff4:") {
-		return base_path
-	}
-	return "/" + base_path
+	return utils.JoinComponents(elem, "/")
 }

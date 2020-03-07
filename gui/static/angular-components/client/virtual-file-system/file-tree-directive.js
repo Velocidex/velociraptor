@@ -6,6 +6,7 @@ goog.module.declareLegacyNamespace();
 const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ensurePathIsFolder, getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 const {getFileId} = goog.require('grrUi.client.virtualFileSystem.fileViewDirective');
+const {PathJoin} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for FileTreeDirective.
@@ -179,7 +180,7 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
         var mode = file["Mode"][0];
         if (mode == "d" || mode == "L") {
             var filePath = file['Name'];
-            var fullFilePath = folderPath + "/" + filePath;
+            var fullFilePath = PathJoin(folderPath, filePath);
             var fileId = getFileId(fullFilePath);
             result.push({
                 id: fileId,

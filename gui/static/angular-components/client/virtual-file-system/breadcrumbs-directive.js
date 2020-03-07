@@ -3,7 +3,7 @@
 goog.module('grrUi.client.virtualFileSystem.breadcrumbsDirective');
 goog.module.declareLegacyNamespace();
 
-
+const {SplitPathComponents} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for BreadcrumbsDirective.
@@ -55,7 +55,7 @@ BreadcrumbsController.prototype.onDirectiveArgsChange_ = function() {
     return;
   }
 
-  var components = pathArg.split('/');
+  var components = SplitPathComponents(pathArg);
   if (stripEndingSlashArg && pathArg.endsWith('/')) {
     components = components.slice(0, components.length - 1);
   }

@@ -9,7 +9,7 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"path"
+	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -19,9 +19,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -128,9 +128,11 @@ func (self *VFSService) ProcessListDirectory(
 	}
 
 	var rows []vfilter.Row
-	current_vfs_path := ""
+	var current_vfs_components []string = nil
 
 	for row := range vql.Eval(ctx, sub_scope) {
+		fmt.Printf("row %v\n", row)
+
 		full_path := vql_subsystem.GetStringFromRow(scope, row, "_FullPath")
 		accessor := vql_subsystem.GetStringFromRow(scope, row, "_Accessor")
 		name := vql_subsystem.GetStringFromRow(scope, row, "Name")
@@ -139,36 +141,43 @@ func (self *VFSService) ProcessListDirectory(
 			continue
 		}
 
-		vfs_path := getVfsPath(full_path, accessor)
+		vfs_components := getVfsComponents(full_path, accessor)
+
+		if vfs_components == nil {
+			continue
+		}
+
+		dir_components := vfs_components[:len(vfs_components)-1]
 
 		// This row does not belong in the current
 		// collection - flush the collection and start
 		// a new one.
-		if path.Dir(vfs_path) != current_vfs_path ||
+		if !utils.StringSliceEq(dir_components, current_vfs_components) ||
+
 			// Do not let our memory footprint
 			// grow without bounds.
 			len(rows) > 100000 {
 
-			// current_vfs_path == "" represents the first
-			// collection before the first row is
-			// processed.
-			if current_vfs_path != "" {
+			// current_vfs_components == nil represents
+			// the first collection before the first row
+			// is processed.
+			if current_vfs_components != nil {
 				err := self.flush_state(
 					sub_scope, ts, client_id,
 					flow_id,
-					current_vfs_path, rows)
+					current_vfs_components, rows)
 				if err != nil {
 					return
 				}
 				rows = nil
 			}
-			current_vfs_path = path.Dir(vfs_path)
+			current_vfs_components = dir_components
 		}
 		rows = append(rows, row)
 	}
 
 	err = self.flush_state(sub_scope, ts, client_id, flow_id,
-		current_vfs_path, rows)
+		current_vfs_components, rows)
 	if err != nil {
 		self.logger.Error("Unable to save directory: %v", err)
 		return
@@ -177,8 +186,8 @@ func (self *VFSService) ProcessListDirectory(
 
 // Flush the current state into the database and clear it for the next directory.
 func (self *VFSService) flush_state(scope *vfilter.Scope,
-	timestamp uint64, client_id, flow_id, vfs_path string,
-	rows []vfilter.Row) error {
+	timestamp uint64, client_id, flow_id string,
+	vfs_components []string, rows []vfilter.Row) error {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -188,7 +197,8 @@ func (self *VFSService) flush_state(scope *vfilter.Scope,
 		return errors.WithStack(err)
 	}
 
-	urn := urns.BuildURN("clients", client_id, "vfs", vfs_path)
+	urn := utils.JoinComponents(append([]string{
+		"clients", client_id, "vfs"}, vfs_components...), "/")
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -206,16 +216,25 @@ func (self *VFSService) flush_state(scope *vfilter.Scope,
 }
 
 // The inverse of GetClientPath()
-func getVfsPath(client_path string, accessor string) string {
-	prefix := "/file"
+func getVfsComponents(client_path string, accessor string) []string {
 	switch accessor {
+
 	case "reg", "registry":
-		prefix = "/registry"
+		return append([]string{"registry"}, utils.SplitComponents(client_path)...)
+
 	case "ntfs":
-		prefix = "/ntfs"
+		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		if err == nil {
+			if subpath == "" || subpath == "." {
+				return []string{"ntfs", device}
+			}
+			return append([]string{"ntfs", device},
+				utils.SplitPlainComponents(subpath)...)
+		}
 	}
 
-	return prefix + utils.Normalize_windows_path(client_path)
+	return append([]string{"file"},
+		utils.SplitPlainComponents(client_path)...)
 }
 
 func startVFSService(

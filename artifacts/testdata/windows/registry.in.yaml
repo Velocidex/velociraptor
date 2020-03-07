@@ -16,6 +16,9 @@ Queries:
        filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
        accessor="reg")
 
+  # A key with path separators in it.
+  - SELECT FullPath, Name FROM glob(globs="HKEY_USERS\S-1-5-18\http*\*")
+
   - SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath)
     FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*",
               accessor="reg")

@@ -102,13 +102,13 @@ func renderRootVFS(client_id string) *flows_proto.VFSListResponse {
     {"Mode": "drwxrwxrwx", "Name": "artifacts"}
    ]`,
 	}
-
 }
 
 // Render VFS nodes with VQL collection + uploads.
 func renderDBVFS(
 	config_obj *config_proto.Config,
-	client_id, client_path, accessor string) (*flows_proto.VFSListResponse, error) {
+	client_id string,
+	components []string) (*flows_proto.VFSListResponse, error) {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -116,16 +116,22 @@ func renderDBVFS(
 	}
 
 	// Figure out where the download info files are.
-	download_info_path := utils.GetVFSDownloadInfoPath(client_id, accessor, client_path)
-	downloaded_files, err := db.ListChildren(config_obj, download_info_path, 0, 1000)
+	download_info_path := append([]string{
+		"clients", client_id, "vfs_files"}, components...)
+
+	downloaded_files, err := db.ListChildren(
+		config_obj, utils.JoinComponents(download_info_path, "/"),
+		0, 1000)
 	if err != nil {
 		return nil, err
 	}
 	result := &flows_proto.VFSListResponse{}
 
 	// Figure out where the directory info is.
-	vfs_path := utils.GetVFSDirectoryInfoPath(client_id, accessor, client_path)
-	err = db.GetSubject(config_obj, vfs_path, result)
+	vfs_path := append([]string{
+		"clients", client_id, "vfs"}, components...)
+	err = db.GetSubject(
+		config_obj, utils.JoinComponents(vfs_path, "/"), result)
 	if err != nil {
 		return nil, err
 	}
@@ -188,20 +194,19 @@ func renderDBVFS(
 // Render VFS nodes from the filestore.
 func renderFileStore(
 	config_obj *config_proto.Config,
-	prefix string,
-	vfs_path string) (*flows_proto.VFSListResponse, error) {
+	components []string) (*flows_proto.VFSListResponse, error) {
 	var rows []*FileInfoRow
 
-	filestore_urn := path.Join(prefix, vfs_path)
+	vfs_path := utils.JoinComponents(components, "/")
 	items, err := file_store.GetFileStore(config_obj).
-		ListDirectory(filestore_urn)
+		ListDirectory(vfs_path)
 	if err == nil {
 		for _, item := range items {
 			row := &FileInfoRow{
 				Name:      item.Name(),
 				Size:      item.Size(),
 				Timestamp: item.ModTime().Format("2006-01-02 15:04:05"),
-				FullPath:  path.Join(vfs_path, item.Name()),
+				FullPath:  utils.PathJoin(vfs_path, item.Name(), "/"),
 			}
 
 			if item.IsDir() {
@@ -244,37 +249,35 @@ func renderFileStore(
 // function maps from the browser's vfs view into the file_store
 // prefix. If this function returns ok, then the full filestore path
 // can be obtained by joining the prefix with the vfs_path provided.
-func getVFSPathPrefix(vfs_path string, client_id string) (prefix string, ok bool) {
-	if strings.HasPrefix(vfs_path, "/artifacts") {
-		return path.Join("/clients", client_id), true
+func getVFSPathPrefix(components []string, client_id string) (prefix []string, ok bool) {
+	if len(components) > 0 && components[0] == "artifacts" {
+		return []string{"clients", client_id}, true
 	}
 
-	if client_id != "" && strings.HasPrefix(vfs_path, "/clients/"+client_id) {
-		return "/", true
+	if client_id != "" && len(components) > 2 &&
+		components[0] == "clients" && components[1] == client_id {
+		return nil, true
 	}
 
-	return "/", false
+	return nil, false
 }
 
 func vfsListDirectory(
 	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (*flows_proto.VFSListResponse, error) {
-	vfs_path = path.Join("/", vfs_path)
 
-	if vfs_path == "" || vfs_path == "/" {
+	components := utils.SplitComponents(vfs_path)
+	if len(components) == 0 {
 		return renderRootVFS(client_id), nil
 	}
 
-	prefix, ok := getVFSPathPrefix(vfs_path, client_id)
+	prefix, ok := getVFSPathPrefix(components, client_id)
 	if ok {
-		return renderFileStore(config_obj, prefix, vfs_path)
+		return renderFileStore(config_obj, append(prefix, components...))
 	}
 
-	// Break up the GUI's view of the VFS into client_path and accessor.
-	client_path, accessor := GetClientPath(vfs_path)
-
-	return renderDBVFS(config_obj, client_id, client_path, accessor)
+	return renderDBVFS(config_obj, client_id, components)
 }
 
 // NOTE: We only support stat of DBFS style entries. This function is
@@ -284,15 +287,13 @@ func vfsStatDirectory(
 	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (*flows_proto.VFSListResponse, error) {
-	vfs_path = path.Join("/", vfs_path)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	client_path, accessor := GetClientPath(vfs_path)
-	vfs_urn := utils.GetVFSDirectoryInfoPath(client_id, accessor, client_path)
+	vfs_urn := fmt.Sprintf("/clients/%v/vfs/%v", client_id, vfs_path)
 
 	result := &flows_proto.VFSListResponse{}
 
@@ -312,15 +313,15 @@ func vfsStatDownload(
 	config_obj *config_proto.Config,
 	client_id string,
 	vfs_path string) (*flows_proto.VFSDownloadInfo, error) {
-	vfs_path = path.Join("/", vfs_path)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	client_path, accessor := GetClientPath(vfs_path)
-	vfs_urn := utils.GetVFSDownloadInfoPath(client_id, accessor, client_path)
+	components := utils.SplitComponents(vfs_path)
+	vfs_components := append([]string{
+		"clients", client_id, "vfs_files"}, components...)
 
 	result := &flows_proto.VFSDownloadInfo{}
 
@@ -328,6 +329,7 @@ func vfsStatDownload(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
+	vfs_urn := utils.JoinComponents(vfs_components, "/")
 	err = db.GetSubject(config_obj, vfs_urn, result)
 	if err != nil {
 		return nil, err
@@ -345,25 +347,25 @@ func vfsStatDownload(
 // where the top level directory is the accessor, the rest of the path
 // is passed to the accessor directly.
 func GetClientPath(vfs_path string) (client_path string, accessor string) {
-	vfs_path = path.Clean(vfs_path)
-	if strings.HasPrefix(vfs_path, "/file") {
-		return strings.TrimPrefix(vfs_path, "/file"), "file"
+	components := utils.SplitComponents(vfs_path)
+
+	if len(components) == 0 {
+		return "", "file"
 	}
 
-	if strings.HasPrefix(vfs_path, "/registry") {
-		return strings.TrimPrefix(vfs_path, "/registry"), "registry"
-	}
+	switch components[0] {
+	case "file", "registry":
+		return utils.JoinComponents(components[1:], "/"), components[0]
 
-	if strings.HasPrefix(vfs_path, "/ntfs/") {
-		return strings.TrimPrefix(vfs_path, "/ntfs/"), "ntfs"
-	}
+	case "ntfs":
+		// With the ntfs accessor, first component is a device
+		// and should not be preceeded with /
+		return strings.Join(components[1:], "\\"), components[0]
 
-	if strings.HasPrefix(vfs_path, "/ntfs") {
-		return strings.TrimPrefix(vfs_path, "/ntfs"), "ntfs"
+	default:
+		// This should not happen - try to get it using file accessor.
+		return vfs_path, "file"
 	}
-
-	// This should not happen - try to get it using file accessor.
-	return vfs_path, "file"
 }
 
 func vfsRefreshDirectory(
@@ -373,7 +375,6 @@ func vfsRefreshDirectory(
 	vfs_path string,
 	depth uint64) (*flows_proto.ArtifactCollectorResponse, error) {
 
-	vfs_path = path.Join("/", vfs_path)
 	client_path, accessor := GetClientPath(vfs_path)
 	result, err := self.CollectArtifact(ctx, MakeCollectorRequest(
 		client_id, "System.VFS.ListDirectory",

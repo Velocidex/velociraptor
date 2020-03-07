@@ -109,3 +109,36 @@ exports.debug = function(name,  item) {
     console.log(angular.copy(item));
   }
 };
+
+exports.PathJoin = function(path, component) {
+    return path + "\"" + component.replace("\"", "\"\"") + "\"";
+};
+
+
+
+var component_quoted_regex = /^[\\/]?"((?:[^"\\]*(?:\\"?)?)+)"/;
+var component_unquoted_regex = /^[\\/]?([^\\/]*)([\\/]?|$)/;
+
+// Split an escaped path into components.
+exports.SplitPathComponents = function(path) {
+    var components = [];
+    while(path.length > 0) {
+        var match = path.match(component_quoted_regex);
+        if (match != null && match.length >= 2) {
+            components.push(match[1]);
+            path = path.substr(match[0].length);
+            continue;
+        }
+
+        match = path.match(component_unquoted_regex);
+        if (match != null && match.length >= 2) {
+            components.push(match[1]);
+            path = path.substr(match[0].length);
+            continue;
+        }
+
+        return path.split("/");
+    }
+
+    return components.filter(function (x) {return x.length > 0;});
+};

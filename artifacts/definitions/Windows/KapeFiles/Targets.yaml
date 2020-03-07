@@ -423,7 +423,7 @@ parameters:
       77,$MFT,FileSystem,$MFT,lazy_ntfs,
       78,SRUM,Execution,Windows*\System32\SRU/**10,lazy_ntfs,
       79,LogFiles,Logs,Windows*\System32\LogFiles/**10,lazy_ntfs,
-      80,$J,FileSystem,$Extend\$UsnJrnl:$J,ntfs,
+      999980,$J,FileSystem,$Extend\$UsnJrnl:$J,ntfs,
       81,$Max,FileSystem,$Extend\$UsnJrnl:$Max,ntfs,
       82,Setupapi.log XP,USBDevices,Windows\setupapi.log,lazy_ntfs,
       83,Setupapi.log Win7+,USBDevices,Windows*\inf\setupapi.dev.log,lazy_ntfs,

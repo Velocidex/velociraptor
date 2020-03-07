@@ -12,6 +12,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 const (
@@ -129,10 +130,21 @@ func GetCSVPath(
 
 // Currently only CLIENT artifacts upload files.
 func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
-	return path.Join(
+	prefix := path.Join(
 		"/clients", client_id, "collections",
-		flow_id, "uploads", accessor,
-		utils.Normalize_windows_path(client_path))
+		flow_id, "uploads", accessor)
+
+	if accessor == "ntfs" {
+		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		if err == nil {
+			if subpath == "" || subpath == "." {
+				return fmt.Sprintf("/ntfs/\"%s\"", device)
+			}
+			return fmt.Sprintf("/ntfs/\"%s\"%s", device,
+				utils.Normalize_windows_path(subpath))
+		}
+	}
+	return path.Join(prefix, utils.Normalize_windows_path(client_path))
 }
 
 // GetUploadsMetadata returns the path to the metadata file that contains all the uploads.
@@ -217,6 +229,5 @@ func DayNameToTimestamp(name string) int64 {
 			return time.Unix()
 		}
 	}
-
 	return 0
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This service checks the running server environment for sane
@@ -19,6 +21,15 @@ import (
 type SanityChecks struct{}
 
 func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
+	if config_obj.Logging.OutputDirectory != "" {
+		err := utils.CheckDirWritable(config_obj.Logging.OutputDirectory)
+		if err != nil {
+			return errors.Wrap(
+				err, fmt.Sprintf("Unable to write logs to directory %v: ",
+					config_obj.Logging.OutputDirectory))
+		}
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	// If we are handling the authentication make sure there is at
@@ -65,6 +76,15 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 		return err
 	}
 	file.Close()
+
+	if config_obj.AutocertCertCache != "" {
+		err := utils.CheckDirWritable(config_obj.AutocertCertCache)
+		if err != nil {
+			return errors.Wrap(
+				err, fmt.Sprintf("Autocert cache directory not writable %v: ",
+					config_obj.AutocertCertCache))
+		}
+	}
 
 	return nil
 }

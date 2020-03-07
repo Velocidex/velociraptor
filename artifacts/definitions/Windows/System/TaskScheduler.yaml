@@ -13,17 +13,18 @@ description: |
 parameters:
   - name: TasksPath
     default: c:/Windows/System32/Tasks/**
+  - name: alsoUpload
+    type: bool
 
 sources:
-  - name: Upload
-    queries:
-      - LET Uploads <= SELECT Name, FullPath, upload(file=FullPath) as Upload
-        FROM glob(globs=TasksPath)
-        WHERE NOT IsDir
-      - SELECT * FROM Uploads
-
   - name: Analysis
     queries:
+      - LET Uploads = SELECT Name, FullPath, if(
+           condition=alsoUpload,
+           then=upload(file=FullPath)) as Upload
+        FROM glob(globs=TasksPath)
+        WHERE NOT IsDir
+
       # Job files contain invalid XML which confuses the parser - we
       # use regex to remove the invalid tags.
       - LET parse_task = select FullPath, parse_xml(

@@ -31,14 +31,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
-	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -59,10 +57,9 @@ var (
 )
 
 type RegKeyInfo struct {
-	_modtime   time.Time
-	_full_path string
-	_name      string
-	_data      *ordereddict.Dict
+	_modtime    time.Time
+	_components []string
+	_data       *ordereddict.Dict
 }
 
 func (self *RegKeyInfo) IsDir() bool {
@@ -82,7 +79,7 @@ func (self *RegKeyInfo) Sys() interface{} {
 }
 
 func (self *RegKeyInfo) FullPath() string {
-	return self._full_path
+	return utils.JoinComponents(self._components, "\\")
 }
 
 func (self *RegKeyInfo) Mode() os.FileMode {
@@ -90,7 +87,10 @@ func (self *RegKeyInfo) Mode() os.FileMode {
 }
 
 func (self *RegKeyInfo) Name() string {
-	return self._name
+	if len(self._components) > 0 {
+		return self._components[len(self._components)-1]
+	}
+	return ""
 }
 
 func (self *RegKeyInfo) ModTime() time.Time {
@@ -224,8 +224,10 @@ func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAcces
 func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	var result []glob.FileInfo
 
+	components := utils.SplitComponents(path)
+
 	// Root directory is just the name of the hives.
-	if path == "/" || path == "\\" || path == "" {
+	if len(components) == 0 {
 		for k, _ := range root_keys {
 			result = append(result,
 				glob.NewVirtualDirectoryPath(k, nil))
@@ -233,7 +235,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		return result, nil
 	}
 
-	components := utils.SplitComponents(path)
 	hive_name := components[0]
 	hive, pres := root_keys[hive_name]
 	if !pres {
@@ -257,8 +258,6 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	}
 	defer key.Close()
 
-	full_key_path := filepath.Join(hive_name, key_path)
-
 	// Now enumerate the subkeys
 	subkeys, err := key.ReadSubKeyNames(-1)
 	if err != nil {
@@ -275,10 +274,9 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 		}
 		defer subkey.Close()
 
-		full_path := filepath.Join(hive_name, key_path)
-		full_path = self.PathJoin(full_path, subkey_name)
-
-		key_info, err := getKeyInfo(subkey, full_path, subkey_name)
+		// Make a local copy.
+		full_path := append([]string{}, components...)
+		key_info, err := getKeyInfo(subkey, append(full_path, subkey_name))
 		if err != nil {
 			continue
 		}
@@ -292,10 +290,11 @@ func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) 
 	}
 
 	for _, value_name := range values {
-		value_info, err := getValueInfo(
-			key,
-			full_key_path,
-			value_name)
+		// Make a local copy.
+		full_path := append([]string{}, components...)
+
+		value_info, err := getValueInfo(key,
+			append(full_path, value_name))
 		if err != nil {
 			continue
 		}
@@ -344,9 +343,10 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 	key, err := registry.OpenKey(hive, key_path,
 		registry.READ|registry.WOW64_64KEY)
 	if err != nil && len(components) > 1 {
-		// Maybe its a value then.
-		containing_key_name := strings.Join(components[1:len(components)-1], "\\")
-		value_name := components[len(components)-1]
+		// Maybe its a value then - open the containing key
+		// and return a valueInfo
+		containing_key_name := strings.Join(
+			components[1:len(components)-1], "\\")
 		key, err := registry.OpenKey(hive, containing_key_name,
 			registry.READ|registry.WOW64_64KEY)
 		if err != nil {
@@ -354,38 +354,33 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (glob.FileInfo, error)
 		}
 		defer key.Close()
 
-		return getValueInfo(
-			key, hive_name+"\\"+containing_key_name, value_name)
+		return getValueInfo(key, components)
 	}
 	defer key.Close()
 
-	return getKeyInfo(key, key_path, "")
+	return getKeyInfo(key, components)
 }
 
-func getKeyInfo(key registry.Key, key_path string, name string) (*RegKeyInfo, error) {
+func getKeyInfo(key registry.Key, components []string) (*RegKeyInfo, error) {
 	stat, err := key.Stat()
 	if err != nil {
 		return nil, err
 	}
-
-	if name == "" {
-		name = filepath.Base(key_path)
-	}
-
 	return &RegKeyInfo{
-		_name:      name,
-		_modtime:   stat.ModTime(),
-		_full_path: key_path,
-		_data:      ordereddict.NewDict().Set("type", "key"),
+		_modtime:    stat.ModTime(),
+		_components: components,
+		_data:       ordereddict.NewDict().Set("type", "key"),
 	}, nil
 }
 
-func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo, error) {
+func getValueInfo(key registry.Key, components []string) (*RegValueInfo, error) {
+	// Last component is the value name
+	value_name := components[len(components)-1]
+
 	// Represent the default value as different from the
 	// actual key name.
-	value_info_name := value_name
 	if value_name == "" {
-		value_info_name = "@"
+		components[len(components)-1] = "@"
 	}
 
 	var key_modtime time.Time
@@ -402,9 +397,8 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 			// any of the values does so we just
 			// copy the key's timestamp to each
 			// value.
-			_modtime:   key_modtime,
-			_full_path: utils.PathJoin(key_path, value_info_name, "\\"),
-			_name:      value_info_name,
+			_modtime:    key_modtime,
+			_components: components,
 		}}
 
 	buf_size, value_type, err := key.GetValue(value_name, nil)
@@ -504,13 +498,12 @@ func getValueInfo(key registry.Key, key_path, value_name string) (*RegValueInfo,
 }
 
 func (self RegFileSystemAccessor) GetRoot(path string) (string, string, error) {
-	components := utils.SplitComponents(path)
-	return "", strings.Join(components, "\\"), nil
+	return "", path, nil
 }
 
 // We accept both / and \ as a path separator
 func (self RegFileSystemAccessor) PathSplit(path string) []string {
-	return regparser.SplitComponents(path)
+	return utils.SplitComponents(path)
 }
 
 func (self RegFileSystemAccessor) PathJoin(root, stem string) string {

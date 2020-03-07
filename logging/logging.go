@@ -151,6 +151,11 @@ func (self *LogManager) makeNewComponent(
 	Log.Level = logrus.DebugLevel
 
 	if config_obj.Logging.OutputDirectory != "" {
+		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
+		if err != nil {
+			panic("Unable to create logging directory.")
+		}
+
 		base_filename := filepath.Join(
 			config_obj.Logging.OutputDirectory,
 			*component)
