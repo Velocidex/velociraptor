@@ -242,7 +242,7 @@ func (self *FileBaseDataStore) ListChildren(
 			continue
 		}
 		name = strings.TrimSuffix(name, ".db")
-		result = append(result, urn+"/"+name)
+		result = append(result, utils.PathJoin(urn, name, "/"))
 	}
 	return result, nil
 }

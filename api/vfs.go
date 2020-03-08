@@ -64,7 +64,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
@@ -148,7 +147,7 @@ func renderDBVFS(
 	if len(downloaded_files) > 0 {
 		lookup := make(map[string]string)
 		for _, filename := range downloaded_files {
-			normalized_name := path.Base(filename)
+			normalized_name := utils.Base(filename)
 			lookup[normalized_name] = filename
 		}
 
@@ -214,7 +213,7 @@ func renderFileStore(
 			} else {
 				row.Mode = "-r--r--r--"
 				row.Download = &flows_proto.VFSDownloadInfo{
-					VfsPath: path.Join(vfs_path, item.Name()),
+					VfsPath: row.FullPath,
 					Size:    uint64(item.Size()),
 					Mtime:   uint64(item.ModTime().UnixNano() / 1000),
 				}

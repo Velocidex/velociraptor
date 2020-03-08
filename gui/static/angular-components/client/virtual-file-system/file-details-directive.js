@@ -71,7 +71,7 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
 
     var filePath = this.fileContext.selectedFilePath;
     this.params = {
-        path: filePath,
+        path: '/clients/' + this.fileContext.clientId + '/' + filePath,
         client_id: this.fileContext.clientId,
     };
 

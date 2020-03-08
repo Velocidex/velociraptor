@@ -20,6 +20,7 @@ package api
 import (
 	"io"
 
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -34,7 +35,7 @@ func getTable(config_obj *config_proto.Config, in *api_proto.GetTableRequest) (
 		in.Rows = 500
 	}
 
-	fd, err := getFileForVFSPath(config_obj, in.ClientId, in.Path)
+	fd, err := file_store.GetFileStore(config_obj).ReadFile(in.Path)
 	if err != nil {
 		return nil, err
 	}

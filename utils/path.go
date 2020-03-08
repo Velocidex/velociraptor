@@ -39,8 +39,6 @@
 package utils
 
 import (
-	"fmt"
-	"path"
 	"regexp"
 	"strings"
 )
@@ -111,7 +109,7 @@ func SplitComponents(path string) []string {
 
 	for path != "" {
 		path, component = consumeComponent(path)
-		if component != "" {
+		if component != "" && component != "." && component != ".." {
 			components = append(components, component)
 		}
 	}
@@ -205,25 +203,10 @@ func Dir(path string) string {
 	return ""
 }
 
-// Figure out where to store the VFSDownloadInfo file.
-func GetVFSDownloadInfoPath(client_id, accessor, client_path string) string {
-	return fmt.Sprintf("/clients/%v/vfs_files/%v/%v",
-		client_id, accessor, client_path)
-
-	return path.Join(
-		"clients", client_id,
-		"vfs_files", accessor,
-		Normalize_windows_path(client_path))
-}
-
-// GetVFSDownloadInfoPath returns the data store path to the directory
-// info file.
-func GetVFSDirectoryInfoPath(client_id, accessor, client_path string) string {
-	return fmt.Sprintf("/clients/%v/vfs/%v/%v",
-		client_id, accessor, client_path)
-
-	return path.Join(
-		"clients", client_id,
-		"vfs", accessor,
-		Normalize_windows_path(client_path))
+func Base(path string) string {
+	components := SplitComponents(path)
+	if len(components) > 0 {
+		return components[len(components)-1]
+	}
+	return ""
 }

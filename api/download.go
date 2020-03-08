@@ -552,46 +552,6 @@ type vfsFileDownloadRequest struct {
 	Encoding string `schema:"encoding"`
 }
 
-func filestorePathForVFSPath(
-	config_obj *config_proto.Config,
-	client_id string,
-	vfs_path string) string {
-	vfs_path = path.Join("/", vfs_path)
-
-	// monitoring and artifacts vfs folders are in the client's
-	// space.
-	if strings.HasPrefix(vfs_path, "/monitoring/") ||
-		strings.HasPrefix(vfs_path, "/collections/") ||
-		strings.HasPrefix(vfs_path, "/artifacts/") {
-		return path.Join(
-			"clients", client_id, vfs_path)
-	}
-
-	// These VFS directories are mapped directly to the root of
-	// the filestore regardless of the client id.
-	if strings.HasPrefix(vfs_path, "/server_artifacts/") ||
-		strings.HasPrefix(vfs_path, "/hunts/") ||
-		strings.HasPrefix(vfs_path, "/clients/") {
-		return utils.Normalize_windows_path(vfs_path)
-	}
-
-	// Other folders live inside the client's vfs_files subdir.
-	return path.Join(
-		"clients", client_id,
-		"vfs_files", vfs_path)
-}
-
-func getFileForVFSPath(
-	config_obj *config_proto.Config,
-	client_id string,
-	vfs_path string) (
-	file_store.ReadSeekCloser, error) {
-	vfs_path = path.Clean(vfs_path)
-
-	filestore_path := filestorePathForVFSPath(config_obj, client_id, vfs_path)
-	return file_store.GetFileStore(config_obj).ReadFile(filestore_path)
-}
-
 // URL format: /api/v1/DownloadVFSFile
 func vfsFileDownloadHandler(
 	config_obj *config_proto.Config) http.Handler {
@@ -604,8 +564,7 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		file, err := getFileForVFSPath(
-			config_obj, request.ClientId, request.VfsPath)
+		file, err := file_store.GetFileStore(config_obj).ReadFile(request.VfsPath)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -696,8 +655,7 @@ func vfsFolderDownloadHandler(
 		defer zip_writer.Close()
 
 		file_store_factory := file_store.GetFileStore(config_obj)
-		file_store_factory.Walk(filestorePathForVFSPath(
-			config_obj, request.ClientId, request.VfsPath),
+		file_store_factory.Walk(request.VfsPath,
 			func(path_name string, info os.FileInfo, err error) error {
 				if err != nil || info.IsDir() {
 					return nil
@@ -734,8 +692,7 @@ func vfsGetBuffer(
 	client_id string, vfs_path string, offset uint64, length uint32) (
 	*api_proto.VFSFileBuffer, error) {
 
-	file, err := getFileForVFSPath(
-		config_obj, client_id, vfs_path)
+	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
 	if err != nil {
 		return nil, err
 	}

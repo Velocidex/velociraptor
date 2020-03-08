@@ -97,7 +97,7 @@ func (self *VFSService) ProcessDownloadFile(
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		err = db.SetSubject(self.config_obj,
-			utils.GetVFSDownloadInfoPath(client_id, Accessor, Path),
+			artifacts.GetVFSDownloadInfoPath(client_id, Accessor, Path),
 			&flows_proto.VFSDownloadInfo{
 				VfsPath: vfs_path,
 				Mtime:   uint64(ts) * 1000000,

@@ -4,7 +4,7 @@ goog.module('grrUi.client.virtualFileSystem.fileStatsViewDirective');
 
 const {REFRESH_FILE_EVENT, REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
-const {SplitPathComponents} = goog.require('grrUi.core.utils');
+const {SplitPathComponents, Join} = goog.require('grrUi.core.utils');
 
 
 var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
@@ -47,7 +47,7 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
     var accessor = 'file';
     if (components.length > 0) {
         accessor = components[0];
-        path = components.slice(1).join('/');
+        path = Join(components.slice(1));
     }
 
     // Some windows paths start with device name e.g. \\.\C: so we do
