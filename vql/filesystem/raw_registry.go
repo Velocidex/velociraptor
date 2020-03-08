@@ -56,6 +56,7 @@ const (
 
 type RawRegKeyInfo struct {
 	key         *regparser.CM_KEY_NODE
+	_base       url.URL
 	_components []string
 }
 
@@ -76,7 +77,8 @@ func (self *RawRegKeyInfo) Sys() interface{} {
 }
 
 func (self *RawRegKeyInfo) FullPath() string {
-	return utils.JoinComponents(self._components, "\\")
+	self._base.Fragment = utils.JoinComponents(self._components, "\\")
+	return self._base.String()
 }
 
 func (self *RawRegKeyInfo) Mode() os.FileMode {
@@ -325,7 +327,9 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo,
 		new_components := append([]string{}, components...)
 		result = append(result,
 			&RawRegKeyInfo{
-				subkey, append(new_components, subkey.Name()),
+				key:         subkey,
+				_base:       *url,
+				_components: append(new_components, subkey.Name()),
 			})
 	}
 
@@ -335,8 +339,9 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo,
 		result = append(result,
 			&RawRegValueInfo{
 				&RawRegKeyInfo{
-					key,
-					append(new_components, value.ValueName()),
+					key:         key,
+					_base:       *url,
+					_components: append(new_components, value.ValueName()),
 				}, value,
 			})
 	}

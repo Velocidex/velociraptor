@@ -1,0 +1,4 @@
+Queries:
+  # This artifact uses the raw registry parser.
+  - SELECT * FROM Artifact.Windows.System.Amcache(
+       amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5

@@ -23,10 +23,6 @@ Queries:
     FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*",
               accessor="reg")
 
-  # This artifact uses the raw registry parser.
-  - SELECT * FROM Artifact.Windows.System.Amcache(
-       amCacheGlob="c:/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5
-
   # Check for sysinternal eula
   - SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()
 
