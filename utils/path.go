@@ -185,8 +185,9 @@ func JoinComponents(components []string, sep string) string {
 		if idx == 0 && drive_letter_regex.FindString(components[0]) == "" {
 			result = append(result, "")
 		}
-
-		result = append(result, escapeComponent(component))
+		if component != "" {
+			result = append(result, escapeComponent(component))
+		}
 	}
 	return strings.Join(result, sep)
 }

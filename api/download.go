@@ -580,8 +580,7 @@ func vfsFileDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		filename := strings.Replace(path.Dir(request.VfsPath),
-			"\"", "_", -1)
+		filename := strings.Replace(request.VfsPath, "\"", "_", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			url.PathEscape(filename))
 		w.Header().Set("Content-Type", "binary/octet-stream")
