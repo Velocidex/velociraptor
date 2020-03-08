@@ -69,8 +69,7 @@ FileDetailsController.prototype.onFilePathChange_ = function(newValue) {
     var download = this.fileContext.selectedRow.Download;
     this.fileHasContent = angular.isObject(download);
 
-    // Normalize path to contain only single / path separators.
-    var filePath = this.fileContext.selectedFilePath.replace(/\/+/g,"/");
+    var filePath = this.fileContext.selectedFilePath;
     this.params = {
         path: filePath,
         client_id: this.fileContext.clientId,

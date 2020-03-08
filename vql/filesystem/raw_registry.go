@@ -367,7 +367,6 @@ func (self *RawRegFileSystemAccessor) GetRoot(path string) (string, string, erro
 // We accept both / and \ as a path separator
 func (self *RawRegFileSystemAccessor) PathSplit(path string) []string {
 	return utils.SplitComponents(path)
-	return regparser.SplitComponents(path)
 }
 
 func (self *RawRegFileSystemAccessor) PathJoin(root, stem string) string {

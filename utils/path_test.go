@@ -25,6 +25,7 @@ var splitTestCases = []splitTest{
 	{"/foo/////b\"ar", []string{"foo", "b\"ar"}}, // Should have been quoted
 
 	{"//\"file\"/\"C:\"", []string{"file", "C:"}},
+	{"//\"fi\"\"le\"/\"C:\"", []string{"fi\"le", "C:"}},
 
 	// A registry path with included separators.
 	{"HKEY_USERS\\S-1-5-21-546003962-2713609280-610790815-1003\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\mshta.exe\"",

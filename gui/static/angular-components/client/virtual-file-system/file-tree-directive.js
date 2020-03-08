@@ -6,7 +6,7 @@ goog.module.declareLegacyNamespace();
 const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ensurePathIsFolder, getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 const {getFileId} = goog.require('grrUi.client.virtualFileSystem.fileViewDirective');
-const {PathJoin} = goog.require('grrUi.core.utils');
+const {PathJoin, ConsumeComponent} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for FileTreeDirective.
@@ -184,7 +184,7 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
             var fileId = getFileId(fullFilePath);
             result.push({
                 id: fileId,
-                text: file['Name'].replace(/%5c/g, "\\").replace(/%2f/g, "/"),
+                text: file['Name'],
                 data: {
                     name: file['Name'],
                     path: fullFilePath,
@@ -206,9 +206,12 @@ FileTreeController.prototype.onRefreshFolderEvent_ = function(e, path) {
     path = this.fileContext['selectedDirPath'];
   }
 
-  var nodeId = getFileId(getFolderFromPath(path));
+    var nodeId = getFileId(getFolderFromPath(path));
     var node = $('#' + nodeId);
-    this.treeElement_.jstree(true)['refresh_node'](node);
+    var tree_node = this.treeElement_.jstree(true);
+    if (angular.isDefined(tree_node)) {
+        tree_node['refresh_node'](node);
+    }
 };
 
 /**

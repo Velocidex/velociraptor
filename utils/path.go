@@ -78,7 +78,7 @@ func consumeComponent(path string) (next_path string, component string) {
 					continue
 
 				case '/', '\\':
-					return path[i+1 : length], path[1:i]
+					return path[i+1 : length], string(result)
 				default:
 					// Should never happen, " followed by *
 					result = append(result, next_char)

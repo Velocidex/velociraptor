@@ -493,7 +493,7 @@ func urnToFilename(config_obj *config_proto.Config, urn string) (string, error) 
 		return "\\\\?\\" + result, nil
 	}
 
-	fmt.Printf("Accessing on %v\n", result)
+	// fmt.Printf("Accessing on %v\n", result)
 
 	return result, nil
 }
