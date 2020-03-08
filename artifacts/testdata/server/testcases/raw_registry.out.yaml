@@ -1,72 +1,47 @@
-SELECT * FROM Artifact.Windows.System.Amcache( amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
+SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
-  "FileId": "000085ec26beb5c422b02c5d059bbc966bf99eb3892a",
-  "Key": "file:///home/mic/projects/velociraptor/artifacts/testdata/files/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5Cam_base.exe%7C89cd9b0a99b0456e",
   "LastModified": "2019-03-02T08:21:12Z",
-  "_LastModified": 1551514872,
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_base.exe",
   "Name": "AM_Base.exe",
   "Size": 73585544,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Version": "1.289.0.0",
-  "BinFileVersion": "1.289.0.0",
-  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
+  "BinFileVersion": "1.289.0.0"
  },
  {
-  "FileId": "0000499688da430f3e0534a8c822154588c998062abb",
-  "Key": "file:///home/mic/projects/velociraptor/artifacts/testdata/files/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5Cam_delta.exe%7C9025d818d4db6f5e",
   "LastModified": "2019-03-02T08:21:18Z",
-  "_LastModified": 1551514878,
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_delta.exe",
   "Name": "AM_Delta.exe",
   "Size": 1994928,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Version": "1.289.263.0",
-  "BinFileVersion": "1.289.263.0",
-  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
+  "BinFileVersion": "1.289.263.0"
  },
  {
-  "FileId": "000095e04fb4f1c8f64240970d1937323473cdc3b42d",
-  "Key": "file:///home/mic/projects/velociraptor/artifacts/testdata/files/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5Cam_engine.exe%7Cf8baa8d1048be37c",
   "LastModified": "2019-03-02T08:20:48Z",
-  "_LastModified": 1551514848,
   "Binary": "c:\\windows\\softwaredistribution\\download\\install\\am_engine.exe",
   "Name": "AM_Engine.exe",
   "Size": 5634728,
   "ProductName": "microsoft malware protection",
   "Publisher": "microsoft corporation",
-  "Version": "1.1.15700.9",
-  "BinFileVersion": "1.1.15700.9",
-  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
+  "BinFileVersion": "1.1.15700.9"
  },
  {
-  "FileId": "00002e6c38958917fb86f09026d41337c7460efbe5f5",
-  "Key": "file:///home/mic/projects/velociraptor/artifacts/testdata/files/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5Cautochk.exe%7C62a87acc15a1c57f",
   "LastModified": "2019-03-02T08:10:03Z",
-  "_LastModified": 1551514203,
   "Binary": "c:\\windows\\system32\\autochk.exe",
   "Name": "autochk.exe",
   "Size": 956416,
   "ProductName": "microsoft® windows® operating system",
   "Publisher": "microsoft corporation",
-  "Version": "10.0.17763.1 (winbuild.160101.0800)",
-  "BinFileVersion": "10.0.17763.1",
-  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
+  "BinFileVersion": "10.0.17763.1"
  },
  {
-  "FileId": "00005417796e422db7aa90da0e7bdced0e3d609010e6",
-  "Key": "file:///home/mic/projects/velociraptor/artifacts/testdata/files/Amcache.hve#%5CRoot%5CInventoryApplicationFile%5Cchrmstp.exe%7C5d43f70c64b9b033",
   "LastModified": "2019-03-02T08:11:12Z",
-  "_LastModified": 1551514272,
   "Binary": "c:\\program files (x86)\\google\\chrome\\application\\72.0.3626.121\\installer\\chrmstp.exe",
   "Name": "chrmstp.exe",
   "Size": 2640880,
   "ProductName": "google chrome installer",
   "Publisher": "google inc.",
-  "Version": "72.0.3626.121",
-  "BinFileVersion": "72.0.3626.121",
-  "_Source": "Windows.System.Amcache/InventoryApplicationFile"
+  "BinFileVersion": "72.0.3626.121"
  }
 ]
