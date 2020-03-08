@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/Velocidex/survey"
@@ -101,6 +102,12 @@ func doGenerateConfigInteractive() {
 	config_obj, err := generateNewKeys()
 	kingpin.FatalIfError(err, "Generating Keys")
 
+	err = getFileStoreLocation(config_obj)
+	kingpin.FatalIfError(err, "getFileStoreLocation")
+
+	err = getLogLocation(config_obj)
+	kingpin.FatalIfError(err, "getLogLocation")
+
 	switch install_type {
 	case self_signed:
 		err = survey.AskOne(port_question, &config_obj.Frontend.BindPort, nil)
@@ -163,12 +170,6 @@ func doGenerateConfigInteractive() {
 		err = dynDNSConfig(config_obj, hostname)
 		kingpin.FatalIfError(err, "dynDNSConfig")
 	}
-
-	err = getFileStoreLocation(config_obj)
-	kingpin.FatalIfError(err, "getFileStoreLocation")
-
-	err = getLogLocation(config_obj)
-	kingpin.FatalIfError(err, "getLogLocation")
 
 	kingpin.FatalIfError(addUser(config_obj), "Add users")
 
@@ -238,14 +239,7 @@ func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 func getFileStoreLocation(config_obj *config_proto.Config) error {
 	err := survey.AskOne(data_store_question,
 		&config_obj.Datastore.Location,
-		survey.WithValidator(func(val interface{}) error {
-			// Check that the directory exists.
-			stat, err := os.Stat(val.(string))
-			if err == nil && stat.IsDir() {
-				return nil
-			}
-			return err
-		}))
+		survey.WithValidator(survey.Required))
 	if err != nil {
 		return err
 	}
@@ -260,16 +254,10 @@ func getFileStoreLocation(config_obj *config_proto.Config) error {
 }
 
 func getLogLocation(config_obj *config_proto.Config) error {
+	log_question.Default = path.Join(config_obj.Datastore.Location, "logs")
 	err := survey.AskOne(log_question,
 		&config_obj.Logging.OutputDirectory,
-		survey.WithValidator(func(val interface{}) error {
-			// Check that the directory exists.
-			stat, err := os.Stat(val.(string))
-			if err == nil && stat.IsDir() {
-				return nil
-			}
-			return err
-		}))
+		survey.WithValidator(survey.Required))
 	if err != nil {
 		return err
 	}

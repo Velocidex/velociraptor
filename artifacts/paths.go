@@ -12,6 +12,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 const (
@@ -127,12 +128,65 @@ func GetCSVPath(
 	return ""
 }
 
-// Currently only CLIENT artifacts upload files.
+// Currently only CLIENT artifacts upload files. We store the uploaded
+// file inside the collection that uploaded it.
 func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
-	return path.Join(
-		"/clients", client_id, "collections",
-		flow_id, "uploads", accessor,
-		utils.Normalize_windows_path(client_path))
+	components := []string{
+		"clients", client_id, "collections",
+		flow_id, "uploads", accessor}
+
+	if accessor == "ntfs" {
+		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		if err == nil {
+			components = append(components, device)
+			components = append(components, utils.SplitComponents(subpath)...)
+			return utils.JoinComponents(components, "/")
+		}
+	}
+
+	components = append(components, utils.SplitComponents(client_path)...)
+	return utils.JoinComponents(components, "/")
+}
+
+// Figure out where to store the VFSDownloadInfo file. We maintain a
+// metadata file in the client's VFS area linking back to the
+// collection which most recently uploaded this file.
+func GetVFSDownloadInfoPath(client_id, accessor, client_path string) string {
+	components := []string{
+		"clients", client_id, "vfs_files",
+		accessor}
+
+	if accessor == "ntfs" {
+		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		if err == nil {
+			components = append(components, device)
+			components = append(components, utils.SplitComponents(subpath)...)
+			return utils.JoinComponents(components, "/")
+		}
+	}
+
+	components = append(components, utils.SplitComponents(client_path)...)
+	return utils.JoinComponents(components, "/")
+}
+
+// GetVFSDownloadInfoPath returns the vfs path to the directory info
+// file.
+func GetVFSDirectoryInfoPath(client_id, accessor, client_path string) string {
+	components := []string{
+		"clients", client_id, "vfs",
+		accessor}
+
+	if accessor == "ntfs" {
+		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		if err == nil {
+			components = append(components, device)
+			components = append(components, utils.SplitComponents(subpath)...)
+			return utils.JoinComponents(components, "/")
+		}
+	}
+
+	components = append(components, utils.SplitComponents(client_path)...)
+	return utils.JoinComponents(components, "/")
 }
 
 // GetUploadsMetadata returns the path to the metadata file that contains all the uploads.
@@ -217,6 +271,5 @@ func DayNameToTimestamp(name string) int64 {
 			return time.Unix()
 		}
 	}
-
 	return 0
 }

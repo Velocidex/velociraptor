@@ -21,6 +21,8 @@ import (
 	"io"
 	"os"
 	"sort"
+
+	"golang.org/x/sys/unix"
 )
 
 // Like io/utils but more robust - return as many files as we can. See
@@ -60,4 +62,8 @@ func ReadDir(dirname string) ([]os.FileInfo, error) {
 
 	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
 	return list, err
+}
+
+func CheckDirWritable(dirname string) error {
+	return unix.Access(dirname, unix.W_OK)
 }

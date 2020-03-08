@@ -57,6 +57,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FileBaseDataStore struct {
@@ -108,7 +109,7 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 	message *crypto_proto.GrrMessage) error {
 
 	task_urn := urns.BuildURN("clients", client_id, "tasks",
-		fmt.Sprintf("/%d", message.TaskId))
+		fmt.Sprintf("%d", message.TaskId))
 
 	return self.DeleteSubject(config_obj, task_urn)
 }
@@ -120,7 +121,7 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 
 	now := self.clock.Now().UTC().UnixNano() / 1000
 	subject := urns.BuildURN("clients", client_id, "tasks",
-		fmt.Sprintf("/%d", now))
+		fmt.Sprintf("%d", now))
 
 	req.TaskId = uint64(now)
 	return self.SetSubject(config_obj, subject, req)
@@ -241,7 +242,7 @@ func (self *FileBaseDataStore) ListChildren(
 			continue
 		}
 		name = strings.TrimSuffix(name, ".db")
-		result = append(result, urn+"/"+name)
+		result = append(result, utils.PathJoin(urn, name, "/"))
 	}
 	return result, nil
 }
@@ -475,11 +476,7 @@ func urnToFilename(config_obj *config_proto.Config, urn string) (string, error) 
 	}
 
 	components := []string{config_obj.Datastore.Location}
-	for idx, component := range strings.Split(urn, "/") {
-		if idx == 0 && component == "aff4:" {
-			continue
-		}
-
+	for _, component := range utils.SplitComponents(urn) {
 		components = append(components, string(SanitizeString(component)))
 	}
 
@@ -495,6 +492,8 @@ func urnToFilename(config_obj *config_proto.Config, urn string) (string, error) 
 	if runtime.GOOS == "windows" {
 		return "\\\\?\\" + result, nil
 	}
+
+	// fmt.Printf("Accessing on %v\n", result)
 
 	return result, nil
 }

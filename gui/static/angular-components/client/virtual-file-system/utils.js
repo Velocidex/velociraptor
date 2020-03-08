@@ -3,6 +3,7 @@
 goog.module('grrUi.client.virtualFileSystem.utils');
 goog.module.declareLegacyNamespace();
 
+const {SplitPathComponents, Join} = goog.require('grrUi.core.utils');
 
 
 /**
@@ -31,10 +32,18 @@ exports.ensurePathIsFolder = function(path) {
  * @export
  */
 exports.getFolderFromPath = function(path) {
-  if (!path) {
-    return '';
-  }
+    if (!angular.isDefined(path)) {
+        return;
+    }
 
-  var components = path.split('/');
-  return components.slice(0, -1).join('/');
+    if (path.endsWith('/')) {
+        return path.replace(/\/+$/, '');
+    };
+
+    var components = SplitPathComponents(path);
+    if (components.length == 0) {
+        return "";
+    }
+
+    return Join(components.slice(0, components.length-1));
 };

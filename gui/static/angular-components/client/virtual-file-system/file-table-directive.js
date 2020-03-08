@@ -5,6 +5,7 @@ goog.module.declareLegacyNamespace();
 
 const {getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 const {REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
+const {PathJoin} = goog.require('grrUi.core.utils');
 
 var OPERATION_POLL_INTERVAL_MS = 1000;
 
@@ -68,7 +69,7 @@ FileTableController.prototype.setMode_ = function() {
         return;
     }
 
-    var path = this.fileContext.selectedDirPath.replace(/\/+/, "");
+    var path = this.fileContext.selectedDirPath;
     // Viewing the server files VFS
     if (this.fileContext.clientId == "") {
         this.mode = "server";
@@ -122,8 +123,8 @@ FileTableController.prototype.onDirPathChange_ = function(newValue, oldValue) {
 FileTableController.prototype.onSelectedRowChange_ = function(newValue, oldValue) {
   if (angular.isDefined(newValue) && angular.isDefined(newValue.Name)) {
     if (angular.isDefined(this.fileContext.selectedDirPath)) {
-      this.fileContext.selectedFilePath = this.fileContext.selectedDirPath +
-        "/" + newValue.Name;
+        this.fileContext.selectedFilePath = PathJoin(
+            this.fileContext.selectedDirPath, newValue.Name);
     }
   }
 };

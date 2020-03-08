@@ -15,6 +15,25 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+/*
+
+  This file store implementation stores files on disk. All of these
+  functions receive serialized Velociraptor's VFS paths.
+
+  Velociraptor paths are a sequence of string components. When the VFS
+  path is serialized, we join the components using the path separator
+  (by default /) . If the component contains path separators, they
+  will be escaped (see utils/path.go).
+
+  There is a direct mapping between VFS paths and filenames on
+  disk. This mapping is reversible and supports correct round
+  tripping.
+
+  Use FilenameToFileStorePath() to convert from a serialized VFS path to a disk path
+
+  Calling any of the Filestore methods (ReadDir, Open, Lstat) will
+  always return VFS paths.
+*/
 package file_store
 
 import (
@@ -105,7 +124,9 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	var result []os.FileInfo
 	for _, fileinfo := range files {
 		result = append(result, &FileStoreFileInfo{
-			fileinfo, dirname, nil})
+			fileinfo,
+			utils.PathJoin(dirname, fileinfo.Name(), "/"),
+			nil})
 	}
 
 	return result, nil

@@ -45,7 +45,7 @@
             <dd>
               <button class="btn btn-default"
                       ng-click="controller.updateFile()"
-                      ng-disabled="controller.updateInProgress">
+                      >
                 <i class="fa fa-refresh"
                    ng-class="{'fa-spin': controller.updateInProgress}"></i>
                 {{ controller.fileContext.selectedRow.Dowload.vfs_path ? 'Re-Collect' : 'Collect' }} from the client
