@@ -100,11 +100,12 @@ sources:
           SELECT * FROM foreach(
             row={
                SELECT * FROM modified_before
+               WHERE NOT IsDir
             },
             query={
                SELECT FullPath, Inode, Mode,
                       Size, Modified, ATime, MTime, CTime,
-                      str(str=String.Data) As Keywords
+                      str(str=String.Data) As Keywords, IsDir
 
                FROM yara(files=FullPath,
                          key=Keywords,
@@ -116,7 +117,7 @@ sources:
 
     - |
       SELECT FullPath, Inode, Mode, Size, Modified, ATime,
-             MTime, CTime, Keywords,
+             MTime, CTime, Keywords, IsDir,
                if(condition=(Upload_File = "Y" and NOT IsDir ),
                   then=upload(file=FullPath,
                               accessor=if(condition=Use_Raw_NTFS = "Y",
