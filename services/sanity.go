@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -32,25 +33,27 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	// If we are handling the authentication make sure there is at
-	// least one user account created.
-	if !config.GoogleAuthEnabled(config_obj) &&
-		!config.SAMLEnabled(config_obj) {
+	// Make sure the initial user accounts are created.
+	for _, user := range config_obj.GUI.InitialUsers {
+		user_record, err := users.GetUser(config_obj, user.Name)
+		if err != nil || user_record.Name != user.Name {
+			logger.Info("Initial user %v not present, creating",
+				user.Name)
+			new_user, _ := users.NewUserRecord(user.Name)
 
-		// Make sure all the users specified in the config
-		// file exist.
-		for _, user := range config_obj.GUI.InitialUsers {
-			user_record, err := users.GetUser(config_obj, user.Name)
-			if err != nil || user_record.Name != user.Name {
-				logger.Info("Initial user %v not present, creating",
-					user.Name)
-				new_user, _ := users.NewUserRecord(user.Name)
+			if config.GoogleAuthEnabled(config_obj) ||
+				config.SAMLEnabled(config_obj) {
+				password := make([]byte, 100)
+				rand.Read(password)
+				new_user.SetPassword(string(password))
+
+			} else {
 				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
 				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
-				err := users.SetUser(config_obj, new_user)
-				if err != nil {
-					return err
-				}
+			}
+			err := users.SetUser(config_obj, new_user)
+			if err != nil {
+				return err
 			}
 		}
 	}

@@ -50,10 +50,8 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
         path = Join(components.slice(1));
     }
 
-    // Some windows paths start with device name e.g. \\.\C: so we do
-    // not want to prepend a / to these.
-    if (path.substring(0,2) != '\\\\') {
-        path = '/' + path;
+    if (accessor == 'ntfs' && components.length > 1) {
+        path = components[1] + "\\" + components.slice(2).join("\\");
     }
 
     return {accessor: accessor, path: path};
