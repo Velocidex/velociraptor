@@ -104,11 +104,14 @@ Group=velociraptor
 WantedBy=multi-user.target
 `
 
-	server_launcher = `
-#!/bin/bash
+	server_launcher = `#!/bin/bash
 
 export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
-/usr/local/bin/velociraptor.bin ${@}
+if ! [[ -r "$VELOCIRAPTOR_CONFIG" ]] ; then
+    echo "'$VELOCIRAPTOR_CONFIG' is not readable, you will need to run this as the velociraptor user ('sudo -u velociraptor bash')."
+else
+    /usr/local/bin/velociraptor.bin "$@"
+fi
 `
 	client_service_definition = `
 [Unit]
@@ -233,7 +236,7 @@ chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
 chmod -R go-r /etc/velociraptor/
 chmod +x /usr/local/bin/velociraptor
 
-setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path))
