@@ -133,6 +133,7 @@ func (self *ClientEventTable) Start(
 		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
 		UpdateEventTable: event_table,
 	}
+	atomic.StoreUint64(&self.version, version)
 
 	return nil
 }
