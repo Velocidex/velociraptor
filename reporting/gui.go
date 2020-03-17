@@ -82,6 +82,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	}
 
 	if len(rows) == 0 { // No rows returned.
+		self.Scope.Log("Query produced no rows.")
 		return ""
 	}
 

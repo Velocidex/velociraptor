@@ -24,13 +24,10 @@ NotebookCellReportController.prototype.onCellIdChange_ = function() {
     var self = this;
 
     var cell = self.scope_["cell"];
-    if (!angular.isDefined(cell.output)) {
-        return;
-    }
 
-    self.template_ = cell.output;
-    self.messages_ = cell.messages;
-    self.scope_["data"] = JSON.parse(cell.data);
+    self.template_ = cell.output || "";
+    self.messages_ = cell.messages || [];
+    self.scope_["data"] = JSON.parse(cell.data || "{}");
     self.element_.html(self.template_).show();
     self.compile_(self.element_.contents())(self.scope_);
 };

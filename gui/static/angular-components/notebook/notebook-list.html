@@ -7,7 +7,7 @@
       </button>
       <button title="Delete Notebook" class="btn btn-default"
               ng-disabled="!selectedNotebookId"
-              ng-click="controller.deleteNotebook()">
+              ng-click="controller.deleteNotebook($event)">
         <i class="fa fa-trash"></i>
       </button>
     </li>

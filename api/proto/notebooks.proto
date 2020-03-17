@@ -23,6 +23,8 @@ message NotebookMetadata {
     repeated string cells = 6;
 
     string latest_cell_id = 8;
+
+    bool hidden = 9;
 }
 
 message Notebooks {

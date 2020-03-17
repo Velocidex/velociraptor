@@ -10,7 +10,7 @@ var TABLE_ROW_HASH = InfiniteTableController.ROW_HASH_NAME;
 
 
 /** @type {number} */
-let AUTO_REFRESH_INTERVAL_MS = 30 * 1000;
+let AUTO_REFRESH_INTERVAL_MS = 5 * 1000;
 
 /**
  * Sets the delay between automatic refreshes of the flow list.
@@ -38,6 +38,8 @@ const NotebookListController = function(
 
     /** @type {!Object<string, Object>} */
     this.notebooksById = {};
+
+    this.grrApiService_ = grrApiService;
 
     /** @type {?string} */
     this.selectedNotebookId;
@@ -88,6 +90,27 @@ NotebookListController.prototype.transformItems = function(items) {
   }.bind(this));
 
   return items;
+};
+
+NotebookListController.prototype.deleteNotebook = function(event) {
+    var selected_notebook_id = this.selectedNotebookId;
+    var notebook = this.scope_["state"]["notebook"];
+    var self = this;
+
+    notebook.hidden = true;
+
+    this.grrApiService_.post(
+        'v1/UpdateNotebook', notebook).then(
+            function success(response) {
+                self.selectedNotebookId = null;
+                self.triggerUpdate();
+
+            }, function failure(response) {
+                console.log("Error " + response.data);
+            });
+
+    event.stopPropagation();
+    return false;
 };
 
 /**

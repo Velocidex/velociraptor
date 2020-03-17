@@ -106,6 +106,11 @@ NotebookCellRendererController.prototype.deleteCell = function(event) {
     var changed = false;
     var cells = state.notebook.cells;
 
+    // Dont allow us to remove all cells.
+    if (cells.length <= 1) {
+        return;
+    }
+
     var new_cells = [];
     for (var i=0; i<cells.length; i++) {
         if (cells[i] == cell_id) {
@@ -201,6 +206,8 @@ NotebookCellRendererController.prototype.saveCell = function(event) {
                   type: this.cell.type || "Markdown",
                   input: this.cell.input};
     var self = this;
+    self.cell.output = "Loading";
+    self.cell.timestamp = 0;
 
     this.grrApiService_.post(url, params).then(function(response) {
         self.cell = response.data;

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"path"
 	"strings"
@@ -38,9 +39,17 @@ func (self *ApiServer) GetNotebooks(
 		return nil, err
 	}
 
-	for _, urn := range notebook_urns {
-		noteboook := &api_proto.NotebookMetadata{}
-		err := db.GetSubject(self.config, urn, noteboook)
+	for idx, urn := range notebook_urns {
+		if uint64(idx) < in.Offset {
+			continue
+		}
+
+		if uint64(idx) > in.Offset+in.Count {
+			break
+		}
+
+		notebook := &api_proto.NotebookMetadata{}
+		err := db.GetSubject(self.config, urn, notebook)
 		if err != nil {
 			logging.GetLogger(
 				self.config, &logging.FrontendComponent).
@@ -48,7 +57,9 @@ func (self *ApiServer) GetNotebooks(
 			continue
 		}
 
-		result.Items = append(result.Items, noteboook)
+		if !notebook.Hidden {
+			result.Items = append(result.Items, notebook)
+		}
 	}
 
 	return result, nil
@@ -94,16 +105,26 @@ func (self *ApiServer) NewNotebook(
 	in.ModifiedTime = in.CreatedTime
 	in.NotebookId = NewNotebookId()
 
-	// Add at least one cell to the notebook.
-	in.Cells = append(in.Cells, NewNotebookCellId())
+	new_cell_id := NewNotebookCellId()
+	in.Cells = append(in.Cells, new_cell_id)
 
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
 	}
+
 	err = db.SetSubject(self.config, reporting.GetNotebookPath(
 		in.NotebookId), in)
 
+	// Add a new single cell to the notebook.
+	new_cell_request := &api_proto.NotebookCellRequest{
+		Input:      fmt.Sprintf("# %s\n\n%s\n", in.Name, in.Description),
+		NotebookId: in.NotebookId,
+		CellId:     new_cell_id,
+		Type:       "Markdown",
+	}
+
+	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
 	return &empty.Empty{}, err
 }
 
