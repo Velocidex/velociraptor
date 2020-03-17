@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package proto;
+
+message NotebookCellRequest {
+    string notebook_id = 1;
+    string cell_id = 2;
+    string input = 3;
+
+    uint64 offset = 4;
+    uint64 count = 5;
+    string type = 6;
+}
+
+message NotebookMetadata {
+    string name = 1;
+    string description = 2;
+    string creator = 3;
+    int64 created_time = 4;
+    int64 modified_time = 5;
+
+    string notebook_id = 7;
+    repeated string cells = 6;
+
+    string latest_cell_id = 8;
+
+    bool hidden = 9;
+}
+
+message Notebooks {
+    repeated NotebookMetadata items = 1;
+}
+
+message NotebookCell {
+    string input = 1;
+    string output = 2;
+    string data  = 3;
+    string cell_id = 4;
+    repeated string messages = 5;
+
+    int64 timestamp = 6;
+
+    // The type of this cell.
+    string type = 7;
+}

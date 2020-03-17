@@ -1013,11 +1013,6 @@ li.active .navicon {
     height: 33px;
 }
 
-.hamburger {
-    margin-left: -10px;
-}
-
-
 div.artifact-view-table {
     max-height: -webkit-fill-available;
     max-height: -moz-available;

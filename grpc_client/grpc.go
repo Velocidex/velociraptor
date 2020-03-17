@@ -99,6 +99,10 @@ func GetChannel(config_obj *config_proto.Config) *grpc.ClientConn {
 }
 
 func GetAPIConnectionString(config_obj *config_proto.Config) string {
+	if config_obj.ApiConfig != nil && config_obj.ApiConfig.ApiConnectionString != "" {
+		return config_obj.ApiConfig.ApiConnectionString
+	}
+
 	switch config_obj.API.BindScheme {
 	case "tcp":
 		return fmt.Sprintf("%s:%d", config_obj.API.BindAddress,

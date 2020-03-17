@@ -28,26 +28,27 @@ const {routingModule} = goog.require('grrUi.routing.routing');
 const {semanticModule} = goog.require('grrUi.semantic.semantic');
 const {sidebarModule} = goog.require('grrUi.sidebar.sidebar');
 const {userModule} = goog.require('grrUi.user.user');
+const {notebookModule} = goog.require('grrUi.notebook.notebook');
 
 
 /**
  * Main GRR UI application module.
  */
 exports.appControllerModule = angular.module('grrUi.appController', [
-//  aclModule.name,
-  artifactModule.name,
-  clientModule.name,
-  configModule.name,
-  coreModule.name,
-  flowModule.name,
-  formsModule.name,
-  huntModule.name,
-  localModule.name,
-  routingModule.name,
-  semanticModule.name,
-  sidebarModule.name,
-  templatesModule.name,
-  userModule.name,
+    artifactModule.name,
+    clientModule.name,
+    configModule.name,
+    coreModule.name,
+    flowModule.name,
+    formsModule.name,
+    huntModule.name,
+    localModule.name,
+    routingModule.name,
+    semanticModule.name,
+    sidebarModule.name,
+    templatesModule.name,
+    userModule.name,
+    notebookModule.name,
 ]);
 
 /**

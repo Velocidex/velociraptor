@@ -401,7 +401,6 @@ func NewVFSFs(config_obj *config_proto.Config, client_id string) *VFSFs {
 
 func doFuse() {
 	config_obj := get_config_or_default()
-
 	grpc_client.GetChannel(config_obj)
 
 	args := []string{*fuse_command_mnt_point,

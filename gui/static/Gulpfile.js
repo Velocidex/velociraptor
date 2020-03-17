@@ -80,6 +80,8 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/ace-builds/src-noconflict/ext-language_tools.js',
                    config.nodeModulesDir + '/ace-builds/src-noconflict/theme-twilight.js',
                    config.nodeModulesDir + '/ace-builds/src-noconflict/mode-yaml.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/mode-markdown.js',
+                   config.nodeModulesDir + '/ace-builds/src-noconflict/mode-sql.js',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
@@ -154,27 +156,28 @@ gulp.task('compile-third-party-css', function() {
 
 gulp.task('compile-css', function() {
   return gulp.src([
-    'css/_variables.css',
-    'angular-components/sidebar/navigator.css',
-    'css/base.css',
-    'angular-components/artifact/reporting.css',
-    'angular-components/client/host-info.css',
-    'angular-components/client/virtual-file-system/breadcrumbs.css',
-    'angular-components/client/virtual-file-system/file-details.css',
-    'angular-components/client/virtual-file-system/file-hex-view.css',
-    'angular-components/client/virtual-file-system/file-text-view.css',
-    'angular-components/client/virtual-file-system/file-table.css',
-    'angular-components/core/global-notifications.css',
-    'angular-components/core/wizard-form.css',
-    'angular-components/forms/semantic-proto-form.css',
-    'angular-components/forms/semantic-proto-union-form.css',
-    'angular-components/sidebar/client-summary.css',
-    'angular-components/sidebar/client-warnings.css',
-    'angular-components/user/user-notification-item.css'
+      'css/_variables.css',
+      'angular-components/sidebar/navigator.css',
+      'css/base.css',
+      'angular-components/artifact/reporting.css',
+      'angular-components/client/host-info.css',
+      'angular-components/client/virtual-file-system/breadcrumbs.css',
+      'angular-components/client/virtual-file-system/file-details.css',
+      'angular-components/client/virtual-file-system/file-hex-view.css',
+      'angular-components/client/virtual-file-system/file-text-view.css',
+      'angular-components/client/virtual-file-system/file-table.css',
+      'angular-components/core/global-notifications.css',
+      'angular-components/core/wizard-form.css',
+      'angular-components/forms/semantic-proto-form.css',
+      'angular-components/forms/semantic-proto-union-form.css',
+      'angular-components/sidebar/client-summary.css',
+      'angular-components/sidebar/client-warnings.css',
+      'angular-components/user/user-notification-item.css',
+      'angular-components/notebook/notebook.css',
   ])
-    .pipe(gulpNewer(config.distDir + '/grr-ui.bundle.css'))
-    .pipe(gulpConcat('grr-ui.bundle.css'))
-    .pipe(gulp.dest(config.distDir));
+        .pipe(gulpNewer(config.distDir + '/grr-ui.bundle.css'))
+        .pipe(gulpConcat('grr-ui.bundle.css'))
+        .pipe(gulp.dest(config.distDir));
 });
 
 
