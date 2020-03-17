@@ -1,0 +1,93 @@
+<div class='notebook-cell'
+     ng-class="{selected: selected}"
+     >
+  <div class='notebook-input'>
+    <div class="cell-toolbar"
+      ng-class="{selected: selected, not_selected: !selected}">
+      <div class="btn-group" role="group">
+        <button class="btn btn-default"
+                title="Cancel"
+                ng-if="!controller.editing"
+                ng-click="controller.removeFocus($event)">
+          <i class="fa fa-window-close"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Edit Cell"
+                ng-if="!controller.editing"
+                ng-click="controller.setEditing($event,true)">
+          <i class="fa fa-pencil"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Delete Cell"
+                ng-if="!controller.editing"
+                ng-click="controller.deleteCell($event,true)">
+          <i class="fa fa-trash-o"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Up Cell"
+                ng-if="!controller.editing"
+                ng-disabled="cellId == state.notebook.cells[0]"
+                ng-click="controller.upCell($event)">
+          <i class="fa fa-arrow-up"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Down Cell"
+                ng-disabled="cellId == state.notebook.cells[state.notebook.cells.length-1]"
+                ng-if="!controller.editing"
+                ng-click="controller.downCell($event)">
+          <i class="fa fa-arrow-down"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Add Cell"
+                ng-if="!controller.editing"
+                ng-click="controller.addCell($event)">
+          <i class="fa fa-plus"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Undo"
+                ng-if="controller.editing"
+                ng-click="controller.setEditing($event, false)">
+          <i class="fa fa-window-close"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Save"
+                ng-if="controller.editing"
+                ng-click="controller.saveCell($event)">
+          <i class="fa fa-floppy-o"></i>
+        </button>
+      </div>
+    </div>
+    <div ng-if="controller.editing">
+      <form>
+        <div ui-ace="{
+                     useWrapMode : true,
+                     showGutter: true,
+                     theme:'twilight',
+                     mode: 'markdown',
+                     enableBasicAutocompletion: true,
+                     enableSnippets: true,
+                     enableLiveAutocompletion: true,
+                     rendererOptions: {
+                     fontSize: '14px',
+                     fontFamily: 'monospace',
+                     },
+                     }"
+             ng-model="controller.cell.input"
+             style="height: 20em; width: 100%"
+             ng-click="controller.noop($event)"
+             ></div>
+      </form>
+    </div>
+  </div>
+  <div class='notebook-output'>
+    <grr-notebook-report-renderer
+      cell="controller.cell" />
+  </div>
+</div>

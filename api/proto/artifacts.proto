@@ -112,7 +112,6 @@ message GetReportResponse {
         }];
 }
 
-
 // Deprecated.
 message ArtifactCompressionDict {}
 

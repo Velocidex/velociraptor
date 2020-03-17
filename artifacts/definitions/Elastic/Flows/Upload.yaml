@@ -25,18 +25,18 @@ sources:
 
       - LET documents = SELECT * FROM foreach(row=completions,
           query={
-             SELECT * FROM for(
-                 var="ArtifactWithResults",
-                 foreach=Flow.artifacts_with_results,
+             SELECT * FROM foreach(
+                 row=Flow.artifacts_with_results,
                  query={
-                     SELECT *, ArtifactWithResults AS Artifact,
+                     SELECT *, _value AS Artifact,
                             timestamp(epoch=now()) AS timestamp,
                             ClientId, Flow.session_id AS FlowId,
-                            "artifact_" + ArtifactWithResults as _index
+                            "artifact_" + regex_replace(source=_value,
+                               re='[/.]', replace='_') as _index
                      FROM source(
                         client_id=ClientId,
                         flow_id=Flow.session_id,
-                        artifact=ArtifactWithResults)
+                        artifact=_value)
                  })
           })
 
