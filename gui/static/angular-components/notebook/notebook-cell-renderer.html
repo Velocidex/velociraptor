@@ -63,6 +63,15 @@
           <i class="fa fa-floppy-o"></i>
         </button>
       </div>
+
+      <select class="btn btn-default float-right"
+              ng-model="controller.cell.type"
+              ng-if="controller.editing"
+              >
+        <option label="Markdown" value="Markdown"></option>
+        <option label="VQL" value="VQL"></option>
+      </select>
+
     </div>
     <div ng-if="controller.editing">
       <form>
@@ -70,7 +79,7 @@
                      useWrapMode : true,
                      showGutter: true,
                      theme:'twilight',
-                     mode: 'markdown',
+                     mode: controller.ace_type(),
                      enableBasicAutocompletion: true,
                      enableSnippets: true,
                      enableLiveAutocompletion: true,

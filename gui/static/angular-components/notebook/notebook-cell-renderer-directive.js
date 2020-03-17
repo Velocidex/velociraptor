@@ -12,10 +12,14 @@ const NotebookCellRendererController = function(
     this.grrApiService_ = grrApiService;
     this.cell = {};
     this.editing = false;
-
     this.scope_.$watch('cellId',
                        this.onCellIdChange_.bind(this));
-
+    this.scope_.$watch('state.selectedNotebookCellId', function() {
+        var state = this.scope_["state"];
+        if (state.selectedNotebookCellId != this.cell.cell_id) {
+            this.editing = false;
+        };
+    }.bind(this));
 };
 
 NotebookCellRendererController.prototype.onCellIdChange_ = function() {
@@ -25,11 +29,25 @@ NotebookCellRendererController.prototype.onCellIdChange_ = function() {
     this.grrApiService_.get(
         'v1/GetNotebookCell', request).then(function success(response) {
             self.cell = response.data;
-
+            if (!self.cell.type) {
+                self.cell.type = "Markdown";
+            }
          }, function failure(response) {
              console.log("Error " + response.data);
          });
 };
+
+NotebookCellRendererController.prototype.ace_type = function() {
+    var type = this.cell.type;
+
+    if (type == "VQL") {
+        return "sql";
+    }
+    if (type == "Markdown") {
+        return "markdown";
+    }
+    return "yaml";
+}
 
 NotebookCellRendererController.prototype.noop = function(e) {
     e.stopPropagation();
@@ -180,6 +198,7 @@ NotebookCellRendererController.prototype.saveCell = function(event) {
     var url = 'v1/UpdateNotebookCell';
     var params = {notebook_id: this.scope_["notebookId"],
                   cell_id: this.scope_["cellId"],
+                  type: this.cell.type || "Markdown",
                   input: this.cell.input};
     var self = this;
 

@@ -9,6 +9,7 @@ message NotebookCellRequest {
 
     uint64 offset = 4;
     uint64 count = 5;
+    string type = 6;
 }
 
 message NotebookMetadata {
@@ -37,10 +38,6 @@ message NotebookCell {
 
     int64 timestamp = 6;
 
-    enum Type {
-        MARKDOWN = 0;
-        VQL = 1;
-    }
-
-    Type type = 7;
+    // The type of this cell.
+    string type = 7;
 }

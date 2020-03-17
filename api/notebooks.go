@@ -284,9 +284,24 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, err
 	}
 
-	output, err := tmpl.Execute(in.Input)
-	if err != nil {
-		return nil, err
+	output := ""
+
+	switch in.Type {
+	case "Markdown":
+		output, err = tmpl.Execute(in.Input)
+		if err != nil {
+			return nil, err
+		}
+
+	case "VQL":
+		rows := tmpl.Query(in.Input)
+		output_any, ok := tmpl.Table(rows).(string)
+		if ok {
+			output = output_any
+		}
+
+	default:
+		return nil, errors.New("Unsupported cell type")
 	}
 
 	db, err := datastore.GetDB(self.config)
@@ -305,6 +320,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		Data:      string(encoded_data),
 		Messages:  *tmpl.Messages,
 		CellId:    in.CellId,
+		Type:      in.Type,
 		Timestamp: time.Now().Unix(),
 	}
 
