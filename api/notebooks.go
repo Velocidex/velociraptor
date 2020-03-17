@@ -94,6 +94,9 @@ func (self *ApiServer) NewNotebook(
 	in.ModifiedTime = in.CreatedTime
 	in.NotebookId = NewNotebookId()
 
+	// Add at least one cell to the notebook.
+	in.Cells = append(in.Cells, NewNotebookCellId())
+
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
