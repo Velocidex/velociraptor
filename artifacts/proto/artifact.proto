@@ -89,6 +89,10 @@ message ArtifactSource {
             "this source."
         }];
 
+    string query = 6 [(sem_type) = {
+            description: "A multi-line VQL query"
+        }];
+
     repeated string queries = 2 [(sem_type) = {
             description: "Queries that will run in order. Only output from "
             "the last query will be collected."

@@ -4,13 +4,13 @@ description: |
   the system records properties about the executable to make it faster
   to run next time. By parsing this information we are able to
   determine when binaries are run in the past. On Windows10 we can see
-  the last 8 execution times and creation time (9 potential executions).  
-    
-  There are several parameter's availible for this artifact.  
-    - dateAfter enables search for prefetch evidence after this date.  
-    - dateBefore enables search for prefetch evidence before this date.   
-    - binaryRegex enables to filter on binary name, e.g evil.exe.  
-    - hashRegex enables to filter on prefetch hash.  
+  the last 8 execution times and creation time (9 potential executions).
+
+  There are several parameter's availible for this artifact.
+    - dateAfter enables search for prefetch evidence after this date.
+    - dateBefore enables search for prefetch evidence before this date.
+    - binaryRegex enables to filter on binary name, e.g evil.exe.
+    - hashRegex enables to filter on prefetch hash.
 
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
@@ -30,12 +30,11 @@ parameters:
       description: "Regex of executable name."
     - name: hashRegex
       description: "Regex of prefetch hash."
-      
+
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
-  - queries:
-      - |
+  - query: |
         // Parse prefetch files and apply non time filters
         LET pf <= SELECT * FROM foreach(
               row={
@@ -49,39 +48,39 @@ sources:
                     Version,
                     LastRunTimes,
                     RunCount,
-                    // FilesAccessed, 
-                    FullPath, 
+                    // FilesAccessed,
+                    FullPath,
                     Name AS PrefetchFileName,
                     timestamp(epoch=Ctime.sec) as CreationTime,
                     timestamp(epoch=Mtime.sec) as ModificationTime
                  FROM prefetch(filename=FullPath)
-                 WHERE  
+                 WHERE
                     if(condition=binaryRegex, then= Executable =~ binaryRegex,
                     else=TRUE) AND
                     if(condition=hashRegex, then= Hash =~ hashRegex,
                     else=TRUE)
               })
-      - |
+
         // Flattern to enable time filters. Remember VQL is lazy.
         LET executionTimes = SELECT * FROM flatten(
-                query = { 
+                query = {
                     SELECT *,
                         FullPath as FilteredPath,
                         LastRunTimes as ExecutionTime
-                    FROM pf 
+                    FROM pf
                 })
-            WHERE 
+            WHERE
                 if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
                     else=TRUE) AND
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                     else=TRUE)
-      - |
+
         LET creationTimes = SELECT * FROM flatten(
-                query = { 
+                query = {
                     SELECT *,
                         FullPath as FilteredPath,
                         CreationTime as ExecutionTime
-                    FROM pf 
+                    FROM pf
                     WHERE RunCount > 8
                 })
             WHERE
@@ -90,14 +89,14 @@ sources:
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                         else=TRUE)
             GROUP BY ExecutionTime
-      - |
+
         // For stdOutput with timefilters we need to group by FullPath
         LET timeFiltered = SELECT FilteredPath
             FROM chain(
                 a = { SELECT * FROM executionTimes },
                 b = { SELECT * FROM creationTimes  })
             GROUP BY FilteredPath
-      - |
+
         LET timeFilteredStdOut = SELECT * FROM foreach(
                 row={
                         SELECT * FROM timeFiltered
@@ -107,11 +106,8 @@ sources:
                     FROM pf
                     WHERE FullPath = FilteredPath
                 })
-               
-      - |
-        SELECT * 
+
+        SELECT *
         FROM if(condition = (dateBefore OR dateAfter),
-            then={ SELECT * FROM timeFilteredStdOut }, 
+            then={ SELECT * FROM timeFilteredStdOut },
             else={ SELECT * FROM pf  })
-                    
-                    

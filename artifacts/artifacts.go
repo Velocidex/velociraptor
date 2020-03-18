@@ -28,13 +28,14 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/Velocidex/yaml"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -111,6 +112,23 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
+
+	for _, source := range artifact.Sources {
+		if source.Query != "" {
+			multi_vql, err := vfilter.MultiParse(source.Query)
+			if err != nil {
+				return nil, err
+			}
+
+			scope := vql_subsystem.MakeScope()
+
+			// Append the queries to the query list.
+			for _, vql := range multi_vql {
+				source.Queries = append(source.Queries, vql.ToString(scope))
+			}
+		}
+	}
+
 	artifact.Raw = data
 	return self.LoadProto(artifact, validate)
 }
