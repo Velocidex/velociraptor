@@ -25,7 +25,7 @@ NotebookCellReportController.prototype.onCellIdChange_ = function() {
 
     var cell = self.scope_["cell"];
 
-    self.template_ = cell.output || "";
+    self.template_ = cell.output || "<hr />";
     self.messages_ = cell.messages || [];
     self.scope_["data"] = JSON.parse(cell.data || "{}");
     self.element_.html(self.template_).show();
