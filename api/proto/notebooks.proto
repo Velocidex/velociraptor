@@ -10,6 +10,8 @@ message NotebookCellRequest {
     uint64 offset = 4;
     uint64 count = 5;
     string type = 6;
+
+    bool currently_editing = 8;
 }
 
 message NotebookMetadata {
@@ -42,4 +44,6 @@ message NotebookCell {
 
     // The type of this cell.
     string type = 7;
+
+    bool currently_editing = 8;
 }

@@ -58,12 +58,10 @@ const closureCompilerFlags = {
  */
 gulp.task('compile-third-party-js', function() {
   return gulp.src([config.nodeModulesDir + '/jquery/dist/jquery.js',
+                   config.nodeModulesDir + '/popper.js/dist/umd/popper.min.js',
                    config.nodeModulesDir + '/jquery-migrate/dist/jquery-migrate.js',
-
                    config.nodeModulesDir + '/google-closure-library/closure/goog/base.js',
-
                    config.nodeModulesDir + '/bootstrap/dist/js/bootstrap.js',
-
                    config.nodeModulesDir + '/angular/angular.js',
                    config.nodeModulesDir + '/angular-animate/angular-animate.js',
                    config.nodeModulesDir + '/angular-cookies/angular-cookies.js',

@@ -128,6 +128,14 @@ NotebookListController.prototype.newNotebook = function() {
     var modalScope = this.scope_.$new();
     var self = this;
 
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-new-notebook-dialog '+
+            'on-resolve="resolve()" on-reject="reject()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+
     modalScope.resolve = function() {
         modalInstance.close();
         self.triggerUpdate();
@@ -139,13 +147,6 @@ NotebookListController.prototype.newNotebook = function() {
         modalScope.$destroy();
     });
 
-    var modalInstance = this.uibModal_.open({
-        template: '<grr-new-notebook-dialog '+
-            'on-resolve="resolve()" on-reject="reject()" />',
-        scope: modalScope,
-        windowClass: 'wide-modal high-modal',
-        size: 'lg'
-    });
 };
 
 

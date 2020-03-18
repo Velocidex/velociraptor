@@ -118,10 +118,11 @@ func (self *ApiServer) NewNotebook(
 
 	// Add a new single cell to the notebook.
 	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:      fmt.Sprintf("# %s\n\n%s\n", in.Name, in.Description),
-		NotebookId: in.NotebookId,
-		CellId:     new_cell_id,
-		Type:       "Markdown",
+		Input:            fmt.Sprintf("# %s\n\n%s\n", in.Name, in.Description),
+		NotebookId:       in.NotebookId,
+		CellId:           new_cell_id,
+		Type:             "Markdown",
+		CurrentlyEditing: true,
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
@@ -184,7 +185,20 @@ func (self *ApiServer) NewNotebookCell(
 
 	err = db.SetSubject(self.config, reporting.GetNotebookPath(
 		in.NotebookId), notebook)
+	if err != nil {
+		return nil, err
+	}
 
+	// Create the new cell with fresh content.
+	new_cell_request := &api_proto.NotebookCellRequest{
+		Input:            in.Input,
+		NotebookId:       in.NotebookId,
+		CellId:           notebook.LatestCellId,
+		Type:             in.Type,
+		CurrentlyEditing: in.CurrentlyEditing,
+	}
+
+	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
 	return notebook, err
 }
 
@@ -318,10 +332,12 @@ func (self *ApiServer) UpdateNotebookCell(
 		}
 
 	case "VQL":
-		rows := tmpl.Query(in.Input)
-		output_any, ok := tmpl.Table(rows).(string)
-		if ok {
-			output = output_any
+		if in.Input != "" {
+			rows := tmpl.Query(in.Input)
+			output_any, ok := tmpl.Table(rows).(string)
+			if ok {
+				output = output_any
+			}
 		}
 
 	default:
@@ -339,13 +355,14 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	notebook := &api_proto.NotebookCell{
-		Input:     in.Input,
-		Output:    output,
-		Data:      string(encoded_data),
-		Messages:  *tmpl.Messages,
-		CellId:    in.CellId,
-		Type:      in.Type,
-		Timestamp: time.Now().Unix(),
+		Input:            in.Input,
+		Output:           output,
+		Data:             string(encoded_data),
+		Messages:         *tmpl.Messages,
+		CellId:           in.CellId,
+		Type:             in.Type,
+		Timestamp:        time.Now().Unix(),
+		CurrentlyEditing: in.CurrentlyEditing,
 	}
 
 	// And store it for next time.
