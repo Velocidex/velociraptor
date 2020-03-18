@@ -241,7 +241,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			query = html.UnescapeString(buf.String())
 		}
 
-		vql, err := vfilter.Parse(query)
+		multi_vql, err := vfilter.MultiParse(query)
 		if err != nil {
 			return self.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
@@ -250,15 +250,17 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		ctx, cancel := context.WithCancel(self.ctx)
 		defer cancel()
 
-		for row := range vql.Eval(ctx, self.Scope) {
-			result = append(result, row)
+		for _, vql := range multi_vql {
+			for row := range vql.Eval(ctx, self.Scope) {
+				result = append(result, row)
 
-			// Do not let the query collect too many rows
-			// - it impacts on server performance.
-			if len(result) > 10000 {
-				self.Error("Query cancelled because it "+
-					"exceeded row count: '%s'", query)
-				return result
+				// Do not let the query collect too many rows
+				// - it impacts on server performance.
+				if len(result) > 10000 {
+					self.Error("Query cancelled because it "+
+						"exceeded row count: '%s'", query)
+					return result
+				}
 			}
 		}
 	}

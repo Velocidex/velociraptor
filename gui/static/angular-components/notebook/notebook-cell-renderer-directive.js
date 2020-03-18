@@ -20,6 +20,17 @@ const NotebookCellRendererController = function(
             this.editing = false;
         };
     }.bind(this));
+
+    var self = this;
+    this.scope_.aceConfig = function(ace) {
+        ace.commands.addCommand({
+            name: 'saveAndExit',
+            bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
+            exec: function(editor) {
+                self.saveCell();
+            },
+        });
+    };
 };
 
 NotebookCellRendererController.prototype.onCellIdChange_ = function() {
@@ -35,6 +46,12 @@ NotebookCellRendererController.prototype.onCellIdChange_ = function() {
          }, function failure(response) {
              console.log("Error " + response.data);
          });
+};
+
+
+NotebookCellRendererController.prototype.aceConfig = function(ace) {
+    var self = this;
+
 };
 
 NotebookCellRendererController.prototype.ace_type = function() {
@@ -220,24 +237,27 @@ NotebookCellRendererController.prototype.saveCell = function(event) {
         self.error = error;
     });
 
-    event.stopPropagation();
+    if (angular.isDefined(event)) {
+        event.stopPropagation();
+    }
     return false;
 };
 
 
 exports.NotebookCellRendererDirective = function() {
-  return {
-      scope: {
-          'notebookId': '=',
-          "cellId": '=',
-          "selected": '=',
-          "state": '=',
-      },
-      restrict: 'E',
-      templateUrl: '/static/angular-components/notebook/notebook-cell-renderer.html',
-      controller: NotebookCellRendererController,
-      controllerAs: 'controller'
-  };
+    var result = {
+        scope: {
+            'notebookId': '=',
+            "cellId": '=',
+            "selected": '=',
+            "state": '=',
+        },
+        restrict: 'E',
+        templateUrl: '/static/angular-components/notebook/notebook-cell-renderer.html',
+        controller: NotebookCellRendererController,
+        controllerAs: 'controller',
+    };
+    return result;
 };
 
 exports.NotebookCellRendererDirective.directive_name = 'grrNotebookCellRenderer';

@@ -46,9 +46,19 @@ reports:
       {{ range $source := $artifact.Sources }}
 
       ### Source {{ $source.Name }}
+      {{ if $source.Query }}
+
+      ```vql
+      {{ $source.Query }}
+      ```
+
+      {{- else -}}
+
       ```vql
       {{ range $query := $source.Queries -}}
       {{- $query -}}
       {{ end }}
       ```
+      {{ end }}
+
       {{ end }}
