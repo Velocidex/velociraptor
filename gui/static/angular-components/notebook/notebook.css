@@ -28,6 +28,16 @@
     display: none;
 }
 
-.notebook-output {
+.notebook-output.collapsed {
+    max-height: 24em;
+    width: 100%;
+    overflow: auto;
+    border-radius: 2px;
+    -webkit-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    display: block;
+}
 
+div.dt-buttons {
+    margin-bottom: 6px;
 }
