@@ -282,7 +282,17 @@ func (self *Repository) GetQueryDependencies(
 
 		// Now search the referred to artifact's query for its
 		// own dependencies.
+		err := self.GetQueryDependencies(dep.Precondition, depth+1, dependency)
+		if err != nil {
+			return err
+		}
+
 		for _, source := range dep.Sources {
+			err := self.GetQueryDependencies(source.Precondition, depth+1, dependency)
+			if err != nil {
+				return err
+			}
+
 			for _, query := range source.Queries {
 				err := self.GetQueryDependencies(query, depth+1, dependency)
 				if err != nil {
