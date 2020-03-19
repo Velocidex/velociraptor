@@ -12,6 +12,7 @@ const NotebookCellRendererController = function(
     this.grrApiService_ = grrApiService;
     this.uibModal_ = $uibModal;
     this.cell = {};
+    this.id = 0;
     this.currently_editing = false;
 
     var self = this;
@@ -49,6 +50,7 @@ NotebookCellRendererController.prototype.onCellIdChange_ = function() {
             if (!self.cell.type) {
                 self.cell.type = "Markdown";
             }
+            self.id = self.cell.cell_id.split(".")[1];
          }, function failure(response) {
              console.log("Error " + response.data);
          });

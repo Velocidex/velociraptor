@@ -13,6 +13,20 @@
         </button>
 
         <button class="btn btn-default"
+                title="Cancel"
+                ng-if="!controller.currently_editing && !controller.collapsed"
+                ng-click="controller.collapsed = true">
+          <i class="fa fa-compress"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Cancel"
+                ng-if="!controller.currently_editing && controller.collapsed"
+                ng-click="controller.collapsed = false">
+          <i class="fa fa-expand"></i>
+        </button>
+
+        <button class="btn btn-default"
                 title="Edit Cell"
                 ng-if="!controller.currently_editing"
                 ng-click="controller.setEditing($event,true)">
@@ -113,9 +127,10 @@
       </form>
     </div>
   </div>
-  <div class='notebook-output'>
-    <grr-notebook-report-renderer
-      cell="controller.cell" />
+  <div class='notebook-output'
+       ng-class="{collapsed: controller.collapsed}"
+       >
+    <grr-notebook-report-renderer cell="controller.cell" />
     <div ng-repeat="msg in controller.cell.messages track by $index"
          ng-if="selected"
          class="error-message"

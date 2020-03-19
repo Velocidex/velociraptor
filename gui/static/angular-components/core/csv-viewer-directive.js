@@ -38,9 +38,23 @@ const CsvViewerDirective = function(
     this.pageData;
 
     /** @type {object} */
-    this.options = {
-        "pagingType": "full_numbers"
-    };
+    this.dtOptions =  DTOptionsBuilder.newOptions()
+        .withColReorder()
+        .withDOM('BRlfrtip')
+        .withPaginationType('full_numbers')
+        .withButtons([
+            {
+                extend: 'csv',
+                className: "btn btn-default pull-left  btn-sm",
+                text: '<i class="fa fa-floppy-o"></i>',
+                filename: "Velociraptor Table",
+                exportOptions: {
+                    modifier: {
+                        search: 'none'
+                    }
+                }
+            },
+        ]);
 
     this.scope_.$watch(
         'params',
@@ -100,6 +114,12 @@ CsvViewerDirective.prototype.fetchText_ = function() {
         var value = self.scope_.value;
         var rows = JSON.parse(value.Response);
         var new_rows = [];
+        if (angular.isDefined(self.scope_.params)) {
+            var filename = self.scope_.params.filename;
+            if (filename) {
+                this.dtOptions.buttons[0].filename = filename;
+            }
+        }
 
         for (var i=0; i<rows.length; i++) {
             var new_row = [];
