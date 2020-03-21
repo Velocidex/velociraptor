@@ -66,6 +66,16 @@ const NotebookListController = function(
     // Propagate our triggerUpdate implementation to the scope so that users of
     // this directive can use it.
     this.scope_['triggerUpdate'] = this.triggerUpdate.bind(this);
+
+    var self = this;
+    self.pollPromise_ = null;
+    self.notebook = null;
+    self.scope_.$on('$destroy', function() {
+        if (self.pollPromise_ !== null) {
+            self.grrApiService_.cancelPoll(self.pollPromise_);
+            self.pollPromise_ = null;
+        };
+    });
 };
 
 
@@ -120,8 +130,33 @@ NotebookListController.prototype.deleteNotebook = function(event) {
  * @export
  */
 NotebookListController.prototype.selectItem = function(item) {
-    this.selectedNotebookId = item['notebook_id'];
-    this.scope_["state"]["notebook"] = item;
+    var self = this;
+
+    // Start watching self notebook id.
+    self.selectedNotebookId = item['notebook_id'];
+    self.scope_["state"]["notebook"] = item;
+    self.scope_["state"]["notebook_id"] = self.selectedNotebookId;
+
+    if (angular.isDefined(self.selectedNotebookId)) {
+        // Cancel existing polls
+        if (self.pollPromise_ !== null) {
+            self.grrApiService_.cancelPoll(self.pollPromise_);
+            self.pollPromise_ = null;
+        };
+
+        self.pollPromise_ = self.grrApiService_.poll(
+            'v1/GetNotebooks',
+            AUTO_REFRESH_INTERVAL_MS,
+            {notebook_id: self.selectedNotebookId});
+        self.pollPromise_.then(
+            undefined,
+            undefined,
+            function notify(response) {
+                if (response['data']) {
+                    self.scope_["state"]["notebook"] = response['data']["items"][0];
+                }
+            });
+    }
 };
 
 NotebookListController.prototype.newNotebook = function() {
@@ -146,8 +181,34 @@ NotebookListController.prototype.newNotebook = function() {
     this.scope_.$on('$destroy', function() {
         modalScope.$destroy();
     });
+};
+
+
+NotebookListController.prototype.exportNotebook = function() {
+    var modalScope = this.scope_.$new();
+    var self = this;
+
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-export-notebook-dialog notebook="state.notebook" '+
+            'on-resolve="resolve()" on-reject="reject()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+
+    modalScope.resolve = function() {
+        modalInstance.close();
+        self.triggerUpdate();
+    };
+    modalScope.reject = function() {
+        modalInstance.dismiss();
+    };
+    this.scope_.$on('$destroy', function() {
+        modalScope.$destroy();
+    });
 
 };
+
 
 
 /**

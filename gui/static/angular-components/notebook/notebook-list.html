@@ -10,6 +10,14 @@
               ng-click="controller.deleteNotebook($event)">
         <i class="fa fa-trash"></i>
       </button>
+
+      <button class="btn btn-default" name="ExportNotebook"
+              ng-disabled="!selectedNotebookId"
+              title="Export Notebook"
+              ng-click="controller.exportNotebook($event)">
+        <i class="fa fa-download"></i>
+      </button>
+
     </li>
   </div>
 </div>

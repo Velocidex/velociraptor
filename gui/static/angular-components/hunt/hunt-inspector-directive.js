@@ -77,21 +77,17 @@ HuntInspectorController.prototype.startPolling_ = function() {
   this.pollPromise_ = undefined;
 
   if (angular.isDefined(this.scope_['huntId'])) {
-      // FIXME: Remove the aff4 path from this.
       var huntId = this.scope_['huntId'];
-      var components = huntId.split("/");
-      this.huntId = components[components.length-1];
-
-    this.pollPromise_ = this.grrApiService_.poll(
-      'v1/GetHunt',
-      AUTO_REFRESH_INTERVAL_MS,
-      {hunt_id: this.huntId});
-    this.pollPromise_.then(
-        undefined,
-        undefined,
-        function notify(response) {
-            this.hunt = response['data'];
-        }.bind(this));
+      this.pollPromise_ = this.grrApiService_.poll(
+          'v1/GetHunt',
+          AUTO_REFRESH_INTERVAL_MS,
+          {hunt_id: this.huntId});
+      this.pollPromise_.then(
+          undefined,
+          undefined,
+          function notify(response) {
+              this.hunt = response['data'];
+          }.bind(this));
   }
 };
 

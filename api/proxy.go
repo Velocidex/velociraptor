@@ -104,17 +104,6 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	mux.Handle("/api/", csrfProtect(config_obj,
 		checkUserCredentialsHandler(config_obj, h)))
 
-	// DEPRECATED: Download the flow result and uploads as a zip
-	// file generated on the fly. This is deprecated: Users now
-	// need to prepare the download first.
-	mux.Handle("/api/v1/download/", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
-			config_obj, flowResultDownloadHandler(config_obj))))
-
-	mux.Handle("/api/v1/DownloadHuntResults", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
-			config_obj, huntResultDownloadHandler(config_obj))))
-
 	mux.Handle("/api/v1/DownloadVFSFile", csrfProtect(config_obj,
 		checkUserCredentialsHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))

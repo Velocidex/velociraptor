@@ -359,6 +359,13 @@ service API {
         };
     }
 
+    rpc CreateNotebookDownloadFile(NotebookExportRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateNotebookDownloadFile",
+            body: "*",
+        };
+    }
+
 
     // The below are API client methods - not available over HTTP
 

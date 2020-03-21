@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"strings"
 	"sync"
 	"text/template"
 
@@ -205,7 +206,10 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 				chroma_html.WithLineNumbers()),
 			bfchroma.Style("github"),
 		)))
-	output_string := string(output)
+
+	// Add classes to various tags
+	output_string := strings.ReplaceAll(string(output),
+		"<table>", "<table class=\"table table-striped\">")
 
 	/* This is used to dump out the CSS to be included in
 	   reporting.scss.

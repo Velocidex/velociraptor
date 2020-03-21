@@ -1,10 +1,11 @@
 <div>
-  <div ng-repeat="cell in state.notebook.cells">
+  <div ng-repeat="cell in state.notebook.cell_metadata track by $index">
     <grr-notebook-cell-renderer
       notebook-id="state.notebook.notebook_id"
-      ng-click="controller.toggleFocus(cell)"
-      selected="state.selectedNotebookCellId == cell"
+      ng-click="controller.toggleFocus(cell.cell_id)"
+      selected="state.selectedNotebookCellId == cell.cell_id"
+      timestamp="cell.timestamp"
       state="state"
-      cell-id="cell"/>
+      cell-id="cell.cell_id"/>
   </div>
 </div>
