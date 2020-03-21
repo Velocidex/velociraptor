@@ -462,7 +462,8 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	file_store_factory := file_store.GetFileStore(self.config)
 	filename := path.Join("/downloads/notebooks", notebook.NotebookId,
-		notebook.NotebookId+".html")
+		fmt.Sprintf("%s-%s.html", notebook.NotebookId,
+			time.Now().Format("20060102150405Z")))
 
 	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
 	if err != nil {

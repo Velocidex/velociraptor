@@ -68,7 +68,7 @@ pre {
 /* Error */  .chromaerr { color: #a61717; background-color: #e3d2d2 }
 /* LineTableTD */  .chromalntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
 /* LineTable */  .chromalntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; overflow: auto; display: block; }
-/* LineHighlight */  .chromahl { display: block; width: 100%; }
+/* LineHighlight */  .chromahl { display: block; width: 100%%; }
 /* LineNumbersTable */  .chromalnt { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
 /* LineNumbers */  .chromaln { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
 /* Keyword */  .chromak { color: #000000; font-weight: bold }
