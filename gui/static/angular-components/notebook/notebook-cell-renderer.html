@@ -36,14 +36,14 @@
         <button class="btn btn-default"
                 title="Up Cell"
                 ng-if="!controller.currently_editing"
-                ng-disabled="cellId == state.notebook.cells[0]"
+                ng-disabled="cellId == state.notebook.cell_metadata[0].cell_id"
                 ng-click="controller.upCell($event)">
           <i class="fa fa-arrow-up"></i>
         </button>
 
         <button class="btn btn-default"
                 title="Down Cell"
-                ng-disabled="cellId == state.notebook.cells[state.notebook.cells.length-1]"
+                ng-disabled="cellId == state.notebook.cell_metadata[state.notebook.cell_metadata.length-1].cell_id"
                 ng-if="!controller.currently_editing"
                 ng-click="controller.downCell($event)">
           <i class="fa fa-arrow-down"></i>

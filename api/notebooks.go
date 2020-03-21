@@ -13,9 +13,12 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -31,6 +34,35 @@ func (self *ApiServer) GetNotebooks(
 		return nil, err
 	}
 
+	// We want a single notebook metadata.
+	if in.NotebookId != "" {
+		notebook := &api_proto.NotebookMetadata{}
+		err := db.GetSubject(self.config,
+			reporting.GetNotebookPath(in.NotebookId),
+			notebook)
+		if err != nil {
+			logging.GetLogger(
+				self.config, &logging.FrontendComponent).
+				Error("Unable to open notebook", err)
+			return nil, err
+		}
+
+		notebook.AvailableDownloads, err = getAvailableDownloadFiles(self.config,
+			path.Join("/downloads/notebooks/", in.NotebookId))
+		if err != nil {
+			logger := logging.GetLogger(self.config, &logging.GUIComponent)
+			logger.WithFields(logrus.Fields{
+				"notebook_id": notebook.NotebookId,
+				"error":       err,
+			}).Error("GetNotebooks")
+		}
+
+		result.Items = append(result.Items, notebook)
+
+		return result, nil
+	}
+
+	// List all available notebooks
 	notebook_urns, err := db.ListChildren(
 		self.config,
 		path.Dir(reporting.GetNotebookPath("X")),
@@ -106,7 +138,11 @@ func (self *ApiServer) NewNotebook(
 	in.NotebookId = NewNotebookId()
 
 	new_cell_id := NewNotebookCellId()
-	in.Cells = append(in.Cells, new_cell_id)
+
+	in.CellMetadata = append(in.CellMetadata, &api_proto.NotebookCell{
+		CellId:    new_cell_id,
+		Timestamp: time.Now().Unix(),
+	})
 
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
@@ -161,27 +197,36 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, err
 	}
 
-	new_cells := []string{}
+	new_cell_md := []*api_proto.NotebookCell{}
 	added := false
 
 	notebook.LatestCellId = NewNotebookCellId()
 
-	for _, cell_id := range notebook.Cells {
-		if cell_id == in.CellId {
-			new_cells = append(new_cells, cell_id)
-			new_cells = append(new_cells, notebook.LatestCellId)
+	for _, cell_md := range notebook.CellMetadata {
+		if cell_md.CellId == in.CellId {
+			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+				CellId:    cell_md.CellId,
+				Timestamp: time.Now().Unix(),
+			})
+			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+				CellId:    notebook.LatestCellId,
+				Timestamp: time.Now().Unix(),
+			})
 			added = true
 			continue
 		}
-		new_cells = append(new_cells, cell_id)
+		new_cell_md = append(new_cell_md, cell_md)
 	}
 
 	// Add it to the end of the document.
 	if !added {
-		new_cells = append(new_cells, notebook.LatestCellId)
+		new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+			CellId:    notebook.LatestCellId,
+			Timestamp: time.Now().Unix(),
+		})
 	}
 
-	notebook.Cells = new_cells
+	notebook.CellMetadata = new_cell_md
 
 	err = db.SetSubject(self.config, reporting.GetNotebookPath(
 		in.NotebookId), notebook)
@@ -287,6 +332,7 @@ func (self *ApiServer) GetNotebookCell(
 			Output: "",
 			Data:   "{}",
 			CellId: notebook.CellId,
+			Type:   "Markdown",
 		}
 
 		// And store it for next time.
@@ -354,7 +400,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, err
 	}
 
-	notebook := &api_proto.NotebookCell{
+	notebook_cell := &api_proto.NotebookCell{
 		Input:            in.Input,
 		Output:           output,
 		Data:             string(encoded_data),
@@ -367,7 +413,120 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	// And store it for next time.
 	err = db.SetSubject(self.config,
-		reporting.GetNotebookCellPath(in.NotebookId, notebook.CellId),
+		reporting.GetNotebookCellPath(in.NotebookId, in.CellId),
+		notebook_cell)
+
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(self.config,
+		reporting.GetNotebookPath(in.NotebookId),
 		notebook)
-	return notebook, err
+	if err != nil {
+		return nil, err
+	}
+
+	new_cell_md := []*api_proto.NotebookCell{}
+	for _, cell_md := range notebook.CellMetadata {
+		if cell_md.CellId == in.CellId {
+			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+				CellId:    in.CellId,
+				Timestamp: time.Now().Unix(),
+			})
+			continue
+		}
+		new_cell_md = append(new_cell_md, cell_md)
+	}
+	notebook.CellMetadata = new_cell_md
+
+	err = db.SetSubject(self.config, reporting.GetNotebookPath(
+		in.NotebookId), notebook)
+
+	return notebook_cell, err
+}
+
+func (self *ApiServer) CreateNotebookDownloadFile(
+	ctx context.Context,
+	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+
+	db, err := datastore.GetDB(self.config)
+	if err != nil {
+		return nil, err
+	}
+
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(self.config,
+		reporting.GetNotebookPath(in.NotebookId),
+		notebook)
+	if err != nil {
+		return nil, err
+	}
+
+	file_store_factory := file_store.GetFileStore(self.config)
+	filename := path.Join("/downloads/notebooks", notebook.NotebookId,
+		fmt.Sprintf("%s-%s.html", notebook.NotebookId,
+			time.Now().Format("20060102150405Z")))
+
+	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	if err != nil {
+		return nil, err
+	}
+	lock_file.Close()
+
+	writer, err := file_store_factory.WriteFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() {
+		defer file_store_factory.Delete(filename + ".lock")
+		defer writer.Close()
+
+		err := reporting.ExportNotebookToHTML(self.config, notebook.NotebookId, writer)
+		if err != nil {
+			logger := logging.GetLogger(self.config, &logging.GUIComponent)
+			logger.WithFields(logrus.Fields{
+				"notebook_id": notebook.NotebookId,
+				"export_file": filename,
+				"error":       err,
+			}).Error("CreateNotebookDownloadFile")
+			return
+		}
+	}()
+
+	return &empty.Empty{}, err
+}
+
+func getAvailableDownloadFiles(config_obj *config_proto.Config,
+	download_path string) (*api_proto.AvailableDownloads, error) {
+	result := &api_proto.AvailableDownloads{}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	files, err := file_store_factory.ListDirectory(download_path)
+	if err != nil {
+		return nil, err
+	}
+
+	is_complete := func(name string) bool {
+		for _, item := range files {
+			if item.Name() == name+".lock" {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, item := range files {
+		if strings.HasSuffix(item.Name(), ".lock") {
+			continue
+		}
+
+		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
+			Name:     item.Name(),
+			Path:     path.Join(download_path, item.Name()),
+			Size:     uint64(item.Size()),
+			Date:     fmt.Sprintf("%v", item.ModTime()),
+			Complete: is_complete(item.Name()),
+		})
+	}
+
+	return result, nil
 }

@@ -33,6 +33,7 @@ exports.NotebookRendererDirective = function() {
   return {
     scope: {
         'notebookId': '=',
+        'timestamp': '=',
         'state': '=',
     },
     restrict: 'E',

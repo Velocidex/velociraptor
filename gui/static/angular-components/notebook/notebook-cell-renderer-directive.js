@@ -16,7 +16,8 @@ const NotebookCellRendererController = function(
     this.currently_editing = false;
 
     var self = this;
-    this.scope_.$watch('cellId', this.onCellIdChange_.bind(this));
+    this.scope_.$watchGroup(['cellId', 'timestamp'],
+                            this.onCellIdChange_.bind(this));
 
     // Editing a cell only happens when the cell is in editing mode
     // and it is selected. Eventually we need to check that another
@@ -93,22 +94,22 @@ NotebookCellRendererController.prototype.upCell = function(event) {
     var state = self.scope_["state"];
     var cell_id = self.scope_["cellId"];
     var changed = false;
-    var cells = state.notebook.cells;
+    var cell_metadata = state.notebook.cell_metadata;
 
     var new_cells = [];
-    for (var i=0; i<cells.length; i++) {
-        if (cells[i] == cell_id && new_cells.length > 0) {
+    for (var i=0; i<cell_metadata.length; i++) {
+        if (cell_metadata[i].cell_id == cell_id && new_cells.length > 0) {
             var last_cell = new_cells.pop();
-            new_cells.push(cells[i]);
+            new_cells.push(cell_metadata[i]);
             new_cells.push(last_cell);
             changed = true;
         } else {
-            new_cells.push(cells[i]);
+            new_cells.push(cell_metadata[i]);
         }
     }
 
     if (changed) {
-    state.notebook.cells = new_cells;
+    state.notebook.cell_metadata = new_cells;
 
     this.grrApiService_.post(
         'v1/UpdateNotebook', state.notebook).then(function success(response) {
@@ -129,24 +130,24 @@ NotebookCellRendererController.prototype.deleteCell = function(event) {
     var state = self.scope_["state"];
     var cell_id = self.scope_["cellId"];
     var changed = false;
-    var cells = state.notebook.cells;
+    var cell_metadata = state.notebook.cell_metadata;
 
     // Dont allow us to remove all cells.
-    if (cells.length <= 1) {
+    if (cell_metadata.length <= 1) {
         return;
     }
 
     var new_cells = [];
-    for (var i=0; i<cells.length; i++) {
-        if (cells[i] == cell_id) {
+    for (var i=0; i<cell_metadata.length; i++) {
+        if (cell_metadata[i].cell_id == cell_id) {
             changed = true;
         } else {
-            new_cells.push(cells[i]);
+            new_cells.push(cell_metadata[i]);
         }
     }
 
     if (changed) {
-    state.notebook.cells = new_cells;
+    state.notebook.cell_metadata = new_cells;
 
     this.grrApiService_.post(
         'v1/UpdateNotebook', state.notebook).then(function success(response) {
@@ -166,23 +167,23 @@ NotebookCellRendererController.prototype.downCell = function(event) {
     var state = self.scope_["state"];
     var cell_id = self.scope_["cellId"];
     var changed = false;
-    var cells = state.notebook.cells;
+    var cell_metadata = state.notebook.cell_metadata;
 
     var new_cells = [];
-    for (var i=0; i<cells.length; i++) {
-        if (cells[i] == cell_id && cells.length > i) {
-            var next_cell = cells[i+1];
+    for (var i=0; i<cell_metadata.length; i++) {
+        if (cell_metadata[i].cell_id == cell_id && cell_metadata.length > i) {
+            var next_cell = cell_metadata[i+1];
             new_cells.push(next_cell);
-            new_cells.push(cells[i]);
+            new_cells.push(cell_metadata[i]);
             i += 1;
             changed = true;
         } else {
-            new_cells.push(cells[i]);
+            new_cells.push(cell_metadata[i]);
         }
     }
 
     if (changed) {
-        state.notebook.cells = new_cells;
+        state.notebook.cell_metadata = new_cells;
 
         this.grrApiService_.post(
             'v1/UpdateNotebook', state.notebook).then(function success(response) {
@@ -328,6 +329,7 @@ exports.NotebookCellRendererDirective = function() {
             "cellId": '=',
             "selected": '=',
             "state": '=',
+            "timestamp": '=',
         },
         restrict: 'E',
         templateUrl: '/static/angular-components/notebook/notebook-cell-renderer.html',

@@ -1,6 +1,13 @@
 syntax = "proto3";
 
+import "flows.proto";
+
 package proto;
+
+message NotebookExportRequest {
+    string notebook_id = 1;
+    string type = 2;
+}
 
 message NotebookCellRequest {
     string notebook_id = 1;
@@ -22,11 +29,17 @@ message NotebookMetadata {
     int64 modified_time = 5;
 
     string notebook_id = 7;
+
+    // Deprecated
     repeated string cells = 6;
+
+    repeated NotebookCell cell_metadata = 11;
 
     string latest_cell_id = 8;
 
     bool hidden = 9;
+
+    AvailableDownloads available_downloads = 10;
 }
 
 message Notebooks {
