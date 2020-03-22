@@ -1,8 +1,7 @@
-name: Windows.System.DLLs
+name: Custom.Windows.System.DLLs
 description: |
-  Enumerate the DLLs loaded by a running process. Note that this is
-  similar to the output of `Windows.System.VAD` but less detailed. It
-  only includes DLLs loaded via conventional means.
+  Enumerate the DLLs loaded by a running process. It includes hash value
+  and certificate information.
 
 parameters:
   - name: processRegex
@@ -11,7 +10,19 @@ parameters:
   - name: dllRegex
     description: A regex applied to the full dll path (e.g. whitelist all system dlls)
     default: .
-
+  - name: Calculate_Hash
+    default: Y
+    type: bool
+  - name: certificate
+    default: Y
+    type: bool    
+  - name: Type
+    type: choices
+    default: unsigned
+    choices:
+      - trusted
+      - unsigned
+     
 sources:
   - queries:
       - LET processes = SELECT Pid, Name
@@ -23,7 +34,12 @@ sources:
             SELECT Pid, Name,
                 format(format='%x-%x', args=[ModuleBaseAddress,
                      ModuleBaseAddress+ModuleBaseSize]) AS Range,
-                ModuleName, ExePath
+                ModuleName, ExePath,
+                if(condition=(Calculate_Hash = "Y"),
+                  then=hash(path=ExePath,
+                            accessor=file)) AS Hash,
+                if(condition=(certificate = "Y"),
+                  then=authenticode(filename=ExePath)) AS Certinfo                  
             FROM modules(pid=Pid)
-            WHERE ExePath =~ dllRegex
+            WHERE ExePath =~ dllRegex and (Pid = ".*" or Certinfo.Trusted = Type)
           })
