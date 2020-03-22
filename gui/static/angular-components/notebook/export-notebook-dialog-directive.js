@@ -10,7 +10,18 @@ const ExportNotebookDialogController = function($scope, grrApiService) {
 
     self.scope_ = $scope;
     self.grrApiService_ = grrApiService;
-}
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
+};
 
 ExportNotebookDialogController.prototype.exportNotebook = function(event) {
     this.request = {

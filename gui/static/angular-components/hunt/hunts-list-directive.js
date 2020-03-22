@@ -22,34 +22,45 @@ const {stripAff4Prefix} = goog.require('grrUi.core.utils');
  */
 const HuntsListController = function(
     $scope, $q, $uibModal, grrDialogService, grrApiService) {
-  // Injected dependencies.
+    // Injected dependencies.
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.$q} */
-  this.q_ = $q;
+    /** @private {!angular.$q} */
+    this.q_ = $q;
 
-  /** @private {!angularUi.$uibModal} */
-  this.uibModal_ = $uibModal;
+    /** @private {!angularUi.$uibModal} */
+    this.uibModal_ = $uibModal;
 
-  /** @private {DialogService} */
-  this.grrDialogService_ = grrDialogService;
+    /** @private {DialogService} */
+    this.grrDialogService_ = grrDialogService;
 
-  /** @private {!ApiService} */
+    /** @private {!ApiService} */
     this.grrApiService_ = grrApiService;
 
     /** @type {string} */
-  this.selectedHunt;
+    this.selectedHunt;
 
-  // Internal state.
-  /**
-   * This variable is bound to grr-infinite-table's trigger-update attribute
-   * and therefore is set by that directive to a function that triggers
-   * table update.
-   * @export {function()}
-   */
-  this.triggerUpdate;
+    // Internal state.
+    /**
+     * This variable is bound to grr-infinite-table's trigger-update attribute
+     * and therefore is set by that directive to a function that triggers
+     * table update.
+     * @export {function()}
+     */
+    this.triggerUpdate;
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
 };
 
 /**

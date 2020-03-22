@@ -121,7 +121,6 @@ func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, err
 	}
 	return user_record, db.GetSubject(config_obj,
 		constants.USER_URN+username, user_record)
-
 }
 
 func GetUserNotificationCount(config_obj *config_proto.Config, username string) (uint64, error) {

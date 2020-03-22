@@ -4,27 +4,38 @@ goog.module('grrUi.artifact.artifactViewerDirective');
 
 
 const ArtifactViewerController = function(
-  $scope, grrApiService, $uibModal) {
-  this.scope_ = $scope;
-  this.grrApiService_ = grrApiService;
-  this.uibModal_ = $uibModal;
+    $scope, grrApiService, $uibModal) {
+    this.scope_ = $scope;
+    this.grrApiService_ = grrApiService;
+    this.uibModal_ = $uibModal;
 
-  /** @export {Object<string, Object>} */
-  this.descriptors = {};
+    /** @export {Object<string, Object>} */
+    this.descriptors = {};
 
-  /** @export {string} */
-  this.descriptorsError;
+    /** @export {string} */
+    this.descriptorsError;
 
-  /** @export {Object} */
-  this.selectedName;
-  this.isCustom = false;
+    /** @export {Object} */
+    this.selectedName;
+    this.isCustom = false;
 
-  this.reportParams = {};
+    this.reportParams = {};
 
-  // A list of descriptors that matched the search term.
-  this.matchingDescriptors = [];
-  this.scope_.$watch('controller.search',
-                     this.onSearchChange_.bind(this));
+    // A list of descriptors that matched the search term.
+    this.matchingDescriptors = [];
+    this.scope_.$watch('controller.search',
+                       this.onSearchChange_.bind(this));
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
 };
 
 ArtifactViewerController.prototype.onSearchChange_ = function() {

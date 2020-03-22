@@ -8,8 +8,9 @@
     <form>
       <div class="form-group">
         <button class="btn btn-primary"
+                ng-disabled="!controller.uiTraits.Permissions.read_results"
                 ng-click="controller.exportNotebook($event)">
-          Add Notebook
+          Create Export
         </button>
       </div>
     </form>
@@ -19,7 +20,9 @@
 
     <dt>Available Downloads</dt>
     <dd>
-      <table class="table table-stiped table-condensed table-hover table-bordered">
+      <table class="table table-stiped table-condensed table-hover table-bordered"
+             ng-if="controller.uiTraits.Permissions.read_results"
+             >
         <tbody>
           <tr ng-repeat="item in notebook.available_downloads.files">
             <td>
