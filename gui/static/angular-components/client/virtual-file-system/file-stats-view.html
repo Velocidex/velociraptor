@@ -44,6 +44,7 @@
             <dt>Fetch from Client</dt>
             <dd>
               <button class="btn btn-default"
+                      ng-disabled="!controller.uiTraits.Permissions.collect_client"
                       ng-click="controller.updateFile()"
                       >
                 <i class="fa fa-refresh"

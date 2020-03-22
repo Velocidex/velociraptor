@@ -3,8 +3,6 @@
 goog.module('grrUi.flow.clientFlowsListDirective');
 goog.module.declareLegacyNamespace();
 
-
-
 /**
  * Controller for FlowsListDirective.
  *
@@ -18,33 +16,44 @@ goog.module.declareLegacyNamespace();
  */
 const ClientFlowsListController = function(
     $scope, $timeout, $uibModal, grrApiService, grrRoutingService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.$timeout} */
-  this.timeout_ = $timeout;
+    /** @private {!angular.$timeout} */
+    this.timeout_ = $timeout;
 
-  /** @private {!angularUi.$uibModal} */
-  this.uibModal_ = $uibModal;
+    /** @private {!angularUi.$uibModal} */
+    this.uibModal_ = $uibModal;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.routing.routingService.RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
+    /** @private {!grrUi.routing.routingService.RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
-  /** @type {?string} */
+    /** @type {?string} */
     this.flowsUrl;
 
-  /**
-   * This variable is bound to grr-flows-list's trigger-update attribute
-   * and therefore is set by that directive to a function that triggers
-   * list update.
-   * @export {function()}
-   */
-  this.triggerUpdate;
+    /**
+     * This variable is bound to grr-flows-list's trigger-update attribute
+     * and therefore is set by that directive to a function that triggers
+     * list update.
+     * @export {function()}
+     */
+    this.triggerUpdate;
 
-  this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
+    this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
 };
 
 /**

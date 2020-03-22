@@ -20,7 +20,6 @@ package parsers
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -325,10 +324,6 @@ type _IndexAssociativeProtocol struct{}
 
 func (self _IndexAssociativeProtocol) Applicable(
 	a vfilter.Any, b vfilter.Any) bool {
-
-	if a == nil {
-		fmt.Printf("%v\n", a)
-	}
 
 	a_value := reflect.Indirect(reflect.ValueOf(a))
 	a_type := a_value.Type()

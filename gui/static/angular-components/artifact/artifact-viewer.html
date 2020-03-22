@@ -7,6 +7,7 @@
           class="btn btn-default"
           title="Add an Artifact"
           name="AddArtifact"
+          ng-disabled="!controller.uiTraits.Permissions.artifact_writer"
           ng-click="controller.updateArtifactDefinitions()"
           >
           <i class="fa fa-plus"></i>
@@ -17,7 +18,7 @@
           class="btn btn-default"
           title="Edit an Artifact"
           name="EditArtifact"
-          ng-disabled="!controller.selectedName"
+          ng-disabled="!controller.selectedName || !controller.uiTraits.Permissions.artifact_writer"
           ng-click="controller.updateArtifactDefinitions(controller.selectedName)"
           >
           <i class="fa fa-pencil"></i>
@@ -28,7 +29,7 @@
           class="btn btn-default"
           title="Delete Artifact"
           name="DeleteArtifact"
-          ng-disabled="!controller.isCustom"
+          ng-disabled="!controller.isCustom || !controller.uiTraits.Permissions.artifact_writer"
           ng-click="controller.deleteArtifactDefinitions()"
           >
           <i class="fa fa-trash"></i>

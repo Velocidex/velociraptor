@@ -138,24 +138,8 @@ func GetGRPCUserInfo(
 func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiGrrUser {
 	result := &api_proto.ApiGrrUser{
 		InterfaceTraits: &api_proto.ApiGrrUserInterfaceTraits{
-			CronJobsNavItemEnabled:                true,
-			CreateCronJobActionEnabled:            true,
-			HuntManagerNavItemEnabled:             true,
-			CreateHuntActionEnabled:               true,
-			ShowStatisticsNavItemEnabled:          true,
-			ServerLoadNavItemEnabled:              true,
-			ManageBinariesNavItemEnabled:          true,
-			UploadBinaryActionEnabled:             true,
-			SettingsNavItemEnabled:                true,
-			ArtifactManagerNavItemEnabled:         true,
-			UploadArtifactActionEnabled:           true,
-			SearchClientsActionEnabled:            true,
-			BrowseVirtualFileSystemNavItemEnabled: true,
-			StartClientFlowNavItemEnabled:         true,
-			ManageClientFlowsNavItemEnabled:       true,
-			ModifyClientLabelsActionEnabled:       true,
-			AuthUsingGoogle:                       config_obj.GUI.GoogleOauthClientId != "",
-			Links:                                 []*api_proto.UILink{},
+			AuthUsingGoogle: config_obj.GUI.GoogleOauthClientId != "",
+			Links:           []*api_proto.UILink{},
 		},
 		UserType: api_proto.ApiGrrUser_USER_TYPE_ADMIN,
 	}

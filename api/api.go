@@ -64,23 +64,20 @@ type ApiServer struct {
 func (self *ApiServer) CancelFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 
-	// Empty users are called internally.
-	if user != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, user)
-		if err != nil {
-			return nil, err
-		}
+	permissions := acls.COLLECT_CLIENT
+	if in.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
+	}
 
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to launch flows.")
-		}
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to cancel flows.")
 	}
 
 	result, err := flows.CancelFlow(
-		self.config, in.ClientId, in.FlowId, user,
+		self.config, in.ClientId, in.FlowId, user_name,
 		self.api_client_factory)
 	if err != nil {
 		return nil, err
@@ -89,7 +86,7 @@ func (self *ApiServer) CancelFlow(
 	// Log this event as and Audit event.
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
-			"user":    user,
+			"user":    user_name,
 			"client":  in.ClientId,
 			"flow_id": in.FlowId,
 			"details": fmt.Sprintf("%v", in),
@@ -101,22 +98,19 @@ func (self *ApiServer) CancelFlow(
 func (self *ApiServer) ArchiveFlow(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user := GetGRPCUserInfo(self.config, ctx).Name
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
 
-	// Empty users are called internally.
-	if user != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, user)
-		if err != nil {
-			return nil, err
-		}
-
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to launch flows.")
-		}
+	permissions := acls.COLLECT_CLIENT
+	if in.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
 	}
 
-	result, err := flows.ArchiveFlow(self.config, in.ClientId, in.FlowId, user)
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to archive flows.")
+	}
+
+	result, err := flows.ArchiveFlow(self.config, in.ClientId, in.FlowId, user_name)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +118,7 @@ func (self *ApiServer) ArchiveFlow(
 	// Log this event as and Audit event.
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
-			"user":    user,
+			"user":    user_name,
 			"client":  in.ClientId,
 			"flow_id": in.FlowId,
 			"details": fmt.Sprintf("%v", in),
@@ -136,6 +130,14 @@ func (self *ApiServer) ArchiveFlow(
 func (self *ApiServer) GetReport(
 	ctx context.Context,
 	in *api_proto.GetReportRequest) (*api_proto.GetReportResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view reports.")
+	}
+
 	return getReport(ctx, self.config, in)
 }
 
@@ -149,13 +151,13 @@ func (self *ApiServer) CollectArtifact(
 	if creator != self.config.Client.PinnedServerName {
 		in.Creator = creator
 
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, in.Creator)
-		if err != nil {
-			return nil, err
+		permissions := acls.COLLECT_CLIENT
+		if in.ClientId == "server" {
+			permissions = acls.COLLECT_SERVER
 		}
 
-		if user_record.ReadOnly {
+		perm, err := acls.CheckAccess(self.config, creator, permissions)
+		if !perm || err != nil {
 			return nil, errors.New("User is not allowed to launch flows.")
 		}
 	}
@@ -198,17 +200,10 @@ func (self *ApiServer) CreateHunt(
 	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 	in.HuntId = flows.GetNewHuntId()
 
-	// Empty creators are called internally.
-	if in.Creator != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, in.Creator)
-		if err != nil {
-			return nil, err
-		}
-
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to launch hunts.")
-		}
+	permissions := acls.COLLECT_CLIENT
+	perm, err := acls.CheckAccess(self.config, in.Creator, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to launch hunts.")
 	}
 
 	logging.GetLogger(self.config, &logging.Audit).
@@ -236,17 +231,10 @@ func (self *ApiServer) ModifyHunt(
 	// Log this event as an Audit event.
 	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 
-	// Empty creators are called internally.
-	if in.Creator != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, in.Creator)
-		if err != nil {
-			return nil, err
-		}
-
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to modify hunts.")
-		}
+	permissions := acls.COLLECT_CLIENT
+	perm, err := acls.CheckAccess(self.config, in.Creator, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify hunts.")
 	}
 
 	logging.GetLogger(self.config, &logging.Audit).
@@ -256,7 +244,7 @@ func (self *ApiServer) ModifyHunt(
 			"details": fmt.Sprintf("%v", in),
 		}).Info("ModifyHunt")
 
-	err := flows.ModifyHunt(self.config, in, in.Creator)
+	err = flows.ModifyHunt(self.config, in, in.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -268,6 +256,14 @@ func (self *ApiServer) ModifyHunt(
 func (self *ApiServer) ListHunts(
 	ctx context.Context,
 	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view hunts.")
+	}
+
 	result, err := flows.ListHunts(self.config, in)
 	if err != nil {
 		return nil, err
@@ -283,6 +279,13 @@ func (self *ApiServer) GetHunt(
 		return &api_proto.Hunt{}, nil
 	}
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view hunts.")
+	}
+
 	result, err := flows.GetHunt(self.config, in)
 	if err != nil {
 		return nil, err
@@ -294,6 +297,14 @@ func (self *ApiServer) GetHunt(
 func (self *ApiServer) GetHuntResults(
 	ctx context.Context,
 	in *api_proto.GetHuntResultsRequest) (*api_proto.GetTableResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view results.")
+	}
+
 	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
 	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
@@ -317,6 +328,15 @@ func (self *ApiServer) GetHuntResults(
 func (self *ApiServer) ListClients(
 	ctx context.Context,
 	in *api_proto.SearchClientsRequest) (*api_proto.SearchClientsResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view clients.")
+	}
+
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
@@ -353,6 +373,14 @@ func (self *ApiServer) ListClients(
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
 	in *api_proto.NotificationRequest) (*empty.Empty, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.COLLECT_CLIENT
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to launch flows.")
+	}
+
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
 		self.server_obj.NotificationPool.NotifyAll()
@@ -370,18 +398,11 @@ func (self *ApiServer) LabelClients(
 	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	if user_name != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, user_name)
-		if err != nil {
-			return nil, err
-		}
-
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to manipulate labels.")
-		}
+	permissions := acls.LABEL_CLIENT
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to label clients.")
 	}
-
 	result, err := LabelClients(self.config, in)
 	if err != nil {
 		return nil, err
@@ -393,6 +414,14 @@ func (self *ApiServer) LabelClients(
 func (self *ApiServer) GetClient(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view clients.")
+	}
+
 	api_client, err := GetApiClient(
 		self.config,
 		self.server_obj,
@@ -415,6 +444,14 @@ func (self *ApiServer) DescribeTypes(
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view flows.")
+	}
+
 	return flows.GetFlows(self.config, in.ClientId,
 		in.IncludeArchived, in.Offset, in.Count)
 }
@@ -423,6 +460,13 @@ func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.FlowDetails, error) {
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to launch flows.")
+	}
+
 	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
 }
@@ -430,6 +474,14 @@ func (self *ApiServer) GetFlowDetails(
 func (self *ApiServer) GetFlowRequests(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowRequestDetails, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view flows.")
+	}
+
 	result, err := flows.GetFlowRequests(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
@@ -443,6 +495,8 @@ func (self *ApiServer) GetUserUITraits(
 
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
+	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(self.config,
+		result.Username)
 
 	return result, nil
 }
@@ -467,6 +521,14 @@ func (self *ApiServer) GetUserNotificationCount(
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view the VFS.")
+	}
+
 	result, err := vfsListDirectory(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err
@@ -475,6 +537,14 @@ func (self *ApiServer) VFSListDirectory(
 func (self *ApiServer) VFSStatDirectory(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSListResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to launch flows.")
+	}
+
 	result, err := vfsStatDirectory(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err
@@ -483,6 +553,14 @@ func (self *ApiServer) VFSStatDirectory(
 func (self *ApiServer) VFSStatDownload(
 	ctx context.Context,
 	in *flows_proto.VFSListRequest) (*flows_proto.VFSDownloadInfo, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view the VFS.")
+	}
+
 	result, err := vfsStatDownload(
 		self.config, in.ClientId, in.VfsPath)
 	return result, err
@@ -492,6 +570,13 @@ func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*flows_proto.ArtifactCollectorResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.COLLECT_CLIENT
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to launch flows.")
+	}
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsPath, in.Depth)
@@ -503,6 +588,13 @@ func (self *ApiServer) VFSGetBuffer(
 	in *api_proto.VFSFileBuffer) (
 	*api_proto.VFSFileBuffer, error) {
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view the VFS.")
+	}
+
 	result, err := vfsGetBuffer(
 		self.config, in.ClientId, in.VfsPath, in.Offset, in.Length)
 
@@ -512,6 +604,14 @@ func (self *ApiServer) VFSGetBuffer(
 func (self *ApiServer) GetTable(
 	ctx context.Context,
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view results.")
+	}
+
 	result, err := getTable(self.config, in)
 	if err != nil {
 		return &api_proto.GetTableResponse{}, nil
@@ -523,6 +623,13 @@ func (self *ApiServer) GetArtifacts(
 	ctx context.Context,
 	in *api_proto.GetArtifactsRequest) (
 	*artifacts_proto.ArtifactDescriptors, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view custom artifacts.")
+	}
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
@@ -551,6 +658,13 @@ func (self *ApiServer) GetArtifactFile(
 	in *api_proto.GetArtifactRequest) (
 	*api_proto.GetArtifactResponse, error) {
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view custom artifacts.")
+	}
+
 	artifact, err := getArtifactFile(self.config, in.Name)
 	if err != nil {
 		return nil, err
@@ -568,16 +682,10 @@ func (self *ApiServer) SetArtifactFile(
 	*api_proto.APIResponse, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	if user_name != "" {
-		// If user is not found then reject it.
-		user_record, err := users.GetUser(self.config, user_name)
-		if err != nil {
-			return nil, err
-		}
-
-		if user_record.ReadOnly {
-			return nil, errors.New("User is not allowed to modify artifacts.")
-		}
+	permissions := acls.ARTIFACT_WRITER
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
 	}
 
 	definition, err := setArtifactFile(self.config, in)
@@ -684,7 +792,7 @@ func (self *ApiServer) Query(
 		peer_name := peer_cert.Subject.CommonName
 
 		// Check that the principal is allowed to issue queries.
-		ok, err := acls.CheckAccess(self.config, peer_name, acls.QUERY)
+		ok, err := acls.CheckAccess(self.config, peer_name, acls.ANY_QUERY)
 		if err != nil {
 			return err
 		}
@@ -705,6 +813,13 @@ func (self *ApiServer) GetServerMonitoringState(
 	in *empty.Empty) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
+	}
+
 	result, err := getServerMonitoringState(self.config)
 	return result, err
 }
@@ -714,7 +829,14 @@ func (self *ApiServer) SetServerMonitoringState(
 	in *flows_proto.ArtifactCollectorArgs) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
-	err := setServerMonitoringState(self.config, in)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.SERVER_ADMIN
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
+	}
+
+	err = setServerMonitoringState(self.config, in)
 	return in, err
 }
 
@@ -722,6 +844,13 @@ func (self *ApiServer) GetClientMonitoringState(
 	ctx context.Context,
 	in *empty.Empty) (
 	*flows_proto.ArtifactCollectorArgs, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.SERVER_ADMIN
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
+	}
 
 	result, err := getClientMonitoringState(self.config)
 	return result, err
@@ -732,7 +861,14 @@ func (self *ApiServer) SetClientMonitoringState(
 	in *flows_proto.ArtifactCollectorArgs) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
-	err := setClientMonitoringState(self.config, in)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.SERVER_ADMIN
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
+	}
+
+	err = setClientMonitoringState(self.config, in)
 	if err != nil {
 		return nil, err
 	}
@@ -747,6 +883,13 @@ func (self *ApiServer) SetClientMonitoringState(
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	in *api_proto.CreateDownloadRequest) (*empty.Empty, error) {
 
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to modify artifacts.")
+	}
+
 	// Log an audit event.
 	userinfo := GetUserInfo(ctx, self.config)
 	logging.GetLogger(self.config, &logging.Audit).
@@ -754,8 +897,6 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 			"user":    userinfo.Name,
 			"request": in,
 		}).Info("CreateDownloadRequest")
-
-	var err error
 
 	if in.FlowId != "" && in.ClientId != "" {
 		err = createDownloadFile(self.config, in.FlowId, in.ClientId)

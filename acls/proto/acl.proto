@@ -6,11 +6,36 @@ package proto;
 
 message ApiClientACL {
 
-  bool all_query = 1 [(sem_type) = {
-    description: "Provides arbitrary query level access.",
-  }];
+    bool all_query = 1 [(sem_type) = {
+            description: "Provides arbitrary query level access.",
+        }];
 
-  repeated string publish_queues = 2 [(sem_type)= {
-    description: "List of queues the client can publish to.",
-  }];
+    bool any_query = 10;
+
+    repeated string publish_queues = 2 [(sem_type)= {
+            description: "List of queues the client can publish to.",
+        }];
+
+    bool read_results = 3;
+    bool label_clients = 11;
+
+    bool collect_client = 4;
+    bool collect_server = 5;
+    bool artifact_writer = 6;
+    bool execve = 7;
+    bool notebook_editor = 8;
+    bool server_admin = 12;
+
+    // A list of roles in lieu of the permissions above. These will be
+    // interpolated into this ACL object.
+    repeated string roles = 9;
+
+}
+
+// A role is a named sets of ACL permissions. A user may possess
+// multiple roles.
+message Role {
+    string name = 1;
+
+    ApiClientACL permissions = 2;
 }

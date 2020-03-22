@@ -13,14 +13,14 @@
         </button>
 
         <button class="btn btn-default"
-                title="Cancel"
+                title="Expand"
                 ng-if="!controller.currently_editing && !controller.collapsed"
                 ng-click="controller.collapsed = true">
           <i class="fa fa-compress"></i>
         </button>
 
         <button class="btn btn-default"
-                title="Cancel"
+                title="Collapse"
                 ng-if="!controller.currently_editing && controller.collapsed"
                 ng-click="controller.collapsed = false">
           <i class="fa fa-expand"></i>
@@ -29,6 +29,7 @@
         <button class="btn btn-default"
                 title="Edit Cell"
                 ng-if="!controller.currently_editing"
+                ng-disabled="!controller.uiTraits.Permissions.notebook_editor"
                 ng-click="controller.setEditing($event,true)">
           <i class="fa fa-pencil"></i>
         </button>
@@ -36,14 +37,16 @@
         <button class="btn btn-default"
                 title="Up Cell"
                 ng-if="!controller.currently_editing"
-                ng-disabled="cellId == state.notebook.cell_metadata[0].cell_id"
+                ng-disabled="cellId == state.notebook.cell_metadata[0].cell_id ||
+                             !controller.uiTraits.Permissions.notebook_editor"
                 ng-click="controller.upCell($event)">
           <i class="fa fa-arrow-up"></i>
         </button>
 
         <button class="btn btn-default"
                 title="Down Cell"
-                ng-disabled="cellId == state.notebook.cell_metadata[state.notebook.cell_metadata.length-1].cell_id"
+                ng-disabled="cellId == state.notebook.cell_metadata[state.notebook.cell_metadata.length-1].cell_id ||
+                             !controller.uiTraits.Permissions.notebook_editor"
                 ng-if="!controller.currently_editing"
                 ng-click="controller.downCell($event)">
           <i class="fa fa-arrow-down"></i>
@@ -53,6 +56,7 @@
                 data-toggle="dropdown"
                 aria-haspopup="true" aria-expanded="false"
                 title="Add Cell"
+                ng-disabled="!controller.uiTraits.Permissions.notebook_editor"
                 ng-if="!controller.currently_editing"
 
                 >

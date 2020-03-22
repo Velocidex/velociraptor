@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -27,6 +28,19 @@ import (
 func (self *ApiServer) GetNotebooks(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.Notebooks, error) {
+
+	// Empty creators are called internally.
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to read notebooks.")
+	}
 
 	result := &api_proto.Notebooks{}
 	db, err := datastore.GetDB(self.config)
@@ -121,18 +135,19 @@ func (self *ApiServer) NewNotebook(
 	ctx context.Context,
 	in *api_proto.NotebookMetadata) (*empty.Empty, error) {
 
-	user := GetGRPCUserInfo(self.config, ctx).Name
-
-	// If user is not found then reject it.
-	user_record, err := users.GetUser(self.config, user)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
 	}
 
-	if user_record.ReadOnly {
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
 		return nil, errors.New("User is not allowed to create notebooks.")
 	}
-	in.Creator = user
+
+	in.Creator = user_name
 	in.CreatedTime = time.Now().Unix()
 	in.ModifiedTime = in.CreatedTime
 	in.NotebookId = NewNotebookId()
@@ -173,15 +188,15 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user := GetGRPCUserInfo(self.config, ctx).Name
-
-	// If user is not found then reject it.
-	user_record, err := users.GetUser(self.config, user)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
 	}
 
-	if user_record.ReadOnly {
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
 		return nil, errors.New("User is not allowed to edit notebooks.")
 	}
 
@@ -255,15 +270,15 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user := GetGRPCUserInfo(self.config, ctx).Name
-
-	// If user is not found then reject it.
-	user_record, err := users.GetUser(self.config, user)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
 	}
 
-	if user_record.ReadOnly {
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
 		return nil, errors.New("User is not allowed to edit notebooks.")
 	}
 
@@ -303,16 +318,16 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user := GetGRPCUserInfo(self.config, ctx).Name
-
-	// If user is not found then reject it.
-	user_record, err := users.GetUser(self.config, user)
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
 	}
 
-	if user_record.ReadOnly {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to read notebooks.")
 	}
 
 	db, err := datastore.GetDB(self.config)
@@ -360,6 +375,18 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
 		return nil, errors.New("Invalid NoteboookCellId")
+	}
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to edit notebooks.")
 	}
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
@@ -446,6 +473,18 @@ func (self *ApiServer) UpdateNotebookCell(
 func (self *ApiServer) CreateNotebookDownloadFile(
 	ctx context.Context,
 	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to edit notebooks.")
+	}
 
 	db, err := datastore.GetDB(self.config)
 	if err != nil {

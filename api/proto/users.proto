@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "www.velocidex.com/golang/velociraptor/acls/proto/acl.proto";
 
 package proto;
 
@@ -25,6 +26,8 @@ message VelociraptorUser {
     bool locked = 8 [(sem_type) = {
            description: "If set the user is not allowed to log in.",
         }];
+
+    ApiClientACL Permissions = 9;
 }
 
 
@@ -54,31 +57,10 @@ message UILink {
     string url = 2;
 }
 
-// These traits are used by the AdminUI Angular app to disable certain UI
-// elements.
+// These traits are used by the AdminUI Angular app to disable certain
+// UI elements based on the user's permission set.
 message ApiGrrUserInterfaceTraits {
-    bool cron_jobs_nav_item_enabled = 1;
-    bool create_cron_job_action_enabled = 2;
-
-    bool hunt_manager_nav_item_enabled = 3;
-    bool create_hunt_action_enabled = 4;
-
-    bool show_statistics_nav_item_enabled = 5;
-
-    bool server_load_nav_item_enabled = 7;
-
-    bool manage_binaries_nav_item_enabled = 9;
-    bool upload_binary_action_enabled = 10;
-
-    bool settings_nav_item_enabled = 11;
-
-    bool artifact_manager_nav_item_enabled = 12;
-    bool upload_artifact_action_enabled = 13;
-    bool search_clients_action_enabled = 14;
-    bool browse_virtual_file_system_nav_item_enabled = 15;
-    bool start_client_flow_nav_item_enabled = 16;
-    bool manage_client_flows_nav_item_enabled = 17;
-    bool modify_client_labels_action_enabled = 18;
+    ApiClientACL Permissions = 9;
 
     bool auth_using_google = 19;
     string picture = 20;

@@ -2,17 +2,20 @@
   <div class="breadcrumb">
     <li>
       <button class="btn btn-default" name="NewNotebook"
+              ng-disabled="!controller.uiTraits.Permissions.notebook_editor"
               title="New Notebook" ng-click="controller.newNotebook()">
         <i class="fa fa-plus"></i>
       </button>
       <button title="Delete Notebook" class="btn btn-default"
-              ng-disabled="!selectedNotebookId"
+              ng-disabled="!selectedNotebookId ||
+                           !controller.uiTraits.Permissions.notebook_editor"
               ng-click="controller.deleteNotebook($event)">
         <i class="fa fa-trash"></i>
       </button>
 
       <button class="btn btn-default" name="ExportNotebook"
-              ng-disabled="!selectedNotebookId"
+              ng-disabled="!selectedNotebookId ||
+                           !controller.uiTraits.Permissions.read_results"
               title="Export Notebook"
               ng-click="controller.exportNotebook($event)">
         <i class="fa fa-download"></i>

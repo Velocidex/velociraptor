@@ -9,7 +9,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -131,8 +130,6 @@ func (self *VFSService) ProcessListDirectory(
 	var current_vfs_components []string = nil
 
 	for row := range vql.Eval(ctx, sub_scope) {
-		fmt.Printf("row %v\n", row)
-
 		full_path := vql_subsystem.GetStringFromRow(scope, row, "_FullPath")
 		accessor := vql_subsystem.GetStringFromRow(scope, row, "_Accessor")
 		name := vql_subsystem.GetStringFromRow(scope, row, "Name")
