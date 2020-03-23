@@ -15,6 +15,7 @@
           type="button"
           class="btn btn-default"
           title="Update client monitoring table"
+          ng-disabled="!controller.uiTraits.Permissions.collect_server"
           ng-click="controller.updateClientMonitoringTable()"
           >
           <i class="fa fa-edit"></i>

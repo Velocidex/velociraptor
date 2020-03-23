@@ -103,3 +103,18 @@ func CheckFilesystemAccess(scope *vfilter.Scope, accessor string) error {
 		return CheckAccess(scope, acls.FILESYSTEM_READ)
 	}
 }
+
+// Get the principal that is running the query if possible.
+func GetPrincipal(scope *vfilter.Scope) string {
+	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
+	if !pres {
+		return ""
+	}
+
+	manager, ok := manager_any.(*ServerACLManager)
+	if !ok {
+		return ""
+	}
+
+	return manager.principal
+}

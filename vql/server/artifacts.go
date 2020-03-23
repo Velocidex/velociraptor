@@ -68,6 +68,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	request := api.MakeCollectorRequest(arg.ClientId, "")
 	request.Artifacts = arg.Artifacts
+	request.Creator = vql_subsystem.GetPrincipal(scope)
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)
