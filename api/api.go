@@ -138,7 +138,7 @@ func (self *ApiServer) GetReport(
 		return nil, errors.New("User is not allowed to view reports.")
 	}
 
-	return getReport(ctx, self.config, in)
+	return getReport(ctx, self.config, user_name, in)
 }
 
 func (self *ApiServer) CollectArtifact(
@@ -314,7 +314,7 @@ func (self *ApiServer) GetHuntResults(
 	// More than 100 results are not very useful in the GUI -
 	// users should just download the csv file for post
 	// processing.
-	result, err := RunVQL(ctx, self.config, env,
+	result, err := RunVQL(ctx, self.config, user_name, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
 			"artifact=Artifact, source=Source, "+
 			"brief=true) LIMIT 100")
@@ -683,9 +683,26 @@ func (self *ApiServer) SetArtifactFile(
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.ARTIFACT_WRITER
+
+	// First ensure that the artifact is correct.
+	tmp_repository := artifacts.NewRepository()
+	artifact_definition, err := tmp_repository.LoadYaml(
+		in.Artifact, true /* validate */)
+	if err != nil {
+		return nil, err
+	}
+
+	switch strings.ToUpper(artifact_definition.Type) {
+	case "CLIENT", "CLIENT_EVENT":
+		permissions = acls.ARTIFACT_WRITER
+	case "SERVER", "SERVER_EVENT":
+		permissions = acls.SERVER_ARTIFACT_WRITER
+	}
+
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, errors.New(fmt.Sprintf(
+			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
 	definition, err := setArtifactFile(self.config, in)
@@ -817,7 +834,8 @@ func (self *ApiServer) GetServerMonitoringState(
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, errors.New(fmt.Sprintf(
+			"User is not allowed to read results (%v).", permissions))
 	}
 
 	result, err := getServerMonitoringState(self.config)
@@ -833,7 +851,8 @@ func (self *ApiServer) SetServerMonitoringState(
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, errors.New(fmt.Sprintf(
+			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
 	err = setServerMonitoringState(self.config, in)
@@ -865,7 +884,8 @@ func (self *ApiServer) SetClientMonitoringState(
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, errors.New(fmt.Sprintf(
+			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
 	err = setClientMonitoringState(self.config, in)

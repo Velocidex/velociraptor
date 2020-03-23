@@ -67,6 +67,13 @@ func (self _SQLitePlugin) Call(
 		if arg.Accessor == "" {
 			arg.Accessor = "file"
 		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("sqlite: %s", err)
+			return
+		}
+
 		handle, err := self.GetHandle(ctx, arg, scope)
 		if err != nil {
 			scope.Log("sqlite: %v", err)
@@ -189,6 +196,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 	if arg.Accessor != "data" {
 		scope.Log("Will try to copy to temp file: %v", filename)
 	}
+
 	tmpfile, err := tempfile.TempFile("", "tmp", ".sqlite")
 	if err != nil {
 		return "", err

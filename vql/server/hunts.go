@@ -26,6 +26,7 @@ import (
 	"path"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -51,8 +52,14 @@ func (self HuntsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunts: %s", err)
+			return
+		}
+
 		arg := &HuntsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunts: %v", err)
 			return
@@ -124,8 +131,14 @@ func (self HuntResultsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunt_results: %s", err)
+			return
+		}
+
 		arg := &HuntResultsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_results: %v", err)
 			return
@@ -275,8 +288,14 @@ func (self HuntFlowsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunt_flows: %s", err)
+			return
+		}
+
 		arg := &HuntFlowsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_flows: %v", err)
 			return

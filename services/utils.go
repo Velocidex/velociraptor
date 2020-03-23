@@ -24,6 +24,8 @@ func watchForFlowCompletion(
 
 	env := ordereddict.NewDict().
 		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("artifact_name", artifact_name)
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)

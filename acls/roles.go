@@ -32,9 +32,13 @@ func GetRolePermissions(
 			result.CollectClient = true
 			result.CollectServer = true
 			result.ArtifactWriter = true
+			result.ServerArtifactWriter = true
 			result.Execve = true
 			result.NotebookEditor = true
 			result.ServerAdmin = true
+			result.FilesystemRead = true
+			result.FilesystemWrite = true
+			result.MachineState = true
 
 			// Readers can view results but not edit or
 			// modify anything.

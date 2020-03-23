@@ -198,6 +198,12 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("parse_mft: %s", err)
+			return
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)

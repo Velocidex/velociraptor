@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -44,8 +45,15 @@ type ScheduleHuntFunction struct{}
 func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	if err != nil {
+		scope.Log("flows: %s", err)
+		return vfilter.Null{}
+	}
+
 	arg := &ScheduleHuntFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}

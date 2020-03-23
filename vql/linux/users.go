@@ -24,6 +24,7 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
@@ -107,21 +108,27 @@ func (self _UsersPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
-	arg := &_UsersPluginArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
-	if err != nil {
-		scope.Log("%s: %s", "users", err.Error())
-		close(output_chan)
-		return output_chan
-	}
-
-	// Default location.
-	if arg.File == "" {
-		arg.File = "/var/log/wtmp"
-	}
-
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("users: %s", err)
+			return
+		}
+
+		arg := &_UsersPluginArg{}
+		err = vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("%s: %s", "users", err.Error())
+			return
+		}
+
+		// Default location.
+		if arg.File == "" {
+			arg.File = "/var/log/wtmp"
+		}
+
 		file, err := os.Open(arg.File)
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())

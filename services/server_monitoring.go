@@ -99,8 +99,12 @@ func (self *EventTable) Update(
 			return errors.New("Unknown artifact " + name)
 		}
 
+		// Server monitoring artifacts run with full admin
+		// permissions.
 		env := ordereddict.NewDict().
 			Set("server_config", config_obj).
+			Set(vql_subsystem.ACL_MANAGER_VAR,
+				vql_subsystem.NewRoleACLManager("administrator")).
 			Set("config", config_obj.Client).
 			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 

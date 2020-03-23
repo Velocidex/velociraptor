@@ -39,6 +39,8 @@ func doUnzip() {
 	}
 
 	env := ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("ZipPath", filename).
 		Set("MemberGlob", *unzip_cmd_member)
 

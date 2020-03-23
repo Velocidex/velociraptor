@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -43,6 +44,8 @@ func (self *StatsCollector) Start(
 
 	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("server_config", self.config_obj)
 
 	repository, err := artifacts.GetGlobalRepository(self.config_obj)

@@ -50,6 +50,8 @@ var (
 	api_config_path = app.Flag("api_config", "The API configuration file.").Short('a').
 			Envar("VELOCIRAPTOR_API_CONFIG").String()
 
+	run_as = app.Flag("runas", "Run as this username's ACLs").String()
+
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
 

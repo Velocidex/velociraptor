@@ -35,6 +35,7 @@ import (
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -54,10 +55,17 @@ func (self ProcDumpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("proc_dump: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("proc_dump: %s", err.Error())
 			return

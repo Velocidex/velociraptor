@@ -49,6 +49,12 @@ func _OLEVBAPlugin_ParseFile(
 
 	defer utils.CheckForPanic("Parsing VBA file.")
 
+	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("olevba: %s", err)
+		return nil, err
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		return nil, err

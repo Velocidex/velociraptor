@@ -63,6 +63,12 @@ func (self *GrepFunction) Call(ctx context.Context,
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("grep: %s", err.Error())
+		return false
+	}
+
 	fs, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log(err.Error())

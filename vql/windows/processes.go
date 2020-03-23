@@ -29,6 +29,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -170,12 +171,19 @@ func (self PslistPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("pslist: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
 		defer vql_subsystem.CheckForPanic(scope, "pslist")
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("pslist: %s", err.Error())
 			return

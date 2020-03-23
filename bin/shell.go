@@ -165,6 +165,8 @@ func get_responses(ctx context.Context,
 	}()
 
 	env := ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("server_config", config_obj).
 		Set("ClientId", client_id)
 

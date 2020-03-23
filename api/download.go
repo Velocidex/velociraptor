@@ -291,7 +291,9 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			err = StoreVQLAsCSVFile(ctx, config_obj, env, query, f)
+			err = StoreVQLAsCSVFile(ctx, config_obj,
+				config_obj.Client.PinnedServerName,
+				env, query, f)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

@@ -792,6 +792,31 @@
     repeated: false
     required: false
   category: plugin
+- name: flow_results
+  description: Retrieve the results of a flow.
+  type: Plugin
+  args:
+  - name: artifact
+    description: The artifact to retrieve
+    type: string
+    repeated: false
+    required: false
+  - name: source
+    description: An optional source within the artifact.
+    type: string
+    repeated: false
+    required: false
+  - name: flow_id
+    description: The hunt id to read.
+    type: string
+    repeated: false
+    required: true
+  - name: client_id
+    description: The client id to extract
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: flows
   description: Retrieve the flows launched on each client.
   type: Plugin
@@ -818,7 +843,7 @@
     required: true
   - name: foreach
     description: The variable to iterate over.
-    type: vfilter.Any
+    type: vfilter.LazyExpr
     repeated: false
     required: true
   - name: query
@@ -833,7 +858,7 @@
   args:
   - name: row
     description: A query or slice which generates rows.
-    type: vfilter.Any
+    type: vfilter.LazyExpr
     repeated: false
     required: true
   - name: query
@@ -1172,7 +1197,7 @@
     description: The artifact to retrieve
     type: string
     repeated: false
-    required: true
+    required: false
   - name: source
     description: An optional source within the artifact.
     type: string
@@ -1214,12 +1239,12 @@
     required: true
   - name: then
     description: ""
-    type: vfilter.Any
+    type: vfilter.LazyExpr
     repeated: false
     required: true
   - name: else
     description: ""
-    type: vfilter.Any
+    type: vfilter.LazyExpr
     repeated: false
     required: false
   category: basic
@@ -2141,8 +2166,7 @@
   type: Plugin
   args:
   - name: pid
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
     type: int64
     repeated: false
     required: false
@@ -2848,12 +2872,7 @@
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
   type: Plugin
-  args:
-  - name: file
-    description: The wtmp file to use
-    type: string
-    repeated: false
-    required: false
+  args: []
   category: windows
 - name: utf16
   description: Parse input from utf16.

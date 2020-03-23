@@ -71,6 +71,8 @@ func streamQuery(
 	env := ordereddict.NewDict().
 		Set("config", config_obj).
 		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewServerACLManager(config_obj, peer_name)).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {

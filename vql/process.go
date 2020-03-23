@@ -25,6 +25,7 @@ package vql
 import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/process"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -79,8 +80,14 @@ func init() {
 			args *ordereddict.Dict) []vfilter.Row {
 			var result []vfilter.Row
 
+			err := CheckAccess(scope, acls.MACHINE_STATE)
+			if err != nil {
+				scope.Log("pslist: %s", err)
+				return result
+			}
+
 			arg := &PslistArgs{}
-			err := vfilter.ExtractArgs(scope, args, arg)
+			err = vfilter.ExtractArgs(scope, args, arg)
 			if err != nil {
 				scope.Log("pslist: %s", err.Error())
 				return result

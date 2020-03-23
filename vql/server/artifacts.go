@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -44,8 +45,15 @@ type ScheduleCollectionFunction struct{}
 func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
 	arg := &ScheduleCollectionFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}

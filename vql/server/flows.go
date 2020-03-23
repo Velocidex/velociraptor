@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -34,8 +35,14 @@ func (self FlowsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("flows: %s", err)
+			return
+		}
+
 		arg := &FlowsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("flows: %v", err)
 			return
@@ -101,8 +108,15 @@ type CancelFlowFunction struct{}
 func (self *CancelFlowFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	if err != nil {
+		scope.Log("flows: %s", err)
+		return vfilter.Null{}
+	}
+
 	arg := &FlowsPluginArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("cancel_flow: %s", err.Error())
 		return vfilter.Null{}
@@ -143,8 +157,15 @@ func (self EnumerateFlowPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("flows: %s", err)
+			return
+		}
+
 		arg := &FlowsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("enumerate_flow: %s", err.Error())
 			return

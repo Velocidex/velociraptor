@@ -58,6 +58,12 @@ func (self *UploadFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("upload: %s", err)
+			return vfilter.Null{}
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("upload: %v", err)
@@ -120,27 +126,32 @@ func (self *UploadPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	arg := &UploadPluginArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
-	if err != nil {
-		scope.Log("upload: %s", err.Error())
-		close(output_chan)
-		return output_chan
-	}
-
-	uploader_obj, _ := scope.Resolve("$uploader")
-	uploader, ok := uploader_obj.(Uploader)
-	if !ok {
-		scope.Log("upload: Uploader not configured.")
-
-		// If the uploader is not configured, we need to do
-		// nothing.
-		close(output_chan)
-		return output_chan
-	}
 
 	go func() {
 		defer close(output_chan)
+
+		arg := &UploadPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("upload: %s", err.Error())
+			return
+		}
+
+		uploader_obj, _ := scope.Resolve("$uploader")
+		uploader, ok := uploader_obj.(Uploader)
+		if !ok {
+			scope.Log("upload: Uploader not configured.")
+
+			// If the uploader is not configured, we need to do
+			// nothing.
+			return
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("upload: %s", err)
+			return
+		}
 
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {

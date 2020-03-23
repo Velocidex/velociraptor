@@ -418,6 +418,12 @@ func (self ReadKeyValues) Call(
 			accessor_name = "reg"
 		}
 
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("read_reg_key: %s", err.Error())
+			return
+		}
+
 		accessor, err := glob.GetAccessor(accessor_name, ctx)
 		if err != nil {
 			scope.Log("read_reg_key: %v", err)

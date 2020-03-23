@@ -390,7 +390,8 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config, ctx, "Server.Internal.ArtifactDescription")
+		self.config, ctx, user_name, /* principal */
+		"Server.Internal.ArtifactDescription")
 	if err != nil {
 		return nil, err
 	}

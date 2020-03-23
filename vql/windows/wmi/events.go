@@ -39,6 +39,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ole "github.com/go-ole/go-ole"
 	pointer "github.com/mattn/go-pointer"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	wmi_parse "www.velocidex.com/golang/velociraptor/vql/windows/wmi/parse"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -114,10 +115,17 @@ func (self WmiEventPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("wmi_events: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("wmi_events: %s", err.Error())
 			return

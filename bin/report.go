@@ -34,8 +34,15 @@ func doDailyMonitoring() {
 
 	getRepository(config_obj)
 
+	// Bypass all ACLs by default
+	principal := config_obj.Client.PinnedServerName
+	if *run_as != "" {
+		principal = *run_as
+	}
+
 	template_engine, err := reporting.NewTextTemplateEngine(
-		config_obj, *report_command_daily_monitoring_artifact)
+		config_obj, principal,
+		*report_command_daily_monitoring_artifact)
 	kingpin.FatalIfError(err, "Generating report")
 
 	for k, v := range *env_map {

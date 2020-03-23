@@ -45,8 +45,15 @@ const ClientFlowsListController = function(
     this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
 
     this.uiTraits = {};
+    this.collect_perm = false;
+    var self = this;
     this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
-        this.uiTraits = response.data['interface_traits'];
+        self.uiTraits = response.data['interface_traits'];
+        if (self.scope_["clientId"] == "server") {
+            self.collect_perm = self.uiTraits.Permissions.collect_server;
+        } else {
+            self.collect_perm = self.uiTraits.Permissions.collect_client;
+        }
     }.bind(this), function(error) {
         if (error['status'] == 403) {
             this.error = 'Authentication Error';

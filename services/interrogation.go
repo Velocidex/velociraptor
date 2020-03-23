@@ -41,6 +41,8 @@ func (self *InterrogationService) Start(
 
 	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("server_config", self.config_obj)
 
 	repository, err := artifacts.GetGlobalRepository(self.config_obj)
