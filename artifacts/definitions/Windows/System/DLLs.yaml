@@ -1,4 +1,4 @@
-name: Custom.Windows.System.DLLs
+name: Windows.System.DLLs
 description: |
   Enumerate the DLLs loaded by a running process. It includes hash value
   and certificate information.
@@ -11,17 +11,11 @@ parameters:
     description: A regex applied to the full dll path (e.g. whitelist all system dlls)
     default: .
   - name: Calculate_Hash
-    default: Y
+    default: N
     type: bool
-  - name: certificate
-    default: Y
-    type: bool    
-  - name: Type
-    type: choices
-    default: unsigned
-    choices:
-      - trusted
-      - unsigned
+  - name: CertificateInfo
+    default: N
+    type: bool
      
 sources:
   - queries:
@@ -38,8 +32,8 @@ sources:
                 if(condition=(Calculate_Hash = "Y"),
                   then=hash(path=ExePath,
                             accessor=file)) AS Hash,
-                if(condition=(certificate = "Y"),
-                  then=authenticode(filename=ExePath)) AS Certinfo                  
+                if(condition=(CertificateInfo = "Y"),
+                  then=authenticode(filename=ExePath)) AS Certinfo
             FROM modules(pid=Pid)
-            WHERE ExePath =~ dllRegex and (Pid = ".*" or Certinfo.Trusted = Type)
+            WHERE ExePath =~ dllRegex
           })
