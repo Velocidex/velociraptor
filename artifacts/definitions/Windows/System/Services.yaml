@@ -29,7 +29,7 @@ sources:
                  SELECT ServiceDll FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
                } AS ServiceDll,
                parse_string_with_regex(regex=
-                 ['^\\"(?P<AbsolutePath>[^"]+)','(?P<AbsolutePath>^[^"]+)[ ][-/]+','(?P<AbsolutePath>^[^ ]+$)'], 
+                 ['^"(?P<AbsolutePath>[^"]+)','(?P<AbsolutePath>^[^ "]+)'], 
                  string=PathName).AbsolutePath as AbsolutePath
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
       - |
