@@ -338,6 +338,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("class").OnElements("span")
 	p.AllowAttrs("class").OnElements("div")
 	p.AllowAttrs("class").OnElements("table")
+	p.AllowAttrs("class").OnElements("a")
 
 	return p
 }
