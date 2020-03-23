@@ -12,6 +12,7 @@ import (
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -43,12 +44,19 @@ func (self ModulesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("modules: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
 		defer vql_subsystem.CheckForPanic(scope, "module")
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("modules: %s", err.Error())
 			return

@@ -22,9 +22,13 @@ message ApiClientACL {
     bool collect_client = 4;
     bool collect_server = 5;
     bool artifact_writer = 6;
+    bool server_artifact_writer = 15;
     bool execve = 7;
     bool notebook_editor = 8;
     bool server_admin = 12;
+    bool filesystem_read = 13;
+    bool filesystem_write = 14;
+    bool machine_state = 16;
 
     // A list of roles in lieu of the permissions above. These will be
     // interpolated into this ACL object.

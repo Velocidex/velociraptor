@@ -24,6 +24,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -38,8 +39,15 @@ type TempfileFunction struct{}
 func (self *TempfileFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	if err != nil {
+		scope.Log("tempfile: %s", err)
+		return false
+	}
+
 	arg := &_TempfileRequest{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("tempfile: %s", err.Error())
 		return false

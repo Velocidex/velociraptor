@@ -49,6 +49,7 @@ import (
 
 	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -77,8 +78,14 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		if err != nil {
+			scope.Log("elastic: %v", err)
+			return
+		}
+
 		arg := _ElasticPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, &arg)
+		err = vfilter.ExtractArgs(scope, args, &arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return

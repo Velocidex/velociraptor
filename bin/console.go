@@ -593,12 +593,18 @@ func doConsole() {
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
+	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
+	if *run_as != "" {
+		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
+
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: *console_dump_dir,
 		}).
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if env_map != nil {

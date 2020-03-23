@@ -61,6 +61,7 @@ func EvalQueryToTable(ctx context.Context,
 type Expansions struct {
 	config_obj *config_proto.Config
 	rows       []vfilter.Row
+	scope      *vfilter.Scope
 }
 
 // Support a number of expansions in description strings.
@@ -111,14 +112,9 @@ func (self *Expansions) DocFrom(artifact string) string {
 func (self *Expansions) Query(queries ...string) string {
 	result := &bytes.Buffer{}
 
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
-	if err != nil {
-		return fmt.Sprintf("Error: %v", err)
-	}
-
 	env := ordereddict.NewDict().Set("Rows", self.rows)
+	scope := self.scope.Copy().AppendVars(env)
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
 	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)

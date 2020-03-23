@@ -25,6 +25,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -49,8 +50,14 @@ func (self ClientsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("clients: %v", err)
+			return
+		}
+
 		arg := &ClientsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("clients: %v", err)
 			return

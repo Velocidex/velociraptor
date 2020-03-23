@@ -27,9 +27,28 @@ below. ACL_PERMISSION represents what the code wants to do.
 A Role is a collection of permissions that are granted to anyone in
 that role.
 
+Note that the interaction of different permission may be used to
+bypass the RBACS - for example:
+
+1. Given SERVER_ARTIFACT_WRITER and COLLECT_SERVER allows one to write
+   an artifact which runs with full permissions on the server
+   (i.e. arbitrary execution).
+
+2. Given ARTIFACT_WRITER and COLLECT_CLIENT give one full control over
+   endpoints.
+
+Tips:
+
+- Since Velociraptor is a VQL based system writing arbitrary VQL can
+  provide the user with a lot of power. Server side VQL typically runs
+  with full privileges so being able to add server side artifacts is
+  equivalent to admin access.
+
+
 */
 
 import (
+	"fmt"
 	"path"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
@@ -61,8 +80,11 @@ const (
 	// Schedule new artifact collections on velociraptor servers.
 	COLLECT_SERVER
 
-	// Add or edit custom artifacts
+	// Add or edit custom artifacts that run on endpoints.
 	ARTIFACT_WRITER
+
+	// Add or edit custom artifacts that run on the server.
+	SERVER_ARTIFACT_WRITER
 
 	// Allowed to run the execve command.
 	EXECVE
@@ -73,9 +95,54 @@ const (
 	// Allowed to manage server configuration.
 	SERVER_ADMIN
 
+	// Allowed to read arbitrary files from the filesystem.
+	FILESYSTEM_READ
+
+	// Allowed to create files on the filesystem.
+	FILESYSTEM_WRITE
+
+	// Allowed to collect state information from machines (e.g. pslist()).
+	MACHINE_STATE
+
 	// When adding new permission - update CheckAccess,
 	// GetRolePermissions and acl.proto
 )
+
+func (self ACL_PERMISSION) String() string {
+	switch self {
+	case ALL_QUERY:
+		return "ALL_QUERY"
+	case ANY_QUERY:
+		return "ANY_QUERY"
+	case PUBLISH:
+		return "PUBLISH"
+	case READ_RESULTS:
+		return "READ_RESULTS"
+	case LABEL_CLIENT:
+		return "LABEL_CLIENT"
+	case COLLECT_CLIENT:
+		return "COLLECT_CLIENT"
+	case COLLECT_SERVER:
+		return "COLLECT_SERVER"
+	case ARTIFACT_WRITER:
+		return "ARTIFACT_WRITER"
+	case SERVER_ARTIFACT_WRITER:
+		return "SERVER_ARTIFACT_WRITER"
+	case EXECVE:
+		return "EXECVE"
+	case NOTEBOOK_EDITOR:
+		return "NOTEBOOK_EDITOR"
+	case SERVER_ADMIN:
+		return "SERVER_ADMIN"
+	case FILESYSTEM_READ:
+		return "FILESYSTEM_READ"
+	case FILESYSTEM_WRITE:
+		return "FILESYSTEM_WRITE"
+	case MACHINE_STATE:
+		return "MACHINE_STATE"
+	}
+	return fmt.Sprintf("%d", self)
+}
 
 func GetPolicy(
 	config_obj *config_proto.Config,
@@ -154,15 +221,22 @@ func CheckAccess(
 		return false, err
 	}
 
+	return CheckAccessWithToken(acl_obj, permission, args...)
+}
+
+func CheckAccessWithToken(
+	token *acl_proto.ApiClientACL,
+	permission ACL_PERMISSION, args ...string) (bool, error) {
+
 	// Requested permission
 	switch permission {
 	case ANY_QUERY:
 		// Principal is allowed all queries.
-		return acl_obj.AllQuery, nil
+		return token.AllQuery, nil
 
 	case PUBLISH:
 		if len(args) == 1 {
-			for _, allowed_queue := range acl_obj.PublishQueues {
+			for _, allowed_queue := range token.PublishQueues {
 				if allowed_queue == args[0] {
 					return true, nil
 				}
@@ -171,28 +245,41 @@ func CheckAccess(
 		}
 
 	case READ_RESULTS:
-		return acl_obj.ReadResults, nil
+		return token.ReadResults, nil
 
 	case LABEL_CLIENT:
-		return acl_obj.LabelClients, nil
+		return token.LabelClients, nil
 
 	case COLLECT_CLIENT:
-		return acl_obj.CollectClient, nil
+		return token.CollectClient, nil
 
 	case COLLECT_SERVER:
-		return acl_obj.CollectServer, nil
+		return token.CollectServer, nil
 
 	case ARTIFACT_WRITER:
-		return acl_obj.ArtifactWriter, nil
+		return token.ArtifactWriter, nil
+
+	case SERVER_ARTIFACT_WRITER:
+		return token.ServerArtifactWriter, nil
 
 	case EXECVE:
-		return acl_obj.Execve, nil
+		return token.Execve, nil
 
 	case NOTEBOOK_EDITOR:
-		return acl_obj.NotebookEditor, nil
+		return token.NotebookEditor, nil
 
 	case SERVER_ADMIN:
-		return acl_obj.ServerAdmin, nil
+		return token.ServerAdmin, nil
+
+	case FILESYSTEM_READ:
+		return token.FilesystemRead, nil
+
+	case FILESYSTEM_WRITE:
+		return token.FilesystemWrite, nil
+
+	case MACHINE_STATE:
+		return token.MachineState, nil
+
 	}
 
 	return false, nil

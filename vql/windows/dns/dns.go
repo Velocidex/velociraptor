@@ -35,6 +35,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	pointer "github.com/mattn/go-pointer"
 	"golang.org/x/net/dns/dnsmessage"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -177,7 +178,13 @@ func (self DNSEventPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("dns: %s", err)
+			return
+		}
+
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("dns: %s", err.Error())
 			return

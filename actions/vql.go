@@ -100,10 +100,13 @@ func (self VQLClientAction) StartQuery(
 		Responder: responder,
 	}
 
+	// Clients run VQL with no ACL control.
 	env := ordereddict.NewDict().
 		Set("$responder", responder).
 		Set("$uploader", uploader).
 		Set("config", config_obj.Client).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NullACLManager{}).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {

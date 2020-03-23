@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -41,7 +42,14 @@ func (self *EnvFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &EnvFunctionArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("environ: %s", err)
+		return false
+	}
+
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("environ: %s", err.Error())
 		return false

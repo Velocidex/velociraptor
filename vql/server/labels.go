@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -41,10 +42,17 @@ type AddLabels struct{}
 func (self *AddLabels) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
 	arg := &AddLabelsArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("label: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.LABEL_CLIENT)
+	if err != nil {
+		scope.Log("label: %s", err)
 		return vfilter.Null{}
 	}
 

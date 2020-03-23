@@ -293,11 +293,12 @@ func (self *logWriter) Write(b []byte) (int, error) {
 func NewGuiTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
+	principal string,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, artifact_name)
+		config_obj, principal, artifact_name)
 	if err != nil {
 		return nil, err
 	}

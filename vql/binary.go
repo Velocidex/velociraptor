@@ -104,6 +104,12 @@ func (self _BinaryParserPlugin) Call(
 		return output_chan
 	}
 
+	err = CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("binary_parse: %s", err)
+		return output_chan
+	}
+
 	// Extract additional args
 	options := make(map[string]interface{})
 	if arg.Args != nil {

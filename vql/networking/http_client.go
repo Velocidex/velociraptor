@@ -34,6 +34,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -252,6 +253,12 @@ func (self *_HttpPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		if err != nil {
+			scope.Log("http_client: %s", err)
+			return
+		}
 
 		any_config_obj, _ := scope.Resolve("config")
 		config_obj := any_config_obj.(*config_proto.ClientConfig)

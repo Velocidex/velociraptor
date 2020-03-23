@@ -23,6 +23,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	gomail "gopkg.in/gomail.v2"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -54,6 +55,12 @@ func (self MailPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		if err != nil {
+			scope.Log("environ: %s", err)
+			return
+		}
+
 		any_config_obj, _ := scope.Resolve("server_config")
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
@@ -62,7 +69,7 @@ func (self MailPlugin) Call(
 		}
 
 		arg := &MailPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("mail: %v", err)
 			return

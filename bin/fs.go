@@ -80,6 +80,8 @@ func doLS(path string) {
 	}
 
 	env := ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("accessor", *fs_command_accessor).
 		Set("path", path)
 
@@ -114,6 +116,8 @@ func doCp(path string, dump_dir string) {
 		Set("$uploader", &vql_networking.FileBasedUploader{
 			UploadDir: dump_dir,
 		}).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)

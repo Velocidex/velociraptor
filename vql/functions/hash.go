@@ -66,6 +66,12 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("yara: %s", err)
+		return vfilter.Null{}
+	}
+
 	fs, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("yara: %v", err)

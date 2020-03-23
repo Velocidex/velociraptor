@@ -113,6 +113,12 @@ func (self YaraScanPlugin) Call(
 			vql_subsystem.CacheSet(scope, arg.Key, rules)
 		}
 
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("yara: %s", err.Error())
+			return
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("yara: %v", err)

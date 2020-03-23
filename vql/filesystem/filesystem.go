@@ -52,6 +52,13 @@ func (self GlobPlugin) Call(
 			scope.Log("glob: %s", err.Error())
 			return
 		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("glob: %s", err.Error())
+			return
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("glob: %v", err)
@@ -183,6 +190,12 @@ func (self ReadFilePlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("read_file: %s", err.Error())
+			return
+		}
+
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("read_file: %v", err)
@@ -286,13 +299,19 @@ func (self *StatPlugin) Call(
 		arg := &StatArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
-			scope.Log("%s: %s", "stat", err.Error())
+			scope.Log("stat: %s", err.Error())
+			return
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("stat: %s", err.Error())
 			return
 		}
 
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
-			scope.Log("%s: %s", "stat", err.Error())
+			scope.Log("stat: %s", err.Error())
 			return
 		}
 		for _, filename := range arg.Filename {

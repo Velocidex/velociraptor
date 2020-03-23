@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -19,6 +20,12 @@ func (self UsersPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("users: %s", err)
+			return
+		}
 
 		any_config_obj, _ := scope.Resolve("server_config")
 		config_obj, ok := any_config_obj.(*config_proto.Config)

@@ -411,7 +411,8 @@ func ArtifactCollectorProcessOneMessage(
 			}
 			defer fd.Close()
 
-			writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
+			scope := vql_subsystem.MakeScope()
+			writer, err := csv.GetCSVWriter(scope, fd)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err

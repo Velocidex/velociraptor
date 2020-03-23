@@ -3,67 +3,78 @@
 goog.module('grrUi.artifact.serverEventsDirective');
 
 const ServerEventsController = function($scope, $uibModal, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  this.uibModal_ = $uibModal;
-  this.grrApiService_ = grrApiService;
+    this.uibModal_ = $uibModal;
+    this.grrApiService_ = grrApiService;
 
-  this.artifacts = [];
-  this.selectedArtifact = {};
+    this.artifacts = [];
+    this.selectedArtifact = {};
 
-  this.names = [];
-  this.params = {};
+    this.names = [];
+    this.params = {};
 
-  this.flowArguments = {};
+    this.flowArguments = {};
 
-  this.opened = false;
-  this.reportParams;
+    this.opened = false;
+    this.reportParams;
 
-  // Start off with the time rounded to the current day.
-  this.selected_date;
+    // Start off with the time rounded to the current day.
+    this.selected_date;
 
-  this.dateOptions = {
-    formatYear: 'yy',
-    startingDay: 1,
-    dateDisabled: function(dateAndMode) {
-      var timestamp_start = 0;
-      var timestamp_end = 0;
-      var utc;
+    this.dateOptions = {
+        formatYear: 'yy',
+        startingDay: 1,
+        dateDisabled: function(dateAndMode) {
+            var timestamp_start = 0;
+            var timestamp_end = 0;
+            var utc;
 
-      if (dateAndMode.mode == "day") {
-        // This is a hack! popup date time has to use local
-        // timezone. We therefore convert it to utc.
-        utc = moment(dateAndMode.date).format("YYYY-MM-DD");
-        timestamp_start = moment.utc(utc + "T00:00:00").unix();
-        timestamp_end = moment.utc(utc + "T23:59:59").unix();
-      } else if(dateAndMode.mode == "month") {
-        utc = moment(dateAndMode.date).format("YYYY-MM-");
-        timestamp_start = moment.utc(utc + "01T00:00:00").unix();
-        timestamp_end = moment.utc(utc + "30T23:59:59").unix();
-      } else {
-        utc = moment(dateAndMode.date).format("YYYY-");
-        timestamp_start = moment.utc(utc + "01-01T00:00:00").unix();
-        timestamp_end = moment.utc(utc + "12-30T23:59:59").unix();
-      };
+            if (dateAndMode.mode == "day") {
+                // This is a hack! popup date time has to use local
+                // timezone. We therefore convert it to utc.
+                utc = moment(dateAndMode.date).format("YYYY-MM-DD");
+                timestamp_start = moment.utc(utc + "T00:00:00").unix();
+                timestamp_end = moment.utc(utc + "T23:59:59").unix();
+            } else if(dateAndMode.mode == "month") {
+                utc = moment(dateAndMode.date).format("YYYY-MM-");
+                timestamp_start = moment.utc(utc + "01T00:00:00").unix();
+                timestamp_end = moment.utc(utc + "30T23:59:59").unix();
+            } else {
+                utc = moment(dateAndMode.date).format("YYYY-");
+                timestamp_start = moment.utc(utc + "01-01T00:00:00").unix();
+                timestamp_end = moment.utc(utc + "12-30T23:59:59").unix();
+            };
 
-      var timestamps = this.selectedArtifact.timestamps;
-      if (angular.isDefined(timestamps.length)) {
-        for (var i=0; i<timestamps.length; i++) {
-          var ts = timestamps[i];
-          if (ts >= timestamp_start && ts <= timestamp_end) {
-            return false;
-          }
+            var timestamps = this.selectedArtifact.timestamps;
+            if (angular.isDefined(timestamps.length)) {
+                for (var i=0; i<timestamps.length; i++) {
+                    var ts = timestamps[i];
+                    if (ts >= timestamp_start && ts <= timestamp_end) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }.bind(this),
+    };
+
+    this.scope_.$watch('controller.selected_date',
+                       this.onDateChange.bind(this));
+    this.GetArtifactList();
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
         }
-      }
-
-      return true;
-    }.bind(this),
-  };
-
-  this.scope_.$watch('controller.selected_date',
-                     this.onDateChange.bind(this));
-  this.GetArtifactList();
+    }.bind(this));
 };
 
 ServerEventsController.prototype.onDateChange = function() {

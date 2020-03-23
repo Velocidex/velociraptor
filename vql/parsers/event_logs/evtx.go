@@ -63,6 +63,12 @@ func (self _ParseEvtxPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
+				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+				if err != nil {
+					scope.Log("parse_evtx: %s", err)
+					return
+				}
+
 				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 				if err != nil {
 					scope.Log("parse_evtx: %v", err)
@@ -138,6 +144,12 @@ func (self _WatchEvtxPlugin) Call(
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("watch_evtx: %s", err.Error())
+			return
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("watch_evtx: %s", err)
 			return
 		}
 

@@ -24,6 +24,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/host"
 
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -57,6 +58,13 @@ func init() {
 				scope *vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
+
+				err := CheckAccess(scope, acls.MACHINE_STATE)
+				if err != nil {
+					scope.Log("info: %s", err)
+					return result
+				}
+
 				if info, err := host.Info(); err == nil {
 					item := getInfo(info).
 						Set("Fqdn", fqdn.Get()).

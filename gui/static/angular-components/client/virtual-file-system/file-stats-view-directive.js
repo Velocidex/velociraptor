@@ -50,7 +50,8 @@ const FileStatsViewController = function(
 
 
 /**
- * Updates the current file.
+ * getAccessorAndPath converts a Velociraptor VFS path into a path
+ * suitable to use on the client.
  *
  * @export
  */
@@ -59,7 +60,7 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
     var accessor = 'file';
     if (components.length > 0) {
         accessor = components[0];
-        path = Join(components.slice(1));
+        path = components.slice(1).join("\\");
     }
 
     if (accessor == 'ntfs' && components.length > 1) {
@@ -67,7 +68,7 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
     }
 
     return {accessor: accessor, path: path};
-}
+};
 
 FileStatsViewController.prototype.updateFile = function() {
   if (this.updateInProgress) {
