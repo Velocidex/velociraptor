@@ -5,21 +5,37 @@ description: |
 parameters:
   - name: servicesKeyGlob
     default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\
-
+  - name: Calculate_Hash
+    default: N
+    type: bool
+  - name: CertificateInfo
+    default: N
+    type: bool  
+    
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
 
     queries:
       - |
-        SELECT State, Name, DisplayName, Status,
+        LET service <= SELECT State, Name, DisplayName, Status,
                ProcessId as Pid, ExitCode, StartMode,
                PathName, ServiceType, StartName as UserAccount,
                {
-                  SELECT timestamp(epoch=Mtime.Sec) as Created
-                  FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
+                 SELECT timestamp(epoch=Mtime.Sec) as Created
+                 FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
                } AS Created,
                {
                  SELECT ServiceDll FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
-               } AS ServiceDll
+               } AS ServiceDll,
+               parse_string_with_regex(regex=
+                 ['^"(?P<AbsolutePath>[^"]+)','(?P<AbsolutePath>^[^ "]+)'], 
+                 string=PathName).AbsolutePath as AbsolutePath
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
+      - |
+        SELECT *, if(condition=(Calculate_Hash = "Y"),
+                    then=hash(path=AbsolutePath,
+                           accessor=file)) AS Hash,
+                 if(condition=(CertificateInfo = "Y"),
+                    then=authenticode(filename=AbsolutePath)) AS Certinfo  
+        FROM service
