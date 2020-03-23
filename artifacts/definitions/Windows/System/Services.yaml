@@ -1,4 +1,4 @@
-name: Custom.Windows.System.Services
+name: Windows.System.Services
 description: |
   List all the installed services.
 
