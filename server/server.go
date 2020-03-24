@@ -168,8 +168,12 @@ func (self *Server) Process(
 			self.DrainRequestsForClient(message_info.Source)...)
 	}
 
+	// Messages sent to clients are typically small and we do not
+	// benefit from compression.
 	response, err := self.manager.EncryptMessageList(
-		message_list, message_info.Source)
+		message_list,
+		crypto_proto.PackedMessageList_UNCOMPRESSED,
+		message_info.Source)
 	if err != nil {
 		return nil, 0, err
 	}
