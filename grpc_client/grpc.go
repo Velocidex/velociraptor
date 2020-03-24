@@ -35,16 +35,17 @@ import (
 
 var (
 	// Cache the creds for internal gRPC connections.
-	mu    sync.RWMutex
+	mu    sync.Mutex
 	creds credentials.TransportCredentials
 
+	pool_mu sync.Mutex
 	pool    *grpcpool.Pool
 	address string
 )
 
 func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
-	mu.RLock()
-	defer mu.RUnlock()
+	mu.Lock()
+	defer mu.Unlock()
 
 	if creds == nil {
 		certificate := config_obj.Frontend.Certificate
@@ -100,10 +101,10 @@ func (self GRPCAPIClient) GetAPIClient(
 func GetChannel(
 	ctx context.Context,
 	config_obj *config_proto.Config) *grpc.ClientConn {
-	mu.RLock()
-	defer mu.RUnlock()
-
 	var err error
+
+	pool_mu.Lock()
+	defer pool_mu.Unlock()
 
 	// Pool does not exist - make a new one.
 	if pool == nil {
