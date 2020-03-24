@@ -51,6 +51,7 @@ import (
 // ForemanProcessMessage processes a ForemanCheckin message from the
 // client.
 func ForemanProcessMessage(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string,
 	foreman_checkin *actions_proto.ForemanCheckin) error {
@@ -121,11 +122,11 @@ func ForemanProcessMessage(
 		}
 
 		api_client, cancel := dispatcher.APIClientFactory.GetAPIClient(
-			config_obj)
+			ctx, config_obj)
 		defer cancel()
 
 		_, err = api_client.NotifyClients(
-			context.Background(), &api_proto.NotificationRequest{
+			ctx, &api_proto.NotificationRequest{
 				ClientId: client_id})
 		return err
 	})

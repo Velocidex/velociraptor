@@ -410,8 +410,11 @@ func (self *NotificationReader) sendToURL(
 	self.logger.Info("%s: Connected to %s", self.name,
 		self.connector.GetCurrentUrl()+self.handler)
 
+	// Clients always compress messages to the server.
 	cipher_text, err := self.manager.Encrypt(
-		message_list, self.connector.ServerName())
+		message_list,
+		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		self.connector.ServerName())
 	if err != nil {
 		return err
 	}

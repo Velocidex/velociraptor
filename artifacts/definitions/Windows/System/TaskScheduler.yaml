@@ -13,14 +13,14 @@ description: |
 parameters:
   - name: TasksPath
     default: c:/Windows/System32/Tasks/**
-  - name: alsoUpload
+  - name: AlsoUpload
     type: bool
 
 sources:
   - name: Analysis
     queries:
       - LET Uploads = SELECT Name, FullPath, if(
-           condition=alsoUpload,
+           condition=AlsoUpload='Y',
            then=upload(file=FullPath)) as Upload
         FROM glob(globs=TasksPath)
         WHERE NOT IsDir

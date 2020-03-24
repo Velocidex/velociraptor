@@ -64,7 +64,7 @@ func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response
 	require.NoError(self.t, err)
 
 	message_info.IterateJobs(context.Background(),
-		func(item *crypto_proto.GrrMessage) {
+		func(ctx context.Context, item *crypto_proto.GrrMessage) {
 			self.received = append(self.received, item.Name)
 		})
 

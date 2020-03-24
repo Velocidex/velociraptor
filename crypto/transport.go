@@ -162,7 +162,9 @@ func _NewCipher(
 type ICryptoManager interface {
 	GetCSR() ([]byte, error)
 	AddCertificate(certificate_pem []byte) (*string, error)
-	Encrypt(compressed_message_lists [][]byte, destination string) ([]byte, error)
+	Encrypt(compressed_message_lists [][]byte,
+		compression crypto_proto.PackedMessageList_CompressionType,
+		destination string) ([]byte, error)
 	Decrypt(cipher_text []byte) (*MessageInfo, error)
 }
 
@@ -407,7 +409,7 @@ type MessageInfo struct {
 // immediately use the decompressed buffer and not hold it around.
 func (self *MessageInfo) IterateJobs(
 	ctx context.Context,
-	processor func(msg *crypto_proto.GrrMessage)) error {
+	processor func(ctx context.Context, msg *crypto_proto.GrrMessage)) error {
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
 			decompressed, err := Uncompress(ctx, raw)
@@ -432,7 +434,7 @@ func (self *MessageInfo) IterateJobs(
 			// For backwards compatibility normalize old
 			// client messages to new format.
 			responder.NormalizeGrrMessageForBackwardCompatibility(job)
-			processor(job)
+			processor(ctx, job)
 		}
 	}
 
@@ -679,6 +681,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 // there are enough to send.
 func (self *CryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
+	compression crypto_proto.PackedMessageList_CompressionType,
 	destination string) ([]byte, error) {
 
 	plain_text, err := proto.Marshal(message_list)
@@ -686,13 +689,20 @@ func (self *CryptoManager) EncryptMessageList(
 		return nil, errors.WithStack(err)
 	}
 
+	if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+		plain_text = Compress(plain_text)
+	}
+
 	cipher_text, err := self.Encrypt(
-		[][]byte{Compress(plain_text)}, destination)
+		[][]byte{plain_text},
+		compression,
+		destination)
 	return cipher_text, err
 }
 
 func (self *CryptoManager) Encrypt(
 	compressed_message_lists [][]byte,
+	compression crypto_proto.PackedMessageList_CompressionType,
 	destination string) (
 	[]byte, error) {
 	// The cipher is kept the same for all future communications
@@ -722,7 +732,7 @@ func (self *CryptoManager) Encrypt(
 
 	packed_message_list := &crypto_proto.PackedMessageList{
 		// We always compress the data.
-		Compression: crypto_proto.PackedMessageList_ZCOMPRESSION,
+		Compression: compression,
 		MessageList: compressed_message_lists,
 		Source:      self.source,
 		Nonce:       self.config.Client.Nonce,
@@ -753,6 +763,7 @@ func (self *CryptoManager) Encrypt(
 		comms.PacketIv)
 	if err != nil {
 		return nil, err
+
 	}
 
 	comms.Encrypted = encrypted_serialized_packed_message_list

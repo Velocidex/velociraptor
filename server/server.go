@@ -107,9 +107,11 @@ func NewServer(
 
 // We only process enrollment messages when the client is not fully
 // authenticated.
-func (self *Server) ProcessSingleUnauthenticatedMessage(message *crypto_proto.GrrMessage) {
+func (self *Server) ProcessSingleUnauthenticatedMessage(
+	ctx context.Context,
+	message *crypto_proto.GrrMessage) {
 	if message.CSR != nil {
-		err := enroll(self, message.CSR)
+		err := enroll(ctx, self, message.CSR)
 		if err != nil {
 			self.logger.Error("Enrol Error: %s", err)
 		}
@@ -168,8 +170,12 @@ func (self *Server) Process(
 			self.DrainRequestsForClient(message_info.Source)...)
 	}
 
+	// Messages sent to clients are typically small and we do not
+	// benefit from compression.
 	response, err := self.manager.EncryptMessageList(
-		message_list, message_info.Source)
+		message_list,
+		crypto_proto.PackedMessageList_UNCOMPRESSED,
+		message_info.Source)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -129,10 +129,10 @@ func shell_executor(config_obj *config_proto.Config,
 		kingpin.FatalIfError(err, "Sending client message ")
 
 		api_client_factory := grpc_client.GRPCAPIClient{}
-		client, cancel := api_client_factory.GetAPIClient(config_obj)
+		client, cancel := api_client_factory.GetAPIClient(ctx, config_obj)
 		defer cancel()
 
-		_, err = client.NotifyClients(context.Background(),
+		_, err = client.NotifyClients(ctx,
 			&api_proto.NotificationRequest{ClientId: *shell_client})
 		kingpin.FatalIfError(err, "Sending client message ")
 	}()
@@ -213,11 +213,10 @@ func completer(t prompt.Document) []prompt.Suggest {
 }
 
 func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel)
-	return client.GetClient(context.Background(), &api_proto.GetClientRequest{
+	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,
 	})
 }

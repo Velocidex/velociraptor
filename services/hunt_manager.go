@@ -92,7 +92,7 @@ func (self *HuntManager) Start(
 		defer self.Close()
 
 		for row := range vql.Eval(ctx, scope) {
-			self.ProcessRow(scope, row)
+			self.ProcessRow(ctx, scope, row)
 		}
 	}()
 
@@ -112,6 +112,7 @@ func (self *HuntManager) Close() {
 }
 
 func (self *HuntManager) ProcessRow(
+	ctx context.Context,
 	scope *vfilter.Scope,
 	row vfilter.Row) {
 	self.mu.Lock()
@@ -131,7 +132,7 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Check if we already launched it on this client. We maintain
-	// a data store index of all the clients and hunts so be able
+	// a data store index of all the clients and hunts to be able
 	// to quickly check if a certain hunt ran on a particular
 	// client. We dont care too much how fast this is because the
 	// hunt manager is running as an independent service and not
@@ -226,12 +227,9 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	client, closer := grpc_client.Factory.GetAPIClient(
+		ctx, self.config_obj)
+	defer closer()
 
 	response, err := client.CollectArtifact(ctx, request)
 	if err != nil {
@@ -264,10 +262,9 @@ func huntHasLabel(config_obj *config_proto.Config,
 
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition != nil && len(label_condition.Label) > 0 {
-		channel := grpc_client.GetChannel(config_obj)
-		defer channel.Close()
+		client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+		defer closer()
 
-		client := api_proto.NewAPIClient(channel)
 		request := &api_proto.LabelClientsRequest{
 			ClientIds: []string{client_id},
 			Labels:    label_condition.Label,

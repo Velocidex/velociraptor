@@ -87,14 +87,26 @@ func ScheduleArtifactCollection(
 	config_obj *config_proto.Config,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
 
-	client_id := collector_request.ClientId
-	if client_id == "" {
-		return "", errors.New("Client id not provided.")
+	args := collector_request.CompiledCollectorArgs
+	if args == nil {
+		var err error
+		args, err = CompileCollectorArgs(config_obj, collector_request)
+		if err != nil {
+			return "", err
+		}
 	}
 
+	return ScheduleArtifactCollectionFromCollectorArgs(
+		config_obj, collector_request, args)
+}
+
+func CompileCollectorArgs(
+	config_obj *config_proto.Config,
+	collector_request *flows_proto.ArtifactCollectorArgs) (
+	*actions_proto.VQLCollectorArgs, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Update the flow's artifacts list.
@@ -114,30 +126,39 @@ func ScheduleArtifactCollection(
 		}
 
 		if artifact == nil {
-			return "", errors.New("Unknown artifact " + name)
+			return nil, errors.New("Unknown artifact " + name)
 		}
 
 		err := repository.Compile(artifact, vql_collector_args)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
 	// Add any artifact dependencies.
 	err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = AddArtifactCollectorArgs(
 		config_obj, vql_collector_args, collector_request)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = artifacts.Obfuscate(config_obj, vql_collector_args)
-	if err != nil {
-		return "", err
+	return vql_collector_args, err
+}
+
+func ScheduleArtifactCollectionFromCollectorArgs(
+	config_obj *config_proto.Config,
+	collector_request *flows_proto.ArtifactCollectorArgs,
+	vql_collector_args *actions_proto.VQLCollectorArgs) (string, error) {
+
+	client_id := collector_request.ClientId
+	if client_id == "" {
+		return "", errors.New("Client id not provided.")
 	}
 
 	// Generate a new collection context.
@@ -648,10 +669,13 @@ func (self *FlowRunner) Close() {
 	}
 }
 
-func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
+func (self *FlowRunner) ProcessSingleMessage(
+	ctx context.Context,
+	job *crypto_proto.GrrMessage) {
 	if job.ForemanCheckin != nil {
 		ForemanProcessMessage(
-			self.config_obj, job.Source, job.ForemanCheckin)
+			ctx, self.config_obj,
+			job.Source, job.ForemanCheckin)
 		return
 	}
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
