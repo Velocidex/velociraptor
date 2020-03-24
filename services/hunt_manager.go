@@ -226,7 +226,7 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(context.Background(), self.config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
@@ -264,7 +264,7 @@ func huntHasLabel(config_obj *config_proto.Config,
 
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition != nil && len(label_condition.Label) > 0 {
-		channel := grpc_client.GetChannel(config_obj)
+		channel := grpc_client.GetChannel(context.Background(), config_obj)
 		defer channel.Close()
 
 		client := api_proto.NewAPIClient(channel)

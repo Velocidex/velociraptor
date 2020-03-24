@@ -158,6 +158,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 }
 
 func CancelFlow(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, flow_id, username string,
 	api_client_factory grpc_client.APIClientFactory) (
@@ -215,10 +216,10 @@ func CancelFlow(
 		return nil, err
 	}
 
-	client, cancel := api_client_factory.GetAPIClient(config_obj)
+	client, cancel := api_client_factory.GetAPIClient(ctx, config_obj)
 	defer cancel()
 
-	_, err = client.NotifyClients(context.Background(),
+	_, err = client.NotifyClients(ctx,
 		&api_proto.NotificationRequest{
 			ClientId: client_id,
 		})

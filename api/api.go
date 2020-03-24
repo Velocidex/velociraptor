@@ -77,6 +77,7 @@ func (self *ApiServer) CancelFlow(
 	}
 
 	result, err := flows.CancelFlow(
+		ctx,
 		self.config, in.ClientId, in.FlowId, user_name,
 		self.api_client_factory)
 	if err != nil {
@@ -170,7 +171,7 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Notify the client if it is listenning.
-	client, cancel := self.api_client_factory.GetAPIClient(self.config)
+	client, cancel := self.api_client_factory.GetAPIClient(ctx, self.config)
 	defer cancel()
 
 	_, err = client.NotifyClients(ctx, &api_proto.NotificationRequest{
@@ -244,7 +245,7 @@ func (self *ApiServer) ModifyHunt(
 			"details": fmt.Sprintf("%v", in),
 		}).Info("ModifyHunt")
 
-	err = flows.ModifyHunt(self.config, in, in.Creator)
+	err = flows.ModifyHunt(ctx, self.config, in, in.Creator)
 	if err != nil {
 		return nil, err
 	}

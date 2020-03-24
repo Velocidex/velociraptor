@@ -87,7 +87,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	channel := grpc_client.GetChannel(config_obj)
+	channel := grpc_client.GetChannel(ctx, config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)

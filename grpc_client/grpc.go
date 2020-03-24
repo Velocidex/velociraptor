@@ -19,11 +19,14 @@
 package grpc_client
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"sync"
+	"time"
 
+	grpcpool "github.com/processout/grpc-go-pool"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -32,13 +35,16 @@ import (
 
 var (
 	// Cache the creds for internal gRPC connections.
-	mu    sync.Mutex
+	mu    sync.RWMutex
 	creds credentials.TransportCredentials
+
+	pool    *grpcpool.Pool
+	address string
 )
 
 func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
-	mu.Lock()
-	defer mu.Unlock()
+	mu.RLock()
+	defer mu.RUnlock()
 
 	if creds == nil {
 		certificate := config_obj.Frontend.Certificate
@@ -75,27 +81,50 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 }
 
 type APIClientFactory interface {
-	GetAPIClient(config_obj *config_proto.Config) (api_proto.APIClient, func() error)
+	GetAPIClient(ctx context.Context,
+		config_obj *config_proto.Config) (api_proto.APIClient, func() error)
 }
 
 type GRPCAPIClient struct{}
 
-func (self GRPCAPIClient) GetAPIClient(config_obj *config_proto.Config) (
+func (self GRPCAPIClient) GetAPIClient(
+	ctx context.Context,
+	config_obj *config_proto.Config) (
 	api_proto.APIClient, func() error) {
-	channel := GetChannel(config_obj)
+	channel := GetChannel(ctx, config_obj)
 
 	return api_proto.NewAPIClient(channel), channel.Close
 }
 
 // TODO- Return a cluster dialer.
-func GetChannel(config_obj *config_proto.Config) *grpc.ClientConn {
-	address := GetAPIConnectionString(config_obj)
-	con, err := grpc.Dial(address, grpc.WithTransportCredentials(
-		getCreds(config_obj)))
+func GetChannel(
+	ctx context.Context,
+	config_obj *config_proto.Config) *grpc.ClientConn {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	var err error
+
+	// Pool does not exist - make a new one.
+	if pool == nil {
+		address = GetAPIConnectionString(config_obj)
+		factory := func() (*grpc.ClientConn, error) {
+			return grpc.Dial(address, grpc.WithTransportCredentials(
+				getCreds(config_obj)))
+
+		}
+
+		pool, err = grpcpool.New(factory, 1, 5, 60*time.Second)
+		if err != nil {
+			panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
+		}
+	}
+
+	conn, err := pool.Get(ctx)
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
 	}
-	return con
+	return conn.ClientConn
 }
 
 func GetAPIConnectionString(config_obj *config_proto.Config) string {

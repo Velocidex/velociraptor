@@ -129,7 +129,8 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	res, err := flows.CancelFlow(config_obj, arg.ClientId, arg.FlowId, "VQL query",
+	res, err := flows.CancelFlow(ctx, config_obj,
+		arg.ClientId, arg.FlowId, "VQL query",
 		grpc_client.GRPCAPIClient{})
 	if err != nil {
 		scope.Log("cancel_flow: %s", err.Error())

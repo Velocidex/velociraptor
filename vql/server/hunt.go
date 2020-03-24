@@ -93,11 +93,11 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		State:           api_proto.Hunt_RUNNING,
 	}
 
-	channel := grpc_client.GetChannel(config_obj)
+	channel := grpc_client.GetChannel(ctx, config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	response, err := client.CreateHunt(ctx, hunt_request)

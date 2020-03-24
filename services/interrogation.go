@@ -120,7 +120,8 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 	}
 
 	if len(client_info.Labels) > 0 {
-		client, cancel := self.APIClientFactory.GetAPIClient(self.config_obj)
+		client, cancel := self.APIClientFactory.GetAPIClient(
+			context.Background(), self.config_obj)
 		defer cancel()
 
 		ctx, ctx_cancel := context.WithCancel(context.Background())

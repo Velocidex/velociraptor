@@ -648,10 +648,13 @@ func (self *FlowRunner) Close() {
 	}
 }
 
-func (self *FlowRunner) ProcessSingleMessage(job *crypto_proto.GrrMessage) {
+func (self *FlowRunner) ProcessSingleMessage(
+	ctx context.Context,
+	job *crypto_proto.GrrMessage) {
 	if job.ForemanCheckin != nil {
 		ForemanProcessMessage(
-			self.config_obj, job.Source, job.ForemanCheckin)
+			ctx, self.config_obj,
+			job.Source, job.ForemanCheckin)
 		return
 	}
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)

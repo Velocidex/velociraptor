@@ -409,7 +409,7 @@ type MessageInfo struct {
 // immediately use the decompressed buffer and not hold it around.
 func (self *MessageInfo) IterateJobs(
 	ctx context.Context,
-	processor func(msg *crypto_proto.GrrMessage)) error {
+	processor func(ctx context.Context, msg *crypto_proto.GrrMessage)) error {
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
 			decompressed, err := Uncompress(ctx, raw)
@@ -434,7 +434,7 @@ func (self *MessageInfo) IterateJobs(
 			// For backwards compatibility normalize old
 			// client messages to new format.
 			responder.NormalizeGrrMessageForBackwardCompatibility(job)
-			processor(job)
+			processor(ctx, job)
 		}
 	}
 

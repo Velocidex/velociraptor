@@ -48,9 +48,11 @@ type VFSFs struct {
 	logger *logging.LogContext
 }
 
-func (self *VFSFs) fetchDir(vfs_name string) ([]*api.FileInfoRow, error) {
+func (self *VFSFs) fetchDir(
+	ctx context.Context,
+	vfs_name string) ([]*api.FileInfoRow, error) {
 	self.logger.Info(fmt.Sprintf("Fetching dir %v from %v", vfs_name, self.client_id))
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(ctx, self.config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
@@ -83,13 +85,15 @@ func (self *VFSFs) fetchDir(vfs_name string) ([]*api.FileInfoRow, error) {
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	return self.getDir(vfs_name)
+	return self.getDir(ctx, vfs_name)
 }
 
-func (self *VFSFs) fetchFile(vfs_name string) error {
+func (self *VFSFs) fetchFile(
+	ctx context.Context,
+	vfs_name string) error {
 	self.logger.Info("Fetching file %v", vfs_name)
 
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(ctx, self.config_obj)
 	defer channel.Close()
 
 	client_path, accessor := api.GetClientPath(vfs_name)
@@ -143,9 +147,9 @@ func (self *VFSFs) GetAttr(name string, fcontext *fuse.Context) (*fuse.Attr, fus
 	vfs_name := fsPathToVFS(name)
 
 	dirname, basename := path.Split(vfs_name)
-	rows, err := self.getDir(dirname)
+	rows, err := self.getDir(fcontext, dirname)
 	if err != nil {
-		rows, err = self.fetchDir(dirname)
+		rows, err = self.fetchDir(fcontext, dirname)
 		if err != nil {
 			self.logger.Error(
 				fmt.Sprintf("Failed to fetch %s: %v", dirname, err))
@@ -173,13 +177,15 @@ func (self *VFSFs) GetAttr(name string, fcontext *fuse.Context) (*fuse.Attr, fus
 	return nil, fuse.ENOENT
 }
 
-func (self *VFSFs) getDir(vfs_name string) ([]*api.FileInfoRow, error) {
+func (self *VFSFs) getDir(
+	ctx context.Context,
+	vfs_name string) ([]*api.FileInfoRow, error) {
 	rows, pres := self.cache[vfs_name]
 	if pres {
 		return rows, nil
 	}
 
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(ctx, self.config_obj)
 	defer channel.Close()
 
 	request := &flows_proto.VFSListRequest{
@@ -206,10 +212,10 @@ func (self *VFSFs) getDir(vfs_name string) ([]*api.FileInfoRow, error) {
 func (self *VFSFs) OpenDir(fs_name string, fcontext *fuse.Context) (
 	[]fuse.DirEntry, fuse.Status) {
 	vfs_name := fsPathToVFS(fs_name)
-	rows, err := self.getDir(vfs_name)
+	rows, err := self.getDir(fcontext, vfs_name)
 	if err != nil {
 		self.logger.Warn(fmt.Sprintf("Fetching directory %s", vfs_name))
-		rows, err = self.fetchDir(vfs_name)
+		rows, err = self.fetchDir(fcontext, vfs_name)
 		if err != nil {
 			return nil, fuse.ENOENT
 		}
@@ -237,7 +243,7 @@ func (self *VFSFs) Open(fs_name string, flags uint32, fcontext *fuse.Context) (
 
 	vfs_name := fsPathToVFS(fs_name)
 
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(fcontext, self.config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
@@ -247,7 +253,7 @@ func (self *VFSFs) Open(fs_name string, flags uint32, fcontext *fuse.Context) (
 			VfsPath:  vfs_name,
 		})
 	if err != nil {
-		err := self.fetchFile(vfs_name)
+		err := self.fetchFile(fcontext, vfs_name)
 		if err != nil {
 			_, ok := errors.Cause(err).(*os.PathError)
 			if ok {
@@ -294,7 +300,8 @@ func (self *VFSFileReader) GetAttr(out *fuse.Attr) fuse.Status {
 func (self *VFSFileReader) Read(dest []byte, off int64) (
 	fuse.ReadResult, fuse.Status) {
 
-	channel := grpc_client.GetChannel(self.config_obj)
+	channel := grpc_client.GetChannel(
+		context.Background(), self.config_obj)
 	defer channel.Close()
 
 	client := api_proto.NewAPIClient(channel)
