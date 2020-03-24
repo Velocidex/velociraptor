@@ -55,7 +55,7 @@ func (self *VFSFs) fetchDir(
 	channel := grpc_client.GetChannel(ctx, self.config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	response, err := client.VFSRefreshDirectory(context.Background(),
 		&api_proto.VFSRefreshDirectoryRequest{
 			ClientId: self.client_id,
@@ -98,7 +98,7 @@ func (self *VFSFs) fetchFile(
 
 	client_path, accessor := api.GetClientPath(vfs_name)
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 
 	request := api.MakeCollectorRequest(
 		self.client_id, "System.VFS.DownloadFile",
@@ -193,7 +193,7 @@ func (self *VFSFs) getDir(
 		VfsPath:  vfs_name,
 	}
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	response, err := client.VFSListDirectory(context.Background(), request)
 	if err != nil {
 		return nil, err
@@ -246,7 +246,7 @@ func (self *VFSFs) Open(fs_name string, flags uint32, fcontext *fuse.Context) (
 	channel := grpc_client.GetChannel(fcontext, self.config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	_, err := client.VFSGetBuffer(context.Background(),
 		&api_proto.VFSFileBuffer{
 			ClientId: self.client_id,
@@ -304,7 +304,7 @@ func (self *VFSFileReader) Read(dest []byte, off int64) (
 		context.Background(), self.config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	response, err := client.VFSGetBuffer(context.Background(),
 		&api_proto.VFSFileBuffer{
 			ClientId: self.client_id,

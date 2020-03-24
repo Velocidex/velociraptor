@@ -216,7 +216,7 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 	channel := grpc_client.GetChannel(ctx, config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,
 	})

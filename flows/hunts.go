@@ -111,7 +111,7 @@ func CreateHunt(
 		channel := grpc_client.GetChannel(ctx, config_obj)
 		defer channel.Close()
 
-		client := api_proto.NewAPIClient(channel)
+		client := api_proto.NewAPIClient(channel.ClientConn)
 		client.NotifyClients(
 			ctx, &api_proto.NotificationRequest{
 				NotifyAll: true,

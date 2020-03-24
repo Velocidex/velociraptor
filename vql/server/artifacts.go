@@ -90,7 +90,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	channel := grpc_client.GetChannel(ctx, config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	response, err := client.CollectArtifact(ctx, request)
 
 	if err != nil {

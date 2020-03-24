@@ -94,13 +94,13 @@ func (self GRPCAPIClient) GetAPIClient(
 	api_proto.APIClient, func() error) {
 	channel := GetChannel(ctx, config_obj)
 
-	return api_proto.NewAPIClient(channel), channel.Close
+	return api_proto.NewAPIClient(channel.ClientConn), channel.Close
 }
 
 // TODO- Return a cluster dialer.
 func GetChannel(
 	ctx context.Context,
-	config_obj *config_proto.Config) *grpc.ClientConn {
+	config_obj *config_proto.Config) *grpcpool.ClientConn {
 	var err error
 
 	pool_mu.Lock()
@@ -125,7 +125,7 @@ func GetChannel(
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
 	}
-	return conn.ClientConn
+	return conn
 }
 
 func GetAPIConnectionString(config_obj *config_proto.Config) string {

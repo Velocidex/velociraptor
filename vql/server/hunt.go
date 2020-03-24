@@ -96,7 +96,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	channel := grpc_client.GetChannel(ctx, config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 

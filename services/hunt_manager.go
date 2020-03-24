@@ -229,7 +229,7 @@ func (self *HuntManager) ProcessRow(
 	channel := grpc_client.GetChannel(context.Background(), self.config_obj)
 	defer channel.Close()
 
-	client := api_proto.NewAPIClient(channel)
+	client := api_proto.NewAPIClient(channel.ClientConn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -267,7 +267,7 @@ func huntHasLabel(config_obj *config_proto.Config,
 		channel := grpc_client.GetChannel(context.Background(), config_obj)
 		defer channel.Close()
 
-		client := api_proto.NewAPIClient(channel)
+		client := api_proto.NewAPIClient(channel.ClientConn)
 		request := &api_proto.LabelClientsRequest{
 			ClientIds: []string{client_id},
 			Labels:    label_condition.Label,
