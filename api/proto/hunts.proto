@@ -154,8 +154,6 @@ message Hunt {
     State state = 8 [(sem_type) = {
             description: "This is state of the hunt. This field is manupulated by the GUI."
         }];
-
-    VQLCollectorArgs compiled_collector_args = 20;
 }
 
 message ListHuntsRequest {

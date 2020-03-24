@@ -41,6 +41,8 @@ var (
 	pool_mu sync.Mutex
 	pool    *grpcpool.Pool
 	address string
+
+	Factory APIClientFactory = GRPCAPIClient{}
 )
 
 func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
@@ -92,13 +94,12 @@ func (self GRPCAPIClient) GetAPIClient(
 	ctx context.Context,
 	config_obj *config_proto.Config) (
 	api_proto.APIClient, func() error) {
-	channel := GetChannel(ctx, config_obj)
+	channel := getChannel(ctx, config_obj)
 
 	return api_proto.NewAPIClient(channel.ClientConn), channel.Close
 }
 
-// TODO- Return a cluster dialer.
-func GetChannel(
+func getChannel(
 	ctx context.Context,
 	config_obj *config_proto.Config) *grpcpool.ClientConn {
 	var err error

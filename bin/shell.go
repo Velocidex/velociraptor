@@ -213,10 +213,9 @@ func completer(t prompt.Document) []prompt.Suggest {
 }
 
 func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
-	channel := grpc_client.GetChannel(ctx, config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel.ClientConn)
 	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,
 	})

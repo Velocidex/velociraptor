@@ -26,7 +26,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
@@ -87,12 +86,10 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	channel := grpc_client.GetChannel(ctx, config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel.ClientConn)
 	response, err := client.CollectArtifact(ctx, request)
-
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}

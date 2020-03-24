@@ -89,10 +89,27 @@ func CreateHunt(
 	if hunt.HuntId == "" {
 		hunt.HuntId = GetNewHuntId()
 	}
+
+	if hunt.StartRequest == nil || hunt.StartRequest.Artifacts == nil {
+		return nil, errors.New("No artifacts to collect.")
+	}
+
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
 	if hunt.Expires < hunt.CreateTime {
 		hunt.Expires = uint64(time.Now().Add(7*24*time.Hour).
 			UTC().UnixNano() / 1000)
+	}
+
+	// Compile the start request and store it in the hunt. We will
+	// use this compiled version to launch all other flows from
+	// this hunt rather than re-compile the artifact each
+	// time. This ensures that if the artifact definition is
+	// changed after this point, the hunt will continue to
+	// schedule consistent VQL on the clients.
+	hunt.StartRequest.CompiledCollectorArgs, err = CompileCollectorArgs(
+		config_obj, hunt.StartRequest)
+	if err != nil {
+		return nil, err
 	}
 
 	// We allow our caller to determine if hunts are created in
@@ -108,10 +125,9 @@ func CreateHunt(
 		// Notify all the clients about the new hunt. New
 		// hunts are not that common so notifying all the
 		// clients at once is probably ok.
-		channel := grpc_client.GetChannel(ctx, config_obj)
-		defer channel.Close()
+		client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+		defer closer()
 
-		client := api_proto.NewAPIClient(channel.ClientConn)
 		client.NotifyClients(
 			ctx, &api_proto.NotificationRequest{
 				NotifyAll: true,
