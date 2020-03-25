@@ -50,6 +50,7 @@ Tips:
 import (
 	"fmt"
 	"path"
+	"strings"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -59,8 +60,10 @@ import (
 type ACL_PERMISSION int
 
 const (
+	NO_PERMISSIONS ACL_PERMISSION = iota
+
 	// Issue all queries without restriction
-	ALL_QUERY ACL_PERMISSION = iota
+	ALL_QUERY
 
 	// Issue any query at all (ALL_QUERY implies ANY_QUERY).
 	ANY_QUERY
@@ -110,6 +113,8 @@ const (
 
 func (self ACL_PERMISSION) String() string {
 	switch self {
+	case NO_PERMISSIONS:
+		return "NO_PERMISSIONS"
 	case ALL_QUERY:
 		return "ALL_QUERY"
 	case ANY_QUERY:
@@ -142,6 +147,45 @@ func (self ACL_PERMISSION) String() string {
 		return "MACHINE_STATE"
 	}
 	return fmt.Sprintf("%d", self)
+}
+
+func GetPermission(name string) ACL_PERMISSION {
+	switch strings.ToUpper(name) {
+	case "NO_PERMISSIONS":
+		return NO_PERMISSIONS
+
+	case "ALL_QUERY":
+		return ALL_QUERY
+	case "ANY_QUERY":
+		return ANY_QUERY
+	case "PUBLISH":
+		return PUBLISH
+	case "READ_RESULTS":
+		return READ_RESULTS
+	case "LABEL_CLIENT":
+		return LABEL_CLIENT
+	case "COLLECT_CLIENT":
+		return COLLECT_CLIENT
+	case "COLLECT_SERVER":
+		return COLLECT_SERVER
+	case "ARTIFACT_WRITER":
+		return ARTIFACT_WRITER
+	case "SERVER_ARTIFACT_WRITER":
+		return SERVER_ARTIFACT_WRITER
+	case "EXECVE":
+		return EXECVE
+	case "NOTEBOOK_EDITOR":
+		return NOTEBOOK_EDITOR
+	case "SERVER_ADMIN":
+		return SERVER_ADMIN
+	case "FILESYSTEM_READ":
+		return FILESYSTEM_READ
+	case "FILESYSTEM_WRITE":
+		return FILESYSTEM_WRITE
+	case "MACHINE_STATE":
+		return MACHINE_STATE
+	}
+	return NO_PERMISSIONS
 }
 
 func GetPolicy(

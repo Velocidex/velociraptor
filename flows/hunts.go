@@ -76,6 +76,7 @@ func FindCollectedArtifacts(
 func CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	principal string,
 	hunt *api_proto.Hunt) (*string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -107,7 +108,7 @@ func CreateHunt(
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
 	hunt.StartRequest.CompiledCollectorArgs, err = CompileCollectorArgs(
-		config_obj, hunt.StartRequest)
+		config_obj, principal, hunt.StartRequest)
 	if err != nil {
 		return nil, err
 	}

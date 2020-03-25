@@ -18,6 +18,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,6 +29,7 @@ import (
 	"runtime/trace"
 	"strings"
 
+	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -136,6 +139,33 @@ func maybe_parse_api_config(config_obj *config_proto.Config) {
 		kingpin.FatalIfError(err, "Unable to read api config.")
 		err = yaml.Unmarshal(data, &config_obj.ApiConfig)
 		kingpin.FatalIfError(err, "Unable to decode config.")
+
+		// If the key is locked ask for a password.
+		private_key := []byte(config_obj.ApiConfig.ClientPrivateKey)
+		block, _ := pem.Decode(private_key)
+		if block == nil {
+			kingpin.Fatalf("Unable to decode private key.")
+		}
+
+		if x509.IsEncryptedPEMBlock(block) {
+			password := ""
+			err := survey.AskOne(
+				&survey.Password{Message: "Password:"},
+				&password,
+				survey.WithValidator(survey.Required))
+			kingpin.FatalIfError(err, "Password.")
+
+			decrypted_block, err := x509.DecryptPEMBlock(
+				block, []byte(password))
+			kingpin.FatalIfError(err, "Password.")
+
+			config_obj.ApiConfig.ClientPrivateKey = string(
+				pem.EncodeToMemory(&pem.Block{
+					Bytes: decrypted_block,
+					Type:  block.Type,
+				}))
+		}
+
 	}
 }
 

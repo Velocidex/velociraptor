@@ -85,12 +85,14 @@ func GetCollectionPath(client_id, flow_id string) string {
 
 func ScheduleArtifactCollection(
 	config_obj *config_proto.Config,
+	principal string,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
 
 	args := collector_request.CompiledCollectorArgs
 	if args == nil {
 		var err error
-		args, err = CompileCollectorArgs(config_obj, collector_request)
+		args, err = CompileCollectorArgs(
+			config_obj, principal, collector_request)
 		if err != nil {
 			return "", err
 		}
@@ -102,6 +104,7 @@ func ScheduleArtifactCollection(
 
 func CompileCollectorArgs(
 	config_obj *config_proto.Config,
+	principal string,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
 	*actions_proto.VQLCollectorArgs, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
@@ -129,7 +132,12 @@ func CompileCollectorArgs(
 			return nil, errors.New("Unknown artifact " + name)
 		}
 
-		err := repository.Compile(artifact, vql_collector_args)
+		err := repository.CheckAccess(config_obj, artifact, principal)
+		if err != nil {
+			return nil, err
+		}
+
+		err = repository.Compile(artifact, vql_collector_args)
 		if err != nil {
 			return nil, err
 		}

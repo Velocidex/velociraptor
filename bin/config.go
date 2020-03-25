@@ -23,11 +23,15 @@ import (
 	"bytes"
 	"compress/zlib"
 	"crypto/rand"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"os"
 
+	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
 	jsonpatch "github.com/evanphx/json-patch"
 	errors "github.com/pkg/errors"
@@ -47,11 +51,19 @@ var (
 		"client", "Dump the client's config file.")
 
 	config_api_client_command = config_command.Command(
-		"api_client", "Dump and api_client config file.")
+		"api_client", "Dump an api_client config file.")
 
 	config_api_client_common_name = config_api_client_command.Flag(
 		"name", "The common name of the API Client.").
 		Default("VelociraptorAPIClient").String()
+
+	config_api_client_password_protect = config_api_client_command.Flag(
+		"password", "Protect the certificate with a password.").
+		Bool()
+
+	config_api_client_output = config_api_client_command.Arg(
+		"output", "The filename to write the config file on.").
+		Required().String()
 
 	config_generate_command = config_command.Command(
 		"generate",
@@ -243,10 +255,31 @@ func doDumpApiClientConfig() {
 		config_obj, *config_api_client_common_name)
 	kingpin.FatalIfError(err, "Unable to generate certificate.")
 
+	if *config_api_client_password_protect {
+		password := ""
+		err = survey.AskOne(
+			&survey.Password{Message: "Password:"},
+			&password,
+			survey.WithValidator(survey.Required))
+		kingpin.FatalIfError(err, "Password.")
+
+		pem_block, _ := pem.Decode([]byte(bundle.PrivateKey))
+		if pem_block == nil {
+			kingpin.Fatalf("Unable to decode private key.")
+		}
+
+		block, err := x509.EncryptPEMBlock(
+			rand.Reader, "RSA PRIVATE KEY", pem_block.Bytes,
+			[]byte(password), x509.PEMCipherAES256)
+		kingpin.FatalIfError(err, "Password.")
+
+		bundle.PrivateKey = string(pem.EncodeToMemory(block))
+	}
+
 	api_client_config := &config_proto.ApiClientConfig{
 		CaCertificate:    config_obj.Client.CaCertificate,
 		ClientCert:       bundle.Cert,
-		ClientPrivateKey: bundle.PrivateKey,
+		ClientPrivateKey: string(bundle.PrivateKey),
 		Name:             *config_api_client_common_name,
 	}
 
@@ -265,7 +298,12 @@ func doDumpApiClientConfig() {
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
 	}
-	fmt.Printf("%v", string(res))
+
+	fd, err := os.OpenFile(*config_api_client_output, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	kingpin.FatalIfError(err, "Unable to open output file: ")
+
+	fd.Write(res)
+	fd.Close()
 }
 
 func init() {

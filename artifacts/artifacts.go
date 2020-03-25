@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/yaml"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -163,6 +164,12 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	// Validate the artifact contains syntactically correct VQL.
 	if validate {
+		for _, perm := range artifact.RequiredPermissions {
+			if acls.GetPermission(perm) == acls.NO_PERMISSIONS {
+				return nil, errors.New("Invalid artifact permission")
+			}
+		}
+
 		for _, source := range artifact.Sources {
 			if source.Precondition != "" {
 				_, err := vfilter.Parse(source.Precondition)
