@@ -1,0 +1,30 @@
+name: Windows.System.PowerShell
+description: |
+  This artifact allows running arbitrary commands through the system
+  powershell.
+
+  Since Velociraptor typically runs as system, the commands will also
+  run as System.
+
+  This is a very powerful artifact since it allows for arbitrary
+  command execution on the endpoints. Therefore this artifact requires
+  elevated permissions (specifically the `EXECVE`
+  permission). Typically it is only available with the `administrator`
+  role.
+
+required_permissions:
+  - EXECVE
+
+precondition:
+  SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: Command
+    default: "dir C:/"
+
+sources:
+  - query: |
+      SELECT * FROM execve(argv=["powershell",
+        "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
+        base64encode(string=utf16_encode(string=Command))
+      ])

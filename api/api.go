@@ -163,7 +163,8 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	flow_id, err := flows.ScheduleArtifactCollection(self.config, in)
+	flow_id, err := flows.ScheduleArtifactCollection(
+		self.config, in.Creator, in)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +216,8 @@ func (self *ApiServer) CreateHunt(
 		}).Info("CreateHunt")
 
 	result := &api_proto.StartFlowResponse{}
-	hunt_id, err := flows.CreateHunt(ctx, self.config, in)
+	hunt_id, err := flows.CreateHunt(
+		ctx, self.config, in.Creator, in)
 	if err != nil {
 		return nil, err
 	}

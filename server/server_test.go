@@ -230,6 +230,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	hunt_id, err := flows.CreateHunt(
 		context.Background(), self.config_obj,
+		self.config_obj.Client.PinnedServerName,
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
@@ -424,7 +425,9 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	}
 
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, request)
+		self.config_obj,
+		self.config_obj.Client.PinnedServerName,
+		request)
 
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(t, err)
@@ -448,7 +451,9 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, &flows_proto.ArtifactCollectorArgs{
+		self.config_obj,
+		self.config_obj.Client.PinnedServerName,
+		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
 			Artifacts: []string{"Generic.Client.Info"},
 		})

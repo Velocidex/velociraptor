@@ -145,6 +145,10 @@ message Artifact {
             description: "A reference for this artifact."
         }];
 
+    repeated string required_permissions = 13 [(sem_type) = {
+            description: "A list of required permissions to collect this artifact."
+        }];
+
     // If set here this applies to all sources.
     string precondition = 8 [(sem_type) = {
             description: "A VQL expression to be evaluated prior to using "
