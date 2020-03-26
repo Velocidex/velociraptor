@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
@@ -101,6 +102,9 @@ func doGenerateConfigInteractive() {
 	fmt.Println("Generating keys please wait....")
 	config_obj, err := generateNewKeys()
 	kingpin.FatalIfError(err, "Generating Keys")
+
+	// Assume we are generating a server config for this binary
+	config_obj.ServerType = runtime.GOOS
 
 	err = getFileStoreLocation(config_obj)
 	kingpin.FatalIfError(err, "getFileStoreLocation")

@@ -550,4 +550,8 @@ message Config {
         }];
 
    ServerServicesConfig server_services = 29;
+
+    string server_type = 30 [(sem_type) = {
+            description: "Type of server (linux, windows, darwin)"
+        }];
 }
