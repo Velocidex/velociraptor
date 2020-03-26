@@ -68,13 +68,13 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("yara: %s", err)
+		scope.Log("hash: %s", err)
 		return vfilter.Null{}
 	}
 
 	fs, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
-		scope.Log("yara: %v", err)
+		scope.Log("hash: %v", err)
 		return vfilter.Null{}
 	}
 

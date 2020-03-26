@@ -24,7 +24,6 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"strings"
@@ -87,7 +86,7 @@ func validateServerConfig(configuration *config_proto.Config) error {
 
 	// On windows we require file locations to include a drive
 	// letter.
-	if runtime.GOOS == "windows" {
+	if configuration.ServerType == "windows" {
 		path_regex := regexp.MustCompile("^[a-zA-Z]:")
 		path_check := func(parameter, value string) error {
 			if !path_regex.MatchString(value) {

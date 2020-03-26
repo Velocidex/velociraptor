@@ -171,6 +171,7 @@ func doServerDeb() {
 
 	// Debian packages always use the "velociraptor" user.
 	config_obj.Frontend.RunAsUser = "velociraptor"
+	config_obj.ServerType = "linux"
 
 	res, err := yaml.Marshal(config_obj)
 	kingpin.FatalIfError(err, "marshal")
@@ -234,7 +235,7 @@ fi
 mkdir -p '%s'
 chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
 chmod -R go-r /etc/velociraptor/
-chmod +x /usr/local/bin/velociraptor
+chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
 
 setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
 /bin/systemctl enable velociraptor_server
