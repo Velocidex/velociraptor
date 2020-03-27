@@ -131,6 +131,7 @@ func GetDefaultConfig() *config_proto.Config {
 				"Generic.Client.Stats",
 			},
 			ExpectedClients: 10000,
+			PublicPath:      "/tmp/public",
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
