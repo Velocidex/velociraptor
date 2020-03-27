@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -33,7 +34,8 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	// Make sure the initial user accounts are created.
+	// Make sure the initial user accounts are created with the
+	// administrator roles.
 	for _, user := range config_obj.GUI.InitialUsers {
 		user_record, err := users.GetUser(config_obj, user.Name)
 		if err != nil || user_record.Name != user.Name {
@@ -52,6 +54,12 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
 			}
 			err := users.SetUser(config_obj, new_user)
+			if err != nil {
+				return err
+			}
+
+			// Give them the administrator roles
+			err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
 			if err != nil {
 				return err
 			}

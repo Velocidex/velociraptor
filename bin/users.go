@@ -22,9 +22,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -36,7 +38,8 @@ var (
 	user_add_password = user_add.Arg(
 		"password",
 		"The password. If not specified we read from the terminal.").String()
-	user_add_readonly = user_add.Flag("read_only", "Desginate this user as read only.").Bool()
+	user_add_roles = user_add.Flag("role", "Specify the role for this user.").
+			Required().String()
 
 	user_show      = user_command.Command("show", "Display information about a user")
 	user_show_name = user_show.Arg(
@@ -56,7 +59,10 @@ func doAddUser() {
 	if err != nil {
 		kingpin.FatalIfError(err, "add user:")
 	}
-	user_record.ReadOnly = *user_add_readonly
+
+	err = acls.GrantRoles(config_obj, *user_add_name,
+		strings.Split(*user_add_roles, ","))
+	kingpin.FatalIfError(err, "Granting roles: ")
 
 	if config_obj.GUI.GoogleOauthClientId != "" {
 		fmt.Printf("Authentication will occur via Google - " +

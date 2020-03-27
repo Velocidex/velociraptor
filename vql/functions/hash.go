@@ -100,7 +100,7 @@ func (self *HashFunction) Call(ctx context.Context,
 			n, err := file.Read(buf)
 
 			// We are done!
-			if err == io.EOF {
+			if n == 0 || err == io.EOF {
 				if n == 0 {
 					result.MD5 = fmt.Sprintf(
 						"%x", result.md5.Sum(nil))

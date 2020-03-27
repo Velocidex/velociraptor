@@ -133,6 +133,11 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 func doShell() {
 	config_obj := get_config_or_default()
 
+	if config_obj.ApiConfig == nil ||
+		config_obj.ApiConfig.Name == "" {
+		kingpin.Fatalf("Shell requires a valid api config. Generate one with `velociraptor config api_config my_config.yaml --name myName --role administrator`")
+	}
+
 	scope := vql_subsystem.MakeScope()
 	ctx := InstallSignalHandler(scope)
 	client_info, err := getClientInfo(config_obj, ctx)

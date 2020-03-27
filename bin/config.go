@@ -30,12 +30,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
 	jsonpatch "github.com/evanphx/json-patch"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -55,7 +57,11 @@ var (
 
 	config_api_client_common_name = config_api_client_command.Flag(
 		"name", "The common name of the API Client.").
-		Default("VelociraptorAPIClient").String()
+		Required().String()
+
+	config_api_add_roles = config_api_client_command.Flag(
+		"role", "Specify the role for this api_client.").
+		String()
 
 	config_api_client_password_protect = config_api_client_command.Flag(
 		"password", "Protect the certificate with a password.").
@@ -304,6 +310,15 @@ func doDumpApiClientConfig() {
 
 	fd.Write(res)
 	fd.Close()
+
+	fmt.Printf("Creating API client file on %v.\n", *config_api_client_output)
+	if *config_api_add_roles != "" {
+		err = acls.GrantRoles(config_obj, *config_api_client_common_name,
+			strings.Split(*config_api_add_roles, ","))
+		kingpin.FatalIfError(err, "Unable to set role ACL: ")
+	} else {
+		fmt.Printf("No role added to user %v. You will need to do this later using the 'acl grant' command.", *config_api_client_common_name)
+	}
 }
 
 func init() {
