@@ -25,6 +25,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -61,7 +62,9 @@ func checkUserCredentialsHandler(
 			return
 		}
 
-		if user_record.Locked || user_record.Name != username ||
+		// Must have at least reader.
+		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+		if !perm || err != nil || user_record.Locked || user_record.Name != username ||
 			!user_record.VerifyPassword(password) {
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return

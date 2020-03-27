@@ -366,6 +366,13 @@ service API {
         };
     }
 
+    rpc UploadNotebookAttachment(NotebookFileUploadRequest) returns (NotebookFileUploadResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/UploadNotebookAttachment",
+            body: "*",
+        };
+    }
+
 
     // The below are API client methods - not available over HTTP
 
