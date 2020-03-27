@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/rand"
 	"encoding/base32"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
@@ -119,6 +120,16 @@ func NewNotebookId() string {
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return "N." + result
+}
+
+func NewNotebookAttachmentId() string {
+	buf := make([]byte, 8)
+	rand.Read(buf)
+
+	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	result := base32.HexEncoding.EncodeToString(buf)[:13]
+
+	return "NA." + result
 }
 
 func NewNotebookCellId() string {
@@ -469,6 +480,43 @@ func (self *ApiServer) UpdateNotebookCell(
 		in.NotebookId), notebook)
 
 	return notebook_cell, err
+}
+
+func (self *ApiServer) UploadNotebookAttachment(
+	ctx context.Context,
+	in *api_proto.NotebookFileUploadRequest) (*api_proto.NotebookFileUploadResponse, error) {
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to edit notebooks.")
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(in.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := NewNotebookAttachmentId() + in.Filename
+	full_path := path.Join("/notebooks", in.NotebookId,
+		string(datastore.SanitizeString(filename)))
+	file_store_factory := file_store.GetFileStore(self.config)
+	fd, err := file_store_factory.WriteFile(full_path)
+	if err != nil {
+		return nil, err
+	}
+	fd.Write(decoded)
+	fd.Close()
+
+	result := &api_proto.NotebookFileUploadResponse{
+		Url: full_path,
+	}
+	return result, nil
 }
 
 func (self *ApiServer) CreateNotebookDownloadFile(

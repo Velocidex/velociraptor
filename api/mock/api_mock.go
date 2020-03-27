@@ -799,6 +799,26 @@ func (mr *MockAPIClientMockRecorder) UpdateNotebookCell(arg0, arg1 interface{}, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebookCell), varargs...)
 }
 
+// UploadNotebookAttachment mocks base method
+func (m *MockAPIClient) UploadNotebookAttachment(arg0 context.Context, arg1 *proto0.NotebookFileUploadRequest, arg2 ...grpc.CallOption) (*proto0.NotebookFileUploadResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UploadNotebookAttachment", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookFileUploadResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadNotebookAttachment indicates an expected call of UploadNotebookAttachment
+func (mr *MockAPIClientMockRecorder) UploadNotebookAttachment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).UploadNotebookAttachment), varargs...)
+}
+
 // VFSGetBuffer mocks base method
 func (m *MockAPIClient) VFSGetBuffer(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.VFSFileBuffer, error) {
 	m.ctrl.T.Helper()

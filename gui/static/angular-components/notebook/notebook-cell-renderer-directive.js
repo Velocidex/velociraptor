@@ -6,8 +6,9 @@ goog.module.declareLegacyNamespace();
 
 
 const NotebookCellRendererController = function(
-    $scope, grrRoutingService, grrApiService, $uibModal) {
+    $scope, grrRoutingService, grrApiService, $uibModal, $timeout) {
     this.scope_ = $scope;
+    this.timeout_ = $timeout;
     this.grrRoutingService_ = grrRoutingService;
     this.grrApiService_ = grrApiService;
     this.uibModal_ = $uibModal;
@@ -31,6 +32,7 @@ const NotebookCellRendererController = function(
                             });
 
     this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
         ace.commands.addCommand({
             name: 'saveAndExit',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
@@ -100,6 +102,43 @@ NotebookCellRendererController.prototype.removeFocus = function(event) {
     event.stopPropagation();
     return false;
 };
+
+NotebookCellRendererController.prototype.pasteEvent = function(e) {
+    var items = e.originalEvent.clipboardData.items;
+    var self = this;
+    var state = self.scope_["state"];
+
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+
+        if (item.kind === 'file') {
+            var blob = item.getAsFile();
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var request = {
+                    data: reader.result.split(",")[1],
+                    notebook_id: state.notebook.notebook_id,
+                    filename: blob.name,
+                    size: blob.size,
+                };
+
+                self.grrApiService_.post(
+                    'v1/UploadNotebookAttachment', request
+                ).then(function success(response) {
+                    self.timeout_(function () {
+                        self.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
+                    });
+                }, function failure(response) {
+                    console.log("Error " + response.data);
+                });
+            };
+            reader.readAsDataURL(blob);
+        }
+    }
+
+    return false;
+};
+
 
 NotebookCellRendererController.prototype.upCell = function(event) {
     var self = this;

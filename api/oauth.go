@@ -33,6 +33,7 @@ import (
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -241,7 +242,14 @@ func authenticateOAUTHCookie(
 
 		// Now check if the user is allowed to log in.
 		user_record, err := users.GetUser(config_obj, username)
-		if err != nil || user_record.Locked || user_record.Name != username {
+		if err != nil {
+			reject(errors.New("Invalid user"))
+			return
+		}
+
+		// Must have at least reader.
+		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+		if !perm || err != nil || user_record.Locked || user_record.Name != username {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 

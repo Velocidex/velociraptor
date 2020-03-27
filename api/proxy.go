@@ -119,6 +119,13 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 				config_obj.Datastore.FilestoreDirectory,
 			)))))
 
+	// Serve notebook items
+	mux.Handle("/notebooks/", csrfProtect(config_obj,
+		checkUserCredentialsHandler(
+			config_obj, http.FileServer(http.Dir(
+				config_obj.Datastore.FilestoreDirectory,
+			)))))
+
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
 

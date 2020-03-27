@@ -46,6 +46,10 @@ func (self TimeVal) Time() time.Time {
 	return time.Unix(self.Sec, 0)
 }
 
+func (self TimeVal) MarshalJSON() ([]byte, error) {
+	return self.Time().MarshalJSON()
+}
+
 type FileInfo interface {
 	os.FileInfo
 	FullPath() string

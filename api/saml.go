@@ -9,6 +9,7 @@ import (
 
 	"github.com/crewjam/saml/samlsp"
 	"github.com/sirupsen/logrus"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -70,7 +71,10 @@ func authenticateSAML(config_obj *config_proto.Config, parent http.Handler) http
 
 			username := token.Attributes.Get(userAttr(config_obj))
 			user_record, err := users.GetUser(config_obj, username)
-			if err != nil || user_record.Locked || user_record.Name != username {
+
+			perm, err2 := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+			if err != nil || !perm || err2 != nil ||
+				user_record.Locked || user_record.Name != username {
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.WriteHeader(http.StatusUnauthorized)
 

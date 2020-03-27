@@ -115,19 +115,19 @@ func (self *NTFSFileInfo) FullPath() string {
 
 func (self *NTFSFileInfo) Mtime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Mtime.Unix(),
+		Nsec: self.info.Mtime.UnixNano(),
 	}
 }
 
 func (self *NTFSFileInfo) Ctime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Ctime.Unix(),
+		Nsec: self.info.Ctime.UnixNano(),
 	}
 }
 
 func (self *NTFSFileInfo) Atime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Atime.Unix(),
+		Nsec: self.info.Atime.UnixNano(),
 	}
 }
 

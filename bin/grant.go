@@ -41,7 +41,7 @@ var (
 		Default("{}").String()
 
 	grant_command_roles = grant_command.Flag(
-		"roles", "A comma separated list of roles to grant the principal").
+		"role", "A comma separated list of roles to grant the principal").
 		String()
 
 	grant_command_policy_merge = grant_command.Flag(

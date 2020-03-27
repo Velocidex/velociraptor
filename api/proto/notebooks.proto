@@ -60,3 +60,13 @@ message NotebookCell {
 
     bool currently_editing = 8;
 }
+
+message NotebookFileUploadRequest {
+    string data = 1;
+    string filename = 2;
+    string notebook_id = 3;
+}
+
+message NotebookFileUploadResponse {
+    string url = 1;
+}
