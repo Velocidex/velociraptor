@@ -41,8 +41,10 @@ var (
 	shell_client = shell.Arg("client_id", "The client id to run the shell for.").
 			Required().String()
 
-	shell_artifact = shell.Flag("type", "The type of shell to run").Default("cmd").
-			Enum("cmd", "powershell")
+	shell_artifact = shell.Flag("type", "The type of shell to run (cmd, powershell, bash)").
+			Default("cmd").Enum("cmd", "powershell", "bash")
+
+	shell_alt_artifact = shell.Flag("artifact", "An alternative artifact to run").String()
 )
 
 func shell_executor(config_obj *config_proto.Config,
@@ -56,10 +58,16 @@ func shell_executor(config_obj *config_proto.Config,
 
 	artifact_name := "Windows.System.CmdShell"
 	switch *shell_artifact {
+	case "bash":
+		artifact_name = "Linux.Sys.BashShell"
 	case "cmd":
 		artifact_name = "Windows.System.CmdShell"
 	case "powershell":
 		artifact_name = "Windows.System.PowerShell"
+	}
+
+	if *shell_alt_artifact != "" {
+		artifact_name = *shell_alt_artifact
 	}
 
 	fmt.Printf("Running %v on %v\n", t, client_id)

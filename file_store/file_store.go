@@ -39,7 +39,6 @@ package file_store
 import (
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -116,7 +115,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	listCounter.Inc()
 
 	file_path := self.FilenameToFileStorePath(dirname)
-	files, err := ioutil.ReadDir(file_path)
+	files, err := utils.ReadDir(file_path)
 	if err != nil {
 		return nil, err
 	}

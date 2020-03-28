@@ -205,7 +205,7 @@ func listChildren(config_obj *config_proto.Config,
 		return nil, err
 	}
 	dirname := strings.TrimSuffix(filename, ".db")
-	children, err := ioutil.ReadDir(dirname)
+	children, err := utils.ReadDir(dirname)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return []os.FileInfo{}, nil

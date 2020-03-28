@@ -75,9 +75,9 @@ func GetDefaultConfig() *config_proto.Config {
 			LocalBuffer: &config_proto.RingBufferConfig{
 				MemorySize:      50 * 1024 * 1024,
 				DiskSize:        1024 * 1024 * 1024,
-				FilenameLinux:   "/tmp/Velociraptor_Buffer.bin",
+				FilenameLinux:   "/var/tmp/Velociraptor_Buffer.bin",
 				FilenameWindows: "$TEMP/Velociraptor_Buffer.bin",
-				FilenameDarwin:  "/tmp/Velociraptor_Buffer.bin",
+				FilenameDarwin:  "/var/tmp/Velociraptor_Buffer.bin",
 			},
 
 			// Specific instructions for the
@@ -131,15 +131,15 @@ func GetDefaultConfig() *config_proto.Config {
 				"Generic.Client.Stats",
 			},
 			ExpectedClients: 10000,
-			PublicPath:      "/tmp/public",
+			PublicPath:      "/var/tmp/velociraptor/public",
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
 
 			// Users would probably need to change
 			// this to something more permanent.
-			Location:           "/tmp/velociraptor",
-			FilestoreDirectory: "/tmp/velociraptor",
+			Location:           "/var/tmp/velociraptor",
+			FilestoreDirectory: "/var/tmp/velociraptor",
 		},
 		Writeback: &config_proto.Writeback{},
 		Mail:      &config_proto.MailConfig{},
