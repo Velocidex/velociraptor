@@ -907,10 +907,10 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	in *api_proto.CreateDownloadRequest) (*empty.Empty, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	permissions := acls.READ_RESULTS
+	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, errors.New("User is not allowed to create downloads.")
 	}
 
 	// Log an audit event.

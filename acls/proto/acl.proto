@@ -29,6 +29,7 @@ message ApiClientACL {
     bool filesystem_read = 13;
     bool filesystem_write = 14;
     bool machine_state = 16;
+    bool prepare_results = 17;
 
     // A list of roles in lieu of the permissions above. These will be
     // interpolated into this ACL object.

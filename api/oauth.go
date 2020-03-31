@@ -186,6 +186,11 @@ func authenticateOAUTHCookie(
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		reject := func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"remote": r.RemoteAddr,
+			}).Error("OAuth2 Redirect")
+
 			// Not authorized - redirect to logon screen.
 			http.Redirect(w, r, "/auth/google/login",
 				http.StatusTemporaryRedirect)

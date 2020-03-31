@@ -107,6 +107,9 @@ const (
 	// Allowed to collect state information from machines (e.g. pslist()).
 	MACHINE_STATE
 
+	// Allowed to create zip files.
+	PREPARE_RESULTS
+
 	// When adding new permission - update CheckAccess,
 	// GetRolePermissions and acl.proto
 )
@@ -145,6 +148,9 @@ func (self ACL_PERMISSION) String() string {
 		return "FILESYSTEM_WRITE"
 	case MACHINE_STATE:
 		return "MACHINE_STATE"
+	case PREPARE_RESULTS:
+		return "PREPARE_RESULTS"
+
 	}
 	return fmt.Sprintf("%d", self)
 }
@@ -184,6 +190,9 @@ func GetPermission(name string) ACL_PERMISSION {
 		return FILESYSTEM_WRITE
 	case "MACHINE_STATE":
 		return MACHINE_STATE
+	case "PREPARE_RESULTS":
+		return PREPARE_RESULTS
+
 	}
 	return NO_PERMISSIONS
 }
@@ -274,9 +283,11 @@ func CheckAccessWithToken(
 
 	// Requested permission
 	switch permission {
-	case ANY_QUERY:
-		// Principal is allowed all queries.
+	case ALL_QUERY:
 		return token.AllQuery, nil
+
+	case ANY_QUERY:
+		return token.AnyQuery, nil
 
 	case PUBLISH:
 		if len(args) == 1 {
@@ -323,6 +334,9 @@ func CheckAccessWithToken(
 
 	case MACHINE_STATE:
 		return token.MachineState, nil
+
+	case PREPARE_RESULTS:
+		return token.PrepareResults, nil
 
 	}
 

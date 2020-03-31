@@ -158,7 +158,7 @@ func getArtifactReports(
 			Template: fmt.Sprintf(`
 ## %s
 
-{{ Query "SELECT * FROM source(%s) LIMIT 500" | Table }}
+{{ Query "SELECT * FROM source(%s) LIMIT 100" | Table }}
 
 `, name, parameters),
 		})

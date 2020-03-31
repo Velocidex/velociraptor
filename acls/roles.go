@@ -9,7 +9,7 @@ import (
 
 func ValidateRole(role string) bool {
 	switch role {
-	case "administrator", "reader", "analyst", "investigator", "artifact_writer":
+	case "administrator", "reader", "analyst", "investigator", "artifact_writer", "api":
 		return true
 	}
 
@@ -39,10 +39,17 @@ func GetRolePermissions(
 			result.FilesystemRead = true
 			result.FilesystemWrite = true
 			result.MachineState = true
+			result.PrepareResults = true
 
 			// Readers can view results but not edit or
 			// modify anything.
 		case "reader":
+			result.ReadResults = true
+
+			// An API client can read results
+			// (e.g watch_monitoring)
+		case "api":
+			result.AnyQuery = true
 			result.ReadResults = true
 
 			// Analysts can post process results using
@@ -54,6 +61,7 @@ func GetRolePermissions(
 			result.NotebookEditor = true
 			result.LabelClients = true
 			result.AnyQuery = true
+			result.PrepareResults = true
 
 			// Investigators are like analysts but can
 			// also issue new collections from endpoints.
@@ -63,6 +71,7 @@ func GetRolePermissions(
 			result.CollectClient = true
 			result.LabelClients = true
 			result.AnyQuery = true
+			result.PrepareResults = true
 
 			// Artifact writers are allowed to edit and
 			// create artifacts. NOTE This role is akin to
