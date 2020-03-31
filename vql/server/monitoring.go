@@ -197,7 +197,7 @@ func (self WatchMonitoringPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
 			scope.Log("watch_monitoring: %s", err)
 			return

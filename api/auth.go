@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
@@ -29,12 +30,33 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
 var (
 	contextKeyUser = "USER"
 )
+
+func logoff() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, _, ok := r.BasicAuth()
+		if !ok {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		params := r.URL.Query()
+		old_username, ok := params["username"]
+		if ok && len(old_username) == 1 && old_username[0] != username {
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+		http.Error(w, "authorization failed", http.StatusUnauthorized)
+	})
+}
 
 func checkUserCredentialsHandler(
 	config_obj *config_proto.Config,
@@ -47,6 +69,13 @@ func checkUserCredentialsHandler(
 		return authenticateSAML(config_obj, parent)
 	}
 
+	return authenticateBasic(config_obj, parent)
+}
+
+func authenticateBasic(
+	config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 
@@ -58,14 +87,36 @@ func checkUserCredentialsHandler(
 
 		user_record, err := users.GetUser(config_obj, username)
 		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"username": username,
+				"status":   http.StatusUnauthorized,
+			}).Error("Unknown username")
+
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
 
 		// Must have at least reader.
 		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
-		if !perm || err != nil || user_record.Locked || user_record.Name != username ||
-			!user_record.VerifyPassword(password) {
+		if !perm || err != nil || user_record.Locked || user_record.Name != username {
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"username": username,
+				"status":   http.StatusUnauthorized,
+			}).Error("Unauthorized username")
+
+			http.Error(w, "authorization failed", http.StatusUnauthorized)
+			return
+		}
+
+		if !user_record.VerifyPassword(password) {
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"username": username,
+				"status":   http.StatusUnauthorized,
+			}).Error("Invalid password")
+
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
@@ -90,14 +141,7 @@ func checkUserCredentialsHandler(
 	})
 }
 
-// TODO: Implement this properly.
-func IsUserApprovedForClient(
-	config_obj *config_proto.Config,
-	md *metadata.MD,
-	client_id string) bool {
-	return true
-}
-
+// GetGRPCUserInfo: Extracts user information from GRPC context.
 func GetGRPCUserInfo(
 	config_obj *config_proto.Config,
 	ctx context.Context) *api_proto.VelociraptorUser {

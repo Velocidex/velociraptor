@@ -43,6 +43,11 @@ func (self UsersPlugin) Call(
 		for _, user_details := range user_list {
 			user_details.PasswordHash = nil
 			user_details.PasswordSalt = nil
+			policy, err := acls.GetPolicy(
+				config_obj, user_details.Name)
+			if err == nil {
+				user_details.Permissions = policy
+			}
 			output_chan <- user_details.VelociraptorUser
 		}
 

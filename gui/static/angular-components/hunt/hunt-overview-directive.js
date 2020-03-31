@@ -20,6 +20,17 @@ const HuntOverviewController = function($scope, grrApiService) {
     this.scope_.hunt;
 
     this.grrApiService_ = grrApiService;
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
 };
 
 
