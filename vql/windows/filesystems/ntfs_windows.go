@@ -378,6 +378,14 @@ type readAdapter struct {
 func (self *readAdapter) Read(buf []byte) (int, error) {
 	self.Lock()
 	defer self.Unlock()
+	
+        defer func() {
+		r := recover()
+		if r != nil {
+			err = r
+		}
+	}()
+
 	res, err := self.reader.ReadAt(buf, self.pos)
 	self.pos += int64(res)
 
