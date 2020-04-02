@@ -382,7 +382,8 @@ func (self *readAdapter) Read(buf []byte) (res int, err error) {
 	defer func() {
 		r := recover()
 		if r != nil {
-			err = r
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
 		}
 	}()
 
