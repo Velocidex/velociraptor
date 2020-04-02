@@ -375,18 +375,18 @@ type readAdapter struct {
 	pos    int64
 }
 
-func (self *readAdapter) Read(buf []byte) (int, error) {
+func (self *readAdapter) Read(buf []byte) (res int, err error) {
 	self.Lock()
 	defer self.Unlock()
 	
-        defer func() {
+	defer func() {
 		r := recover()
 		if r != nil {
 			err = r
 		}
 	}()
 
-	res, err := self.reader.ReadAt(buf, self.pos)
+	res, err = self.reader.ReadAt(buf, self.pos)
 	self.pos += int64(res)
 
 	// If ReadAt is unable to read anything it means an EOF.
