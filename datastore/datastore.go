@@ -97,24 +97,19 @@ type DataStore interface {
 	Close()
 }
 
-func RegisterImplementation(name string, impl DataStore) {
-	if implementations == nil {
-		implementations = make(map[string]DataStore)
-	}
-
-	implementations[name] = impl
-}
-
-func GetImpl(name string) (DataStore, bool) {
-	result, pres := implementations[name]
-	return result, pres
-}
-
 func GetDB(config_obj *config_proto.Config) (DataStore, error) {
-	db, pres := GetImpl(config_obj.Datastore.Implementation)
-	if !pres {
-		return nil, errors.New("no datastore implementation")
-	}
+	switch config_obj.Datastore.Implementation {
+	case "FileBaseDataStore":
+		return file_based_imp, nil
 
-	return db, nil
+	case "MySQL":
+		return NewMySQLDataStore(config_obj)
+
+	case "Test":
+		return gTestDatastore, nil
+
+	default:
+		return nil, errors.New("no datastore implementation " +
+			config_obj.Datastore.Implementation)
+	}
 }

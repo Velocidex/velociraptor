@@ -117,8 +117,8 @@ func outputCSV(ctx context.Context,
 	out io.Writer) {
 	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
 
-	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{out})
-	kingpin.FatalIfError(err, "outputCSV")
+	csv_writer := csv.GetCSVAppender(
+		scope, &StdoutWrapper{out}, true /* write_headers */)
 	defer csv_writer.Close()
 
 	for result := range result_chan {

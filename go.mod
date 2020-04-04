@@ -38,7 +38,7 @@ require (
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/go-ole/go-ole v1.2.4
-	github.com/go-sql-driver/mysql v1.5.0 // indirect
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
@@ -83,6 +83,7 @@ require (
 	github.com/robertkrimen/otto v0.0.0-20180617131154-15f95af6e78d
 	github.com/russellhaering/goxmldsig v0.0.0-20180430223755-7acd5e4a6ef7 // indirect
 	github.com/sebdah/goldie v1.0.0
+	github.com/segmentio/fasthash v1.0.1
 	github.com/sergi/go-diff v1.0.0
 	github.com/shirou/gopsutil v0.0.0-20190627142359-4c8b404ee5c5
 	github.com/sirupsen/logrus v1.4.2

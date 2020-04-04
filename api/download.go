@@ -155,7 +155,10 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return err
 	}
 
-	fd.Truncate(0)
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
 
 	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
 	if err != nil {
@@ -177,7 +180,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(fd)
+	zip_writer := zip.NewWriter(&file_store.WriterAdapter{fd})
 	f, err := zip_writer.Create("FlowDetails")
 	if err != nil {
 		fd.Close()
@@ -231,7 +234,11 @@ func createHuntDownloadFile(
 	if err != nil {
 		return err
 	}
-	fd.Truncate(0)
+
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
 
 	hunt_details, err := flows.GetHunt(config_obj,
 		&api_proto.GetHuntRequest{HuntId: hunt_id})
@@ -248,7 +255,7 @@ func createHuntDownloadFile(
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(fd)
+	zip_writer := zip.NewWriter(&file_store.WriterAdapter{fd})
 	f, err := zip_writer.Create("HuntDetails")
 	if err != nil {
 		fd.Close()

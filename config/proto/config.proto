@@ -411,6 +411,16 @@ message DatastoreConfig {
     string filestore_directory = 3 [(sem_type) = {
             description: "The path to store uploaded files."
         }];
+
+    // For MySQL data store (Valid when implementation = "MySQL")
+    string mysql_username = 4;
+    string mysql_password = 5;
+    string mysql_database = 6;
+    string mysql_server = 7;
+
+    // Alternatively if this is set we just use this instead of the
+    // above settings.
+    string mysql_connection_string = 8;
 }
 
 // Configuration for the mail server.

@@ -50,6 +50,7 @@ import (
 
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -58,6 +59,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	file_based_imp = &FileBaseDataStore{
+		clock: testing.RealClock{},
+	}
 )
 
 type FileBaseDataStore struct {
@@ -257,7 +264,7 @@ func (self *FileBaseDataStore) SetIndex(
 
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
-		err := writeContentToFile(config_obj, subject, []byte{})
+		err := self.SetSubject(config_obj, subject, &empty.Empty{})
 		if err != nil {
 			return err
 		}
@@ -381,14 +388,6 @@ func (self *FileBaseDataStore) SearchClients(
 
 // Called to close all db handles etc. Not thread safe.
 func (self *FileBaseDataStore) Close() {}
-
-func init() {
-	db := FileBaseDataStore{
-		clock: testing.RealClock{},
-	}
-
-	RegisterImplementation("FileBaseDataStore", &db)
-}
 
 var hexTable = []rune("0123456789ABCDEF")
 

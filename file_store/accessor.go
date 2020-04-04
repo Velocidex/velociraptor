@@ -79,7 +79,6 @@ func (self *FileStoreFileInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// Real implementation for non windows OSs:
 type FileStoreFileSystemAccessor struct {
 	file_store FileStore
 }
@@ -136,6 +135,13 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 }
 
 func GetFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
+	config_obj *config_proto.Config) glob.FileSystemAccessor {
+	if config_obj.Datastore.Implementation == "MySQL" {
+		datastore, err := NewSqlFileStore(config_obj)
+		if err != nil {
+			return nil
+		}
+		return &SqlFileStoreAccessor{datastore}
+	}
 	return &FileStoreFileSystemAccessor{&DirectoryFileStore{config_obj}}
 }

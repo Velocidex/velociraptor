@@ -31,15 +31,15 @@ const (
 
 type serverLogger struct {
 	config_obj *config_proto.Config
-	w          *csv.Writer
+	w          *csv.CSVWriter
 }
 
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	self.w.Write([]string{
-		fmt.Sprintf("%v", time.Now().UTC().UnixNano()/1000),
-		time.Now().UTC().String(),
-		msg})
+	self.w.Write(ordereddict.NewDict().
+		Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().UnixNano()/1000)).
+		Set("time", time.Now().UTC().String()).
+		Set("message", msg))
 	return len(b), nil
 }
 
@@ -206,13 +206,16 @@ func (self *ServerArtifactsRunner) runQuery(
 	}
 	defer fd.Close()
 
-	fd.Truncate(0)
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
 
-	w := csv.NewWriter(fd)
-	defer w.Flush()
-
-	// Write headers
-	w.Write([]string{"Timestamp", "time", "message"})
+	w, err := csv.GetCSVWriter(scope, fd)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
 
 	scope.Logger = log.New(&serverLogger{self.config_obj, w}, "server", 0)
 

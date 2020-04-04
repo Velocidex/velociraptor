@@ -376,6 +376,8 @@ github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQD
 github.com/sebdah/goldie v0.0.0-20180424091453-8784dd1ab561/go.mod h1:lvjGftC8oe7XPtyrOidaMi0rp5B9+XY/ZRUynGnuaxQ=
 github.com/sebdah/goldie v1.0.0 h1:9GNhIat69MSlz/ndaBg48vl9dF5fI+NBB6kfOxgfkMc=
 github.com/sebdah/goldie v1.0.0/go.mod h1:jXP4hmWywNEwZzhMuv2ccnqTSFpuq8iyQhtQdkkZBH4=
+github.com/segmentio/fasthash v1.0.1 h1:U+9f+rh5LxMOquTrEKNw1Z3JgsBlms9QoReNfUo+fws=
+github.com/segmentio/fasthash v1.0.1/go.mod h1:tm/wZFQ8e24NYaBGIlnO2WGCAi67re4HHuOm0sftE/M=
 github.com/sergi/go-diff v1.0.0 h1:Kpca3qRNrduNnOQeazBd0ysaKrUJiIuISHxogkT9RPQ=
 github.com/sergi/go-diff v1.0.0/go.mod h1:0CfEIISq7TuYL3j771MWULgwwjU+GofnZX9QAmXWZgo=
 github.com/shirou/gopsutil v0.0.0-20190627142359-4c8b404ee5c5 h1:t5PgljoKFvOqjzOAooGmvWIzXP9y10yTmWJZS5xZgww=

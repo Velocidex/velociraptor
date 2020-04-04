@@ -9,26 +9,33 @@ import (
 	"github.com/pkg/errors"
 )
 
-type CloserReader struct {
+type MemoryReader struct {
 	*bytes.Reader
 }
 
-func (self CloserReader) Close() error {
+func (self MemoryReader) Close() error {
 	return nil
 }
 
-func (self CloserReader) Stat() (os.FileInfo, error) {
+func (self MemoryReader) Stat() (os.FileInfo, error) {
 	return nil, errors.New("Not Implemented")
 }
 
-type CloserWriter struct {
-	*WriterSeeker
-
+type MemoryWriter struct {
+	buf               []byte
 	memory_file_store *MemoryFileStore
 	filename          string
 }
 
-func (self CloserWriter) Close() error {
+func (self *MemoryWriter) Size() (int64, error) {
+	return int64(len(self.buf)), nil
+}
+func (self *MemoryWriter) Append(data []byte) error {
+	self.buf = append(self.buf, data...)
+	return nil
+}
+
+func (self *MemoryWriter) Close() error {
 	self.memory_file_store.mu.Lock()
 	defer self.memory_file_store.mu.Unlock()
 
@@ -36,8 +43,8 @@ func (self CloserWriter) Close() error {
 	return nil
 }
 
-func (self CloserWriter) Truncate(size int64) error {
-	self.buf = self.buf[:size]
+func (self *MemoryWriter) Truncate() error {
+	self.buf = nil
 	return nil
 }
 
@@ -47,26 +54,32 @@ type MemoryFileStore struct {
 	Data map[string][]byte
 }
 
-func (self *MemoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
+func (self *MemoryFileStore) ReadFile(filename string) (FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	data, pres := self.Data[filename]
 	if pres {
-		return CloserReader{bytes.NewReader(data)}, nil
+		return MemoryReader{bytes.NewReader(data)}, nil
 	}
 
 	return nil, errors.New("Not found")
 }
 
-func (self *MemoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
+func (self *MemoryFileStore) WriteFile(filename string) (FileWriter, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	buf := make([]byte, 0)
+	buf, pres := self.Data[filename]
+	if !pres {
+		buf = []byte{}
+	}
 	self.Data[filename] = buf
 
-	return CloserWriter{&WriterSeeker{buf, 0}, self, filename}, nil
+	return &MemoryWriter{
+		memory_file_store: self,
+		filename:          filename,
+	}, nil
 }
 
 func (self *MemoryFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {

@@ -178,6 +178,10 @@ func escapeComponent(component string) string {
 
 // The opposite of SplitComponents above.
 func JoinComponents(components []string, sep string) string {
+	if len(components) == 0 {
+		return sep
+	}
+
 	result := []string{}
 	for idx, component := range components {
 		// If the first component looks like a drive letter
@@ -193,7 +197,7 @@ func JoinComponents(components []string, sep string) string {
 }
 
 func PathJoin(root, stem, sep string) string {
-	return root + sep + escapeComponent(stem)
+	return strings.TrimSuffix(root, sep) + sep + escapeComponent(stem)
 }
 
 func Dir(path string) string {
@@ -210,4 +214,14 @@ func Base(path string) string {
 		return components[len(components)-1]
 	}
 	return ""
+}
+
+// A compbined Dir and Base
+func PathSplit(path string) (string, string) {
+	components := SplitComponents(path)
+	length := len(components)
+	if length > 0 {
+		return JoinComponents(components[:length-1], "/"), components[length-1]
+	}
+	return "", ""
 }

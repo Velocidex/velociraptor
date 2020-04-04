@@ -19,7 +19,6 @@ package csv
 
 import (
 	"io"
-	"os"
 	"sync"
 	"time"
 
@@ -140,11 +139,20 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 	return result
 }
 
-func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
+type WriterAdapter struct {
+	file_store.FileWriter
+}
+
+func (self *WriterAdapter) Write(data []byte) (int, error) {
+	err := self.Append(data)
+	return len(data), err
+}
+
+func GetCSVWriter(scope *vfilter.Scope, fd file_store.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
+	length, err := fd.Size()
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(scope, fd, length == 0), nil
+	return GetCSVAppender(scope, &WriterAdapter{fd}, length == 0), nil
 }
