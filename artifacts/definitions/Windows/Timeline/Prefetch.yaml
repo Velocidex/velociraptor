@@ -77,6 +77,7 @@ sources:
                     else=TRUE) AND
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                     else=TRUE)
+            GROUP BY ExecutionTime
       - |
         LET creationTimes = SELECT * FROM flatten(
                 query = { 
