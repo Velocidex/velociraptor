@@ -3,6 +3,7 @@ package file_store
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"sort"
@@ -137,9 +138,9 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 6)
 	assert.Equal(self.T(), "E data", string(buff[:n]))
 
-	// Read at EOF - no error just empty read
+	// Read at EOF - gives an EOF and 0 byte read.
 	n, err = reader.Read(buff)
-	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), err, io.EOF)
 	assert.Equal(self.T(), n, 0)
 
 	// Write some data.
@@ -168,7 +169,7 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 
 	// Reading past the end of file should produce empty data.
 	n, err = reader.Read(buff)
-	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), err, io.EOF)
 	assert.Equal(self.T(), n, 0)
 
 	// Reopenning the file should give the right size.

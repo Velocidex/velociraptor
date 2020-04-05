@@ -135,13 +135,13 @@ func (self *FileStoreFileSystemAccessor) GetRoot(path string) (string, string, e
 }
 
 func GetFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config) glob.FileSystemAccessor {
+	config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
 	if config_obj.Datastore.Implementation == "MySQL" {
 		datastore, err := NewSqlFileStore(config_obj)
 		if err != nil {
 			return nil
 		}
-		return &SqlFileStoreAccessor{datastore}
+		return &FileStoreFileSystemAccessor{datastore}
 	}
 	return &FileStoreFileSystemAccessor{&DirectoryFileStore{config_obj}}
 }

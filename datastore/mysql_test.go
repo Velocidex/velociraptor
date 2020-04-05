@@ -87,17 +87,23 @@ func (self MysqlTestSuite) TestListChildren() {
 	children, err := self.datastore.ListChildren(self.config_obj, urn, 0, 100)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), children, []string{"1", "2", "3"})
+	// ListChildren gives the full path to all children
+	assert.Equal(self.T(), children, []string{
+		"/a/b/c/1",
+		"/a/b/c/2",
+		"/a/b/c/3"})
 
 	children, err = self.datastore.ListChildren(self.config_obj, urn, 0, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), children, []string{"1", "2"})
+	assert.Equal(self.T(), children, []string{
+		"/a/b/c/1", "/a/b/c/2"})
 
 	children, err = self.datastore.ListChildren(self.config_obj, urn, 1, 2)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), children, []string{"2", "3"})
+	assert.Equal(self.T(), children, []string{
+		"/a/b/c/2", "/a/b/c/3"})
 }
 
 func (self MysqlTestSuite) TestIndexes() {

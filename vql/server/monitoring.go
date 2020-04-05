@@ -307,8 +307,6 @@ func (self WatchMonitoringPlugin) ScanLog(
 		last_info = info{}
 	}
 
-	fmt.Printf("Item %v %v\n", item.FullPath(), item.ModTime())
-
 	// Item was not modified since last time, skip it.
 	if !item.ModTime().After(last_info.age) {
 		return

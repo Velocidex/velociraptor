@@ -104,7 +104,7 @@ func (self *ApiServer) GetNotebooks(
 			continue
 		}
 
-		if !notebook.Hidden {
+		if !notebook.Hidden && notebook.NotebookId != "" {
 			result.Items = append(result.Items, notebook)
 		}
 	}

@@ -219,7 +219,7 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 				config_obj.Datastore.MysqlUsername != "" ||
 				config_obj.Datastore.MysqlPassword != "") {
 			config_obj.Datastore.MysqlConnectionString = fmt.Sprintf(
-				"%s:%s@tcp(%s)/%s?parseTime=true",
+				"%s:%s@tcp(%s)/%s",
 				config_obj.Datastore.MysqlUsername,
 				config_obj.Datastore.MysqlPassword,
 				config_obj.Datastore.MysqlServer,

@@ -7,7 +7,6 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -27,7 +26,7 @@ var (
 	set_subject_dir_cache *cache.LRUCache
 )
 
-type _cache_item struct{}
+type _cache_item int
 
 func (self _cache_item) Size() int { return 1 }
 
@@ -35,7 +34,7 @@ type DataStoreRow struct {
 	Path      string
 	PathHash  []byte
 	Name      string
-	Timestamp time.Time
+	Timestamp int64
 	Data      []byte
 }
 
@@ -120,6 +119,26 @@ func (self *MySQLDataStore) ListChildren(
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
 
+	children, err := self.listChildren(config_obj, urn, offset, length)
+	if err != nil {
+		return nil, err
+	}
+
+	// ListChildren returns the full URN
+	result := make([]string, 0, len(children))
+	for _, child := range children {
+		result = append(result, utils.PathJoin(urn, child, "/"))
+	}
+
+	return result, nil
+}
+
+// Returns only the children
+func (self *MySQLDataStore) listChildren(
+	config_obj *config_proto.Config,
+	urn string,
+	offset uint64, length uint64) ([]string, error) {
+
 	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
 	if err != nil {
 		return nil, err
@@ -127,7 +146,8 @@ func (self *MySQLDataStore) ListChildren(
 	defer db.Close()
 
 	// In the database directories do not contain a trailing /
-	urn = strings.TrimSuffix(urn, "/")
+	components := utils.SplitComponents(urn)
+	urn = utils.JoinComponents(components, "/")
 
 	hash := sha1.Sum([]byte(urn))
 	rows, err := db.Query(`
@@ -220,7 +240,7 @@ func (self *MySQLDataStore) SearchClients(
 	}
 
 	add_func := func(key string) {
-		children, err := self.ListChildren(config_obj,
+		children, err := self.listChildren(config_obj,
 			path.Join(index_urn, key), 0, 1000)
 		if err != nil {
 			return
@@ -238,7 +258,7 @@ func (self *MySQLDataStore) SearchClients(
 	if strings.ContainsAny(query, "[]*?") {
 		// We could make it smarter in future but this is
 		// quick enough for now.
-		sets, err := self.ListChildren(
+		sets, err := self.listChildren(
 			config_obj, index_urn, 0, 1000)
 		if err != nil {
 			return result
@@ -387,7 +407,7 @@ INSERT IGNORE INTO datastore (path, path_hash, name) VALUES (?, ?, ?)`,
 		if ok {
 			return nil
 		}
-		set_subject_dir_cache.Set(hash, &_cache_item{})
+		set_subject_dir_cache.Set(hash, _cache_item(0))
 
 		components = components[:len(components)-1]
 		serialized_content = nil

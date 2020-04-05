@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -32,7 +33,7 @@ func (self _cache_item) Size() int { return 1 }
 type MysqlFileStoreFileInfo struct {
 	path      string
 	name      string
-	timestamp time.Time
+	timestamp int64
 }
 
 func (self MysqlFileStoreFileInfo) FullPath() string {
@@ -76,7 +77,7 @@ func (self MysqlFileStoreFileInfo) Mode() os.FileMode {
 }
 
 func (self MysqlFileStoreFileInfo) ModTime() time.Time {
-	return self.timestamp
+	return time.Unix(self.timestamp, 0)
 }
 
 func (self MysqlFileStoreFileInfo) IsDir() bool {
@@ -159,7 +160,7 @@ func (self SqlReader) Close() error {
 func (self *SqlReader) Read(buff []byte) (int, error) {
 	// Reading out of bound.
 	if self.part < 0 {
-		return 0, nil
+		return 0, io.EOF
 	}
 
 	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
@@ -204,6 +205,9 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 	}
 
 	self.offset += int64(offset)
+	if offset == 0 {
+		return 0, io.EOF
+	}
 
 	return offset, nil
 }
@@ -445,7 +449,7 @@ func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
 	hash := sha1.Sum([]byte(dir_name))
 
 	rows, err := db.Query(`
-SELECT path, name, timestamp FROM filestore_metadata
+SELECT path, name, unix_timestamp(timestamp) FROM filestore_metadata
 WHERE path_hash = ? AND path = ?`, string(hash[:]), dir_name)
 	if err != nil {
 		return nil, err
