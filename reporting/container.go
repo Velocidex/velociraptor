@@ -65,10 +65,8 @@ func (self *Container) StoreArtifact(
 		// In this instance we want to make / unescaped.
 		sanitized_name = query.Name + ".csv"
 
-		csv_writer, err := csv.GetCSVWriter(scope, tmpfile)
-		if err != nil {
-			return errors.WithStack(err)
-		}
+		csv_writer := csv.GetCSVAppender(
+			scope, tmpfile, true /* write_headers */)
 		defer csv_writer.Close()
 
 		for row := range vql.Eval(ctx, scope) {
@@ -152,11 +150,8 @@ func (self *Container) DumpRowsIntoContainer(
 		return err
 	}
 
-	csv_writer, err := csv.GetCSVWriter(scope, &StdoutWrapper{writer})
-	if err != nil {
-		return err
-	}
-
+	csv_writer := csv.GetCSVAppender(
+		scope, writer, true /* write_headers */)
 	for _, row := range output_rows {
 		csv_writer.Write(row)
 	}

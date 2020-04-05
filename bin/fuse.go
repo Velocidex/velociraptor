@@ -161,11 +161,13 @@ func (self *VFSFs) GetAttr(name string, fcontext *fuse.Context) (*fuse.Attr, fus
 				mode = fuse.S_IFDIR | 0644
 			}
 			return &fuse.Attr{
-				Mode:  uint32(mode),
-				Size:  uint64(i.Size),
-				Atime: uint64(i.Atime.Unix()),
-				Mtime: uint64(i.Mtime.Unix()),
-				Ctime: uint64(i.Ctime.Unix()),
+				Mode: uint32(mode),
+				Size: uint64(i.Size),
+				/*
+					Atime: uint64(i.Atime.Unix()),
+					Mtime: uint64(i.Mtime.Unix()),
+					Ctime: uint64(i.Ctime.Unix()),
+				*/
 			}, fuse.OK
 		}
 	}

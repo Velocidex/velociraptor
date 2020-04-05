@@ -304,10 +304,16 @@ func (r *Reader) ReadAny() ([]interface{}, error) {
 	return record, nil
 }
 
-func (r *Reader) Seek(offset int64) {
-	r.raw_reader.Seek(offset, io.SeekStart)
+func (r *Reader) Seek(offset int64) error {
+	_, err := r.raw_reader.Seek(offset, io.SeekStart)
+	if err != nil {
+		return err
+	}
+
 	r.r = bufio.NewReader(r.raw_reader)
 	r.ByteOffset = offset
+
+	return nil
 }
 
 // ReadAll reads all the remaining records from r.

@@ -19,7 +19,6 @@ package csv
 
 import (
 	"io"
-	"os"
 	"sync"
 	"time"
 
@@ -44,7 +43,7 @@ func (self *CSVWriter) Close() {
 
 type CSVReader chan *ordereddict.Dict
 
-func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
+func GetCSVReader(fd file_store.FileReader) CSVReader {
 	output_chan := make(CSVReader)
 
 	go func() {
@@ -139,10 +138,9 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 
 	return result
 }
-
-func GetCSVWriter(scope *vfilter.Scope, fd file_store.WriteSeekCloser) (*CSVWriter, error) {
+func GetCSVWriter(scope *vfilter.Scope, fd file_store.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
+	length, err := fd.Size()
 	if err != nil {
 		return nil, err
 	}

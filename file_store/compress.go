@@ -23,13 +23,17 @@ import (
 	"os"
 )
 
-type SeekableGzip struct {
-	io.Reader
-
+// GzipReader is a FileReader from compressed files.
+type GzipReader struct {
+	zip_fd       io.Reader
 	backing_file *os.File
 }
 
-func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
+func (self *GzipReader) Read(buff []byte) (int, error) {
+	return self.zip_fd.Read(buff)
+}
+
+func (self *GzipReader) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case io.SeekStart:
 		if offset == 0 {
@@ -42,11 +46,10 @@ func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
 		offset, whence)
 }
 
-func (self SeekableGzip) Stat() (os.FileInfo, error) {
-	stat, err := self.backing_file.Stat()
-	return stat, err
+func (self GzipReader) Stat() (os.FileInfo, error) {
+	return self.backing_file.Stat()
 }
 
-func (self *SeekableGzip) Close() error {
+func (self *GzipReader) Close() error {
 	return self.backing_file.Close()
 }

@@ -38,7 +38,6 @@ package file_store
 
 import (
 	"compress/gzip"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -73,26 +72,56 @@ const (
 	WINDOWS_LFN_PREFIX = "\\\\?\\"
 )
 
-type WriteSeekCloser interface {
-	io.WriteSeeker
-	io.Closer
-	Truncate(size int64) error
+type FileReader interface {
+	Read(buff []byte) (int, error)
+	Seek(offset int64, whence int) (int64, error)
+	Stat() (os.FileInfo, error)
+	Close() error
 }
 
-type ReadSeekCloser interface {
-	io.ReadSeeker
-	io.Closer
-
-	Stat() (os.FileInfo, error)
+// A file store writer writes files in the filestore. Filestore files
+// are not as flexible as real files and only provide a subset of
+// functionality. Specifically they can not be over-written - only
+// appended to. They can be truncated but only to 0 size.
+type FileWriter interface {
+	Size() (int64, error)
+	Write(data []byte) (int, error)
+	Truncate() error
+	Close() error
 }
 
 type FileStore interface {
-	ReadFile(filename string) (ReadSeekCloser, error)
-	WriteFile(filename string) (WriteSeekCloser, error)
+	ReadFile(filename string) (FileReader, error)
+	WriteFile(filename string) (FileWriter, error)
 	StatFile(filename string) (*FileStoreFileInfo, error)
 	ListDirectory(dirname string) ([]os.FileInfo, error)
 	Walk(root string, cb filepath.WalkFunc) error
 	Delete(filename string) error
+}
+
+type DirectoryFileWriter struct {
+	Fd *os.File
+}
+
+func (self *DirectoryFileWriter) Size() (int64, error) {
+	return self.Fd.Seek(0, os.SEEK_END)
+}
+
+func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
+	_, err := self.Fd.Seek(0, os.SEEK_END)
+	if err != nil {
+		return 0, err
+	}
+
+	return self.Fd.Write(data)
+}
+
+func (self *DirectoryFileWriter) Truncate() error {
+	return self.Fd.Truncate(0)
+}
+
+func (self *DirectoryFileWriter) Close() error {
+	return self.Fd.Close()
 }
 
 type FileStoreFileInfo struct {
@@ -131,7 +160,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	return result, nil
 }
 
-func getCompressed(filename string) (ReadSeekCloser, error) {
+func getCompressed(filename string) (FileReader, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -142,10 +171,10 @@ func getCompressed(filename string) (ReadSeekCloser, error) {
 		return nil, errors.WithStack(err)
 	}
 
-	return &SeekableGzip{zr, fd}, nil
+	return &GzipReader{zr, fd}, nil
 }
 
-func (self *DirectoryFileStore) ReadFile(filename string) (ReadSeekCloser, error) {
+func (self *DirectoryFileStore) ReadFile(filename string) (FileReader, error) {
 	file_path := self.FilenameToFileStorePath(filename)
 	if strings.HasSuffix(".gz", file_path) {
 		return getCompressed(file_path)
@@ -173,7 +202,7 @@ func (self *DirectoryFileStore) StatFile(filename string) (*FileStoreFileInfo, e
 	return &FileStoreFileInfo{file, filename, nil}, nil
 }
 
-func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, error) {
+func (self *DirectoryFileStore) WriteFile(filename string) (FileWriter, error) {
 	file_path := self.FilenameToFileStorePath(filename)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
@@ -191,7 +220,7 @@ func (self *DirectoryFileStore) WriteFile(filename string) (WriteSeekCloser, err
 		return nil, errors.WithStack(err)
 	}
 
-	return file, nil
+	return &DirectoryFileWriter{file}, nil
 }
 
 func (self *DirectoryFileStore) Delete(filename string) error {
@@ -272,6 +301,14 @@ func GetFileStore(config_obj *config_proto.Config) FileStore {
 		}
 
 		return impl
+	}
+
+	if config_obj.Datastore.Implementation == "MySQL" {
+		res, err := NewSqlFileStore(config_obj)
+		if err != nil {
+			panic(err)
+		}
+		return res
 	}
 
 	return &DirectoryFileStore{config_obj}

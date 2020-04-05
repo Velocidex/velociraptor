@@ -20,6 +20,7 @@ package config
 import (
 	"bytes"
 	"compress/zlib"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -208,6 +209,21 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 
 		if config_obj.Client.PinnedServerName == "" {
 			config_obj.Client.PinnedServerName = "VelociraptorServer"
+		}
+
+		// If mysql connection params are specified we create
+		// a mysql_connection_string
+		if config_obj.Datastore.MysqlConnectionString == "" &&
+			(config_obj.Datastore.MysqlDatabase != "" ||
+				config_obj.Datastore.MysqlServer != "" ||
+				config_obj.Datastore.MysqlUsername != "" ||
+				config_obj.Datastore.MysqlPassword != "") {
+			config_obj.Datastore.MysqlConnectionString = fmt.Sprintf(
+				"%s:%s@tcp(%s)/%s",
+				config_obj.Datastore.MysqlUsername,
+				config_obj.Datastore.MysqlPassword,
+				config_obj.Datastore.MysqlServer,
+				config_obj.Datastore.MysqlDatabase)
 		}
 	}
 

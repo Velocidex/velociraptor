@@ -65,7 +65,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
 
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -82,9 +81,9 @@ type FileInfoRow struct {
 	Timestamp string                       `json:"Timestamp"`
 	Mode      string                       `json:"Mode"`
 	Download  *flows_proto.VFSDownloadInfo `json:"Download"`
-	Mtime     time.Time                    `json:"mtime"`
-	Atime     time.Time                    `json:"atime"`
-	Ctime     time.Time                    `json:"ctime"`
+	Mtime     string                       `json:"mtime"`
+	Atime     string                       `json:"atime"`
+	Ctime     string                       `json:"ctime"`
 	FullPath  string                       `json:"_FullPath"`
 	Data      interface{}                  `json:"_Data"`
 }

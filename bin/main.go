@@ -178,11 +178,6 @@ func get_config_or_default() *config_proto.Config {
 	return config_obj
 }
 
-func init() {
-	// Just display everything in UTC.
-	os.Setenv("TZ", "UTC")
-}
-
 func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()

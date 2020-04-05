@@ -104,7 +104,7 @@ func (self *ApiServer) GetNotebooks(
 			continue
 		}
 
-		if !notebook.Hidden {
+		if !notebook.Hidden && notebook.NotebookId != "" {
 			result.Items = append(result.Items, notebook)
 		}
 	}
@@ -510,8 +510,12 @@ func (self *ApiServer) UploadNotebookAttachment(
 	if err != nil {
 		return nil, err
 	}
-	fd.Write(decoded)
-	fd.Close()
+	defer fd.Close()
+
+	_, err = fd.Write(decoded)
+	if err != nil {
+		return nil, err
+	}
 
 	result := &api_proto.NotebookFileUploadResponse{
 		Url: full_path,
@@ -529,7 +533,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		return nil, err
 	}
 
-	permissions := acls.READ_RESULTS
+	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, errors.New("User is not allowed to edit notebooks.")
@@ -568,7 +572,8 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		defer file_store_factory.Delete(filename + ".lock")
 		defer writer.Close()
 
-		err := reporting.ExportNotebookToHTML(self.config, notebook.NotebookId, writer)
+		err := reporting.ExportNotebookToHTML(
+			self.config, notebook.NotebookId, writer)
 		if err != nil {
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{

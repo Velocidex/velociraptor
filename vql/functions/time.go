@@ -18,7 +18,7 @@ var (
 )
 
 type cachedTime struct {
-	time.Time
+	utils.Time
 }
 
 func (self cachedTime) Size() int {
@@ -65,7 +65,7 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 			IgnoreTZ: true}
 		time_value, err := parser.Parse(arg.String)
 		if err == nil {
-			lru.Set(arg.String, cachedTime{time_value})
+			lru.Set(arg.String, cachedTime{utils.Time{time_value}})
 			return time_value
 		}
 		scope.Log("timestamp: %v", err)
@@ -88,22 +88,22 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 		return vfilter.Null{}
 	}
 
-	return time.Unix(int64(sec), int64(dec))
+	return utils.Unix(int64(sec), int64(dec))
 }
 
 // Time aware operators.
 type _TimeLt struct{}
 
 func (self _TimeLt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
-	a_time, _ := a.(time.Time)
-	b_time, _ := b.(time.Time)
+	a_time, _ := utils.IsTime(a)
+	b_time, _ := utils.IsTime(b)
 
 	return a_time.Before(b_time)
 }
 
 func (self _TimeLt) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(time.Time)
-	_, b_ok := b.(time.Time)
+	_, a_ok := utils.IsTime(a)
+	_, b_ok := utils.IsTime(b)
 
 	return a_ok && b_ok
 }
@@ -111,24 +111,24 @@ func (self _TimeLt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 type _TimeLtInt struct{}
 
 func (self _TimeLtInt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
-	a_time, _ := a.(time.Time)
-	var b_time time.Time
+	a_time, _ := utils.IsTime(a)
+	var b_time utils.Time
 
 	switch t := b.(type) {
 	case float64:
 		sec_f, dec_f := math.Modf(t)
 		dec_f *= 1e9
-		b_time = time.Unix(int64(sec_f), int64(dec_f))
+		b_time = utils.Unix(int64(sec_f), int64(dec_f))
 	default:
 		sec, _ := utils.ToInt64(b)
-		b_time = time.Unix(sec, 0)
+		b_time = utils.Unix(sec, 0)
 	}
 
 	return a_time.Before(b_time)
 }
 
 func (self _TimeLtInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(time.Time)
+	_, a_ok := utils.IsTime(a)
 	if !a_ok {
 		return false
 	}
@@ -140,9 +140,9 @@ func (self _TimeLtInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
 type _TimeLtString struct{}
 
 func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
-	a_time, _ := a.(time.Time)
+	a_time, _ := utils.IsTime(a)
 	b_str, _ := b.(string)
-	var b_time time.Time
+	var b_time utils.Time
 
 	time_value_any, pres := lru.Get(b_str)
 	if pres {
@@ -152,19 +152,18 @@ func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any)
 		parser := dateparser.Parser{Fuzzy: true,
 			DayFirst: true,
 			IgnoreTZ: true}
-		b_time, err := parser.Parse(b_str)
-		if err != nil {
-			b_time = time.Time{}
+		b_time_time, err := parser.Parse(b_str)
+		if err == nil {
+			b_time = utils.Time{b_time_time}
+			lru.Set(b_str, cachedTime{b_time})
 		}
-
-		lru.Set(b_str, cachedTime{b_time})
 	}
 
 	return a_time.Before(b_time)
 }
 
 func (self _TimeLtString) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(time.Time)
+	_, a_ok := utils.IsTime(a)
 	_, b_ok := b.(string)
 
 	return a_ok && b_ok
@@ -173,15 +172,15 @@ func (self _TimeLtString) Applicable(a vfilter.Any, b vfilter.Any) bool {
 type _TimeEq struct{}
 
 func (self _TimeEq) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
-	a_time, _ := a.(time.Time)
-	b_time, _ := b.(time.Time)
+	a_time, _ := utils.IsTime(a)
+	b_time, _ := utils.IsTime(b)
 
 	return a_time == b_time
 }
 
 func (self _TimeEq) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(time.Time)
-	_, b_ok := b.(time.Time)
+	_, a_ok := utils.IsTime(a)
+	_, b_ok := utils.IsTime(b)
 
 	return a_ok && b_ok
 }
@@ -189,7 +188,7 @@ func (self _TimeEq) Applicable(a vfilter.Any, b vfilter.Any) bool {
 type _TimeEqInt struct{}
 
 func (self _TimeEqInt) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
-	a_time, _ := a.(time.Time)
+	a_time, _ := utils.IsTime(a)
 	var b_time time.Time
 
 	switch t := b.(type) {
@@ -206,7 +205,7 @@ func (self _TimeEqInt) Eq(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bo
 }
 
 func (self _TimeEqInt) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(time.Time)
+	_, a_ok := utils.IsTime(a)
 	if !a_ok {
 		return false
 	}

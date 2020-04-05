@@ -39,11 +39,11 @@ type TimeVal struct {
 	Nsec int64 `json:"usec"`
 }
 
-func (self TimeVal) Time() time.Time {
+func (self TimeVal) Time() utils.Time {
 	if self.Nsec > 0 {
-		return time.Unix(0, self.Nsec)
+		return utils.Unix(0, self.Nsec)
 	}
-	return time.Unix(self.Sec, 0)
+	return utils.Unix(self.Sec, 0)
 }
 
 func (self TimeVal) MarshalJSON() ([]byte, error) {
@@ -51,15 +51,20 @@ func (self TimeVal) MarshalJSON() ([]byte, error) {
 }
 
 type FileInfo interface {
-	os.FileInfo
+	Name() string
+	ModTime() time.Time
 	FullPath() string
 	Mtime() TimeVal
 	Ctime() TimeVal
 	Atime() TimeVal
 	Data() interface{}
+	Size() int64
 
+	IsDir() bool
 	IsLink() bool
 	GetLink() (string, error)
+	Mode() os.FileMode
+	Sys() interface{}
 }
 
 type ReadSeekCloser interface {

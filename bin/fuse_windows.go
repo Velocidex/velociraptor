@@ -232,27 +232,29 @@ func newStatF(row *api.FileInfoRow) *fuse.Stat_t {
 		mode = uint32(00777 | fuse.S_IFDIR)
 	}
 
-	if row.Mtime.Unix() < 0 {
-		row.Mtime = time.Unix(0, 0)
-	}
+	/*
+		if row.Mtime.Unix() < 0 {
+			row.Mtime = time.Unix(0, 0)
+		}
 
-	if row.Atime.Unix() < 0 {
-		row.Atime = time.Unix(0, 0)
-	}
+		if row.Atime.Unix() < 0 {
+			row.Atime = time.Unix(0, 0)
+		}
 
-	if row.Ctime.Unix() < 0 {
-		row.Ctime = time.Unix(0, 0)
-	}
-
+		if row.Ctime.Unix() < 0 {
+			row.Ctime = time.Unix(0, 0)
+		}
+	*/
 	result := &fuse.Stat_t{
-
-		Mode:     mode,
-		Nlink:    1,
-		Size:     row.Size,
-		Mtim:     fuse.NewTimespec(row.Mtime),
-		Atim:     fuse.NewTimespec(row.Atime),
-		Ctim:     fuse.NewTimespec(row.Ctime),
-		Birthtim: fuse.NewTimespec(row.Ctime),
+		Mode:  mode,
+		Nlink: 1,
+		Size:  row.Size,
+		/*
+			Mtim:     fuse.NewTimespec(row.Mtime),
+			Atim:     fuse.NewTimespec(row.Atime),
+			Ctim:     fuse.NewTimespec(row.Ctime),
+			Birthtim: fuse.NewTimespec(row.Ctime),
+		*/
 	}
 
 	return result

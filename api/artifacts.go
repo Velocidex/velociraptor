@@ -141,7 +141,10 @@ func setArtifactFile(config_obj *config_proto.Config,
 		defer fd.Close()
 
 		// We want to completely replace the content of the file.
-		fd.Truncate(0)
+		err = fd.Truncate()
+		if err != nil {
+			return nil, err
+		}
 
 		_, err = fd.Write([]byte(in.Artifact))
 		if err != nil {

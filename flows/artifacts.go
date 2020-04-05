@@ -24,7 +24,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path"
 	"strings"
 	"time"
@@ -279,25 +278,18 @@ func flushContextLogs(
 	}
 	defer fd.Close()
 
-	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
+	scope := vql_subsystem.MakeScope()
+	w, err := csv.GetCSVWriter(scope, fd)
 	if err != nil {
 		return err
 	}
-
-	w := csv.NewWriter(fd)
-	defer w.Flush()
-
-	headers_written := length > 0
-	if !headers_written {
-		w.Write([]string{"Timestamp", "time", "message"})
-	}
+	defer w.Close()
 
 	for _, row := range collection_context.Logs {
-		w.Write([]string{
-			fmt.Sprintf("%v", row.Timestamp),
-			time.Unix(int64(row.Timestamp)/1000000, 0).String(),
-			row.Message})
+		w.Write(ordereddict.NewDict().
+			Set("Timestamp", fmt.Sprintf("%v", row.Timestamp)).
+			Set("time", time.Unix(int64(row.Timestamp)/1000000, 0).String()).
+			Set("message", row.Message))
 	}
 
 	// Clear the logs from the flow object.
@@ -319,27 +311,20 @@ func flushContextUploadedFiles(
 	}
 	defer fd.Close()
 
-	// Seek to the end of the file.
-	length, err := fd.Seek(0, os.SEEK_END)
+	scope := vql_subsystem.MakeScope()
+	w, err := csv.GetCSVWriter(scope, fd)
 	if err != nil {
 		return err
 	}
-
-	w := csv.NewWriter(fd)
-	defer w.Flush()
-
-	headers_written := length > 0
-	if !headers_written {
-		w.Write([]string{"Timestamp", "started", "vfs_path",
-			"expected_size"})
-	}
+	defer w.Close()
 
 	for _, row := range collection_context.UploadedFiles {
-		w.Write([]string{
-			fmt.Sprintf("%v", time.Now().UTC().Unix()),
-			time.Now().UTC().String(),
-			row.Name,
-			fmt.Sprintf("%v", row.Size)})
+		w.Write(ordereddict.NewDict().
+			Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().Unix())).
+			Set("started", time.Now().UTC().String()).
+			Set("vfs_path", row.Name).
+			Set("expected_size", fmt.Sprintf("%v", row.Size)))
+
 	}
 
 	// Clear the logs from the flow object.
@@ -590,7 +575,10 @@ func appendUploadDataToFile(
 
 	// Keep track of all the files we uploaded.
 	if file_buffer.Offset == 0 {
-		fd.Truncate(0)
+		err = fd.Truncate()
+		if err != nil {
+			return err
+		}
 		collection_context.TotalUploadedFiles += 1
 		collection_context.TotalExpectedUploadedBytes += file_buffer.Size
 		collection_context.UploadedFiles = append(
@@ -607,7 +595,6 @@ func appendUploadDataToFile(
 		collection_context.Dirty = true
 	}
 
-	fd.Seek(int64(file_buffer.Offset), 0)
 	_, err = fd.Write(file_buffer.Data)
 	if err != nil {
 		Log(config_obj, collection_context,

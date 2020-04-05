@@ -21,6 +21,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"time"
 
@@ -257,9 +258,12 @@ func (self WatchMonitoringPlugin) Call(
 			source, mode)
 		globber.Add(log_path, accessor.PathSplit)
 
+		fmt.Printf("Globbing for %v (%T)\n", log_path, accessor)
+
 		// Capture the initial state of the files. We will
 		// only monitor events after this point.
 		for item := range globber.ExpandWithContext(ctx, "", accessor) {
+			fmt.Printf("Glob for %v\n", item.FullPath())
 			dir_state[item.FullPath()] = info{item.ModTime(), item.Size()}
 		}
 
@@ -326,7 +330,11 @@ func (self WatchMonitoringPlugin) ScanLog(
 
 	// Seek to the place we left the file last time.
 	if last_info.offset > 0 {
-		csv_reader.Seek(last_info.offset)
+		err = csv_reader.Seek(last_info.offset)
+		if err != nil {
+			scope.Log("Error %v\n", err)
+			return
+		}
 	}
 
 	defer func() {

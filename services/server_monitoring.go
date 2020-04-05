@@ -158,7 +158,7 @@ func (self *EventTable) GetWriter(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		last_log := ""
 		var err error
-		var fd file_store.WriteSeekCloser
+		var fd file_store.FileWriter
 		var writer *csv.CSVWriter
 		var columns []string
 

@@ -1,0 +1,6 @@
+Datastore:
+  implementation: MySQL
+  mysql_username: root
+  mysql_password: password
+  mysql_server: 127.0.0.1
+  mysql_database: velociraptor_test

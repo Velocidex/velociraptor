@@ -108,12 +108,8 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 	}
 	defer fd.Close()
 
-	writer, err := csv.GetCSVWriter(scope, fd)
-	if err != nil {
-		return err
-	}
+	writer := csv.GetCSVAppender(scope, fd, true /* write_headers */)
 	defer writer.Close()
-
 	for _, query := range request.Query {
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {

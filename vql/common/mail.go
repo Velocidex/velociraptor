@@ -57,7 +57,7 @@ func (self MailPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("environ: %s", err)
+			scope.Log("mail: %s", err)
 			return
 		}
 

@@ -8,6 +8,10 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
+var (
+	gTestDatastore = NewTestDataStore()
+)
+
 type TestDataStore struct {
 	Subjects    map[string]proto.Message
 	ClientTasks map[string][]*crypto_proto.GrrMessage
@@ -154,9 +158,5 @@ func (self *TestDataStore) SearchClients(
 
 // Called to close all db handles etc. Not thread safe.
 func (self *TestDataStore) Close() {
-	RegisterImplementation("Test", NewTestDataStore())
-}
-
-func init() {
-	RegisterImplementation("Test", NewTestDataStore())
+	gTestDatastore = NewTestDataStore()
 }
