@@ -29,6 +29,10 @@ func (self *MysqlTestSuite) SetupTest() {
 		self.config_obj.Datastore.MysqlPassword,
 		self.config_obj.Datastore.MysqlServer)
 
+	// Make sure our database is not the same as the datastore
+	// tests or else we will trash over them.
+	self.config_obj.Datastore.MysqlDatabase += "fs"
+
 	db, err := sql.Open("mysql", conn_string)
 	assert.NoError(self.T(), err)
 
