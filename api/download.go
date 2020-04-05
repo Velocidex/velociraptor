@@ -180,7 +180,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(&file_store.WriterAdapter{fd})
+	zip_writer := zip.NewWriter(fd)
 	f, err := zip_writer.Create("FlowDetails")
 	if err != nil {
 		fd.Close()
@@ -255,7 +255,7 @@ func createHuntDownloadFile(
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := zip.NewWriter(&file_store.WriterAdapter{fd})
+	zip_writer := zip.NewWriter(fd)
 	f, err := zip_writer.Create("HuntDetails")
 	if err != nil {
 		fd.Close()

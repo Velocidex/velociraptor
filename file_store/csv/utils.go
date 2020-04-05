@@ -43,7 +43,7 @@ func (self *CSVWriter) Close() {
 
 type CSVReader chan *ordereddict.Dict
 
-func GetCSVReader(fd file_store.ReadSeekCloser) CSVReader {
+func GetCSVReader(fd file_store.FileReader) CSVReader {
 	output_chan := make(CSVReader)
 
 	go func() {
@@ -138,21 +138,11 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 
 	return result
 }
-
-type WriterAdapter struct {
-	file_store.FileWriter
-}
-
-func (self *WriterAdapter) Write(data []byte) (int, error) {
-	err := self.Append(data)
-	return len(data), err
-}
-
 func GetCSVWriter(scope *vfilter.Scope, fd file_store.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(scope, &WriterAdapter{fd}, length == 0), nil
+	return GetCSVAppender(scope, fd, length == 0), nil
 }

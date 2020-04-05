@@ -146,7 +146,7 @@ func setArtifactFile(config_obj *config_proto.Config,
 			return nil, err
 		}
 
-		err = fd.Append([]byte(in.Artifact))
+		_, err = fd.Write([]byte(in.Artifact))
 		if err != nil {
 			return nil, err
 		}

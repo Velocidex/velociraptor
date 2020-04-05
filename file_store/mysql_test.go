@@ -113,7 +113,7 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 	defer fd.Close()
 
 	// Write some data.
-	err = fd.Append([]byte("Some data"))
+	_, err = fd.Write([]byte("Some data"))
 	assert.NoError(self.T(), err)
 
 	// Check that size is incremeented.
@@ -121,7 +121,7 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(9), size)
 
-	err = fd.Append([]byte("MORE data"))
+	_, err = fd.Write([]byte("MORE data"))
 	assert.NoError(self.T(), err)
 
 	buff := make([]byte, 6)
@@ -152,7 +152,7 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), n, 0)
 
 	// Write some data.
-	err = fd.Append([]byte("EXTRA EXTRA"))
+	_, err = fd.Write([]byte("EXTRA EXTRA"))
 	assert.NoError(self.T(), err)
 
 	// New read picks the new data.

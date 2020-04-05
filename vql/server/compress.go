@@ -80,7 +80,7 @@ func (self *Compress) Call(ctx context.Context,
 			}
 			defer out_fd.Close()
 
-			zw := gzip.NewWriter(&file_store.WriterAdapter{out_fd})
+			zw := gzip.NewWriter(out_fd)
 			defer zw.Close()
 
 			zw.Name = path

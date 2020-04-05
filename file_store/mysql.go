@@ -231,10 +231,10 @@ func (self SqlWriter) Close() error {
 	return nil
 }
 
-func (self *SqlWriter) Append(buff []byte) error {
+func (self *SqlWriter) Write(buff []byte) (int, error) {
 	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
 
@@ -242,12 +242,13 @@ func (self *SqlWriter) Append(buff []byte) error {
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Append the buffer to the data table
 	end := int64(0)
 	part := int64(0)
+	length := int64(len(buff))
 
 	// Get the last part and end offset. SELECT max() on a primary
 	// key is instant. We then use this part to look up the row
@@ -264,36 +265,36 @@ ON A.part = B.max_part AND A.id = ?`,
 		part = 0
 	} else if err != nil {
 		_ = tx.Rollback()
-		return err
+		return 0, err
 	} else {
 		part += 1
 	}
 
 	_, err = tx.Exec(`
 INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`,
-		self.file_id, part, end, end+int64(len(buff)), buff)
+		self.file_id, part, end, end+length, buff)
 	if err != nil {
 		_ = tx.Rollback()
 		fmt.Printf("SqlCloserWriter.Write: %v", err)
-		return err
+		return 0, err
 	}
 
 	_, err = tx.Exec(`UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`,
 		int64(len(buff)), self.file_id)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return 0, err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Increase our size
-	self.size = end + int64(len(buff))
+	self.size = end + length
 
-	return nil
+	return len(buff), nil
 }
 
 func (self SqlWriter) Truncate() error {

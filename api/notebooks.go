@@ -512,7 +512,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 	}
 	defer fd.Close()
 
-	err = fd.Append(decoded)
+	_, err = fd.Write(decoded)
 	if err != nil {
 		return nil, err
 	}
@@ -573,8 +573,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		defer writer.Close()
 
 		err := reporting.ExportNotebookToHTML(
-			self.config, notebook.NotebookId,
-			&file_store.WriterAdapter{writer})
+			self.config, notebook.NotebookId, writer)
 		if err != nil {
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{

@@ -595,7 +595,7 @@ func appendUploadDataToFile(
 		collection_context.Dirty = true
 	}
 
-	err = fd.Append(file_buffer.Data)
+	_, err = fd.Write(file_buffer.Data)
 	if err != nil {
 		Log(config_obj, collection_context,
 			fmt.Sprintf("While writing to %v: %v", file_path, err))

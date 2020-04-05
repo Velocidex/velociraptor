@@ -38,7 +38,6 @@ package file_store
 
 import (
 	"compress/gzip"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -73,13 +72,6 @@ const (
 	WINDOWS_LFN_PREFIX = "\\\\?\\"
 )
 
-type ReadSeekCloser interface {
-	io.ReadSeeker
-	io.Closer
-
-	Stat() (os.FileInfo, error)
-}
-
 type FileReader interface {
 	Read(buff []byte) (int, error)
 	Seek(offset int64, whence int) (int64, error)
@@ -87,13 +79,13 @@ type FileReader interface {
 	Close() error
 }
 
-// A file store writer writes files on the filestore. File store files
+// A file store writer writes files in the filestore. Filestore files
 // are not as flexible as real files and only provide a subset of
 // functionality. Specifically they can not be over-written - only
-// appended to.
+// appended to. They can be truncated but only to 0 size.
 type FileWriter interface {
 	Size() (int64, error)
-	Append(data []byte) error
+	Write(data []byte) (int, error)
 	Truncate() error
 	Close() error
 }
@@ -115,14 +107,13 @@ func (self *DirectoryFileWriter) Size() (int64, error) {
 	return self.Fd.Seek(0, os.SEEK_END)
 }
 
-func (self *DirectoryFileWriter) Append(data []byte) error {
+func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
 	_, err := self.Fd.Seek(0, os.SEEK_END)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	_, err = self.Fd.Write(data)
-	return err
+	return self.Fd.Write(data)
 }
 
 func (self *DirectoryFileWriter) Truncate() error {
