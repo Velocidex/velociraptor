@@ -158,7 +158,7 @@ func getArtifactReports(
 			Template: fmt.Sprintf(`
 ## %s
 
-{{ Query "SELECT * FROM source(%s) LIMIT 500" | Table }}
+{{ Query "SELECT * FROM source(%s) LIMIT 100" | Table }}
 
 `, name, parameters),
 		})
@@ -266,6 +266,7 @@ func GenerateHuntReport(template_engine TemplateEngine,
 
 func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
+	principal string,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
@@ -282,9 +283,13 @@ func newBaseTemplateEngine(
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewServerACLManager(
+				config_obj, principal)).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
+
 	return &BaseTemplateEngine{
 		Artifact: artifact,
 		Scope:    scope,

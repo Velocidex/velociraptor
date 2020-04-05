@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path"
 	"sync"
 	"time"
 
@@ -22,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -99,8 +99,12 @@ func (self *EventTable) Update(
 			return errors.New("Unknown artifact " + name)
 		}
 
+		// Server monitoring artifacts run with full admin
+		// permissions.
 		env := ordereddict.NewDict().
 			Set("server_config", config_obj).
+			Set(vql_subsystem.ACL_MANAGER_VAR,
+				vql_subsystem.NewRoleACLManager("administrator")).
 			Set("config", config_obj.Client).
 			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
@@ -252,7 +256,7 @@ func (self *EventTable) RunQuery(
 
 		name := artifact_name
 		if source.Name != "" {
-			name = path.Join(artifact_name, source.Name)
+			name = utils.PathJoin(artifact_name, source.Name, "/")
 		}
 
 		row_chan := self.GetWriter(ctx, config_obj, scope,

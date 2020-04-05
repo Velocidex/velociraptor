@@ -176,9 +176,13 @@ func (self *ServerArtifactsRunner) runQuery(
 	sub_ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// Server artifacts run with full access. In order to collect
+	// them in the first place we need COLLECT_SERVER permissions.
 	env := ordereddict.NewDict().
 		Set("server_config", self.config_obj).
 		Set("config", self.config_obj.Client).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, env_spec := range arg.Env {

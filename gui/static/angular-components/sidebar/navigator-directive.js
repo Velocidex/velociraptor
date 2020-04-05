@@ -18,29 +18,40 @@ const {RoutingService} = goog.require('grrUi.routing.routingService');
  */
 const NavigatorController = function(
     $scope, grrApiService, grrRoutingService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
+    /** @private {!RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
-  /** @type {Object} */
-  this.client;
+    /** @type {Object} */
+    this.client;
 
-  /** @type {?string} */
-  this.clientId;
+    /** @type {?string} */
+    this.clientId;
 
-  /** @type {boolean} */
-  this.hasClientAccess = false;
+    /** @type {boolean} */
+    this.hasClientAccess = false;
 
-  this.collapsed = true;
+    this.collapsed = true;
 
-  // Subscribe to legacy grr events to be notified on client change.
-  this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
-      this.onClientSelectionChange_.bind(this), true);
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
+
+    // Subscribe to legacy grr events to be notified on client change.
+    this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
+                                              this.onClientSelectionChange_.bind(this), true);
 };
 
 NavigatorController.prototype.onClientSelectionChange_ = function(clientId) {

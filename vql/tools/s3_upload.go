@@ -40,6 +40,12 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("upload_S3: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("upload_S3: %v", err)

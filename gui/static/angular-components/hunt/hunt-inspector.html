@@ -1,6 +1,5 @@
 <div class="padded">
-
-  <div ng-if="!huntId || !controller.huntId">
+  <div ng-if="!huntId || !controller.hunt.hunt_id">
     <div class="card-deck">
       <div class="card panel" >
         <h5 class="card-header">View Hunt details</h5>
@@ -11,7 +10,7 @@
     </div>
   </div>
 
-  <uib-tabset ng-if="huntId && controller.huntId"
+  <uib-tabset ng-if="huntId && controller.hunt.hunt_id"
               active="controller.activeTab">
     <uib-tab heading="Overview" index="''">
       <grr-hunt-overview hunt="controller.hunt"
@@ -19,22 +18,41 @@
       </grr-hunt-overview>
     </uib-tab>
 
+    <uib-tab heading="Requests" index="'requests'">
+      <table class="table table-condensed table-hover table-bordered
+                    full-width">
+        <thead>
+          <tr>
+            <th>Request sent to client</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>
+              <grr-semantic-value
+                ng-if="controller.tabsShown['requests']"
+                value="::controller.hunt.start_request.compiled_collector_args"
+                type="VQLCollectorArgs" />
+          </td></tr>
+        </tbody>
+      </table>
+    </uib-tab>
+
     <uib-tab heading="Results" index="'results'">
       <grr-hunt-results hunt="controller.hunt"
-                        hunt-id="controller.huntId"
+                        hunt-id="huntId"
                         ng-if="controller.tabsShown['results']">
       </grr-hunt-results>
     </uib-tab>
 
     <uib-tab heading="Clients" index="'clients'">
-      <grr-hunt-clients hunt-id="controller.huntId"
+      <grr-hunt-clients hunt-id="huntId"
                         ng-if="controller.tabsShown['clients']">
       </grr-hunt-clients>
     </uib-tab>
 
     <uib-tab heading="Report" index="'report'">
       <grr-hunt-report hunt="controller.hunt"
-                       huntId="controller.hunt.hunt_id"
+                       huntId="huntId"
                        ng-if="controller.tabsShown['report']">
       </grr-hunt-report>
     </uib-tab>

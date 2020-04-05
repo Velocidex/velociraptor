@@ -16,13 +16,12 @@ Queries:
        filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
        accessor="reg")
 
+  # A key with path separators in it.
+  - SELECT FullPath, Name FROM glob(globs="HKEY_USERS\\S-1-5-18\\http*\\*", accessor='reg')
+
   - SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath)
     FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*",
               accessor="reg")
-
-  # This artifact uses the raw registry parser.
-  - SELECT * FROM Artifact.Windows.System.Amcache(
-       amCacheGlob="c:/velociraptor/artifacts/testdata/files/Amcache.hve") LIMIT 5
 
   # Check for sysinternal eula
   - SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()

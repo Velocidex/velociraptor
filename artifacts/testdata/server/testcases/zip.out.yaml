@@ -7,10 +7,7 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
  {
   "Name": "test/secret.txt",
   "Size": 1549,
-  "Mtime": {
-   "sec": 1549972030,
-   "usec": 0
-  }
+  "Mtime": "2019-02-12T11:47:10Z"
  }
 ]SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')})[
  {

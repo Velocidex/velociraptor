@@ -13,6 +13,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/hillu/go-ntdll"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -38,6 +39,13 @@ func (self WinObjPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("proc_dump: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 
 		// Deliberately do not unlock this thread - this will
@@ -47,7 +55,7 @@ func (self WinObjPlugin) Call(
 		defer vql_subsystem.CheckForPanic(scope, "winobj")
 
 		arg := &WinObjPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("winobj: %s", err.Error())
 			return

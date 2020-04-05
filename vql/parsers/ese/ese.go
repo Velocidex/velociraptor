@@ -65,6 +65,12 @@ func (self _SRUMLookupId) Call(
 		return &vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("srum_lookup_id: %s", err)
+		return &vfilter.Null{}
+	}
+
 	key := arg.Filename + arg.Accessor
 	lookup_map, ok := vql_subsystem.CacheGet(scope, key).(map[int64]string)
 	if !ok {
@@ -189,6 +195,12 @@ func (self _ESEPlugin) Call(
 
 		if arg.Accessor == "" {
 			arg.Accessor = "file"
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("parse_ese: %s", err)
+			return
 		}
 
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)

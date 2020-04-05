@@ -111,10 +111,12 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 	return buffer.String()
 }
 
-func NewTextTemplateEngine(config_obj *config_proto.Config,
+func NewTextTemplateEngine(
+	config_obj *config_proto.Config,
+	principal string,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, artifact_name)
+		config_obj, principal, artifact_name)
 	if err != nil {
 		return nil, err
 	}

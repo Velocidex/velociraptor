@@ -1,0 +1,32 @@
+name: Windows.System.LocalAdmins
+description: |
+   Gets a list of local admin accounts.
+
+reference:
+- https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.localaccounts/get-localgroupmember?view=powershell-5.1
+
+type: CLIENT
+
+parameters:
+ - name: script
+   default: |
+       Get-LocalGroupMember -Group "Administrators" |SELECT -ExpandProperty SID -Property Name, PrincipalSource |select  Name, Value, PrincipalSource|convertto-json
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    queries:
+    - LET out = SELECT parse_json_array(data=Stdout) AS Output
+          FROM execve(argv=["powershell",
+               "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
+                  base64encode(string=utf16_encode(
+                  string=script))
+            ], length=1000000)
+    - SELECT * FROM foreach(row=out.Output[0],
+      query={
+          SELECT Name, Value AS SID, if(condition=PrincipalSource=1,
+            then="Local", else=if(condition=PrincipalSource=2,
+            then="Domain", else=PrincipalSource)) AS PrincipalSource
+          FROM scope()
+      })

@@ -1,6 +1,7 @@
 <button
   class="btn btn-default btn-rounded"
   type="button"
+  ng-disabled="!controller.uiTraits.Permissions.collect_client"
   title="Recursively refresh this directory (sync its listing with the client)"
   name="RecursiveRefresh"
   ng-click="controller.onClick()"

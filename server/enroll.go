@@ -26,7 +26,10 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
-func enroll(server *Server, csr *crypto_proto.Certificate) error {
+func enroll(
+	ctx context.Context,
+	server *Server,
+	csr *crypto_proto.Certificate) error {
 	if csr.GetType() == crypto_proto.Certificate_CSR && csr.Pem != nil {
 		client_urn, err := server.manager.AddCertificateRequest(csr.Pem)
 		if err != nil {
@@ -36,14 +39,14 @@ func enroll(server *Server, csr *crypto_proto.Certificate) error {
 		client_id := strings.TrimPrefix(*client_urn, "aff4:/")
 
 		client, closer := server.APIClientFactory.GetAPIClient(
-			server.config)
+			ctx, server.config)
 		defer closer()
 
 		request := &flows_proto.ArtifactCollectorArgs{
 			ClientId:  client_id,
 			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
 		}
-		_, err = client.CollectArtifact(context.Background(), request)
+		_, err = client.CollectArtifact(ctx, request)
 		if err != nil {
 			return err
 		}

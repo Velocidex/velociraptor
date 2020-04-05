@@ -18,9 +18,6 @@ const HuntResultsController = function(
   /** @export {string} */
   this.resultsUrl;
 
-  /** @export {string} */
-    this.exportedResultsUrl;
-
     /** @type {array} */
     this.artifactNames;
 
@@ -52,7 +49,6 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
                         path: this.scope_.huntId,
                         artifact: this.selectedArtifact};
     this.resultsUrl = '/v1/GetHuntResults';
-    this.exportedResultsUrl = '/v1/DownloadHuntResults';
 };
 
 /**

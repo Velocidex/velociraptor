@@ -26,45 +26,55 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  */
 const RecursiveListButtonController = function(
     $rootScope, $scope, $timeout, $uibModal, grrApiService, grrReflectionService) {
-  /** @private {!angular.Scope} */
-  this.rootScope_ = $rootScope;
+    /** @private {!angular.Scope} */
+    this.rootScope_ = $rootScope;
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.$timeout} */
-  this.timeout_ = $timeout;
+    /** @private {!angular.$timeout} */
+    this.timeout_ = $timeout;
 
-  /** @private {!angularUi.$uibModal} */
-  this.uibModal_ = $uibModal;
+    /** @private {!angularUi.$uibModal} */
+    this.uibModal_ = $uibModal;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.core.reflectionService.ReflectionService} */
-  this.grrReflectionService_ = grrReflectionService;
+    /** @private {!grrUi.core.reflectionService.ReflectionService} */
+    this.grrReflectionService_ = grrReflectionService;
 
-  /** @type {?string} */
-  this.lastOperationId;
+    /** @type {?string} */
+    this.lastOperationId;
 
-  /** @type {Object} */
-  this.refreshOperation;
+    /** @type {Object} */
+    this.refreshOperation;
 
-  /** @type {?boolean} */
-  this.done;
+    /** @type {?boolean} */
+    this.done;
 
-  /** @type {?string} */
-  this.error;
+    /** @type {?string} */
+    this.error;
 
-  /** @private {angularUi.$uibModalInstance} */
+    /** @private {angularUi.$uibModalInstance} */
     this.modalInstance;
 
     /** @private {object} */
-  this.fileContext;
+    this.fileContext;
 
-  this.scope_.$watchGroup(['controller.fileContext.clientId',
-                           'controller.fileContext.selectedDirPath'],
-                          this.onClientOrPathChange_.bind(this));
+    this.scope_.$watchGroup(['controller.fileContext.clientId',
+                             'controller.fileContext.selectedDirPath'],
+                            this.onClientOrPathChange_.bind(this));
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
 };
 
 

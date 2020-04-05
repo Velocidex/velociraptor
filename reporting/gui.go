@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"strings"
 	"sync"
 	"text/template"
 
@@ -82,6 +83,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	}
 
 	if len(rows) == 0 { // No rows returned.
+		self.Scope.Log("Query produced no rows.")
 		return ""
 	}
 
@@ -204,7 +206,10 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 				chroma_html.WithLineNumbers()),
 			bfchroma.Style("github"),
 		)))
-	output_string := string(output)
+
+	// Add classes to various tags
+	output_string := strings.ReplaceAll(string(output),
+		"<table>", "<table class=\"table table-striped\">")
 
 	/* This is used to dump out the CSS to be included in
 	   reporting.scss.
@@ -240,7 +245,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			query = html.UnescapeString(buf.String())
 		}
 
-		vql, err := vfilter.Parse(query)
+		multi_vql, err := vfilter.MultiParse(query)
 		if err != nil {
 			return self.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
@@ -249,15 +254,17 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		ctx, cancel := context.WithCancel(self.ctx)
 		defer cancel()
 
-		for row := range vql.Eval(ctx, self.Scope) {
-			result = append(result, row)
+		for _, vql := range multi_vql {
+			for row := range vql.Eval(ctx, self.Scope) {
+				result = append(result, row)
 
-			// Do not let the query collect too many rows
-			// - it impacts on server performance.
-			if len(result) > 10000 {
-				self.Error("Query cancelled because it "+
-					"exceeded row count: '%s'", query)
-				return result
+				// Do not let the query collect too many rows
+				// - it impacts on server performance.
+				if len(result) > 10000 {
+					self.Error("Query cancelled because it "+
+						"exceeded row count: '%s'", query)
+					return result
+				}
 			}
 		}
 	}
@@ -286,11 +293,12 @@ func (self *logWriter) Write(b []byte) (int, error) {
 func NewGuiTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
+	principal string,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, artifact_name)
+		config_obj, principal, artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -330,6 +338,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("class").OnElements("span")
 	p.AllowAttrs("class").OnElements("div")
 	p.AllowAttrs("class").OnElements("table")
+	p.AllowAttrs("class").OnElements("a")
 
 	return p
 }

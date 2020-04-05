@@ -27,6 +27,8 @@
 package vql
 
 import (
+	"sync"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/vfilter"
@@ -67,21 +69,34 @@ func RegisterProtocol(plugin vfilter.Any) {
 	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
 }
 
+var (
+	mu sync.Mutex
+
+	// Instead of building the scope from scratch each time, use a
+	// global scope and prepare any other scopes from it.
+	globalScope *vfilter.Scope
+)
+
 func _makeRootScope() *vfilter.Scope {
-	result := vfilter.NewScope()
-	for _, plugin := range exportedPlugins {
-		result.AppendPlugins(plugin)
+	mu.Lock()
+	defer mu.Unlock()
+
+	if globalScope == nil {
+		globalScope = vfilter.NewScope()
+		for _, plugin := range exportedPlugins {
+			globalScope.AppendPlugins(plugin)
+		}
+
+		for _, protocol := range exportedProtocolImpl {
+			globalScope.AddProtocolImpl(protocol)
+		}
+
+		for _, function := range exportedFunctions {
+			globalScope.AppendFunctions(function)
+		}
 	}
 
-	for _, protocol := range exportedProtocolImpl {
-		result.AddProtocolImpl(protocol)
-	}
-
-	for _, function := range exportedFunctions {
-		result.AppendFunctions(function)
-	}
-
-	return result
+	return globalScope.NewScope()
 }
 
 func MakeScope() *vfilter.Scope {

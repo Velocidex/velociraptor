@@ -12,6 +12,10 @@ parameters:
   - name: Accessor
     default: ntfs
 
+  - name: FilenameRegex
+    default: .
+
 sources:
   - queries:
       - SELECT * FROM parse_mft(filename=MFTFilename, accessor=Accessor)
+        WHERE FileName =~ FilenameRegex

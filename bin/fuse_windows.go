@@ -138,14 +138,12 @@ func (self *VFSFs) Read(file_path string, buff []byte, off int64, fd uint64) (n 
 	}
 
 	// We need to fetch the file from the client.
+	ctx := context.Background()
 	self.logger.Info("Fetching file %v", vfs_name)
-
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	defer closer()
 
 	client_path, accessor := api.GetClientPath(vfs_name)
-
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.CollectArtifact(context.Background(),
 		api.MakeCollectorRequest(self.client_id, "System.VFS.DownloadFile",
 			"Path", client_path, "Accessor", accessor))
@@ -174,10 +172,10 @@ func (self *VFSFs) Read(file_path string, buff []byte, off int64, fd uint64) (n 
 }
 
 func (self *VFSFs) read_buffer(vfs_name string, buff []byte, off int64, fh uint64) (n int) {
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
+	ctx := context.Background()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.VFSGetBuffer(context.Background(),
 		&api_proto.VFSFileBuffer{
 			ClientId: self.client_id,
@@ -274,10 +272,10 @@ func (self *VFSFs) GetDir(vfs_name string) ([]*api.FileInfoRow, int) {
 	}
 
 	// Not there - initiate a new client flow.
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
+	ctx := context.Background()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.VFSRefreshDirectory(context.Background(),
 		&api_proto.VFSRefreshDirectoryRequest{
 			ClientId: self.client_id,
@@ -317,14 +315,14 @@ func (self *VFSFs) GetDir(vfs_name string) ([]*api.FileInfoRow, int) {
 
 func (self *VFSFs) isFlowComplete(flow_id, vfs_name string) (bool, int) {
 	// Check if the flow is completed yet.
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
+	ctx := context.Background()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	defer closer()
 
 	req := &api_proto.ApiFlowRequest{
 		ClientId: self.client_id,
 		FlowId:   flow_id,
 	}
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.GetFlowDetails(context.Background(), req)
 	if err != nil {
 		self.logger.Warn("GetFlowDetails %s: %v", vfs_name, err)
@@ -339,15 +337,14 @@ func (self *VFSFs) isFlowComplete(flow_id, vfs_name string) (bool, int) {
 }
 
 func (self *VFSFs) getDir(vfs_name string) ([]*api.FileInfoRow, error) {
-	channel := grpc_client.GetChannel(self.config_obj)
-	defer channel.Close()
+	ctx := context.Background()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	defer closer()
 
 	request := &flows_proto.VFSListRequest{
 		ClientId: self.client_id,
 		VfsPath:  vfs_name,
 	}
-
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.VFSListDirectory(context.Background(), request)
 	if err != nil {
 		self.logger.Warn("VFSListDirectory error %s (%v)", vfs_name, err)
@@ -402,7 +399,10 @@ func NewVFSFs(config_obj *config_proto.Config, client_id string) *VFSFs {
 func doFuse() {
 	config_obj := get_config_or_default()
 
-	grpc_client.GetChannel(config_obj)
+	// Connect one time to make sure we can.
+	ctx := context.Background()
+	_, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	closer()
 
 	args := []string{*fuse_command_mnt_point,
 		// Winfsp uses very few threads (2) which may cause a

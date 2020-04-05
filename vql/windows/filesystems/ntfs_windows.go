@@ -115,19 +115,19 @@ func (self *NTFSFileInfo) FullPath() string {
 
 func (self *NTFSFileInfo) Mtime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Mtime.Unix(),
+		Nsec: self.info.Mtime.UnixNano(),
 	}
 }
 
 func (self *NTFSFileInfo) Ctime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Ctime.Unix(),
+		Nsec: self.info.Ctime.UnixNano(),
 	}
 }
 
 func (self *NTFSFileInfo) Atime() glob.TimeVal {
 	return glob.TimeVal{
-		Sec: self.info.Atime.Unix(),
+		Nsec: self.info.Atime.UnixNano(),
 	}
 }
 
@@ -166,25 +166,12 @@ func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 	return result, err
 }
 
-type NTFSFileSystemAccessor struct{}
+type NTFSFileSystemAccessor struct {
+	ctx context.Context
+}
 
 func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &NTFSFileSystemAccessor{}
-
-	// When the context is done, close all the files. The files
-	// must remain open until the entire VQL query is done.
-	go func() {
-		select {
-		case <-ctx.Done():
-			mu.Lock()
-			defer mu.Unlock()
-
-			for k, v := range fd_cache {
-				v.fd.Close()
-				delete(fd_cache, k)
-			}
-		}
-	}()
+	result := &NTFSFileSystemAccessor{ctx}
 
 	return result
 }
@@ -229,7 +216,21 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 			ntfs_ctx:     ntfs_ctx,
 			path_listing: cache.NewLRUCache(200),
 		}
+
+		// When the context is done, close the
+		// file. The files must remain open until the
+		// entire VQL query is done.
+		go func() {
+			select {
+			case <-self.ctx.Done():
+				mu.Lock()
+				ctx.fd.Close()
+				mu.Unlock()
+			}
+		}()
+
 		fd_cache[device] = ctx
+
 		timestamp = time.Now()
 	}
 
@@ -374,11 +375,25 @@ type readAdapter struct {
 	pos    int64
 }
 
-func (self *readAdapter) Read(buf []byte) (int, error) {
+func (self *readAdapter) Read(buf []byte) (res int, err error) {
 	self.Lock()
 	defer self.Unlock()
-	res, err := self.reader.ReadAt(buf, self.pos)
+	
+	defer func() {
+		r := recover()
+		if r != nil {
+			fmt.Printf("PANIC %v\n", r)
+			err, _ = r.(error)
+		}
+	}()
+
+	res, err = self.reader.ReadAt(buf, self.pos)
 	self.pos += int64(res)
+
+	// If ReadAt is unable to read anything it means an EOF.
+	if res == 0 {
+		return res, io.EOF
+	}
 
 	return res, err
 }

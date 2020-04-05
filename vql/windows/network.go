@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -110,6 +111,13 @@ type NetstatArgs struct{}
 func runNetstat(scope *vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("netstat: %s", err)
+		return result
+	}
+
 	arg := &NetstatArgs{}
 
 	logerror := func(err error) []vfilter.Row {
@@ -117,7 +125,7 @@ func runNetstat(scope *vfilter.Scope,
 		return result
 	}
 
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		return logerror(err)
 	}

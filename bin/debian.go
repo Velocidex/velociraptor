@@ -103,6 +103,16 @@ Group=velociraptor
 [Install]
 WantedBy=multi-user.target
 `
+
+	server_launcher = `#!/bin/bash
+
+export VELOCIRAPTOR_CONFIG=/etc/velociraptor/server.config.yaml
+if ! [[ -r "$VELOCIRAPTOR_CONFIG" ]] ; then
+    echo "'$VELOCIRAPTOR_CONFIG' is not readable, you will need to run this as the velociraptor user ('sudo -u velociraptor bash')."
+else
+    /usr/local/bin/velociraptor.bin "$@"
+fi
+`
 	client_service_definition = `
 [Unit]
 Description=Velociraptor linux client
@@ -159,6 +169,10 @@ func doServerDeb() {
 	config_obj, err := get_server_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	// Debian packages always use the "velociraptor" user.
+	config_obj.Frontend.RunAsUser = "velociraptor"
+	config_obj.ServerType = "linux"
+
 	res, err := yaml.Marshal(config_obj)
 	kingpin.FatalIfError(err, "marshal")
 
@@ -200,7 +214,8 @@ func doServerDeb() {
 	deb.AddFileString(fmt.Sprintf(
 		server_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_server.service")
-	deb.AddFile(input, velociraptor_bin)
+	deb.AddFile(input, velociraptor_bin+".bin")
+	deb.AddFileString(server_launcher, velociraptor_bin)
 
 	// Just a simple bare bones deb.
 	if !*server_debian_command_with_monitoring {
@@ -220,8 +235,9 @@ fi
 mkdir -p '%s'
 chown -R velociraptor:velociraptor '%s' /etc/velociraptor/
 chmod -R go-r /etc/velociraptor/
+chmod o+x /usr/local/bin/velociraptor /usr/local/bin/velociraptor.bin
 
-setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
+setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bin
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path))

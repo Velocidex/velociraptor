@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	context "golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -32,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	users "www.velocidex.com/golang/velociraptor/users"
 )
 
 const (
@@ -226,6 +228,19 @@ func (self *ApiServer) ListAvailableEventResults(
 	ctx context.Context,
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.READ_RESULTS
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, errors.New("User is not allowed to view results.")
+	}
+
 	result := &api_proto.ListAvailableEventResultsResponse{}
 
 	root_path := "server_artifacts"

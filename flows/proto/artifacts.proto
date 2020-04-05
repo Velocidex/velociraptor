@@ -43,6 +43,11 @@ message ArtifactCollectorArgs {
     bool allow_custom_overrides = 8 [(sem_type) = {
             description: "If true we will use a custom artifact if present instead of the named artifact.",
         }];
+
+
+    // A place to cache the compiled request. If this is provided we
+    // do not compile the artifacts at all, we just use it as is.
+    VQLCollectorArgs compiled_collector_args = 20;
 }
 
 message ArtifactCollectorResponse {

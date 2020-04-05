@@ -27,10 +27,12 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -52,6 +54,13 @@ func (self UploadsPlugins) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("uploads: %s", err)
+			return
+		}
+
 		arg := &UploadsPluginsArgs{}
 		any_config_obj, _ := scope.Resolve("server_config")
 		config_obj, ok := any_config_obj.(*config_proto.Config)
@@ -61,7 +70,7 @@ func (self UploadsPlugins) Call(
 		}
 
 		// Allow the plugin args to override the environment scope.
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
@@ -118,6 +127,13 @@ func (self SourcePlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("uploads: %s", err)
+			return
+		}
+
 		arg := &SourcePluginArgs{}
 		any_config_obj, _ := scope.Resolve("server_config")
 		config_obj, ok := any_config_obj.(*config_proto.Config)
@@ -133,7 +149,7 @@ func (self SourcePlugin) Call(
 		parseSourceArgsFromScope(arg, scope)
 
 		// Allow the plugin args to override the environment scope.
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
@@ -149,7 +165,7 @@ func (self SourcePlugin) Call(
 
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
-		if arg.Mode == "HUNT" {
+		if arg.Mode == "HUNT" || arg.HuntId != "" {
 			args := ordereddict.NewDict().
 				Set("hunt_id", arg.HuntId).
 				Set("artifact", arg.Artifact).
@@ -357,7 +373,115 @@ func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 	}
 }
 
+type FlowResultsPluginArgs struct {
+	Artifact string `vfilter:"optional,field=artifact,doc=The artifact to retrieve"`
+	Source   string `vfilter:"optional,field=source,doc=An optional source within the artifact."`
+	FlowId   string `vfilter:"required,field=flow_id,doc=The hunt id to read."`
+	ClientId string `vfilter:"required,field=client_id,doc=The client id to extract"`
+}
+
+type FlowResultsPlugin struct{}
+
+func (self FlowResultsPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("flow_results: %s", err)
+			return
+		}
+
+		arg := &FlowResultsPluginArgs{}
+		err = vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("hunt_results: %v", err)
+			return
+		}
+
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*config_proto.Config)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		// If no artifact is specified, get the first one from
+		// the hunt.
+		if arg.Artifact == "" {
+			flow, err := flows.GetFlowDetails(config_obj, arg.ClientId, arg.FlowId)
+			if err != nil {
+				scope.Log("flow_results: %v", err)
+				return
+			}
+
+			requested_artifacts := flow.Context.Request.Artifacts
+			if len(requested_artifacts) == 0 {
+				scope.Log("flow_results: no artifacts in hunt")
+				return
+			}
+			arg.Artifact = requested_artifacts[0]
+
+			if arg.Source == "" {
+				arg.Artifact, arg.Source = artifacts.SplitFullSourceName(
+					arg.Artifact)
+			}
+
+			// If the source is not specified find the
+			// first named source from the artifact
+			// definition.
+			if arg.Source == "" {
+				repo, err := artifacts.GetGlobalRepository(config_obj)
+				if err == nil {
+					artifact_def, ok := repo.Get(arg.Artifact)
+					if ok {
+						for _, source := range artifact_def.Sources {
+							if source.Name != "" {
+								arg.Source = source.Name
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+
+		result_path := artifacts.GetCSVPath(
+			arg.ClientId, "",
+			arg.FlowId,
+			arg.Artifact, arg.Source,
+			artifacts.MODE_CLIENT)
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+		fd, err := file_store_factory.ReadFile(result_path)
+		if err != nil {
+			scope.Log("flow_results: %v", err)
+			return
+		}
+		defer fd.Close()
+
+		for row := range csv.GetCSVReader(fd) {
+			output_chan <- row
+		}
+	}()
+
+	return output_chan
+}
+
+func (self FlowResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "flow_results",
+		Doc:     "Retrieve the results of a flow.",
+		ArgType: type_map.AddType(scope, &FlowResultsPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&SourcePlugin{})
 	vql_subsystem.RegisterPlugin(&UploadsPlugins{})
+	vql_subsystem.RegisterPlugin(&FlowResultsPlugin{})
 }

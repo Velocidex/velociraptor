@@ -33,6 +33,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -176,8 +177,15 @@ type WMIQueryArgs struct {
 func runWMIQuery(scope *vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("wmi: %s", err)
+		return result
+	}
+
 	arg := &WMIQueryArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("wmi: %s", err.Error())
 		return result

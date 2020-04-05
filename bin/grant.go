@@ -4,34 +4,44 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	jsonpatch "github.com/evanphx/json-patch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
 	acl_command = app.Command(
-		"acl", "Manipulate api_client acls.")
+		"acl", "Manipulate acls.")
 
 	show_command = acl_command.Command(
-		"show", "Grant API client a policy.")
+		"show", "Show a principal's policy.")
 
 	show_command_principal = show_command.Arg(
-		"principal", "Name of certificate to grant.").
+		"principal", "Name of principal to grant.").
 		Required().String()
 
+	show_command_effective = show_command.Flag(
+		"effective", "Show the effective persmissions object.").
+		Bool()
+
 	grant_command = acl_command.Command(
-		"grant", "Grant API client a policy.")
+		"grant", "Grant a principal  a policy.")
 
 	grant_command_principal = grant_command.Arg(
-		"principal", "Name of certificate to grant.").
+		"principal", "Name of principal (User or cert) to grant.").
 		Required().String()
 
 	grant_command_policy_object = grant_command.Arg(
 		"policy", "A policy to grant as a json encoded string").
+		Default("{}").String()
+
+	grant_command_roles = grant_command.Flag(
+		"role", "A comma separated list of roles to grant the principal").
 		String()
 
 	grant_command_policy_merge = grant_command.Flag(
@@ -70,6 +80,17 @@ func doGrant() {
 		kingpin.FatalIfError(err, "Invalid policy object")
 	}
 
+	if *grant_command_roles != "" {
+		for _, role := range strings.Split(*grant_command_roles, ",") {
+			if !utils.InString(&new_policy.Roles, role) {
+				if !acls.ValidateRole(role) {
+					kingpin.Fatalf("Invalid role %v", role)
+				}
+				new_policy.Roles = append(new_policy.Roles, role)
+			}
+		}
+	}
+
 	err = acls.SetPolicy(config_obj, principal, new_policy)
 	kingpin.FatalIfError(err, "Setting policy object")
 }
@@ -82,6 +103,12 @@ func doShow() {
 	existing_policy, err := acls.GetPolicy(config_obj, principal)
 	kingpin.FatalIfError(err, "Unable to load existing policy for '%v' ",
 		principal)
+
+	if *show_command_effective {
+		existing_policy, err = acls.GetEffectivePolicy(config_obj, principal)
+		kingpin.FatalIfError(err, "Unable to load existing policy for '%v' ",
+			principal)
+	}
 
 	serialized, err := json.Marshal(existing_policy)
 	kingpin.FatalIfError(err, "Unable to serialized policy ")

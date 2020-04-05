@@ -26,6 +26,7 @@ import (
 	"path"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -51,8 +52,14 @@ func (self HuntsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunts: %s", err)
+			return
+		}
+
 		arg := &HuntsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunts: %v", err)
 			return
@@ -108,7 +115,7 @@ func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 type HuntResultsPluginArgs struct {
-	Artifact string `vfilter:"required,field=artifact,doc=The artifact to retrieve"`
+	Artifact string `vfilter:"optional,field=artifact,doc=The artifact to retrieve"`
 	Source   string `vfilter:"optional,field=source,doc=An optional source within the artifact."`
 	HuntId   string `vfilter:"required,field=hunt_id,doc=The hunt id to read."`
 	Brief    bool   `vfilter:"optional,field=brief,doc=If set we return less columns."`
@@ -124,8 +131,14 @@ func (self HuntResultsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunt_results: %s", err)
+			return
+		}
+
 		arg := &HuntResultsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_results: %v", err)
 			return
@@ -136,6 +149,52 @@ func (self HuntResultsPlugin) Call(
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
+		}
+
+		// If no artifact is specified, get the first one from
+		// the hunt.
+		if arg.Artifact == "" {
+			db, err := datastore.GetDB(config_obj)
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				return
+			}
+
+			hunt_obj := &api_proto.Hunt{}
+			err = db.GetSubject(config_obj,
+				path.Join(constants.HUNTS_URN, arg.HuntId), hunt_obj)
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				return
+			}
+
+			if len(hunt_obj.Artifacts) == 0 {
+				scope.Log("hunt_results: no artifacts in hunt")
+				return
+			}
+
+			if arg.Source == "" {
+				arg.Artifact, arg.Source = artifacts.SplitFullSourceName(
+					hunt_obj.Artifacts[0])
+			}
+
+			// If the source is not specified find the
+			// first named source from the artifact
+			// definition.
+			if arg.Source == "" {
+				repo, err := artifacts.GetGlobalRepository(config_obj)
+				if err == nil {
+					artifact_def, ok := repo.Get(arg.Artifact)
+					if ok {
+						for _, source := range artifact_def.Sources {
+							if source.Name != "" {
+								arg.Source = source.Name
+								break
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// Backwards compatibility.
@@ -229,8 +288,14 @@ func (self HuntFlowsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		if err != nil {
+			scope.Log("hunt_flows: %s", err)
+			return
+		}
+
 		arg := &HuntFlowsPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("hunt_flows: %v", err)
 			return

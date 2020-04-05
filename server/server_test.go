@@ -45,6 +45,7 @@ type MockAPIClientFactory struct {
 }
 
 func (self MockAPIClientFactory) GetAPIClient(
+	ctx context.Context,
 	config_obj *config_proto.Config) (api_proto.APIClient, func() error) {
 	return self.mock, func() error { return nil }
 
@@ -121,6 +122,7 @@ func (self *ServerTestSuite) TestEnrollment() {
 	}
 
 	self.server.ProcessSingleUnauthenticatedMessage(
+		context.Background(),
 		&crypto_proto.GrrMessage{
 			CSR: &crypto_proto.Certificate{
 				Pem: csr_message}})
@@ -165,12 +167,14 @@ func (self *ServerTestSuite) TestClientEventTable() {
 
 	// Send a foreman checkin message from client with old event
 	// table version.
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source: self.client_id,
-		ForemanCheckin: &actions_proto.ForemanCheckin{
-			LastEventTableVersion: 0,
-		},
-	})
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source: self.client_id,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastEventTableVersion: 0,
+			},
+		})
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
 
@@ -226,6 +230,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	hunt_id, err := flows.CreateHunt(
 		context.Background(), self.config_obj,
+		self.config_obj.Client.PinnedServerName,
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
@@ -237,20 +242,27 @@ func (self *ServerTestSuite) TestForeman() {
 	err = db.GetSubject(self.config_obj, "/hunts/"+*hunt_id, hunt)
 	require.NoError(t, err)
 
+	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)
+
+	hunt.StartRequest.CompiledCollectorArgs = nil
+	expected.CompiledCollectorArgs = nil
+
 	assert.Equal(t, hunt.StartRequest, expected)
 
 	// Send a foreman checkin message from client with old hunt
 	// timestamp.
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source: self.client_id,
-		ForemanCheckin: &actions_proto.ForemanCheckin{
-			LastHuntTimestamp: 0,
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source: self.client_id,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastHuntTimestamp: 0,
 
-			// We do not want to triggen an event table
-			// update in this test.
-			LastEventTableVersion: 10000000000,
-		},
-	})
+				// We do not want to triggen an event table
+				// update in this test.
+				LastEventTableVersion: 10000000000,
+			},
+		})
 
 	// Server should schedule the new hunt on the client.
 	tasks, err := db.GetClientTasks(self.config_obj,
@@ -284,19 +296,21 @@ func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex st
 // well as a journal entry for all clients.
 func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-		VQLResponse: &actions_proto.VQLResponse{
-			Columns: []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
-			Response: fmt.Sprintf(
-				`[{"ClientId": "%s", "Participate": true, "HuntId": "H.123"}]`,
-				self.client_id),
-			Query: &actions_proto.VQLRequest{
-				Name: "System.Hunt.Participation",
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
+				Response: fmt.Sprintf(
+					`[{"ClientId": "%s", "Participate": true, "HuntId": "H.123"}]`,
+					self.client_id),
+				Query: &actions_proto.VQLRequest{
+					Name: "System.Hunt.Participation",
+				},
 			},
-		},
-	})
+		})
 	runner.Close()
 
 	// Wait for the journal writer
@@ -316,17 +330,19 @@ func (self *ServerTestSuite) TestMonitoring() {
 // monitoring log.
 func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-		VQLResponse: &actions_proto.VQLResponse{
-			Columns:  []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
-			Response: fmt.Sprintf(`}}}`), // Invalid json
-			Query: &actions_proto.VQLRequest{
-				Name: "System.Hunt.Participation",
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns:  []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
+				Response: fmt.Sprintf(`}}}`), // Invalid json
+				Query: &actions_proto.VQLRequest{
+					Name: "System.Hunt.Participation",
+				},
 			},
-		},
-	})
+		})
 	runner.Close()
 
 	self.RequiredFilestoreContains(
@@ -337,18 +353,20 @@ func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
 // Monitoring queries which upload data.
 func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-		RequestId: constants.TransferWellKnownFlowId,
-		FileBuffer: &actions_proto.FileBuffer{
-			Pathspec: &actions_proto.PathSpec{
-				Path: "/etc/passwd",
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			RequestId: constants.TransferWellKnownFlowId,
+			FileBuffer: &actions_proto.FileBuffer{
+				Pathspec: &actions_proto.PathSpec{
+					Path: "/etc/passwd",
+				},
+				Data: []byte("Hello"),
+				Size: 10000,
 			},
-			Data: []byte("Hello"),
-			Size: 10000,
-		},
-	})
+		})
 	runner.Close()
 
 	self.RequiredFilestoreContains(
@@ -366,13 +384,15 @@ func (self *ServerTestSuite) TestLog() {
 
 	// Emulate a log message from client to flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: flow_id,
-		LogMessage: &crypto_proto.LogMessage{
-			Message: "Foobar",
-		},
-	})
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			LogMessage: &crypto_proto.LogMessage{
+				Message: "Foobar",
+			},
+		})
 	runner.Close()
 
 	self.RequiredFilestoreContains(
@@ -385,13 +405,15 @@ func (self *ServerTestSuite) TestLog() {
 func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	// Emulate a log message from client to flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: "F.1234",
-		LogMessage: &crypto_proto.LogMessage{
-			Message: "Foobar",
-		},
-	})
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: "F.1234",
+			LogMessage: &crypto_proto.LogMessage{
+				Message: "Foobar",
+			},
+		})
 	runner.Close()
 }
 
@@ -403,7 +425,9 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	}
 
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, request)
+		self.config_obj,
+		self.config_obj.Client.PinnedServerName,
+		request)
 
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(t, err)
@@ -427,7 +451,9 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
 	flow_id, err := flows.ScheduleArtifactCollection(
-		self.config_obj, &flows_proto.ArtifactCollectorArgs{
+		self.config_obj,
+		self.config_obj.Client.PinnedServerName,
+		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
 			Artifacts: []string{"Generic.Client.Info"},
 		})
@@ -445,20 +471,22 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: flow_id,
-		RequestId: constants.TransferWellKnownFlowId,
-		FileBuffer: &actions_proto.FileBuffer{
-			Pathspec: &actions_proto.PathSpec{
-				Path:     "/tmp/foobar",
-				Accessor: "file",
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.TransferWellKnownFlowId,
+			FileBuffer: &actions_proto.FileBuffer{
+				Pathspec: &actions_proto.PathSpec{
+					Path:     "/tmp/foobar",
+					Accessor: "file",
+				},
+				Offset: 0,
+				Data:   []byte("hello world"),
+				Size:   11,
 			},
-			Offset: 0,
-			Data:   []byte("hello world"),
-			Size:   11,
-		},
-	})
+		})
 	runner.Close()
 
 	self.RequiredFilestoreContains(
@@ -480,20 +508,22 @@ func (self *ServerTestSuite) TestVQLResponse() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: flow_id,
-		RequestId: constants.ProcessVQLResponses,
-		VQLResponse: &actions_proto.VQLResponse{
-			Columns: []string{"ClientId", "Column1"},
-			Response: fmt.Sprintf(
-				`[{"ClientId": "%s", "Column1": "Foo"}]`,
-				self.client_id),
-			Query: &actions_proto.VQLRequest{
-				Name: "Generic.Client.Info",
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{"ClientId", "Column1"},
+				Response: fmt.Sprintf(
+					`[{"ClientId": "%s", "Column1": "Foo"}]`,
+					self.client_id),
+				Query: &actions_proto.VQLRequest{
+					Name: "Generic.Client.Info",
+				},
 			},
-		},
-	})
+		})
 	runner.Close()
 
 	self.RequiredFilestoreContains(
@@ -511,16 +541,18 @@ func (self *ServerTestSuite) TestErrorMessage() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: flow_id,
-		RequestId: constants.ProcessVQLResponses,
-		Status: &crypto_proto.GrrStatus{
-			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
-			ErrorMessage: "Error generated.",
-			Backtrace:    "I am a backtrace",
-		},
-	})
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			Status: &crypto_proto.GrrStatus{
+				Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+				ErrorMessage: "Error generated.",
+				Backtrace:    "I am a backtrace",
+			},
+		})
 	runner.Close()
 
 	db, _ := datastore.GetDB(self.config_obj)
@@ -554,14 +586,16 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.config_obj)
-	runner.ProcessSingleMessage(&crypto_proto.GrrMessage{
-		Source:    self.client_id,
-		SessionId: flow_id,
-		RequestId: constants.ProcessVQLResponses,
-		Status: &crypto_proto.GrrStatus{
-			Status: crypto_proto.GrrStatus_OK,
-		},
-	})
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			Status: &crypto_proto.GrrStatus{
+				Status: crypto_proto.GrrStatus_OK,
+			},
+		})
 	runner.Close()
 
 	db, _ := datastore.GetDB(self.config_obj)
@@ -606,6 +640,7 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
+		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
 	require.Equal(t, response.FlowId, flow_id)
@@ -669,6 +704,7 @@ func (self *ServerTestSuite) TestFlowArchives() {
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
+		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
 	require.Equal(t, response.FlowId, flow_id)

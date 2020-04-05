@@ -22,6 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 )
 
 var (
@@ -127,4 +128,21 @@ func TestArtifacts(t *testing.T) {
 	err = repository.PopulateArtifactsVQLCollectorArgs(request)
 	assert.Error(err)
 	assert.Contains(err.Error(), "Unknown artifact reference")
+}
+
+// Load all built in artifacts and make sure they validate syntax.
+func TestArtifactsSyntax(t *testing.T) {
+	config_obj := config.GetDefaultConfig()
+	repository, err := GetGlobalRepository(config_obj)
+	assert.NoError(t, err)
+
+	new_repository := NewRepository()
+
+	for _, artifact_name := range repository.List() {
+		artifact, pres := repository.Get(artifact_name)
+		assert.True(t, pres)
+
+		_, err = new_repository.LoadProto(artifact, true /* validate */)
+		assert.NoError(t, err, "Error compiling "+artifact_name)
+	}
 }

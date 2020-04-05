@@ -13,6 +13,7 @@ import "artifacts.proto";
 import "clients.proto";
 import "hunts.proto";
 import "flows.proto";
+import "notebooks.proto";
 import "users.proto";
 import "csv.proto";
 import "download.proto";
@@ -313,6 +314,61 @@ service API {
     rpc CreateDownloadFile(CreateDownloadRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/CreateDownload",
+            body: "*",
+        };
+    }
+
+    // Notebook management
+   rpc GetNotebooks(NotebookCellRequest) returns (Notebooks) {
+        option (google.api.http) = {
+            get: "/api/v1/GetNotebooks",
+        };
+    }
+
+   rpc NewNotebook(NotebookMetadata) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/NewNotebook",
+            body: "*",
+        };
+    }
+
+   rpc UpdateNotebook(NotebookMetadata) returns (NotebookMetadata) {
+        option (google.api.http) = {
+            post: "/api/v1/UpdateNotebook",
+            body: "*",
+        };
+    }
+
+    rpc NewNotebookCell(NotebookCellRequest) returns (NotebookMetadata) {
+        option (google.api.http) = {
+            post: "/api/v1/NewNotebookCell",
+            body: "*",
+        };
+    }
+
+   rpc GetNotebookCell(NotebookCellRequest) returns (NotebookCell) {
+        option (google.api.http) = {
+            get: "/api/v1/GetNotebookCell",
+        };
+    }
+
+   rpc UpdateNotebookCell(NotebookCellRequest) returns (NotebookCell) {
+        option (google.api.http) = {
+            post: "/api/v1/UpdateNotebookCell",
+            body: "*",
+        };
+    }
+
+    rpc CreateNotebookDownloadFile(NotebookExportRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateNotebookDownloadFile",
+            body: "*",
+        };
+    }
+
+    rpc UploadNotebookAttachment(NotebookFileUploadRequest) returns (NotebookFileUploadResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/UploadNotebookAttachment",
             body: "*",
         };
     }

@@ -51,11 +51,7 @@ const HuntInspectorController = function(
   /** @private {!grrUi.routing.routingService.RoutingService} */
   this.grrRoutingService_ = grrRoutingService;
 
-  /** @export {string} */
-  this.huntId;
-
-  /** @export {Object} */
-  this.hunt;
+    this.hunt = {};
 
   /** @private {!angular.$q.Promise|undefined} */
   this.pollPromise_;
@@ -64,7 +60,7 @@ const HuntInspectorController = function(
     this.grrApiService_.cancelPoll(this.pollPromise_);
   }.bind(this));
 
-  this.scope_.$watch('huntId', this.startPolling_.bind(this));
+    this.scope_.$watch('huntId', this.startPolling_.bind(this));
 };
 
 /**
@@ -73,26 +69,24 @@ const HuntInspectorController = function(
  * @private
  */
 HuntInspectorController.prototype.startPolling_ = function() {
-  this.grrApiService_.cancelPoll(this.pollPromise_);
-  this.pollPromise_ = undefined;
+    var self = this;
 
-  if (angular.isDefined(this.scope_['huntId'])) {
-      // FIXME: Remove the aff4 path from this.
-      var huntId = this.scope_['huntId'];
-      var components = huntId.split("/");
-      this.huntId = components[components.length-1];
+    self.grrApiService_.cancelPoll(self.pollPromise_);
+    self.pollPromise_ = undefined;
 
-    this.pollPromise_ = this.grrApiService_.poll(
-      'v1/GetHunt',
-      AUTO_REFRESH_INTERVAL_MS,
-      {hunt_id: this.huntId});
-    this.pollPromise_.then(
-        undefined,
-        undefined,
-        function notify(response) {
-            this.hunt = response['data'];
-        }.bind(this));
-  }
+    if (angular.isDefined(self.scope_['huntId'])) {
+        var huntId = self.scope_['huntId'];
+        self.pollPromise_ = self.grrApiService_.poll(
+            'v1/GetHunt',
+            AUTO_REFRESH_INTERVAL_MS,
+            {hunt_id: huntId});
+        self.pollPromise_.then(
+            undefined,
+            undefined,
+            function notify(response) {
+                self.hunt = response['data'];
+            });
+    }
 };
 
 /**

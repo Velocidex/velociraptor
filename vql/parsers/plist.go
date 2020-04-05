@@ -27,6 +27,12 @@ func (self *PlistParser) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("plist: %s", err)
+		return
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("pslist: %v", err)

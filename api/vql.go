@@ -27,12 +27,14 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 func RunVQL(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	principal string,
 	env *ordereddict.Dict,
 	query string) (*api_proto.GetTableResponse, error) {
 
@@ -43,7 +45,9 @@ func RunVQL(
 		return nil, err
 	}
 
-	env.Set("server_config", config_obj)
+	env.Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewServerACLManager(config_obj, principal))
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
@@ -82,6 +86,7 @@ func RunVQL(
 func StoreVQLAsCSVFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	principal string,
 	env *ordereddict.Dict,
 	query string,
 	writer io.Writer) error {
@@ -91,7 +96,9 @@ func StoreVQLAsCSVFile(
 		return err
 	}
 
-	env.Set("server_config", config_obj)
+	env.Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewServerACLManager(config_obj, principal))
 
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()

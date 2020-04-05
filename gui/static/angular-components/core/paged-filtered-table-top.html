@@ -1,9 +1,9 @@
-<h5 class="pull-left" ng-if="parentController.totalCount !== undefined">
+<h5 class="float-left" ng-if="parentController.totalCount !== undefined">
   <span ng-if="parentController.totalCount && !parentController.filterApplied">{$ parentController.totalCount $} entries</span>
   <span ng-if="parentController.totalCount && parentController.filterApplied">Filtered by: {$ parentController.filterValue $}</span>
 </h5>
 
-<div class="pull-right" ng-if="parentController.totalCount">
+<div class="float-right" ng-if="parentController.totalCount">
   <input type="text" class="search-query"
          ng-model="parentController.filterEditedValue"
          ng-keydown="$event.which == 13 && parentController.applyFilter()"
@@ -11,4 +11,3 @@
   <button class="btn btn-default" ng-click="parentController.applyFilter()">Filter</button>
 </div>
 <div class="clear"></div>
-

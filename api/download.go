@@ -206,77 +206,6 @@ func createDownloadFile(config_obj *config_proto.Config,
 	return nil
 }
 
-// DEPRECATED:
-// URL format: /api/v1/download/<client_id>/<flow_id>
-func flowResultDownloadHandler(
-	config_obj *config_proto.Config) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		components := strings.Split(r.URL.Path, "/")
-		if len(components) < 2 {
-			returnError(w, 404, "Flow id should be specified.")
-			return
-		}
-		flow_id := components[len(components)-1]
-		client_id := components[len(components)-2]
-		flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		// TODO: ACL checks.
-		if r.Method == "HEAD" {
-			returnError(w, 200, "Ok")
-			return
-		}
-
-		// From here on we already sent the headers and we can
-		// not really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(flow_id+".zip"))
-		w.Header().Set("Content-Type", "binary/octet-stream")
-		w.WriteHeader(200)
-
-		// Log an audit event.
-		userinfo := GetUserInfo(r.Context(), config_obj)
-
-		// This should never happen!
-		if userinfo.Name == "" {
-			panic("Unauthenticated access.")
-		}
-
-		logging.GetLogger(config_obj, &logging.Audit).
-			WithFields(logrus.Fields{
-				"user":      userinfo.Name,
-				"flow_id":   flow_id,
-				"client_id": client_id,
-				"remote":    r.RemoteAddr,
-			}).Info("DownloadFlowResults")
-
-		marshaler := &jsonpb.Marshaler{Indent: " "}
-		flow_details_json, err := marshaler.MarshalToString(flow_details)
-		if err != nil {
-			return
-		}
-
-		zip_writer := zip.NewWriter(w)
-		defer zip_writer.Close()
-
-		f, err := zip_writer.Create("FlowDetails")
-		if err != nil {
-			return
-		}
-
-		_, err = f.Write([]byte(flow_details_json))
-		if err != nil {
-			return
-		}
-
-		downloadFlowToZip(r.Context(),
-			config_obj, client_id, flow_id, zip_writer)
-	})
-}
-
 func createHuntDownloadFile(
 	config_obj *config_proto.Config, hunt_id string) error {
 	if hunt_id == "" {
@@ -362,7 +291,9 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			err = StoreVQLAsCSVFile(ctx, config_obj, env, query, f)
+			err = StoreVQLAsCSVFile(ctx, config_obj,
+				config_obj.Client.PinnedServerName,
+				env, query, f)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{
@@ -409,187 +340,12 @@ func createHuntDownloadFile(
 	return nil
 }
 
-// To be deprecated.
-// URL format: /api/v1/DownloadHuntResults
-func huntResultDownloadHandler(
-	config_obj *config_proto.Config) http.Handler {
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		hunt_ids, pres := r.URL.Query()["hunt_id"]
-		if !pres || len(hunt_ids) == 0 {
-			returnError(w, 404, "Hunt id should be specified.")
-			return
-		}
-		hunt_id := hunt_ids[0]
-
-		hunt_details, err := flows.GetHunt(
-			config_obj,
-			&api_proto.GetHuntRequest{HuntId: hunt_id})
-		if err != nil {
-			returnError(w, 404, err.Error())
-			return
-		}
-
-		// TODO: ACL checks.
-		if r.Method == "HEAD" {
-			returnError(w, 200, "Ok")
-			return
-		}
-
-		// From here on we sent the headers and we can not
-		// really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(hunt_id+".zip"))
-		w.Header().Set("Content-Type", "binary/octet-stream")
-		w.WriteHeader(200)
-
-		// Log an audit event.
-		userinfo := GetUserInfo(r.Context(), config_obj)
-		logging.GetLogger(config_obj, &logging.Audit).
-			WithFields(logrus.Fields{
-				"user":    userinfo.Name,
-				"hunt_id": hunt_id,
-				"remote":  r.RemoteAddr,
-			}).Info("DownloadHuntResults")
-
-		// This should never happen!
-		if userinfo.Name == "" {
-			panic("Unauthenticated access.")
-		}
-
-		marshaler := &jsonpb.Marshaler{Indent: " "}
-		hunt_details_json, err := marshaler.MarshalToString(hunt_details)
-		if err != nil {
-			return
-		}
-
-		zip_writer := zip.NewWriter(w)
-		defer zip_writer.Close()
-
-		f, err := zip_writer.Create("HuntDetails")
-		if err != nil {
-			return
-		}
-
-		_, err = f.Write([]byte(hunt_details_json))
-		if err != nil {
-			return
-		}
-
-		// Export aggregate CSV files for all clients.
-		for _, artifact_source := range hunt_details.ArtifactSources {
-			artifact, source := artifacts.SplitFullSourceName(
-				artifact_source)
-
-			query := "SELECT * FROM hunt_results(" +
-				"hunt_id=HuntId, artifact=Artifact, " +
-				"source=Source, brief=true)"
-			env := ordereddict.NewDict().
-				Set("Artifact", artifact).
-				Set("HuntId", hunt_id).
-				Set("Source", source)
-
-			f, err := zip_writer.Create("All " +
-				path.Join(artifact, source) + ".csv")
-			if err != nil {
-				continue
-			}
-
-			err = StoreVQLAsCSVFile(r.Context(), config_obj,
-				env, query, f)
-			if err != nil {
-				logging.GetLogger(config_obj, &logging.Audit).
-					WithFields(logrus.Fields{
-						"artifact": artifact,
-					}).Info("ExportHuntArtifact")
-			}
-		}
-
-		file_store_factory := file_store.GetFileStore(config_obj)
-		file_path := path.Join("hunts", hunt_id+".csv")
-		fd, err := file_store_factory.ReadFile(file_path)
-		if err != nil {
-			return
-		}
-		defer fd.Close()
-
-		for row := range csv.GetCSVReader(fd) {
-			flow_id_any, _ := row.Get("FlowId")
-			flow_id, ok := flow_id_any.(string)
-			if !ok {
-				continue
-			}
-			client_id_any, _ := row.Get("ClientId")
-			client_id, ok := client_id_any.(string)
-			if !ok {
-				continue
-			}
-
-			err := downloadFlowToZip(
-				r.Context(),
-				config_obj,
-				client_id,
-				flow_id,
-				zip_writer)
-			if err != nil {
-				logging.GetLogger(config_obj, &logging.FrontendComponent).
-					WithFields(logrus.Fields{
-						"hunt_id": hunt_id,
-						"error":   err.Error(),
-						"bt":      logging.GetStackTrace(err),
-					}).Info("DownloadHuntResults")
-				continue
-			}
-		}
-	})
-}
-
 type vfsFileDownloadRequest struct {
 	ClientId string `schema:"client_id"`
 	VfsPath  string `schema:"vfs_path,required"`
 	Offset   int64  `schema:"offset"`
 	Length   int    `schema:"length"`
 	Encoding string `schema:"encoding"`
-}
-
-func filestorePathForVFSPath(
-	config_obj *config_proto.Config,
-	client_id string,
-	vfs_path string) string {
-	vfs_path = path.Join("/", vfs_path)
-
-	// monitoring and artifacts vfs folders are in the client's
-	// space.
-	if strings.HasPrefix(vfs_path, "/monitoring/") ||
-		strings.HasPrefix(vfs_path, "/collections/") ||
-		strings.HasPrefix(vfs_path, "/artifacts/") {
-		return path.Join(
-			"clients", client_id, vfs_path)
-	}
-
-	// These VFS directories are mapped directly to the root of
-	// the filestore regardless of the client id.
-	if strings.HasPrefix(vfs_path, "/server_artifacts/") ||
-		strings.HasPrefix(vfs_path, "/hunts/") ||
-		strings.HasPrefix(vfs_path, "/clients/") {
-		return utils.Normalize_windows_path(vfs_path)
-	}
-
-	// Other folders live inside the client's vfs_files subdir.
-	return path.Join(
-		"clients", client_id,
-		"vfs_files", vfs_path)
-}
-
-func getFileForVFSPath(
-	config_obj *config_proto.Config,
-	client_id string,
-	vfs_path string) (
-	file_store.ReadSeekCloser, error) {
-	vfs_path = path.Clean(vfs_path)
-
-	filestore_path := filestorePathForVFSPath(config_obj, client_id, vfs_path)
-	return file_store.GetFileStore(config_obj).ReadFile(filestore_path)
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -604,8 +360,7 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		file, err := getFileForVFSPath(
-			config_obj, request.ClientId, request.VfsPath)
+		file, err := file_store.GetFileStore(config_obj).ReadFile(request.VfsPath)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -621,8 +376,7 @@ func vfsFileDownloadHandler(
 
 		// From here on we sent the headers and we can not
 		// really report an error to the client.
-		filename := strings.Replace(path.Dir(request.VfsPath),
-			"\"", "_", -1)
+		filename := strings.Replace(request.VfsPath, "\"", "_", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
 			url.PathEscape(filename))
 		w.Header().Set("Content-Type", "binary/octet-stream")
@@ -696,8 +450,7 @@ func vfsFolderDownloadHandler(
 		defer zip_writer.Close()
 
 		file_store_factory := file_store.GetFileStore(config_obj)
-		file_store_factory.Walk(filestorePathForVFSPath(
-			config_obj, request.ClientId, request.VfsPath),
+		file_store_factory.Walk(request.VfsPath,
 			func(path_name string, info os.FileInfo, err error) error {
 				if err != nil || info.IsDir() {
 					return nil
@@ -734,8 +487,7 @@ func vfsGetBuffer(
 	client_id string, vfs_path string, offset uint64, length uint32) (
 	*api_proto.VFSFileBuffer, error) {
 
-	file, err := getFileForVFSPath(
-		config_obj, client_id, vfs_path)
+	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
 	if err != nil {
 		return nil, err
 	}

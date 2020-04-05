@@ -24,6 +24,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/host"
 
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -57,12 +58,31 @@ func init() {
 				scope *vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
-				if info, err := host.Info(); err == nil {
-					item := getInfo(info).
-						Set("Fqdn", fqdn.Get()).
-						Set("Architecture", runtime.GOARCH)
-					result = append(result, item)
+
+				err := CheckAccess(scope, acls.MACHINE_STATE)
+				if err != nil {
+					scope.Log("info: %s", err)
+					return result
 				}
+
+				// It turns out that host.Info() is
+				// actually rather slow so we cache it
+				// in the scope cache.
+				info, ok := CacheGet(scope, "__info").(*host.InfoStat)
+				if !ok {
+					info, err = host.Info()
+					if err != nil {
+						scope.Log("info: %s", err)
+						return result
+					}
+					CacheSet(scope, "__info", info)
+				}
+
+				item := getInfo(info).
+					Set("Fqdn", fqdn.Get()).
+					Set("Architecture", runtime.GOARCH)
+				result = append(result, item)
+
 				return result
 			},
 			Doc: "Get information about the running host.",

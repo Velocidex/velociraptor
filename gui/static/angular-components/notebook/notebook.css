@@ -1,0 +1,43 @@
+.notebook-cell {
+    border-color: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 2px;
+    border-width: 3px;
+    border-style: solid;
+    width: 100%;
+    padding: 5px;
+    margin: 0px;
+    outline: none;
+    position: relative;
+    overflow: visible;
+}
+
+.notebook-cell.selected {
+    border-color: #ababab;
+}
+
+.notebook-input {
+    border-radius: 2px;
+    background: #f7f7f7;
+    line-height: 1.21429em;
+}
+
+.cell-toolbar.not_selected {
+    display: none;
+}
+
+.notebook-output.collapsed {
+    max-height: 24em;
+    width: 100%;
+    overflow: auto;
+    border-radius: 2px;
+    -webkit-box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    display: block;
+}
+
+div.dt-buttons {
+    margin-bottom: 6px;
+}

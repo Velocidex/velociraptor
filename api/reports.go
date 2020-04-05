@@ -12,15 +12,17 @@ import (
 )
 
 func getReport(ctx context.Context,
-	config_obj *config_proto.Config, in *api_proto.GetReportRequest) (
+	config_obj *config_proto.Config,
+	principal string,
+	in *api_proto.GetReportRequest) (
 	*api_proto.GetReportResponse, error) {
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
-		config_obj, ctx, in.Artifact)
+		config_obj, ctx, principal, in.Artifact)
 	if err != nil {
 		if strings.HasPrefix(in.Artifact, "Custom.") {
 			template_engine, err = reporting.NewGuiTemplateEngine(
-				config_obj, ctx,
+				config_obj, ctx, principal,
 				strings.TrimPrefix(in.Artifact, "Custom."))
 		}
 		if err != nil {

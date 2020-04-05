@@ -54,6 +54,12 @@ func (self _PrefetchPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
+				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+				if err != nil {
+					scope.Log("prefetch: %s", err)
+					return
+				}
+
 				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 				if err != nil {
 					scope.Log("prefetch: %v", err)

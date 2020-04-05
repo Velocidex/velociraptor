@@ -53,6 +53,12 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("parse_pe: %s", err)
+		return &vfilter.Null{}
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("parse_pe: %v", err)

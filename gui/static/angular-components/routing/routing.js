@@ -145,6 +145,11 @@ exports.routingModule
           }
         }
       })
+      .state('notebook', {
+        url: '/notebook',
+        template: '<grr-notebook />',
+        title: "Notebook",
+      })
       .state('client.events', {
         url: '/client_events',
         template: '<grr-client-events />',

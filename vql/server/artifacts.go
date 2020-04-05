@@ -23,9 +23,9 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
@@ -44,8 +44,15 @@ type ScheduleCollectionFunction struct{}
 func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
 	arg := &ScheduleCollectionFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}
@@ -60,6 +67,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	request := api.MakeCollectorRequest(arg.ClientId, "")
 	request.Artifacts = arg.Artifacts
+	request.Creator = vql_subsystem.GetPrincipal(scope)
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)
@@ -78,12 +86,10 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel)
 	response, err := client.CollectArtifact(ctx, request)
-
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}

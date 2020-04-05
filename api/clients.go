@@ -86,8 +86,7 @@ func GetApiClient(
 	}
 
 	err = db.GetSubject(
-		config_obj,
-		urns.BuildURN(client_urn, "ping"),
+		config_obj, urns.BuildURN("clients", client_id, "ping"),
 		client_info)
 	if err != nil {
 		return nil, err

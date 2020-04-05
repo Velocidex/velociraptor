@@ -1,0 +1,146 @@
+<div class='notebook-cell'
+     ng-class="{selected: selected}"
+     >
+  <div class='notebook-input'>
+    <div class="cell-toolbar"
+      ng-class="{selected: selected, not_selected: !selected}">
+      <div class="btn-group" role="group">
+        <button class="btn btn-default"
+                title="Cancel"
+                ng-if="!controller.currently_editing"
+                ng-click="controller.removeFocus($event)">
+          <i class="fa fa-window-close"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Expand"
+                ng-if="!controller.currently_editing && !controller.collapsed"
+                ng-click="controller.collapsed = true">
+          <i class="fa fa-compress"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Collapse"
+                ng-if="!controller.currently_editing && controller.collapsed"
+                ng-click="controller.collapsed = false">
+          <i class="fa fa-expand"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Edit Cell"
+                ng-if="!controller.currently_editing"
+                ng-disabled="!controller.uiTraits.Permissions.notebook_editor"
+                ng-click="controller.setEditing($event,true)">
+          <i class="fa fa-pencil"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Up Cell"
+                ng-if="!controller.currently_editing"
+                ng-disabled="cellId == state.notebook.cell_metadata[0].cell_id ||
+                             !controller.uiTraits.Permissions.notebook_editor"
+                ng-click="controller.upCell($event)">
+          <i class="fa fa-arrow-up"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Down Cell"
+                ng-disabled="cellId == state.notebook.cell_metadata[state.notebook.cell_metadata.length-1].cell_id ||
+                             !controller.uiTraits.Permissions.notebook_editor"
+                ng-if="!controller.currently_editing"
+                ng-click="controller.downCell($event)">
+          <i class="fa fa-arrow-down"></i>
+        </button>
+
+        <button class="btn btn-default dropdown-toggle dropdown-toggle-split"
+                data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false"
+                title="Add Cell"
+                ng-disabled="!controller.uiTraits.Permissions.notebook_editor"
+                ng-if="!controller.currently_editing"
+
+                >
+          <i class="fa fa-plus"></i>
+        </button>
+
+        <div class="dropdown-menu">
+          <a class="dropdown-item" href="#"
+             ng-click="controller.addCell($event, 'Markdown')"
+             >Markdown</a>
+          <a class="dropdown-item" href="#"
+             ng-click="controller.addCell($event, 'VQL')"
+             >VQL</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#"
+             ng-click="controller.addCellFromHunt($event)"
+             >Add Cell From Hunt</a>
+        </div>
+
+        <button class="btn btn-default"
+                title="Undo"
+                ng-if="controller.currently_editing"
+                ng-click="controller.setEditing($event, false)">
+          <i class="fa fa-window-close"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Save"
+                ng-if="controller.currently_editing"
+                ng-click="controller.saveCell($event)">
+          <i class="fa fa-floppy-o"></i>
+        </button>
+      </div>
+
+      <div class="btn-group float-right" role="group">
+        <button class="btn btn-default"
+                title="Delete Cell"
+                ng-if="!controller.currently_editing"
+                ng-click="controller.deleteCell($event,true)">
+          <i class="fa fa-trash-o"></i>
+        </button>
+
+        <select class="btn btn-default"
+                ng-model="controller.cell.type"
+                ng-if="controller.currently_editing"
+                >
+          <option label="Markdown" value="Markdown"></option>
+          <option label="VQL" value="VQL"></option>
+        </select>
+      </div>
+    </div>
+    <div ng-if="controller.currently_editing">
+      <form>
+        <div ui-ace="{
+                     useWrapMode : true,
+                     showGutter: true,
+                     theme:'twilight',
+                     mode: controller.ace_type(),
+                     enableBasicAutocompletion: true,
+                     enableSnippets: true,
+                     enableLiveAutocompletion: true,
+                     onLoad: aceConfig,
+                     rendererOptions: {
+                     fontSize: '14px',
+                     fontFamily: 'monospace',
+                     },
+                     }"
+             ng-model="controller.cell.input"
+             style="height: 20em; width: 100%"
+             ng-click="controller.noop($event)"
+             ng-paste="controller.pasteEvent($event)"
+             ></div>
+      </form>
+    </div>
+  </div>
+  <div class='notebook-output'
+       ng-class="{collapsed: controller.collapsed}"
+       >
+    <grr-notebook-report-renderer cell="controller.cell" />
+    <div ng-repeat="msg in controller.cell.messages track by $index"
+         ng-if="selected"
+         class="error-message"
+         >
+      <div>{{ msg }}</div>
+    </div>
+  </div>
+</div>

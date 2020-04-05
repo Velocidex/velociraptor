@@ -39,30 +39,27 @@ parameters:
       }
 
 sources:
-  - queries:
-      - |
+  - query: |
         LET office_docs = SELECT FullPath AS OfficePath,
              timestamp(epoch=Mtime.Sec) as OfficeMtime,
              Size as OfficeSize
-          FROM glob(globs=searchGlob + documentGlobs)
+        FROM glob(globs=searchGlob + documentGlobs)
 
-      # A list of zip members inside the doc that have some content.
-      - |
+        // A list of zip members inside the doc that have some content.
         LET document_parts = SELECT OfficePath,
              FullPath AS ZipMemberPath
-          FROM glob(globs=url(
+        FROM glob(globs=url(
              scheme="file", path=OfficePath, fragment="/**").String,
              accessor='zip')
-          WHERE not IsDir and Size > 0
+        WHERE not IsDir and Size > 0
 
-      # For each document, scan all its parts for the keyword.
-      - |
+        // For each document, scan all its parts for the keyword.
         SELECT OfficePath,
                OfficeMtime,
                OfficeSize,
                File.ModTime as InternalMtime,
                String.HexData as HexContext
-         FROM foreach(
+        FROM foreach(
            row=office_docs,
            query={
               SELECT File, String, OfficePath,
@@ -72,4 +69,4 @@ sources:
                  files=document_parts.ZipMemberPath,
                  context=200,
                  accessor='zip')
-         })
+        })

@@ -21,29 +21,18 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
-	"os/signal"
-	"strconv"
-	"sync"
+	"path"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	prompt "github.com/c-bata/go-prompt"
-	"github.com/google/shlex"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/flows"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -51,158 +40,88 @@ var (
 	shell        = app.Command("shell", "Run an interactive shell on a client")
 	shell_client = shell.Arg("client_id", "The client id to run the shell for.").
 			Required().String()
-)
 
-const (
-	_                          = iota
-	processVQLResponses uint64 = iota
+	shell_artifact = shell.Flag("type", "The type of shell to run (cmd, powershell, bash)").
+			Default("cmd").Enum("cmd", "powershell", "bash")
+
+	shell_alt_artifact = shell.Flag("artifact", "An alternative artifact to run").String()
 )
 
 func shell_executor(config_obj *config_proto.Config,
 	ctx context.Context,
+	client_id string,
 	t string) {
 
 	if t == "" {
 		return
 	}
 
-	argv, err := shlex.Split(t)
+	artifact_name := "Windows.System.CmdShell"
+	switch *shell_artifact {
+	case "bash":
+		artifact_name = "Linux.Sys.BashShell"
+	case "cmd":
+		artifact_name = "Windows.System.CmdShell"
+	case "powershell":
+		artifact_name = "Windows.System.PowerShell"
+	}
+
+	if *shell_alt_artifact != "" {
+		artifact_name = *shell_alt_artifact
+	}
+
+	fmt.Printf("Running %v on %v\n", t, client_id)
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
+
+	response, err := client.CollectArtifact(ctx,
+		api.MakeCollectorRequest(client_id, artifact_name, "Command", t))
 	if err != nil {
-		// Not a fatal error - the user can retry.
-		fmt.Printf("Parsing command line: %v\n", err)
+		fmt.Printf("ERROR: %v\n", err)
 		return
 	}
 
-	fmt.Printf("Running %v on %v\n", t, *shell_client)
+	// Wait here until the flow is completed.
+	flow_id := response.FlowId
+	for {
+		response, err := client.GetFlowDetails(ctx, &api_proto.ApiFlowRequest{
+			ClientId: client_id, FlowId: flow_id})
+		if err != nil {
+			fmt.Printf("ERROR: %v\n", err)
+			return
+		}
 
-	// Query environment is a string and we need to send an array
-	// - we json marshal it and unpack it in VQL.
-	encoded_argv, err := json.Marshal(&map[string]interface{}{"Argv": argv})
-	kingpin.FatalIfError(err, "Argv ")
+		if response.Context.State == flows_proto.ArtifactCollectorContext_ERROR {
+			fmt.Printf("ERROR: %v\n", response.Context.Status)
+			return
+		}
 
-	vql_request := &actions_proto.VQLCollectorArgs{
-		Env: []*actions_proto.VQLEnv{
-			&actions_proto.VQLEnv{
-				Key:   "Argv",
-				Value: string(encoded_argv),
-			},
-		},
-		Query: []*actions_proto.VQLRequest{
-			&actions_proto.VQLRequest{
-				Name: "Server.Internal.Shell",
-				VQL: "SELECT now() as Timestamp, Argv, Stdout, " +
-					"Stderr, ReturnCode FROM execve(" +
-					"argv=parse_json(data=Argv).Argv)",
-			},
-		},
-	}
-
-	wg := &sync.WaitGroup{}
-
-	// There is a race condition here - it takes a short time for
-	// watch_monitoring to get set up and the client may return
-	// results before then.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		// Wait until the response arrives. The client may not be
-		// online so this may block indefinitely!
-		// TODO: Implement a timeout for shell commands.
-		get_responses(ctx, config_obj, *shell_client)
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		// Obfuscate the artifact from the client. It will be
-		// automatically deobfuscated when the client replies to the
-		// monitoring flow.
-		artifacts.Obfuscate(config_obj, vql_request)
-
-		err = flows.QueueMessageForClient(
-			config_obj, *shell_client,
-			&crypto_proto.GrrMessage{
-				SessionId:       constants.MONITORING_WELL_KNOWN_FLOW,
-				RequestId:       processVQLResponses,
-				VQLClientAction: vql_request})
-		kingpin.FatalIfError(err, "Sending client message ")
-
-		api_client_factory := grpc_client.GRPCAPIClient{}
-		client, cancel := api_client_factory.GetAPIClient(config_obj)
-		defer cancel()
-
-		_, err = client.NotifyClients(context.Background(),
-			&api_proto.NotificationRequest{ClientId: *shell_client})
-		kingpin.FatalIfError(err, "Sending client message ")
-	}()
-
-	wg.Wait()
-}
-
-// Create a monitoring event query to receive shell responses and
-// write them in the terminal.
-func get_responses(ctx context.Context,
-	config_obj *config_proto.Config, client_id string) {
-
-	sub_ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-
-	go func() {
-		for {
-			select {
-			case <-sub_ctx.Done():
-				return
-
-			case <-c:
-				fmt.Println("Cancelled!")
-				cancel()
+		if response.Context.State == flows_proto.ArtifactCollectorContext_TERMINATED {
+			request := &api_proto.GetTableRequest{
+				ClientId: client_id,
+				Path: path.Join(
+					"/clients", client_id, "artifacts",
+					artifact_name, flow_id+".csv"),
 			}
-		}
-	}()
+			response, err := client.GetTable(ctx, request)
+			if err != nil {
+				fmt.Printf("ERROR: %v\n", err)
+				return
+			}
 
-	env := ordereddict.NewDict().
-		Set("server_config", config_obj).
-		Set("ClientId", client_id)
+			for _, row := range response.Rows {
+				fmt.Println(row.Cell[0])
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
-	defer scope.Close()
-
-	vql, err := vfilter.Parse(`SELECT ReturnCode, Stdout, Stderr, Timestamp,
-           Argv FROM watch_monitoring(client_id=ClientId, artifact='Server.Internal.Shell')`)
-	if err != nil {
-		kingpin.FatalIfError(err, "Unable to parse VQL Query")
-	}
-
-	print_value := func(row vfilter.Row, field string) {
-		value, ok := scope.Associative(row, field)
-		if ok {
-			fmt.Printf("%v\n", value)
-		}
-	}
-
-	for row := range vql.Eval(sub_ctx, scope) {
-		return_code, _ := scope.Associative(row, "ReturnCode")
-		ts_any, ok := scope.Associative(row, "Timestamp")
-		if ok {
-			ts_str, ok := ts_any.(string)
-			if ok {
-				ts, err := strconv.Atoi(ts_str)
-				if err == nil {
-					fmt.Printf("Received response at %v - "+
-						"Return code %v\n",
-						time.Unix(int64(ts), 0), return_code)
+				stderr := row.Cell[1]
+				if stderr != "" {
+					fmt.Println("STDERR: ")
+					fmt.Println(stderr)
 				}
 			}
+			return
 		}
 
-		print_value(row, "Stderr")
-		print_value(row, "Stdout")
-
-		break
+		time.Sleep(1)
 	}
 }
 
@@ -211,29 +130,24 @@ func completer(t prompt.Document) []prompt.Suggest {
 }
 
 func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
-	client := api_proto.NewAPIClient(channel)
-	return client.GetClient(context.Background(), &api_proto.GetClientRequest{
+	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,
 	})
 }
 
 func doShell() {
-	config_obj, err := config.LoadConfig(*config_path)
-	if err != nil {
-		config_obj = config.GetDefaultConfig()
+	config_obj := get_config_or_default()
+
+	if config_obj.ApiConfig == nil ||
+		config_obj.ApiConfig.Name == "" {
+		kingpin.Fatalf("Shell requires a valid api config. Generate one with `velociraptor config api_config my_config.yaml --name myName --role administrator`")
 	}
 
-	// Preload the repository before we start querying it. Loading
-	// the repository later will result in a race condition.
-	_, err = artifacts.GetGlobalRepository(config_obj)
-	kingpin.FatalIfError(err, "Unable load global repository")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+	scope := vql_subsystem.MakeScope()
+	ctx := InstallSignalHandler(scope)
 	client_info, err := getClientInfo(config_obj, ctx)
 	kingpin.FatalIfError(err, "Unable to contact server ")
 
@@ -243,10 +157,12 @@ func doShell() {
 
 	p := prompt.New(
 		func(t string) {
-			shell_executor(config_obj, ctx, t)
+			shell_executor(
+				config_obj, ctx, *shell_client, t)
 		},
 		completer,
-		prompt.OptionPrefix(fmt.Sprintf("%v (%v) >", *shell_client, client_info.OsInfo.Fqdn)),
+		prompt.OptionPrefix(fmt.Sprintf("%v (%v) >",
+			*shell_client, client_info.OsInfo.Fqdn)),
 	)
 	p.Run()
 }

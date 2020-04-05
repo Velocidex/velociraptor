@@ -63,6 +63,12 @@ func (self *CopyFunction) Call(ctx context.Context,
 	scope.Log("copy: Copying file from %v into %v", arg.Filename,
 		arg.Destination)
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("copy: %s", err.Error())
+		return vfilter.Null{}
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("copy: %v", err)

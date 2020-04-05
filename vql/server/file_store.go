@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -41,7 +42,14 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &DeleteFileStoreArgs{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+
+	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	if err != nil {
+		scope.Log("flows: %s", err)
+		return vfilter.Null{}
+	}
+
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("file_store_delete: %s", err.Error())
 		return vfilter.Null{}

@@ -20,7 +20,6 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"path"
 	"reflect"
 	"strings"
 
@@ -43,16 +42,18 @@ func IsNil(a interface{}) bool {
 	return a == nil || reflect.ValueOf(a).IsNil()
 }
 
-// Massage a windows path into a standard form:
-// \ are replaced with /
-// Drive letters are preceeded with /
-// Example: c:\windows ->  /c:/windows
-func Normalize_windows_path(filename string) string {
-	filename = path.Clean(strings.Replace(filename, "\\", "/", -1))
-	if !strings.HasPrefix(filename, "/") {
-		filename = "/" + filename
+func StringSliceEq(a []string, b []string) bool {
+	if len(a) != len(b) {
+		return false
 	}
-	return filename
+
+	for i := 0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func hard_wrap(text string, colBreak int) string {

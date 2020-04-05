@@ -10,7 +10,7 @@ import (
 
 type ForPluginArgs struct {
 	Var     string              `vfilter:"required,field=var,doc=The variable to assign."`
-	Foreach vfilter.Any         `vfilter:"required,field=foreach,doc=The variable to iterate over."`
+	Foreach vfilter.LazyExpr    `vfilter:"required,field=foreach,doc=The variable to iterate over."`
 	Query   vfilter.StoredQuery `vfilter:"optional,field=query,doc=Run this query over the item."`
 }
 
@@ -32,19 +32,8 @@ func (self ForPlugin) Call(
 			return
 		}
 
-		// Expand lazy expressions.
-		lazy_v, ok := arg.Foreach.(vfilter.LazyExpr)
-		if ok {
-			arg.Foreach = lazy_v.Reduce()
-		}
-
 		// Force the in parameter to be a query.
-		stored_query, ok := arg.Foreach.(vfilter.StoredQuery)
-		if !ok {
-			wrapper := vfilter.StoredQueryWrapper{arg.Foreach}
-			stored_query = &wrapper
-		}
-
+		stored_query := arg.Foreach.ToStoredQuery(scope)
 		for item := range stored_query.Eval(ctx, scope) {
 			// Evaluate the query on the new value
 			new_scope := scope.Copy()

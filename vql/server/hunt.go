@@ -23,6 +23,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -44,8 +45,15 @@ type ScheduleHuntFunction struct{}
 func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	if err != nil {
+		scope.Log("flows: %s", err)
+		return vfilter.Null{}
+	}
+
 	arg := &ScheduleHuntFunctionArg{}
-	err := vfilter.ExtractArgs(scope, args, arg)
+	err = vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}
@@ -59,6 +67,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   vql_subsystem.GetPrincipal(scope),
 		Artifacts: arg.Artifacts,
 	}
 
@@ -84,12 +93,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		State:           api_proto.Hunt_RUNNING,
 	}
 
-	channel := grpc_client.GetChannel(config_obj)
-	defer channel.Close()
-
-	client := api_proto.NewAPIClient(channel)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	defer closer()
 
 	response, err := client.CreateHunt(ctx, hunt_request)
 	if err != nil {

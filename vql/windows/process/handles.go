@@ -16,6 +16,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	gowin "golang.org/x/sys/windows"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -68,6 +69,13 @@ func (self HandlesPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("handles: %s", err)
+			return
+		}
+
 		runtime.LockOSThread()
 
 		// Deliberately do not unlock this thread - this will
@@ -77,7 +85,7 @@ func (self HandlesPlugin) Call(
 		defer vql_subsystem.CheckForPanic(scope, "handles")
 
 		arg := &HandlesPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("handles: %s", err.Error())
 			return

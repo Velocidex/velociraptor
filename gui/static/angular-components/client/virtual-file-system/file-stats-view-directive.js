@@ -4,6 +4,7 @@ goog.module('grrUi.client.virtualFileSystem.fileStatsViewDirective');
 
 const {REFRESH_FILE_EVENT, REFRESH_FOLDER_EVENT} = goog.require('grrUi.client.virtualFileSystem.events');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
+const {SplitPathComponents, Join} = goog.require('grrUi.core.utils');
 
 
 var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
@@ -33,30 +34,41 @@ const FileStatsViewController = function(
 
     this.scope_.$on('$destroy',
                     this.stopMonitorUpdateOperation_.bind(this));
+
+    this.uiTraits = {};
+    this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
+        this.uiTraits = response.data['interface_traits'];
+    }.bind(this), function(error) {
+        if (error['status'] == 403) {
+            this.error = 'Authentication Error';
+        } else {
+            this.error = error['statusText'] || ('Error');
+        }
+    }.bind(this));
+
 };
 
 
 /**
- * Updates the current file.
+ * getAccessorAndPath converts a Velociraptor VFS path into a path
+ * suitable to use on the client.
  *
  * @export
  */
 FileStatsViewController.prototype.getAccessorAndPath = function(path) {
-    var components = path.split('/').filter(function (x) {return x.length > 0;});
+    var components = SplitPathComponents(path);
     var accessor = 'file';
     if (components.length > 0) {
         accessor = components[0];
-        path = components.slice(1).join('/');
+        path = components.slice(1).join("\\");
     }
 
-    // Some windows paths start with device name e.g. \\.\C: so we do
-    // not want to prepend a / to these.
-    if (path.substring(0,2) != '\\\\') {
-        path = '/' + path;
+    if (accessor == 'ntfs' && components.length > 1) {
+        path = components[1] + "\\" + components.slice(2).join("\\");
     }
 
     return {accessor: accessor, path: path};
-}
+};
 
 FileStatsViewController.prototype.updateFile = function() {
   if (this.updateInProgress) {

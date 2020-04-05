@@ -1,0 +1,18 @@
+<div grr-splitter orientation="horizontal"
+     closeable-to="0"
+     class="rightSplitterContainer">
+  <div grr-splitter-pane id="content_rightPane" class="rightTopPane">
+    <grr-notebook-list
+      state="controller.state"
+      selected-notebook-id="controller.selectedNotebookId"/>
+  </div>
+
+  <div grr-splitter-pane
+       id="main_bottomPane"
+       class="rightBottomPane">
+    <grr-notebook-renderer
+      state="controller.state"
+      timestamp="controller.state.notebook.modified_timestamp"
+      notebook-id="controller.selectedNotebookId"/>
+  </div>
+</div>

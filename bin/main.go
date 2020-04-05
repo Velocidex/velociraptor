@@ -18,15 +18,17 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"strings"
 
+	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -49,6 +51,8 @@ var (
 
 	api_config_path = app.Flag("api_config", "The API configuration file.").Short('a').
 			Envar("VELOCIRAPTOR_API_CONFIG").String()
+
+	run_as = app.Flag("runas", "Run as this username's ACLs").String()
 
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
@@ -82,7 +86,7 @@ func validateServerConfig(configuration *config_proto.Config) error {
 
 	// On windows we require file locations to include a drive
 	// letter.
-	if runtime.GOOS == "windows" {
+	if configuration.ServerType == "windows" {
 		path_regex := regexp.MustCompile("^[a-zA-Z]:")
 		path_check := func(parameter, value string) error {
 			if !path_regex.MatchString(value) {
@@ -134,6 +138,33 @@ func maybe_parse_api_config(config_obj *config_proto.Config) {
 		kingpin.FatalIfError(err, "Unable to read api config.")
 		err = yaml.Unmarshal(data, &config_obj.ApiConfig)
 		kingpin.FatalIfError(err, "Unable to decode config.")
+
+		// If the key is locked ask for a password.
+		private_key := []byte(config_obj.ApiConfig.ClientPrivateKey)
+		block, _ := pem.Decode(private_key)
+		if block == nil {
+			kingpin.Fatalf("Unable to decode private key.")
+		}
+
+		if x509.IsEncryptedPEMBlock(block) {
+			password := ""
+			err := survey.AskOne(
+				&survey.Password{Message: "Password:"},
+				&password,
+				survey.WithValidator(survey.Required))
+			kingpin.FatalIfError(err, "Password.")
+
+			decrypted_block, err := x509.DecryptPEMBlock(
+				block, []byte(password))
+			kingpin.FatalIfError(err, "Password.")
+
+			config_obj.ApiConfig.ClientPrivateKey = string(
+				pem.EncodeToMemory(&pem.Block{
+					Bytes: decrypted_block,
+					Type:  block.Type,
+				}))
+		}
+
 	}
 }
 
@@ -149,7 +180,7 @@ func get_config_or_default() *config_proto.Config {
 
 func init() {
 	// Just display everything in UTC.
-	os.Setenv("TZ", "Z")
+	os.Setenv("TZ", "UTC")
 }
 
 func main() {

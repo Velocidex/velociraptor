@@ -73,7 +73,9 @@ type Executor interface {
 	// These two are called by the comms module.
 
 	// Feed a server request to the executor for execution.
-	ProcessRequest(message *crypto_proto.GrrMessage)
+	ProcessRequest(
+		ctx context.Context,
+		message *crypto_proto.GrrMessage)
 
 	// Read a single response from the executor to be sent to the server.
 	ReadResponse() <-chan *crypto_proto.GrrMessage
@@ -172,7 +174,9 @@ func (self *ClientExecutor) SendToServer(message *crypto_proto.GrrMessage) {
 	self.Outbound <- message
 }
 
-func (self *ClientExecutor) ProcessRequest(message *crypto_proto.GrrMessage) {
+func (self *ClientExecutor) ProcessRequest(
+	ctx context.Context,
+	message *crypto_proto.GrrMessage) {
 	self.Inbound <- message
 }
 

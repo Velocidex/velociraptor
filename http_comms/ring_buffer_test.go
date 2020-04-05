@@ -29,7 +29,9 @@ func getTempFile(t *testing.T) string {
 
 func createRB(t *testing.T, filename string) *FileBasedRingBuffer {
 	config_obj := config.GetDefaultConfig()
-	config_obj.Client.LocalBuffer.Filename = filename
+	config_obj.Client.LocalBuffer.FilenameLinux = filename
+	config_obj.Client.LocalBuffer.FilenameWindows = filename
+	config_obj.Client.LocalBuffer.FilenameDarwin = filename
 
 	null_logger, new_hook := test.NewNullLogger()
 	logger := &logging.LogContext{null_logger}

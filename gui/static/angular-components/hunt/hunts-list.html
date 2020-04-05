@@ -2,6 +2,7 @@
   <ul class="breadcrumb">
     <li>
       <button class="btn btn-default" name="NewHunt"
+              ng-disabled="!controller.uiTraits.Permissions.collect_client"
               title="New Hunt" ng-click="controller.newHunt()">
         <i class="fa fa-plus"></i>
       </button>
@@ -9,22 +10,26 @@
       <div class="btn-group">
         <button class="btn btn-default" name="RunHunt"
                 title="Run Hunt"
-                ng-disabled="controller.selectedHunt.state != 'PAUSED' &&
-                             controller.selectedHunt.state != 'STOPPED'"
+                ng-disabled="(controller.selectedHunt.state != 'PAUSED' &&
+                             controller.selectedHunt.state != 'STOPPED') ||
+                             !controller.uiTraits.Permissions.collect_client"
                 ng-click="controller.runHunt()">
           <i class="fa fa-play"></i>
         </button>
 
         <button class="btn btn-default" name="StopHunt"
                 title="Stop Hunt"
-                ng-disabled="controller.selectedHunt.state != 'RUNNING'"
+                ng-disabled="controller.selectedHunt.state != 'RUNNING' ||
+                             !controller.uiTraits.Permissions.collect_client"
                 ng-click="controller.stopHunt()">
           <i class="fa fa-stop"></i>
         </button>
 
         <button class="btn btn-default" name="ArchiveHunt"
                 title="Delete Hunt"
-                ng-disabled="!controller.selectedHunt || controller.selectedHunt.state == 'RUNNING'"
+                ng-disabled="(!controller.selectedHunt ||
+                              controller.selectedHunt.state == 'RUNNING') ||
+                              !controller.uiTraits.Permissions.collect_client"
                 ng-click="controller.deleteHunt()">
           <i class="fa fa-trash"></i>
         </button>

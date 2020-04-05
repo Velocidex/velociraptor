@@ -87,7 +87,9 @@ func (self *TestSuite) TestEncDecServerToClient() {
 	assert.NoError(t, err)
 
 	cipher_text, err := self.server_manager.Encrypt(
-		[][]byte{serialized}, self.client_id)
+		[][]byte{serialized},
+		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		self.client_id)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
@@ -99,7 +101,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 			t.Fatal(err)
 		}
 		message_info.IterateJobs(context.Background(),
-			func(item *crypto_proto.GrrMessage) {
+			func(ctx context.Context, item *crypto_proto.GrrMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
 				assert.Equal(t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
 			})
@@ -122,7 +124,9 @@ func (self *TestSuite) TestEncDecClientToServer() {
 
 	config_obj := config.GetDefaultConfig()
 	cipher_text, err := self.client_manager.EncryptMessageList(
-		message_list, config_obj.Client.PinnedServerName)
+		message_list,
+		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		config_obj.Client.PinnedServerName)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
@@ -135,7 +139,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 		}
 
 		message_info.IterateJobs(context.Background(),
-			func(item *crypto_proto.GrrMessage) {
+			func(ctx context.Context, item *crypto_proto.GrrMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
 				assert.Equal(
 					t, item.AuthState, crypto_proto.GrrMessage_AUTHENTICATED)
@@ -157,6 +161,7 @@ func (self *TestSuite) TestEncryption() {
 	for i := 0; i < 100; i++ {
 		cipher_text, err := self.client_manager.Encrypt(
 			[][]byte{Compress(plain_text)},
+			crypto_proto.PackedMessageList_ZCOMPRESSION,
 			config_obj.Client.PinnedServerName)
 		assert.NoError(t, err)
 

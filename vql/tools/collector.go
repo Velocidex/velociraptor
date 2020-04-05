@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -31,8 +32,16 @@ func (self CollectPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		// ACLs will be carried through to the collected
+		// artifacts from this plugin.
+		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+		if err != nil {
+			scope.Log("collect: %s", err)
+			return
+		}
+
 		arg := &CollectPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return

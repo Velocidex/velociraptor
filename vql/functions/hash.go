@@ -66,9 +66,15 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	buf := make([]byte, 4*1024*1024) // 4Mb chunks
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("hash: %s", err)
+		return vfilter.Null{}
+	}
+
 	fs, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
-		scope.Log("yara: %v", err)
+		scope.Log("hash: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -94,7 +100,7 @@ func (self *HashFunction) Call(ctx context.Context,
 			n, err := file.Read(buf)
 
 			// We are done!
-			if err == io.EOF {
+			if n == 0 || err == io.EOF {
 				if n == 0 {
 					result.MD5 = fmt.Sprintf(
 						"%x", result.md5.Sum(nil))

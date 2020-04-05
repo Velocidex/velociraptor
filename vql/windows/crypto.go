@@ -36,6 +36,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/mattn/go-pointer"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -149,6 +150,12 @@ func (self *CertContext) HexSerialNumber() string {
 func runCertificates(scope *vfilter.Scope,
 	args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("certificates: %s", err)
+		return result
+	}
 
 	// The context is passed to the cert walker.
 	ctx := &certContext{}

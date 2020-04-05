@@ -47,7 +47,7 @@ var (
 	artifact_command_show = artifact_command.Command(
 		"show", "Show an artifact")
 
-	artifact_command_show_name = artifact_command_list.Arg(
+	artifact_command_show_name = artifact_command_show.Arg(
 		"name", "Name to show.").
 		HintAction(listArtifacts).String()
 
@@ -103,9 +103,16 @@ func collectArtifact(
 	repository *artifacts.Repository,
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
+
+	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
+	if *run_as != "" {
+		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
+
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	for _, request_env := range request.Env {
@@ -176,9 +183,15 @@ func collectArtifactToContainer(
 	container *reporting.Container,
 	format string,
 	request *actions_proto.VQLCollectorArgs) {
+	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
+	if *run_as != "" {
+		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
+
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	// Any uploads go into the container.

@@ -61,6 +61,7 @@
             <dt>Download Results</dt>
             <dd>
               <button class="btn btn-default"
+                      ng-disabled="!controller.uiTraits.Permissions.prepare_results"
                       ng-click="controller.prepareDownload()">
                 Prepare Download
               </button>

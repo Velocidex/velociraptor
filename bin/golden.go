@@ -88,6 +88,9 @@ func runTest(fixture *testFixture) (string, error) {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
+		// Run tests as administrator - disable ACLs.
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	// Create an output container.

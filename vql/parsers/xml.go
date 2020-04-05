@@ -44,6 +44,12 @@ func (self _ParseXMLFunction) Call(
 		return vfilter.Null{}
 	}
 
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("parse_xml: %s", err)
+		return vfilter.Null{}
+	}
+
 	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 	if err != nil {
 		scope.Log("parse_xml: %v", err)

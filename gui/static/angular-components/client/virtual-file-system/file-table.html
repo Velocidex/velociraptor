@@ -3,11 +3,12 @@
     <div class="navbar-form pull-left">
       <div class="btn-group" role="group">
         <button id="refresh-dir"
-             type="button"
-             ng-if="controller.mode == 'vfs_files'"
-             class="btn btn-default btn-rounded"
-             title="Refresh this directory (sync its listing with the client)"
-             ng-class="{'disabled': controller.lastRefreshOperationId }"
+                type="button"
+                ng-if="controller.mode == 'vfs_files'"
+                class="btn btn-default btn-rounded"
+                title="Refresh this directory (sync its listing with the client)"
+                ng-disabled="!controller.uiTraits.Permissions.collect_client ||
+                             controller.lastRefreshOperationId"
                 ng-click="controller.startVfsRefreshOperation()">
           <i class="fa fa-folder-open"></i>
         </button>

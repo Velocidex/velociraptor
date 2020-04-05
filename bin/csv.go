@@ -20,6 +20,8 @@ var (
 
 func doCSV() {
 	env := ordereddict.NewDict().
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("Files", *csv_cmd_files)
 
 	scope := vql_subsystem.MakeScope().AppendVars(env)

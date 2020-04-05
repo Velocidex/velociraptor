@@ -20,6 +20,7 @@ package linux
 import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/net"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -32,6 +33,13 @@ func init() {
 				scope *vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
+
+				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+				if err != nil {
+					scope.Log("connections: %s", err)
+					return result
+				}
+
 				if cons, err := net.Connections("all"); err == nil {
 					for _, item := range cons {
 						result = append(result, item)

@@ -25,12 +25,16 @@ func (self *NullCryptoManager) EncryptMessageList(
 	}
 
 	cipher_text, err := self.Encrypt(
-		[][]byte{Compress(plain_text)}, destination)
+		[][]byte{Compress(plain_text)},
+		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		destination)
 	return cipher_text, err
 }
 
 func (self *NullCryptoManager) Encrypt(
-	compressed_message_lists [][]byte, destination string) (
+	compressed_message_lists [][]byte,
+	compression crypto_proto.PackedMessageList_CompressionType,
+	destination string) (
 	[]byte, error) {
 	packed_message_list := &crypto_proto.PackedMessageList{
 		MessageList: compressed_message_lists,

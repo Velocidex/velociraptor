@@ -1,4 +1,4 @@
-<div class="pull-left">
+<div class="float-left">
   <img src="/static/images/velo.svg" class="velo-logo"/>
   <span class="hamburger toolbar-buttons"
         ng-click="controller.CollapseToggle()">&#9776;</span>
@@ -10,37 +10,56 @@
       <!-- Management links -->
       <section>
         <ul class="nav nav-pills">
-          <li grr-nav-link state="userDashboard">
+          <li grr-nav-link state="userDashboard"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
             <i class="fa fa-home navicon"></i>
             Home
           </li>
         </ul>
 
         <ul class="nav nav-pills">
-          <li grr-nav-link state="hunts" >
+          <li grr-nav-link state="hunts"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
             <i class="fa fa-crosshairs navicon"></i>
             Hunt Manager
           </li>
         </ul>
 
         <ul class="nav nav-pills">
-          <li grr-nav-link state="view_artifacts">
+          <li grr-nav-link state="view_artifacts"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
             <i class="fa fa-wrench navicon"></i>
             View Artifacts
           </li>
         </ul>
 
         <ul class="nav nav-pills">
-          <li grr-nav-link state="server_events">
+          <li grr-nav-link state="server_events"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
             <i class="fa fa-eye navicon"></i>
             Server Events
           </li>
         </ul>
 
         <ul class="nav nav-pills">
-          <li grr-nav-link state="server_artifacts">
+          <li grr-nav-link state="server_artifacts"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
             <i class="fa fa-server navicon"></i>
             Server Artifacts
+          </li>
+        </ul>
+
+        <ul class="nav nav-pills">
+          <li grr-nav-link state="notebook"
+              ng-if="controller.uiTraits.Permissions.read_results"
+              >
+            <i class="fa fa-book navicon"></i>
+            Notebooks
           </li>
         </ul>
 
@@ -59,22 +78,26 @@
         <!-- Client links -->
         <ul class="nav nav-pills">
           <li grr-nav-link state="client.hostInfo"
+              ng-if="controller.uiTraits.Permissions.read_results"
               params="{clientId: controller.clientId}">
             <i class="fa fa-laptop navicon"></i>
             Host Information
           </li>
           <li grr-nav-link state="client.vfs"
+              ng-if="controller.uiTraits.Permissions.read_results"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-folder-open navicon"></i>
             Virtual Filesystem
           </li>
           <li grr-nav-link state="client.flows"
+              ng-if="controller.uiTraits.Permissions.read_results"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-history navicon"></i>
             Collected Artifacts
           </li>
 
           <li grr-nav-link state="client.events"
+              ng-if="controller.uiTraits.Permissions.read_results"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-binoculars navicon"></i>
             Client Events

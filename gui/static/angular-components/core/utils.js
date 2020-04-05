@@ -109,3 +109,82 @@ exports.debug = function(name,  item) {
     console.log(angular.copy(item));
   }
 };
+
+exports.PathJoin = function(path, component) {
+    return path + '/"' + component.replace(/"/g, '""') + '"';
+};
+
+exports.ConsumeComponent = function(path) {
+    if (path.length == 0) {
+        return {next_path: "", component: ""};
+    }
+
+    if (path[0] == '/' || path[0] == '\\') {
+        return {next_path: path.substr(1, path.length), component: ""};
+    }
+
+    if (path[0] == '"') {
+        var result = "";
+        for (var i=1; i<path.length; i++) {
+            if (path[i] == '"') {
+                if (i >= path.length-1) {
+                    return {next_path: "", component: result};
+                }
+
+                var next_char = path[i+1];
+                if (next_char == '"') { // Double quoted quote
+                    result += next_char;
+                    i += 1;
+
+                } else if(next_char == '/' || next_char == '\\') {
+                    return {next_path: path.substr(i+1, path.length),
+                            component: result};
+
+                } else {
+                    // Should never happen, " followed by *
+                    result += next_char;
+                }
+
+            } else {
+                result += path[i];
+            }
+        }
+
+        // If we get here it is unterminated (e.g. '"foo<EOF>')
+        return {next_path: "", component: result};
+
+    } else {
+        for (var i = 0; i < path.length; i++) {
+            if (path[i] == '/' || path[i] == '\\') {
+                return {next_path: path.substr(i, path.length),
+                        component: path.substr(0, i)};
+            }
+        }
+    }
+
+    return {next_path: "", component: path};
+};
+
+
+exports.SplitPathComponents = function(path) {
+    var components = [];
+
+    while (path != "") {
+        var item = exports.ConsumeComponent(path);
+        if (item.component != "") {
+            components.push(item.component);
+        }
+        path = item.next_path;
+    }
+
+    return components;
+};
+
+exports.Join = function(components) {
+    var result = "";
+    for (var i = 0; i < components.length; i++) {
+        result = exports.PathJoin(result, components[i]);
+    }
+
+    return result;
+};

@@ -139,6 +139,26 @@ func (mr *MockAPIClientMockRecorder) CreateHunt(arg0, arg1 interface{}, arg2 ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHunt", reflect.TypeOf((*MockAPIClient)(nil).CreateHunt), varargs...)
 }
 
+// CreateNotebookDownloadFile mocks base method
+func (m *MockAPIClient) CreateNotebookDownloadFile(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateNotebookDownloadFile", varargs...)
+	ret0, _ := ret[0].(*empty.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateNotebookDownloadFile indicates an expected call of CreateNotebookDownloadFile
+func (mr *MockAPIClientMockRecorder) CreateNotebookDownloadFile(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNotebookDownloadFile", reflect.TypeOf((*MockAPIClient)(nil).CreateNotebookDownloadFile), varargs...)
+}
+
 // DescribeTypes mocks base method
 func (m *MockAPIClient) DescribeTypes(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto1.Types, error) {
 	m.ctrl.T.Helper()
@@ -337,6 +357,46 @@ func (mr *MockAPIClientMockRecorder) GetHuntResults(arg0, arg1 interface{}, arg2
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntResults", reflect.TypeOf((*MockAPIClient)(nil).GetHuntResults), varargs...)
+}
+
+// GetNotebookCell mocks base method
+func (m *MockAPIClient) GetNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookCell, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetNotebookCell", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookCell)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotebookCell indicates an expected call of GetNotebookCell
+func (mr *MockAPIClientMockRecorder) GetNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).GetNotebookCell), varargs...)
+}
+
+// GetNotebooks mocks base method
+func (m *MockAPIClient) GetNotebooks(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.Notebooks, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetNotebooks", varargs...)
+	ret0, _ := ret[0].(*proto0.Notebooks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNotebooks indicates an expected call of GetNotebooks
+func (mr *MockAPIClientMockRecorder) GetNotebooks(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNotebooks", reflect.TypeOf((*MockAPIClient)(nil).GetNotebooks), varargs...)
 }
 
 // GetReport mocks base method
@@ -559,6 +619,46 @@ func (mr *MockAPIClientMockRecorder) ModifyHunt(arg0, arg1 interface{}, arg2 ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyHunt", reflect.TypeOf((*MockAPIClient)(nil).ModifyHunt), varargs...)
 }
 
+// NewNotebook mocks base method
+func (m *MockAPIClient) NewNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "NewNotebook", varargs...)
+	ret0, _ := ret[0].(*empty.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NewNotebook indicates an expected call of NewNotebook
+func (mr *MockAPIClientMockRecorder) NewNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewNotebook", reflect.TypeOf((*MockAPIClient)(nil).NewNotebook), varargs...)
+}
+
+// NewNotebookCell mocks base method
+func (m *MockAPIClient) NewNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookMetadata, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "NewNotebookCell", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NewNotebookCell indicates an expected call of NewNotebookCell
+func (mr *MockAPIClientMockRecorder) NewNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).NewNotebookCell), varargs...)
+}
+
 // NotifyClients mocks base method
 func (m *MockAPIClient) NotifyClients(arg0 context.Context, arg1 *proto0.NotificationRequest, arg2 ...grpc.CallOption) (*empty.Empty, error) {
 	m.ctrl.T.Helper()
@@ -657,6 +757,66 @@ func (mr *MockAPIClientMockRecorder) SetServerMonitoringState(arg0, arg1 interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetServerMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).SetServerMonitoringState), varargs...)
+}
+
+// UpdateNotebook mocks base method
+func (m *MockAPIClient) UpdateNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*proto0.NotebookMetadata, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateNotebook", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNotebook indicates an expected call of UpdateNotebook
+func (mr *MockAPIClientMockRecorder) UpdateNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebook", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebook), varargs...)
+}
+
+// UpdateNotebookCell mocks base method
+func (m *MockAPIClient) UpdateNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookCell, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateNotebookCell", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookCell)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNotebookCell indicates an expected call of UpdateNotebookCell
+func (mr *MockAPIClientMockRecorder) UpdateNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebookCell), varargs...)
+}
+
+// UploadNotebookAttachment mocks base method
+func (m *MockAPIClient) UploadNotebookAttachment(arg0 context.Context, arg1 *proto0.NotebookFileUploadRequest, arg2 ...grpc.CallOption) (*proto0.NotebookFileUploadResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UploadNotebookAttachment", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookFileUploadResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UploadNotebookAttachment indicates an expected call of UploadNotebookAttachment
+func (mr *MockAPIClientMockRecorder) UploadNotebookAttachment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UploadNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).UploadNotebookAttachment), varargs...)
 }
 
 // VFSGetBuffer mocks base method

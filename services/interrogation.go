@@ -41,6 +41,8 @@ func (self *InterrogationService) Start(
 
 	env := ordereddict.NewDict().
 		Set("config", self.config_obj.Client).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
 		Set("server_config", self.config_obj)
 
 	repository, err := artifacts.GetGlobalRepository(self.config_obj)
@@ -118,7 +120,8 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 	}
 
 	if len(client_info.Labels) > 0 {
-		client, cancel := self.APIClientFactory.GetAPIClient(self.config_obj)
+		client, cancel := self.APIClientFactory.GetAPIClient(
+			context.Background(), self.config_obj)
 		defer cancel()
 
 		ctx, ctx_cancel := context.WithCancel(context.Background())

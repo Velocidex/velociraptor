@@ -11,6 +11,7 @@ import (
 	"github.com/elastic/go-libaudit"
 	"github.com/elastic/go-libaudit/aucoalesce"
 	"github.com/elastic/go-libaudit/auparse"
+	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -52,6 +53,12 @@ func (self AuditPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("audit: %s", err)
+			return
+		}
 
 		client, err := libaudit.NewMulticastAuditClient(nil)
 		if err != nil {

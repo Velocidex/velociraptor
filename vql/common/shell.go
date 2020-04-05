@@ -27,6 +27,7 @@ import (
 	"syscall"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -56,6 +57,12 @@ func (self ShellPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
+		err := vql_subsystem.CheckAccess(scope, acls.EXECVE)
+		if err != nil {
+			scope.Log("shell: %v", err)
+			return
+		}
+
 		// Check the config if we are allowed to execve at all.
 		scope_config, pres := scope.Resolve("config")
 		if pres {
@@ -67,7 +74,7 @@ func (self ShellPlugin) Call(
 		}
 
 		arg := &ShellPluginArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
+		err = vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
 			scope.Log("shell: %v", err)
 			return

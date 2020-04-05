@@ -8,7 +8,7 @@ import (
 // An io.Copy() that respects context cancellations.
 func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) {
 	offset := 0
-	buff := make([]byte, 1024*1024)
+	buff := make([]byte, 32*1024)
 	for {
 		select {
 		case <-ctx.Done():
