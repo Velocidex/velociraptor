@@ -36,8 +36,12 @@ func (self *MysqlTestSuite) SetupTest() {
 	db, err := sql.Open("mysql", conn_string)
 	assert.NoError(self.T(), err)
 
-	db.Exec(fmt.Sprintf("drop database `%v`",
+	_, err = db.Exec(fmt.Sprintf("drop database `%v`",
 		self.config_obj.Datastore.MysqlDatabase))
+	if err != nil {
+		self.T().Skipf("Unable to contact mysql - skipping: %v", err)
+		return
+	}
 
 	defer db.Close()
 
