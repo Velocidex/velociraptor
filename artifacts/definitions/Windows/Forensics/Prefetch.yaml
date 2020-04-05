@@ -11,7 +11,7 @@ description: |
     - dateBefore enables search for prefetch evidence before this date.
     - binaryRegex enables to filter on binary name, e.g evil.exe.
     - hashRegex enables to filter on prefetch hash.
-
+    
 reference:
   - https://www.forensicswiki.org/wiki/Prefetch
 
@@ -74,7 +74,6 @@ sources:
                     else=TRUE) AND
                 if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
                     else=TRUE)
-
         LET creationTimes = SELECT * FROM flatten(
                 query = {
                     SELECT *,
