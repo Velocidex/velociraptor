@@ -28,6 +28,9 @@ sources:
                {
                  SELECT ServiceDll FROM read_reg_key(globs=servicesKeyGlob + Name + "\\Parameters")
                } AS ServiceDll,
+               {
+                 SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
+               } AS FailureCommand,
                parse_string_with_regex(regex=
                  ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'], 
                  string=PathName).AbsoluteExePath as AbsoluteExePath
