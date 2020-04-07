@@ -55,7 +55,6 @@ var (
 	fs_command_cp      = fs_command.Command("cp", "Copy files to a directory.")
 	fs_command_cp_path = fs_command_cp.Arg(
 		"path", "The path or glob to list").Required().String()
-
 	fs_command_cp_outdir = fs_command_cp.Arg(
 		"dumpdir", "The directory to store files at.").Required().
 		String()
@@ -63,6 +62,10 @@ var (
 	fs_command_cat      = fs_command.Command("cat", "Dump a file to the terminal")
 	fs_command_cat_path = fs_command_cat.Arg(
 		"path", "The path to cat").Required().String()
+
+	fs_command_rm      = fs_command.Command("rm", "Remove file (only filestore supported)")
+	fs_command_rm_path = fs_command_rm.Arg(
+		"path", "The path or glob to remove").Required().String()
 )
 
 func eval_query(query string, scope *vfilter.Scope) {
@@ -121,6 +124,44 @@ func doLS(path, accessor string) {
 	if !*fs_command_verbose && accessor == "ntfs" {
 		query += " WHERE Sys.name_type != 'DOS' "
 	}
+
+	eval_query(query, scope)
+}
+
+func doRM(path, accessor string) {
+	initFilestoreAccessor()
+
+	matches := accessor_reg.FindStringSubmatch(path)
+	if matches != nil {
+		accessor = matches[1]
+		path = matches[2]
+	}
+
+	if len(path) > 0 && (path[len(path)-1] == '/' ||
+		path[len(path)-1] == '\\') {
+		path += "*"
+	}
+
+	if accessor != "fs" {
+		kingpin.Fatalf("Only fs:// URLs support removal")
+	}
+
+	config_obj := get_config_or_default()
+	env := ordereddict.NewDict().
+		Set("server_config", config_obj).
+		Set(vql_subsystem.ACL_MANAGER_VAR,
+			vql_subsystem.NewRoleACLManager("administrator")).
+		Set("accessor", accessor).
+		Set("path", path)
+
+	scope := vql_subsystem.MakeScope().AppendVars(env)
+	defer scope.Close()
+
+	AddLogger(scope, get_config_or_default())
+
+	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
+		"file_store_delete(path=FullPath) AS Deletion " +
+		"FROM glob(globs=path, accessor=accessor) "
 
 	eval_query(query, scope)
 }
@@ -230,6 +271,9 @@ func init() {
 		switch command {
 		case fs_command_ls.FullCommand():
 			doLS(*fs_command_ls_path, *fs_command_accessor)
+
+		case fs_command_rm.FullCommand():
+			doRM(*fs_command_rm_path, *fs_command_accessor)
 
 		case fs_command_cp.FullCommand():
 			doCp(*fs_command_cp_path, *fs_command_accessor, *fs_command_cp_outdir)

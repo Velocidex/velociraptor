@@ -23,7 +23,9 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -166,6 +168,7 @@ func (self _WatchCSVPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap
 
 type WriteCSVPluginArgs struct {
 	Filename string              `vfilter:"required,field=filename,doc=CSV files to open"`
+	Accessor string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Query    vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
 }
 
@@ -180,15 +183,8 @@ func (self WriteCSVPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		// Check the config if we are allowed to execve at all.
-		scope_config, pres := scope.Resolve("config")
-		if pres {
-			config_obj, ok := scope_config.(*config_proto.ClientConfig)
-			if ok && config_obj.PreventExecve {
-				scope.Log("write_csv: Not allowed to write files by configuration.")
-				return
-			}
-		}
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, _ := any_config_obj.(*config_proto.Config)
 
 		arg := &WriteCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -197,50 +193,63 @@ func (self WriteCSVPlugin) Call(
 			return
 		}
 
-		file, err := os.OpenFile(arg.Filename, os.O_RDWR|os.O_CREATE, 0700)
-		if err != nil {
-			scope.Log("write_csv: Unable to open file %s: %s",
-				arg.Filename, err.Error())
-			return
-		}
-		defer file.Close()
+		var writer *csv.CSVWriter
 
-		writer := csv.NewWriter(file)
-		defer writer.Flush()
-
-		columns := []string{}
-		for row := range arg.Query.Eval(ctx, scope) {
-			if len(columns) == 0 {
-				columns = scope.GetMembers(row)
-				if len(columns) > 0 {
-					file.Truncate(0)
-					err := writer.Write(columns)
-					if err != nil {
-						scope.Log("write_csv: %s", err.Error())
-						return
-					}
-				}
-			}
-
-			new_row := []interface{}{}
-			for _, column := range columns {
-				item, pres := scope.Associative(row, column)
-				if !pres {
-					item = vfilter.Null{}
-				}
-
-				new_row = append(new_row, item)
-			}
-
-			err := writer.WriteAny(new_row)
+		switch arg.Accessor {
+		case "", "file":
+			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
-				scope.Log("write_csv: %s", err.Error())
+				scope.Log("write_csv: %s", err)
 				return
 			}
 
-			output_chan <- row
+			file, err := os.OpenFile(arg.Filename, os.O_RDWR|os.O_CREATE, 0700)
+			if err != nil {
+				scope.Log("write_csv: Unable to open file %s: %s",
+					arg.Filename, err.Error())
+				return
+			}
+			defer file.Close()
+
+			writer = csv.GetCSVAppender(scope, file, true)
+			defer writer.Close()
+
+		case "fs":
+			err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+			if err != nil {
+				scope.Log("write_csv: %s", err)
+				return
+			}
+
+			file_store_factory := file_store.GetFileStore(config_obj)
+			file, err := file_store_factory.WriteFile(arg.Filename)
+			if err != nil {
+				scope.Log("write_csv: Unable to open file %s: %v",
+					arg.Filename, err)
+				return
+			}
+			defer file.Close()
+
+			file.Truncate()
+
+			writer, err = csv.GetCSVWriter(scope, file)
+			if err != nil {
+				scope.Log("write_csv: Unable to open file %s: %v",
+					arg.Filename, err)
+				return
+			}
+
+			defer writer.Close()
+
+		default:
+			scope.Log("write_csv: Unsupported accessor for writing %v", arg.Accessor)
+			return
 		}
 
+		for row := range arg.Query.Eval(ctx, scope) {
+			writer.Write(row)
+			output_chan <- row
+		}
 	}()
 
 	return output_chan

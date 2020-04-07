@@ -43,7 +43,7 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &DeleteFileStoreArgs{}
 
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
 		scope.Log("flows: %s", err)
 		return vfilter.Null{}

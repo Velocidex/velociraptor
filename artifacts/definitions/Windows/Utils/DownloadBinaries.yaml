@@ -23,19 +23,17 @@ parameters:
 
 sources:
   - queries:
-      - LET binpath <= SELECT server_config.Frontend.public_path AS Path FROM scope()
       - LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
 
       - LET download = SELECT Tool, Type, Filename,
             hash(path=Content) as Hash,
-            copy(filename=Content, dest=path_join(components=[
-                (binpath[0]).Path, Filename]))
+            upload(file=Content, name="/public/" + Filename)
         FROM http_client(url=URL, tempfile_extension=".exe")
 
       # Write the inventory file.
       - SELECT * FROM write_csv(
-          filename=path_join(components=[
-              (binpath[0]).Path, "inventory.csv"]),
+          filename="/public/inventory.csv",
+          accessor="fs",
           query={
             SELECT Tool, Type,
                    Filename, Hash.SHA256 AS ExpectedHash

@@ -29,6 +29,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
@@ -58,14 +59,10 @@ func PrepareFrontendMux(
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
 
-	// FIXME: Use a handler which works on the file store. This
-	// will stop working when we have a distributed file store.
 	if config_obj.Frontend.PublicPath != "" {
-		router.Handle(
-			"/public/", http.StripPrefix("/public/",
-				http.FileServer(http.Dir(
-					config_obj.Frontend.PublicPath,
-				))))
+		router.Handle("/public/", http.FileServer(
+			file_store.NewFileSystem(
+				config_obj, "/public/")))
 	}
 }
 
