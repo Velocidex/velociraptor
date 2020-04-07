@@ -19,8 +19,8 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -195,7 +195,7 @@ func (self *Container) Upload(
 	accessor string,
 	store_as_name string,
 	expected_size int64,
-	reader io.Reader) (*vql_networking.UploadResponse, error) {
+	reader io.Reader) (*uploads.UploadResponse, error) {
 	self.Lock()
 	defer self.Unlock()
 
@@ -229,12 +229,12 @@ func (self *Container) Upload(
 
 	n, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
-		return &vql_networking.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	return &vql_networking.UploadResponse{
+	return &uploads.UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

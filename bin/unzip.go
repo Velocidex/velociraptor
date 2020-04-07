@@ -7,8 +7,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -78,7 +78,7 @@ func doUnzip() {
 		}
 
 	} else {
-		env.Set("$uploader", &vql_networking.FileBasedUploader{
+		env.Set("$uploader", &uploads.FileBasedUploader{
 			UploadDir: *unzip_path,
 		})
 

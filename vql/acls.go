@@ -99,6 +99,11 @@ func CheckFilesystemAccess(scope *vfilter.Scope, accessor string) error {
 	case "data":
 		return nil
 
+		// Direct filestore access only allowed for server
+		// admins.
+	case "filestore", "fs":
+		return CheckAccess(scope, acls.SERVER_ADMIN)
+
 	default:
 		return CheckAccess(scope, acls.FILESYSTEM_READ)
 	}

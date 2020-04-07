@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package networking
+package uploads
 
 import (
 	"context"
@@ -29,34 +29,10 @@ import (
 	"regexp"
 	"runtime"
 
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
-
-// Returned as the result of the query.
-type UploadResponse struct {
-	Path   string `json:"Path"`
-	Size   uint64 `json:"Size"`
-	Error  string `json:"Error,omitempty"`
-	Sha256 string `json:"sha256,omitempty"`
-	Md5    string `json:"md5,omitempty"`
-}
-
-// Provide an uploader capable of uploading any reader object.
-type Uploader interface {
-	Upload(ctx context.Context,
-		scope *vfilter.Scope,
-		filename string,
-		accessor string,
-		store_as_name string,
-		expected_size int64,
-		reader io.Reader) (*UploadResponse, error)
-}
 
 type FileBasedUploader struct {
 	UploadDir string
@@ -151,77 +127,4 @@ func (self *FileBasedUploader) Upload(
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
-}
-
-type VelociraptorUploader struct {
-	Responder *responder.Responder
-	Count     int
-}
-
-func (self *VelociraptorUploader) Upload(
-	ctx context.Context,
-	scope *vfilter.Scope,
-	filename string,
-	accessor string,
-	store_as_name string,
-	expected_size int64,
-	reader io.Reader) (
-	*UploadResponse, error) {
-	result := &UploadResponse{
-		Path: filename,
-	}
-
-	if store_as_name == "" {
-		store_as_name = filename
-	}
-
-	offset := uint64(0)
-	self.Count += 1
-
-	md5_sum := md5.New()
-	sha_sum := sha256.New()
-
-	for {
-		// Ensure there is a fresh allocation for every
-		// iteration to prevent overwriting in flight buffers.
-		buffer := make([]byte, 1024*1024)
-		read_bytes, err := reader.Read(buffer)
-		data := buffer[:read_bytes]
-		sha_sum.Write(data)
-		md5_sum.Write(data)
-
-		packet := &actions_proto.FileBuffer{
-			Pathspec: &actions_proto.PathSpec{
-				Path:     store_as_name,
-				Accessor: accessor,
-			},
-			Offset: offset,
-			Size:   uint64(expected_size),
-			Data:   data,
-			Eof:    err == io.EOF,
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, errors.New("Cancelled!")
-
-		default:
-			// Send the packet to the server.
-			self.Responder.AddResponse(&crypto_proto.GrrMessage{
-				RequestId:  constants.TransferWellKnownFlowId,
-				FileBuffer: packet})
-		}
-
-		offset += uint64(read_bytes)
-		if err != nil && err != io.EOF {
-			return nil, err
-		}
-
-		if read_bytes == 0 {
-			result.Size = offset
-			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
-			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
-			return result, nil
-		}
-	}
 }

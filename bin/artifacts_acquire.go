@@ -33,8 +33,8 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -75,7 +75,7 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
-		Set("$uploader", &vql_networking.FileBasedUploader{
+		Set("$uploader", &uploads.FileBasedUploader{
 			UploadDir: filepath.Join(subdir, "files"),
 		}).
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).

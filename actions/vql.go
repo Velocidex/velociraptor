@@ -33,8 +33,8 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -96,7 +96,7 @@ func (self VQLClientAction) StartQuery(
 	// Create a new query environment and store some useful
 	// objects in there. VQL plugins may then use the environment
 	// to communicate with the server.
-	uploader := &vql_networking.VelociraptorUploader{
+	uploader := &uploads.VelociraptorUploader{
 		Responder: responder,
 	}
 

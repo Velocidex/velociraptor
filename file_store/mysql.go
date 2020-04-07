@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +27,10 @@ var (
 	set_subject_dir_cache *cache.LRUCache
 )
 
+const (
+	MAX_BLOB_SIZE = 1<<16 - 1
+)
+
 type _cache_item struct{}
 
 func (self _cache_item) Size() int { return 1 }
@@ -33,6 +38,8 @@ func (self _cache_item) Size() int { return 1 }
 type MysqlFileStoreFileInfo struct {
 	path      string
 	name      string
+	is_dir    bool
+	size      int64
 	timestamp int64
 }
 
@@ -40,8 +47,11 @@ func (self MysqlFileStoreFileInfo) FullPath() string {
 	return path.Join(self.path, self.name)
 }
 
-func (self MysqlFileStoreFileInfo) Mtime() glob.TimeVal {
-	return glob.TimeVal{}
+func (self *MysqlFileStoreFileInfo) Mtime() glob.TimeVal {
+	return glob.TimeVal{
+		Sec:  self.timestamp,
+		Nsec: self.timestamp * 1000000000,
+	}
 }
 
 func (self MysqlFileStoreFileInfo) Atime() glob.TimeVal {
@@ -49,7 +59,10 @@ func (self MysqlFileStoreFileInfo) Atime() glob.TimeVal {
 }
 
 func (self MysqlFileStoreFileInfo) Ctime() glob.TimeVal {
-	return glob.TimeVal{}
+	return glob.TimeVal{
+		Sec:  self.timestamp,
+		Nsec: self.timestamp * 1000000000,
+	}
 }
 
 func (self MysqlFileStoreFileInfo) Data() interface{} {
@@ -69,11 +82,11 @@ func (self MysqlFileStoreFileInfo) Name() string {
 }
 
 func (self MysqlFileStoreFileInfo) Size() int64 {
-	return 0
+	return self.size
 }
 
 func (self MysqlFileStoreFileInfo) Mode() os.FileMode {
-	return os.ModeDir
+	return os.ModeDir | 0777
 }
 
 func (self MysqlFileStoreFileInfo) ModTime() time.Time {
@@ -81,10 +94,43 @@ func (self MysqlFileStoreFileInfo) ModTime() time.Time {
 }
 
 func (self MysqlFileStoreFileInfo) IsDir() bool {
-	return true
+	if self.size > 0 {
+		return false
+	}
+	return true //self.is_dir
 }
 
 func (self MysqlFileStoreFileInfo) Sys() interface{} {
+	return nil
+}
+
+func (self *MysqlFileStoreFileInfo) MarshalJSON() ([]byte, error) {
+	result, err := json.Marshal(&struct {
+		FullPath string
+		Size     int64
+		Mode     os.FileMode
+		ModeStr  string
+		ModTime  time.Time
+		Sys      interface{}
+		Mtime    glob.TimeVal
+		Ctime    glob.TimeVal
+		Atime    glob.TimeVal
+	}{
+		FullPath: self.FullPath(),
+		Size:     self.Size(),
+		Mode:     self.Mode(),
+		ModeStr:  self.Mode().String(),
+		ModTime:  self.ModTime(),
+		Sys:      self.Sys(),
+		Mtime:    self.Mtime(),
+		Ctime:    self.Ctime(),
+		Atime:    self.Atime(),
+	})
+
+	return result, err
+}
+
+func (self *MysqlFileStoreFileInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
@@ -96,6 +142,10 @@ type SqlReader struct {
 	part          int64
 	file_id       int64
 	filename      string
+
+	is_dir    bool
+	size      int64
+	timestamp int64
 }
 
 // Seek loads a new chunk into the current_chunk buffer and prepares
@@ -212,7 +262,17 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 	return offset, nil
 }
 
-func (self SqlReader) Stat() (os.FileInfo, error) {
+func (self SqlReader) Stat() (glob.FileInfo, error) {
+	dir_path, name := utils.PathSplit(self.filename)
+
+	return &MysqlFileStoreFileInfo{
+		path:      dir_path,
+		name:      name,
+		is_dir:    self.is_dir,
+		size:      self.size,
+		timestamp: self.timestamp,
+	}, nil
+
 	return nil, errors.New("Not Implemented")
 }
 
@@ -232,6 +292,10 @@ func (self SqlWriter) Close() error {
 }
 
 func (self *SqlWriter) Write(buff []byte) (int, error) {
+	if len(buff) == 0 {
+		return 0, nil
+	}
+
 	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
 	if err != nil {
 		return 0, err
@@ -245,44 +309,76 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 		return 0, err
 	}
 
+	defer tx.Rollback()
+
+	last_part_query, err := tx.Prepare(`
+SELECT A.part, A.end_offset FROM filestore AS A join (
+   SELECT max(part) AS max_part FROM filestore WHERE id=?
+) AS B
+ON A.part = B.max_part AND A.id = ?`)
+	if err != nil {
+		return 0, err
+	}
+	defer last_part_query.Close()
+
+	insert, err := tx.Prepare(`INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer insert.Close()
+
+	update_metadata, err := tx.Prepare(`UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
+	if err != nil {
+		return 0, err
+	}
+	defer update_metadata.Close()
+
 	// Append the buffer to the data table
 	end := int64(0)
 	part := int64(0)
-	length := int64(len(buff))
 
 	// Get the last part and end offset. SELECT max() on a primary
 	// key is instant. We then use this part to look up the row
 	// using the all_column index.
-	err = tx.QueryRow(`
-SELECT A.part, A.end_offset FROM filestore AS A join (
-   SELECT max(part) AS max_part FROM filestore WHERE id=?
-) AS B
-ON A.part = B.max_part AND A.id = ?`,
-		self.file_id, self.file_id).Scan(
+	err = last_part_query.QueryRow(self.file_id, self.file_id).Scan(
 		&part, &end)
 	// No parts exist yet
 	if err == sql.ErrNoRows {
 		part = 0
 	} else if err != nil {
-		_ = tx.Rollback()
 		return 0, err
 	} else {
 		part += 1
 	}
 
-	_, err = tx.Exec(`
-INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`,
-		self.file_id, part, end, end+length, buff)
-	if err != nil {
-		_ = tx.Rollback()
-		fmt.Printf("SqlCloserWriter.Write: %v", err)
-		return 0, err
+	// Push the buffer into the table one chunk at the time.
+	for len(buff) > 0 {
+		// We store the data in blobs which are limited to
+		// 64kb.
+		length := int64(len(buff))
+		if length > MAX_BLOB_SIZE {
+			length = MAX_BLOB_SIZE
+		}
+
+		// Write this chunk only.
+		chunk := buff[:length]
+
+		_, err = insert.Exec(
+			self.file_id, part, end, end+length, chunk)
+		if err != nil {
+			return 0, err
+		}
+
+		// Increase our size
+		self.size = end + length
+
+		// Advance the buffer some more.
+		buff = buff[length:]
+		part += 1
 	}
 
-	_, err = tx.Exec(`UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`,
-		int64(len(buff)), self.file_id)
+	_, err = update_metadata.Exec(int64(len(buff)), self.file_id)
 	if err != nil {
-		_ = tx.Rollback()
 		return 0, err
 	}
 
@@ -290,9 +386,6 @@ INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?
 	if err != nil {
 		return 0, err
 	}
-
-	// Increase our size
-	self.size = end + length
 
 	return len(buff), nil
 }
@@ -304,9 +397,39 @@ func (self SqlWriter) Truncate() error {
 	}
 	defer db.Close()
 
+	// TODO - retry transaction.
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return err
+	}
+
 	// Essentially delete all the filestore rows for this file id.
-	_, err = db.Exec("DELETE FROM filestore WHERE id = ?", self.file_id)
+	_, err = tx.Exec("DELETE FROM filestore WHERE id = ?", self.file_id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	// Reset the size of the file in the metadata.
+	_, err = tx.Exec(`UPDATE filestore_metadata SET timestamp=now(), size=0 WHERE id = ?`,
+		self.file_id)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return err
+}
+
+func hash(path string) string {
+	hash := sha1.Sum([]byte(path))
+	return string(hash[:])
 }
 
 type SqlFileStore struct {
@@ -319,45 +442,46 @@ func (self *SqlFileStore) ReadFile(filename string) (FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	result := &SqlReader{
+		config_obj: self.config_obj,
+		filename:   filename,
+	}
+
 	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	dir_path := path.Dir(filename)
-	name := path.Base(filename)
-	hash := sha1.Sum([]byte(dir_path))
+	dir_path, name := utils.PathSplit(filename)
 
 	// Create the file metadata
-	var id sql.NullInt64
-	err = db.QueryRow(`SELECT id FROM filestore_metadata WHERE path_hash = ? AND name = ?`,
-		string(hash[:]), name).Scan(&id)
+	err = db.QueryRow(`
+SELECT id, size, is_dir, unix_timestamp(timestamp)
+FROM filestore_metadata WHERE path_hash = ? AND name = ?`,
+		hash(dir_path), name).Scan(
+		&result.file_id, &result.size,
+		&result.is_dir, &result.timestamp)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("Not found " + filename)
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if !id.Valid {
-		return nil, errors.New("Not found")
-	}
-
-	return &SqlReader{
-		config_obj: self.config_obj,
-		file_id:    id.Int64,
-		filename:   filename,
-	}, nil
+	return result, nil
 }
 
 func makeDirs(components []string, db *sql.DB) error {
 	for len(components) > 0 {
 		dir_path := utils.JoinComponents(components[:len(components)-1], "/")
 		name := components[len(components)-1]
-		hash := sha1.Sum([]byte(dir_path))
-		hash_str := string(hash[:])
 
 		_, err := db.Exec(`
 INSERT IGNORE INTO filestore_metadata (path, path_hash, name) values(?, ?, ?)`,
-			dir_path, hash_str, name)
+			dir_path, hash(dir_path), name)
 		if err != nil {
 			return err
 		}
@@ -383,8 +507,6 @@ func (self *SqlFileStore) WriteFile(filename string) (FileWriter, error) {
 	if len(components) > 0 {
 		dir_path := utils.JoinComponents(components[:len(components)-1], "/")
 		name := components[len(components)-1]
-		hash := sha1.Sum([]byte(dir_path))
-		hash_str := string(hash[:])
 
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
@@ -393,12 +515,12 @@ func (self *SqlFileStore) WriteFile(filename string) (FileWriter, error) {
 		}
 
 		err = tx.QueryRow(`SELECT id, size FROM filestore_metadata WHERE path_hash =? and name = ?`,
-			hash_str, name).Scan(&last_id, &size)
+			hash(dir_path), name).Scan(&last_id, &size)
 		if err == sql.ErrNoRows {
 			// Create the file metadata
 			res, err := tx.Exec(`
 INSERT INTO filestore_metadata (path, path_hash, name) values(?, ?, ?)`,
-				dir_path, string(hash[:]), name)
+				dir_path, hash(dir_path), name)
 			if err != nil {
 				_ = tx.Rollback()
 				return nil, err
@@ -433,8 +555,8 @@ INSERT INTO filestore_metadata (path, path_hash, name) values(?, ?, ?)`,
 	}, nil
 }
 
-func (self *SqlFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {
-	return &FileStoreFileInfo{}, nil
+func (self *SqlFileStore) StatFile(filename string) (os.FileInfo, error) {
+	return nil, errors.New("Not Implemented")
 }
 
 func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
@@ -447,18 +569,19 @@ func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
 
 	components := utils.SplitComponents(dirname)
 	dir_name := utils.JoinComponents(components, "/")
-	hash := sha1.Sum([]byte(dir_name))
 
 	rows, err := db.Query(`
-SELECT path, name, unix_timestamp(timestamp) FROM filestore_metadata
-WHERE path_hash = ? AND path = ?`, string(hash[:]), dir_name)
+SELECT path, name, unix_timestamp(timestamp), size, is_dir
+FROM filestore_metadata
+WHERE path_hash = ? AND path = ?`, hash(dir_name), dir_name)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
 		row := &MysqlFileStoreFileInfo{}
-		err = rows.Scan(&row.path, &row.name, &row.timestamp)
+		err = rows.Scan(&row.path, &row.name, &row.timestamp, &row.size,
+			&row.is_dir)
 		if err != nil {
 			return nil, err
 		}
@@ -516,7 +639,9 @@ func NewSqlFileStore(config_obj *config_proto.Config) (FileStore, error) {
 	defer my_sql_mu.Unlock()
 
 	if !db_initialized {
-		err := initializeDatabase(config_obj)
+		err := initializeDatabase(
+			config_obj, config_obj.Datastore.MysqlConnectionString,
+			config_obj.Datastore.MysqlDatabase)
 		if err != nil {
 			return nil, err
 		}
@@ -527,9 +652,10 @@ func NewSqlFileStore(config_obj *config_proto.Config) (FileStore, error) {
 }
 
 func initializeDatabase(
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config,
+	database_connection_string, database string) error {
 
-	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
+	db, err := sql.Open("mysql", database_connection_string)
 	if err != nil {
 		return err
 	}
@@ -537,7 +663,7 @@ func initializeDatabase(
 
 	// If specifying the connection string we assume the database
 	// already exists.
-	if config_obj.Datastore.MysqlDatabase != "" {
+	if database != "" {
 		// If the database does not exist we need to connect
 		// to a blank database to issue the create database.
 		conn_string := fmt.Sprintf("%s:%s@tcp(%s)/",
@@ -551,7 +677,7 @@ func initializeDatabase(
 		defer db.Close()
 
 		_, err = db.Exec(fmt.Sprintf("create database if not exists `%v`",
-			config_obj.Datastore.MysqlDatabase))
+			database))
 		if err != nil {
 			return err
 		}
@@ -577,6 +703,7 @@ func initializeDatabase(
               name varchar(256),
               timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
               size int NOT NULL DEFAULT 0,
+              is_dir bool NOT NULL DEFAULT false,
               PRIMARY KEY (id),
               INDEX(path_hash(20)),
               unique INDEX(path_hash(20), name))`)
@@ -588,23 +715,28 @@ func initializeDatabase(
 }
 
 type SqlFileStoreAccessor struct {
-	file_store FileStore
+	file_store *SqlFileStore
 }
 
 func (self SqlFileStoreAccessor) New(ctx context.Context) glob.FileSystemAccessor {
 	return &SqlFileStoreAccessor{self.file_store}
 }
 
-func (self SqlFileStoreAccessor) Lstat(filename string) (glob.FileInfo, error) {
+func (self *SqlFileStoreAccessor) Lstat(filename string) (glob.FileInfo, error) {
 	lstat, err := self.file_store.StatFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return lstat, err
+	return &MysqlFileStoreFileInfo{path: filename,
+		name:      lstat.Name(),
+		is_dir:    lstat.IsDir(),
+		size:      lstat.Size(),
+		timestamp: lstat.ModTime().Unix(),
+	}, err
 }
 
-func (self SqlFileStoreAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
+func (self *SqlFileStoreAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	files, err := self.file_store.ListDirectory(path)
 	if err != nil {
 		return nil, err
@@ -617,8 +749,12 @@ func (self SqlFileStoreAccessor) ReadDir(path string) ([]glob.FileInfo, error) {
 	return result, nil
 }
 
-func (self SqlFileStoreAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	return self.file_store.ReadFile(path)
+func (self *SqlFileStoreAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+	fd, err := self.file_store.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return &FileReaderAdapter{fd}, nil
 }
 
 var SqlFileStoreAccessor_re = regexp.MustCompile("/")

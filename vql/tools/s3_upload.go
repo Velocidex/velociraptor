@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -94,7 +94,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	reader io.Reader,
 	bucket, name string,
 	credentialsKey string, credentialsSecret string, region string) (
-	*networking.UploadResponse, error) {
+	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
 
@@ -102,7 +102,7 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 	creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, token)
 	_, err := creds.Get()
 	if err != nil {
-		return &networking.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
@@ -118,12 +118,12 @@ func upload_S3(ctx context.Context, scope *vfilter.Scope,
 			Body:   reader,
 		})
 	if err != nil {
-		return &networking.UploadResponse{
+		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	return &networking.UploadResponse{
+	return &uploads.UploadResponse{
 		Path: result.Location,
 	}, nil
 }

@@ -206,13 +206,19 @@ func (self SourcePlugin) Call(
 		}
 
 		globber := make(glob.Globber)
-		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
+
 		globber.Add(csv_path, accessor.PathSplit)
 
 		// Expanding the glob is not sorted but we really need
 		// to go in order of dates.
 		hits := []string{}
-		for hit := range globber.ExpandWithContext(ctx, "", accessor) {
+		for hit := range globber.ExpandWithContext(
+			ctx, config_obj, "", accessor) {
 			hits = append(hits, hit.FullPath())
 		}
 		sort.Strings(hits)

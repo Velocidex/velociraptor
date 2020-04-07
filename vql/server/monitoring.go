@@ -21,7 +21,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"time"
 
@@ -102,10 +101,16 @@ func (self MonitoringPlugin) Call(
 			source, mode)
 
 		globber := make(glob.Globber)
-		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		if err != nil {
+			scope.Log("monitoring: %v", err)
+			return
+		}
+
 		globber.Add(log_path, accessor.PathSplit)
 
-		for hit := range globber.ExpandWithContext(ctx, "", accessor) {
+		for hit := range globber.ExpandWithContext(
+			ctx, config_obj, "", accessor) {
 			err := self.ScanLog(config_obj,
 				scope, output_chan,
 				hit.FullPath())
@@ -243,7 +248,11 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		globber := make(glob.Globber)
-		accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		if err != nil {
+			scope.Log("watch_monitoring: %v", err)
+			return
+		}
 
 		// dir_state contains the initial state of the log
 		// files when we first start watching. If the file
@@ -258,18 +267,17 @@ func (self WatchMonitoringPlugin) Call(
 			source, mode)
 		globber.Add(log_path, accessor.PathSplit)
 
-		fmt.Printf("Globbing for %v (%T)\n", log_path, accessor)
-
 		// Capture the initial state of the files. We will
 		// only monitor events after this point.
-		for item := range globber.ExpandWithContext(ctx, "", accessor) {
-			fmt.Printf("Glob for %v\n", item.FullPath())
+		for item := range globber.ExpandWithContext(
+			ctx, config_obj, "", accessor) {
 			dir_state[item.FullPath()] = info{item.ModTime(), item.Size()}
 		}
 
 		// Spin forever here and emit new files or events.
 		for {
-			for item := range globber.ExpandWithContext(ctx, "", accessor) {
+			for item := range globber.ExpandWithContext(
+				ctx, config_obj, "", accessor) {
 				self.ScanLog(ctx, config_obj,
 					scope, dir_state, output_chan,
 					item, arg.ClientId, arg.Artifact)

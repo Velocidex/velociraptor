@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -45,7 +46,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		scope.Log("upload: Uploader not configured.")
 		return vfilter.Null{}
 	}
-	uploader, ok := uploader_obj.(Uploader)
+	uploader, ok := uploader_obj.(uploads.Uploader)
 	if ok {
 		arg := &UploadFunctionArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -67,7 +68,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
 		if err != nil {
 			scope.Log("upload: %v", err)
-			return &UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}
 		}
@@ -76,7 +77,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 		if err != nil {
 			scope.Log("upload: Unable to open %s: %s",
 				arg.File, err.Error())
-			return &UploadResponse{
+			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}
 		}
@@ -94,7 +95,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 				stat.Size(), // Expected size.
 				file)
 			if err != nil {
-				return &UploadResponse{
+				return &uploads.UploadResponse{
 					Error: err.Error(),
 				}
 			}
@@ -138,7 +139,7 @@ func (self *UploadPlugin) Call(
 		}
 
 		uploader_obj, _ := scope.Resolve("$uploader")
-		uploader, ok := uploader_obj.(Uploader)
+		uploader, ok := uploader_obj.(uploads.Uploader)
 		if !ok {
 			scope.Log("upload: Uploader not configured.")
 
@@ -194,7 +195,7 @@ func (self UploadPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 	return &vfilter.PluginInfo{
 		Name:    "upload",
 		Doc:     "Upload files to the server.",
-		RowType: type_map.AddType(scope, &UploadResponse{}),
+		RowType: type_map.AddType(scope, &uploads.UploadResponse{}),
 		ArgType: type_map.AddType(scope, &UploadPluginArgs{}),
 	}
 }
