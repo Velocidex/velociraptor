@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -159,6 +160,24 @@ func (self *ServerArtifactsRunner) runQuery(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Set up the logger for writing query logs. Note this must be
+	// destroyed last since we need to be able to receive logs
+	// from scope destructors.
+	log_path := path.Join(collection_context.Urn, "logs")
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	fd, err := file_store_factory.WriteFile(log_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	log_sink, err := csv.GetCSVWriter(vql.MakeScope(), fd)
+	if err != nil {
+		return err
+	}
+	defer log_sink.Close()
+
 	arg := task.VQLClientAction
 	if arg == nil {
 		return errors.New("VQLClientAction should be specified.")
@@ -181,6 +200,12 @@ func (self *ServerArtifactsRunner) runQuery(
 	env := ordereddict.NewDict().
 		Set("server_config", self.config_obj).
 		Set("config", self.config_obj.Client).
+
+		// We server artifacts upload() they end up writing in
+		// the file store. NOTE: This allows arbitrary
+		// filestore write.
+		Set("$uploader", file_store.NewFileStoreUploader(
+			self.config_obj, "/")).
 		Set(vql_subsystem.ACL_MANAGER_VAR,
 			vql_subsystem.NewRoleACLManager("administrator")).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -196,30 +221,9 @@ func (self *ServerArtifactsRunner) runQuery(
 	scope := artifacts.MakeScope(repository).AppendVars(env)
 	defer scope.Close()
 
-	// Set up the logger for writing query logs
-	log_path := path.Join(collection_context.Urn, "logs")
+	scope.Logger = log.New(&serverLogger{self.config_obj, log_sink}, "server", 0)
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	err = fd.Truncate()
-	if err != nil {
-		return err
-	}
-
-	w, err := csv.GetCSVWriter(scope, fd)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	scope.Logger = log.New(&serverLogger{self.config_obj, w}, "server", 0)
-
-	// If we panic we need to recover and report this to the
+	// If we panic below we need to recover and report this to the
 	// server.
 	defer func() {
 		r := recover()

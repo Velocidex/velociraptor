@@ -37,6 +37,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -115,16 +116,16 @@ func PrepareMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handl
 	// Serve prepared zip files.
 	mux.Handle("/downloads/", csrfProtect(config_obj,
 		checkUserCredentialsHandler(
-			config_obj, http.FileServer(http.Dir(
-				config_obj.Datastore.FilestoreDirectory,
-			)))))
+			config_obj, http.FileServer(
+				file_store.NewFileSystem(
+					config_obj, "/downloads/")))))
 
 	// Serve notebook items
 	mux.Handle("/notebooks/", csrfProtect(config_obj,
 		checkUserCredentialsHandler(
-			config_obj, http.FileServer(http.Dir(
-				config_obj.Datastore.FilestoreDirectory,
-			)))))
+			config_obj, http.FileServer(
+				file_store.NewFileSystem(
+					config_obj, "/notebooks/")))))
 
 	// A logoff handler forces a logoff for basic auth.
 	mux.Handle("/logoff", logoff())
