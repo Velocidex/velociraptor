@@ -21,6 +21,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -139,6 +140,10 @@ func doCp(path, accessor string, dump_dir string) {
 		path += "*"
 	}
 
+	if accessor == "file" {
+		path, _ = filepath.Abs(path)
+	}
+
 	output_accessor := ""
 	output_path := dump_dir
 
@@ -174,6 +179,9 @@ func doCp(path, accessor string, dump_dir string) {
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())
+
+	scope.Log("Copy from %v (%v) to %v (%v)",
+		path, accessor, output_path, output_accessor)
 
 	eval_query(`
 SELECT * from foreach(

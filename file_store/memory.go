@@ -10,6 +10,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
+var (
+	// Only used for tests.
+	test_memory_file_store *MemoryFileStore = &MemoryFileStore{
+		Data: make(map[string][]byte)}
+)
+
 type MemoryReader struct {
 	*bytes.Reader
 }

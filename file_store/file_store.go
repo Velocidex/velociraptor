@@ -18,6 +18,7 @@
 package file_store
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -52,31 +53,27 @@ type FileStore interface {
 	Delete(filename string) error
 }
 
-// Currently we only support a DirectoryFileStore.
+// GetFileStore selects an appropriate FileStore object based on
+// config.
 func GetFileStore(config_obj *config_proto.Config) FileStore {
-	if config_obj.Datastore.Implementation == "Test" {
-		mu.Lock()
-		defer mu.Unlock()
+	switch config_obj.Datastore.Implementation {
+	case "Test":
+		return test_memory_file_store
 
-		impl, pres := implementations["Test"]
-		if !pres {
-			impl = &MemoryFileStore{
-				Data: make(map[string][]byte)}
-			implementations["Test"] = impl
-		}
-
-		return impl
-	}
-
-	if config_obj.Datastore.Implementation == "MySQL" {
+	case "MySQL":
 		res, err := NewSqlFileStore(config_obj)
 		if err != nil {
 			panic(err)
 		}
 		return res
-	}
 
-	return &DirectoryFileStore{config_obj}
+	case "FileBaseDataStore":
+		return &DirectoryFileStore{config_obj}
+
+	default:
+		panic(fmt.Sprintf("Unsupported filestore %v",
+			config_obj.Datastore.Implementation))
+	}
 }
 
 // Gets an accessor that can access the file store.

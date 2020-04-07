@@ -292,6 +292,66 @@ func (self SqlWriter) Close() error {
 }
 
 func (self *SqlWriter) Write(buff []byte) (int, error) {
+	if len(buff) == 0 {
+		return 0, nil
+	}
+
+	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	// TODO - retry transaction.
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	if err != nil {
+		return 0, err
+	}
+
+	defer tx.Rollback()
+
+	last_part_query, err := tx.Prepare(`
+SELECT A.part, A.end_offset FROM filestore AS A join (
+   SELECT max(part) AS max_part FROM filestore WHERE id=?
+) AS B
+ON A.part = B.max_part AND A.id = ?`)
+	if err != nil {
+		return 0, err
+	}
+	defer last_part_query.Close()
+
+	insert, err := tx.Prepare(`INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`)
+	if err != nil {
+		return 0, err
+	}
+	defer insert.Close()
+
+	update_metadata, err := tx.Prepare(`UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
+	if err != nil {
+		return 0, err
+	}
+	defer update_metadata.Close()
+
+	// Append the buffer to the data table
+	end := int64(0)
+	part := int64(0)
+
+	// Get the last part and end offset. SELECT max() on a primary
+	// key is instant. We then use this part to look up the row
+	// using the all_column index.
+	err = last_part_query.QueryRow(self.file_id, self.file_id).Scan(
+		&part, &end)
+	// No parts exist yet
+	if err == sql.ErrNoRows {
+		part = 0
+	} else if err != nil {
+		return 0, err
+	} else {
+		part += 1
+	}
+
+	// Push the buffer into the table one chunk at the time.
 	for len(buff) > 0 {
 		// We store the data in blobs which are limited to
 		// 64kb.
@@ -303,60 +363,8 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 		// Write this chunk only.
 		chunk := buff[:length]
 
-		db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-		if err != nil {
-			return 0, err
-		}
-		defer db.Close()
-
-		// TODO - retry transaction.
-		ctx := context.Background()
-		tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
-		if err != nil {
-			return 0, err
-		}
-
-		// Append the buffer to the data table
-		end := int64(0)
-		part := int64(0)
-
-		// Get the last part and end offset. SELECT max() on a primary
-		// key is instant. We then use this part to look up the row
-		// using the all_column index.
-		err = tx.QueryRow(`
-SELECT A.part, A.end_offset FROM filestore AS A join (
-   SELECT max(part) AS max_part FROM filestore WHERE id=?
-) AS B
-ON A.part = B.max_part AND A.id = ?`,
-			self.file_id, self.file_id).Scan(
-			&part, &end)
-		// No parts exist yet
-		if err == sql.ErrNoRows {
-			part = 0
-		} else if err != nil {
-			_ = tx.Rollback()
-			return 0, err
-		} else {
-			part += 1
-		}
-
-		_, err = tx.Exec(`
-INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`,
+		_, err = insert.Exec(
 			self.file_id, part, end, end+length, chunk)
-		if err != nil {
-			_ = tx.Rollback()
-			fmt.Printf("SqlCloserWriter.Write: %v", err)
-			return 0, err
-		}
-
-		_, err = tx.Exec(`UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`,
-			int64(len(chunk)), self.file_id)
-		if err != nil {
-			_ = tx.Rollback()
-			return 0, err
-		}
-
-		err = tx.Commit()
 		if err != nil {
 			return 0, err
 		}
@@ -366,6 +374,17 @@ INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?
 
 		// Advance the buffer some more.
 		buff = buff[length:]
+		part += 1
+	}
+
+	_, err = update_metadata.Exec(int64(len(buff)), self.file_id)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, err
 	}
 
 	return len(buff), nil

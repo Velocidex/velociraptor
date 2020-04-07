@@ -34,7 +34,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
@@ -235,8 +234,3 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 				&DirectoryFileStoreFileInfo{info, path, nil}, err)
 		})
 }
-
-var (
-	mu              sync.Mutex
-	implementations map[string]FileStore = make(map[string]FileStore)
-)
