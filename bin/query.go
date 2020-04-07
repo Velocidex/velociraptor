@@ -29,8 +29,8 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -158,7 +158,7 @@ func doQuery() {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
-		Set("$uploader", &vql_networking.FileBasedUploader{
+		Set("$uploader", &uploads.FileBasedUploader{
 			UploadDir: *dump_dir,
 		}).
 

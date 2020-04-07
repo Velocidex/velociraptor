@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/sebdah/goldie"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -228,7 +229,8 @@ func TestGlobWithContext(t *testing.T) {
 		}
 
 		output_chan := globber.ExpandWithContext(
-			ctx, "/", fs_accessor)
+			ctx, config.GetDefaultConfig(),
+			"/", fs_accessor)
 		for row := range output_chan {
 			returned = append(returned, row.FullPath())
 		}

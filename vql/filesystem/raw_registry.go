@@ -44,6 +44,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/regparser"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -406,6 +407,12 @@ func (self ReadKeyValues) Call(
 	go func() {
 		defer close(output_chan)
 
+		any_config_obj, _ := scope.Resolve("server_config")
+		config_obj, ok := any_config_obj.(*config_proto.Config)
+		if !ok {
+			config_obj = &config_proto.Config{}
+		}
+
 		arg := &ReadKeyValuesArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -442,7 +449,7 @@ func (self ReadKeyValues) Call(
 		}
 
 		file_chan := globber.ExpandWithContext(
-			ctx, root, accessor)
+			ctx, config_obj, root, accessor)
 		for {
 			select {
 			case <-ctx.Done():

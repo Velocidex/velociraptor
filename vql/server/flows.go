@@ -226,12 +226,18 @@ func (self EnumerateFlowPlugin) Call(
 				artifacts.ModeNameToMode(artifact.Type))
 
 			globber := make(glob.Globber)
-			accessor := file_store.GetFileStoreFileSystemAccessor(config_obj)
+			accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+			if err != nil {
+				scope.Log("enumerate_flow: %v", err)
+				return
+			}
+
 			globber.Add(csv_path, accessor.PathSplit)
 
 			// Expanding the glob is not sorted but we really need
 			// to go in order of dates.
-			for hit := range globber.ExpandWithContext(ctx, "", accessor) {
+			for hit := range globber.ExpandWithContext(
+				ctx, config_obj, "", accessor) {
 				full_path := hit.FullPath()
 				emit("Result", full_path)
 			}

@@ -21,12 +21,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 // GzipReader is a FileReader from compressed files.
 type GzipReader struct {
 	zip_fd       io.Reader
 	backing_file *os.File
+
+	full_path string
 }
 
 func (self *GzipReader) Read(buff []byte) (int, error) {
@@ -46,8 +50,12 @@ func (self *GzipReader) Seek(offset int64, whence int) (int64, error) {
 		offset, whence)
 }
 
-func (self GzipReader) Stat() (os.FileInfo, error) {
-	return self.backing_file.Stat()
+func (self GzipReader) Stat() (glob.FileInfo, error) {
+	stat, err := self.backing_file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return NewFileInfoAdapter(stat, self.full_path, nil), nil
 }
 
 func (self *GzipReader) Close() error {

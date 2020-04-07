@@ -31,21 +31,21 @@ func (self *MysqlTestSuite) SetupTest() {
 
 	// Make sure our database is not the same as the datastore
 	// tests or else we will trash over them.
-	self.config_obj.Datastore.MysqlDatabase += "fs"
+	database := self.config_obj.Datastore.MysqlDatabase + "fs"
 
 	db, err := sql.Open("mysql", conn_string)
 	assert.NoError(self.T(), err)
+	defer db.Close()
 
-	_, err = db.Exec(fmt.Sprintf("drop database `%v`",
-		self.config_obj.Datastore.MysqlDatabase))
+	err = db.Ping()
 	if err != nil {
 		self.T().Skipf("Unable to contact mysql - skipping: %v", err)
 		return
 	}
 
-	defer db.Close()
+	db.Exec(fmt.Sprintf("drop database `%v`", database))
 
-	initializeDatabase(self.config_obj)
+	initializeDatabase(self.config_obj, conn_string+database, database)
 
 	self.filestore, err = NewSqlFileStore(self.config_obj)
 	assert.NoError(self.T(), err)

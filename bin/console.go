@@ -35,9 +35,9 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	vql_networking "www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -601,7 +601,7 @@ func doConsole() {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
-		Set("$uploader", &vql_networking.FileBasedUploader{
+		Set("$uploader", &uploads.FileBasedUploader{
 			UploadDir: *console_dump_dir,
 		}).
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).

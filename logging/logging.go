@@ -84,7 +84,8 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if !config_obj.Logging.SeparateLogsPerComponent {
+	if config_obj.Logging != nil &&
+		!config_obj.Logging.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}
 
@@ -97,7 +98,8 @@ func (self *LogManager) GetLogger(
 			&ClientComponent, &GUIComponent, &APICmponent:
 
 			logger := self.makeNewComponent(config_obj, component)
-			if config_obj.Logging.SeparateLogsPerComponent {
+			if config_obj.Logging != nil &&
+				config_obj.Logging.SeparateLogsPerComponent {
 				self.contexts[component] = logger
 				return logger
 			} else {
@@ -150,7 +152,8 @@ func (self *LogManager) makeNewComponent(
 	Log.Out = ioutil.Discard
 	Log.Level = logrus.DebugLevel
 
-	if config_obj.Logging.OutputDirectory != "" {
+	if config_obj.Logging != nil &&
+		config_obj.Logging.OutputDirectory != "" {
 		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
 		if err != nil {
 			panic("Unable to create logging directory.")

@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 type MemoryReader struct {
@@ -17,7 +18,7 @@ func (self MemoryReader) Close() error {
 	return nil
 }
 
-func (self MemoryReader) Stat() (os.FileInfo, error) {
+func (self MemoryReader) Stat() (glob.FileInfo, error) {
 	return nil, errors.New("Not Implemented")
 }
 
@@ -82,8 +83,8 @@ func (self *MemoryFileStore) WriteFile(filename string) (FileWriter, error) {
 	}, nil
 }
 
-func (self *MemoryFileStore) StatFile(filename string) (*FileStoreFileInfo, error) {
-	return &FileStoreFileInfo{}, nil
+func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
+	return &DirectoryFileStoreFileInfo{}, nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {

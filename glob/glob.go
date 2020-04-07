@@ -28,6 +28,8 @@ import (
 	"strings"
 	"time"
 
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -263,7 +265,9 @@ func is_dir_or_link(f FileInfo, accessor FileSystemAccessor, depth int) bool {
 // version uses a context to allow cancellation. We write the FileInfo
 // into the output channel.
 func (self Globber) ExpandWithContext(
-	ctx context.Context, root string,
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	root string,
 	accessor FileSystemAccessor) <-chan FileInfo {
 	output_chan := make(chan FileInfo)
 
@@ -281,6 +285,8 @@ func (self Globber) ExpandWithContext(
 		// level.
 		files, err := accessor.ReadDir(root)
 		if err != nil {
+			logging.GetLogger(config_obj, &logging.GenericComponent).
+				Debug("Globber.ExpandWithContext: %v", err)
 			return
 		}
 
@@ -338,7 +344,7 @@ func (self Globber) ExpandWithContext(
 						continue
 					}
 					for f := range next.ExpandWithContext(
-						ctx, next_path, accessor) {
+						ctx, config_obj, next_path, accessor) {
 						output_chan <- f
 					}
 				}
