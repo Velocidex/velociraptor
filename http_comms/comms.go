@@ -477,7 +477,7 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			if err == nil {
 				self.sendMessageList(
 					ctx, [][]byte{
-						crypto.Compress(serialized_message_list)})
+						utils.Compress(serialized_message_list)})
 			}
 
 			select {

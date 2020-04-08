@@ -260,6 +260,7 @@ func createHuntDownloadFile(
 	zip_writer := zip.NewWriter(fd)
 	f, err := zip_writer.Create("HuntDetails")
 	if err != nil {
+		zip_writer.Close()
 		fd.Close()
 		return err
 	}

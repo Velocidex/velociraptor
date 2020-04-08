@@ -46,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -412,7 +413,7 @@ func (self *MessageInfo) IterateJobs(
 	processor func(ctx context.Context, msg *crypto_proto.GrrMessage)) error {
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
-			decompressed, err := Uncompress(ctx, raw)
+			decompressed, err := utils.Uncompress(ctx, raw)
 			if err != nil {
 				return errors.New("Unable to decompress MessageList")
 			}
@@ -690,7 +691,7 @@ func (self *CryptoManager) EncryptMessageList(
 	}
 
 	if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
-		plain_text = Compress(plain_text)
+		plain_text = utils.Compress(plain_text)
 	}
 
 	cipher_text, err := self.Encrypt(

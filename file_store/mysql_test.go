@@ -31,7 +31,8 @@ func (self *MysqlTestSuite) SetupTest() {
 
 	// Make sure our database is not the same as the datastore
 	// tests or else we will trash over them.
-	database := self.config_obj.Datastore.MysqlDatabase + "fs"
+	self.config_obj.Datastore.MysqlDatabase = "velociraptor_testfs"
+	database := self.config_obj.Datastore.MysqlDatabase
 
 	db, err := sql.Open("mysql", conn_string)
 	assert.NoError(self.T(), err)
@@ -45,6 +46,7 @@ func (self *MysqlTestSuite) SetupTest() {
 
 	db.Exec(fmt.Sprintf("drop database `%v`", database))
 
+	self.config_obj.Datastore.MysqlConnectionString = conn_string + database
 	initializeDatabase(self.config_obj, conn_string+database, database)
 
 	self.filestore, err = NewSqlFileStore(self.config_obj)

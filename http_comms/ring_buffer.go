@@ -12,10 +12,10 @@ import (
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -149,7 +149,7 @@ func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
 			break
 		}
 
-		compressed_message_list := crypto.Compress(next_message_list)
+		compressed_message_list := utils.Compress(next_message_list)
 		result = append(result, compressed_message_list)
 		total_len += uint64(len(compressed_message_list))
 	}

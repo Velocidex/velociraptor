@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -21,14 +22,65 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+/*
+The MySql data store relies on two tables:
+
+filestore_metadata:
++-----+----------------------------------------------------+---------------------------+---------------------+----------+--------+
+| id  | path                                               | name                      | timestamp           | size     | is_dir |
++-----+----------------------------------------------------+---------------------------+---------------------+----------+--------+
+|   3 | /                                                  | public                    | 2020-04-08 16:33:53 |        0 |      1 |
+|  84 | /server_artifacts/Server.Monitor.Health/2020-04-08 | Prometheus.csv            | 2020-04-08 17:53:47 |     5155 |      0 |
++-----+----------------------------------------------------+---------------------------+---------------------+----------+--------+
+
+filestore:
++-----+------+--------------+------------+--------------+
+| id  | part | start_offset | end_offset | length(data) |
++-----+------+--------------+------------+--------------+
+| 719 |    0 |            0 |          0 |         NULL |
+| 719 |    1 |            0 |      64512 |        40339 |
+| 719 |    2 |        64512 |     129024 |        41815 |
+| 719 |    3 |       129024 |     193536 |        42395 |
++-----+------+--------------+------------+--------------+
+
+The 0'th row is a place holder for empty files. The real parts start
+at part id 1.
+
+Insertion- New chunks are added automatically to the filestore table
+in an atomic insert/select query. This means that inserts may occur by
+multiple writers to the same table at the same time. This will result
+in interleaving of data on the same file.
+
+Since Velociraptor simply writers CSV files, and each write operation
+contains a whole number of CSV rows this allows multiple writers to
+stream their results to the same file without needing to lock access
+to the database.
+
+*/
+
 var (
-	my_sql_mu             sync.Mutex
-	db_initialized        bool
+	my_sql_mu sync.Mutex
+
+	// A global DB object - initialized once and reused. According
+	//  to http://go-database-sql.org/accessing.html Although it’s
+	//  idiomatic to Close() the database when you’re finished
+	//  with it, the sql.DB object is designed to be
+	//  long-lived. Don’t Open() and Close() databases
+	//  frequently. Instead, create one sql.DB object for each
+	//  distinct datastore you need to access, and keep it until
+	//  the program is done accessing that datastore. Pass it
+	//  around as needed, or make it available somehow globally,
+	//  but keep it open. And don’t Open() and Close() from a
+	//  short-lived function. Instead, pass the sql.DB into that
+	//  short-lived function as an argument.
+	db *sql.DB
+
 	set_subject_dir_cache *cache.LRUCache
 )
 
 const (
-	MAX_BLOB_SIZE = 1<<16 - 1
+	// Allow a bit of overheads for snappy compression.
+	MAX_BLOB_SIZE = 1<<16 - 1024
 )
 
 type _cache_item struct{}
@@ -165,28 +217,23 @@ func (self *SqlReader) Seek(offset int64, whence int) (int64, error) {
 			self.filename, offset, whence))
 	}
 
-	// Find which part contains the required offset.
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
 	start_offset := int64(0)
 
 	// This query tries to find the part which covers the required
 	// offset. The inner query uses the (id, start_offset) index
 	// to find 1 row which has the start_offset just below the
 	// offset. We then
-	err = db.QueryRow(`
+	blob := []byte{}
+
+	err := db.QueryRow(`
 SELECT A.part, A.start_offset, A.data FROM (
     SELECT part FROM filestore WHERE id=? AND start_offset <= ?
     ORDER BY start_offset DESC LIMIT 1
 ) AS B
 JOIN filestore as A
-ON A.part = B.part AND A.id = ? AND A.end_offset > ?`,
+ON A.part = B.part AND A.id = ? AND A.end_offset > ? AND A.end_offset != A.start_offset`,
 		self.file_id, offset, self.file_id, offset).Scan(
-		&self.part, &start_offset, &self.current_chunk)
+		&self.part, &start_offset, &blob)
 
 	// No valid range is found we are seeking past end of file.
 	if err == sql.ErrNoRows {
@@ -201,7 +248,15 @@ ON A.part = B.part AND A.id = ? AND A.end_offset > ?`,
 		return 0, err
 	}
 
-	// The part is covered.
+	self.current_chunk, err = snappy.Decode(nil, blob)
+	if err != nil {
+		return 0, err
+	}
+
+	// If the query above works then the offset is inside this part.
+	if int(offset-start_offset) > len(self.current_chunk) {
+		return 0, errors.New("Bad chunk")
+	}
 	self.current_chunk = self.current_chunk[offset-start_offset:]
 
 	return offset, nil
@@ -216,12 +271,6 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 	if self.part < 0 {
 		return 0, io.EOF
 	}
-
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
 
 	offset := 0
 	for offset < len(buff) {
@@ -247,11 +296,9 @@ func (self *SqlReader) Read(buff []byte) (int, error) {
 			return offset, err
 		}
 
-		self.current_chunk = append([]byte{}, blob...)
-
-		// An empty chunk means no more data.
-		if len(self.current_chunk) == 0 {
-			break
+		self.current_chunk, err = snappy.Decode(nil, blob)
+		if err != nil {
+			return offset, err
 		}
 
 		// Next chunk id
@@ -300,12 +347,6 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 		return 0, nil
 	}
 
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
 	// TODO - retry transaction.
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
@@ -315,18 +356,17 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 
 	defer tx.Rollback()
 
-	last_part_query, err := tx.Prepare(`
-SELECT A.part, A.end_offset FROM filestore AS A join (
+	insert, err := tx.Prepare(`
+INSERT INTO filestore (id, part, start_offset, end_offset, data)
+SELECT A.id AS id,
+       A.part + 1 AS part,
+       A.end_offset AS start_offset,
+       A.end_offset + ? AS end_offset,
+       ? AS data
+FROM filestore AS A join (
    SELECT max(part) AS max_part FROM filestore WHERE id=?
 ) AS B
 ON A.part = B.max_part AND A.id = ?`)
-	if err != nil {
-		return 0, err
-	}
-	defer last_part_query.Close()
-
-	insert, err := tx.Prepare(`
-INSERT INTO filestore (id, part, start_offset, end_offset, data) VALUES (?, ?, ?, ?,?)`)
 	if err != nil {
 		return 0, err
 	}
@@ -338,24 +378,6 @@ UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
 		return 0, err
 	}
 	defer update_metadata.Close()
-
-	// Append the buffer to the data table
-	end := int64(0)
-	part := int64(0)
-
-	// Get the last part and end offset. SELECT max() on a primary
-	// key is instant. We then use this part to look up the row
-	// using the all_column index.
-	err = last_part_query.QueryRow(self.file_id, self.file_id).Scan(
-		&part, &end)
-	// No parts exist yet
-	if err == sql.ErrNoRows {
-		part = 0
-	} else if err != nil {
-		return 0, err
-	} else {
-		part += 1
-	}
 
 	total_length := int64(0)
 
@@ -369,21 +391,18 @@ UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
 		}
 
 		// Write this chunk only.
-		chunk := buff[:length]
-
-		_, err = insert.Exec(
-			self.file_id, part, end, end+length, chunk)
+		chunk := snappy.Encode(nil, buff[:length])
+		_, err = insert.Exec(length, chunk, self.file_id, self.file_id)
 		if err != nil {
 			return 0, err
 		}
 
 		// Increase our size
-		self.size = end + length
+		self.size += length
 		total_length += length
 
 		// Advance the buffer some more.
 		buff = buff[length:]
-		part += 1
 	}
 
 	_, err = update_metadata.Exec(total_length, self.file_id)
@@ -396,27 +415,21 @@ UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
 		return 0, err
 	}
 
-	return len(buff), nil
+	return int(total_length), nil
 }
 
 func (self SqlWriter) Truncate() error {
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
 	// TODO - retry transaction.
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return err
 	}
+	defer tx.Rollback()
 
 	// Essentially delete all the filestore rows for this file id.
-	_, err = tx.Exec("DELETE FROM filestore WHERE id = ?", self.file_id)
+	_, err = tx.Exec("DELETE FROM filestore WHERE id = ? AND part != 0", self.file_id)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
@@ -424,7 +437,6 @@ func (self SqlWriter) Truncate() error {
 	_, err = tx.Exec(`UPDATE filestore_metadata SET timestamp=now(), size=0 WHERE id = ?`,
 		self.file_id)
 	if err != nil {
-		_ = tx.Rollback()
 		return err
 	}
 
@@ -432,6 +444,8 @@ func (self SqlWriter) Truncate() error {
 	if err != nil {
 		return err
 	}
+
+	self.size = 0
 
 	return err
 }
@@ -449,18 +463,15 @@ func (self *SqlFileStore) ReadFile(filename string) (FileReader, error) {
 	result := &SqlReader{
 		config_obj: self.config_obj,
 		filename:   filename,
-	}
 
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return nil, err
+		// Parts start counting at 1.
+		part: 1,
 	}
-	defer db.Close()
 
 	dir_path, name := utils.PathSplit(filename)
 
 	// Create the file metadata
-	err = db.QueryRow(`
+	err := db.QueryRow(`
 SELECT id, size, is_dir, unix_timestamp(timestamp)
 FROM filestore_metadata WHERE path_hash = ? AND name = ?`,
 		hash(dir_path), name).Scan(
@@ -503,12 +514,6 @@ func (self *SqlFileStore) WriteFile(filename string) (FileWriter, error) {
 		dir_path := utils.JoinComponents(components[:len(components)-1], "/")
 		name := components[len(components)-1]
 
-		db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
-
 		ctx := context.Background()
 		tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 		if err != nil {
@@ -517,8 +522,9 @@ func (self *SqlFileStore) WriteFile(filename string) (FileWriter, error) {
 		defer tx.Rollback()
 
 		err = tx.QueryRow(`
-SELECT id, size FROM filestore_metadata WHERE path_hash =? and name = ?`,
-			hash(dir_path), name).Scan(&last_id, &size)
+SELECT id, size FROM filestore_metadata
+WHERE path = ? AND path_hash =? and name = ?`,
+			dir_path, hash(dir_path), name).Scan(&last_id, &size)
 		if err == sql.ErrNoRows {
 			// Create the file metadata
 			res, err := tx.Exec(`
@@ -529,6 +535,12 @@ INSERT INTO filestore_metadata (path, path_hash, name, is_dir) values(?, ?, ?, f
 			}
 
 			last_id, err = res.LastInsertId()
+			if err != nil {
+				return nil, err
+			}
+			_, err = tx.Exec(`
+INSERT INTO filestore (id, part, start_offset, end_offset)
+VALUES(?, 0, 0, 0)`, last_id)
 			if err != nil {
 				return nil, err
 			}
@@ -562,12 +574,6 @@ func (self *SqlFileStore) StatFile(filename string) (os.FileInfo, error) {
 
 func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
 	result := []os.FileInfo{}
-	db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
 	components := utils.SplitComponents(dirname)
 	dir_name := utils.JoinComponents(components, "/")
 
@@ -578,6 +584,7 @@ WHERE path_hash = ? AND path = ?`, hash(dir_name), dir_name)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	for rows.Next() {
 		row := &MysqlFileStoreFileInfo{}
@@ -618,12 +625,6 @@ func (self *SqlFileStore) Walk(root string, walkFn filepath.WalkFunc) error {
 func (self *SqlFileStore) Delete(filename string) error {
 	components := utils.SplitComponents(filename)
 	if len(components) > 0 {
-		db, err := sql.Open("mysql", self.config_obj.Datastore.MysqlConnectionString)
-		if err != nil {
-			return err
-		}
-		defer db.Close()
-
 		dir_path := utils.JoinComponents(components[:len(components)-1], "/")
 		name := components[len(components)-1]
 
@@ -671,14 +672,14 @@ func NewSqlFileStore(config_obj *config_proto.Config) (FileStore, error) {
 	my_sql_mu.Lock()
 	defer my_sql_mu.Unlock()
 
-	if !db_initialized {
-		err := initializeDatabase(
+	if db == nil {
+		var err error
+		db, err = initializeDatabase(
 			config_obj, config_obj.Datastore.MysqlConnectionString,
 			config_obj.Datastore.MysqlDatabase)
 		if err != nil {
 			return nil, err
 		}
-		db_initialized = true
 	}
 
 	return &SqlFileStore{config_obj: config_obj}, nil
@@ -686,13 +687,13 @@ func NewSqlFileStore(config_obj *config_proto.Config) (FileStore, error) {
 
 func initializeDatabase(
 	config_obj *config_proto.Config,
-	database_connection_string, database string) error {
+	database_connection_string, database string) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", database_connection_string)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer db.Close()
+	// Do not close the handle as it is a global.
 
 	// If specifying the connection string we assume the database
 	// already exists.
@@ -705,14 +706,14 @@ func initializeDatabase(
 			config_obj.Datastore.MysqlServer)
 		db, err := sql.Open("mysql", conn_string)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer db.Close()
 
 		_, err = db.Exec(fmt.Sprintf("create database if not exists `%v`",
 			database))
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -722,10 +723,10 @@ func initializeDatabase(
               start_offset int,
               end_offset int,
               data blob,
-              INDEX(id, part, start_offset, end_offset),
+              unique INDEX(id, part, start_offset, end_offset),
               INDEX(id, start_offset))`)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = db.Exec(`create table if not exists
@@ -741,10 +742,10 @@ func initializeDatabase(
               INDEX(path_hash(20)),
               unique INDEX(path_hash(20), name))`)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return db, nil
 }
 
 type SqlFileStoreAccessor struct {
