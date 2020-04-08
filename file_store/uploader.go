@@ -53,18 +53,29 @@ func (self *FileStoreUploader) Upload(
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 
+loop:
 	for {
-		n, _ := reader.Read(buf)
-		if n == 0 {
-			break
+		select {
+		case <-ctx.Done():
+			break loop
+
+		default:
+			n, err := reader.Read(buf)
+			if n == 0 || err == io.EOF {
+				break loop
+			}
+			data := buf[:n]
+
+			_, err = out_fd.Write(data)
+			if err != nil {
+				return nil, err
+			}
+
+			md5_sum.Write(data)
+			sha_sum.Write(data)
+
+			offset += int64(n)
 		}
-		data := buf[:n]
-
-		out_fd.Write(data)
-		md5_sum.Write(data)
-		sha_sum.Write(data)
-
-		offset += int64(n)
 	}
 
 	scope.Log("Uploaded %v (%v bytes)", output_path, offset)

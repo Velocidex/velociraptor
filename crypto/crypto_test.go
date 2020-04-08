@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TestSuite struct {
@@ -160,7 +161,7 @@ func (self *TestSuite) TestEncryption() {
 	initial_c := testutil.ToFloat64(rsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		cipher_text, err := self.client_manager.Encrypt(
-			[][]byte{Compress(plain_text)},
+			[][]byte{utils.Compress(plain_text)},
 			crypto_proto.PackedMessageList_ZCOMPRESSION,
 			config_obj.Client.PinnedServerName)
 		assert.NoError(t, err)
@@ -170,7 +171,8 @@ func (self *TestSuite) TestEncryption() {
 
 		assert.Equal(t, self.client_id, result.Source)
 		assert.Equal(t, result.Authenticated, true)
-		assert.Equal(t, result.RawCompressed[0], Compress(plain_text))
+		assert.Equal(t, result.RawCompressed[0],
+			utils.Compress(plain_text))
 	}
 
 	// We should encrypt this only once since we cache the cipher in the output LRU.

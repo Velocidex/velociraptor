@@ -21,8 +21,10 @@ import (
 )
 
 var (
-	mu                    sync.Mutex
-	db_initialized        bool
+	mu sync.Mutex
+
+	// Global db handle.
+	db                    *sql.DB
 	set_subject_dir_cache *cache.LRUCache
 )
 
@@ -94,16 +96,10 @@ func (self *MySQLDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn string) error {
 
-	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
 	dir_path, name := utils.PathSplit(urn)
 	hash := sha1.Sum([]byte(dir_path))
 
-	_, err = db.Exec(`
+	_, err := db.Exec(`
 DELETE FROM datastore WHERE path =?  AND  path_hash = ? and  name = ?`,
 		dir_path, string(hash[:]), name)
 	if err != nil {
@@ -138,12 +134,6 @@ func (self *MySQLDataStore) listChildren(
 	config_obj *config_proto.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
-
-	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
 
 	// In the database directories do not contain a trailing /
 	components := utils.SplitComponents(urn)
@@ -308,25 +298,25 @@ func NewMySQLDataStore(config_obj *config_proto.Config) (DataStore, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if !db_initialized {
-		err := initializeDatabase(config_obj)
+	if db == nil {
+		var err error
+		db, err = initializeDatabase(config_obj)
 		if err != nil {
 			return nil, err
 		}
-		db_initialized = true
 	}
 
 	return &MySQLDataStore{FileBaseDataStore{clock: testing.RealClock{}}}, nil
 }
 
 func initializeDatabase(
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer db.Close()
+	// Deliberatly do not close db as it is a global.
 
 	// If specifying the connection string we assume the database
 	// already exists.
@@ -339,14 +329,14 @@ func initializeDatabase(
 			config_obj.Datastore.MysqlServer)
 		db, err := sql.Open("mysql", conn_string)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer db.Close()
 
 		_, err = db.Exec(fmt.Sprintf("create database if not exists `%v`",
 			config_obj.Datastore.MysqlDatabase))
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -359,10 +349,10 @@ func initializeDatabase(
               data blob,
               INDEX(path_hash(20)), unique INDEX(path_hash(20), name))`)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return db, nil
 }
 
 func writeContentToMysqlRow(

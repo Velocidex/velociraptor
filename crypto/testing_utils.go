@@ -4,6 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type NullCryptoManager struct{}
@@ -25,7 +26,7 @@ func (self *NullCryptoManager) EncryptMessageList(
 	}
 
 	cipher_text, err := self.Encrypt(
-		[][]byte{Compress(plain_text)},
+		[][]byte{utils.Compress(plain_text)},
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
 		destination)
 	return cipher_text, err
