@@ -39,7 +39,7 @@ func (self *MysqlTestSuite) SetupTest() {
 	}
 	defer db.Close()
 
-	err = initializeDatabase(self.config_obj)
+	_, err = initializeDatabase(self.config_obj)
 	assert.NoError(self.T(), err)
 
 	self.datastore, err = NewMySQLDataStore(self.config_obj)
