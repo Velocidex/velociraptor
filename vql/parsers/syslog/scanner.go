@@ -84,8 +84,8 @@ func (self _WatchSyslogPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-		// Do not close output_chan - The event log service
-		// owns it and it will be closed by it.
+		defer close(output_chan)
+
 		arg := &ScannerPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -102,8 +102,10 @@ func (self _WatchSyslogPlugin) Call(
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
-			GlobalSyslogService.Register(
+			cancel := GlobalSyslogService.Register(
 				filename, arg.Accessor, ctx, scope, output_chan)
+
+			defer cancel()
 		}
 
 		// Wait until the query is complete.

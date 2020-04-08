@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -40,25 +41,17 @@ func (self *SyslogWatcherService) Register(
 	accessor string,
 	ctx context.Context,
 	scope *vfilter.Scope,
-	output_chan chan vfilter.Row) {
+	output_chan chan vfilter.Row) func() {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	subctx, cancel := context.WithCancel(ctx)
+
 	handle := &Handle{
-		ctx:         ctx,
+		ctx:         subctx,
 		output_chan: output_chan,
 		scope:       scope}
-
-	go func() {
-		select {
-		case <-handle.ctx.Done():
-			// Remove and close handles that are not
-			// currently active.
-			handle.scope.Log("Removing watcher for %v", filename)
-			close(handle.output_chan)
-		}
-	}()
 
 	key := filename + accessor
 	registration, pres := self.registrations[key]
@@ -71,13 +64,18 @@ func (self *SyslogWatcherService) Register(
 
 	registration = append(registration, handle)
 	self.registrations[key] = registration
+
 	scope.Log("Registering watcher for %v", filename)
+
+	return cancel
 }
 
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *SyslogWatcherService) StartMonitoring(
 	filename string, accessor_name string) {
+
+	defer utils.CheckForPanic("StartMonitoring")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -236,6 +234,7 @@ func (self *SyslogWatcherService) monitorOnce(
 	return cursor
 }
 
+// Send the syslog line to all listeners.
 func (self *SyslogWatcherService) distributeLine(
 	line, filename, key string,
 	handles []*Handle) []*Handle {
