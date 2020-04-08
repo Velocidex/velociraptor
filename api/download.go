@@ -210,7 +210,9 @@ func createDownloadFile(config_obj *config_proto.Config,
 }
 
 func createHuntDownloadFile(
-	config_obj *config_proto.Config, hunt_id string) error {
+	config_obj *config_proto.Config,
+	principal string,
+	hunt_id string) error {
 	if hunt_id == "" {
 		return errors.New("Hunt Id should be specified.")
 	}
@@ -299,8 +301,7 @@ func createHuntDownloadFile(
 			}
 
 			err = StoreVQLAsCSVFile(ctx, config_obj,
-				config_obj.Client.PinnedServerName,
-				env, query, f)
+				principal, env, query, f)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{

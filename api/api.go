@@ -924,7 +924,7 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	if in.FlowId != "" && in.ClientId != "" {
 		err = createDownloadFile(self.config, in.FlowId, in.ClientId)
 	} else if in.HuntId != "" {
-		err = createHuntDownloadFile(self.config, in.HuntId)
+		err = createHuntDownloadFile(self.config, user_name, in.HuntId)
 	}
 
 	result := &empty.Empty{}
