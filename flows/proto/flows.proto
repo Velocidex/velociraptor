@@ -1,10 +1,10 @@
 syntax = "proto3";
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
-import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
+import "proto/semantic.proto";
+import "crypto/proto/jobs.proto";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/flows/proto";
 
 message UploadedFileInfo {
     string name = 1;
@@ -49,8 +49,8 @@ message FlowContext {
             label: HIDDEN,
         }];
 
-	string session_id = 13;
-	enum State {
+        string session_id = 13;
+        enum State {
         UNSET = 0;
         RUNNING = 1;
         TERMINATED = 2;

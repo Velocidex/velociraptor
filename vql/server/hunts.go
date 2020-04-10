@@ -168,6 +168,7 @@ func (self HuntResultsPlugin) Call(
 				return
 			}
 
+			flows.FindCollectedArtifacts(config_obj, hunt_obj)
 			if len(hunt_obj.Artifacts) == 0 {
 				scope.Log("hunt_results: no artifacts in hunt")
 				return

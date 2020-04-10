@@ -4,6 +4,8 @@ import "google/protobuf/descriptor.proto";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/proto";
+
 message FlowMetaData {
     string category = 1;
 }

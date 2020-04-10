@@ -1,9 +1,11 @@
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/acls/proto/acl.proto";
+import "proto/semantic.proto";
+import "acls/proto/acl.proto";
 
 package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message VelociraptorUser {
     string name = 1 [(sem_type) = {

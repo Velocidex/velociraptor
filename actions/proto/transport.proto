@@ -1,9 +1,11 @@
 syntax = "proto3";
 
 // Protobufs for transferring bulk data.
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "proto/semantic.proto";
 
 package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
 
 // A message to encode a filesystem path (maybe for raw access)
 // Next field: 15

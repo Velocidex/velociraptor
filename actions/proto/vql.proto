@@ -1,11 +1,13 @@
 // These are the messages used in client actions.
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/proto/flow_metadata.proto";
-import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
+import "proto/semantic.proto";
+import "proto/flow_metadata.proto";
+import "artifacts/proto/artifact.proto";
 
 package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
 
 message VQLRequest {
     string Name = 2 [(sem_type) = {

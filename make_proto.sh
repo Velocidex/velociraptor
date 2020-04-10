@@ -17,18 +17,27 @@ for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/acls/proto/ \
                      $CWD/flows/proto/ ; do
     echo Building protos in $i
-    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD --go_out=$i $i/*.proto
+    echo protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD --go_out=paths=source_relative:$i $i/*.proto
+    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ -I$CWD --go_out=paths=source_relative:$i $i/*.proto
 done
 
 # Build GRPC servers.
 for i in  $CWD/api/proto/ ; do
     echo Building protos in $i
-    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ \
+    echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
            -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-           -I$CWD $i/*.proto --go_out=plugins=grpc:$i
+           -I$CWD $i/*.proto --go_out=paths=source_relative,plugins=grpc:$i
 
-    protoc -I$i -I$GOPATH/src/ -I/usr/local/include/ \
+    protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
            -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
-           --grpc-gateway_out=logtostderr=true:$i $i/*.proto
+           -I$CWD $i/*.proto --go_out=paths=source_relative,plugins=grpc:$i
+
+    echo protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+           --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
+
+    protoc -I$i -I. -I$GOPATH/src/ -I/usr/local/include/ \
+           -I$GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis \
+           --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
 
 done

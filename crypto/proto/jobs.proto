@@ -2,12 +2,14 @@
 // communication protocol.
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/actions/proto/hunts.proto";
-import "www.velocidex.com/golang/velociraptor/actions/proto/transport.proto";
-import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "proto/semantic.proto";
+import "actions/proto/hunts.proto";
+import "actions/proto/transport.proto";
+import "actions/proto/vql.proto";
 
 package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/crypto/proto";
 
 // This message is sent between the client and the server.
 // Next field: 24
