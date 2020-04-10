@@ -1,13 +1,11 @@
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/flows.proto";
-import "www.velocidex.com/golang/velociraptor/crypto/proto/jobs.proto";
-import "google/protobuf/any.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
+import "crypto/proto/jobs.proto";
+import "flows/proto/artifacts.proto";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message AvailableDownloadFile {
     string name = 1;

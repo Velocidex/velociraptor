@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/artifacts/proto/artifact.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/artifacts.proto";
-import "www.velocidex.com/golang/velociraptor/flows/proto/vfs.proto";
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
-import "www.velocidex.com/golang/velociraptor/actions/proto/vql.proto";
+import "artifacts/proto/artifact.proto";
+import "flows/proto/artifacts.proto";
+import "flows/proto/vfs.proto";
+import "proto/semantic.proto";
+import "actions/proto/vql.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
@@ -19,6 +19,8 @@ import "csv.proto";
 import "download.proto";
 
 package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message StartFlowResponse {
     string flow_id = 1;

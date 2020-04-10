@@ -4,6 +4,8 @@ import "flows.proto";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
 message NotebookExportRequest {
     string notebook_id = 1;
     string type = 2;

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
 message CreateDownloadRequest {
     string flow_id = 1;
     string client_id = 2;

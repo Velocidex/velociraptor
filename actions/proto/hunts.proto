@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
+
 message ForemanCheckin {
     uint64 last_hunt_timestamp = 1;
     uint64 last_event_table_version = 2;

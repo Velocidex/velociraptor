@@ -4,6 +4,7 @@ import "google/protobuf/descriptor.proto";  // for FieldOptions
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/proto";
 
 message SemanticDescriptor {
     // The semantic name of the SemanticValue contained in this field.

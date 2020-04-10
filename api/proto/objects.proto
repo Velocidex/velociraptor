@@ -1,9 +1,10 @@
 syntax = "proto3";
 
-import "www.velocidex.com/golang/velociraptor/proto/semantic.proto";
+import "proto/semantic.proto";
 
 package proto;
 
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message ObjectReference {
     ClientReference client = 2;
