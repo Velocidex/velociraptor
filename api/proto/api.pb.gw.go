@@ -10,6 +10,7 @@ package proto
 
 import (
 	"context"
+	fmt "fmt"
 	"io"
 	"net/http"
 
@@ -38,10 +39,24 @@ func request_API_CreateHunt_0(ctx context.Context, marshaler runtime.Marshaler, 
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
+
+	/*
+		b, _ := ioutil.ReadAll(newReader())
+		fmt.Println(string(b))
+		err := json.Unmarshal(b, &protoReq)
+
+		fmt.Printf("%v %v\n", err, protoReq)
+	*/
 	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		fmt.Printf("%v %v", err, protoReq)
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
+	/*
+		err := json.NewDecoder(req.Body).Decode(&protoReq)
+		if err != nil {
+			return nil, metadata, err
+		}
+	*/
 	msg, err := client.CreateHunt(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
