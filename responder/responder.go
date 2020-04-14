@@ -59,6 +59,7 @@ func (self *Responder) AddResponse(message *crypto_proto.GrrMessage) {
 	defer self.Unlock()
 
 	message.SessionId = self.request.SessionId
+	message.Urgent = self.request.Urgent
 	message.ResponseId = self.next_id
 	self.next_id++
 	if message.RequestId == 0 {

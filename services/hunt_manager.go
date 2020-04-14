@@ -27,6 +27,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -196,10 +197,15 @@ func (self *HuntManager) ProcessRow(
 
 			// Ignore hunts with label conditions which
 			// exclude this client.
-			if !huntHasLabel(
+			has_label, err := huntHasLabel(
 				self.config_obj,
 				hunt_obj,
-				participation_row.ClientId) {
+				participation_row.ClientId)
+			if err != nil {
+				return err
+			}
+
+			if !has_label {
 				return errors.New("hunt label does not match")
 			}
 
@@ -227,8 +233,12 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	client, closer := grpc_client.Factory.GetAPIClient(
+	client, closer, err := grpc_client.Factory.GetAPIClient(
 		ctx, self.config_obj)
+	if err != nil {
+		scope.Log("hunt manager: %s", err.Error())
+		return
+	}
 	defer closer()
 
 	response, err := client.CollectArtifact(ctx, request)
@@ -255,27 +265,20 @@ func startHuntManager(
 
 func huntHasLabel(config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt,
-	client_id string) bool {
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	client_id string) (bool, error) {
 
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition != nil && len(label_condition.Label) > 0 {
-		client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-		defer closer()
-
 		request := &api_proto.LabelClientsRequest{
 			ClientIds: []string{client_id},
 			Labels:    label_condition.Label,
-			Operation: "check",
 		}
-		_, err := client.LabelClients(ctx, request)
 
+		_, err := clients.LabelClients(config_obj, request)
 		if err != nil {
-			return false
+			return false, nil
 		}
 	}
 
-	return true
+	return true, nil
 }

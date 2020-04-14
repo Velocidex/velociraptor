@@ -42,6 +42,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -50,6 +51,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -171,13 +173,7 @@ func (self *ApiServer) CollectArtifact(
 
 	result.FlowId = flow_id
 
-	// Notify the client if it is listenning.
-	client, cancel := self.api_client_factory.GetAPIClient(ctx, self.config)
-	defer cancel()
-
-	_, err = client.NotifyClients(ctx, &api_proto.NotificationRequest{
-		ClientId: in.ClientId,
-	})
+	err = services.NotifyClient(in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -376,7 +372,6 @@ func (self *ApiServer) ListClients(
 func (self *ApiServer) NotifyClients(
 	ctx context.Context,
 	in *api_proto.NotificationRequest) (*empty.Empty, error) {
-
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -386,10 +381,10 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		self.server_obj.NotificationPool.NotifyAll()
+		services.NotifyAll()
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		self.server_obj.NotificationPool.Notify(in.ClientId)
+		services.NotifyClient(in.ClientId)
 	} else {
 		return nil, errors.New("client id should be specified")
 	}
@@ -406,7 +401,7 @@ func (self *ApiServer) LabelClients(
 	if !perm || err != nil {
 		return nil, errors.New("User is not allowed to label clients.")
 	}
-	result, err := LabelClients(self.config, in)
+	result, err := clients.LabelClients(self.config, in)
 	if err != nil {
 		return nil, err
 	}

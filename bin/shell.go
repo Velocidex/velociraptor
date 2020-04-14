@@ -71,7 +71,11 @@ func shell_executor(config_obj *config_proto.Config,
 	}
 
 	fmt.Printf("Running %v on %v\n", t, client_id)
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+		return
+	}
 	defer closer()
 
 	response, err := client.CollectArtifact(ctx,
@@ -130,7 +134,10 @@ func completer(t prompt.Document) []prompt.Suggest {
 }
 
 func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_proto.ApiClient, error) {
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
 	defer closer()
 
 	return client.GetClient(ctx, &api_proto.GetClientRequest{

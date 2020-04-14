@@ -390,13 +390,17 @@ message FrontendConfig {
             description: "The initial set of client monitoring artifacts."
         }];
 
+    string run_as_user = 16 [(sem_type) = {
+            description: "The user that the frontend should run as. If set we refuse to run as a different user.",
+        }];
+
+    // Various performoance related tweaks.
     int64 expected_clients = 15 [(sem_type) = {
             description: "Expected number of clients in this deployment (default 10000)",
         }];
 
-    string run_as_user = 16 [(sem_type) = {
-            description: "The user that the frontend should run as. If set we refuse to run as a different user.",
-        }];
+    int64 GRPC_pool_max_size = 17;
+    int64 GRPC_pool_max_wait = 18;
 }
 
 

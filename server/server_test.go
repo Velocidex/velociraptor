@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -46,8 +45,8 @@ type MockAPIClientFactory struct {
 
 func (self MockAPIClientFactory) GetAPIClient(
 	ctx context.Context,
-	config_obj *config_proto.Config) (api_proto.APIClient, func() error) {
-	return self.mock, func() error { return nil }
+	config_obj *config_proto.Config) (api_proto.APIClient, func() error, error) {
+	return self.mock, func() error { return nil }, nil
 
 }
 
@@ -109,7 +108,6 @@ func (self *ServerTestSuite) TestEnrollment() {
 	// We expect a single call to schedule an artifact collection.
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
-
 	mock.EXPECT().CollectArtifact(
 		gomock.Any(),
 		expected,
@@ -215,10 +213,6 @@ func (self *ServerTestSuite) TestForeman() {
 	// Launching the hunt on the client will result in client
 	// notification for that client only.
 	mock := api_mock.NewMockAPIClient(ctrl)
-	mock.EXPECT().NotifyClients(
-		gomock.Any(),
-		&api_proto.NotificationRequest{ClientId: self.client_id},
-	).Return(nil, nil)
 
 	dispatcher.APIClientFactory = MockAPIClientFactory{
 		mock: mock,
@@ -633,10 +627,6 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// Cancelling the flow will notify the client immediately.
 	mock := api_mock.NewMockAPIClient(ctrl)
-	mock.EXPECT().NotifyClients(
-		gomock.Any(),
-		&api_proto.NotificationRequest{ClientId: self.client_id},
-	).Return(&empty.Empty{}, nil)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(
@@ -697,10 +687,6 @@ func (self *ServerTestSuite) TestFlowArchives() {
 
 	// Cancelling the flow will notify the client immediately.
 	mock := api_mock.NewMockAPIClient(ctrl)
-	mock.EXPECT().NotifyClients(
-		gomock.Any(),
-		&api_proto.NotificationRequest{ClientId: self.client_id},
-	).Return(&empty.Empty{}, nil)
 
 	// Now cancel the same flow.
 	response, err := flows.CancelFlow(

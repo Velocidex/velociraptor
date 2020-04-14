@@ -13,7 +13,7 @@ require (
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
-	github.com/Velocidex/go-yara v1.1.9
+	github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
 	github.com/Velocidex/ordereddict v0.0.0-20200405143047-0d78f9f9da53
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml v0.0.0-20190812045153-ad0acda9eea0
@@ -39,7 +39,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.3.5
 	github.com/golang/snappy v0.0.1
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
@@ -53,6 +53,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
 	github.com/hanwen/go-fuse v1.0.1-0.20190726130028-2f298055551b
 	github.com/hillu/go-ntdll v0.0.0-20190226223014-dd4204aa705e
+	github.com/hillu/go-yara v1.2.2 // indirect
 	github.com/hinshun/vt10x v0.0.0-20180809195222-d55458df857c // indirect
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
@@ -125,7 +126,6 @@ require (
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
-
 // Replace chroma with our fork - we take out the lexers and styles we
 // dont care about to reduce the size of the binary significantly.
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20191004150416-dcd285bf46f1
@@ -133,7 +133,8 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.201
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
-//replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
+// replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
+// replace www.velocidex.com/golang/go-yara => /home/mic/projects/go-yara
 
 replace gopkg.in/russross/blackfriday.v2 v2.0.1 => github.com/russross/blackfriday/v2 v2.0.1
 

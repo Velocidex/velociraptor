@@ -31,6 +31,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Sender struct {
@@ -66,6 +67,24 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 			// Executor closed the channel.
 			if msg == nil {
 				return
+			}
+
+			// Urgent messages skip the ring buffer and
+			// get sent immediately. This allows them to
+			// jump ahead of queued messages.
+			if msg.Urgent {
+				item := &crypto_proto.MessageList{
+					Job: []*crypto_proto.GrrMessage{msg}}
+
+				serialized_msg, err := proto.Marshal(item)
+				if err != nil {
+					// Can't serialize the message
+					// - drop it on the floor.
+					continue
+				}
+				self.sendMessageList(ctx, [][]byte{
+					utils.Compress(serialized_msg)},
+					msg.Urgent)
 			}
 
 			// NOTE: This is kind of a hack. We hold in
@@ -130,7 +149,8 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 				// know the messages are sent so we
 				// can commit them from the ring
 				// buffer.
-				self.sendMessageList(ctx, compressed_messages)
+				self.sendMessageList(ctx, compressed_messages,
+					false /* urgent */)
 				self.ring_buffer.Commit()
 
 				// We need to make sure our memory
