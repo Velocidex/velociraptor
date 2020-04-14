@@ -69,7 +69,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("copy: %v", err)
 		return vfilter.Null{}

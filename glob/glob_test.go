@@ -34,6 +34,7 @@ import (
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type pathComponentsTestFixtureType struct {
@@ -119,7 +120,7 @@ func (self MockFileInfo) GetLink() (string, error) { return "", nil }
 
 type MockFileSystemAccessor []string
 
-func (self MockFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+func (self MockFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
 	return self
 }
 

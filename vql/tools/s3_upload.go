@@ -46,7 +46,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload_S3: %v", err)
 		return vfilter.Null{}

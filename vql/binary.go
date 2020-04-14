@@ -126,7 +126,7 @@ func (self _BinaryParserPlugin) Call(
 
 		var file io.Reader
 		if arg.File != "" {
-			accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+			accessor, err := glob.GetAccessor(arg.Accessor, scope)
 			if err != nil {
 				scope.Log("%s: %v", self.Name(), err)
 				return

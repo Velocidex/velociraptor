@@ -63,7 +63,7 @@ func (self ParseCSVPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+				accessor, err := glob.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_csv: %v", err)
 					return

@@ -4,9 +4,8 @@
 package filesystems
 
 import (
-	"context"
-
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type AutoFilesystemAccessor struct {
@@ -14,10 +13,10 @@ type AutoFilesystemAccessor struct {
 	file_delegate glob.FileSystemAccessor
 }
 
-func (self AutoFilesystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
+func (self AutoFilesystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
 	return &AutoFilesystemAccessor{
-		ntfs_delegate: NTFSFileSystemAccessor{}.New(ctx),
-		file_delegate: OSFileSystemAccessor{}.New(ctx),
+		ntfs_delegate: NTFSFileSystemAccessor{}.New(scope),
+		file_delegate: OSFileSystemAccessor{}.New(scope),
 	}
 }
 

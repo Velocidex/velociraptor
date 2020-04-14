@@ -52,7 +52,7 @@ func _ParseFile(
 		return
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("error: %v", err)
 		return

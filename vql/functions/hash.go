@@ -72,7 +72,7 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	fs, err := glob.GetAccessor(arg.Accessor, ctx)
+	fs, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("hash: %v", err)
 		return vfilter.Null{}

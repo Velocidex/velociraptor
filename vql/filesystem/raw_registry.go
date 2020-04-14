@@ -230,12 +230,12 @@ func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
 type RawRegistryFileCache struct {
 	registry *regparser.Registry
 	fd       glob.ReadSeekCloser
-	cancel   func()
 }
 
 type RawRegFileSystemAccessor struct {
 	mu       sync.Mutex
 	fd_cache map[string]*RawRegistryFileCache
+	scope    *vfilter.Scope
 }
 
 func (self *RawRegFileSystemAccessor) getRegHive(
@@ -253,9 +253,7 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 
 	file_cache, pres := self.fd_cache[base_url.String()]
 	if !pres {
-		ctx, cancel := context.WithCancel(context.Background())
-
-		accessor, err := glob.GetAccessor(url.Scheme, ctx)
+		accessor, err := glob.GetAccessor(url.Scheme, self.scope)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -277,8 +275,8 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 
 		file_cache = &RawRegistryFileCache{
 			registry: registry,
-			cancel:   cancel,
-			fd:       fd}
+			fd:       fd,
+		}
 
 		self.fd_cache[url.String()] = file_cache
 	}
@@ -286,29 +284,31 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 	return file_cache, url, nil
 }
 
+const RawRegFileSystemTag = "_RawReg"
+
 func (self *RawRegFileSystemAccessor) New(
-	ctx context.Context) glob.FileSystemAccessor {
-	result := &RawRegFileSystemAccessor{
-		fd_cache: make(map[string]*RawRegistryFileCache),
+	scope *vfilter.Scope) glob.FileSystemAccessor {
+
+	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
+	if result_any == nil {
+		result := &RawRegFileSystemAccessor{
+			fd_cache: make(map[string]*RawRegistryFileCache),
+		}
+		vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
+
+		// When scope is destroyed, we close all the filehandles.
+		scope.AddDestructor(func() {
+			result.mu.Lock()
+			defer result.mu.Unlock()
+
+			for _, v := range result.fd_cache {
+				v.fd.Close()
+			}
+		})
+		return result
 	}
 
-	// When the context is done, close all the files.
-	go func() {
-		<-ctx.Done()
-
-		result.mu.Lock()
-		defer result.mu.Unlock()
-
-		for _, v := range result.fd_cache {
-			v.cancel()
-			v.fd.Close()
-		}
-
-		result.fd_cache = make(
-			map[string]*RawRegistryFileCache)
-	}()
-
-	return result
+	return result_any.(glob.FileSystemAccessor)
 }
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {
@@ -431,7 +431,7 @@ func (self ReadKeyValues) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(accessor_name, ctx)
+		accessor, err := glob.GetAccessor(accessor_name, scope)
 		if err != nil {
 			scope.Log("read_reg_key: %v", err)
 			return

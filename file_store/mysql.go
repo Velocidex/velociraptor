@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 /*
@@ -752,7 +753,7 @@ type SqlFileStoreAccessor struct {
 	file_store *SqlFileStore
 }
 
-func (self SqlFileStoreAccessor) New(ctx context.Context) glob.FileSystemAccessor {
+func (self SqlFileStoreAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
 	return &SqlFileStoreAccessor{self.file_store}
 }
 

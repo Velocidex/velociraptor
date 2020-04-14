@@ -69,7 +69,7 @@ func (self _ParseEvtxPlugin) Call(
 					return
 				}
 
-				accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+				accessor, err := glob.GetAccessor(arg.Accessor, scope)
 				if err != nil {
 					scope.Log("parse_evtx: %v", err)
 					return

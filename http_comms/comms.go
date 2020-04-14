@@ -319,7 +319,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 // Manages reading jobs from the reader notification channel.
 type NotificationReader struct {
-	config_obj config_proto.Config
+	config_obj *config_proto.Config
 	connector  IConnector
 	manager    crypto.ICryptoManager
 	executor   executor.Executor
@@ -350,7 +350,7 @@ func NewNotificationReader(
 	}
 
 	return &NotificationReader{
-		config_obj:            *config_obj,
+		config_obj:            config_obj,
 		connector:             connector,
 		manager:               manager,
 		executor:              executor,

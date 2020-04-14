@@ -23,7 +23,6 @@
 package filesystems
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -40,21 +39,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
+	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	// Cache raw devices for a given time. Note that the cache is
-	// only alive for the duration of a single VQL query
-	// (including its subqueries). The query will close the cache
-	// after it terminates. The cache helps in the case where
-	// subqueries need to open the same device. For long running
-	// queries, the cache will refresh every 10 minutes to get a
-	// fresh view of the data.
-	mu        sync.Mutex
-	fd_cache  map[string]*AccessorContext // Protected by mutex
-	timestamp time.Time                   // Protected by mutex
+const (
+	NTFSFileSystemTag = "_NTFS"
 )
 
 type AccessorContext struct {
@@ -167,13 +159,41 @@ func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 }
 
 type NTFSFileSystemAccessor struct {
-	ctx context.Context
+	// Cache raw devices for a given time. Note that the cache is
+	// only alive for the duration of a single VQL query
+	// (including its subqueries). The query will close the cache
+	// after it terminates. The cache helps in the case where
+	// subqueries need to open the same device. For long running
+	// queries, the cache will refresh every 10 minutes to get a
+	// fresh view of the data.
+	mu        sync.Mutex
+	fd_cache  map[string]*AccessorContext // Protected by mutex
+	timestamp time.Time                   // Protected by mutex
 }
 
-func (self NTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &NTFSFileSystemAccessor{ctx}
+func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+	result_any := vql_subsystem.CacheGet(scope, NTFSFileSystemTag)
+	if result_any == nil {
+		// Create a new cache in the scope.
+		result := &NTFSFileSystemAccessor{
+			fd_cache: make(map[string]*AccessorContext),
+		}
 
-	return result
+		vql_subsystem.CacheSet(scope, NTFSFileSystemTag, result)
+
+		// When scope is destroyed, we close all the filehandles.
+		scope.AddDestructor(func() {
+			result.mu.Lock()
+			defer result.mu.Unlock()
+
+			for _, v := range result.fd_cache {
+				v.fd.Close()
+			}
+		})
+		return result
+	}
+
+	return result_any.(glob.FileSystemAccessor)
 }
 
 func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) (
@@ -183,13 +203,13 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 
 func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 	*AccessorContext, error) {
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	// We cache the paged reader as well as the original file
 	// handle so we can safely close it when the query is done.
-	ctx, pres := fd_cache[device]
-	if !pres || time.Now().After(timestamp.Add(10*time.Minute)) {
+	cached_ctx, pres := self.fd_cache[device]
+	if !pres || time.Now().After(self.timestamp.Add(10*time.Minute)) {
 		// Try to open the device and list its path.
 		raw_fd, err := os.OpenFile(device, os.O_RDONLY, os.FileMode(0666))
 		if err != nil {
@@ -205,36 +225,20 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 		if err != nil {
 			return nil, err
 		}
-
-		if ctx != nil {
-			ctx.fd.Close()
+		if cached_ctx != nil {
+			cached_ctx.fd.Close()
 		}
 
-		ctx = &AccessorContext{
+		cached_ctx = &AccessorContext{
 			reader:       reader,
 			fd:           raw_fd,
 			ntfs_ctx:     ntfs_ctx,
 			path_listing: cache.NewLRUCache(200),
 		}
-
-		// When the context is done, close the
-		// file. The files must remain open until the
-		// entire VQL query is done.
-		go func() {
-			select {
-			case <-self.ctx.Done():
-				mu.Lock()
-				ctx.fd.Close()
-				mu.Unlock()
-			}
-		}()
-
-		fd_cache[device] = ctx
-
-		timestamp = time.Now()
+		self.fd_cache[device] = cached_ctx
+		self.timestamp = time.Now()
 	}
-
-	return ctx, nil
+	return cached_ctx, nil
 }
 
 func discoverVSS() ([]glob.FileInfo, error) {
@@ -378,7 +382,7 @@ type readAdapter struct {
 func (self *readAdapter) Read(buf []byte) (res int, err error) {
 	self.Lock()
 	defer self.Unlock()
-	
+
 	defer func() {
 		r := recover()
 		if r != nil {
@@ -657,7 +661,4 @@ func GetDirLRU(accessor_ctx *AccessorContext, path string, component string) (
 
 func init() {
 	glob.Register("ntfs", &NTFSFileSystemAccessor{})
-
-	fd_cache = make(map[string]*AccessorContext)
-	timestamp = time.Now()
 }

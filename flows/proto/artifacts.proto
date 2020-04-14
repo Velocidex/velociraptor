@@ -20,6 +20,9 @@ message ArtifactCollectorArgs {
     string creator = 1;
     string client_id = 3;
 
+    // If set we send an urgent request to the client.
+    bool urgent = 21;
+
     repeated string artifacts = 2 [(sem_type) = {
             description: "The artifacts to launch.",
             friendly_name: "Launch",

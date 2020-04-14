@@ -33,7 +33,7 @@ func (self *PlistParser) Call(ctx context.Context,
 		return
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("pslist: %v", err)
 		return vfilter.Null{}

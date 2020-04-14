@@ -65,7 +65,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("upload: %v", err)
 			return &uploads.UploadResponse{
@@ -154,7 +154,7 @@ func (self *UploadPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("upload: %v", err)
 			return

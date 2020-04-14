@@ -66,7 +66,7 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("glob: %v", err)
 			return
@@ -203,7 +203,7 @@ func (self ReadFilePlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("read_file: %v", err)
 			return
@@ -254,7 +254,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 		arg.Length = 4 * 1024 * 1024
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("read_file: %v", err)
 		return ""
@@ -316,7 +316,7 @@ func (self *StatPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("stat: %s", err.Error())
 			return

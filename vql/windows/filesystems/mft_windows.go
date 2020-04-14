@@ -25,20 +25,20 @@
 package filesystems
 
 import (
-	"context"
 	"errors"
 	"strings"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type MFTFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self MFTFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	ntfs_accessor := NTFSFileSystemAccessor{}.New(ctx).(*NTFSFileSystemAccessor)
+func (self MFTFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+	ntfs_accessor := NTFSFileSystemAccessor{}.New(scope).(*NTFSFileSystemAccessor)
 	return &MFTFileSystemAccessor{ntfs_accessor}
 }
 

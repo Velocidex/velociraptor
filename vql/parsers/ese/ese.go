@@ -77,7 +77,7 @@ func (self _SRUMLookupId) Call(
 		lookup_map = make(map[int64]string)
 		defer vql_subsystem.CacheSet(scope, key, lookup_map)
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("srum_lookup_id: %v", err)
 			return &vfilter.Null{}
@@ -203,7 +203,7 @@ func (self _ESEPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_ese: %v", err)
 			return

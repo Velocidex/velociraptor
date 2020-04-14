@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -67,10 +68,10 @@ func (self *CSVWatcherService) Register(
 func (self *CSVWatcherService) StartMonitoring(
 	filename string, accessor_name string) {
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
 
-	accessor, err := glob.GetAccessor(accessor_name, ctx)
+	accessor, err := glob.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return
 	}

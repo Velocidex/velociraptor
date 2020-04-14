@@ -20,18 +20,18 @@
 package glob
 
 import (
-	"context"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type DataFilesystemAccessor struct{}
 
-func (self DataFilesystemAccessor) New(ctx context.Context) FileSystemAccessor {
+func (self DataFilesystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
 	return DataFilesystemAccessor{}
 }
 

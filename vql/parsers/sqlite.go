@@ -212,7 +212,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 		}
 	})
 
-	fs, err := glob.GetAccessor(arg.Accessor, ctx)
+	fs, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		return "", err
 	}

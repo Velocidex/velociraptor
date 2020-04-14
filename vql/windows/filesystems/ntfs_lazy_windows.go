@@ -23,7 +23,6 @@
 package filesystems
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -34,6 +33,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func ExtractI30List(accessor_ctx *AccessorContext,
@@ -248,9 +248,9 @@ type LazyNTFSFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self LazyNTFSFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
+func (self LazyNTFSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
 	return &LazyNTFSFileSystemAccessor{
-		NTFSFileSystemAccessor{}.New(ctx).(*NTFSFileSystemAccessor),
+		NTFSFileSystemAccessor{}.New(scope).(*NTFSFileSystemAccessor),
 	}
 }
 
