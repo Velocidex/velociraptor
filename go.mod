@@ -39,7 +39,7 @@ require (
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
-	github.com/golang/mock v1.3.1
+	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.3.5
 	github.com/golang/snappy v0.0.1
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect

@@ -27,7 +27,9 @@ func NotifyAll() error {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	notification_pool.NotifyAll()
+	if notification_pool != nil {
+		notification_pool.NotifyAll()
+	}
 	return nil
 }
 
@@ -35,6 +37,8 @@ func NotifyClient(client_id string) error {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	notification_pool.Notify(client_id)
+	if notification_pool != nil {
+		notification_pool.Notify(client_id)
+	}
 	return nil
 }

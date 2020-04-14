@@ -47,7 +47,7 @@ type MockHTTPConnector struct {
 }
 
 func (self *MockHTTPConnector) GetCurrentUrl() string { return "http://URL/" }
-func (self *MockHTTPConnector) Post(handler string, data []byte) (*http.Response, error) {
+func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*http.Response, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
