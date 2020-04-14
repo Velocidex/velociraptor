@@ -9,6 +9,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -120,14 +121,8 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 	}
 
 	if len(client_info.Labels) > 0 {
-		client, cancel := self.APIClientFactory.GetAPIClient(
-			context.Background(), self.config_obj)
-		defer cancel()
-
-		ctx, ctx_cancel := context.WithCancel(context.Background())
-		defer ctx_cancel()
-
-		_, err := client.LabelClients(ctx,
+		_, err := clients.LabelClients(
+			self.config_obj,
 			&api_proto.LabelClientsRequest{
 				ClientIds: []string{client_id},
 				Labels:    client_info.Labels,

@@ -23,6 +23,10 @@ message GrrMessage {
       "(requests increment from 1)."
     }];
 
+  // If this is set then the message is urgent - it will not be
+  // queued needlessly.
+  bool urgent = 36;
+
   uint64 response_id = 3 [(sem_type) = {
       description: "Responses for each request are also numbered from 1."
     }];

@@ -38,8 +38,11 @@ func enroll(
 
 		client_id := strings.TrimPrefix(*client_urn, "aff4:/")
 
-		client, closer := server.APIClientFactory.GetAPIClient(
+		client, closer, err := server.APIClientFactory.GetAPIClient(
 			ctx, server.config)
+		if err != nil {
+			return err
+		}
 		defer closer()
 
 		request := &flows_proto.ArtifactCollectorArgs{

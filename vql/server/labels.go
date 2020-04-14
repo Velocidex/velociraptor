@@ -24,8 +24,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -68,8 +68,7 @@ func (self *AddLabels) Call(ctx context.Context,
 		ClientIds: []string{arg.ClientId},
 		Operation: arg.Op,
 	}
-
-	_, err = api.LabelClients(config_obj, request)
+	_, err = clients.LabelClients(config_obj, request)
 	if err != nil {
 		scope.Log("label: %s", err.Error())
 		return vfilter.Null{}

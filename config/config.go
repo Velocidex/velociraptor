@@ -132,6 +132,8 @@ func GetDefaultConfig() *config_proto.Config {
 				"Generic.Client.Stats",
 			},
 			ExpectedClients: 10000,
+			GRPCPoolMaxSize: 100,
+			GRPCPoolMaxWait: 60,
 			PublicPath:      "/var/tmp/velociraptor/public",
 		},
 		Datastore: &config_proto.DatastoreConfig{

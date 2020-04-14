@@ -86,7 +86,12 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
 	defer closer()
 
 	response, err := client.CollectArtifact(ctx, request)

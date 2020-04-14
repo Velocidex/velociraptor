@@ -37,6 +37,11 @@ func StartServices(
 	config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) error {
 
+	err := startNotificationService(notifier)
+	if err != nil {
+		return err
+	}
+
 	if config_obj.ServerServices.HuntManager {
 		err := startHuntManager(ctx, wg, config_obj)
 		if err != nil {

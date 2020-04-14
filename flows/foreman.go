@@ -121,14 +121,7 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		api_client, cancel := dispatcher.APIClientFactory.GetAPIClient(
-			ctx, config_obj)
-		defer cancel()
-
-		_, err = api_client.NotifyClients(
-			ctx, &api_proto.NotificationRequest{
-				ClientId: client_id})
-		return err
+		return services.NotifyClient(client_id)
 	})
 }
 

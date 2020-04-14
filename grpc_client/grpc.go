@@ -22,6 +22,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -85,7 +86,7 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 
 type APIClientFactory interface {
 	GetAPIClient(ctx context.Context,
-		config_obj *config_proto.Config) (api_proto.APIClient, func() error)
+		config_obj *config_proto.Config) (api_proto.APIClient, func() error, error)
 }
 
 type GRPCAPIClient struct{}
@@ -93,15 +94,15 @@ type GRPCAPIClient struct{}
 func (self GRPCAPIClient) GetAPIClient(
 	ctx context.Context,
 	config_obj *config_proto.Config) (
-	api_proto.APIClient, func() error) {
-	channel := getChannel(ctx, config_obj)
+	api_proto.APIClient, func() error, error) {
+	channel, err := getChannel(ctx, config_obj)
 
-	return api_proto.NewAPIClient(channel.ClientConn), channel.Close
+	return api_proto.NewAPIClient(channel.ClientConn), channel.Close, err
 }
 
 func getChannel(
 	ctx context.Context,
-	config_obj *config_proto.Config) *grpcpool.ClientConn {
+	config_obj *config_proto.Config) (*grpcpool.ClientConn, error) {
 	var err error
 
 	pool_mu.Lock()
@@ -116,17 +117,26 @@ func getChannel(
 
 		}
 
-		pool, err = grpcpool.New(factory, 1, 5, 60*time.Second)
+		max_size := 100
+		max_wait := 60
+		if config_obj.Frontend != nil {
+			if config_obj.Frontend.GRPCPoolMaxSize > 0 {
+				max_size = int(config_obj.Frontend.GRPCPoolMaxSize)
+			}
+
+			if config_obj.Frontend.GRPCPoolMaxWait > 0 {
+				max_size = int(config_obj.Frontend.GRPCPoolMaxWait)
+			}
+		}
+
+		pool, err = grpcpool.New(factory, 1, max_size, time.Duration(max_wait)*time.Second)
 		if err != nil {
-			panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
+			return nil, errors.New(
+				fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
 		}
 	}
 
-	conn, err := pool.Get(ctx)
-	if err != nil {
-		panic(fmt.Sprintf("Unable to connect to gRPC server: %v: %v", address, err))
-	}
-	return conn
+	return pool.Get(ctx)
 }
 
 func GetAPIConnectionString(config_obj *config_proto.Config) string {

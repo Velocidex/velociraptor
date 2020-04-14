@@ -93,7 +93,11 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		State:           api_proto.Hunt_RUNNING,
 	}
 
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	if err != nil {
+		scope.Log("hunt: %s", err.Error())
+		return vfilter.Null{}
+	}
 	defer closer()
 
 	response, err := client.CreateHunt(ctx, hunt_request)

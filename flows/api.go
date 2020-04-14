@@ -37,6 +37,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -216,13 +217,7 @@ func CancelFlow(
 		return nil, err
 	}
 
-	client, cancel := api_client_factory.GetAPIClient(ctx, config_obj)
-	defer cancel()
-
-	_, err = client.NotifyClients(ctx,
-		&api_proto.NotificationRequest{
-			ClientId: client_id,
-		})
+	err = services.NotifyClient(client_id)
 	if err != nil {
 		return nil, err
 	}

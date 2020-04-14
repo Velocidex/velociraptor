@@ -98,7 +98,7 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 
 type IConnector interface {
 	GetCurrentUrl() string
-	Post(handler string, data []byte) (*http.Response, error)
+	Post(handler string, data []byte, priority bool) (*http.Response, error)
 	ReKeyNextServer()
 	ServerName() string
 }
@@ -198,7 +198,8 @@ func (self *HTTPConnector) GetCurrentUrl() string {
 	return self.urls[self.current_url_idx]
 }
 
-func (self *HTTPConnector) Post(handler string, data []byte) (
+func (self *HTTPConnector) Post(handler string,
+	data []byte, urgent bool) (
 	*http.Response, error) {
 
 	reader := bytes.NewReader(data)
@@ -208,6 +209,9 @@ func (self *HTTPConnector) Post(handler string, data []byte) (
 	}
 	req.Header.Set("User-Agent", constants.USER_AGENT)
 	req.Header.Set("Content-Type", "application/binary")
+	if urgent {
+		req.Header.Set("X-Priority", "urgent")
+	}
 
 	resp, err := self.client.Do(req)
 	if err != nil {
@@ -364,11 +368,12 @@ func NewNotificationReader(
 // Block until the messages are sent. Will retry, back off and rekey
 // the server.
 func (self *NotificationReader) sendMessageList(
-	ctx context.Context, message_list [][]byte) {
+	ctx context.Context, message_list [][]byte,
+	urgent bool) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
-			err := self.sendToURL(ctx, message_list)
+			err := self.sendToURL(ctx, message_list, urgent)
 			// Success!
 			if err == nil {
 				return
@@ -401,7 +406,9 @@ func (self *NotificationReader) sendMessageList(
 }
 
 func (self *NotificationReader) sendToURL(
-	ctx context.Context, message_list [][]byte) error {
+	ctx context.Context,
+	message_list [][]byte,
+	urgent bool) error {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer()
@@ -419,7 +426,7 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
-	resp, err := self.connector.Post(self.handler, cipher_text)
+	resp, err := self.connector.Post(self.handler, cipher_text, urgent)
 	if err != nil {
 		return err
 	}
@@ -477,7 +484,8 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			if err == nil {
 				self.sendMessageList(
 					ctx, [][]byte{
-						utils.Compress(serialized_message_list)})
+						utils.Compress(serialized_message_list)},
+					false)
 			}
 
 			select {

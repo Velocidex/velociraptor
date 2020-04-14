@@ -52,7 +52,10 @@ func (self *VFSFs) fetchDir(
 	ctx context.Context,
 	vfs_name string) ([]*api.FileInfoRow, error) {
 	self.logger.Info(fmt.Sprintf("Fetching dir %v from %v", vfs_name, self.client_id))
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	if err != nil {
+		return nil, err
+	}
 	defer closer()
 
 	response, err := client.VFSRefreshDirectory(ctx,
@@ -92,7 +95,10 @@ func (self *VFSFs) fetchFile(
 	vfs_name string) error {
 	self.logger.Info("Fetching file %v", vfs_name)
 
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	if err != nil {
+		return err
+	}
 	defer closer()
 
 	client_path, accessor := api.GetClientPath(vfs_name)
@@ -183,7 +189,10 @@ func (self *VFSFs) getDir(
 		return rows, nil
 	}
 
-	client, closer := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	if err != nil {
+		return nil, err
+	}
 	defer closer()
 
 	request := &flows_proto.VFSListRequest{
@@ -239,10 +248,13 @@ func (self *VFSFs) Open(fs_name string, flags uint32, fcontext *fuse.Context) (
 
 	vfs_name := fsPathToVFS(fs_name)
 
-	client, closer := grpc_client.Factory.GetAPIClient(fcontext, self.config_obj)
+	client, closer, err := grpc_client.Factory.GetAPIClient(fcontext, self.config_obj)
+	if err != nil {
+		return nil, fuse.EIO
+	}
 	defer closer()
 
-	_, err := client.VFSGetBuffer(context.Background(),
+	_, err = client.VFSGetBuffer(context.Background(),
 		&api_proto.VFSFileBuffer{
 			ClientId: self.client_id,
 			VfsPath:  vfs_name,
@@ -295,8 +307,11 @@ func (self *VFSFileReader) GetAttr(out *fuse.Attr) fuse.Status {
 func (self *VFSFileReader) Read(dest []byte, off int64) (
 	fuse.ReadResult, fuse.Status) {
 
-	client, closer := grpc_client.Factory.GetAPIClient(
+	client, closer, err := grpc_client.Factory.GetAPIClient(
 		context.Background(), self.config_obj)
+	if err != nil {
+		return nil, fuse.EIO
+	}
 	defer closer()
 
 	response, err := client.VFSGetBuffer(context.Background(),

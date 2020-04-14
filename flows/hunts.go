@@ -38,7 +38,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -122,17 +121,7 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-
-		// Notify all the clients about the new hunt. New
-		// hunts are not that common so notifying all the
-		// clients at once is probably ok.
-		client, closer := grpc_client.Factory.GetAPIClient(ctx, config_obj)
-		defer closer()
-
-		client.NotifyClients(
-			ctx, &api_proto.NotificationRequest{
-				NotifyAll: true,
-			})
+		services.NotifyAll()
 	}
 
 	err = db.SetSubject(config_obj, constants.GetHuntURN(hunt.HuntId), hunt)
@@ -298,12 +287,5 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	client, cancel := dispatcher.APIClientFactory.GetAPIClient(ctx, config_obj)
-	defer cancel()
-	client.NotifyClients(
-		ctx, &api_proto.NotificationRequest{
-			NotifyAll: true,
-		})
-
-	return nil
+	return services.NotifyAll()
 }
