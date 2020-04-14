@@ -293,6 +293,7 @@ func (self *RawRegFileSystemAccessor) New(
 	if result_any == nil {
 		result := &RawRegFileSystemAccessor{
 			fd_cache: make(map[string]*RawRegistryFileCache),
+			scope:    scope,
 		}
 		vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
 
