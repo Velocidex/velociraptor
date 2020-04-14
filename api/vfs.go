@@ -374,10 +374,15 @@ func vfsRefreshDirectory(
 	depth uint64) (*flows_proto.ArtifactCollectorResponse, error) {
 
 	client_path, accessor := GetClientPath(vfs_path)
-	result, err := self.CollectArtifact(ctx, MakeCollectorRequest(
+	request := MakeCollectorRequest(
 		client_id, "System.VFS.ListDirectory",
 		"Path", client_path,
 		"Accessor", accessor,
-		"Depth", fmt.Sprintf("%v", depth)))
+		"Depth", fmt.Sprintf("%v", depth))
+
+	// VFS navigation is high priority.
+	request.Urgent = true
+
+	result, err := self.CollectArtifact(ctx, request)
 	return result, err
 }

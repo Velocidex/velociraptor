@@ -26,7 +26,6 @@ package filesystems
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,6 +38,7 @@ import (
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -217,7 +217,7 @@ func NewValueBuffer(buf []byte, stat glob.FileInfo) *ValueBuffer {
 
 type RegFileSystemAccessor struct{}
 
-func (self *RegFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
+func (self *RegFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
 	return self
 }
 

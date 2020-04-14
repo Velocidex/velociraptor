@@ -73,6 +73,9 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 			// get sent immediately. This allows them to
 			// jump ahead of queued messages.
 			if msg.Urgent {
+				logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+				logger.Info("Sending urgent response to session %v", msg.SessionId)
+
 				item := &crypto_proto.MessageList{
 					Job: []*crypto_proto.GrrMessage{msg}}
 
@@ -85,6 +88,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 				self.sendMessageList(ctx, [][]byte{
 					utils.Compress(serialized_msg)},
 					msg.Urgent)
+				continue
 			}
 
 			// NOTE: This is kind of a hack. We hold in

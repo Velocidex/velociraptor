@@ -21,7 +21,6 @@
 package glob
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -31,6 +30,7 @@ import (
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type OSFileInfo struct {
@@ -122,7 +122,7 @@ func (self *OSFileInfo) UnmarshalJSON(data []byte) error {
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct{}
 
-func (self OSFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+func (self OSFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
 	result := &OSFileSystemAccessor{}
 	return result
 }

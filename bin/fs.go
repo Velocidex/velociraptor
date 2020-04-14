@@ -18,7 +18,6 @@
 package main
 
 import (
-	"context"
 	"io"
 	"os"
 	"path/filepath"
@@ -256,8 +255,8 @@ func doCat(path, accessor_name string) {
 		path = matches[2]
 	}
 
-	ctx := context.Background()
-	accessor, err := glob.GetAccessor(accessor_name, ctx)
+	scope := vql_subsystem.MakeScope()
+	accessor, err := glob.GetAccessor(accessor_name, scope)
 	kingpin.FatalIfError(err, "GetAccessor")
 
 	fd, err := accessor.Open(path)

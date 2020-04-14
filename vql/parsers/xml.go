@@ -50,7 +50,7 @@ func (self _ParseXMLFunction) Call(
 		return vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("parse_xml: %v", err)
 		return vfilter.Null{}

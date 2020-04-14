@@ -50,7 +50,7 @@ func (self ScannerPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				fd, err := maybeOpenGzip(ctx, arg.Accessor, filename)
+				fd, err := maybeOpenGzip(scope, arg.Accessor, filename)
 				if err != nil {
 					scope.Log("parse_lines: %v", err)
 					return
@@ -123,8 +123,9 @@ func (self _WatchSyslogPlugin) Info(scope *vfilter.Scope, type_map *vfilter.Type
 	}
 }
 
-func maybeOpenGzip(ctx context.Context, accessor_name, filename string) (io.ReadCloser, error) {
-	accessor, err := glob.GetAccessor(accessor_name, ctx)
+func maybeOpenGzip(scope *vfilter.Scope,
+	accessor_name, filename string) (io.ReadCloser, error) {
+	accessor, err := glob.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return nil, err
 	}

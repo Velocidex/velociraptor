@@ -194,6 +194,11 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 		RequestId:       processVQLResponses,
 		VQLClientAction: vql_collector_args}
 
+	// Send an urgent request to the client.
+	if collector_request.Urgent {
+		task.Urgent = true
+	}
+
 	// Record the tasks for provenance of what we actually did.
 	err = db.SetSubject(config_obj,
 		path.Join(collection_context.Urn, "task"),

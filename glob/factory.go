@@ -18,11 +18,11 @@
 package glob
 
 import (
-	"context"
 	"path/filepath"
 	"regexp"
 
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -52,12 +52,12 @@ type FileSystemAccessor interface {
 	GetRoot(path string) (root, subpath string, err error)
 
 	// A factory for new accessors
-	New(ctx context.Context) FileSystemAccessor
+	New(scope *vfilter.Scope) FileSystemAccessor
 }
 
 type NullFileSystemAccessor struct{}
 
-func (self NullFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
+func (self NullFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
 	return self
 }
 
@@ -86,21 +86,19 @@ func (self NullFileSystemAccessor) PathJoin(root, stem string) string {
 	return filepath.Join(root, stem)
 }
 
-func GetAccessor(scheme string, ctx context.Context) (
+func GetAccessor(scheme string, scope *vfilter.Scope) (
 	FileSystemAccessor, error) {
-	handler, pres := handlers[scheme]
-	if pres {
-		return handler.New(ctx), nil
-	}
 
 	// Fallback to the file handler - this should work
 	// because there needs to be at least a file handler
 	// registered.
 	if scheme == "" {
-		handler, pres = handlers["file"]
-		if pres {
-			return handler.New(ctx), nil
-		}
+		scheme = "file"
+	}
+
+	handler, pres := handlers[scheme]
+	if pres {
+		return handler.New(scope), nil
 	}
 
 	return nil, errors.New("Unknown filesystem accessor")

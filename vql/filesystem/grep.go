@@ -69,7 +69,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 		return false
 	}
 
-	fs, err := glob.GetAccessor(arg.Accessor, ctx)
+	fs, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log(err.Error())
 		return false

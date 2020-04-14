@@ -40,7 +40,6 @@
 package filesystem
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -55,6 +54,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/glob"
 )
@@ -183,7 +184,6 @@ type _CDLookup struct {
 
 type ZipFileCache struct {
 	zip_file *zip.Reader
-	cancel   func()
 	fd       glob.ReadSeekCloser
 	lookup   []_CDLookup
 }
@@ -191,6 +191,7 @@ type ZipFileCache struct {
 type ZipFileSystemAccessor struct {
 	mu       sync.Mutex
 	fd_cache map[string]*ZipFileCache
+	scope    *vfilter.Scope
 }
 
 func (self *ZipFileSystemAccessor) GetZipFile(
@@ -208,9 +209,7 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 
 	zip_file_cache, pres := self.fd_cache[base_url.String()]
 	if !pres {
-		ctx, cancel := context.WithCancel(context.Background())
-
-		accessor, err := glob.GetAccessor(url.Scheme, ctx)
+		accessor, err := glob.GetAccessor(url.Scheme, self.scope)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -238,7 +237,6 @@ func (self *ZipFileSystemAccessor) GetZipFile(
 		zip_file_cache = &ZipFileCache{
 			zip_file: zip_file,
 			fd:       fd,
-			cancel:   cancel,
 		}
 
 		self.fd_cache[url.String()] = zip_file_cache
@@ -415,26 +413,31 @@ loop:
 	return result, nil
 }
 
-func (self ZipFileSystemAccessor) New(ctx context.Context) glob.FileSystemAccessor {
-	result := &ZipFileSystemAccessor{
-		fd_cache: make(map[string]*ZipFileCache),
+const (
+	ZipFileSystemAccessorTag = "_ZipFS"
+)
+
+func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+	result_any := vql_subsystem.CacheGet(scope, ZipFileSystemAccessorTag)
+	if result_any == nil {
+		// Create a new cache in the scope.
+		result := &ZipFileSystemAccessor{
+			fd_cache: make(map[string]*ZipFileCache),
+			scope:    scope,
+		}
+
+		vql_subsystem.CacheSet(scope, ZipFileSystemAccessorTag, result)
+
+		// When scope is destroyed, we close all the filehandles.
+		scope.AddDestructor(func() {
+			for _, v := range result.fd_cache {
+				v.fd.Close()
+			}
+		})
+		return result
 	}
 
-	// When the context is done, close all the files.
-	go func() {
-		<-ctx.Done()
-
-		result.mu.Lock()
-		defer result.mu.Unlock()
-
-		for _, v := range result.fd_cache {
-			v.cancel()
-			v.fd.Close()
-		}
-		result.fd_cache = make(map[string]*ZipFileCache)
-	}()
-
-	return result
+	return result_any.(glob.FileSystemAccessor)
 }
 
 type SeekableZip struct {

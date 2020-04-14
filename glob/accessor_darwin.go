@@ -21,7 +21,6 @@
 package glob
 
 import (
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -29,6 +28,8 @@ import (
 	"regexp"
 	"syscall"
 	"time"
+
+	"www.velocidex.com/golang/vfilter"
 )
 
 type OSFileInfo struct {
@@ -112,26 +113,10 @@ func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
 }
 
 // Real implementation for non windows OSs:
-type OSFileSystemAccessor struct {
-	fd_cache map[string]*os.File
-}
+type OSFileSystemAccessor struct{}
 
-func (self OSFileSystemAccessor) New(ctx context.Context) FileSystemAccessor {
-	result := &OSFileSystemAccessor{
-		fd_cache: make(map[string]*os.File),
-	}
-
-	// When the context is done, close all the files. The files
-	// must remain open until the entire VQL query is done.
-	go func() {
-		select {
-		case <-ctx.Done():
-			for _, v := range result.fd_cache {
-				v.Close()
-			}
-		}
-	}()
-
+func (self OSFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
+	result := &OSFileSystemAccessor{}
 	return result
 }
 

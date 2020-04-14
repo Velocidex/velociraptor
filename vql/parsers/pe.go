@@ -59,7 +59,7 @@ func (self _PEFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("parse_pe: %v", err)
 		return &vfilter.Null{}

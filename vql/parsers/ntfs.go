@@ -204,7 +204,7 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, ctx)
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("parse_mft: %v", err)
 			return

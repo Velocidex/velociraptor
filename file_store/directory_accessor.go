@@ -6,7 +6,6 @@ package file_store
 // This accessor is for DirectoryFileStore
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"path"
@@ -16,6 +15,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type DirectoryFileStoreFileInfo struct {
@@ -95,7 +95,7 @@ type DirectoryFileStoreFileSystemAccessor struct {
 }
 
 func (self DirectoryFileStoreFileSystemAccessor) New(
-	ctx context.Context) glob.FileSystemAccessor {
+	scope *vfilter.Scope) glob.FileSystemAccessor {
 	return &DirectoryFileStoreFileSystemAccessor{self.file_store}
 }
 

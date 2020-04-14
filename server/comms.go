@@ -269,8 +269,14 @@ func control(server_obj *Server) http.Handler {
 			panic("http handler is not a flusher")
 		}
 
-		server_obj.StartConcurrencyControl()
-		defer server_obj.EndConcurrencyControl()
+		priority := req.Header.Get("X-Priority")
+		// For urgent messages skip concurrency control - This
+		// allows clients with urgent messages to always be
+		// processing even when the frontend are loaded.
+		if priority != "urgent" {
+			server_obj.StartConcurrencyControl()
+			defer server_obj.EndConcurrencyControl()
+		}
 
 		body, err := ioutil.ReadAll(
 			io.LimitReader(req.Body, int64(server_obj.config.
