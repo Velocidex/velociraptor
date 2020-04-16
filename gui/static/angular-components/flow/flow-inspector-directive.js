@@ -5,9 +5,6 @@ goog.module('grrUi.flow.flowInspectorDirective');
 goog.module.declareLegacyNamespace();
 
 
-var ERROR_EVENT_NAME = 'ServerError';
-
-
 /** @type {number} */
 let AUTO_REFRESH_INTERVAL_MS = 5 * 1000;
 

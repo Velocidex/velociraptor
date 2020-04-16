@@ -672,12 +672,22 @@ func (self *FlowRunner) Close() {
 func (self *FlowRunner) ProcessSingleMessage(
 	ctx context.Context,
 	job *crypto_proto.GrrMessage) {
+
+	// Foreman messages are related to hunts.
 	if job.ForemanCheckin != nil {
 		ForemanProcessMessage(
 			ctx, self.config_obj,
 			job.Source, job.ForemanCheckin)
 		return
 	}
+
+	// CSR messages are related to enrolment. By the time the
+	// message arrives here, it is authenticated and the client is
+	// fully enrolled so it serves no purpose here - Just ignore it.
+	if job.CSR != nil {
+		return
+	}
+
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
 	if false && job.Status != nil &&

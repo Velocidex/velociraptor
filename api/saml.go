@@ -8,6 +8,7 @@ import (
 	"net/url"
 
 	"github.com/crewjam/saml/samlsp"
+	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -67,6 +68,8 @@ func userAttr(config_obj *config_proto.Config) string {
 
 func authenticateSAML(config_obj *config_proto.Config, parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
+
 		if token := samlMiddleware.GetAuthorizationToken(r); token != nil {
 
 			username := token.Attributes.Get(userAttr(config_obj))

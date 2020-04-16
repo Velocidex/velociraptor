@@ -513,7 +513,6 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				// the connection to be terminated
 				// (case above).
 				server_obj.NotificationPool.Notify(source)
-				logger.Info("reader: Deadline exceeded")
 
 				// Write a pad message every 3 seconds
 				// to keep the conenction alive.

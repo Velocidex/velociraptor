@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -241,7 +243,8 @@ func (self *ApiServer) ListAvailableEventResults(
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to view results.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to view results.")
 	}
 
 	result := &api_proto.ListAvailableEventResultsResponse{}

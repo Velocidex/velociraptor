@@ -79,6 +79,9 @@ func (self *Enroller) MaybeEnrol() {
 				Type: crypto_proto.Certificate_CSR,
 				Pem:  csr_pem,
 			},
+			// Enrolment messages should be sent
+			// immediately and not queued client side.
+			Urgent: true,
 		})
 	}
 }

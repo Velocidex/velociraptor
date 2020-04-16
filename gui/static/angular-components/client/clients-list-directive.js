@@ -184,9 +184,10 @@ ClientsListController.prototype.showLabelsDialog = function(action) {
 /**
  * @export {string}
  * @const
+ *
+ * used by grr-infinite-table directive
  */
-ClientsListController.prototype.clientsQueryUrl =
-    '/v1/SearchClients';
+ClientsListController.prototype.clientsQueryUrl = '/v1/SearchClients';
 
 /**
  * Displays a table of clients.

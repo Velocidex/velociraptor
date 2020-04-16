@@ -98,22 +98,22 @@ exports.appControllerModule.run(function(
     $injector, $http, $cookies, grrApiService, grrReflectionService) {
 
     // Ensure CSRF token is in place for Angular-initiated HTTP requests.
-  $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
-  $http.defaults.headers.delete = $http.defaults.headers.patch = {
-    'X-CSRFToken': $cookies.get('csrftoken')
-  };
+    $http.defaults.headers.post['X-CSRFToken'] = $cookies.get('csrftoken');
+    $http.defaults.headers.delete = $http.defaults.headers.patch = {
+        'X-CSRFToken': $cookies.get('csrftoken')
+    };
 
     grrApiService.markAuthDone();
 
-  // Call reflection service as soon as possible in the app lifetime to cache
-  // the values. "ACLToken" is picked up here as an arbitrary name.
-  // grrReflectionService loads all RDFValues definitions on first request
-  // and then caches them.
-  grrReflectionService.getRDFValueDescriptor('ACLToken');
+    // Call reflection service as soon as possible in the app lifetime to cache
+    // the values. "ACLToken" is picked up here as an arbitrary name.
+    // grrReflectionService loads all RDFValues definitions on first request
+    // and then caches them.
+    grrReflectionService.getRDFValueDescriptor('ACLToken');
 
-  // Propagate the globals to the root scope. This makes them
-  // available in templates.
-  $injector.get("$rootScope").globals = window.globals;
+    // Propagate the globals to the root scope. This makes them
+    // available in templates.
+    $injector.get("$rootScope").globals = window.globals;
 });
 
 

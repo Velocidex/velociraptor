@@ -7,7 +7,6 @@ goog.module.declareLegacyNamespace();
 
 var OPERATION_POLL_INTERVAL_MS = 1000;
 
-
 /**
  * Controller for HostInfoDirective.
  *
@@ -95,7 +94,7 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
 
   this.fetchDetailsRequestId += 1;
   var requestId = this.fetchDetailsRequestId;
-  this.grrApiService_.get(url, params).then(function success(response) {
+    this.grrApiService_.get(url, params).then(function success(response) {
     // Make sure that the request that we got corresponds to the
     // arguments we used while sending it. This is needed for cases
     // when bindings change so fast that we send multiple concurrent
@@ -112,7 +111,7 @@ HostInfoController.prototype.fetchClientDetails_ = function() {
       type: 'CLIENT'
     };
 
-  }.bind(this));
+    }.bind(this));
 };
 
 /**

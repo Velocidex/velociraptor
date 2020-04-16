@@ -3,7 +3,7 @@
 goog.module('grrUi.hunt.modifyHuntDialogDirective');
 goog.module.declareLegacyNamespace();
 
-const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {ApiService} = goog.require('grrUi.core.apiService');
 const {stripAff4Prefix} = goog.require('grrUi.core.utils');
 
 
@@ -74,7 +74,7 @@ ModifyHuntDialogController.prototype.onHuntIdChange_ = function(newValue) {
  * @export
  */
 ModifyHuntDialogController.prototype.proceed = function() {
-  var request = /** @type {Object} */ (stripTypeInfo(this.argsObj));
+  var request = /** @type {Object} */ (this.argsObj);
   return this.grrApiService_.patch(
       '/hunts/' + this.scope_['huntId'], request).then(
           function success() {

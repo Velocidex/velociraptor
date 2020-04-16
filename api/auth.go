@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -77,6 +78,7 @@ func authenticateBasic(
 	parent http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 
 		username, password, ok := r.BasicAuth()

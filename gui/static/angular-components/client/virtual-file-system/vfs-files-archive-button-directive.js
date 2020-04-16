@@ -6,9 +6,6 @@ goog.module.declareLegacyNamespace();
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
 const {getFolderFromPath} = goog.require('grrUi.client.virtualFileSystem.utils');
 
-var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
-
-
 /**
  * Controller for VfsFilesArchiveButtonDirective.
  *
@@ -52,14 +49,6 @@ VfsFilesArchiveButtonController.prototype.downloadCurrentFolder = function(e) {
     };
     this.grrApiService_.downloadFile(url, params).then(
         function success() {}.bind(this),
-        function failure(response) {
-            if (angular.isUndefined(response.status)) {
-                this.rootScope_.$broadcast(
-                    ERROR_EVENT_NAME, {
-                        message: 'Couldn\'t download the VFS archive.'
-                    });
-            }
-        }.bind(this)
     );
 };
 

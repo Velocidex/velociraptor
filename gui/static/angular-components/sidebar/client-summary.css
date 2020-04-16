@@ -21,8 +21,3 @@ grr-client-summary  .client-status,
 grr-client-summary  .client-ip-info {
     color: var(--color-infoline-color);
 }
-
-grr-client-summary  grr-client-warnings {
-    display: block;
-    padding-top: .5em;
-}
