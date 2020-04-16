@@ -3,7 +3,7 @@
 goog.module('grrUi.forms.clientLabelFormDirective');
 goog.module.declareLegacyNamespace();
 
-const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {ApiService} = goog.require('grrUi.core.apiService');
 
 
 /**
@@ -38,7 +38,7 @@ const ClientLabelFormController =
   this.emptyOptionLabel;
 
   this.grrApiService_.get('/clients/labels').then(function(response) {
-    this.labelsList = stripTypeInfo(response['data']['items']);
+    this.labelsList = response['data']['items'];
 
     this.scope_.$watch('controller.hideEmptyOption', function() {
       if (!this.clientLabel &&  // Handles all falsey values, including ''.

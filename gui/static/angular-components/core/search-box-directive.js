@@ -4,6 +4,9 @@ goog.module('grrUi.core.searchBoxDirective');
 goog.module.declareLegacyNamespace();
 
 
+var ERROR_EVENT_NAME = 'ServerError';
+
+
 /**
  * Controller for SearchBoxDirective.
  *
@@ -17,22 +20,22 @@ goog.module.declareLegacyNamespace();
 const SearchBoxController = function(
     $scope, $element, grrApiService, grrRoutingService) {
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.jQuery} */
-  this.element_ = $element;
+    /** @private {!angular.jQuery} */
+    this.element_ = $element;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.routing.routingService.RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
+    /** @private {!grrUi.routing.routingService.RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
-  /** @export {string} */
-  this.query = '';
+    /** @export {string} */
+    this.query = '';
 
-  /** @export {Array} */
+    /** @export {Array} */
     this.labels = [];
 };
 
@@ -57,7 +60,6 @@ SearchBoxController.prototype.predict = function(viewValue) {
     this.grrApiService_.get(url, params).then(function (response) {
         self.labels = response.data.names;
     });
-
     return this.labels;
 };
 

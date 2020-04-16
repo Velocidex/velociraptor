@@ -175,7 +175,6 @@ gulp.task('compile-css', function() {
       'angular-components/forms/semantic-proto-form.css',
       'angular-components/forms/semantic-proto-union-form.css',
       'angular-components/sidebar/client-summary.css',
-      'angular-components/sidebar/client-warnings.css',
       'angular-components/user/user-notification-item.css',
       'angular-components/notebook/notebook.css',
   ])

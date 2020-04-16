@@ -3,7 +3,7 @@
 goog.module('grrUi.hunt.newHuntWizard.formDirective');
 goog.module.declareLegacyNamespace();
 
-const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {ApiService} = goog.require('grrUi.core.apiService');
 const {ReflectionService} = goog.require('grrUi.core.reflectionService');
 const {debug} = goog.require('grrUi.core.utils');
 

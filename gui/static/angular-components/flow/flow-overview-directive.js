@@ -41,15 +41,7 @@ FlowOverviewController.prototype.prepareDownload = function() {
     client_id: flow["request"]['client_id'],
   };
   this.grrApiService_.post(url, params).then(
-        function success() {}.bind(this),
-        function failure(response) {
-            if (angular.isUndefined(response.status)) {
-                this.rootScope_.$broadcast(
-                    ERROR_EVENT_NAME, {
-                        message: 'Couldn\'t download file.'
-                    });
-            }
-        }.bind(this)
+        function success() {}.bind(this)
     );
 };
 

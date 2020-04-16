@@ -7,7 +7,6 @@ const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonD
 const {SplitPathComponents, Join} = goog.require('grrUi.core.utils');
 
 
-var ERROR_EVENT_NAME = ServerErrorButtonDirective.error_event_name;
 var OPERATION_POLL_INTERVAL_MS = 1000;
 
 const FileStatsViewController = function(
@@ -184,14 +183,6 @@ FileStatsViewController.prototype.downloadFile = function() {
   };
   this.grrApiService_.downloadFile(url, params).then(
     function success() {}.bind(this),
-    function failure(response) {
-      if (angular.isUndefined(response.status)) {
-        this.rootScope_.$broadcast(
-          ERROR_EVENT_NAME, {
-            message: 'Couldn\'t download file.'
-          });
-      }
-    }.bind(this)
   );
 };
 

@@ -3,7 +3,7 @@
 goog.module('grrUi.user.userNotificationItemDirective');
 goog.module.declareLegacyNamespace();
 
-const {encodeUrlPath, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {encodeUrlPath} = goog.require('grrUi.core.apiService');
 const {getLastPathComponent, stripAff4Prefix} = goog.require('grrUi.core.utils');
 
 
@@ -48,7 +48,7 @@ var annotateApiNotification = exports.annotateApiNotification;
  * @private
  */
 var getLink_ = function(notification) {
-  var strippedNotification = stripTypeInfo(notification);
+  var strippedNotification = notification;
   if (!strippedNotification['reference']){
     return null;
   }

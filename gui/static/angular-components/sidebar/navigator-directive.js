@@ -3,7 +3,7 @@
 goog.module('grrUi.sidebar.navigatorDirective');
 goog.module.declareLegacyNamespace();
 
-const {ApiService, stripTypeInfo} = goog.require('grrUi.core.apiService');
+const {ApiService} = goog.require('grrUi.core.apiService');
 const {RoutingService} = goog.require('grrUi.routing.routingService');
 
 

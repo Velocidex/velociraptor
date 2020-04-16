@@ -29,6 +29,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -184,6 +185,7 @@ func authenticateOAUTHCookie(
 	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
 		reject := func(err error) {
 			logger := logging.GetLogger(config_obj, &logging.Audit)

@@ -16,6 +16,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -40,7 +42,8 @@ func (self *ApiServer) GetNotebooks(
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to read notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to read notebooks.")
 	}
 
 	result := &api_proto.Notebooks{}
@@ -155,7 +158,8 @@ func (self *ApiServer) NewNotebook(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to create notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to create notebooks.")
 	}
 
 	in.Creator = user_name
@@ -208,7 +212,8 @@ func (self *ApiServer) NewNotebookCell(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
 	db, err := datastore.GetDB(self.config)
@@ -290,7 +295,8 @@ func (self *ApiServer) UpdateNotebook(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
 	db, err := datastore.GetDB(self.config)
@@ -338,7 +344,8 @@ func (self *ApiServer) GetNotebookCell(
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to read notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to read notebooks.")
 	}
 
 	db, err := datastore.GetDB(self.config)
@@ -397,7 +404,8 @@ func (self *ApiServer) UpdateNotebookCell(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
@@ -494,7 +502,8 @@ func (self *ApiServer) UploadNotebookAttachment(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
 	decoded, err := base64.StdEncoding.DecodeString(in.Data)
@@ -536,7 +545,8 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to edit notebooks.")
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
 	db, err := datastore.GetDB(self.config)
