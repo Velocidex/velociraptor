@@ -20,7 +20,6 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -399,7 +398,8 @@ func (self *ApiServer) NotifyClients(
 		self.server_obj.Info("sending notification to %s", in.ClientId)
 		services.NotifyClient(in.ClientId)
 	} else {
-		return nil, errors.New("client id should be specified")
+		return nil, status.Error(codes.InvalidArgument,
+			"client id should be specified")
 	}
 	return &empty.Empty{}, nil
 }
@@ -725,7 +725,7 @@ func (self *ApiServer) SetArtifactFile(
 
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New(fmt.Sprintf(
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
@@ -755,12 +755,12 @@ func (self *ApiServer) WriteEvent(
 	// certificate.
 	peer, ok := peer.FromContext(ctx)
 	if !ok {
-		return nil, errors.New("cant get peer info")
+		return nil, status.Error(codes.InvalidArgument, "cant get peer info")
 	}
 
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 	if !ok {
-		return nil, errors.New("unable to get credentials")
+		return nil, status.Error(codes.InvalidArgument, "unable to get credentials")
 	}
 
 	// Authenticate API clients using certificates.
@@ -772,7 +772,7 @@ func (self *ApiServer) WriteEvent(
 		}
 
 		if len(chains) == 0 {
-			return nil, errors.New("no chains verified")
+			return nil, status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
 		peer_name := peer_cert.Subject.CommonName
@@ -785,7 +785,8 @@ func (self *ApiServer) WriteEvent(
 		}
 
 		if !ok {
-			return nil, errors.New("Permission denied: PUBLISH " + peer_name + " to " + in.Query.Name)
+			return nil, status.Error(codes.PermissionDenied,
+				"Permission denied: PUBLISH "+peer_name+" to "+in.Query.Name)
 		}
 
 		flows.GJournalWriter.Channel <- &flows.Event{
@@ -799,7 +800,7 @@ func (self *ApiServer) WriteEvent(
 		return &empty.Empty{}, nil
 	}
 
-	return nil, errors.New("no peer certs?")
+	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
 }
 
 func (self *ApiServer) Query(
@@ -810,12 +811,12 @@ func (self *ApiServer) Query(
 	// certificate.
 	peer, ok := peer.FromContext(stream.Context())
 	if !ok {
-		return errors.New("cant get peer info")
+		return status.Error(codes.InvalidArgument, "cant get peer info")
 	}
 
 	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
 	if !ok {
-		return errors.New("unable to get credentials")
+		return status.Error(codes.InvalidArgument, "unable to get credentials")
 	}
 
 	// Authenticate API clients using certificates.
@@ -827,26 +828,29 @@ func (self *ApiServer) Query(
 		}
 
 		if len(chains) == 0 {
-			return errors.New("no chains verified")
+			return status.Error(codes.InvalidArgument, "no chains verified")
 		}
 
 		peer_name := peer_cert.Subject.CommonName
 
 		// Check that the principal is allowed to issue queries.
-		ok, err := acls.CheckAccess(self.config, peer_name, acls.ANY_QUERY)
+		permissions := acls.ANY_QUERY
+		ok, err := acls.CheckAccess(self.config, peer_name, permissions)
 		if err != nil {
 			return err
 		}
 
 		if !ok {
-			return errors.New("Permission denied: QUERY " + peer_name)
+			return status.Error(codes.PermissionDenied, fmt.Sprintf(
+				"Permission denied: User %v requires permission %v to run queries",
+				peer_name, permissions))
 		}
 
 		// Cert is good enough for us, run the query.
 		return streamQuery(self.config, in, stream, peer_name)
 	}
 
-	return errors.New("no peer certs?")
+	return status.Error(codes.InvalidArgument, "no peer certs?")
 }
 
 func (self *ApiServer) GetServerMonitoringState(
@@ -858,7 +862,7 @@ func (self *ApiServer) GetServerMonitoringState(
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New(fmt.Sprintf(
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to read results (%v).", permissions))
 	}
 
@@ -875,7 +879,7 @@ func (self *ApiServer) SetServerMonitoringState(
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New(fmt.Sprintf(
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
@@ -892,7 +896,8 @@ func (self *ApiServer) GetClientMonitoringState(
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to modify artifacts.")
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
+			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
 	result, err := getClientMonitoringState(self.config)
@@ -908,8 +913,8 @@ func (self *ApiServer) SetClientMonitoringState(
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New(fmt.Sprintf(
-			"User is not allowed to modify artifacts (%v).", permissions))
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
+			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
 	err = setClientMonitoringState(self.config, in)
@@ -931,7 +936,8 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, errors.New("User is not allowed to create downloads.")
+		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
+			"User is not allowed to create downloads (%v).", permissions))
 	}
 
 	// Log an audit event.
