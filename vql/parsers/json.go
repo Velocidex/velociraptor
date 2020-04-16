@@ -129,7 +129,7 @@ func (self ParseJsonArrayPlugin) Call(
 		result := ParseJsonArray{}.Call(ctx, scope, args)
 		result_value := reflect.Indirect(reflect.ValueOf(result))
 		result_type := result_value.Type()
-		if result_type.Kind() != reflect.Slice {
+		if result_type.Kind() == reflect.Slice {
 			for i := 0; i < result_value.Len(); i++ {
 				output_chan <- result_value.Index(i).Interface()
 			}
