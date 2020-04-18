@@ -932,6 +932,11 @@
   type: Function
   args: []
   category: ""
+- name: get_server_monitoring
+  description: Retrieve the current client monitoring state.
+  type: Function
+  args: []
+  category: ""
 - name: getpid
   description: Returns the current pid of the process.
   type: Function
@@ -1419,13 +1424,8 @@
   args:
   - name: list
     description: A list of items too filter
-    type: string
-    repeated: true
-    required: true
-  - name: regex
-    description: A regex to test each item
-    type: string
-    repeated: true
+    type: vfilter.Any
+    repeated: false
     required: true
   category: basic
 - name: log
@@ -2082,7 +2082,6 @@
            patch=[dict(op="add", path="/artifacts/0", value="Windows.Events.DNSQueries")]))
     FROM scope()
     ```
-
   type: Function
   args:
   - name: item
@@ -2091,8 +2090,13 @@
     repeated: false
     required: true
   - name: patch
+    description: A JSON Patch to apply
+    type: vfilter.Any
+    repeated: false
+    required: false
+  - name: merge
     description: A merge-patch to apply
-    type: string
+    type: vfilter.Any
     repeated: false
     required: false
   category: ""
@@ -2465,6 +2469,16 @@
   category: basic
 - name: set_client_monitoring
   description: Sets the current client monitoring state.
+  type: Function
+  args:
+  - name: value
+    description: The Value to set
+    type: vfilter.Any
+    repeated: false
+    required: true
+  category: ""
+- name: set_server_monitoring
+  description: Sets the current server monitoring state.
   type: Function
   args:
   - name: value
@@ -3255,3 +3269,4 @@
     repeated: false
     required: false
   category: plugin
+
