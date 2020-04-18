@@ -28,7 +28,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"

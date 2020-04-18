@@ -33,7 +33,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/survey"
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	jsonpatch "github.com/evanphx/json-patch"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"

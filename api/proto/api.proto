@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "artifacts/proto/artifact.proto";
-import "flows/proto/artifacts.proto";
+import "flows/proto/artifact_collector.proto";
 import "flows/proto/vfs.proto";
 import "proto/semantic.proto";
 import "actions/proto/vql.proto";

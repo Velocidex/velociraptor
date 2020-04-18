@@ -3,7 +3,6 @@
 syntax = "proto3";
 
 import "proto/semantic.proto";
-import "actions/proto/hunts.proto";
 import "actions/proto/transport.proto";
 import "actions/proto/vql.proto";
 

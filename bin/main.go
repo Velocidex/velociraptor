@@ -29,7 +29,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/survey"
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"

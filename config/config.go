@@ -26,7 +26,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"

@@ -23,7 +23,7 @@ import (
 	"io/ioutil"
 	"path"
 
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

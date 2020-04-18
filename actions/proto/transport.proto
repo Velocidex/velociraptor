@@ -37,3 +37,8 @@ message FileBuffer {
     string flow_id = 4;
     bool eof = 5;
 }
+
+message ForemanCheckin {
+    uint64 last_hunt_timestamp = 1;
+    uint64 last_event_table_version = 2;
+}

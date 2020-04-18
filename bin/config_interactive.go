@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/Velocidex/survey"
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/users"

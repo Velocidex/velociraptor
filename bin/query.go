@@ -44,8 +44,9 @@ var (
 		Default("1000000").Float64()
 	format = query.Flag("format", "Output format to use (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
+
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
-			Default(".").String()
+			Default("").String()
 
 	env_map = app.Flag("env", "Environment for the query.").
 		StringMap()
@@ -158,13 +159,17 @@ func doQuery() {
 	env := ordereddict.NewDict().
 		Set("config", config_obj.Client).
 		Set("server_config", config_obj).
-		Set("$uploader", &uploads.FileBasedUploader{
-			UploadDir: *dump_dir,
-		}).
 
 		// Running on the commandline has no ACL restrictions.
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+
+	// Configure an uploader if required.
+	if *dump_dir != "" {
+		env.Set("$uploader", &uploads.FileBasedUploader{
+			UploadDir: *dump_dir,
+		})
+	}
 
 	if env_map != nil {
 		for k, v := range *env_map {

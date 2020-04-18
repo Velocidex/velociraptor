@@ -927,6 +927,16 @@
     repeated: false
     required: false
   category: basic
+- name: get_client_monitoring
+  description: Retrieve the current client monitoring state.
+  type: Function
+  args: []
+  category: ""
+- name: get_server_monitoring
+  description: Retrieve the current client monitoring state.
+  type: Function
+  args: []
+  category: ""
 - name: getpid
   description: Returns the current pid of the process.
   type: Function
@@ -1414,13 +1424,8 @@
   args:
   - name: list
     description: A list of items too filter
-    type: string
-    repeated: true
-    required: true
-  - name: regex
-    description: A regex to test each item
-    type: string
-    repeated: true
+    type: vfilter.Any
+    repeated: false
     required: true
   category: basic
 - name: log
@@ -2038,6 +2043,63 @@
     repeated: false
     required: false
   category: windows
+- name: patch
+  description: |
+    Patch a JSON object with a json patch or merge.
+
+    The function allows for modifications of objects by way of
+    applying a json patch. You can read more about JSON patching here
+    https://github.com/evanphx/json-patch.
+
+    I practice you can use this to update server settings - for
+    example, consider the client event monitoring state.
+
+    ```text
+    SELECT get_client_monitoring() FROM scope()
+
+     [
+      {
+       "get_client_monitoring": {
+        "artifacts": [
+         "Generic.Client.Stats"
+        ]
+       }
+      }
+     ]
+    ```
+
+    Suppose we wish to add a new artifact, we can patch it with the json:
+    ```json
+    [{"op": "add", "path": "/artifacts/0", "value": "Windows.Events.DNSQueries"}]
+    ```
+
+    This can then be immediately pushed to `set_client_monitoring()`
+    to update the monitoring state.
+
+    ```
+    SELECT set_client_monitoring(value=patch(
+           item=get_client_monitoring(),
+           patch=[dict(op="add", path="/artifacts/0", value="Windows.Events.DNSQueries")]))
+    FROM scope()
+    ```
+  type: Function
+  args:
+  - name: item
+    description: The item to path
+    type: vfilter.Any
+    repeated: false
+    required: true
+  - name: patch
+    description: A JSON Patch to apply
+    type: vfilter.Any
+    repeated: false
+    required: false
+  - name: merge
+    description: A merge-patch to apply
+    type: vfilter.Any
+    repeated: false
+    required: false
+  category: ""
 - name: path_join
   description: Build a path by joining all components.
   type: Function
@@ -2166,7 +2228,8 @@
   type: Plugin
   args:
   - name: pid
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
     type: int64
     repeated: false
     required: false
@@ -2404,6 +2467,26 @@
     repeated: false
     required: false
   category: basic
+- name: set_client_monitoring
+  description: Sets the current client monitoring state.
+  type: Function
+  args:
+  - name: value
+    description: The Value to set
+    type: vfilter.Any
+    repeated: false
+    required: true
+  category: ""
+- name: set_server_monitoring
+  description: Sets the current server monitoring state.
+  type: Function
+  args:
+  - name: value
+    description: The Value to set
+    type: vfilter.Any
+    repeated: false
+    required: true
+  category: ""
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -2872,7 +2955,12 @@
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
   type: Plugin
-  args: []
+  args:
+  - name: file
+    description: The wtmp file to use
+    type: string
+    repeated: false
+    required: false
   category: windows
 - name: utf16
   description: Parse input from utf16.
@@ -3073,6 +3161,11 @@
     type: string
     repeated: false
     required: true
+  - name: accessor
+    description: The accessor to use
+    type: string
+    repeated: false
+    required: false
   - name: query
     description: query to write into the file.
     type: vfilter.StoredQuery
