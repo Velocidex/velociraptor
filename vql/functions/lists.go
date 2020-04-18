@@ -208,7 +208,7 @@ func (self LenFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	return &vfilter.FunctionInfo{
 		Name:    "len",
 		Doc:     "Returns the length of an object.",
-		ArgType: type_map.AddType(scope, &FilterFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &LenFunctionArgs{}),
 	}
 }
 

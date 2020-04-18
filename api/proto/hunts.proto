@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "proto/semantic.proto";
 import "actions/proto/vql.proto";
-import "flows/proto/artifacts.proto";
+import "flows/proto/artifact_collector.proto";
 
 package proto;
 

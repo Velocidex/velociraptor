@@ -16,9 +16,10 @@ import (
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
 	"github.com/Velocidex/ordereddict"
+
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"
-	blackfriday "gopkg.in/russross/blackfriday.v2"
+	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/vfilter"
@@ -202,8 +203,8 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 		blackfriday.WithRenderer(bfchroma.NewRenderer(
 			bfchroma.ChromaOptions(
 				chroma_html.ClassPrefix("chroma"),
-				chroma_html.WithClasses(),
-				chroma_html.WithLineNumbers()),
+				chroma_html.WithClasses(true),
+				chroma_html.WithLineNumbers(true)),
 			bfchroma.Style("github"),
 		)))
 

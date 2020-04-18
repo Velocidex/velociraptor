@@ -49,7 +49,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/Velocidex/yaml"
+	"github.com/Velocidex/yaml/v2"
 	"github.com/xor-gate/debpkg"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
