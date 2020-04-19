@@ -112,8 +112,8 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 			id := time.Now().UnixNano() + int64(i)*100000000
 
 			// Start an uploader on a thread.
-			go upload_rows(scope, output_chan, row_chan, id, &wg,
-				&arg)
+			go upload_rows(ctx, scope, output_chan,
+				row_chan, id, &wg, &arg)
 		}
 
 		wg.Wait()
@@ -122,7 +122,9 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 }
 
 // Copy rows from row_chan to a local buffer and push it up to elastic.
-func upload_rows(scope *vfilter.Scope, output_chan chan vfilter.Row,
+func upload_rows(
+	ctx context.Context,
+	scope *vfilter.Scope, output_chan chan vfilter.Row,
 	row_chan <-chan vfilter.Row,
 	id int64,
 	wg *sync.WaitGroup,
@@ -165,7 +167,7 @@ func upload_rows(scope *vfilter.Scope, output_chan chan vfilter.Row,
 			// FIXME: Find a better way to interleave id's
 			// to avoid collisions.
 			id = id + 3
-			err := append_row_to_buffer(scope, row, id, &buf, arg)
+			err := append_row_to_buffer(ctx, scope, row, id, &buf, arg)
 			if err != nil {
 				scope.Log("elastic: %v", err)
 				continue
@@ -187,17 +189,19 @@ func upload_rows(scope *vfilter.Scope, output_chan chan vfilter.Row,
 	}
 }
 
-func append_row_to_buffer(scope *vfilter.Scope,
+func append_row_to_buffer(
+	ctx context.Context,
+	scope *vfilter.Scope,
 	row vfilter.Row, id int64, buf *bytes.Buffer,
 	arg *_ElasticPluginArgs) error {
 
-	row_dict := vfilter.RowToMap(scope, row)
+	row_dict := vfilter.RowToDict(ctx, scope, row, nil)
 	index := arg.Index
-	index_any, pres := row_dict["_index"]
+	index_any, pres := row_dict.Get("_index")
 	if pres {
 		index = sanitize_index(
 			fmt.Sprintf("%v", index_any))
-		delete(row_dict, "_index")
+		row_dict.Delete("_index")
 	}
 
 	meta := []byte(fmt.Sprintf(

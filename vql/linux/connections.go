@@ -47,7 +47,6 @@ func init() {
 				}
 				return result
 			},
-			Doc:     "List all active connections",
-			RowType: net.ConnectionStat{},
+			Doc: "List all active connections",
 		})
 }

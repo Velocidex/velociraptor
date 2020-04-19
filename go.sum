@@ -51,8 +51,8 @@ github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9 h1:zatH9PNN7I
 github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
 github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
-github.com/Velocidex/ordereddict v0.0.0-20200418081115-17494970552f h1:LpyxGF2GG8bhOmEWAJkNidOc1x6kFNSYOV7oq3Z8Zek=
-github.com/Velocidex/ordereddict v0.0.0-20200418081115-17494970552f/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
+github.com/Velocidex/ordereddict v0.0.0-20200419183704-bc44e4ef79c7 h1:kOuTDzcjsrEE+JM+/PkKLIfoyy+7nGxiG5idfZYKA5M=
+github.com/Velocidex/ordereddict v0.0.0-20200419183704-bc44e4ef79c7/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml/v2 v2.2.5 h1:8XZwR8tmm5UWAXotI3fL17s9fjKEMqZ293fgqUiMhBw=
@@ -598,7 +598,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20200417165231-2dfd54916f9b h1:SINzeb9DzrWtNgybNTl09aGGD/leCevLv1wPrmkV2Tg=
-www.velocidex.com/golang/vfilter v0.0.0-20200417165231-2dfd54916f9b/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
+www.velocidex.com/golang/vfilter v0.0.0-20200419183006-5e67794db35e h1:3PmsR00Jfvd/IJXN0bUv9iFktcAfsSt5GiUdzrzU/d0=
+www.velocidex.com/golang/vfilter v0.0.0-20200419183006-5e67794db35e/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=
