@@ -4,13 +4,13 @@ import (
 	"os"
 
 	"www.velocidex.com/golang/velociraptor/config"
-	logging "www.velocidex.com/golang/velociraptor/logging"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func maybeUnpackConfig(args []string) []string {
+func maybeUnpackConfig(args []string) ([]string, *config_proto.Config) {
 	embedded_config, err := config.ReadEmbeddedConfig()
 	if err != nil || embedded_config.Autoexec == nil {
-		return args
+		return args, nil
 	}
 
 	argv := []string{}
@@ -18,8 +18,5 @@ func maybeUnpackConfig(args []string) []string {
 		argv = append(argv, os.ExpandEnv(arg))
 	}
 
-	logging.GetLogger(embedded_config, &logging.ToolComponent).
-		Info("Autoexec with parameters: %s", argv)
-
-	return argv
+	return argv, embedded_config
 }

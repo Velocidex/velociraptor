@@ -183,16 +183,28 @@ func main() {
 	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
 	args := os.Args[1:]
 
-	// If not args are given check if there is an embedded config
+	var embedded_config *config_proto.Config
+
+	// If no args are given check if there is an embedded config
 	// with autoexec.
 	if len(args) == 0 {
-		args = maybeUnpackConfig(args)
+		args, embedded_config = maybeUnpackConfig(args)
 	}
 
 	command := kingpin.MustParse(app.Parse(args))
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true
+		logging.Manager.Reset()
+
+		// We need to delay this message until we parsed the
+		// command line so we can find out of the logging is
+		// suppressed.
+		if embedded_config != nil && embedded_config.Autoexec != nil {
+			logging.GetLogger(embedded_config, &logging.ToolComponent).
+				Info("Autoexec with parameters: %s",
+					embedded_config.Autoexec)
+		}
 	}
 
 	if *trace_flag != "" {

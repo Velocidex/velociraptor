@@ -114,6 +114,13 @@ func (self *LogManager) GetLogger(
 	return ctx
 }
 
+func (self *LogManager) Reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.contexts = make(map[*string]*LogContext)
+}
+
 func getRotator(
 	config_obj *config_proto.Config,
 	base_path string) *rotatelogs.RotateLogs {
