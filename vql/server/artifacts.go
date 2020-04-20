@@ -27,6 +27,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -58,7 +59,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")

@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -42,21 +41,13 @@ func (self *StatsCollector) Start(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Stats Collector Service.")
 
-	env := ordereddict.NewDict().
-		Set("config", self.config_obj.Client).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("server_config", self.config_obj)
-
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
-	if err != nil {
-		return err
-	}
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     self.config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger: logging.NewPlainLogger(self.config_obj,
+			&logging.FrontendComponent),
+	}.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(self.config_obj,
-		&logging.FrontendComponent)
 
 	// Make sure we do not consume too many resources, these stats
 	// are not very important. Rate limit to 10 clients per second.

@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -62,7 +63,7 @@ func (self UploadsPlugins) Call(
 		}
 
 		arg := &UploadsPluginsArgs{}
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
@@ -135,7 +136,7 @@ func (self SourcePlugin) Call(
 		}
 
 		arg := &SourcePluginArgs{}
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
@@ -409,7 +410,7 @@ func (self FlowResultsPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")

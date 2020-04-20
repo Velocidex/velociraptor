@@ -197,31 +197,25 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	env := ordereddict.NewDict().
-		Set("server_config", self.config_obj).
-		Set("config", self.config_obj.Client).
+	scope := artifacts.ScopeBuilder{
+		Config: self.config_obj,
 
-		// We server artifacts upload() they end up writing in
+		// For server artifacts, upload() ends up writing in
 		// the file store. NOTE: This allows arbitrary
-		// filestore write.
-		Set("$uploader", file_store.NewFileStoreUploader(
-			self.config_obj, "/")).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+		// filestore write. Using this we can manager the
+		// files in the filestore using VQL artifacts.
+		Uploader: file_store.NewFileStoreUploader(
+			self.config_obj, "/"),
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger:     log.New(&serverLogger{self.config_obj, log_sink}, "server", 0),
+	}.Build()
+	defer scope.Close()
 
+	env := ordereddict.NewDict()
 	for _, env_spec := range arg.Env {
 		env.Set(env_spec.Key, env_spec.Value)
 	}
-
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
-	if err != nil {
-		return err
-	}
-	scope := artifacts.MakeScope(repository).AppendVars(env)
-	defer scope.Close()
-
-	scope.Logger = log.New(&serverLogger{self.config_obj, log_sink}, "server", 0)
+	scope.AppendVars(env)
 
 	// If we panic below we need to recover and report this to the
 	// server.

@@ -260,7 +260,7 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_CONFIG)
 		config_obj := any_config_obj.(*config_proto.ClientConfig)
 
 		params := encodeParams(arg, scope)

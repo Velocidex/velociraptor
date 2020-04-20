@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -36,7 +37,7 @@ func (self GetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")
@@ -91,7 +92,7 @@ func (self SetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")
@@ -166,7 +167,7 @@ func (self GetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")
@@ -221,7 +222,7 @@ func (self SetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")

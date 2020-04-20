@@ -93,24 +93,20 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
-	// Create a new query environment and store some useful
-	// objects in there. VQL plugins may then use the environment
-	// to communicate with the server.
 	uploader := &uploads.VelociraptorUploader{
 		Responder: responder,
 	}
 
-	// Clients run VQL with no ACL control.
-	env := ordereddict.NewDict().
-		Set("$responder", responder).
-		Set("$uploader", uploader).
-		Set("config", config_obj.Client).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NullACLManager{}).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	builder := artifacts.ScopeBuilder{
+		Config: config_obj,
+		// Disable ACLs on the client.
+		ACLManager: vql_subsystem.NullACLManager{},
+		Env:        ordereddict.NewDict(),
+		Uploader:   uploader,
+	}
 
 	for _, env_spec := range arg.Env {
-		env.Set(env_spec.Key, env_spec.Value)
+		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
 	// Clients do not have a copy of artifacts so they need to be
@@ -119,7 +115,7 @@ func (self VQLClientAction) StartQuery(
 	for _, artifact := range arg.Artifacts {
 		repository.Set(artifact)
 	}
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	scope.Logger = log.New(&LogWriter{config_obj, responder},

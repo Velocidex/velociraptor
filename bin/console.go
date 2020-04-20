@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -593,27 +594,27 @@ func doConsole() {
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
-	if *run_as != "" {
-		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
-	}
-
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		Set("$uploader", &uploads.FileBasedUploader{
+	builder := artifacts.ScopeBuilder{
+		Config: config_obj,
+		// Run tests as administrator - disable ACLs.
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env:        ordereddict.NewDict(),
+		Uploader: &uploads.FileBasedUploader{
 			UploadDir: *console_dump_dir,
-		}).
-		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+		},
+	}
+	if *run_as != "" {
+		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
 
 	if env_map != nil {
 		for k, v := range *env_map {
-			env.Set(k, v)
+			builder.Env.Set(k, v)
 		}
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())

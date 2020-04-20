@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -136,7 +137,6 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		child_scope := self.copyScope(scope).AppendVars(env)
 		defer child_scope.Close()
-
 		for _, query := range request.Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
@@ -147,7 +147,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 			}
 
 			for row := range vql.Eval(ctx, child_scope) {
-				dict_row := vql_subsystem.RowToDict(child_scope, row)
+				dict_row := vfilter.RowToDict(ctx, child_scope, row)
 				if query.Name != "" {
 					dict_row.Set("_Source", query.Name)
 				}
@@ -166,14 +166,22 @@ func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.S
 	env := ordereddict.NewDict()
 	for _, field := range []string{
 		vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.CACHE_VAR,
-		"config", "server_config", "$throttle", "$uploader"} {
+		constants.SCOPE_CONFIG,
+		constants.SCOPE_SERVER_CONFIG,
+		constants.SCOPE_THROTTLE,
+		constants.SCOPE_UPLOADER} {
 		value, pres := scope.Resolve(field)
 		if pres {
 			env.Set(field, value)
 		}
 	}
 
-	return MakeScope(self.repository).AppendVars(env)
+	mock := scope.GetContext(constants.SCOPE_MOCK)
+	result := scope.Copy()
+	result.ClearContext()
+	result.SetContext(constants.SCOPE_MOCK, mock)
+
+	return result.AppendVars(env)
 }
 
 func (self *ArtifactRepositoryPlugin) Name() string {

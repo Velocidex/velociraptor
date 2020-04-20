@@ -25,6 +25,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -47,7 +48,7 @@ func (self GlobPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			config_obj = &config_proto.Config{}

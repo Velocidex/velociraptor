@@ -63,7 +63,7 @@ func (self ClientsPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")

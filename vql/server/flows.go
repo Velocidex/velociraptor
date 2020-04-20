@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -48,7 +49,7 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")
@@ -122,7 +123,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	any_config_obj, _ := scope.Resolve("server_config")
+	any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 	config_obj, ok := any_config_obj.(*config_proto.Config)
 	if !ok {
 		scope.Log("Command can only run on the server")
@@ -172,7 +173,7 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("server_config")
+		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
 		config_obj, ok := any_config_obj.(*config_proto.Config)
 		if !ok {
 			scope.Log("Command can only run on the server")

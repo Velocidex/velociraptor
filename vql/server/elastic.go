@@ -195,7 +195,7 @@ func append_row_to_buffer(
 	row vfilter.Row, id int64, buf *bytes.Buffer,
 	arg *_ElasticPluginArgs) error {
 
-	row_dict := vfilter.RowToDict(ctx, scope, row, nil)
+	row_dict := vfilter.RowToDict(ctx, scope, row)
 	index := arg.Index
 	index_any, pres := row_dict.Get("_index")
 	if pres {

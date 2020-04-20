@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -146,14 +147,13 @@ func doRM(path, accessor string) {
 	}
 
 	config_obj := get_config_or_default()
-	env := ordereddict.NewDict().
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("accessor", accessor).
-		Set("path", path)
-
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Env: ordereddict.NewDict().
+			Set("accessor", accessor).
+			Set("path", path),
+	}.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())
@@ -193,29 +193,29 @@ func doCp(path, accessor string, dump_dir string) {
 		output_path = matches[2]
 	}
 
-	env := ordereddict.NewDict().
-		Set("accessor", accessor).
-		Set("path", path).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	builder := artifacts.ScopeBuilder{
+		Config: config_obj,
+		Env: ordereddict.NewDict().
+			Set("accessor", accessor).
+			Set("path", path),
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+	}
 
 	switch output_accessor {
 	case "", "file":
-		env.Set("$uploader", &uploads.FileBasedUploader{
+		builder.Uploader = &uploads.FileBasedUploader{
 			UploadDir: output_path,
-		})
+		}
 
 	case "fs":
-		uploader := file_store.NewFileStoreUploader(
+		builder.Uploader = file_store.NewFileStoreUploader(
 			config_obj, output_path)
-		env.Set("$uploader", uploader)
 
 	default:
 		kingpin.Fatalf("Can not write to accessor %v\n", output_accessor)
 	}
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())

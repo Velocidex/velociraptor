@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -162,12 +163,12 @@ func (self *MockFunction) Call(ctx context.Context,
 
 	var scope_context *_MockingScopeContext
 
-	scope_context_any := scope.GetContext("_mock_")
+	scope_context_any := scope.GetContext(constants.SCOPE_MOCK)
 	if scope_context_any != nil {
 		scope_context = scope_context_any.(*_MockingScopeContext)
 	} else {
 		scope_context = &_MockingScopeContext{}
-		scope.SetContext("_mock_", scope_context)
+		scope.SetContext(constants.SCOPE_MOCK, scope_context)
 	}
 
 	if arg.Plugin != "" {
@@ -236,12 +237,12 @@ func (self *MockCheckFunction) Call(ctx context.Context,
 
 	var scope_context *_MockingScopeContext
 
-	scope_context_any := scope.GetContext("_mock_")
+	scope_context_any := scope.GetContext(constants.SCOPE_MOCK)
 	if scope_context_any != nil {
 		scope_context = scope_context_any.(*_MockingScopeContext)
 	} else {
 		scope_context = &_MockingScopeContext{}
-		scope.SetContext("_mock_", scope_context)
+		scope.SetContext(constants.SCOPE_MOCK, scope_context)
 	}
 
 	if arg.Plugin != "" {

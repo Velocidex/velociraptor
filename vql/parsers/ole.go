@@ -143,7 +143,7 @@ func (self _OLEVBAPlugin) Call(
 			}
 
 			for _, macro_info := range macros {
-				output_chan <- vql_subsystem.RowToDict(scope, macro_info).Set(
+				output_chan <- vfilter.RowToDict(ctx, scope, macro_info).Set(
 					"filename", filename)
 			}
 		}

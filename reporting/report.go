@@ -280,20 +280,17 @@ func newBaseTemplateEngine(
 			"Artifact %v not known.", artifact_name)
 	}
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewServerACLManager(
-				config_obj, principal)).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+	}.Build()
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	// Closing the scope is deferred to closing the template.
 
 	return &BaseTemplateEngine{
 		Artifact: artifact,
 		Scope:    scope,
-		Env:      env,
+		Env:      ordereddict.NewDict(),
 		logger:   logging.GetLogger(config_obj, &logging.FrontendComponent),
 	}, nil
 }

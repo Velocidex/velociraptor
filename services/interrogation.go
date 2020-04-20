@@ -40,17 +40,10 @@ func (self *InterrogationService) Start(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting interrogation service.")
 
-	env := ordereddict.NewDict().
-		Set("config", self.config_obj.Client).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("server_config", self.config_obj)
-
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
-	if err != nil {
-		return err
-	}
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     self.config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+	}.Build()
 	defer scope.Close()
 
 	scope.Logger = logging.NewPlainLogger(self.config_obj,

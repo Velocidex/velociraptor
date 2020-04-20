@@ -23,7 +23,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -65,21 +64,13 @@ func (self *HuntManager) Start(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the hunt manager service.")
 
-	env := ordereddict.NewDict().
-		Set("config", self.config_obj.Client).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("server_config", self.config_obj)
-
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
-	if err != nil {
-		return err
-	}
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     self.config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger: logging.NewPlainLogger(self.config_obj,
+			&logging.FrontendComponent),
+	}.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(self.config_obj,
-		&logging.FrontendComponent)
 
 	vql, err := vfilter.Parse("select HuntId, ClientId, Fqdn, Participate FROM " +
 		"watch_monitoring(artifact='System.Hunt.Participation')")
@@ -119,7 +110,7 @@ func (self *HuntManager) ProcessRow(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	dict_row := vql_subsystem.RowToDict(scope, row)
+	dict_row := vfilter.RowToDict(ctx, scope, row)
 	participation_row := &ParticipationRecord{}
 	err := vfilter.ExtractArgs(scope, dict_row, participation_row)
 	if err != nil {

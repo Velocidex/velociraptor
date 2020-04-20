@@ -40,20 +40,13 @@ func RunVQL(
 
 	result := &api_proto.GetTableResponse{}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	env.Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewServerACLManager(config_obj, principal))
-
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		Env:        env,
+		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+		Logger:     logging.NewPlainLogger(config_obj, &logging.ToolComponent),
+	}.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
 
 	vql, err := vfilter.Parse(query)
 	if err != nil {
@@ -91,20 +84,14 @@ func StoreVQLAsCSVFile(
 	query string,
 	writer io.Writer) error {
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
-	env.Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewServerACLManager(config_obj, principal))
-
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+		Logger: logging.NewPlainLogger(config_obj,
+			&logging.ToolComponent),
+		Env: env,
+	}.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.ToolComponent)
 
 	vql, err := vfilter.Parse(query)
 	if err != nil {

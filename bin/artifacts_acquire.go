@@ -20,6 +20,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -67,32 +68,32 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 
 	logger.Info("Collecting artifact %v into subdir %v", name, subdir)
 
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
-	if *run_as != "" {
-		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	builder := artifacts.ScopeBuilder{
+		Config: config_obj,
+		// Run tests as administrator - disable ACLs.
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env:        ordereddict.NewDict(),
+		Uploader: &uploads.FileBasedUploader{
+			UploadDir: filepath.Join(subdir, "files"),
+		},
 	}
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		Set("$uploader", &uploads.FileBasedUploader{
-			UploadDir: filepath.Join(subdir, "files"),
-		}).
-		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	if *run_as != "" {
+		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
 
 	// Allow the user to override the env - this is how we set
 	// artifact parameters.
 	for _, request_env := range request.Env {
-		env.Set(request_env.Key, request_env.Value)
+		builder.Env.Set(request_env.Key, request_env.Value)
 	}
 
 	for k, v := range *artifact_command_acquire_parameters {
-		env.Set(k, v)
+		builder.Env.Set(k, v)
 	}
 
-	repository := getRepository(config_obj)
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())

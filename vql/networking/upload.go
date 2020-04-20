@@ -21,6 +21,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -41,7 +42,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	uploader_obj, ok := scope.Resolve("$uploader")
+	uploader_obj, ok := scope.Resolve(constants.SCOPE_UPLOADER)
 	if !ok {
 		scope.Log("upload: Uploader not configured.")
 		return vfilter.Null{}
@@ -138,7 +139,7 @@ func (self *UploadPlugin) Call(
 			return
 		}
 
-		uploader_obj, _ := scope.Resolve("$uploader")
+		uploader_obj, _ := scope.Resolve(constants.SCOPE_UPLOADER)
 		uploader, ok := uploader_obj.(uploads.Uploader)
 		if !ok {
 			scope.Log("upload: Uploader not configured.")

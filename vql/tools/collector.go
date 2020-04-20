@@ -8,6 +8,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -83,7 +84,7 @@ func (self CollectPlugin) Call(
 			// Any uploads go into the container.
 			subscope := scope.Copy()
 			env := ordereddict.NewDict().
-				Set("$uploader", container)
+				Set(constants.SCOPE_UPLOADER, container)
 
 			subscope.AppendVars(env)
 
