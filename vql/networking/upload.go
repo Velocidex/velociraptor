@@ -21,7 +21,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -42,67 +42,66 @@ func (self *UploadFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	uploader_obj, ok := scope.Resolve(constants.SCOPE_UPLOADER)
+	uploader, ok := artifacts.GetUploader(scope)
 	if !ok {
 		scope.Log("upload: Uploader not configured.")
 		return vfilter.Null{}
 	}
-	uploader, ok := uploader_obj.(uploads.Uploader)
-	if ok {
-		arg := &UploadFunctionArgs{}
-		err := vfilter.ExtractArgs(scope, args, arg)
-		if err != nil {
-			scope.Log("upload: %s", err.Error())
-			return vfilter.Null{}
-		}
 
-		if arg.File == "" {
-			return vfilter.Null{}
-		}
+	arg := &UploadFunctionArgs{}
+	err := vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("upload: %s", err.Error())
+		return vfilter.Null{}
+	}
 
-		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
-		if err != nil {
-			scope.Log("upload: %s", err)
-			return vfilter.Null{}
-		}
+	if arg.File == "" {
+		return vfilter.Null{}
+	}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("upload: %v", err)
-			return &uploads.UploadResponse{
-				Error: err.Error(),
-			}
-		}
+	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+	if err != nil {
+		scope.Log("upload: %s", err)
+		return vfilter.Null{}
+	}
 
-		file, err := accessor.Open(arg.File)
-		if err != nil {
-			scope.Log("upload: Unable to open %s: %s",
-				arg.File, err.Error())
-			return &uploads.UploadResponse{
-				Error: err.Error(),
-			}
-		}
-		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil {
-			scope.Log("upload: Unable to stat %s: %v",
-				arg.File, err)
-		} else if !stat.IsDir() {
-			upload_response, err := uploader.Upload(
-				ctx, scope, arg.File,
-				arg.Accessor,
-				arg.Name,
-				stat.Size(), // Expected size.
-				file)
-			if err != nil {
-				return &uploads.UploadResponse{
-					Error: err.Error(),
-				}
-			}
-			return upload_response
+	accessor, err := glob.GetAccessor(arg.Accessor, scope)
+	if err != nil {
+		scope.Log("upload: %v", err)
+		return &uploads.UploadResponse{
+			Error: err.Error(),
 		}
 	}
+
+	file, err := accessor.Open(arg.File)
+	if err != nil {
+		scope.Log("upload: Unable to open %s: %s",
+			arg.File, err.Error())
+		return &uploads.UploadResponse{
+			Error: err.Error(),
+		}
+	}
+	defer file.Close()
+
+	stat, err := file.Stat()
+	if err != nil {
+		scope.Log("upload: Unable to stat %s: %v",
+			arg.File, err)
+	} else if !stat.IsDir() {
+		upload_response, err := uploader.Upload(
+			ctx, scope, arg.File,
+			arg.Accessor,
+			arg.Name,
+			stat.Size(), // Expected size.
+			file)
+		if err != nil {
+			return &uploads.UploadResponse{
+				Error: err.Error(),
+			}
+		}
+		return upload_response
+	}
+
 	return vfilter.Null{}
 }
 
@@ -139,8 +138,7 @@ func (self *UploadPlugin) Call(
 			return
 		}
 
-		uploader_obj, _ := scope.Resolve(constants.SCOPE_UPLOADER)
-		uploader, ok := uploader_obj.(uploads.Uploader)
+		uploader, ok := artifacts.GetUploader(scope)
 		if !ok {
 			scope.Log("upload: Uploader not configured.")
 

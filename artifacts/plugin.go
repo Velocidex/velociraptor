@@ -165,7 +165,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.Scope {
 	env := ordereddict.NewDict()
 	for _, field := range []string{
-		vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.CACHE_VAR,
+		vql_subsystem.ACL_MANAGER_VAR,
+		vql_subsystem.CACHE_VAR,
+		constants.SCOPE_MOCK,
 		constants.SCOPE_CONFIG,
 		constants.SCOPE_SERVER_CONFIG,
 		constants.SCOPE_THROTTLE,
@@ -176,10 +178,8 @@ func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.S
 		}
 	}
 
-	mock := scope.GetContext(constants.SCOPE_MOCK)
 	result := scope.Copy()
 	result.ClearContext()
-	result.SetContext(constants.SCOPE_MOCK, mock)
 
 	return result.AppendVars(env)
 }

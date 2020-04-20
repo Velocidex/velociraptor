@@ -22,8 +22,7 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -43,13 +42,10 @@ func (self *CopyFunction) Call(ctx context.Context,
 	args *ordereddict.Dict) vfilter.Any {
 
 	// Check the config if we are allowed to execve at all.
-	scope_config, pres := scope.Resolve(constants.SCOPE_CONFIG)
-	if pres {
-		config_obj, ok := scope_config.(*config_proto.ClientConfig)
-		if ok && config_obj.PreventExecve {
-			scope.Log("copy: Not allowed to write by configuration.")
-			return vfilter.Null{}
-		}
+	config_obj, ok := artifacts.GetConfig(scope)
+	if ok && config_obj.PreventExecve {
+		scope.Log("copy: Not allowed to write by configuration.")
+		return vfilter.Null{}
 	}
 
 	arg := &CopyFunctionArgs{}

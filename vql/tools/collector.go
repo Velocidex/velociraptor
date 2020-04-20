@@ -8,7 +8,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -79,18 +78,13 @@ func (self CollectPlugin) Call(
 			return
 		}
 
+		builder := artifacts.ScopeBuilderFromScope(scope)
+		builder.Uploader = container
+
 		for _, name := range arg.Artifacts {
-			// Make a new scope for each artifact.
-			// Any uploads go into the container.
-			subscope := scope.Copy()
-			env := ordereddict.NewDict().
-				Set(constants.SCOPE_UPLOADER, container)
-
-			subscope.AppendVars(env)
-
 			artifact, pres := repository.Get(name)
 			if !pres {
-				subscope.Log("collect: Unknown artifact %v", name)
+				scope.Log("collect: Unknown artifact %v", name)
 				continue
 
 			}
@@ -98,14 +92,15 @@ func (self CollectPlugin) Call(
 			request := &actions_proto.VQLCollectorArgs{}
 			err := repository.Compile(artifact, request)
 			if err != nil {
-				subscope.Log("collect: Invalid artifact %v: %v",
+				scope.Log("collect: Invalid artifact %v: %v",
 					name, err)
 				continue
 			}
 
 			// First set defaulst
+			builder.Env = ordereddict.NewDict()
 			for _, e := range request.Env {
-				env.Set(e.Key, e.Value)
+				builder.Env.Set(e.Key, e.Value)
 			}
 
 			in_params := func(key string) bool {
@@ -118,19 +113,23 @@ func (self CollectPlugin) Call(
 			}
 
 			// Now override provided parameters
-			for _, key := range subscope.GetMembers(arg.Args) {
+			for _, key := range scope.GetMembers(arg.Args) {
 				if !in_params(key) {
 					scope.Log("Unknown arg %v to artifact collector",
 						key)
 					return
 				}
 
-				value, pres := subscope.Associative(arg.Args,
+				value, pres := scope.Associative(arg.Args,
 					key)
 				if pres {
-					env.Set(key, value)
+					builder.Env.Set(key, value)
 				}
 			}
+
+			// Make a new scope for each artifact.
+			// Any uploads go into the container.
+			subscope := builder.Build()
 
 			for _, query := range request.Query {
 				vql, err := vfilter.Parse(query.VQL)

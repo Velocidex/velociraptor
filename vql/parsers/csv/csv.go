@@ -24,8 +24,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -184,9 +183,6 @@ func (self WriteCSVPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		any_config_obj, _ := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
-		config_obj, _ := any_config_obj.(*config_proto.Config)
-
 		arg := &WriteCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
 		if err != nil {
@@ -219,6 +215,12 @@ func (self WriteCSVPlugin) Call(
 			err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 			if err != nil {
 				scope.Log("write_csv: %s", err)
+				return
+			}
+
+			config_obj, ok := artifacts.GetServerConfig(scope)
+			if !ok {
+				scope.Log("Command can only run on the server")
 				return
 			}
 

@@ -22,28 +22,92 @@ type ScopeBuilder struct {
 }
 
 func (self ScopeBuilder) Build() *vfilter.Scope {
-	if self.Env == nil {
-		self.Env = ordereddict.NewDict()
+	env := ordereddict.NewDict()
+	if self.Env != nil {
+		env.MergeFrom(self.Env)
 	}
 
-	self.Env.Set(constants.SCOPE_CONFIG, self.Config.Client).
+	env.Set(constants.SCOPE_CONFIG, self.Config.Client).
 		Set(constants.SCOPE_SERVER_CONFIG, self.Config).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if self.ACLManager != nil {
-		self.Env.Set(vql_subsystem.ACL_MANAGER_VAR, self.ACLManager)
+		env.Set(vql_subsystem.ACL_MANAGER_VAR, self.ACLManager)
 	}
 
 	if self.Uploader != nil {
-		self.Env.Set(constants.SCOPE_UPLOADER, self.Uploader)
+		env.Set(constants.SCOPE_UPLOADER, self.Uploader)
 	}
 
 	repository, err := GetGlobalRepository(self.Config)
 	if err != nil {
 		panic(err)
 	}
-	scope := MakeScope(repository).AppendVars(self.Env)
+	scope := MakeScope(repository).AppendVars(env)
 	scope.Logger = self.Logger
 
 	return scope
+}
+
+func ScopeBuilderFromScope(scope *vfilter.Scope) *ScopeBuilder {
+	result := &ScopeBuilder{
+		Logger: scope.Logger,
+	}
+	config_obj, ok := GetServerConfig(scope)
+	if ok {
+		result.Config = config_obj
+	}
+
+	uploader, ok := GetUploader(scope)
+	if ok {
+		result.Uploader = uploader
+	}
+
+	acl_manger, ok := GetACLManager(scope)
+	if ok {
+		result.ACLManager = acl_manger
+	}
+
+	return result
+}
+
+// Gets the config from the scope.
+func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
+	scope_config, pres := scope.Resolve(constants.SCOPE_CONFIG)
+	if !pres {
+		return nil, false
+	}
+
+	config, ok := scope_config.(*config_proto.ClientConfig)
+	return config, ok
+}
+
+func GetServerConfig(scope *vfilter.Scope) (*config_proto.Config, bool) {
+	scope_config, pres := scope.Resolve(constants.SCOPE_SERVER_CONFIG)
+	if !pres {
+		return nil, false
+	}
+
+	config, ok := scope_config.(*config_proto.Config)
+	return config, ok
+}
+
+func GetUploader(scope *vfilter.Scope) (uploads.Uploader, bool) {
+	scope_uploader, pres := scope.Resolve(constants.SCOPE_UPLOADER)
+	if !pres {
+		return nil, false
+	}
+
+	config, ok := scope_uploader.(uploads.Uploader)
+	return config, ok
+}
+
+func GetACLManager(scope *vfilter.Scope) (vql_subsystem.ACLManager, bool) {
+	scope_manager, pres := scope.Resolve(vql_subsystem.ACL_MANAGER_VAR)
+	if !pres {
+		return nil, false
+	}
+
+	config, ok := scope_manager.(vql_subsystem.ACLManager)
+	return config, ok
 }

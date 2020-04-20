@@ -33,10 +33,12 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -99,7 +101,9 @@ func runTest(fixture *testFixture) (string, error) {
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
 		Uploader:   container,
-		Env:        ordereddict.NewDict().Set("GoldenOutput", tmpfile.Name()),
+		Env: ordereddict.NewDict().
+			Set("GoldenOutput", tmpfile.Name()).
+			Set(constants.SCOPE_MOCK, &tools.MockingScopeContext{}),
 	}
 
 	if env_map != nil {

@@ -35,6 +35,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -260,8 +261,7 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve(constants.SCOPE_CONFIG)
-		config_obj := any_config_obj.(*config_proto.ClientConfig)
+		config_obj, _ := artifacts.GetConfig(scope)
 
 		params := encodeParams(arg, scope)
 		client := getHttpClient(config_obj, arg)
