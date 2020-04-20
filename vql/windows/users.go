@@ -200,7 +200,6 @@ func init() {
 		Doc: "Display information about workstation local users. " +
 			"This is obtained through the NetUserEnum() API.",
 		Function: getUsers,
-		RowType:  UserRecord{},
 	})
 
 	vql_subsystem.RegisterFunction(&LookupSidFunction{})

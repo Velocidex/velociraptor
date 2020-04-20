@@ -151,33 +151,31 @@ func doQuery() {
 		repository.LoadDirectory(*artifact_definitions_dir)
 	}
 
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
-	if *run_as != "" {
-		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env:        ordereddict.NewDict(),
 	}
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-
-		// Running on the commandline has no ACL restrictions.
-		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	if *run_as != "" {
+		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
 
 	// Configure an uploader if required.
 	if *dump_dir != "" {
-		env.Set("$uploader", &uploads.FileBasedUploader{
+		builder.Uploader = &uploads.FileBasedUploader{
 			UploadDir: *dump_dir,
-		})
+		}
 	}
 
 	if env_map != nil {
 		for k, v := range *env_map {
-			env.Set(k, v)
+			builder.Env.Set(k, v)
 		}
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	// Install throttler into the scope.

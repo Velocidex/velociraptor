@@ -33,10 +33,12 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -83,16 +85,8 @@ func vqlCollectorArgsFromFixture(
 
 func runTest(fixture *testFixture) (string, error) {
 	config_obj := get_config_or_default()
-	repository := getRepository(config_obj)
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		// Run tests as administrator - disable ACLs.
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
-
+	// Any uploads go into the container.
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {
@@ -102,30 +96,35 @@ func runTest(fixture *testFixture) (string, error) {
 	container, err := reporting.NewContainer(tmpfile.Name())
 	kingpin.FatalIfError(err, "Can not create output container")
 
-	// Any uploads go into the container.
-	env.Set("$uploader", container)
-	env.Set("GoldenOutput", tmpfile.Name())
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Uploader:   container,
+		Env: ordereddict.NewDict().
+			Set("GoldenOutput", tmpfile.Name()).
+			Set(constants.SCOPE_MOCK, &tools.MockingScopeContext{}),
+	}
 
 	if env_map != nil {
 		for k, v := range *env_map {
-			env.Set(k, v)
+			builder.Env.Set(k, v)
 		}
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	vql_collector_args := vqlCollectorArgsFromFixture(config_obj, fixture)
+	for _, env_spec := range vql_collector_args.Env {
+		builder.Env.Set(env_spec.Key, env_spec.Value)
+	}
+
+	// Cleanup after the query.
+	scope := builder.Build()
 	defer scope.Close()
 
 	scope.AddDestructor(func() {
 		container.Close()
 		os.Remove(tmpfile.Name()) // clean up
 	})
-
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
-	vql_collector_args := vqlCollectorArgsFromFixture(
-		config_obj, fixture)
-	for _, env_spec := range vql_collector_args.Env {
-		env.Set(env_spec.Key, env_spec.Value)
-	}
 
 	result := ""
 	for _, query := range fixture.Queries {

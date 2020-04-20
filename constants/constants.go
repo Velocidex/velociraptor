@@ -64,6 +64,14 @@ const (
 
 	// Internal artifact names.
 	CLIENT_INFO_ARTIFACT = "Generic.Client.Info"
+
+	// Globals set in VQL scopes.
+	SCOPE_CONFIG        = "config"
+	SCOPE_SERVER_CONFIG = "server_config"
+	SCOPE_THROTTLE      = "$throttle"
+	SCOPE_UPLOADER      = "$uploader"
+	SCOPE_RESPONDER     = "$responder"
+	SCOPE_MOCK          = "$mock"
 )
 
 var (

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -22,17 +23,17 @@ func watchForFlowCompletion(
 	handler func(ctx context.Context,
 		scope *vfilter.Scope, row vfilter.Row)) error {
 
-	env := ordereddict.NewDict().
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("artifact_name", artifact_name)
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Env: ordereddict.NewDict().
+			Set("artifact_name", artifact_name),
+		Logger: logging.NewPlainLogger(config_obj,
+			&logging.FrontendComponent),
+	}
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.FrontendComponent)
 
 	vql, err := vfilter.Parse("select * FROM " +
 		"watch_monitoring(artifact='System.Flow.Completion') " +

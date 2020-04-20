@@ -68,31 +68,29 @@ func streamQuery(
 		}
 	}()
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj).
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewServerACLManager(config_obj, peer_name)).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewServerACLManager(config_obj, peer_name),
+		Logger:     logging.NewPlainLogger(config_obj, &logging.APICmponent),
+		Env:        ordereddict.NewDict(),
+	}
 
 	for _, env_spec := range arg.Env {
-		env.Set(env_spec.Key, env_spec.Value)
+		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
+
 	err = repository.PopulateArtifactsVQLCollectorArgs(arg)
 	if err != nil {
 		return err
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(config_obj,
-		&logging.APICmponent)
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.

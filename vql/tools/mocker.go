@@ -7,24 +7,25 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-type _MockingScopeContext struct {
+type MockingScopeContext struct {
 	plugins   []*MockerPlugin
 	functions []*MockerFunction
 }
 
-func (self *_MockingScopeContext) AddPlugin(pl *MockerPlugin) {
+func (self *MockingScopeContext) AddPlugin(pl *MockerPlugin) {
 	self.plugins = append(self.plugins, pl)
 }
 
-func (self *_MockingScopeContext) AddFunction(pl *MockerFunction) {
+func (self *MockingScopeContext) AddFunction(pl *MockerFunction) {
 	self.functions = append(self.functions, pl)
 }
 
-func (self *_MockingScopeContext) GetPlugin(name string) *MockerPlugin {
+func (self *MockingScopeContext) GetPlugin(name string) *MockerPlugin {
 	for _, pl := range self.plugins {
 		if name == pl.name {
 			return pl
@@ -34,7 +35,7 @@ func (self *_MockingScopeContext) GetPlugin(name string) *MockerPlugin {
 	return nil
 }
 
-func (self _MockingScopeContext) GetFunction(name string) *MockerFunction {
+func (self MockingScopeContext) GetFunction(name string) *MockerFunction {
 	for _, pl := range self.functions {
 		if name == pl.name {
 			return pl
@@ -44,7 +45,7 @@ func (self _MockingScopeContext) GetFunction(name string) *MockerFunction {
 	return nil
 }
 
-func (self *_MockingScopeContext) Reset() {
+func (self *MockingScopeContext) Reset() {
 	for _, pl := range self.plugins {
 		pl.ctx.call_count = 0
 	}
@@ -160,14 +161,10 @@ func (self *MockFunction) Call(ctx context.Context,
 		}
 	}
 
-	var scope_context *_MockingScopeContext
-
-	scope_context_any := scope.GetContext("_mock_")
-	if scope_context_any != nil {
-		scope_context = scope_context_any.(*_MockingScopeContext)
-	} else {
-		scope_context = &_MockingScopeContext{}
-		scope.SetContext("_mock_", scope_context)
+	scope_context, ok := GetMockContext(scope)
+	if !ok {
+		scope.Log("mock_check: Not running in test.")
+		return vfilter.Null{}
 	}
 
 	if arg.Plugin != "" {
@@ -234,14 +231,10 @@ func (self *MockCheckFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	var scope_context *_MockingScopeContext
-
-	scope_context_any := scope.GetContext("_mock_")
-	if scope_context_any != nil {
-		scope_context = scope_context_any.(*_MockingScopeContext)
-	} else {
-		scope_context = &_MockingScopeContext{}
-		scope.SetContext("_mock_", scope_context)
+	scope_context, ok := GetMockContext(scope)
+	if !ok {
+		scope.Log("mock_check: Not running in test.")
+		return vfilter.Null{}
 	}
 
 	if arg.Plugin != "" {
@@ -288,6 +281,16 @@ func (self MockCheckFunction) Info(
 		Doc:     "Check expectations on a mock.",
 		ArgType: type_map.AddType(scope, &MockCheckArgs{}),
 	}
+}
+
+func GetMockContext(scope *vfilter.Scope) (*MockingScopeContext, bool) {
+	scope_mocker, pres := scope.Resolve(constants.SCOPE_MOCK)
+	if !pres {
+		return nil, false
+	}
+
+	mocker, ok := scope_mocker.(*MockingScopeContext)
+	return mocker, ok
 }
 
 func init() {

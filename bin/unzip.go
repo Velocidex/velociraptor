@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -38,11 +39,12 @@ func doUnzip() {
 		kingpin.FatalIfError(err, "File does not exist")
 	}
 
-	env := ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("ZipPath", filename).
-		Set("MemberGlob", *unzip_cmd_member)
+	builder := artifacts.ScopeBuilder{
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Env: ordereddict.NewDict().
+			Set("ZipPath", filename).
+			Set("MemberGlob", *unzip_cmd_member),
+	}
 
 	var query string
 
@@ -78,9 +80,9 @@ func doUnzip() {
 		}
 
 	} else {
-		env.Set("$uploader", &uploads.FileBasedUploader{
+		builder.Uploader = &uploads.FileBasedUploader{
 			UploadDir: *unzip_path,
-		})
+		}
 
 		query = `
        SELECT upload(
@@ -97,7 +99,7 @@ func doUnzip() {
 		}
 	}
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())

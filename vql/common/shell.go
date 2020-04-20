@@ -28,7 +28,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -64,13 +64,10 @@ func (self ShellPlugin) Call(
 		}
 
 		// Check the config if we are allowed to execve at all.
-		scope_config, pres := scope.Resolve("config")
-		if pres {
-			config_obj, ok := scope_config.(*config_proto.ClientConfig)
-			if ok && config_obj.PreventExecve {
-				scope.Log("shell: Not allowed to execve by configuration.")
-				return
-			}
+		config_obj, ok := artifacts.GetConfig(scope)
+		if ok && config_obj.PreventExecve {
+			scope.Log("shell: Not allowed to execve by configuration.")
+			return
 		}
 
 		arg := &ShellPluginArgs{}

@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -104,22 +105,22 @@ func collectArtifact(
 	artifact_name string,
 	request *actions_proto.VQLCollectorArgs) {
 
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
-	if *run_as != "" {
-		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env:        ordereddict.NewDict(),
 	}
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	if *run_as != "" {
+		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
 
 	for _, request_env := range request.Env {
-		env.Set(request_env.Key, request_env.Value)
+		builder.Env.Set(request_env.Key, request_env.Value)
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())
@@ -183,25 +184,24 @@ func collectArtifactToContainer(
 	container *reporting.Container,
 	format string,
 	request *actions_proto.VQLCollectorArgs) {
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
-	if *run_as != "" {
-		acl_manager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env:        ordereddict.NewDict(),
+		Uploader:   container,
 	}
 
-	env := ordereddict.NewDict().
-		Set("config", config_obj.Client).
-		Set("server_config", config_obj).
-		Set(vql_subsystem.ACL_MANAGER_VAR, acl_manager).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
-
-	// Any uploads go into the container.
-	env.Set("$uploader", container)
+	if *run_as != "" {
+		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
+	}
 
 	for _, request_env := range request.Env {
-		env.Set(request_env.Key, request_env.Value)
+		builder.Env.Set(request_env.Key, request_env.Value)
 	}
 
-	scope := artifacts.MakeScope(repository).AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
 
 	AddLogger(scope, get_config_or_default())

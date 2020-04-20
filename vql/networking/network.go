@@ -50,7 +50,6 @@ func init() {
 
 				return result
 			},
-			RowType: net.Interface{},
-			Doc:     "List all active interfaces.",
+			Doc: "List all active interfaces.",
 		})
 }

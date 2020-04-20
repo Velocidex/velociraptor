@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -134,7 +135,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 			env.Set(k, v)
 		}
 
-		child_scope := scope.Copy().AppendVars(env)
+		child_scope := self.copyScope(scope).AppendVars(env)
+		defer child_scope.Close()
 		for _, query := range request.Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
@@ -144,15 +146,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 				return
 			}
 
-			child_chan := vql.Eval(ctx, child_scope)
-			for {
-				row, ok := <-child_chan
-				// This query is done - do the
-				// next one.
-				if !ok {
-					break
-				}
-				dict_row := vql_subsystem.RowToDict(scope, row)
+			for row := range vql.Eval(ctx, child_scope) {
+				dict_row := vfilter.RowToDict(ctx, child_scope, row)
 				if query.Name != "" {
 					dict_row.Set("_Source", query.Name)
 				}
@@ -163,6 +158,30 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 	}()
 	return output_chan
+}
+
+// Create a mostly new scope for executing the new artifact but copy
+// over some important global variables.
+func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.Scope {
+	env := ordereddict.NewDict()
+	for _, field := range []string{
+		vql_subsystem.ACL_MANAGER_VAR,
+		vql_subsystem.CACHE_VAR,
+		constants.SCOPE_MOCK,
+		constants.SCOPE_CONFIG,
+		constants.SCOPE_SERVER_CONFIG,
+		constants.SCOPE_THROTTLE,
+		constants.SCOPE_UPLOADER} {
+		value, pres := scope.Resolve(field)
+		if pres {
+			env.Set(field, value)
+		}
+	}
+
+	result := scope.Copy()
+	result.ClearContext()
+
+	return result.AppendVars(env)
 }
 
 func (self *ArtifactRepositoryPlugin) Name() string {

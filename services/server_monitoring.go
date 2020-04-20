@@ -101,12 +101,17 @@ func (self *EventTable) Update(
 
 		// Server monitoring artifacts run with full admin
 		// permissions.
-		env := ordereddict.NewDict().
-			Set("server_config", config_obj).
-			Set(vql_subsystem.ACL_MANAGER_VAR,
-				vql_subsystem.NewRoleACLManager("administrator")).
-			Set("config", config_obj.Client).
-			Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+		scope := artifacts.ScopeBuilder{
+			Config:     config_obj,
+			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+			Logger: logging.NewPlainLogger(config_obj,
+				&logging.FrontendComponent),
+		}.Build()
+
+		// Closing the scope is deferred to table close.
+
+		// Build env for this query.
+		env := ordereddict.NewDict()
 
 		// First set param default.
 		for _, param := range artifact.Parameters {
@@ -120,9 +125,7 @@ func (self *EventTable) Update(
 
 		// A new scope for each artifact - but shared scope
 		// for all sources.
-		scope := artifacts.MakeScope(repository).AppendVars(env)
-		scope.Logger = logging.NewPlainLogger(
-			config_obj, &logging.FrontendComponent)
+		scope.AppendVars(env)
 
 		// Make sure we do not consume too many resources.
 		vfilter.InstallThrottler(

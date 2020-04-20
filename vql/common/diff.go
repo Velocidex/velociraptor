@@ -87,7 +87,7 @@ check_row:
 			}
 			new_key := fmt.Sprintf("%v", new_key_any)
 
-			dict_row := vql_subsystem.RowToDict(scope, row)
+			dict_row := vfilter.RowToDict(ctx, scope, row)
 
 			self.rows[new_key] = append(self.rows[new_key], dict_row)
 

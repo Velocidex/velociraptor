@@ -62,8 +62,8 @@ func (self UploadsPlugins) Call(
 		}
 
 		arg := &UploadsPluginsArgs{}
-		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*config_proto.Config)
+
+		config_obj, ok := artifacts.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -135,8 +135,7 @@ func (self SourcePlugin) Call(
 		}
 
 		arg := &SourcePluginArgs{}
-		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*config_proto.Config)
+		config_obj, ok := artifacts.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return
@@ -409,8 +408,7 @@ func (self FlowResultsPlugin) Call(
 			return
 		}
 
-		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*config_proto.Config)
+		config_obj, ok := artifacts.GetServerConfig(scope)
 		if !ok {
 			scope.Log("Command can only run on the server")
 			return

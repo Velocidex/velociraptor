@@ -24,6 +24,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -47,8 +48,7 @@ func (self GlobPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		any_config_obj, _ := scope.Resolve("server_config")
-		config_obj, ok := any_config_obj.(*config_proto.Config)
+		config_obj, ok := artifacts.GetServerConfig(scope)
 		if !ok {
 			config_obj = &config_proto.Config{}
 		}
@@ -107,7 +107,6 @@ func (self GlobPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	return &vfilter.PluginInfo{
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
-		RowType: type_map.AddType(scope, glob.NewVirtualDirectoryPath("", nil)),
 		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
 	}
 }
@@ -227,7 +226,6 @@ func (self ReadFilePlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 	return &vfilter.PluginInfo{
 		Name:    "read_file",
 		Doc:     "Read files in chunks.",
-		RowType: type_map.AddType(scope, ReadFileResponse{}),
 		ArgType: type_map.AddType(scope, &ReadFileArgs{}),
 	}
 }
@@ -362,7 +360,6 @@ func init() {
 				}
 				return result
 			},
-			RowType: disk.PartitionStat{},
 		})
 	vql_subsystem.RegisterPlugin(&StatPlugin{})
 	vql_subsystem.RegisterFunction(&ReadFileFunction{})
