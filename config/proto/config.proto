@@ -181,6 +181,8 @@ message ClientConfig {
     RingBufferConfig local_buffer = 26 [(sem_type) = {
              description: "Configure the local ring buffer."
         }];
+
+    uint64 max_memory_hard_limit = 29;
 }
 
 message APIConfig {
