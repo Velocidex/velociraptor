@@ -258,26 +258,6 @@
     required: false
   category: event
 - name: collect
-  description: Launch an artifact collection against a client.
-  type: Function
-  args:
-  - name: client_id
-    description: The client id to schedule a collection on
-    type: string
-    repeated: false
-    required: true
-  - name: artifacts
-    description: A list of artifacts to collect
-    type: string
-    repeated: true
-    required: true
-  - name: env
-    description: Parameters to apply to the artifacts
-    type: vfilter.Any
-    repeated: false
-    required: false
-  category: server
-- name: collect
   description: Collect artifacts into a local file.
   type: Plugin
   args:

@@ -59,7 +59,7 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
     var accessor = 'file';
     if (components.length > 0) {
         accessor = components[0];
-        path = components.slice(1).join("\\");
+        path = components.slice(1).join("/");
     }
 
     if (accessor == 'ntfs' && components.length > 1) {

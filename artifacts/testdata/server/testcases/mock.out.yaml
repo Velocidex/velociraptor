@@ -146,6 +146,10 @@ LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] )
   "Family": "IPv4",
   "Type": "TCP",
   "Status": "ESTAB",
+  "Laddr.IP": null,
+  "Laddr.Port": null,
+  "Raddr.IP": null,
+  "Raddr.Port": null,
   "Timestamp": "2019-12-07T03:30:58Z",
   "_Source": "Windows.Network.NetstatEnriched/Netstat"
  }
