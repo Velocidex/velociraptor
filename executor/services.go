@@ -27,4 +27,7 @@ func StartServices(
 		actions.UpdateEventTable{}.Run(config_obj, context.Background(),
 			responder, config_obj.Writeback.EventQueries)
 	}
+
+	logger.Info("Starting Nanny service.")
+	StartNannyService(config_obj)
 }
