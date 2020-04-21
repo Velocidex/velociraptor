@@ -30,6 +30,10 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 			return
 		}
 
+		if arg.N == 0 {
+			arg.N = 1
+		}
+
 		count := 0
 		for row := range arg.Query.Eval(ctx, scope) {
 			if count%int(arg.N) == 0 {
