@@ -17,8 +17,10 @@ parameters:
     default: 0
 
 sources:
-  - queries:
-      - SELECT FullPath as _FullPath,
+  - query: |
+      // Old versions do not have the root parameter to glob()
+      // Fixes https://github.com/Velocidex/velociraptor/issues/322
+      LET LegacyQuery = SELECT FullPath as _FullPath,
            Accessor as _Accessor,
            Data as _Data,
            Name, Size, Mode.String AS Mode,
@@ -28,3 +30,20 @@ sources:
         FROM glob(globs=Path + if(condition=atoi(string=Depth),
              then='/**' + Depth, else='/*'),
              accessor=Accessor)
+
+      LET NewQuery = SELECT FullPath as _FullPath,
+           Accessor as _Accessor,
+           Data as _Data,
+           Name, Size, Mode.String AS Mode,
+           timestamp(epoch=Mtime.Sec) as mtime,
+           timestamp(epoch=Atime.Sec) as atime,
+           timestamp(epoch=Ctime.Sec) as ctime
+        FROM glob(globs=if(condition=atoi(string=Depth),
+             then='/**' + Depth, else='/*'),
+             root=Path,
+             accessor=Accessor)
+
+      SELECT * FROM if(
+       condition=version(plugin="glob") >= 1,
+       then=NewQuery,
+       else=LegacyQuery)

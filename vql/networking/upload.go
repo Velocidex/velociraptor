@@ -194,7 +194,6 @@ func (self UploadPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *
 	return &vfilter.PluginInfo{
 		Name:    "upload",
 		Doc:     "Upload files to the server.",
-		RowType: type_map.AddType(scope, &uploads.UploadResponse{}),
 		ArgType: type_map.AddType(scope, &UploadPluginArgs{}),
 	}
 }

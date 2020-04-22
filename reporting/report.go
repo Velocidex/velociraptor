@@ -280,17 +280,21 @@ func newBaseTemplateEngine(
 			"Artifact %v not known.", artifact_name)
 	}
 
+	// The template shares the same scope environment for the
+	// whole processing. Keep a reference to the environment so
+	// SetEnv() can update it later.
+	env := ordereddict.NewDict()
 	scope := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
-	}.Build()
+	}.Build().AppendVars(env)
 
 	// Closing the scope is deferred to closing the template.
 
 	return &BaseTemplateEngine{
 		Artifact: artifact,
 		Scope:    scope,
-		Env:      ordereddict.NewDict(),
+		Env:      env,
 		logger:   logging.GetLogger(config_obj, &logging.FrontendComponent),
 	}, nil
 }

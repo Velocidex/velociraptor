@@ -107,7 +107,6 @@ func (self HuntsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	return &vfilter.PluginInfo{
 		Name:    "hunts",
 		Doc:     "Retrieve the list of hunts.",
-		RowType: type_map.AddType(scope, &api_proto.ApiClient{}),
 		ArgType: type_map.AddType(scope, &HuntsPluginArgs{}),
 	}
 }
@@ -267,7 +266,6 @@ func (self HuntResultsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 	return &vfilter.PluginInfo{
 		Name:    "hunt_results",
 		Doc:     "Retrieve the results of a hunt.",
-		RowType: type_map.AddType(scope, &api_proto.ApiClient{}),
 		ArgType: type_map.AddType(scope, &HuntResultsPluginArgs{}),
 	}
 }

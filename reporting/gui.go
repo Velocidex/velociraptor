@@ -255,9 +255,8 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		ctx, cancel := context.WithCancel(self.ctx)
 		defer cancel()
 
-		subscope := self.Scope.Copy().AppendVars(self.Env)
 		for _, vql := range multi_vql {
-			for row := range vql.Eval(ctx, subscope) {
+			for row := range vql.Eval(ctx, self.Scope) {
 				result = append(result, row)
 
 				// Do not let the query collect too many rows

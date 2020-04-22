@@ -33,6 +33,7 @@ import (
 
 type GlobPluginArgs struct {
 	Globs    []string `vfilter:"required,field=globs,doc=One or more glob patterns to apply to the filesystem."`
+	Root     string   `vfilter:"optional,field=root,doc=The root directory to glob from (default '')."`
 	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
@@ -72,16 +73,26 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		root := ""
-		for _, item := range arg.Globs {
-			item_root, item_path, _ := accessor.GetRoot(item)
-			if root != "" && root != item_root {
-				scope.Log("glob: %s: Must use the same root for "+
-					"all globs. Skipping.", item)
-				continue
+		root := arg.Root
+
+		// If root is not specified we try to find a common
+		// root from the globs.
+		if root == "" {
+			for _, item := range arg.Globs {
+				item_root, item_path, _ := accessor.GetRoot(item)
+				if root != "" && root != item_root {
+					scope.Log("glob: %s: Must use the same root for "+
+						"all globs. Skipping.", item)
+					continue
+				}
+				root = item_root
+				globber.Add(item_path, accessor.PathSplit)
 			}
-			root = item_root
-			globber.Add(item_path, accessor.PathSplit)
+
+		} else {
+			for _, item := range arg.Globs {
+				globber.Add(item, accessor.PathSplit)
+			}
 		}
 
 		file_chan := globber.ExpandWithContext(
@@ -108,6 +119,7 @@ func (self GlobPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
 		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
+		Version: 1,
 	}
 }
 
