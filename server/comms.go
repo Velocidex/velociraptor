@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
@@ -61,8 +62,10 @@ func PrepareFrontendMux(
 
 	if config_obj.Frontend.PublicPath != "" {
 		router.Handle("/public/", http.FileServer(
-			file_store.NewFileSystem(
-				config_obj, "/public/")))
+			api.NewFileSystem(
+				config_obj,
+				file_store.GetFileStore(config_obj),
+				"/public/")))
 	}
 }
 

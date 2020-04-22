@@ -16,6 +16,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -204,8 +205,9 @@ func (self *ServerArtifactsRunner) runQuery(
 		// the file store. NOTE: This allows arbitrary
 		// filestore write. Using this we can manager the
 		// files in the filestore using VQL artifacts.
-		Uploader: file_store.NewFileStoreUploader(
-			self.config_obj, "/"),
+		Uploader: api.NewFileStoreUploader(
+			self.config_obj,
+			file_store.GetFileStore(self.config_obj), "/"),
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(&serverLogger{self.config_obj, log_sink}, "server", 0),
 	}.Build()

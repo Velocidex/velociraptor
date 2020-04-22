@@ -1,4 +1,4 @@
-package file_store
+package mysql
 
 import (
 	"database/sql"
@@ -13,13 +13,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 type MysqlTestSuite struct {
 	suite.Suite
 
 	config_obj *config_proto.Config
-	filestore  FileStore
+	filestore  api.FileStore
 }
 
 func (self *MysqlTestSuite) SetupTest() {

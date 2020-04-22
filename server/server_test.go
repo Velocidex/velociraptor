@@ -24,6 +24,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -50,9 +51,9 @@ func (self MockAPIClientFactory) GetAPIClient(
 
 }
 
-func (self *ServerTestSuite) GetMemoryFileStore() *file_store.MemoryFileStore {
+func (self *ServerTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*file_store.MemoryFileStore)
+		self.config_obj).(*memory.MemoryFileStore)
 	require.True(self.T(), ok)
 
 	return file_store_factory

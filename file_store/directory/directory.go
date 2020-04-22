@@ -6,7 +6,7 @@
 // such as NFS might work but this configuration is not tested nor
 // supported.
 
-package file_store
+package directory
 
 /*
 
@@ -40,6 +40,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -91,6 +92,10 @@ type DirectoryFileStore struct {
 	config_obj *config_proto.Config
 }
 
+func NewDirectoryFileStore(config_obj *config_proto.Config) *DirectoryFileStore {
+	return &DirectoryFileStore{config_obj}
+}
+
 func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	[]os.FileInfo, error) {
 
@@ -113,7 +118,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	return result, nil
 }
 
-func getCompressed(filename string) (FileReader, error) {
+func getCompressed(filename string) (api.FileReader, error) {
 	fd, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -127,7 +132,7 @@ func getCompressed(filename string) (FileReader, error) {
 	return &GzipReader{zr, fd, filename}, nil
 }
 
-func (self *DirectoryFileStore) ReadFile(filename string) (FileReader, error) {
+func (self *DirectoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	file_path := self.FilenameToFileStorePath(filename)
 	if strings.HasSuffix(".gz", file_path) {
 		return getCompressed(file_path)
@@ -142,7 +147,7 @@ func (self *DirectoryFileStore) ReadFile(filename string) (FileReader, error) {
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &FileAdapter{file, filename}, nil
+	return &api.FileAdapter{file, filename}, nil
 }
 
 func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
@@ -155,7 +160,7 @@ func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 	return &DirectoryFileStoreFileInfo{file, filename, nil}, nil
 }
 
-func (self *DirectoryFileStore) WriteFile(filename string) (FileWriter, error) {
+func (self *DirectoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
 	file_path := self.FilenameToFileStorePath(filename)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {

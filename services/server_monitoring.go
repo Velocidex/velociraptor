@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -161,7 +162,7 @@ func (self *EventTable) GetWriter(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		last_log := ""
 		var err error
-		var fd file_store.FileWriter
+		var fd api.FileWriter
 		var writer *csv.CSVWriter
 		var columns []string
 

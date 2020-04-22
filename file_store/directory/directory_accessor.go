@@ -1,4 +1,4 @@
-package file_store
+package directory
 
 // This implements a filesystem accessor which can be used to access
 // the filestore. This allows us to run globs on the file store
@@ -13,7 +13,9 @@ import (
 	"regexp"
 	"time"
 
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -94,6 +96,11 @@ type DirectoryFileStoreFileSystemAccessor struct {
 	file_store *DirectoryFileStore
 }
 
+func NewDirectoryFileStoreFileSystemAccessor(config_obj *config_proto.Config) *DirectoryFileStoreFileSystemAccessor {
+	return &DirectoryFileStoreFileSystemAccessor{
+		&DirectoryFileStore{config_obj}}
+}
+
 func (self DirectoryFileStoreFileSystemAccessor) New(
 	scope *vfilter.Scope) glob.FileSystemAccessor {
 	return &DirectoryFileStoreFileSystemAccessor{self.file_store}
@@ -130,7 +137,7 @@ func (self DirectoryFileStoreFileSystemAccessor) Open(path string) (glob.ReadSee
 		return nil, err
 	}
 
-	return &FileReaderAdapter{file}, nil
+	return &api.FileReaderAdapter{file}, nil
 }
 
 var DirectoryFileStoreFileSystemAccessor_re = regexp.MustCompile("/")
