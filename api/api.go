@@ -51,6 +51,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -314,7 +315,7 @@ func (self *ApiServer) GetHuntResults(
 			"User is not allowed to view results.")
 	}
 
-	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
+	artifact, source := paths.SplitFullSourceName(in.Artifact)
 	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
 		Set("Artifact", artifact).

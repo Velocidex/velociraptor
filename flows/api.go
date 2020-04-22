@@ -28,7 +28,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -37,6 +36,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -116,7 +116,7 @@ func GetFlowDetails(
 func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
-	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
+	download_file := paths.GetDownloadsFile(client_id, flow_id)
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

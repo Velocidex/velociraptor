@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -62,16 +63,16 @@ func MonitoringProcessMessage(
 	if response.Query.Name != "" {
 		file_store_factory := file_store.GetFileStore(config_obj)
 
-		artifact_name, source_name := artifacts.
+		artifact_name, source_name := paths.
 			QueryNameToArtifactAndSource(
 				response.Query.Name)
 
-		log_path := artifacts.GetCSVPath(
+		log_path := paths.GetCSVPath(
 			message.Source, /* client_id */
-			artifacts.GetDayName(),
+			paths.GetDayName(),
 			collection_context.SessionId,
 			artifact_name, source_name,
-			artifacts.MODE_MONITORING_DAILY)
+			paths.MODE_MONITORING_DAILY)
 
 		fd, err := file_store_factory.WriteFile(log_path)
 		if err != nil {

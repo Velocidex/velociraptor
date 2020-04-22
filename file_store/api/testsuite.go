@@ -173,3 +173,25 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), int64(29), size)
 }
+
+type QueueManagerTestSuite struct {
+	suite.Suite
+
+	config_obj *config_proto.Config
+	manager    QueueManager
+}
+
+func (self *QueueManagerTestSuite) TestPush() {
+	payload := []byte("[{\"foo\":1},{\"foo\":2}]")
+
+	err := self.manager.Push("System.Hunt.Participation", "C.123", payload)
+	assert.NoError(self.T(), err)
+}
+
+func NewQueueManagerTestSuite(config_obj *config_proto.Config,
+	manager QueueManager) *QueueManagerTestSuite {
+	return &QueueManagerTestSuite{
+		config_obj: config_obj,
+		manager:    manager,
+	}
+}

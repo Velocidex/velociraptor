@@ -28,8 +28,8 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
-	urns "www.velocidex.com/golang/velociraptor/urns"
 )
 
 func GetApiClient(
@@ -51,7 +51,7 @@ func GetApiClient(
 		return nil, errors.New("client_id must start with C")
 	}
 
-	client_urn := urns.BuildURN("clients", client_id)
+	client_urn := paths.GetClientMetadataPath(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -85,8 +85,7 @@ func GetApiClient(
 		Fqdn:    client_info.Fqdn,
 	}
 
-	err = db.GetSubject(
-		config_obj, urns.BuildURN("clients", client_id, "ping"),
+	err = db.GetSubject(config_obj, paths.GetClientPingPath(client_id),
 		client_info)
 	if err != nil {
 		return nil, err

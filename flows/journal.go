@@ -8,11 +8,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -105,15 +105,15 @@ func (self *JournalWriter) WriteEvent(event *Event) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	artifact_name, source_name := artifacts.
+	artifact_name, source_name := paths.
 		QueryNameToArtifactAndSource(event.QueryName)
 
-	log_path := artifacts.GetCSVPath(
+	log_path := paths.GetCSVPath(
 		/* client_id */ "",
-		artifacts.GetDayName(),
+		paths.GetDayName(),
 		/* flow_id */ "",
 		artifact_name, source_name,
-		artifacts.MODE_JOURNAL_DAILY)
+		paths.MODE_JOURNAL_DAILY)
 
 	// Fetch the CSV writer for this journal file
 	writer, pres := self.writers[log_path]

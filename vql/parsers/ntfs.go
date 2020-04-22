@@ -19,62 +19,16 @@ package parsers
 
 import (
 	"context"
-	"errors"
 	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
-
-var (
-	// For convenience we transform paths like c:\Windows -> \\.\c:\Windows
-	driveRegex = regexp.MustCompile(
-		`(?i)^[/\\]?([a-z]:)(.*)`)
-	deviceDriveRegex = regexp.MustCompile(
-		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
-	deviceDirectoryRegex = regexp.MustCompile(
-		`(?i)^(\\\\[\?\.]\\GLOBALROOT\\Device\\[^/\\]+)([/\\]?.*)`)
-)
-
-func GetDeviceAndSubpath(path string) (device string, subpath string, err error) {
-	// Make sure not to run filepath.Clean() because it will
-	// collapse multiple slashes (and prevent device names from
-	// being recognized).
-	path = strings.Replace(path, "/", "\\", -1)
-
-	m := deviceDriveRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
-	}
-
-	m = driveRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return "\\\\.\\" + m[1], clean(m[2]), nil
-	}
-
-	m = deviceDirectoryRegex.FindStringSubmatch(path)
-	if len(m) != 0 {
-		return m[1], clean(m[2]), nil
-	}
-
-	return "/", path, errors.New("Unsupported device type")
-}
-
-func clean(path string) string {
-	result := filepath.Clean(path)
-	if result == "." {
-		result = ""
-	}
-
-	return result
-}
 
 func GetNTFSContext(scope *vfilter.Scope, device string) (*ntfs.NTFSContext, error) {
 	ntfs_ctx, ok := vql_subsystem.CacheGet(scope, device).(*ntfs.NTFSContext)
@@ -144,7 +98,7 @@ func (self NTFSFunction) Call(
 		arg.MFT = mft_idx
 	}
 
-	device, _, err := GetDeviceAndSubpath(arg.Device)
+	device, _, err := paths.GetDeviceAndSubpath(arg.Device)
 	if err != nil {
 		scope.Log("parse_ntfs: %v", err)
 		return &vfilter.Null{}
@@ -276,7 +230,7 @@ func (self NTFSI30ScanPlugin) Call(
 			arg.MFT = mft_idx
 		}
 
-		device, _, err := GetDeviceAndSubpath(arg.Device)
+		device, _, err := paths.GetDeviceAndSubpath(arg.Device)
 		if err != nil {
 			scope.Log("parse_ntfs_i30: %v", err)
 			return

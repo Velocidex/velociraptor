@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -27,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -313,12 +313,12 @@ func (self *ServerTestSuite) TestMonitoring() {
 	flows.GJournalWriter.Flush()
 
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
-		self.client_id)
+		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+
+			paths.GetDayName()+".csv", self.client_id)
 
 	self.RequiredFilestoreContains(
-		"/journals/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
-		self.client_id)
+		"/journals/System.Hunt.Participation/"+
+			paths.GetDayName()+".csv", self.client_id)
 }
 
 // An invalid monitoring response will log an error in the client's

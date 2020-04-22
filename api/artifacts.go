@@ -32,9 +32,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -117,8 +117,7 @@ func setArtifactFile(config_obj *config_proto.Config,
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	vfs_path := path.Join(constants.ARTIFACT_DEFINITION_PREFIX,
-		artifacts.NameToPath(artifact_definition.Name))
+	vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
 
 	// Load the new artifact into the global repo so it is
 	// immediately available.
@@ -271,7 +270,7 @@ func (self *ApiServer) ListAvailableEventResults(
 			path.Join(root_path, dirname.Name()))
 		if err == nil {
 			for _, filename := range timestamps {
-				timestamp := artifacts.DayNameToTimestamp(
+				timestamp := paths.DayNameToTimestamp(
 					filename.Name())
 				if timestamp > 0 {
 					available_event.Timestamps = append(

@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -74,7 +75,7 @@ func (self MonitoringPlugin) Call(
 		artifact_name := arg.Artifact
 		source := arg.Source
 		if arg.Source == "" {
-			artifact_name, source = artifacts.SplitFullSourceName(arg.Artifact)
+			artifact_name, source = paths.SplitFullSourceName(arg.Artifact)
 		}
 
 		// Figure out the mode by looking at the artifact type.
@@ -88,13 +89,13 @@ func (self MonitoringPlugin) Call(
 			arg.Mode = artifact.Type
 		}
 
-		mode := artifacts.ModeNameToMode(arg.Mode)
+		mode := paths.ModeNameToMode(arg.Mode)
 		if mode == 0 {
 			scope.Log("Unknown mode %v", arg.Mode)
 			return
 		}
 
-		log_path := artifacts.GetCSVPath(
+		log_path := paths.GetCSVPath(
 			arg.ClientId, arg.DayName,
 			arg.FlowId, artifact_name,
 			source, mode)
@@ -226,7 +227,7 @@ func (self WatchMonitoringPlugin) Call(
 		artifact_name := arg.Artifact
 		source := arg.Source
 		if arg.Source == "" {
-			artifact_name, source = artifacts.SplitFullSourceName(arg.Artifact)
+			artifact_name, source = paths.SplitFullSourceName(arg.Artifact)
 		}
 
 		repository, _ := artifacts.GetGlobalRepository(config_obj)
@@ -235,12 +236,12 @@ func (self WatchMonitoringPlugin) Call(
 			scope.Log("Artifact %s not known", arg.Artifact)
 			return
 		}
-		mode := artifacts.ModeNameToMode(artifact.Type)
+		mode := paths.ModeNameToMode(artifact.Type)
 		switch mode {
 		case 0:
 			scope.Log("Unknown mode %v", artifact.Type)
 			return
-		case artifacts.MODE_CLIENT, artifacts.MODE_SERVER:
+		case paths.MODE_CLIENT, paths.MODE_SERVER:
 			scope.Log("watch_monitoring only supports monitoring event artifacts")
 			return
 		}
@@ -260,7 +261,7 @@ func (self WatchMonitoringPlugin) Call(
 
 		// Otherwise we watch the per client log
 		// directory for each client.
-		log_path := artifacts.GetCSVPath(
+		log_path := paths.GetCSVPath(
 			arg.ClientId, "*", "", artifact_name,
 			source, mode)
 		globber.Add(log_path, accessor.PathSplit)

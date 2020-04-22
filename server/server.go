@@ -33,7 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
-	"www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 var (
@@ -156,9 +156,8 @@ func (self *Server) Process(
 	}
 
 	err = self.db.SetSubject(
-		self.config, urns.BuildURN("clients",
-			message_info.Source, "ping"),
-		client_info)
+		self.config,
+		paths.GetClientPingPath(message_info.Source), client_info)
 	if err != nil {
 		return nil, 0, err
 	}

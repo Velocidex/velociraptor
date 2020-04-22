@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -412,15 +413,15 @@ func ArtifactCollectorProcessOneMessage(
 			return err
 		}
 
-		artifact_name, source_name := artifacts.
+		artifact_name, source_name := paths.
 			QueryNameToArtifactAndSource(response.Query.Name)
 
 		// Store the event log in the client's VFS.
 		if response.Query.Name != "" {
-			log_path := artifacts.GetCSVPath(
+			log_path := paths.GetCSVPath(
 				collection_context.Request.ClientId, "",
 				collection_context.SessionId,
-				artifact_name, source_name, artifacts.MODE_CLIENT)
+				artifact_name, source_name, paths.MODE_CLIENT)
 
 			file_store_factory := file_store.GetFileStore(config_obj)
 			fd, err := file_store_factory.WriteFile(log_path)
@@ -561,7 +562,7 @@ func appendUploadDataToFile(
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// Figure out where to store the file.
-	file_path := artifacts.GetUploadsFile(
+	file_path := paths.GetUploadsFile(
 		message.Source,
 		collection_context.SessionId,
 		file_buffer.Pathspec.Accessor,

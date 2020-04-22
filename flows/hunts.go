@@ -38,6 +38,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -205,7 +206,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 func availableHuntDownloadFiles(config_obj *config_proto.Config,
 	hunt_id string) (*api_proto.AvailableDownloads, error) {
 
-	download_file := artifacts.GetHuntDownloadsFile(hunt_id)
+	download_file := paths.GetHuntDownloadsFile(hunt_id)
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

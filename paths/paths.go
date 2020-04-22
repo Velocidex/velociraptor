@@ -1,7 +1,7 @@
 // This file defines the schema of where various things go into the
 // filestore.
 
-package artifacts
+package paths
 
 import (
 	"fmt"
@@ -10,9 +10,7 @@ import (
 	"strings"
 	"time"
 
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 const (
@@ -136,7 +134,7 @@ func GetUploadsFile(client_id, flow_id, accessor, client_path string) string {
 		flow_id, "uploads", accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
@@ -157,7 +155,7 @@ func GetVFSDownloadInfoPath(client_id, accessor, client_path string) string {
 		accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
@@ -177,7 +175,7 @@ func GetVFSDirectoryInfoPath(client_id, accessor, client_path string) string {
 		accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
@@ -207,22 +205,6 @@ func GetDownloadsFile(client_id, flow_id string) string {
 func GetHuntDownloadsFile(hunt_id string) string {
 	return path.Join(
 		"/downloads/hunts", hunt_id, hunt_id+".zip")
-}
-
-func GetArtifactSources(
-	config_obj *config_proto.Config,
-	artifact string) []string {
-	result := []string{}
-	repository, err := GetGlobalRepository(config_obj)
-	if err == nil {
-		artifact_obj, pres := repository.Get(artifact)
-		if pres {
-			for _, source := range artifact_obj.Sources {
-				result = append(result, source.Name)
-			}
-		}
-	}
-	return result
 }
 
 // Fully qualified source names are obtained by joining the artifact

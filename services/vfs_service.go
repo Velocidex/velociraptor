@@ -12,15 +12,14 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -83,7 +82,7 @@ func (self *VFSService) ProcessDownloadFile(
 		Path := vql_subsystem.GetStringFromRow(scope, row, "Path")
 
 		// Figure out where the file was uploaded to.
-		vfs_path := artifacts.GetUploadsFile(client_id, flow_id, Accessor, Path)
+		vfs_path := paths.GetUploadsFile(client_id, flow_id, Accessor, Path)
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -96,7 +95,7 @@ func (self *VFSService) ProcessDownloadFile(
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		err = db.SetSubject(self.config_obj,
-			artifacts.GetVFSDownloadInfoPath(client_id, Accessor, Path),
+			paths.GetVFSDownloadInfoPath(client_id, Accessor, Path),
 			&flows_proto.VFSDownloadInfo{
 				VfsPath: vfs_path,
 				Mtime:   uint64(ts) * 1000000,
@@ -220,7 +219,7 @@ func getVfsComponents(client_path string, accessor string) []string {
 		return append([]string{"registry"}, utils.SplitComponents(client_path)...)
 
 	case "ntfs":
-		device, subpath, err := parsers.GetDeviceAndSubpath(client_path)
+		device, subpath, err := paths.GetDeviceAndSubpath(client_path)
 		if err == nil {
 			if subpath == "" || subpath == "." {
 				return []string{"ntfs", device}

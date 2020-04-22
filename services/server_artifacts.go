@@ -21,6 +21,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -243,15 +244,15 @@ func (self *ServerArtifactsRunner) runQuery(
 		if query.Name != "" {
 			name := artifacts.DeobfuscateString(
 				self.config_obj, query.Name)
-			artifact_name, source_name := artifacts.
+			artifact_name, source_name := paths.
 				QueryNameToArtifactAndSource(name)
 
-			log_path := artifacts.GetCSVPath(
+			log_path := paths.GetCSVPath(
 				/* client_id */ source,
 				"",
 				/* flow_id */ flow_id,
 				artifact_name, source_name,
-				artifacts.MODE_SERVER)
+				paths.MODE_SERVER)
 			write_chan = self.GetWriter(scope, log_path)
 			defer close(write_chan)
 

@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -79,7 +80,7 @@ func (self UploadsPlugins) Call(
 		file_store_factory := file_store.GetFileStore(config_obj)
 
 		// File uploads are stored in their own CSV file.
-		csv_file_path := artifacts.GetUploadsMetadata(
+		csv_file_path := paths.GetUploadsMetadata(
 			arg.ClientId, arg.FlowId)
 		fd, err := file_store_factory.ReadFile(csv_file_path)
 		if err != nil {
@@ -189,14 +190,14 @@ func (self SourcePlugin) Call(
 			arg.Mode = artifact.Type
 		}
 
-		mode := artifacts.ModeNameToMode(arg.Mode)
+		mode := paths.ModeNameToMode(arg.Mode)
 		if mode == 0 {
 			scope.Log("Invalid mode %v", arg.Mode)
 			return
 		}
 
 		// Find the glob for the CSV files making up these results.
-		csv_path := artifacts.GetCSVPath(
+		csv_path := paths.GetCSVPath(
 			arg.ClientId, "*",
 			arg.FlowId, arg.Artifact, arg.Source, mode)
 		if csv_path == "" {
@@ -431,7 +432,7 @@ func (self FlowResultsPlugin) Call(
 			arg.Artifact = requested_artifacts[0]
 
 			if arg.Source == "" {
-				arg.Artifact, arg.Source = artifacts.SplitFullSourceName(
+				arg.Artifact, arg.Source = paths.SplitFullSourceName(
 					arg.Artifact)
 			}
 
@@ -454,11 +455,11 @@ func (self FlowResultsPlugin) Call(
 			}
 		}
 
-		result_path := artifacts.GetCSVPath(
+		result_path := paths.GetCSVPath(
 			arg.ClientId, "",
 			arg.FlowId,
 			arg.Artifact, arg.Source,
-			artifacts.MODE_CLIENT)
+			paths.MODE_CLIENT)
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		fd, err := file_store_factory.ReadFile(result_path)
