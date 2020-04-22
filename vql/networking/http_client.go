@@ -368,7 +368,6 @@ func (self _HttpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	return &vfilter.PluginInfo{
 		Name:    self.Name(),
 		Doc:     "Make a http request.",
-		RowType: type_map.AddType(scope, &_HttpPluginResponse{}),
 		ArgType: type_map.AddType(scope, &_HttpPluginRequest{}),
 	}
 }

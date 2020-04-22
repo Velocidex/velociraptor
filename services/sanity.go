@@ -5,14 +5,14 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"os"
-	"path/filepath"
+	"path"
 	"sync"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -75,18 +75,13 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	}
 
 	// Ensure there is an index.html file in there to prevent directory listing.
-	err := os.MkdirAll(config_obj.Frontend.PublicPath, 0700)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.WriteFile(path.Join(
+		config_obj.Frontend.PublicPath, "index.html"))
 	if err != nil {
 		return err
 	}
-
-	file, err := os.OpenFile(filepath.Join(
-		config_obj.Frontend.PublicPath,
-		"index.html"), os.O_RDWR|os.O_CREATE, 0700)
-	if err != nil {
-		return err
-	}
-	file.Close()
+	fd.Close()
 
 	if config_obj.AutocertCertCache != "" {
 		err := utils.CheckDirWritable(config_obj.AutocertCertCache)

@@ -27,7 +27,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -109,7 +108,6 @@ func (self ClientsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	return &vfilter.PluginInfo{
 		Name:    "clients",
 		Doc:     "Retrieve the list of clients.",
-		RowType: type_map.AddType(scope, &api_proto.ApiClient{}),
 		ArgType: type_map.AddType(scope, &ClientsPluginArgs{}),
 	}
 }

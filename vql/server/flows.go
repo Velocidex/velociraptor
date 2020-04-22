@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -96,7 +95,6 @@ func (self FlowsPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 	return &vfilter.PluginInfo{
 		Name:    "flows",
 		Doc:     "Retrieve the flows launched on each client.",
-		RowType: type_map.AddType(scope, &flows_proto.ArtifactCollectorContext{}),
 		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
 	}
 }
