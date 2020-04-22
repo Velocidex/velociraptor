@@ -223,7 +223,7 @@ func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 			string(datastore.UnsanitizeComponent(component)))
 	}
 
-	result := filepath.Join(components...)
+	result := "/" + filepath.Join(components...)
 	return result, nil
 }
 
