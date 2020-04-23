@@ -56,7 +56,6 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	scope.Log("set up splunk")
 
 	go func() {
 		defer close(output_chan)
