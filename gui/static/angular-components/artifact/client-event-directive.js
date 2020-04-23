@@ -106,12 +106,14 @@ ClientEventController.prototype.onDateChange = function() {
 };
 
 ClientEventController.prototype.GetArtifactList = function() {
-  var url = 'v1/ListAvailableEventResults';
-  var params = {"client_id": this.clientId};
-  return this.grrApiService_.post(url, params).then(
-    function(response) {
-      this.artifacts = response.data;
-    }.bind(this));
+    if (angular.isString(this.clientId)) {
+        var url = 'v1/ListAvailableEventResults';
+        var params = {"client_id": this.clientId};
+        return this.grrApiService_.post(url, params).then(
+            function(response) {
+                this.artifacts = response.data;
+            }.bind(this));
+    };
 };
 
 
@@ -195,14 +197,14 @@ ClientEventController.prototype.saveClientMonitoringArtifacts = function() {
  */
 exports.ClientEventDirective = function() {
   return {
-    scope: {
-      "artifact": '=',
-      "clientId": '=',
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/artifact/client-event.html',
-    controller: ClientEventController,
-    controllerAs: 'controller',
+      scope: {
+          "artifact": '=',
+          "clientId": '=',
+      },
+      restrict: 'E',
+      templateUrl: '/static/angular-components/artifact/client-event.html',
+      controller: ClientEventController,
+      controllerAs: 'controller',
   };
 };
 

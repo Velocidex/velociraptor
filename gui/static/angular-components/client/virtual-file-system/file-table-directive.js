@@ -153,8 +153,9 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
     var clientId = this.fileContext['clientId'];
     var selectedDirPath = this.fileContext['selectedDirPath'];
 
-    var url = 'v1/VFSRefreshDirectory/' + clientId;
+    var url = 'v1/VFSRefreshDirectory';
     var params = {
+        client_id: clientId,
         vfs_path: selectedDirPath,
         depth: 0,
     };

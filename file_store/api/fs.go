@@ -1,4 +1,4 @@
-package file_store
+package api
 
 import (
 	"net/http"
@@ -60,10 +60,13 @@ func (self FileSystem) Open(path string) (http.File, error) {
 	}, nil
 }
 
-func NewFileSystem(config_obj *config_proto.Config, prefix string) *FileSystem {
+func NewFileSystem(
+	config_obj *config_proto.Config,
+	file_store FileStore,
+	prefix string) *FileSystem {
 	return &FileSystem{
 		config_obj: config_obj,
-		file_store: GetFileStore(config_obj),
+		file_store: file_store,
 		prefix:     prefix,
 	}
 }

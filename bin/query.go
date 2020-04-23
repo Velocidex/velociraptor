@@ -20,16 +20,22 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -142,8 +148,60 @@ func outputCSV(ctx context.Context,
 
 }
 
+func doRemoteQuery(config_obj *config_proto.Config) {
+	ctx := context.Background()
+	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	kingpin.FatalIfError(err, "GetAPIClient")
+	defer closer()
+
+	request := &actions_proto.VQLCollectorArgs{
+		MaxRow:  1000,
+		MaxWait: 1,
+	}
+	for _, query := range *queries {
+		request.Query = append(request.Query,
+			&actions_proto.VQLRequest{VQL: query})
+	}
+	stream, err := client.Query(context.Background(), request)
+	kingpin.FatalIfError(err, "GetAPIClient")
+
+	for {
+		response, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		kingpin.FatalIfError(err, "GetAPIClient")
+
+		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
+		kingpin.FatalIfError(err, "GetAPIClient")
+
+		switch *format {
+		case "json":
+			fmt.Println(response.Response)
+
+		case "jsonl":
+			for _, row := range rows {
+				serialized, err := json.Marshal(row)
+				if err == nil {
+					fmt.Println(string(serialized) + "\n")
+				}
+			}
+
+		case "csv":
+			fmt.Println(response.Response)
+		}
+	}
+}
+
 func doQuery() {
 	config_obj := get_config_or_default()
+	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
+		logging.GetLogger(config_obj, &logging.ToolComponent).
+			Info("API Client configuration loaded - will make gRPC connection.")
+		doRemoteQuery(config_obj)
+		return
+	}
+
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 

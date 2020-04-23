@@ -24,9 +24,9 @@ sources:
            Accessor as _Accessor,
            Data as _Data,
            Name, Size, Mode.String AS Mode,
-           timestamp(epoch=Mtime.Sec) as mtime,
-           timestamp(epoch=Atime.Sec) as atime,
-           timestamp(epoch=Ctime.Sec) as ctime
+           Mtime as mtime,
+           Atime as atime,
+           Ctime as ctime
         FROM glob(globs=Path + if(condition=atoi(string=Depth),
              then='/**' + Depth, else='/*'),
              accessor=Accessor)
@@ -35,9 +35,9 @@ sources:
            Accessor as _Accessor,
            Data as _Data,
            Name, Size, Mode.String AS Mode,
-           timestamp(epoch=Mtime.Sec) as mtime,
-           timestamp(epoch=Atime.Sec) as atime,
-           timestamp(epoch=Ctime.Sec) as ctime
+           Mtime as mtime,
+           Atime as atime,
+           Ctime as ctime
         FROM glob(globs=if(condition=atoi(string=Depth),
              then='/**' + Depth, else='/*'),
              root=Path,

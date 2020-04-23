@@ -28,6 +28,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -208,8 +209,10 @@ func doCp(path, accessor string, dump_dir string) {
 		}
 
 	case "fs":
-		builder.Uploader = file_store.NewFileStoreUploader(
-			config_obj, output_path)
+		builder.Uploader = api.NewFileStoreUploader(
+			config_obj,
+			file_store.GetFileStore(config_obj),
+			output_path)
 
 	default:
 		kingpin.Fatalf("Can not write to accessor %v\n", output_accessor)

@@ -1,4 +1,4 @@
-package file_store
+package api
 
 import (
 	"os"

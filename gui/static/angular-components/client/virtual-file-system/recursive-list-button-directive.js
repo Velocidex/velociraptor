@@ -100,22 +100,20 @@ RecursiveListButtonController.prototype.onClientOrPathChange_ = function() {
  * @export
  */
 RecursiveListButtonController.prototype.onClick = function() {
-  this.isDisabled = true;
-  this.done = false;
-  this.error = null;
+    this.isDisabled = true;
+    this.done = false;
+    this.error = null;
 
-  this.grrReflectionService_.getRDFValueDescriptor(
-    'VFSRefreshDirectoryRequest', true).then(function(descriptors) {
-      this.refreshOperation = {
+    this.refreshOperation = {
+        client_id: this.fileContext.clientId,
         'vfs_path': this.fileContext['selectedDirPath'] || '',
         'depth': RecursiveListButtonController.MAX_DEPTH};
 
-      this.modalInstance = this.uibModal_.open({
+    this.modalInstance = this.uibModal_.open({
         templateUrl: '/static/angular-components/client/virtual-file-system/' +
-          'recursive-list-button-modal.html',
+            'recursive-list-button-modal.html',
         scope: this.scope_
-      });
-    }.bind(this));
+    });
 };
 
 
@@ -127,57 +125,50 @@ RecursiveListButtonController.prototype.onClick = function() {
  * @export
  */
 RecursiveListButtonController.prototype.createRefreshOperation = function() {
-  var aff4Prefix = 'aff4:/';
-  var clientId = this.scope_['clientId'];
-  if (clientId.toLowerCase().indexOf(aff4Prefix) == 0) {
-    clientId = clientId.substr(aff4Prefix.length);
-  }
+    var clientId = this.scope_['clientId'];
+    var self = this;
+    var url = 'v1/VFSRefreshDirectory';
 
-  var url = 'v1/VFSRefreshDirectory/' + clientId;
+    // Setting this.lastOperationId means that the update button will get
+    // disabled immediately.
+    var operationId = self.lastOperationId = 'unknown';
+    self.grrApiService_.post(url, self.refreshOperation)
+        .then(function success(response) {
+            self.done = true;
 
-  // Setting this.lastOperationId means that the update button will get
-  // disabled immediately.
-  var operationId = this.lastOperationId = 'unknown';
-  this.grrApiService_.post(url, this.refreshOperation, true)
-      .then(
-          function success(response) {
-            this.done = true;
             // Make modal dialog go away in 1 second.
-            this.timeout_(function() {
-              this.modalInstance.close();
-            }.bind(this), 1000);
+            self.timeout_(function() {
+                self.modalInstance.close();
+            }, 1000);
 
-            operationId = this.lastOperationId =
+            operationId = self.lastOperationId =
                 response['data']['flow_id'];
 
-            var pollPromise = this.grrApiService_.poll(
-              'v1/GetFlowDetails/' + clientId,
-              OPERATION_POLL_INTERVAL_MS, {
-                'flow_id': operationId,
-              }, function(response) {
-                return response.data.context.state != 'RUNNING';
-              });
-            this.scope_.$on('$destroy', function() {
-              this.grrApiService_.cancelPoll(pollPromise);
-            }.bind(this));
+            var pollPromise = self.grrApiService_.poll(
+                'v1/GetFlowDetails/' + clientId,
+                OPERATION_POLL_INTERVAL_MS, {
+                    'flow_id': operationId,
+                }, function(response) {
+                    return response.data.context.state != 'RUNNING';
+                });
+
+            self.scope_.$on('$destroy', function() {
+                self.grrApiService_.cancelPoll(pollPromise);
+            });
 
             return pollPromise;
-          }.bind(this),
-          function failure(response) {
-            this.done = true;
-            this.error = response['data']['message'] || 'Unknown error.';
-          }.bind(this))
-      .then(
-          function success() {
-            var path = this.refreshOperation.vfs_path;
-            this.rootScope_.$broadcast(
-                REFRESH_FOLDER_EVENT, ensurePathIsFolder(path));
-          }.bind(this))
-      .finally(function() {
-        if (this.lastOperationId == operationId) {
-          this.lastOperationId = null;
-        }
-      }.bind(this));
+        }, function failure(response) {
+            self.done = true;
+            self.error = response['data']['message'] || 'Unknown error.';
+        }).then(function success() {
+            var path = self.refreshOperation.vfs_path;
+            self.rootScope_.$broadcast(
+                REFRESH_FOLDER_EVENT, ensurePaselfFolder(path));
+        }).finally(function() {
+            if (self.lastOperationId == operationId) {
+                self.lastOperationId = null;
+            }
+        });
 };
 
 /**

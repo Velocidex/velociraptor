@@ -1,4 +1,4 @@
-package file_store
+package api
 
 import (
 	"context"
@@ -89,8 +89,7 @@ loop:
 
 func NewFileStoreUploader(
 	config_obj *config_proto.Config,
+	fs FileStore,
 	root_path string) *FileStoreUploader {
-
-	fs := GetFileStore(config_obj)
 	return &FileStoreUploader{fs, root_path}
 }

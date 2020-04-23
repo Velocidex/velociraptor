@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -113,7 +114,7 @@ func (self *FileStore) Call(ctx context.Context,
 	result := []string{}
 	file_store_factory := file_store.GetFileStore(config_obj)
 	for _, path := range arg.VFSPath {
-		file_path := file_store_factory.(*file_store.DirectoryFileStore).
+		file_path := file_store_factory.(*directory.DirectoryFileStore).
 			FilenameToFileStorePath(path)
 		result = append(result, file_path)
 	}

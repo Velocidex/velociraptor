@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -171,7 +172,7 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if arg.Source == "" {
-				arg.Artifact, arg.Source = artifacts.SplitFullSourceName(
+				arg.Artifact, arg.Source = paths.SplitFullSourceName(
 					hunt_obj.Artifacts[0])
 			}
 
@@ -225,11 +226,11 @@ func (self HuntResultsPlugin) Call(
 				// results. Artifacts are by
 				// definition client artifacts - hunts
 				// only run on client artifacts.
-				result_path := artifacts.GetCSVPath(
+				result_path := paths.GetCSVPath(
 					participation_row.ClientId, "",
 					participation_row.FlowId,
 					arg.Artifact, arg.Source,
-					artifacts.MODE_CLIENT)
+					paths.MODE_CLIENT)
 				fd, err := file_store_factory.ReadFile(result_path)
 				if err != nil {
 					continue

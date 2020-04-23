@@ -18,9 +18,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -161,7 +163,7 @@ func (self *EventTable) GetWriter(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		last_log := ""
 		var err error
-		var fd file_store.FileWriter
+		var fd api.FileWriter
 		var writer *csv.CSVWriter
 		var columns []string
 
@@ -180,12 +182,12 @@ func (self *EventTable) GetWriter(
 		defer closer()
 
 		for row := range row_chan {
-			log_path := artifacts.GetCSVPath(
+			log_path := paths.GetCSVPath(
 				/* client_id */ "",
-				artifacts.GetDayName(),
+				paths.GetDayName(),
 				/* flow_id */ "",
 				artifact_name, source_name,
-				artifacts.MODE_SERVER_EVENT)
+				paths.MODE_SERVER_EVENT)
 
 			// We need to rotate the log file.
 			if log_path != last_log {

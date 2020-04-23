@@ -1,4 +1,4 @@
-package file_store
+package mysql
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -460,7 +461,7 @@ type SqlFileStore struct {
 	config_obj *config_proto.Config
 }
 
-func (self *SqlFileStore) ReadFile(filename string) (FileReader, error) {
+func (self *SqlFileStore) ReadFile(filename string) (api.FileReader, error) {
 	result := &SqlReader{
 		config_obj: self.config_obj,
 		filename:   filename,
@@ -506,7 +507,7 @@ INSERT IGNORE INTO filestore_metadata (path, path_hash, name, is_dir) values(?, 
 	return nil
 }
 
-func (self *SqlFileStore) WriteFile(filename string) (FileWriter, error) {
+func (self *SqlFileStore) WriteFile(filename string) (api.FileWriter, error) {
 	last_id := int64(0)
 	size := int64(0)
 
@@ -669,7 +670,7 @@ func (self *SqlFileStore) Get(filename string) ([]byte, bool) {
 
 func (self *SqlFileStore) Clear() {}
 
-func NewSqlFileStore(config_obj *config_proto.Config) (FileStore, error) {
+func NewSqlFileStore(config_obj *config_proto.Config) (api.FileStore, error) {
 	my_sql_mu.Lock()
 	defer my_sql_mu.Unlock()
 
@@ -749,6 +750,10 @@ func initializeDatabase(
 	return db, nil
 }
 
+func NewSqlFileStoreAccessor(file_store *SqlFileStore) *SqlFileStoreAccessor {
+	return &SqlFileStoreAccessor{file_store}
+}
+
 type SqlFileStoreAccessor struct {
 	file_store *SqlFileStore
 }
@@ -789,7 +794,7 @@ func (self *SqlFileStoreAccessor) Open(path string) (glob.ReadSeekCloser, error)
 	if err != nil {
 		return nil, err
 	}
-	return &FileReaderAdapter{fd}, nil
+	return &api.FileReaderAdapter{fd}, nil
 }
 
 var SqlFileStoreAccessor_re = regexp.MustCompile("/")

@@ -36,12 +36,12 @@ import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -98,11 +98,11 @@ func downloadFlowToZip(
 
 	// Copy CSV files
 	for _, artifacts_with_results := range flow_details.Context.ArtifactsWithResults {
-		artifact_name, source := artifacts.SplitFullSourceName(artifacts_with_results)
-		csv_path := artifacts.GetCSVPath(
+		artifact_name, source := paths.SplitFullSourceName(artifacts_with_results)
+		csv_path := paths.GetCSVPath(
 			flow_details.Context.Request.ClientId, "*",
 			flow_details.Context.SessionId,
-			artifact_name, source, artifacts.MODE_CLIENT)
+			artifact_name, source, paths.MODE_CLIENT)
 		copier(csv_path)
 	}
 
@@ -117,7 +117,7 @@ func downloadFlowToZip(
 	// are. Users can do their own post processing.
 
 	// File uploads are stored in their own CSV file.
-	file_path := artifacts.GetUploadsMetadata(client_id, flow_id)
+	file_path := paths.GetUploadsMetadata(client_id, flow_id)
 	fd, err := file_store_factory.ReadFile(file_path)
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	download_file := artifacts.GetDownloadsFile(client_id, flow_id)
+	download_file := paths.GetDownloadsFile(client_id, flow_id)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -216,7 +216,7 @@ func createHuntDownloadFile(
 	if hunt_id == "" {
 		return errors.New("Hunt Id should be specified.")
 	}
-	download_file := artifacts.GetHuntDownloadsFile(hunt_id)
+	download_file := paths.GetHuntDownloadsFile(hunt_id)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -284,7 +284,7 @@ func createHuntDownloadFile(
 
 		// Export aggregate CSV files for all clients.
 		for _, artifact_source := range hunt_details.ArtifactSources {
-			artifact, source := artifacts.SplitFullSourceName(
+			artifact, source := paths.SplitFullSourceName(
 				artifact_source)
 
 			query := "SELECT * FROM hunt_results(" +

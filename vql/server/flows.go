@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -189,7 +190,7 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		// Delete all the uploads from the flow.
-		csv_file_path := artifacts.GetUploadsMetadata(
+		csv_file_path := paths.GetUploadsMetadata(
 			arg.ClientId, arg.FlowId)
 		defer emit("UploadMetadata", csv_file_path)
 
@@ -207,17 +208,17 @@ func (self EnumerateFlowPlugin) Call(
 
 		repository, _ := artifacts.GetGlobalRepository(config_obj)
 		for _, full_artifact_name := range collection_context.ArtifactsWithResults {
-			artifact_name, source := artifacts.SplitFullSourceName(full_artifact_name)
+			artifact_name, source := paths.SplitFullSourceName(full_artifact_name)
 			artifact, pres := repository.Get(artifact_name)
 			if !pres {
 				scope.Log("Artifact %s not known", artifact_name)
 				continue
 			}
 
-			csv_path := artifacts.GetCSVPath(
+			csv_path := paths.GetCSVPath(
 				arg.ClientId, "*",
 				arg.FlowId, artifact_name, source,
-				artifacts.ModeNameToMode(artifact.Type))
+				paths.ModeNameToMode(artifact.Type))
 
 			globber := make(glob.Globber)
 			accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)

@@ -37,10 +37,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -106,20 +106,26 @@ func (self *NTFSFileInfo) FullPath() string {
 }
 
 func (self *NTFSFileInfo) Mtime() glob.TimeVal {
+	nsec := self.info.Mtime.UnixNano()
 	return glob.TimeVal{
-		Nsec: self.info.Mtime.UnixNano(),
+		Sec:  nsec / 1000000000,
+		Nsec: nsec,
 	}
 }
 
 func (self *NTFSFileInfo) Ctime() glob.TimeVal {
+	nsec := self.info.Ctime.UnixNano()
 	return glob.TimeVal{
-		Nsec: self.info.Ctime.UnixNano(),
+		Sec:  nsec / 1000000000,
+		Nsec: nsec,
 	}
 }
 
 func (self *NTFSFileInfo) Atime() glob.TimeVal {
+	nsec := self.info.Atime.UnixNano()
 	return glob.TimeVal{
-		Nsec: self.info.Atime.UnixNano(),
+		Sec:  nsec / 1000000000,
+		Nsec: nsec,
 	}
 }
 
@@ -534,7 +540,7 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 
 func (self *NTFSFileSystemAccessor) GetRoot(path string) (
 	device string, subpath string, err error) {
-	return parsers.GetDeviceAndSubpath(path)
+	return paths.GetDeviceAndSubpath(path)
 }
 
 // We accept both / and \ as a path separator

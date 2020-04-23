@@ -51,9 +51,11 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ApiServer struct {
@@ -314,7 +316,7 @@ func (self *ApiServer) GetHuntResults(
 			"User is not allowed to view results.")
 	}
 
-	artifact, source := artifacts.SplitFullSourceName(in.Artifact)
+	artifact, source := paths.SplitFullSourceName(in.Artifact)
 	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
 		Set("Artifact", artifact).
@@ -590,6 +592,8 @@ func (self *ApiServer) VFSRefreshDirectory(
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*flows_proto.ArtifactCollectorResponse, error) {
 
+	utils.Debug(in)
+
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
@@ -789,15 +793,8 @@ func (self *ApiServer) WriteEvent(
 				"Permission denied: PUBLISH "+peer_name+" to "+in.Query.Name)
 		}
 
-		flows.GJournalWriter.Channel <- &flows.Event{
-			Config:    self.config,
-			Timestamp: time.Now(),
-			ClientId:  peer_name,
-			QueryName: in.Query.Name,
-			Response:  in.Response,
-			Columns:   in.Columns,
-		}
-		return &empty.Empty{}, nil
+		return &empty.Empty{}, services.GetJournal().Push(
+			in.Query.Name, peer_name, 0, []byte(in.Response))
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")

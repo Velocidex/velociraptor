@@ -15,13 +15,14 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package file_store
+package directory
 
 import (
 	"fmt"
 	"io"
 	"os"
 
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
@@ -55,7 +56,7 @@ func (self GzipReader) Stat() (glob.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewFileInfoAdapter(stat, self.full_path, nil), nil
+	return api.NewFileInfoAdapter(stat, self.full_path, nil), nil
 }
 
 func (self *GzipReader) Close() error {

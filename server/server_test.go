@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -24,8 +22,10 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -50,9 +50,9 @@ func (self MockAPIClientFactory) GetAPIClient(
 
 }
 
-func (self *ServerTestSuite) GetMemoryFileStore() *file_store.MemoryFileStore {
+func (self *ServerTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*file_store.MemoryFileStore)
+		self.config_obj).(*memory.MemoryFileStore)
 	require.True(self.T(), ok)
 
 	return file_store_factory
@@ -66,6 +66,9 @@ func (self *ServerTestSuite) SetupTest() {
 	self.config_obj = config_obj
 	self.config_obj.Datastore.Implementation = "Test"
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
+
+	// Start the journaling service manually for tests.
+	services.StartJournalService(self.config_obj)
 
 	self.server, err = server.NewServer(config_obj)
 	require.NoError(self.T(), err)
@@ -286,8 +289,7 @@ func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex st
 }
 
 // Receiving a response from the server to the monitoring flow will
-// write the rows into a csv file in the client's monitoring area as
-// well as a journal entry for all clients.
+// write the rows into a csv file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
@@ -307,17 +309,9 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	// Wait for the journal writer
-	time.Sleep(time.Second)
-	flows.GJournalWriter.Flush()
-
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
-		self.client_id)
-
-	self.RequiredFilestoreContains(
-		"/journals/System.Hunt.Participation/"+artifacts.GetDayName()+".csv",
-		self.client_id)
+		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+
+			paths.GetDayName()+".csv", self.client_id)
 }
 
 // An invalid monitoring response will log an error in the client's

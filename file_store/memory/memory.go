@@ -1,4 +1,4 @@
-package file_store
+package memory
 
 import (
 	"bytes"
@@ -7,12 +7,14 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
 var (
 	// Only used for tests.
-	test_memory_file_store *MemoryFileStore = &MemoryFileStore{
+	Test_memory_file_store *MemoryFileStore = &MemoryFileStore{
 		Data: make(map[string][]byte)}
 )
 
@@ -61,7 +63,7 @@ type MemoryFileStore struct {
 	Data map[string][]byte
 }
 
-func (self *MemoryFileStore) ReadFile(filename string) (FileReader, error) {
+func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -73,7 +75,7 @@ func (self *MemoryFileStore) ReadFile(filename string) (FileReader, error) {
 	return nil, errors.New("Not found")
 }
 
-func (self *MemoryFileStore) WriteFile(filename string) (FileWriter, error) {
+func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -90,7 +92,7 @@ func (self *MemoryFileStore) WriteFile(filename string) (FileWriter, error) {
 }
 
 func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
-	return &DirectoryFileStoreFileInfo{}, nil
+	return &directory.DirectoryFileStoreFileInfo{}, nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {

@@ -15,7 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/urns"
+	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -102,7 +102,7 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 		}
 	}
 
-	client_urn := urns.BuildURN("clients", client_id)
+	client_urn := paths.GetClientMetadataPath(client_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err

@@ -33,7 +33,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
-	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
@@ -148,17 +147,18 @@ func getAvailableDrives() ([]string, error) {
 	return result, nil
 }
 
+// Glob sends us paths in normal form which we need to convert to
+// windows form. Normal form uses / instead of \ and always has a
+// leading /.
 func GetPath(path string) string {
-	expanded_path, err := registry.ExpandString(path)
-	if err == nil {
-		path = expanded_path
-	}
-
-	// Add a final \ to turn path into a directory path.
-	path = normalize_path(path)
+	path = strings.Replace(path, "/", "\\", -1)
 
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
-	return strings.TrimLeft(path, "\\")
+	path = strings.TrimLeft(path, "\\")
+	if path == "." {
+		return ""
+	}
+	return path
 }
 
 type OSFileSystemAccessor struct {
@@ -255,7 +255,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 		result = append(result,
 			&OSFileInfo{
 				FileInfo:   f,
-				_full_path: filepath.Join(path, f.Name()),
+				_full_path: dir_path + f.Name(),
 			})
 	}
 	return result, nil
@@ -287,18 +287,6 @@ func (self *OSFileSystemAccessor) PathSplit(path string) []string {
 
 func (self *OSFileSystemAccessor) PathJoin(x, y string) string {
 	return filepath.Join(x, y)
-}
-
-// Glob sends us paths in normal form which we need to convert to
-// windows form. Normal form uses / instead of \ and always has a
-// leading /.
-func normalize_path(path string) string {
-	path = filepath.Clean(strings.Replace(path, "/", "\\", -1))
-	path = strings.TrimLeft(path, "\\")
-	if path == "." {
-		return ""
-	}
-	return path
 }
 
 func init() {

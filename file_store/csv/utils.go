@@ -23,7 +23,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -43,7 +43,7 @@ func (self *CSVWriter) Close() {
 
 type CSVReader chan *ordereddict.Dict
 
-func GetCSVReader(fd file_store.FileReader) CSVReader {
+func GetCSVReader(fd api.FileReader) CSVReader {
 	output_chan := make(CSVReader)
 
 	go func() {
@@ -138,7 +138,7 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 
 	return result
 }
-func GetCSVWriter(scope *vfilter.Scope, fd file_store.FileWriter) (*CSVWriter, error) {
+func GetCSVWriter(scope *vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
 	if err != nil {

@@ -19,56 +19,31 @@ package file_store
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/mysql"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
-type FileReader interface {
-	Read(buff []byte) (int, error)
-	Seek(offset int64, whence int) (int64, error)
-	Stat() (glob.FileInfo, error)
-	Close() error
-}
-
-// A file store writer writes files in the filestore. Filestore files
-// are not as flexible as real files and only provide a subset of
-// functionality. Specifically they can not be over-written - only
-// appended to. They can be truncated but only to 0 size.
-type FileWriter interface {
-	Size() (int64, error)
-	Write(data []byte) (int, error)
-	Truncate() error
-	Close() error
-}
-
-type FileStore interface {
-	ReadFile(filename string) (FileReader, error)
-	WriteFile(filename string) (FileWriter, error)
-	StatFile(filename string) (os.FileInfo, error)
-	ListDirectory(dirname string) ([]os.FileInfo, error)
-	Walk(root string, cb filepath.WalkFunc) error
-	Delete(filename string) error
-}
-
 // GetFileStore selects an appropriate FileStore object based on
 // config.
-func GetFileStore(config_obj *config_proto.Config) FileStore {
+func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 	switch config_obj.Datastore.Implementation {
 	case "Test":
-		return test_memory_file_store
+		return memory.Test_memory_file_store
 
 	case "MySQL":
-		res, err := NewSqlFileStore(config_obj)
+		res, err := mysql.NewSqlFileStore(config_obj)
 		if err != nil {
 			panic(err)
 		}
 		return res
 
 	case "FileBaseDataStore":
-		return &DirectoryFileStore{config_obj}
+		return directory.NewDirectoryFileStore(config_obj)
 
 	default:
 		panic(fmt.Sprintf("Unsupported filestore %v",
@@ -80,12 +55,11 @@ func GetFileStore(config_obj *config_proto.Config) FileStore {
 func GetFileStoreFileSystemAccessor(
 	config_obj *config_proto.Config) (glob.FileSystemAccessor, error) {
 	if config_obj.Datastore.Implementation == "MySQL" {
-		datastore, err := NewSqlFileStore(config_obj)
+		datastore, err := mysql.NewSqlFileStore(config_obj)
 		if err != nil {
 			return nil, err
 		}
-		return &SqlFileStoreAccessor{datastore.(*SqlFileStore)}, nil
+		return mysql.NewSqlFileStoreAccessor(datastore.(*mysql.SqlFileStore)), nil
 	}
-	return &DirectoryFileStoreFileSystemAccessor{
-		&DirectoryFileStore{config_obj}}, nil
+	return directory.NewDirectoryFileStoreFileSystemAccessor(config_obj), nil
 }

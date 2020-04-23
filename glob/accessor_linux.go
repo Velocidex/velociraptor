@@ -128,7 +128,7 @@ func (self OSFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
-	lstat, err := os.Lstat(filename)
+	lstat, err := os.Lstat(GetPath(filename))
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
-	files, err := utils.ReadDir(path)
+	files, err := utils.ReadDir(GetPath(path))
 	if err != nil {
 		return nil, err
 	}
@@ -152,12 +152,16 @@ func (self OSFileSystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 }
 
 func (self OSFileSystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	file, err := os.Open(path)
+	file, err := os.Open(GetPath(path))
 	if err != nil {
 		return nil, err
 	}
 
 	return file, nil
+}
+
+func GetPath(path string) string {
+	return filepath.Clean("/" + path)
 }
 
 var OSFileSystemAccessor_re = regexp.MustCompile("/")

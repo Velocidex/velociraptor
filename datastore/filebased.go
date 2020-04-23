@@ -56,8 +56,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/testing"
-	"www.velocidex.com/golang/velociraptor/urns"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -77,7 +77,7 @@ func (self *FileBaseDataStore) GetClientTasks(
 	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	result := []*crypto_proto.GrrMessage{}
 	now := self.clock.Now().UTC().UnixNano() / 1000
-	tasks_urn := urns.BuildURN("clients", client_id, "tasks")
+	tasks_urn := paths.GetClientTasksPath(client_id)
 	now_urn := tasks_urn + fmt.Sprintf("/%d", now)
 
 	tasks, err := self.ListChildren(config_obj, tasks_urn, 0, 100)
@@ -115,10 +115,8 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 	client_id string,
 	message *crypto_proto.GrrMessage) error {
 
-	task_urn := urns.BuildURN("clients", client_id, "tasks",
-		fmt.Sprintf("%d", message.TaskId))
-
-	return self.DeleteSubject(config_obj, task_urn)
+	return self.DeleteSubject(config_obj,
+		paths.GetClientTaskPath(client_id, message.TaskId))
 }
 
 func (self *FileBaseDataStore) QueueMessageForClient(
@@ -126,11 +124,8 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 	client_id string,
 	req *crypto_proto.GrrMessage) error {
 
-	now := self.clock.Now().UTC().UnixNano() / 1000
-	subject := urns.BuildURN("clients", client_id, "tasks",
-		fmt.Sprintf("%d", now))
-
-	req.TaskId = uint64(now)
+	req.TaskId = uint64(self.clock.Now().UTC().UnixNano() / 1000)
+	subject := paths.GetClientTaskPath(client_id, req.TaskId)
 	return self.SetSubject(config_obj, subject, req)
 }
 

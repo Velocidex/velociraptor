@@ -37,7 +37,13 @@ func StartServices(
 	config_obj *config_proto.Config,
 	notifier *notifications.NotificationPool) error {
 
-	err := startNotificationService(notifier)
+	// Start critical services first.
+	err := StartJournalService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = startNotificationService(notifier)
 	if err != nil {
 		return err
 	}

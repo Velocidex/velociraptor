@@ -1,59 +1,36 @@
-package file_store
+package api
 
 import (
-	"database/sql"
 	"fmt"
 	"io"
 	"os"
 	"path"
 	"sort"
-	"testing"
 
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
-type MysqlTestSuite struct {
+// An abstract test suite to ensure file store implementations all
+// comply with the API.
+type FileStoreTestSuite struct {
 	suite.Suite
 
 	config_obj *config_proto.Config
 	filestore  FileStore
 }
 
-func (self *MysqlTestSuite) SetupTest() {
-	// Drop and initialize the database to start a new test.
-	conn_string := fmt.Sprintf("%s:%s@tcp(%s)/",
-		self.config_obj.Datastore.MysqlUsername,
-		self.config_obj.Datastore.MysqlPassword,
-		self.config_obj.Datastore.MysqlServer)
-
-	// Make sure our database is not the same as the datastore
-	// tests or else we will trash over them.
-	self.config_obj.Datastore.MysqlDatabase = "velociraptor_testfs"
-	database := self.config_obj.Datastore.MysqlDatabase
-
-	db, err := sql.Open("mysql", conn_string)
-	assert.NoError(self.T(), err)
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		self.T().Skipf("Unable to contact mysql - skipping: %v", err)
-		return
+func NewFileStoreTestSuite(config_obj *config_proto.Config,
+	filestore FileStore) *FileStoreTestSuite {
+	return &FileStoreTestSuite{
+		config_obj: config_obj,
+		filestore:  filestore,
 	}
-
-	db.Exec(fmt.Sprintf("drop database `%v`", database))
-
-	self.config_obj.Datastore.MysqlConnectionString = conn_string + database
-	initializeDatabase(self.config_obj, conn_string+database, database)
-
-	self.filestore, err = NewSqlFileStore(self.config_obj)
-	assert.NoError(self.T(), err)
 }
 
-func (self *MysqlTestSuite) TestListChildrenIntermediateDirs() {
+func (self *FileStoreTestSuite) TestListChildrenIntermediateDirs() {
 	fd, err := self.filestore.WriteFile("/a/b/c/d/Foo")
 	assert.NoError(self.T(), err)
 	defer fd.Close()
@@ -70,13 +47,13 @@ func (self *MysqlTestSuite) TestListChildrenIntermediateDirs() {
 	assert.Equal(self.T(), names, []string{"b"})
 }
 
-func (self *MysqlTestSuite) TestListChildren() {
+func (self *FileStoreTestSuite) TestListChildren() {
 	filename := "/a/b"
-	fd, err := self.filestore.WriteFile(path.Join(filename, "Foo"))
+	fd, err := self.filestore.WriteFile(path.Join(filename, "Foo.txt"))
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
-	fd, err = self.filestore.WriteFile(path.Join(filename, "Bar"))
+	fd, err = self.filestore.WriteFile(path.Join(filename, "Bar.txt"))
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
@@ -93,23 +70,27 @@ func (self *MysqlTestSuite) TestListChildren() {
 	}
 
 	sort.Strings(names)
-	assert.Equal(self.T(), names, []string{"Bar", "Foo"})
+	assert.Equal(self.T(), names, []string{"Bar", "Bar.txt", "Foo.txt"})
 
 	names = nil
 	err = self.filestore.Walk(filename, func(path string, info os.FileInfo, err error) error {
-		names = append(names, path)
+		// Ignore directories as they are not important.
+		if !info.IsDir() {
+			names = append(names, path)
+		}
 		return nil
 	})
 	assert.NoError(self.T(), err)
 
 	sort.Strings(names)
+	fmt.Println(names)
 	assert.Equal(self.T(), names, []string{
-		"/a/b/Bar",
+		"/a/b/Bar.txt",
 		"/a/b/Bar/Baz",
-		"/a/b/Foo"})
+		"/a/b/Foo.txt"})
 }
 
-func (self *MysqlTestSuite) TestFileReadWrite() {
+func (self *FileStoreTestSuite) TestFileReadWrite() {
 	fd, err := self.filestore.WriteFile("/test/foo")
 	assert.NoError(self.T(), err)
 	defer fd.Close()
@@ -194,15 +175,39 @@ func (self *MysqlTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), int64(29), size)
 }
 
-func TestMysqlDatabase(t *testing.T) {
-	// If a local testing mysql server is configured we can run
-	// this test, otherwise skip it.
-	config_obj, err := config.LoadConfig("../datastore/test_data/mysql.config.yaml")
-	if err != nil {
-		return
-	}
+type QueueManagerTestSuite struct {
+	suite.Suite
 
-	suite.Run(t, &MysqlTestSuite{
+	config_obj *config_proto.Config
+	manager    QueueManager
+}
+
+func (self *QueueManagerTestSuite) TestPush() {
+	artifact_name := "System.Hunt.Participation"
+
+	payload := []byte("[{\"foo\":1},{\"foo\":2}]")
+
+	output, cancel := self.manager.Watch(artifact_name)
+	defer cancel()
+
+	err := self.manager.Push(artifact_name, "C.123",
+		paths.MODE_MONITORING_DAILY, payload)
+
+	assert.NoError(self.T(), err)
+
+	for row := range output {
+		fmt.Printf("%v\n", row)
+		value, _ := row.Get("foo")
+		if value.(int64) == 2 {
+			break
+		}
+	}
+}
+
+func NewQueueManagerTestSuite(config_obj *config_proto.Config,
+	manager QueueManager) *QueueManagerTestSuite {
+	return &QueueManagerTestSuite{
 		config_obj: config_obj,
-	})
+		manager:    manager,
+	}
 }

@@ -35,6 +35,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -198,7 +199,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
-	artifact_name, source_name := SplitFullSourceName(name)
+	artifact_name, source_name := paths.SplitFullSourceName(name)
 
 	res, pres := self.Data[artifact_name]
 	if !pres || source_name == "" {
