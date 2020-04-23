@@ -199,7 +199,10 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string 
 			string(datastore.SanitizeString(component)))
 	}
 
-	result := path.Join(components...)
+	// OS filenames may use / or \ as separators. On windows we
+	// prefix the LFN prefix to be able to access long paths but
+	// then we must use \ as a separator.
+	result := filepath.Join(components...)
 	if runtime.GOOS == "windows" {
 		return WINDOWS_LFN_PREFIX + result
 	}
@@ -224,6 +227,7 @@ func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 			string(datastore.UnsanitizeComponent(component)))
 	}
 
+	// Filestore filenames always use / as separator.
 	result := "/" + path.Join(components...)
 	return result, nil
 }
