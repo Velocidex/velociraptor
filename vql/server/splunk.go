@@ -115,7 +115,8 @@ func _upload_rows(
 	arg *_SplunkPluginArgs) {
 	defer wg.Done()
 
-	var buf []*ordereddict.Dict
+	// var buf []*ordereddict.Dict
+	var buf = make([]vfilter.Row, 0, arg.ChunkSize)
 
 	client := splunk.NewClient(
 		&http.Client{
@@ -148,10 +149,7 @@ func _upload_rows(
 			}
 
 			//
-			err := _append_row_to_buffer(ctx, scope, row, &buf, arg)
-			if err != nil {
-				continue
-			}
+			buf = append(buf, row)
 
 		case <-next_send_time:
 
@@ -163,33 +161,9 @@ func _upload_rows(
 	}
 }
 
-func _append_row_to_buffer(
-	ctx context.Context,
-	scope *vfilter.Scope,
-	row vfilter.Row, buf *[]*ordereddict.Dict,
-	arg *_SplunkPluginArgs) error {
-
-	_buf := *buf
-	row_dict := vfilter.RowToDict(ctx, scope, row)
-
-	// Commented out as this makes the VQL too smart.
-
-	// if ClientID exists and "Host" isn't a field, use the ClientID field
-	// _, host_pres := row_dict.Get("host")
-	// if !host_pres {
-	// 	clientid, client_idpres := row_dict.Get("ClientId")
-	// 	if client_idpres {
-	// 		row_dict = row_dict.Set("host", clientid)
-	// 	}
-	// }
-
-	*buf = append(_buf, row_dict)
-	return nil
-}
-
 func send_to_splunk(scope *vfilter.Scope,
 	output_chan chan vfilter.Row,
-	client *splunk.Client, buf *[]*ordereddict.Dict, arg *_SplunkPluginArgs) {
+	client *splunk.Client, buf *[]vfilter.Row, arg *_SplunkPluginArgs) {
 
 	_buf := *buf
 
