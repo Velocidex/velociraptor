@@ -49,7 +49,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -240,6 +239,19 @@ func closeContext(
 	}
 	collection_context.Dirty = false
 
+	// Write the data before we fire the event.
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+		collection_context.Status = err.Error()
+	}
+
+	err = db.SetSubject(config_obj, collection_context.Urn,
+		collection_context)
+	if err != nil {
+		return err
+	}
+
 	// This is the final time we update the context - send a
 	// journal message.
 	if collection_context.Request != nil &&
@@ -248,28 +260,13 @@ func closeContext(
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", collection_context).
 			Set("FlowId", collection_context.SessionId)
-		serialized, err := json.Marshal([]vfilter.Row{row})
-		if err != nil {
-			return err
-		}
 
-		GJournalWriter.Channel <- &Event{
-			Config:    config_obj,
-			ClientId:  collection_context.Request.ClientId,
-			QueryName: "System.Flow.Completion",
-			Response:  string(serialized),
-			Columns:   []string{"Timestamp", "Flow", "FlowId"},
-		}
+		return services.GetJournal().PushRow("System.Flow.Completion",
+			collection_context.Request.ClientId, /* source */
+			0, row)
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		collection_context.Status = err.Error()
-	}
-
-	return db.SetSubject(config_obj, collection_context.Urn,
-		collection_context)
+	return nil
 }
 
 func flushContextLogs(
@@ -623,18 +620,8 @@ func appendUploadDataToFile(
 			Set("Accessor", file_buffer.Pathspec.Accessor).
 			Set("Size", size)
 
-		serialized, err := json.Marshal([]vfilter.Row{row})
-		if err == nil {
-			GJournalWriter.Channel <- &Event{
-				Config:    config_obj,
-				ClientId:  message.Source,
-				QueryName: "System.Upload.Completion",
-				Response:  string(serialized),
-				Columns: []string{"Timestamp", "ClientId",
-					"VFSPath", "UploadName",
-					"Accessor", "Size"},
-			}
-		}
+		return services.GetJournal().PushRow(
+			"System.Upload.Completion", message.Source, 0, row)
 	}
 
 	return nil

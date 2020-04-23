@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -67,6 +66,9 @@ func (self *ServerTestSuite) SetupTest() {
 	self.config_obj = config_obj
 	self.config_obj.Datastore.Implementation = "Test"
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
+
+	// Start the journaling service manually for tests.
+	services.StartJournalService(self.config_obj)
 
 	self.server, err = server.NewServer(config_obj)
 	require.NoError(self.T(), err)
@@ -287,8 +289,7 @@ func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex st
 }
 
 // Receiving a response from the server to the monitoring flow will
-// write the rows into a csv file in the client's monitoring area as
-// well as a journal entry for all clients.
+// write the rows into a csv file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
@@ -308,16 +309,8 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	// Wait for the journal writer
-	time.Sleep(time.Second)
-	flows.GJournalWriter.Flush()
-
 	self.RequiredFilestoreContains(
 		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+
-			paths.GetDayName()+".csv", self.client_id)
-
-	self.RequiredFilestoreContains(
-		"/journals/System.Hunt.Participation/"+
 			paths.GetDayName()+".csv", self.client_id)
 }
 

@@ -19,7 +19,6 @@ package flows
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -38,7 +37,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func GetFlows(
@@ -256,20 +254,11 @@ func ArchiveFlow(
 	row := ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context)
-	serialized, err := json.Marshal([]vfilter.Row{row})
-	if err == nil {
-		GJournalWriter.Channel <- &Event{
-			Config:    config_obj,
-			ClientId:  client_id,
-			QueryName: "System.Flow.Archive",
-			Response:  string(serialized),
-			Columns:   []string{"Timestamp", "Flow"},
-		}
-	}
 
 	return &api_proto.StartFlowResponse{
-		FlowId: flow_id,
-	}, nil
+			FlowId: flow_id,
+		}, services.GetJournal().PushRow(
+			"System.Flow.Archive", client_id, paths.MODE_MONITORING_DAILY, row)
 }
 
 func GetFlowRequests(

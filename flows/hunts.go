@@ -25,7 +25,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"path"
 	"sort"
 	"time"
@@ -40,7 +39,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func GetNewHuntId() string {
@@ -240,15 +238,11 @@ func ModifyHunt(
 					Set("Timestamp", time.Now().UTC().Unix()).
 					Set("Hunt", hunt).
 					Set("User", user)
-				serialized, err := json.Marshal([]vfilter.Row{row})
-				if err == nil {
-					GJournalWriter.Channel <- &Event{
-						Config:    config_obj,
-						QueryName: "System.Hunt.Archive",
-						Response:  string(serialized),
-						Columns:   []string{"Timestamp", "Hunt"},
-					}
-				}
+
+				services.GetJournal().PushRow(
+					"System.Hunt.Archive", "server",
+					paths.MODE_MONITORING_DAILY, row)
+
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
 

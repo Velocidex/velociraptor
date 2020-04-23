@@ -171,23 +171,22 @@ service API {
 
     rpc VFSRefreshDirectory(VFSRefreshDirectoryRequest) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
-            post: "/api/v1/VFSRefreshDirectory/{client_id}",
+            post: "/api/v1/VFSRefreshDirectory",
             body: "*",
         };
     }
 
-  rpc VFSStatDirectory(VFSListRequest) returns (VFSListResponse) {
+    rpc VFSStatDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSStatDirectory",
         };
-  }
+    }
 
-  rpc VFSStatDownload(VFSListRequest) returns (VFSDownloadInfo) {
+    rpc VFSStatDownload(VFSListRequest) returns (VFSDownloadInfo) {
         option (google.api.http) = {
             get: "/api/v1/VFSStatDownload",
         };
-  }
-
+    }
 
   // This can be used by API clients to fetch file content.
     rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {

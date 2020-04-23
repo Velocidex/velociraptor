@@ -94,7 +94,7 @@ exports.routingModule
       .state('server_events', {
         url: '/server_events',
         template: '<grr-server-events />',
-        title: "Server Events",
+          title: "Server Events",
       })
       .state('server_artifacts', {
         url: '/server_artifacts',
@@ -115,7 +115,7 @@ exports.routingModule
         redirectTo: 'client.hostInfo',
         template: '<div ui-view></div>',
         title: function(params) {
-          return params['clientId'];
+            return params['clientId'];
         }
       })
       .state('client.hostInfo', {

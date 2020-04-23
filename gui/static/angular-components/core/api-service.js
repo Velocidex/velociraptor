@@ -221,7 +221,7 @@ ApiService.prototype.get = function(apiPath, opt_params) {
 
             // Update the csrf token for the next response.
             if (angular.isString(token) && token.length > 0) {
-                window.csrf = token;
+                window.CsrfToken = token;
             }
 
             return response;
@@ -410,33 +410,13 @@ ApiService.prototype.downloadFile = function(apiPath, opt_params) {
  *
  * @private
  */
-ApiService.prototype.sendRequestWithPayload_ = function(
-    httpMethod, apiPath, opt_params, opt_files) {
-    var request;
-    if (angular.equals(opt_files || {}, {})) {
-        request = {
-            method: httpMethod,
-            url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
-            data: opt_params,
-            headers: {}
-        };
-    } else {
-        var fd = new FormData();
-        angular.forEach(/** @type {Object} */(opt_files), function(value, key) {
-            fd.append(key, value);
-        }.bind(this));
-        fd.append('_params_', angular.toJson(opt_params || {}));
-
-        request = {
-            method: httpMethod,
-            url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
-            data: fd,
-            transformRequest: angular.identity,
-            headers: {
-                'Content-Type': undefined
-            }
-        };
-    }
+ApiService.prototype.sendRequestWithPayload_ = function(httpMethod, apiPath, opt_params) {
+    var request = {
+        method: httpMethod,
+        url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
+        data: opt_params,
+        headers: {}
+    };
 
     var loadingKey = this.grrLoadingIndicatorService_.startLoading();
 
@@ -461,9 +441,9 @@ ApiService.prototype.sendRequestWithPayload_ = function(
  *
  * @return {!angular.$q.Promise} Promise that resolves to the server response.
  */
-ApiService.prototype.post = function(apiPath, opt_params, opt_files) {
+ApiService.prototype.post = function(apiPath, opt_params) {
     return this.sendRequestWithPayload_(
-        'POST', apiPath, opt_params, opt_files).then(
+        'POST', apiPath, opt_params).then(
             null, this.error_response.bind(this));
 };
 

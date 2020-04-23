@@ -10,6 +10,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 // An abstract test suite to ensure file store implementations all
@@ -182,10 +183,25 @@ type QueueManagerTestSuite struct {
 }
 
 func (self *QueueManagerTestSuite) TestPush() {
+	artifact_name := "System.Hunt.Participation"
+
 	payload := []byte("[{\"foo\":1},{\"foo\":2}]")
 
-	err := self.manager.Push("System.Hunt.Participation", "C.123", payload)
+	output, cancel := self.manager.Watch(artifact_name)
+	defer cancel()
+
+	err := self.manager.Push(artifact_name, "C.123",
+		paths.MODE_MONITORING_DAILY, payload)
+
 	assert.NoError(self.T(), err)
+
+	for row := range output {
+		fmt.Printf("%v\n", row)
+		value, _ := row.Get("foo")
+		if value.(int64) == 2 {
+			break
+		}
+	}
 }
 
 func NewQueueManagerTestSuite(config_obj *config_proto.Config,

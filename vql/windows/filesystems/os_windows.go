@@ -151,7 +151,7 @@ func getAvailableDrives() ([]string, error) {
 // windows form. Normal form uses / instead of \ and always has a
 // leading /.
 func GetPath(path string) string {
-	path = filepath.Clean(strings.Replace(path, "/", "\\", -1))
+	path = strings.Replace(path, "/", "\\", -1)
 
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
 	path = strings.TrimLeft(path, "\\")
@@ -255,7 +255,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 		result = append(result,
 			&OSFileInfo{
 				FileInfo:   f,
-				_full_path: filepath.Join(path, f.Name()),
+				_full_path: dir_path + f.Name(),
 			})
 	}
 	return result, nil

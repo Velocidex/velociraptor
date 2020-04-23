@@ -1,21 +1,13 @@
 package flows
 
 import (
-	"encoding/json"
-	"fmt"
-	"time"
-
-	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func MonitoringProcessMessage(
@@ -46,63 +38,12 @@ func MonitoringProcessMessage(
 		return err
 	}
 
-	// Write the response on the journal.
-	GJournalWriter.Channel <- &Event{
-		Config:    config_obj,
-		Timestamp: time.Now(),
-		ClientId:  message.Source,
-		QueryName: response.Query.Name,
-		Response:  response.Response,
-		Columns:   response.Columns,
-	}
-
-	// Todo: Remove this into a service - It is slowing down
-	// processing and takes up a concurrency slot.
-
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {
-		file_store_factory := file_store.GetFileStore(config_obj)
+		return services.GetJournal().Push(
+			response.Query.Name, message.Source,
+			paths.MODE_MONITORING_DAILY, []byte(response.Response))
 
-		artifact_name, source_name := paths.
-			QueryNameToArtifactAndSource(
-				response.Query.Name)
-
-		log_path := paths.GetCSVPath(
-			message.Source, /* client_id */
-			paths.GetDayName(),
-			collection_context.SessionId,
-			artifact_name, source_name,
-			paths.MODE_MONITORING_DAILY)
-
-		fd, err := file_store_factory.WriteFile(log_path)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return err
-		}
-		defer fd.Close()
-
-		writer, err := csv.GetCSVWriter(vql_subsystem.MakeScope(), fd)
-		if err != nil {
-			fmt.Printf("Error: %v\n", err)
-			return err
-		}
-		defer writer.Close()
-
-		var rows []map[string]interface{}
-		err = json.Unmarshal([]byte(response.Response), &rows)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-
-		for _, row := range rows {
-			csv_row := ordereddict.NewDict().Set(
-				"_ts", int(time.Now().Unix()))
-			for _, column := range response.Columns {
-				csv_row.Set(column, row[column])
-			}
-
-			writer.Write(csv_row)
-		}
 	}
 
 	return nil

@@ -15,6 +15,7 @@ import (
 
 const (
 	// The different types of artifacts.
+	MODE_INVALID          = 0
 	MODE_CLIENT           = 1
 	MODE_SERVER           = 2
 	MODE_SERVER_EVENT     = 3
@@ -37,11 +38,6 @@ func ModeNameToMode(name string) int {
 		return MODE_JOURNAL_DAILY
 	}
 	return 0
-}
-
-// Convert an artifact name to a path to store its definition.
-func NameToPath(name string) string {
-	return "/" + strings.Replace(name, ".", "/", -1) + ".yaml"
 }
 
 // Resolve the path relative to the filestore where the CVS files are

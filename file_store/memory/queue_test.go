@@ -1,4 +1,4 @@
-package directory
+package memory
 
 import (
 	"io/ioutil"
@@ -11,18 +11,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
-func TestDirectoryQueueManager(t *testing.T) {
+func TestMemoryQueueManager(t *testing.T) {
 	dir, err := ioutil.TempDir("", "file_store_test")
 	assert.NoError(t, err)
 
 	defer os.RemoveAll(dir) // clean up
 
-	dir = "/tmp/file_store_test"
+	//dir = "/tmp/file_store_test"
 
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.FilestoreDirectory = dir
 	config_obj.Datastore.Location = dir
 
-	manager := NewDirectoryQueueManager(config_obj)
+	manager := NewMemoryQueueManager(config_obj, Test_memory_file_store)
 	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager))
 }

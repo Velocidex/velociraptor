@@ -5,9 +5,8 @@ package proto
 
 import (
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
+	math "math"
 	_ "www.velocidex.com/golang/velociraptor/proto"
 )
 
