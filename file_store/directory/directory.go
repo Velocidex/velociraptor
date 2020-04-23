@@ -31,6 +31,7 @@ package directory
 import (
 	"compress/gzip"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -198,7 +199,7 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string 
 			string(datastore.SanitizeString(component)))
 	}
 
-	result := filepath.Join(components...)
+	result := path.Join(components...)
 	if runtime.GOOS == "windows" {
 		return WINDOWS_LFN_PREFIX + result
 	}
@@ -223,7 +224,7 @@ func (self *DirectoryFileStore) FileStorePathToFilename(filename string) (
 			string(datastore.UnsanitizeComponent(component)))
 	}
 
-	result := "/" + filepath.Join(components...)
+	result := "/" + path.Join(components...)
 	return result, nil
 }
 
