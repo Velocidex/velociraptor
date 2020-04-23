@@ -20,12 +20,13 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -35,7 +36,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -56,6 +56,8 @@ type HuntManager struct {
 	// flushing etc.
 	writers    map[string]*csv.CSVWriter
 	config_obj *config_proto.Config
+
+	APIClientFactory grpc_client.APIClientFactory
 }
 
 func (self *HuntManager) Start(
@@ -64,28 +66,27 @@ func (self *HuntManager) Start(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the hunt manager service.")
 
-	scope := artifacts.ScopeBuilder{
-		Config:     self.config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger: logging.NewPlainLogger(self.config_obj,
-			&logging.FrontendComponent),
-	}.Build()
-	defer scope.Close()
-
-	vql, err := vfilter.Parse("select HuntId, ClientId, Fqdn, Participate FROM " +
-		"watch_monitoring(artifact='System.Hunt.Participation')")
-	if err != nil {
-		return err
-	}
+	scope := vfilter.NewScope()
+	qm_chan, cancel := GetJournal().Watch("System.Hunt.Participation")
 
 	wg.Add(1)
 	go func() {
+		defer cancel()
 		defer wg.Done()
 		defer self.Close()
 
-		for row := range vql.Eval(ctx, scope) {
-			self.ProcessRow(ctx, scope, row)
+		for {
+			select {
+			case row := <-qm_chan:
+				fmt.Printf("row %v\n", row)
+				self.ProcessRow(ctx, scope, row)
+
+			case <-ctx.Done():
+				return
+			}
 		}
+
+		fmt.Printf("Exit\n")
 	}()
 
 	return nil
@@ -106,7 +107,7 @@ func (self *HuntManager) Close() {
 func (self *HuntManager) ProcessRow(
 	ctx context.Context,
 	scope *vfilter.Scope,
-	row vfilter.Row) {
+	row *ordereddict.Dict) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -224,7 +225,7 @@ func (self *HuntManager) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	client, closer, err := grpc_client.Factory.GetAPIClient(
+	client, closer, err := self.APIClientFactory.GetAPIClient(
 		ctx, self.config_obj)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
@@ -246,12 +247,13 @@ func (self *HuntManager) ProcessRow(
 func startHuntManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (*HuntManager, error) {
 	result := &HuntManager{
-		config_obj: config_obj,
-		writers:    make(map[string]*csv.CSVWriter),
+		config_obj:       config_obj,
+		writers:          make(map[string]*csv.CSVWriter),
+		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
-	return result.Start(ctx, wg)
+	return result, result.Start(ctx, wg)
 }
 
 func huntHasLabel(config_obj *config_proto.Config,
@@ -263,6 +265,7 @@ func huntHasLabel(config_obj *config_proto.Config,
 		request := &api_proto.LabelClientsRequest{
 			ClientIds: []string{client_id},
 			Labels:    label_condition.Label,
+			Operation: "check",
 		}
 
 		_, err := clients.LabelClients(config_obj, request)

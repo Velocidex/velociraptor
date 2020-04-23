@@ -256,7 +256,7 @@ func (self WatchMonitoringPlugin) Call(
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 
 			case row := <-qm_chan:
 				output_chan <- row

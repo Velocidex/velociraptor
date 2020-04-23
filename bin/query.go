@@ -154,6 +154,8 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 	kingpin.FatalIfError(err, "GetAPIClient")
 	defer closer()
 
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+
 	request := &actions_proto.VQLCollectorArgs{
 		MaxRow:  1000,
 		MaxWait: 1,
@@ -171,6 +173,11 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 			break
 		}
 		kingpin.FatalIfError(err, "GetAPIClient")
+
+		if response.Log != "" {
+			logger.Info(response.Log)
+			continue
+		}
 
 		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
 		kingpin.FatalIfError(err, "GetAPIClient")

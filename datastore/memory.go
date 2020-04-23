@@ -1,9 +1,12 @@
 package datastore
 
 import (
+	"errors"
+	"path"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/ptypes/empty"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
@@ -129,6 +132,14 @@ func (self *TestDataStore) SetIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
+
+	for _, keyword := range keywords {
+		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
+		err := self.SetSubject(config_obj, subject, &empty.Empty{})
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -137,6 +148,14 @@ func (self *TestDataStore) UnsetIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
+
+	for _, keyword := range keywords {
+		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
+		err := self.DeleteSubject(config_obj, subject)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -145,7 +164,14 @@ func (self *TestDataStore) CheckIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
-	return nil
+	for _, keyword := range keywords {
+		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
+		_, pres := self.Subjects[subject]
+		if pres {
+			return nil
+		}
+	}
+	return errors.New("Client does not have label")
 }
 
 func (self *TestDataStore) SearchClients(

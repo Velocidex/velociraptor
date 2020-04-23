@@ -101,6 +101,8 @@ message VQLResponse {
     uint64 total_rows = 7[(sem_type) = {
             description: "Total number of rows in this response part."
         }];
+
+    string log = 9;
 }
 
 

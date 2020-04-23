@@ -29,10 +29,6 @@ type LogFunctionArgs struct {
 	Message string `vfilter:"required,field=message,doc=Message to log."`
 }
 
-var (
-	last_log string
-)
-
 type LogFunction struct{}
 
 func (self *LogFunction) Call(ctx context.Context,
@@ -45,11 +41,13 @@ func (self *LogFunction) Call(ctx context.Context,
 		return false
 	}
 
-	if arg.Message != last_log {
-		scope.Log("%v", arg.Message)
-		last_log = arg.Message
+	last_log, ok := scope.GetContext("last_log").(string)
+	if ok && arg.Message == last_log {
+		return true
 	}
 
+	scope.Log("%v", arg.Message)
+	scope.SetContext("last_log", arg.Message)
 	return true
 }
 
