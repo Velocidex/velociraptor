@@ -834,7 +834,9 @@ func (self *ApiServer) Query(
 		permissions := acls.ANY_QUERY
 		ok, err := acls.CheckAccess(self.config, peer_name, permissions)
 		if err != nil {
-			return err
+			return status.Error(codes.PermissionDenied,
+				fmt.Sprintf("User %v is not allowed to run queries.",
+					peer_name))
 		}
 
 		if !ok {

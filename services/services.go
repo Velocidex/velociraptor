@@ -49,7 +49,7 @@ func StartServices(
 	}
 
 	if config_obj.ServerServices.HuntManager {
-		err := startHuntManager(ctx, wg, config_obj)
+		_, err := startHuntManager(ctx, wg, config_obj)
 		if err != nil {
 			return err
 		}
