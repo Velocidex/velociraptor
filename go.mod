@@ -12,11 +12,13 @@ require (
 	github.com/Showmax/go-fqdn v0.0.0-20180501083314-6f60894d629f
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/cgofuse v1.1.2
+	github.com/Velocidex/fileb0x v1.1.2-0.20200125141948-d54f40400160 // indirect
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
 	github.com/Velocidex/ordereddict v0.0.0-20200419183704-bc44e4ef79c7
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
+	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.4.1
@@ -24,7 +26,6 @@ require (
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/clbanning/mxj v1.8.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/crewjam/saml v0.3.1
