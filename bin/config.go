@@ -218,7 +218,7 @@ func doRotateKeyConfig() {
 	gw_certificate, err := crypto.GenerateServerCert(
 		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create Frontend cert")
+		kingpin.FatalIfError(err, "Unable to create gatewat cert")
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert
