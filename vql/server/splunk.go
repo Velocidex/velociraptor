@@ -173,17 +173,17 @@ func _append_row_to_buffer(
 	_buf := *buf
 	row_dict := vfilter.RowToDict(ctx, scope, row)
 
-	// if ClientID exists and "Host" isn't a field, use the ClientID field
-	clientid, client_idpres := row_dict.Get("ClientId")
-	_, host_pres := row_dict.Get("host")
+	// Commented out as this makes the VQL too smart.
 
-	if !host_pres {
-		if client_idpres {
-			row_dict = row_dict.Set("host", clientid)
-		} else {
-			row_dict = row_dict.Set("host", "velociraptor")
-		}
-	}
+	// if ClientID exists and "Host" isn't a field, use the ClientID field
+	// _, host_pres := row_dict.Get("host")
+	// if !host_pres {
+	// 	clientid, client_idpres := row_dict.Get("ClientId")
+	// 	if client_idpres {
+	// 		row_dict = row_dict.Set("host", clientid)
+	// 	}
+	// }
+
 	*buf = append(_buf, row_dict)
 	return nil
 }
@@ -193,8 +193,6 @@ func send_to_splunk(scope *vfilter.Scope,
 	client *splunk.Client, buf *[]*ordereddict.Dict, arg *_SplunkPluginArgs) {
 
 	_buf := *buf
-
-	scope.Log("buf: %d", len(_buf))
 
 	if len(_buf) == 0 {
 		return
