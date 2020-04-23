@@ -214,6 +214,16 @@ func doRotateKeyConfig() {
 	config_obj.Frontend.Certificate = frontend_cert.Cert
 	config_obj.Frontend.PrivateKey = frontend_cert.PrivateKey
 
+	// Generate gRPC gateway certificate.
+	gw_certificate, err := crypto.GenerateServerCert(
+		config_obj, config_obj.API.PinnedGwName)
+	if err != nil {
+		return nil, errors.Wrap(err, "Unable to create Frontend cert")
+	}
+
+	config_obj.GUI.GwCertificate = gw_certificate.Cert
+	config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
+
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to encode config.")
