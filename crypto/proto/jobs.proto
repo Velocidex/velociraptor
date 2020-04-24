@@ -279,5 +279,9 @@ message LogMessage {
 // Message written to the data store with the PEM of the client's
 // public key.
 message PublicKey {
-  bytes pem = 1;
+    bytes pem = 1;
+
+    // The timestamp when the key was saved (the client
+    // enrolled). This is used to deduce the first_seen_time.
+    uint64 enroll_time = 2;
 }

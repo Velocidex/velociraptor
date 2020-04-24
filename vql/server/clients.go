@@ -74,7 +74,7 @@ func (self ClientsPlugin) Call(
 			return
 		}
 
-		// If a client id is specifies we do not need to search at all.
+		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
 			api_client, err := api.GetApiClient(
 				config_obj, nil, arg.ClientId, false)

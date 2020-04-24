@@ -27,6 +27,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -84,6 +85,15 @@ func GetApiClient(
 		Machine: client_info.Architecture,
 		Fqdn:    client_info.Fqdn,
 	}
+
+	public_key_info := &crypto_proto.PublicKey{}
+	err = db.GetSubject(config_obj, paths.GetClientKeyPath(client_id),
+		public_key_info)
+	if err != nil {
+		return nil, err
+	}
+
+	result.FirstSeenAt = public_key_info.EnrollTime
 
 	err = db.GetSubject(config_obj, paths.GetClientPingPath(client_id),
 		client_info)
