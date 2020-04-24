@@ -21,6 +21,7 @@ import (
 	"crypto/rsa"
 	"strings"
 	"sync"
+	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -120,7 +121,8 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 	}
 
 	pem := &crypto_proto.PublicKey{
-		Pem: PublicKeyToPem(key),
+		Pem:        PublicKeyToPem(key),
+		EnrollTime: uint64(time.Now().Unix()),
 	}
 	return db.SetSubject(self.config_obj, subject, pem)
 }

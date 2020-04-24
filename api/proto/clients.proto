@@ -66,9 +66,10 @@ message ApiClient {
         }];
     AgentInformation agent_information = 2;
     Uname os_info = 3;
+
     uint64 first_seen_at = 6 [(sem_type) = {
             type: "RDFDatetime",
-            description: "When flow was created."
+            description: "When the client was first seen (i.e. when it was enrolled)."
         }];
     uint64 last_seen_at = 7 [(sem_type) = {
             type: "RDFDatetime",
