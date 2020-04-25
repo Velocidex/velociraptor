@@ -39,7 +39,8 @@ var (
 	}
 )
 
-// Keep track of cancelled flows client side.
+// Keep track of cancelled flows client side. NOTE We never expire the
+// map of cancelled flows but it is expected to be very uncommon.
 type canceller struct {
 	mu        sync.Mutex
 	cancelled map[string]bool
@@ -102,9 +103,13 @@ type ClientExecutor struct {
 	next_id    int
 }
 
-func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responder) {
+func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responder) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if Canceller.IsCancelled(flow_id) {
+		return false
+	}
 
 	contexts, ok := self.in_flight[flow_id]
 	if ok {
@@ -114,7 +119,10 @@ func (self *ClientExecutor) Cancel(flow_id string, responder *responder.Responde
 		}
 
 		Canceller.Cancel(flow_id)
+		return true
 	}
+
+	return ok
 }
 
 func (self *ClientExecutor) _FlowContext(flow_id string) (context.Context, *_FlowContext) {
@@ -244,10 +252,12 @@ func (self *ClientExecutor) processRequestPlugin(
 	}
 
 	if req.Cancel != nil {
-		self.Cancel(req.SessionId, responder)
-		self.Outbound <- makeErrorResponse(
-			req, fmt.Sprintf("Cancelled all inflight queries: %v",
-				req.SessionId))
+		// Only log when the flow is not already cancelled.
+		if self.Cancel(req.SessionId, responder) {
+			self.Outbound <- makeErrorResponse(
+				req, fmt.Sprintf("Cancelled all inflight queries: %v",
+					req.SessionId))
+		}
 		return
 	}
 
@@ -268,6 +278,12 @@ func NewClientExecutor(
 	// Drain messages from server and execute them, pushing
 	// results to the output channel.
 	go func() {
+		defer close(result.Outbound)
+
+		// Do not exit until all goroutines have finished.
+		wg := &sync.WaitGroup{}
+		defer wg.Wait()
+
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 		for {
@@ -276,8 +292,6 @@ func NewClientExecutor(
 			// home.  (Never normally called in the client
 			// but used in tests to cleanup.)
 			case <-ctx.Done():
-				close(result.Inbound)
-				close(result.Outbound)
 				return
 
 			// Pump messages from input channel and
@@ -295,7 +309,10 @@ func NewClientExecutor(
 						req.SessionId)
 					logger.Debug("Received request: %v", req)
 
+					wg.Add(1)
 					go func() {
+						defer wg.Done()
+
 						result.processRequestPlugin(
 							config_obj, ctx, req)
 						result._CloseContext(flow_context)

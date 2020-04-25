@@ -10,24 +10,25 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ExecutorTestSuite struct {
 	suite.Suite
 }
 
+// Cancelling the executor multiple times will cause a single
+// cancellation state and then ignore the rest.
 func (self *ExecutorTestSuite) TestCancellation() {
 	t := self.T()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	wg := &sync.WaitGroup{}
 	config_obj := config.GetDefaultConfig()
 	executor, err := NewClientExecutor(ctx, config_obj)
 	require.NoError(t, err)
-
-	wg := &sync.WaitGroup{}
 
 	var received_messages []*crypto_proto.GrrMessage
 
@@ -35,8 +36,8 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	go func() {
 		defer wg.Done()
 
+		// Wait here until the executor is fully cancelled.
 		for message := range executor.Outbound {
-			utils.Debug(message)
 			received_messages = append(
 				received_messages, message)
 		}
@@ -44,19 +45,25 @@ func (self *ExecutorTestSuite) TestCancellation() {
 
 	// Send cancel message
 	flow_id := "F.XXX"
-	executor.Inbound <- &crypto_proto.GrrMessage{
-		AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
-		SessionId: flow_id,
-		Cancel:    &crypto_proto.Cancel{},
-		RequestId: 1}
+	for i := 0; i < 10; i++ {
+		executor.Inbound <- &crypto_proto.GrrMessage{
+			AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
+			SessionId: flow_id,
+			Cancel:    &crypto_proto.Cancel{},
+			RequestId: 1}
+	}
 
-	executor.Inbound <- &crypto_proto.GrrMessage{
-		AuthState: crypto_proto.GrrMessage_AUTHENTICATED,
-		SessionId: flow_id,
-		Cancel:    &crypto_proto.Cancel{},
-		RequestId: 1}
+	// Tear down the executor and wait for it to finish.
+	cancel()
 
 	wg.Wait()
+
+	// The cancel message should generate a log + a status
+	// message. This should only be done once, no matter how many
+	// cancellations are sent.
+	require.Equal(t, len(received_messages), 2)
+	require.NotNil(t, received_messages[0].LogMessage)
+	require.NotNil(t, received_messages[1].Status)
 }
 
 func TestExecutorTestSuite(t *testing.T) {
