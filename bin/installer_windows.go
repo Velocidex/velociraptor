@@ -460,6 +460,59 @@ func (self *VelociraptorService) Close() {
 	}
 }
 
+func runOnce(result *VelociraptorService, elog debug.Log) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Spin forever waiting for a config file to be
+	// dropped into place.
+	config_obj, err := loadClientConfig()
+	if err != nil {
+		time.Sleep(10 * time.Second)
+		return
+	}
+
+	manager, err := crypto.NewClientCryptoManager(
+		config_obj, []byte(config_obj.Writeback.PrivateKey))
+	if err != nil {
+		elog.Error(1, fmt.Sprintf(
+			"Can not create crypto: %v", err))
+		time.Sleep(10 * time.Second)
+		return
+	}
+
+	exe, err := executor.NewClientExecutor(ctx, config_obj)
+	if err != nil {
+		elog.Error(1, fmt.Sprintf(
+			"Can not create client: %v", err))
+		time.Sleep(10 * time.Second)
+		return
+	}
+
+	comm, err := http_comms.NewHTTPCommunicator(
+		config_obj,
+		manager,
+		exe,
+		config_obj.Client.ServerUrls,
+	)
+	if err != nil {
+		elog.Error(1, fmt.Sprintf(
+			"Can not create comms: %v", err))
+		time.Sleep(10 * time.Second)
+		return
+	}
+
+	result.mu.Lock()
+	result.comms = comm
+	result.mu.Unlock()
+
+	// Wait for all services to properly start
+	// before we begin the comms.
+	executor.StartServices(config_obj, manager.ClientId, exe)
+
+	comm.Run(ctx)
+}
+
 func NewVelociraptorService(name string) (*VelociraptorService, error) {
 	elog, err := getLogger(name)
 	if err != nil {
@@ -470,57 +523,7 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 
 	go func() {
 		for {
-			// Spin forever waiting for a config file to be
-			// dropped into place.
-			config_obj, err := loadClientConfig()
-			if err != nil {
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			manager, err := crypto.NewClientCryptoManager(
-				config_obj, []byte(config_obj.Writeback.PrivateKey))
-			if err != nil {
-				elog.Error(1, fmt.Sprintf(
-					"Can not create crypto: %v", err))
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			ctx := context.Background()
-			exe, err := executor.NewClientExecutor(config_obj)
-			if err != nil {
-				elog.Error(1, fmt.Sprintf(
-					"Can not create client: %v", err))
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			comm, err := http_comms.NewHTTPCommunicator(
-				config_obj,
-				manager,
-				exe,
-				config_obj.Client.ServerUrls,
-			)
-			if err != nil {
-				elog.Error(1, fmt.Sprintf(
-					"Can not create comms: %v", err))
-				time.Sleep(10 * time.Second)
-				continue
-			}
-
-			result.mu.Lock()
-			result.comms = comm
-			result.mu.Unlock()
-
-			// Wait for all services to properly start
-			// before we begin the comms.
-			executor.StartServices(config_obj, manager.ClientId, exe)
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			comm.Run(ctx)
-			return
+			runOnce(result, elog)
 		}
 	}()
 
