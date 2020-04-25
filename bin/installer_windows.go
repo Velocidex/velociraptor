@@ -487,6 +487,7 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 				continue
 			}
 
+			ctx := context.Background()
 			exe, err := executor.NewClientExecutor(config_obj)
 			if err != nil {
 				elog.Error(1, fmt.Sprintf(

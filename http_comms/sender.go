@@ -31,7 +31,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Sender struct {
@@ -44,6 +43,9 @@ type Sender struct {
 	release chan bool
 
 	ring_buffer IRingBuffer
+
+	// An in-memory ring buffer for urgent packets.
+	urgent_buffer *RingBuffer
 }
 
 // Persistant loop to pump messages from the executor to the ring
@@ -69,13 +71,9 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 				return
 			}
 
-			// Urgent messages skip the ring buffer and
-			// get sent immediately. This allows them to
-			// jump ahead of queued messages.
 			if msg.Urgent {
-				logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
-				logger.Info("Sending urgent response to session %v", msg.SessionId)
-
+				// Urgent messages are queued in
+				// memory and dispatched separately.
 				item := &crypto_proto.MessageList{
 					Job: []*crypto_proto.GrrMessage{msg}}
 
@@ -85,37 +83,35 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 					// - drop it on the floor.
 					continue
 				}
-				self.sendMessageList(ctx, [][]byte{
-					utils.Compress(serialized_msg)},
-					msg.Urgent)
-				continue
-			}
+				self.urgent_buffer.Enqueue(serialized_msg)
 
-			// NOTE: This is kind of a hack. We hold in
-			// memory a bunch of GrrMessage proto objects
-			// and we want to serialize them into a
-			// MessageList proto one at the time (so we
-			// can track how large the final message is
-			// going to be). We use the special wire
-			// format property of protobufs that repeated
-			// fields can be appended on the wire, and
-			// then parsed as a single message. This saves
-			// us encoding the GrrMessage just to see how
-			// large it is going to be and then encoding
-			// it again.
-			item := &crypto_proto.MessageList{
-				Job: []*crypto_proto.GrrMessage{msg}}
-			serialized_msg, err := proto.Marshal(item)
-			if err != nil {
-				// Can't serialize the message
-				// - drop it on the floor.
-				continue
-			}
+			} else {
+				// NOTE: This is kind of a hack. We hold in
+				// memory a bunch of GrrMessage proto objects
+				// and we want to serialize them into a
+				// MessageList proto one at the time (so we
+				// can track how large the final message is
+				// going to be). We use the special wire
+				// format property of protobufs that repeated
+				// fields can be appended on the wire, and
+				// then parsed as a single message. This saves
+				// us encoding the GrrMessage just to see how
+				// large it is going to be and then encoding
+				// it again.
+				item := &crypto_proto.MessageList{
+					Job: []*crypto_proto.GrrMessage{msg}}
+				serialized_msg, err := proto.Marshal(item)
+				if err != nil {
+					// Can't serialize the message
+					// - drop it on the floor.
+					continue
+				}
 
-			// RingBuffer.Enqueue may block if there is
-			// no room in the ring buffer. While waiting
-			// here we block the executor channel.
-			self.ring_buffer.Enqueue(serialized_msg)
+				// RingBuffer.Enqueue may block if there is
+				// no room in the ring buffer. While waiting
+				// here we block the executor channel.
+				self.ring_buffer.Enqueue(serialized_msg)
+			}
 
 			// We have just filled the message queue with
 			// enough data, trigger the sender to send
@@ -143,8 +139,17 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
+			// Grab some messages from the urgent ring buffer.
+			compressed_messages := LeaseAndCompress(self.urgent_buffer,
+				self.config_obj.Client.MaxUploadSize)
+			if len(compressed_messages) > 0 {
+				self.sendMessageList(ctx, compressed_messages,
+					true /* urgent */)
+				self.urgent_buffer.Commit()
+			}
+
 			// Grab some messages from the ring buffer.
-			compressed_messages := LeaseAndCompress(self.ring_buffer,
+			compressed_messages = LeaseAndCompress(self.ring_buffer,
 				self.config_obj.Client.MaxUploadSize)
 			if len(compressed_messages) > 0 {
 				// sendMessageList will block until
@@ -208,8 +213,9 @@ func NewSender(
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler),
-		ring_buffer: ring_buffer,
-		release:     make(chan bool),
+		ring_buffer:   ring_buffer,
+		urgent_buffer: NewRingBuffer(config_obj, 2*config_obj.Client.MaxUploadSize),
+		release:       make(chan bool),
 	}
 
 	return result

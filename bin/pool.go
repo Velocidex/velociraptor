@@ -91,7 +91,7 @@ func doPoolClient() {
 			client_config, []byte(client_config.Writeback.PrivateKey))
 		kingpin.FatalIfError(err, "Unable to parse config file")
 
-		exe, err := executor.NewClientExecutor(client_config)
+		exe, err := executor.NewClientExecutor(ctx, client_config)
 		kingpin.FatalIfError(err, "Can not create executor.")
 
 		comm, err := http_comms.NewHTTPCommunicator(

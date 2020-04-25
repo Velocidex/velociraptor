@@ -255,7 +255,9 @@ func (self *ClientExecutor) processRequestPlugin(
 		req, fmt.Sprintf("Unsupported payload for message: %v", req))
 }
 
-func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error) {
+func NewClientExecutor(
+	ctx context.Context,
+	config_obj *config_proto.Config) (*ClientExecutor, error) {
 	result := &ClientExecutor{
 		Inbound:    make(chan *crypto_proto.GrrMessage),
 		Outbound:   make(chan *crypto_proto.GrrMessage),
@@ -263,25 +265,42 @@ func NewClientExecutor(config_obj *config_proto.Config) (*ClientExecutor, error)
 		config_obj: config_obj,
 	}
 
+	// Drain messages from server and execute them, pushing
+	// results to the output channel.
 	go func() {
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
 		for {
+			select {
+			// Context is cancelled wrap this up and go
+			// home.  (Never normally called in the client
+			// but used in tests to cleanup.)
+			case <-ctx.Done():
+				close(result.Inbound)
+				close(result.Outbound)
+				return
+
 			// Pump messages from input channel and
 			// process each request.
-			req := result.ReadFromServer()
+			case req, ok := <-result.Inbound:
+				if !ok {
+					return
+				}
 
-			// Ignore unauthenticated messages - the
-			// server should never send us those.
-			if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
-				// Each request has its own context.
-				ctx, flow_context := result._FlowContext(req.SessionId)
-				logger.Info("Received request: %v", req)
+				// Ignore unauthenticated messages - the
+				// server should never send us those.
+				if req.AuthState == crypto_proto.GrrMessage_AUTHENTICATED {
+					// Each request has its own context.
+					ctx, flow_context := result._FlowContext(
+						req.SessionId)
+					logger.Debug("Received request: %v", req)
 
-				go func() {
-					result.processRequestPlugin(config_obj, ctx, req)
-					result._CloseContext(flow_context)
-				}()
+					go func() {
+						result.processRequestPlugin(
+							config_obj, ctx, req)
+						result._CloseContext(flow_context)
+					}()
+				}
 			}
 		}
 	}()

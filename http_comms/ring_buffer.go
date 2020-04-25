@@ -466,10 +466,10 @@ func (self *RingBuffer) Commit() {
 	self.c.Broadcast()
 }
 
-func NewRingBuffer(config_obj *config_proto.Config) *RingBuffer {
+func NewRingBuffer(config_obj *config_proto.Config, size uint64) *RingBuffer {
 	result := &RingBuffer{
 		messages:   make([][]byte, 0),
-		Size:       config_obj.Client.LocalBuffer.MemorySize,
+		Size:       size,
 		config_obj: config_obj,
 	}
 	result.c = sync.NewCond(&result.mu)
@@ -488,5 +488,5 @@ func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
 		}
 		logger.Error("Unable to create a file based ring buffer - using in memory only.")
 	}
-	return NewRingBuffer(config_obj)
+	return NewRingBuffer(config_obj, config_obj.Client.LocalBuffer.MemorySize)
 }

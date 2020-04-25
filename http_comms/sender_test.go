@@ -171,13 +171,12 @@ func testRingBuffer(
 func TestSender(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 
-	// Make the ring buffer 10 bytes - this is enough for one
-	// message but no more.
-	config_obj.Client.LocalBuffer.MemorySize = 10
 	config_obj.Client.MaxPoll = 1
 	config_obj.Client.MaxPollStd = 1
 
-	rb := NewRingBuffer(config_obj)
+	// Make the ring buffer 10 bytes - this is enough for one
+	// message but no more.
+	rb := NewRingBuffer(config_obj, 10)
 	testRingBuffer(rb, config_obj, "0123456789", t)
 }
 
