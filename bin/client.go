@@ -53,7 +53,7 @@ func RunClient(
 		kingpin.FatalIfError(err, "Unable to parse config file")
 	}
 
-	exe, err := executor.NewClientExecutor(config_obj)
+	exe, err := executor.NewClientExecutor(ctx, config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Can not create executor.")
 	}

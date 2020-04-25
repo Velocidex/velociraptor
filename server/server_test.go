@@ -403,6 +403,49 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 			},
 		})
 	runner.Close()
+
+	t := self.T()
+	db, err := datastore.GetDB(self.config_obj)
+	require.NoError(t, err)
+
+	// Cancellation message should never be sent due to log.
+	tasks, err := db.GetClientTasks(self.config_obj,
+		self.client_id, true /* do_not_lease */)
+	assert.NoError(t, err)
+	assert.Equal(t, len(tasks), 0)
+
+	runner = flows.NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: "F.1234",
+			Status:    &crypto_proto.GrrStatus{},
+		})
+	runner.Close()
+
+	// Cancellation message should never be sent due to status.
+	tasks, err = db.GetClientTasks(self.config_obj,
+		self.client_id, true /* do_not_lease */)
+	assert.NoError(t, err)
+	assert.Equal(t, len(tasks), 0)
+
+	runner = flows.NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:      self.client_id,
+			SessionId:   "F.1234",
+			VQLResponse: &actions_proto.VQLResponse{},
+		})
+	runner.Close()
+
+	// Cancellation message should be sent due to response
+	// messages.
+	tasks, err = db.GetClientTasks(self.config_obj,
+		self.client_id, true /* do_not_lease */)
+	assert.NoError(t, err)
+	assert.Equal(t, len(tasks), 1)
 }
 
 func (self *ServerTestSuite) TestScheduleCollection() {
@@ -658,6 +701,47 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		collection_context.State)
+}
+
+// Test an unknown flow. What happens when the server receives a
+// message to an unknown flow.
+func (self *ServerTestSuite) TestUnknownFlow() {
+	t := self.T()
+
+	db, err := datastore.GetDB(self.config_obj)
+	require.NoError(t, err)
+
+	runner := flows.NewFlowRunner(self.config_obj)
+	defer runner.Close()
+
+	// Send a message to a random non-existant flow from client.
+	flow_id := "F.NONEXISTENT"
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:      self.client_id,
+			SessionId:   flow_id,
+			VQLResponse: &actions_proto.VQLResponse{},
+		})
+
+	// This should send a cancellation message to the client.
+	tasks, err := db.GetClientTasks(self.config_obj,
+		self.client_id, true /* do_not_lease */)
+	assert.NoError(t, err)
+	assert.Equal(t, len(tasks), 1)
+
+	// Client will cancel all in flight queries from this session
+	// id.
+	require.Equal(t, tasks[0].SessionId, flow_id)
+	require.NotNil(t, tasks[0].Cancel)
+
+	// The flow does not exist - make sure it still does not.
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	err = db.GetSubject(self.config_obj,
+		"/clients/"+self.client_id+"/collections/"+flow_id,
+		collection_context)
+	require.NoError(t, err)
+	require.Equal(t, collection_context.SessionId, "")
 }
 
 // Test flow archiving
