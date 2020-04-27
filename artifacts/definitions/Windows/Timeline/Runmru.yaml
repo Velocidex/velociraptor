@@ -1,0 +1,111 @@
+name: Windows.Timeline.Registry.RunMRU
+description: |
+    Output all availible RunMRU registry keys in timeline format.
+    
+    RunMRU is when a user enters a command into the START > Run prompt.
+    Entries will be logged in the user hive under:
+        Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU
+    
+    The artifact joins and numbers all entries with the most recent at 
+    reg_mtime starting at 0. Second recent 1, Third recent 2 etc etc.
+    
+    Note: This artifact will collect RunMRU from ntuser.dat files and 
+    may exclude very recent entries in transaction (HKCU).  Future 
+    versions of this content will address this gap.
+    
+author: Matt Green - @mgreen27
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: KeyGlob
+    type: hidden
+    default: Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU\MRUList     
+  - name: dateAfter
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: dateBefore
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ss Z"
+    type: timestamp
+  - name: regexValue
+    description: "regex search over RunMRU values."
+    
+sources:
+ - query: |
+        LET hostname <= SELECT Fqdn FROM info()
+        
+        // First we need to extract populated RunMRU
+        LET runmru <= SELECT basename(path=FullPath),
+                url(path=url(parse=FullPath).Path,
+                    fragment=dirname(path=url(parse=FullPath).Fragment) 
+                        + "/*").string as mruKeyGlob,
+                FullPath,
+                url(parse=FullPath),
+                Data.value as RunMruOrder,
+                len(list=Data.value) as RunMruLength,
+                Username,
+                UUID
+        FROM chain(
+            a = { SELECT * FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob) }
+            )
+        
+        // Now extract RunMRU entries and details from results
+        // Output in timeline format
+        LET results <= SELECT * FROM foreach(
+             row={
+                 SELECT * FROM runmru
+              },
+              query={
+                SELECT 
+                    timestamp(epoch=Mtime.sec) as event_time,
+                    hostname.Fqdn[0] as hostname,
+                    "RunMRU" as parser,
+                    "RunMRU evidence user: '" + Username + "', ran command: '"
+                        + split(string=Data.value, sep="\\\\")[0] + "'" as message,
+                    url(parse=FullPath).Path as source,
+                    Username as user,
+                    "HKEY_USERS\\" + UUID + 
+                        url(parse=runmru.FullPath).Fragment as reg_key,
+                    timestamp(epoch=Mtime.sec) as reg_mtime,
+                    basename(path=url(parse=FullPath).Fragment) as reg_name,
+                    split(string=Data.value, sep="\\\\")[0] as reg_value,
+                    Data.type as reg_type,
+                    RunMruLength - 1 - len(list=regex_replace(
+                        source=RunMruOrder, 
+                        re="^.*" + basename(path=url(parse=FullPath).Fragment), 
+                            replace="")) as reg_mru_order
+                FROM glob(globs=mruKeyGlob, accessor="raw_reg")
+                WHERE not reg_name = "MRUList" AND
+                    if(condition=dateAfter, then=event_time > timestamp(string=dateAfter),
+                        else=TRUE) AND
+                    if(condition=dateBefore, then=event_time < timestamp(string=dateBefore),
+                        else=TRUE)  
+                ORDER BY reg_mru_order
+              })
+              
+        SELECT * FROM foreach(
+          row={
+              SELECT *, user, {
+                 SELECT *,
+                    format(format="%v: %v", args=[reg_mru_order,reg_value]) as reg_value, user AS user_
+                 FROM results WHERE user = user_
+              } AS Event 
+              FROM results
+              GROUP BY HivePath
+          },
+          query={
+             SELECT 
+                Event.event_time[0] as event_time,
+                Event.hostname[0] as hostname,
+                "RunMRU" as parser,
+                "RunMRU evidence user: '" + user + "' - '"
+                        + join(array=Event.reg_value, sep=" | ") + "'" as message,
+                Event.source[0] as source,
+                user, 
+                Event.reg_key[0] as reg_key,
+                Event.reg_mtime[0] as reg_mtime,
+                join(array=Event.reg_value, sep=" | ") AS reg_runmru 
+             FROM scope()
+             WHERE if(condition=regexValue, then=reg_runmru =~ regexValue,
+                        else=TRUE)  
+          })
