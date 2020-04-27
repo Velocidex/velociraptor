@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type HuntTestSuite struct {
@@ -105,7 +106,8 @@ func (self *HuntTestSuite) TestHuntManager() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id, 0,
+	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
+		paths.MODE_SERVER_EVENT,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -160,7 +162,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id, 0,
+	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
+		paths.MODE_SERVER_EVENT,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -231,7 +234,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id, 0,
+	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
+		paths.MODE_SERVER_EVENT,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -302,7 +306,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id, 0,
+	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
+		paths.MODE_SERVER_EVENT,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).

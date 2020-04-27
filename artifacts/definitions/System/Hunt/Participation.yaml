@@ -3,7 +3,7 @@ description: |
      Endpoints may participate in hunts. This artifact collects which hunt
      each system participated in.
 
-     Note: This is an automated system hunt. You do not need to start it.
+     Note: This is an automated system artifact. You do not need to start it.
 
 type: CLIENT_EVENT
 

@@ -15,7 +15,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -91,43 +90,45 @@ func NewQueuePool() *QueuePool {
 }
 
 type MemoryQueueManager struct {
-	file_store api.FileStore
+	FileStore api.FileStore
+
+	Clock utils.Clock
 }
 
-func (self *MemoryQueueManager) PushRow(
-	queue_name, source string, mode int, row *ordereddict.Dict) error {
-	pool.Broadcast(queue_name,
-		row.Set("ClientId", source).
-			Set("_ts", int(time.Now().Unix())))
-
-	return nil
+func (self *MemoryQueueManager) Debug() {
+	switch t := self.FileStore.(type) {
+	case api.Debugger:
+		t.Debug()
+	}
 }
 
-func (self *MemoryQueueManager) Push(
-	queue_name, source string, mode int, serialized_rows []byte) error {
-	rows, err := utils.ParseJsonToDicts(serialized_rows)
+func (self *MemoryQueueManager) PushEventRows(
+	path_manager api.PathManager, source string,
+	dict_rows []*ordereddict.Dict) error {
+
+	for _, row := range dict_rows {
+		pool.Broadcast(path_manager.GetArtifact(),
+			row.Set("_ts", int(self.Clock.Now().Unix())))
+	}
+
+	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
 		return err
 	}
 
-	for _, row := range rows {
-		pool.Broadcast(queue_name,
-			row.Set("ClientId", source).
-				Set("_ts", int(time.Now().Unix())))
+	fd, err := self.FileStore.WriteFile(log_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	serialized, err := utils.DictsToJson(dict_rows)
+	if err != nil {
+		return err
 	}
 
-	return nil
-}
-
-func (self *MemoryQueueManager) Read(
-	queue_name, source string, start_time, endtime time.Time) <-chan vfilter.Row {
-	output := make(chan vfilter.Row)
-
-	go func() {
-		defer close(output)
-	}()
-
-	return output
+	_, err = fd.Write(serialized)
+	return err
 }
 
 func (self *MemoryQueueManager) Watch(
@@ -138,6 +139,7 @@ func (self *MemoryQueueManager) Watch(
 func NewMemoryQueueManager(config_obj *config_proto.Config,
 	file_store api.FileStore) api.QueueManager {
 	return &MemoryQueueManager{
-		file_store: file_store,
+		FileStore: file_store,
+		Clock:     utils.RealClock{},
 	}
 }

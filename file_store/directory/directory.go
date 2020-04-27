@@ -110,7 +110,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 
 	var result []os.FileInfo
 	for _, fileinfo := range files {
-		result = append(result, &DirectoryFileStoreFileInfo{
+		result = append(result, &api.FileStoreFileInfo{
 			fileinfo,
 			utils.PathJoin(dirname, fileinfo.Name(), "/"),
 			nil})
@@ -158,7 +158,7 @@ func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 		return nil, err
 	}
 
-	return &DirectoryFileStoreFileInfo{file, filename, nil}, nil
+	return &api.FileStoreFileInfo{file, filename, nil}, nil
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
@@ -203,6 +203,7 @@ func (self *DirectoryFileStore) FilenameToFileStorePath(filename string) string 
 	// prefix the LFN prefix to be able to access long paths but
 	// then we must use \ as a separator.
 	result := filepath.Join(components...)
+
 	if runtime.GOOS == "windows" {
 		return WINDOWS_LFN_PREFIX + result
 	}
@@ -241,6 +242,6 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 				return err_1
 			}
 			return walkFn(filename,
-				&DirectoryFileStoreFileInfo{info, path, nil}, err)
+				&api.FileStoreFileInfo{info, path, nil}, err)
 		})
 }

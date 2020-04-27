@@ -6,8 +6,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 func MonitoringProcessMessage(
@@ -40,9 +40,14 @@ func MonitoringProcessMessage(
 
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {
-		return services.GetJournal().Push(
+		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
+		if err != nil {
+			return err
+		}
+
+		return services.GetJournal().PushRows(
 			response.Query.Name, message.Source,
-			paths.MODE_MONITORING_DAILY, []byte(response.Response))
+			message.SessionId, rows)
 
 	}
 

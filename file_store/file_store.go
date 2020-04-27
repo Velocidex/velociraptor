@@ -18,6 +18,7 @@
 package file_store
 
 import (
+	"errors"
 	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -54,12 +55,23 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 // Gets an accessor that can access the file store.
 func GetFileStoreFileSystemAccessor(
 	config_obj *config_proto.Config) (glob.FileSystemAccessor, error) {
-	if config_obj.Datastore.Implementation == "MySQL" {
+	switch config_obj.Datastore.Implementation {
+	case "MySQL":
 		datastore, err := mysql.NewSqlFileStore(config_obj)
 		if err != nil {
 			return nil, err
 		}
 		return mysql.NewSqlFileStoreAccessor(datastore.(*mysql.SqlFileStore)), nil
+
+	case "FileBaseDataStore":
+		return api.NewFileStoreFileSystemAccessor(
+			config_obj, directory.NewDirectoryFileStore(config_obj)), nil
+
+	case "Test":
+		return api.NewFileStoreFileSystemAccessor(
+			config_obj, memory.Test_memory_file_store), nil
+
 	}
-	return directory.NewDirectoryFileStoreFileSystemAccessor(config_obj), nil
+
+	return nil, errors.New("Unknown file store implementation")
 }

@@ -27,7 +27,10 @@ const HuntClientsController = function($scope) {
 
 HuntClientsController.prototype.onContextChange_ = function(newValues, oldValues) {
     if (newValues != oldValues || this.pageData == null) {
-        this.params = {path: "hunts/" + this.scope_.huntId + ".csv"};
+        this.params = {
+            hunt_id: this.scope_.huntId,
+            path: this.scope_.huntId,
+        };
     }
 };
 

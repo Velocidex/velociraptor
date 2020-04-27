@@ -15,8 +15,9 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// Implement downloads. For now we do not use gRPC for this but
-// implement it directly in the API.
+
+// Implement downloads. We do not use gRPC for this but implement it
+// directly in the API.
 package api
 
 import (
@@ -42,6 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -93,17 +95,20 @@ func downloadFlowToZip(
 		return err
 	}
 
-	// Copy the flow's logs.
-	copier(path.Join(flow_details.Context.Urn, "logs"))
+	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
 
-	// Copy CSV files
-	for _, artifacts_with_results := range flow_details.Context.ArtifactsWithResults {
-		artifact_name, source := paths.SplitFullSourceName(artifacts_with_results)
-		csv_path := paths.GetCSVPath(
-			flow_details.Context.Request.ClientId, "*",
-			flow_details.Context.SessionId,
-			artifact_name, source, paths.MODE_CLIENT)
-		copier(csv_path)
+	// Copy the flow's logs.
+	copier(flow_path_manager.Log().Path())
+
+	// Copy result sets
+	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			flow_details.Context.Request.ClientId,
+			flow_details.Context.SessionId, artifact_with_results)
+		rs_path, err := path_manager.GetPathForWriting()
+		if err == nil {
+			copier(rs_path)
+		}
 	}
 
 	// Get all file uploads
@@ -117,14 +122,13 @@ func downloadFlowToZip(
 	// are. Users can do their own post processing.
 
 	// File uploads are stored in their own CSV file.
-	file_path := paths.GetUploadsMetadata(client_id, flow_id)
-	fd, err := file_store_factory.ReadFile(file_path)
+	row_chan, err := file_store.GetTimeRange(
+		ctx, config_obj, flow_path_manager.UploadMetadata(), 0, 0)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
 
-	for row := range csv.GetCSVReader(fd) {
+	for row := range row_chan {
 		vfs_path_any, pres := row.Get("vfs_path")
 		if pres {
 			err = copier(vfs_path_any.(string))
@@ -140,7 +144,8 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	download_file := paths.GetDownloadsFile(client_id, flow_id)
+	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	download_file := flow_path_manager.GetDownloadsFile().Path()
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{

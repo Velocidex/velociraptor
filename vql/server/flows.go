@@ -9,11 +9,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -174,8 +172,6 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		file_store_factory := file_store.GetFileStore(config_obj)
-
 		emit := func(item_type, target string) {
 			output_chan <- ordereddict.NewDict().
 				Set("Type", item_type).
@@ -189,58 +185,42 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		// Delete all the uploads from the flow.
-		csv_file_path := paths.GetUploadsMetadata(
+		flow_path_manager := result_sets.NewFlowPathManager(
 			arg.ClientId, arg.FlowId)
-		defer emit("UploadMetadata", csv_file_path)
 
-		fd, err := file_store_factory.ReadFile(csv_file_path)
-		if err == nil {
-			defer fd.Close()
+		upload_metadata_path, _ := flow_path_manager.UploadMetadata().
+			GetPathForWriting()
 
-			for row := range csv.GetCSVReader(fd) {
-				upload, pres := row.Get("vfs_path")
-				if pres {
-					emit("Upload", upload.(string))
-				}
+		defer emit("UploadMetadata", upload_metadata_path)
+
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			flow_path_manager.UploadMetadata(), 0, 0)
+		if err != nil {
+			scope.Log("enumerate_flow: %v", err)
+			return
+		}
+
+		for row := range row_chan {
+			upload, pres := row.GetString("vfs_path")
+			if pres {
+				emit("Upload", upload)
 			}
 		}
 
-		repository, _ := artifacts.GetGlobalRepository(config_obj)
-		for _, full_artifact_name := range collection_context.ArtifactsWithResults {
-			artifact_name, source := paths.SplitFullSourceName(full_artifact_name)
-			artifact, pres := repository.Get(artifact_name)
-			if !pres {
-				scope.Log("Artifact %s not known", artifact_name)
-				continue
-			}
-
-			csv_path := paths.GetCSVPath(
-				arg.ClientId, "*",
-				arg.FlowId, artifact_name, source,
-				paths.ModeNameToMode(artifact.Type))
-
-			globber := make(glob.Globber)
-			accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		for _, artifact_name := range collection_context.ArtifactsWithResults {
+			result_path, err := result_sets.NewArtifactPathManager(
+				config_obj, arg.ClientId, arg.FlowId, artifact_name).
+				GetPathForWriting()
 			if err != nil {
 				scope.Log("enumerate_flow: %v", err)
-				return
+				continue
 			}
-
-			globber.Add(csv_path, accessor.PathSplit)
-
-			// Expanding the glob is not sorted but we really need
-			// to go in order of dates.
-			for hit := range globber.ExpandWithContext(
-				ctx, config_obj, "", accessor) {
-				full_path := hit.FullPath()
-				emit("Result", full_path)
-			}
+			emit("Result", result_path)
 
 		}
 
 		// The flow's logs
-		log_path := path.Join(collection_context.Urn, "logs")
+		log_path, _ := flow_path_manager.Log().GetPathForWriting()
 		emit("Log", log_path)
 
 		// The flow's metadata

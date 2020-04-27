@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -196,22 +197,20 @@ func (self HuntResultsPlugin) Call(
 		}
 
 		// Backwards compatibility.
-		file_path := path.Join("hunts", arg.HuntId+".csv")
-		file_store_factory := file_store.GetFileStore(config_obj)
-		fd, err := file_store_factory.ReadFile(file_path)
+		hunt_path_manager := result_sets.NewHuntPathManager(arg.HuntId)
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			hunt_path_manager, 0, 0)
 		if err != nil {
-			scope.Log("Error %v: %v\n", err, file_path)
 			return
 		}
-		defer fd.Close()
 
 		// Read each CSV file and emit it with
 		// some extra columns for context.
-		for row := range csv.GetCSVReader(fd) {
+		for row := range row_chan {
 			participation_row := &services.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
-				return
+				continue
 			}
 
 			if participation_row.Participate {
@@ -223,36 +222,29 @@ func (self HuntResultsPlugin) Call(
 				}
 
 				// Read individual flow's
-				// results. Artifacts are by
-				// definition client artifacts - hunts
-				// only run on client artifacts.
-				result_path := paths.GetCSVPath(
-					participation_row.ClientId, "",
+				// results.
+				path_manager := result_sets.NewArtifactPathManager(
+					config_obj,
+					participation_row.ClientId,
 					participation_row.FlowId,
-					arg.Artifact, arg.Source,
-					paths.MODE_CLIENT)
-				fd, err := file_store_factory.ReadFile(result_path)
+					arg.Artifact)
+				row_chan, err := file_store.GetTimeRange(
+					ctx, config_obj, path_manager, 0, 0)
 				if err != nil {
 					continue
 				}
-				defer fd.Close()
 
-				// Read each CSV file and emit it with
-				// some extra columns for context.
-				for row := range csv.GetCSVReader(fd) {
-					value := row.
-						Set("FlowId", participation_row.FlowId).
-						Set("ClientId",
-							participation_row.ClientId).
-						Set("Fqdn",
-							participation_row.Fqdn)
+				// Read each result set and emit it
+				// with some extra columns for
+				// context.
+				for row := range row_chan {
+					value := row.Set("FlowId", participation_row.FlowId).
+						Set("ClientId", participation_row.ClientId).
+						Set("Fqdn", participation_row.Fqdn)
 
 					if !arg.Brief {
-						value.
-							Set("HuntId",
-								participation_row.HuntId).
-							Set("Context",
-								collection_context)
+						value.Set("HuntId", participation_row.HuntId).
+							Set("Context", collection_context)
 					}
 					output_chan <- value
 				}

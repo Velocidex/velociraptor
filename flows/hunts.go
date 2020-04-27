@@ -239,9 +239,9 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				services.GetJournal().PushRow(
+				services.GetJournal().PushRows(
 					"System.Hunt.Archive", "server",
-					paths.MODE_MONITORING_DAILY, row)
+					hunt_modification.HuntId, []*ordereddict.Dict{row})
 
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {

@@ -35,7 +35,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -114,7 +114,8 @@ func GetFlowDetails(
 func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
-	download_file := paths.GetDownloadsFile(client_id, flow_id)
+	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	download_file := flow_path_manager.GetDownloadsFile().Path()
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)
@@ -257,8 +258,9 @@ func ArchiveFlow(
 
 	return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, services.GetJournal().PushRow(
-			"System.Flow.Archive", client_id, paths.MODE_MONITORING_DAILY, row)
+		}, services.GetJournal().PushRows(
+			"System.Flow.Archive", client_id, flow_id,
+			[]*ordereddict.Dict{row})
 }
 
 func GetFlowRequests(

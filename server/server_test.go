@@ -298,7 +298,8 @@ func (self *ServerTestSuite) TestMonitoring() {
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			VQLResponse: &actions_proto.VQLResponse{
-				Columns: []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
+				Columns: []string{"ClientId", "Timestamp", "Fqdn",
+					"HuntId", "Participate"},
 				Response: fmt.Sprintf(
 					`[{"ClientId": "%s", "Participate": true, "HuntId": "H.123"}]`,
 					self.client_id),
@@ -310,8 +311,9 @@ func (self *ServerTestSuite) TestMonitoring() {
 	runner.Close()
 
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/monitoring/System.Hunt.Participation/"+
-			paths.GetDayName()+".csv", self.client_id)
+		paths.GetResultSetPath(self.client_id, paths.GetDayName(), "",
+			"System.Hunt.Participation", "", paths.MODE_CLIENT_EVENT),
+		self.client_id)
 }
 
 // An invalid monitoring response will log an error in the client's
@@ -324,8 +326,9 @@ func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			VQLResponse: &actions_proto.VQLResponse{
-				Columns:  []string{"ClientId", "Timestamp", "Fqdn", "HuntId", "Participate"},
-				Response: fmt.Sprintf(`}}}`), // Invalid json
+				Columns: []string{"ClientId", "Timestamp",
+					"Fqdn", "HuntId", "Participate"},
+				Response: `}}}`, // Invalid json
 				Query: &actions_proto.VQLRequest{
 					Name: "System.Hunt.Participation",
 				},

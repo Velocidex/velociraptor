@@ -7,6 +7,7 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message GetTableRequest {
+    // Deprecated!
     string path = 1 [(sem_type) = {
             description: "The path within the client's VFS "
             "that contains CSV file to read."
@@ -21,6 +22,12 @@ message GetTableRequest {
         }];
 
     string client_id = 4;
+    string flow_id = 5;
+    string artifact = 6;
+
+    string type = 7;
+
+    string hunt_id = 8;
 }
 
 message Row {

@@ -21,17 +21,14 @@ package server
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -67,102 +64,22 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		if arg.DayName == "" {
-			arg.DayName = "*"
-		}
+		path_manager := result_sets.NewArtifactPathManager(
+			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 
-		// Allow the source to be specified in
-		// artifact_name/Source notation.
-		artifact_name := arg.Artifact
-		source := arg.Source
-		if arg.Source == "" {
-			artifact_name, source = paths.SplitFullSourceName(arg.Artifact)
-		}
-
-		// Figure out the mode by looking at the artifact type.
-		if arg.Mode == "" {
-			repository, _ := artifacts.GetGlobalRepository(config_obj)
-			artifact, pres := repository.Get(artifact_name)
-			if !pres {
-				scope.Log("Artifact %s not known", arg.Artifact)
-				return
-			}
-			arg.Mode = artifact.Type
-		}
-
-		mode := paths.ModeNameToMode(arg.Mode)
-		if mode == 0 {
-			scope.Log("Unknown mode %v", arg.Mode)
-			return
-		}
-
-		log_path := paths.GetCSVPath(
-			arg.ClientId, arg.DayName,
-			arg.FlowId, artifact_name,
-			source, mode)
-
-		globber := make(glob.Globber)
-		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			path_manager, arg.StartTime, arg.EndTime)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
 			return
 		}
 
-		globber.Add(log_path, accessor.PathSplit)
-
-		for hit := range globber.ExpandWithContext(
-			ctx, config_obj, "", accessor) {
-			err := self.ScanLog(config_obj,
-				scope, output_chan,
-				hit.FullPath())
-			if err != nil {
-				scope.Log(
-					"Error reading %v: %v",
-					hit.FullPath(), err)
-			}
+		for row := range row_chan {
+			output_chan <- row
 		}
 	}()
 
 	return output_chan
-}
-
-func (self MonitoringPlugin) ScanLog(
-	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
-	output_chan chan<- vfilter.Row,
-	log_path string) error {
-
-	fd, err := file_store.GetFileStore(config_obj).ReadFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	csv_reader := csv.NewReader(fd)
-	headers, err := csv_reader.Read()
-	if err != nil {
-		return err
-	}
-
-	for {
-		row := ordereddict.NewDict()
-		row_data, err := csv_reader.ReadAny()
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return err
-		}
-
-		for idx, row_item := range row_data {
-			if idx > len(headers) {
-				break
-			}
-			row.Set(headers[idx], row_item)
-		}
-
-		output_chan <- row
-	}
 }
 
 func (self MonitoringPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
@@ -226,22 +143,14 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		// Figure out the artifact's type by querying the
-		// artifact repository.
-		repository, _ := artifacts.GetGlobalRepository(config_obj)
-		artifact, pres := repository.Get(arg.Artifact)
-		if !pres {
+		mode, err := result_sets.GetArtifactMode(config_obj, arg.Artifact)
+		if err != nil {
 			scope.Log("Artifact %s not known", arg.Artifact)
 			return
 		}
 
-		mode := paths.ModeNameToMode(artifact.Type)
 		switch mode {
-		case paths.MODE_INVALID:
-			scope.Log("Unknown mode %v", artifact.Type)
-			return
-
-		case paths.MODE_SERVER_EVENT, paths.MODE_MONITORING_DAILY, paths.MODE_JOURNAL_DAILY:
+		case paths.MODE_SERVER_EVENT, paths.MODE_CLIENT_EVENT:
 			break
 
 		default:
@@ -258,7 +167,10 @@ func (self WatchMonitoringPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case row := <-qm_chan:
+			case row, ok := <-qm_chan:
+				if !ok {
+					return
+				}
 				output_chan <- row
 			}
 		}

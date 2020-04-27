@@ -18,6 +18,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -77,12 +78,14 @@ func (self *VFSService) ProcessDownloadFile(
 		panic(err)
 	}
 
+	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+
 	for row := range vql.Eval(ctx, sub_scope) {
 		Accessor := vql_subsystem.GetStringFromRow(scope, row, "Accessor")
 		Path := vql_subsystem.GetStringFromRow(scope, row, "Path")
 
 		// Figure out where the file was uploaded to.
-		vfs_path := paths.GetUploadsFile(client_id, flow_id, Accessor, Path)
+		vfs_path := flow_path_manager.GetUploadsFile(Accessor, Path).Path()
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -95,7 +98,7 @@ func (self *VFSService) ProcessDownloadFile(
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		err = db.SetSubject(self.config_obj,
-			paths.GetVFSDownloadInfoPath(client_id, Accessor, Path),
+			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
 			&flows_proto.VFSDownloadInfo{
 				VfsPath: vfs_path,
 				Mtime:   uint64(ts) * 1000000,

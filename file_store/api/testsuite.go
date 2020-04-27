@@ -1,17 +1,24 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"sort"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
+
+type Debugger interface {
+	Debug()
+}
 
 // An abstract test suite to ensure file store implementations all
 // comply with the API.
@@ -180,34 +187,81 @@ type QueueManagerTestSuite struct {
 
 	config_obj *config_proto.Config
 	manager    QueueManager
+	file_store FileStore
+}
+
+func (self *QueueManagerTestSuite) Debug() {
+	switch t := self.manager.(type) {
+	case Debugger:
+		t.Debug()
+	}
+}
+
+func (self *QueueManagerTestSuite) FilestoreGet(path string) string {
+	fd, _ := self.file_store.ReadFile(path)
+	value, _ := ioutil.ReadAll(fd)
+	return string(value)
 }
 
 func (self *QueueManagerTestSuite) TestPush() {
 	artifact_name := "System.Hunt.Participation"
 
-	payload := []byte("[{\"foo\":1},{\"foo\":2}]")
+	payload := []*ordereddict.Dict{
+		ordereddict.NewDict().Set("foo", 1),
+		ordereddict.NewDict().Set("foo", 2)}
 
 	output, cancel := self.manager.Watch(artifact_name)
 	defer cancel()
 
-	err := self.manager.Push(artifact_name, "C.123",
-		paths.MODE_MONITORING_DAILY, payload)
+	err := self.manager.PushEventRows(
+		MockPathManager{"log_path", artifact_name},
+		"C.123", payload)
 
 	assert.NoError(self.T(), err)
 
 	for row := range output {
-		fmt.Printf("%v\n", row)
 		value, _ := row.Get("foo")
-		if value.(int64) == 2 {
+		v, _ := utils.ToInt64(value)
+		if v == int64(2) {
 			break
 		}
 	}
+
+	// Make sure the manager wrote the event to the filestore as well.
+	assert.Contains(self.T(), self.FilestoreGet("log_path"), "foo")
 }
 
-func NewQueueManagerTestSuite(config_obj *config_proto.Config,
-	manager QueueManager) *QueueManagerTestSuite {
+func NewQueueManagerTestSuite(
+	config_obj *config_proto.Config,
+	manager QueueManager,
+	file_store FileStore) *QueueManagerTestSuite {
 	return &QueueManagerTestSuite{
 		config_obj: config_obj,
 		manager:    manager,
+		file_store: file_store,
 	}
+}
+
+type MockPathManager struct {
+	Path         string
+	ArtifactName string
+}
+
+func (self MockPathManager) GetPathForWriting() (string, error) {
+	return self.Path, nil
+}
+
+func (self MockPathManager) GetArtifact() string {
+	return self.ArtifactName
+}
+
+func (self MockPathManager) GeneratePaths(ctx context.Context) <-chan *ResultSetFileProperties {
+	output := make(chan *ResultSetFileProperties)
+
+	go func() {
+		defer close(output)
+
+	}()
+
+	return output
 }

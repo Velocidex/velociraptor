@@ -638,7 +638,7 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
-	result, err := getTable(self.config, in)
+	result, err := getTable(ctx, self.config, in)
 	if err != nil {
 		return &api_proto.GetTableResponse{}, nil
 	}
@@ -793,8 +793,13 @@ func (self *ApiServer) WriteEvent(
 				"Permission denied: PUBLISH "+peer_name+" to "+in.Query.Name)
 		}
 
-		return &empty.Empty{}, services.GetJournal().Push(
-			in.Query.Name, peer_name, 0, []byte(in.Response))
+		rows, err := utils.ParseJsonToDicts([]byte(in.Response))
+		if err != nil {
+			return nil, err
+		}
+
+		return &empty.Empty{}, services.GetJournal().PushRows(
+			in.Query.Name, peer_name, "", rows)
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
