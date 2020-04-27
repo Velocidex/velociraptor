@@ -1,6 +1,6 @@
 name: Windows.Timeline.Registry.RunMRU
 description: |
-    Output all availible RunMRU registry keys in timeline format.
+    Output all available RunMRU registry keys in timeline format.
     
     RunMRU is when a user enters a command into the START > Run prompt.
     Entries will be logged in the user hive under:
