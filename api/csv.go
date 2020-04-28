@@ -18,16 +18,21 @@
 package api
 
 import (
-	"io"
-
+	context "golang.org/x/net/context"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func getTable(config_obj *config_proto.Config, in *api_proto.GetTableRequest) (
+func getTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
 
 	rows := uint64(0)
@@ -35,36 +40,52 @@ func getTable(config_obj *config_proto.Config, in *api_proto.GetTableRequest) (
 		in.Rows = 500
 	}
 
-	fd, err := file_store.GetFileStore(config_obj).ReadFile(in.Path)
-	if err != nil {
-		return nil, err
-	}
+	var path_manager api.PathManager
 
-	csv_reader := csv.NewReader(fd)
-	headers, err := csv_reader.Read()
-	if err != nil {
-		if err == io.EOF {
-			return &api_proto.GetTableResponse{}, nil
+	if in.FlowId != "" && in.Artifact != "" {
+		path_manager = result_sets.NewArtifactPathManager(
+			config_obj, in.ClientId, in.FlowId, in.Artifact)
+
+	} else if in.FlowId != "" && in.Type != "" {
+		flow_path_manager := paths.NewFlowPathManager(
+			in.ClientId, in.FlowId)
+		switch in.Type {
+		case "log":
+			path_manager = flow_path_manager.Log()
+		case "uploads":
+			path_manager = flow_path_manager.UploadMetadata()
 		}
-		return nil, err
+	} else if in.HuntId != "" && in.Type == "clients" {
+		path_manager = paths.NewHuntPathManager(in.HuntId).Clients()
 	}
 
-	result := &api_proto.GetTableResponse{
-		Columns: headers,
-	}
+	result := &api_proto.GetTableResponse{}
 
-	for {
-		row_data, err := csv_reader.Read()
+	if path_manager != nil {
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			path_manager, 0, 0)
 		if err != nil {
-			break
+			return nil, err
 		}
-		result.Rows = append(result.Rows, &api_proto.Row{
-			Cell: row_data,
-		})
 
-		rows += 1
-		if rows > in.Rows {
-			break
+		for row := range row_chan {
+			if result.Columns == nil {
+				result.Columns = row.Keys()
+			}
+
+			row_data := make([]string, 0, len(result.Columns))
+			for _, key := range row.Keys() {
+				value, _ := row.Get(key)
+				row_data = append(row_data, csv.AnyToString(value))
+			}
+			result.Rows = append(result.Rows, &api_proto.Row{
+				Cell: row_data,
+			})
+
+			rows += 1
+			if rows > in.Rows {
+				break
+			}
 		}
 	}
 

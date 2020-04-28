@@ -69,7 +69,9 @@ message ArtifactUploadedFileInfo {
 // This context is serialized into the data store.
 message ArtifactCollectorContext {
     // Where we are stored in the data store.
-    string urn = 5;
+    //    string urn = 5;
+
+    string client_id = 27;
     string session_id = 13;
     ArtifactCollectorArgs request = 11;
 

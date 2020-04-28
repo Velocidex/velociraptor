@@ -336,6 +336,7 @@ func control(server_obj *Server) http.Handler {
 		// do this by streaming pad packets to the client,
 		// while the flow is processed.
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("X-Accel-Buffering", "no")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
 

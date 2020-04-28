@@ -22,8 +22,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
-	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -68,7 +68,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	accessor, err := glob.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("upload: %v", err)
-		return &uploads.UploadResponse{
+		return &api.UploadResponse{
 			Error: err.Error(),
 		}
 	}
@@ -77,7 +77,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("upload: Unable to open %s: %s",
 			arg.File, err.Error())
-		return &uploads.UploadResponse{
+		return &api.UploadResponse{
 			Error: err.Error(),
 		}
 	}
@@ -95,7 +95,7 @@ func (self *UploadFunction) Call(ctx context.Context,
 			stat.Size(), // Expected size.
 			file)
 		if err != nil {
-			return &uploads.UploadResponse{
+			return &api.UploadResponse{
 				Error: err.Error(),
 			}
 		}

@@ -43,7 +43,7 @@ func StartServices(
 		return err
 	}
 
-	err = startNotificationService(notifier)
+	err = startNotificationService(config_obj, notifier)
 	if err != nil {
 		return err
 	}

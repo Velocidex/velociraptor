@@ -345,6 +345,10 @@ func (self SqlWriter) Close() error {
 }
 
 func (self *SqlWriter) Write(buff []byte) (int, error) {
+	return self.write_row("", buff)
+}
+
+func (self *SqlWriter) write_row(channel string, buff []byte) (int, error) {
 	if len(buff) == 0 {
 		return 0, nil
 	}
@@ -359,12 +363,13 @@ func (self *SqlWriter) Write(buff []byte) (int, error) {
 	defer tx.Rollback()
 
 	insert, err := tx.Prepare(`
-INSERT INTO filestore (id, part, start_offset, end_offset, data)
+INSERT INTO filestore (id, part, start_offset, end_offset, data, channel)
 SELECT A.id AS id,
        A.part + 1 AS part,
        A.end_offset AS start_offset,
        A.end_offset + ? AS end_offset,
-       ? AS data
+       ? AS data,
+       ? AS channel
 FROM filestore AS A join (
    SELECT max(part) AS max_part FROM filestore WHERE id=?
 ) AS B
@@ -394,7 +399,8 @@ UPDATE filestore_metadata SET timestamp=now(), size=size + ? WHERE id = ?`)
 
 		// Write this chunk only.
 		chunk := snappy.Encode(nil, buff[:length])
-		_, err = insert.Exec(length, chunk, self.file_id, self.file_id)
+		_, err = insert.Exec(length, chunk, channel,
+			self.file_id, self.file_id)
 		if err != nil {
 			return 0, err
 		}
@@ -724,8 +730,12 @@ func initializeDatabase(
               part int NOT NULL DEFAULT 0,
               start_offset int,
               end_offset int,
+              channel varchar(256),
+              part_id INT NOT NULL AUTO_INCREMENT,
               data blob,
+              PRIMARY KEY (part_id),
               unique INDEX(id, part, start_offset, end_offset),
+              INDEX(channel, part_id),
               INDEX(id, start_offset))`)
 	if err != nil {
 		return nil, err

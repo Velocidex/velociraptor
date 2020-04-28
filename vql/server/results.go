@@ -21,21 +21,14 @@ package server
 
 import (
 	"context"
-	"io"
-	"sort"
-	"strings"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -77,19 +70,15 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
-		file_store_factory := file_store.GetFileStore(config_obj)
-
-		// File uploads are stored in their own CSV file.
-		csv_file_path := paths.GetUploadsMetadata(
-			arg.ClientId, arg.FlowId)
-		fd, err := file_store_factory.ReadFile(csv_file_path)
+		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			flow_path_manager.UploadMetadata(), 0, 0)
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
 		}
-		defer fd.Close()
 
-		for row := range csv.GetCSVReader(fd) {
+		for row := range row_chan {
 			output_chan <- row
 		}
 	}()
@@ -155,17 +144,9 @@ func (self SourcePlugin) Call(
 			return
 		}
 
-		// If the artifact_name has a "/" it means an artifact and
-		// source - override the Source.
-		if strings.Contains(arg.Artifact, "/") {
-			components := strings.SplitN(arg.Artifact, "/", 2)
-			arg.Artifact = components[0]
-			arg.Source = components[1]
-		}
-
 		// Hunt mode is just a proxy for the hunt_results()
 		// plugin.
-		if arg.Mode == "HUNT" || arg.HuntId != "" {
+		if arg.HuntId != "" {
 			args := ordereddict.NewDict().
 				Set("hunt_id", arg.HuntId).
 				Set("artifact", arg.Artifact).
@@ -179,144 +160,27 @@ func (self SourcePlugin) Call(
 			return
 		}
 
-		// Figure out the mode by looking at the artifact type.
-		if arg.Mode == "" {
-			repository, _ := artifacts.GetGlobalRepository(config_obj)
-			artifact, pres := repository.Get(arg.Artifact)
-			if !pres {
-				scope.Log("Artifact %s not known", arg.Artifact)
-				return
-			}
-			arg.Mode = artifact.Type
+		if arg.Source != "" {
+			arg.Artifact = arg.Artifact + "/" + arg.Source
+			arg.Source = ""
 		}
 
-		mode := paths.ModeNameToMode(arg.Mode)
-		if mode == 0 {
-			scope.Log("Invalid mode %v", arg.Mode)
-			return
-		}
+		path_manager := result_sets.NewArtifactPathManager(
+			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 
-		// Find the glob for the CSV files making up these results.
-		csv_path := paths.GetCSVPath(
-			arg.ClientId, "*",
-			arg.FlowId, arg.Artifact, arg.Source, mode)
-		if csv_path == "" {
-			scope.Log("Invalid mode %v", arg.Mode)
-			return
-		}
-
-		globber := make(glob.Globber)
-		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		row_chan, err := file_store.GetTimeRange(
+			ctx, config_obj, path_manager, arg.StartTime, arg.EndTime)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
 		}
 
-		globber.Add(csv_path, accessor.PathSplit)
-
-		// Expanding the glob is not sorted but we really need
-		// to go in order of dates.
-		hits := []string{}
-		for hit := range globber.ExpandWithContext(
-			ctx, config_obj, "", accessor) {
-			hits = append(hits, hit.FullPath())
-		}
-		sort.Strings(hits)
-
-		for _, hit := range hits {
-			ts_start, ts_end := parseFileTimestamp(hit)
-
-			// Skip files modified before the required
-			// start time.
-			if ts_end < arg.StartTime {
-				continue
-			}
-
-			if arg.EndTime > 0 && ts_start >= arg.EndTime {
-				return
-			}
-
-			err := self.ScanLog(ctx, config_obj,
-				scope, arg, output_chan, hit)
-			if err != nil {
-				scope.Log("Error reading %v: %v", hit, err)
-			}
+		for row := range row_chan {
+			output_chan <- row
 		}
 	}()
 
 	return output_chan
-}
-
-func (self SourcePlugin) ScanLog(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
-	arg *SourcePluginArgs,
-	output_chan chan<- vfilter.Row,
-	log_path string) error {
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.ReadFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	csv_reader := csv.NewReader(fd)
-	headers, err := csv_reader.Read()
-	if err != nil {
-		return err
-	}
-
-	row_to_dict := func(row_data []interface{}) *ordereddict.Dict {
-		row := ordereddict.NewDict()
-
-		for idx, row_item := range row_data {
-			if idx > len(headers) {
-				break
-			}
-			// Event logs have a _ts column representing
-			// the time of each event.
-			column_name := headers[idx]
-			if column_name == "_ts" {
-				timestamp, ok := row_item.(int)
-				if ok {
-					if timestamp < int(arg.StartTime) {
-						return nil
-					}
-
-					if arg.EndTime > 0 && timestamp > int(arg.EndTime) {
-						return nil
-					}
-				}
-			}
-
-			row.Set(column_name, row_item)
-		}
-		return row
-	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-
-		default:
-			row_data, err := csv_reader.ReadAny()
-			if err != nil {
-				if err == io.EOF {
-					return nil
-				}
-				return err
-			}
-
-			dict := row_to_dict(row_data)
-			if dict == nil {
-				break
-			}
-			output_chan <- dict
-		}
-	}
 }
 
 func (self SourcePlugin) Info(
@@ -326,19 +190,6 @@ func (self SourcePlugin) Info(
 		Doc:     "Retrieve rows from an artifact's source.",
 		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
 	}
-}
-
-// Derive the unix timestamp from the filename.
-func parseFileTimestamp(filename string) (int64, int64) {
-	for _, component := range utils.SplitComponents(filename) {
-		component = strings.Split(component, ".")[0]
-		ts, err := time.Parse("2006-01-02", component)
-		if err == nil {
-			start := ts.Unix()
-			return start, start + 60*60*24
-		}
-	}
-	return 0, 0
 }
 
 // Override SourcePluginArgs from the scope.
@@ -416,7 +267,7 @@ func (self FlowResultsPlugin) Call(
 		}
 
 		// If no artifact is specified, get the first one from
-		// the hunt.
+		// the flow.
 		if arg.Artifact == "" {
 			flow, err := flows.GetFlowDetails(config_obj, arg.ClientId, arg.FlowId)
 			if err != nil {
@@ -430,46 +281,23 @@ func (self FlowResultsPlugin) Call(
 				return
 			}
 			arg.Artifact = requested_artifacts[0]
-
-			if arg.Source == "" {
-				arg.Artifact, arg.Source = paths.SplitFullSourceName(
-					arg.Artifact)
-			}
-
-			// If the source is not specified find the
-			// first named source from the artifact
-			// definition.
-			if arg.Source == "" {
-				repo, err := artifacts.GetGlobalRepository(config_obj)
-				if err == nil {
-					artifact_def, ok := repo.Get(arg.Artifact)
-					if ok {
-						for _, source := range artifact_def.Sources {
-							if source.Name != "" {
-								arg.Source = source.Name
-								break
-							}
-						}
-					}
-				}
-			}
 		}
 
-		result_path := paths.GetCSVPath(
-			arg.ClientId, "",
-			arg.FlowId,
-			arg.Artifact, arg.Source,
-			paths.MODE_CLIENT)
+		if arg.Source != "" {
+			arg.Artifact = arg.Artifact + "/" + arg.Source
+			arg.Source = ""
+		}
 
-		file_store_factory := file_store.GetFileStore(config_obj)
-		fd, err := file_store_factory.ReadFile(result_path)
+		path_manager := result_sets.NewArtifactPathManager(
+			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+		row_chan, err := file_store.GetTimeRange(
+			ctx, config_obj, path_manager, 0, 0)
 		if err != nil {
-			scope.Log("flow_results: %v", err)
+			scope.Log("source: %v", err)
 			return
 		}
-		defer fd.Close()
 
-		for row := range csv.GetCSVReader(fd) {
+		for row := range row_chan {
 			output_chan <- row
 		}
 	}()

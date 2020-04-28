@@ -22,7 +22,6 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -42,13 +41,12 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 var (
@@ -174,16 +172,19 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 		CreateTime: uint64(time.Now().UnixNano() / 1000),
 		State:      flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:    collector_request,
+		ClientId:   client_id,
 	}
-	collection_context.Urn = GetCollectionPath(client_id, collection_context.SessionId)
-
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return "", err
 	}
 
 	// Save the collection context.
-	err = db.SetSubject(config_obj, collection_context.Urn, collection_context)
+	flow_path_manager := paths.NewFlowPathManager(client_id,
+		collection_context.SessionId)
+	err = db.SetSubject(config_obj,
+		flow_path_manager.Path(),
+		collection_context)
 	if err != nil {
 		return "", err
 	}
@@ -201,7 +202,7 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 
 	// Record the tasks for provenance of what we actually did.
 	err = db.SetSubject(config_obj,
-		path.Join(collection_context.Urn, "task"),
+		flow_path_manager.Task().Path(),
 		&api_proto.ApiFlowRequestDetails{
 			Items: []*crypto_proto.GrrMessage{task}})
 	if err != nil {
@@ -246,8 +247,9 @@ func closeContext(
 		collection_context.Status = err.Error()
 	}
 
-	err = db.SetSubject(config_obj, collection_context.Urn,
-		collection_context)
+	flow_path_manager := paths.NewFlowPathManager(
+		collection_context.ClientId, collection_context.SessionId)
+	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
 		return err
 	}
@@ -259,11 +261,15 @@ func closeContext(
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", collection_context).
-			Set("FlowId", collection_context.SessionId)
+			Set("FlowId", collection_context.SessionId).
+			Set("ClientId", collection_context.ClientId)
 
-		return services.GetJournal().PushRow("System.Flow.Completion",
-			collection_context.Request.ClientId, /* source */
-			0, row)
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			collection_context.ClientId, collection_context.SessionId,
+			"System.Flow.Completion")
+
+		return services.GetJournal().PushRows(path_manager,
+			[]*ordereddict.Dict{row})
 	}
 
 	return nil
@@ -272,24 +278,19 @@ func closeContext(
 func flushContextLogs(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
-	log_path := path.Join(collection_context.Urn, "logs")
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(log_path)
+	flow_path_manager := paths.NewFlowPathManager(
+		collection_context.ClientId,
+		collection_context.SessionId).Log()
+
+	rs_writer, err := result_sets.NewResultSetWriter(config_obj, flow_path_manager)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
-
-	scope := vql_subsystem.MakeScope()
-	w, err := csv.GetCSVWriter(scope, fd)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
+	defer rs_writer.Close()
 
 	for _, row := range collection_context.Logs {
-		w.Write(ordereddict.NewDict().
+		rs_writer.Write(ordereddict.NewDict().
 			Set("Timestamp", fmt.Sprintf("%v", row.Timestamp)).
 			Set("time", time.Unix(int64(row.Timestamp)/1000000, 0).String()).
 			Set("message", row.Message))
@@ -306,33 +307,26 @@ func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
-	log_path := path.Join(collection_context.Urn, "uploads.csv")
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(log_path)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
+	flow_path_manager := paths.NewFlowPathManager(
+		collection_context.ClientId,
+		collection_context.SessionId).UploadMetadata()
 
-	scope := vql_subsystem.MakeScope()
-	w, err := csv.GetCSVWriter(scope, fd)
+	rs_writer, err := result_sets.NewResultSetWriter(config_obj, flow_path_manager)
 	if err != nil {
 		return err
 	}
-	defer w.Close()
+	defer rs_writer.Close()
 
 	for _, row := range collection_context.UploadedFiles {
-		w.Write(ordereddict.NewDict().
+		rs_writer.Write(ordereddict.NewDict().
 			Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().Unix())).
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", row.Name).
 			Set("expected_size", fmt.Sprintf("%v", row.Size)))
-
 	}
 
 	// Clear the logs from the flow object.
 	collection_context.UploadedFiles = nil
-
 	return nil
 }
 
@@ -343,20 +337,20 @@ func LoadCollectionContext(
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
 		return &flows_proto.ArtifactCollectorContext{
-			Urn:       GetCollectionPath(client_id, flow_id),
 			SessionId: flow_id,
+			ClientId:  client_id,
 		}, nil
 	}
 
-	urn := GetCollectionPath(client_id, flow_id)
-
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.GetSubject(config_obj, urn, collection_context)
+	err = db.GetSubject(config_obj, flow_path_manager.Path(),
+		collection_context)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +360,6 @@ func LoadCollectionContext(
 	}
 
 	collection_context.Dirty = false
-	collection_context.Urn = urn
 
 	return collection_context, nil
 }
@@ -410,52 +403,28 @@ func ArtifactCollectorProcessOneMessage(
 			return err
 		}
 
-		artifact_name, source_name := paths.
-			QueryNameToArtifactAndSource(response.Query.Name)
-
 		// Store the event log in the client's VFS.
 		if response.Query.Name != "" {
-			log_path := paths.GetCSVPath(
-				collection_context.Request.ClientId, "",
+			path_manager := result_sets.NewArtifactPathManager(config_obj,
+				collection_context.Request.ClientId,
 				collection_context.SessionId,
-				artifact_name, source_name, paths.MODE_CLIENT)
+				response.Query.Name)
 
-			file_store_factory := file_store.GetFileStore(config_obj)
-			fd, err := file_store_factory.WriteFile(log_path)
+			rs_writer, err := result_sets.NewResultSetWriter(config_obj, path_manager)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err
 			}
-			defer fd.Close()
+			defer rs_writer.Close()
 
-			scope := vql_subsystem.MakeScope()
-			writer, err := csv.GetCSVWriter(scope, fd)
+			rows, err := utils.ParseJsonToDicts([]byte(response.Response))
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err
-			}
-			defer writer.Close()
-
-			// Decode the JSON data.
-			var rows []map[string]interface{}
-			err = json.Unmarshal([]byte(response.Response), &rows)
-			if err != nil {
-				return errors.WithStack(err)
 			}
 
 			for _, row := range rows {
-				csv_row := ordereddict.NewDict()
-
-				for _, column := range response.Columns {
-					item, pres := row[column]
-					if !pres {
-						csv_row.Set(column, "-")
-					} else {
-						csv_row.Set(column, item)
-					}
-				}
-
-				writer.Write(csv_row)
+				rs_writer.Write(row)
 			}
 
 			// Update the artifacts with results in the
@@ -558,12 +527,12 @@ func appendUploadDataToFile(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
+	flow_path_manager := paths.NewFlowPathManager(
+		message.Source, collection_context.SessionId)
 	// Figure out where to store the file.
-	file_path := paths.GetUploadsFile(
-		message.Source,
-		collection_context.SessionId,
+	file_path := flow_path_manager.GetUploadsFile(
 		file_buffer.Pathspec.Accessor,
-		file_buffer.Pathspec.Path)
+		file_buffer.Pathspec.Path).Path()
 
 	fd, err := file_store_factory.WriteFile(file_path)
 	if err != nil {
@@ -620,8 +589,12 @@ func appendUploadDataToFile(
 			Set("Accessor", file_buffer.Pathspec.Accessor).
 			Set("Size", size)
 
-		return services.GetJournal().PushRow(
-			"System.Upload.Completion", message.Source, 0, row)
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			message.Source, collection_context.SessionId,
+			"System.Upload.Completion")
+
+		return services.GetJournal().PushRows(path_manager,
+			[]*ordereddict.Dict{row})
 	}
 
 	return nil
@@ -700,14 +673,14 @@ func (self *FlowRunner) ProcessSingleMessage(
 		collection_context, err = LoadCollectionContext(
 			self.config_obj, job.Source, job.SessionId)
 		if err != nil {
-			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
-
 			// Ignore logs and status messages from the
 			// client. These are generated by cancel
 			// requests anyway.
 			if job.LogMessage != nil || job.Status != nil {
 				return
 			}
+
+			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
 			db, err := datastore.GetDB(self.config_obj)
 			if err == nil {
