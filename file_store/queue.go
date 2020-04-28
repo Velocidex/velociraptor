@@ -26,8 +26,7 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 		return directory.NewDirectoryQueueManager(config_obj, file_store), nil
 
 	case "MySQL":
-		return mysql.NewMysqlQueueManager(
-			config_obj, file_store.(*mysql.SqlFileStore))
+		return mysql.NewMysqlQueueManager(file_store.(*mysql.SqlFileStore))
 
 	default:
 		return nil, errors.New(fmt.Sprintf("Unsupported QueueManager %v",

@@ -55,6 +55,8 @@ func (self *VFSService) Start(
 func (self *VFSService) ProcessDownloadFile(
 	ctx context.Context, scope *vfilter.Scope, row vfilter.Row) {
 
+	defer utils.CheckForPanic("ProcessDownloadFile")
+
 	client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
 	flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
 	ts := vql_subsystem.GetIntFromRow(scope, row, "_ts")
@@ -64,7 +66,7 @@ func (self *VFSService) ProcessDownloadFile(
 	sub_scope.AppendVars(row)
 
 	vql, err := vfilter.Parse(
-		"select Path, Accessor FROM source(" +
+		"select Path, Accessor, Size FROM source(" +
 			"flow_id=FlowId, " +
 			"artifact='System.VFS.DownloadFile', " +
 			"client_id=ClientId)")

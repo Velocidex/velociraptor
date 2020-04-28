@@ -107,7 +107,7 @@ type MonitoringPluginArgs struct {
 }
 
 // The watch_monitoring plugin watches for new rows written to the
-// monitoring CSV files on the server.
+// monitoring result set files on the server.
 type WatchMonitoringPlugin struct{}
 
 func (self WatchMonitoringPlugin) Call(

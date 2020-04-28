@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -95,6 +96,7 @@ type MysqlFileStoreFileInfo struct {
 	is_dir    bool
 	size      int64
 	timestamp int64
+	id        int64
 }
 
 func (self MysqlFileStoreFileInfo) FullPath() string {
@@ -120,7 +122,8 @@ func (self MysqlFileStoreFileInfo) Ctime() glob.TimeVal {
 }
 
 func (self MysqlFileStoreFileInfo) Data() interface{} {
-	return nil
+	return ordereddict.NewDict().
+		Set("id", self.id)
 }
 
 func (self MysqlFileStoreFileInfo) IsLink() bool {
@@ -173,6 +176,7 @@ func (self *MysqlFileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		Mtime    glob.TimeVal
 		Ctime    glob.TimeVal
 		Atime    glob.TimeVal
+		Data     interface{}
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),
@@ -183,6 +187,7 @@ func (self *MysqlFileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		Mtime:    self.Mtime(),
 		Ctime:    self.Ctime(),
 		Atime:    self.Atime(),
+		Data:     self.Data(),
 	})
 
 	return result, err
@@ -230,7 +235,7 @@ func (self *SqlReader) Seek(offset int64, whence int) (int64, error) {
 	err := db.QueryRow(`
 SELECT A.part, A.start_offset, A.data FROM (
     SELECT part FROM filestore WHERE id=? AND start_offset <= ?
-    ORDER BY start_offset DESC LIMIT 1
+    ORDER BY end_offset DESC LIMIT 1
 ) AS B
 JOIN filestore as A
 ON A.part = B.part AND A.id = ? AND A.end_offset > ? AND A.end_offset != A.start_offset`,
@@ -324,9 +329,8 @@ func (self SqlReader) Stat() (glob.FileInfo, error) {
 		is_dir:    self.is_dir,
 		size:      self.size,
 		timestamp: self.timestamp,
+		id:        self.file_id,
 	}, nil
-
-	return nil, errors.New("Not Implemented")
 }
 
 type SqlWriter struct {
@@ -577,7 +581,32 @@ VALUES(?, 0, 0, 0)`, last_id)
 }
 
 func (self *SqlFileStore) StatFile(filename string) (os.FileInfo, error) {
-	return nil, errors.New("Not Implemented")
+	components := utils.SplitComponents(filename)
+	dir_name := utils.JoinComponents(components[:len(components)-1], "/")
+	base_name := components[len(components)-1]
+
+	rows, err := db.Query(`
+SELECT id, path, name, unix_timestamp(timestamp), size, is_dir
+FROM filestore_metadata
+WHERE path_hash = ? AND path = ? AND name = ?`, hash(dir_name),
+		dir_name, base_name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		row := &MysqlFileStoreFileInfo{}
+		err = rows.Scan(&row.id, &row.path, &row.name,
+			&row.timestamp, &row.size, &row.is_dir)
+		if err != nil {
+			return nil, err
+		}
+
+		return row, nil
+	}
+
+	return nil, os.ErrNotExist
 }
 
 func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
@@ -586,7 +615,7 @@ func (self *SqlFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
 	dir_name := utils.JoinComponents(components, "/")
 
 	rows, err := db.Query(`
-SELECT path, name, unix_timestamp(timestamp), size, is_dir
+SELECT id, path, name, unix_timestamp(timestamp), size, is_dir
 FROM filestore_metadata
 WHERE path_hash = ? AND path = ?`, hash(dir_name), dir_name)
 	if err != nil {
@@ -596,8 +625,8 @@ WHERE path_hash = ? AND path = ?`, hash(dir_name), dir_name)
 
 	for rows.Next() {
 		row := &MysqlFileStoreFileInfo{}
-		err = rows.Scan(&row.path, &row.name, &row.timestamp, &row.size,
-			&row.is_dir)
+		err = rows.Scan(&row.id, &row.path, &row.name,
+			&row.timestamp, &row.size, &row.is_dir)
 		if err != nil {
 			return nil, err
 		}
