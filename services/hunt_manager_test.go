@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
@@ -99,8 +100,8 @@ func (self *HuntTestSuite) TestHuntManager() {
 	db, err := datastore.GetDB(self.config_obj)
 	assert.NoError(t, err)
 
-	err = db.SetSubject(self.config_obj,
-		constants.GetHuntURN(hunt_obj.HuntId), hunt_obj)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
 	GetHuntDispatcher().Refresh()
@@ -156,8 +157,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	db, err := datastore.GetDB(self.config_obj)
 	assert.NoError(t, err)
 
-	err = db.SetSubject(self.config_obj,
-		constants.GetHuntURN(hunt_obj.HuntId), hunt_obj)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
 	GetHuntDispatcher().Refresh()
@@ -221,8 +222,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	db, err := datastore.GetDB(self.config_obj)
 	assert.NoError(t, err)
 
-	err = db.SetSubject(self.config_obj,
-		constants.GetHuntURN(hunt_obj.HuntId), hunt_obj)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
 	_, err = clients.LabelClients(self.config_obj,
@@ -294,8 +295,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	db, err := datastore.GetDB(self.config_obj)
 	assert.NoError(t, err)
 
-	err = db.SetSubject(self.config_obj,
-		constants.GetHuntURN(hunt_obj.HuntId), hunt_obj)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
 	_, err = clients.LabelClients(self.config_obj,

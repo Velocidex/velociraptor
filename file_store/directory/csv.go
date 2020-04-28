@@ -1,19 +1,14 @@
-package result_sets
+package directory
 
 import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-// TODO - timestamps can be written separately from the chunks in the
-// mysql file store, instead of embedding inside the data (which
-// requires parsing and serializing). We need to refactor it into the
-// file store.
 func row_to_dict(row_data []interface{}, headers []string) (*ordereddict.Dict, int64) {
 	row := ordereddict.NewDict()
 	var timestamp int64
@@ -22,6 +17,7 @@ func row_to_dict(row_data []interface{}, headers []string) (*ordereddict.Dict, i
 		if idx > len(headers) {
 			break
 		}
+
 		// Event logs have a _ts column representing the time
 		// of each event.
 		column_name := headers[idx]
@@ -37,12 +33,11 @@ func row_to_dict(row_data []interface{}, headers []string) (*ordereddict.Dict, i
 
 func ReadRowsCSV(
 	ctx context.Context,
-	config_obj *config_proto.Config,
+	file_store api.FileStore,
 	log_path string, start_time, end_time int64) (
 	<-chan *ordereddict.Dict, error) {
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.ReadFile(log_path)
+	fd, err := file_store.ReadFile(log_path)
 	if err != nil {
 		return nil, err
 	}

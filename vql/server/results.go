@@ -167,6 +167,7 @@ func (self SourcePlugin) Call(
 
 		path_manager := result_sets.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+
 		row_chan, err := file_store.GetTimeRange(
 			ctx, config_obj, path_manager, arg.StartTime, arg.EndTime)
 		if err != nil {
