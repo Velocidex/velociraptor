@@ -11,12 +11,11 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
+// Receive monitoring messages from the client.
 func MonitoringProcessMessage(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext,
 	message *crypto_proto.GrrMessage) error {
-
-	utils.Debug(message)
 
 	err := FailIfError(config_obj, collection_context, message)
 	if err != nil {
@@ -46,6 +45,13 @@ func MonitoringProcessMessage(
 		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
 		if err != nil {
 			return err
+		}
+
+		// Mark the client this came from. Since message.Souce
+		// is cryptographically trusted, this column may also
+		// be trusted.
+		for _, row := range rows {
+			row.Set("ClientId", message.Source)
 		}
 
 		path_manager := result_sets.NewArtifactPathManager(config_obj,

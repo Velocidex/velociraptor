@@ -337,7 +337,6 @@ func control(server_obj *Server) http.Handler {
 		// while the flow is processed.
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Accel-Buffering", "no")
-		utils.Debug(w.Header())
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
 

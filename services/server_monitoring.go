@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -132,8 +133,7 @@ func (self *EventTable) Update(
 
 		// Run each source concurrently.
 		for _, source := range artifact.Sources {
-			err := self.RunQuery(
-				new_ctx, config_obj,
+			err := self.RunQuery(new_ctx, config_obj,
 				scope, name, source)
 			if err != nil {
 				return err
@@ -195,7 +195,9 @@ func (self *EventTable) RunQuery(
 
 		for _, vql := range vqls {
 			for row := range vql.Eval(ctx, scope) {
-				rs_writer.Write(vfilter.RowToDict(ctx, scope, row))
+				rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
+					Set("_ts", time.Now().Unix()))
+				rs_writer.Flush()
 			}
 		}
 	}()

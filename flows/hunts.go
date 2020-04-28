@@ -124,7 +124,8 @@ func CreateHunt(
 		services.NotifyAll(config_obj)
 	}
 
-	err = db.SetSubject(config_obj, constants.GetHuntURN(hunt.HuntId), hunt)
+	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
 	if err != nil {
 		return nil, err
 	}
@@ -268,9 +269,9 @@ func ModifyHunt(
 				return err
 			}
 
+			hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 			err = db.SetSubject(
-				config_obj,
-				constants.GetHuntURN(hunt.HuntId), hunt)
+				config_obj, hunt_path_manager.Path(), hunt)
 			if err != nil {
 				return err
 			}

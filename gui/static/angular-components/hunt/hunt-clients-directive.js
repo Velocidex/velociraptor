@@ -29,6 +29,7 @@ HuntClientsController.prototype.onContextChange_ = function(newValues, oldValues
     if (newValues != oldValues || this.pageData == null) {
         this.params = {
             hunt_id: this.scope_.huntId,
+            type: "clients",
             path: this.scope_.huntId,
         };
     }

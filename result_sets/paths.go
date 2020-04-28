@@ -245,3 +245,26 @@ func get_back_path(client_id, day_name, flow_id, artifact_name, source_name stri
 
 	return ""
 }
+
+type MonitoringArtifactPathManager struct {
+	path string
+}
+
+func (self MonitoringArtifactPathManager) Path() string {
+	return self.path
+}
+
+// Represents the directory where all the available monitoring logs
+// are present - i.e. listing this directory reveals all logs
+// currently available.
+func NewMonitoringArtifactPathManager(client_id string) *MonitoringArtifactPathManager {
+	result := &MonitoringArtifactPathManager{}
+
+	if client_id != "" {
+		result.path = path.Join("/clients", client_id, "monitoring")
+	} else {
+		result.path = "/server_artifacts"
+	}
+
+	return result
+}

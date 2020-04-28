@@ -33,7 +33,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -48,7 +47,7 @@ var classifiers = map[string]proto.Message{
 	"/clients/C.[^/]+/vfs/.+":                 &actions_proto.VQLResponse{},
 	"/clients/C.[^/]+/collections/F\\.[^/]+$": &flows_proto.ArtifactCollectorContext{},
 	"/clients/C.[^/]+/tasks/[^/]+$":           &crypto_proto.GrrMessage{},
-	constants.HUNTS_URN + "H.[^/]+$":          &api_proto.Hunt{},
+	"/hunts/H.[^/]+$":                         &api_proto.Hunt{},
 	"/users/[^/]+$":                           &api_proto.VelociraptorUser{},
 	"/users/[^/]+/notifications/.+$":          &api_proto.UserNotification{},
 }

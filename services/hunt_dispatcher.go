@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 var (
@@ -139,9 +140,9 @@ func (self *HuntDispatcher) _flush_stats() error {
 	}
 
 	for _, hunt_obj := range self.hunts {
-		err = db.SetSubject(
-			self.config_obj,
-			constants.GetHuntStatsPath(hunt_obj.HuntId), hunt_obj.Stats)
+		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+		err = db.SetSubject(self.config_obj,
+			hunt_path_manager.Stats().Path(), hunt_obj.Stats)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_obj.HuntId, err)
@@ -191,7 +192,9 @@ func (self *HuntDispatcher) Refresh() error {
 		return err
 	}
 
-	hunts, err := db.ListChildren(self.config_obj, constants.HUNTS_URN, 0, 1000)
+	hunt_path_manager := paths.NewHuntPathManager("")
+	hunts, err := db.ListChildren(self.config_obj,
+		hunt_path_manager.HuntDirectory().Path(), 0, 1000)
 	if err != nil {
 		return err
 	}
@@ -203,9 +206,9 @@ func (self *HuntDispatcher) Refresh() error {
 		}
 
 		hunt_obj := &api_proto.Hunt{}
+		hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 		err = db.GetSubject(
-			self.config_obj,
-			constants.GetHuntURN(hunt_id), hunt_obj)
+			self.config_obj, hunt_path_manager.Path(), hunt_obj)
 		if err != nil {
 			continue
 		}
@@ -213,14 +216,9 @@ func (self *HuntDispatcher) Refresh() error {
 		// Re-read the stats into the hunt object.
 		hunt_stats := &api_proto.HuntStats{}
 		err := db.GetSubject(self.config_obj,
-			constants.GetHuntStatsPath(hunt_id), hunt_stats)
+			hunt_path_manager.Stats().Path(), hunt_stats)
 		if err == nil {
 			hunt_obj.Stats = hunt_stats
-		}
-
-		// FIXME: Backwards compatibility
-		if path.Base(hunt_obj.HuntId) != hunt_id {
-			continue
 		}
 
 		// This hunt is newer than the last_timestamp, we need

@@ -48,7 +48,7 @@ const ServerEventsController = function($scope, $uibModal, grrApiService) {
             };
 
             var timestamps = this.selectedArtifact.timestamps;
-            if (angular.isDefined(timestamps.length)) {
+            if (angular.isArray(timestamps) && timestamps.length) {
                 for (var i=0; i<timestamps.length; i++) {
                     var ts = timestamps[i];
                     if (ts >= timestamp_start && ts <= timestamp_end) {
@@ -78,7 +78,7 @@ const ServerEventsController = function($scope, $uibModal, grrApiService) {
 };
 
 ServerEventsController.prototype.onDateChange = function() {
-  if (!angular.isDefined(this.selected_date)) {
+  if (!angular.isObject(this.selected_date)) {
     return;
   }
 
@@ -106,15 +106,15 @@ ServerEventsController.prototype.openDatePicker = function() {
 };
 
 ServerEventsController.prototype.selectArtifact = function(artifact) {
-  this.selectedArtifact = artifact;
-  this.selected_date = null;
+    this.selectedArtifact = artifact;
+    this.selected_date = null;
 
-  if (artifact.timestamps.length > 0) {
-    var last_timestamp = artifact.timestamps[artifact.timestamps.length-1];
-    this.selected_date = new Date(last_timestamp * 1000);
-  }
+    if (angular.isArray(artifact.timestamps) && artifact.timestamps.length > 0) {
+        var last_timestamp = artifact.timestamps[artifact.timestamps.length-1];
+        this.selected_date = new Date(last_timestamp * 1000);
+    }
 
-  return false;
+    return false;
 };
 
 ServerEventsController.prototype.showHelp = function() {

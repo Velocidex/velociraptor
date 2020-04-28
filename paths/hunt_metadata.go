@@ -39,7 +39,23 @@ func (self HuntPathManager) GeneratePaths(ctx context.Context) <-chan *api.Resul
 
 func NewHuntPathManager(hunt_id string) *HuntPathManager {
 	return &HuntPathManager{
-		path:    path.Join("/hunts", hunt_id+".json"),
+		path:    path.Join("/hunts", hunt_id),
 		hunt_id: hunt_id,
 	}
+}
+
+func (self HuntPathManager) Stats() *HuntPathManager {
+	self.path = path.Join(self.path, "stats")
+	return &self
+}
+
+func (self HuntPathManager) HuntDirectory() *HuntPathManager {
+	self.path = "/hunts"
+	return &self
+}
+
+// Get result set for storing participating clients.
+func (self HuntPathManager) Clients() *HuntPathManager {
+	self.path = path.Join("/hunts", self.hunt_id+".json")
+	return &self
 }

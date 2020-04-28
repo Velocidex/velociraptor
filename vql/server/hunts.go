@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -78,7 +77,9 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		hunts, err := db.ListChildren(config_obj, constants.HUNTS_URN, 0, 100)
+		hunt_path_manager := paths.NewHuntPathManager("")
+		hunts, err := db.ListChildren(config_obj,
+			hunt_path_manager.HuntDirectory().Path(), 0, 100)
 		if err != nil {
 			scope.Log("Error: %v", err)
 			return
@@ -92,8 +93,10 @@ func (self HuntsPlugin) Call(
 			}
 
 			// Re-read the stats into the hunt object.
+			hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 			hunt_stats := &api_proto.HuntStats{}
-			err := db.GetSubject(config_obj, hunt_urn+"/stats", hunt_stats)
+			err := db.GetSubject(config_obj,
+				hunt_path_manager.Stats().Path(), hunt_stats)
 			if err == nil {
 				hunt_obj.Stats = hunt_stats
 			}
@@ -158,9 +161,10 @@ func (self HuntResultsPlugin) Call(
 				return
 			}
 
+			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
 			hunt_obj := &api_proto.Hunt{}
 			err = db.GetSubject(config_obj,
-				path.Join(constants.HUNTS_URN, arg.HuntId), hunt_obj)
+				hunt_path_manager.Path(), hunt_obj)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)
 				return
@@ -197,7 +201,7 @@ func (self HuntResultsPlugin) Call(
 		}
 
 		// Backwards compatibility.
-		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
+		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
 		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
 			hunt_path_manager, 0, 0)
 		if err != nil {

@@ -55,8 +55,8 @@ func getTable(
 		case "uploads":
 			path_manager = flow_path_manager.UploadMetadata()
 		}
-	} else if in.HuntId != "" {
-		path_manager = paths.NewHuntPathManager(in.HuntId)
+	} else if in.HuntId != "" && in.Type == "clients" {
+		path_manager = paths.NewHuntPathManager(in.HuntId).Clients()
 	}
 
 	result := &api_proto.GetTableResponse{}

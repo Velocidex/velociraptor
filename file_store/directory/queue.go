@@ -2,7 +2,6 @@ package directory
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -27,7 +26,7 @@ func (self *DirectoryQueueManager) PushEventRows(
 
 	for _, row := range dict_rows {
 		pool.Broadcast(path_manager.GetQueueName(),
-			row.Set("_ts", int(time.Now().Unix())))
+			row.Set("_ts", int(self.Clock.Now().Unix())))
 	}
 
 	log_path, err := path_manager.GetPathForWriting()
