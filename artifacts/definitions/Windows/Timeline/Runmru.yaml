@@ -45,27 +45,19 @@ sources:
                 len(list=Data.value) as RunMruLength,
                 Username,
                 UUID
-        FROM chain(
-            a = { SELECT * FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob) }
-            )
+        FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob)
         
-        // Now extract RunMRU entries and details from results
-        // Output in timeline format
+        // Now extract RunMRU entries and order
         LET results <= SELECT * FROM foreach(
              row={
                  SELECT * FROM runmru
               },
               query={
                 SELECT 
-                    timestamp(epoch=Mtime.sec) as event_time,
-                    hostname.Fqdn[0] as hostname,
-                    "RunMRU" as parser,
-                    "RunMRU evidence user: '" + Username + "', ran command: '"
-                        + split(string=Data.value, sep="\\\\")[0] + "'" as message,
                     url(parse=FullPath).Path as source,
-                    Username as user,
-                    "HKEY_USERS\\" + UUID + 
-                        url(parse=runmru.FullPath).Fragment as reg_key,
+                    Username,
+                    "HKEY_USERS\\" + UUID + dirname(path=url(parse="ntfs://" + 
+                        FullPath).Fragment) as reg_key,
                     timestamp(epoch=Mtime.sec) as reg_mtime,
                     basename(path=url(parse=FullPath).Fragment) as reg_name,
                     split(string=Data.value, sep="\\\\")[0] as reg_value,
@@ -76,36 +68,40 @@ sources:
                             replace="")) as reg_mru_order
                 FROM glob(globs=mruKeyGlob, accessor="raw_reg")
                 WHERE not reg_name = "MRUList" AND
-                    if(condition=dateAfter, then=event_time > timestamp(string=dateAfter),
+                    if(condition=dateAfter, then=reg_mtime > timestamp(string=dateAfter),
                         else=TRUE) AND
-                    if(condition=dateBefore, then=event_time < timestamp(string=dateBefore),
+                    if(condition=dateBefore, then=reg_mtime < timestamp(string=dateBefore),
                         else=TRUE)  
                 ORDER BY reg_mru_order
               })
-              
-        SELECT * FROM foreach(
-          row={
-              SELECT *, user, {
-                 SELECT *,
-                    format(format="%v: %v", args=[reg_mru_order,reg_value]) as reg_value, user AS user_
-                 FROM results WHERE user = user_
-              } AS Event 
-              FROM results
-              GROUP BY HivePath
-          },
-          query={
-             SELECT 
-                Event.event_time[0] as event_time,
-                Event.hostname[0] as hostname,
-                "RunMRU" as parser,
-                "RunMRU evidence user: '" + user + "' - '"
-                        + join(array=Event.reg_value, sep=" | ") + "'" as message,
-                Event.source[0] as source,
-                user, 
-                Event.reg_key[0] as reg_key,
-                Event.reg_mtime[0] as reg_mtime,
-                join(array=Event.reg_value, sep=" | ") AS reg_runmru 
-             FROM scope()
-             WHERE if(condition=regexValue, then=reg_runmru =~ regexValue,
-                        else=TRUE)  
-          })
+
+        // join mru values and order for presentation
+        LET usercommands <= SELECT Username as user, reg_mru_order, format(format="%v: %v", args=[reg_mru_order,reg_value]) as reg_value
+        FROM results
+        
+        // Finally print out formatted RunMRU
+        SELECT 
+            reg_mtime as event_time,
+            hostname.Fqdn[0] as hostname,
+            "RunMRU" as parser,
+            "RunMRU evidence user: '" + Username + "' - '" + 
+              join(array=reg_value, sep=" | ")  + "'" as message,
+            source,
+            Username as user, 
+            reg_key,
+            reg_mtime,
+            join(array=reg_value, sep=" | ") as reg_runmru
+        FROM foreach(row=usercommands,
+            query={
+                SELECT *, Username,
+                    {
+                        SELECT reg_value
+                        FROM usercommands
+                        WHERE user = Username
+                        ORDER BY reg_mru_order
+                    } as reg_value
+                FROM results
+                ORDER BY reg_value
+            })
+        WHERE if(condition=regexValue, then=reg_runmru =~ regexValue, else=TRUE)
+        GROUP BY source

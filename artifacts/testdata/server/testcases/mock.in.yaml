@@ -139,6 +139,92 @@ Parameters:
        "TypeString": "TCP"
       }]
 
+NTUser1: |
+    [{
+      "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+      "Data": {
+       "type": "REG_SZ",
+       "data_len": 44,
+       "value": "dcba"
+      },
+      "Mtime": 1587694759,
+      "Username": "yolo",
+      "Description": "",
+      "Uid": 1000,
+      "Gid": 513,
+      "UUID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+      "Directory": "C:\\Users\\yolo",
+      "_Source": "Windows.Registry.NTUser"
+    }]
+
+NTUser2: |
+  [{
+    "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Ca",
+    "Data": {
+     "type": "REG_SZ",
+     "data_len": 26,
+     "value": "powershell\\1"
+    },
+    "Mtime": 1587694759,
+    "Username": "yolo",
+    "Description": "",
+    "Uid": 1000,
+    "Gid": 513,
+    "UUID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+    "Directory": "C:\\Users\\yolo",
+    "_Source": "Windows.Registry.NTUser"
+   },
+   
+   {
+    "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cb",
+    "Data": {
+     "type": "REG_SZ",
+     "data_len": 44,
+     "value": "ping 127.0.0.1 -n 1\\1"
+    },
+    "Mtime": 1587694759,
+    "Username": "yolo",
+    "Description": "",
+    "Uid": 1000,
+    "Gid": 513,
+    "UUID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+    "Directory": "C:\\Users\\yolo",
+    "_Source": "Windows.Registry.NTUser"
+   },
+   {
+    "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cc",
+    "Data": {
+     "type": "REG_SZ",
+     "data_len": 18,
+     "value": "whoami\\1"
+    },
+    "Mtime": 1587694759,
+    "Username": "yolo",
+    "Description": "",
+    "Uid": 1000,
+    "Gid": 513,
+    "UUID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+    "Directory": "C:\\Users\\yolo",
+    "_Source": "Windows.Registry.NTUser"
+   },
+   {
+    "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cd",
+    "Data": {
+     "type": "REG_SZ",
+     "data_len": 22,
+     "value": "hostname\\1"
+    },
+    "Mtime": 1587694759,
+    "Username": "yolo",
+    "Description": "",
+    "Uid": 1000,
+    "Gid": 513,
+    "UUID": "S-1-5-21-2201333269-445358460-1233016754-1000",
+    "Directory": "C:\\Users\\yolo",
+    "_Source": "Windows.Registry.NTUser"
+ }]
+
+
 Queries:
   # Mock out the info plugin just for fun.
   - LET X <= SELECT mock(plugin='info', results=[dict(foo='bar'), dict(foo='baz')] ),
@@ -176,3 +262,10 @@ Queries:
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
           AuthenticodeVerified="NOT TRUSTED",
           Status="ESTABLISHED")
+
+  # Mock up test for Windows.Timeline.Registry.RunMRU
+  - LET y <= SELECT 
+        mock(artifact=Artifact.Windows.Registry.NTUser, results=parse_json_array(data=NTUser1)),
+        mock(artifact=Artifact.Windows.Registry.NTUser, results=parse_json_array(data=NTUser2))
+      FROM scope()
+  - SELECT * FROM Windows.Timeline.Registry.RunMRU()
