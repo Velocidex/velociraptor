@@ -50,8 +50,7 @@ type MysqlQueueManager struct {
 }
 
 func (self *MysqlQueueManager) PushEventRows(
-	path_manager api.PathManager, source string,
-	dict_rows []*ordereddict.Dict) error {
+	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
 	if len(dict_rows) == 0 {
 		return nil
@@ -73,7 +72,7 @@ func (self *MysqlQueueManager) PushEventRows(
 	}
 
 	// An internal write method to set the queue name in the table.
-	_, err = fd.(*SqlWriter).write_row(path_manager.GetArtifact(), serialized)
+	_, err = fd.(*SqlWriter).write_row(path_manager.GetQueueName(), serialized)
 	return err
 }
 

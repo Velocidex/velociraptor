@@ -52,6 +52,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -180,7 +181,7 @@ func (self *ApiServer) CollectArtifact(
 
 	result.FlowId = flow_id
 
-	err = services.NotifyClient(in.ClientId)
+	err = services.NotifyClient(self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -395,10 +396,10 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		services.NotifyAll()
+		services.NotifyAll(self.config)
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		services.NotifyClient(in.ClientId)
+		services.NotifyClient(self.config, in.ClientId)
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
@@ -798,8 +799,11 @@ func (self *ApiServer) WriteEvent(
 			return nil, err
 		}
 
+		path_manager := result_sets.NewArtifactPathManager(self.config,
+			peer_name, "", in.Query.Name)
+
 		return &empty.Empty{}, services.GetJournal().PushRows(
-			in.Query.Name, peer_name, "", rows)
+			path_manager, rows)
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")

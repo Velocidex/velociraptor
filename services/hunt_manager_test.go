@@ -21,7 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 type HuntTestSuite struct {
@@ -106,13 +106,14 @@ func (self *HuntTestSuite) TestHuntManager() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
-		paths.MODE_SERVER_EVENT,
-		ordereddict.NewDict().
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, "", "System.Hunt.Participation")
+	GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true))
+			Set("Participate", true)})
 
 	// Make sure manager reacted.
 	time.Sleep(1 * time.Second)
@@ -162,13 +163,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
-		paths.MODE_SERVER_EVENT,
-		ordereddict.NewDict().
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, "", "System.Hunt.Participation")
+	GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true))
+			Set("Participate", true)})
 
 	// Make sure manager reacted.
 	time.Sleep(1 * time.Second)
@@ -234,13 +236,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
-		paths.MODE_SERVER_EVENT,
-		ordereddict.NewDict().
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, "", "System.Hunt.Participation")
+	GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true))
+			Set("Participate", true)})
 
 	// Make sure manager reacted.
 	time.Sleep(1 * time.Second)
@@ -306,13 +309,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	GetJournal().PushRow("System.Hunt.Participation", self.client_id,
-		paths.MODE_SERVER_EVENT,
-		ordereddict.NewDict().
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, "", "System.Hunt.Participation")
+	GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true))
+			Set("Participate", true)})
 
 	// Make sure manager reacted.
 	time.Sleep(1 * time.Second)

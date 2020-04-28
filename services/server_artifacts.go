@@ -20,6 +20,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -133,7 +134,7 @@ func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage) error {
 
-	flow_urn := result_sets.NewFlowPathManager(source, task.SessionId).Path()
+	flow_urn := paths.NewFlowPathManager(source, task.SessionId).Path()
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -166,7 +167,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
-	path_manager := result_sets.NewFlowPathManager(source, flow_id).Log()
+	path_manager := paths.NewFlowPathManager(source, flow_id).Log()
 	rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
 	if err != nil {
 		return err

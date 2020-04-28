@@ -197,7 +197,7 @@ func (self HuntResultsPlugin) Call(
 		}
 
 		// Backwards compatibility.
-		hunt_path_manager := result_sets.NewHuntPathManager(arg.HuntId)
+		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
 		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
 			hunt_path_manager, 0, 0)
 		if err != nil {

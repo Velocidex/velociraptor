@@ -54,7 +54,7 @@ func TestPathManager(t *testing.T) {
 	artifacts.GetGlobalRepository(config_obj)
 
 	for _, testcase := range path_tests {
-		path_manager := NewPathManager(
+		path_manager := NewArtifactPathManager(
 			config_obj,
 			testcase.client_id,
 			testcase.flow_id,
@@ -70,7 +70,7 @@ func TestPathManager(t *testing.T) {
 		qm := memory.NewMemoryQueueManager(config_obj, file_store).(*memory.MemoryQueueManager)
 		qm.Clock = path_manager.clock
 
-		qm.PushEventRows(path_manager, "C.123",
+		qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 
 		data, ok := file_store.Get(testcase.expected)
@@ -96,7 +96,7 @@ func TestPathManagerDailyRotations(t *testing.T) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	clock := &utils.MockClock{}
 
-	path_manager := NewPathManager(
+	path_manager := NewArtifactPathManager(
 		config_obj,
 		"C.123",
 		"F.123",
@@ -111,7 +111,7 @@ func TestPathManagerDailyRotations(t *testing.T) {
 	timestamps := []int64{1587200823, 1587300823, 1587400823}
 	for _, ts := range timestamps {
 		clock.MockNow = time.Unix(ts, 0)
-		qm.PushEventRows(path_manager, "C.123",
+		qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
 	}
 

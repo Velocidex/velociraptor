@@ -1,4 +1,4 @@
-package result_sets
+package paths
 
 import (
 	"context"
@@ -20,8 +20,8 @@ func (self HuntPathManager) GetPathForWriting() (string, error) {
 	return self.path, nil
 }
 
-func (self HuntPathManager) GetArtifact() string {
-	return ""
+func (self HuntPathManager) GetQueueName() string {
+	return self.hunt_id
 }
 
 func (self HuntPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {

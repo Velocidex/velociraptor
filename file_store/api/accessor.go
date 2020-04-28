@@ -14,7 +14,6 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -88,7 +87,7 @@ type FileStoreFileInfo struct {
 }
 
 func (self FileStoreFileInfo) Name() string {
-	return datastore.UnsanitizeComponent(self.FileInfo.Name())
+	return self.FileInfo.Name()
 }
 
 func (self *FileStoreFileInfo) Data() interface{} {

@@ -1,11 +1,10 @@
-package result_sets
+package paths
 
 import (
 	"context"
 	"path"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -23,8 +22,8 @@ func (self FlowPathManager) GetPathForWriting() (string, error) {
 	return self.path, nil
 }
 
-func (self FlowPathManager) GetArtifact() string {
-	return ""
+func (self FlowPathManager) GetQueueName() string {
+	return self.client_id + self.flow_id
 }
 
 func (self FlowPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
@@ -78,7 +77,7 @@ func (self FlowPathManager) GetVFSDownloadInfoPath(
 	components := []string{"clients", self.client_id, "vfs_files", accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := paths.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
@@ -98,7 +97,7 @@ func (self FlowPathManager) GetVFSDirectoryInfoPath(accessor, client_path string
 	components := []string{"clients", self.client_id, "vfs", accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := paths.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
@@ -120,7 +119,7 @@ func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *FlowPa
 		self.flow_id, "uploads", accessor}
 
 	if accessor == "ntfs" {
-		device, subpath, err := paths.GetDeviceAndSubpath(client_path)
+		device, subpath, err := GetDeviceAndSubpath(client_path)
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)

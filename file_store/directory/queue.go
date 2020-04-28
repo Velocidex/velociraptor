@@ -23,11 +23,10 @@ type DirectoryQueueManager struct {
 }
 
 func (self *DirectoryQueueManager) PushEventRows(
-	path_manager api.PathManager, sender string,
-	dict_rows []*ordereddict.Dict) error {
+	path_manager api.PathManager, dict_rows []*ordereddict.Dict) error {
 
 	for _, row := range dict_rows {
-		pool.Broadcast(path_manager.GetArtifact(),
+		pool.Broadcast(path_manager.GetQueueName(),
 			row.Set("_ts", int(time.Now().Unix())))
 	}
 

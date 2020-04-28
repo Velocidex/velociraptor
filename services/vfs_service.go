@@ -18,7 +18,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -78,7 +77,7 @@ func (self *VFSService) ProcessDownloadFile(
 		panic(err)
 	}
 
-	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	for row := range vql.Eval(ctx, sub_scope) {
 		Accessor := vql_subsystem.GetStringFromRow(scope, row, "Accessor")

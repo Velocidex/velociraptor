@@ -9,8 +9,7 @@ import (
 // A QueueManager writes query results into queues. The manager is
 // responsible for rotating the queue files as required.
 type QueueManager interface {
-	PushEventRows(path_manager PathManager,
-		sender string, rows []*ordereddict.Dict) error
+	PushEventRows(path_manager PathManager, rows []*ordereddict.Dict) error
 	Watch(queue_name string) (output <-chan *ordereddict.Dict, cancel func())
 }
 
@@ -24,7 +23,9 @@ type PathManager interface {
 	// Gets a log path for writing new rows on.
 	GetPathForWriting() (string, error)
 
-	GetArtifact() string
+	// The name of the queue we will use to watch for any rows
+	// inserted into this result set.
+	GetQueueName() string
 
 	// Generate paths for reading linked result sets.
 	GeneratePaths(ctx context.Context) <-chan *ResultSetFileProperties

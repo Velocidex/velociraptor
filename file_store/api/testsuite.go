@@ -214,8 +214,7 @@ func (self *QueueManagerTestSuite) TestPush() {
 	defer cancel()
 
 	err := self.manager.PushEventRows(
-		MockPathManager{"log_path", artifact_name},
-		"C.123", payload)
+		MockPathManager{"log_path", artifact_name}, payload)
 
 	assert.NoError(self.T(), err)
 
@@ -251,7 +250,7 @@ func (self MockPathManager) GetPathForWriting() (string, error) {
 	return self.Path, nil
 }
 
-func (self MockPathManager) GetArtifact() string {
+func (self MockPathManager) GetQueueName() string {
 	return self.ArtifactName
 }
 

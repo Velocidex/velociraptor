@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -26,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -69,6 +71,7 @@ func (self *ServerTestSuite) SetupTest() {
 
 	// Start the journaling service manually for tests.
 	services.StartJournalService(self.config_obj)
+	artifacts.GetGlobalRepository(config_obj)
 
 	self.server, err = server.NewServer(config_obj)
 	require.NoError(self.T(), err)
@@ -310,10 +313,10 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close()
 
-	self.RequiredFilestoreContains(
-		paths.GetResultSetPath(self.client_id, paths.GetDayName(), "",
-			"System.Hunt.Participation", "", paths.MODE_CLIENT_EVENT),
-		self.client_id)
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW, "System.Hunt.Participation")
+
+	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
 }
 
 // An invalid monitoring response will log an error in the client's
@@ -523,13 +526,13 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 		})
 	runner.Close()
 
+	flow_path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/"+flow_id+"/uploads/file/tmp/foobar",
+		flow_path_manager.GetUploadsFile("file", "/tmp/foobar").Path(),
 		"hello world")
 
 	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/"+flow_id+"/uploads.csv",
-		flow_id)
+		flow_path_manager.UploadMetadata().Path(), flow_id)
 }
 
 // Test VQLResponse are written correctly.
@@ -560,9 +563,9 @@ func (self *ServerTestSuite) TestVQLResponse() {
 		})
 	runner.Close()
 
-	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/artifacts/Generic.Client.Info/"+flow_id+".csv",
-		self.client_id)
+	flow_path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, flow_id, "Generic.Client.Info")
+	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
 }
 
 // Errors from the client kill the flow.

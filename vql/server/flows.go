@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -185,7 +186,7 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		flow_path_manager := result_sets.NewFlowPathManager(
+		flow_path_manager := paths.NewFlowPathManager(
 			arg.ClientId, arg.FlowId)
 
 		upload_metadata_path, _ := flow_path_manager.UploadMetadata().

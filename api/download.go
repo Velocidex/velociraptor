@@ -95,7 +95,7 @@ func downloadFlowToZip(
 		return err
 	}
 
-	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	// Copy the flow's logs.
 	copier(flow_path_manager.Log().Path())
@@ -144,7 +144,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile().Path()
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)

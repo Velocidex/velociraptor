@@ -43,6 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -179,7 +180,7 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Save the collection context.
-	flow_path_manager := result_sets.NewFlowPathManager(client_id,
+	flow_path_manager := paths.NewFlowPathManager(client_id,
 		collection_context.SessionId)
 	err = db.SetSubject(config_obj,
 		flow_path_manager.Path(),
@@ -246,7 +247,7 @@ func closeContext(
 		collection_context.Status = err.Error()
 	}
 
-	flow_path_manager := result_sets.NewFlowPathManager(
+	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId, collection_context.SessionId)
 	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
@@ -263,9 +264,11 @@ func closeContext(
 			Set("FlowId", collection_context.SessionId).
 			Set("ClientId", collection_context.ClientId)
 
-		return services.GetJournal().PushRows("System.Flow.Completion",
-			collection_context.SessionId,
-			collection_context.ClientId, /* source */
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			collection_context.ClientId, collection_context.SessionId,
+			"System.Flow.Completion")
+
+		return services.GetJournal().PushRows(path_manager,
 			[]*ordereddict.Dict{row})
 	}
 
@@ -276,7 +279,7 @@ func flushContextLogs(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
-	flow_path_manager := result_sets.NewFlowPathManager(
+	flow_path_manager := paths.NewFlowPathManager(
 		collection_context.ClientId,
 		collection_context.SessionId).Log()
 
@@ -304,8 +307,8 @@ func flushContextUploadedFiles(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
-	flow_path_manager := result_sets.NewFlowPathManager(
-		collection_context.Request.ClientId,
+	flow_path_manager := paths.NewFlowPathManager(
+		collection_context.ClientId,
 		collection_context.SessionId).UploadMetadata()
 
 	rs_writer, err := result_sets.NewResultSetWriter(config_obj, flow_path_manager)
@@ -339,7 +342,7 @@ func LoadCollectionContext(
 		}, nil
 	}
 
-	flow_path_manager := result_sets.NewFlowPathManager(client_id, flow_id)
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -524,7 +527,7 @@ func appendUploadDataToFile(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	flow_path_manager := result_sets.NewFlowPathManager(
+	flow_path_manager := paths.NewFlowPathManager(
 		message.Source, collection_context.SessionId)
 	// Figure out where to store the file.
 	file_path := flow_path_manager.GetUploadsFile(
@@ -586,9 +589,12 @@ func appendUploadDataToFile(
 			Set("Accessor", file_buffer.Pathspec.Accessor).
 			Set("Size", size)
 
-		return services.GetJournal().PushRows(
-			"System.Upload.Completion", message.Source,
-			collection_context.SessionId, []*ordereddict.Dict{row})
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			message.Source, collection_context.SessionId,
+			"System.Upload.Completion")
+
+		return services.GetJournal().PushRows(path_manager,
+			[]*ordereddict.Dict{row})
 	}
 
 	return nil

@@ -22,6 +22,7 @@ import (
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -46,7 +47,7 @@ func getTable(
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
 
 	} else if in.FlowId != "" && in.Type != "" {
-		flow_path_manager := result_sets.NewFlowPathManager(
+		flow_path_manager := paths.NewFlowPathManager(
 			in.ClientId, in.FlowId)
 		switch in.Type {
 		case "log":
@@ -55,7 +56,7 @@ func getTable(
 			path_manager = flow_path_manager.UploadMetadata()
 		}
 	} else if in.HuntId != "" {
-		path_manager = result_sets.NewHuntPathManager(in.HuntId)
+		path_manager = paths.NewHuntPathManager(in.HuntId)
 	}
 
 	result := &api_proto.GetTableResponse{}

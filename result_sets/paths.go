@@ -40,8 +40,13 @@ func NewArtifactPathManager(
 	}
 }
 
-func (self *ArtifactPathManager) GetArtifact() string {
+func (self *ArtifactPathManager) GetQueueName() string {
 	return self.full_artifact_name
+}
+
+func (self *ArtifactPathManager) Path() string {
+	result, _ := self.GetPathForWriting()
+	return result
 }
 
 func (self *ArtifactPathManager) GetPathForWriting() (string, error) {

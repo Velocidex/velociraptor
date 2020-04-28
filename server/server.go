@@ -155,9 +155,9 @@ func (self *Server) Process(
 		IpAddress: message_info.RemoteAddr,
 	}
 
+	client_path_manager := paths.NewClientPathManager(message_info.Source)
 	err = self.db.SetSubject(
-		self.config,
-		paths.GetClientPingPath(message_info.Source), client_info)
+		self.config, client_path_manager.Ping().Path(), client_info)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -11,6 +11,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -29,8 +30,8 @@ func (self *VelociraptorUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	reader io.Reader) (
-	*UploadResponse, error) {
-	result := &UploadResponse{
+	*api.UploadResponse, error) {
+	result := &api.UploadResponse{
 		Path: filename,
 	}
 

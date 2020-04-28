@@ -38,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -120,7 +121,7 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		services.NotifyAll()
+		services.NotifyAll(config_obj)
 	}
 
 	err = db.SetSubject(config_obj, constants.GetHuntURN(hunt.HuntId), hunt)
@@ -239,9 +240,11 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
+				path_manager := result_sets.NewArtifactPathManager(config_obj,
+					"server", hunt_modification.HuntId, "System.Hunt.Archive")
+
 				services.GetJournal().PushRows(
-					"System.Hunt.Archive", "server",
-					hunt_modification.HuntId, []*ordereddict.Dict{row})
+					path_manager, []*ordereddict.Dict{row})
 
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {
@@ -282,5 +285,5 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	return services.NotifyAll()
+	return services.NotifyAll(config_obj)
 }

@@ -52,12 +52,10 @@ func (self *InterrogationService) Start(
 	vql, _ := vfilter.Parse("SELECT * FROM Artifact.Server.Internal.Interrogate()")
 	go func() {
 		for row := range vql.Eval(ctx, scope) {
-			row_dict, ok := row.(*ordereddict.Dict)
-			if ok {
-				err := self.ProcessRow(scope, row_dict)
-				if err != nil {
-					logger.Error("Interrogation Service: %v", err)
-				}
+			row_dict := vfilter.RowToDict(ctx, scope, row)
+			err := self.ProcessRow(row_dict)
+			if err != nil {
+				logger.Error("Interrogation Service: %v", err)
 			}
 		}
 	}()
@@ -65,15 +63,15 @@ func (self *InterrogationService) Start(
 	return nil
 }
 
-func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
-	row *ordereddict.Dict) error {
-	getter := func(field string) string {
-		return vql_subsystem.GetStringFromRow(scope, row, field)
+func (self *InterrogationService) ProcessRow(row *ordereddict.Dict) error {
+	client_id, ok := row.GetString("ClientId")
+	if !ok {
+		return errors.New("Unknown ClientId")
 	}
 
-	client_id := getter("ClientId")
-	if client_id == "" {
-		return errors.New("Unknown ClientId")
+	getter := func(field string) string {
+		result, _ := row.GetString(field)
+		return result
 	}
 
 	client_info := &actions_proto.ClientInfo{
@@ -92,13 +90,14 @@ func (self *InterrogationService) ProcessRow(scope *vfilter.Scope,
 		client_info.Labels = append(client_info.Labels, label_array...)
 	}
 
-	client_urn := paths.GetClientMetadataPath(client_id)
+	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = db.SetSubject(self.config_obj, client_urn, client_info)
+	err = db.SetSubject(self.config_obj,
+		client_path_manager.Path(), client_info)
 	if err != nil {
 		return err
 	}

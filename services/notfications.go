@@ -8,6 +8,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 )
 
 var (
@@ -55,12 +56,18 @@ func startNotificationService(
 	return nil
 }
 
-func NotifyAll() error {
-	return GetJournal().PushRows("Server.Internal.Notifications", "", "server",
+func NotifyAll(config_obj *config_proto.Config) error {
+	path_manager := result_sets.NewArtifactPathManager(
+		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
+
+	return GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")})
 }
 
-func NotifyClient(client_id string) error {
-	return GetJournal().PushRows("Server.Internal.Notifications", "", "server",
+func NotifyClient(config_obj *config_proto.Config, client_id string) error {
+	path_manager := result_sets.NewArtifactPathManager(
+		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
+
+	return GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", client_id)})
 }

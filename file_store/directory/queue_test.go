@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 )
 
 func TestDirectoryQueueManager(t *testing.T) {
@@ -22,6 +23,6 @@ func TestDirectoryQueueManager(t *testing.T) {
 	config_obj.Datastore.FilestoreDirectory = dir
 	config_obj.Datastore.Location = dir
 
-	manager := NewMemoryQueueManager(config_obj, Test_memory_file_store)
-	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager))
+	manager := NewDirectoryQueueManager(config_obj, memory.Test_memory_file_store)
+	suite.Run(t, api.NewQueueManagerTestSuite(config_obj, manager, memory.Test_memory_file_store))
 }
