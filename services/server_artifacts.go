@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
@@ -49,8 +48,7 @@ type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
 	mu         sync.Mutex
 	notifier   *notifications.NotificationPool
-
-	timeout time.Duration
+	timeout    time.Duration
 }
 
 func (self *ServerArtifactsRunner) Start(
@@ -290,55 +288,6 @@ func (self *ServerArtifactsRunner) runQuery(
 	}
 
 	return nil
-}
-
-func (self *ServerArtifactsRunner) GetWriter(
-	scope *vfilter.Scope,
-	log_path string) chan vfilter.Row {
-
-	logger := logging.GetLogger(
-		self.config_obj, &logging.FrontendComponent)
-
-	row_chan := make(chan vfilter.Row)
-
-	go func() {
-		var columns []string
-
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-
-		fd, err := file_store_factory.WriteFile(log_path)
-		if err != nil {
-			logger.Error("Error: %v\n", err)
-			return
-		}
-
-		writer, err := csv.GetCSVWriter(scope, fd)
-		if err != nil {
-			logger.Error("Error: %v\n", err)
-			return
-		}
-		defer writer.Close()
-
-		for row := range row_chan {
-			if columns == nil {
-				columns = scope.GetMembers(row)
-			}
-
-			// First column is a row timestamp. This makes
-			// it easier to do a row scan for time ranges.
-			dict_row := ordereddict.NewDict()
-			for _, column := range columns {
-				value, pres := scope.Associative(row, column)
-				if pres {
-					dict_row.Set(column, value)
-				}
-			}
-
-			writer.Write(dict_row)
-		}
-	}()
-
-	return row_chan
 }
 
 func startServerArtifactService(

@@ -116,10 +116,10 @@ func downloadFlowToZip(
 		return nil
 	}
 
-	// This basically copies the CSV files from the
-	// filestore into the zip. We do not need to do any
-	// processing - just give the user the files as they
-	// are. Users can do their own post processing.
+	// This basically copies the files from the filestore into the
+	// zip. We do not need to do any processing - just give the
+	// user the files as they are. Users can do their own post
+	// processing.
 
 	// File uploads are stored in their own CSV file.
 	row_chan, err := file_store.GetTimeRange(

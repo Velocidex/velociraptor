@@ -23,7 +23,6 @@ package server
 
 import (
 	"context"
-	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -31,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -208,8 +206,8 @@ func (self HuntResultsPlugin) Call(
 			return
 		}
 
-		// Read each CSV file and emit it with
-		// some extra columns for context.
+		// Read each file and emit it with some extra columns
+		// for context.
 		for row := range row_chan {
 			participation_row := &services.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
@@ -300,18 +298,17 @@ func (self HuntFlowsPlugin) Call(
 			return
 		}
 
-		file_path := path.Join("hunts", arg.HuntId+".csv")
-		file_store_factory := file_store.GetFileStore(config_obj)
-		fd, err := file_store_factory.ReadFile(file_path)
+		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
+		row_chan, err := file_store.GetTimeRange(ctx, config_obj,
+			hunt_path_manager, 0, 0)
 		if err != nil {
-			scope.Log("Error %v: %v\n", err, file_path)
+			scope.Log("Error %v: %v\n", err, hunt_path_manager.Path())
 			return
 		}
-		defer fd.Close()
 
-		// Read each CSV file and emit it with
-		// some extra columns for context.
-		for row := range csv.GetCSVReader(fd) {
+		// Read each CSV file and emit it with some extra
+		// columns for context.
+		for row := range row_chan {
 			participation_row := &services.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {

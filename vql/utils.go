@@ -76,6 +76,8 @@ func GetIntFromRow(scope *vfilter.Scope,
 			return uint64(t)
 		case int32:
 			return uint64(t)
+		case int64:
+			return uint64(t)
 		case uint8:
 			return uint64(t)
 		case uint16:
