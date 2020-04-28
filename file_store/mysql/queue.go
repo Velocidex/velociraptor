@@ -119,8 +119,6 @@ func (self *QueuePool) emitEvents(queue_name string, last_id *sql.NullInt64) err
 		return err
 	}
 
-	fmt.Printf("Checking %v > %v\n", queue_name, last_id.Int64)
-
 	rows, err := db.Query(`
 SELECT data, part_id
 FROM filestore
