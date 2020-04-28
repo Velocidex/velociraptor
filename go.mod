@@ -14,7 +14,7 @@ require (
         github.com/Velocidex/cgofuse v1.1.2
         github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
         github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
-        github.com/Velocidex/ordereddict v0.0.0-20200419183704-bc44e4ef79c7
+        github.com/Velocidex/ordereddict v0.0.0-20200428070154-4cd604876fe5
         github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
         github.com/Velocidex/yaml/v2 v2.2.5
         github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
@@ -126,7 +126,7 @@ require (
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
-replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
+// replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
 
 // replace www.velocidex.com/golang/go-yara => /home/mic/projects/go-yara
 
