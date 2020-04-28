@@ -245,8 +245,8 @@ func (self *MysqlQueueManager) Watch(queue_name string) (<-chan *ordereddict.Dic
 	return pool.Register(queue_name)
 }
 
-func NewMysqlQueueManager(file_store *SqlFileStore) (api.QueueManager, error) {
+func NewMysqlQueueManager(file_store *SqlFileStore) api.QueueManager {
 	return &MysqlQueueManager{
 		file_store: file_store,
-		Clock:      utils.RealClock{}}, nil
+		Clock:      utils.RealClock{}}
 }

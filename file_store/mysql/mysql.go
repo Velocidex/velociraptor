@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/golang/snappy"
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

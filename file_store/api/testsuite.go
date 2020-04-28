@@ -224,6 +224,9 @@ func (self *QueueManagerTestSuite) TestPush() {
 		if v == int64(2) {
 			break
 		}
+
+		ts, _ := row.Get("_ts")
+		assert.NotNil(self.T(), ts)
 	}
 
 	// Make sure the manager wrote the event to the filestore as well.
