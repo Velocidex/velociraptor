@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
-	"path"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -70,14 +69,14 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 		config_obj.Frontend.ExpectedClients = 10000
 	}
 
-	if config_obj.Frontend.PublicPath == "" {
-		return errors.New("Frontend is missing a public_path setting. This is required to serve third party VQL plugins.")
+	// DynDns.Hostname is deprecated, moved to Frontend.Hostname
+	if config_obj.Frontend.Hostname == "" && config_obj.Frontend.Hostname != "" {
+		config_obj.Frontend.Hostname = config_obj.Frontend.Hostname
 	}
 
 	// Ensure there is an index.html file in there to prevent directory listing.
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(path.Join(
-		config_obj.Frontend.PublicPath, "index.html"))
+	fd, err := file_store_factory.WriteFile("/public/index.html")
 	if err != nil {
 		return err
 	}

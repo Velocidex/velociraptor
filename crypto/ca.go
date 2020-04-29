@@ -43,8 +43,12 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 		return nil, err
 	}
 
+	// Velociraptor depends on the CA certificate for
+	// everything. It is embedded in clients and underpins
+	// comms. We must ensure it does not expire in a reasonable
+	// time.
 	start_time := time.Now()
-	end_time := start_time.Add(365 * 24 * time.Hour)
+	end_time := start_time.Add(10 * 365 * 24 * time.Hour) // 10 years
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)

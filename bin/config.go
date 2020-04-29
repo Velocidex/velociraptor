@@ -115,11 +115,10 @@ func doShowConfig() {
 	fmt.Printf("%v", string(res))
 }
 
-func generateNewKeys() (*config_proto.Config, error) {
-	config_obj := config.GetDefaultConfig()
+func generateNewKeys(config_obj *config_proto.Config) error {
 	ca_bundle, err := crypto.GenerateCACert(2048)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create CA cert")
+		return errors.Wrap(err, "Unable to create CA cert")
 	}
 
 	config_obj.Client.CaCertificate = ca_bundle.Cert
@@ -128,7 +127,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 	nonce := make([]byte, 8)
 	_, err = rand.Read(nonce)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create nonce")
+		return errors.Wrap(err, "Unable to create nonce")
 	}
 	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
 
@@ -138,7 +137,7 @@ func generateNewKeys() (*config_proto.Config, error) {
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create Frontend cert")
+		return errors.Wrap(err, "Unable to create Frontend cert")
 	}
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
@@ -148,17 +147,18 @@ func generateNewKeys() (*config_proto.Config, error) {
 	gw_certificate, err := crypto.GenerateServerCert(
 		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
-		return nil, errors.Wrap(err, "Unable to create Frontend cert")
+		return errors.Wrap(err, "Unable to create Frontend cert")
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert
 	config_obj.GUI.GwPrivateKey = gw_certificate.PrivateKey
 
-	return config_obj, nil
+	return nil
 }
 
 func doGenerateConfigNonInteractive() {
-	config_obj, err := generateNewKeys()
+	config_obj := config.GetDefaultConfig()
+	err := generateNewKeys(config_obj)
 
 	// Users have to updated the following fields.
 	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
@@ -239,10 +239,6 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 		Client:  config_obj.Client,
 	}
 
-	// Only allow self signed certs if we do not use autocerts
-	if config_obj.AutocertDomain == "" {
-		client_config.Client.UseSelfSignedSsl = true
-	}
 	return client_config
 }
 
@@ -352,6 +348,9 @@ func init() {
 
 		case config_api_client_command.FullCommand():
 			doDumpApiClientConfig()
+
+		case config_frontend_command.FullCommand():
+			doConfigFrontend()
 
 		default:
 			return false

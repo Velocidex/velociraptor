@@ -261,16 +261,8 @@ func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
-	var filename string
-
-	switch runtime.GOOS {
-	case "windows":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
-	case "linux":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
-	case "darwin":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
-	default:
+	filename := getLocalBufferName(config_obj)
+	if filename == "" {
 		return nil, errors.New("Unsupport platform")
 	}
 
@@ -477,9 +469,22 @@ func NewRingBuffer(config_obj *config_proto.Config, size uint64) *RingBuffer {
 	return result
 }
 
+func getLocalBufferName(config_obj *config_proto.Config) string {
+	switch runtime.GOOS {
+	case "windows":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
+	case "linux":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
+	case "darwin":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
+	default:
+		return ""
+	}
+}
+
 func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
-		config_obj.Client.LocalBuffer.Filename != "" {
+		getLocalBufferName(config_obj) != "" {
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		rb, err := NewFileBasedRingBuffer(config_obj, logger)

@@ -160,7 +160,7 @@ func startFrontend(
 
 	// Are we in autocert mode? There are special requirements in
 	// this case.
-	if config_obj.AutocertDomain != "" {
+	if config_obj.AutocertCertCache != "" {
 		startAutoCertFrontend(ctx, wg, config_obj, server_obj)
 
 		// If the GUI and Frontend need to be on the same port

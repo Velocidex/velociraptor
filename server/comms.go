@@ -60,13 +60,13 @@ func PrepareFrontendMux(
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
 
-	if config_obj.Frontend.PublicPath != "" {
-		router.Handle("/public/", http.FileServer(
-			api.NewFileSystem(
-				config_obj,
-				file_store.GetFileStore(config_obj),
-				"/public/")))
-	}
+	// Publically accessible part of the filestore. NOTE: this
+	// does not have to be a physical directory - it is served
+	// from the filestore.
+	router.Handle("/public/", http.FileServer(
+		api.NewFileSystem(config_obj,
+			file_store.GetFileStore(config_obj),
+			"/public/")))
 }
 
 // Starts the frontend over HTTPS.
@@ -177,7 +177,7 @@ func StartTLSServer(
 
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(config_obj.AutocertDomain),
+		HostPolicy: autocert.HostWhitelist(config_obj.Frontend.Hostname),
 		Cache:      autocert.DirCache(cache_dir),
 	}
 

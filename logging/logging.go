@@ -50,7 +50,31 @@ var (
 	Audit = "VelociraptorAudit"
 
 	Manager *LogManager
+
+	mu      sync.Mutex
+	prelogs []string
 )
+
+// Early in the startup process, we find that we need to log sometimes
+// but we have no idea where to send the logs and what components to
+// load (because the config is not fully loaded yet). We therefore
+// queue these messages until we are able to flush them.
+func Prelog(format string, v ...interface{}) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	prelogs = append(prelogs, fmt.Sprintf(format, v...))
+}
+
+func FlushPrelogs(config_obj *config_proto.Config) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	logger := GetLogger(config_obj, &GenericComponent)
+	for _, msg := range prelogs {
+		logger.Error(msg)
+	}
+}
 
 type LogContext struct {
 	*logrus.Logger

@@ -78,17 +78,14 @@ message DarwinInstallerConfig {
 }
 
 message RingBufferConfig {
+    string filename = 3 [deprecated = true];
+
     uint64 memory_size = 1 [(sem_type) = {
        description: "How many bytes to store in the ring buffer in memory."
     }];
 
     uint64 disk_size = 2 [(sem_type) = {
        description: "How many bytes to store in the ring buffer on disk (0 mean no disk file)."
-    }];
-
-    // Deprecated
-    string filename = 3 [(sem_type) = {
-       description: "Name of file to store the ring buffer in (if empty we do not use a file)."
     }];
 
     string filename_linux = 4 [(sem_type) = {
@@ -329,7 +326,9 @@ message ReverseProxyConfig {
 
 
 message DynDNSConfig {
-    string hostname = 1;
+    string hostname = 1 [deprecated=true];
+
+    // Not used any more - we take the hostname from Frontend.Hostname.
     string ddns_username = 2;
     string ddns_password = 3;
     string update_url = 4;
@@ -337,6 +336,11 @@ message DynDNSConfig {
 }
 
 message FrontendConfig {
+    string public_path = 8 [deprecated=true];
+
+    // Publicly accessible hostname for this frontend.
+    string hostname = 19;
+
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind frontend endpoint. Clients connect to this endpoint to poll for jobs."
         }];
@@ -359,10 +363,6 @@ message FrontendConfig {
 
     string artifacts_path = 7 [(sem_type) = {
             description: "Path to additional artifacts to load",
-        }];
-
-    string public_path = 8 [(sem_type) = {
-            description: "If specified we export this path through the /public/ handler.",
         }];
 
     uint64 concurrency = 9 [(sem_type) = {
@@ -407,18 +407,12 @@ message FrontendConfig {
 
 
 message DatastoreConfig {
-    string implementation = 1 [(sem_type) = {
-            description: "The name of the datastore implementation to use."
-            default: "FileBaseDataStore",
-        }];
+    // The name of the datastore implementation to use.
+    string implementation = 1;
 
-    string location = 2 [(sem_type) = {
-            description: "The location (or path) to the datastore.",
-        }];
-
-    string filestore_directory = 3 [(sem_type) = {
-            description: "The path to store uploaded files."
-        }];
+    // For FileBaseDataStore
+    string location = 2;
+    string filestore_directory = 3;
 
     // For MySQL data store (Valid when implementation = "MySQL")
     string mysql_username = 4;
@@ -510,6 +504,8 @@ message ServerServicesConfig {
 
 
 message Config {
+    string autocert_domain = 21 [deprecated=true];
+
     Version version = 8 [(sem_type) = {
             description: "Version information."
         }];
@@ -528,6 +524,11 @@ message Config {
 
     FrontendConfig Frontend = 5;
 
+    // A list of possible frontends to use. When deployed in
+    // multi-frontend configuration we select on those and populate
+    // the Frontend field above.
+    repeated FrontendConfig ExtraFrontends = 31;
+
     DatastoreConfig Datastore = 6;
 
     Writeback Writeback = 9 [(sem_type) = {
@@ -542,13 +543,6 @@ message Config {
             description: "Enable verbose logging output.",
         }];
 
-    string autocert_domain = 21 [(sem_type) = {
-            description: "Domain to use for autocerts (letsencrypt). "
-            "This must be resolvable to the frontend via DNS."
-            "NOTE: When this is set, both the GUI and frontend will "
-            "use ports 80 and 443 - the client.server_urls must be of the form "
-            " https://autocert_domain/",
-        }];
 
     string autocert_cert_cache = 22 [(sem_type) = {
             description: "Path to store autocert certificates.",

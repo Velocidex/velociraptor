@@ -30,6 +30,7 @@ import (
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -131,10 +132,10 @@ func GetDefaultConfig() *config_proto.Config {
 				// Essential for client resource telemetry.
 				"Generic.Client.Stats",
 			},
+			DynDns:          &config_proto.DynDNSConfig{},
 			ExpectedClients: 10000,
 			GRPCPoolMaxSize: 100,
 			GRPCPoolMaxWait: 60,
-			PublicPath:      "/var/tmp/velociraptor/public",
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
@@ -162,7 +163,6 @@ func GetDefaultConfig() *config_proto.Config {
 	if runtime.GOOS == "windows" {
 		result.Datastore.Location = "C:\\Windows\\Temp"
 		result.Datastore.FilestoreDirectory = "C:\\Windows\\Temp"
-		result.Client.LocalBuffer.Filename = "C:\\Windows\\Temp\\Velociraptor_Buffer.bin"
 	}
 
 	return result
@@ -196,10 +196,21 @@ func ReadEmbeddedConfig() (*config_proto.Config, error) {
 
 // Load the config stored in the YAML file and returns a config object.
 func LoadConfig(filename string) (*config_proto.Config, error) {
+	result, err := loadConfig(filename)
+	if result != nil {
+		logging.FlushPrelogs(result)
+	}
+	return result, err
+}
+
+func loadConfig(filename string) (*config_proto.Config, error) {
 	default_config := GetDefaultConfig()
 	result := GetDefaultConfig()
 
 	verify_config := func(config_obj *config_proto.Config) {
+		// Check for older version.
+		migrate(config_obj)
+
 		// TODO: Check if the config version is compatible with our
 		// version. We always set the result's version to our version.
 		config_obj.Version = default_config.Version
