@@ -27,8 +27,12 @@ const FlowLogController = function($scope) {
  * @private
  */
 FlowLogController.prototype.onChange_ = function() {
-    this.queryParams.path = '/clients/' + this.scope_["clientId"] +
-        '/collections/' + this.scope_['flowId'] + '/logs';;
+    this.queryParams = {
+        client_id: this.scope_["clientId"],
+        flow_id: this.scope_['flowId'],
+        type: 'log',
+        path: this.scope_['flowId'],
+    };
 };
 
 /**

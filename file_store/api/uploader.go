@@ -9,9 +9,28 @@ import (
 	"path"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/vfilter"
 )
+
+// Returned as the result of the query.
+type UploadResponse struct {
+	Path   string `json:"Path"`
+	Size   uint64 `json:"Size"`
+	Error  string `json:"Error,omitempty"`
+	Sha256 string `json:"sha256,omitempty"`
+	Md5    string `json:"md5,omitempty"`
+}
+
+// Provide an uploader capable of uploading any reader object.
+type Uploader interface {
+	Upload(ctx context.Context,
+		scope *vfilter.Scope,
+		filename string,
+		accessor string,
+		store_as_name string,
+		expected_size int64,
+		reader io.Reader) (*UploadResponse, error)
+}
 
 // An uploader into the filestore.
 type FileStoreUploader struct {
@@ -27,7 +46,7 @@ func (self *FileStoreUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	reader io.Reader) (
-	*uploads.UploadResponse, error) {
+	*UploadResponse, error) {
 
 	if store_as_name == "" {
 		store_as_name = filename
@@ -79,7 +98,7 @@ loop:
 	}
 
 	scope.Log("Uploaded %v (%v bytes)", output_path, offset)
-	return &uploads.UploadResponse{
+	return &UploadResponse{
 		Path:   output_path,
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

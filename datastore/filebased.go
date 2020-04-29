@@ -38,7 +38,6 @@ package datastore
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -76,11 +75,13 @@ func (self *FileBaseDataStore) GetClientTasks(
 	client_id string,
 	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
 	result := []*crypto_proto.GrrMessage{}
-	now := self.clock.Now().UTC().UnixNano() / 1000
-	tasks_urn := paths.GetClientTasksPath(client_id)
-	now_urn := tasks_urn + fmt.Sprintf("/%d", now)
+	now := uint64(self.clock.Now().UTC().UnixNano() / 1000)
 
-	tasks, err := self.ListChildren(config_obj, tasks_urn, 0, 100)
+	client_path_manager := paths.NewClientPathManager(client_id)
+	now_urn := client_path_manager.Task(now).Path()
+
+	tasks, err := self.ListChildren(
+		config_obj, client_path_manager.TasksDirectory().Path(), 0, 100)
 	if err != nil {
 		return nil, err
 	}
@@ -115,8 +116,9 @@ func (self *FileBaseDataStore) UnQueueMessageForClient(
 	client_id string,
 	message *crypto_proto.GrrMessage) error {
 
+	client_path_manager := paths.NewClientPathManager(client_id)
 	return self.DeleteSubject(config_obj,
-		paths.GetClientTaskPath(client_id, message.TaskId))
+		client_path_manager.Task(message.TaskId).Path())
 }
 
 func (self *FileBaseDataStore) QueueMessageForClient(
@@ -125,8 +127,9 @@ func (self *FileBaseDataStore) QueueMessageForClient(
 	req *crypto_proto.GrrMessage) error {
 
 	req.TaskId = uint64(self.clock.Now().UTC().UnixNano() / 1000)
-	subject := paths.GetClientTaskPath(client_id, req.TaskId)
-	return self.SetSubject(config_obj, subject, req)
+	client_path_manager := paths.NewClientPathManager(client_id)
+	return self.SetSubject(config_obj,
+		client_path_manager.Task(req.TaskId).Path(), req)
 }
 
 func (self *FileBaseDataStore) GetSubject(

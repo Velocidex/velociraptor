@@ -63,25 +63,15 @@ FlowResultsController.prototype.onFlowIdOrBasePathChange_ = function(
 
     if (newValues != oldValues) {
         if (newValues.every(angular.isDefined)) {
-            var components = this.selectedArtifact.split("/");
-            // Artifact has no source name.
-            if (components.length == 1) {
-                this.queryParams = {
-                    path: '/clients/'+ this.scope_['clientId'] +
-                        '/artifacts/' + this.selectedArtifact +
-                        '/' + this.scope_.flowId + '.csv',
-                    client_id: this.scope_['clientId'],
-                };
-            } else {
-                // Artifact has a source name.
-                this.queryParams = {
-                    path: '/clients/' + this.scope_['clientId'] +
-                        '/artifacts/' + components[0] +
-                        '/' + this.scope_.flowId + "/" +
-                        components[1] + '.csv',
-                    client_id: this.scope_['clientId'],
-                };
-            }
+            this.queryParams = {
+                client_id: this.scope_['clientId'],
+                flow_id: this.scope_.flowId ,
+                artifact: this.selectedArtifact,
+                // Path is ignored by is used by angular to trigger
+                // changes.
+                path: this.scope_.flowId+this.selectedArtifact
+            };
+
         }
     }
 };

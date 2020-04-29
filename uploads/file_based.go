@@ -30,6 +30,7 @@ import (
 	"runtime"
 
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -75,7 +76,7 @@ func (self *FileBasedUploader) Upload(
 	store_as_name string,
 	expected_size int64,
 	reader io.Reader) (
-	*UploadResponse, error) {
+	*api.UploadResponse, error) {
 
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")
@@ -121,7 +122,7 @@ func (self *FileBasedUploader) Upload(
 	}
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
-	return &UploadResponse{
+	return &api.UploadResponse{
 		Path:   file_path,
 		Size:   uint64(offset),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),

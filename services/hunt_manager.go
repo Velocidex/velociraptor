@@ -20,7 +20,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -31,11 +30,10 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -51,10 +49,6 @@ type ParticipationRecord struct {
 type HuntManager struct {
 	mu sync.Mutex
 
-	// We keep a cache of hunt writers to write the output of each
-	// hunt. Note that each writer is responsible for its own
-	// flushing etc.
-	writers    map[string]*csv.CSVWriter
 	config_obj *config_proto.Config
 
 	APIClientFactory grpc_client.APIClientFactory
@@ -77,8 +71,10 @@ func (self *HuntManager) Start(
 
 		for {
 			select {
-			case row := <-qm_chan:
-				fmt.Printf("row %v\n", row)
+			case row, ok := <-qm_chan:
+				if !ok {
+					return
+				}
 				self.ProcessRow(ctx, scope, row)
 
 			case <-ctx.Done():
@@ -86,7 +82,7 @@ func (self *HuntManager) Start(
 			}
 		}
 
-		fmt.Printf("Exit\n")
+		logger.Info("Exiting hunt manager\n")
 	}()
 
 	return nil
@@ -96,10 +92,6 @@ func (self *HuntManager) Start(
 func (self *HuntManager) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	for _, v := range self.writers {
-		v.Close()
-	}
-
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Shutting down hunt manager service.")
 }
@@ -147,28 +139,6 @@ func (self *HuntManager) ProcessRow(
 	if err != nil {
 		scope.Log("Setting hunt index: %v", err)
 		return
-	}
-
-	// Fetch the CSV writer for this hunt or create a new one and
-	// cache it.
-	writer, pres := self.writers[participation_row.HuntId]
-	if !pres {
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-
-		// Hold references to all the writers for the life of
-		// the manager.
-		fd, err := file_store_factory.WriteFile(
-			constants.GetHuntURN(participation_row.HuntId) + ".csv")
-		if err != nil {
-			return
-		}
-
-		writer, err = csv.GetCSVWriter(scope, fd)
-		if err != nil {
-			return
-		}
-
-		self.writers[participation_row.HuntId] = writer
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
@@ -241,7 +211,9 @@ func (self *HuntManager) ProcessRow(
 
 	dict_row.Set("FlowId", response.FlowId)
 	dict_row.Set("Timestamp", time.Now().Unix())
-	writer.Write(dict_row)
+
+	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
+	GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{dict_row})
 }
 
 func startHuntManager(
@@ -250,7 +222,6 @@ func startHuntManager(
 	config_obj *config_proto.Config) (*HuntManager, error) {
 	result := &HuntManager{
 		config_obj:       config_obj,
-		writers:          make(map[string]*csv.CSVWriter),
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 	return result, result.Start(ctx, wg)

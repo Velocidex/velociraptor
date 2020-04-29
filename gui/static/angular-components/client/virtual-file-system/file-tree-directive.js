@@ -209,7 +209,7 @@ FileTreeController.prototype.onRefreshFolderEvent_ = function(e, path) {
     var nodeId = getFileId(getFolderFromPath(path));
     var node = $('#' + nodeId);
     var tree_node = this.treeElement_.jstree(true);
-    if (angular.isDefined(tree_node)) {
+    if (angular.isFunction(tree_node['refresh_node'])) {
         tree_node['refresh_node'](node);
     }
 };
