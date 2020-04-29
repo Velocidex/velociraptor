@@ -99,8 +99,8 @@ FileStatsViewController.prototype.updateFile = function() {
   this.grrApiService_.post(url, params).then(
       function success(response) {
         this.updateOperation = {
-          mtime:    current_mtime,
-          vfs_path: selectedFilePath
+            mtime:    current_mtime,
+            vfs_path: selectedFilePath,
         };
         this.monitorUpdateOperation_();
       }.bind(this),

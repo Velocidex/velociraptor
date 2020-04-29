@@ -94,7 +94,8 @@ CsvViewerDirective.prototype.fetchText_ = function() {
 
     if (self.scope_.baseUrl && angular.isDefined(self.scope_.params)) {
         var url = self.scope_.baseUrl;
-      var params = Object.assign({}, self.scope_.params);
+        var params = Object.assign({}, self.scope_.params);
+
         if (angular.isObject(params) && angular.isDefined(params.path)) {
             params['start_row'] = 0;
             params['rows'] = MAX_ROWS_PER_TABLE;

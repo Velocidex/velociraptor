@@ -7,7 +7,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -17,13 +16,9 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -138,8 +133,7 @@ func (self *EventTable) Update(
 
 		// Run each source concurrently.
 		for _, source := range artifact.Sources {
-			err := self.RunQuery(
-				new_ctx, config_obj,
+			err := self.RunQuery(new_ctx, config_obj,
 				scope, name, source)
 			if err != nil {
 				return err
@@ -148,83 +142,6 @@ func (self *EventTable) Update(
 	}
 
 	return nil
-}
-
-func (self *EventTable) GetWriter(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope *vfilter.Scope,
-	artifact_name string,
-	source_name string) chan vfilter.Row {
-
-	row_chan := make(chan vfilter.Row)
-
-	go func() {
-		file_store_factory := file_store.GetFileStore(config_obj)
-		last_log := ""
-		var err error
-		var fd api.FileWriter
-		var writer *csv.CSVWriter
-		var columns []string
-
-		closer := func() {
-			if writer != nil {
-				writer.Close()
-			}
-			if fd != nil {
-				fd.Close()
-			}
-
-			writer = nil
-			fd = nil
-		}
-
-		defer closer()
-
-		for row := range row_chan {
-			log_path := paths.GetCSVPath(
-				/* client_id */ "",
-				paths.GetDayName(),
-				/* flow_id */ "",
-				artifact_name, source_name,
-				paths.MODE_SERVER_EVENT)
-
-			// We need to rotate the log file.
-			if log_path != last_log {
-				closer()
-
-				fd, err = file_store_factory.WriteFile(log_path)
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
-					continue
-				}
-
-				writer, err = csv.GetCSVWriter(scope, fd)
-				if err != nil {
-					continue
-				}
-			}
-
-			if columns == nil {
-				columns = scope.GetMembers(row)
-			}
-
-			// First column is a row timestamp. This makes
-			// it easier to do a row scan for time ranges.
-			dict_row := ordereddict.NewDict().
-				Set("_ts", int(time.Now().Unix()))
-			for _, column := range columns {
-				value, pres := scope.Associative(row, column)
-				if pres {
-					dict_row.Set(column, value)
-				}
-			}
-
-			writer.Write(dict_row)
-		}
-	}()
-
-	return row_chan
 }
 
 func (self *EventTable) RunQuery(
@@ -259,21 +176,28 @@ func (self *EventTable) RunQuery(
 	go func() {
 		defer self.wg.Done()
 
-		name := artifact_name
 		if source.Name != "" {
-			name = utils.PathJoin(artifact_name, source.Name, "/")
+			artifact_name = artifact_name + "/" + source.Name
 		}
 
-		row_chan := self.GetWriter(ctx, config_obj, scope,
-			artifact_name, source.Name)
-		defer close(row_chan)
-
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Collecting Server Event Artifact: %s", name)
+		logger.Info("Collecting Server Event Artifact: %s", artifact_name)
+
+		path_manager := result_sets.NewArtifactPathManager(
+			config_obj, "", "", artifact_name)
+		rs_writer, err := result_sets.NewResultSetWriter(
+			config_obj, path_manager)
+		if err != nil {
+			logger.Error("NewResultSetWriter", err)
+			return
+		}
+		defer rs_writer.Close()
 
 		for _, vql := range vqls {
 			for row := range vql.Eval(ctx, scope) {
-				row_chan <- row
+				rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
+					Set("_ts", time.Now().Unix()))
+				rs_writer.Flush()
 			}
 		}
 	}()

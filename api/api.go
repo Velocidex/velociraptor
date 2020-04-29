@@ -52,6 +52,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -180,7 +181,7 @@ func (self *ApiServer) CollectArtifact(
 
 	result.FlowId = flow_id
 
-	err = services.NotifyClient(in.ClientId)
+	err = services.NotifyClient(self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -395,10 +396,10 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		services.NotifyAll()
+		services.NotifyAll(self.config)
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		services.NotifyClient(in.ClientId)
+		services.NotifyClient(self.config, in.ClientId)
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
@@ -638,7 +639,7 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
-	result, err := getTable(self.config, in)
+	result, err := getTable(ctx, self.config, in)
 	if err != nil {
 		return &api_proto.GetTableResponse{}, nil
 	}
@@ -793,8 +794,16 @@ func (self *ApiServer) WriteEvent(
 				"Permission denied: PUBLISH "+peer_name+" to "+in.Query.Name)
 		}
 
-		return &empty.Empty{}, services.GetJournal().Push(
-			in.Query.Name, peer_name, 0, []byte(in.Response))
+		rows, err := utils.ParseJsonToDicts([]byte(in.Response))
+		if err != nil {
+			return nil, err
+		}
+
+		path_manager := result_sets.NewArtifactPathManager(self.config,
+			peer_name, "", in.Query.Name)
+
+		return &empty.Empty{}, services.GetJournal().PushRows(
+			path_manager, rows)
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")

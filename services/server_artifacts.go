@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"path"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -17,13 +16,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -34,7 +32,7 @@ const (
 
 type serverLogger struct {
 	config_obj *config_proto.Config
-	w          *csv.CSVWriter
+	w          *result_sets.ResultSetWriter
 }
 
 func (self *serverLogger) Write(b []byte) (int, error) {
@@ -50,8 +48,7 @@ type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
 	mu         sync.Mutex
 	notifier   *notifications.NotificationPool
-
-	timeout time.Duration
+	timeout    time.Duration
 }
 
 func (self *ServerArtifactsRunner) Start(
@@ -134,14 +131,15 @@ func (self *ServerArtifactsRunner) process(
 func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage) error {
-	urn := path.Join("/clients", source, "collections", task.SessionId)
+
+	flow_urn := paths.NewFlowPathManager(source, task.SessionId).Path()
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = db.GetSubject(self.config_obj, urn, collection_context)
+	err = db.GetSubject(self.config_obj, flow_urn, collection_context)
 	if err != nil {
 		return err
 	}
@@ -152,7 +150,7 @@ func (self *ServerArtifactsRunner) processTask(
 
 	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	return db.SetSubject(self.config_obj, urn, collection_context)
+	return db.SetSubject(self.config_obj, flow_urn, collection_context)
 }
 
 func (self *ServerArtifactsRunner) runQuery(
@@ -162,23 +160,17 @@ func (self *ServerArtifactsRunner) runQuery(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	flow_id := task.SessionId
+
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
-	log_path := path.Join(collection_context.Urn, "logs")
-
-	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile(log_path)
+	path_manager := paths.NewFlowPathManager(source, flow_id).Log()
+	rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
-
-	log_sink, err := csv.GetCSVWriter(vql.MakeScope(), fd)
-	if err != nil {
-		return err
-	}
-	defer log_sink.Close()
+	defer rs_writer.Close()
 
 	arg := task.VQLClientAction
 	if arg == nil {
@@ -188,8 +180,6 @@ func (self *ServerArtifactsRunner) runQuery(
 	if arg.Query == nil {
 		return errors.New("Query should be specified")
 	}
-
-	flow_id := task.SessionId
 
 	// Cancel the query after this deadline
 	deadline := time.After(self.timeout)
@@ -210,7 +200,9 @@ func (self *ServerArtifactsRunner) runQuery(
 			self.config_obj,
 			file_store.GetFileStore(self.config_obj), "/"),
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(&serverLogger{self.config_obj, log_sink}, "server", 0),
+		Logger: log.New(
+			&serverLogger{self.config_obj, rs_writer},
+			source, 0),
 	}.Build()
 	defer scope.Close()
 
@@ -238,23 +230,16 @@ func (self *ServerArtifactsRunner) runQuery(
 		}
 
 		read_chan := vql.Eval(sub_ctx, scope)
-
-		var write_chan chan vfilter.Row
-
+		var rs_writer *result_sets.ResultSetWriter
 		if query.Name != "" {
 			name := artifacts.DeobfuscateString(
 				self.config_obj, query.Name)
-			artifact_name, source_name := paths.
-				QueryNameToArtifactAndSource(name)
 
-			log_path := paths.GetCSVPath(
-				/* client_id */ source,
-				"",
-				/* flow_id */ flow_id,
-				artifact_name, source_name,
-				paths.MODE_SERVER)
-			write_chan = self.GetWriter(scope, log_path)
-			defer close(write_chan)
+			path_manager := result_sets.NewArtifactPathManager(
+				self.config_obj, source, flow_id, name)
+			rs_writer, err = result_sets.NewResultSetWriter(
+				self.config_obj, path_manager)
+			defer rs_writer.Close()
 
 			// Update the artifacts with results in the
 			// context.
@@ -289,9 +274,10 @@ func (self *ServerArtifactsRunner) runQuery(
 				if !ok {
 					break process_query
 				}
-				if write_chan != nil {
+				if rs_writer != nil {
 					row_idx += 1
-					write_chan <- row
+					rs_writer.Write(vfilter.RowToDict(
+						sub_ctx, scope, row))
 				}
 			}
 		}
@@ -302,55 +288,6 @@ func (self *ServerArtifactsRunner) runQuery(
 	}
 
 	return nil
-}
-
-func (self *ServerArtifactsRunner) GetWriter(
-	scope *vfilter.Scope,
-	log_path string) chan vfilter.Row {
-
-	logger := logging.GetLogger(
-		self.config_obj, &logging.FrontendComponent)
-
-	row_chan := make(chan vfilter.Row)
-
-	go func() {
-		var columns []string
-
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-
-		fd, err := file_store_factory.WriteFile(log_path)
-		if err != nil {
-			logger.Error("Error: %v\n", err)
-			return
-		}
-
-		writer, err := csv.GetCSVWriter(scope, fd)
-		if err != nil {
-			logger.Error("Error: %v\n", err)
-			return
-		}
-		defer writer.Close()
-
-		for row := range row_chan {
-			if columns == nil {
-				columns = scope.GetMembers(row)
-			}
-
-			// First column is a row timestamp. This makes
-			// it easier to do a row scan for time ranges.
-			dict_row := ordereddict.NewDict()
-			for _, column := range columns {
-				value, pres := scope.Associative(row, column)
-				if pres {
-					dict_row.Set(column, value)
-				}
-			}
-
-			writer.Write(dict_row)
-		}
-	}()
-
-	return row_chan
 }
 
 func startServerArtifactService(

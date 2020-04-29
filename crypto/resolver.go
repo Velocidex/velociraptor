@@ -92,14 +92,16 @@ type serverPublicKeyResolver struct {
 
 func (self *serverPublicKeyResolver) GetPublicKey(
 	client_id string) (*rsa.PublicKey, bool) {
-	subject := paths.GetClientKeyPath(client_id)
+
+	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, false
 	}
 
 	pem := &crypto_proto.PublicKey{}
-	err = db.GetSubject(self.config_obj, subject, pem)
+	err = db.GetSubject(self.config_obj,
+		client_path_manager.Key().Path(), pem)
 	if err != nil {
 		return nil, false
 	}
@@ -114,7 +116,8 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 
 func (self *serverPublicKeyResolver) SetPublicKey(
 	client_id string, key *rsa.PublicKey) error {
-	subject := paths.GetClientKeyPath(client_id)
+
+	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -124,7 +127,8 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 		Pem:        PublicKeyToPem(key),
 		EnrollTime: uint64(time.Now().Unix()),
 	}
-	return db.SetSubject(self.config_obj, subject, pem)
+	return db.SetSubject(self.config_obj,
+		client_path_manager.Key().Path(), pem)
 }
 
 func (self *serverPublicKeyResolver) Clear() {}

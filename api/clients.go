@@ -52,7 +52,7 @@ func GetApiClient(
 		return nil, errors.New("client_id must start with C")
 	}
 
-	client_urn := paths.GetClientMetadataPath(client_id)
+	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,8 @@ func GetApiClient(
 	}
 
 	client_info := &actions_proto.ClientInfo{}
-	err = db.GetSubject(config_obj, client_urn, client_info)
+	err = db.GetSubject(config_obj,
+		client_path_manager.Path(), client_info)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +88,7 @@ func GetApiClient(
 	}
 
 	public_key_info := &crypto_proto.PublicKey{}
-	err = db.GetSubject(config_obj, paths.GetClientKeyPath(client_id),
+	err = db.GetSubject(config_obj, client_path_manager.Key().Path(),
 		public_key_info)
 	if err != nil {
 		return nil, err
@@ -95,7 +96,7 @@ func GetApiClient(
 
 	result.FirstSeenAt = public_key_info.EnrollTime
 
-	err = db.GetSubject(config_obj, paths.GetClientPingPath(client_id),
+	err = db.GetSubject(config_obj, client_path_manager.Ping().Path(),
 		client_info)
 	if err != nil {
 		return nil, err

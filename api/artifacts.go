@@ -19,6 +19,7 @@ package api
 
 import (
 	"errors"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -35,6 +36,7 @@ import (
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -246,39 +248,40 @@ func (self *ApiServer) ListAvailableEventResults(
 			"User is not allowed to view results.")
 	}
 
-	result := &api_proto.ListAvailableEventResultsResponse{}
-
-	root_path := "server_artifacts"
-
-	if in.ClientId != "" {
-		root_path = "clients/" + in.ClientId + "/monitoring"
-	}
-
+	path_manager := result_sets.NewMonitoringArtifactPathManager(in.ClientId)
 	file_store_factory := file_store.GetFileStore(self.config)
-	dir_list, err := file_store_factory.ListDirectory(root_path)
+
+	seen := make(map[string]*api_proto.AvailableEvent)
+	err = file_store_factory.Walk(path_manager.Path(),
+		func(full_path string, info os.FileInfo, err error) error {
+			if !info.IsDir() && info.Size() > 0 {
+				relative_path := strings.TrimPrefix(full_path, path_manager.Path())
+				artifact_name := strings.TrimLeft(path.Dir(relative_path), "/")
+				date_name := path.Base(relative_path)
+				timestamp := paths.DayNameToTimestamp(date_name)
+
+				if timestamp != 0 {
+					event, pres := seen[artifact_name]
+					if !pres {
+						event = &api_proto.AvailableEvent{
+							Artifact: artifact_name,
+						}
+					}
+
+					event.Timestamps = append(event.Timestamps,
+						int32(timestamp))
+					seen[artifact_name] = event
+				}
+			}
+			return nil
+		})
 	if err != nil {
 		return nil, err
 	}
 
-	for _, dirname := range dir_list {
-		available_event := &api_proto.AvailableEvent{
-			Artifact: dirname.Name(),
-		}
-		result.Logs = append(result.Logs, available_event)
-
-		timestamps, err := file_store_factory.ListDirectory(
-			path.Join(root_path, dirname.Name()))
-		if err == nil {
-			for _, filename := range timestamps {
-				timestamp := paths.DayNameToTimestamp(
-					filename.Name())
-				if timestamp > 0 {
-					available_event.Timestamps = append(
-						available_event.Timestamps,
-						int32(timestamp))
-				}
-			}
-		}
+	result := &api_proto.ListAvailableEventResultsResponse{}
+	for _, item := range seen {
+		result.Logs = append(result.Logs, item)
 	}
 
 	return result, nil

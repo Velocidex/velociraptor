@@ -66,8 +66,10 @@ FlowInspectorController.prototype.startPolling = function(newValues, oldValues) 
     this.pollPromise_ = undefined;
 
     this.uploadedFilesParams = {
-      path: '/clients/' + this.scope_['clientId'] + '/collections/' +
-        this.scope_['flowId'] + '/uploads.csv'
+        client_id: this.scope_['clientId'],
+        flow_id: this.scope_['flowId'] ,
+        type: 'uploads',
+        path: this.scope_['flowId'],
     };
 
     if (angular.isDefined(this.scope_['apiBasePath']) &&

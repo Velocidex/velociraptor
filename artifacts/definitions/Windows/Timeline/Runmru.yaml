@@ -10,7 +10,7 @@ description: |
       
     There are two modes of output:  
     1. grouped - the default, which will include all RunMRU in one line.  
-    2. splitResults  - which will output each registry key as a record with order in message. 
+    2. splitResults - which will output each registry key as a record with order in message. 
     
     Note: This artifact will collect RunMRU from ntuser.dat files and 
     may exclude very recent entries in transaction (HKCU).  Future 

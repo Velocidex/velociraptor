@@ -2,13 +2,13 @@ package memory
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
 
@@ -63,6 +63,16 @@ type MemoryFileStore struct {
 	Data map[string][]byte
 }
 
+func (self *MemoryFileStore) Debug() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	fmt.Printf("MemoryFileStore: \n")
+	for k, v := range self.Data {
+		fmt.Printf("%v: %v\n", k, string(v))
+	}
+}
+
 func (self *MemoryFileStore) ReadFile(filename string) (api.FileReader, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -92,7 +102,7 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 }
 
 func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
-	return &directory.DirectoryFileStoreFileInfo{}, nil
+	return &api.FileStoreFileInfo{}, nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {

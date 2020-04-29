@@ -55,6 +55,8 @@ func (self *VFSService) Start(
 func (self *VFSService) ProcessDownloadFile(
 	ctx context.Context, scope *vfilter.Scope, row vfilter.Row) {
 
+	defer utils.CheckForPanic("ProcessDownloadFile")
+
 	client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
 	flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
 	ts := vql_subsystem.GetIntFromRow(scope, row, "_ts")
@@ -64,7 +66,7 @@ func (self *VFSService) ProcessDownloadFile(
 	sub_scope.AppendVars(row)
 
 	vql, err := vfilter.Parse(
-		"select Path, Accessor FROM source(" +
+		"select Path, Accessor, Size FROM source(" +
 			"flow_id=FlowId, " +
 			"artifact='System.VFS.DownloadFile', " +
 			"client_id=ClientId)")
@@ -77,12 +79,14 @@ func (self *VFSService) ProcessDownloadFile(
 		panic(err)
 	}
 
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+
 	for row := range vql.Eval(ctx, sub_scope) {
 		Accessor := vql_subsystem.GetStringFromRow(scope, row, "Accessor")
 		Path := vql_subsystem.GetStringFromRow(scope, row, "Path")
 
 		// Figure out where the file was uploaded to.
-		vfs_path := paths.GetUploadsFile(client_id, flow_id, Accessor, Path)
+		vfs_path := flow_path_manager.GetUploadsFile(Accessor, Path).Path()
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -95,7 +99,7 @@ func (self *VFSService) ProcessDownloadFile(
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
 		err = db.SetSubject(self.config_obj,
-			paths.GetVFSDownloadInfoPath(client_id, Accessor, Path),
+			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
 			&flows_proto.VFSDownloadInfo{
 				VfsPath: vfs_path,
 				Mtime:   uint64(ts) * 1000000,

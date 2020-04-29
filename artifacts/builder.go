@@ -6,7 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -16,7 +16,7 @@ import (
 type ScopeBuilder struct {
 	Config     *config_proto.Config
 	ACLManager vql_subsystem.ACLManager
-	Uploader   uploads.Uploader
+	Uploader   api.Uploader
 	Logger     *log.Logger
 	Env        *ordereddict.Dict
 }
@@ -92,13 +92,13 @@ func GetServerConfig(scope *vfilter.Scope) (*config_proto.Config, bool) {
 	return config, ok
 }
 
-func GetUploader(scope *vfilter.Scope) (uploads.Uploader, bool) {
+func GetUploader(scope *vfilter.Scope) (api.Uploader, bool) {
 	scope_uploader, pres := scope.Resolve(constants.SCOPE_UPLOADER)
 	if !pres {
 		return nil, false
 	}
 
-	config, ok := scope_uploader.(uploads.Uploader)
+	config, ok := scope_uploader.(api.Uploader)
 	return config, ok
 }
 

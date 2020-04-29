@@ -394,6 +394,7 @@ func (self *NotificationReader) sendMessageList(
 		// synchronization of endpoints.
 		wait := self.maxPoll + time.Duration(
 			rand.Intn(int(self.maxPollDev)))*time.Second
+		self.logger.Info("Sleeping for %v", wait)
 
 		select {
 		case <-ctx.Done():
