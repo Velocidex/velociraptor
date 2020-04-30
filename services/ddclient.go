@@ -108,6 +108,7 @@ func startDynDNSService(
 	result := &DynDNSService{}
 
 	if config_obj.Frontend.DynDns == nil ||
+		config_obj.Frontend.DynDns.DdnsUsername == "" ||
 		config_obj.Frontend.Hostname == "" {
 		return nil
 	}

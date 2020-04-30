@@ -193,6 +193,11 @@ func doGenerateConfigInteractive() {
 			config_obj.GUI, survey.WithValidator(survey.Required)), "")
 	}
 
+	// The API's public DNS name allows external callers but by
+	// default we bind to loopback only.
+	config_obj.API.Hostname = config_obj.Frontend.Hostname
+	config_obj.API.BindAddress = "127.0.0.1"
+
 	// Setup dyndns
 	kingpin.FatalIfError(dynDNSConfig(config_obj), "")
 

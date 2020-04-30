@@ -146,8 +146,11 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 
 	switch config_obj.API.BindScheme {
 	case "tcp":
-		return fmt.Sprintf("%s:%d", config_obj.API.BindAddress,
-			config_obj.API.BindPort)
+		hostname := config_obj.API.Hostname
+		if hostname == "" {
+			hostname = config_obj.API.BindAddress
+		}
+		return fmt.Sprintf("%s:%d", hostname, config_obj.API.BindPort)
 
 	case "unix":
 		return fmt.Sprintf("unix://%s", config_obj.API.BindAddress)

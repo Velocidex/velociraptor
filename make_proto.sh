@@ -13,6 +13,7 @@ fi
 for i in $CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/artifacts/proto/ \
                      $CWD/actions/proto/ \
+                     $CWD/frontend/proto/ \
                      $CWD/config/proto/ \
                      $CWD/acls/proto/ \
                      $CWD/flows/proto/ ; do

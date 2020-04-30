@@ -38,8 +38,8 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	for _, user := range config_obj.GUI.InitialUsers {
 		user_record, err := users.GetUser(config_obj, user.Name)
 		if err != nil || user_record.Name != user.Name {
-			logger.Info("Initial user %v not present, creating",
-				user.Name)
+			logger.Info("Initial user %v not present (%v), creating",
+				user_record, user.Name)
 			new_user, _ := users.NewUserRecord(user.Name)
 
 			if config.GoogleAuthEnabled(config_obj) ||

@@ -61,6 +61,10 @@ func doConfigFrontend() {
 	config_obj.ExtraFrontends = append(config_obj.ExtraFrontends,
 		frontend_config)
 
+	// API server must be exposed to allow multiple frontends to
+	// call it.
+	config_obj.API.BindAddress = "0.0.0.0"
+
 	path := ""
 	err = survey.AskOne(output_question, &path,
 		survey.WithValidator(survey.Required))

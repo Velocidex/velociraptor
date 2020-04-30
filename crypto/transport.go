@@ -162,7 +162,7 @@ func _NewCipher(
 
 type ICryptoManager interface {
 	GetCSR() ([]byte, error)
-	AddCertificate(certificate_pem []byte) (*string, error)
+	AddCertificate(certificate_pem []byte) (string, error)
 	Encrypt(compressed_message_lists [][]byte,
 		compression crypto_proto.PackedMessageList_CompressionType,
 		destination string) ([]byte, error)
@@ -216,14 +216,14 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 }
 
 // Adds the server certificate to the crypto manager.
-func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, error) {
+func (self *CryptoManager) AddCertificate(certificate_pem []byte) (string, error) {
 	server_cert, err := ParseX509CertFromPemStr(certificate_pem)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if server_cert.PublicKeyAlgorithm != x509.RSA {
-		return nil, errors.New("Not RSA algorithm")
+		return "", errors.New("Not RSA algorithm")
 	}
 
 	// Verify that the certificate is signed by the CA.
@@ -233,7 +233,7 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 
 	_, err = server_cert.Verify(opts)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Check that the server's serial number is larger than the
@@ -241,7 +241,7 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 	last_serial_number := big.NewInt(int64(
 		self.config.Writeback.LastServerSerialNumber))
 	if last_serial_number.Cmp(server_cert.SerialNumber) == 1 {
-		return nil, errors.New(
+		return "", errors.New(
 			fmt.Sprintf("Server serial number is too old. Should be %v",
 				self.config.Writeback.LastServerSerialNumber))
 	}
@@ -267,7 +267,7 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 			server_cert.SerialNumber.Int64())
 		err := config.UpdateWriteback(self.config)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		self.logger.Info(
 			"Updated server serial number in "+
@@ -280,20 +280,20 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (*string, erro
 		server_cert.Subject.CommonName,
 		server_cert.PublicKey.(*rsa.PublicKey))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &server_cert.Subject.CommonName, nil
+	return server_cert.Subject.CommonName, nil
 }
 
-func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error) {
+func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (string, error) {
 	csr, err := parseX509CSRFromPemStr(csr_pem)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if csr.PublicKeyAlgorithm != x509.RSA {
-		return nil, errors.New("Not RSA algorithm")
+		return "", errors.New("Not RSA algorithm")
 	}
 
 	common_name := strings.TrimPrefix(csr.Subject.CommonName, "aff4:/")
@@ -313,14 +313,14 @@ func (self *CryptoManager) AddCertificateRequest(csr_pem []byte) (*string, error
 	// avoids the possibility of impersonation since the
 	// public/private key pair is tied into the client id itself.
 	if common_name != ClientIDFromPublicKey(public_key) {
-		return nil, errors.New("Invalid CSR")
+		return "", errors.New("Invalid CSR")
 	}
 	err = self.public_key_resolver.SetPublicKey(
 		common_name, csr.PublicKey.(*rsa.PublicKey))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	return &csr.Subject.CommonName, nil
+	return csr.Subject.CommonName, nil
 }
 
 func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []byte) (

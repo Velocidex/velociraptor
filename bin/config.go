@@ -131,6 +131,13 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	}
 	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
 
+	// Make another nonce for VQL obfuscation.
+	_, err = rand.Read(nonce)
+	if err != nil {
+		return errors.Wrap(err, "Unable to create nonce")
+	}
+	config_obj.ObfuscationNonce = base64.StdEncoding.EncodeToString(nonce)
+
 	// Generate frontend certificate. Frontend certificates must
 	// have a constant common name - clients will refuse to talk
 	// with another common name.

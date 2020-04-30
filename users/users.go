@@ -31,6 +31,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type UserRecord struct {
@@ -74,8 +75,10 @@ func SetUser(config_obj *config_proto.Config, user_record *UserRecord) error {
 	if err != nil {
 		return err
 	}
+
 	return db.SetSubject(config_obj,
-		constants.USER_URN+user_record.Name, user_record)
+		paths.UserPathManager{user_record.Name}.Path(),
+		user_record.VelociraptorUser)
 }
 
 func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
@@ -119,8 +122,10 @@ func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, err
 	if err != nil {
 		return nil, err
 	}
-	return user_record, db.GetSubject(config_obj,
-		constants.USER_URN+username, user_record)
+
+	err = db.GetSubject(config_obj, paths.UserPathManager{
+		username}.Path(), user_record.VelociraptorUser)
+	return user_record, err
 }
 
 func GetUserNotificationCount(config_obj *config_proto.Config, username string) (uint64, error) {

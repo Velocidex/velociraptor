@@ -183,6 +183,9 @@ message ClientConfig {
 }
 
 message APIConfig {
+    // Publically accessible hostname.
+    string hostname = 5;
+
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind gRPC endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
         }];
@@ -403,6 +406,10 @@ message FrontendConfig {
 
     int64 GRPC_pool_max_size = 17;
     int64 GRPC_pool_max_wait = 18;
+
+    // The services that will run on this frontend. If not set, all
+    // services will run on the primary frontend.
+    ServerServicesConfig server_services = 20;
 }
 
 
@@ -561,9 +568,10 @@ message Config {
            "line automatically."
         }];
 
-   ServerServicesConfig server_services = 29;
-
     string server_type = 30 [(sem_type) = {
             description: "Type of server (linux, windows, darwin)"
         }];
+
+    // If set we obfuscate VQL to the clients using this key.
+    string obfuscation_nonce = 32;
 }

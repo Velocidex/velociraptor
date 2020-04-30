@@ -28,6 +28,7 @@ import (
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
+	"www.velocidex.com/golang/velociraptor/frontend"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
@@ -39,9 +40,11 @@ import (
 
 var (
 	// Run the server.
-	frontend         = app.Command("frontend", "Run the frontend and GUI.")
-	compression_flag = frontend.Flag("disable_artifact_compression",
+	frontend_cmd     = app.Command("frontend", "Run the frontend and GUI.")
+	compression_flag = frontend_cmd.Flag("disable_artifact_compression",
 		"Disables artifact compressions").Bool()
+	frontend_node = frontend_cmd.Flag("node", "Run this specified node only").
+			String()
 )
 
 func doFrontend() {
@@ -85,27 +88,6 @@ func startFrontend(
 		config_obj.Frontend.DoNotCompressArtifacts = true
 	}
 
-	// If not specified at all, start all services on this instance.
-	if config_obj.ServerServices == nil {
-		config_obj.ServerServices = &config_proto.ServerServicesConfig{
-			HuntManager:       true,
-			HuntDispatcher:    true,
-			StatsCollector:    true,
-			ServerMonitoring:  true,
-			ServerArtifacts:   true,
-			DynDns:            true,
-			Interrogation:     true,
-			SanityChecker:     true,
-			VfsService:        true,
-			UserManager:       true,
-			ClientMonitoring:  true,
-			MonitoringService: true,
-			ApiServer:         true,
-			FrontendServer:    true,
-			GuiServer:         true,
-		}
-	}
-
 	// Parse the artifacts database to detect errors early.
 	getRepository(config_obj)
 
@@ -115,33 +97,49 @@ func startFrontend(
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)
 
+	// Start critical services first.
+	err = services.StartJournalService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Start the frontend service if needed.
+	err = frontend.StartFrontendService(ctx, config_obj, *frontend_node)
+	if err != nil {
+		return nil, err
+	}
+
 	var notifier *notifications.NotificationPool
 	var server_obj *server.Server
 
-	if config_obj.ServerServices.FrontendServer ||
-		config_obj.ServerServices.ApiServer {
-		// Create a new server
-		server_obj, err = server.NewServer(config_obj)
-		kingpin.FatalIfError(err, "Unable to create server")
+	// Create a new server
+	server_obj, err = server.NewServer(config_obj)
+	kingpin.FatalIfError(err, "Unable to create server")
 
-		notifier = server_obj.NotificationPool
+	notifier = server_obj.NotificationPool
+
+	// These services must start on all frontends
+	err = services.StartFrontendServices(ctx, wg, config_obj, notifier)
+	if err != nil {
+		logger.Error("Failed starting services: ", err)
+		return nil, err
 	}
 
-	// Start Server Services
-	err = services.StartServices(
-		ctx, wg, config_obj, notifier)
+	// Start all services that are supposed to run on this
+	// frontend.
+	err = services.StartServices(ctx, wg, config_obj, notifier)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
 		return nil, err
 	}
 
 	// Start monitoring.
-	if config_obj.ServerServices.MonitoringService {
+	if config_obj.Frontend.ServerServices.MonitoringService {
 		api.StartMonitoringService(ctx, wg, config_obj)
 	}
 
 	// Start the gRPC API server.
-	if config_obj.ServerServices.ApiServer {
+	if config_obj.Frontend.ServerServices.ApiServer {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -150,12 +148,6 @@ func startFrontend(
 			kingpin.FatalIfError(
 				err, "Unable to start API server")
 		}()
-	}
-
-	// The below configures the frontend or gui services.
-	if !config_obj.ServerServices.FrontendServer &&
-		!config_obj.ServerServices.GuiServer {
-		return server_obj, nil
 	}
 
 	// Are we in autocert mode? There are special requirements in
@@ -186,11 +178,7 @@ func startSharedSelfSignedFrontend(
 	server_obj *server.Server) {
 	mux := http.NewServeMux()
 
-	if config_obj.ServerServices.FrontendServer {
-		server.PrepareFrontendMux(
-			config_obj, server_obj, mux)
-	}
-
+	server.PrepareFrontendMux(config_obj, server_obj, mux)
 	router, err := api.PrepareMux(config_obj, mux)
 	kingpin.FatalIfError(
 		err, "Unable to start API server")
@@ -217,7 +205,7 @@ func startSelfSignedFrontend(
 	server_obj *server.Server) {
 
 	// Launch a new server for the GUI.
-	if config_obj.ServerServices.GuiServer {
+	if config_obj.Frontend.ServerServices.GuiServer {
 		wg.Add(1)
 
 		go func() {
@@ -236,24 +224,22 @@ func startSelfSignedFrontend(
 	}
 
 	// Add Comms handlers if required.
-	if config_obj.ServerServices.FrontendServer {
-		wg.Add(1)
+	wg.Add(1)
 
-		go func() {
-			defer wg.Done()
-			// Launch a server for the frontend.
-			mux := http.NewServeMux()
+	go func() {
+		defer wg.Done()
+		// Launch a server for the frontend.
+		mux := http.NewServeMux()
 
-			server.PrepareFrontendMux(
-				config_obj, server_obj, mux)
+		server.PrepareFrontendMux(
+			config_obj, server_obj, mux)
 
-			// Start comms over https.
-			err := server.StartFrontendHttps(
-				ctx, wg,
-				config_obj, server_obj, mux)
-			kingpin.FatalIfError(err, "StartFrontendHttps")
-		}()
-	}
+		// Start comms over https.
+		err := server.StartFrontendHttps(
+			ctx, wg,
+			config_obj, server_obj, mux)
+		kingpin.FatalIfError(err, "StartFrontendHttps")
+	}()
 }
 
 // When in autocert mode, we share the same port for both frontend and
@@ -264,17 +250,14 @@ func startAutoCertFrontend(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *server.Server) {
-	// For autocert we combine the GUI and
-	// frontends on the same port. The
-	// ACME protocol requires ports 80 and
-	// 443 for all services.
+
+	// For autocert we combine the GUI and frontends on the same
+	// port. The ACME protocol requires ports 80 and 443 for all
+	// services.
 	mux := http.NewServeMux()
 
 	// Add Comms handlers.
-	if config_obj.ServerServices.FrontendServer {
-		server.PrepareFrontendMux(
-			config_obj, server_obj, mux)
-	}
+	server.PrepareFrontendMux(config_obj, server_obj, mux)
 
 	router, err := api.PrepareMux(config_obj, mux)
 	kingpin.FatalIfError(
@@ -312,7 +295,7 @@ func checkFrontendUser(config_obj *config_proto.Config) error {
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
-		if command == frontend.FullCommand() {
+		if command == frontend_cmd.FullCommand() {
 			doFrontend()
 			return true
 		}

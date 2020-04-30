@@ -308,13 +308,13 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
-	if *server_name != self.config_obj.Client.PinnedServerName {
+	if server_name != self.config_obj.Client.PinnedServerName {
 		self.server_name = ""
-		self.logger.Info("Invalid server certificate common name %v!", *server_name)
+		self.logger.Info("Invalid server certificate common name %v!", server_name)
 		return errors.New("Invalid server certificate common name!")
 	}
 
-	self.server_name = *server_name
+	self.server_name = server_name
 	self.logger.Info("Received PEM for %v from %v", self.server_name, url)
 
 	return nil
