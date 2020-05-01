@@ -3,6 +3,9 @@ Client:
   writeback_windows: c:/tmp/foo.yaml
   writeback_darwin: /tmp/foo.yaml
 
+Frontend:
+  hostname: www.example.com
+
 Datastore:
   filestore_directory: ./artifacts/testdata/server
   location: ./artifacts/testdata/server
