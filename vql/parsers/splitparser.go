@@ -94,7 +94,7 @@ func processFile(
 				if arg.First_row_is_headers {
 					count := 1
 					for _, item := range items {
-						if utils.InString(&arg.Columns, item) {
+						if utils.InString(arg.Columns, item) {
 							item = fmt.Sprintf("%s%d",
 								item, count)
 							count += 1

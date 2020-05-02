@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -180,7 +180,7 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			length := int64(binary.LittleEndian.Uint64(self.read_buf))
 			// File might be corrupt - just reset the
 			// entire file.
-			if length > constants.MAX_MEMORY*2 {
+			if length > constants.MAX_MEMORY*2 || length == 0 {
 				self.log_ctx.Error("Possible corruption detected - item length is too large.")
 				self._Truncate()
 				return nil

@@ -224,7 +224,7 @@ func (self *VFSFs) Readdir(path string,
 
 	names := make([]string, len(rows))
 	for _, row := range rows {
-		if utils.InString(&names, row.Name) {
+		if utils.InString(names, row.Name) {
 			continue
 		}
 		names = append(names, row.Name)

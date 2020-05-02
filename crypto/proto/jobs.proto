@@ -193,7 +193,7 @@ message CipherProperties {
     }];
 
   enum HMACType {
-    // DEPRECATED: Older clients use a HMAC only on the encrypted message.
+      // DEPRECATED: Older clients use a HMAC only on the encrypted message.
     SIMPLE_HMAC = 0;
 
     // Newer clients also include the encrypted cipher and API version in the

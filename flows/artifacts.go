@@ -430,7 +430,7 @@ func ArtifactCollectorProcessOneMessage(
 			// Update the artifacts with results in the
 			// context.
 			if len(rows) > 0 && !utils.InString(
-				&collection_context.ArtifactsWithResults,
+				collection_context.ArtifactsWithResults,
 				response.Query.Name) {
 				collection_context.ArtifactsWithResults = append(
 					collection_context.ArtifactsWithResults,

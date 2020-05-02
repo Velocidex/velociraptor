@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -42,6 +44,9 @@ type FrontendManager struct {
 
 	// For now we only allow frontends to be distributed.
 	primary_frontend string
+
+	// A list of active frontend URLs
+	urls []string
 }
 
 func GetFrontendName(fe *config_proto.FrontendConfig) string {
@@ -75,6 +80,18 @@ func (self *FrontendManager) setMyState() error {
 		self.my_state)
 }
 
+func (self *FrontendManager) clearMyState() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return db.DeleteSubject(self.config_obj,
+		self.path_manager.Frontend(self.my_state.Name))
+}
+
 func (self *FrontendManager) syncActiveFrontends() error {
 	active_frontends := make(map[string]*frontend_proto.FrontendState)
 
@@ -86,6 +103,8 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	now := time.Now().Unix()
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
+
+	urls := make([]string, 0, len(children))
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
 		err = db.GetSubject(self.config_obj, child, state)
@@ -97,15 +116,38 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		// seconds ago.
 		if state.Heartbeat > now-30 {
 			active_frontends[state.Name] = state
+			urls = append(urls, state.Url)
 		}
 	}
 
 	// Keep the lock to a minimum.
 	self.mu.Lock()
 	self.active_frontends = active_frontends
+	self.urls = urls
+	utils.Debug(self.urls)
+
 	self.mu.Unlock()
 
 	return nil
+}
+
+// GetFrontendURL gets a URL of another frontend. If we return this
+// frontend's url then we must serve this request ourselves.
+func (self *FrontendManager) GetFrontendURL() (string, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if len(self.urls) <= 1 {
+		return "", false
+	}
+
+	result := self.urls[rand.Intn(len(self.urls))]
+	return result, result != self.my_state.Url
+}
+
+func GetFrontendURL() (string, bool) {
+	return fe_manager.GetFrontendURL()
+
 }
 
 // Selects a frontend to take on.
@@ -167,6 +209,8 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 
 func StartFrontendService(ctx context.Context,
 	config_obj *config_proto.Config, node string) error {
+	var err error
+
 	fe_manager = &FrontendManager{
 		frontends:        make(map[string]*config_proto.FrontendConfig),
 		active_frontends: make(map[string]*frontend_proto.FrontendState),
@@ -201,16 +245,17 @@ func StartFrontendService(ctx context.Context,
 
 	fe_manager.addFrontendConfig(config_obj.Frontend)
 	for _, fe_config := range config_obj.ExtraFrontends {
+		fe_config.Certificate = config_obj.Frontend.Certificate
+		fe_config.PrivateKey = config_obj.Frontend.PrivateKey
 		fe_manager.addFrontendConfig(fe_config)
-	}
-
-	err := fe_manager.syncActiveFrontends()
-	if err != nil {
-		return err
 	}
 
 	// Select a frontend to run as
 	for i := 0; i < 10; i++ {
+		err = fe_manager.syncActiveFrontends()
+		if err != nil {
+			return err
+		}
 		err = fe_manager.selectFrontend(node)
 		if err == nil {
 			break
@@ -240,6 +285,10 @@ func StartFrontendService(ctx context.Context,
 		for {
 			select {
 			case <-ctx.Done():
+				// Not a guaranteed removal but if we
+				// exit cleanly we can free up the
+				// frontend slot.
+				fe_manager.clearMyState()
 				return
 
 			case <-time.After(10 * time.Second):

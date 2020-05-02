@@ -131,7 +131,7 @@ func (self _ParseFileWithRegex) Call(
 		// make sure the result row has something in each
 		// position to avoid errors.
 		for _, x := range r.SubexpNames() {
-			if !utils.InString(&arg.capture_vars, x) && x != "" {
+			if !utils.InString(arg.capture_vars, x) && x != "" {
 				arg.capture_vars = append(arg.capture_vars, x)
 			}
 		}
@@ -185,7 +185,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 		if match != nil {
 			names := r.SubexpNames()
 			for _, x := range names {
-				if !utils.InString(&merged_names, x) && x != "" {
+				if !utils.InString(merged_names, x) && x != "" {
 					merged_names = append(merged_names, x)
 				}
 			}

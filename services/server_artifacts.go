@@ -244,7 +244,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			// Update the artifacts with results in the
 			// context.
 			if !utils.InString(
-				&collection_context.ArtifactsWithResults, name) {
+				collection_context.ArtifactsWithResults, name) {
 				collection_context.ArtifactsWithResults = append(
 					collection_context.ArtifactsWithResults, name)
 			}

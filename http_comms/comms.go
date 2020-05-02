@@ -163,7 +163,7 @@ func NewHTTPConnector(
 		tls_config.RootCAs = CA_Pool
 	}
 
-	return &HTTPConnector{
+	self := &HTTPConnector{
 		config_obj: config_obj,
 		manager:    manager,
 		logger:     logger,
@@ -191,6 +191,20 @@ func NewHTTPConnector(
 			},
 		},
 	}
+
+	self.client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		fmt.Printf("Redirected to %v\n", req.URL)
+		return nil
+
+		dest := req.URL.String()
+		if !utils.InString(self.urls, dest) {
+			self.urls = append(self.urls, dest)
+			self.current_url_idx = len(self.urls) - 1
+		}
+		return errors.New("Redirected")
+	}
+
+	return self
 
 }
 

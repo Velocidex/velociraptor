@@ -48,7 +48,7 @@ func (self _ProcessFieldImpl) Associative(
 	scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
 	field := b.(string)
 
-	if utils.InString(&_BlockedMembers, field) {
+	if utils.InString(_BlockedMembers, field) {
 		return false, true
 	}
 
@@ -59,7 +59,7 @@ func (self _ProcessFieldImpl) Associative(
 func (self _ProcessFieldImpl) GetMembers(scope *vfilter.Scope, a vfilter.Any) []string {
 	var result []string
 	for _, item := range (vfilter.DefaultAssociative{}).GetMembers(scope, a) {
-		if !utils.InString(&_BlockedMembers, item) {
+		if !utils.InString(_BlockedMembers, item) {
 			result = append(result, item)
 		}
 	}

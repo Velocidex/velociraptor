@@ -82,7 +82,7 @@ func doGrant() {
 
 	if *grant_command_roles != "" {
 		for _, role := range strings.Split(*grant_command_roles, ",") {
-			if !utils.InString(&new_policy.Roles, role) {
+			if !utils.InString(new_policy.Roles, role) {
 				if !acls.ValidateRole(role) {
 					kingpin.Fatalf("Invalid role %v", role)
 				}
