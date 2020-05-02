@@ -24,8 +24,13 @@ import (
 )
 
 // Install artifact stuff into the scope.
-func MakeScope(repository *Repository) *vfilter.Scope {
-	scope := vql_subsystem.MakeScope()
+func MakeScope(repository *Repository, from_scratch bool) *vfilter.Scope {
+	var scope *vfilter.Scope
+	if from_scratch {
+		scope = vql_subsystem.MakeNewScope()
+	} else {
+		scope = vql_subsystem.MakeScope()
+	}
 	artifact_plugin := NewArtifactRepositoryPlugin(repository, nil)
 	env := ordereddict.NewDict().Set("Artifact", artifact_plugin)
 	return scope.AppendVars(env).AddProtocolImpl(
