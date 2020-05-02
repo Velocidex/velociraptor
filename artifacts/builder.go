@@ -22,6 +22,15 @@ type ScopeBuilder struct {
 }
 
 func (self ScopeBuilder) Build() *vfilter.Scope {
+	return self._build(false)
+}
+
+// Only used in tests - this is much more expensive.
+func (self ScopeBuilder) BuildFromScratch() *vfilter.Scope {
+	return self._build(true)
+}
+
+func (self ScopeBuilder) _build(from_scratch bool) *vfilter.Scope {
 	env := ordereddict.NewDict()
 	if self.Env != nil {
 		env.MergeFrom(self.Env)
@@ -43,7 +52,7 @@ func (self ScopeBuilder) Build() *vfilter.Scope {
 	if err != nil {
 		panic(err)
 	}
-	scope := MakeScope(repository).AppendVars(env)
+	scope := MakeScope(repository, from_scratch).AppendVars(env)
 	scope.Logger = self.Logger
 
 	return scope
