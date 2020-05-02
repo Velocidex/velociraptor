@@ -1,0 +1,40 @@
+LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]), mock(artifact=Artifact.Windows.Registry.NTUser, results=parse_json_array(data=NTUserRunMRU)), mock(plugin="glob", results=parse_json_array(data=ArtifactRunMRUGlobMock)) FROM scope()[]SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=FALSE)[
+ {
+  "event_time": "2020-04-30T01:46:57Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "RunMRU",
+  "message": "RunMRU evidence user: yolo, order: 0, command: powershell'",
+  "source": "/C:/Users/yolo/NTUSER.DAT",
+  "user": "yolo",
+  "reg_key": "HKEY_USERS\\S-1-5-21-2201333269-445358460-1233016754-1000/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU",
+  "reg_mtime": "2020-04-30T01:46:57Z",
+  "reg_name": "a",
+  "reg_value": "powershell",
+  "reg_type": "REG_SZ",
+  "_Source": "Windows.Timeline.Registry.RunMRU"
+ },
+ {
+  "event_time": "2020-04-30T01:46:57Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "RunMRU",
+  "message": "RunMRU evidence user: yolo, order: 1, command: \\\\criticalserver\\c$'",
+  "source": "/C:/Users/yolo/NTUSER.DAT",
+  "user": "yolo",
+  "reg_key": "HKEY_USERS\\S-1-5-21-2201333269-445358460-1233016754-1000/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU",
+  "reg_mtime": "2020-04-30T01:46:57Z",
+  "reg_name": "b",
+  "reg_value": "\\\\criticalserver\\c$",
+  "reg_type": "REG_SZ",
+  "_Source": "Windows.Timeline.Registry.RunMRU"
+ }
+]SELECT * from Artifact.Windows.Timeline.Registry.RunMRU(groupResults=TRUE)[
+ {
+  "event_time": "2020-04-30T01:46:57Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "RunMRU",
+  "message": "RunMRU evidence user: yolo, MRU0: powershell | MRU1: \\\\criticalserver\\c$'",
+  "source": "/C:/Users/yolo/NTUSER.DAT",
+  "user": "yolo",
+  "_Source": "Windows.Timeline.Registry.RunMRU"
+ }
+]

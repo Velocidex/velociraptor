@@ -118,7 +118,7 @@ func runTest(fixture *testFixture) (string, error) {
 	}
 
 	// Cleanup after the query.
-	scope := builder.Build()
+	scope := builder.BuildFromScratch()
 	defer scope.Close()
 
 	scope.AddDestructor(func() {

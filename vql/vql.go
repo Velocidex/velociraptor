@@ -82,25 +82,33 @@ func _makeRootScope() *vfilter.Scope {
 	defer mu.Unlock()
 
 	if globalScope == nil {
-		globalScope = vfilter.NewScope()
-		for _, plugin := range exportedPlugins {
-			globalScope.AppendPlugins(plugin)
-		}
-
-		for _, protocol := range exportedProtocolImpl {
-			globalScope.AddProtocolImpl(protocol)
-		}
-
-		for _, function := range exportedFunctions {
-			globalScope.AppendFunctions(function)
-		}
+		globalScope = MakeNewScope()
 	}
 
 	return globalScope.NewScope()
 }
 
 func MakeScope() *vfilter.Scope {
+	return _makeRootScope()
+}
+
+// MakeNewScope makes a new scope from scratch. You do not need to use
+// this! use MakeScope() above which is much faster.
+func MakeNewScope() *vfilter.Scope {
 	scopeCounter.Inc()
 
-	return _makeRootScope()
+	result := vfilter.NewScope()
+	for _, plugin := range exportedPlugins {
+		result.AppendPlugins(plugin)
+	}
+
+	for _, protocol := range exportedProtocolImpl {
+		result.AddProtocolImpl(protocol)
+	}
+
+	for _, function := range exportedFunctions {
+		result.AppendFunctions(function)
+	}
+
+	return result
 }
