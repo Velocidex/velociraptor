@@ -43,8 +43,8 @@ build_script:
 
 test_script:
 - set GO111MODULE=on
-- cmd: output\velociraptor.exe golden artifacts\testdata\windows\ --env srcDir=c:\velociraptor
-- cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
+- cmd: output\velociraptor.exe golden --config artifacts\testdata\windows\test.config.yaml artifacts\testdata\windows\ --env srcDir=c:\velociraptor
+- cmd: output\velociraptor.exe golden --config artifacts\testdata\windows\test.config.yaml artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
 
 on_finish:
