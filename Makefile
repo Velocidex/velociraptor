@@ -45,7 +45,7 @@ build_release: build_docker
 	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder
 
 debug:
-	dlv debug --build-flags="-tags 'server_vql extras'" \
+	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" \
 		./bin/ -- frontend -v --debug
 
 debug_client:

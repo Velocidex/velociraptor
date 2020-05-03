@@ -12,12 +12,11 @@ import (
 
 func LabelClients(
 	config_obj *config_proto.Config,
-	in *api_proto.LabelClientsRequest) (*api_proto.APIResponse, error) {
-	result := &api_proto.APIResponse{}
+	in *api_proto.LabelClientsRequest) error {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if in.Operation == "check" {
@@ -31,7 +30,7 @@ func LabelClients(
 					constants.CLIENT_INDEX_URN,
 					client_id, []string{label})
 				if err == nil {
-					return result, nil
+					return nil
 				}
 
 				err = db.CheckIndex(
@@ -39,7 +38,7 @@ func LabelClients(
 					constants.CLIENT_INDEX_URN,
 					label, []string{client_id})
 				if err == nil {
-					return result, nil
+					return nil
 				}
 
 				err = db.CheckIndex(
@@ -48,10 +47,11 @@ func LabelClients(
 					"__"+strings.ToLower(label),
 					[]string{client_id})
 				if err == nil {
-					return result, nil
+					return nil
 				}
 			}
 		}
+		return errors.New("Not found")
 	}
 
 	index_func := db.SetIndex
@@ -62,8 +62,7 @@ func LabelClients(
 	case "set":
 		// default.
 	default:
-		return nil, errors.New(
-			"unknown label operation. Must be set, check or remove")
+		return errors.New("unknown label operation. Must be set, check or remove")
 	}
 
 	for _, label := range in.Labels {
@@ -76,14 +75,14 @@ func LabelClients(
 				constants.CLIENT_INDEX_URN,
 				client_id, []string{label})
 			if err != nil {
-				return nil, err
+				return err
 			}
 			err = index_func(
 				config_obj,
 				constants.CLIENT_INDEX_URN,
 				label, []string{client_id})
 			if err != nil {
-				return nil, err
+				return err
 			}
 			err = index_func(
 				config_obj,
@@ -91,10 +90,10 @@ func LabelClients(
 				"__label:"+strings.ToLower(label),
 				[]string{client_id})
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
 
-	return result, nil
+	return nil
 }
