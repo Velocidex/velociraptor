@@ -19,6 +19,7 @@ package artifacts
 
 import (
 	"strings"
+	"time"
 
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -26,6 +27,8 @@ import (
 )
 
 func register(config_obj *config_proto.Config) error {
+	now := time.Now()
+
 	assets.Init()
 	files, err := assets.WalkDirs("", false)
 	if err != nil {
@@ -53,7 +56,7 @@ func register(config_obj *config_proto.Config) error {
 		}
 	}
 
-	logger.Info("Loaded %d built in artifacts", count)
+	logger.Info("Loaded %d built in artifacts in %v", count, time.Now().Sub(now))
 	return nil
 }
 
