@@ -92,6 +92,14 @@ func doShowConfig() {
 	config_obj, err := config.LoadClientConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
+	if config_obj.Frontend == nil {
+		kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
+			"Unable to load config.")
+	} else {
+		kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+			"Unable to load config.")
+	}
+
 	// Dump out the embedded config as is.
 	if *config_path == "" {
 		idx := bytes.IndexByte(config.FileConfigDefaultYaml, '\n')
@@ -208,6 +216,10 @@ func doGenerateConfigNonInteractive() {
 func doRotateKeyConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
+
+	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+		"Unable to load config.")
+
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	// Frontends must have a well known common name.
@@ -252,6 +264,9 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 func doDumpClientConfig() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
+
+	kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
+		"Unable to load config.")
 
 	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)

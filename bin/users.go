@@ -55,6 +55,8 @@ func doAddUser() {
 	config_obj, err := get_server_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
+
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
 		kingpin.FatalIfError(err, "add user:")

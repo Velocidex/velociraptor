@@ -273,8 +273,13 @@ func startAutoCertFrontend(
 	}()
 }
 
+// Any commands that potentially change the filestore need to make
+// sure they are not running as the wrong user when using the
+// FileBaseDataStore. Otherwise we might create files that are not
+// readable by the service.
 func checkFrontendUser(config_obj *config_proto.Config) error {
-	if config_obj.Frontend.RunAsUser == "" {
+	if config_obj.Frontend.RunAsUser == "" ||
+		config_obj.Datastore.Implementation != "FileBaseDataStore" {
 		return nil
 	}
 

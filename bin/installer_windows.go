@@ -74,6 +74,10 @@ func doInstall(config_obj *config_proto.Config) (err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	if config_obj.Client.WindowsInstaller == nil {
+		kingpin.Fatalf("WindowsInstaller is not configured.")
+	}
+
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -494,6 +498,7 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
+		utils.RealClock{},
 	)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(

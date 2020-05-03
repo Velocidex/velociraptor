@@ -315,6 +315,9 @@ func doClientDeb() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
+		"Unable to load config.")
+
 	res, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")
 

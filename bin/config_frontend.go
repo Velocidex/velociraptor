@@ -22,7 +22,8 @@ var (
 func doConfigFrontend() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
-
+	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+		"Unable to load config.")
 	if config_obj.Datastore.Implementation == "FileBaseDataStore" {
 		kingpin.Fatalf("Current FileStore implementation is %v which does not support multiple frontends.", config_obj.Datastore.Implementation)
 	}

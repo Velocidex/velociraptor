@@ -270,7 +270,7 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 	if ok {
 		// We should redirect to another frontend.
 		fmt.Printf("Redirecting to %v\n", redirect_url)
-		http.Redirect(w, r, redirect_url+handler+"?r=0", 301)
+		http.Redirect(w, r, redirect_url, 301)
 		return true
 	}
 

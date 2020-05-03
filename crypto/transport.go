@@ -32,7 +32,6 @@ import (
 	"encoding/binary"
 	"encoding/pem"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
@@ -40,7 +39,6 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -234,46 +232,6 @@ func (self *CryptoManager) AddCertificate(certificate_pem []byte) (string, error
 	_, err = server_cert.Verify(opts)
 	if err != nil {
 		return "", err
-	}
-
-	// Check that the server's serial number is larger than the
-	// last one we saw. This prevents attackers from MITM old certs.
-	last_serial_number := big.NewInt(int64(
-		self.config.Writeback.LastServerSerialNumber))
-	if last_serial_number.Cmp(server_cert.SerialNumber) == 1 {
-		return "", errors.New(
-			fmt.Sprintf("Server serial number is too old. Should be %v",
-				self.config.Writeback.LastServerSerialNumber))
-	}
-
-	// Server has advanced its serial number - record the new
-	// number in our writeback state. Note- serial number can only
-	// be advanced.
-
-	// With the use of TLS I am not sure this code is needed. It
-	// may also erroneously increment serial numbers then lock the
-	// client out. It is disabled for now - we need to explictly
-	// update the minimum server serial number from the server
-	// when needed.
-
-	// last_serial_number < server_cert.SerialNumber
-	if false && last_serial_number.Cmp(server_cert.SerialNumber) == -1 {
-		// Clear all our internal caches because we are now
-		// re-keying.
-		self.Clear()
-
-		// Persist the number.
-		self.config.Writeback.LastServerSerialNumber = uint64(
-			server_cert.SerialNumber.Int64())
-		err := config.UpdateWriteback(self.config)
-		if err != nil {
-			return "", err
-		}
-		self.logger.Info(
-			"Updated server serial number in "+
-				"config file %v to %v",
-			config.WritebackLocation(self.config),
-			self.config.Writeback.LastServerSerialNumber)
 	}
 
 	err = self.public_key_resolver.SetPublicKey(

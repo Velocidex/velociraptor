@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -63,6 +64,7 @@ func RunClient(
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
+		utils.RealClock{},
 	)
 	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 

@@ -51,6 +51,10 @@ func doRemove() error {
 		return errors.Wrap(err, "Unable to load config file")
 	}
 
+	if config_obj.Client.DarwinInstaller == nil {
+		return errors.New("DarwinInstaller not configured")
+	}
+
 	service_name := config_obj.Client.DarwinInstaller.ServiceName
 	plist_path := "/Library/LaunchDaemons/" + service_name + ".plist"
 	err = exec.CommandContext(context.Background(),
