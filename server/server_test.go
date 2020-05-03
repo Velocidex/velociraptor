@@ -99,37 +99,15 @@ func (self *ServerTestSuite) TearDownTest() {
 }
 
 func (self *ServerTestSuite) TestEnrollment() {
-	ctrl := gomock.NewController(self.T())
-	defer ctrl.Finish()
-
 	// Enrollment occurs when the client sends an unauthenticated
 	// CSR message.
 	csr_message, err := self.client_crypto.GetCSR()
 	require.NoError(self.T(), err)
 
-	// The server will make a gRPC call to create a new
-	// Generic.Client.Info collection.
-	mock := api_mock.NewMockAPIClient(ctrl)
-
-	// We expect a single call to schedule an artifact collection.
-	expected := api.MakeCollectorRequest(
-		self.client_id, "Generic.Client.Info")
-	mock.EXPECT().CollectArtifact(
-		gomock.Any(),
-		expected,
-	).Return(&flows_proto.ArtifactCollectorResponse{
-		FlowId: "F.1234",
-	}, nil)
-
-	self.server.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
-
 	self.server.ProcessSingleUnauthenticatedMessage(
 		context.Background(),
 		&crypto_proto.GrrMessage{
-			CSR: &crypto_proto.Certificate{
-				Pem: csr_message}})
+			CSR: &crypto_proto.Certificate{Pem: csr_message}})
 
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
@@ -137,11 +115,22 @@ func (self *ServerTestSuite) TestEnrollment() {
 	pub_key := &crypto_proto.PublicKey{}
 	err = db.GetSubject(
 		self.config_obj,
-		"/clients/"+self.client_id+"/key", pub_key)
+		paths.NewClientPathManager(self.client_id).Key().Path(),
+		pub_key)
 
 	assert.NoError(self.T(), err)
 
 	assert.Regexp(self.T(), "RSA PUBLIC KEY", string(pub_key.Pem))
+
+	// Check that Generic.Client.Info artifact is scheduled for this client.
+	tasks, err := db.GetClientTasks(self.config_obj, self.client_id,
+		true /* do_not_lease */)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(tasks), 1)
+	queries := tasks[0].VQLClientAction.Query
+
+	assert.NotNil(self.T(), queries)
+	assert.Contains(self.T(), queries[len(queries)-1].Name, "Generic.Client.Info")
 }
 
 func (self *ServerTestSuite) TestClientEventTable() {

@@ -139,7 +139,7 @@ func (self MockFileSystemAccessor) ReadDir(filepath string) ([]FileInfo, error) 
 		if strings.HasPrefix(mock_path, subpath) {
 			suffix := mock_path[len(subpath):]
 			mock_path_components := strings.Split(suffix, "/")
-			if !utils.InString(&seen, mock_path_components[0]) {
+			if !utils.InString(seen, mock_path_components[0]) {
 				seen = append(seen, mock_path_components[0])
 			}
 		}

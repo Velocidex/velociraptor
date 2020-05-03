@@ -316,7 +316,6 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	if config_obj.Frontend.PrivateKey == "" {
 		return errors.New("No Frontend.private_key config")
 	}
-
 	if config_obj.Datastore == nil {
 		return errors.New("No Datastore config")
 	}

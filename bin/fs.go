@@ -38,7 +38,7 @@ import (
 
 var (
 	accessor_reg = regexp.MustCompile(
-		"^(file|ntft|reg|registry|zip|raw_reg|lazy_ntfs|file_links|fs)://(.+)$")
+		"^(file|ntfs|reg|registry|zip|raw_reg|lazy_ntfs|file_links|fs)://(.+)$")
 
 	fs_command          = app.Command("fs", "Run filesystem commands.")
 	fs_command_accessor = fs_command.Flag(
