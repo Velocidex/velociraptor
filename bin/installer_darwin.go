@@ -46,7 +46,7 @@ var (
 )
 
 func doRemove() error {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
 	}
@@ -65,7 +65,7 @@ func doRemove() error {
 }
 
 func doInstall() error {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
 	}
