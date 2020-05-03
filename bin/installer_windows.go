@@ -293,7 +293,7 @@ func removeService(name string) error {
 }
 
 func doRemove() {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to load config file")
 	}
@@ -346,7 +346,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 		config_path = &config_target_path
 	}
 
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		return nil, err
 	}
@@ -540,7 +540,7 @@ func init() {
 		var err error
 		switch command {
 		case installl_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -570,26 +570,26 @@ func init() {
 			}
 
 		case start_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = startService(config_obj.Client.WindowsInstaller.ServiceName)
 
 		case stop_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Stop, svc.Stopped)
 
 		case pause_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Pause, svc.Paused)
 
 		case continue_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlService(
 				config_obj.Client.WindowsInstaller.ServiceName,

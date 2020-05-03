@@ -89,7 +89,7 @@ var (
 )
 
 func doShowConfig() {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	if config_obj.Frontend == nil {

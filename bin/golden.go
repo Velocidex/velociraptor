@@ -84,7 +84,8 @@ func vqlCollectorArgsFromFixture(
 }
 
 func runTest(fixture *testFixture) (string, error) {
-	config_obj := get_config_or_default()
+	config_obj, err := load_config_or_api()
+	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Any uploads go into the container.
 	// Create an output container.
@@ -99,7 +100,7 @@ func runTest(fixture *testFixture) (string, error) {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).

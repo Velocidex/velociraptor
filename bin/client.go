@@ -39,7 +39,9 @@ func RunClient(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_path *string) {
-	config_obj, err := config.LoadClientConfig(*config_path)
+
+	// Include the writeback in the client's configuration.
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Make sure the config is ok.

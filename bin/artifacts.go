@@ -89,8 +89,10 @@ var (
 )
 
 func listArtifacts() []string {
+	config_obj := load_config_or_default()
+
 	result := []string{}
-	config_obj := get_config_or_default()
+
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
 		return result
@@ -108,7 +110,7 @@ func collectArtifact(
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -122,8 +124,6 @@ func collectArtifact(
 
 	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	if *trace_vql_flag {
 		scope.Tracer = logging.NewPlainLogger(config_obj,
@@ -188,7 +188,7 @@ func collectArtifactToContainer(
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env:        ordereddict.NewDict(),
 		Uploader:   container,
 	}
@@ -203,8 +203,6 @@ func collectArtifactToContainer(
 
 	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	ctx := InstallSignalHandler(scope)
 
@@ -287,9 +285,8 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 }
 
 func doArtifactCollect() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	repository := getRepository(config_obj)
-
 	now := time.Now()
 	defer func() {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -379,7 +376,7 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func doArtifactShow() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	repository := getRepository(config_obj)
 
 	artifact, pres := repository.Get(*artifact_command_show_name)
@@ -392,7 +389,7 @@ func doArtifactShow() {
 }
 
 func doArtifactList() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	repository := getRepository(config_obj)
 
 	var name_regex *regexp.Regexp

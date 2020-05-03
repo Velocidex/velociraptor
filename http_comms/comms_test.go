@@ -142,9 +142,11 @@ func (self *CommsTestSuite) SetupTest() {
 	self.frontend1 = NewFakeServer()
 	self.frontend2 = NewFakeServer()
 
-	config_obj, err := config.LoadClientConfig(
+	config_obj, err := config.LoadConfig(
 		"../http_comms/test_data/server.config.yaml")
 	require.NoError(self.T(), err)
+	require.NoError(self.T(), config.ValidateClientConfig(config_obj))
+
 	self.config_obj = config_obj
 	self.config_obj.Client.LocalBuffer.DiskSize = 0
 

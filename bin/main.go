@@ -119,13 +119,32 @@ func maybe_parse_api_config(config_obj *config_proto.Config) {
 	}
 }
 
-func get_config_or_default() *config_proto.Config {
+func load_config_or_api() (*config_proto.Config, error) {
 	config_obj, err := config.LoadConfig(*config_path)
 	if err != nil {
-		config_obj = config.GetDefaultConfig()
+		return nil, err
 	}
+	if config_obj.Frontend != nil {
+		err = config.ValidateFrontendConfig(config_obj)
+	} else {
+		err = config.ValidateClientConfig(config_obj)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	maybe_parse_api_config(config_obj)
 	load_config_artifacts(config_obj)
+
+	return config_obj, nil
+}
+
+func load_config_or_default() *config_proto.Config {
+	config_obj, err := load_config_or_api()
+	if err != nil {
+		return &config_proto.Config{}
+	}
 	return config_obj
 }
 

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -19,15 +21,21 @@ var (
 )
 
 func doCSV() {
-	env := ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("Files", *csv_cmd_files)
+	config_obj := load_config_or_default()
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env: ordereddict.NewDict().
+			Set(vql_subsystem.ACL_MANAGER_VAR,
+				vql_subsystem.NewRoleACLManager("administrator")).
+			Set("Files", *csv_cmd_files),
+	}
+
+	scope := builder.Build()
 	defer scope.Close()
 
-	AddLogger(scope, get_config_or_default())
 	query := "SELECT * FROM parse_csv(filename=Files)"
 
 	if *csv_cmd_filter != "" {

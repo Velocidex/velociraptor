@@ -19,6 +19,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,6 +28,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -91,7 +94,8 @@ func eval_query(query string, scope *vfilter.Scope) {
 }
 
 func doLS(path, accessor string) {
-	initFilestoreAccessor()
+	config_obj := load_config_or_default()
+	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -104,16 +108,19 @@ func doLS(path, accessor string) {
 		path += "*"
 	}
 
-	env := ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR,
-			vql_subsystem.NewRoleACLManager("administrator")).
-		Set("accessor", accessor).
-		Set("path", path)
+	builder := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Env: ordereddict.NewDict().
+			Set(vql_subsystem.ACL_MANAGER_VAR,
+				vql_subsystem.NewRoleACLManager("administrator")).
+			Set("accessor", accessor).
+			Set("path", path),
+	}
 
-	scope := vql_subsystem.MakeScope().AppendVars(env)
+	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	query := "SELECT Name, Size, Mode.String AS Mode, Mtime, Data " +
 		"FROM glob(globs=path, accessor=accessor) "
@@ -130,7 +137,8 @@ func doLS(path, accessor string) {
 }
 
 func doRM(path, accessor string) {
-	initFilestoreAccessor()
+	config_obj := load_config_or_default()
+	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -147,17 +155,15 @@ func doRM(path, accessor string) {
 		kingpin.Fatalf("Only fs:// URLs support removal")
 	}
 
-	config_obj := get_config_or_default()
 	scope := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
 	}.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
 		"file_store_delete(path=FullPath) AS Deletion " +
@@ -167,8 +173,8 @@ func doRM(path, accessor string) {
 }
 
 func doCp(path, accessor string, dump_dir string) {
-	initFilestoreAccessor()
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
+	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -196,6 +202,7 @@ func doCp(path, accessor string, dump_dir string) {
 
 	builder := artifacts.ScopeBuilder{
 		Config: config_obj,
+		Logger: log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
@@ -221,8 +228,6 @@ func doCp(path, accessor string, dump_dir string) {
 	scope := builder.Build()
 	defer scope.Close()
 
-	AddLogger(scope, get_config_or_default())
-
 	scope.Log("Copy from %v (%v) to %v (%v)",
 		path, accessor, output_path, output_accessor)
 
@@ -239,19 +244,20 @@ SELECT * from foreach(
   })`, scope)
 }
 
-func initFilestoreAccessor() {
-	config_obj, err := get_server_config(*config_path)
-	if err != nil {
-		return
+// Only register the filesystem accessor if we have a proper valid server config.
+func initFilestoreAccessor(config_obj *config_proto.Config) {
+	err := config.ValidateFrontendConfig(config_obj)
+	if err == nil {
+		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
+		kingpin.FatalIfError(err, "GetFileStoreFileSystemAccessor")
+		glob.Register("fs", accessor)
 	}
-
-	accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
-	kingpin.FatalIfError(err, "GetFileStoreFileSystemAccessor")
-	glob.Register("fs", accessor)
 }
 
 func doCat(path, accessor_name string) {
-	initFilestoreAccessor()
+	config_obj := load_config_or_default()
+	initFilestoreAccessor(config_obj)
+
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor_name = matches[1]

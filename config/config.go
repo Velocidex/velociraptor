@@ -199,6 +199,7 @@ func ReadEmbeddedConfig() (*config_proto.Config, error) {
 	return result, nil
 }
 
+// Loads the config from a file, or possibly from embedded.
 func LoadConfig(filename string) (*config_proto.Config, error) {
 	result := &config_proto.Config{}
 
@@ -397,7 +398,7 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 }
 
 // Loads the client config and merges it with the writeback file.
-func LoadClientConfig(filename string) (*config_proto.Config, error) {
+func LoadConfigWithWriteback(filename string) (*config_proto.Config, error) {
 	config_obj, err := LoadConfig(filename)
 	if err != nil {
 		return nil, err
