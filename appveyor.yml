@@ -22,6 +22,7 @@ install:
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
     mkdir "C:\Program Files\Velociraptor"
+    mkdir c:\tmp
     echo Hello > C:\hello.txt
     echo HelloADS > C:\hello.txt:myads
     fsutil file setshortname C:\hello.txt hi.txt
