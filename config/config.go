@@ -24,7 +24,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"runtime"
+	"strings"
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
@@ -53,15 +55,18 @@ func WritebackLocation(self *config_proto.Config) string {
 	}
 }
 
+func GetVersion() *config_proto.Version {
+	return &config_proto.Version{
+		Name:      "velociraptor",
+		Version:   constants.VERSION,
+		BuildTime: build_time,
+		Commit:    commit_hash,
+	}
+}
+
 // Create a default configuration object.
 func GetDefaultConfig() *config_proto.Config {
 	result := &config_proto.Config{
-		Version: &config_proto.Version{
-			Name:      "velociraptor",
-			Version:   constants.VERSION,
-			BuildTime: build_time,
-			Commit:    commit_hash,
-		},
 		Client: &config_proto.ClientConfig{
 			WritebackDarwin: "/etc/velociraptor.writeback.yaml",
 			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
@@ -131,10 +136,10 @@ func GetDefaultConfig() *config_proto.Config {
 				// Essential for client resource telemetry.
 				"Generic.Client.Stats",
 			},
+			DynDns:          &config_proto.DynDNSConfig{},
 			ExpectedClients: 10000,
 			GRPCPoolMaxSize: 100,
 			GRPCPoolMaxWait: 60,
-			PublicPath:      "/var/tmp/velociraptor/public",
 		},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
@@ -156,13 +161,13 @@ func GetDefaultConfig() *config_proto.Config {
 
 	// The client's version needs to keep in sync with the
 	// server's version.
-	result.Client.Version = result.Version
+	result.Client.Version = GetVersion()
+	result.Version = result.Client.Version
 
 	// On windows we need slightly different defaults.
 	if runtime.GOOS == "windows" {
 		result.Datastore.Location = "C:\\Windows\\Temp"
 		result.Datastore.FilestoreDirectory = "C:\\Windows\\Temp"
-		result.Client.LocalBuffer.Filename = "C:\\Windows\\Temp\\Velociraptor_Buffer.bin"
 	}
 
 	return result
@@ -194,40 +199,9 @@ func ReadEmbeddedConfig() (*config_proto.Config, error) {
 	return result, nil
 }
 
-// Load the config stored in the YAML file and returns a config object.
+// Loads the config from a file, or possibly from embedded.
 func LoadConfig(filename string) (*config_proto.Config, error) {
-	default_config := GetDefaultConfig()
-	result := GetDefaultConfig()
-
-	verify_config := func(config_obj *config_proto.Config) {
-		// TODO: Check if the config version is compatible with our
-		// version. We always set the result's version to our version.
-		config_obj.Version = default_config.Version
-		config_obj.Client.Version = default_config.Version
-
-		if config_obj.API.PinnedGwName == "" {
-			config_obj.API.PinnedGwName = "GRPC_GW"
-		}
-
-		if config_obj.Client.PinnedServerName == "" {
-			config_obj.Client.PinnedServerName = "VelociraptorServer"
-		}
-
-		// If mysql connection params are specified we create
-		// a mysql_connection_string
-		if config_obj.Datastore.MysqlConnectionString == "" &&
-			(config_obj.Datastore.MysqlDatabase != "" ||
-				config_obj.Datastore.MysqlServer != "" ||
-				config_obj.Datastore.MysqlUsername != "" ||
-				config_obj.Datastore.MysqlPassword != "") {
-			config_obj.Datastore.MysqlConnectionString = fmt.Sprintf(
-				"%s:%s@tcp(%s)/%s",
-				config_obj.Datastore.MysqlUsername,
-				config_obj.Datastore.MysqlPassword,
-				config_obj.Datastore.MysqlServer,
-				config_obj.Datastore.MysqlDatabase)
-		}
-	}
+	result := &config_proto.Config{}
 
 	// If filename is specified we try to read from it.
 	if filename != "" {
@@ -237,9 +211,6 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 			if err != nil {
 				return nil, errors.WithStack(err)
 			}
-
-			verify_config(result)
-
 			return result, nil
 		}
 	}
@@ -250,19 +221,191 @@ func LoadConfig(filename string) (*config_proto.Config, error) {
 		return nil, err
 	}
 
-	verify_config(embedded_config)
-
 	return embedded_config, nil
 }
 
-func LoadClientConfig(filename string) (*config_proto.Config, error) {
-	client_config, err := LoadConfig(filename)
+// Ensures client config is valid, fills in defaults for missing values etc.
+func ValidateClientConfig(config_obj *config_proto.Config) error {
+	migrate(config_obj)
+
+	// Ensure we have all the sections that are required.
+	if config_obj.Client == nil {
+		return errors.New("No Client config")
+	}
+
+	if config_obj.Client.CaCertificate == "" {
+		return errors.New("No Client.ca_certificate configured")
+	}
+
+	if config_obj.Client.Nonce == "" {
+		return errors.New("No Client.nonce configured")
+	}
+
+	if config_obj.Client.ServerUrls == nil {
+		return errors.New("No Client.server_urls configured")
+	}
+
+	if WritebackLocation(config_obj) == "" {
+		return errors.New("No writeback location specified.")
+	}
+
+	// Add defaults
+
+	// If no local buffer is specified make an in memory one.
+	if config_obj.Client.LocalBuffer == nil {
+		config_obj.Client.LocalBuffer = &config_proto.RingBufferConfig{
+			MemorySize: 50 * 1024 * 1024,
+		}
+	}
+
+	if config_obj.Client.MaxPoll == 0 {
+		config_obj.Client.MaxPoll = 60
+	}
+
+	if config_obj.Client.PinnedServerName == "" {
+		config_obj.Client.PinnedServerName = "VelociraptorServer"
+	}
+
+	if config_obj.Client.MaxUploadSize == 0 {
+		config_obj.Client.MaxUploadSize = 5242880
+	}
+
+	config_obj.Version = GetVersion()
+	config_obj.Client.Version = config_obj.Version
+
+	for _, url := range config_obj.Client.ServerUrls {
+		if !strings.HasSuffix(url, "/") {
+			return errors.New(
+				"Configuration Client.server_urls must end with /")
+		}
+	}
+
+	return nil
+}
+
+// Ensures server config is valid, fills in defaults for missing values etc.
+func ValidateFrontendConfig(config_obj *config_proto.Config) error {
+	// Check for older version.
+	migrate(config_obj)
+
+	err := ValidateClientConfig(config_obj)
+	if err != nil {
+		return err
+	}
+
+	if config_obj.API == nil {
+		return errors.New("No API config")
+	}
+	if config_obj.GUI == nil {
+		return errors.New("No GUI config")
+	}
+	if config_obj.GUI.GwCertificate == "" {
+		return errors.New("No GUI.gw_certificate config")
+	}
+	if config_obj.GUI.GwPrivateKey == "" {
+		return errors.New("No GUI.gw_private_key config")
+	}
+	if config_obj.Frontend == nil {
+		return errors.New("No Frontend config")
+	}
+	if config_obj.Frontend.Hostname == "" {
+		return errors.New("No Frontend.hostname config")
+	}
+	if config_obj.Frontend.Certificate == "" {
+		return errors.New("No Frontend.certificate config")
+	}
+	if config_obj.Frontend.PrivateKey == "" {
+		return errors.New("No Frontend.private_key config")
+	}
+	if config_obj.Datastore == nil {
+		return errors.New("No Datastore config")
+	}
+
+	// Fill defaults for optional sections
+	if config_obj.Writeback == nil {
+		config_obj.Writeback = &config_proto.Writeback{}
+	}
+	if config_obj.CA == nil {
+		config_obj.CA = &config_proto.CAConfig{}
+	}
+	if config_obj.Frontend.ExpectedClients == 0 {
+		config_obj.Frontend.ExpectedClients = 10000
+	}
+	if config_obj.Mail == nil {
+		config_obj.Mail = &config_proto.MailConfig{}
+	}
+	if config_obj.Logging == nil {
+		config_obj.Logging = &config_proto.LoggingConfig{}
+	}
+	if config_obj.Monitoring == nil {
+		config_obj.Monitoring = &config_proto.MonitoringConfig{}
+	}
+
+	if config_obj.ApiConfig == nil {
+		config_obj.ApiConfig = &config_proto.ApiClientConfig{}
+	}
+
+	if config_obj.API.PinnedGwName == "" {
+		config_obj.API.PinnedGwName = "GRPC_GW"
+	}
+
+	// If mysql connection params are specified we create
+	// a mysql_connection_string
+	if config_obj.Datastore.MysqlConnectionString == "" &&
+		(config_obj.Datastore.MysqlDatabase != "" ||
+			config_obj.Datastore.MysqlServer != "" ||
+			config_obj.Datastore.MysqlUsername != "" ||
+			config_obj.Datastore.MysqlPassword != "") {
+		config_obj.Datastore.MysqlConnectionString = fmt.Sprintf(
+			"%s:%s@tcp(%s)/%s",
+			config_obj.Datastore.MysqlUsername,
+			config_obj.Datastore.MysqlPassword,
+			config_obj.Datastore.MysqlServer,
+			config_obj.Datastore.MysqlDatabase)
+	}
+
+	// On windows we require file locations to include a drive
+	// letter.
+	if config_obj.ServerType == "windows" {
+		path_regex := regexp.MustCompile("^[a-zA-Z]:")
+		path_check := func(parameter, value string) error {
+			if !path_regex.MatchString(value) {
+				return errors.New(fmt.Sprintf(
+					"%s must have a drive letter.",
+					parameter))
+			}
+			if strings.Contains(value, "/") {
+				return errors.New(fmt.Sprintf(
+					"%s can not contain / path separators on windows.",
+					parameter))
+			}
+			return nil
+		}
+
+		err := path_check("Datastore.Locations",
+			config_obj.Datastore.Location)
+		if err != nil {
+			return err
+		}
+		err = path_check("Datastore.Locations",
+			config_obj.Datastore.FilestoreDirectory)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Loads the client config and merges it with the writeback file.
+func LoadConfigWithWriteback(filename string) (*config_proto.Config, error) {
+	config_obj, err := LoadConfig(filename)
 	if err != nil {
 		return nil, err
 	}
 
 	existing_writeback := &config_proto.Writeback{}
-	data, err := ioutil.ReadFile(WritebackLocation(client_config))
+	data, err := ioutil.ReadFile(WritebackLocation(config_obj))
 	// Failing to read the file is not an error - the file may not
 	// exist yet.
 	if err == nil {
@@ -273,9 +416,10 @@ func LoadClientConfig(filename string) (*config_proto.Config, error) {
 	}
 
 	// Merge the writeback with the config.
-	client_config.Writeback = existing_writeback
+	config_obj.Writeback = existing_writeback
 
-	return client_config, nil
+	// Validate client config
+	return config_obj, ValidateClientConfig(config_obj)
 }
 
 func WriteConfigToFile(filename string, config *config_proto.Config) error {

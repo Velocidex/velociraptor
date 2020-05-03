@@ -45,6 +45,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	RedirectError = errors.New("RedirectError")
+)
+
 // Responsible for maybe enrolling the client. Enrollments should not
 // be done too frequently and should only be done in response for the
 // 406 HTTP codes.
@@ -54,6 +58,7 @@ type Enroller struct {
 	executor             executor.Executor
 	logger               *logging.LogContext
 	last_enrollment_time time.Time
+	clock                utils.Clock
 }
 
 // TODO: This is a hold over from GRR - do we need it?  GRR's
@@ -63,7 +68,7 @@ type Enroller struct {
 func (self *Enroller) MaybeEnrol() {
 	// Only send an enrolment request at most every minute so as
 	// not to overwhelm the server if it can not keep up.
-	if time.Now().After(
+	if self.clock.Now().After(
 		self.last_enrollment_time.Add(1 * time.Minute)) {
 		csr_pem, err := self.manager.GetCSR()
 		if err != nil {
@@ -99,8 +104,10 @@ func (self *Enroller) GetMessageList() *crypto_proto.MessageList {
 	}
 }
 
+// Connectors abstract the http.Post() operation. Make an interface so
+// it can be mocked.
 type IConnector interface {
-	GetCurrentUrl() string
+	GetCurrentUrl(handler string) string
 	Post(handler string, data []byte, priority bool) (*http.Response, error)
 	ReKeyNextServer()
 	ServerName() string
@@ -120,20 +127,30 @@ type HTTPConnector struct {
 	minPoll, maxPoll time.Duration
 	maxPollDev       uint64
 	// Used to cycle through the urls slice.
-	mu              sync.Mutex
-	current_url_idx int
-	urls            []string
+	mu               sync.Mutex
+	current_url_idx  int
+	last_success_idx int
+	urls             []string
 
 	client *http.Client
 
 	// Obtained from the server's Cert CommonName.
 	server_name string
+
+	// If the last request caused a redirect, we switch to that
+	// server immediately and keep accessing that server until the
+	// an error occurs or we are further redirected.
+	redirect_to_server bool
+
+	clock utils.Clock
 }
 
 func NewHTTPConnector(
 	config_obj *config_proto.Config,
 	manager crypto.ICryptoManager,
-	logger *logging.LogContext) *HTTPConnector {
+	logger *logging.LogContext,
+	urls []string,
+	clock utils.Clock) *HTTPConnector {
 
 	max_poll := config_obj.Client.MaxPoll
 	if max_poll == 0 {
@@ -163,18 +180,23 @@ func NewHTTPConnector(
 		tls_config.RootCAs = CA_Pool
 	}
 
-	return &HTTPConnector{
+	self := &HTTPConnector{
 		config_obj: config_obj,
 		manager:    manager,
 		logger:     logger,
+		clock:      clock,
 
 		minPoll:    time.Duration(1) * time.Second,
 		maxPoll:    time.Duration(max_poll) * time.Second,
 		maxPollDev: maxPollDev,
 
-		urls: config_obj.Client.ServerUrls,
+		urls: urls,
 
 		client: &http.Client{
+			// Let us handle redirect ourselves.
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
 					Timeout:   300 * time.Second,
@@ -192,13 +214,19 @@ func NewHTTPConnector(
 		},
 	}
 
+	return self
+
 }
 
-func (self *HTTPConnector) GetCurrentUrl() string {
+func (self *HTTPConnector) GetCurrentUrl(handler string) string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.urls[self.current_url_idx]
+	if self.redirect_to_server {
+		return self.urls[self.current_url_idx] + handler + "?r=1"
+	}
+
+	return self.urls[self.current_url_idx] + handler
 }
 
 func (self *HTTPConnector) Post(handler string,
@@ -206,8 +234,9 @@ func (self *HTTPConnector) Post(handler string,
 	*http.Response, error) {
 
 	reader := bytes.NewReader(data)
-	req, err := http.NewRequest("POST", self.GetCurrentUrl()+handler, reader)
+	req, err := http.NewRequest("POST", self.GetCurrentUrl(handler), reader)
 	if err != nil {
+		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
 	}
 	req.Header.Set("User-Agent", constants.USER_AGENT)
@@ -218,10 +247,105 @@ func (self *HTTPConnector) Post(handler string,
 
 	resp, err := self.client.Do(req)
 	if err != nil {
+		// POST error - rotate to next URL
+		self.advanceToNextServer()
 		return nil, errors.WithStack(err)
 	}
 
+	// Handle redirect. Frontends may redirect us to other
+	// frontends.
+	if resp.StatusCode == 301 {
+		dest, pres := resp.Header["Location"]
+		if !pres || len(dest) == 0 {
+			self.advanceToNextServer()
+			return nil, errors.New("Redirect without a Location header?")
+		}
+
+		// HTTP does not allow direct redirection with
+		// POST. We need to fail this request and cause an
+		// immediate re-connection to the redirected URL and
+		// POST the data again.
+
+		// Since we have now learned of a new frontend, we can
+		// add it to our list of URLs to try when another
+		// frontend fails. It could be a new frontend that was
+		// spun up after the client is created.
+		found := false
+		for idx, url := range self.urls {
+			// Yep we already knew about it.
+			if url == dest[0] {
+				self.current_url_idx = idx
+				found = true
+			}
+		}
+
+		// No we didnt know about it - add it to the end.
+		if !found {
+			self.urls = append(self.urls, dest[0])
+			self.current_url_idx = len(self.urls) - 1
+		}
+
+		// Here self.current_url_idx points to the correct
+		// frontend. Clearing the server name will force
+		// rekey to that server.
+		self.server_name = ""
+		// Future POST requests will mark the URL as a
+		// redirected URL which stops the frontend from
+		// redirecting us again.
+		self.redirect_to_server = true
+
+		self.logger.Info("Redirecting to frontend: %v", dest[0])
+
+		// For safety we wait after redirect in case we end up
+		// in a redirect loop.
+		wait := self.maxPoll + time.Duration(
+			rand.Intn(int(self.maxPollDev)))*time.Second
+		self.logger.Info("Waiting after redirect: %v", wait)
+		<-self.clock.After(wait)
+
+		return nil, RedirectError
+
+	} else if resp.StatusCode != 200 {
+		// POST error - rotate to next URL
+		self.advanceToNextServer()
+
+		return nil, errors.New(resp.Status)
+
+	}
+
+	// Remember the last successful index.
+	self.last_success_idx = self.current_url_idx
+
 	return resp, nil
+}
+
+// When we have any failures contacting any server, we advance our url
+// index to the next frontend. When we went all the way around the
+// loop we wait to backoff.  Therefore when switching from one FE to
+// another we wont necessarily wait but if all frontends are down we
+// wait once per loop.
+func (self *HTTPConnector) advanceToNextServer() {
+	// Advance the current URL to the next one in
+	// line. Reset the server name (will be fetched from
+	// the PEM) and do not use redirects.
+	self.current_url_idx = ((self.current_url_idx + 1) % len(self.urls))
+	self.redirect_to_server = false
+	self.server_name = ""
+
+	// We are cycling through all our frontend's PEM keys
+	// in this loop. Once we go all the way around we
+	// sleep to back off.
+	if self.current_url_idx == self.last_success_idx {
+		wait := self.maxPoll + time.Duration(
+			rand.Intn(int(self.maxPollDev)))*time.Second
+
+		self.logger.Info(
+			"Waiting for a reachable server: %v", wait)
+
+		// Add random wait between polls to avoid
+		// synchronization of endpoints.
+		<-self.clock.After(wait)
+	}
 }
 
 func (self *HTTPConnector) String() string {
@@ -245,18 +369,8 @@ func (self *HTTPConnector) ReKeyNextServer() {
 			return
 		}
 
-		// Only wait once we go round the list a full time.
-		if self.current_url_idx == 0 {
-			wait := self.maxPoll + time.Duration(
-				rand.Intn(int(self.maxPollDev)))*time.Second
+		self.advanceToNextServer()
 
-			self.logger.Info(
-				"Waiting for a reachable server: %v", wait)
-
-			// Add random wait between polls to avoid
-			// synchronization of endpoints.
-			<-time.After(wait)
-		}
 	}
 }
 
@@ -268,11 +382,6 @@ func (self *HTTPConnector) ServerName() string {
 }
 
 func (self *HTTPConnector) rekeyNextServer() error {
-	// Advance the current URL to the next one in line.
-	if self.server_name == "" {
-		self.current_url_idx = ((self.current_url_idx + 1) % len(self.urls))
-	}
-
 	// Try to fetch the server pem.
 	url := self.urls[self.current_url_idx]
 
@@ -291,14 +400,18 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return errors.New("Invalid status while downloading PEM")
+	}
+
 	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
 		self.server_name = ""
 		return errors.WithStack(err)
 	}
 
-	// This will replace the current server_name
-	// certificate in the manager.
+	// This will replace the current server_name certificate in
+	// the manager.
 	server_name, err := self.manager.AddCertificate(pem)
 	if err != nil {
 		self.logger.Error(err)
@@ -308,13 +421,13 @@ func (self *HTTPConnector) rekeyNextServer() error {
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
-	if *server_name != self.config_obj.Client.PinnedServerName {
+	if server_name != self.config_obj.Client.PinnedServerName {
 		self.server_name = ""
-		self.logger.Info("Invalid server certificate common name %v!", *server_name)
+		self.logger.Info("Invalid server certificate common name %v!", server_name)
 		return errors.New("Invalid server certificate common name!")
 	}
 
-	self.server_name = *server_name
+	self.server_name = server_name
 	self.logger.Info("Received PEM for %v from %v", self.server_name, url)
 
 	return nil
@@ -335,6 +448,8 @@ type NotificationReader struct {
 	maxPollDev            uint64
 	current_poll_duration time.Duration
 	IsPaused              int32
+
+	clock utils.Clock
 }
 
 func NewNotificationReader(
@@ -345,7 +460,8 @@ func NewNotificationReader(
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
-	handler string) *NotificationReader {
+	handler string,
+	clock utils.Clock) *NotificationReader {
 
 	maxPollDev := config_obj.Client.MaxPollStd
 	if maxPollDev == 0 {
@@ -365,6 +481,7 @@ func NewNotificationReader(
 		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
 		maxPollDev:            maxPollDev,
 		current_poll_duration: time.Second,
+		clock:                 clock,
 	}
 }
 
@@ -382,31 +499,39 @@ func (self *NotificationReader) sendMessageList(
 				return
 			}
 
+			// If we are being redirected do not wait -
+			// just retry again.
+
+			if errors.Cause(err) == RedirectError {
+				continue
+			}
+
 			// Failed to fetch the URL - This could happen because
 			// the server is overloaded, or the client is off the
 			// network. We need to back right off and retry the
 			// POST again.
 			self.logger.Info("Failed to fetch URL %v: %v",
-				self.connector.GetCurrentUrl()+self.handler, err)
+				self.connector.GetCurrentUrl(self.handler), err)
+
+		} else {
+			// If we are paused we need to wait a bit before trying again
+
+			// Add random wait between polls to avoid
+			// synchronization of endpoints.
+			wait := self.maxPoll + time.Duration(
+				rand.Intn(int(self.maxPollDev)))*time.Second
+			self.logger.Info("Sleeping for %v", wait)
+
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-self.clock.After(wait):
+			}
 		}
 
-		// Add random wait between polls to avoid
-		// synchronization of endpoints.
-		wait := self.maxPoll + time.Duration(
-			rand.Intn(int(self.maxPollDev)))*time.Second
-		self.logger.Info("Sleeping for %v", wait)
-
-		select {
-		case <-ctx.Done():
-			return
-
-			// Wait for the maximum length of time
-			// and try to rekey the next URL.
-		case <-time.After(wait):
-			self.connector.ReKeyNextServer()
-			continue
-		}
 	}
+
 }
 
 func (self *NotificationReader) sendToURL(
@@ -419,8 +544,7 @@ func (self *NotificationReader) sendToURL(
 	}
 
 	self.logger.Info("%s: Connected to %s", self.name,
-		self.connector.GetCurrentUrl()+self.handler)
-
+		self.connector.GetCurrentUrl(self.handler))
 	// Clients always compress messages to the server.
 	cipher_text, err := self.manager.Encrypt(
 		message_list,
@@ -496,7 +620,7 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			case <-ctx.Done():
 				return
 
-			case <-time.After(self.minPoll):
+			case <-self.clock.After(self.minPoll):
 				continue
 			}
 		}
@@ -557,15 +681,18 @@ func NewHTTPCommunicator(
 	config_obj *config_proto.Config,
 	manager crypto.ICryptoManager,
 	executor executor.Executor,
-	urls []string) (*HTTPCommunicator, error) {
+	urls []string,
+	clock utils.Clock) (*HTTPCommunicator, error) {
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	enroller := &Enroller{
 		config_obj: config_obj,
 		manager:    manager,
 		executor:   executor,
-		logger:     logger}
-	connector := NewHTTPConnector(config_obj, manager, logger)
+		logger:     logger,
+		clock:      clock,
+	}
+	connector := NewHTTPConnector(config_obj, manager, logger, urls, clock)
 
 	rb := NewLocalBuffer(config_obj)
 
@@ -580,10 +707,10 @@ func NewHTTPCommunicator(
 		},
 		sender: NewSender(
 			config_obj, connector, manager, executor, rb, enroller,
-			logger, "Sender", "control"),
+			logger, "Sender", "control", clock),
 		receiver: NewNotificationReader(
 			config_obj, connector, manager, executor, enroller,
-			logger, "Receiver", "reader"),
+			logger, "Receiver", "reader", clock),
 	}
 
 	return result, nil

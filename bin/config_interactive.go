@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/users"
 )
@@ -21,6 +21,10 @@ const (
 	self_signed = "Self Signed SSL"
 	autocert    = "Automatically provision certificates with Lets Encrypt"
 	oauth_sso   = "Authenticate users with Google OAuth SSO"
+
+	// FileStore implementations
+	mysql_datastore     = "MySQL"
+	filebased_datastore = "FileBaseDataStore"
 )
 
 var (
@@ -41,7 +45,7 @@ begin by identifying what type of deployment you need.
 			"(e.g. www.example.com):",
 		Help: "Clients will connect to the Frontend using this " +
 			"public name (e.g. https://www.example.com:8000/ ).",
-		Default: "localhost",
+		Default: "www.example.com",
 	}
 
 	port_question = &survey.Input{
@@ -49,9 +53,42 @@ begin by identifying what type of deployment you need.
 		Default: "8000",
 	}
 
-	data_store_question = &survey.Input{
-		Message: "Path to the datastore directory.",
-		Default: os.TempDir(),
+	data_store_type = &survey.Select{
+		Message: "Please select the datastore implementation\n",
+		Options: []string{filebased_datastore, mysql_datastore},
+	}
+
+	// MySQL data stores
+	data_store_mysql = []*survey.Question{
+		{
+			Name: "MysqlUsername",
+			Prompt: &survey.Input{
+				Message: "MySQL Database username",
+				Default: "root",
+			},
+		}, {
+			Name: "MysqlPassword",
+			Prompt: &survey.Input{
+				Message: "MySQL Database password",
+				Default: "password",
+			},
+		}, {
+			Name: "MysqlServer",
+			Prompt: &survey.Input{
+				Message: "MySQL Database server address",
+				Default: "localhost",
+			},
+		},
+	}
+
+	data_store_file = []*survey.Question{
+		{
+			Name: "Location",
+			Prompt: &survey.Input{
+				Message: "Path to the datastore directory.",
+				Default: os.TempDir(),
+			},
+		},
 	}
 
 	log_question = &survey.Input{
@@ -77,12 +114,18 @@ begin by identifying what type of deployment you need.
 		Message: "Password",
 	}
 
-	google_oauth_client_id_question = &survey.Input{
-		Message: "Enter the Google OAuth Client ID?",
-	}
-
-	google_oauth_client_secret_question = &survey.Input{
-		Message: "Enter the Google OAuth Client Secret?",
+	google_oauth = []*survey.Question{
+		{
+			Name: "GoogleOauthClientId",
+			Prompt: &survey.Input{
+				Message: "Enter the Google OAuth Client ID?",
+			},
+		}, {
+			Name: "GoogleOauthClientSecret",
+			Prompt: &survey.Input{
+				Message: "Enter the Google OAuth Client Secret?",
+			},
+		},
 	}
 
 	google_domains_username = &survey.Input{
@@ -95,91 +138,86 @@ begin by identifying what type of deployment you need.
 )
 
 func doGenerateConfigInteractive() {
-	install_type := ""
-	err := survey.AskOne(deployment_type, &install_type, nil)
-	kingpin.FatalIfError(err, "Question")
+	config_obj := config.GetDefaultConfig()
+	var err error
 
-	fmt.Println("Generating keys please wait....")
-	config_obj, err := generateNewKeys()
-	kingpin.FatalIfError(err, "Generating Keys")
-
-	// Assume we are generating a server config for this binary
+	// Assume we are generating a server config for the running binary
 	config_obj.ServerType = runtime.GOOS
 
-	err = getFileStoreLocation(config_obj)
-	kingpin.FatalIfError(err, "getFileStoreLocation")
+	kingpin.FatalIfError(
+		survey.AskOne(data_store_type,
+			&config_obj.Datastore.Implementation,
+			survey.WithValidator(survey.Required)), "")
 
-	err = getLogLocation(config_obj)
-	kingpin.FatalIfError(err, "getLogLocation")
+	if config_obj.Datastore.Implementation == filebased_datastore {
+		kingpin.FatalIfError(
+			survey.Ask(data_store_file,
+				config_obj.Datastore,
+				survey.WithValidator(survey.Required)), "")
+
+		config_obj.Datastore.FilestoreDirectory = config_obj.Datastore.Location
+		log_question.Default = path.Join(config_obj.Datastore.Location, "logs")
+	} else {
+		kingpin.FatalIfError(
+			survey.Ask(data_store_mysql,
+				config_obj.Datastore,
+				survey.WithValidator(survey.Required)), "")
+	}
+
+	install_type := ""
+	kingpin.FatalIfError(
+		survey.AskOne(deployment_type, &install_type, nil), "")
 
 	switch install_type {
 	case self_signed:
-		err = survey.AskOne(port_question, &config_obj.Frontend.BindPort, nil)
-		kingpin.FatalIfError(err, "Question")
+		kingpin.FatalIfError(survey.Ask([]*survey.Question{
+			{Name: "BindPort", Prompt: port_question},
+			{Name: "Hostname", Prompt: url_question},
+		}, config_obj.Frontend), "")
 
-		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Question")
-
+		config_obj.Client.UseSelfSignedSsl = true
 		config_obj.Client.ServerUrls = append(
 			config_obj.Client.ServerUrls,
-			fmt.Sprintf("https://%s:%d/", hostname,
+			fmt.Sprintf("https://%s:%d/", config_obj.Frontend.Hostname,
 				config_obj.Frontend.BindPort))
 
 	case autocert:
-		// In autocert mode these are all fixed.
-		config_obj.Frontend.BindPort = 443
-		config_obj.GUI.BindPort = 443
-		config_obj.Frontend.BindAddress = "0.0.0.0"
-
-		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Question")
-
-		config_obj.Client.ServerUrls = []string{
-			fmt.Sprintf("https://%s/", hostname)}
-
-		config_obj.AutocertDomain = hostname
-		config_obj.AutocertCertCache = config_obj.Datastore.Location
-
-		err = dynDNSConfig(config_obj, hostname)
-		kingpin.FatalIfError(err, "dynDNSConfig")
+		kingpin.FatalIfError(configAutocert(config_obj), "")
 
 	case oauth_sso:
-		// In autocert mode these are all fixed.
-		config_obj.Frontend.BindPort = 443
-		config_obj.GUI.BindPort = 443
-		config_obj.Frontend.BindAddress = "0.0.0.0"
+		kingpin.FatalIfError(configAutocert(config_obj), "")
 
-		hostname := ""
-		err = survey.AskOne(url_question, &hostname, survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Question")
-
-		config_obj.GUI.PublicUrl = fmt.Sprintf("https://%s/", hostname)
-		config_obj.Client.ServerUrls = []string{config_obj.GUI.PublicUrl}
-
-		config_obj.AutocertDomain = hostname
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 
-		err = survey.AskOne(google_oauth_client_id_question,
-			&config_obj.GUI.GoogleOauthClientId,
-			survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Question")
-
-		err = survey.AskOne(google_oauth_client_secret_question,
-			&config_obj.GUI.GoogleOauthClientSecret,
-			survey.WithValidator(survey.Required))
-		kingpin.FatalIfError(err, "Question")
-
-		err = dynDNSConfig(config_obj, hostname)
-		kingpin.FatalIfError(err, "dynDNSConfig")
+		kingpin.FatalIfError(survey.Ask(google_oauth,
+			config_obj.GUI, survey.WithValidator(survey.Required)), "")
 	}
 
+	// The API's public DNS name allows external callers but by
+	// default we bind to loopback only.
+	config_obj.API.Hostname = config_obj.Frontend.Hostname
+	config_obj.API.BindAddress = "127.0.0.1"
+
+	// Setup dyndns
+	kingpin.FatalIfError(dynDNSConfig(config_obj), "")
+
+	kingpin.FatalIfError(survey.AskOne(log_question,
+		&config_obj.Logging.OutputDirectory,
+		survey.WithValidator(survey.Required)), "")
+
+	config_obj.Logging.SeparateLogsPerComponent = true
+
+	// Add users to the config file so the server can be
+	// initialized.
 	kingpin.FatalIfError(addUser(config_obj), "Add users")
 
+	fmt.Println("Generating keys please wait....")
+	kingpin.FatalIfError(generateNewKeys(config_obj), "")
+
 	path := ""
-	err = survey.AskOne(output_question, &path, survey.WithValidator(survey.Required))
-	kingpin.FatalIfError(err, "Question")
+	kingpin.FatalIfError(
+		survey.AskOne(output_question, &path,
+			survey.WithValidator(survey.Required)), "")
 
 	res, err := yaml.Marshal(config_obj)
 	kingpin.FatalIfError(err, "Yaml Marshal")
@@ -190,9 +228,8 @@ func doGenerateConfigInteractive() {
 	kingpin.FatalIfError(err, "Write file %s", path)
 	fd.Close()
 
-	err = survey.AskOne(client_output_question, &path,
-		survey.WithValidator(survey.Required))
-	kingpin.FatalIfError(err, "Question")
+	kingpin.FatalIfError(survey.AskOne(client_output_question, &path,
+		survey.WithValidator(survey.Required)), "")
 
 	client_config := getClientConfig(config_obj)
 	res, err = yaml.Marshal(client_config)
@@ -205,7 +242,7 @@ func doGenerateConfigInteractive() {
 	fd.Close()
 }
 
-func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
+func dynDNSConfig(config_obj *config_proto.Config) error {
 	dyndns := false
 	err := survey.AskOne(&survey.Confirm{
 		Message: "Are you using Google Domains DynDNS?"},
@@ -214,46 +251,47 @@ func dynDNSConfig(config_obj *config_proto.Config, hostname string) error {
 		return err
 	}
 
-	if dyndns {
-		username := ""
-		err = survey.AskOne(
-			google_domains_username, &username,
-			survey.WithValidator(survey.Required))
-		if err != nil {
-			return err
-		}
-
-		password := ""
-		err = survey.AskOne(google_domains_password, &password,
-			survey.WithValidator(survey.Required))
-		if err != nil {
-			return err
-		}
-
-		config_obj.Frontend.DynDns = &config_proto.DynDNSConfig{
-			Hostname:     hostname,
-			DdnsUsername: username,
-			DdnsPassword: password,
-		}
+	if !dyndns {
+		return nil
 	}
 
-	return nil
+	return survey.Ask([]*survey.Question{
+		{Name: "DdnsUsername", Prompt: google_domains_username},
+		{Name: "DdnsPassword", Prompt: google_domains_password},
+	}, config_obj.Frontend.DynDns, survey.WithValidator(survey.Required))
 }
 
-func getFileStoreLocation(config_obj *config_proto.Config) error {
-	err := survey.AskOne(data_store_question,
-		&config_obj.Datastore.Location,
-		survey.WithValidator(survey.Required))
+func configAutocert(config_obj *config_proto.Config) error {
+	err := survey.Ask([]*survey.Question{
+		{Name: "Hostname", Prompt: url_question},
+	}, config_obj.Frontend)
 	if err != nil {
 		return err
 	}
 
-	config_obj.Datastore.FilestoreDirectory = config_obj.Datastore.Location
+	// In autocert mode these are all fixed.
+	config_obj.Frontend.BindPort = 443
+	config_obj.Frontend.BindAddress = "0.0.0.0"
 
-	// Put the public directory inside the file store.
-	config_obj.Frontend.PublicPath = filepath.Join(config_obj.Datastore.Location,
-		"public")
+	// The gui is also served from port 443.
+	config_obj.GUI.BindPort = 443
+	config_obj.GUI.PublicUrl = fmt.Sprintf(
+		"https://%s/", config_obj.Frontend.Hostname)
 
+	config_obj.Client.ServerUrls = []string{
+		fmt.Sprintf("https://%s/", config_obj.Frontend.Hostname)}
+
+	config_obj.AutocertCertCache = config_obj.Datastore.Location
+
+	return nil
+}
+
+func getMySQLConfig(config_obj *config_proto.Config) error {
+	config_obj.Datastore = &config_proto.DatastoreConfig{}
+	err := survey.Ask(data_store_mysql, config_obj.Datastore)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -127,6 +127,7 @@ CA:
     2DyzC7t9mILP2BAJGYEC2ag++7m1HuCgA3GfBGd81SHH1ScGvXCi+A==
     -----END RSA PRIVATE KEY-----
 Frontend:
+  hostname: localhost
   bind_address: 0.0.0.0
   bind_port: 8000
   certificate: |

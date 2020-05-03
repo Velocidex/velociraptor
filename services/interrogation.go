@@ -103,7 +103,7 @@ func (self *InterrogationService) ProcessRow(row *ordereddict.Dict) error {
 	}
 
 	if len(client_info.Labels) > 0 {
-		_, err := clients.LabelClients(
+		err := clients.LabelClients(
 			self.config_obj,
 			&api_proto.LabelClientsRequest{
 				ClientIds: []string{client_id},

@@ -219,6 +219,15 @@ func Aix() error {
 	}.Run()
 }
 
+func Arm() error {
+	return Builder{
+		extra_tags:  " release ",
+		goos:        "linux",
+		disable_cgo: true,
+		arch:        "arm",
+	}.Run()
+}
+
 // Builds a Development binary. This does not embed things like GUI
 // resources to allow them to be loaded from the local directory.
 func Dev() error {

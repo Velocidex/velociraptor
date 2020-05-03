@@ -589,16 +589,15 @@ func save_state(state *consoleState) {
 }
 
 func doConsole() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)
 
 	builder := artifacts.ScopeBuilder{
-		Config: config_obj,
-		// Run tests as administrator - disable ACLs.
+		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env:        ordereddict.NewDict(),
 		Uploader: &uploads.FileBasedUploader{
 			UploadDir: *console_dump_dir,
@@ -616,8 +615,6 @@ func doConsole() {
 
 	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	state := load_state()
 	defer save_state(state)

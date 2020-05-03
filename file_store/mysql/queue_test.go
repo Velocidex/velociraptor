@@ -9,7 +9,8 @@ import (
 )
 
 func TestMysqlQueueManager(t *testing.T) {
-	config_obj, err := config.LoadConfig("../../datastore/test_data/mysql.config.yaml")
+	config_obj, err := config.LoadConfig(
+		"../../datastore/test_data/mysql.config.yaml")
 	if err != nil {
 		return
 	}

@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -48,6 +49,9 @@ var (
 func doPoolClient() {
 	client_config, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
+	kingpin.FatalIfError(config.ValidateClientConfig(client_config),
+		"Unable to load config file")
+
 	server.IncreaseLimits(client_config)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -99,6 +103,7 @@ func doPoolClient() {
 			manager,
 			exe,
 			client_config.Client.ServerUrls,
+			utils.RealClock{},
 		)
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 

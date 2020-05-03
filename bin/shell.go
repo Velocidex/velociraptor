@@ -22,7 +22,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"path"
 	"time"
 
 	prompt "github.com/c-bata/go-prompt"
@@ -102,10 +101,9 @@ func shell_executor(config_obj *config_proto.Config,
 
 		if response.Context.State == flows_proto.ArtifactCollectorContext_TERMINATED {
 			request := &api_proto.GetTableRequest{
+				FlowId:   flow_id,
+				Artifact: artifact_name,
 				ClientId: client_id,
-				Path: path.Join(
-					"/clients", client_id, "artifacts",
-					artifact_name, flow_id+".csv"),
 			}
 			response, err := client.GetTable(ctx, request)
 			if err != nil {
@@ -146,7 +144,8 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 }
 
 func doShell() {
-	config_obj := get_config_or_default()
+	config_obj, err := load_config_or_api()
+	kingpin.FatalIfError(err, "Unable to load config file")
 
 	if config_obj.ApiConfig == nil ||
 		config_obj.ApiConfig.Name == "" {

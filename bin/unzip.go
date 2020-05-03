@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
@@ -31,6 +32,8 @@ var (
 )
 
 func doUnzip() {
+	config_obj := load_config_or_default()
+
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	kingpin.FatalIfError(err, "File does not exist")
 
@@ -41,6 +44,7 @@ func doUnzip() {
 
 	builder := artifacts.ScopeBuilder{
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("MemberGlob", *unzip_cmd_member),
@@ -101,8 +105,6 @@ func doUnzip() {
 
 	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	vql, err := vfilter.Parse(query)
 	kingpin.FatalIfError(err, "Unable to parse VQL Query")

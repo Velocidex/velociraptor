@@ -22,6 +22,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -30,7 +31,9 @@ var (
 )
 
 func doDebug() {
-	config_obj := get_config_or_default()
+	config_obj, err := load_config_or_api()
+	kingpin.FatalIfError(err, "Unable to load config file")
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting debug server on http://127.0.0.1:6060/debug/pprof")
 

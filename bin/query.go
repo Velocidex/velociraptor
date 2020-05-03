@@ -201,7 +201,7 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 }
 
 func doQuery() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
@@ -219,7 +219,7 @@ func doQuery() {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -248,7 +248,6 @@ func doQuery() {
 
 	ctx := InstallSignalHandler(scope)
 
-	AddLogger(scope, get_config_or_default())
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", log.Lshortfile)
 	}

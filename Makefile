@@ -8,7 +8,7 @@ test: golden
 	go test ./...
 
 golden:
-	./output/velociraptor --config artifacts/testdata/windows/test.config.yaml \
+	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml \
 	     golden artifacts/testdata/server/testcases/ --env srcDir=`pwd`
 
 references:
@@ -45,7 +45,7 @@ build_release: build_docker
 	docker run --rm -v `pwd`:/build/ -u `id -u`:`id -g` -e HOME=/tmp/  velo_builder
 
 debug:
-	dlv debug --build-flags="-tags 'server_vql extras'" \
+	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" \
 		./bin/ -- frontend -v --debug
 
 debug_client:

@@ -59,7 +59,7 @@ func TestPathManager(t *testing.T) {
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)
-		path_manager.clock = utils.MockClock{time.Unix(ts, 0)}
+		path_manager.clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(t, err)
 		assert.Equal(t, path, testcase.expected)

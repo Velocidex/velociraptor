@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -38,7 +39,9 @@ func RunClient(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_path *string) {
-	config_obj, err := config.LoadClientConfig(*config_path)
+
+	// Include the writeback in the client's configuration.
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Make sure the config is ok.
@@ -63,6 +66,7 @@ func RunClient(
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
+		utils.RealClock{},
 	)
 	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 

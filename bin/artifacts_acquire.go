@@ -69,10 +69,9 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 	logger.Info("Collecting artifact %v into subdir %v", name, subdir)
 
 	builder := artifacts.ScopeBuilder{
-		Config: config_obj,
-		// Run tests as administrator - disable ACLs.
+		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
 		Env:        ordereddict.NewDict(),
 		Uploader: &uploads.FileBasedUploader{
 			UploadDir: filepath.Join(subdir, "files"),
@@ -95,8 +94,6 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 
 	scope := builder.Build()
 	defer scope.Close()
-
-	AddLogger(scope, get_config_or_default())
 
 	now := time.Now()
 	fd, err := os.OpenFile(
@@ -137,7 +134,7 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 }
 
 func doArtifactsAcquire() {
-	config_obj := get_config_or_default()
+	config_obj := load_config_or_default()
 	repository := getRepository(config_obj)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

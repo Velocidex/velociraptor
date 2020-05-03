@@ -51,7 +51,7 @@ func (self *OSFileInfo) Mtime() TimeVal {
 	ts := int64(self.sys().Mtim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Mtim.Nsec + ts*1000000000),
+		Nsec: int64(self.sys().Mtim.Nsec) + ts*1000000000,
 	}
 }
 
@@ -59,7 +59,7 @@ func (self *OSFileInfo) Ctime() TimeVal {
 	ts := int64(self.sys().Ctim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Ctim.Nsec + ts*1000000000),
+		Nsec: int64(self.sys().Ctim.Nsec) + ts*1000000000,
 	}
 }
 
@@ -67,7 +67,7 @@ func (self *OSFileInfo) Atime() TimeVal {
 	ts := int64(self.sys().Atim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Atim.Nsec + ts*1000000000),
+		Nsec: int64(self.sys().Atim.Nsec) + ts*1000000000,
 	}
 }
 

@@ -55,7 +55,7 @@ type Repository struct {
 
 func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 	count := 0
-	if utils.InString(&self.loaded_dirs, dirname) {
+	if utils.InString(self.loaded_dirs, dirname) {
 		return &count, nil
 	}
 	dirname = filepath.Clean(dirname)

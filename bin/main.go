@@ -20,17 +20,13 @@ package main
 import (
 	"crypto/x509"
 	"encoding/pem"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"regexp"
 	"runtime/pprof"
 	"runtime/trace"
-	"strings"
 
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -72,58 +68,13 @@ var (
 	command_handlers []CommandHandler
 )
 
-func validateServerConfig(configuration *config_proto.Config) error {
-	if configuration.Frontend.Certificate == "" {
-		return errors.New("Configuration does not specify a frontend certificate.")
-	}
-
-	for _, url := range configuration.Client.ServerUrls {
-		if !strings.HasSuffix(url, "/") {
-			return errors.New(
-				"Configuration Client.server_urls must end with /")
-		}
-	}
-
-	// On windows we require file locations to include a drive
-	// letter.
-	if configuration.ServerType == "windows" {
-		path_regex := regexp.MustCompile("^[a-zA-Z]:")
-		path_check := func(parameter, value string) error {
-			if !path_regex.MatchString(value) {
-				return errors.New(fmt.Sprintf(
-					"%s must have a drive letter.",
-					parameter))
-			}
-			if strings.Contains(value, "/") {
-				return errors.New(fmt.Sprintf(
-					"%s can not contain / path separators on windows.",
-					parameter))
-			}
-			return nil
-		}
-
-		err := path_check("Datastore.Locations",
-			configuration.Datastore.Location)
-		if err != nil {
-			return err
-		}
-		err = path_check("Datastore.Locations",
-			configuration.Datastore.FilestoreDirectory)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func get_server_config(config_path string) (*config_proto.Config, error) {
 	config_obj, err := config.LoadConfig(config_path)
 	if err != nil {
 		return nil, err
 	}
 	if err == nil {
-		err = validateServerConfig(config_obj)
+		err = config.ValidateFrontendConfig(config_obj)
 	}
 
 	return config_obj, err
@@ -168,13 +119,32 @@ func maybe_parse_api_config(config_obj *config_proto.Config) {
 	}
 }
 
-func get_config_or_default() *config_proto.Config {
+func load_config_or_api() (*config_proto.Config, error) {
 	config_obj, err := config.LoadConfig(*config_path)
 	if err != nil {
-		config_obj = config.GetDefaultConfig()
+		return nil, err
 	}
+	if config_obj.Frontend != nil {
+		err = config.ValidateFrontendConfig(config_obj)
+	} else {
+		err = config.ValidateClientConfig(config_obj)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
 	maybe_parse_api_config(config_obj)
 	load_config_artifacts(config_obj)
+
+	return config_obj, nil
+}
+
+func load_config_or_default() *config_proto.Config {
+	config_obj, err := load_config_or_api()
+	if err != nil {
+		return &config_proto.Config{}
+	}
 	return config_obj
 }
 

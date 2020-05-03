@@ -22,6 +22,7 @@ install:
     echo %GOPATH%
     mklink c:\Users\link c:\Windows
     mkdir "C:\Program Files\Velociraptor"
+    mkdir c:\tmp
     echo Hello > C:\hello.txt
     echo HelloADS > C:\hello.txt:myads
     fsutil file setshortname C:\hello.txt hi.txt
@@ -43,8 +44,8 @@ build_script:
 
 test_script:
 - set GO111MODULE=on
-- cmd: output\velociraptor.exe golden artifacts\testdata\windows\ --env srcDir=c:\velociraptor
-- cmd: output\velociraptor.exe golden artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
 
 on_finish:

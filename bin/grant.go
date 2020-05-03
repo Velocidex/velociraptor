@@ -52,6 +52,9 @@ var (
 func doGrant() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
+	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+		"Unable to load config.")
+	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
 
 	principal := *grant_command_principal
 
@@ -82,7 +85,7 @@ func doGrant() {
 
 	if *grant_command_roles != "" {
 		for _, role := range strings.Split(*grant_command_roles, ",") {
-			if !utils.InString(&new_policy.Roles, role) {
+			if !utils.InString(new_policy.Roles, role) {
 				if !acls.ValidateRole(role) {
 					kingpin.Fatalf("Invalid role %v", role)
 				}
@@ -98,6 +101,8 @@ func doGrant() {
 func doShow() {
 	config_obj, err := config.LoadConfig(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
+	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+		"Unable to load config.")
 
 	principal := *show_command_principal
 	existing_policy, err := acls.GetPolicy(config_obj, principal)

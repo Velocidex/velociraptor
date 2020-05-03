@@ -287,7 +287,7 @@ func removeServiceServerService(name string) error {
 }
 
 func doRemoveServerService() {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to load config file")
 	}
@@ -476,7 +476,7 @@ func init() {
 		var err error
 		switch command {
 		case server_service_installl_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -506,26 +506,26 @@ func init() {
 			}
 
 		case server_service_start_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = startService(config_obj.Client.WindowsInstaller.ServiceName)
 
 		case server_service_stop_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Stop, svc.Stopped)
 
 		case server_service_pause_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Pause, svc.Paused)
 
 		case server_service_continue_command.FullCommand():
-			config_obj, err := config.LoadClientConfig(*config_path)
+			config_obj, err := config.LoadConfigWithWriteback(*config_path)
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,

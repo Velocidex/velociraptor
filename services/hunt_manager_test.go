@@ -226,7 +226,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	_, err = clients.LabelClients(self.config_obj,
+	err = clients.LabelClients(self.config_obj,
 		&api_proto.LabelClientsRequest{
 			ClientIds: []string{self.client_id},
 			Labels:    []string{"lAbEl"}, // Lowercase label
@@ -299,7 +299,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	_, err = clients.LabelClients(self.config_obj,
+	err = clients.LabelClients(self.config_obj,
 		&api_proto.LabelClientsRequest{
 			ClientIds: []string{self.client_id},
 			Labels:    []string{"MyLabel"},

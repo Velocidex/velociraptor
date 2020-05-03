@@ -88,6 +88,9 @@ func GetConfig(scope *vfilter.Scope) (*config_proto.ClientConfig, bool) {
 	}
 
 	config, ok := scope_config.(*config_proto.ClientConfig)
+	if config == nil {
+		return nil, false
+	}
 	return config, ok
 }
 

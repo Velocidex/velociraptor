@@ -43,9 +43,10 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	t := self.T()
-	config_obj, err := config.LoadClientConfig(
+	config_obj, err := config.LoadConfig(
 		"../http_comms/test_data/server.config.yaml")
 	require.NoError(t, err)
+	require.NoError(t, config.ValidateFrontendConfig(config_obj))
 
 	self.config_obj = config_obj
 	self.config_obj.Client.WritebackLinux = ""

@@ -364,7 +364,8 @@ func fsPathToVFS(fs_path string) string {
 }
 
 func doFuse() {
-	config_obj := get_config_or_default()
+	config_obj, err := load_config_or_api()
+	kingpin.FatalIfError(err, "Unable to load config file")
 
 	vfs_fs := NewVFSFs(config_obj, *fuse_command_client)
 	nfs := pathfs.NewPathNodeFs(vfs_fs, nil)

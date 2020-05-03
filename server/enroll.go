@@ -19,10 +19,10 @@ package server
 
 import (
 	"context"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
@@ -31,25 +31,18 @@ func enroll(
 	server *Server,
 	csr *crypto_proto.Certificate) error {
 	if csr.GetType() == crypto_proto.Certificate_CSR && csr.Pem != nil {
-		client_urn, err := server.manager.AddCertificateRequest(csr.Pem)
+		client_id, err := server.manager.AddCertificateRequest(csr.Pem)
 		if err != nil {
 			return err
 		}
 
-		client_id := strings.TrimPrefix(*client_urn, "aff4:/")
-
-		client, closer, err := server.APIClientFactory.GetAPIClient(
-			ctx, server.config)
-		if err != nil {
-			return err
-		}
-		defer closer()
-
-		request := &flows_proto.ArtifactCollectorArgs{
-			ClientId:  client_id,
-			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
-		}
-		_, err = client.CollectArtifact(ctx, request)
+		// Schedule a collection automatically.
+		_, err = flows.ScheduleArtifactCollection(server.config,
+			server.config.Client.PinnedServerName,
+			&flows_proto.ArtifactCollectorArgs{
+				ClientId:  client_id,
+				Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
+			})
 		if err != nil {
 			return err
 		}

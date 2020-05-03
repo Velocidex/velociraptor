@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -180,7 +180,7 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 			length := int64(binary.LittleEndian.Uint64(self.read_buf))
 			// File might be corrupt - just reset the
 			// entire file.
-			if length > constants.MAX_MEMORY*2 {
+			if length > constants.MAX_MEMORY*2 || length == 0 {
 				self.log_ctx.Error("Possible corruption detected - item length is too large.")
 				self._Truncate()
 				return nil
@@ -261,16 +261,8 @@ func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
-	var filename string
-
-	switch runtime.GOOS {
-	case "windows":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
-	case "linux":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
-	case "darwin":
-		filename = os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
-	default:
+	filename := getLocalBufferName(config_obj)
+	if filename == "" {
 		return nil, errors.New("Unsupport platform")
 	}
 
@@ -477,9 +469,22 @@ func NewRingBuffer(config_obj *config_proto.Config, size uint64) *RingBuffer {
 	return result
 }
 
+func getLocalBufferName(config_obj *config_proto.Config) string {
+	switch runtime.GOOS {
+	case "windows":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameWindows)
+	case "linux":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameLinux)
+	case "darwin":
+		return os.ExpandEnv(config_obj.Client.LocalBuffer.FilenameDarwin)
+	default:
+		return ""
+	}
+}
+
 func NewLocalBuffer(config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
-		config_obj.Client.LocalBuffer.Filename != "" {
+		getLocalBufferName(config_obj) != "" {
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		rb, err := NewFileBasedRingBuffer(config_obj, logger)

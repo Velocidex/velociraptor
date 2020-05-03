@@ -46,9 +46,13 @@ var (
 )
 
 func doRemove() error {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
+	}
+
+	if config_obj.Client.DarwinInstaller == nil {
+		return errors.New("DarwinInstaller not configured")
 	}
 
 	service_name := config_obj.Client.DarwinInstaller.ServiceName
@@ -61,7 +65,7 @@ func doRemove() error {
 }
 
 func doInstall() error {
-	config_obj, err := config.LoadClientConfig(*config_path)
+	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
 	}

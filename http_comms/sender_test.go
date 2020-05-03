@@ -36,6 +36,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type MockHTTPConnector struct {
@@ -46,7 +47,7 @@ type MockHTTPConnector struct {
 	t         *testing.T
 }
 
-func (self *MockHTTPConnector) GetCurrentUrl() string { return "http://URL/" }
+func (self *MockHTTPConnector) GetCurrentUrl(handler string) string { return "http://URL/" + handler }
 func (self *MockHTTPConnector) Post(handler string, data []byte, urgent bool) (*http.Response, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -119,7 +120,7 @@ func testRingBuffer(
 
 	sender := NewSender(
 		config_obj, connector, manager, exe, rb, nil, /* enroller */
-		logger, "Sender", "control")
+		logger, "Sender", "control", &utils.RealClock{})
 	sender.Start(ctx)
 
 	// This message results in a 14 byte message enqueued. The

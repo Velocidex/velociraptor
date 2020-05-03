@@ -415,15 +415,21 @@ func (self *ApiServer) LabelClients(
 	permissions := acls.LABEL_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to label clients.")
+		return &api_proto.APIResponse{
+				Error:        true,
+				ErrorMessage: "Permission Denied",
+			}, status.Error(codes.PermissionDenied,
+				"User is not allowed to label clients.")
 	}
-	result, err := clients.LabelClients(self.config, in)
+	err = clients.LabelClients(self.config, in)
 	if err != nil {
-		return nil, err
+		return &api_proto.APIResponse{
+			Error:        true,
+			ErrorMessage: err.Error(),
+		}, err
 	}
 
-	return result, nil
+	return &api_proto.APIResponse{}, nil
 }
 
 func (self *ApiServer) GetClient(

@@ -13,8 +13,14 @@ func (self *NullCryptoManager) GetCSR() ([]byte, error) {
 	return []byte{}, nil
 }
 func (self *NullCryptoManager) AddCertificate(certificate_pem []byte) (
-	*string, error) {
-	return nil, nil
+	string, error) {
+
+	server_cert, err := ParseX509CertFromPemStr(certificate_pem)
+	if err != nil {
+		return "", err
+	}
+
+	return server_cert.Subject.CommonName, nil
 }
 
 func (self *NullCryptoManager) EncryptMessageList(

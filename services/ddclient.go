@@ -33,7 +33,7 @@ func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 		return
 	}
 
-	ddns_hostname := config_obj.Frontend.DynDns.Hostname
+	ddns_hostname := config_obj.Frontend.Hostname
 	hostnameIPs, err := GetCurrentDDNSIp(ddns_hostname)
 	if err != nil {
 		logger.Error("Unable to resolve DDNS hostname IP: %v", err)
@@ -77,7 +77,7 @@ func (self *DynDNSService) Start(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the DynDNS service: Updating hostname %v",
-		config_obj.Frontend.DynDns.Hostname)
+		config_obj.Frontend.Hostname)
 
 	min_update_wait := config_obj.Frontend.DynDns.Frequency
 	if min_update_wait == 0 {
@@ -108,7 +108,8 @@ func startDynDNSService(
 	result := &DynDNSService{}
 
 	if config_obj.Frontend.DynDns == nil ||
-		config_obj.Frontend.DynDns.Hostname == "" {
+		config_obj.Frontend.DynDns.DdnsUsername == "" ||
+		config_obj.Frontend.Hostname == "" {
 		return nil
 	}
 

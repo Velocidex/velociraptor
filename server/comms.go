@@ -31,6 +31,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/frontend"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
@@ -60,13 +61,13 @@ func PrepareFrontendMux(
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
 
-	if config_obj.Frontend.PublicPath != "" {
-		router.Handle("/public/", http.FileServer(
-			api.NewFileSystem(
-				config_obj,
-				file_store.GetFileStore(config_obj),
-				"/public/")))
-	}
+	// Publically accessible part of the filestore. NOTE: this
+	// does not have to be a physical directory - it is served
+	// from the filestore.
+	router.Handle("/public/", http.FileServer(
+		api.NewFileSystem(config_obj,
+			file_store.GetFileStore(config_obj),
+			"/public/")))
 }
 
 // Starts the frontend over HTTPS.
@@ -177,7 +178,7 @@ func StartTLSServer(
 
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(config_obj.AutocertDomain),
+		HostPolicy: autocert.HostWhitelist(config_obj.Frontend.Hostname),
 		Cache:      autocert.DirCache(cache_dir),
 	}
 
@@ -257,6 +258,26 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
+// Redirect client to another active frontend.
+func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Request) bool {
+	utils.Debug(r.URL)
+	_, pres := r.URL.Query()["r"]
+	if pres {
+		return false
+	}
+
+	redirect_url, ok := frontend.GetFrontendURL()
+	if ok {
+		// We should redirect to another frontend.
+		fmt.Printf("Redirecting to %v\n", redirect_url)
+		http.Redirect(w, r, redirect_url, 301)
+		return true
+	}
+
+	// Handle request ourselves.
+	return false
+}
+
 // This handler is used to receive messages from the client to the
 // server. These connections are short lived - the client will just
 // post its message and then disconnect.
@@ -267,6 +288,11 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		if maybeRedirectFrontend("control", w, req) {
+			return
+		}
+
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			panic("http handler is not a flusher")
@@ -390,6 +416,11 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		if maybeRedirectFrontend("reader", w, req) {
+			return
+		}
+
 		ctx := req.Context()
 
 		flusher, ok := w.(http.Flusher)

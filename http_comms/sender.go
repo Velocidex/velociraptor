@@ -23,7 +23,6 @@ import (
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/golang/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -31,6 +30,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type Sender struct {
@@ -46,6 +46,8 @@ type Sender struct {
 
 	// An in-memory ring buffer for urgent packets.
 	urgent_buffer *RingBuffer
+
+	clock utils.Clock
 }
 
 // Persistant loop to pump messages from the executor to the ring
@@ -57,7 +59,7 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) != 0 {
-			time.Sleep(self.minPoll)
+			self.clock.Sleep(self.minPoll)
 			continue
 		}
 
@@ -187,7 +189,7 @@ func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 
 			// Wait a minimum amount of time to allow for
 			// responses to be queued in the same POST.
-		case <-time.After(self.minPoll):
+		case <-self.clock.After(self.minPoll):
 			continue
 		}
 	}
@@ -209,13 +211,15 @@ func NewSender(
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
-	handler string) *Sender {
+	handler string,
+	clock utils.Clock) *Sender {
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
-			executor, enroller, logger, name, handler),
+			executor, enroller, logger, name, handler, clock),
 		ring_buffer:   ring_buffer,
 		urgent_buffer: NewRingBuffer(config_obj, 2*config_obj.Client.MaxUploadSize),
 		release:       make(chan bool),
+		clock:         clock,
 	}
 
 	return result

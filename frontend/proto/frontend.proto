@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/frontend/proto";
+
+
+// Describe the frontend state.
+message FrontendState {
+    // The unique name of the frontend.
+    string name = 1;
+
+    // Updated periodically to indicate the frontend is alive (in seconds).
+    int64 heartbeat = 2;
+
+    // The URL over which the frontend is accessible to clients.
+    string url = 3;
+}

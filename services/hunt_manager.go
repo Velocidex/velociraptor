@@ -239,7 +239,7 @@ func huntHasLabel(config_obj *config_proto.Config,
 			Operation: "check",
 		}
 
-		_, err := clients.LabelClients(config_obj, request)
+		err := clients.LabelClients(config_obj, request)
 		if err != nil {
 			return false, nil
 		}

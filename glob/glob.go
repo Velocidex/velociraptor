@@ -200,7 +200,7 @@ func (self *Globber) _brace_expansion(pattern string, result *[]string) {
 		for _, item := range middle {
 			self._brace_expansion(left+item+right, result)
 		}
-	} else if !utils.InString(result, pattern) {
+	} else if !utils.InString(*result, pattern) {
 		*result = append(*result, pattern)
 	}
 }

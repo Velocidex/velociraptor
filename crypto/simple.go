@@ -47,7 +47,7 @@ func (self *Obfuscator) Encrypt(config_obj *config_proto.Config, name string) (
 }
 
 func (self *Obfuscator) generateCrypter(config_obj *config_proto.Config) error {
-	hash := sha256.Sum256([]byte(config_obj.Frontend.PrivateKey))
+	hash := sha256.Sum256([]byte(config_obj.ObfuscationNonce))
 	self.key = hash[:]
 	crypter, err := aes.NewCipher(self.key)
 	if err != nil {
