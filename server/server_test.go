@@ -173,8 +173,9 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		if old_version != services.GetClientEventsVersion() {
 			break
 		}
-		time.Sleep(100 * time.Microsecond)
+		time.Sleep(100 * time.Millisecond)
 	}
+	assert.NotEqual(t, old_version, services.GetClientEventsVersion())
 
 	// Send a foreman checkin message from client with old event
 	// table version.
