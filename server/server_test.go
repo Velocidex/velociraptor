@@ -161,6 +161,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		Artifacts: []string{"Generic.Client.Stats"},
 	}
 
+	// Wait for the service to fully come up.
 	time.Sleep(time.Second)
 
 	old_version := services.GetClientEventsVersion()

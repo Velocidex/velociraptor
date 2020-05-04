@@ -56,6 +56,9 @@ func StartNotificationService(
 	go func() {
 		defer wg.Done()
 		defer func() {
+			pool_mu.Lock()
+			defer pool_mu.Unlock()
+
 			notification_pool.Shutdown()
 			notification_pool = nil
 		}()
@@ -78,11 +81,13 @@ func StartNotificationService(
 					continue
 				}
 
+				pool_mu.Lock()
 				if target == "All" {
 					notification_pool.NotifyAll()
 				} else {
 					notification_pool.Notify(target)
 				}
+				pool_mu.Unlock()
 			}
 		}
 	}()
