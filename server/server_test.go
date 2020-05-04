@@ -161,6 +161,8 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		Artifacts: []string{"Generic.Client.Stats"},
 	}
 
+	time.Sleep(time.Second)
+
 	old_version := services.GetClientEventsVersion()
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
