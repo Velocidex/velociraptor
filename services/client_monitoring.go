@@ -208,18 +208,16 @@ func StartClientMonitoringService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
+	notification, err := ListenForNotification(constants.ClientMonitoringFlowURN)
+	if err != nil {
+		return err
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		for {
-			notification, err := ListenForNotification(
-				constants.ClientMonitoringFlowURN)
-			if err != nil {
-				logger.Error("StartClientMonitoringService ", err)
-				return
-			}
-
 			select {
 			case <-ctx.Done():
 				return
@@ -230,6 +228,12 @@ func StartClientMonitoringService(
 					logger.Error("StartClientMonitoringService: ", err)
 					return
 				}
+			}
+
+			notification, err = ListenForNotification(constants.ClientMonitoringFlowURN)
+			if err != nil {
+				logger.Error("StartClientMonitoringService ", err)
+				return
 			}
 		}
 	}()
