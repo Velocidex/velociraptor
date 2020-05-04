@@ -161,13 +161,20 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		Artifacts: []string{"Generic.Client.Stats"},
 	}
 
+	old_version := services.GetClientEventsVersion()
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
 	_, err = services.StartHuntDispatcher(ctx, wg, self.config_obj)
 	require.NoError(t, err)
 
-	// For the journaling service to pass the message along.
-	time.Sleep(2 * time.Second)
+	// Wait up to 10 sec, for the journaling service to pass the
+	// message along and update the client events table.
+	for i := 0; i < 100; i++ {
+		if old_version != services.GetClientEventsVersion() {
+			break
+		}
+		time.Sleep(100 * time.Microsecond)
+	}
 
 	// Send a foreman checkin message from client with old event
 	// table version.
