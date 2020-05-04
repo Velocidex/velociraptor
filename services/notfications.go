@@ -6,15 +6,19 @@
 
 // Notifications do not carry actual data, they just indicate that an
 // event occured. Callers need to go back to actually do something
-// with that information (read the filestore etc). Notifications are not meant to be
+// with that information (read the filestore etc). Notifications are
+// not meant to be reliable - it is possible to miss a notification or
+// to receive too many notifications while no change
+// occurs. Notifications are just an optimization that reduces the
+// need to poll something.
 
 package services
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
@@ -31,34 +35,53 @@ var (
 // the current process. This allows multiprocess communication as the
 // notifications may arrive from other frontend processes through the
 // journal service.
-func startNotificationService(
-	config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) error {
+func StartNotificationService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	if notifier == nil {
-		return errors.New("Notifier must be specified.")
+	if notification_pool != nil {
+		notification_pool.Shutdown()
 	}
+
+	notification_pool = notifications.NewNotificationPool()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the notification service.")
 
-	notification_pool = notifier
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
+		defer func() {
+			notification_pool.Shutdown()
+			notification_pool = nil
+		}()
+
 		events, cancel := GetJournal().Watch("Server.Internal.Notifications")
 		defer cancel()
 
-		for event := range events {
-			target, ok := event.GetString("Target")
-			if !ok {
-				continue
-			}
+		for {
+			select {
+			case <-ctx.Done():
+				return
 
-			if target == "All" {
-				notification_pool.NotifyAll()
-			} else {
-				notification_pool.Notify(target)
+			case event, ok := <-events:
+				if !ok {
+					return
+				}
+
+				target, ok := event.GetString("Target")
+				if !ok {
+					continue
+				}
+
+				if target == "All" {
+					notification_pool.NotifyAll()
+				} else {
+					notification_pool.Notify(target)
+				}
 			}
 		}
 	}()
@@ -87,4 +110,12 @@ func NotifyListener(config_obj *config_proto.Config, id string) error {
 
 	return GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)})
+}
+
+// TODO: Make this work on all frontends.
+func IsClientConnected(client_id string) bool {
+	pool_mu.Lock()
+	defer pool_mu.Unlock()
+
+	return notification_pool.IsClientConnected(client_id)
 }

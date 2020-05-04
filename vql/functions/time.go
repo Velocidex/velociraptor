@@ -60,7 +60,7 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	result, err := TimeFromAny(scope, arg.Epoch)
-	if err != nil {
+	if err != nil || result.Unix() == 0 {
 		return vfilter.Null{}
 	}
 	return result

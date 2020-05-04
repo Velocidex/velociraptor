@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/notifications"
 )
 
 // A manager responsible for starting and shutting down all the
@@ -34,12 +33,11 @@ type ServicesManager struct{}
 func StartFrontendServices(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) error {
+	config_obj *config_proto.Config) error {
 
 	// Allow for low latency scheduling by notifying clients of
 	// new events for them.
-	err := startNotificationService(config_obj, notifier)
+	err := StartNotificationService(ctx, wg, config_obj)
 	if err != nil {
 		return err
 	}
@@ -77,8 +75,7 @@ func StartFrontendServices(
 func StartServices(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) error {
+	config_obj *config_proto.Config) error {
 
 	if config_obj.Frontend.ServerServices.HuntManager {
 		_, err := startHuntManager(ctx, wg, config_obj)
@@ -120,7 +117,7 @@ func StartServices(
 	// Run any server arttifacts the user asks for.
 	if config_obj.Frontend.ServerServices.ServerArtifacts {
 		err := startServerArtifactService(
-			ctx, wg, config_obj, notifier)
+			ctx, wg, config_obj)
 		if err != nil {
 			return err
 		}
