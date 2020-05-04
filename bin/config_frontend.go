@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Velocidex/survey"
@@ -12,7 +11,6 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
 )
 
 var (
@@ -49,15 +47,6 @@ func doConfigFrontend() {
 	if config_obj.Frontend.DynDns.DdnsUsername != "" {
 		kingpin.FatalIfError(dynDNSConfig(config_obj), "")
 	}
-
-	// Frontends must have a well known common name.
-	fmt.Println("Generating keys please wait....")
-	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, config_obj.Client.PinnedServerName)
-	kingpin.FatalIfError(err, "Unable to create Frontend cert")
-
-	frontend_config.Certificate = frontend_cert.Cert
-	frontend_config.PrivateKey = frontend_cert.PrivateKey
 
 	// Add the additional frontend.
 	config_obj.ExtraFrontends = append(config_obj.ExtraFrontends,

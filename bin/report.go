@@ -32,7 +32,8 @@ func doDailyMonitoring() {
 	config_obj, err := get_server_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	getRepository(config_obj)
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Unable to load artifacts")
 
 	// Bypass all ACLs by default
 	principal := config_obj.Client.PinnedServerName

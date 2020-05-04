@@ -223,7 +223,7 @@ func collectArtifactToContainer(
 	}
 }
 
-func getRepository(config_obj *config_proto.Config) *artifacts.Repository {
+func getRepository(config_obj *config_proto.Config) (*artifacts.Repository, error) {
 	repository, err := server.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	if *artifact_definitions_dir != "" {
@@ -234,10 +234,11 @@ func getRepository(config_obj *config_proto.Config) *artifacts.Repository {
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
 				Error("Artifact LoadDirectory", err)
+			return nil, err
 		}
 	}
 
-	return repository
+	return repository, nil
 }
 
 func printParameters(artifacts []string, repository *artifacts.Repository) {
@@ -286,7 +287,9 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 
 func doArtifactCollect() {
 	config_obj := load_config_or_default()
-	repository := getRepository(config_obj)
+	repository, err := getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
+
 	now := time.Now()
 	defer func() {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -296,7 +299,6 @@ func doArtifactCollect() {
 	}()
 
 	var container *reporting.Container
-	var err error
 
 	if *artifact_command_collect_output != "" {
 		// Create an output container.
@@ -377,7 +379,8 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 
 func doArtifactShow() {
 	config_obj := load_config_or_default()
-	repository := getRepository(config_obj)
+	repository, err := getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	artifact, pres := repository.Get(*artifact_command_show_name)
 	if !pres {
@@ -390,7 +393,8 @@ func doArtifactShow() {
 
 func doArtifactList() {
 	config_obj := load_config_or_default()
-	repository := getRepository(config_obj)
+	repository, err := getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	var name_regex *regexp.Regexp
 	if *artifact_command_list_name != "" {
@@ -441,7 +445,9 @@ func load_config_artifacts(config_obj *config_proto.Config) {
 	if config_obj.Autoexec == nil {
 		return
 	}
-	repository := getRepository(config_obj)
+	repository, err := getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
+
 	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
 		_, err := repository.LoadProto(definition, true /* validate */)
 		kingpin.FatalIfError(err, "Unable to parse config artifact")

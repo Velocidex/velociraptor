@@ -140,7 +140,7 @@ type HTTPConnector struct {
 	// If the last request caused a redirect, we switch to that
 	// server immediately and keep accessing that server until the
 	// an error occurs or we are further redirected.
-	redirect_to_server bool
+	redirect_to_server int
 
 	clock utils.Clock
 }
@@ -222,15 +222,15 @@ func (self *HTTPConnector) GetCurrentUrl(handler string) string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.redirect_to_server {
+	if self.redirect_to_server > 0 {
+		self.redirect_to_server--
 		return self.urls[self.current_url_idx] + handler + "?r=1"
 	}
 
 	return self.urls[self.current_url_idx] + handler
 }
 
-func (self *HTTPConnector) Post(handler string,
-	data []byte, urgent bool) (
+func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 	*http.Response, error) {
 
 	reader := bytes.NewReader(data)
@@ -289,19 +289,23 @@ func (self *HTTPConnector) Post(handler string,
 		// frontend. Clearing the server name will force
 		// rekey to that server.
 		self.server_name = ""
-		// Future POST requests will mark the URL as a
-		// redirected URL which stops the frontend from
-		// redirecting us again.
-		self.redirect_to_server = true
 
 		self.logger.Info("Redirecting to frontend: %v", dest[0])
 
-		// For safety we wait after redirect in case we end up
-		// in a redirect loop.
-		wait := self.maxPoll + time.Duration(
-			rand.Intn(int(self.maxPollDev)))*time.Second
-		self.logger.Info("Waiting after redirect: %v", wait)
-		<-self.clock.After(wait)
+		// Future POST requests will mark the URL as a
+		// redirected URL which stops the frontend from
+		// redirecting us again.
+		if self.redirect_to_server <= 0 {
+			self.redirect_to_server = 200
+
+		} else {
+			// For safety we wait after redirect in case we end up
+			// in a redirect loop.
+			wait := self.maxPoll + time.Duration(
+				rand.Intn(int(self.maxPollDev)))*time.Second
+			self.logger.Info("Waiting after redirect: %v", wait)
+			<-self.clock.After(wait)
+		}
 
 		return nil, RedirectError
 
@@ -329,7 +333,7 @@ func (self *HTTPConnector) advanceToNextServer() {
 	// line. Reset the server name (will be fetched from
 	// the PEM) and do not use redirects.
 	self.current_url_idx = ((self.current_url_idx + 1) % len(self.urls))
-	self.redirect_to_server = false
+	self.redirect_to_server = 0
 	self.server_name = ""
 
 	// We are cycling through all our frontend's PEM keys

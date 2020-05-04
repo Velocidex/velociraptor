@@ -58,6 +58,8 @@ func (self _SRUMLookupId) Call(
 	ctx context.Context, scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer utils.RecoverVQL(scope)
+
 	arg := &_SRUMLookupIdArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -185,6 +187,7 @@ func (self _ESEPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
 
 		arg := &_ESEArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)

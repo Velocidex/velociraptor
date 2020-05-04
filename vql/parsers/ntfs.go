@@ -82,6 +82,8 @@ func (self NTFSFunction) Call(
 	ctx context.Context, scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
+	defer utils.RecoverVQL(scope)
+
 	arg := &NTFSFunctionArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
@@ -144,6 +146,7 @@ func (self MFTScanPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
 
 		arg := &MFTScanPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -213,6 +216,7 @@ func (self NTFSI30ScanPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
 
 		arg := &NTFSFunctionArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)

@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -22,28 +21,11 @@ func GetGlobalRepository(config_obj *config_proto.Config) (*artifacts.Repository
 		return nil, err
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	if config_obj.Frontend.ArtifactsPath != "" {
-		count, err := global_repository.LoadDirectory(
-			config_obj.Frontend.ArtifactsPath)
-		switch errors.Cause(err).(type) {
-
-		// PathError is not fatal - it means we just
-		// cant load the directory.
-		case *os.PathError:
-			logger.Info("Unable to load artifacts from directory "+
-				"%s (skipping): %v",
-				config_obj.Frontend.ArtifactsPath, err)
-		case nil:
-			break
-		default:
-			// Other errors are fatal - they mean we cant
-			// parse the artifacts themselves.
-			return nil, err
-		}
-		logger.Info("Loaded %d artifacts from %s",
-			*count, config_obj.Frontend.ArtifactsPath)
+	if config_obj.Frontend == nil {
+		return global_repository, err
 	}
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	// Load artifacts from the custom file store.
 	file_store_factory := file_store.GetFileStore(config_obj)

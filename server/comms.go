@@ -260,7 +260,6 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 
 // Redirect client to another active frontend.
 func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Request) bool {
-	utils.Debug(r.URL)
 	_, pres := r.URL.Query()["r"]
 	if pres {
 		return false

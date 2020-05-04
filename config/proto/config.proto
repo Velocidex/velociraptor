@@ -364,10 +364,6 @@ message FrontendConfig {
             description: "The DNS name of the frontend."
         }];
 
-    string artifacts_path = 7 [(sem_type) = {
-            description: "Path to additional artifacts to load",
-        }];
-
     uint64 concurrency = 9 [(sem_type) = {
             description: "The number of client messages to process concurrently.",
         }];

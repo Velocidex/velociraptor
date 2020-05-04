@@ -1,3 +1,13 @@
+// Notifications are low latency indications that something has
+// changed. Callers may listen for notifications using the
+// ListenForNotification() function which returns a channel. The
+// caller can then block on the channel until an event occurs, at
+// which time, the channel will be closed.
+
+// Notifications do not carry actual data, they just indicate that an
+// event occured. Callers need to go back to actually do something
+// with that information (read the filestore etc). Notifications are not meant to be
+
 package services
 
 import (
@@ -56,7 +66,14 @@ func startNotificationService(
 	return nil
 }
 
-func NotifyAll(config_obj *config_proto.Config) error {
+func ListenForNotification(client_id string) (chan bool, error) {
+	pool_mu.Lock()
+	defer pool_mu.Unlock()
+
+	return notification_pool.Listen(client_id)
+}
+
+func NotifyAllListeners(config_obj *config_proto.Config) error {
 	path_manager := result_sets.NewArtifactPathManager(
 		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
 
@@ -64,10 +81,10 @@ func NotifyAll(config_obj *config_proto.Config) error {
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")})
 }
 
-func NotifyClient(config_obj *config_proto.Config, client_id string) error {
+func NotifyListener(config_obj *config_proto.Config, id string) error {
 	path_manager := result_sets.NewArtifactPathManager(
 		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
 
 	return GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", client_id)})
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)})
 }

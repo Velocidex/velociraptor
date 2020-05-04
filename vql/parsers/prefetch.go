@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	prefetch "www.velocidex.com/golang/go-prefetch"
 	"www.velocidex.com/golang/velociraptor/glob"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -54,6 +55,8 @@ func (self _PrefetchPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
+				defer utils.RecoverVQL(scope)
+
 				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 				if err != nil {
 					scope.Log("prefetch: %s", err)

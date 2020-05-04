@@ -56,6 +56,7 @@ func (self _SQLitePlugin) Call(
 	output_chan := make(chan vfilter.Row)
 	go func() {
 		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
 
 		arg := &_SQLiteArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)

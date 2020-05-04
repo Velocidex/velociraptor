@@ -89,7 +89,8 @@ func startFrontend(
 	}
 
 	// Parse the artifacts database to detect errors early.
-	getRepository(config_obj)
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	// Load the assets into memory.
 	assets.Init()

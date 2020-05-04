@@ -47,7 +47,7 @@ func _OLEVBAPlugin_ParseFile(
 	scope *vfilter.Scope,
 	arg *_OLEVBAArgs) ([]*oleparse.VBAModule, error) {
 
-	defer utils.CheckForPanic("Parsing VBA file.")
+	defer utils.RecoverVQL(scope)
 
 	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {

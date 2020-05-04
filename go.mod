@@ -25,7 +25,6 @@ require (
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/aws/aws-sdk-go v1.26.7
 	github.com/c-bata/go-prompt v0.2.3
-	github.com/cevaris/ordered_map v0.0.0-20180310183325-0efaee1733e3
 	github.com/clbanning/mxj v1.8.4
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/crewjam/saml v0.3.1
@@ -96,7 +95,7 @@ require (
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4
+	golang.org/x/sys v0.0.0-20200501145240-bc7a7d42d5c3
 	golang.org/x/tools v0.0.0-20200207131002-533eb2654509 // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
@@ -109,7 +108,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
-	www.velocidex.com/golang/evtx v0.0.2-0.20191118125331-191dc946afdf
+	www.velocidex.com/golang/evtx v0.0.2-0.20200504101835-a9fb49a9a1a0
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.0.0-20200110083657-950cbe916617
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6

@@ -19,7 +19,6 @@ import (
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -124,7 +123,6 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Lock()
 	self.active_frontends = active_frontends
 	self.urls = urls
-	utils.Debug(self.urls)
 
 	self.mu.Unlock()
 
@@ -245,6 +243,7 @@ func StartFrontendService(ctx context.Context,
 
 	fe_manager.addFrontendConfig(config_obj.Frontend)
 	for _, fe_config := range config_obj.ExtraFrontends {
+		// Duplicate keys to all frontends.
 		fe_config.Certificate = config_obj.Frontend.Certificate
 		fe_config.PrivateKey = config_obj.Frontend.PrivateKey
 		fe_manager.addFrontendConfig(fe_config)
@@ -298,5 +297,5 @@ func StartFrontendService(ctx context.Context,
 		}
 	}()
 
-	return services.NotifyClient(config_obj, "Frontend")
+	return services.NotifyListener(config_obj, "Frontend")
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -63,6 +64,8 @@ func (self _ParseEvtxPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
+				defer utils.RecoverVQL(scope)
+
 				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 				if err != nil {
 					scope.Log("parse_evtx: %s", err)
