@@ -138,8 +138,7 @@ begin by identifying what type of deployment you need.
 )
 
 func doGenerateConfigInteractive() {
-	config_obj, err := load_config_or_api()
-	kingpin.FatalIfError(err, "Unable to decode config.")
+	config_obj := load_config_or_default()
 
 	// Assume we are generating a server config for the running binary
 	config_obj.ServerType = runtime.GOOS
