@@ -170,7 +170,7 @@ func main() {
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true
-		logging.Manager.Reset()
+		logging.Reset()
 
 		// We need to delay this message until we parsed the
 		// command line so we can find out of the logging is

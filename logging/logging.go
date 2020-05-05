@@ -154,6 +154,12 @@ func (self *LogManager) Reset() {
 	self.contexts = make(map[*string]*LogContext)
 }
 
+func Reset() {
+	if Manager != nil {
+		Manager.Reset()
+	}
+}
+
 func getRotator(
 	config_obj *config_proto.Config,
 	base_path string) *rotatelogs.RotateLogs {
