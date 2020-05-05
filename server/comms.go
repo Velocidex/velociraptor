@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/crypto/acme/autocert"
@@ -269,7 +270,6 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 	redirect_url, ok := frontend.GetFrontendURL()
 	if ok {
 		// We should redirect to another frontend.
-		fmt.Printf("Redirecting to %v\n", redirect_url)
 		http.Redirect(w, r, redirect_url, 301)
 		return true
 	}
@@ -307,9 +307,22 @@ func control(server_obj *Server) http.Handler {
 			defer server_obj.EndConcurrencyControl()
 		}
 
-		body, err := ioutil.ReadAll(
-			io.LimitReader(req.Body, int64(server_obj.config.
-				Frontend.MaxUploadSize*2)))
+		reader := io.LimitReader(req.Body, int64(server_obj.config.
+			Frontend.MaxUploadSize*2))
+
+		if server_obj.config.Frontend.PerClientUploadRate > 0 {
+			bucket := ratelimit.NewBucketWithRate(
+				float64(server_obj.config.Frontend.PerClientUploadRate),
+				100*1024)
+			reader = ratelimit.Reader(reader, bucket)
+		}
+
+		if server_obj.Bucket != nil {
+			reader = ratelimit.Reader(reader, server_obj.Bucket)
+		}
+
+		body, err := ioutil.ReadAll(reader)
+
 		if err != nil {
 			logger.Debug("Unable to read body from %v: %+v (read %v)",
 				req.RemoteAddr, err, len(body))

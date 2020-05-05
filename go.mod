@@ -58,6 +58,7 @@ require (
 	github.com/jehiah/go-strftime v0.0.0-20171201141054-1d33003b3869 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
+	github.com/juju/ratelimit v1.0.1
 	github.com/kierdavis/dateparser v0.0.0-20171227112021-81e70b820720
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
@@ -108,7 +109,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
-	www.velocidex.com/golang/evtx v0.0.2-0.20200504101835-a9fb49a9a1a0
+	www.velocidex.com/golang/evtx v0.0.2-0.20200505002428-02e98e3e472b
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.0.0-20200110083657-950cbe916617
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6

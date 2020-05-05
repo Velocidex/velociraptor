@@ -406,6 +406,10 @@ message FrontendConfig {
     // The services that will run on this frontend. If not set, all
     // services will run on the primary frontend.
     ServerServicesConfig server_services = 20;
+
+    // Per client rate in bytes/sec
+    int64 per_client_upload_rate = 21;
+    int64 global_upload_rate = 22;
 }
 
 

@@ -22,6 +22,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -49,7 +50,9 @@ type Server struct {
 	db      datastore.DataStore
 
 	// Limit concurrency for processing messages.
-	concurrency      chan bool
+	concurrency chan bool
+
+	Bucket           *ratelimit.Bucket
 	APIClientFactory grpc_client.APIClientFactory
 }
 
@@ -98,6 +101,15 @@ func NewServer(
 		concurrency:      make(chan bool, concurrency),
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
+
+	if config_obj.Frontend.GlobalUploadRate > 0 {
+		result.logger.Info("Global upload rate set to %v bytes per second",
+			config_obj.Frontend.GlobalUploadRate)
+		result.Bucket = ratelimit.NewBucketWithRate(
+			float64(config_obj.Frontend.GlobalUploadRate),
+			1024*1024)
+	}
+
 	return &result, nil
 }
 
