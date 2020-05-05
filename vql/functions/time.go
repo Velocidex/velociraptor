@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/kierdavis/dateparser"
+	glob "www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -55,40 +56,55 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	}
 
 	if arg.String != "" {
-		time_value_any, pres := lru.Get(arg.String)
-		if pres {
-			return time_value_any.(cachedTime).Time
-		}
-
-		parser := dateparser.Parser{Fuzzy: true,
-			DayFirst: true,
-			IgnoreTZ: true}
-		time_value, err := parser.Parse(arg.String)
-		if err == nil {
-			lru.Set(arg.String, cachedTime{utils.Time{time_value}})
-			return time_value
-		}
-		scope.Log("timestamp: %v", err)
-		return vfilter.Null{}
+		arg.Epoch = arg.String
 	}
 
+	result, err := TimeFromAny(scope, arg.Epoch)
+	if err != nil || result.Unix() == 0 {
+		return vfilter.Null{}
+	}
+	return result
+}
+
+func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (utils.Time, error) {
 	sec := int64(0)
 	dec := int64(0)
-	switch t := arg.Epoch.(type) {
+	switch t := timestamp.(type) {
 	case float64:
 		sec_f, dec_f := math.Modf(t)
 		sec = int64(sec_f)
 		dec = int64(dec_f * 1e9)
+
+	case string:
+		return parse_time_from_string(scope, t)
+
+	case *glob.TimeVal:
+		return t.Time(), nil
+
+	case glob.TimeVal:
+		return t.Time(), nil
+
 	default:
-		sec, _ = utils.ToInt64(arg.Epoch)
+		sec, _ = utils.ToInt64(timestamp)
 	}
 
-	// Propagate a null to output.
-	if sec == 0 && dec == 0 {
-		return vfilter.Null{}
+	return utils.Unix(int64(sec), int64(dec)), nil
+}
+
+func parse_time_from_string(scope *vfilter.Scope, timestamp string) (
+	utils.Time, error) {
+	time_value_any, pres := lru.Get(timestamp)
+	if pres {
+		return time_value_any.(cachedTime).Time, nil
 	}
 
-	return utils.Unix(int64(sec), int64(dec))
+	parser := dateparser.Parser{Fuzzy: true, DayFirst: true, IgnoreTZ: true}
+	time_value, err := parser.Parse(timestamp)
+	if err != nil {
+		return utils.Time{time_value}, err
+	}
+	lru.Set(timestamp, cachedTime{utils.Time{time_value}})
+	return utils.Time{time_value}, nil
 }
 
 // Time aware operators.

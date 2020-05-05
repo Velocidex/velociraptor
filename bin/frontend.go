@@ -31,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/frontend"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 
@@ -89,7 +88,8 @@ func startFrontend(
 	}
 
 	// Parse the artifacts database to detect errors early.
-	getRepository(config_obj)
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	// Load the assets into memory.
 	assets.Init()
@@ -109,17 +109,14 @@ func startFrontend(
 		return nil, err
 	}
 
-	var notifier *notifications.NotificationPool
 	var server_obj *server.Server
 
 	// Create a new server
 	server_obj, err = server.NewServer(config_obj)
 	kingpin.FatalIfError(err, "Unable to create server")
 
-	notifier = server_obj.NotificationPool
-
 	// These services must start on all frontends
-	err = services.StartFrontendServices(ctx, wg, config_obj, notifier)
+	err = services.StartFrontendServices(ctx, wg, config_obj)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
 		return nil, err
@@ -127,7 +124,7 @@ func startFrontend(
 
 	// Start all services that are supposed to run on this
 	// frontend.
-	err = services.StartServices(ctx, wg, config_obj, notifier)
+	err = services.StartServices(ctx, wg, config_obj)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
 		return nil, err

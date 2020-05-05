@@ -50,7 +50,14 @@ func GetClientEventsVersion() uint64 {
 func UpdateClientEventTable(
 	config_obj *config_proto.Config,
 	args *flows_proto.ArtifactCollectorArgs) error {
-	return gEventTable.Update(config_obj, args)
+	err := gEventTable.Update(config_obj, args)
+	if err != nil {
+		return err
+	}
+
+	// Notify all the client monitoring tables that we got
+	// updated. This should cause all frontends to refresh.
+	return NotifyListener(config_obj, constants.ClientMonitoringFlowURN)
 }
 
 func GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
@@ -148,12 +155,6 @@ func (self *ClientEventTable) Update(
 	// Increment the version to force clients to update their copy
 	// of the event table.
 	current_version := uint64(time.Now().Unix())
-	atomic.StoreUint64(&self.version, current_version)
-
-	err := self.Start(config_obj, current_version, arg)
-	if err != nil {
-		return err
-	}
 
 	// Store the new table in the data store.
 	db, err := datastore.GetDB(config_obj)
@@ -161,27 +162,15 @@ func (self *ClientEventTable) Update(
 		return err
 	}
 
-	err = db.SetSubject(
-		config_obj, constants.ClientMonitoringFlowURN,
+	return db.SetSubject(config_obj, constants.ClientMonitoringFlowURN,
 		&flows_proto.ClientEventTable{
 			Version:   current_version,
 			Artifacts: arg,
 		})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
-// Runs at frontend start to initialize the client monitoring table.
-func StartClientMonitoringService(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-
+func LoadFromFile(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -207,7 +196,48 @@ func StartClientMonitoringService(
 		return gEventTable.Update(config_obj, artifacts)
 	}
 
-	logger.Info("Starting Client Monitoring Service")
 	return gEventTable.Start(
 		config_obj, event_table.Version, event_table.Artifacts)
+}
+
+// Runs at frontend start to initialize the client monitoring table.
+func StartClientMonitoringService(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	notification, err := ListenForNotification(constants.ClientMonitoringFlowURN)
+	if err != nil {
+		return err
+	}
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-notification:
+				err = LoadFromFile(config_obj)
+				if err != nil {
+					logger.Error("StartClientMonitoringService: ", err)
+					return
+				}
+			}
+
+			notification, err = ListenForNotification(constants.ClientMonitoringFlowURN)
+			if err != nil {
+				logger.Error("StartClientMonitoringService ", err)
+				return
+			}
+		}
+	}()
+
+	logger.Info("Starting Client Monitoring Service")
+	return LoadFromFile(config_obj)
 }

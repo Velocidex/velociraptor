@@ -32,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
@@ -44,11 +43,10 @@ var (
 )
 
 type Server struct {
-	config           *config_proto.Config
-	manager          *crypto.CryptoManager
-	logger           *logging.LogContext
-	db               datastore.DataStore
-	NotificationPool *notifications.NotificationPool
+	config  *config_proto.Config
+	manager *crypto.CryptoManager
+	logger  *logging.LogContext
+	db      datastore.DataStore
 
 	// Limit concurrency for processing messages.
 	concurrency      chan bool
@@ -69,7 +67,6 @@ func (self *Server) EndConcurrencyControl() {
 
 func (self *Server) Close() {
 	self.db.Close()
-	self.NotificationPool.Shutdown()
 }
 
 func NewServer(
@@ -93,10 +90,9 @@ func NewServer(
 	}
 
 	result := Server{
-		config:           config_obj,
-		manager:          manager,
-		db:               db,
-		NotificationPool: notifications.NewNotificationPool(),
+		config:  config_obj,
+		manager: manager,
+		db:      db,
 		logger: logging.GetLogger(config_obj,
 			&logging.FrontendComponent),
 		concurrency:      make(chan bool, concurrency),

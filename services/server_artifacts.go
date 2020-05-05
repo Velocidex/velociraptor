@@ -18,16 +18,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/notifications"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-const (
-	source = "server"
 )
 
 type serverLogger struct {
@@ -47,7 +42,6 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 type ServerArtifactsRunner struct {
 	config_obj *config_proto.Config
 	mu         sync.Mutex
-	notifier   *notifications.NotificationPool
 	timeout    time.Duration
 }
 
@@ -60,12 +54,12 @@ func (self *ServerArtifactsRunner) Start(
 		self.config_obj, &logging.FrontendComponent)
 
 	// Listen for notifications from the server.
-	notification, err := self.notifier.Listen(source)
+	notification, err := ListenForNotification("server")
 	if err != nil {
 		logger.Error("ServerArtifactsRunner", err)
 		return
 	}
-	defer self.notifier.Notify(source)
+	defer NotifyListener(self.config_obj, "server")
 
 	self.process(ctx, wg)
 
@@ -91,7 +85,7 @@ func (self *ServerArtifactsRunner) Start(
 			}
 
 			// Listen again.
-			notification, _ = self.notifier.Listen(source)
+			notification, _ = ListenForNotification("server")
 		}
 	}
 }
@@ -108,7 +102,7 @@ func (self *ServerArtifactsRunner) process(
 		return err
 	}
 
-	tasks, err := db.GetClientTasks(self.config_obj, source, true)
+	tasks, err := db.GetClientTasks(self.config_obj, "server", true)
 	if err != nil {
 		return err
 	}
@@ -132,7 +126,7 @@ func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage) error {
 
-	flow_urn := paths.NewFlowPathManager(source, task.SessionId).Path()
+	flow_urn := paths.NewFlowPathManager("server", task.SessionId).Path()
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -144,7 +138,7 @@ func (self *ServerArtifactsRunner) processTask(
 		return err
 	}
 
-	db.UnQueueMessageForClient(self.config_obj, source, task)
+	db.UnQueueMessageForClient(self.config_obj, "server", task)
 
 	self.runQuery(ctx, task, collection_context)
 
@@ -165,7 +159,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
-	path_manager := paths.NewFlowPathManager(source, flow_id).Log()
+	path_manager := paths.NewFlowPathManager("server", flow_id).Log()
 	rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
 	if err != nil {
 		return err
@@ -202,7 +196,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger: log.New(
 			&serverLogger{self.config_obj, rs_writer},
-			source, 0),
+			"server", 0),
 	}.Build()
 	defer scope.Close()
 
@@ -236,7 +230,7 @@ func (self *ServerArtifactsRunner) runQuery(
 				self.config_obj, query.Name)
 
 			path_manager := result_sets.NewArtifactPathManager(
-				self.config_obj, source, flow_id, name)
+				self.config_obj, "server", flow_id, name)
 			rs_writer, err = result_sets.NewResultSetWriter(
 				self.config_obj, path_manager)
 			defer rs_writer.Close()
@@ -293,17 +287,10 @@ func (self *ServerArtifactsRunner) runQuery(
 func startServerArtifactService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	notifier *notifications.NotificationPool) error {
-
-	if notifier == nil {
-		return errors.New(
-			"Server artifacts service must run on the frontend.")
-	}
+	config_obj *config_proto.Config) error {
 
 	result := &ServerArtifactsRunner{
 		config_obj: config_obj,
-		notifier:   notifier,
 		timeout:    time.Second * time.Duration(600),
 	}
 

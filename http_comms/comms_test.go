@@ -494,22 +494,21 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 		// Now client tries to connect for real.
 		"2 request: /reader",
 		"3 response:  301",
-		"4 sleep: 10",
 	})
 
 	checkResponses(self.T(), self.frontend2.events, []string{
 		// Rekey this FE
-		"5 request: /server.pem",
-		"6 response: -----BEGIN CERTIFIC",
+		"4 request: /server.pem",
+		"5 response: -----BEGIN CERTIFIC",
 
 		// This FE is up.
-		"7 request: /reader?r=1",
-		"8 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"6 request: /reader?r=1",
+		"7 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 
 		// Next request goes straight to this FE and includes
 		// the r=1 parameter to avoid another redirect.
-		"9 request: /reader?r=1",
-		"10 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"8 request: /reader?r=1",
+		"9 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 	})
 }
 
@@ -563,42 +562,40 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 		"2 request: /reader",
 		"3 response:  301",
 
-		"4 sleep: 10",
-
 		// Immediately switch to FE1 (no sleep)
-		"11 request: /server.pem",
-		"12 response: -----BEGIN CERTIFICATE-",
+		"10 request: /server.pem",
+		"11 response: -----BEGIN CERTIFICATE-",
 
 		// Try to connect to FE1 but there is an error. NOTE
 		// r=1 is now removed.
-		"13 request: /reader",
-		"14 response:  500",
+		"12 request: /reader",
+		"13 response:  500",
 
 		// Now must sleep since we tried all endpoints and
 		// they all failed.
-		"15 sleep: 10",
+		"14 sleep: 10",
 	})
 
 	checkResponses(self.T(), self.frontend2.events, []string{
 		// Rekey FE2
-		"5 request: /server.pem",
-		"6 response: -----BEGIN CERTIFIC",
+		"4 request: /server.pem",
+		"5 response: -----BEGIN CERTIFIC",
 
 		// This FE is up.
-		"7 request: /reader?r=1",
-		"8 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"6 request: /reader?r=1",
+		"7 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 
 		// Next request goes straight to this FE and includes
 		// the r=1 parameter to avoid another redirect. FE2 is
 		// down now.
-		"9 request: /reader?r=1",
-		"10 response:  500",
+		"8 request: /reader?r=1",
+		"9 response:  500",
 
 		// After sleep switch to FE2 and succeed.
-		"16 request: /server.pem",
-		"17 response: -----BEGIN CERTIFIC",
-		"18 request: /reader",
-		"19 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"15 request: /server.pem",
+		"16 response: -----BEGIN CERTIFIC",
+		"17 request: /reader",
+		"18 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 	})
 
 	utils.Debug(communicator.receiver.connector.(*HTTPConnector).urls)
@@ -654,26 +651,24 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 		"2 request: /reader",
 		"3 response:  301",
 
-		"4 sleep: 10",
-
-		"9 sleep: 10",
+		"8 sleep: 10",
 
 		// Immediately switch to FE1 (no sleep)
-		"10 request: /server.pem",
-		"11 response: -----BEGIN CERTIFICATE-",
+		"9 request: /server.pem",
+		"10 response: -----BEGIN CERTIFICATE-",
 
-		"12 request: /reader?r=1",
-		"13 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"11 request: /reader?r=1",
+		"12 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
 	})
 
 	checkResponses(self.T(), self.frontend2.events, []string{
 		// Rekey FE2
-		"5 request: /server.pem",
-		"6 response: -----BEGIN CERTIFIC",
+		"4 request: /server.pem",
+		"5 response: -----BEGIN CERTIFIC",
 
 		// This FE is up.
-		"7 request: /reader?r=1",
-		"8 response:  301",
+		"6 request: /reader?r=1",
+		"7 response:  301",
 	})
 
 }

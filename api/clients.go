@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func GetApiClient(
@@ -108,7 +109,7 @@ func GetApiClient(
 	// Update the time to now if the client is currently actually
 	// connected.
 	if server_obj != nil &&
-		server_obj.NotificationPool.IsClientConnected(client_id) {
+		services.IsClientConnected(client_id) {
 		result.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
 	}
 

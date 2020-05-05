@@ -181,7 +181,7 @@ func (self *ApiServer) CollectArtifact(
 
 	result.FlowId = flow_id
 
-	err = services.NotifyClient(self.config, in.ClientId)
+	err = services.NotifyListener(self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -396,10 +396,10 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		services.NotifyAll(self.config)
+		services.NotifyAllListeners(self.config)
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		services.NotifyClient(self.config, in.ClientId)
+		services.NotifyListener(self.config, in.ClientId)
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")

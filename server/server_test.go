@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -37,8 +38,9 @@ type ServerTestSuite struct {
 	server        *server.Server
 	client_crypto *crypto.CryptoManager
 	config_obj    *config_proto.Config
-
-	client_id string
+	cancel        func()
+	wg            *sync.WaitGroup
+	client_id     string
 }
 
 type MockAPIClientFactory struct {
@@ -69,8 +71,13 @@ func (self *ServerTestSuite) SetupTest() {
 	self.config_obj.Datastore.Implementation = "Test"
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
 
+	ctx, cancel := context.WithCancel(context.Background())
+	self.cancel = cancel
+	self.wg = &sync.WaitGroup{}
+
 	// Start the journaling service manually for tests.
 	services.StartJournalService(self.config_obj)
+	services.StartNotificationService(ctx, self.wg, self.config_obj)
 	artifacts.GetGlobalRepository(config_obj)
 
 	self.server, err = server.NewServer(config_obj)
@@ -94,8 +101,9 @@ func (self *ServerTestSuite) TearDownTest() {
 	require.NoError(self.T(), err)
 
 	db.Close()
-
+	self.cancel()
 	self.GetMemoryFileStore().Clear()
+	self.wg.Wait()
 }
 
 func (self *ServerTestSuite) TestEnrollment() {
@@ -153,10 +161,24 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		Artifacts: []string{"Generic.Client.Stats"},
 	}
 
+	// Wait for the service to fully come up.
+	time.Sleep(time.Second)
+
+	old_version := services.GetClientEventsVersion()
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
 	_, err = services.StartHuntDispatcher(ctx, wg, self.config_obj)
 	require.NoError(t, err)
+
+	// Wait up to 10 sec, for the journaling service to pass the
+	// message along and update the client events table.
+	for i := 0; i < 100; i++ {
+		if old_version != services.GetClientEventsVersion() {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	assert.NotEqual(t, old_version, services.GetClientEventsVersion())
 
 	// Send a foreman checkin message from client with old event
 	// table version.

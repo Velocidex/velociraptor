@@ -68,7 +68,6 @@ func (self *NotificationPool) Shutdown() {
 	// Send all the readers the quit signal and shut down the
 	// pool.
 	for _, c := range self.clients {
-		c <- true
 		close(c)
 	}
 

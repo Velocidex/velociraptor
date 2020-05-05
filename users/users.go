@@ -78,7 +78,7 @@ func SetUser(config_obj *config_proto.Config, user_record *UserRecord) error {
 
 	return db.SetSubject(config_obj,
 		paths.UserPathManager{user_record.Name}.Path(),
-		user_record.VelociraptorUser)
+		user_record)
 }
 
 func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
@@ -95,13 +95,7 @@ func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
 	result := make([]*UserRecord, 0, len(children))
 	for _, child := range children {
 		username := path.Base(child)
-		user_record, err := NewUserRecord(username)
-		if err != nil {
-			return nil, err
-		}
-
-		err = db.GetSubject(config_obj,
-			constants.USER_URN+username, user_record)
+		user_record, err := GetUser(config_obj, username)
 		if err == nil {
 			result = append(result, user_record)
 		}
@@ -118,14 +112,16 @@ func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, err
 	if err != nil {
 		return nil, err
 	}
-	user_record, err := NewUserRecord(username)
-	if err != nil {
-		return nil, err
+
+	user_record := &api_proto.VelociraptorUser{}
+	err = db.GetSubject(config_obj,
+		paths.UserPathManager{username}.Path(), user_record)
+
+	if user_record.Name == "" {
+		return NewUserRecord(username)
 	}
 
-	err = db.GetSubject(config_obj, paths.UserPathManager{
-		username}.Path(), user_record.VelociraptorUser)
-	return user_record, err
+	return &UserRecord{user_record}, err
 }
 
 func GetUserNotificationCount(config_obj *config_proto.Config, username string) (uint64, error) {

@@ -121,7 +121,7 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		services.NotifyAll(config_obj)
+		services.NotifyAllListeners(config_obj)
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
@@ -286,5 +286,5 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	return services.NotifyAll(config_obj)
+	return services.NotifyAllListeners(config_obj)
 }

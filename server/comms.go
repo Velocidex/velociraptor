@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/frontend"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	"github.com/golang/protobuf/proto"
@@ -140,7 +141,7 @@ func StartFrontendHttps(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		server_obj.NotificationPool.NotifyAll()
+		services.NotifyAllListeners(config_obj)
 		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
@@ -226,7 +227,7 @@ func StartTLSServer(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		server_obj.NotificationPool.NotifyAll()
+		services.NotifyAllListeners(config_obj)
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
 			logger.Error("Frontend shutdown error ", err)
@@ -260,7 +261,6 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 
 // Redirect client to another active frontend.
 func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Request) bool {
-	utils.Debug(r.URL)
 	_, pres := r.URL.Query()["r"]
 	if pres {
 		return false
@@ -459,7 +459,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Get a notification for this client from the pool -
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
-		notification, err := server_obj.NotificationPool.Listen(source)
+		notification, err := services.ListenForNotification(source)
 		if err != nil {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
@@ -489,7 +489,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 
 		// Remove the notification from the pool when we exit
 		// here.
-		defer server_obj.NotificationPool.Notify(source)
+		defer services.NotifyListener(config_obj, source)
 
 		// Check for any requests outstanding now.
 		response, count, err := server_obj.Process(
@@ -547,7 +547,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				// an empty response to be written and
 				// the connection to be terminated
 				// (case above).
-				server_obj.NotificationPool.Notify(source)
+				services.NotifyListener(config_obj, source)
 
 				// Write a pad message every 3 seconds
 				// to keep the conenction alive.
