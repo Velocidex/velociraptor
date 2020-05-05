@@ -145,6 +145,11 @@ func load_config_or_default() *config_proto.Config {
 	if err != nil {
 		return &config_proto.Config{}
 	}
+
+	// Initialize the logging now that we have loaded the config.
+	err = logging.InitLogging(config_obj)
+	kingpin.FatalIfError(err, "Logging")
+
 	return config_obj
 }
 

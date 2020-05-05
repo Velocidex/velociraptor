@@ -6,6 +6,16 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/frontend/proto";
 
 
+// Not a replacement for proper monitoring - just a simple load
+// monitor for the dashboard. For proper monitoring use
+// graphana/prometheus.
+message Metrics {
+    float process_cpu_seconds_total = 1;
+    int64 client_commso_current_connections = 2;
+    int64 process_resident_memory_bytes = 3;
+}
+
+
 // Describe the frontend state.
 message FrontendState {
     // The unique name of the frontend.
@@ -16,4 +26,6 @@ message FrontendState {
 
     // The URL over which the frontend is accessible to clients.
     string url = 3;
+
+    Metrics metrics = 4;
 }

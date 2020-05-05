@@ -12,8 +12,8 @@ import (
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -138,8 +138,8 @@ begin by identifying what type of deployment you need.
 )
 
 func doGenerateConfigInteractive() {
-	config_obj := config.GetDefaultConfig()
-	var err error
+	config_obj, err := load_config_or_api()
+	kingpin.FatalIfError(err, "Unable to decode config.")
 
 	// Assume we are generating a server config for the running binary
 	config_obj.ServerType = runtime.GOOS
@@ -201,18 +201,19 @@ func doGenerateConfigInteractive() {
 	// Setup dyndns
 	kingpin.FatalIfError(dynDNSConfig(config_obj), "")
 
+	// Add users to the config file so the server can be
+	// initialized.
+	kingpin.FatalIfError(addUser(config_obj), "Add users")
+
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+	logger.Info("Generating keys please wait....")
+	kingpin.FatalIfError(generateNewKeys(config_obj), "")
+
 	kingpin.FatalIfError(survey.AskOne(log_question,
 		&config_obj.Logging.OutputDirectory,
 		survey.WithValidator(survey.Required)), "")
 
 	config_obj.Logging.SeparateLogsPerComponent = true
-
-	// Add users to the config file so the server can be
-	// initialized.
-	kingpin.FatalIfError(addUser(config_obj), "Add users")
-
-	fmt.Println("Generating keys please wait....")
-	kingpin.FatalIfError(generateNewKeys(config_obj), "")
 
 	path := ""
 	kingpin.FatalIfError(

@@ -14,11 +14,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -73,6 +75,37 @@ func (self *FrontendManager) setMyState() error {
 	if err != nil {
 		return err
 	}
+
+	metrics := &frontend_proto.Metrics{}
+	gathering, err := prometheus.DefaultGatherer.Gather()
+	if err == nil {
+		for _, metric := range gathering {
+			if len(metric.Metric) == 0 {
+				continue
+			}
+
+			switch *metric.Name {
+			case "process_cpu_seconds_total":
+				if metric.Metric[0].Counter != nil {
+					metrics.ProcessCpuSecondsTotal = (float32)(
+						*metric.Metric[0].Counter.Value)
+				}
+			case "client_comms_current_connections":
+				if metric.Metric[0].Gauge != nil {
+					metrics.ClientCommsCurrentConnections = (int64)(
+						*metric.Metric[0].Gauge.Value)
+				}
+
+			case "process_resident_memory_bytes":
+				if metric.Metric[0].Gauge != nil {
+					metrics.ProcessResidentMemoryBytes = (int64)(
+						*metric.Metric[0].Gauge.Value)
+				}
+			}
+		}
+	}
+
+	self.my_state.Metrics = metrics
 	self.my_state.Heartbeat = time.Now().Unix()
 	return db.SetSubject(self.config_obj,
 		self.path_manager.Frontend(self.my_state.Name),
@@ -117,6 +150,8 @@ func (self *FrontendManager) syncActiveFrontends() error {
 			active_frontends[state.Name] = state
 			urls = append(urls, state.Url)
 		}
+
+		utils.Debug(state.Metrics)
 	}
 
 	// Keep the lock to a minimum.

@@ -55,6 +55,36 @@ var (
 	prelogs []string
 )
 
+func InitLogging(config_obj *config_proto.Config) error {
+	if Manager != nil {
+		return nil
+	}
+
+	Manager = &LogManager{
+		contexts: make(map[*string]*LogContext),
+	}
+
+	for _, component := range []*string{&GenericComponent,
+		&FrontendComponent, &ClientComponent,
+		&GUIComponent, &ToolComponent, &APICmponent, &Audit} {
+
+		logger, err := Manager.makeNewComponent(config_obj, component)
+		if err != nil {
+			return err
+		}
+		if config_obj.Logging != nil &&
+			config_obj.Logging.SeparateLogsPerComponent {
+			Manager.contexts[component] = logger
+		} else {
+			Manager.contexts[&GenericComponent] = logger
+		}
+	}
+
+	FlushPrelogs(config_obj)
+
+	return nil
+}
+
 // Early in the startup process, we find that we need to log sometimes
 // but we have no idea where to send the logs and what components to
 // load (because the config is not fully loaded yet). We therefore
@@ -67,9 +97,6 @@ func Prelog(format string, v ...interface{}) {
 }
 
 func FlushPrelogs(config_obj *config_proto.Config) {
-	mu.Lock()
-	defer mu.Unlock()
-
 	logger := GetLogger(config_obj, &GenericComponent)
 	for _, msg := range prelogs {
 		logger.Error(msg)
@@ -115,25 +142,7 @@ func (self *LogManager) GetLogger(
 
 	ctx, pres := self.contexts[component]
 	if !pres {
-		// Add a new context.
-		switch component {
-		case &GenericComponent,
-			&FrontendComponent, &ToolComponent, &Audit,
-			&ClientComponent, &GUIComponent, &APICmponent:
-
-			logger := self.makeNewComponent(config_obj, component)
-			if config_obj.Logging != nil &&
-				config_obj.Logging.SeparateLogsPerComponent {
-				self.contexts[component] = logger
-				return logger
-			} else {
-				self.contexts[&GenericComponent] = logger
-				return logger
-			}
-
-		default:
-			panic("Unsupported component!")
-		}
+		panic("Uninitialized logging")
 	}
 	return ctx
 }
@@ -177,7 +186,7 @@ func getRotator(
 
 func (self *LogManager) makeNewComponent(
 	config_obj *config_proto.Config,
-	component *string) *LogContext {
+	component *string) (*LogContext, error) {
 
 	Log := logrus.New()
 	Log.Out = ioutil.Discard
@@ -187,7 +196,7 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging.OutputDirectory != "" {
 		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
 		if err != nil {
-			panic("Unable to create logging directory.")
+			return nil, errors.New("Unable to create logging directory.")
 		}
 
 		base_filename := filepath.Join(
@@ -226,7 +235,7 @@ func (self *LogManager) makeNewComponent(
 
 	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{}))
 
-	return &LogContext{Log}
+	return &LogContext{Log}, nil
 }
 
 type Formatter struct{}
@@ -268,6 +277,12 @@ func NewPlainLogger(
 }
 
 func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
+	if Manager == nil {
+		err := InitLogging(config_obj)
+		if err != nil {
+			panic(err)
+		}
+	}
 	return Manager.GetLogger(config_obj, component)
 }
 
@@ -282,10 +297,4 @@ func GetStackTrace(err error) string {
 		}
 	}
 	return ""
-}
-
-func init() {
-	Manager = &LogManager{
-		contexts: make(map[*string]*LogContext),
-	}
 }
