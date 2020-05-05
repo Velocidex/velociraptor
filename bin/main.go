@@ -143,7 +143,7 @@ func load_config_or_api() (*config_proto.Config, error) {
 func load_config_or_default() *config_proto.Config {
 	config_obj, err := load_config_or_api()
 	if err != nil {
-		return &config_proto.Config{}
+		return config.GetDefaultConfig()
 	}
 
 	// Initialize the logging now that we have loaded the config.

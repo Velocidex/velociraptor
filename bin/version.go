@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 )
 
 var (
@@ -31,8 +32,7 @@ var (
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		if command == version.FullCommand() {
-			config_obj := load_config_or_default()
-			res, err := yaml.Marshal(config_obj.Version)
+			res, err := yaml.Marshal(config.GetVersion())
 			if err != nil {
 				kingpin.FatalIfError(err, "Unable to encode version.")
 			}
