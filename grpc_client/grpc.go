@@ -147,6 +147,9 @@ func GetAPIConnectionString(config_obj *config_proto.Config) string {
 	switch config_obj.API.BindScheme {
 	case "tcp":
 		hostname := config_obj.API.Hostname
+		if config_obj.API.BindAddress == "127.0.0.1" {
+			hostname = config_obj.API.BindAddress
+		}
 		if hostname == "" {
 			hostname = config_obj.API.BindAddress
 		}
