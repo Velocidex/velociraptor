@@ -48,7 +48,7 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 				config.SAMLEnabled(config_obj) {
 				password := make([]byte, 100)
 				rand.Read(password)
-				users.SetPassword(user_record, string(password))
+				users.SetPassword(new_user, string(password))
 
 			} else {
 				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
