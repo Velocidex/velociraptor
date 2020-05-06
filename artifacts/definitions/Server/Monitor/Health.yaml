@@ -5,16 +5,12 @@ description: |
 
 type: SERVER_EVENT
 
-parameters:
-  - name: Frequency
-    description: Return stats every this many seconds.
-    default: "15"
-
 sources:
-  # This artifact is populated by the frontend service from the total
-  # of all frontend metrics.
   - name: Prometheus
 
+    # This artifact is populated by the frontend service using the
+    # total of all frontend metrics.
+    query: SELECT * FROM info() WHERE FALSE
 
 reports:
   - type: SERVER_EVENT
@@ -24,15 +20,11 @@ reports:
 
     template: |
       {{ define "CPU" }}
-           SELECT * FROM sample(
-             n=atoi(string=Sample),
-             query={
-               SELECT _ts as Timestamp,
-                  CPUPercent,
-                  MemoryUse / 1024 / 1024
-               FROM source(source="Prometheus",
-                           artifact="Server.Monitor.Health")
-             })
+          SELECT _ts as Timestamp,
+              CPUPercent,
+              MemoryUse / 1048576 AS MemoryUse
+          FROM source(source="Prometheus",
+                      artifact="Server.Monitor.Health")
       {{ end }}
 
       {{ define "CurrentConnections" }}
@@ -40,8 +32,7 @@ reports:
              n=atoi(string=Sample),
              query={
                SELECT _ts as Timestamp,
-                  client_comms_current_connections,
-                  client_comms_concurrency
+                  client_comms_current_connections
                FROM source(source="Prometheus",
                            artifact="Server.Monitor.Health")
             })

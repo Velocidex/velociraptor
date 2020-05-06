@@ -70,10 +70,6 @@ func RunClient(
 	)
 	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")
 
-	// Wait for all services to properly start before we begin the
-	// comms.
-	executor.StartServices(config_obj, manager.ClientId, exe)
-
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -89,6 +85,11 @@ func RunClient(
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("Interrupted! Shutting down\n")
 	}()
+
+	// Wait for the comms to properly start before we begin the
+	// services. If services need to communicate with the server
+	// they will deadlock otherwise.
+	executor.StartServices(config_obj, manager.ClientId, exe)
 }
 
 func init() {
