@@ -160,7 +160,7 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		return err
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
 
@@ -175,7 +175,7 @@ func (self *FrontendManager) syncActiveFrontends() error {
 
 		// Only count frontends that were active at least 30
 		// seconds ago.
-		if state.Heartbeat < now-30 {
+		if state.Heartbeat < now-30000000000 { // 30 sec
 			continue
 		}
 
@@ -258,8 +258,8 @@ func (self *FrontendManager) selectFrontend(node string) error {
 	for name, conf := range self.frontends {
 		active_state, pres := self.active_frontends[name]
 
-		// older than 10 min or not present - select this frontend.
-		if !pres || active_state.Heartbeat < heartbeat-600 {
+		// older than 60 sec or not present - select this frontend.
+		if !pres || active_state.Heartbeat < heartbeat-600000000000 {
 			self.my_state = &frontend_proto.FrontendState{
 				Name:      name,
 				Heartbeat: heartbeat,
