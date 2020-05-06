@@ -67,6 +67,8 @@ func (self *ServerTestSuite) SetupTest() {
 		"../http_comms/test_data/server.config.yaml")
 	require.NoError(self.T(), err)
 
+	require.NoError(self.T(), config.ValidateFrontendConfig(config_obj))
+
 	self.config_obj = config_obj
 	self.config_obj.Datastore.Implementation = "Test"
 	self.config_obj.Frontend.DoNotCompressArtifacts = true
