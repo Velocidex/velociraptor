@@ -313,7 +313,8 @@ func addUser(config_obj *config_proto.Config) error {
 		username := ""
 		err := survey.AskOne(user_name_question, &username, nil)
 		if err != nil {
-			return err
+			fmt.Printf("%v", err)
+			continue
 		}
 
 		if username == "" {
@@ -322,7 +323,8 @@ func addUser(config_obj *config_proto.Config) error {
 
 		user_record, err := users.NewUserRecord(username)
 		if err != nil {
-			return err
+			fmt.Printf("%v", err)
+			continue
 		}
 
 		if config_obj.GUI.GoogleOauthClientId != "" {
@@ -333,10 +335,11 @@ func addUser(config_obj *config_proto.Config) error {
 			err := survey.AskOne(password_question, &password,
 				survey.WithValidator(survey.Required))
 			if err != nil {
-				return err
+				fmt.Printf("%v", err)
+				continue
 			}
 
-			user_record.SetPassword(password)
+			users.SetPassword(user_record, password)
 		}
 		config_obj.GUI.InitialUsers = append(
 			config_obj.GUI.InitialUsers,

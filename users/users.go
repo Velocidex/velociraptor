@@ -34,40 +34,30 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
-type UserRecord struct {
-	*api_proto.VelociraptorUser
-}
-
-func NewUserRecord(name string) (*UserRecord, error) {
+func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
 	if !regexp.MustCompile("^[a-zA-Z0-9@.-]+$").MatchString(name) {
 		return nil, errors.New(fmt.Sprintf(
 			"Unacceptable username %v", name))
 	}
-	return &UserRecord{&api_proto.VelociraptorUser{Name: name}}, nil
+	return &api_proto.VelociraptorUser{Name: name}, nil
 }
 
-func (self *UserRecord) SetPassword(password string) *UserRecord {
+func SetPassword(user_record *api_proto.VelociraptorUser, password string) {
 	salt := make([]byte, 32)
 	rand.Read(salt)
 
 	hash := sha256.Sum256(append(salt, []byte(password)...))
-	self.PasswordSalt = salt[:]
-	self.PasswordHash = hash[:]
-	self.Locked = false
-	return self
+	user_record.PasswordSalt = salt[:]
+	user_record.PasswordHash = hash[:]
+	user_record.Locked = false
 }
 
-func (self *UserRecord) Lock() *UserRecord {
-	self.Locked = true
-	return self
-}
-
-func (self *UserRecord) VerifyPassword(password string) bool {
+func VerifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	hash := sha256.Sum256(append(self.PasswordSalt, []byte(password)...))
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func SetUser(config_obj *config_proto.Config, user_record *UserRecord) error {
+func SetUser(config_obj *config_proto.Config, user_record *api_proto.VelociraptorUser) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
@@ -81,7 +71,7 @@ func SetUser(config_obj *config_proto.Config, user_record *UserRecord) error {
 		user_record)
 }
 
-func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
+func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -92,7 +82,7 @@ func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
 		return nil, err
 	}
 
-	result := make([]*UserRecord, 0, len(children))
+	result := make([]*api_proto.VelociraptorUser, 0, len(children))
 	for _, child := range children {
 		username := path.Base(child)
 		user_record, err := GetUser(config_obj, username)
@@ -104,7 +94,8 @@ func ListUsers(config_obj *config_proto.Config) ([]*UserRecord, error) {
 	return result, nil
 }
 
-func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, error) {
+func GetUser(config_obj *config_proto.Config, username string) (
+	*api_proto.VelociraptorUser, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")
 	}
@@ -118,10 +109,10 @@ func GetUser(config_obj *config_proto.Config, username string) (*UserRecord, err
 		paths.UserPathManager{username}.Path(), user_record)
 
 	if user_record.Name == "" {
-		return NewUserRecord(username)
+		return nil, errors.New("User not found")
 	}
 
-	return &UserRecord{user_record}, err
+	return user_record, err
 }
 
 func GetUserNotificationCount(config_obj *config_proto.Config, username string) (uint64, error) {

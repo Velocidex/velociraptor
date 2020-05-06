@@ -87,7 +87,7 @@ func doAddUser() {
 		user_add_password = &password_str
 	}
 
-	user_record.SetPassword(*user_add_password)
+	users.SetPassword(user_record, *user_add_password)
 	err = users.SetUser(config_obj, user_record)
 	if err != nil {
 		kingpin.FatalIfError(
@@ -116,7 +116,8 @@ func doLockUser() {
 	user_record, err := users.GetUser(config_obj, *user_lock_name)
 	kingpin.FatalIfError(err, "Unable to find user %s", *user_lock_name)
 
-	user_record.Lock()
+	user_record.Locked = true
+
 	err = users.SetUser(config_obj, user_record)
 	if err != nil {
 		kingpin.FatalIfError(

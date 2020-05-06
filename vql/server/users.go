@@ -47,7 +47,7 @@ func (self UsersPlugin) Call(
 			if err == nil {
 				user_details.Permissions = policy
 			}
-			output_chan <- user_details.VelociraptorUser
+			output_chan <- user_details
 		}
 
 	}()
