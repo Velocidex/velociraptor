@@ -160,6 +160,40 @@ func (self *CommsTestSuite) TearDownTest() {
 	self.frontend2.Close()
 }
 
+func (self *CommsTestSuite) TestEnrollment() {
+	urls := []string{self.frontend1.URL}
+
+	clock := &FakeClock{events: &self.frontend1.events}
+	clock.MockNow = time.Now()
+
+	crypto_manager := &crypto.NullCryptoManager{}
+	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
+		&executor.TestExecutor{}, urls, clock)
+	assert.NoError(self.T(), err)
+
+	self.frontend1.responses = []*Response{
+		{data: self.config_obj.Frontend.Certificate, status: 200},
+		{data: "", status: 406},
+		{data: "", status: 406},
+		{data: "", status: 406},
+	}
+
+	communicator.receiver.sendMessageList(context.Background(), nil, false)
+
+	utils.Debug(self.frontend1.events)
+
+	checkResponses(self.T(), self.frontend1.events, []string{
+		// First request looks for server.pem but fails on frontend1
+		"0 request: /server.pem",
+		"1 response: -----BEG",
+		"2 request: /reader",
+
+		// A 406 should not trigger resend - we just schedule
+		// a new CSR to go in the next poll.
+		"3 response:  406",
+	})
+}
+
 func (self *CommsTestSuite) TestServerError() {
 	urls := []string{self.frontend1.URL}
 

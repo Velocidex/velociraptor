@@ -309,6 +309,9 @@ func (self *HTTPConnector) Post(handler string, data []byte, urgent bool) (
 
 		return nil, RedirectError
 
+	} else if resp.StatusCode == 406 {
+		return resp, nil
+
 	} else if resp.StatusCode != 200 {
 		// POST error - rotate to next URL
 		self.advanceToNextServer()

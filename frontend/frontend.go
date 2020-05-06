@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -151,7 +151,13 @@ func (self *FrontendManager) syncActiveFrontends() error {
 			urls = append(urls, state.Url)
 		}
 
-		utils.Debug(state.Metrics)
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.WithFields(logrus.Fields{
+			"process_cpu_seconds_total":        state.Metrics.ProcessCpuSecondsTotal,
+			"client_comms_current_connections": state.Metrics.ClientCommsCurrentConnections,
+			"process_resident_memory_bytes":    state.Metrics.ProcessResidentMemoryBytes,
+			"node":                             state.Name,
+		}).Debug("Metrics")
 	}
 
 	// Keep the lock to a minimum.
