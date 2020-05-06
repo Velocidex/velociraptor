@@ -10,8 +10,11 @@ option go_package = "www.velocidex.com/golang/velociraptor/frontend/proto";
 // monitor for the dashboard. For proper monitoring use
 // graphana/prometheus.
 message Metrics {
-    float process_cpu_seconds_total = 1;
-    int64 client_commso_current_connections = 2;
+    int64 process_cpu_nano_seconds_total = 1;
+
+    // Percent of one core used by this frontend process.
+    int64 cpu_load_percent = 4;
+    int64 client_comms_current_connections = 2;
     int64 process_resident_memory_bytes = 3;
 }
 
@@ -21,7 +24,8 @@ message FrontendState {
     // The unique name of the frontend.
     string name = 1;
 
-    // Updated periodically to indicate the frontend is alive (in seconds).
+    // Updated periodically to indicate the frontend is alive (in
+    // nanoseconds).
     int64 heartbeat = 2;
 
     // The URL over which the frontend is accessible to clients.

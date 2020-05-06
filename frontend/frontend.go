@@ -14,12 +14,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -76,6 +78,7 @@ func (self *FrontendManager) setMyState() error {
 		return err
 	}
 
+	now := time.Now().UnixNano()
 	metrics := &frontend_proto.Metrics{}
 	gathering, err := prometheus.DefaultGatherer.Gather()
 	if err == nil {
@@ -87,8 +90,19 @@ func (self *FrontendManager) setMyState() error {
 			switch *metric.Name {
 			case "process_cpu_seconds_total":
 				if metric.Metric[0].Counter != nil {
-					metrics.ProcessCpuSecondsTotal = (float32)(
-						*metric.Metric[0].Counter.Value)
+					total_time := (int64)(*metric.Metric[0].Counter.Value * 1e9)
+
+					if self.my_state.Metrics != nil {
+						delta_cpu := (total_time -
+							self.my_state.Metrics.ProcessCpuNanoSecondsTotal)
+						delta_t := now - self.my_state.Heartbeat
+
+						if delta_t > 0 && self.my_state.Heartbeat > 0 {
+							metrics.CpuLoadPercent = delta_cpu *
+								100 / delta_t
+						}
+					}
+					metrics.ProcessCpuNanoSecondsTotal = total_time
 				}
 			case "client_comms_current_connections":
 				if metric.Metric[0].Gauge != nil {
@@ -106,7 +120,7 @@ func (self *FrontendManager) setMyState() error {
 	}
 
 	self.my_state.Metrics = metrics
-	self.my_state.Heartbeat = time.Now().Unix()
+	self.my_state.Heartbeat = now
 	return db.SetSubject(self.config_obj,
 		self.path_manager.Frontend(self.my_state.Name),
 		self.my_state)
@@ -136,6 +150,7 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
 
+	total_metrics := &frontend_proto.Metrics{}
 	urls := make([]string, 0, len(children))
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
@@ -146,19 +161,36 @@ func (self *FrontendManager) syncActiveFrontends() error {
 
 		// Only count frontends that were active at least 30
 		// seconds ago.
-		if state.Heartbeat > now-30 {
-			active_frontends[state.Name] = state
-			urls = append(urls, state.Url)
+		if state.Heartbeat < now-30 {
+			continue
 		}
+
+		active_frontends[state.Name] = state
+		urls = append(urls, state.Url)
+		total_metrics.CpuLoadPercent += state.Metrics.CpuLoadPercent
+		total_metrics.ClientCommsCurrentConnections += state.Metrics.ClientCommsCurrentConnections
+		total_metrics.ProcessResidentMemoryBytes += state.Metrics.ProcessResidentMemoryBytes
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.WithFields(logrus.Fields{
-			"process_cpu_seconds_total":        state.Metrics.ProcessCpuSecondsTotal,
+			"process_cpu_seconds_total":        state.Metrics.ProcessCpuNanoSecondsTotal,
+			"cpu_load_percent":                 state.Metrics.CpuLoadPercent,
 			"client_comms_current_connections": state.Metrics.ClientCommsCurrentConnections,
 			"process_resident_memory_bytes":    state.Metrics.ProcessResidentMemoryBytes,
 			"node":                             state.Name,
 		}).Debug("Metrics")
 	}
+
+	path_manager := result_sets.NewArtifactPathManager(
+		self.config_obj, "server" /* client_id */, "",
+		"Server.Monitor.Health/Prometheus")
+
+	services.GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("CPUPercent", total_metrics.CpuLoadPercent).
+			Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
+			Set("client_comms_current_connections",
+				total_metrics.ClientCommsCurrentConnections)})
 
 	// Keep the lock to a minimum.
 	self.mu.Lock()
@@ -196,7 +228,7 @@ func (self *FrontendManager) selectFrontend(node string) error {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
-	heartbeat := time.Now().Unix()
+	heartbeat := time.Now().UnixNano()
 
 	if node != "" {
 		conf, pres := self.frontends[node]

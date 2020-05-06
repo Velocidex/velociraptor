@@ -11,28 +11,9 @@ parameters:
     default: "15"
 
 sources:
+  # This artifact is populated by the frontend service from the total
+  # of all frontend metrics.
   - name: Prometheus
-    queries:
-      - |
-        LET metrics_url <= SELECT format(format='http://%s:%d/metrics', args=[
-              server_config.Monitoring.bind_address,
-              server_config.Monitoring.bind_port]) as URL
-        FROM scope()
-
-      - |
-        SELECT int(int=rate(x=process_cpu_seconds_total, y=Timestamp) * 100) As CPUPercent,
-               process_resident_memory_bytes / 1000000 AS MemoryUse,
-               process_cpu_seconds_total,
-               client_comms_current_connections,
-               client_comms_concurrency
-        FROM foreach(
-          row={
-             SELECT UnixNano FROM clock(period=atoi(string=Frequency))
-          },
-          query={
-             SELECT * FROM Artifact.Server.Monitor.VeloMetrics(MetricsURL=metrics_url.URL[0])
-          })
-        WHERE CPUPercent >= 0
 
 
 reports:
@@ -48,7 +29,7 @@ reports:
              query={
                SELECT _ts as Timestamp,
                   CPUPercent,
-                  MemoryUse
+                  MemoryUse / 1024 / 1024
                FROM source(source="Prometheus",
                            artifact="Server.Monitor.Health")
              })
@@ -66,11 +47,9 @@ reports:
             })
       {{ end }}
 
-      {{ $CurrentMetrics := Query "SELECT * FROM Artifact.Server.Monitor.VeloMetrics()" }}
-
       ## Server status
 
-      Currently there are {{ Get $CurrentMetrics "0.client_comms_current_connections" }} clients connected.
+      The following are total across all frontends.
 
       <span class="container">
         <span class="row">
