@@ -67,9 +67,9 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 		case <-ctx.Done():
 			return
 
-		case msg := <-executor_chan:
+		case msg, ok := <-executor_chan:
 			// Executor closed the channel.
-			if msg == nil {
+			if !ok {
 				return
 			}
 
@@ -213,6 +213,7 @@ func NewSender(
 	name string,
 	handler string,
 	clock utils.Clock) *Sender {
+
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
 			executor, enroller, logger, name, handler, clock),

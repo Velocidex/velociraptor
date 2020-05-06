@@ -172,7 +172,7 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 }
 
 func doGenerateConfigNonInteractive() {
-	config_obj := config.GetDefaultConfig()
+	config_obj := load_config_or_default()
 	err := generateNewKeys(config_obj)
 
 	// Users have to updated the following fields.

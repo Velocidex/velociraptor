@@ -143,8 +143,13 @@ func load_config_or_api() (*config_proto.Config, error) {
 func load_config_or_default() *config_proto.Config {
 	config_obj, err := load_config_or_api()
 	if err != nil {
-		return &config_proto.Config{}
+		return config.GetDefaultConfig()
 	}
+
+	// Initialize the logging now that we have loaded the config.
+	err = logging.InitLogging(config_obj)
+	kingpin.FatalIfError(err, "Logging")
+
 	return config_obj
 }
 
@@ -165,7 +170,7 @@ func main() {
 
 	if !*verbose_flag {
 		logging.SuppressLogging = true
-		logging.Manager.Reset()
+		logging.Reset()
 
 		// We need to delay this message until we parsed the
 		// command line so we can find out of the logging is

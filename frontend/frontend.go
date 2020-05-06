@@ -14,10 +14,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/prometheus/client_golang/prometheus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -46,6 +49,8 @@ type FrontendManager struct {
 
 	// A list of active frontend URLs
 	urls []string
+
+	sample int
 }
 
 func GetFrontendName(fe *config_proto.FrontendConfig) string {
@@ -65,6 +70,54 @@ func (self *FrontendManager) addFrontendConfig(fe *config_proto.FrontendConfig) 
 	self.frontends[name] = fe
 }
 
+func (self *FrontendManager) calculateMetrics(now int64) error {
+	metrics := &frontend_proto.Metrics{}
+
+	gathering, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return err
+	}
+	for _, metric := range gathering {
+		if len(metric.Metric) == 0 {
+			continue
+		}
+
+		switch *metric.Name {
+		case "process_cpu_seconds_total":
+			if metric.Metric[0].Counter != nil {
+				total_time := (int64)(*metric.Metric[0].Counter.Value * 1e9)
+
+				if self.my_state.Metrics != nil {
+					delta_cpu := (total_time -
+						self.my_state.Metrics.ProcessCpuNanoSecondsTotal)
+					delta_t := now - self.my_state.Heartbeat
+
+					if delta_t > 0 && self.my_state.Heartbeat > 0 {
+						metrics.CpuLoadPercent = delta_cpu *
+							100 / delta_t
+					}
+				}
+				metrics.ProcessCpuNanoSecondsTotal = total_time
+			}
+		case "client_comms_current_connections":
+			if metric.Metric[0].Gauge != nil {
+				metrics.ClientCommsCurrentConnections = (int64)(
+					*metric.Metric[0].Gauge.Value)
+			}
+
+		case "process_resident_memory_bytes":
+			if metric.Metric[0].Gauge != nil {
+				metrics.ProcessResidentMemoryBytes = (int64)(
+					*metric.Metric[0].Gauge.Value)
+			}
+		}
+	}
+
+	self.my_state.Metrics = metrics
+
+	return nil
+}
+
 func (self *FrontendManager) setMyState() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -73,10 +126,18 @@ func (self *FrontendManager) setMyState() error {
 	if err != nil {
 		return err
 	}
-	self.my_state.Heartbeat = time.Now().Unix()
-	return db.SetSubject(self.config_obj,
-		self.path_manager.Frontend(self.my_state.Name),
-		self.my_state)
+
+	now := time.Now().UnixNano()
+	path_manager := self.path_manager.Frontend(self.my_state.Name)
+
+	// Calculate the metrics.
+	err = self.calculateMetrics(now)
+	if err != nil {
+		return err
+	}
+	self.my_state.Heartbeat = now
+
+	return db.SetSubject(self.config_obj, path_manager, self.my_state)
 }
 
 func (self *FrontendManager) clearMyState() error {
@@ -99,10 +160,11 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		return err
 	}
 
-	now := time.Now().Unix()
+	now := time.Now().UnixNano()
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
 
+	total_metrics := &frontend_proto.Metrics{}
 	urls := make([]string, 0, len(children))
 	for _, child := range children {
 		state := &frontend_proto.FrontendState{}
@@ -113,18 +175,37 @@ func (self *FrontendManager) syncActiveFrontends() error {
 
 		// Only count frontends that were active at least 30
 		// seconds ago.
-		if state.Heartbeat > now-30 {
-			active_frontends[state.Name] = state
-			urls = append(urls, state.Url)
+		if state.Heartbeat < now-30000000000 { // 30 sec
+			continue
 		}
+
+		active_frontends[state.Name] = state
+		urls = append(urls, state.Url)
+
+		total_metrics.CpuLoadPercent += state.Metrics.CpuLoadPercent
+		total_metrics.ClientCommsCurrentConnections += state.Metrics.ClientCommsCurrentConnections
+		total_metrics.ProcessResidentMemoryBytes += state.Metrics.ProcessResidentMemoryBytes
 	}
+
+	path_manager := result_sets.NewArtifactPathManager(
+		self.config_obj, "server" /* client_id */, "",
+		"Server.Monitor.Health/Prometheus")
 
 	// Keep the lock to a minimum.
 	self.mu.Lock()
 	self.active_frontends = active_frontends
 	self.urls = urls
-
 	self.mu.Unlock()
+
+	if self.sample%2 == 0 {
+		services.GetJournal().PushRows(path_manager,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("CPUPercent", total_metrics.CpuLoadPercent).
+				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
+				Set("client_comms_current_connections",
+					total_metrics.ClientCommsCurrentConnections)})
+	}
+	self.sample++
 
 	return nil
 }
@@ -155,7 +236,7 @@ func (self *FrontendManager) selectFrontend(node string) error {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
-	heartbeat := time.Now().Unix()
+	heartbeat := time.Now().UnixNano()
 
 	if node != "" {
 		conf, pres := self.frontends[node]
@@ -177,8 +258,8 @@ func (self *FrontendManager) selectFrontend(node string) error {
 	for name, conf := range self.frontends {
 		active_state, pres := self.active_frontends[name]
 
-		// older than 10 min or not present - select this frontend.
-		if !pres || active_state.Heartbeat < heartbeat-600 {
+		// older than 60 sec or not present - select this frontend.
+		if !pres || active_state.Heartbeat < heartbeat-600000000000 {
 			self.my_state = &frontend_proto.FrontendState{
 				Name:      name,
 				Heartbeat: heartbeat,

@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 
 	humanize "github.com/dustin/go-humanize"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -36,7 +37,10 @@ func InstallSignalHandler(
 	// Wait for signal. When signal is received we shut down the
 	// server.
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
@@ -137,7 +141,11 @@ func DownloadFile(filepath string, url string) error {
 
 func install_sig_handler() (context.Context, context.CancelFunc) {
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
 	ctx, cancel := context.WithCancel(context.Background())
 
 	go func() {

@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -38,21 +37,23 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	for _, user := range config_obj.GUI.InitialUsers {
 		user_record, err := users.GetUser(config_obj, user.Name)
 		if err != nil || user_record.Name != user.Name {
-			logger.Info("Initial user %v not present (%v), creating",
-				user_record, user.Name)
-			new_user, _ := users.NewUserRecord(user.Name)
+			logger.Info("Initial user %v not present, creating", user.Name)
+			new_user, err := users.NewUserRecord(user.Name)
+			if err != nil {
+				return err
+			}
 
 			if config.GoogleAuthEnabled(config_obj) ||
 				config.SAMLEnabled(config_obj) {
 				password := make([]byte, 100)
 				rand.Read(password)
-				new_user.SetPassword(string(password))
+				users.SetPassword(new_user, string(password))
 
 			} else {
 				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
 				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
 			}
-			err := users.SetUser(config_obj, new_user)
+			err = users.SetUser(config_obj, new_user)
 			if err != nil {
 				return err
 			}
@@ -73,14 +74,6 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	if config_obj.Frontend.Hostname == "" && config_obj.Frontend.Hostname != "" {
 		config_obj.Frontend.Hostname = config_obj.Frontend.Hostname
 	}
-
-	// Ensure there is an index.html file in there to prevent directory listing.
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile("/public/index.html")
-	if err != nil {
-		return err
-	}
-	fd.Close()
 
 	if config_obj.AutocertCertCache != "" {
 		err := utils.CheckDirWritable(config_obj.AutocertCertCache)

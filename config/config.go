@@ -32,6 +32,7 @@ import (
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -250,6 +251,9 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	}
 
 	// Add defaults
+	if config_obj.Logging == nil {
+		config_obj.Logging = &config_proto.LoggingConfig{}
+	}
 
 	// If no local buffer is specified make an in memory one.
 	if config_obj.Client.LocalBuffer == nil {
@@ -280,7 +284,7 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
-	return nil
+	return logging.InitLogging(config_obj)
 }
 
 // Ensures server config is valid, fills in defaults for missing values etc.
@@ -333,9 +337,6 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	}
 	if config_obj.Mail == nil {
 		config_obj.Mail = &config_proto.MailConfig{}
-	}
-	if config_obj.Logging == nil {
-		config_obj.Logging = &config_proto.LoggingConfig{}
 	}
 	if config_obj.Monitoring == nil {
 		config_obj.Monitoring = &config_proto.MonitoringConfig{}
@@ -394,7 +395,7 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
-	return nil
+	return logging.InitLogging(config_obj)
 }
 
 // Loads the client config and merges it with the writeback file.

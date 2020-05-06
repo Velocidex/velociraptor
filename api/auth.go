@@ -112,7 +112,7 @@ func authenticateBasic(
 			return
 		}
 
-		if !user_record.VerifyPassword(password) {
+		if !users.VerifyPassword(user_record, password) {
 			logger := logging.GetLogger(config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"username": username,

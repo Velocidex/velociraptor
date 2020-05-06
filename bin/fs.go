@@ -28,7 +28,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -246,8 +245,7 @@ SELECT * from foreach(
 
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) {
-	err := config.ValidateFrontendConfig(config_obj)
-	if err == nil {
+	if config_obj.Datastore != nil {
 		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
 		kingpin.FatalIfError(err, "GetFileStoreFileSystemAccessor")
 		glob.Register("fs", accessor)
