@@ -14,4 +14,29 @@ SELECT Authors, FullPath, License, Name, Summary, Version FROM source( client_id
   "vfs_path": "/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/1.zip",
   "expected_size": 1319
  }
+]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow FROM scope()[
+ {
+  "Flow": {
+   "client_id": "C.11a3013ccaXXXXX",
+   "artifacts": [
+    "Windows.KapeFiles.Targets"
+   ],
+   "parameters": {
+    "env": [
+     {
+      "key": "Device",
+      "value": "C:"
+     },
+     {
+      "key": "VSSAnalysis",
+      "value": "Y"
+     },
+     {
+      "key": "KapeTriage",
+      "value": "Y"
+     }
+    ]
+   }
+  }
+ }
 ]

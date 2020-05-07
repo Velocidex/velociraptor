@@ -293,8 +293,9 @@ func MakeCollectorRequest(
 	client_id string, artifact_name string,
 	parameters ...string) *flows_proto.ArtifactCollectorArgs {
 	result := &flows_proto.ArtifactCollectorArgs{
-		ClientId:  client_id,
-		Artifacts: []string{artifact_name},
+		ClientId:   client_id,
+		Artifacts:  []string{artifact_name},
+		Parameters: &flows_proto.ArtifactParameters{},
 	}
 
 	if len(parameters)%2 != 0 {
@@ -302,7 +303,6 @@ func MakeCollectorRequest(
 	}
 
 	if parameters != nil {
-		result.Parameters = &flows_proto.ArtifactParameters{}
 		for i := 0; i < len(parameters); {
 			k := parameters[i]
 			i++
