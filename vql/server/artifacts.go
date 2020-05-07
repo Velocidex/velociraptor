@@ -21,6 +21,7 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -45,16 +46,28 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	arg := &ScheduleCollectionFunctionArg{}
+	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("collect_client: %v", err)
+		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	arg := &ScheduleCollectionFunctionArg{}
-	err = vfilter.ExtractArgs(scope, args, arg)
+	// Scheduling artifacts on the server requires higher
+	// permissions.
+	permission := acls.COLLECT_CLIENT
+	if arg.ClientId == "server" {
+		permission = acls.SERVER_ADMIN
+	} else if strings.HasPrefix(arg.ClientId, "C.") {
+		permission = acls.COLLECT_CLIENT
+	} else {
+		scope.Log("collect_client: unsupported client id")
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("collect_client: %s", err.Error())
+		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 

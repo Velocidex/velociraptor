@@ -298,7 +298,11 @@
     required: false
   category: plugin
 - name: collect_client
-  description: Launch an artifact collection against a client.
+  description: |
+     Launch an artifact collection against a client. If the client_id
+     is "server" then the collection occurs on the server itself. In
+     that case the caller needs the SERVER_ADMIN permission.
+
   type: Function
   args:
   - name: client_id
