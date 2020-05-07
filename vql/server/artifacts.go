@@ -27,9 +27,9 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/flows"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -85,21 +85,18 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	principal := vql_subsystem.GetPrincipal(scope)
+	result := &flows_proto.ArtifactCollectorResponse{Request: request}
+
+	flow_id, err := flows.ScheduleArtifactCollection(
+		config_obj, principal, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
-	defer closer()
-
-	response, err := client.CollectArtifact(ctx, request)
-	if err != nil {
-		scope.Log("collect_client: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	return response
+	result.FlowId = flow_id
+	return result
 }
 
 func (self ScheduleCollectionFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
