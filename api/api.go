@@ -51,7 +51,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -317,15 +316,13 @@ func (self *ApiServer) GetHuntResults(
 			"User is not allowed to view results.")
 	}
 
-	artifact, source := paths.SplitFullSourceName(in.Artifact)
 	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
-		Set("Artifact", artifact).
-		Set("Source", source)
+		Set("Artifact", in.Artifact)
 
 	// More than 100 results are not very useful in the GUI -
-	// users should just download the csv file for post
-	// processing.
+	// users should just download the json file for post
+	// processing or process in the notebook.
 	result, err := RunVQL(ctx, self.config, user_name, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
 			"artifact=Artifact, source=Source, "+

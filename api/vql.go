@@ -18,9 +18,11 @@
 package api
 
 import (
+	"encoding/json"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -106,6 +108,43 @@ func StoreVQLAsCSVFile(
 
 	for row := range vql.Eval(sub_ctx, scope) {
 		csv_writer.Write(row)
+	}
+
+	return nil
+}
+
+func StoreVQLAsJSONFile(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	principal string,
+	env *ordereddict.Dict,
+	query string,
+	writer io.Writer) error {
+
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+		Logger: logging.NewPlainLogger(config_obj,
+			&logging.ToolComponent),
+		Env: env,
+	}.Build()
+	defer scope.Close()
+
+	vql, err := vfilter.Parse(query)
+	if err != nil {
+		return err
+	}
+
+	for row := range vql.Eval(ctx, scope) {
+		serialized, err := json.Marshal(row)
+		if err != nil {
+			continue
+		}
+		_, err = writer.Write(serialized)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+		writer.Write([]byte("\n"))
 	}
 
 	return nil

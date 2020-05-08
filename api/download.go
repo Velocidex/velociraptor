@@ -37,6 +37,7 @@ import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -45,11 +46,22 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
 	w.Write([]byte(message))
+}
+
+func cleanPathForZip(filename string) string {
+	filename = path.Clean(strings.Replace(
+		filename, "\\", "/", -1))
+
+	// Zip files should not have absolute paths
+	filename = strings.TrimLeft(filename, "/")
+	return filename
 }
 
 func downloadFlowToZip(
@@ -73,12 +85,7 @@ func downloadFlowToZip(
 		defer reader.Close()
 
 		// Clean the name so it makes a reasonable zip member.
-		upload_name = path.Clean(strings.Replace(
-			upload_name, "\\", "/", -1))
-
-		// Zip files should not have absolute paths
-		upload_name = strings.TrimLeft(upload_name, "/")
-		f, err := zip_writer.Create(upload_name)
+		f, err := zip_writer.Create(cleanPathForZip(upload_name))
 		if err != nil {
 			return err
 		}
@@ -109,9 +116,29 @@ func downloadFlowToZip(
 		if err == nil {
 			copier(rs_path)
 		}
+
+		// Also make a csv file why not?
+		f, err := zip_writer.Create(cleanPathForZip(
+			strings.TrimSuffix(rs_path, ".json") + ".csv"))
+		if err != nil {
+			continue
+		}
+
+		// File uploads are stored in their own json file.
+		row_chan, err := file_store.GetTimeRange(
+			ctx, config_obj, path_manager, 0, 0)
+		if err != nil {
+			return err
+		}
+		scope := vql_subsystem.MakeScope()
+		csv_writer := csv.GetCSVAppender(scope, f, true /* write_headers */)
+		for row := range row_chan {
+			csv_writer.Write(row)
+		}
+		csv_writer.Close()
 	}
 
-	// Get all file uploads
+	// Get all file uploads if needed
 	if flow_details.Context.TotalUploadedFiles == 0 {
 		return nil
 	}
@@ -121,7 +148,7 @@ func downloadFlowToZip(
 	// user the files as they are. Users can do their own post
 	// processing.
 
-	// File uploads are stored in their own CSV file.
+	// File uploads are stored in their own json file.
 	row_chan, err := file_store.GetTimeRange(
 		ctx, config_obj, flow_path_manager.UploadMetadata(), 0, 0)
 	if err != nil {
@@ -306,7 +333,7 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			err = StoreVQLAsCSVFile(ctx, config_obj,
+			err = StoreVQLAsJSONFile(ctx, config_obj,
 				principal, env, query, f)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.GUIComponent).
@@ -317,23 +344,21 @@ func createHuntDownloadFile(
 			}
 		}
 
-		file_store_factory := file_store.GetFileStore(config_obj)
-		file_path := path.Join("hunts", hunt_id+".csv")
-		fd, err := file_store_factory.ReadFile(file_path)
-		if err != nil {
-			return
-		}
-		defer fd.Close()
+		scope := artifacts.ScopeBuilder{
+			Config:     config_obj,
+			ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+			Logger:     logging.NewPlainLogger(config_obj, &logging.ToolComponent),
+			Env:        ordereddict.NewDict().Set("HuntId", hunt_id),
+		}.Build()
+		defer scope.Close()
 
-		for row := range csv.GetCSVReader(fd) {
-			flow_id_any, _ := row.Get("FlowId")
-			flow_id, ok := flow_id_any.(string)
-			if !ok {
-				continue
-			}
-			client_id_any, _ := row.Get("ClientId")
-			client_id, ok := client_id_any.(string)
-			if !ok {
+		vql, _ := vfilter.Parse(
+			"SELECT Flow.SessionId AS FlowId, ClientId " +
+				"FROM hunt_flows(hunt_id=HuntId)")
+		for row := range vql.Eval(ctx, scope) {
+			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
+			client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
+			if flow_id == "" || client_id == "" {
 				continue
 			}
 

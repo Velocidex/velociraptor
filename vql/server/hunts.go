@@ -196,6 +196,9 @@ func (self HuntResultsPlugin) Call(
 					}
 				}
 			}
+
+		} else if arg.Source != "" {
+			arg.Artifact += "/" + arg.Source
 		}
 
 		// Backwards compatibility.
