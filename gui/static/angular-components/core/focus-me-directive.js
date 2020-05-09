@@ -16,7 +16,9 @@ exports.FocusMeDirective = function($parse, $timeout) {
               }
           });
           element.bind('blur', function () {
-              scope.$apply(model.assign(scope, false));
+              $timeout(function () {
+                  scope.$apply(model.assign(scope, false));
+              });
           });
       }
   };

@@ -605,6 +605,10 @@ dd.histogram  > div {
   height: 100%;
 }
 
+.artifact-links {
+    color: black;
+}
+
 .fill-parent {
   position: absolute;
   left: 1em;

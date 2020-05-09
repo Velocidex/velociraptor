@@ -27,7 +27,8 @@
 
           <div style="height: 150px; overflow-y: auto; overflow-x: hidden; border: 1px solid #dddddd; border-top: none">
 
-            <table name="Artifacts" class="table table-condensed table-hover table-striped">
+            <table name="Artifacts"
+                   class="table table-condensed table-hover table-striped">
               <colgroup>
                 <col width="100%"></col>
               </colgroup>
@@ -47,12 +48,13 @@
                 <tr ng-repeat="descriptor in controller.matchingDescriptors"
                     ng-class="{'row-selected': descriptor.name ==
                               controller.selectedName}">
-                  <td style="cursor: pointer; border: none"
-                      ng-dblclick="controller.add(descriptor.name)"
-                      ng-click="controller.selectArtifact(descriptor.name)">
-                    <div style="display:block" class="full-width-height">
+                  <td style="cursor: pointer; border: none">
+                    <a ng-dblclick="controller.add(descriptor.name, $event)"
+                       href="#"
+                       ng-click="controller.selectArtifact(descriptor.name, $event)"
+                       style="display:block" class="full-width-height artifact-links">
                       {$ ::descriptor.name $}
-                    </div>
+                    </a>
                   </td>
                 </tr>
               </tbody>
@@ -136,6 +138,7 @@
               data-toggle="collapse"
               data-target="#collapseTwo"
               aria-expanded="false"
+              focus-me="controller.focus_parameters"
               aria-controls="collapseTwo">
         Configure parameters
       </button>
