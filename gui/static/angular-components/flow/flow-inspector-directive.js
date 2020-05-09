@@ -72,18 +72,17 @@ FlowInspectorController.prototype.startPolling = function(newValues, oldValues) 
         path: this.scope_['flowId'],
     };
 
-    if (angular.isDefined(this.scope_['apiBasePath']) &&
-        angular.isDefined(this.scope_['flowId'])) {
-        var flowUrl = this.scope_['apiBasePath'];
+    if (angular.isDefined(this.scope_['flowId'])) {
+        var flowUrl = "v1/GetFlowDetails";
         var interval = AUTO_REFRESH_INTERVAL_MS;
-
+        var params = {flow_id: this.scope_['flowId'],
+                      client_id: this.scope_['clientId']};
         this.flow = null;
 
         // It's important to assign the result of the poll() call, not the
         // result of the poll().then() call, since we need the original
         // promise to pass to cancelPoll if needed.
-        this.pollPromise_ = this.grrApiService_.poll(
-            flowUrl, interval, {flow_id: this.scope_['flowId']});
+        this.pollPromise_ = this.grrApiService_.poll(flowUrl, interval, params);
         this.pollPromise_.then(
             undefined,
             undefined,
@@ -134,9 +133,7 @@ exports.FlowInspectorDirective = function() {
     return {
         scope: {
             flowId: '=',
-            apiBasePath: '=',
             activeTab: '=?',
-            exportBasePath: '=',
             clientId: '=',
         },
         controller: FlowInspectorController,

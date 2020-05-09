@@ -1,13 +1,14 @@
 <div class="padded" grr-force-refresh refresh-trigger="flowId">
 
-  <div ng-if="!flowId">
+  <div ng-if="!flowId" class="no-content">
     Please select a flow to see its details here.
   </div>
 
   <uib-tabset ng-if="flowId" active="controller.activeTab">
     <uib-tab heading="Artifact Collection" index="''">
       <grr-flow-overview flow="controller.flow"
-                         flow-id="flowId" api-base-path="apiBasePath"
+                         flow-id="flowId"
+                         client-id="clientId"
                          ng-if="controller.tabsShown['']" />
     </uib-tab>
 
@@ -40,7 +41,8 @@
     <uib-tab heading="Requests" index="'requests'">
       <grr-flow-requests
         flow="controller.flow"
-        flow-id="flowId" api-base-path="apiBasePath"
+        flow-id="flowId"
+        client-id="clientId"
         ng-if="controller.tabsShown['requests']" />
     </uib-tab>
 
@@ -56,7 +58,7 @@
       <grr-flow-log
         flow="controller.flow"
         client-id="clientId"
-        flow-id="flowId" api-base-path="apiBasePath"
+        flow-id="flowId"
         ng-if="controller.activeTab == 'log'" />
     </uib-tab>
 

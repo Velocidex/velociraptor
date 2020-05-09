@@ -19,6 +19,10 @@
                      value="controller.scope_.value"
                      type="{$ type $}" default="default" />
 
+  <grr-form-client-label ng-switch-when="grrFormClientLabel"
+                         value="controller.scope_.value"
+                         type="{$ type $}" default="default" />
+
   <div ng-switch-default>
     I dont know how to render {{ controller.renderer }} for type
     {{controller.scope_.type}} descriptors {{controller.valueDescriptor}}

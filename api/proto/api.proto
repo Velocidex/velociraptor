@@ -225,13 +225,13 @@ service API {
 
     rpc GetFlowDetails(ApiFlowRequest) returns (FlowDetails) {
         option (google.api.http) = {
-            get: "/api/v1/GetFlowDetails/{client_id}",
+            get: "/api/v1/GetFlowDetails",
         };
     }
 
     rpc GetFlowRequests(ApiFlowRequest) returns (ApiFlowRequestDetails) {
         option (google.api.http) = {
-            get: "/api/v1/GetFlowDetails/{client_id}/{flow_id}/requests",
+            get: "/api/v1/GetFlowRequests",
         };
     }
 

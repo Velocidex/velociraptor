@@ -1,13 +1,10 @@
-<label class="control-label">{{
-  controller.formLabel || 'Client label'
-}}</label>
+<label class="control-label">Client label</label>
 <div class="controls select-label-controls">
   <select class="form-control"
-          ng-model="controller.clientLabel"
-          ng-options="label.name as label.name
-                      for label in controller.labelsList">
-    <option value="" ng-if="!controller.hideEmptyOption">{{
-      controller.emptyOptionLabel
-    }}</option>
+          ng-model="value['label']"
+          ng-options="label for label in controller.labelsList">
+    <option value="{{label}}"
+            ng-selected="value.label==label"
+            >{{ label }}</option>
   </select>
 </div>

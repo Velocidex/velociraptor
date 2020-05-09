@@ -10,6 +10,7 @@ const {ClockDirective} = goog.require('grrUi.core.clockDirective');
 const {CsvViewerDirective} = goog.require('grrUi.core.csvViewerDirective');
 const {ConfirmationDialogDirective} = goog.require('grrUi.core.confirmationDialogDirective');
 const {DialogService} = goog.require('grrUi.core.dialogService');
+const {FocusMeDirective} = goog.require('grrUi.core.focusMeDirective');
 const {ForceRefreshDirective} = goog.require('grrUi.core.forceRefreshDirective');
 const {GlobalNotificationsDirective} = goog.require('grrUi.core.globalNotificationsDirective');
 const {HexNumberFilter} = goog.require('grrUi.core.hexNumberFilter');
@@ -48,6 +49,8 @@ exports.coreModule.directive(
     ApiItemsProviderDirective.directive_name, ApiItemsProviderDirective);
 exports.coreModule.directive(
     ForceRefreshDirective.directive_name, ForceRefreshDirective);
+exports.coreModule.directive(
+    FocusMeDirective.directive_name, FocusMeDirective);
 exports.coreModule.directive(
     PagedFilteredTableDirective.directive_name, PagedFilteredTableDirective);
 exports.coreModule.directive(

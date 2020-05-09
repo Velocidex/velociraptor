@@ -883,30 +883,12 @@ func local_request_API_ArchiveFlow_0(ctx context.Context, marshaler runtime.Mars
 }
 
 var (
-	filter_API_GetFlowDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_API_GetFlowDetails_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_API_GetFlowDetails_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ApiFlowRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["client_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "client_id")
-	}
-
-	protoReq.ClientId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -924,24 +906,6 @@ func local_request_API_GetFlowDetails_0(ctx context.Context, marshaler runtime.M
 	var protoReq ApiFlowRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["client_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "client_id")
-	}
-
-	protoReq.ClientId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
-	}
-
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_API_GetFlowDetails_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -952,41 +916,12 @@ func local_request_API_GetFlowDetails_0(ctx context.Context, marshaler runtime.M
 }
 
 var (
-	filter_API_GetFlowRequests_0 = &utilities.DoubleArray{Encoding: map[string]int{"client_id": 0, "flow_id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
+	filter_API_GetFlowRequests_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
 
 func request_API_GetFlowRequests_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ApiFlowRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["client_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "client_id")
-	}
-
-	protoReq.ClientId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
-	}
-
-	val, ok = pathParams["flow_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "flow_id")
-	}
-
-	protoReq.FlowId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "flow_id", err)
-	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -1003,35 +938,6 @@ func request_API_GetFlowRequests_0(ctx context.Context, marshaler runtime.Marsha
 func local_request_API_GetFlowRequests_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ApiFlowRequest
 	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["client_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "client_id")
-	}
-
-	protoReq.ClientId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "client_id", err)
-	}
-
-	val, ok = pathParams["flow_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "flow_id")
-	}
-
-	protoReq.FlowId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "flow_id", err)
-	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_API_GetFlowRequests_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -3450,9 +3356,9 @@ var (
 
 	pattern_API_ArchiveFlow_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "ArchiveFlow"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_API_GetFlowDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "GetFlowDetails", "client_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_API_GetFlowDetails_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetFlowDetails"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_API_GetFlowRequests_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"api", "v1", "GetFlowDetails", "client_id", "flow_id", "requests"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_API_GetFlowRequests_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetFlowRequests"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_API_DescribeTypes_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "DescribeTypes"}, "", runtime.AssumeColonVerbOpt(true)))
 

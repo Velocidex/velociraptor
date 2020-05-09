@@ -15,45 +15,80 @@ const {ApiService} = goog.require('grrUi.core.apiService');
  */
 const NewArtifactCollectionController = function(
     $scope, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
 
-  /** @private {!ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @type {boolean} */
-  this.requestSent = false;
+    /** @private {!ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @type {?string} */
-  this.responseError;
+    /** @type {boolean} */
+    this.requestSent = false;
 
-  /** @type {?string} */
-  this.responseData;
+    /** @type {?string} */
+    this.responseError;
 
-  // This controls which type of artifact we are allowed to search
-  // for.
-  var client_id = this.scope_['clientId'];
-  if (client_id[0] == "C") {
-    this.artifactType = "CLIENT";
-  } else {
-    this.artifactType = "SERVER";
-  }
+    /** @type {?string} */
+    this.responseData;
 
-  /** @type {boolean} */
-  this.flowFormHasErrors;
+    // This controls which type of artifact we are allowed to search
+    // for.
+    var client_id = this.scope_['clientId'];
+    if (client_id[0] == "C") {
+      this.artifactType = "CLIENT";
+    } else {
+        this.artifactType = "SERVER";
+    }
 
-  this.params = {};
-  this.names = [];
-  this.ops_per_second;
-  this.timeout = 600;
+    // Configured parameters to collect the artifacts with.
+    this.params = {};
+
+    // The names of the artifacts to collect.
+    this.names = [];
+    this.ops_per_second = 0;
+    this.timeout = 600;
+
+    this.flow_details = {};
+
+    this.scope_.$watchGroup(['clientId', 'flowId'],
+                            this.onClientIdChange_.bind(this));
 };
 
+
+NewArtifactCollectionController.prototype.onClientIdChange_ = function() {
+    var url = 'v1/GetFlowDetails';
+    var param = {flow_id: this.scope_["flowId"],
+                 client_id: this.scope_["clientId"]};
+
+    this.grrApiService_.get(url, param).then(
+        function success(response) {
+            this.flow_details = response.data["context"];
+            this.names = this.flow_details.request.artifacts;
+            this.params = {};
+
+            var env = this.flow_details.request.parameters.env;
+            for (var i=0; i<env.length;i++) {
+                var key = env[i]["key"];
+                var value = env[i]["value"];
+                if (angular.isString(key)) {
+                    this.params[key] = value;
+                }
+            }
+        }.bind(this));
+};
 
 NewArtifactCollectionController.prototype.resolve = function() {
   var onResolve = this.scope_['onResolve'];
   if (onResolve && this.responseData) {
       var flow_id = this.responseData['session_id'];
       onResolve({flowId: flow_id});
+  }
+};
+
+NewArtifactCollectionController.prototype.reject = function() {
+  var onReject = this.scope_['onReject'];
+  if (onReject && this.responseError) {
+      onReject(this.responseError);
   }
 };
 
@@ -87,8 +122,10 @@ NewArtifactCollectionController.prototype.startClientFlow = function() {
         'v1/CollectArtifact',
         this.artifactCollectorRequest).then(function success(response) {
             this.responseData = response['data'];
+            this.resolve();
         }.bind(this), function failure(response) {
             this.responseError = response['data']['error'] || 'Unknown error';
+            this.reject();
         }.bind(this));
     this.requestSent = true;
 };
@@ -103,6 +140,7 @@ exports.NewArtifactCollectionDirective = function() {
   return {
     scope: {
         clientId: '=?',
+        flowId: "=",
         onResolve: '&',
         onReject: '&'
     },

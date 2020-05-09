@@ -19,12 +19,6 @@ const serverArtifactsController = function(
   /** @type {string} */
   this.tab;
 
-  /** @type {string} */
-  this.flowApiBasePath;
-
-  /** @type {string} */
-  this.exportBasePath;
-
   this.scope_.$watchGroup(
       ['controller.selectedFlowId', 'controller.tab'],
       this.onSelectionOrTabChange_.bind(this));
@@ -47,8 +41,6 @@ serverArtifactsController.prototype.onRoutingParamsChange_ = function(
   this.clientId = opt_stateParams['clientId'];
   this.selectedFlowId = opt_stateParams['flowId'];
   this.tab = opt_stateParams['tab'];
-  this.flowApiBasePath = 'v1/GetFlowDetails' + '/' + this.clientId;
-  this.exportBasePath = "v1/download/" + this.clientId;
 };
 
 

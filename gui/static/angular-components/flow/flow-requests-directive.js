@@ -22,8 +22,7 @@ const FlowRequestsController = function($scope) {
     /** @type {object} */
     this.requestsParams;
 
-  this.scope_.$watchGroup(['flowId', 'apiBasePath'],
-                          this.onFlowIdOrBasePathChange_.bind(this));
+  this.scope_.$watch('flowId', this.onFlowIdPathChange_.bind(this));
 };
 
 
@@ -34,13 +33,12 @@ const FlowRequestsController = function($scope) {
  * @param {Array<string>} newValues
  * @private
  */
-FlowRequestsController.prototype.onFlowIdOrBasePathChange_ = function(
-    newValues) {
-  if (newValues.every(angular.isDefined)) {
-    this.requestsUrl = this.scope_['apiBasePath'] + '/' +
-        this.scope_['flowId'] + '/requests';
-    this.requestsParams = {};
-  }
+FlowRequestsController.prototype.onFlowIdPathChange_ = function() {
+    this.requestsUrl = "v1/GetFlowRequests";
+    this.requestsParams = {
+        flow_id: this.scope_['flowId'],
+        client_id: this.scope_['clientId'],
+    };
 };
 
 
@@ -55,7 +53,7 @@ exports.FlowRequestsDirective = function() {
   return {
     scope: {
       flowId: '=',
-      apiBasePath: '='
+      clientId: '=',
     },
     restrict: 'E',
     templateUrl: '/static/angular-components/flow/flow-requests.html',

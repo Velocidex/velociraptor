@@ -152,72 +152,35 @@ ClientFlowsListController.prototype.createHuntFromFlow = function() {
   }.bind(this));
 };
 
-
-/**
- * Shows a 'New Hunt' dialog prefilled with the data of the currently selected
- * hunt.
- *
- * @export
- */
-ClientFlowsListController.prototype.copyFlow = function() {
-  var newFlowId;
-
-  var modalScope = this.scope_.$new();
-  modalScope['clientId'] = this.scope_['clientId'];
-  modalScope['flowId'] = this.scope_['selectedFlowId'];
-  modalScope['resolve'] = function(newFlowObj) {
-    newFlowId = newFlowObj['session_id'];
-    modalInstance.close();
-  }.bind(this);
-
-  this.scope_.$on('$destroy', function() {
-    modalScope.$destroy();
-  });
-
-  var modalInstance = this.uibModal_.open({
-    template: '<grr-copy-flow-form on-resolve="resolve(flow)" ' +
-        'flow-id="flowId" client-id="clientId" />',
-    scope: modalScope,
-    windowClass: 'wide-modal high-modal',
-    size: 'lg'
-  });
-  modalInstance.result.then(function resolve() {
-    // newFlowId will remain unset if an error happened on the server and
-    // 'resolve' callback was never called.
-    if (angular.isDefined(newFlowId)) {
-      this.grrRoutingService_.go('client.flows', {flowId: newFlowId});
-      this.triggerUpdate();
-    }
-  }.bind(this));
-};
-
-/**
- * Shows new hunt wizard.
- *
- * @export
- */
-ClientFlowsListController.prototype.newArtifactCollection = function() {
+ClientFlowsListController.prototype.newArtifactCollection = function(flow_id) {
     var modalScope = this.scope_.$new();
+
+    modalScope['clientId'] = this.scope_['clientId'];
+    if (angular.isString(flow_id)) {
+        modalScope['flowId'] = flow_id;
+    }
+
     var self = this;
 
-  modalScope.resolve = function() {
-      modalInstance.close();
-      self.triggerUpdate();
-  };
-  modalScope.reject = function() {
-    modalInstance.dismiss();
-  };
-  this.scope_.$on('$destroy', function() {
-    modalScope.$destroy();
-  });
+    modalScope.resolve = function() {
+        modalInstance.close();
+        self.triggerUpdate();
+    };
+    modalScope.reject = function() {
+        modalInstance.dismiss();
+    };
+    this.scope_.$on('$destroy', function() {
+        modalScope.$destroy();
+    });
 
-  var modalInstance = this.uibModal_.open({
-    template: '<grr-new-artifact-collection client-id="clientId" '+
-          'on-resolve="resolve()" on-reject="reject()" />',
-    scope: modalScope,
-    windowClass: 'wide-modal high-modal',
-    size: 'lg'
-  });
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-new-artifact-collection client-id="clientId" '+
+            'flow_id="flowId" '+
+            'on-resolve="resolve()" on-reject="reject()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
 };
 
 

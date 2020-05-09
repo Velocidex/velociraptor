@@ -33,6 +33,7 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
 
     this.currentPage = 0;
 
+    this.hunt_conditions = {};
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
         this.scope_['createHuntArgs'] = {
             start_request: {},
@@ -55,6 +56,13 @@ FormController.prototype.onValueChange_ = function(page_index) {
     createHuntArgs.start_request.parameters = {env: env};
     createHuntArgs.start_request.ops_per_second = this.ops_per_second;
     createHuntArgs.start_request.timeout = this.timeout;
+
+    if (self.hunt_conditions.condition == "labels") {
+        createHuntArgs.condition = {"labels": {"label": [self.hunt_conditions.label]}};
+    } else if(self.hunt_conditions.condition == "os") {
+        createHuntArgs.condition = {"os": {"os": "OSX"}};
+    }
+
 };
 
 

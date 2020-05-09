@@ -1,3 +1,34 @@
 <div class="padded">
-  <grr-form-value value="clientRuleSet" type="HuntCondition"></grr-form-value>
+  <div class="well well-large">
+    <div class="form-group">
+      <label class="control-label" title="The condition to match hosts for this hunt.">
+        HuntCondition
+      </label>
+      <div class="controls">
+        <select class="form-control" ng-model="clientRuleSet['condition']">
+          <option label="Run everywhere" value="" selected="selected"></option>
+          <option label="Match by label" value="labels">Match by label</option>
+          <option label="Operating System" value="os">Operating System</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <grr-form-client-label
+        ng-if="clientRuleSet.condition=='labels'"
+        value="clientRuleSet"></grr-form-client-label>
+
+      <div ng-if="clientRuleSet.condition=='os'">
+        <label class="control-label">Target OS</label>
+        <div class="controls">
+          <select class="form-control"
+                  ng-model="clientRuleSet['os']">
+            <option value="WINDOWS" >Windows</option>
+            <option value="LINUX" >Linux</option>
+            <option value="OSX" >MacOS</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

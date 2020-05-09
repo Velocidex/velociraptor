@@ -34,6 +34,9 @@ const SearchArtifactController = function(
     this.param_descriptions = {};
     this.paramDescriptors = {};
 
+    this.search_focus = true;
+    this.focus_parameters = false;
+
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
 
@@ -43,8 +46,14 @@ const SearchArtifactController = function(
     this.scope_.$watch('controller.search',
                        this.onSearchChange_.bind(this));
 
+    this.scope_.$watch('names', this.onNamesChanged_.bind(this));
+};
+
+SearchArtifactController.prototype.onNamesChanged_ = function() {
     var self = this;
     if (this.scope_["names"].length>0) {
+        this.selectArtifact(this.scope_["names"][0]);
+
         this.grrApiService_.get("v1/GetArtifacts", {names: this.scope_["names"]}).then(
             function(response) {
                 var items = response['data'].items;
@@ -66,6 +75,7 @@ const SearchArtifactController = function(
     }
 };
 
+
 /**
  * Adds artifact with a given name to the list of selected names.
  *
@@ -73,19 +83,29 @@ const SearchArtifactController = function(
  *     selected list.
  * @export
  */
-SearchArtifactController.prototype.add = function(name) {
+SearchArtifactController.prototype.add = function(name, e) {
+    if (angular.isDefined(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
   if (angular.isUndefined(name) || name == "") {
     return;
   }
 
-  var self = this;
-  var index = -1;
-  for (var i = 0; i < self.scope_.names.length; ++i) {
-    if (self.scope_.names[i] == name) {
-      index = i;
-      break;
+    var self = this;
+    var index = -1;
+    for (var i = 0; i < self.scope_.names.length; ++i) {
+        if (self.scope_.names[i] == name) {
+            index = i;
+
+            // The artifact is already in the added list, shift focus
+            // to the config param section. This allows for efficient
+            // keyboard navigation.
+            self.focus_parameters = true;
+            return ;
+        }
     }
-  }
   if (index == -1) {
     self.scope_.names.push(name);
 
@@ -162,12 +182,21 @@ SearchArtifactController.prototype.clear = function() {
   }.bind(this));
 };
 
-SearchArtifactController.prototype.selectArtifact = function(name) {
-  this.selectedName = name;
-  this.reportParams= {
-    artifact: this.selectedName,
-    type: "ARTIFACT_DESCRIPTION",
-  };
+SearchArtifactController.prototype.selectArtifact = function(name, e) {
+    if (angular.isDefined(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    if (this.selectedName == name) {
+        return this.add(name);
+    }
+
+    this.selectedName = name;
+    this.reportParams= {
+        artifact: this.selectedName,
+        type: "ARTIFACT_DESCRIPTION",
+    };
 };
 
 SearchArtifactController.prototype.onSearchChange_ = function() {

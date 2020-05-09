@@ -14,40 +14,33 @@ const {ApiService} = goog.require('grrUi.core.apiService');
  * @constructor
  * @ngInject
  */
-const ClientLabelFormController =
-    function($scope, grrApiService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+const ClientLabelFormController = function($scope, grrApiService) {
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @type {*} */
-  this.labelsList;
+    /** @type {*} */
+    this.labelsList = [];
 
-  /** @type {string} */
-  this.clientLabel;
+    var params = {
+        query: "label:*",
+        limit: 100,
+        type: 1,
+    };
+    this.grrApiService_.get('v1/SearchClients', params).then(function(response) {
+        this.labelsList = [];
+        var data = response['data']['names'];
+        for (var i=0; i<data.length; i++) {
+            this.labelsList.push(data[i].replace(/^label:/, ""));
+        };
 
-  /** @type {string} */
-  this.formLabel;
-
-  /** @type {boolean} */
-  this.hideEmptyOption;
-
-  /** @type {string} */
-  this.emptyOptionLabel;
-
-  this.grrApiService_.get('/clients/labels').then(function(response) {
-    this.labelsList = response['data']['items'];
-
-    this.scope_.$watch('controller.hideEmptyOption', function() {
-      if (!this.clientLabel &&  // Handles all falsey values, including ''.
-          this.hideEmptyOption &&
-          this.labelsList.length > 0) {
-        this.clientLabel = this.labelsList[0]['name'];
-      }
+        this.labelsList.sort();
+        if (this.labelsList.length > 0) {
+            this.scope_.value["label"] = this.labelsList[0];
+        }
     }.bind(this));
-  }.bind(this));
 };
 
 
@@ -68,13 +61,9 @@ ClientLabelFormController.prototype.$onInit = function() {
  */
 exports.ClientLabelFormDirective = function() {
   return {
-    scope: {
-      clientLabel: '=',
-      formLabel: '=?',
-      hideEmptyOption: '=?',
-      emptyOptionLabel: '=?'
+      scope: {
+          value: '=',
     },
-    bindToController: true,
     restrict: 'E',
     templateUrl: '/static/angular-components/forms/client-label-form.html',
     controller: ClientLabelFormController,

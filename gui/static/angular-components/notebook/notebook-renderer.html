@@ -1,4 +1,4 @@
-<div>
+<div ng-if="!state.notebook.hidden">
   <div ng-repeat="cell in state.notebook.cell_metadata track by $index">
     <grr-notebook-cell-renderer
       notebook-id="state.notebook.notebook_id"
@@ -8,4 +8,7 @@
       state="state"
       cell-id="cell.cell_id"/>
   </div>
+</div>
+<div ng-if="!state.notebook || state.notebook.hidden" class="no-content">
+  Please select a notebook to view.
 </div>

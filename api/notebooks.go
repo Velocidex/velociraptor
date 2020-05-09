@@ -462,6 +462,9 @@ func (self *ApiServer) UpdateNotebookCell(
 	err = db.SetSubject(self.config,
 		reporting.GetNotebookCellPath(in.NotebookId, in.CellId),
 		notebook_cell)
+	if err != nil {
+		return nil, err
+	}
 
 	notebook := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(self.config,

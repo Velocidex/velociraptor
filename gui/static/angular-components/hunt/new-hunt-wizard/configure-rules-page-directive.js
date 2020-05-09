@@ -4,6 +4,12 @@ goog.module('grrUi.hunt.newHuntWizard.configureRulesPageDirective');
 goog.module.declareLegacyNamespace();
 
 
+const ConfigureRulesPageController = function(
+    $scope, grrRoutingService) {
+    this.scope_ = $scope;
+    this.scope_["clientRuleSet"]["os"] = "WINDOWS";
+};
+
 
 /**
  * Directive for showing wizard-like forms with multiple named steps/pages.
@@ -13,14 +19,16 @@ goog.module.declareLegacyNamespace();
  * @export
  */
 exports.ConfigureRulesPageDirective = function() {
-  return {
-    scope: {
-      clientRuleSet: '=',
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +
-        'configure-rules-page.html',
-  };
+    return {
+        scope: {
+            clientRuleSet: '=',
+        },
+        restrict: 'E',
+        templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +
+            'configure-rules-page.html',
+        controller: ConfigureRulesPageController,
+        controllerAs: 'controller',
+    };
 };
 
 
