@@ -153,20 +153,21 @@ HostInfoController.prototype.monitorInterrogateOperation_ = function() {
  * @private
  */
 HostInfoController.prototype.pollInterrogateOperationState_ = function() {
-  var url = 'v1/GetFlowDetails/' + this.clientId;
-  var param = {'flow_id': this.interrogateOperationId};
+    var url = 'v1/GetFlowDetails/';
+    var param = {flow_id: this.interrogateOperationId,
+                 client_id: this.clientId};
 
-  this.grrApiService_.get(url, param).then(
-    function success(response) {
-      if (response['data']['context']['state'] != 'RUNNING') {
-        this.stopMonitorInterrogateOperation_();
+    this.grrApiService_.get(url, param).then(
+        function success(response) {
+            if (response['data']['context']['state'] != 'RUNNING') {
+                this.stopMonitorInterrogateOperation_();
 
-        this.fetchClientDetails_();
-      }
-    }.bind(this),
-    function failure(response) {
-      this.stopMonitorInterrogateOperation_();
-    }.bind(this));
+                this.fetchClientDetails_();
+            }
+        }.bind(this),
+        function failure(response) {
+            this.stopMonitorInterrogateOperation_();
+        }.bind(this));
 };
 
 /**

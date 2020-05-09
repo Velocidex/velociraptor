@@ -1,54 +1,54 @@
-<grr-wizard-form title="New Artifact Collection"
-                 on-resolve="controller.resolve()"
-                 on-reject="onReject()">
-
-  <grr-wizard-form-page title="Select Artifacts to collect">
+<div class="modal-header">
+  <h3 ng-if="flowId">Copy artifact {{ flowId }}</h3>
+  <h3 ng-if="!flowId">Collect new artifact</h3>
+  <button type="button" class="close"
+          ng-click="controller.reject()" aria-hidden="true">
+    x
+  </button>
+</div>
+<div class="modal-body">
+  <div class="container-fluid">
     <grr-search-artifact names="controller.names"
                          params="controller.params"
                          type="controller.artifactType">
     </grr-search-artifact>
-    <dl class="dl-horizontal dl-flow">
-      <dt>Ops/Sec</dt>
-      <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
-      <dt>Maximum Time</dt>
-      <dd><input ng-model="controller.timeout" type="text"></input></dd>
-    </dl>
-  </grr-wizard-form-page>
 
-  <grr-wizard-form-page title="Launched Flow"
-                        on-show="controller.startClientFlow()"
-                        next-button-label="Done"
-                        no-back-button="true">
-    <div class="padded">
-      <div ng-if="!controller.responseData">
-        <uib-progressbar class="progress-striped active" max="100" value="50">
-          Launching new Artifacts Collection...
-        </uib-progressbar>
-      </div>
+    <div id="collection_context">
+      <div class="card">
+        <div id="headingResources">
+          <button class="btn btn-default btn-block"
+                  data-toggle="collapse"
+                  data-target="#collapseResources"
+                  aria-expanded="true"
+                  aria-controls="collapseResources">
+            Resource control
+          </button>
+        </div>
 
-      <div ng-if="controller.responseData && controller.responseData.error"
-           class="alert alert-error">
-        <p><em>Can't Launch Artifact collection:</em></p>
-        <p class="preserve-linebreaks">{$ controller.responseData.data $}</p>
-      </div>
-
-      <div ng-if="controller.responseData && !controller.responseData.error"
-           class="panel panel-default">
-        <div class="panel-body">
-          <p>
-            Launched Flow {{ controller.responseData.flow_id }}
-          </p>
-          <p>
-            Flow arguments:<br/>
-            <grr-semantic-value
-              value="controller.flowRunnerArguments.args"
-              type="ArtifactCollectorArgs"
-              ></grr-semantic-value>
-          </p>
+        <div id="collapseResources"
+             class="collapse show"
+             aria-labelledby="headingResources"
+             data-parent="#collection_context">
+          <div class="card-body">
+            <dl class="dl-horizontal dl-flow">
+              <dt>Ops/Sec</dt>
+              <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
+              <dt>Maximum Time</dt>
+              <dd><input ng-model="controller.timeout" type="text"></input></dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
-  </grr-wizard-form-page>
-
-
-</grr-wizard-form>
+  </div>
+</div>
+<div class="modal-footer navbar-inner">
+  <ul class="nav pull-right">
+    <button class="btn btn-primary Next"
+            ng-disabled="controller.names.length==0"
+            ng-click="controller.startClientFlow()">
+      Launch collection
+    </button>
+  </ul>
+</div>
+</div>

@@ -7,7 +7,7 @@ const FormController = function($scope) {
   this.scope_ = $scope;
   this.popup_opened = false;
     this.date_time;
-
+    this.text_size = 1;
     this.dateOptions = {allowInvalid: true};
     this.altInputFormats = ["M!/d!/yyyy"];
   $scope.$watch('controller.date_time',
@@ -28,6 +28,16 @@ FormController.prototype.onDateChange_ = function() {
 
 FormController.prototype.openDatePopup = function() {
   this.popup_opened = true;
+};
+
+FormController.prototype.resizeTextArea = function(e) {
+    if (this.text_size == 1) {
+        this.text_size = 10;
+    } else {
+        this.text_size = 1;
+    };
+    e.stopPropagation();
+    return false;
 };
 
 exports.FormDirective = function() {

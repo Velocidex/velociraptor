@@ -34,6 +34,8 @@ const SearchArtifactController = function(
     this.param_descriptions = {};
     this.paramDescriptors = {};
 
+    this.search_focus = true;
+
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
 
@@ -43,8 +45,14 @@ const SearchArtifactController = function(
     this.scope_.$watch('controller.search',
                        this.onSearchChange_.bind(this));
 
+    this.scope_.$watch('names', this.onNamesChanged_.bind(this));
+};
+
+SearchArtifactController.prototype.onNamesChanged_ = function() {
     var self = this;
     if (this.scope_["names"].length>0) {
+        this.selectArtifact(this.scope_["names"][0]);
+
         this.grrApiService_.get("v1/GetArtifacts", {names: this.scope_["names"]}).then(
             function(response) {
                 var items = response['data'].items;
@@ -65,6 +73,7 @@ const SearchArtifactController = function(
             });
     }
 };
+
 
 /**
  * Adds artifact with a given name to the list of selected names.

@@ -3,7 +3,8 @@
     <li>
       <button class="btn btn-default" name="NewCollection"
               ng-disabled="!controller.collect_perm"
-              title="Collect More Artifacts" ng-click="controller.newArtifactCollection()">
+              title="Collect More Artifacts"
+              ng-click="controller.newArtifactCollection()">
         <i class="fa fa-plus"></i>
       </button>
       <button title="Delete Artifact Collection" class="btn btn-default"
@@ -23,10 +24,9 @@
 
       <button class="btn btn-default" name="copy_flow"
               title="Copy Flow"
-              ng-if="false"
               ng-disabled="!selectedFlowId ||
                            !controller.collect_perm"
-              ng-click="controller.copyFlow()">
+              ng-click="controller.newArtifactCollection(selectedFlowId)">
         <i class="fa fa-copy"></i>
       </button>
 

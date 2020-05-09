@@ -144,10 +144,10 @@ RecursiveListButtonController.prototype.createRefreshOperation = function() {
             operationId = self.lastOperationId =
                 response['data']['flow_id'];
 
-            var pollPromise = self.grrApiService_.poll(
-                'v1/GetFlowDetails/' + clientId,
+            var pollPromise = self.grrApiService_.poll('v1/GetFlowDetails/',
                 OPERATION_POLL_INTERVAL_MS, {
-                    'flow_id': operationId,
+                    flow_id: operationId,
+                    client_id: clientId,
                 }, function(response) {
                     return response.data.context.state != 'RUNNING';
                 });

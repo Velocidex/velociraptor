@@ -32,6 +32,13 @@
 
             <dt>Ops/Sec</dt>
             <dd>{{::hunt.start_request.ops_per_second || 'Unlimited' }}</dd>
+
+            <dt ng-if="hunt.condition.labels.label">Labels</dt>
+            <dd ng-repeat="label in hunt.condition.labels.label track by $index">{{label}}</dd>
+
+            <dt ng-if="hunt.condition.os">OS Condition</dt>
+            <dd>{{hunt.condition.os.os}}</dd>
+
             <br>
           </dl>
 

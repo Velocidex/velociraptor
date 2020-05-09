@@ -30,12 +30,6 @@ const ClientFlowsViewController = function(
   /** @type {string} */
   this.tab;
 
-  /** @type {string} */
-  this.flowApiBasePath;
-
-  /** @type {string} */
-  this.exportBasePath;
-
   this.grrRoutingService_.uiOnParamsChanged(
     this.scope_, ['clientId', 'flowId', 'tab'],
     this.onRoutingParamsChange_.bind(this));
@@ -54,8 +48,6 @@ ClientFlowsViewController.prototype.onRoutingParamsChange_ = function(
   this.clientId = opt_stateParams['clientId'] || this.scope_['clientId'];
   this.selectedFlowId = opt_stateParams['flowId'];
   this.tab = opt_stateParams['tab'];
-  this.flowApiBasePath = 'v1/GetFlowDetails' + '/' + this.clientId;
-  this.exportBasePath = "v1/download/" + this.clientId;
 };
 
 /**

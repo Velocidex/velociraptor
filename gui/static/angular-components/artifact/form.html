@@ -21,14 +21,11 @@
     </p>
   </div>
 
-  <div class="form-group"
-       ng-switch-when="choices">
-    <p class="input-group">
-      <select class="form-control pull-left"
-              ng-options="choice for choice in info.choices"
-              ng-model="value[field]">
-      </select>
-    </p>
+  <div ng-switch-when="choices">
+    <select class="form-control pull-left"
+            ng-options="choice for choice in info.choices"
+            ng-model="value[field]">
+    </select>
   </div>
 
   <div ng-switch-when="bool">
@@ -42,7 +39,18 @@
      </span>
   </div>
   <div ng-switch-default>
-    <input class="form-control"
-           ng-model="value[field]"></input>
-  </div>
+    <div class="input-group" style="display: flex">
+      <textarea class="form-control"
+                ng-model="value[field]"
+                ng-attr-rows="{$ controller.text_size $}"
+                ></textarea>
+      <button class="btn btn-light"
+              ng-click="controller.resizeTextArea($event)"
+              >
+        <i class="fa fa-chevron-down"
+           ng-if="controller.text_size==1"></i>
+        <i class="fa fa-chevron-up"
+           ng-if="controller.text_size!=1"></i>
+      </button>
+    </div>
 </div>
