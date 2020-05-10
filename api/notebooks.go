@@ -54,9 +54,10 @@ func (self *ApiServer) GetNotebooks(
 
 	// We want a single notebook metadata.
 	if in.NotebookId != "" {
+		notebook_path_manager := reporting.NewNotebookPathManager(
+			in.NotebookId)
 		notebook := &api_proto.NotebookMetadata{}
-		err := db.GetSubject(self.config,
-			reporting.GetNotebookPath(in.NotebookId),
+		err := db.GetSubject(self.config, notebook_path_manager.Path(),
 			notebook)
 		if err != nil {
 			logging.GetLogger(
@@ -81,10 +82,9 @@ func (self *ApiServer) GetNotebooks(
 	}
 
 	// List all available notebooks
+
 	notebook_urns, err := db.ListChildren(
-		self.config,
-		path.Dir(reporting.GetNotebookPath("X")),
-		in.Offset, in.Count)
+		self.config, reporting.NotebookDir(), in.Offset, in.Count)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +179,8 @@ func (self *ApiServer) NewNotebook(
 		return nil, err
 	}
 
-	err = db.SetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), in)
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 
 	// Add a new single cell to the notebook.
 	new_cell_request := &api_proto.NotebookCellRequest{
@@ -222,8 +222,8 @@ func (self *ApiServer) NewNotebookCell(
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), notebook)
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -259,8 +259,7 @@ func (self *ApiServer) NewNotebookCell(
 
 	notebook.CellMetadata = new_cell_md
 
-	err = db.SetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), notebook)
+	err = db.SetSubject(self.config, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -305,8 +304,8 @@ func (self *ApiServer) UpdateNotebook(
 	}
 
 	old_notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), old_notebook)
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	err = db.GetSubject(self.config, notebook_path_manager.Path(), old_notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -317,8 +316,7 @@ func (self *ApiServer) UpdateNotebook(
 
 	in.ModifiedTime = time.Now().Unix()
 
-	err = db.SetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), in)
+	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
 
 	return in, err
 }
@@ -354,8 +352,9 @@ func (self *ApiServer) GetNotebookCell(
 	}
 
 	notebook := &api_proto.NotebookCell{}
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	err = db.GetSubject(self.config,
-		reporting.GetNotebookCellPath(in.NotebookId, in.CellId),
+		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook)
 
 	// Cell does not exist, make it a default cell.
@@ -370,7 +369,7 @@ func (self *ApiServer) GetNotebookCell(
 
 		// And store it for next time.
 		err = db.SetSubject(self.config,
-			reporting.GetNotebookCellPath(in.NotebookId, in.CellId),
+			notebook_path_manager.Cell(in.CellId).Path(),
 			notebook)
 		if err != nil {
 			return nil, err
@@ -407,9 +406,10 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
 	}
-
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	tmpl, err := reporting.NewGuiTemplateEngine(
 		self.config, ctx, user_name, /* principal */
+		notebook_path_manager.Cell(in.CellId),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
 		return nil, err
@@ -460,16 +460,14 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	// And store it for next time.
 	err = db.SetSubject(self.config,
-		reporting.GetNotebookCellPath(in.NotebookId, in.CellId),
+		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook_cell)
 	if err != nil {
 		return nil, err
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config,
-		reporting.GetNotebookPath(in.NotebookId),
-		notebook)
+	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -487,9 +485,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 	notebook.CellMetadata = new_cell_md
 
-	err = db.SetSubject(self.config, reporting.GetNotebookPath(
-		in.NotebookId), notebook)
-
+	err = db.SetSubject(self.config, notebook_path_manager.Path(), notebook)
 	return notebook_cell, err
 }
 
@@ -558,17 +554,15 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config,
-		reporting.GetNotebookPath(in.NotebookId),
+	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	err = db.GetSubject(self.config, notebook_path_manager.Path(),
 		notebook)
 	if err != nil {
 		return nil, err
 	}
 
 	file_store_factory := file_store.GetFileStore(self.config)
-	filename := path.Join("/downloads/notebooks", notebook.NotebookId,
-		fmt.Sprintf("%s-%s.html", notebook.NotebookId,
-			time.Now().Format("20060102150405Z")))
+	filename := notebook_path_manager.HtmlExport()
 
 	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
 	if err != nil {

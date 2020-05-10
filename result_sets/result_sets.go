@@ -79,5 +79,7 @@ func NewResultSetWriter(
 		return nil, err
 	}
 
+	fd.Truncate()
+
 	return &ResultSetWriter{fd: fd}, nil
 }

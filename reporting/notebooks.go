@@ -158,9 +158,9 @@ func ExportNotebookToHTML(
 		return err
 	}
 
+	notebook_path_manager := NewNotebookPathManager(notebook_id)
 	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(config_obj,
-		GetNotebookPath(notebook_id),
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
 		notebook)
 	if err != nil {
 		return err
@@ -172,7 +172,7 @@ func ExportNotebookToHTML(
 	cell := &api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
 		err = db.GetSubject(config_obj,
-			GetNotebookCellPath(notebook_id, cell_md.CellId),
+			notebook_path_manager.Cell(cell_md.CellId).Path(),
 			cell)
 		if err != nil {
 			return err

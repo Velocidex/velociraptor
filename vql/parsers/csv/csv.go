@@ -235,13 +235,7 @@ func (self WriteCSVPlugin) Call(
 
 			file.Truncate()
 
-			writer, err = csv.GetCSVWriter(scope, file)
-			if err != nil {
-				scope.Log("write_csv: Unable to open file %s: %v",
-					arg.Filename, err)
-				return
-			}
-
+			writer = csv.GetCSVAppender(scope, file, true)
 			defer writer.Close()
 
 		default:
