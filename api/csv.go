@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -57,6 +58,9 @@ func getTable(
 		}
 	} else if in.HuntId != "" && in.Type == "clients" {
 		path_manager = paths.NewHuntPathManager(in.HuntId).Clients()
+	} else if in.NotebookId != "" && in.CellId != "" {
+		path_manager = reporting.NewNotebookPathManager(in.NotebookId).Cell(
+			in.CellId).QueryStorage(in.TableId)
 	}
 
 	result := &api_proto.GetTableResponse{}

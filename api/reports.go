@@ -18,11 +18,11 @@ func getReport(ctx context.Context,
 	*api_proto.GetReportResponse, error) {
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
-		config_obj, ctx, principal, in.Artifact)
+		config_obj, ctx, principal, nil, in.Artifact)
 	if err != nil {
 		if strings.HasPrefix(in.Artifact, "Custom.") {
 			template_engine, err = reporting.NewGuiTemplateEngine(
-				config_obj, ctx, principal,
+				config_obj, ctx, principal, nil,
 				strings.TrimPrefix(in.Artifact, "Custom."))
 		}
 		if err != nil {

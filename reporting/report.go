@@ -24,10 +24,11 @@ type TemplateEngine interface {
 
 // Everything needed to evaluate a template
 type BaseTemplateEngine struct {
-	Artifact *artifacts_proto.Artifact
-	Env      *ordereddict.Dict
-	Scope    *vfilter.Scope
-	logger   *logging.LogContext
+	Artifact   *artifacts_proto.Artifact
+	Env        *ordereddict.Dict
+	Scope      *vfilter.Scope
+	logger     *logging.LogContext
+	config_obj *config_proto.Config
 }
 
 func (self *BaseTemplateEngine) GetArtifact() *artifacts_proto.Artifact {
@@ -292,9 +293,10 @@ func newBaseTemplateEngine(
 	// Closing the scope is deferred to closing the template.
 
 	return &BaseTemplateEngine{
-		Artifact: artifact,
-		Scope:    scope,
-		Env:      env,
-		logger:   logging.GetLogger(config_obj, &logging.FrontendComponent),
+		Artifact:   artifact,
+		Scope:      scope,
+		Env:        env,
+		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
+		config_obj: config_obj,
 	}, nil
 }

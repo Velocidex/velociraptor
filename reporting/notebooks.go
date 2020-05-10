@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
@@ -13,12 +14,13 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 )
 
 var (
 	// Must match the output emitted by GuiTemplateEngine.Table
 	csvViewerRegexp = regexp.MustCompile(
-		"<grr-csv-viewer value=\"data\\['([^\\]]+)'\\]\" params='\\{\\}' />")
+		`<grr-csv-viewer base-url="'v1/GetTable'" params='([^']+)' />`)
 )
 
 const (
@@ -150,6 +152,7 @@ pre {
 )
 
 func ExportNotebookToHTML(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	notebook_id string, output io.Writer) error {
 
@@ -158,9 +161,9 @@ func ExportNotebookToHTML(
 		return err
 	}
 
+	notebook_path_manager := NewNotebookPathManager(notebook_id)
 	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(config_obj,
-		GetNotebookPath(notebook_id),
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
 		notebook)
 	if err != nil {
 		return err
@@ -172,7 +175,7 @@ func ExportNotebookToHTML(
 	cell := &api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
 		err = db.GetSubject(config_obj,
-			GetNotebookCellPath(notebook_id, cell_md.CellId),
+			notebook_path_manager.Cell(cell_md.CellId).Path(),
 			cell)
 		if err != nil {
 			return err
@@ -183,7 +186,7 @@ func ExportNotebookToHTML(
 		// Expand tables
 		cell_output := csvViewerRegexp.ReplaceAllStringFunc(
 			cell.Output, func(in string) string {
-				result, err := convertCSVTags(in, cell)
+				result, err := convertCSVTags(ctx, config_obj, in, cell)
 				if err != nil {
 					return fmt.Sprintf(
 						"<error>%s</error>",
@@ -203,7 +206,11 @@ func ExportNotebookToHTML(
 }
 
 // Unpack the table referenced in the csv view tag from the data field.
-func convertCSVTags(in string, cell *api_proto.NotebookCell) (string, error) {
+func convertCSVTags(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in string,
+	cell *api_proto.NotebookCell) (string, error) {
 	output := &bytes.Buffer{}
 
 	data := make(map[string]*actions_proto.VQLResponse)
@@ -217,30 +224,36 @@ func convertCSVTags(in string, cell *api_proto.NotebookCell) (string, error) {
 		return "", errors.New("Unexpected regexp match")
 	}
 
-	response, pres := data[m[1]]
-	if !pres {
-		return "", errors.New("csv viewer tag refers to non existant table")
-	}
-
-	output.WriteString("\n<table class=\"table table-striped\">\n <thead>\n")
-
-	output.WriteString("  <tr>\n")
-	for _, header := range response.Columns {
-		output.WriteString(fmt.Sprintf("    <th>%s</th>\n", html.EscapeString(header)))
-	}
-	output.WriteString("  </tr>\n </thead>\n")
-
-	table := make([]map[string]interface{}, 0)
-	err = json.Unmarshal([]byte(response.Response), &table)
+	params := &api_proto.GetTableRequest{}
+	err = json.Unmarshal([]byte(m[1]), params)
 	if err != nil {
 		return "", err
 	}
 
-	output.WriteString(" <tbody>\n")
-	for _, row := range table {
+	path_manager := NewNotebookPathManager(params.NotebookId).Cell(
+		params.CellId).QueryStorage(params.TableId)
+	row_chan, err := file_store.GetTimeRange(ctx, config_obj, path_manager, 0, 0)
+	if err != nil {
+		return "", err
+	}
+
+	headers := false
+	for row := range row_chan {
+		if !headers {
+			output.WriteString("\n<table class=\"table table-striped\">\n <thead>\n")
+			output.WriteString("  <tr>\n")
+			for _, header := range row.Keys() {
+				output.WriteString(fmt.Sprintf(
+					"    <th>%s</th>\n", html.EscapeString(header)))
+			}
+			output.WriteString("  </tr>\n </thead>\n")
+			output.WriteString(" <tbody>\n")
+			headers = true
+		}
+
 		output.WriteString("  <tr>\n")
-		for _, header := range response.Columns {
-			value, pres := row[header]
+		for _, header := range row.Keys() {
+			value, pres := row.Get(header)
 			if !pres {
 				value = ""
 			}

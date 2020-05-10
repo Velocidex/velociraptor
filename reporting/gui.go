@@ -22,6 +22,7 @@ import (
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -39,10 +40,11 @@ var (
 
 type GuiTemplateEngine struct {
 	*BaseTemplateEngine
-	tmpl     *template.Template
-	ctx      context.Context
-	Messages *[]string
-	Data     map[string]*actions_proto.VQLResponse
+	tmpl         *template.Template
+	ctx          context.Context
+	Messages     *[]string
+	path_manager *NotebookCellPathManager
+	Data         map[string]*actions_proto.VQLResponse
 }
 
 // Go templates can call functions which take args. The pipeline is
@@ -78,34 +80,40 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		return ""
 	}
 
-	rows, ok := argv[0].([]vfilter.Row)
-	if !ok { // Not the right type
-		return argv[0]
-	}
+	switch t := argv[0].(type) {
+	default:
+		return t
 
-	if len(rows) == 0 { // No rows returned.
-		self.Scope.Log("Query produced no rows.")
-		return ""
-	}
+	case *NotebookCellQuery:
+		return fmt.Sprintf(
+			`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
+				`params='%s' /></div>`, t.Params())
 
-	encoded_rows, err := json.MarshalIndent(rows, "", " ")
-	if err != nil {
-		return self.Error("Error: %v", err)
-	}
+	case []*ordereddict.Dict:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return ""
+		}
 
-	parameters, err := options.MarshalJSON()
-	if err != nil {
-		return self.Error("Error: %v", err)
-	}
+		encoded_rows, err := json.MarshalIndent(t, "", " ")
+		if err != nil {
+			return self.Error("Error: %v", err)
+		}
 
-	key := fmt.Sprintf("table%d", len(self.Data))
-	self.Data[key] = &actions_proto.VQLResponse{
-		Response: string(encoded_rows),
-		Columns:  self.Scope.GetMembers(rows[0]),
+		parameters, err := options.MarshalJSON()
+		if err != nil {
+			return self.Error("Error: %v", err)
+		}
+
+		key := fmt.Sprintf("table%d", len(self.Data))
+		self.Data[key] = &actions_proto.VQLResponse{
+			Response: string(encoded_rows),
+			Columns:  self.Scope.GetMembers(t[0]),
+		}
+		return fmt.Sprintf(
+			`<div class="panel"><grr-csv-viewer value="data['%s']" params='%s' /></div>`,
+			key, string(parameters))
 	}
-	return fmt.Sprintf(
-		`<div class="panel"><grr-csv-viewer value="data['%s']" params='%s' /></div>`,
-		key, string(parameters))
 }
 
 // Currently supported line chart options:
@@ -117,33 +125,38 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 		return ""
 	}
 
-	rows, ok := argv[0].([]vfilter.Row)
-	if !ok { // Not the right type
+	switch t := argv[0].(type) {
+	default:
 		return ""
-	}
 
-	if len(rows) == 0 {
-		return ""
-	}
-	encoded_rows, err := json.MarshalIndent(rows, "", " ")
-	if err != nil {
-		return ""
-	}
+	case *NotebookCellQuery:
+		return fmt.Sprintf(
+			`<div class="panel"><grr-line-chart base-url="'v1/GetTable'" `+
+				`params='%s' /></div>`, t.Params())
 
-	parameters, err := options.MarshalJSON()
-	if err != nil {
-		return ""
-	}
+	case []*ordereddict.Dict:
+		if len(t) == 0 {
+			return ""
+		}
+		encoded_rows, err := json.MarshalIndent(t, "", " ")
+		if err != nil {
+			return ""
+		}
 
-	key := fmt.Sprintf("table%d", len(self.Data))
-	self.Data[key] = &actions_proto.VQLResponse{
-		Response: string(encoded_rows),
-		Columns:  self.Scope.GetMembers(rows[0]),
-	}
-	return fmt.Sprintf(
-		`<grr-line-chart value="data['%s']" params='%s' />`,
-		key, string(parameters))
+		parameters, err := options.MarshalJSON()
+		if err != nil {
+			return ""
+		}
 
+		key := fmt.Sprintf("table%d", len(self.Data))
+		self.Data[key] = &actions_proto.VQLResponse{
+			Response: string(encoded_rows),
+			Columns:  self.Scope.GetMembers(t[0]),
+		}
+		return fmt.Sprintf(
+			`<grr-line-chart value="data['%s']" params='%s' />`,
+			key, string(parameters))
+	}
 }
 
 // Currently supported timeline options:
@@ -154,33 +167,38 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		return ""
 	}
 
-	rows, ok := argv[0].([]vfilter.Row)
-	if !ok { // Not the right type
+	switch t := argv[0].(type) {
+	default:
 		return ""
-	}
 
-	if len(rows) == 0 {
-		return ""
-	}
-	encoded_rows, err := json.MarshalIndent(rows, "", " ")
-	if err != nil {
-		return ""
-	}
+	case *NotebookCellQuery:
+		return fmt.Sprintf(
+			`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
+				`params='%s' /></div>`, t.Params())
 
-	parameters, err := options.MarshalJSON()
-	if err != nil {
-		return ""
-	}
+	case []*ordereddict.Dict:
+		if len(t) == 0 {
+			return ""
+		}
+		encoded_rows, err := json.MarshalIndent(t, "", " ")
+		if err != nil {
+			return ""
+		}
 
-	key := fmt.Sprintf("timeline%d", len(self.Data))
-	self.Data[key] = &actions_proto.VQLResponse{
-		Response: string(encoded_rows),
-		Columns:  self.Scope.GetMembers(rows[0]),
-	}
-	return fmt.Sprintf(
-		`<grr-timeline value="data['%s']" params='%s' />`,
-		key, string(parameters))
+		parameters, err := options.MarshalJSON()
+		if err != nil {
+			return ""
+		}
 
+		key := fmt.Sprintf("timeline%d", len(self.Data))
+		self.Data[key] = &actions_proto.VQLResponse{
+			Response: string(encoded_rows),
+			Columns:  self.Scope.GetMembers(t[0]),
+		}
+		return fmt.Sprintf(
+			`<grr-timeline value="data['%s']" params='%s' />`,
+			key, string(parameters))
+	}
 }
 
 func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
@@ -226,7 +244,29 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 }
 
 func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
-	result := []vfilter.Row{}
+	fmt.Printf("Rendering query\n")
+
+	rows := self.queryRows(queries...)
+
+	if self.path_manager != nil {
+		path_manager := self.path_manager.NewQueryStorage()
+		rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
+		if err != nil {
+			self.Error("Error: %v\n", err)
+			return ""
+		}
+		defer rs_writer.Close()
+
+		for _, row := range rows {
+			rs_writer.Write(row)
+		}
+		return path_manager
+	}
+	return rows
+}
+
+func (self *GuiTemplateEngine) queryRows(queries ...string) []*ordereddict.Dict {
+	result := []*ordereddict.Dict{}
 
 	for _, query := range queries {
 		t := self.tmpl.Lookup(query)
@@ -234,8 +274,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			buf := &bytes.Buffer{}
 			err := t.Execute(buf, self.Artifact)
 			if err != nil {
-				return self.Error("Template Error (%s): %v",
+				self.Error("Template Error (%s): %v",
 					self.Artifact.Name, err)
+				return nil
 			}
 
 			// html/template escapes its template but this
@@ -248,8 +289,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 		multi_vql, err := vfilter.MultiParse(query)
 		if err != nil {
-			return self.Error("VQL Error while reporting %s: %v",
+			self.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
+			return nil
 		}
 
 		ctx, cancel := context.WithCancel(self.ctx)
@@ -257,7 +299,8 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 		for _, vql := range multi_vql {
 			for row := range vql.Eval(ctx, self.Scope) {
-				result = append(result, row)
+				result = append(result, vfilter.RowToDict(
+					ctx, self.Scope, row))
 
 				// Do not let the query collect too many rows
 				// - it impacts on server performance.
@@ -295,6 +338,7 @@ func NewGuiTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
 	principal string,
+	notebook_cell_path_manager *NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
@@ -310,6 +354,7 @@ func NewGuiTemplateEngine(
 		BaseTemplateEngine: base_engine,
 		ctx:                ctx,
 		Messages:           &messages,
+		path_manager:       notebook_cell_path_manager,
 		Data:               make(map[string]*actions_proto.VQLResponse),
 	}
 	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(

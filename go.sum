@@ -70,6 +70,8 @@ github.com/alecthomas/kong v0.2.4/go.mod h1:kQOmtJgV+Lb4aj+I2LEn40cbtawdWJ9Y8QLq
 github.com/alecthomas/participle v0.2.0/go.mod h1:SW6HZGeZgSIpcUWX3fXpfZhuaWHnmoD5KCVaqSaNTkk=
 github.com/alecthomas/participle v0.4.1 h1:P2PJWzwrSpuCWXKnzqvw0b0phSfH1kJo4p2HvLynVsI=
 github.com/alecthomas/participle v0.4.1/go.mod h1:T8u4bQOSMwrkTWOSyt8/jSFPEnRtd0FKFMjVfYBlqPs=
+github.com/alecthomas/participle v0.4.4 h1:ZhPi9STNpixhITQx0RuoA/3UqCMu3cLsJVCfpT6iOGE=
+github.com/alecthomas/participle v0.4.4/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
 github.com/alecthomas/repr v0.0.0-20180818092828-117648cd9897/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1 h1:GDQdwm/gAcJcLAKQQZGOJ4knlw+7rfEQQcmwTbt4p5E=
 github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
@@ -618,5 +620,9 @@ www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiA
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20200422024715-0e09f92d1676 h1:jxG1Q6nXHAPIOfIZ/RsSP48ac8x/54p1xx6CZoliHHU=
 www.velocidex.com/golang/vfilter v0.0.0-20200422024715-0e09f92d1676/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
+www.velocidex.com/golang/vfilter v0.0.0-20200508151605-2d56d0be0d43 h1:Qwuhjjh9/4JL0wcb9DHHJMMdFi2kWSjKixouLiAfY1Y=
+www.velocidex.com/golang/vfilter v0.0.0-20200508151605-2d56d0be0d43/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
+www.velocidex.com/golang/vfilter v0.0.0-20200509144921-bf5becedca8b h1:tC9PXA8KIWN7U/iiw5DZufSclsNw9RIyoxdYK+u3bFg=
+www.velocidex.com/golang/vfilter v0.0.0-20200509144921-bf5becedca8b/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=

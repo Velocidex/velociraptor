@@ -28,6 +28,10 @@ message GetTableRequest {
     string type = 7;
 
     string hunt_id = 8;
+
+    string notebook_id = 9;
+    string cell_id = 10;
+    int64 table_id = 11;
 }
 
 message Row {
