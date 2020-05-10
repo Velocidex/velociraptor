@@ -30,6 +30,7 @@ const {SplitterDirective, SplitterPaneDirective} = goog.require('grrUi.core.spli
 const {TimeService} = goog.require('grrUi.core.timeService');
 const {TimeSinceFilter} = goog.require('grrUi.core.timeSinceFilter');
 const {TimestampFilter} = goog.require('grrUi.core.timestampFilter');
+const {VqlHelpDirective} = goog.require('grrUi.core.vqlHelpDirective');
 const {WizardFormDirective} = goog.require('grrUi.core.wizardFormDirective');
 const {WizardFormPageDirective} = goog.require('grrUi.core.wizardFormPageDirective');
 
@@ -68,6 +69,8 @@ exports.coreModule.directive(
 exports.coreModule.directive(ClockDirective.directive_name, ClockDirective);
 exports.coreModule.directive(
     CsvViewerDirective.directive_name, CsvViewerDirective);
+exports.coreModule.directive(
+    VqlHelpDirective.directive_name, VqlHelpDirective);
 exports.coreModule.directive(
     WizardFormDirective.directive_name, WizardFormDirective);
 exports.coreModule.directive(

@@ -17,10 +17,12 @@ var MAX_ROWS_PER_TABLE = 500;
  * @ngInject
  */
 const CsvViewerDirective = function(
-    $scope, grrApiService, DTOptionsBuilder, DTColumnBuilder) {
+    $scope, grrApiService, $uibModal, DTOptionsBuilder, DTColumnBuilder) {
 
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
+
+    this.uibModal_ = $uibModal;
 
     this.DTOptionsBuilder = DTOptionsBuilder;
     this.DTColumnBuilder = DTColumnBuilder;
@@ -38,23 +40,31 @@ const CsvViewerDirective = function(
     this.pageData;
 
     /** @type {object} */
+    var buttons = [{
+        extend: 'csv',
+        className: "btn btn-default pull-left  btn-sm",
+        text: '<i class="fa fa-floppy-o"></i>',
+        filename: "Velociraptor Table",
+        exportOptions: {
+            modifier: {
+                search: 'none'
+            }
+        }
+    }];
+
+    if (angular.isString(this.scope_["vqlHelpPlugin"])) {
+        buttons.push({
+            className: "btn btn-default pull-left btn-sm",
+            text: '<i class="fa fa-question-circle"></i>',
+            action: this.showVQL_.bind(this),
+        });
+    }
+
     this.dtOptions =  DTOptionsBuilder.newOptions()
         .withColReorder()
         .withDOM('BRlfrtip')
         .withPaginationType('full_numbers')
-        .withButtons([
-            {
-                extend: 'csv',
-                className: "btn btn-default pull-left  btn-sm",
-                text: '<i class="fa fa-floppy-o"></i>',
-                filename: "Velociraptor Table",
-                exportOptions: {
-                    modifier: {
-                        search: 'none'
-                    }
-                }
-            },
-        ]);
+        .withButtons(buttons);
 
     this.scope_.$watch(
         'params',
@@ -64,11 +74,37 @@ const CsvViewerDirective = function(
     this.dtInstance = {};
 };
 
-/**
- * Handles changes to the clientId and filePath.
- *
- * @private
- */
+
+const regex = /[^a-zA-Z0-9]/;
+
+CsvViewerDirective.prototype.showVQL_ = function() {
+    var modalScope = this.scope_.$new();
+
+    var columns = [];
+    for(var i=0;i<this.pageData["columns"].length;i++) {
+        var column = this.pageData["columns"][i];
+        if (regex.test(column)) {
+            column = "`" + column + "`";
+        }
+        columns.push(column);
+    }
+
+    modalScope["vql"] = "SELECT " + columns.join(", \n    ") +
+        "\nFROM " + this.scope_["vqlHelpPlugin"] + "\nLIMIT " +
+        MAX_ROWS_PER_TABLE;
+    modalScope["resolve"] = function(){
+        modalInstance.close;
+    };
+
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-vql-help vql="vql"'+
+            'on-resolve="resolve()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+};
+
 CsvViewerDirective.prototype.onContextChange_ = function(newValues, oldValues) {
     if (newValues != oldValues || this.pageData == null) {
         this.fetchText_();
@@ -174,6 +210,7 @@ exports.CsvViewerDirective = function() {
           baseUrl: '=',
           params: '=',
           value: '=',
+          vqlHelpPlugin: '@',
       },
       restrict: 'E',
       templateUrl: '/static/angular-components/core/csv-viewer.html',

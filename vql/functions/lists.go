@@ -30,8 +30,12 @@ import (
 
 type ArrayFunction struct{}
 
-func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter.Any {
+func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any, depth int) []vfilter.Any {
 	var result []vfilter.Any
+
+	if depth > 4 {
+		return result
+	}
 
 	switch t := a.(type) {
 	case vfilter.LazyExpr:
@@ -45,7 +49,7 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter
 			if len(members) == 1 {
 				row, _ = scope.Associative(row, members[0])
 			}
-			flattened := flatten(ctx, scope, row)
+			flattened := flatten(ctx, scope, row, depth+1)
 			result = append(result, flattened...)
 		}
 		return result
@@ -57,7 +61,7 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			flattened := flatten(ctx, scope, element)
+			flattened := flatten(ctx, scope, element, depth+1)
 
 			result = append(result, flattened...)
 		}
@@ -69,7 +73,8 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter
 		for _, item := range members {
 			value, pres := scope.Associative(a, item)
 			if pres {
-				result = append(result, flatten(ctx, scope, value)...)
+				result = append(result, flatten(
+					ctx, scope, value, depth+1)...)
 			}
 		}
 
@@ -82,7 +87,7 @@ func flatten(ctx context.Context, scope *vfilter.Scope, a vfilter.Any) []vfilter
 func (self *ArrayFunction) Call(ctx context.Context,
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
-	return flatten(ctx, scope, args)
+	return flatten(ctx, scope, args, 0)
 }
 
 func (self ArrayFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
