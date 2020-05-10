@@ -89,7 +89,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
 				`params='%s' /></div>`, t.Params())
 
-	case []vfilter.Row:
+	case []*ordereddict.Dict:
 		if len(t) == 0 { // No rows returned.
 			self.Scope.Log("Query produced no rows.")
 			return ""
@@ -134,7 +134,7 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 			`<div class="panel"><grr-line-chart base-url="'v1/GetTable'" `+
 				`params='%s' /></div>`, t.Params())
 
-	case []vfilter.Row:
+	case []*ordereddict.Dict:
 		if len(t) == 0 {
 			return ""
 		}
@@ -176,7 +176,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 			`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
 				`params='%s' /></div>`, t.Params())
 
-	case []vfilter.Row:
+	case []*ordereddict.Dict:
 		if len(t) == 0 {
 			return ""
 		}
