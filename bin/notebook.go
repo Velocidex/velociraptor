@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -20,9 +21,10 @@ func doExportNotebook() {
 	config_obj, err := get_server_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	ctx := context.Background()
 	writer := &bytes.Buffer{}
 	err = reporting.ExportNotebookToHTML(
-		config_obj, *notebook_command_notebook_id, writer)
+		ctx, config_obj, *notebook_command_notebook_id, writer)
 	kingpin.FatalIfError(err, "Generating report")
 
 	fmt.Println(writer.String())

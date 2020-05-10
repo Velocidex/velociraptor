@@ -555,8 +555,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	notebook := &api_proto.NotebookMetadata{}
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
-	err = db.GetSubject(self.config, notebook_path_manager.Path(),
-		notebook)
+	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -575,12 +574,16 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		return nil, err
 	}
 
+	// Allow 1 hour to export the notebook.
+	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+
 	go func() {
 		defer file_store_factory.Delete(filename + ".lock")
 		defer writer.Close()
+		defer cancel()
 
 		err := reporting.ExportNotebookToHTML(
-			self.config, notebook.NotebookId, writer)
+			sub_ctx, self.config, notebook.NotebookId, writer)
 		if err != nil {
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{
