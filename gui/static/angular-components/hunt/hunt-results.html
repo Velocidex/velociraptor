@@ -9,6 +9,9 @@
   <div>
     <grr-csv-viewer
       base-url="controller.resultsUrl"
-      params="controller.queryParams" />
+      params="controller.queryParams"
+      vql-help-plugin="source(hunt_id='{{huntId}}',
+    artifact='{{controller.selectedArtifact}}')"
+      />
   </div>
 </div>
