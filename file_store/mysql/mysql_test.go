@@ -47,7 +47,7 @@ func TestMysqlDatabase(t *testing.T) {
 	// If a local testing mysql server is configured we can run
 	// this test, otherwise skip it.
 	config_obj, err := config.LoadConfig(
-		"../datastore/test_data/mysql.config.yaml")
+		"../../datastore/test_data/mysql.config.yaml")
 	if err != nil {
 		return
 	}

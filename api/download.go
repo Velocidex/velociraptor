@@ -538,7 +538,7 @@ func vfsGetBuffer(
 		Data: make([]byte, length),
 	}
 
-	n, err := io.ReadAtLeast(file, result.Data, len(result.Data))
+	n, err := file.Read(result.Data)
 	if err != nil && errors.Cause(err) != io.EOF &&
 		errors.Cause(err) != io.ErrUnexpectedEOF {
 		return nil, err

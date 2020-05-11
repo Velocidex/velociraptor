@@ -170,6 +170,15 @@ func (self *FileStoreTestSuite) TestFileReadWrite() {
 	assert.Equal(self.T(), err, io.EOF)
 	assert.Equal(self.T(), n, 0)
 
+	// Seek to the last chunk and read a large buffer.
+	_, err = reader.Seek(25, os.SEEK_SET)
+	assert.NoError(self.T(), err)
+
+	// Reading past the end of file should produce empty data.
+	buff = make([]byte, 1000)
+	n, err = reader.Read(buff)
+	assert.Equal(self.T(), n, 4)
+
 	// Reopenning the file should give the right size.
 	size, err = fd.Size()
 	assert.NoError(self.T(), err)
