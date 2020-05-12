@@ -26,6 +26,11 @@
 </table>
 
 <!-- Show a hint if no content exists. -->
-<div ng-if="!controller.pageData.columns" class="no-content">
-  No file content to show.
+<div ng-if="controller.loading" class="padded">
+  <i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...
+</div>
+
+<div ng-if="!controller.loading && !controller.pageData.columns"
+     class="no-content">
+  No rows to show.
 </div>

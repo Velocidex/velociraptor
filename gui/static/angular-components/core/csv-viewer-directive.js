@@ -39,6 +39,8 @@ const CsvViewerDirective = function(
     /** @type {?string} */
     this.pageData;
 
+    this.loading = false;
+
     /** @type {object} */
     var buttons = [{
         extend: 'csv',
@@ -60,7 +62,7 @@ const CsvViewerDirective = function(
         });
     }
 
-    this.dtOptions =  DTOptionsBuilder.newOptions()
+    this.dtOptions = DTOptionsBuilder.newOptions()
         .withColReorder()
         .withDOM('BRlfrtip')
         .withPaginationType('full_numbers')
@@ -136,11 +138,15 @@ CsvViewerDirective.prototype.fetchText_ = function() {
             params['start_row'] = 0;
             params['rows'] = MAX_ROWS_PER_TABLE;
             self.pageData = null;
+            self.loading = true;
             this.grrApiService_.get(url, params).then(function(response) {
-              self.pageData = this.prepareData(response.data);
+                self.pageData = this.prepareData(response.data);
+                self.loading = false;
             }.bind(this), function() {
                 self.pageData = null;
+                self.loading = false;
             }.bind(this)).catch(function() {
+                self.loading = false;
                 self.pageData = null;
             });
         }

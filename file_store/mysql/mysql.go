@@ -261,6 +261,9 @@ ON A.part = B.part AND A.id = ? AND A.end_offset > ? AND A.end_offset != A.start
 		return 0, err
 	}
 
+	// Next chunk id
+	self.part++
+
 	// If the query above works then the offset is inside this part.
 	if int(offset-start_offset) > len(self.current_chunk) {
 		return 0, errors.New("Bad chunk")
