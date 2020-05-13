@@ -102,7 +102,7 @@ require (
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/genproto v0.0.0-20200409111301-baae70f3302d
 	google.golang.org/grpc v1.28.1
-	google.golang.org/protobuf v1.21.0 // indirect
+	google.golang.org/protobuf v1.21.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df

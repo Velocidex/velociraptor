@@ -32,6 +32,7 @@ clean:
 
 generate:
 	go generate ./vql/windows/win32_windows.go
+	go generate ./api/mock/
 
 check:
 	staticcheck ./...
