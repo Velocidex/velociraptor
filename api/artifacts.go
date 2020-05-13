@@ -54,10 +54,10 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'windows'
+      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
 
     query: |
-      SELECT * FROM scope()
+      SELECT * FROM info()
       LIMIT 10
 
 # Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT

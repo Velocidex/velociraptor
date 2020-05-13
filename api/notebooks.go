@@ -273,11 +273,13 @@ func (self *ApiServer) NewNotebookCell(
 
 	// Create the new cell with fresh content.
 	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:            in.Input,
-		NotebookId:       in.NotebookId,
-		CellId:           notebook.LatestCellId,
-		Type:             in.Type,
-		CurrentlyEditing: in.CurrentlyEditing,
+		Input:      in.Input,
+		NotebookId: in.NotebookId,
+		CellId:     notebook.LatestCellId,
+		Type:       in.Type,
+
+		// New cells are opened for editing.
+		CurrentlyEditing: true,
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
@@ -419,7 +421,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		Output:           `<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...</div>`,
 		CellId:           in.CellId,
 		Type:             in.Type,
-		Timestamp:        time.Now().Unix() - 2,
+		Timestamp:        time.Now().Unix(),
 		CurrentlyEditing: in.CurrentlyEditing,
 		Calculating:      true,
 	}
@@ -448,29 +450,43 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	input := in.Input
 	cell_type := in.Type
+
+	// For artifacts we parse and check the artifact in the main
+	// thread so we can return errors to the user
+	// immediately. Ultimately the artifact will be converted to a
+	// VQL query to run which we pass to the template engine
+	// asynchronously.
 	if in.Type == "Artifact" {
 		global_repo, err := artifacts.GetGlobalRepository(self.config)
 		if err != nil {
 			return nil, err
 		}
+
+		// New artifacts are added to a temporary repository
+		// so they do not affect the global one.
 		repository := global_repo.Copy()
 		artifact_obj, err := repository.LoadYaml(input, true /* validate */)
 		if err != nil {
 			return nil, err
 		}
 
+		// Update the artifact plugin in the template.
 		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository, nil)
 		tmpl.Env.Set("Artifact", artifact_plugin)
 
 		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,
 			artifact_obj.Name)
-		cell_type = "Markdown"
 	}
 
 	// Update the content asynchronously
 	start_time := time.Now()
+
+	// RPC call deadline - if we can complete within 1 second pass
+	// the response directly to the RPC caller.
 	sub_ctx, main_cancel := context.WithTimeout(ctx, time.Second)
 
+	// Main error will be delivered to the RPC caller if we can
+	// complete the entire operation before the deadline.
 	var main_err error
 
 	go func() {
@@ -483,11 +499,12 @@ func (self *ApiServer) UpdateNotebookCell(
 		}
 
 		go func() {
-			// Cancel the main call if we finish before it.
+			// Cancel the main call if we finish before the timeout.
 			defer main_cancel()
 
 			resp, err := updateCellContents(ctx, self.config, tmpl,
-				in.NotebookId, in.CellId, cell_type, input)
+				in.CurrentlyEditing, in.NotebookId,
+				in.CellId, cell_type, input, in.Input)
 			if err != nil {
 				main_err = err
 				logger := logging.GetLogger(self.config, &logging.GUIComponent)
@@ -695,14 +712,16 @@ func updateCellContents(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tmpl *reporting.GuiTemplateEngine,
-	notebook_id, cell_id, cell_type, input string) (*api_proto.NotebookCell, error) {
+	currently_editing bool,
+	notebook_id, cell_id, cell_type string,
+	input, original_input string) (*api_proto.NotebookCell, error) {
 
 	output := ""
 	var err error
 
 	switch cell_type {
 
-	case "Markdown":
+	case "Markdown", "Artifact":
 		output, err = tmpl.Execute(input)
 		if err != nil {
 			return nil, err
@@ -732,13 +751,14 @@ func updateCellContents(
 	}
 
 	notebook_cell := &api_proto.NotebookCell{
-		Input:     input,
-		Output:    output,
-		Data:      string(encoded_data),
-		Messages:  *tmpl.Messages,
-		CellId:    cell_id,
-		Type:      cell_type,
-		Timestamp: time.Now().Unix(),
+		Input:            original_input,
+		Output:           output,
+		Data:             string(encoded_data),
+		Messages:         *tmpl.Messages,
+		CellId:           cell_id,
+		Type:             cell_type,
+		Timestamp:        time.Now().Unix(),
+		CurrentlyEditing: currently_editing,
 	}
 
 	// And store it for next time.
