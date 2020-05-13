@@ -20,11 +20,13 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -221,6 +223,11 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, err
 	}
 
+	// Set a default artifact.
+	if in.Input == "" && in.Type == "Artifact" {
+		in.Input = default_artifact
+	}
+
 	notebook := &api_proto.NotebookMetadata{}
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
@@ -266,11 +273,13 @@ func (self *ApiServer) NewNotebookCell(
 
 	// Create the new cell with fresh content.
 	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:            in.Input,
-		NotebookId:       in.NotebookId,
-		CellId:           notebook.LatestCellId,
-		Type:             in.Type,
-		CurrentlyEditing: in.CurrentlyEditing,
+		Input:      in.Input,
+		NotebookId: in.NotebookId,
+		CellId:     notebook.LatestCellId,
+		Type:       in.Type,
+
+		// New cells are opened for editing.
+		CurrentlyEditing: true,
 	}
 
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
@@ -406,7 +415,31 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
 	}
+
+	notebook_cell := &api_proto.NotebookCell{
+		Input:            in.Input,
+		Output:           `<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...</div>`,
+		CellId:           in.CellId,
+		Type:             in.Type,
+		Timestamp:        time.Now().Unix(),
+		CurrentlyEditing: in.CurrentlyEditing,
+		Calculating:      true,
+	}
+
+	db, _ := datastore.GetDB(self.config)
+
+	// And store it for next time.
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	err = db.SetSubject(self.config,
+		notebook_path_manager.Cell(in.CellId).Path(),
+		notebook_cell)
+	if err != nil {
+		return nil, err
+	}
+
+	// Run the actual query independently.
+	ctx, cancel := context.WithCancel(context.Background())
+
 	tmpl, err := reporting.NewGuiTemplateEngine(
 		self.config, ctx, user_name, /* principal */
 		notebook_path_manager.Cell(in.CellId),
@@ -415,78 +448,119 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, err
 	}
 
-	output := ""
+	input := in.Input
+	cell_type := in.Type
 
-	switch in.Type {
-	case "Markdown":
-		output, err = tmpl.Execute(in.Input)
+	// For artifacts we parse and check the artifact in the main
+	// thread so we can return errors to the user
+	// immediately. Ultimately the artifact will be converted to a
+	// VQL query to run which we pass to the template engine
+	// asynchronously.
+	if in.Type == "Artifact" {
+		global_repo, err := artifacts.GetGlobalRepository(self.config)
 		if err != nil {
 			return nil, err
 		}
 
-	case "VQL":
-		if in.Input != "" {
-			rows := tmpl.Query(in.Input)
-			output_any, ok := tmpl.Table(rows).(string)
-			if ok {
-				output = output_any
+		// New artifacts are added to a temporary repository
+		// so they do not affect the global one.
+		repository := global_repo.Copy()
+		artifact_obj, err := repository.LoadYaml(input, true /* validate */)
+		if err != nil {
+			return nil, err
+		}
+
+		// Update the artifact plugin in the template.
+		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository, nil)
+		tmpl.Env.Set("Artifact", artifact_plugin)
+
+		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,
+			artifact_obj.Name)
+	}
+
+	// Update the content asynchronously
+	start_time := time.Now()
+
+	// RPC call deadline - if we can complete within 1 second pass
+	// the response directly to the RPC caller.
+	sub_ctx, main_cancel := context.WithTimeout(ctx, time.Second)
+
+	// Main error will be delivered to the RPC caller if we can
+	// complete the entire operation before the deadline.
+	var main_err error
+
+	go func() {
+		defer cancel()
+
+		done, err := services.ListenForNotification(in.CellId)
+		if err != nil {
+			main_err = err
+			return
+		}
+
+		go func() {
+			// Cancel the main call if we finish before the timeout.
+			defer main_cancel()
+
+			resp, err := updateCellContents(ctx, self.config, tmpl,
+				in.CurrentlyEditing, in.NotebookId,
+				in.CellId, cell_type, input, in.Input)
+			if err != nil {
+				main_err = err
+				logger := logging.GetLogger(self.config, &logging.GUIComponent)
+				logger.Error("Rendering error", err)
 			}
+			// Update the response if we can.
+			notebook_cell = resp
+		}()
+
+		select {
+		// Cancel if we are notified.
+		case <-done:
+			tmpl.Scope.Log("Cancelled after %v !", time.Now().Sub(start_time))
+			// Set a timeout.
+		case <-time.After(10 * time.Minute):
+			tmpl.Scope.Log("Query timed out after %v !", time.Now().Sub(start_time))
 		}
 
-	default:
-		return nil, errors.New("Unsupported cell type")
+	}()
+
+	// Wait here up to 1 second for immediate response - but if
+	// the response takes too long, just give up and return a
+	// continuation.
+	select {
+	case <-sub_ctx.Done():
 	}
 
-	db, err := datastore.GetDB(self.config)
+	return notebook_cell, main_err
+}
+
+func (self *ApiServer) CancelNotebookCell(
+	ctx context.Context,
+	in *api_proto.NotebookCellRequest) (*empty.Empty, error) {
+
+	if !strings.HasPrefix(in.NotebookId, "N.") {
+		return nil, errors.New("Invalid NoteboookId")
+	}
+
+	if !strings.HasPrefix(in.CellId, "NC.") {
+		return nil, errors.New("Invalid NoteboookCellId")
+	}
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
 	if err != nil {
 		return nil, err
 	}
 
-	encoded_data, err := json.Marshal(tmpl.Data)
-	if err != nil {
-		return nil, err
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_cell := &api_proto.NotebookCell{
-		Input:            in.Input,
-		Output:           output,
-		Data:             string(encoded_data),
-		Messages:         *tmpl.Messages,
-		CellId:           in.CellId,
-		Type:             in.Type,
-		Timestamp:        time.Now().Unix(),
-		CurrentlyEditing: in.CurrentlyEditing,
-	}
-
-	// And store it for next time.
-	err = db.SetSubject(self.config,
-		notebook_path_manager.Cell(in.CellId).Path(),
-		notebook_cell)
-	if err != nil {
-		return nil, err
-	}
-
-	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
-	if err != nil {
-		return nil, err
-	}
-
-	new_cell_md := []*api_proto.NotebookCell{}
-	for _, cell_md := range notebook.CellMetadata {
-		if cell_md.CellId == in.CellId {
-			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    in.CellId,
-				Timestamp: time.Now().Unix(),
-			})
-			continue
-		}
-		new_cell_md = append(new_cell_md, cell_md)
-	}
-	notebook.CellMetadata = new_cell_md
-
-	err = db.SetSubject(self.config, notebook_path_manager.Path(), notebook)
-	return notebook_cell, err
+	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
 }
 
 func (self *ApiServer) UploadNotebookAttachment(
@@ -632,4 +706,89 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	}
 
 	return result, nil
+}
+
+func updateCellContents(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	tmpl *reporting.GuiTemplateEngine,
+	currently_editing bool,
+	notebook_id, cell_id, cell_type string,
+	input, original_input string) (*api_proto.NotebookCell, error) {
+
+	output := ""
+	var err error
+
+	switch cell_type {
+
+	case "Markdown", "Artifact":
+		output, err = tmpl.Execute(input)
+		if err != nil {
+			return nil, err
+		}
+
+	case "VQL":
+		if input != "" {
+			rows := tmpl.Query(input)
+			output_any, ok := tmpl.Table(rows).(string)
+			if ok {
+				output = output_any
+			}
+		}
+
+	default:
+		return nil, errors.New("Unsupported cell type")
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	encoded_data, err := json.Marshal(tmpl.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	notebook_cell := &api_proto.NotebookCell{
+		Input:            original_input,
+		Output:           output,
+		Data:             string(encoded_data),
+		Messages:         *tmpl.Messages,
+		CellId:           cell_id,
+		Type:             cell_type,
+		Timestamp:        time.Now().Unix(),
+		CurrentlyEditing: currently_editing,
+	}
+
+	// And store it for next time.
+	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	err = db.SetSubject(config_obj,
+		notebook_path_manager.Cell(cell_id).Path(),
+		notebook_cell)
+	if err != nil {
+		return nil, err
+	}
+
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
+	if err != nil {
+		return nil, err
+	}
+
+	new_cell_md := []*api_proto.NotebookCell{}
+	for _, cell_md := range notebook.CellMetadata {
+		if cell_md.CellId == cell_id {
+			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+				CellId:    cell_id,
+				Timestamp: time.Now().Unix(),
+			})
+			continue
+		}
+		new_cell_md = append(new_cell_md, cell_md)
+	}
+	notebook.CellMetadata = new_cell_md
+
+	err = db.SetSubject(config_obj, notebook_path_manager.Path(), notebook)
+	return notebook_cell, err
 }

@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+  <Product Name='Velociraptor' Manufacturer='Velocidex Innovations'
+           Id='*'
+           UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
+           Language='1033' Codepage='1252' Version='0.42.0'>
+    <Package Id='*' Keywords='Installer' Description="Velociraptor Service Installer"
+             Comments='This installs the Velociraptor service.'
+             Manufacturer='Velocidex Innovations'
+             InstallerVersion='200' Languages='1033' Compressed='yes'
+             SummaryCodepage='1252' />
+    <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
+    <Property Id='DiskPrompt' Value="Installation [1]" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
+        <Directory Id='INSTALLDIR' Name='Velociraptor'>
+          <Component Id='MainExecutable'
+                     Guid='35e9ec26-d243-4fcd-9b5b-6ad37345ccea'>
+            <File Id='ServiceEXE' Name='Velociraptor.exe'
+                  DiskId='1'
+                  Source='Output/Velociraptor_x86.exe' KeyPath='yes'>
+            </File>
+            <ServiceInstall
+                Id="ServiceInstaller"
+                Type="ownProcess"
+                Vital="yes"
+                Name="Velociraptor"
+                DisplayName="Velociraptor Service"
+                Description="Velociraptor Service"
+                Start="auto"
+                Account="LocalSystem"
+                Arguments=' --config "[INSTALLDIR]/client.config.yaml" service run '
+                ErrorControl="normal"
+                Interactive="no">
+              <util:ServiceConfig
+                  FirstFailureActionType='restart'
+                  SecondFailureActionType='restart'
+                  ThirdFailureActionType='restart'
+                  RestartServiceDelayInSeconds='30'
+                  ResetPeriodInDays='1'/>
+            </ServiceInstall>
+            <ServiceControl
+                Id="StartService"
+                Name="Velociraptor"
+                Stop="both"
+                Start="install"
+                Remove="uninstall" Wait="yes" />
+          </Component>
+          <Component Id='Config' Guid='d47dd101-3f53-45ef-889e-2b0db79e554c'>
+            <File Id='Config' Name='client.config.yaml'
+                  DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
+            </File>
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='MainExecutable' />
+      <ComponentRef Id='Config' />
+    </Feature>
+
+    <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed." Schedule="afterInstallValidate" />
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+
+  </Product>
+</Wix>

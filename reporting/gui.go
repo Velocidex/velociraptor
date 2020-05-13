@@ -84,10 +84,14 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	default:
 		return t
 
-	case *NotebookCellQuery:
-		return fmt.Sprintf(
-			`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
-				`params='%s' /></div>`, t.Params())
+	case []*NotebookCellQuery:
+		result := ""
+		for _, item := range t {
+			result += fmt.Sprintf(
+				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
+					`params='%s' /></div>`, item.Params())
+		}
+		return result
 
 	case []*ordereddict.Dict:
 		if len(t) == 0 { // No rows returned.
@@ -129,10 +133,14 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 	default:
 		return ""
 
-	case *NotebookCellQuery:
-		return fmt.Sprintf(
-			`<div class="panel"><grr-line-chart base-url="'v1/GetTable'" `+
-				`params='%s' /></div>`, t.Params())
+	case []*NotebookCellQuery:
+		result := ""
+		for _, item := range t {
+			result += fmt.Sprintf(
+				`<div class="panel"><grr-line-chart base-url="'v1/GetTable'" `+
+					`params='%s' /></div>`, item.Params())
+		}
+		return result
 
 	case []*ordereddict.Dict:
 		if len(t) == 0 {
@@ -171,10 +179,14 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 	default:
 		return ""
 
-	case *NotebookCellQuery:
-		return fmt.Sprintf(
-			`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
-				`params='%s' /></div>`, t.Params())
+	case []*NotebookCellQuery:
+		result := ""
+		for _, item := range t {
+			result += fmt.Sprintf(
+				`<div class="panel"><grr-timeline base-url="'v1/GetTable'" `+
+					`params='%s' /></div>`, item.Params())
+		}
+		return result
 
 	case []*ordereddict.Dict:
 		if len(t) == 0 {
@@ -243,48 +255,82 @@ func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
 	return bm_policy.Sanitize(output_string), nil
 }
 
-func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
-	fmt.Printf("Rendering query\n")
-
-	rows := self.queryRows(queries...)
-
-	if self.path_manager != nil {
-		path_manager := self.path_manager.NewQueryStorage()
-		rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
-		if err != nil {
-			self.Error("Error: %v\n", err)
-			return ""
-		}
-		defer rs_writer.Close()
-
-		for _, row := range rows {
-			rs_writer.Write(row)
-		}
-		return path_manager
+func (self *GuiTemplateEngine) getMultiLineQuery(query string) (string, error) {
+	t := self.tmpl.Lookup(query)
+	if t == nil {
+		return query, nil
 	}
-	return rows
+
+	buf := &bytes.Buffer{}
+	err := t.Execute(buf, self.Artifact)
+	if err != nil {
+		return "", err
+	}
+
+	// html/template escapes its template but this
+	// is the wrong thing to do for us because we
+	// use the template as a work around for
+	// text/template actions not spanning multiple
+	// lines.
+	return html.UnescapeString(buf.String()), nil
+}
+
+func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
+	if self.path_manager == nil {
+		return self.queryRows(queries...)
+	}
+
+	result := []*NotebookCellQuery{}
+	for _, query := range queries {
+		query, err := self.getMultiLineQuery(query)
+		if err != nil {
+			self.Error("VQL Error while reporting %s: %v",
+				self.Artifact.Name, err)
+			return nil
+		}
+
+		multi_vql, err := vfilter.MultiParse(query)
+		if err != nil {
+			self.Error("VQL Error while reporting %s: %v",
+				self.Artifact.Name, err)
+			return nil
+		}
+
+		ctx, cancel := context.WithCancel(self.ctx)
+		defer cancel()
+
+		for _, vql := range multi_vql {
+			written := false
+			path_manager := self.path_manager.NewQueryStorage()
+			rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
+			if err != nil {
+				self.Error("Error: %v\n", err)
+				return ""
+			}
+			defer rs_writer.Close()
+
+			for row := range vql.Eval(ctx, self.Scope) {
+				rs_writer.Write(vfilter.RowToDict(ctx, self.Scope, row))
+				written = true
+			}
+
+			if written {
+				result = append(result, path_manager)
+			}
+		}
+	}
+	return result
 }
 
 func (self *GuiTemplateEngine) queryRows(queries ...string) []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}
 
 	for _, query := range queries {
-		t := self.tmpl.Lookup(query)
-		if t != nil {
-			buf := &bytes.Buffer{}
-			err := t.Execute(buf, self.Artifact)
-			if err != nil {
-				self.Error("Template Error (%s): %v",
-					self.Artifact.Name, err)
-				return nil
-			}
-
-			// html/template escapes its template but this
-			// is the wrong thing to do for us because we
-			// use the template as a work around for
-			// text/template actions not spanning multiple
-			// lines.
-			query = html.UnescapeString(buf.String())
+		query, err := self.getMultiLineQuery(query)
+		if err != nil {
+			self.Error("VQL Error while reporting %s: %v",
+				self.Artifact.Name, err)
+			return nil
 		}
 
 		multi_vql, err := vfilter.MultiParse(query)

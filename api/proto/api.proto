@@ -360,6 +360,13 @@ service API {
         };
     }
 
+   rpc CancelNotebookCell(NotebookCellRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/CancelNotebookCell",
+            body: "*",
+        };
+    }
+
     rpc CreateNotebookDownloadFile(NotebookExportRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/CreateNotebookDownloadFile",

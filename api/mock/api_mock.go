@@ -7,8 +7,8 @@ package mock_proto
 import (
 	context "context"
 	gomock "github.com/golang/mock/gomock"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto0 "www.velocidex.com/golang/velociraptor/api/proto"
@@ -79,6 +79,26 @@ func (mr *MockAPIClientMockRecorder) CancelFlow(arg0, arg1 interface{}, arg2 ...
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelFlow", reflect.TypeOf((*MockAPIClient)(nil).CancelFlow), varargs...)
 }
 
+// CancelNotebookCell mocks base method
+func (m *MockAPIClient) CancelNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CancelNotebookCell", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CancelNotebookCell indicates an expected call of CancelNotebookCell
+func (mr *MockAPIClientMockRecorder) CancelNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CancelNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).CancelNotebookCell), varargs...)
+}
+
 // CollectArtifact mocks base method
 func (m *MockAPIClient) CollectArtifact(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()
@@ -100,14 +120,14 @@ func (mr *MockAPIClientMockRecorder) CollectArtifact(arg0, arg1 interface{}, arg
 }
 
 // CreateDownloadFile mocks base method
-func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.CreateDownloadRequest, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.CreateDownloadRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateDownloadFile", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -140,14 +160,14 @@ func (mr *MockAPIClientMockRecorder) CreateHunt(arg0, arg1 interface{}, arg2 ...
 }
 
 // CreateNotebookDownloadFile mocks base method
-func (m *MockAPIClient) CreateNotebookDownloadFile(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) CreateNotebookDownloadFile(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateNotebookDownloadFile", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -160,7 +180,7 @@ func (mr *MockAPIClientMockRecorder) CreateNotebookDownloadFile(arg0, arg1 inter
 }
 
 // DescribeTypes mocks base method
-func (m *MockAPIClient) DescribeTypes(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto1.Types, error) {
+func (m *MockAPIClient) DescribeTypes(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto1.Types, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -260,7 +280,7 @@ func (mr *MockAPIClientMockRecorder) GetClientFlows(arg0, arg1 interface{}, arg2
 }
 
 // GetClientMonitoringState mocks base method
-func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
+func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -420,7 +440,7 @@ func (mr *MockAPIClientMockRecorder) GetReport(arg0, arg1 interface{}, arg2 ...i
 }
 
 // GetServerMonitoringState mocks base method
-func (m *MockAPIClient) GetServerMonitoringState(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
+func (m *MockAPIClient) GetServerMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -460,7 +480,7 @@ func (mr *MockAPIClientMockRecorder) GetTable(arg0, arg1 interface{}, arg2 ...in
 }
 
 // GetUserNotificationCount mocks base method
-func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto0.UserNotificationCount, error) {
+func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.UserNotificationCount, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -500,7 +520,7 @@ func (mr *MockAPIClientMockRecorder) GetUserNotifications(arg0, arg1 interface{}
 }
 
 // GetUserUITraits mocks base method
-func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *empty.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
+func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
@@ -600,14 +620,14 @@ func (mr *MockAPIClientMockRecorder) ListHunts(arg0, arg1 interface{}, arg2 ...i
 }
 
 // ModifyHunt mocks base method
-func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) ModifyHunt(arg0 context.Context, arg1 *proto0.Hunt, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "ModifyHunt", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -620,14 +640,14 @@ func (mr *MockAPIClientMockRecorder) ModifyHunt(arg0, arg1 interface{}, arg2 ...
 }
 
 // NewNotebook mocks base method
-func (m *MockAPIClient) NewNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) NewNotebook(arg0 context.Context, arg1 *proto0.NotebookMetadata, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NewNotebook", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -660,14 +680,14 @@ func (mr *MockAPIClientMockRecorder) NewNotebookCell(arg0, arg1 interface{}, arg
 }
 
 // NotifyClients mocks base method
-func (m *MockAPIClient) NotifyClients(arg0 context.Context, arg1 *proto0.NotificationRequest, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) NotifyClients(arg0 context.Context, arg1 *proto0.NotificationRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "NotifyClients", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -920,14 +940,14 @@ func (mr *MockAPIClientMockRecorder) VFSStatDownload(arg0, arg1 interface{}, arg
 }
 
 // WriteEvent mocks base method
-func (m *MockAPIClient) WriteEvent(arg0 context.Context, arg1 *proto.VQLResponse, arg2 ...grpc.CallOption) (*empty.Empty, error) {
+func (m *MockAPIClient) WriteEvent(arg0 context.Context, arg1 *proto.VQLResponse, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "WriteEvent", varargs...)
-	ret0, _ := ret[0].(*empty.Empty)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -30,9 +30,6 @@ const CsvViewerDirective = function(
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
 
-    /** @type {string} */
-    this.baseUrl;
-
     /** @type {object} */
     this.params;
 
@@ -130,8 +127,8 @@ CsvViewerDirective.prototype.fetchText_ = function() {
         }
     }
 
-    if (self.scope_.baseUrl && angular.isDefined(self.scope_.params)) {
-        var url = self.scope_.baseUrl;
+    if (angular.isDefined(self.scope_.params)) {
+        var url = "v1/GetTable";
         var params = Object.assign({}, self.scope_.params);
 
         if (angular.isObject(params)) {
@@ -213,7 +210,6 @@ CsvViewerDirective.prototype.prepareData = function(value) {
 exports.CsvViewerDirective = function() {
   return {
       scope: {
-          baseUrl: '=',
           params: '=',
           value: '=',
           vqlHelpPlugin: '@',

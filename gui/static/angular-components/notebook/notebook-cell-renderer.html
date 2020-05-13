@@ -13,6 +13,14 @@
         </button>
 
         <button class="btn btn-default"
+                title="Stop Calculating"
+                ng-if="!controller.currently_editing"
+                ng-disabled="!controller.cell.calculating"
+                ng-click="controller.stopCalculating($event)">
+          <i class="fa fa-stop"></i>
+        </button>
+
+        <button class="btn btn-default"
                 title="Expand"
                 ng-if="!controller.currently_editing && !controller.collapsed"
                 ng-click="controller.collapsed = true">
@@ -70,6 +78,9 @@
           <a class="dropdown-item" href="#"
              ng-click="controller.addCell($event, 'VQL')"
              >VQL</a>
+          <a class="dropdown-item" href="#"
+             ng-click="controller.addCell($event, 'Artifact')"
+             >Artifact</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="#"
              ng-click="controller.addCellFromHunt($event)"
@@ -81,6 +92,14 @@
                 ng-if="controller.currently_editing"
                 ng-click="controller.setEditing($event, false)">
           <i class="fa fa-window-close"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Stop Calculating"
+                ng-if="controller.currently_editing"
+                ng-disabled="!controller.cell.calculating"
+                ng-click="controller.stopCalculating($event)">
+          <i class="fa fa-stop"></i>
         </button>
 
         <button class="btn btn-default"
@@ -105,6 +124,7 @@
                 >
           <option label="Markdown" value="Markdown"></option>
           <option label="VQL" value="VQL"></option>
+          <option label="Artifact" value="Artifact"></option>
         </select>
       </div>
     </div>

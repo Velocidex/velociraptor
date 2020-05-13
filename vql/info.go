@@ -65,6 +65,13 @@ func init() {
 					return result
 				}
 
+				arg := &vfilter.Empty{}
+				err = vfilter.ExtractArgs(scope, args, arg)
+				if err != nil {
+					scope.Log("info: %s", err.Error())
+					return result
+				}
+
 				// It turns out that host.Info() is
 				// actually rather slow so we cache it
 				// in the scope cache.

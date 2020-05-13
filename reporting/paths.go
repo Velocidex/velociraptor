@@ -46,7 +46,7 @@ func (self *NotebookCellPathManager) Path() string {
 	return path.Join("notebooks", self.notebook_id, self.cell_id+".json")
 }
 
-func (self *NotebookCellPathManager) NewQueryStorage() api.PathManager {
+func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
 	self.table_id++
 	return &NotebookCellQuery{
 		notebook_id: self.notebook_id,

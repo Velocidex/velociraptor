@@ -1,7 +1,6 @@
 package notifications
 
 import (
-	"errors"
 	"sync"
 )
 
@@ -40,8 +39,7 @@ func (self *NotificationPool) Listen(client_id string) (chan bool, error) {
 		// wait the full max poll to retry.
 		close(c)
 		delete(self.clients, client_id)
-
-		return nil, errors.New("Only one listener may exist.")
+		// return nil, errors.New("Only one listener may exist.")
 	}
 
 	c = make(chan bool)
