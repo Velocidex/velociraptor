@@ -160,7 +160,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
 	path_manager := paths.NewFlowPathManager("server", flow_id).Log()
-	rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		self.config_obj, path_manager, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -232,7 +233,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			path_manager := result_sets.NewArtifactPathManager(
 				self.config_obj, "server", flow_id, name)
 			rs_writer, err = result_sets.NewResultSetWriter(
-				self.config_obj, path_manager)
+				self.config_obj, path_manager, false /* truncate */)
 			defer rs_writer.Close()
 
 			// Update the artifacts with results in the

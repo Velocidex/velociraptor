@@ -301,8 +301,11 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 
 		for _, vql := range multi_vql {
 			written := false
+
+			// Replace the previously calculated json file.
 			path_manager := self.path_manager.NewQueryStorage()
-			rs_writer, err := result_sets.NewResultSetWriter(self.config_obj, path_manager)
+			rs_writer, err := result_sets.NewResultSetWriter(
+				self.config_obj, path_manager, true /* truncate */)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return ""

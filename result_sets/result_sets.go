@@ -67,7 +67,8 @@ func (self *ResultSetWriter) Close() {
 
 func NewResultSetWriter(
 	config_obj *config_proto.Config,
-	path_manager api.PathManager) (*ResultSetWriter, error) {
+	path_manager api.PathManager,
+	truncate bool) (*ResultSetWriter, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	log_path, err := path_manager.GetPathForWriting()
 	if err != nil {
@@ -79,7 +80,9 @@ func NewResultSetWriter(
 		return nil, err
 	}
 
-	fd.Truncate()
+	if truncate {
+		fd.Truncate()
+	}
 
 	return &ResultSetWriter{fd: fd}, nil
 }

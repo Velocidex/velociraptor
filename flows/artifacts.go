@@ -283,7 +283,9 @@ func flushContextLogs(
 		collection_context.ClientId,
 		collection_context.SessionId).Log()
 
-	rs_writer, err := result_sets.NewResultSetWriter(config_obj, flow_path_manager)
+	// Append logs to messages from previous packets.
+	rs_writer, err := result_sets.NewResultSetWriter(
+		config_obj, flow_path_manager, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -311,7 +313,8 @@ func flushContextUploadedFiles(
 		collection_context.ClientId,
 		collection_context.SessionId).UploadMetadata()
 
-	rs_writer, err := result_sets.NewResultSetWriter(config_obj, flow_path_manager)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		config_obj, flow_path_manager, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -410,7 +413,8 @@ func ArtifactCollectorProcessOneMessage(
 				collection_context.SessionId,
 				response.Query.Name)
 
-			rs_writer, err := result_sets.NewResultSetWriter(config_obj, path_manager)
+			rs_writer, err := result_sets.NewResultSetWriter(
+				config_obj, path_manager, false /* truncate */)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err

@@ -96,6 +96,7 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 	self.Data[filename] = buf
 
 	return &MemoryWriter{
+		buf:               buf,
 		memory_file_store: self,
 		filename:          filename,
 	}, nil

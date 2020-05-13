@@ -352,9 +352,8 @@ func (self *ServerTestSuite) TestInvalidMonitoringPacket() {
 		})
 	runner.Close()
 
-	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/F.Monitoring/logs",
-		"invalid character")
+	path_manager := paths.NewFlowPathManager(self.client_id, "F.Monitoring").Log()
+	self.RequiredFilestoreContains(path_manager.Path(), "invalid character")
 }
 
 // Monitoring queries which upload data.
@@ -376,9 +375,9 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 		})
 	runner.Close()
 
-	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/F.Monitoring/uploads/etc/passwd",
-		"Hello")
+	path_manager := paths.NewFlowPathManager(
+		self.client_id, "F.Monitoring").GetUploadsFile("file", "/etc/passwd")
+	self.RequiredFilestoreContains(path_manager.Path(), "Hello")
 }
 
 // Test that log messages are written to the flow
@@ -389,7 +388,8 @@ func (self *ServerTestSuite) TestLog() {
 	flow_id, err := self.createArtifactCollection()
 	require.NoError(t, err)
 
-	// Emulate a log message from client to flow.
+	// Emulate log messages from client to flow delivered in
+	// separate POST.
 	runner := flows.NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(
 		context.Background(),
@@ -402,9 +402,20 @@ func (self *ServerTestSuite) TestLog() {
 		})
 	runner.Close()
 
-	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/"+flow_id+"/logs",
-		"Foobar")
+	runner.ProcessSingleMessage(
+		context.Background(),
+		&crypto_proto.GrrMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			LogMessage: &crypto_proto.LogMessage{
+				Message: "ZooBar",
+			},
+		})
+	runner.Close()
+
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id).Log()
+	self.RequiredFilestoreContains(path_manager.Path(), "Foobar")
+	self.RequiredFilestoreContains(path_manager.Path(), "ZooBar")
 }
 
 // Test that messages intended to unknown flows are handled
@@ -490,8 +501,8 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	assert.Equal(t, len(tasks), 1)
 
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id, collection_context)
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	assert.Equal(t, collection_context.Request, request)
@@ -608,14 +619,12 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	db, _ := datastore.GetDB(self.config_obj)
 
 	// A log is generated
-	self.RequiredFilestoreContains(
-		"/clients/"+self.client_id+"/collections/"+flow_id+"/logs",
-		"Error generated")
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	self.RequiredFilestoreContains(path_manager.Log().Path(), "Error generated")
 
 	// The collection_context is marked as errored.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id,
+	err = db.GetSubject(self.config_obj, path_manager.Path(),
 		collection_context)
 	require.NoError(t, err)
 
@@ -652,9 +661,8 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	// The collection_context is marked as errored.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id,
-		collection_context)
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_TERMINATED,
@@ -710,9 +718,8 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// The flow must be marked as cancelled with an error.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id,
-		collection_context)
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Regexp(t, regexp.MustCompile("Cancelled by username"),
@@ -756,9 +763,8 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 
 	// The flow does not exist - make sure it still does not.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id,
-		collection_context)
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 	require.Equal(t, collection_context.SessionId, "")
 }
@@ -801,9 +807,8 @@ func (self *ServerTestSuite) TestFlowArchives() {
 
 	// The flow must be marked as archived.
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(self.config_obj,
-		"/clients/"+self.client_id+"/collections/"+flow_id,
-		collection_context)
+	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
+	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
 	require.Regexp(t, regexp.MustCompile("Archived by username"),

@@ -114,6 +114,11 @@ func (self FlowPathManager) GetVFSDirectoryInfoPath(accessor, client_path string
 // Currently only CLIENT artifacts upload files. We store the uploaded
 // file inside the collection that uploaded it.
 func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *FlowPathManager {
+	// Apply the default accessor if not specified.
+	if accessor == "" {
+		accessor = "file"
+	}
+
 	components := []string{
 		"clients", self.client_id, "collections",
 		self.flow_id, "uploads", accessor}
