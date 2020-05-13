@@ -86,6 +86,10 @@ NotebookCellRendererController.prototype.ace_type = function() {
     if (type == "Markdown") {
         return "markdown";
     }
+    if (type == "Artifact") {
+        return "yaml";
+    }
+
     return "yaml";
 }
 
@@ -334,7 +338,7 @@ NotebookCellRendererController.prototype.addCell = function(event, cell_type) {
             state.notebook = response.data;
             state.selectedNotebookCellId = response.data['latest_cell_id'];
 
-         }, function failure(response) {
+        }, function failure(response) {
              console.log("Error " + response);
          });
 
@@ -344,6 +348,32 @@ NotebookCellRendererController.prototype.addCell = function(event, cell_type) {
 NotebookCellRendererController.prototype.setEditing = function(event, value) {
     this.cell.currently_editing = value;
     event.stopPropagation();
+    return false;
+};
+
+NotebookCellRendererController.prototype.stopCalculating = function(event) {
+    var url = 'v1/CancelNotebookCell';
+    var params = {notebook_id: this.scope_["notebookId"],
+                  cell_id: this.scope_["cellId"],
+                  type: this.cell.type || "Markdown",
+                  currently_editing: false,
+                  cancel: true,
+                  input: this.cell.input};
+    var self = this;
+
+    this.cell.output = "Cancelling...";
+
+    this.grrApiService_.post(url, params).then(function(response) {
+        // Refresh the cell in a tick.
+        self.$timeout(self.onCellIdChange_, 1000);
+
+    }, function(error) {
+        self.error = error;
+    });
+
+    if (angular.isDefined(event)) {
+        event.stopPropagation();
+    }
     return false;
 };
 

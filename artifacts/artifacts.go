@@ -53,6 +53,14 @@ type Repository struct {
 	loaded_dirs []string
 }
 
+func (self *Repository) Copy() *Repository {
+	result := &Repository{Data: make(map[string]*artifacts_proto.Artifact)}
+	for k, v := range self.Data {
+		result.Data[k] = v
+	}
+	return result
+}
+
 func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 	count := 0
 	if utils.InString(self.loaded_dirs, dirname) {

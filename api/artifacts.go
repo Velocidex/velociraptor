@@ -56,9 +56,9 @@ sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-    - SELECT * FROM scope()
-
+    query: |
+      SELECT * FROM scope()
+      LIMIT 10
 
 # Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT
 reports:

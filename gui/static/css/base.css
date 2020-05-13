@@ -136,6 +136,9 @@ img.velo-logo {
 
 .search-table {
     margin-left: 15px;
+    height: 100%;
+    display: block;
+    overflow: auto;
 }
 
 .navbar-text p {

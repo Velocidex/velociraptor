@@ -29,7 +29,6 @@ import (
 
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
 type CertBundle struct {
@@ -114,14 +113,6 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
 		return nil, err
-	}
-	old_cert, err := ParseX509CertFromPemStr([]byte(
-		config_obj.Frontend.Certificate))
-	if err == nil {
-		serialNumber.Add(big.NewInt(1), old_cert.SerialNumber)
-		serialNumber.Mod(serialNumber, serialNumberLimit)
-		logging.GetLogger(config_obj, &logging.FrontendComponent).Info(
-			"Incremented server serial number to %v", serialNumber)
 	}
 
 	ca_cert, err := ParseX509CertFromPemStr([]byte(

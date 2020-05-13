@@ -64,12 +64,7 @@ github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38 h1:smF2tmSOzy2Mm
 github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38/go.mod h1:r7bzyVFMNntcxPZXK3/+KdruV1H5KSlyVY0gc+NgInI=
 github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721 h1:JHZL0hZKJ1VENNfmXvHbgYlbUOvpzYzvy2aZU5gXVeo=
 github.com/alecthomas/colour v0.0.0-20160524082231-60882d9e2721/go.mod h1:QO9JBoKquHd+jz9nshCh40fOfO+JzsoXy8qTHF68zU0=
-github.com/alecthomas/go-thrift v0.0.0-20170109061633-7914173639b2/go.mod h1:CxCgO+NdpMdi9SsTlGbc0W+/UNxO3I0AabOEJZ3w61w=
-github.com/alecthomas/kong v0.2.1/go.mod h1:+inYUSluD+p4L8KdviBSgzcqEjUQOfC5fQDRFuc36lI=
 github.com/alecthomas/kong v0.2.4/go.mod h1:kQOmtJgV+Lb4aj+I2LEn40cbtawdWJ9Y8QLq+lElKxE=
-github.com/alecthomas/participle v0.2.0/go.mod h1:SW6HZGeZgSIpcUWX3fXpfZhuaWHnmoD5KCVaqSaNTkk=
-github.com/alecthomas/participle v0.4.1 h1:P2PJWzwrSpuCWXKnzqvw0b0phSfH1kJo4p2HvLynVsI=
-github.com/alecthomas/participle v0.4.1/go.mod h1:T8u4bQOSMwrkTWOSyt8/jSFPEnRtd0FKFMjVfYBlqPs=
 github.com/alecthomas/participle v0.4.4 h1:ZhPi9STNpixhITQx0RuoA/3UqCMu3cLsJVCfpT6iOGE=
 github.com/alecthomas/participle v0.4.4/go.mod h1:HfdmEuwvr12HXQN44HPWXR0lHmVolVYe4dyL6lQ3duY=
 github.com/alecthomas/repr v0.0.0-20180818092828-117648cd9897/go.mod h1:xTS7Pm1pD1mvyM075QCDSRqH6qRLXylzS24ZTpRiSzQ=
@@ -319,8 +314,6 @@ github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b h1:j7+1HpAFS1zy5+Q4qx1f
 github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b/go.mod h1:01TrycV0kFyexm33Z7vhZRXopbI8J3TDReVlkTgMUxE=
 github.com/microcosm-cc/bluemonday v1.0.2 h1:5lPfLTTAvAbtS0VqT+94yOtFnGfUWYyx0+iToC3Os3s=
 github.com/microcosm-cc/bluemonday v1.0.2/go.mod h1:iVP4YcDBq+n/5fb23BhYFvIMq/leAFZyRl6bYmGDlGc=
-github.com/mitchellh/mapstructure v1.1.2 h1:fmNYVwqnSfB9mZU6OS2O6GsXM+wcskZDuKQzvN1EDeE=
-github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
@@ -618,11 +611,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20200422024715-0e09f92d1676 h1:jxG1Q6nXHAPIOfIZ/RsSP48ac8x/54p1xx6CZoliHHU=
-www.velocidex.com/golang/vfilter v0.0.0-20200422024715-0e09f92d1676/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
-www.velocidex.com/golang/vfilter v0.0.0-20200508151605-2d56d0be0d43 h1:Qwuhjjh9/4JL0wcb9DHHJMMdFi2kWSjKixouLiAfY1Y=
-www.velocidex.com/golang/vfilter v0.0.0-20200508151605-2d56d0be0d43/go.mod h1:BEzARVqbdGAqh+R1lQHztwNPbfVIAUzLqU6dwYiT8+w=
-www.velocidex.com/golang/vfilter v0.0.0-20200509144921-bf5becedca8b h1:tC9PXA8KIWN7U/iiw5DZufSclsNw9RIyoxdYK+u3bFg=
-www.velocidex.com/golang/vfilter v0.0.0-20200509144921-bf5becedca8b/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
+www.velocidex.com/golang/vfilter v0.0.0-20200513040007-b245e612ea93 h1:Y0gK1+wW7HGwNUFW/vS+gAYvi83pUdzMcrFdTh55qUU=
+www.velocidex.com/golang/vfilter v0.0.0-20200513040007-b245e612ea93/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=

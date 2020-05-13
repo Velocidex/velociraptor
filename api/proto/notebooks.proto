@@ -61,6 +61,8 @@ message NotebookCell {
     string type = 7;
 
     bool currently_editing = 8;
+
+    bool calculating = 9;
 }
 
 message NotebookFileUploadRequest {

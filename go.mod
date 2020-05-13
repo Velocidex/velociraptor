@@ -20,7 +20,6 @@ require (
 	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
 	github.com/alecthomas/assert v0.0.0-20170929043011-405dbfeb8e38
 	github.com/alecthomas/chroma v0.7.2
-	github.com/alecthomas/go-thrift v0.0.0-20170109061633-7914173639b2 // indirect
 	github.com/alecthomas/participle v0.4.4
 	github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
@@ -73,7 +72,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/mattn/go-tty v0.0.0-20190424173100-523744f04859 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.2
-	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 // indirect
@@ -118,7 +116,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20190703150313-0469fa2f85cf
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20200509144921-bf5becedca8b
+	www.velocidex.com/golang/vfilter v0.0.0-20200513040007-b245e612ea93
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 
