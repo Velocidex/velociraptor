@@ -185,8 +185,10 @@ func (self *EventTable) RunQuery(
 
 		path_manager := result_sets.NewArtifactPathManager(
 			config_obj, "", "", artifact_name)
+
+		// Append events to previous ones.
 		rs_writer, err := result_sets.NewResultSetWriter(
-			config_obj, path_manager)
+			config_obj, path_manager, false /* truncate */)
 		if err != nil {
 			logger.Error("NewResultSetWriter", err)
 			return
