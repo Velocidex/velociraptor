@@ -18,6 +18,7 @@
 package parsers
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"reflect"
@@ -28,6 +29,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
+	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -113,6 +115,82 @@ func (self ParseJsonArray) Call(
 	}
 
 	return result
+}
+
+type ParseJsonlPluginArgs struct {
+	Filename string `vfilter:"required,field=filename,doc=JSON file to open"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+}
+
+type ParseJsonlPlugin struct{}
+
+func (self ParseJsonlPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &ParseJsonlPluginArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("parse_jsonl: %s", err.Error())
+			return
+		}
+
+		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
+		if err != nil {
+			scope.Log("parse_jsonl: %s", err)
+			return
+		}
+
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("parse_jsonl: %v", err)
+			return
+		}
+
+		fd, err := accessor.Open(arg.Filename)
+		if err != nil {
+			scope.Log("Unable to open file %s: %v",
+				arg.Filename, err)
+			return
+		}
+		defer fd.Close()
+
+		reader := bufio.NewReader(fd)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			default:
+				row_data, err := reader.ReadBytes('\n')
+				if err != nil {
+					return
+				}
+				item := ordereddict.NewDict()
+				err = item.UnmarshalJSON(row_data)
+				if err != nil {
+					return
+				}
+
+				output_chan <- item
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self ParseJsonlPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "parse_jsonl",
+		Doc:     "Parses a line oriented json file.",
+		ArgType: type_map.AddType(scope, &ParseJsonlPluginArgs{}),
+	}
 }
 
 type ParseJsonArrayPlugin struct{}
@@ -385,4 +463,5 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_ProtobufAssociativeProtocol{})
 	vql_subsystem.RegisterProtocol(&_IndexAssociativeProtocol{})
 	vql_subsystem.RegisterPlugin(&ParseJsonArrayPlugin{})
+	vql_subsystem.RegisterPlugin(&ParseJsonlPlugin{})
 }

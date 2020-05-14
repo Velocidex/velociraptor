@@ -150,7 +150,7 @@ func renderDBVFS(
 			lookup[normalized_name] = filename
 		}
 
-		var rows []*FileInfoRow
+		var rows []map[string]interface{}
 		err := json.Unmarshal([]byte(result.Response), &rows)
 		if err != nil {
 			return nil, err
@@ -159,7 +159,12 @@ func renderDBVFS(
 		// If the row refers to a downloaded file, we mark it
 		// with the download details.
 		for _, row := range rows {
-			filename, pres := lookup[row.Name]
+			name, ok := row["Name"].(string)
+			if !ok {
+				continue
+			}
+
+			filename, pres := lookup[name]
 			if !pres {
 				continue
 			}
@@ -167,7 +172,7 @@ func renderDBVFS(
 			download_info := &flows_proto.VFSDownloadInfo{}
 			err := db.GetSubject(config_obj, filename, download_info)
 			if err == nil {
-				row.Download = download_info
+				row["Download"] = download_info
 			}
 		}
 
