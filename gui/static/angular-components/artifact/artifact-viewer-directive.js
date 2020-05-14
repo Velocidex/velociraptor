@@ -57,55 +57,48 @@ ArtifactViewerController.prototype.onSearchChange_ = function() {
             });
 };
 
-ArtifactViewerController.prototype.selectName = function(name) {
-  this.selectedName = name;
-  this.isCustom = name.startsWith("Custom.");
+ArtifactViewerController.prototype.selectName = function(name, e) {
+    this.selectedName = name;
+    this.isCustom = name.startsWith("Custom.");
 
-  this.reportParams= {
-    artifact: this.selectedName,
-    type: "ARTIFACT_DESCRIPTION",
-  };
+    this.reportParams= {
+        artifact: this.selectedName,
+        type: "ARTIFACT_DESCRIPTION",
+    };
+
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
 };
 
 ArtifactViewerController.prototype.updateArtifactDefinitions = function(name) {
-  var url = 'v1/GetArtifactFile';
-  var params = {
-    name: name,
-  };
-  var self = this;
-
-  this.error = "";
-  this.grrApiService_.get(url, params).then(function(response) {
-    self.value = response['data']['artifact'];
-    self.modalInstance = self.uibModal_.open({
-      templateUrl: '/static/angular-components/artifact/add_artifact.html',
-      scope: self.scope_,
-      size: "lg",
-    });
-  });
-
-  return false;
-};
-
-
-ArtifactViewerController.prototype.saveArtifact = function() {
-    var url = 'v1/SetArtifactFile';
+    var url = 'v1/GetArtifactFile';
     var params = {
-        artifact: this.value,
+        name: name,
     };
+    var self = this;
 
-    this.grrApiService_.post(url, params).then(function(response) {
-        if (response.data.error) {
-            this.error = response.data['error_message'];
-        } else {
-          this.modalInstance.close();
+    this.error = "";
+    var modalScope = this.scope_.$new();
 
-          // Update the search results.
-          this.onSearchChange_();
-        }
-    }.bind(this), function(error) {
-        this.error = error;
-    }.bind(this));
+    this.grrApiService_.get(url, params).then(function(response) {
+        modalScope["artifact"] = response['data']['artifact'];
+        modalScope.resolve = function() {
+            modalInstance.close();
+
+            // Update the search results.
+            self.onSearchChange_();
+        };
+
+        var modalInstance = self.uibModal_.open({
+            template: '<grr-add-artifact artifact="artifact" on-resolve="resolve()" />',
+            scope: modalScope,
+            windowClass: 'wide-modal high-modal',
+            size: "lg",
+        });
+    });
+
+    return false;
 };
 
 

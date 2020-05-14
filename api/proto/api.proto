@@ -17,6 +17,7 @@ import "notebooks.proto";
 import "users.proto";
 import "csv.proto";
 import "download.proto";
+import "completions.proto";
 
 package proto;
 
@@ -241,6 +242,12 @@ service API {
         };
     }
 
+    rpc GetKeywordCompletions(google.protobuf.Empty) returns (KeywordCompletions) {
+        option (google.api.http) = {
+            get: "/api/v1/GetKeywordCompletions",
+        };
+    }
+
     // Artifacts
     rpc GetArtifacts(GetArtifactsRequest) returns (ArtifactDescriptors) {
         option (google.api.http) = {
@@ -381,6 +388,12 @@ service API {
         };
     }
 
+    rpc ExportNotebook(NotebookExportRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/ExportNotebook",
+            body: "*",
+        };
+    }
 
     // The below are API client methods - not available over HTTP
 

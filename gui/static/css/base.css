@@ -841,9 +841,9 @@ abbr[title] {
 
 
 .ace_editor {
-    min-height: 400px;
-    min-width: 600px;
-    max-height: 80%;
+    min-height: 500px;
+    min-width: 100%;
+    max-height: 100%;
 }
 
 .dashboard {

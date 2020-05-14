@@ -15,7 +15,7 @@ const {NotebookCellReportDirective} = goog.require('grrUi.notebook.notebookCellR
  * Angular module for notebook related UI.
  */
 exports.notebookModule = angular.module('grrUi.notebook', [
-    'ui.ace'
+    'ui.ace',
 ]);
 
 exports.notebookModule.directive(

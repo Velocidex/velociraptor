@@ -24,8 +24,14 @@ import (
 	"github.com/golang/protobuf/descriptor"
 	"github.com/golang/protobuf/proto"
 	descriptor_proto "github.com/golang/protobuf/protoc-gen-go/descriptor"
+	"github.com/golang/protobuf/ptypes/empty"
+	context "golang.org/x/net/context"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	semantic_proto "www.velocidex.com/golang/velociraptor/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -255,4 +261,56 @@ func getFieldDefaults(desc *descriptor_proto.FieldDescriptorProto) string {
 	default:
 		return "\"\""
 	}
+}
+
+func (self *ApiServer) GetKeywordCompletions(
+	ctx context.Context,
+	in *empty.Empty) (*api_proto.KeywordCompletions, error) {
+
+	result := &api_proto.KeywordCompletions{
+		Items: []*api_proto.Completion{
+			{Name: "SELECT", Type: "Keyword"},
+			{Name: "FROM", Type: "Keyword"},
+			{Name: "LET", Type: "Keyword"},
+			{Name: "WHERE", Type: "Keyword"},
+			{Name: "LIMIT", Type: "Keyword"},
+			{Name: "GROUP BY", Type: "Keyword"},
+			{Name: "ORDER BY", Type: "Keyword"},
+		},
+	}
+
+	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
+	type_map := vfilter.NewTypeMap()
+	info := scope.Describe(type_map)
+
+	for _, item := range info.Functions {
+		result.Items = append(result.Items, &api_proto.Completion{
+			Name:        item.Name,
+			Description: item.Doc,
+			Type:        "Function",
+		})
+	}
+
+	for _, item := range info.Plugins {
+		result.Items = append(result.Items, &api_proto.Completion{
+			Name:        item.Name,
+			Description: item.Doc,
+			Type:        "Plugin",
+		})
+	}
+
+	repository, err := artifacts.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range repository.List() {
+		result.Items = append(result.Items, &api_proto.Completion{
+			Name: "Artifact." + name,
+			Type: "Artifact",
+		})
+	}
+
+	return result, nil
 }

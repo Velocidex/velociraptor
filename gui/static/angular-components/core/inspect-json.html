@@ -1,0 +1,21 @@
+<div class="modal-header">
+  <h3>Raw Response JSON</h3>
+</div>
+
+<div class="modal-body">
+  <div ui-ace="{
+               useWrapMode : false,
+               showGutter: true,
+               workerPath: '/static/dist/',
+               theme:'twilight',
+               onLoad: 'aceConfig',
+               mode: 'json',
+               rendererOptions: {
+                 fontSize: '14px',
+                 fontFamily: 'monospace',
+                },
+               }"
+       ng-model="json"
+       readonly
+       ></div>
+</div>

@@ -199,6 +199,26 @@ func (mr *MockAPIClientMockRecorder) DescribeTypes(arg0, arg1 interface{}, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTypes", reflect.TypeOf((*MockAPIClient)(nil).DescribeTypes), varargs...)
 }
 
+// ExportNotebook mocks base method
+func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ExportNotebook", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ExportNotebook indicates an expected call of ExportNotebook
+func (mr *MockAPIClientMockRecorder) ExportNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportNotebook", reflect.TypeOf((*MockAPIClient)(nil).ExportNotebook), varargs...)
+}
+
 // GetArtifactFile mocks base method
 func (m *MockAPIClient) GetArtifactFile(arg0 context.Context, arg1 *proto0.GetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.GetArtifactResponse, error) {
 	m.ctrl.T.Helper()
@@ -377,6 +397,26 @@ func (mr *MockAPIClientMockRecorder) GetHuntResults(arg0, arg1 interface{}, arg2
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHuntResults", reflect.TypeOf((*MockAPIClient)(nil).GetHuntResults), varargs...)
+}
+
+// GetKeywordCompletions mocks base method
+func (m *MockAPIClient) GetKeywordCompletions(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.KeywordCompletions, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetKeywordCompletions", varargs...)
+	ret0, _ := ret[0].(*proto0.KeywordCompletions)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetKeywordCompletions indicates an expected call of GetKeywordCompletions
+func (mr *MockAPIClientMockRecorder) GetKeywordCompletions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetKeywordCompletions", reflect.TypeOf((*MockAPIClient)(nil).GetKeywordCompletions), varargs...)
 }
 
 // GetNotebookCell mocks base method
