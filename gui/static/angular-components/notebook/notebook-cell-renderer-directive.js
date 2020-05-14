@@ -31,6 +31,8 @@ const NotebookCellRendererController = function(
                                 self.currently_editing = is_editing && is_selected;
                             });
 
+    this.completions = [];
+
     this.scope_.aceConfig = function(ace) {
         self.ace = ace;
         ace.commands.addCommand({
@@ -39,6 +41,32 @@ const NotebookCellRendererController = function(
             exec: function(editor) {
                 self.saveCell();
             },
+        });
+
+        self.grrApiService_.getCached('v1/GetKeywordCompletions').then(function(response) {
+            self.completions = response.data['items'];
+        });
+
+        // create a completer object with a required callback function:
+        var vqlCompleter = {
+            getCompletions: function(editor, session, pos, prefix, callback) {
+                callback(null, self.completions.map(function(item) {
+                    return {
+                        caption: item.name,
+                        value: item.name,
+                        meta: item.type,
+                    };
+                }));
+            }
+        };
+        var langTools = window.ace.require('ace/ext/language_tools');
+
+        // finally, bind to langTools:
+        langTools.setCompleters([vqlCompleter, langTools.textCompleter]);
+
+        ace.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true
         });
     };
 

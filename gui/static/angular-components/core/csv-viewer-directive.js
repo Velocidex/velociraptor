@@ -44,6 +44,7 @@ const CsvViewerDirective = function(
         className: "btn btn-default pull-left  btn-sm",
         text: '<i class="fa fa-floppy-o"></i>',
         filename: "Velociraptor Table",
+        titleAttr: "Export to CSV",
         exportOptions: {
             modifier: {
                 search: 'none'
@@ -55,9 +56,17 @@ const CsvViewerDirective = function(
         buttons.push({
             className: "btn btn-default pull-left btn-sm",
             text: '<i class="fa fa-question-circle"></i>',
+            titleAttr: "Show VQL",
             action: this.showVQL_.bind(this),
         });
     }
+
+    buttons.push({
+        className: "btn btn-default pull-left btn-sm",
+        text: '<i class="fa fa-binoculars"></i>',
+        titleAttr: "Show Raw JSON",
+        action: this.showJSON_.bind(this),
+    });
 
     this.dtOptions = DTOptionsBuilder.newOptions()
         .withColReorder()
@@ -97,6 +106,36 @@ CsvViewerDirective.prototype.showVQL_ = function() {
 
     var modalInstance = this.uibModal_.open({
         template: '<grr-vql-help vql="vql"'+
+            'on-resolve="resolve()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+};
+
+CsvViewerDirective.prototype.showJSON_ = function() {
+    var modalScope = this.scope_.$new();
+
+    var data = [];
+    for (var i=0; i<this.pageData.rows.length; i++) {
+        var row = this.pageData.rows[i].cell;
+        if (row.length != this.pageData.columns.length) {
+            continue;
+        }
+        var new_obj = {};
+        for (var j=0; j<row.length; j++) {
+            new_obj[this.pageData.columns[j]] = row[j];
+        }
+        data.push(new_obj);
+    }
+
+    modalScope["json"] = JSON.stringify(data, null, 2);
+    modalScope["resolve"] = function(){
+        modalInstance.close();
+    };
+
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-inspect-json json="json" '+
             'on-resolve="resolve()" />',
         scope: modalScope,
         windowClass: 'wide-modal high-modal',

@@ -71,11 +71,12 @@
           <tr ng-repeat="descriptor in controller.matchingDescriptors"
               ng-class="{'row-selected': descriptor.name ==
                         controller.selectedName}">
-            <td style="cursor: pointer; border: none"
-                ng-click="controller.selectName(descriptor.name)">
-              <div style="display:block" class="full-width-height">
+            <td style="cursor: pointer; border: none">
+              <a style="display:block" class="full-width-height artifact-links"
+                 ng-click="controller.selectName(descriptor.name, $event)"
+                 href='#'>
                 {$ ::descriptor.name $}
-              </div>
+              </a>
             </td>
           </tr>
         </tbody>

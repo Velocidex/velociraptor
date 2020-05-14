@@ -31,6 +31,7 @@ const {TimeService} = goog.require('grrUi.core.timeService');
 const {TimeSinceFilter} = goog.require('grrUi.core.timeSinceFilter');
 const {TimestampFilter} = goog.require('grrUi.core.timestampFilter');
 const {VqlHelpDirective} = goog.require('grrUi.core.vqlHelpDirective');
+const {InspectJsonDirective} = goog.require('grrUi.core.inspectJsonDirective');
 const {WizardFormDirective} = goog.require('grrUi.core.wizardFormDirective');
 const {WizardFormPageDirective} = goog.require('grrUi.core.wizardFormPageDirective');
 
@@ -41,7 +42,7 @@ const {WizardFormPageDirective} = goog.require('grrUi.core.wizardFormPageDirecti
  */
 exports.coreModule =
     angular.module('grrUi.core', ['ngCookies', 'ui.bootstrap', 'datatables',
-                                  'datatables.buttons',
+                                  'datatables.buttons', 'ui.ace',
                                   'datatables.colreorder',
                                   ]);
 
@@ -72,6 +73,8 @@ exports.coreModule.directive(
 exports.coreModule.directive(
     VqlHelpDirective.directive_name, VqlHelpDirective);
 exports.coreModule.directive(
+    InspectJsonDirective.directive_name, InspectJsonDirective);
+exports.coreModule.directive(
     WizardFormDirective.directive_name, WizardFormDirective);
 exports.coreModule.directive(
     WizardFormPageDirective.directive_name, WizardFormPageDirective);
@@ -90,7 +93,9 @@ exports.coreModule.directive(
 exports.coreModule.directive(
     GlobalNotificationsDirective.directive_name, GlobalNotificationsDirective);
 exports.coreModule.service(ApiService.service_name, ApiService);
+
 exports.coreModule.service(ReflectionService.service_name, ReflectionService);
+
 exports.coreModule.service(TimeService.service_name, TimeService);
 exports.coreModule.service(DialogService.service_name, DialogService);
 exports.coreModule.directive(

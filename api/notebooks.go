@@ -30,6 +30,12 @@ import (
 	users "www.velocidex.com/golang/velociraptor/users"
 )
 
+func (self *ApiServer) ExportNotebook(
+	ctx context.Context,
+	in *api_proto.NotebookExportRequest) (*empty.Empty, error) {
+	return nil, errors.New("not implementated")
+}
+
 func (self *ApiServer) GetNotebooks(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.Notebooks, error) {
