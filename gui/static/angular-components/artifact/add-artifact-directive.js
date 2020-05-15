@@ -3,45 +3,24 @@
 goog.module('grrUi.artifact.addArtifactDirective');
 
 
-const AddArtifactController = function($scope, grrApiService) {
+const AddArtifactController = function($scope, grrApiService, grrAceService) {
     this.scope_ = $scope;
     this.grrApiService_ = grrApiService;
 
     var self = this;
     this.scope_.aceConfig = function(ace) {
-        self.ace = ace;
+        grrAceService.AceConfig(ace);
+
+        self.scope_.$on("$destroy", function() {
+            grrAceService.SaveAceConfig(ace);
+        });
+
         ace.commands.addCommand({
             name: 'saveAndExit',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
             exec: function(editor) {
                 self.saveArtifact();
             },
-        });
-
-        self.grrApiService_.getCached('v1/GetKeywordCompletions').then(function(response) {
-            self.completions = response.data['items'];
-        });
-
-        // create a completer object with a required callback function:
-        var vqlCompleter = {
-            getCompletions: function(editor, session, pos, prefix, callback) {
-                callback(null, self.completions.map(function(item) {
-                    return {
-                        caption: item.name,
-                        value: item.name,
-                        meta: item.type,
-                    };
-                }));
-            }
-        };
-        var langTools = window.ace.require('ace/ext/language_tools');
-
-        // finally, bind to langTools:
-        langTools.setCompleters([vqlCompleter, langTools.textCompleter]);
-
-        ace.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true
         });
     };
 };

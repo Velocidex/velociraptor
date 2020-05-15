@@ -14,13 +14,10 @@
     </div>
   </div>
   <div ui-ace="{
-               useWrapMode : true,
                showGutter: true,
                theme:'twilight',
                mode: 'sql',
-               enableBasicAutocompletion: true,
-               enableSnippets: true,
-               enableLiveAutocompletion: true,
+               onLoad: aceConfig,
                rendererOptions: {
                  fontSize: '14px',
                  fontFamily: 'monospace',

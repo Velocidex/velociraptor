@@ -6,11 +6,12 @@ goog.module.declareLegacyNamespace();
 
 
 const NotebookCellRendererController = function(
-    $scope, grrRoutingService, grrApiService, $uibModal, $timeout) {
+    $scope, grrRoutingService, grrApiService, grrAceService, $uibModal, $timeout) {
     this.scope_ = $scope;
     this.timeout_ = $timeout;
     this.grrRoutingService_ = grrRoutingService;
     this.grrApiService_ = grrApiService;
+    this.grrAceService_ = grrAceService;
     this.uibModal_ = $uibModal;
     this.cell = {};
     this.id = 0;
@@ -34,39 +35,14 @@ const NotebookCellRendererController = function(
     this.completions = [];
 
     this.scope_.aceConfig = function(ace) {
+        grrAceService.AceConfig(ace);
         self.ace = ace;
-        ace.commands.addCommand({
+        self.ace.commands.addCommand({
             name: 'saveAndExit',
             bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
             exec: function(editor) {
                 self.saveCell();
             },
-        });
-
-        self.grrApiService_.getCached('v1/GetKeywordCompletions').then(function(response) {
-            self.completions = response.data['items'];
-        });
-
-        // create a completer object with a required callback function:
-        var vqlCompleter = {
-            getCompletions: function(editor, session, pos, prefix, callback) {
-                callback(null, self.completions.map(function(item) {
-                    return {
-                        caption: item.name,
-                        value: item.name,
-                        meta: item.type,
-                    };
-                }));
-            }
-        };
-        var langTools = window.ace.require('ace/ext/language_tools');
-
-        // finally, bind to langTools:
-        langTools.setCompleters([vqlCompleter, langTools.textCompleter]);
-
-        ace.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true
         });
     };
 
@@ -99,11 +75,6 @@ NotebookCellRendererController.prototype.onCellIdChange_ = function() {
          });
 };
 
-
-NotebookCellRendererController.prototype.aceConfig = function(ace) {
-    var self = this;
-
-};
 
 NotebookCellRendererController.prototype.ace_type = function() {
     var type = this.cell.type;
@@ -375,6 +346,12 @@ NotebookCellRendererController.prototype.addCell = function(event, cell_type) {
 
 NotebookCellRendererController.prototype.setEditing = function(event, value) {
     this.cell.currently_editing = value;
+
+    // Only save state when we close the editor.
+    if (value == false) {
+        this.grrAceService_.SaveAceConfig(this.ace);
+    }
+
     event.stopPropagation();
     return false;
 };
@@ -416,6 +393,7 @@ NotebookCellRendererController.prototype.saveCell = function(event) {
     self.cell.output = "Loading";
     self.cell.timestamp = 0;
 
+    self.grrAceService_.SaveAceConfig(self.ace);
     this.grrApiService_.post(url, params).then(function(response) {
         self.cell = response.data;
         self.onCellIdChange_();

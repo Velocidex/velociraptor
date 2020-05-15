@@ -4,6 +4,7 @@ goog.module('grrUi.artifact.artifact');
 goog.module.declareLegacyNamespace();
 
 const {ArtifactsViewerDirective} = goog.require('grrUi.artifact.artifactViewerDirective');
+const {AceService} = goog.require('grrUi.core.aceService');
 const {FormDirective} = goog.require('grrUi.artifact.formDirective');
 const {LineChartDirective} = goog.require('grrUi.artifact.lineChartDirective');
 const {TimelineDirective} = goog.require('grrUi.artifact.timelineDirective');
