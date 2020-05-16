@@ -50,7 +50,9 @@
       </grr-hunt-clients>
     </uib-tab>
 
-    <uib-tab heading="Report" index="'report'">
+    <uib-tab heading="Report"
+             ng-if="false"
+             index="'report'">
       <grr-hunt-report hunt="controller.hunt"
                        huntId="huntId"
                        ng-if="controller.tabsShown['report']">
