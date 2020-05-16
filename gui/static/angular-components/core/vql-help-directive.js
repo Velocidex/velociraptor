@@ -2,8 +2,21 @@
 
 goog.module('grrUi.core.vqlHelpDirective');
 
-const VqlHelpController = function($scope) {
+const VqlHelpController = function($scope, grrAceService) {
     this.scope_ = $scope;
+    this.grrAceService_ = grrAceService;
+    var self = this;
+
+    this.scope_.aceConfig = function(ace) {
+        self.grrAceService_.AceConfig(ace);
+
+        self.scope_.$on('$destroy', function() {
+            self.grrAceService_.SaveAceConfig(ace);
+        });
+
+        ace.resize();
+    };
+
 };
 
 

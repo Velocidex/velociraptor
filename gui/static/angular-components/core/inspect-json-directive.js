@@ -2,11 +2,18 @@
 
 goog.module('grrUi.core.inspectJsonDirective');
 
-const InspectJsonController = function($scope) {
+const InspectJsonController = function($scope, grrAceService) {
+    var self = this;
+
     this.scope_ = $scope;
     this.scope_.aceConfig = function(ace) {
-        self.ace = ace;
-        self.ace.resize();
+        grrAceService.AceConfig(ace);
+
+        self.scope_.$on('$destroy', function() {
+            grrAceService.SaveAceConfig(ace);
+        });
+
+        ace.resize();
     };
 };
 

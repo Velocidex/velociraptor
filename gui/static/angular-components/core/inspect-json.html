@@ -4,11 +4,10 @@
 
 <div class="modal-body">
   <div ui-ace="{
-               useWrapMode : false,
                showGutter: true,
                workerPath: '/static/dist/',
                theme:'twilight',
-               onLoad: 'aceConfig',
+               onLoad: aceConfig,
                mode: 'json',
                rendererOptions: {
                  fontSize: '14px',

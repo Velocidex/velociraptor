@@ -6,6 +6,7 @@ goog.module.declareLegacyNamespace();
 
 const {ApiItemsProviderDirective} = goog.require('grrUi.core.apiItemsProviderDirective');
 const {ApiService} = goog.require('grrUi.core.apiService');
+const {AceService} = goog.require('grrUi.core.aceService');
 const {ClockDirective} = goog.require('grrUi.core.clockDirective');
 const {CsvViewerDirective} = goog.require('grrUi.core.csvViewerDirective');
 const {ConfirmationDialogDirective} = goog.require('grrUi.core.confirmationDialogDirective');
@@ -93,6 +94,7 @@ exports.coreModule.directive(
 exports.coreModule.directive(
     GlobalNotificationsDirective.directive_name, GlobalNotificationsDirective);
 exports.coreModule.service(ApiService.service_name, ApiService);
+exports.coreModule.service(AceService.service_name, AceService);
 
 exports.coreModule.service(ReflectionService.service_name, ReflectionService);
 
