@@ -74,16 +74,9 @@ func (self *ApiServer) GetNotebooks(
 			return nil, err
 		}
 
-		notebook.AvailableDownloads, err = getAvailableDownloadFiles(self.config,
+		// An error here just means there are no AvailableDownloads.
+		notebook.AvailableDownloads, _ = getAvailableDownloadFiles(self.config,
 			path.Join("/downloads/notebooks/", in.NotebookId))
-		if err != nil {
-			logger := logging.GetLogger(self.config, &logging.GUIComponent)
-			logger.WithFields(logrus.Fields{
-				"notebook_id": notebook.NotebookId,
-				"error":       err,
-			}).Error("GetNotebooks")
-		}
-
 		result.Items = append(result.Items, notebook)
 
 		return result, nil

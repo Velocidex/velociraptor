@@ -221,6 +221,8 @@ CsvViewerDirective.prototype.isObject = function(value) {
   return angular.isObject(value);
 };
 
+const int_regex = /^[-0-9]+$/;
+
 CsvViewerDirective.prototype.prepareData = function(value) {
   var rows = [];
   for (var i=0; i<value.rows.length; i++) {
@@ -232,6 +234,10 @@ CsvViewerDirective.prototype.prepareData = function(value) {
       // A bit of a hack for now, this represents an object.
       if (cell[0] == "{" || cell[0] == "[") {
         cell = JSON.parse(cell);
+      } else if(cell.match(int_regex)) {
+          cell = parseInt(cell);
+      } else if(cell[0] == " ") {
+          cell = cell.substr(1);
       }
 
       cells.push(cell);
