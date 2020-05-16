@@ -59,13 +59,6 @@ sources:
     query: |
       SELECT * FROM info()
       LIMIT 10
-
-# Reports can be MONITORING_DAILY, CLIENT, SERVER_EVENT
-reports:
-  - type: CLIENT
-    template: |
-      {{ .Description }}
-
 `
 )
 

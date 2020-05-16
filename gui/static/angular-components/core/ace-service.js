@@ -18,6 +18,9 @@ exports.AceService.prototype.SaveAceConfig = function(ace) {
 exports.AceService.prototype.AceConfig = function(ace) {
     var self = this;
 
+    // Take focus to the new editor.
+    ace.focus();
+
     var ace_options = window.ace_options;
 
     if (angular.isObject(ace_options)) {
@@ -57,7 +60,7 @@ exports.AceService.prototype.AceConfig = function(ace) {
 
     ace.setOptions({
         enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true
+        enableLiveAutocompletion: true,
     });
 };
 

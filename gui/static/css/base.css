@@ -839,6 +839,10 @@ abbr[title] {
   transform: translate(0, 0);
 }
 
+.notebook-editor {
+    border-width: 4px;
+    border-style: inset;
+}
 
 .ace_editor {
     height: 100%;

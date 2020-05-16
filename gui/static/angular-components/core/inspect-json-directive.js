@@ -9,6 +9,10 @@ const InspectJsonController = function($scope, grrAceService) {
     this.scope_.aceConfig = function(ace) {
         grrAceService.AceConfig(ace);
 
+        ace.setOptions({
+            autoScrollEditorIntoView: false,
+        });
+
         self.scope_.$on('$destroy', function() {
             grrAceService.SaveAceConfig(ace);
         });
