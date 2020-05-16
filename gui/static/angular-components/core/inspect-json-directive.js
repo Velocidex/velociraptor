@@ -11,6 +11,7 @@ const InspectJsonController = function($scope, grrAceService) {
 
         ace.setOptions({
             autoScrollEditorIntoView: false,
+            maxLines: null,
         });
 
         self.scope_.$on('$destroy', function() {
