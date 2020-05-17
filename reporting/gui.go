@@ -115,8 +115,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<div class="panel"><grr-csv-viewer value="data['%s']" params='%s' /></div>`,
-			key, string(parameters))
+			`<div class="panel"><grr-csv-viewer value="data['%s']" /></div>`, key)
 	}
 }
 
