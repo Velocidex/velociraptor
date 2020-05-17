@@ -10,6 +10,10 @@ const VqlHelpController = function($scope, grrAceService) {
     this.scope_.aceConfig = function(ace) {
         self.grrAceService_.AceConfig(ace);
 
+        ace.setOptions({
+            autoScrollEditorIntoView: false,
+        });
+
         self.scope_.$on('$destroy', function() {
             self.grrAceService_.SaveAceConfig(ace);
         });

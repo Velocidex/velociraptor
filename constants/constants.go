@@ -20,12 +20,9 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.4.2"
+	VERSION                    = "0.4.3"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
-
-	// Temporary attribute
-	AFF4_ATTR = "aff4:data"
 
 	FLOW_PREFIX             = "F."
 	FOREMAN_WELL_KNOWN_FLOW = "E.Foreman"

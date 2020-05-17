@@ -36,6 +36,12 @@ const NotebookCellRendererController = function(
 
     this.scope_.aceConfig = function(ace) {
         grrAceService.AceConfig(ace);
+
+        ace.setOptions({
+            autoScrollEditorIntoView: true,
+            maxLines: 25
+        });
+
         self.ace = ace;
         self.ace.commands.addCommand({
             name: 'saveAndExit',

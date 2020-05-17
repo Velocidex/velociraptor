@@ -74,7 +74,7 @@ func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 }
 
 func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
-	options, argv := parseOptions(values)
+	_, argv := parseOptions(values)
 	// Not enough args.
 	if len(argv) != 1 {
 		return ""
@@ -104,19 +104,13 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			return self.Error("Error: %v", err)
 		}
 
-		parameters, err := options.MarshalJSON()
-		if err != nil {
-			return self.Error("Error: %v", err)
-		}
-
 		key := fmt.Sprintf("table%d", len(self.Data))
 		self.Data[key] = &actions_proto.VQLResponse{
 			Response: string(encoded_rows),
 			Columns:  self.Scope.GetMembers(t[0]),
 		}
 		return fmt.Sprintf(
-			`<div class="panel"><grr-csv-viewer value="data['%s']" params='%s' /></div>`,
-			key, string(parameters))
+			`<div class="panel"><grr-csv-viewer value="data['%s']" /></div>`, key)
 	}
 }
 
