@@ -74,7 +74,7 @@ func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 }
 
 func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
-	options, argv := parseOptions(values)
+	_, argv := parseOptions(values)
 	// Not enough args.
 	if len(argv) != 1 {
 		return ""
@@ -100,11 +100,6 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		}
 
 		encoded_rows, err := json.MarshalIndent(t, "", " ")
-		if err != nil {
-			return self.Error("Error: %v", err)
-		}
-
-		parameters, err := options.MarshalJSON()
 		if err != nil {
 			return self.Error("Error: %v", err)
 		}
