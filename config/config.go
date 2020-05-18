@@ -128,6 +128,8 @@ func GetDefaultConfig() *config_proto.Config {
 		},
 		CA: &config_proto.CAConfig{},
 		Frontend: &config_proto.FrontendConfig{
+			Hostname: "localhost",
+
 			// A public interface for clients to
 			// connect to.
 			BindAddress:   "0.0.0.0",

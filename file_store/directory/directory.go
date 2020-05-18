@@ -237,6 +237,10 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 	path := self.FilenameToFileStorePath(root)
 	return filepath.Walk(path,
 		func(path string, info os.FileInfo, err error) error {
+			// Ignore stat errors.
+			if info == nil || err != nil {
+				return nil
+			}
 			filename, err_1 := self.FileStorePathToFilename(path)
 			if err_1 != nil {
 				return err_1
