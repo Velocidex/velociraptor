@@ -95,6 +95,15 @@ func (self *FileStoreTestSuite) TestListChildren() {
 		"/a/b/Bar.txt",
 		"/a/b/Bar/Baz",
 		"/a/b/Foo.txt"})
+
+	// Walk non existant directory just returns no results.
+	names = nil
+	err = self.filestore.Walk(filename+"/nonexistant", func(path string, info os.FileInfo, err error) error {
+		names = append(names, path)
+		return nil
+	})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(names), 0)
 }
 
 func (self *FileStoreTestSuite) TestFileReadWrite() {
