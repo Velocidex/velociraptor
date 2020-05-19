@@ -208,10 +208,7 @@ func StartClientMonitoringService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification, err := ListenForNotification(constants.ClientMonitoringFlowURN)
-	if err != nil {
-		return err
-	}
+	notification := ListenForNotification(constants.ClientMonitoringFlowURN)
 
 	wg.Add(1)
 	go func() {
@@ -223,18 +220,14 @@ func StartClientMonitoringService(
 				return
 
 			case <-notification:
-				err = LoadFromFile(config_obj)
+				err := LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartClientMonitoringService: ", err)
 					return
 				}
 			}
 
-			notification, err = ListenForNotification(constants.ClientMonitoringFlowURN)
-			if err != nil {
-				logger.Error("StartClientMonitoringService ", err)
-				return
-			}
+			notification = ListenForNotification(constants.ClientMonitoringFlowURN)
 		}
 	}()
 

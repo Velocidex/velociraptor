@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
@@ -95,12 +94,12 @@ func StartNotificationService(
 	return nil
 }
 
-func ListenForNotification(client_id string) (chan bool, error) {
+func ListenForNotification(client_id string) chan bool {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
 	if notification_pool == nil {
-		return nil, errors.New("Not initialized")
+		notification_pool = notifications.NewNotificationPool()
 	}
 
 	return notification_pool.Listen(client_id)

@@ -23,7 +23,7 @@ func (self *NotificationPool) IsClientConnected(client_id string) bool {
 	return pres
 }
 
-func (self *NotificationPool) Listen(client_id string) (chan bool, error) {
+func (self *NotificationPool) Listen(client_id string) chan bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -39,13 +39,12 @@ func (self *NotificationPool) Listen(client_id string) (chan bool, error) {
 		// wait the full max poll to retry.
 		close(c)
 		delete(self.clients, client_id)
-		// return nil, errors.New("Only one listener may exist.")
 	}
 
 	c = make(chan bool)
 	self.clients[client_id] = c
 
-	return c, nil
+	return c
 }
 
 func (self *NotificationPool) Notify(client_id string) {

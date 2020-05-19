@@ -33,6 +33,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -59,7 +60,7 @@ var (
 
 func validate_config(config_data []byte) error {
 	// Validate the string by parsing it as a config proto.
-	test_config := config.GetDefaultConfig()
+	test_config := &config_proto.Config{}
 	err := yaml.UnmarshalStrict(config_data, test_config)
 	if err != nil {
 		return err
