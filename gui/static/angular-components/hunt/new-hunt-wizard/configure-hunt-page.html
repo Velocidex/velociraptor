@@ -1,5 +1,8 @@
 <div class="padded">
-  <grr-form-proto value="huntRunnerArgs" type="Hunt"
-                  visible-fields="['hunt_description', 'client_limit']">
-  </grr-form-proto>
+  <h4>Hunt Description</h4>
+  <input class="form-control ng-pristine ng-valid ng-empty ng-touched"
+         style="background-color: #ffffff" type="text"
+         placeholder="Enter a hunt description"
+         ng-model="huntRunnerArgs.hunt_description">
+  </input>
 </div>

@@ -7,7 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -56,7 +56,7 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		config_obj := config.GetDefaultConfig()
+		config_obj := &config_proto.Config{}
 		container, err := reporting.NewContainer(arg.Output)
 		if err != nil {
 			scope.Log("collect: %v", err)
@@ -71,8 +71,7 @@ func (self CollectPlugin) Call(
 		// Should we encrypt it?
 		container.Password = arg.Password
 
-		repository, err := artifacts.GetGlobalRepository(
-			config_obj)
+		repository, err := artifacts.GetGlobalRepository(config_obj)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return

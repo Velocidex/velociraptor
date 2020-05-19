@@ -193,7 +193,7 @@ func ReadEmbeddedConfig() (*config_proto.Config, error) {
 	io.Copy(b, r)
 	r.Close()
 
-	result := GetDefaultConfig()
+	result := &config_proto.Config{}
 	err = yaml.Unmarshal(b.Bytes(), result)
 	if err != nil {
 		return nil, err

@@ -472,14 +472,16 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Get a notification for this client from the pool -
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
-		notification, err := services.ListenForNotification(source)
-		if err != nil {
+
+		if services.IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",
 				http.StatusConflict)
 			return
 		}
+
+		notification := services.ListenForNotification(source)
 
 		// Deadlines are designed to ensure that connections
 		// are not blocked for too long (maybe several

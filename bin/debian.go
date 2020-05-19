@@ -53,6 +53,7 @@ import (
 	"github.com/xor-gate/debpkg"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
@@ -166,6 +167,10 @@ WantedBy=multi-user.target
 )
 
 func doServerDeb() {
+	// Disable logging when creating a deb - we may not create the
+	// deb on the same system where the logs should go.
+	config.ValidateClientConfig(&config_proto.Config{})
+
 	config_obj, err := get_server_config(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config file")
 

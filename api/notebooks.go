@@ -491,11 +491,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	go func() {
 		defer cancel()
 
-		done, err := services.ListenForNotification(in.CellId)
-		if err != nil {
-			main_err = err
-			return
-		}
+		done := services.ListenForNotification(in.CellId)
 
 		go func() {
 			// Cancel the main call if we finish before the timeout.
