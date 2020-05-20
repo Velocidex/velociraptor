@@ -85,6 +85,11 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		return t
 
 	case []*NotebookCellQuery:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return ""
+		}
+
 		result := ""
 		for _, item := range t {
 			result += fmt.Sprintf(
