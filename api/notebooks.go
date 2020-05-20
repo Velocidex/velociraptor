@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self *ApiServer) ExportNotebook(
@@ -710,6 +711,9 @@ func updateCellContents(
 	currently_editing bool,
 	notebook_id, cell_id, cell_type string,
 	input, original_input string) (*api_proto.NotebookCell, error) {
+
+	// Do not let exceptions take down the server.
+	defer utils.RecoverVQL(tmpl.Scope)
 
 	output := ""
 	var err error
