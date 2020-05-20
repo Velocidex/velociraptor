@@ -407,6 +407,10 @@ func LoadConfigWithWriteback(filename string) (*config_proto.Config, error) {
 		return nil, err
 	}
 
+	if config_obj.Client == nil {
+		return config_obj, nil
+	}
+
 	existing_writeback := &config_proto.Writeback{}
 	data, err := ioutil.ReadFile(WritebackLocation(config_obj))
 	// Failing to read the file is not an error - the file may not

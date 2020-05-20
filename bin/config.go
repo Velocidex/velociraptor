@@ -88,15 +88,46 @@ var (
 		"Generate a new config file with a rotates server key.")
 )
 
+func verify_frontend_config(config_obj *config_proto.Config) error {
+	server_cert, err := crypto.ParseX509CertFromPemStr(
+		[]byte(config_obj.Frontend.Certificate))
+	if err != nil {
+		return err
+	}
+
+	if server_cert.PublicKeyAlgorithm != x509.RSA {
+		return errors.New("Not RSA algorithm")
+	}
+
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	if !ok {
+		return errors.New("failed to parse CA certificate")
+	}
+
+	// Verify that the certificate is signed by the CA.
+	opts := x509.VerifyOptions{
+		Roots: roots,
+	}
+	_, err = server_cert.Verify(opts)
+	return err
+}
+
 func doShowConfig() {
 	config_obj, err := config.LoadConfigWithWriteback(*config_path)
 	kingpin.FatalIfError(err, "Unable to load config.")
 
-	if config_obj.Frontend == nil {
+	if config_obj.Client != nil {
 		kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
 			"Unable to load config.")
-	} else {
+	}
+
+	if config_obj.Frontend != nil {
 		kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
+			"Unable to load config.")
+
+		// Do some additional verifications.
+		kingpin.FatalIfError(verify_frontend_config(config_obj),
 			"Unable to load config.")
 	}
 
