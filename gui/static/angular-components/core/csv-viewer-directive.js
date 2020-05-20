@@ -167,7 +167,10 @@ CsvViewerDirective.prototype.fetchText_ = function() {
     }
 
     if (angular.isDefined(self.scope_.params)) {
-        var url = "v1/GetTable";
+        var url = this.scope_["baseUrl"];
+        if (!angular.isString(url)) {
+            url = "v1/GetTable";
+        }
         var params = Object.assign({}, self.scope_.params);
 
         if (angular.isObject(params)) {
@@ -255,6 +258,7 @@ CsvViewerDirective.prototype.prepareData = function(value) {
 exports.CsvViewerDirective = function() {
   return {
       scope: {
+          baseUrl: '=',
           params: '=',
           value: '=',
           vqlHelpPlugin: '@',

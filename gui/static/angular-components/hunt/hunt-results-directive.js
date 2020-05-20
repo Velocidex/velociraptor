@@ -12,11 +12,8 @@ goog.module.declareLegacyNamespace();
  */
 const HuntResultsController = function(
     $scope) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
-
-  /** @export {string} */
-  this.resultsUrl;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
     /** @type {array} */
     this.artifactNames;
@@ -24,8 +21,8 @@ const HuntResultsController = function(
     /** @type {string} */
     this.selectedArtifact;
 
-  $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));
-  $scope.$watch('controller.selectedArtifact', this.onHuntIdChange.bind(this));
+    $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));
+    $scope.$watch('controller.selectedArtifact', this.onHuntIdChange.bind(this));
 };
 
 
@@ -48,7 +45,6 @@ HuntResultsController.prototype.onHuntIdChange = function(huntId) {
     this.queryParams = {'hunt_id': this.scope_.huntId,
                         path: this.scope_.huntId,
                         artifact: this.selectedArtifact};
-    this.resultsUrl = '/v1/GetHuntResults';
 };
 
 /**
