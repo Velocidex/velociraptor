@@ -18,6 +18,10 @@ func (self FlowPathManager) Path() string {
 	return self.path
 }
 
+func (self FlowPathManager) ContainerPath() string {
+	return path.Join("/clients", self.client_id, "collections")
+}
+
 func (self FlowPathManager) GetPathForWriting() (string, error) {
 	return self.path, nil
 }

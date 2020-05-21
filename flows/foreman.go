@@ -102,7 +102,7 @@ func ForemanProcessMessage(
 			config_obj, client_id,
 			&crypto_proto.GrrMessage{
 				SessionId:       constants.MONITORING_WELL_KNOWN_FLOW,
-				RequestId:       processVQLResponses,
+				RequestId:       constants.ProcessVQLResponses,
 				VQLClientAction: flow_condition_query})
 		if err != nil {
 			return err

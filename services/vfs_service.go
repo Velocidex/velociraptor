@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -18,6 +19,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -35,55 +37,40 @@ func (self *VFSService) Start(
 	wg *sync.WaitGroup) error {
 	self.logger.Info("Starting VFS writing service.")
 
-	err := watchForFlowCompletion(
+	watchForFlowCompletion(
 		ctx, wg, self.config_obj, "System.VFS.ListDirectory",
 		self.ProcessListDirectory)
-	if err != nil {
-		return err
-	}
 
-	err = watchForFlowCompletion(
+	watchForFlowCompletion(
 		ctx, wg, self.config_obj, "System.VFS.DownloadFile",
 		self.ProcessDownloadFile)
-	if err != nil {
-		return err
-	}
 
 	return nil
 }
 
 func (self *VFSService) ProcessDownloadFile(
-	ctx context.Context, scope *vfilter.Scope, row vfilter.Row) {
+	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
 
 	defer utils.CheckForPanic("ProcessDownloadFile")
 
-	client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
-	flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
-	ts := vql_subsystem.GetIntFromRow(scope, row, "_ts")
-
-	// We need to run a query referring to the row.
-	sub_scope := scope.Copy()
-	sub_scope.AppendVars(row)
-
-	vql, err := vfilter.Parse(
-		"select Path, Accessor, Size FROM source(" +
-			"flow_id=FlowId, " +
-			"artifact='System.VFS.DownloadFile', " +
-			"client_id=ClientId)")
-	if err != nil {
-		panic(err)
-	}
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		panic(err)
-	}
+	client_id, _ := row.GetString("ClientId")
+	flow_id, _ := row.GetString("FlowId")
+	ts, _ := row.GetInt64("_ts")
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
-	for row := range vql.Eval(ctx, sub_scope) {
-		Accessor := vql_subsystem.GetStringFromRow(scope, row, "Accessor")
-		Path := vql_subsystem.GetStringFromRow(scope, row, "Path")
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		client_id, flow_id, "System.VFS.DownloadFile")
+	row_chan, err := file_store.GetTimeRange(
+		ctx, self.config_obj, path_manager, 0, 0)
+	if err != nil {
+		self.logger.Error("Unable to read artifact: %v", err)
+		return
+	}
+
+	for row := range row_chan {
+		Accessor, _ := row.GetString("Accessor")
+		Path, _ := row.GetString("Path")
 
 		// Figure out where the file was uploaded to.
 		vfs_path := flow_path_manager.GetUploadsFile(Accessor, Path).Path()
@@ -98,6 +85,7 @@ func (self *VFSService) ProcessDownloadFile(
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
+		db, _ := datastore.GetDB(self.config_obj)
 		err = db.SetSubject(self.config_obj,
 			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
 			&flows_proto.VFSDownloadInfo{
@@ -112,30 +100,29 @@ func (self *VFSService) ProcessDownloadFile(
 }
 
 func (self *VFSService) ProcessListDirectory(
-	ctx context.Context, scope *vfilter.Scope, row vfilter.Row) {
+	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
 
-	client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
-	flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
-	ts := vql_subsystem.GetIntFromRow(scope, row, "_ts")
+	client_id, _ := row.GetString("ClientId")
+	flow_id, _ := row.GetString("FlowId")
+	ts, _ := row.GetInt64("_ts")
 
-	// We need to run a query referring to the row.
-	sub_scope := scope.Copy()
-	sub_scope.AppendVars(row)
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		client_id, flow_id, "System.VFS.ListDirectory")
 
-	vql, err := vfilter.Parse("select * FROM " +
-		"source(artifact='System.VFS.ListDirectory', " +
-		"flow_id=FlowId, client_id=ClientId)")
+	row_chan, err := file_store.GetTimeRange(
+		ctx, self.config_obj, path_manager, 0, 0)
 	if err != nil {
-		panic(err)
+		self.logger.Error("Unable to read artifact: %v", err)
+		return
 	}
 
-	var rows []vfilter.Row
+	var rows []*ordereddict.Dict
 	var current_vfs_components []string = nil
 
-	for row := range vql.Eval(ctx, sub_scope) {
-		full_path := vql_subsystem.GetStringFromRow(scope, row, "_FullPath")
-		accessor := vql_subsystem.GetStringFromRow(scope, row, "_Accessor")
-		name := vql_subsystem.GetStringFromRow(scope, row, "Name")
+	for row := range row_chan {
+		full_path, _ := row.GetString("_FullPath")
+		accessor, _ := row.GetString("_Accessor")
+		name, _ := row.GetString("Name")
 
 		if name == "." || name == ".." {
 			continue
@@ -162,10 +149,8 @@ func (self *VFSService) ProcessListDirectory(
 			// the first collection before the first row
 			// is processed.
 			if current_vfs_components != nil {
-				err := self.flush_state(
-					sub_scope, ts, client_id,
-					flow_id,
-					current_vfs_components, rows)
+				err := self.flush_state(uint64(ts), client_id,
+					flow_id, current_vfs_components, rows)
 				if err != nil {
 					return
 				}
@@ -176,7 +161,7 @@ func (self *VFSService) ProcessListDirectory(
 		rows = append(rows, row)
 	}
 
-	err = self.flush_state(sub_scope, ts, client_id, flow_id,
+	err = self.flush_state(uint64(ts), client_id, flow_id,
 		current_vfs_components, rows)
 	if err != nil {
 		self.logger.Error("Unable to save directory: %v", err)
@@ -185,9 +170,8 @@ func (self *VFSService) ProcessListDirectory(
 }
 
 // Flush the current state into the database and clear it for the next directory.
-func (self *VFSService) flush_state(scope *vfilter.Scope,
-	timestamp uint64, client_id, flow_id string,
-	vfs_components []string, rows []vfilter.Row) error {
+func (self *VFSService) flush_state(timestamp uint64, client_id, flow_id string,
+	vfs_components []string, rows []*ordereddict.Dict) error {
 	if len(rows) == 0 {
 		return nil
 	}
@@ -197,16 +181,15 @@ func (self *VFSService) flush_state(scope *vfilter.Scope,
 		return errors.WithStack(err)
 	}
 
-	urn := utils.JoinComponents(append([]string{
-		"clients", client_id, "vfs"}, vfs_components...), "/")
-
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
+	client_path_manager := paths.NewClientPathManager(client_id)
 	return db.SetSubject(self.config_obj,
-		urn, &flows_proto.VFSListResponse{
-			Columns:   scope.GetMembers(rows[0]),
+		client_path_manager.VFSPath(vfs_components),
+		&flows_proto.VFSListResponse{
+			Columns:   rows[0].Keys(),
 			Timestamp: timestamp,
 			Response:  string(serialized),
 			TotalRows: uint64(len(rows)),

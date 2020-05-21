@@ -23,6 +23,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type HuntTestSuite struct {
@@ -116,13 +117,12 @@ func (self *HuntTestSuite) TestHuntManager() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	// Make sure manager reacted.
-	time.Sleep(1 * time.Second)
-
-	// The hunt index is updated.
-	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-		self.client_id, []string{hunt_obj.HuntId})
-	assert.NoError(t, err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		// The hunt index is updated.
+		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+			self.client_id, []string{hunt_obj.HuntId})
+		return err == nil
+	})
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
@@ -173,14 +173,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	// Make sure manager reacted.
-	time.Sleep(1 * time.Second)
-
-	// The hunt index is updated since we have seen this client
-	// already (even if we decided not to launch on it).
-	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-		self.client_id, []string{hunt_obj.HuntId})
-	assert.NoError(t, err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		// The hunt index is updated since we have seen this client
+		// already (even if we decided not to launch on it).
+		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+			self.client_id, []string{hunt_obj.HuntId})
+		return err == nil
+	})
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
@@ -246,14 +245,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	// Make sure manager reacted.
-	time.Sleep(1 * time.Second)
-
-	// The hunt index is updated since we have seen this client
-	// already (even if we decided not to launch on it).
-	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-		self.client_id, []string{hunt_obj.HuntId})
-	assert.NoError(t, err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		// The hunt index is updated since we have seen this client
+		// already (even if we decided not to launch on it).
+		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+			self.client_id, []string{hunt_obj.HuntId})
+		return err == nil
+	})
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
@@ -319,14 +317,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	// Make sure manager reacted.
-	time.Sleep(1 * time.Second)
-
-	// The hunt index is updated since we have seen this client
-	// already (even if we decided not to launch on it).
-	err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
-		self.client_id, []string{hunt_obj.HuntId})
-	assert.NoError(t, err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		// The hunt index is updated since we have seen this client
+		// already (even if we decided not to launch on it).
+		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+			self.client_id, []string{hunt_obj.HuntId})
+		return err == nil
+	})
 }
 
 func TestHuntTestSuite(t *testing.T) {

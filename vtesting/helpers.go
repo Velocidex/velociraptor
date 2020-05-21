@@ -18,7 +18,7 @@
 /* An internal package with test utilities.
  */
 
-package testing
+package vtesting
 
 import (
 	"io/ioutil"
@@ -46,4 +46,19 @@ func (self RealClock) Now() time.Time {
 }
 func (self RealClock) After(d time.Duration) <-chan time.Time {
 	return time.After(d)
+}
+
+func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
+	end_time := time.Now().Add(deadline)
+
+	for end_time.After(time.Now()) {
+		ok := cb()
+		if ok {
+			return
+		}
+
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	t.Fatalf("Timed out")
 }

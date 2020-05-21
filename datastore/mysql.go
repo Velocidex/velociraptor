@@ -15,9 +15,9 @@ import (
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -306,7 +306,7 @@ func NewMySQLDataStore(config_obj *config_proto.Config) (DataStore, error) {
 		}
 	}
 
-	return &MySQLDataStore{FileBaseDataStore{clock: testing.RealClock{}}}, nil
+	return &MySQLDataStore{FileBaseDataStore{clock: vtesting.RealClock{}}}, nil
 }
 
 func initializeDatabase(

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -13,12 +14,116 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type EnrollmentService struct {
+	mu sync.Mutex
+
+	APIClientFactory grpc_client.APIClientFactory
+	config_obj       *config_proto.Config
+	cancel           func()
+}
+
+func (self *EnrollmentService) Start(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
+	wg.Add(1)
+
+	// Wait in this func until we are ready to monitor.
+	local_wg := &sync.WaitGroup{}
+	local_wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Info("Starting Enrollment service.")
+
+		events, cancel := GetJournal().Watch("Server.Internal.Enrollment")
+		defer cancel()
+
+		local_wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-events:
+				if !ok {
+					return
+				}
+				err := self.ProcessRow(ctx, event)
+				if err != nil {
+					logger.Error("Enrollment Service: %v", err)
+				}
+			}
+		}
+	}()
+
+	local_wg.Wait()
+
+	return nil
+}
+
+func (self *EnrollmentService) ProcessRow(
+	ctx context.Context,
+	row *ordereddict.Dict) error {
+	client_id, pres := row.GetString("ClientId")
+	if !pres {
+		return nil
+	}
+
+	// Get the client record from the data store.
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_info := &actions_proto.ClientInfo{}
+	client_path_manager := paths.NewClientPathManager(client_id)
+
+	db.GetSubject(self.config_obj, client_path_manager.Path(), client_info)
+
+	// If we have a valid client record we do not need to
+	// interrogate. Interrogation happens automatically only once
+	// - the first time a client appears.
+	if client_info.ClientId == client_id ||
+		len(client_info.Hostname) > 0 {
+		return nil
+	}
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Debug("Interrogating %v", client_id)
+
+	// Issue the flow on the client.
+	flow_id, err := artifacts.ScheduleArtifactCollection(self.config_obj,
+		self.config_obj.Client.PinnedServerName, /* principal */
+		&flows_proto.ArtifactCollectorArgs{
+			ClientId:  client_id,
+			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
+		})
+	if err != nil {
+		return err
+	}
+
+	// Write an intermediate record while the interrogation is in flight.
+	client_info.ClientId = client_id
+	client_info.LastInterrogateFlowId = flow_id
+	err = db.SetSubject(self.config_obj, client_path_manager.Path(), client_info)
+
+	return err
+}
 
 // Watch the system's flow completion log for interrogate artifacts.
 type InterrogationService struct {
@@ -29,65 +134,69 @@ type InterrogationService struct {
 	cancel           func()
 }
 
+// Watch for Generic.Client.Info artifacts.
 func (self *InterrogationService) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
-	defer wg.Done()
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Starting interrogation service.")
 
-	scope := artifacts.ScopeBuilder{
-		Config:     self.config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-	}.Build()
-	defer scope.Close()
-
-	scope.Logger = logging.NewPlainLogger(self.config_obj,
-		&logging.FrontendComponent)
-
-	vql, _ := vfilter.Parse("SELECT * FROM Artifact.Server.Internal.Interrogate()")
-	go func() {
-		for row := range vql.Eval(ctx, scope) {
-			row_dict := vfilter.RowToDict(ctx, scope, row)
-			err := self.ProcessRow(row_dict)
+	watchForFlowCompletion(
+		ctx, wg, self.config_obj, "Generic.Client.Info",
+		func(ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
+			err := self.ProcessRow(ctx, scope, row)
 			if err != nil {
-				logger.Error("Interrogation Service: %v", err)
+				logger.Error(fmt.Sprintf("InterrogationService: %v", err))
 			}
-		}
-	}()
+		})
 
 	return nil
 }
 
-func (self *InterrogationService) ProcessRow(row *ordereddict.Dict) error {
-	client_id, ok := row.GetString("ClientId")
-	if !ok {
+func (self *InterrogationService) ProcessRow(
+	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) error {
+	client_id, _ := row.GetString("ClientId")
+	if client_id == "" {
 		return errors.New("Unknown ClientId")
 	}
 
-	getter := func(field string) string {
-		result, _ := row.GetString(field)
-		return result
+	flow_id, _ := row.GetString("FlowId")
+
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		client_id, flow_id, "Generic.Client.Info")
+	row_chan, err := file_store.GetTimeRange(
+		ctx, self.config_obj, path_manager, 0, 0)
+	if err != nil {
+		return err
 	}
 
-	client_info := &actions_proto.ClientInfo{
-		Hostname:              getter("Hostname"),
-		System:                getter("OS"),
-		Release:               getter("Platform") + getter("PlatformVersion"),
-		Architecture:          getter("Architecture"),
-		Fqdn:                  getter("Fqdn"),
-		ClientName:            getter("Name"),
-		ClientVersion:         getter("BuildTime"),
-		LastInterrogateFlowId: getter("FlowId"),
+	var client_info *actions_proto.ClientInfo
+	for row := range row_chan {
+		getter := func(field string) string {
+			result, _ := row.GetString(field)
+			return result
+		}
+
+		client_info = &actions_proto.ClientInfo{
+			ClientId:              client_id,
+			Hostname:              getter("Hostname"),
+			System:                getter("OS"),
+			Release:               getter("Platform") + getter("PlatformVersion"),
+			Architecture:          getter("Architecture"),
+			Fqdn:                  getter("Fqdn"),
+			ClientName:            getter("Name"),
+			ClientVersion:         getter("BuildTime"),
+			LastInterrogateFlowId: flow_id,
+		}
+
+		label_array, ok := row.GetStrings("Labels")
+		if ok {
+			client_info.Labels = append(client_info.Labels, label_array...)
+		}
 	}
 
-	label_array, ok := row.GetStrings("Labels")
-	if ok {
-		client_info.Labels = append(client_info.Labels, label_array...)
+	if client_info == nil {
+		return errors.New("No Generic.Client.Info results")
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
@@ -135,11 +244,17 @@ func startInterrogationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) {
+
+	enrollment_server := &EnrollmentService{
+		config_obj:       config_obj,
+		APIClientFactory: grpc_client.GRPCAPIClient{},
+	}
+	enrollment_server.Start(ctx, wg)
+
 	result := &InterrogationService{
 		config_obj:       config_obj,
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 
-	wg.Add(1)
-	go result.Start(ctx, wg)
+	result.Start(ctx, wg)
 }

@@ -187,6 +187,20 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				}
 			}
 
+			if source.Query != "" {
+				multi_vql, err := vfilter.MultiParse(source.Query)
+				if err != nil {
+					return nil, err
+				}
+
+				scope := vql_subsystem.MakeScope()
+
+				// Append the queries to the query list.
+				for _, vql := range multi_vql {
+					source.Queries = append(source.Queries, vql.ToString(scope))
+				}
+			}
+
 			if len(source.Queries) == 0 {
 				return nil, errors.New(fmt.Sprintf(
 					"Source %s in artifact %s contains no queries!",

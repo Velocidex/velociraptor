@@ -14,8 +14,7 @@ sources:
     description: |
       This source is used internally to populate agent info. Do not
       remove this query.
-    queries:
-      - |
+    query: |
         SELECT config.Version.Name AS Name,
                config.Version.BuildTime as BuildTime,
                config.Labels AS Labels,

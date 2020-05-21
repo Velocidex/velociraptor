@@ -106,7 +106,7 @@ func CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	hunt.StartRequest.CompiledCollectorArgs, err = CompileCollectorArgs(
+	hunt.StartRequest.CompiledCollectorArgs, err = artifacts.CompileCollectorArgs(
 		config_obj, principal, hunt.StartRequest)
 	if err != nil {
 		return nil, err

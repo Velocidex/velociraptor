@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -116,7 +117,8 @@ func (self *TestDataStore) ListChildren(
 		if strings.HasPrefix(k, urn) {
 			k = strings.TrimLeft(strings.TrimPrefix(k, urn), "/")
 			components := strings.Split(k, "/")
-			if len(components) > 0 {
+			if len(components) > 0 &&
+				!utils.InString(result, components[0]) {
 				result = append(result, components[0])
 			}
 		}

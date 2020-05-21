@@ -39,7 +39,7 @@ func (self *QueuePool) Register(vfs_path string) (<-chan *ordereddict.Dict, func
 
 	registrations, _ := self.registrations[vfs_path]
 	new_registration := &Listener{
-		Channel: make(chan *ordereddict.Dict, 1000),
+		Channel: make(chan *ordereddict.Dict, 100000),
 		id:      time.Now().UnixNano(),
 	}
 	registrations = append(registrations, new_registration)

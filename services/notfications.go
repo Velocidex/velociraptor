@@ -126,5 +126,9 @@ func IsClientConnected(client_id string) bool {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
+	if notification_pool == nil {
+		notification_pool = notifications.NewNotificationPool()
+	}
+
 	return notification_pool.IsClientConnected(client_id)
 }

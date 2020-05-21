@@ -357,12 +357,14 @@ func control(server_obj *Server) http.Handler {
 				// can not encrypt for it), we
 				// indicate this by providing it with
 				// an HTTP error code.
+				logger.Debug("Please Enrol (%v)", message_info.Source)
 				http.Error(
 					w,
 					"Please Enrol",
 					http.StatusNotAcceptable)
 			} else {
 				server_obj.Error("Unable to process", err)
+				logger.Debug("Unable to process (%v)", message_info.Source)
 				http.Error(w, "", http.StatusServiceUnavailable)
 			}
 			return
