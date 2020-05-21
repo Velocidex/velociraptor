@@ -1,0 +1,59 @@
+Parameters:
+  ParseMFTMock: |
+    [
+     {
+      "EntryNumber": 64560,
+      "InUse": true,
+      "ParentEntryNumber": 95295,
+      "FullPath": "Users/yolo/Desktop/evil.txt",
+      "FileName": "evil.txt",
+      "FileSize": 1346,
+      "ReferenceCount": 1,
+      "IsDir": false,
+      "Created0x10s": 1485390072,
+      "Created0x30s": 1588167507,
+      "LastModified0x10s": 1485390072,
+      "LastModified0x30s": 1588167507,
+      "LastRecordChange0x10s": 1485390072,
+      "LastRecordChange0x30s": 1588167507,
+      "LastAccess0x10s": 1485390072,
+      "LastAccess0x30s": "2020-04-29T13:38:27.0905243Z"
+     },
+     {
+      "EntryNumber": 187444,
+      "InUse": true,
+      "ParentEntryNumber": 95309,
+      "FullPath": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+      "FileName": "evil.txt.lnk",
+      "FileSize": 524,
+      "ReferenceCount": 2,
+      "IsDir": false,
+      "Created0x10s": 1485390072,
+      "Created0x30s": 1485390072,
+      "LastModified0x10s": 1485390072,
+      "LastModified0x30s": 1485390072,
+      "LastRecordChange0x10s": 1485390072,
+      "LastRecordChange0x30s": 1485390072,
+      "LastAccess0x10s": 1485390072,
+      "LastAccess0x30s": 1485390072
+     }]
+
+Queries:
+  # Mock up test for Windows.Timeline.RMFT
+  #- SELECT * from Artifact.Windows.Timeline.MFT(CompressedOutput=FALSE,Inode=64560,TimeOutput='FILE_NAME')
+  #- SELECT * from Artifact.Windows.Timeline.MFT(CompressedOutput=TRUE,Inode=64560)
+  - LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10,
+          timestamp(epoch=Created0x30s) AS Created0x30,
+          timestamp(epoch=LastModified0x10s) AS LastModified0x10,
+          timestamp(epoch=LastModified0x30s) AS LastModified0x30,
+          timestamp(epoch=LastRecordChange0x10s) AS LastRecordChange0x10,
+          timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30,
+          timestamp(epoch=LastAccess0x10s) AS LastAccess0x10,
+          timestamp(epoch=LastAccess0x30s) AS LastAccess0x30
+       FROM parse_json_array(data=ParseMFTMock)
+  - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
+        mock(plugin="parse_mft", results=my_mocks)
+      FROM scope()
+  - SELECT * FROM Artifact.Windows.Timeline.MFT(Inode="64560")
+  - SELECT * FROM Artifact.Windows.Timeline.MFT(SizeMin="100",SizeMax="750")
+  - SELECT * FROM Artifact.Windows.Timeline.MFT(DateBefore="2020-01-01")
