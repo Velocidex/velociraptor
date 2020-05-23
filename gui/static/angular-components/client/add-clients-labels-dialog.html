@@ -7,7 +7,7 @@
     <div class="form-group">
       <label class="control-label" for="labelBox">Label</label>
       <div class="controls">
-        <input type="text" name="labelBox" ng-model="controller.labelName" />
+        <input type="text" name="labelBox" ng-model="controller.labelName"></input>
       </div>
     </div>
   </form>
@@ -20,7 +20,7 @@
     </thead>
     <tbody>
     <tr ng-repeat="client in clients">
-      <td><grr-client-urn value="client.client_id" /></td>
+      <td><grr-client-urn value="client.client_id"></grr-client-urn></td>
     </tr>
     </tbody>
   </table>

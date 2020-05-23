@@ -6,7 +6,7 @@
        orientation="vertical"
        closeable-to="0">
     <div grr-splitter-pane id="main_leftPane" class="leftPane">
-      <grr-file-tree />
+      <grr-file-tree></grr-file-tree>
     </div>
 
     <div grr-splitter-pane id="main_rightPane" class="rightPane">
@@ -15,13 +15,13 @@
            class="rightSplitterContainer">
 
         <div grr-splitter-pane id="content_rightPane" class="rightTopPane">
-          <grr-file-table view-mode="controller.viewMode" />
+          <grr-file-table view-mode="controller.viewMode"></grr-file-table>
         </div>
 
         <div grr-splitter-pane id="main_bottomPane" class="rightBottomPane">
-            <grr-file-details current-tab="controller.tab" />
+            <grr-file-details current-tab="controller.tab"></grr-file-details>
         </div>
       </div>
     </div>
-  </div>\
+  </div>
 </grr-file-context>

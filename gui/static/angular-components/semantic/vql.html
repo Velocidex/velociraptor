@@ -5,7 +5,7 @@
       Part {{ value.part }}
     </span>
     <span ng-if="value.timestamp">
-      @ <grr-timestamp value="value.timestamp" />
+      @ <grr-timestamp value="value.timestamp"></grr-timestamp>
     </span>
   </abbr>
 </h4>
@@ -25,7 +25,8 @@
           {{ ::row[column] }}
         </div>
         <div ng-if="::controller.type_map[column]">
-          <grr-semantic-value value="::row[column]" type="{$ controller.type_map[column] $}" />
+          <grr-semantic-value value="::row[column]" type="{$ controller.type_map[column] $}">
+          </grr-semantic-value>
         </div>
       </td>
     </tr>

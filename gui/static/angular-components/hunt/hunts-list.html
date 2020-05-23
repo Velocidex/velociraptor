@@ -72,12 +72,12 @@
           ng-class="{'row-selected': item.hunt_id == selectedHuntId}"
           >
 
-        <td><grr-hunt-status-icon state="controller.huntState(item)" /></td>
+        <td><grr-hunt-status-icon state="controller.huntState(item)"></grr-hunt-status-icon></td>
         <td>{$ ::item.hunt_id $}</td>
         <td>{$ ::item.hunt_description $}</td>
-        <td><grr-timestamp value="::item.create_time" /></td>
-        <td><grr-timestamp value="::item.start_time" /></td>
-        <td><grr-timestamp value="::item.expires" /></td>
+        <td><grr-timestamp value="::item.create_time"></grr-timestamp></td>
+        <td><grr-timestamp value="::item.start_time"></grr-timestamp></td>
+        <td><grr-timestamp value="::item.expires"></grr-timestamp></td>
         <td>{$ ::item.client_limit || 'Unlimited' $}</td>
         <td>{$ ::item.stats.total_clients_scheduled || 0 $}</td>
         <td>{$ ::item.creator $}</td>

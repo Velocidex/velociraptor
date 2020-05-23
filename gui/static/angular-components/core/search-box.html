@@ -7,7 +7,7 @@
                placeholder="Search Box" ng-model="controller.query"
                ng-keypress="$event.which == 13 && controller.submitQuery()"
                uib-typeahead="label for label in controller.predict() | filter:$viewValue "
-               typeahead-min-length="0" typeahead-focus-first="false" />
+               typeahead-min-length="0" typeahead-focus-first="false"></input>
         <span class="input-group-btn">
           <button id="client_query_submit"
                   type="button"

@@ -1,27 +1,27 @@
 <div ng-switch="controller.renderer">
   <grr-form-proto ng-switch-when="grrFormProto"
                   value="controller.scope_.value"
-                  type="{$ type $}" default="default" />
+                  type="{$ type $}" default="default"></grr-form-proto>
 
   <grr-form-primitive ng-switch-when="grrFormPrimitive"
                       value="controller.scope_.value"
-                      type="{$ type $}" default="default" />
+                      type="{$ type $}" default="default"></grr-form-primitive>
 
   <grr-form-enum ng-switch-when="grrFormEnum"
                  value="controller.scope_.value"
-                 type="{$ type $}" default="default" />
+                 type="{$ type $}" default="default"></grr-form-enum>
 
   <grr-form-datetime ng-switch-when="grrFormDatetime"
                      value="controller.scope_.value"
-                     type="{$ type $}" default="default" />
+                     type="{$ type $}" default="default"></grr-form-datetime>
 
   <grr-form-datetime-seconds ng-switch-when="grrFormDatetimeSeconds"
                      value="controller.scope_.value"
-                     type="{$ type $}" default="default" />
+                     type="{$ type $}" default="default"></grr-form-datetime-seconds>
 
   <grr-form-client-label ng-switch-when="grrFormClientLabel"
                          value="controller.scope_.value"
-                         type="{$ type $}" default="default" />
+                         type="{$ type $}" default="default"></grr-form-client-label>
 
   <div ng-switch-default>
     I dont know how to render {{ controller.renderer }} for type

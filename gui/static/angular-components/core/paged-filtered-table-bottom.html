@@ -1,10 +1,12 @@
 <h5 ng-if="parentController.showLoading">Loading...</h5>
 
 <div ng-if="!parentController.showLoading && parentController.totalCount > 0 && !parentController.filterApplied">
-  <uib-pagination total-items="parentController.totalCount" items-per-page="parentController.pageSize"
-              max-size="15" rotate="false" boundary-links="true"
-              ng-model="parentController.paginationSelectedPage"
-              ng-change="parentController.onPageChange(parentController.paginationSelectedPage - 1)" />
+  <uib-pagination total-items="parentController.totalCount"
+                  items-per-page="parentController.pageSize"
+                  max-size="15" rotate="false" boundary-links="true"
+                  ng-model="parentController.paginationSelectedPage"
+                  ng-change="parentController.onPageChange(parentController.paginationSelectedPage - 1)">
+  </uib-pagination>
 </div>
 
 <div ng-if="!parentController.showLoading && parentController.totalCount > 0 &&

@@ -54,7 +54,10 @@
             <dd>{{ controller.client.agent_information.name }}</dd>
 
             <dt>Last Seen At</dt>
-            <dd><grr-timestamp value="controller.client.last_seen_at" /></dd>
+            <dd>
+              <grr-timestamp value="controller.client.last_seen_at">
+              </grr-timestamp>
+            </dd>
 
             <dt>Last Seen IP</dt>
             <dd>{{ controller.client.last_ip }}</dd>
@@ -95,7 +98,7 @@
        refresh-trigger="controller.client.last_interrogate_flow_id">
 
     <grr-report-viewer
-      params="controller.report_params"/>
+      params="controller.report_params"></grr-report-viewer>
 
   </div>
 </div>
