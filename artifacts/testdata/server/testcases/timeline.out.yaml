@@ -1,0 +1,548 @@
+LET my_mocks <= SELECT *, timestamp(epoch=Created0x10s) AS Created0x10, timestamp(epoch=Created0x30s) AS Created0x30, timestamp(epoch=LastModified0x10s) AS LastModified0x10, timestamp(epoch=LastModified0x30s) AS LastModified0x30, timestamp(epoch=LastRecordChange0x10s) AS LastRecordChange0x10, timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30, timestamp(epoch=LastAccess0x10s) AS LastAccess0x10, timestamp(epoch=LastAccess0x30s) AS LastAccess0x30 FROM parse_json_array(data=ParseMFTMock)[]LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]), mock(plugin="parse_mft", results=my_mocks) FROM scope()[]SELECT * FROM Artifact.Windows.Timeline.MFT(Inode="64560")[
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastAccess time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) Created time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastRecordChange time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastModified time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ }
+]SELECT * FROM Artifact.Windows.Timeline.MFT(SizeMin="100",SizeMax="750")[
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastAccess time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) Created time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastRecordChange time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastModified time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ }
+]SELECT * FROM Artifact.Windows.Timeline.MFT(DateBefore="2020-01-01")[
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastAccess time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) Created time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastRecordChange time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:64560 $STANDARD_INFORMATION (0x10) LastModified time",
+  "path": "Users/yolo/Desktop/evil.txt",
+  "optional_1": {
+   "EntryNumber": 64560,
+   "ParentEntryNumber": 95295,
+   "FileSize": 1346,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": true,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2020-04-29T13:38:27Z",
+   "LastAccess0x30": "2020-04-29T13:38:27.0905243Z",
+   "LastRecordChange0x30": "2020-04-29T13:38:27Z",
+   "Created0x30": "2020-04-29T13:38:27Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastAccess time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) Created time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastRecordChange time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ },
+ {
+  "event_time": "2017-01-26T00:21:12Z",
+  "hostname": "DESKTOP-687T2NR",
+  "parser": "MFT",
+  "source": "C:/$MFT",
+  "message": "MFTEntry:187444 $STANDARD_INFORMATION (0x10) LastModified time",
+  "path": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+  "optional_1": {
+   "EntryNumber": 187444,
+   "ParentEntryNumber": 95309,
+   "FileSize": 524,
+   "IsDir": false,
+   "InUse": true
+  },
+  "optional_2": {
+   "FNCreatedShift": false,
+   "USecZero": true,
+   "PossibleCopy": false,
+   "VolumeCopy": false
+  },
+  "optional_3": {
+   "LastModified0x10": "2017-01-26T00:21:12Z",
+   "LastAccess0x10": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x10": "2017-01-26T00:21:12Z",
+   "Created0x10": "2017-01-26T00:21:12Z"
+  },
+  "optional_4": {
+   "LastModified0x30": "2017-01-26T00:21:12Z",
+   "LastAccess0x30": "2017-01-26T00:21:12Z",
+   "LastRecordChange0x30": "2017-01-26T00:21:12Z",
+   "Created0x30": "2017-01-26T00:21:12Z"
+  },
+  "_Source": "Windows.Timeline.MFT"
+ }
+]
