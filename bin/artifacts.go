@@ -287,6 +287,8 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 
 func doArtifactCollect() {
 	config_obj := load_config_or_default()
+	load_config_artifacts(config_obj)
+
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 

@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ClientPathManager struct {
@@ -64,4 +65,9 @@ func (self ClientPathManager) TasksDirectory() *ClientPathManager {
 func (self ClientPathManager) Task(task_id uint64) *ClientPathManager {
 	self.path = path.Join(self.path, "tasks", fmt.Sprintf("%d", task_id))
 	return &self
+}
+
+func (self ClientPathManager) VFSPath(vfs_components []string) string {
+	return utils.JoinComponents(append([]string{
+		"clients", self.client_id, "vfs"}, vfs_components...), "/")
 }

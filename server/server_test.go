@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,20 +18,19 @@ import (
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type ServerTestSuite struct {
@@ -54,24 +54,8 @@ func (self MockAPIClientFactory) GetAPIClient(
 
 }
 
-func (self *ServerTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
-	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*memory.MemoryFileStore)
-	require.True(self.T(), ok)
-
-	return file_store_factory
-}
-
 func (self *ServerTestSuite) SetupTest() {
-	config_obj, err := config.LoadConfig(
-		"../http_comms/test_data/server.config.yaml")
-	require.NoError(self.T(), err)
-
-	require.NoError(self.T(), config.ValidateFrontendConfig(config_obj))
-
-	self.config_obj = config_obj
-	self.config_obj.Datastore.Implementation = "Test"
-	self.config_obj.Frontend.DoNotCompressArtifacts = true
+	self.config_obj = vtesting.GetTestConfig(self.T())
 
 	ctx, cancel := context.WithCancel(context.Background())
 	self.cancel = cancel
@@ -80,17 +64,18 @@ func (self *ServerTestSuite) SetupTest() {
 	// Start the journaling service manually for tests.
 	services.StartJournalService(self.config_obj)
 	services.StartNotificationService(ctx, self.wg, self.config_obj)
-	artifacts.GetGlobalRepository(config_obj)
+	artifacts.GetGlobalRepository(self.config_obj)
 
-	self.server, err = server.NewServer(config_obj)
+	var err error
+	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
 
 	self.client_crypto, err = crypto.NewClientCryptoManager(
-		config_obj, []byte(config_obj.Writeback.PrivateKey))
+		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 
 	_, err = self.client_crypto.AddCertificate([]byte(
-		config_obj.Frontend.Certificate))
+		self.config_obj.Frontend.Certificate))
 
 	require.NoError(self.T(), err)
 
@@ -104,7 +89,7 @@ func (self *ServerTestSuite) TearDownTest() {
 
 	db.Close()
 	self.cancel()
-	self.GetMemoryFileStore().Clear()
+	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 	self.wg.Wait()
 }
 
@@ -113,6 +98,13 @@ func (self *ServerTestSuite) TestEnrollment() {
 	// CSR message.
 	csr_message, err := self.client_crypto.GetCSR()
 	require.NoError(self.T(), err)
+
+	wg := &sync.WaitGroup{}
+	messages := []*ordereddict.Dict{}
+
+	wg.Add(1)
+	services.GetPublishedEvents(
+		self.config_obj, "Server.Internal.Enrollment", wg, 1, &messages)
 
 	self.server.ProcessSingleUnauthenticatedMessage(
 		context.Background(),
@@ -132,15 +124,14 @@ func (self *ServerTestSuite) TestEnrollment() {
 
 	assert.Regexp(self.T(), "RSA PUBLIC KEY", string(pub_key.Pem))
 
-	// Check that Generic.Client.Info artifact is scheduled for this client.
-	tasks, err := db.GetClientTasks(self.config_obj, self.client_id,
-		true /* do_not_lease */)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), len(tasks), 1)
-	queries := tasks[0].VQLClientAction.Query
+	wg.Wait()
 
-	assert.NotNil(self.T(), queries)
-	assert.Contains(self.T(), queries[len(queries)-1].Name, "Generic.Client.Info")
+	// Check that Server.Internal.Enrollment is scheduled for this
+	// client. The entrollment service will respond to this
+	// message.
+	client_id, pres := messages[0].GetString("ClientId")
+	assert.True(self.T(), pres)
+	assert.Equal(self.T(), client_id, self.client_id)
 }
 
 func (self *ServerTestSuite) TestClientEventTable() {
@@ -294,7 +285,7 @@ func (self *ServerTestSuite) TestForeman() {
 }
 
 func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex string) {
-	file_store_factory := self.GetMemoryFileStore()
+	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.config_obj)
 
 	value, pres := file_store_factory.Get(filename)
 	if !pres {
@@ -485,7 +476,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	flow_id, err := flows.ScheduleArtifactCollection(
+	flow_id, err := artifacts.ScheduleArtifactCollection(
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
 		request)
@@ -511,7 +502,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
-	flow_id, err := flows.ScheduleArtifactCollection(
+	flow_id, err := artifacts.ScheduleArtifactCollection(
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
 		&flows_proto.ArtifactCollectorArgs{

@@ -20,33 +20,32 @@ package server
 import (
 	"context"
 
-	"www.velocidex.com/golang/velociraptor/constants"
+	"github.com/Velocidex/ordereddict"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/flows"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func enroll(
 	ctx context.Context,
 	server *Server,
 	csr *crypto_proto.Certificate) error {
-	if csr.GetType() == crypto_proto.Certificate_CSR && csr.Pem != nil {
-		client_id, err := server.manager.AddCertificateRequest(csr.Pem)
-		if err != nil {
-			return err
-		}
 
-		// Schedule a collection automatically.
-		_, err = flows.ScheduleArtifactCollection(server.config,
-			server.config.Client.PinnedServerName,
-			&flows_proto.ArtifactCollectorArgs{
-				ClientId:  client_id,
-				Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},
-			})
-		if err != nil {
-			return err
-		}
+	if csr.GetType() != crypto_proto.Certificate_CSR || csr.Pem == nil {
+		return nil
 	}
 
-	return nil
+	client_id, err := server.manager.AddCertificateRequest(csr.Pem)
+	if err != nil {
+		logger := logging.GetLogger(server.config, &logging.FrontendComponent)
+		logger.Error("While enrolling %v: %v", client_id, err)
+		return err
+	}
+
+	path_manager := result_sets.NewArtifactPathManager(
+		server.config, "server" /* client_id */, "", "Server.Internal.Enrollment")
+
+	return services.GetJournal().PushRows(path_manager,
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)})
 }

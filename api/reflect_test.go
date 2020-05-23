@@ -24,7 +24,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	assert "github.com/stretchr/testify/assert"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	//	utils "www.velocidex.com/golang/velociraptor/testing"
 )
 
 func TestDescriptor(t *testing.T) {

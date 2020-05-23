@@ -7,13 +7,14 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
-// Watch the System.Flow.Completion queue for a specific artifacts and
+// Watch the System.Flow.Completion queue for specific artifacts and
 // run the handlers on the rows.
 func watchForFlowCompletion(
 	ctx context.Context,
@@ -21,37 +22,65 @@ func watchForFlowCompletion(
 	config_obj *config_proto.Config,
 	artifact_name string,
 	handler func(ctx context.Context,
-		scope *vfilter.Scope, row vfilter.Row)) error {
+		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
-	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Env: ordereddict.NewDict().
-			Set("artifact_name", artifact_name),
-		Logger: logging.NewPlainLogger(config_obj,
-			&logging.FrontendComponent),
-	}
-
-	scope := builder.Build()
-	defer scope.Close()
-
-	vql, err := vfilter.Parse("select * FROM " +
-		"watch_monitoring(artifact='System.Flow.Completion') " +
-		"WHERE Flow.artifacts_with_results =~ artifact_name")
-	if err != nil {
-		return err
-	}
+	local_wg := &sync.WaitGroup{}
+	local_wg.Add(1)
 
 	wg.Add(1)
+
 	go func() {
 		defer wg.Done()
 
-		defer utils.CheckForPanic("watchForFlowCompletion: %v", artifact_name)
+		builder := artifacts.ScopeBuilder{
+			Config:     config_obj,
+			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+			Env: ordereddict.NewDict().
+				Set("artifact_name", artifact_name),
+			Logger: logging.NewPlainLogger(config_obj,
+				&logging.FrontendComponent),
+		}
 
-		for row := range vql.Eval(ctx, scope) {
-			handler(ctx, scope, row)
+		scope := builder.Build()
+		defer scope.Close()
+
+		// Allow the artifact we are following to be over-ridden by
+		// the user.
+		custom_artifact_name := "Custom." + artifact_name
+
+		events, cancel := GetJournal().Watch("System.Flow.Completion")
+		defer cancel()
+
+		local_wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event, ok := <-events:
+				if !ok {
+					return
+				}
+				flow_any, pres := event.Get("Flow")
+				if !pres {
+					continue
+				}
+
+				flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
+				if !ok {
+					continue
+				}
+
+				if utils.InString(flow.ArtifactsWithResults, artifact_name) ||
+					utils.InString(flow.ArtifactsWithResults, custom_artifact_name) {
+					handler(ctx, scope, event)
+				}
+			}
 		}
 	}()
+
+	local_wg.Wait()
 
 	return nil
 }

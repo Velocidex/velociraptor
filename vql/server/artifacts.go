@@ -28,7 +28,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -101,7 +100,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	principal := vql_subsystem.GetPrincipal(scope)
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
 
-	flow_id, err := flows.ScheduleArtifactCollection(
+	flow_id, err := artifacts.ScheduleArtifactCollection(
 		config_obj, principal, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)

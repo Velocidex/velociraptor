@@ -56,18 +56,18 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/testing"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
 	file_based_imp = &FileBaseDataStore{
-		clock: testing.RealClock{},
+		clock: vtesting.RealClock{},
 	}
 )
 
 type FileBaseDataStore struct {
-	clock testing.Clock
+	clock vtesting.Clock
 }
 
 func (self *FileBaseDataStore) GetClientTasks(

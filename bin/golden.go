@@ -34,7 +34,6 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -74,7 +73,7 @@ func vqlCollectorArgsFromFixture(
 	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := flows.AddArtifactCollectorArgs(
+	err := artifacts.AddArtifactCollectorArgs(
 		config_obj,
 		vql_collector_args,
 		artifact_collector_args)
