@@ -32,7 +32,7 @@
       <tr>
         <th><input type="checkbox" class="client-checkbox select-all"
                    ng-model="controller.allClientsSelected"
-                   ng-change="controller.selectAll()" />
+                   ng-change="controller.selectAll()"></input>
         </th>
         <th>Online</th>
         <th>ClientID</th>
@@ -55,7 +55,7 @@
                  ng-model="controller.selectedClients[item.client_id]"
                  ng-change="controller.updateNumSelectedClients()"
                  ng-click="$event.stopPropagation()"
-                 />
+                 ></input>
         </td>
 
         <!-- Online status -->
@@ -80,17 +80,17 @@
 
         <!-- Host -->
         <td>
-          <grr-semantic-value value="::item.os_info.fqdn" />
+          <grr-semantic-value value="::item.os_info.fqdn"></grr-semantic-value>
         </td>
 
         <!-- OS Version -->
         <td>
-          <grr-semantic-value value="::item.os_info.release" />
+          <grr-semantic-value value="::item.os_info.release"></grr-semantic-value>
         </td>
 
         <!-- Labels -->
         <td>
-          <grr-semantic-value value="::item.labels" />
+          <grr-semantic-value value="::item.labels"></grr-semantic-value>
         </td>
 
       </tr>

@@ -51,7 +51,7 @@
           <grr-csv-viewer
             ng-if="controller.fileHasContent"
             params='controller.params'
-            />
+            ></grr-csv-viewer>
 
           <div ng-if="!controller.fileHasContent" class="no-content">
             No file content to show.
@@ -63,7 +63,7 @@
       <uib-tab heading="Reports" index="'reports'"
                disable="!controller.reporting_params">
         <div ng-if="controller.currentTab === 'reports'">
-          <grr-report-viewer params="controller.reporting_params"/>
+          <grr-report-viewer params="controller.reporting_params"></grr-report-viewer>
         </div>
       </uib-tab>
 

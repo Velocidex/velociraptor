@@ -27,7 +27,7 @@
         ng-click="controller.selectItem(item)"
         ng-class="{'row-selected': item.session_id == controller.selectedFlowId}"
         >
-      <td><grr-flow-status-icon flow="item" /></td>
+      <td><grr-flow-status-icon flow="item"></grr-flow-status-icon></td>
       <td>
         {$ item.session_id $}
       </td>
@@ -37,10 +37,10 @@
         </div>
       </td>
       <td>
-        <grr-timestamp value="item.create_time" />
+        <grr-timestamp value="item.create_time"></grr-timestamp>
       </td>
       <td>
-        <grr-timestamp value="item.kill_timestamp" />
+        <grr-timestamp value="item.kill_timestamp"></grr-timestamp>
       </td>
       <td>
         {{ item.request.creator }}

@@ -23,7 +23,6 @@ package filesystems
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -34,6 +33,7 @@ import (
 	errors "github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -234,7 +234,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 
 	// For this reason we need to take special care when reading a
 	// directory in case that directory itself is a link.
-	files, err := ioutil.ReadDir(dir_path)
+	files, err := utils.ReadDir(dir_path)
 	if err != nil {
 		if !self.follow_links {
 			return nil, err
@@ -247,7 +247,7 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 
 			// Yes it is a symlink, we just recurse into
 			// the target
-			files, err = ioutil.ReadDir(target)
+			files, err = utils.ReadDir(target)
 		}
 	}
 

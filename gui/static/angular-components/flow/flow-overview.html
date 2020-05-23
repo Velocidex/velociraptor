@@ -11,7 +11,8 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::flow.context.request.artifacts" />
+              <grr-semantic-value value="::flow.context.request.artifacts">
+              </grr-semantic-value>
             </dd>
 
             <dt>Flow ID</dt>
@@ -21,10 +22,13 @@
             <dd>{{ ::flow.context.request.creator }}</dd>
 
             <dt>Start Time</dt>
-            <dd><grr-timestamp value="flow.context.create_time" /></dd>
+            <dd>
+              <grr-timestamp value="flow.context.create_time">
+              </grr-timestamp>
+            </dd>
 
             <dt>Last Active</dt>
-            <dd><grr-timestamp value="flow.context.kill_timestamp" /></dd>
+            <dd><grr-timestamp value="flow.context.kill_timestamp"></grr-timestamp></dd>
 
             <dt>State</dt>
             <dd>{{::flow.context.state}}</dd>

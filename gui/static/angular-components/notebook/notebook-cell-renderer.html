@@ -152,7 +152,7 @@
   <div class='notebook-output'
        ng-class="{collapsed: controller.collapsed}"
        >
-    <grr-notebook-report-renderer cell="controller.cell" />
+    <grr-notebook-report-renderer cell="controller.cell"></grr-notebook-report-renderer>
     <div ng-repeat="msg in controller.cell.messages track by $index"
          ng-if="selected"
          class="error-message"
