@@ -30,6 +30,11 @@ func (self *MainTestSuite) SetupTest() {
 		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
 			"-" + runtime.GOARCH)
 	assert.NoError(self.T(), err)
+
+	if len(binaries) == 0 {
+		binaries, _ := filepath.Glob("../output/velociraptor*")
+	}
+
 	self.binary = binaries[0]
 	fmt.Printf("Found binary %v\n", self.binary)
 }
