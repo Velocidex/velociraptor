@@ -25,14 +25,19 @@ type MainTestSuite struct {
 }
 
 func (self *MainTestSuite) SetupTest() {
+	extension := ""
+	if runtime.GOOS == "windows" {
+		extension = ".exe"
+	}
+
 	// Search for a valid binary to run.
 	binaries, err := filepath.Glob(
 		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
-			"-" + runtime.GOARCH)
+			"-" + runtime.GOARCH + extension)
 	assert.NoError(self.T(), err)
 
 	if len(binaries) == 0 {
-		binaries, _ = filepath.Glob("../output/velociraptor*")
+		binaries, _ = filepath.Glob("../output/velociraptor*" + extension)
 	}
 
 	self.binary = binaries[0]
