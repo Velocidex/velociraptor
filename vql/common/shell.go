@@ -202,7 +202,9 @@ func (self ShellPlugin) Call(
 				data := response.Stdout + line
 				for len(data) > length {
 					response.Stdout = data[:length]
-					output_chan <- response
+					output_chan <- &ShellResult{
+						Stdout: response.Stdout,
+					}
 					data = data[length:]
 				}
 				response.Stdout = data
@@ -219,7 +221,9 @@ func (self ShellPlugin) Call(
 				data := response.Stderr + line
 				for len(data) > length {
 					response.Stderr = data[:length]
-					output_chan <- response
+					output_chan <- &ShellResult{
+						Stderr: response.Stderr,
+					}
 					data = data[length:]
 				}
 				response.Stderr = data
