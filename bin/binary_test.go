@@ -32,7 +32,7 @@ func (self *MainTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	if len(binaries) == 0 {
-		binaries, _ := filepath.Glob("../output/velociraptor*")
+		binaries, _ = filepath.Glob("../output/velociraptor*")
 	}
 
 	self.binary = binaries[0]
