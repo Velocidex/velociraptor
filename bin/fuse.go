@@ -364,7 +364,7 @@ func fsPathToVFS(fs_path string) string {
 }
 
 func doFuse() {
-	config_obj, err := APIConfigLoader.WithDefaultLoader().LoadAndValidate()
+	config_obj, err := APIConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	vfs_fs := NewVFSFs(config_obj, *fuse_command_client)

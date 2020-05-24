@@ -130,8 +130,8 @@ func main() {
 
 	// Most commands load a config in the folloing order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
-		WithEmbedded().
 		WithFileLoader(*config_path).
+		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithCustomValidator(load_config_artifacts)
 

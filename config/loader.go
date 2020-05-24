@@ -15,6 +15,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+// A hard error causes the loader to stop immediately.
+type HardError struct {
+	err error
+}
+
+func (self HardError) Error() string {
+	return self.err.Error()
+}
+
 type loader_func func() (*config_proto.Config, error)
 type validator func(config_obj *config_proto.Config) error
 
@@ -100,7 +109,15 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 		self = self.Copy()
 		self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
 			self.Log("Loading config from file %v", filename)
-			return read_config_from_file(filename)
+			result, err := read_config_from_file(filename)
+			if err != nil {
+				// If a filename is specified but it
+				// does not exist or invalid stop
+				// searching immediately.
+				return result, HardError{err}
+			}
+			return result, nil
+
 		})
 	}
 
@@ -237,6 +254,12 @@ func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 		result, err := loader()
 		if err == nil {
 			return result, self.Validate(result)
+		}
+
+		// Stop on hard errors.
+		_, ok := err.(HardError)
+		if ok {
+			return nil, err
 		}
 		self.Log("%v", err)
 	}

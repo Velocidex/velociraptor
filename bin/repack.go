@@ -122,7 +122,6 @@ func doRepack() {
 	outfd, err := os.OpenFile(*repack_command_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	kingpin.FatalIfError(err, "Unable to create output file")
-	defer outfd.Close()
 
 	data, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to read executable")
@@ -172,6 +171,12 @@ func doRepack() {
 
 	_, err = outfd.Write(data[end+len(config_data):])
 	kingpin.FatalIfError(err, "Writing")
+
+	err = outfd.Close()
+	kingpin.FatalIfError(err, "Writing")
+
+	err = os.Chmod(outfd.Name(), 0777)
+	kingpin.FatalIfError(err, "Chmod")
 }
 
 func init() {
