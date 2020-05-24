@@ -26,7 +26,7 @@ type Loader struct {
 	loaders    []loader_func
 	validators []validator
 
-	messages []string
+	logger *logging.LogContext
 }
 
 func (self *Loader) WithRequiredFrontend() *Loader {
@@ -123,7 +123,13 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 
 func (self *Loader) WithEmbedded() *Loader {
 	self = self.Copy()
-	self.loaders = append(self.loaders, read_embedded_config)
+	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+		result, err := read_embedded_config()
+		if err == nil {
+			self.Log("Loaded embedded config")
+		}
+		return result, err
+	})
 	return self
 }
 
@@ -141,12 +147,15 @@ func (self *Loader) Copy() *Loader {
 		write_back_path: self.write_back_path,
 		loaders:         append([]loader_func{}, self.loaders...),
 		validators:      append([]validator{}, self.validators...),
-		messages:        self.messages,
 	}
 }
 
-func (self *Loader) Log(message string) {
-	self.messages = append(self.messages, message)
+func (self *Loader) Log(format string, v ...interface{}) {
+	if self.logger == nil {
+		logging.Prelog(format, v...)
+	} else {
+		self.logger.Info(format, v...)
+	}
 }
 
 func (self *Loader) Validate(config_obj *config_proto.Config) error {
@@ -155,11 +164,6 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	err := logging.InitLogging(config_obj)
 	if err != nil {
 		return err
-	}
-
-	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
-	for _, message := range self.messages {
-		logger.Debug(message)
 	}
 
 	for _, validator := range self.validators {
@@ -257,7 +261,6 @@ func read_embedded_config() (*config_proto.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return result, nil
 }
 

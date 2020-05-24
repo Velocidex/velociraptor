@@ -109,24 +109,8 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	}
 
 	// Fill defaults for optional sections
-	if config_obj.Writeback == nil {
-		config_obj.Writeback = &config_proto.Writeback{}
-	}
-	if config_obj.CA == nil {
-		config_obj.CA = &config_proto.CAConfig{}
-	}
 	if config_obj.Frontend.ExpectedClients == 0 {
 		config_obj.Frontend.ExpectedClients = 10000
-	}
-	if config_obj.Mail == nil {
-		config_obj.Mail = &config_proto.MailConfig{}
-	}
-	if config_obj.Monitoring == nil {
-		config_obj.Monitoring = &config_proto.MonitoringConfig{}
-	}
-
-	if config_obj.ApiConfig == nil {
-		config_obj.ApiConfig = &config_proto.ApiClientConfig{}
 	}
 
 	if config_obj.API.PinnedGwName == "" {

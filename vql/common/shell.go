@@ -122,12 +122,11 @@ func (self ShellPlugin) Call(
 		// to minimize the total number of responses.  Send a
 		// copy of the response because we will continue
 		// modifying it.
-		response := ShellResult{}
-		wg := sync.WaitGroup{}
+		wg := &sync.WaitGroup{}
 
 		read_from_pipe := func(
 			pipe io.ReadCloser,
-			output_member *string,
+			cb func(message string),
 			wg *sync.WaitGroup) {
 
 			defer wg.Done()
@@ -159,25 +158,23 @@ func (self ShellPlugin) Call(
 					// Read some data into the buffer.
 					if n > 0 {
 						offset += n
+						continue
 					}
 
 					if arg.Sep != "" {
 						for _, line := range strings.Split(
 							string(buff[:offset]), arg.Sep) {
-							if len(*output_member) > 0 {
-								output_chan <- response
+							if len(line) > 0 {
+								cb(line)
 							}
-
-							*output_member = line
 						}
 						offset = 0
 
 					} else if n == 0 {
-						if len(*output_member) > 0 {
-							output_chan <- response
+						line := string(buff[:offset])
+						if len(line) > 0 {
+							cb(line)
 						}
-
-						*output_member = string(buff[:offset])
 
 						// Write over the same buffer with new data.
 						offset = 0
@@ -190,35 +187,31 @@ func (self ShellPlugin) Call(
 		// Read asyncronously.
 		wg.Add(1)
 		wg.Add(1)
-		go read_from_pipe(stdout_pipe, &response.Stdout, &wg)
-		go read_from_pipe(stderr_pipe, &response.Stderr, &wg)
+		go read_from_pipe(stdout_pipe, func(line string) {
+			output_chan <- &ShellResult{Stdout: line}
+		}, wg)
+		go read_from_pipe(stderr_pipe, func(line string) {
+			output_chan <- &ShellResult{Stderr: line}
+		}, wg)
 
-		err_chan := make(chan error)
-		go func() {
-			err_chan <- command.Wait()
-		}()
-
-		// We need to wait here until the readers are done.
+		// We need to wait here until the readers are done before calling command.Wait.
 		wg.Wait()
 
+		response := ShellResult{}
+
 		// Get the command status and combine with the last response.
-		select {
-		case <-ctx.Done():
-			break
+		err = command.Wait()
+		if err == nil {
+			// Successful termination.
+			response.ReturnCode = 0
+		} else {
+			response.ReturnCode = -1
 
-		case err := <-err_chan:
-			if err == nil {
-				// Successful termination.
-				response.ReturnCode = 0
-			} else {
-				response.ReturnCode = -1
-
-				exiterr, ok := err.(*exec.ExitError)
+			exiterr, ok := err.(*exec.ExitError)
+			if ok {
+				status, ok := exiterr.Sys().(syscall.WaitStatus)
 				if ok {
-					status, ok := exiterr.Sys().(syscall.WaitStatus)
-					if ok {
-						response.ReturnCode = int64(status.ExitStatus())
-					}
+					response.ReturnCode = int64(status.ExitStatus())
 				}
 			}
 		}

@@ -68,7 +68,7 @@ var (
 
 // Try to unlock encrypted API keys
 func maybe_unlock_api_config(config_obj *config_proto.Config) error {
-	if config_obj.ApiConfig == nil {
+	if config_obj.ApiConfig == nil || config_obj.ApiConfig.ClientPrivateKey == "" {
 		return nil
 	}
 

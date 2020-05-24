@@ -94,7 +94,7 @@ func Prelog(format string, v ...interface{}) {
 func FlushPrelogs(config_obj *config_proto.Config) {
 	logger := GetLogger(config_obj, &GenericComponent)
 	for _, msg := range prelogs {
-		logger.Error(msg)
+		logger.Info(msg)
 	}
 }
 
