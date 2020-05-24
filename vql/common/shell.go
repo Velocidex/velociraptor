@@ -185,19 +185,47 @@ func (self ShellPlugin) Call(
 		}
 
 		// Read asyncronously.
+		var mu sync.Mutex
+		response := &ShellResult{}
+
 		wg.Add(1)
 		wg.Add(1)
 		go read_from_pipe(stdout_pipe, func(line string) {
-			output_chan <- &ShellResult{Stdout: line}
+			mu.Lock()
+			defer mu.Unlock()
+
+			if arg.Sep != "" {
+				response.Stdout = line
+				output_chan <- response
+			} else {
+				response.Stdout += line
+				if len(response.Stdout) > int(arg.Length) {
+					output_chan <- response
+					response.Stdout = ""
+				}
+			}
 		}, wg)
 		go read_from_pipe(stderr_pipe, func(line string) {
-			output_chan <- &ShellResult{Stderr: line}
+			mu.Lock()
+			defer mu.Unlock()
+
+			if arg.Sep != "" {
+				response.Stderr = line
+				output_chan <- response
+			} else {
+				response.Stderr += line
+				if len(response.Stderr) > int(arg.Length)9 {
+					output_chan <- response
+					response.Stderr = ""
+				}
+			}
 		}, wg)
 
 		// We need to wait here until the readers are done before calling command.Wait.
 		wg.Wait()
 
-		response := ShellResult{}
+		mu.Lock()
+		defer mu.Unlock()
 
 		// Get the command status and combine with the last response.
 		err = command.Wait()
