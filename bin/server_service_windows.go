@@ -36,7 +36,6 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -287,10 +286,8 @@ func removeServiceServerService(name string) error {
 }
 
 func doRemoveServerService() {
-	config_obj, err := config.LoadConfigWithWriteback(*config_path)
-	if err != nil {
-		kingpin.FatalIfError(err, "Unable to load config file")
-	}
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	kingpin.FatalIfError(err, "Unable to load config file")
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	service_name := config_obj.Client.WindowsInstaller.ServiceName
@@ -323,7 +320,7 @@ func loadServerConfig() (*config_proto.Config, error) {
 		config_path = &config_target_path
 	}
 
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
 		return nil, err
 	}
@@ -474,9 +471,12 @@ func NewVelociraptorServerService(name string) (
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		var err error
+
+		loader := DefaultConfigLoader.WithRequiredFrontend()
+
 		switch command {
 		case server_service_installl_command.FullCommand():
-			config_obj, err := config.LoadConfigWithWriteback(*config_path)
+			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -506,26 +506,26 @@ func init() {
 			}
 
 		case server_service_start_command.FullCommand():
-			config_obj, err := config.LoadConfigWithWriteback(*config_path)
+			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = startService(config_obj.Client.WindowsInstaller.ServiceName)
 
 		case server_service_stop_command.FullCommand():
-			config_obj, err := config.LoadConfigWithWriteback(*config_path)
+			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Stop, svc.Stopped)
 
 		case server_service_pause_command.FullCommand():
-			config_obj, err := config.LoadConfigWithWriteback(*config_path)
+			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,
 				svc.Pause, svc.Paused)
 
 		case server_service_continue_command.FullCommand():
-			config_obj, err := config.LoadConfigWithWriteback(*config_path)
+			config_obj, err := loader.LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = controlServiceServerService(
 				config_obj.Client.WindowsInstaller.ServiceName,

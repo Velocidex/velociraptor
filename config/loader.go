@@ -98,7 +98,7 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 	if filename != "" {
 		self = self.Copy()
 		self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
-			self.Log(fmt.Sprintf("Trying to load from file %v", filename))
+			self.Log(fmt.Sprintf("Loading config from file %v", filename))
 			return read_config_from_file(filename)
 		})
 	}
@@ -111,7 +111,7 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
 		env_config := os.Getenv(env_var)
 		if env_config != "" {
-			self.Log(fmt.Sprintf("Trying to load from env %v (%v)",
+			self.Log(fmt.Sprintf("Loading config from env %v (%v)",
 				env_var, env_config))
 			return read_config_from_file(env_config)
 		}
