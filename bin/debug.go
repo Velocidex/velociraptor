@@ -31,7 +31,7 @@ var (
 )
 
 func doDebug() {
-	config_obj, err := load_config_or_api()
+	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

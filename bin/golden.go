@@ -83,7 +83,7 @@ func vqlCollectorArgsFromFixture(
 }
 
 func runTest(fixture *testFixture) (string, error) {
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Any uploads go into the container.

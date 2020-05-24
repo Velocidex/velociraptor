@@ -22,7 +22,6 @@ import (
 	"sync"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -41,10 +40,11 @@ func RunClient(
 	config_path *string) {
 
 	// Include the writeback in the client's configuration.
-	config_obj, err := config.LoadConfigWithWriteback(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredClient().
+		WithWriteback().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	// Make sure the config is ok.
+	// Make sure the config crypto is ok.
 	err = crypto.VerifyConfig(config_obj)
 	if err != nil {
 		kingpin.FatalIfError(err, "Invalid config")

@@ -9,8 +9,8 @@ import (
 )
 
 func GetTestConfig(t *testing.T) *config_proto.Config {
-	config_obj, err := config.LoadConfig(
-		"../http_comms/test_data/server.config.yaml")
+	config_obj, err := new(config.Loader).WithFileLoader(
+		"../http_comms/test_data/server.config.yaml").LoadAndValidate()
 	require.NoError(t, err)
 
 	require.NoError(t, config.ValidateFrontendConfig(config_obj))

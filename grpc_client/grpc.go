@@ -28,6 +28,8 @@ import (
 	"time"
 
 	grpcpool "github.com/processout/grpc-go-pool"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -44,6 +46,11 @@ var (
 	address string
 
 	Factory APIClientFactory = GRPCAPIClient{}
+
+	grpcCallCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "grpc_client_calls",
+		Help: "Total number of internal gRPC calls.",
+	})
 )
 
 func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
@@ -96,6 +103,8 @@ func (self GRPCAPIClient) GetAPIClient(
 	config_obj *config_proto.Config) (
 	api_proto.APIClient, func() error, error) {
 	channel, err := getChannel(ctx, config_obj)
+
+	grpcCallCounter.Inc()
 
 	return api_proto.NewAPIClient(channel.ClientConn), channel.Close, err
 }

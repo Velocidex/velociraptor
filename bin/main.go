@@ -20,13 +20,12 @@ package main
 import (
 	"crypto/x509"
 	"encoding/pem"
-	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
 
 	"github.com/Velocidex/survey"
-	"github.com/Velocidex/yaml/v2"
+	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -42,11 +41,10 @@ var (
 	app = kingpin.New("velociraptor",
 		"An advanced incident response and monitoring agent.")
 
-	config_path = app.Flag("config", "The configuration file.").Short('c').
-			Envar("VELOCIRAPTOR_CONFIG").String()
-
-	api_config_path = app.Flag("api_config", "The API configuration file.").Short('a').
-			Envar("VELOCIRAPTOR_API_CONFIG").String()
+	config_path = app.Flag("config", "The configuration file.").
+			Short('c').String()
+	api_config_path = app.Flag("api_config", "The API configuration file.").
+			Short('a').String()
 
 	run_as = app.Flag("runas", "Run as this username's ACLs").String()
 
@@ -68,119 +66,80 @@ var (
 	command_handlers []CommandHandler
 )
 
-func get_server_config(config_path string) (*config_proto.Config, error) {
-	config_obj, err := config.LoadConfig(config_path)
-	if err != nil {
-		return nil, err
-	}
-	if err == nil {
-		err = config.ValidateFrontendConfig(config_obj)
+// Try to unlock encrypted API keys
+func maybe_unlock_api_config(config_obj *config_proto.Config) error {
+	if config_obj.ApiConfig == nil {
+		return nil
 	}
 
-	return config_obj, err
-}
+	// If the key is locked ask for a password.
+	private_key := []byte(config_obj.ApiConfig.ClientPrivateKey)
+	block, _ := pem.Decode(private_key)
+	if block == nil {
+		return errors.New("Unable to decode private key.")
+	}
 
-func maybe_parse_api_config(config_obj *config_proto.Config) {
-	if *api_config_path != "" {
-		fd, err := os.Open(*api_config_path)
-		kingpin.FatalIfError(err, "Unable to read api config.")
-
-		data, err := ioutil.ReadAll(fd)
-		kingpin.FatalIfError(err, "Unable to read api config.")
-		err = yaml.Unmarshal(data, &config_obj.ApiConfig)
-		kingpin.FatalIfError(err, "Unable to decode config.")
-
-		// If the key is locked ask for a password.
-		private_key := []byte(config_obj.ApiConfig.ClientPrivateKey)
-		block, _ := pem.Decode(private_key)
-		if block == nil {
-			kingpin.Fatalf("Unable to decode private key.")
+	if x509.IsEncryptedPEMBlock(block) {
+		password := ""
+		err := survey.AskOne(
+			&survey.Password{Message: "Password:"},
+			&password,
+			survey.WithValidator(survey.Required))
+		if err != nil {
+			return err
 		}
 
-		if x509.IsEncryptedPEMBlock(block) {
-			password := ""
-			err := survey.AskOne(
-				&survey.Password{Message: "Password:"},
-				&password,
-				survey.WithValidator(survey.Required))
-			kingpin.FatalIfError(err, "Password.")
-
-			decrypted_block, err := x509.DecryptPEMBlock(
-				block, []byte(password))
-			kingpin.FatalIfError(err, "Password.")
-
-			config_obj.ApiConfig.ClientPrivateKey = string(
-				pem.EncodeToMemory(&pem.Block{
-					Bytes: decrypted_block,
-					Type:  block.Type,
-				}))
+		decrypted_block, err := x509.DecryptPEMBlock(
+			block, []byte(password))
+		if err != nil {
+			return err
 		}
-
+		config_obj.ApiConfig.ClientPrivateKey = string(
+			pem.EncodeToMemory(&pem.Block{
+				Bytes: decrypted_block,
+				Type:  block.Type,
+			}))
 	}
+	return nil
 }
 
-func load_config_or_api() (*config_proto.Config, error) {
-	config_obj, err := config.LoadConfig(*config_path)
-	if err != nil {
-		return nil, err
-	}
-	if config_obj.Frontend != nil {
-		err = config.ValidateFrontendConfig(config_obj)
-	} else {
-		err = config.ValidateClientConfig(config_obj)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	maybe_parse_api_config(config_obj)
-	load_config_artifacts(config_obj)
-
-	return config_obj, nil
-}
-
-func load_config_or_default() *config_proto.Config {
-	config_obj, err := load_config_or_api()
-	if err != nil {
-		return config.GetDefaultConfig()
-	}
-
-	// Initialize the logging now that we have loaded the config.
-	err = logging.InitLogging(config_obj)
-	kingpin.FatalIfError(err, "Logging")
-
-	return config_obj
-}
+var (
+	DefaultConfigLoader, APIConfigLoader *config.Loader
+)
 
 func main() {
 	app.HelpFlag.Short('h')
-	app.UsageTemplate(kingpin.CompactUsageTemplate).DefaultEnvars()
+	app.UsageTemplate(kingpin.CompactUsageTemplate)
 	args := os.Args[1:]
-
-	var embedded_config *config_proto.Config
 
 	// If no args are given check if there is an embedded config
 	// with autoexec.
 	if len(args) == 0 {
-		args, embedded_config = maybeUnpackConfig(args)
+		config_obj, err := new(config.Loader).WithVerbose(*verbose_flag).
+			WithEmbedded().LoadAndValidate()
+		if err == nil && config_obj.Autoexec != nil && config_obj.Autoexec.Argv != nil {
+			for _, arg := range config_obj.Autoexec.Argv {
+				args = append(args, os.ExpandEnv(arg))
+			}
+			logging.GetLogger(config_obj, &logging.ToolComponent).
+				Info("Autoexec with parameters: %s", args)
+		}
 	}
 
 	command := kingpin.MustParse(app.Parse(args))
 
-	if !*verbose_flag {
-		logging.SuppressLogging = true
-		logging.Reset()
+	// Most commands load a config in the folloing order
+	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
+		WithEmbedded().
+		WithFileLoader(*config_path).
+		WithEnvLoader("VELOCIRAPTOR_CONFIG").
+		WithCustomValidator(load_config_artifacts)
 
-		// We need to delay this message until we parsed the
-		// command line so we can find out of the logging is
-		// suppressed.
-		if embedded_config != nil && embedded_config.Autoexec != nil {
-			logging.GetLogger(embedded_config, &logging.ToolComponent).
-				Info("Autoexec with parameters: %s",
-					embedded_config.Autoexec)
-		}
-	}
+	// Commands that potentially take an API config can load both
+	APIConfigLoader = DefaultConfigLoader.Copy().
+		WithApiLoader(*api_config_path).
+		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
+		WithCustomValidator(maybe_unlock_api_config)
 
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)

@@ -144,7 +144,7 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 }
 
 func doShell() {
-	config_obj, err := load_config_or_api()
+	config_obj, err := APIConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	if config_obj.ApiConfig == nil ||

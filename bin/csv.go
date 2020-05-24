@@ -21,7 +21,8 @@ var (
 )
 
 func doCSV() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithDefaultLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,

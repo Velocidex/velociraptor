@@ -4,6 +4,7 @@ goog.module('grrUi.client.client');
 goog.module.declareLegacyNamespace();
 
 const {AddClientsLabelsDialogDirective} = goog.require('grrUi.client.addClientsLabelsDialogDirective');
+const {BuildCollectorDirective} = goog.require('grrUi.client.buildCollectorDirective');
 const {ClientContextDirective} = goog.require('grrUi.client.clientContextDirective');
 const {ClientDialogService} = goog.require('grrUi.client.clientDialogService');
 const {ClientUsernamesDirective} = goog.require('grrUi.client.clientUsernamesDirective');
@@ -25,6 +26,8 @@ exports.clientModule = angular.module('grrUi.client', [
 exports.clientModule.directive(
     AddClientsLabelsDialogDirective.directive_name,
     AddClientsLabelsDialogDirective);
+exports.clientModule.directive(
+    BuildCollectorDirective.directive_name, BuildCollectorDirective);
 exports.clientModule.directive(
     ClientContextDirective.directive_name, ClientContextDirective);
 exports.clientModule.directive(

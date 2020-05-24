@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/survey"
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
@@ -138,7 +139,7 @@ begin by identifying what type of deployment you need.
 )
 
 func doGenerateConfigInteractive() {
-	config_obj := load_config_or_default()
+	config_obj := config.GetDefaultConfig()
 
 	// Assume we are generating a server config for the running binary
 	config_obj.ServerType = runtime.GOOS

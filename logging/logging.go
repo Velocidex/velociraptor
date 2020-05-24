@@ -72,12 +72,7 @@ func InitLogging(config_obj *config_proto.Config) error {
 		if err != nil {
 			return err
 		}
-		if config_obj.Logging != nil &&
-			config_obj.Logging.SeparateLogsPerComponent {
-			Manager.contexts[component] = logger
-		} else {
-			Manager.contexts[&GenericComponent] = logger
-		}
+		Manager.contexts[component] = logger
 	}
 
 	FlushPrelogs(config_obj)
@@ -142,7 +137,7 @@ func (self *LogManager) GetLogger(
 
 	ctx, pres := self.contexts[component]
 	if !pres {
-		panic("Uninitialized logging")
+		panic(fmt.Sprintf("Uninitialized logging for %v", *component))
 	}
 	return ctx
 }

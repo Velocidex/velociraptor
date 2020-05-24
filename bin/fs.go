@@ -93,7 +93,9 @@ func eval_query(query string, scope *vfilter.Scope) {
 }
 
 func doLS(path, accessor string) {
-	config_obj := load_config_or_default()
+	config_obj, err := APIConfigLoader.WithDefaultLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
@@ -136,7 +138,9 @@ func doLS(path, accessor string) {
 }
 
 func doRM(path, accessor string) {
-	config_obj := load_config_or_default()
+	config_obj, err := APIConfigLoader.WithDefaultLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
@@ -172,7 +176,9 @@ func doRM(path, accessor string) {
 }
 
 func doCp(path, accessor string, dump_dir string) {
-	config_obj := load_config_or_default()
+	config_obj, err := APIConfigLoader.WithDefaultLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
@@ -253,7 +259,9 @@ func initFilestoreAccessor(config_obj *config_proto.Config) {
 }
 
 func doCat(path, accessor_name string) {
-	config_obj := load_config_or_default()
+	config_obj, err := APIConfigLoader.WithDefaultLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
