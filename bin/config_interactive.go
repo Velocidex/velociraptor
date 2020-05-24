@@ -46,7 +46,7 @@ begin by identifying what type of deployment you need.
 			"(e.g. www.example.com):",
 		Help: "Clients will connect to the Frontend using this " +
 			"public name (e.g. https://www.example.com:8000/ ).",
-		Default: "www.example.com",
+		Default: "localhost",
 	}
 
 	port_question = &survey.Input{

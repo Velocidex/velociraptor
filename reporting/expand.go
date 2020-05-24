@@ -36,7 +36,7 @@ func EvalQueryToTable(ctx context.Context,
 	for row := range output_chan {
 		string_row := []string{}
 		if len(columns) == 0 {
-			columns := scope.GetMembers(row)
+			columns = scope.GetMembers(row)
 			table.SetHeader(columns)
 		}
 

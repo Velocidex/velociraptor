@@ -286,7 +286,7 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 }
 
 func doArtifactCollect() {
-	config_obj, err := DefaultConfigLoader.WithDefaultLoader().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	repository, err := getRepository(config_obj)
@@ -380,7 +380,7 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func doArtifactShow() {
-	config_obj, err := DefaultConfigLoader.WithDefaultLoader().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
@@ -395,7 +395,7 @@ func doArtifactShow() {
 }
 
 func doArtifactList() {
-	config_obj, err := DefaultConfigLoader.WithDefaultLoader().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
 	repository, err := getRepository(config_obj)

@@ -86,10 +86,11 @@ func (self *Loader) WithCustomValidator(validator func(config_obj *config_proto.
 	return self
 }
 
-func (self *Loader) WithDefaultLoader() *Loader {
+func (self *Loader) WithNullLoader() *Loader {
 	self = self.Copy()
 	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
-		return GetDefaultConfig(), nil
+		self.Log("Setting empty config")
+		return &config_proto.Config{}, nil
 	})
 	return self
 }
@@ -98,7 +99,7 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 	if filename != "" {
 		self = self.Copy()
 		self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
-			self.Log(fmt.Sprintf("Loading config from file %v", filename))
+			self.Log("Loading config from file %v", filename)
 			return read_config_from_file(filename)
 		})
 	}
@@ -111,8 +112,7 @@ func (self *Loader) WithEnvLoader(env_var string) *Loader {
 	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
 		env_config := os.Getenv(env_var)
 		if env_config != "" {
-			self.Log(fmt.Sprintf("Loading config from env %v (%v)",
-				env_var, env_config))
+			self.Log("Loading config from env %v (%v)", env_var, env_config)
 			return read_config_from_file(env_config)
 		}
 		return nil, errors.New(fmt.Sprintf("Env var %v is not set", env_var))
@@ -169,6 +169,7 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	for _, validator := range self.validators {
 		err = validator(config_obj)
 		if err != nil {
+			self.Log("%v", err)
 			return err
 		}
 	}
@@ -188,7 +189,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	}
 
 	if config_obj.Client != nil {
-		self.loadWriteback(config_obj)
+		if self.use_writeback {
+			self.loadWriteback(config_obj)
+		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {
 			return err
@@ -210,6 +213,7 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
 		filename = filepath.Join(self.write_back_path, filename)
 	}
 
+	self.Log("Loading writeback from %v", filename)
 	data, err := ioutil.ReadFile(filename)
 
 	// Failing to read the file is not an error - the file may not
@@ -220,8 +224,7 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
 		// it otherwise the client will fail to start and
 		// break.
 		if err != nil {
-			self.Log(fmt.Sprintf(
-				"Writeback file is corrupt - resetting: %v", err))
+			self.Log("Writeback file is corrupt - resetting: %v", err)
 		}
 	}
 
@@ -235,7 +238,7 @@ func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 		if err == nil {
 			return result, self.Validate(result)
 		}
-		self.Log(fmt.Sprintf("%v", err))
+		self.Log("%v", err)
 	}
 	return nil, errors.New("Unable to load config from any source.")
 }

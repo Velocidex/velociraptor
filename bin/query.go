@@ -201,7 +201,7 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 }
 
 func doQuery() {
-	config_obj, err := APIConfigLoader.LoadAndValidate()
+	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
 
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
