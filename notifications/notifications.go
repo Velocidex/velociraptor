@@ -23,7 +23,7 @@ func (self *NotificationPool) IsClientConnected(client_id string) bool {
 	return pres
 }
 
-func (self *NotificationPool) Listen(client_id string) chan bool {
+func (self *NotificationPool) Listen(client_id string) (chan bool, func()) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -44,7 +44,16 @@ func (self *NotificationPool) Listen(client_id string) chan bool {
 	c = make(chan bool)
 	self.clients[client_id] = c
 
-	return c
+	return c, func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		c, pres := self.clients[client_id]
+		if pres {
+			close(c)
+			delete(self.clients, client_id)
+		}
+	}
 }
 
 func (self *NotificationPool) Notify(client_id string) {

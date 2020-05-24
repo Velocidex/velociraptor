@@ -94,7 +94,7 @@ func StartNotificationService(
 	return nil
 }
 
-func ListenForNotification(client_id string) chan bool {
+func ListenForNotification(client_id string) (chan bool, func()) {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 

@@ -7,6 +7,7 @@ package services
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -68,7 +69,13 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage() *crypto_proto.G
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return proto.Clone(gEventTable.job).(*crypto_proto.GrrMessage)
+	// Add a bit of randomness to the max wait to spread out
+	// client's updates.
+	result := proto.Clone(gEventTable.job).(*crypto_proto.GrrMessage)
+	for _, event := range result.UpdateEventTable.Event {
+		event.MaxWait += uint64(rand.Intn(20))
+	}
+	return result
 }
 
 // Start a new ClientEventTable with new rules.
@@ -105,7 +112,7 @@ func (self *ClientEventTable) Start(
 			logger.Info("Collecting Client Monitoring Artifact: %s", name)
 
 			vql_collector_args := &actions_proto.VQLCollectorArgs{
-				MaxWait:      100,
+				MaxWait:      500,
 				OpsPerSecond: rate,
 
 				// Event queries never time out on their own.
@@ -208,7 +215,8 @@ func StartClientMonitoringService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification := ListenForNotification(constants.ClientMonitoringFlowURN)
+	notification, cancel := ListenForNotification(constants.ClientMonitoringFlowURN)
+	defer cancel()
 
 	wg.Add(1)
 	go func() {
@@ -227,7 +235,8 @@ func StartClientMonitoringService(
 				}
 			}
 
-			notification = ListenForNotification(constants.ClientMonitoringFlowURN)
+			cancel()
+			notification, cancel = ListenForNotification(constants.ClientMonitoringFlowURN)
 		}
 	}()
 

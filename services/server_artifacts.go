@@ -54,8 +54,8 @@ func (self *ServerArtifactsRunner) Start(
 		self.config_obj, &logging.FrontendComponent)
 
 	// Listen for notifications from the server.
-	notification := ListenForNotification("server")
-	defer NotifyListener(self.config_obj, "server")
+	notification, cancel := ListenForNotification("server")
+	defer cancel()
 
 	self.process(ctx, wg)
 
@@ -81,7 +81,8 @@ func (self *ServerArtifactsRunner) Start(
 			}
 
 			// Listen again.
-			notification = ListenForNotification("server")
+			cancel()
+			notification, cancel = ListenForNotification("server")
 		}
 	}
 }
