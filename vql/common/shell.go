@@ -214,7 +214,7 @@ func (self ShellPlugin) Call(
 				output_chan <- response
 			} else {
 				response.Stderr += line
-				if len(response.Stderr) > int(arg.Length)9 {
+				if len(response.Stderr) > int(arg.Length) {
 					output_chan <- response
 					response.Stderr = ""
 				}
