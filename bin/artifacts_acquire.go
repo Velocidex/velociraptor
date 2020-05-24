@@ -134,7 +134,9 @@ func acquireArtifact(ctx context.Context, config_obj *config_proto.Config,
 }
 
 func doArtifactsAcquire() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 

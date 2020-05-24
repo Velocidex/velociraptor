@@ -47,10 +47,8 @@ var (
 )
 
 func doPoolClient() {
-	client_config, err := config.LoadConfig(*config_path)
+	client_config, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
-	kingpin.FatalIfError(config.ValidateClientConfig(client_config),
-		"Unable to load config file")
 
 	server.IncreaseLimits(client_config)
 
@@ -63,7 +61,7 @@ func doPoolClient() {
 	}
 
 	for i := 0; i < number_of_clients; i++ {
-		client_config, err := config.LoadConfig(*config_path)
+		client_config, err := DefaultConfigLoader.LoadAndValidate()
 		kingpin.FatalIfError(err, "Unable to load config file")
 
 		client_config.Client.WritebackLinux = path.Join(

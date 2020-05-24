@@ -20,15 +20,12 @@
 package main
 
 import (
-	"bytes"
-	"compress/zlib"
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -114,37 +111,8 @@ func verify_frontend_config(config_obj *config_proto.Config) error {
 }
 
 func doShowConfig() {
-	config_obj, err := config.LoadConfigWithWriteback(*config_path)
+	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-
-	if config_obj.Client != nil {
-		kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
-			"Unable to load config.")
-	}
-
-	if config_obj.Frontend != nil {
-		kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
-			"Unable to load config.")
-
-		// Do some additional verifications.
-		kingpin.FatalIfError(verify_frontend_config(config_obj),
-			"Unable to load config.")
-	}
-
-	// Dump out the embedded config as is.
-	if *config_path == "" {
-		idx := bytes.IndexByte(config.FileConfigDefaultYaml, '\n')
-		r, err := zlib.NewReader(bytes.NewReader(
-			config.FileConfigDefaultYaml[idx+1:]))
-		kingpin.FatalIfError(err, "Unable to load embedded config.")
-
-		b := &bytes.Buffer{}
-		io.Copy(b, r)
-		r.Close()
-
-		fmt.Printf("%v", b.String())
-		return
-	}
 
 	res, err := yaml.Marshal(config_obj)
 	if err != nil {
@@ -203,7 +171,8 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 }
 
 func doGenerateConfigNonInteractive() {
-	config_obj := load_config_or_default()
+	config_obj := config.GetDefaultConfig()
+
 	err := generateNewKeys(config_obj)
 
 	// Users have to updated the following fields.
@@ -245,11 +214,8 @@ func doGenerateConfigNonInteractive() {
 }
 
 func doRotateKeyConfig() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-
-	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
-		"Unable to load config.")
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
@@ -293,11 +259,8 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 }
 
 func doDumpClientConfig() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-
-	kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
-		"Unable to load config.")
 
 	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)
@@ -308,7 +271,7 @@ func doDumpClientConfig() {
 }
 
 func doDumpApiClientConfig() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredCA().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	if *config_api_client_common_name == config_obj.Client.PinnedServerName {

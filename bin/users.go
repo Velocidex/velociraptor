@@ -52,7 +52,7 @@ var (
 )
 
 func doAddUser() {
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
@@ -97,7 +97,7 @@ func doAddUser() {
 }
 
 func doShowUser() {
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	user_record, err := users.GetUser(config_obj, *user_show_name)
@@ -110,7 +110,7 @@ func doShowUser() {
 }
 
 func doLockUser() {
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	user_record, err := users.GetUser(config_obj, *user_lock_name)

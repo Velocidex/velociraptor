@@ -19,53 +19,55 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  * @ngInject
  */
 const HostInfoController = function(
-    $scope, $interval, grrApiService, grrRoutingService,
+    $scope, $interval, grrApiService, grrRoutingService, $uibModal,
     grrDialogService) {
 
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @private {!angular.$interval} */
-  this.interval_ = $interval;
+    this.uibModal_ = $uibModal;
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!angular.$interval} */
+    this.interval_ = $interval;
 
-  /** @private {!grrUi.routing.routingService.RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.core.dialogService.DialogService} */
-  this.grrDialogService_ = grrDialogService;
+    /** @private {!grrUi.routing.routingService.RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
-  /** @type {string} */
-  this.clientId;
+    /** @private {!grrUi.core.dialogService.DialogService} */
+    this.grrDialogService_ = grrDialogService;
 
-  /** @export {Object} */
-  this.client;
+    /** @type {string} */
+    this.clientId;
 
-  /** @type {boolean} */
-  this.hasClientAccess;
+    /** @export {Object} */
+    this.client;
 
-  /** @type {number} */
-  this.fetchDetailsRequestId = 0;
+    /** @type {boolean} */
+    this.hasClientAccess;
 
-  /** @type {?string} */
-  this.interrogateOperationId;
+    /** @type {number} */
+    this.fetchDetailsRequestId = 0;
 
-  /** @private {!angular.$q.Promise} */
-  this.interrogateOperationInterval_;
+    /** @type {?string} */
+    this.interrogateOperationId;
 
-  // clientId may be inferred from the URL or passed explicitly as
-  // a parameter.
-  this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
-      this.onClientIdChange_.bind(this));
-  this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
+    /** @private {!angular.$q.Promise} */
+    this.interrogateOperationInterval_;
 
-  // TODO(user): use grrApiService.poll for polling.
-  this.scope_.$on('$destroy',
-                  this.stopMonitorInterrogateOperation_.bind(this));
+    // clientId may be inferred from the URL or passed explicitly as
+    // a parameter.
+    this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
+                                              this.onClientIdChange_.bind(this));
+    this.scope_.$watch('clientId', this.onClientIdChange_.bind(this));
 
-  this.report_params = {};
+    // TODO(user): use grrApiService.poll for polling.
+    this.scope_.$on('$destroy',
+                    this.stopMonitorInterrogateOperation_.bind(this));
+
+    this.report_params = {};
 };
 
 
@@ -135,6 +137,32 @@ HostInfoController.prototype.interrogate = function() {
             this.stopMonitorInterrogateOperation_();
         }.bind(this));
 };
+
+HostInfoController.prototype.buildCollector = function() {
+  var modalScope = this.scope_.$new();
+  modalScope.resolve = function() {
+    modalInstance.close();
+  };
+  modalScope.reject = function() {
+    modalInstance.dismiss();
+  };
+  this.scope_.$on('$destroy', function() {
+    modalScope.$destroy();
+  });
+
+  var modalInstance = this.uibModal_.open({
+    template: '<grr-build-collector on-resolve="resolve()" ' +
+        'on-reject="reject()" />',
+    scope: modalScope,
+    windowClass: 'wide-modal high-modal',
+    size: 'lg'
+  });
+
+  modalInstance.result.then(function resolve() {
+    this.triggerUpdate();
+  }.bind(this));
+};
+
 
 /**
  * Polls the interrogate operation state.

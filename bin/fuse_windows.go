@@ -424,7 +424,7 @@ func NewVFSFs(config_obj *config_proto.Config, client_id string) *VFSFs {
 }
 
 func doFuse() {
-	config_obj, err := load_config_or_api()
+	config_obj, err := APIConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Connect one time to make sure we can.

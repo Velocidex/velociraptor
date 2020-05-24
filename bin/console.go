@@ -589,7 +589,9 @@ func save_state(state *consoleState) {
 }
 
 func doConsole() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 	repository.LoadDirectory(*artifact_definitions_dir)

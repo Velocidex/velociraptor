@@ -47,7 +47,7 @@ var (
 )
 
 func doFrontend() {
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Use both context and WaitGroup to control life time of

@@ -10,7 +10,6 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -50,10 +49,8 @@ var (
 )
 
 func doGrant() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
-		"Unable to load config.")
 	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
 
 	principal := *grant_command_principal
@@ -99,10 +96,8 @@ func doGrant() {
 }
 
 func doShow() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
-		"Unable to load config.")
 
 	principal := *show_command_principal
 	existing_policy, err := acls.GetPolicy(config_obj, principal)

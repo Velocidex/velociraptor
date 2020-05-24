@@ -58,18 +58,12 @@ var (
 	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\n`)
 )
 
-func validate_config(config_data []byte) error {
-	// Validate the string by parsing it as a config proto.
-	test_config := &config_proto.Config{}
-	err := yaml.UnmarshalStrict(config_data, test_config)
-	if err != nil {
-		return err
-	}
-
-	if test_config.Autoexec != nil {
+// Validate any embedded artifacts to make sure they compile properly.
+func validate_config(config_obj *config_proto.Config) error {
+	if config_obj.Autoexec != nil {
 		repository := artifacts.NewRepository()
 
-		for _, definition := range test_config.Autoexec.ArtifactDefinitions {
+		for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
 			serialized, err := yaml.Marshal(definition)
 			if err != nil {
 				return err
@@ -88,15 +82,15 @@ func validate_config(config_data []byte) error {
 }
 
 func doRepack() {
+	_, err := new(config.Loader).WithFileLoader(*repack_command_config).
+		WithCustomValidator(validate_config).LoadAndValidate()
+	kingpin.FatalIfError(err, "Unable to open config file")
+
 	config_fd, err := os.Open(*repack_command_config)
 	kingpin.FatalIfError(err, "Unable to open config file")
 
 	config_data, err := ioutil.ReadAll(config_fd)
-	kingpin.FatalIfError(err, "Unable to read config file")
-
-	// Validate the string by parsing it as a config proto.
-	err = validate_config(config_data)
-	kingpin.FatalIfError(err, "Config file invalid")
+	kingpin.FatalIfError(err, "Unable to open config file")
 
 	// Compress the string.
 	var b bytes.Buffer
@@ -128,7 +122,6 @@ func doRepack() {
 	outfd, err := os.OpenFile(*repack_command_output,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	kingpin.FatalIfError(err, "Unable to create output file")
-	defer outfd.Close()
 
 	data, err := ioutil.ReadAll(fd)
 	kingpin.FatalIfError(err, "Unable to read executable")
@@ -165,7 +158,7 @@ func doRepack() {
 
 	match := embedded_re.FindIndex(data)
 	if match == nil {
-		kingpin.Fatalf("I can not seem to locate the embedding config????")
+		kingpin.Fatalf("I can not seem to locate the embedded config????")
 	}
 
 	end := match[1]
@@ -178,6 +171,12 @@ func doRepack() {
 
 	_, err = outfd.Write(data[end+len(config_data):])
 	kingpin.FatalIfError(err, "Writing")
+
+	err = outfd.Close()
+	kingpin.FatalIfError(err, "Writing")
+
+	err = os.Chmod(outfd.Name(), 0777)
+	kingpin.FatalIfError(err, "Chmod")
 }
 
 func init() {

@@ -31,7 +31,6 @@ import (
 
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	config "www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -46,7 +45,8 @@ var (
 )
 
 func doRemove() error {
-	config_obj, err := config.LoadConfigWithWriteback(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredClient().
+		WithWriteback().LoadAndValidate()
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
 	}
@@ -65,7 +65,8 @@ func doRemove() error {
 }
 
 func doInstall() error {
-	config_obj, err := config.LoadConfigWithWriteback(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredClient().
+		WithWriteback().LoadAndValidate()
 	if err != nil {
 		return errors.Wrap(err, "Unable to load config file")
 	}

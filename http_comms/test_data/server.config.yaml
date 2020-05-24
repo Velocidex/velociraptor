@@ -180,14 +180,7 @@ Frontend:
     -----END RSA PRIVATE KEY-----
   max_upload_size: 10485760
 Datastore:
-  implementation: FileBaseDataStore
-  location: /tmp
-  filestore_directory: /tmp
-Mail: {}
-Monitoring:
-  bind_address: 127.0.0.1
-  bind_port: 8003
-api_config: {}
+  implementation: Test
 Writeback:
   private_key: |
      -----BEGIN RSA PRIVATE KEY-----

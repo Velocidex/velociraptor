@@ -30,6 +30,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -50,11 +51,11 @@ var (
 
 	artifact_command_show_name = artifact_command_show.Arg(
 		"name", "Name to show.").
-		HintAction(listArtifacts).String()
+		HintAction(listArtifactsHint).String()
 
 	artifact_command_list_name = artifact_command_list.Arg(
 		"regex", "Regex of names to match.").
-		HintAction(listArtifacts).String()
+		HintAction(listArtifactsHint).String()
 
 	artifact_command_list_verbose_count = artifact_command_list.Flag(
 		"details", "Show more details (Use -d -dd for even more)").
@@ -82,15 +83,14 @@ var (
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
-		Required().HintAction(listArtifacts).Strings()
+		Required().HintAction(listArtifactsHint).Strings()
 
 	artifact_command_collect_args = artifact_command_collect.Flag(
 		"args", "Artifact args.").Strings()
 )
 
-func listArtifacts() []string {
-	config_obj := load_config_or_default()
-
+func listArtifactsHint() []string {
+	config_obj := config.GetDefaultConfig()
 	result := []string{}
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
@@ -286,8 +286,8 @@ func valid_parameter(param_name string, repository *artifacts.Repository) bool {
 }
 
 func doArtifactCollect() {
-	config_obj := load_config_or_default()
-	load_config_artifacts(config_obj)
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
@@ -380,7 +380,8 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func doArtifactShow() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
@@ -394,7 +395,9 @@ func doArtifactShow() {
 }
 
 func doArtifactList() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
+
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
@@ -443,17 +446,23 @@ func doArtifactList() {
 	}
 }
 
-func load_config_artifacts(config_obj *config_proto.Config) {
+func load_config_artifacts(config_obj *config_proto.Config) error {
 	if config_obj.Autoexec == nil {
-		return
+		return nil
 	}
+
 	repository, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
+	if err != nil {
+		return err
+	}
 
 	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
 		_, err := repository.LoadProto(definition, true /* validate */)
-		kingpin.FatalIfError(err, "Unable to parse config artifact")
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func init() {

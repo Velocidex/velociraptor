@@ -171,7 +171,7 @@ func doServerDeb() {
 	// deb on the same system where the logs should go.
 	config.ValidateClientConfig(&config_proto.Config{})
 
-	config_obj, err := get_server_config(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Debian packages always use the "velociraptor" user.
@@ -317,11 +317,9 @@ scrape_configs:
 }
 
 func doClientDeb() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredClient().
+		WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
-
-	kingpin.FatalIfError(config.ValidateClientConfig(config_obj),
-		"Unable to load config.")
 
 	res, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")

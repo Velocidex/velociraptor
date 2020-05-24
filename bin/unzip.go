@@ -32,7 +32,8 @@ var (
 )
 
 func doUnzip() {
-	config_obj := load_config_or_default()
+	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config")
 
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	kingpin.FatalIfError(err, "File does not exist")

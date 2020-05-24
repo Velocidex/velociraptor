@@ -129,6 +129,7 @@ func (self CollectPlugin) Call(
 			// Make a new scope for each artifact.
 			// Any uploads go into the container.
 			subscope := builder.Build()
+			defer subscope.Close()
 
 			for _, query := range request.Query {
 				vql, err := vfilter.Parse(query.VQL)

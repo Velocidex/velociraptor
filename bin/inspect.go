@@ -166,7 +166,8 @@ func init() {
 		switch command {
 
 		case inspect_command.FullCommand():
-			config_obj, err := get_server_config(*config_path)
+			config_obj, err := DefaultConfigLoader.
+				WithRequiredFrontend().LoadAndValidate()
 			kingpin.FatalIfError(err, "Unable to load config file")
 			err = Inspect(config_obj, *inspect_filename)
 			kingpin.FatalIfError(err, "Unable to parse datastore item.")

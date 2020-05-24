@@ -9,7 +9,6 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	proto "github.com/golang/protobuf/proto"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -19,10 +18,9 @@ var (
 )
 
 func doConfigFrontend() {
-	config_obj, err := config.LoadConfig(*config_path)
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-	kingpin.FatalIfError(config.ValidateFrontendConfig(config_obj),
-		"Unable to load config.")
+
 	if config_obj.Datastore.Implementation == "FileBaseDataStore" {
 		kingpin.Fatalf("Current FileStore implementation is %v which does not support multiple frontends.", config_obj.Datastore.Implementation)
 	}

@@ -201,7 +201,9 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 }
 
 func doQuery() {
-	config_obj := load_config_or_default()
+	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config")
+
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")

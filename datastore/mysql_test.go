@@ -133,7 +133,9 @@ func (self MysqlTestSuite) TestIndexes() {
 func TestMysqlDatabase(t *testing.T) {
 	// If a local testing mysql server is configured we can run
 	// this test, otherwise skip it.
-	config_obj, err := config.LoadConfig("test_data/mysql.config.yaml")
+	config_obj, err := new(config.Loader).WithFileLoader(
+		"test_data/mysql.config.yaml").
+		LoadAndValidate()
 	if err != nil {
 		return
 	}

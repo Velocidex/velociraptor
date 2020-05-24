@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -30,7 +31,12 @@ type BaseServicesTestSuite struct {
 }
 
 func (self *BaseServicesTestSuite) SetupTest() {
-	self.config_obj = vtesting.GetTestConfig(self.T())
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(self.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	self.cancel = cancel
