@@ -7,7 +7,6 @@ import (
 
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 // Ensures client config is valid, fills in defaults for missing values etc.
@@ -69,11 +68,11 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
-	return logging.InitLogging(config_obj)
+	return nil
 }
 
 func ValidateAutoexecConfig(config_obj *config_proto.Config) error {
-	return logging.InitLogging(config_obj)
+	return nil
 }
 
 // Ensures server config is valid, fills in defaults for missing values etc.
@@ -179,5 +178,5 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
-	return logging.InitLogging(config_obj)
+	return nil
 }

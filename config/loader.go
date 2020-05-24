@@ -7,10 +7,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 type loader_func func() (*config_proto.Config, error)
@@ -19,8 +21,12 @@ type validator func(config_obj *config_proto.Config) error
 type Loader struct {
 	verbose, use_writeback bool
 
+	write_back_path string
+
 	loaders    []loader_func
 	validators []validator
+
+	messages []string
 }
 
 func (self *Loader) WithRequiredFrontend() *Loader {
@@ -131,34 +137,47 @@ func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
 
 func (self *Loader) Copy() *Loader {
 	return &Loader{
-		verbose:    self.verbose,
-		loaders:    append([]loader_func{}, self.loaders...),
-		validators: append([]validator{}, self.validators...),
+		verbose:         self.verbose,
+		write_back_path: self.write_back_path,
+		loaders:         append([]loader_func{}, self.loaders...),
+		validators:      append([]validator{}, self.validators...),
+		messages:        self.messages,
 	}
 }
 
 func (self *Loader) Log(message string) {
-	fmt.Println(message)
+	self.messages = append(self.messages, message)
 }
 
 func (self *Loader) Validate(config_obj *config_proto.Config) error {
+	// Initialize the logging and dump early messages into the
+	// correct log destination.
+	err := logging.InitLogging(config_obj)
+	if err != nil {
+		return err
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
+	for _, message := range self.messages {
+		logger.Debug(message)
+	}
 
 	for _, validator := range self.validators {
-		err := validator(config_obj)
+		err = validator(config_obj)
 		if err != nil {
 			return err
 		}
 	}
 
 	if config_obj.Autoexec != nil {
-		err := ValidateAutoexecConfig(config_obj)
+		err = ValidateAutoexecConfig(config_obj)
 		if err != nil {
 			return err
 		}
 	}
 
 	if config_obj.Frontend != nil {
-		err := ValidateFrontendConfig(config_obj)
+		err = ValidateFrontendConfig(config_obj)
 		if err != nil {
 			return err
 		}
@@ -176,8 +195,18 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 }
 
 func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
+	if config_obj.Writeback != nil {
+		return
+	}
+
 	existing_writeback := &config_proto.Writeback{}
-	data, err := ioutil.ReadFile(WritebackLocation(config_obj))
+
+	filename := WritebackLocation(config_obj)
+	if !filepath.IsAbs(filename) && self.write_back_path != "" {
+		filename = filepath.Join(self.write_back_path, filename)
+	}
+
+	data, err := ioutil.ReadFile(filename)
 
 	// Failing to read the file is not an error - the file may not
 	// exist yet.
@@ -211,8 +240,7 @@ func read_embedded_config() (*config_proto.Config, error) {
 	idx := bytes.IndexByte(FileConfigDefaultYaml, '\n')
 	if FileConfigDefaultYaml[idx+1] == '#' {
 		return nil, errors.New(
-			"No embedded config - try to pack one with the pack command or " +
-				"provide the --config flag.")
+			"No embedded config - you can pack one with the `config repack` command")
 	}
 
 	r, err := zlib.NewReader(bytes.NewReader(FileConfigDefaultYaml[idx+1:]))

@@ -18,6 +18,7 @@ import (
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -30,7 +31,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type ServerTestSuite struct {
@@ -55,7 +55,14 @@ func (self MockAPIClientFactory) GetAPIClient(
 }
 
 func (self *ServerTestSuite) SetupTest() {
-	self.config_obj = vtesting.GetTestConfig(self.T())
+	var err error
+
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../http_comms/test_data/server.config.yaml").
+		WithVerbose(true).
+		WithWriteback(). //  The writeback is actually embedded in the config above.
+		LoadAndValidate()
+	require.NoError(self.T(), err)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	self.cancel = cancel
@@ -66,7 +73,6 @@ func (self *ServerTestSuite) SetupTest() {
 	services.StartNotificationService(ctx, self.wg, self.config_obj)
 	artifacts.GetGlobalRepository(self.config_obj)
 
-	var err error
 	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
 

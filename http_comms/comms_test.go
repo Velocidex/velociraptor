@@ -142,8 +142,10 @@ func (self *CommsTestSuite) SetupTest() {
 	self.frontend1 = NewFakeServer()
 	self.frontend2 = NewFakeServer()
 
-	config_obj, err := config.LoadConfig(
-		"../http_comms/test_data/server.config.yaml")
+	config_obj, err := new(config.Loader).WithFileLoader(
+		"../http_comms/test_data/server.config.yaml").
+		WithRequiredClient().WithWriteback().LoadAndValidate()
+
 	require.NoError(self.T(), err)
 	require.NoError(self.T(), config.ValidateClientConfig(config_obj))
 
