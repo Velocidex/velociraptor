@@ -187,6 +187,7 @@ func (self ShellPlugin) Call(
 		// Read asyncronously.
 		var mu sync.Mutex
 		response := &ShellResult{}
+		length := int(arg.Length)
 
 		wg.Add(1)
 		wg.Add(1)
@@ -198,11 +199,13 @@ func (self ShellPlugin) Call(
 				response.Stdout = line
 				output_chan <- response
 			} else {
-				response.Stdout += line
-				if len(response.Stdout) > int(arg.Length) {
+				data := response.Stdout + line
+				for len(data) > length {
+					response.Stdout = data[:length]
 					output_chan <- response
-					response.Stdout = ""
+					data = data[length:]
 				}
+				response.Stdout = data
 			}
 		}, wg)
 		go read_from_pipe(stderr_pipe, func(line string) {
@@ -213,11 +216,13 @@ func (self ShellPlugin) Call(
 				response.Stderr = line
 				output_chan <- response
 			} else {
-				response.Stderr += line
-				if len(response.Stderr) > int(arg.Length) {
+				data := response.Stderr + line
+				for len(data) > length {
+					response.Stderr = data[:length]
 					output_chan <- response
-					response.Stderr = ""
+					data = data[length:]
 				}
+				response.Stderr = data
 			}
 		}, wg)
 
