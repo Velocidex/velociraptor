@@ -21,23 +21,24 @@ import (
 
 type MainTestSuite struct {
 	suite.Suite
-	binary string
+	binary    string
+	extension string
 }
 
 func (self *MainTestSuite) SetupTest() {
-	extension := ""
 	if runtime.GOOS == "windows" {
-		extension = ".exe"
+		self.extension = ".exe"
 	}
 
 	// Search for a valid binary to run.
 	binaries, err := filepath.Glob(
 		"../output/velociraptor*" + constants.VERSION + "-" + runtime.GOOS +
-			"-" + runtime.GOARCH + extension)
+			"-" + runtime.GOARCH + self.extension)
 	assert.NoError(self.T(), err)
 
 	if len(binaries) == 0 {
-		binaries, _ = filepath.Glob("../output/velociraptor*" + extension)
+		binaries, _ = filepath.Glob("../output/velociraptor*" +
+			self.extension)
 	}
 
 	self.binary = binaries[0]
@@ -68,7 +69,7 @@ autoexec:
 
 func (self *MainTestSuite) TestAutoexec() {
 	// Create a tempfile for the repacked binary.
-	exe, err := ioutil.TempFile("", "exe")
+	exe, err := ioutil.TempFile("", "exe", self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())
@@ -172,7 +173,7 @@ func (self *MainTestSuite) TestGenerateConfigWithMerge() {
 	require.Error(self.T(), err)
 
 	// Create a tempfile for the repacked binary.
-	exe, err := ioutil.TempFile("", "exe")
+	exe, err := ioutil.TempFile("", "exe", self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())
