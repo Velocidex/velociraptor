@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/vfilter"
@@ -91,6 +92,10 @@ func (self FileStoreFileInfo) Name() string {
 }
 
 func (self *FileStoreFileInfo) Data() interface{} {
+	if self.Data_ == nil {
+		return ordereddict.NewDict()
+	}
+
 	return self.Data_
 }
 

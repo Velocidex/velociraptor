@@ -148,7 +148,7 @@ const SemanticValueController = function(
   /** @type {RegistryOverrideController} */
   this.registryOverrideController;
 
-  this.scope_.$watch('::value', this.onValueChange.bind(this));
+  this.scope_.$watch('value', this.onValueChange.bind(this));
 };
 
 
@@ -181,13 +181,13 @@ SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
 
     element.html(' <' +
         this.camelCaseToDashDelimited(directive.directive_name) +
-        ' value="::value" type="' + type + '" hidden-fields="::hiddenFields" />');
+        ' value="value" type="' + type + '" hidden-fields="::hiddenFields" />');
     return this.compile_(element);
   }.bind(this);
 
   var failureHandler = function(directive) {
     var element = angular.element('<span />');
-    element.html('{$ ::value $}');
+    element.html('{$ value $}');
     return this.compile_(element);
   }.bind(this);
 
@@ -211,9 +211,9 @@ SemanticValueController.prototype.compileSingleTypedValueTemplate_ = function(
  */
 SemanticValueController.prototype.compileRepeatedValueTemplate_ = function() {
   var element = angular.element(
-      '<div ng-repeat="item in ::repeatedValue || []">' +
-      ' <grr-semantic-value value="::item" ' +
-      ' type="{$ ::repeatedValueType $}"/></div>');
+      '<div ng-repeat="item in repeatedValue || []">' +
+      ' <grr-semantic-value value="item" ' +
+      ' type="{$ repeatedValueType $}"/></div>');
   return this.compile_(element);
 };
 

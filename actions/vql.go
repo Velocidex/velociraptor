@@ -93,6 +93,18 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
+	// Clients do not have a copy of artifacts so they need to be
+	// sent all artifacts from the server.
+	repository := artifacts.NewRepository()
+	for _, artifact := range arg.Artifacts {
+		_, err := repository.LoadProto(artifact, false /* validate */)
+		if err != nil {
+			responder.RaiseError(fmt.Sprintf(
+				"Failed to compile artifact %v.", artifact.Name))
+			return
+		}
+	}
+
 	uploader := &uploads.VelociraptorUploader{
 		Responder: responder,
 	}
@@ -103,23 +115,18 @@ func (self VQLClientAction) StartQuery(
 		ACLManager: vql_subsystem.NullACLManager{},
 		Env:        ordereddict.NewDict(),
 		Uploader:   uploader,
+		Repository: repository,
+		Logger: log.New(&LogWriter{config_obj, responder},
+			"vql: ", log.Lshortfile),
 	}
 
 	for _, env_spec := range arg.Env {
 		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
-	// Clients do not have a copy of artifacts so they need to be
-	// sent all artifacts from the server.
-	repository := artifacts.NewRepository()
-	for _, artifact := range arg.Artifacts {
-		repository.Set(artifact)
-	}
 	scope := builder.Build()
 	defer scope.Close()
 
-	scope.Logger = log.New(&LogWriter{config_obj, responder},
-		"vql: ", log.Lshortfile)
 	scope.Log("Starting query execution.")
 
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))

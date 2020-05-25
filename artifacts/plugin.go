@@ -255,6 +255,11 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 
 func NewArtifactRepositoryPlugin(
 	repository *Repository, prefix []string) vfilter.PluginGeneratorInterface {
+
+	if repository.artifact_plugin != nil {
+		return repository.artifact_plugin
+	}
+
 	result := &ArtifactRepositoryPlugin{
 		repository: repository,
 		children:   make(map[string]vfilter.PluginGeneratorInterface),
@@ -283,6 +288,9 @@ func NewArtifactRepositoryPlugin(
 				repository, append(prefix, components[0]))
 		}
 	}
+
+	// Cache it for next time.
+	repository.artifact_plugin = result
 
 	return result
 }

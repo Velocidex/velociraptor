@@ -25,7 +25,12 @@ exports.AceService.prototype.AceConfig = function(ace) {
 
     if (angular.isObject(ace_options)) {
         for (let key in ace_options) {
-            if (key == 'mode' || key == 'readOnly') {
+            // Ignore some options that depend on the widget.
+            if (key == 'mode' ||
+                key == 'readOnly' ||
+                key == "minLines" ||
+                key == "maxLines" ||
+                key == "autoScrollEditorIntoView" ) {
                 continue;
             }
 

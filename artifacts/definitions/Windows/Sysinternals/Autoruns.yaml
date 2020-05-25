@@ -23,7 +23,7 @@ sources:
   - queries:
       # Get the path to the binary.
       - |
-        LET bin <= SELECT * FROM Artifact.Windows.Utils.FetchBinary(
+        LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
               binaryURL=binaryURL, ToolName="Autorun")
 
       # Call the binary and return all its output in a single row.

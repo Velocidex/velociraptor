@@ -43,7 +43,10 @@ func getTable(
 
 	var path_manager api.PathManager
 
-	if in.FlowId != "" && in.Artifact != "" {
+	if in.Type == "inventory" {
+		path_manager = paths.NewInventoryPathManager()
+
+	} else if in.FlowId != "" && in.Artifact != "" {
 		path_manager = result_sets.NewArtifactPathManager(
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
 

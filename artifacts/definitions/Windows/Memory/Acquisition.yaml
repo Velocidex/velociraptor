@@ -11,7 +11,7 @@ sources:
       - SELECT * FROM foreach(
           row={
             SELECT FullPath, tempfile(data="X", extension=".aff4") AS Tempfile
-            FROM Artifact.Windows.Utils.FetchBinary(
+            FROM Artifact.Generic.Utils.FetchBinary(
                 ToolName="WinPmem",
                 binaryURL=binaryURL)
           },

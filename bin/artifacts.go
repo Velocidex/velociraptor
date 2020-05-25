@@ -233,7 +233,7 @@ func getRepository(config_obj *config_proto.Config) (*artifacts.Repository, erro
 		_, err := repository.LoadDirectory(*artifact_definitions_dir)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
-				Error("Artifact LoadDirectory", err)
+				Error("Artifact LoadDirectory ", err)
 			return nil, err
 		}
 	}
@@ -457,7 +457,16 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 	}
 
 	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
-		_, err := repository.LoadProto(definition, true /* validate */)
+		definition.Raw = ""
+		serialized, err := yaml.Marshal(definition)
+		if err != nil {
+			return err
+		}
+
+		// Add the raw definition for inspection.
+		definition.Raw = string(serialized)
+
+		_, err = repository.LoadProto(definition, true /* validate */)
 		if err != nil {
 			return err
 		}

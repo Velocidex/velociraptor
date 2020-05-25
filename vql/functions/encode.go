@@ -51,7 +51,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		return serialized_content
+		return string(serialized_content)
 
 	case "csv":
 		// Not actually a slice.

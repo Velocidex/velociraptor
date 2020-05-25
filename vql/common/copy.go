@@ -20,6 +20,8 @@ package common
 import (
 	"context"
 	"os"
+	"runtime"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -33,6 +35,7 @@ type CopyFunctionArgs struct {
 	Filename    string `vfilter:"required,field=filename,doc=The file to copy from."`
 	Accessor    string `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Destination string `vfilter:"required,field=dest,doc=The destination file to write."`
+	Permissions string `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
 }
 
 type CopyFunction struct{}
@@ -57,8 +60,10 @@ func (self *CopyFunction) Call(ctx context.Context,
 
 	// Report the command we ran for auditing
 	// purposes. This will be collected in the flow logs.
-	scope.Log("copy: Copying file from %v into %v", arg.Filename,
-		arg.Destination)
+	if arg.Accessor != "data" {
+		scope.Log("copy: Copying file from %v into %v", arg.Filename,
+			arg.Destination)
+	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
@@ -80,7 +85,28 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer fd.Close()
 
-	to, err := os.OpenFile(arg.Destination, os.O_RDWR|os.O_CREATE, 0600)
+	permissions := os.FileMode(0600)
+
+	switch arg.Permissions {
+	case "x":
+		permissions = 0700
+
+		// On windows executable means it has a .exe extension.
+		if runtime.GOOS == "windows" ||
+			!strings.HasSuffix(arg.Destination, ".exe") {
+			arg.Destination += ".exe"
+		}
+
+	case "r":
+		permissions = 0400
+	}
+
+	if err != nil {
+		scope.Log("copy: Failed to copy: %v", err)
+		return vfilter.Null{}
+	}
+
+	to, err := os.OpenFile(arg.Destination, os.O_RDWR|os.O_CREATE, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
 			arg.Destination, err)
@@ -88,6 +114,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer to.Close()
 
+	to.Truncate(0)
 	_, err = utils.Copy(ctx, to, fd)
 	if err != nil {
 		scope.Log("copy: Failed to copy: %v", err)

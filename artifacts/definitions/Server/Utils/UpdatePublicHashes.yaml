@@ -1,4 +1,4 @@
-name: Windows.Utils.UpdatePublicHashes
+name: Server.Utils.UpdatePublicHashes
 description: |
   The server maintains a public directory which can be served to all
   endpoints. The public directory should be initially populated by

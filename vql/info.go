@@ -18,6 +18,7 @@
 package vql
 
 import (
+	"os"
 	"runtime"
 
 	fqdn "github.com/Showmax/go-fqdn"
@@ -28,13 +29,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type InfoStat struct {
-	host.InfoStat
-	Fqdn         string
-	Architecture string
-}
-
 func getInfo(host *host.InfoStat) *ordereddict.Dict {
+	me, _ := os.Executable()
 	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
 		Set("Uptime", host.Uptime).
@@ -47,7 +43,8 @@ func getInfo(host *host.InfoStat) *ordereddict.Dict {
 		Set("KernelVersion", host.KernelVersion).
 		Set("VirtualizationSystem", host.VirtualizationSystem).
 		Set("VirtualizationRole", host.VirtualizationRole).
-		Set("HostID", host.HostID)
+		Set("HostID", host.HostID).
+		Set("Exe", me)
 }
 
 func init() {

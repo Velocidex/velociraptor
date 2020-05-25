@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -14,11 +15,12 @@ import (
 )
 
 type CollectPluginArgs struct {
-	Artifacts []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
-	Output    string      `vfilter:"required,field=output,doc=A path to write the output file on."`
-	Args      vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
-	Password  string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
-	Format    string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
+	Artifacts           []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
+	Output              string      `vfilter:"required,field=output,doc=A path to write the output file on."`
+	Args                vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
+	Password            string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
+	Format              string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
+	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
 }
 
 type CollectPlugin struct{}
@@ -71,7 +73,7 @@ func (self CollectPlugin) Call(
 		// Should we encrypt it?
 		container.Password = arg.Password
 
-		repository, err := artifacts.GetGlobalRepository(config_obj)
+		repository, err := getRepository(config_obj, arg.ArtifactDefinitions)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -154,6 +156,67 @@ func (self CollectPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+func getRepository(
+	config_obj *config_proto.Config,
+	extra_artifacts vfilter.Any) (*artifacts.Repository, error) {
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	if extra_artifacts == nil {
+		return repository, nil
+	}
+
+	// Private copy of the repository.
+	repository = repository.Copy()
+
+	loader := func(item *ordereddict.Dict) error {
+		serialized, err := json.Marshal(item)
+		if err != nil {
+			return err
+		}
+
+		_, err = repository.LoadYaml(string(serialized), true /* validate */)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	switch t := extra_artifacts.(type) {
+	case []*ordereddict.Dict:
+		for _, item := range t {
+			err := loader(item)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	case *ordereddict.Dict:
+		err := loader(t)
+		if err != nil {
+			return nil, err
+		}
+
+	case []string:
+		for _, item := range t {
+			_, err := repository.LoadYaml(item, true /* validate */)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	case string:
+		_, err := repository.LoadYaml(t, true /* validate */)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return repository, nil
 }
 
 func (self CollectPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {

@@ -1,0 +1,202 @@
+name: Server.Utils.CreateCollector
+description: |
+  A utility artifact to create a stand alone collector.
+
+type: SERVER
+
+parameters:
+  - name: OS
+    default: Windows
+    type: choices
+    choices:
+      - Windows
+      - Linux
+      - MacOS
+
+  - name: artifacts
+    description: A list of artifacts to collect
+    type: json_array
+    default: |
+      ["Generic.Client.Info"]
+  - name: parameters
+    description: A dict containing the parameters to set.
+    type: json
+    default: |
+      {}
+  - name: target
+    description: Output type
+    type: choices
+    default: ZIP
+    choices:
+      - ZIP
+      - GCS
+      - S3
+
+  - name: target_args
+    description: Type Dependent args
+    type: json
+    default: "{}"
+
+  - name: TargetBinary
+    description: Pack this binary instead.
+
+  - name: Binaries
+    description: A list of third party tools to embed into the collector.
+    default: '["Autorun","WinPmem"]'
+    type: json
+
+  - name: BinaryURL
+    default: Override to provide the binary targeting the right OS.
+
+  - name: StandardCollection
+    type: hidden
+    default: |
+      LET Artifacts <= parse_json_array(data=Artifacts)
+      LET Parameters <= parse_json(data=Parameters)
+      LET baseline <= SELECT Fqdn FROM info()
+
+      // Make the filename safe on windows.
+      LET filename <= regex_replace(
+          source=format(format="Collection-%s-%s.zip",
+                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
+          re="[^0-9A-Za-z- ]", replace="_")
+
+      LET _ <= log(message="Will collect package " + filename)
+
+      SELECT * FROM collect(artifacts=Artifacts,
+          args=Parameters, output=filename)
+
+  - name: PackageToolsArtifact
+    description: Collects and uploads third party binaries.
+    type: hidden
+    default: |
+      name: PackageToolsArtifact
+      parameters:
+       - name: Binaries
+      sources:
+       - query: |
+          LET temp <= tempfile()
+
+          LET uploader = SELECT ToolName,
+                                Upload.Path AS Filename,
+                                Upload.sha256 AS ExpectedHash,
+                                Upload.Size AS Size
+          FROM foreach(row=parse_json_array(data=Binaries),
+            query={
+              SELECT _value AS ToolName, upload(file=FullPath, name=Name) AS Upload
+              FROM Artifact.Generic.Utils.FetchBinary(ToolName=_value, SleepDuration='0')
+            })
+
+          // Flush the entire query into the inventory file.
+          LET _ <= SELECT * FROM write_csv(filename=temp, query=uploader)
+
+          // Now upload it.
+          SELECT upload(file=temp, name="inventory.csv") FROM scope()
+
+  - name: FetchBinaryOverride
+    description: |
+       A replacement for Generic.Utils.FetchBinary which
+       grabs files from the local archive.
+
+    default: |
+       LET temp_binary <= tempfile(extension=".exe")
+
+       LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
+       FROM parse_csv(filename="/inventory.csv", accessor="me")
+       SELECT * FROM foreach(row=matching_tools, query={
+         SELECT copy(filename=Filename, accessor="me",
+                     dest=temp_binary, permissions="x") AS FullPath
+         FROM scope()
+         WHERE ToolName = ArchiveTool
+       })
+
+sources:
+  - query: |
+      LET Payload <= tempfile(extension=".zip")
+
+      // Create a zip file with the binaries in it.
+      LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
+         output=Payload, args=dict(Binaries=Binaries),
+         artifact_definitions=PackageToolsArtifact)
+
+      // Derive the autoexec configuration depending on the target
+      // options.
+
+      LET FetchBinary <= dict(name="Generic.Utils.FetchBinary",
+         parameters=[
+            dict(name="binaryURL"),
+            dict(name="SleepDuration"),
+            dict(name="ToolName")
+         ],
+         sources=[dict(query=FetchBinaryOverride), ])
+
+      // This one just writes to a zip file.
+      LET StandardConfig <= dict(autoexec=dict(
+          argv=["artifacts", "collect", "-v", "Collector"],
+          artifact_definitions=[
+            dict(name="Collector",
+                 parameters=[
+                    dict(name="Artifacts", default=artifacts),
+                    dict(name="Parameters", default=parameters)
+                ],
+                sources=[dict(query=StandardCollection), ]
+           ),
+           FetchBinary]
+      ))
+
+      // Build the autoexec config file depending on the user's
+      // collection type choices.
+      LET autoexec <= SELECT * FROM switch(
+        a={ SELECT StandardConfig AS ConfigData FROM scope()
+            WHERE target = "ZIP" },
+        b={ SELECT * FROM scope()
+            WHERE log(message="Unknown target type " + target) AND FALSE }
+      )
+
+      // Get some tempfiles to work with.
+      LET Config <= tempfile()
+      LET Destination <= tempfile()
+
+      // Choose the right target binary depending on the target OS
+      LET tool_name = SELECT * FROM switch(
+       a={ SELECT "VelociraptorWindows" AS Type FROM scope() WHERE OS = "Windows"},
+       b={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
+       c={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
+       d={ SELECT "" AS Type FROM scope()
+           WHERE NOT log(message="Unknown target type " + OS) }
+      )
+
+      // Repack this binary.
+      LET target_binary <= SELECT * FROM if(condition=TargetBinary,
+        then={ SELECT TargetBinary AS FullPath,
+               basename(path=TargetBinary) AS Name FROM scope() },
+        else={
+          SELECT * FROM foreach(row=tool_name,
+            query={
+              SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+                  ToolName=Type, SleepDuration="0")
+            })
+      })
+
+      LET me <= SELECT Exe FROM info()
+
+      // Copy the configuration to a temp file and shell out to our
+      // binary to repack it.
+      LET repack_step = SELECT upload(
+           file=Destination,
+           name='Collector_' + target_binary[0].Name) AS Binary,
+           timestamp(epoch=now()) As CreationTime
+      FROM execve(argv=[
+        me[0].Exe, "config", "repack",
+        "--exe", target_binary[0].FullPath,
+        "--append", Payload,
+        copy(dest=Config,
+             accessor='data',
+             filename=serialize(format='json',
+             item=autoexec[0].ConfigData)),
+        Destination ])
+      WHERE log(message=Stderr)
+
+      // Only actually run stuff if everything looks right.
+      SELECT * FROM if(condition=autoexec AND target_binary AND me[0].Exe,
+         then=repack_step)

@@ -121,8 +121,7 @@ func main() {
 			for _, arg := range config_obj.Autoexec.Argv {
 				args = append(args, os.ExpandEnv(arg))
 			}
-			logging.GetLogger(config_obj, &logging.ToolComponent).
-				Info("Autoexec with parameters: %s", args)
+			logging.Prelog("Autoexec with parameters: %v", args)
 		}
 	}
 
@@ -133,7 +132,8 @@ func main() {
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(load_config_artifacts)
+		WithCustomValidator(load_config_artifacts).
+		WithCustomValidator(initFilestoreAccessor)
 
 	// Commands that potentially take an API config can load both
 	APIConfigLoader = DefaultConfigLoader.Copy().

@@ -14,8 +14,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -26,23 +24,27 @@ import (
 )
 
 type serverLogger struct {
-	config_obj *config_proto.Config
-	w          *result_sets.ResultSetWriter
+	config_obj   *config_proto.Config
+	path_manager *paths.FlowPathManager
 }
 
+// Send each log message individually to avoid any buffering - logs
+// need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	self.w.Write(ordereddict.NewDict().
-		Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().UnixNano()/1000)).
-		Set("time", time.Now().UTC().String()).
-		Set("message", msg))
+	GetJournal().PushRows(self.path_manager, []*ordereddict.Dict{
+		ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+			Set("time", time.Now().UTC().String()).
+			Set("message", msg)})
 	return len(b), nil
 }
 
 type ServerArtifactsRunner struct {
-	config_obj *config_proto.Config
-	mu         sync.Mutex
-	timeout    time.Duration
+	config_obj       *config_proto.Config
+	timeout          time.Duration
+	mu               sync.Mutex
+	cancellationPool map[string]func()
 }
 
 func (self *ServerArtifactsRunner) Start(
@@ -119,6 +121,17 @@ func (self *ServerArtifactsRunner) process(
 	return nil
 }
 
+func (self *ServerArtifactsRunner) cancel(flow_id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	cancel, pres := self.cancellationPool[flow_id]
+	if pres {
+		cancel()
+		delete(self.cancellationPool, flow_id)
+	}
+}
+
 func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage) error {
@@ -137,33 +150,41 @@ func (self *ServerArtifactsRunner) processTask(
 
 	db.UnQueueMessageForClient(self.config_obj, "server", task)
 
-	self.runQuery(ctx, task, collection_context)
+	if task.Cancel != nil {
+		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
+		GetJournal().PushRows(path_manager, []*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+				Set("time", time.Now().UTC().String()).
+				Set("message", "Cancelling Query")})
 
-	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
-	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	return db.SetSubject(self.config_obj, flow_urn, collection_context)
+		self.cancel(task.SessionId)
+		return nil
+	}
+
+	// Kick off processing in the background and go back to
+	// listening for new tasks. We can then cancel this task
+	// later.
+	go func() {
+		self.runQuery(ctx, task, collection_context)
+
+		collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+		collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+		collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
+		db.SetSubject(self.config_obj, flow_urn, collection_context)
+	}()
+
+	return nil
 }
 
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	flow_id := task.SessionId
 
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
-	path_manager := paths.NewFlowPathManager("server", flow_id).Log()
-	rs_writer, err := result_sets.NewResultSetWriter(
-		self.config_obj, path_manager, false /* truncate */)
-	if err != nil {
-		return err
-	}
-	defer rs_writer.Close()
-
 	arg := task.VQLClientAction
 	if arg == nil {
 		return errors.New("VQLClientAction should be specified.")
@@ -177,7 +198,17 @@ func (self *ServerArtifactsRunner) runQuery(
 	deadline := time.After(self.timeout)
 	started := time.Now().Unix()
 	sub_ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+
+	self.mu.Lock()
+	self.cancellationPool[task.SessionId] = cancel
+	self.mu.Unlock()
+
+	defer func() {
+		self.cancel(task.SessionId)
+	}()
+
+	// Where to write the logs.
+	path_manager := paths.NewFlowPathManager("server", task.SessionId)
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
@@ -188,13 +219,13 @@ func (self *ServerArtifactsRunner) runQuery(
 		// the file store. NOTE: This allows arbitrary
 		// filestore write. Using this we can manager the
 		// files in the filestore using VQL artifacts.
-		Uploader: api.NewFileStoreUploader(
-			self.config_obj,
-			file_store.GetFileStore(self.config_obj), "/"),
+		Uploader: NewServerUploader(self.config_obj,
+			path_manager, collection_context),
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger: log.New(
-			&serverLogger{self.config_obj, rs_writer},
-			"server", 0),
+		Logger: log.New(&serverLogger{
+			self.config_obj,
+			path_manager.Log(),
+		}, "", 0),
 	}.Build()
 	defer scope.Close()
 
@@ -213,6 +244,8 @@ func (self *ServerArtifactsRunner) runQuery(
 		}
 	}()
 
+	scope.Log("Starting query execution.")
+
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for _, query := range arg.Query {
@@ -228,7 +261,7 @@ func (self *ServerArtifactsRunner) runQuery(
 				self.config_obj, query.Name)
 
 			path_manager := result_sets.NewArtifactPathManager(
-				self.config_obj, "server", flow_id, name)
+				self.config_obj, "", task.SessionId, name)
 			rs_writer, err = result_sets.NewResultSetWriter(
 				self.config_obj, path_manager, false /* truncate */)
 			defer rs_writer.Close()
@@ -288,8 +321,9 @@ func startServerArtifactService(
 	config_obj *config_proto.Config) error {
 
 	result := &ServerArtifactsRunner{
-		config_obj: config_obj,
-		timeout:    time.Second * time.Duration(600),
+		config_obj:       config_obj,
+		timeout:          time.Second * time.Duration(600),
+		cancellationPool: make(map[string]func()),
 	}
 
 	logger := logging.GetLogger(

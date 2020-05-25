@@ -1,0 +1,26 @@
+name: Generic.Utils.FetchBinaryPacked
+description: |
+  A version of Generic.Utils.FetchBinary which looks at packed
+  payloads.
+
+parameters:
+  - name: ToolName
+    default: Autorun
+  - name: SleepDuration
+  - name: binaryURL
+
+sources:
+  - query: |
+      LET temp_binary <= tempfile(extension=".exe")
+
+      LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
+      FROM parse_csv(
+         filename=url(path="/", scheme="me", fragment="/inventory.csv").String,
+         accessor="zip")
+
+      SELECT * FROM foreach(row=matching_tools, query={
+        SELECT copy(filename=url(path="/", fragment=Filename, scheme="me").String,
+                    accessor="zip", dest=temp_binary, permissions="x") AS FullPath
+        FROM scope()
+        WHERE ToolName = ArchiveTool
+      })

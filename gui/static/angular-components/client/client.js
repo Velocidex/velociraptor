@@ -20,7 +20,8 @@ const {virtualFileSystemModule} = goog.require('grrUi.client.virtualFileSystem.v
  * Angular module for clients-related UI.
  */
 exports.clientModule = angular.module('grrUi.client', [
-  virtualFileSystemModule.name, coreModule.name, semanticModule.name
+    virtualFileSystemModule.name, coreModule.name, semanticModule.name,
+    'ui.select',
 ]);
 
 exports.clientModule.directive(

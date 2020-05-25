@@ -195,13 +195,13 @@ ClientsListController.prototype.clientsQueryUrl = '/v1/SearchClients';
  * @return {angular.Directive} Directive definition object.
  */
 exports.ClientsListDirective = function() {
-  return {
-    scope: {},
-    restrict: 'E',
-    templateUrl: '/static/angular-components/client/clients-list.html',
-    controller: ClientsListController,
-    controllerAs: 'controller'
-  };
+    return {
+        scope: {},
+        restrict: 'E',
+        templateUrl: '/static/angular-components/client/clients-list.html',
+        controller: ClientsListController,
+        controllerAs: 'controller',
+    };
 };
 
 

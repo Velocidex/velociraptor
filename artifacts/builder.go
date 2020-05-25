@@ -19,6 +19,7 @@ type ScopeBuilder struct {
 	Uploader   api.Uploader
 	Logger     *log.Logger
 	Env        *ordereddict.Dict
+	Repository *Repository
 }
 
 func (self ScopeBuilder) Build() *vfilter.Scope {
@@ -36,6 +37,10 @@ func (self ScopeBuilder) _build(from_scratch bool) *vfilter.Scope {
 		env.MergeFrom(self.Env)
 	}
 
+	if self.Repository == nil {
+		self.Repository, _ = GetGlobalRepository(self.Config)
+	}
+
 	env.Set(constants.SCOPE_CONFIG, self.Config.Client).
 		Set(constants.SCOPE_SERVER_CONFIG, self.Config).
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
@@ -48,11 +53,7 @@ func (self ScopeBuilder) _build(from_scratch bool) *vfilter.Scope {
 		env.Set(constants.SCOPE_UPLOADER, self.Uploader)
 	}
 
-	repository, err := GetGlobalRepository(self.Config)
-	if err != nil {
-		panic(err)
-	}
-	scope := MakeScope(repository, from_scratch).AppendVars(env)
+	scope := MakeScope(self.Repository, from_scratch).AppendVars(env)
 	scope.Logger = self.Logger
 
 	return scope

@@ -28,18 +28,46 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
 type OSFileInfo struct {
-	os.FileInfo
+	_FileInfo  os.FileInfo
 	_full_path string
 	_data      interface{}
 }
 
+func (self *OSFileInfo) Size() int64 {
+	return self._FileInfo.Size()
+}
+
+func (self *OSFileInfo) Name() string {
+	return self._FileInfo.Name()
+}
+
+func (self *OSFileInfo) IsDir() bool {
+	return self._FileInfo.IsDir()
+}
+
+func (self *OSFileInfo) ModTime() time.Time {
+	return self._FileInfo.ModTime()
+}
+
+func (self *OSFileInfo) Mode() os.FileMode {
+	return self._FileInfo.Mode()
+}
+
+func (self *OSFileInfo) Sys() interface{} {
+	return self._FileInfo.Sys()
+}
+
 func (self *OSFileInfo) Data() interface{} {
+	if self._data == nil {
+		return ordereddict.NewDict()
+	}
 	return self._data
 }
 
@@ -48,26 +76,26 @@ func (self *OSFileInfo) FullPath() string {
 }
 
 func (self *OSFileInfo) Mtime() TimeVal {
-	ts := int64(self.sys().Mtim.Sec)
+	ts := int64(self._Sys().Mtim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Mtim.Nsec) + ts*1000000000,
+		Nsec: int64(self._Sys().Mtim.Nsec) + ts*1000000000,
 	}
 }
 
 func (self *OSFileInfo) Ctime() TimeVal {
-	ts := int64(self.sys().Ctim.Sec)
+	ts := int64(self._Sys().Ctim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Ctim.Nsec) + ts*1000000000,
+		Nsec: int64(self._Sys().Ctim.Nsec) + ts*1000000000,
 	}
 }
 
 func (self *OSFileInfo) Atime() TimeVal {
-	ts := int64(self.sys().Atim.Sec)
+	ts := int64(self._Sys().Atim.Sec)
 	return TimeVal{
 		Sec:  ts,
-		Nsec: int64(self.sys().Atim.Nsec) + ts*1000000000,
+		Nsec: int64(self._Sys().Atim.Nsec) + ts*1000000000,
 	}
 }
 
@@ -85,8 +113,8 @@ func (self *OSFileInfo) GetLink() (string, error) {
 	return target, nil
 }
 
-func (self *OSFileInfo) sys() *syscall.Stat_t {
-	return self.Sys().(*syscall.Stat_t)
+func (self *OSFileInfo) _Sys() *syscall.Stat_t {
+	return self._FileInfo.Sys().(*syscall.Stat_t)
 }
 
 func (self *OSFileInfo) MarshalJSON() ([]byte, error) {

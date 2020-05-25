@@ -37,6 +37,14 @@
               ng-click="controller.createHuntFromFlow()">
         <i class="fa fa-crosshairs"></i>
       </button>
+
+      <button class="btn btn-default"
+              ng-if="clientId=='server'"
+              title="Build Collector"
+              ng-click="controller.buildCollector()">
+        <i class="fa fa-paper-plane"></i>
+      </button>
+
     </li>
   </div>
 </div>
