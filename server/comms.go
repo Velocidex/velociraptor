@@ -52,6 +52,30 @@ var (
 		Name: "client_comms_current_connections",
 		Help: "Number of currently connected clients.",
 	})
+
+	redirectedFrontendCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_redirect_count",
+		Help: "Number of times the frontend redirected.",
+	})
+
+	sendCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_send_count",
+		Help: "Number of POST requests frontend sent to the client.",
+	})
+
+	receiveCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_received_count",
+		Help: "Number of POST requests frontend received from the client.",
+	})
+
+	enrollmentCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_enroll_response",
+		Help: "Number responses to enrol (406).",
+	})
+	urgentCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "frontend_urgent_responses",
+		Help: "Number urgent responses received.",
+	})
 )
 
 func PrepareFrontendMux(
@@ -100,11 +124,13 @@ func StartFrontendHttps(
 		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
 		ReadTimeout:  500 * time.Second,
 		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		IdleTimeout:  150 * time.Second,
 		TLSConfig: &tls.Config{
-			MinVersion:               tls.VersionTLS12,
-			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-			Certificates:             []tls.Certificate{cert},
+			MinVersion:   tls.VersionTLS12,
+			Certificates: []tls.Certificate{cert},
+			CurvePreferences: []tls.CurveID{tls.CurveP521,
+				tls.CurveP384, tls.CurveP256},
+
 			PreferServerCipherSuites: true,
 			CipherSuites: []uint16{
 				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
@@ -269,6 +295,7 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 
 	redirect_url, ok := frontend.GetFrontendURL()
 	if ok {
+		redirectedFrontendCounter.Inc()
 		// We should redirect to another frontend.
 		http.Redirect(w, r, redirect_url, 301)
 		return true
@@ -288,7 +315,6 @@ func control(server_obj *Server) http.Handler {
 	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-
 		if maybeRedirectFrontend("control", w, req) {
 			return
 		}
@@ -298,6 +324,8 @@ func control(server_obj *Server) http.Handler {
 			panic("http handler is not a flusher")
 		}
 
+		receiveCounter.Inc()
+
 		priority := req.Header.Get("X-Priority")
 		// For urgent messages skip concurrency control - This
 		// allows clients with urgent messages to always be
@@ -305,6 +333,8 @@ func control(server_obj *Server) http.Handler {
 		if priority != "urgent" {
 			server_obj.StartConcurrencyControl()
 			defer server_obj.EndConcurrencyControl()
+		} else {
+			urgentCounter.Inc()
 		}
 
 		reader := io.LimitReader(req.Body, int64(server_obj.config.
@@ -357,6 +387,7 @@ func control(server_obj *Server) http.Handler {
 				// can not encrypt for it), we
 				// indicate this by providing it with
 				// an HTTP error code.
+				enrollmentCounter.Inc()
 				logger.Debug("Please Enrol (%v)", message_info.Source)
 				http.Error(
 					w,
@@ -443,6 +474,8 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			panic("http handler is not a flusher")
 		}
 
+		sendCounter.Inc()
+
 		// Keep track of currently connected clients.
 		currentConnections.Inc()
 		defer currentConnections.Dec()
@@ -483,7 +516,8 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
-		notification := services.ListenForNotification(source)
+		notification, cancel := services.ListenForNotification(source)
+		defer cancel()
 
 		// Deadlines are designed to ensure that connections
 		// are not blocked for too long (maybe several
@@ -503,10 +537,6 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		flusher.Flush()
-
-		// Remove the notification from the pool when we exit
-		// here.
-		defer services.NotifyListener(config_obj, source)
 
 		// Check for any requests outstanding now.
 		response, count, err := server_obj.Process(
@@ -564,9 +594,9 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				// an empty response to be written and
 				// the connection to be terminated
 				// (case above).
-				services.NotifyListener(config_obj, source)
+				cancel()
 
-				// Write a pad message every 3 seconds
+				// Write a pad message every 10 seconds
 				// to keep the conenction alive.
 			case <-time.After(10 * time.Second):
 				_, err := w.Write(serialized_pad)
