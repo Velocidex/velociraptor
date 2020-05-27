@@ -60,7 +60,7 @@ FormController.prototype.onValueChange_ = function(page_index) {
     if (self.hunt_conditions.condition == "labels") {
         createHuntArgs.condition = {"labels": {"label": [self.hunt_conditions.label]}};
     } else if(self.hunt_conditions.condition == "os") {
-        createHuntArgs.condition = {"os": {"os": "OSX"}};
+        createHuntArgs.condition = {"os": {"os": self.hunt_conditions.os}};
     }
 
 };
