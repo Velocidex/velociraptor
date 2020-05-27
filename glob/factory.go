@@ -20,12 +20,14 @@ package glob
 import (
 	"path/filepath"
 	"regexp"
+	"sync"
 
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
+	mu       sync.Mutex
 	handlers map[string]FileSystemAccessorFactory
 )
 
@@ -85,6 +87,8 @@ func (self NullFileSystemAccessor) PathJoin(root, stem string) string {
 
 func GetAccessor(scheme string, scope *vfilter.Scope) (
 	FileSystemAccessor, error) {
+	mu.Lock()
+	defer mu.Unlock()
 
 	// Fallback to the file handler - this should work
 	// because there needs to be at least a file handler
@@ -102,12 +106,15 @@ func GetAccessor(scheme string, scope *vfilter.Scope) (
 	return nil, errors.New("Unknown filesystem accessor")
 }
 
+// A factory for new accessors
 type FileSystemAccessorFactory interface {
-	// A factory for new accessors
 	New(scope *vfilter.Scope) (FileSystemAccessor, error)
 }
 
 func Register(scheme string, accessor FileSystemAccessorFactory) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if handlers == nil {
 		handlers = make(map[string]FileSystemAccessorFactory)
 	}
