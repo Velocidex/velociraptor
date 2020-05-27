@@ -28,6 +28,7 @@ import (
 	"unicode/utf16"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -143,7 +144,7 @@ func (self _ToUpper) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 }
 
 type _ToIntArgs struct {
-	String string `vfilter:"required,field=string,doc=A string to convert to int"`
+	String vfilter.Any `vfilter:"required,field=string,doc=A string to convert to int"`
 }
 
 type _ToInt struct{}
@@ -159,8 +160,15 @@ func (self _ToInt) Call(
 		return vfilter.Null{}
 	}
 
-	result, _ := strconv.ParseInt(arg.String, 0, 64)
-	return result
+	switch t := arg.String.(type) {
+	case string:
+		result, _ := strconv.ParseInt(t, 0, 64)
+		return result
+
+	default:
+		in, _ := utils.ToInt64(arg.String)
+		return in
+	}
 }
 
 func (self _ToInt) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -184,8 +192,27 @@ func (self _ParseFloat) Call(
 		return vfilter.Null{}
 	}
 
-	result, _ := strconv.ParseFloat(arg.String, 64)
-	return result
+	switch t := arg.String.(type) {
+	case string:
+		result, _ := strconv.ParseFloat(t, 64)
+		return result
+
+	case float64:
+		return t
+
+	case *float64:
+		return *t
+
+	case float32:
+		return t
+
+	case *float32:
+		return *t
+
+	default:
+		in, _ := utils.ToInt64(arg.String)
+		return in
+	}
 }
 
 func (self _ParseFloat) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

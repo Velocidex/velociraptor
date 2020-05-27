@@ -15,4 +15,5 @@ Queries:
   # Second time it should be retrieved from the local system cache.
   - SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary(
        ToolName="WinPmem",
+       SleepDuration=0,
        binaryURL="https://storage.googleapis.com/go.velocidex.com/")

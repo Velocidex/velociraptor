@@ -58,13 +58,6 @@ func (self *CopyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	// Report the command we ran for auditing
-	// purposes. This will be collected in the flow logs.
-	if arg.Accessor != "data" {
-		scope.Log("copy: Copying file from %v into %v", arg.Filename,
-			arg.Destination)
-	}
-
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
 		scope.Log("copy: %s", err.Error())
@@ -92,7 +85,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 		permissions = 0700
 
 		// On windows executable means it has a .exe extension.
-		if runtime.GOOS == "windows" ||
+		if runtime.GOOS == "windows" &&
 			!strings.HasSuffix(arg.Destination, ".exe") {
 			arg.Destination += ".exe"
 		}
@@ -101,12 +94,15 @@ func (self *CopyFunction) Call(ctx context.Context,
 		permissions = 0400
 	}
 
-	if err != nil {
-		scope.Log("copy: Failed to copy: %v", err)
-		return vfilter.Null{}
+	// Report the command we ran for auditing
+	// purposes. This will be collected in the flow logs.
+	if arg.Accessor != "data" {
+		scope.Log("copy: Copying file from %v into %v", arg.Filename,
+			arg.Destination)
 	}
 
-	to, err := os.OpenFile(arg.Destination, os.O_RDWR|os.O_CREATE, permissions)
+	to, err := os.OpenFile(arg.Destination,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
 			arg.Destination, err)
@@ -114,7 +110,6 @@ func (self *CopyFunction) Call(ctx context.Context,
 	}
 	defer to.Close()
 
-	to.Truncate(0)
 	_, err = utils.Copy(ctx, to, fd)
 	if err != nil {
 		scope.Log("copy: Failed to copy: %v", err)
