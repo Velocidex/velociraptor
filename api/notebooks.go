@@ -571,7 +571,6 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	fmt.Printf("Cancelling %s !\n", in.CellId)
 	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
 }
 

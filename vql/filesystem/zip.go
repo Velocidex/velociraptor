@@ -417,7 +417,7 @@ const (
 	ZipFileSystemAccessorTag = "_ZipFS"
 )
 
-func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result_any := vql_subsystem.CacheGet(scope, ZipFileSystemAccessorTag)
 	if result_any == nil {
 		// Create a new cache in the scope.
@@ -434,10 +434,10 @@ func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAcces
 				v.fd.Close()
 			}
 		})
-		return result
+		return result, nil
 	}
 
-	return result_any.(glob.FileSystemAccessor)
+	return result_any.(glob.FileSystemAccessor), nil
 }
 
 type SeekableZip struct {

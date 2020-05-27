@@ -217,8 +217,8 @@ func NewValueBuffer(buf []byte, stat glob.FileInfo) *ValueBuffer {
 
 type RegFileSystemAccessor struct{}
 
-func (self *RegFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
-	return self
+func (self *RegFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	return self, nil
 }
 
 func (self RegFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {

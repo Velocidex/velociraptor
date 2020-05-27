@@ -150,9 +150,8 @@ func (self *OSFileInfo) UnmarshalJSON(data []byte) error {
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct{}
 
-func (self OSFileSystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
-	result := &OSFileSystemAccessor{}
-	return result
+func (self OSFileSystemAccessor) New(scope *vfilter.Scope) (FileSystemAccessor, error) {
+	return &OSFileSystemAccessor{}, nil
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (FileInfo, error) {

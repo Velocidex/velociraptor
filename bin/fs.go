@@ -243,16 +243,6 @@ SELECT * from foreach(
   })`, scope)
 }
 
-// Only register the filesystem accessor if we have a proper valid server config.
-func initFilestoreAccessor(config_obj *config_proto.Config) error {
-	if config_obj.Datastore != nil {
-		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
-		kingpin.FatalIfError(err, "GetFileStoreFileSystemAccessor")
-		glob.Register("fs", accessor)
-	}
-	return nil
-}
-
 func doCat(path, accessor_name string) {
 	_, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
@@ -271,6 +261,24 @@ func doCat(path, accessor_name string) {
 	kingpin.FatalIfError(err, "ReadFile")
 
 	io.Copy(os.Stdout, fd)
+}
+
+// Install a fs accessor to enable access to the file store. But make
+// it lazy - no need to connect to the file store un-neccesarily.
+type FileStoreAccessorFactory struct {
+	config_obj *config_proto.Config
+}
+
+func (self FileStoreAccessorFactory) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	return file_store.GetFileStoreFileSystemAccessor(self.config_obj)
+}
+
+// Only register the filesystem accessor if we have a proper valid server config.
+func initFilestoreAccessor(config_obj *config_proto.Config) error {
+	if config_obj.Datastore != nil {
+		glob.Register("fs", &FileStoreAccessorFactory{config_obj})
+	}
+	return nil
 }
 
 func init() {

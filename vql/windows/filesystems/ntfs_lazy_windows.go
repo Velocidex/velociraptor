@@ -248,10 +248,12 @@ type LazyNTFSFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self LazyNTFSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
-	return &LazyNTFSFileSystemAccessor{
-		NTFSFileSystemAccessor{}.New(scope).(*NTFSFileSystemAccessor),
+func (self LazyNTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	base, err := NTFSFileSystemAccessor{}.New(scope)
+	if err != nil {
+		return nil, err
 	}
+	return &LazyNTFSFileSystemAccessor{base.(*NTFSFileSystemAccessor)}, nil
 }
 
 func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, err error) {

@@ -169,9 +169,9 @@ type OSFileSystemAccessor struct {
 	follow_links bool
 }
 
-func (self OSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+func (self OSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result := &OSFileSystemAccessor{follow_links: self.follow_links}
-	return result
+	return result, nil
 }
 
 func discoverDriveLetters() ([]glob.FileInfo, error) {
