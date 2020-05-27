@@ -438,10 +438,10 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	// Run the actual query independently.
-	ctx, cancel := context.WithCancel(context.Background())
+	query_ctx, query_cancel := context.WithCancel(context.Background())
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config, ctx, user_name, /* principal */
+		self.config, query_ctx, user_name, /* principal */
 		notebook_path_manager.Cell(in.CellId),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
@@ -483,38 +483,27 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	// RPC call deadline - if we can complete within 1 second pass
 	// the response directly to the RPC caller.
-	sub_ctx, main_cancel := context.WithTimeout(ctx, time.Second)
+	sub_ctx, sub_cancel := context.WithTimeout(ctx, time.Second)
 
 	// Main error will be delivered to the RPC caller if we can
 	// complete the entire operation before the deadline.
 	var main_err error
 
+	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.
 	go func() {
-		defer cancel()
+		defer query_cancel()
 
-		done, cancel_notification := services.ListenForNotification(in.CellId)
-		defer cancel_notification()
-
-		go func() {
-			// Cancel the main call if we finish before the timeout.
-			defer main_cancel()
-
-			resp, err := updateCellContents(ctx, self.config, tmpl,
-				in.CurrentlyEditing, in.NotebookId,
-				in.CellId, cell_type, input, in.Input)
-			if err != nil {
-				main_err = err
-				logger := logging.GetLogger(self.config, &logging.GUIComponent)
-				logger.Error("Rendering error", err)
-			}
-			// Update the response if we can.
-			notebook_cell = resp
-		}()
+		cancel_notify, remove_notification := services.ListenForNotification(in.CellId)
+		defer remove_notification()
 
 		select {
-		// Cancel if we are notified.
-		case <-done:
+		// Query is done - get out of here.
+		case <-query_ctx.Done():
+
+		// Active cancellation from the GUI.
+		case <-cancel_notify:
 			tmpl.Scope.Log("Cancelled after %v !", time.Now().Sub(start_time))
+
 			// Set a timeout.
 		case <-time.After(10 * time.Minute):
 			tmpl.Scope.Log("Query timed out after %v !", time.Now().Sub(start_time))
@@ -522,9 +511,34 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	}()
 
+	// Main worker: Just run the query until done.
+	go func() {
+		// Cancel and release the main thread if we
+		// finish quickly before the timeout.
+		defer sub_cancel()
+
+		// Make sure to cancel the query context if we
+		// finished early - the Waiter goroutine above will be
+		// released.
+		defer query_cancel()
+
+		resp, err := updateCellContents(query_ctx, self.config, tmpl,
+			in.CurrentlyEditing, in.NotebookId,
+			in.CellId, cell_type, input, in.Input)
+		if err != nil {
+			main_err = err
+			logger := logging.GetLogger(self.config, &logging.GUIComponent)
+			logger.Error("Rendering error", err)
+		}
+
+		// Update the response if we can.
+		notebook_cell = resp
+	}()
+
 	// Wait here up to 1 second for immediate response - but if
 	// the response takes too long, just give up and return a
-	// continuation.
+	// continuation. The GUI will continue polling for notebook
+	// state and will pick up the changes by itself.
 	select {
 	case <-sub_ctx.Done():
 	}
@@ -557,6 +571,7 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
+	fmt.Printf("Cancelling %s !\n", in.CellId)
 	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
 }
 
@@ -754,7 +769,7 @@ func updateCellContents(
 		Input:            original_input,
 		Output:           output,
 		Data:             string(encoded_data),
-		Messages:         *tmpl.Messages,
+		Messages:         tmpl.Messages(),
 		CellId:           cell_id,
 		Type:             cell_type,
 		Timestamp:        time.Now().Unix(),

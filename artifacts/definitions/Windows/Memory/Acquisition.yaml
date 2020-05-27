@@ -6,6 +6,9 @@ description: |
   NOTE: This artifact usually takes a long time. You should increase
   the default timeout to allow it to complete.
 
+parameters:
+  - name: binaryURL
+
 sources:
   - queries:
       - SELECT * FROM foreach(

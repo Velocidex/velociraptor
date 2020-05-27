@@ -42,7 +42,7 @@ type GuiTemplateEngine struct {
 	*BaseTemplateEngine
 	tmpl         *template.Template
 	ctx          context.Context
-	Messages     *[]string
+	log_writer   *logWriter
 	path_manager *NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 }
@@ -369,17 +369,28 @@ func (self *GuiTemplateEngine) Error(fmt_str string, argv ...interface{}) string
 	return ""
 }
 
+func (self *GuiTemplateEngine) Messages() []string {
+	return self.log_writer.Messages()
+}
+
 type logWriter struct {
 	mu       sync.Mutex
-	messages *[]string
+	messages []string
 }
 
 func (self *logWriter) Write(b []byte) (int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	*self.messages = append(*self.messages, string(b))
+	self.messages = append(self.messages, string(b))
 	return len(b), nil
+}
+
+func (self *logWriter) Messages() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.messages[:]
 }
 
 func NewGuiTemplateEngine(
@@ -396,12 +407,12 @@ func NewGuiTemplateEngine(
 		return nil, err
 	}
 
-	messages := []string{}
-	base_engine.Scope.Logger = log.New(&logWriter{messages: &messages}, "", 0)
+	log_writer := &logWriter{}
+	base_engine.Scope.Logger = log.New(log_writer, "", 0)
 	template_engine := &GuiTemplateEngine{
 		BaseTemplateEngine: base_engine,
 		ctx:                ctx,
-		Messages:           &messages,
+		log_writer:         log_writer,
 		path_manager:       notebook_cell_path_manager,
 		Data:               make(map[string]*actions_proto.VQLResponse),
 	}
