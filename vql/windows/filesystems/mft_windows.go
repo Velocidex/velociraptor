@@ -37,9 +37,12 @@ type MFTFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
 
-func (self MFTFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
-	ntfs_accessor := NTFSFileSystemAccessor{}.New(scope).(*NTFSFileSystemAccessor)
-	return &MFTFileSystemAccessor{ntfs_accessor}
+func (self MFTFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	ntfs_accessor, err := NTFSFileSystemAccessor{}.New(scope)
+	if err != nil {
+		return nil, err
+	}
+	return &MFTFileSystemAccessor{ntfs_accessor.(*NTFSFileSystemAccessor)}, nil
 }
 
 func (self MFTFileSystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {

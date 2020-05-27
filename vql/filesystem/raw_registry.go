@@ -287,8 +287,8 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 
 const RawRegFileSystemTag = "_RawReg"
 
-func (self *RawRegFileSystemAccessor) New(
-	scope *vfilter.Scope) glob.FileSystemAccessor {
+func (self *RawRegFileSystemAccessor) New(scope *vfilter.Scope) (
+	glob.FileSystemAccessor, error) {
 
 	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
 	if result_any == nil {
@@ -307,10 +307,10 @@ func (self *RawRegFileSystemAccessor) New(
 				v.fd.Close()
 			}
 		})
-		return result
+		return result, nil
 	}
 
-	return result_any.(glob.FileSystemAccessor)
+	return result_any.(glob.FileSystemAccessor), nil
 }
 
 func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo, error) {

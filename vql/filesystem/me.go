@@ -202,9 +202,12 @@ func (self MEFileSystemAccessor) PathJoin(root, stem string) string {
 	return path.Join(root, stem)
 }
 
-func (self MEFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
-	base := ZipFileSystemAccessor{}
-	return &MEFileSystemAccessor{base.New(scope).(*ZipFileSystemAccessor)}
+func (self MEFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	base, err := ZipFileSystemAccessor{}.New(scope)
+	if err != nil {
+		return nil, err
+	}
+	return &MEFileSystemAccessor{base.(*ZipFileSystemAccessor)}, nil
 }
 
 func init() {

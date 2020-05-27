@@ -177,7 +177,7 @@ type NTFSFileSystemAccessor struct {
 	timestamp time.Time                   // Protected by mutex
 }
 
-func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
+func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result_any := vql_subsystem.CacheGet(scope, NTFSFileSystemTag)
 	if result_any == nil {
 		// Create a new cache in the scope.
@@ -196,10 +196,10 @@ func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAcce
 				v.fd.Close()
 			}
 		})
-		return result
+		return result, nil
 	}
 
-	return result_any.(glob.FileSystemAccessor)
+	return result_any.(glob.FileSystemAccessor), nil
 }
 
 func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) (

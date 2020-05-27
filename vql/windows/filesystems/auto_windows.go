@@ -13,11 +13,21 @@ type AutoFilesystemAccessor struct {
 	file_delegate glob.FileSystemAccessor
 }
 
-func (self AutoFilesystemAccessor) New(scope *vfilter.Scope) glob.FileSystemAccessor {
-	return &AutoFilesystemAccessor{
-		ntfs_delegate: NTFSFileSystemAccessor{}.New(scope),
-		file_delegate: OSFileSystemAccessor{}.New(scope),
+func (self AutoFilesystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+	ntfs_base, err := NTFSFileSystemAccessor{}.New(scope)
+	if err != nil {
+		return nil, err
 	}
+
+	os_base, err := OSFileSystemAccessor{}.New(scope)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AutoFilesystemAccessor{
+		ntfs_delegate: ntfs_base,
+		file_delegate: os_base,
+	}, nil
 }
 
 func (self *AutoFilesystemAccessor) ReadDir(path string) ([]glob.FileInfo, error) {

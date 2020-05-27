@@ -31,8 +31,8 @@ import (
 
 type DataFilesystemAccessor struct{}
 
-func (self DataFilesystemAccessor) New(scope *vfilter.Scope) FileSystemAccessor {
-	return DataFilesystemAccessor{}
+func (self DataFilesystemAccessor) New(scope *vfilter.Scope) (FileSystemAccessor, error) {
+	return DataFilesystemAccessor{}, nil
 }
 
 func (self DataFilesystemAccessor) Lstat(filename string) (FileInfo, error) {
