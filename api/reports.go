@@ -80,7 +80,7 @@ func getReport(ctx context.Context,
 
 	return &api_proto.GetReportResponse{
 		Data:     string(encoded_data),
-		Messages: *template_engine.Messages,
+		Messages: template_engine.Messages(),
 		Template: template_data,
 	}, nil
 

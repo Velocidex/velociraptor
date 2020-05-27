@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -43,9 +42,6 @@ func (self *ServerUploader) Upload(
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, reader)
-	utils.Debug(result)
-	utils.Debug(err)
-	utils.Debug(self.path_manager.UploadMetadata().Path())
 	if err == nil {
 		GetJournal().PushRows(self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
