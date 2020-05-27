@@ -96,8 +96,6 @@ func doLS(path, accessor string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	initFilestoreAccessor(config_obj)
-
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -141,8 +139,6 @@ func doRM(path, accessor string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	initFilestoreAccessor(config_obj)
-
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -178,8 +174,6 @@ func doRM(path, accessor string) {
 func doCp(path, accessor string, dump_dir string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
-
-	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -250,19 +244,18 @@ SELECT * from foreach(
 }
 
 // Only register the filesystem accessor if we have a proper valid server config.
-func initFilestoreAccessor(config_obj *config_proto.Config) {
+func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
 		accessor, err := file_store.GetFileStoreFileSystemAccessor(config_obj)
 		kingpin.FatalIfError(err, "GetFileStoreFileSystemAccessor")
 		glob.Register("fs", accessor)
 	}
+	return nil
 }
 
 func doCat(path, accessor_name string) {
-	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	_, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
-
-	initFilestoreAccessor(config_obj)
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {

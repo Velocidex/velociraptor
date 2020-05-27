@@ -58,7 +58,7 @@ func (self *OSFileInfo) Data() interface{} {
 				Set("Link", target)
 		}
 	}
-	return ""
+	return ordereddict.NewDict()
 }
 
 func (self *OSFileInfo) Mtime() glob.TimeVal {
@@ -151,6 +151,10 @@ func getAvailableDrives() ([]string, error) {
 // windows form. Normal form uses / instead of \ and always has a
 // leading /.
 func GetPath(path string) string {
+	if strings.HasPrefix(path, "\\\\") {
+		return path
+	}
+
 	path = strings.Replace(path, "/", "\\", -1)
 
 	// Strip leading \\ so \\c:\\windows -> c:\\windows
@@ -262,13 +266,13 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 }
 
 func (self OSFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
-	// Strip leading \\ so \\c:\\windows -> c:\\windows
 	path = GetPath(path)
 	file, err := os.Open(path)
 	return file, err
 }
 
 func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
+
 	stat, err := os.Lstat(GetPath(path))
 	return &OSFileInfo{
 		FileInfo:   stat,

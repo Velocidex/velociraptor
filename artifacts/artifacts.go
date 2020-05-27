@@ -51,6 +51,8 @@ var (
 type Repository struct {
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
+
+	artifact_plugin vfilter.PluginGeneratorInterface
 }
 
 func (self *Repository) Copy() *Repository {
@@ -136,6 +138,7 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 			for _, vql := range multi_vql {
 				source.Queries = append(source.Queries, vql.ToString(scope))
 			}
+			source.Query = ""
 		}
 	}
 
@@ -199,6 +202,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				for _, vql := range multi_vql {
 					source.Queries = append(source.Queries, vql.ToString(scope))
 				}
+				source.Query = ""
 			}
 
 			if len(source.Queries) == 0 {
@@ -217,6 +221,10 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	}
 
 	self.Data[artifact.Name] = artifact
+
+	// Clear the cache to force a rebuild.
+	self.artifact_plugin = nil
+
 	return artifact, nil
 }
 
@@ -260,10 +268,6 @@ func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact
 	}
 
 	return result
-}
-
-func (self *Repository) Set(artifact *artifacts_proto.Artifact) {
-	self.Data[artifact.Name] = artifact
 }
 
 func (self *Repository) List() []string {

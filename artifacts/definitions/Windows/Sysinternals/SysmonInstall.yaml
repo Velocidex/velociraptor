@@ -8,7 +8,7 @@ description: |
 
   1. Ensure the server contains the latest Sysmon binaries. You will
      need to download them yourself by running the
-     `Windows.Utils.DownloadBinaries` server artifact.
+     `Server.Utils.DownloadBinaries` server artifact.
 
   2. Ensure the sysmon configration is appropriate for your
      deployment. If you edit the file in your public directory

@@ -101,6 +101,33 @@ ClientFlowsListController.prototype.cancelButtonClicked = function() {
     }.bind(this));
 };
 
+ClientFlowsListController.prototype.buildCollector = function() {
+  var modalScope = this.scope_.$new();
+  modalScope.resolve = function() {
+    modalInstance.close();
+  };
+  modalScope.reject = function() {
+    modalInstance.dismiss();
+  };
+  this.scope_.$on('$destroy', function() {
+    modalScope.$destroy();
+  });
+
+  var modalInstance = this.uibModal_.open({
+    template: '<grr-build-collector on-resolve="resolve()" ' +
+        'on-reject="reject()" />',
+    scope: modalScope,
+    windowClass: 'wide-modal high-modal',
+    size: 'lg'
+  });
+
+  modalInstance.result.then(function resolve() {
+    this.triggerUpdate();
+  }.bind(this));
+};
+
+
+
 /**
  * Handles clicks on 'Delete Flow' button.
  *

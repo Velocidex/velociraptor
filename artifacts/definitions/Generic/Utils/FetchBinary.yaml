@@ -1,10 +1,15 @@
-name: Windows.Utils.FetchBinary
-description: A utility artifact which fetches a binary from a URL and caches it on disk.
+name: Generic.Utils.FetchBinary
+description: |
+   A utility artifact which fetches a binary from a URL and caches it on disk.
    We verify the hash of the binary on disk and if it does not match we fetch it again
    from the source URL.
 
-   This artifact is designed to be called from other artifacts. The binary path will be
-   emitted in the FullPath column.
+   This artifact is designed to be called from other artifacts. The
+   binary path will be emitted in the FullPath column.
+
+   In order to use this you must have run the
+   `Server.Utils.DownloadBinaries` artifact in order to populate the
+   server's public directory with the binaries.
 
 parameters:
   - name: binaryURL
@@ -13,6 +18,10 @@ parameters:
       the server's public directory).
   - name: ToolName
     default: Autorun
+
+  - name: SleepDuration
+    default: "20"
+    description: A time to sleep before fetching the binary.
 
 sources:
   - queries:
@@ -61,8 +70,10 @@ sources:
       # Download the file from the binary URL and store in the local
       # binary cache.
       - LET download = SELECT hash(path=Content) as Hash,
+            Filename AS Name,
             "Downloaded" AS DownloadStatus,
             copy(filename=Content,
+                 permissions="x",
                  dest=path_join(components=[(binpath[0]).Path, Filename])) AS FullPath
         FROM http_client(
             url=(inventory_url[0]).URL + Filename,
@@ -71,7 +82,7 @@ sources:
 
       # Check if the existing file in the binary file cache matches
       # the hash.
-      - LET existing = SELECT FullPath, hash(path=FullPath) AS Hash,
+      - LET existing = SELECT FullPath, hash(path=FullPath) AS Hash, Name,
                     "Cached" AS DownloadStatus
         FROM stat(filename=path_join(components=[(binpath[0]).Path, Filename]))
         WHERE Hash.SHA256 = ExpectedHash
@@ -84,7 +95,7 @@ sources:
           SELECT * FROM switch(
             a=existing,
             b={
-               SELECT rand(range=20) AS timeout
+               SELECT rand(range=atoi(string=SleepDuration)) AS timeout
                FROM scope()
                WHERE log(message=format(format='Sleeping %v Seconds',
                    args=[timeout])) AND sleep(time=timeout) AND FALSE

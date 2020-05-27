@@ -36,11 +36,13 @@
     "lodash.template": "^4.5.0",
     "minimist": "^1.2.5",
     "moment": "^2.24.0",
+    "ng-sanitize": "0.0.2",
     "node": "^11.15.0",
     "npm": "^6.14.4",
     "popper.js": "^1.16.1",
     "sprintf": "^0.1.5",
     "tar": "^6.0.1",
+    "ui-select": "^0.19.8",
     "vis": "^4.21.0"
   },
   "devDependencies": {

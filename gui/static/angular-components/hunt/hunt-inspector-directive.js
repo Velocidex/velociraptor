@@ -3,8 +3,6 @@
 goog.module('grrUi.hunt.huntInspectorDirective');
 goog.module.declareLegacyNamespace();
 
-
-
 /** @type {number} */
 let AUTO_REFRESH_INTERVAL_MS = 5 * 1000;
 
@@ -27,40 +25,61 @@ exports.setAutoRefreshInterval = function(millis) {
  * @ngInject
  */
 const HuntInspectorController = function(
-    $scope, grrApiService, grrRoutingService) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+    $scope, grrApiService, grrRoutingService, grrAceService) {
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-  /** @type {string} */
-  this.shownHuntId;
+    /** @type {string} */
+    this.shownHuntId;
 
-  /** @type {string} */
-  this.activeTab = '';
+    /** @type {string} */
+    this.activeTab = '';
 
-  /** type {Object<string, boolean>} */
-  this.tabsShown = {};
+    /** type {Object<string, boolean>} */
+    this.tabsShown = {};
 
     this.scope_.$watchGroup(['huntId', 'activeTab'],
                             this.onDirectiveArgumentsChange_.bind(this));
 
     this.scope_.$watch('controller.activeTab', this.onTabChange_.bind(this));
 
-  /** @private {!grrUi.core.apiService.ApiService} */
-  this.grrApiService_ = grrApiService;
+    /** @private {!grrUi.core.apiService.ApiService} */
+    this.grrApiService_ = grrApiService;
 
-  /** @private {!grrUi.routing.routingService.RoutingService} */
-  this.grrRoutingService_ = grrRoutingService;
+    /** @private {!grrUi.routing.routingService.RoutingService} */
+    this.grrRoutingService_ = grrRoutingService;
 
     this.hunt = {};
 
-  /** @private {!angular.$q.Promise|undefined} */
-  this.pollPromise_;
+    /** @private {!angular.$q.Promise|undefined} */
+    this.pollPromise_;
 
-  this.scope_.$on('$destroy', function() {
-    this.grrApiService_.cancelPoll(this.pollPromise_);
-  }.bind(this));
+    this.scope_.$on('$destroy', function() {
+        this.grrApiService_.cancelPoll(this.pollPromise_);
+    }.bind(this));
 
     this.scope_.$watch('huntId', this.startPolling_.bind(this));
+
+    this.serializedRequests = "";
+
+    var self = this;
+
+    this.scope_.aceConfig = function(ace) {
+        grrAceService.AceConfig(ace);
+
+        ace.setOptions({
+            wrap: true,
+            autoScrollEditorIntoView: true,
+            minLines: 10,
+            maxLines: 100,
+        });
+
+        self.scope_.$on('$destroy', function() {
+            grrAceService.SaveAceConfig(ace);
+        });
+
+        ace.resize();
+    };
 };
 
 /**
@@ -85,6 +104,8 @@ HuntInspectorController.prototype.startPolling_ = function() {
             undefined,
             function notify(response) {
                 self.hunt = response['data'];
+                self.serializedRequests = JSON.stringify(
+                    self.hunt.start_request.compiled_collector_args, null, 4);
             });
     }
 };

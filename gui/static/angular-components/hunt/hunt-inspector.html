@@ -28,10 +28,22 @@
         </thead>
         <tbody>
           <tr><td>
-              <grr-semantic-value
-                ng-if="controller.tabsShown['requests']"
-                value="::controller.hunt.start_request.compiled_collector_args"
-                type="VQLCollectorArgs"></grr-semantic-value>
+              <div ng-if="controller.tabsShown['requests']">
+                <div ui-ace="{
+                             showGutter: true,
+                             workerPath: '/static/dist/',
+                             theme:'clouds',
+                             onLoad: aceConfig,
+                             mode: 'json',
+                             rendererOptions: {
+                             fontSize: '14px',
+                             fontFamily: 'monospace',
+                             },
+                             }"
+                     ng-model="controller.serializedRequests"
+                     readonly
+                     ></div>
+              </div>
           </td></tr>
         </tbody>
       </table>

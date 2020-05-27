@@ -62,6 +62,10 @@ func (self *RandFunction) Call(ctx context.Context,
 		return false
 	}
 
+	if arg.Range == 0 {
+		return 0
+	}
+
 	return rand.Intn(int(arg.Range))
 }
 

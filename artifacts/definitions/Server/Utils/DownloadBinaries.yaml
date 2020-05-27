@@ -1,4 +1,4 @@
-name: Windows.Utils.DownloadBinaries
+name: Server.Utils.DownloadBinaries
 description: |
   This server side artifact downloads the external binary blobs we
   require into the server's public directory. We also update the
@@ -19,6 +19,9 @@ parameters:
       WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
       Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
       Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
+      VelociraptorWindows,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-windows-amd64.exe,velociraptor-v0.4.4-windows-amd64.exe
+      VelociraptorLinux,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-linux-amd64,velociraptor-v0.4.4-linux-amd64
+      VelociraptorDarwin,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-darwin-amd64,velociraptor-v0.4.4-darwin-amd64
 
 sources:
   - queries:
@@ -26,7 +29,7 @@ sources:
 
       - LET download = SELECT Tool, Type, Filename,
             hash(path=Content) as Hash,
-            upload(file=Content, name="/public/" + Filename)
+            upload(file=Content, name="fs:///public/" + Filename)
         FROM http_client(url=URL, tempfile_extension=".exe")
 
       # Write the inventory file.

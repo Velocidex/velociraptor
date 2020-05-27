@@ -1,1 +1,93 @@
-Build Collector.
+<grr-wizard-form title="Build Offline collector"
+                 on-resolve="onResolve()"
+                 on-reject="onReject()">
+
+  <grr-wizard-form-page title="Select Artifacts to collect">
+    <grr-search-artifact names="controller.names"
+                         params="controller.params"
+                         type="'CLIENT'">
+    </grr-search-artifact>
+    <dl class="dl-horizontal dl-flow">
+      <dt>Ops/Sec</dt>
+      <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
+      <dt>Timeout</dt>
+      <dd><input ng-model="controller.timeout" type="text"></input></dd>
+    </dl>
+  </grr-wizard-form-page>
+
+  <grr-wizard-form-page title="Configure Collection">
+    <div class="padded">
+      <div class="well well-large">
+        <div class="form-group">
+          <label class="control-label" title="The target collector.">
+            Target Operating System
+          </label>
+          <div class="controls">
+            <select class="form-control" ng-model="controller.os">
+              <option label="Windows" value="Windows">Windows</option>
+              <option label="Linux" value="Linux">Linux</option>
+              <option label="MacOS" value="MacOS">MacOS</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label" title="Collector Type">
+            Collection Type
+          </label>
+          <div class="controls">
+            <select class="form-control" ng-model="controller.target">
+              <option value="ZIP">Zip Archive</option>
+              <option value="GCS">Google Cloud Bucket</option>
+              <option value="S3">AWS Bucket</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group row"
+             ng-if="controller.target=='GCS'"
+             >
+          <label class="control-label col-sm-2 col-form-label" title="GCS Project">
+            GCS Project
+          </label>
+          <grr-form field="'Project'" class="col-sm-10"
+                    description="'GCS Project'"
+                    value="controller.target_args"></grr-form>
+
+          <label class="control-label col-sm-2 col-form-label"
+                 title="GCS Configuration">
+            GCS Key Blob
+          </label>
+          <grr-form field="'GCSKey'" class="col-sm-10"
+                    description="'GCS Key Blob'"
+                    value="controller.target_args">
+          </grr-form>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label" title="Include binaries">
+            Include binaries
+          </label>
+          <div class="controls">
+            <ui-select  multiple  ng-model="controller.inventoryModel">
+              <ui-select-match placeholder="Include binaries...">
+                <span ng-bind="$item.label"></span>
+              </ui-select-match>
+              <ui-select-choices repeat="item in (controller.inventory | filter: $select.search) track by item.id">
+                <span ng-bind="item.label"></span>
+              </ui-select-choices>
+            </ui-select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </grr-wizard-form-page>
+
+  <!-- Submit the collection and show the status -->
+  <grr-wizard-form-page title="Result"
+                        is-valid="controller.serverResponse != null"
+                        on-show="controller.sendRequest()"
+                        next-button-label="Done"
+                        no-back-button="true">
+  </grr-wizard-form-page>
+
+</grr-wizard-form>

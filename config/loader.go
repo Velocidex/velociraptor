@@ -176,6 +176,8 @@ func (self *Loader) Log(format string, v ...interface{}) {
 }
 
 func (self *Loader) Validate(config_obj *config_proto.Config) error {
+	logging.SuppressLogging = !self.verbose
+
 	// Initialize the logging and dump early messages into the
 	// correct log destination.
 	err := logging.InitLogging(config_obj)

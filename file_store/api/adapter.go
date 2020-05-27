@@ -3,6 +3,7 @@ package api
 import (
 	"os"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
 )
@@ -24,6 +25,10 @@ func NewFileInfoAdapter(fd os.FileInfo, full_path string, data interface{}) *Fil
 }
 
 func (self FileInfoAdapter) Data() interface{} {
+	if self._data == nil {
+		return ordereddict.NewDict()
+	}
+
 	return self._data
 }
 

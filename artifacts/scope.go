@@ -31,7 +31,7 @@ func MakeScope(repository *Repository, from_scratch bool) *vfilter.Scope {
 	} else {
 		scope = vql_subsystem.MakeScope()
 	}
-	artifact_plugin := NewArtifactRepositoryPlugin(repository, nil)
+	artifact_plugin := NewArtifactRepositoryPlugin(repository)
 	env := ordereddict.NewDict().Set("Artifact", artifact_plugin)
 	return scope.AppendVars(env).AddProtocolImpl(
 		_ArtifactRepositoryPluginAssociativeProtocol{})

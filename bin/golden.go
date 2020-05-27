@@ -86,7 +86,6 @@ func runTest(fixture *testFixture) (string, error) {
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	// Any uploads go into the container.
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {

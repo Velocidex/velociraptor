@@ -30,8 +30,9 @@ import (
 )
 
 type _TempfileRequest struct {
-	Data      []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
-	Extension string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
+	Data       []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
+	Extension  string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
+	RemoveLast bool     `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
 }
 
 type TempfileFunction struct{}
@@ -72,7 +73,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	}
 
 	// Make sure the file is removed when the query is done.
-	scope.AddDestructor(func() {
+	removal := func() {
 		scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
 
 		// On windows especially we can not remove files that
@@ -85,7 +86,19 @@ func (self *TempfileFunction) Call(ctx context.Context,
 			}
 			time.Sleep(time.Second)
 		}
-	})
+	}
+
+	if arg.RemoveLast {
+		go func() {
+			select {
+			case <-ctx.Done():
+				removal()
+			}
+		}()
+
+	} else {
+		scope.AddDestructor(removal)
+	}
 	return tmpfile.Name()
 }
 

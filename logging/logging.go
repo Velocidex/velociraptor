@@ -56,10 +56,6 @@ var (
 )
 
 func InitLogging(config_obj *config_proto.Config) error {
-	if Manager != nil {
-		return nil
-	}
-
 	Manager = &LogManager{
 		contexts: make(map[*string]*LogContext),
 	}
