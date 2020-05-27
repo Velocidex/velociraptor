@@ -471,7 +471,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		}
 
 		// Update the artifact plugin in the template.
-		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository, nil)
+		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository)
 		tmpl.Env.Set("Artifact", artifact_plugin)
 
 		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,

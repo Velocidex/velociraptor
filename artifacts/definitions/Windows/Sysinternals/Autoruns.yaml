@@ -3,7 +3,7 @@ description: |
   Uses Sysinternals autoruns to scan the host.
 
   Note this requires syncing the sysinternals binary from the host -
-  you will need to run Windows.Utils.DownloadBinaries on the server
+  you will need to run Server.Utils.DownloadBinaries on the server
   first.
 
 precondition: SELECT OS From info() where OS = 'windows'

@@ -2,7 +2,7 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
  {
   "Complete": true
  }
-]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
+]SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
  {
   "DownloadStatus": "Downloaded",
   "Hash": {
@@ -11,7 +11,7 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
    "SHA256": "6ca71c13f98eeed8ffc0a9edb8eea787624b90018bd4f64672439af35c3ec820"
   }
  }
-]SELECT DownloadStatus, Hash FROM Artifact.Windows.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
+]SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
  {
   "DownloadStatus": "Cached",
   "Hash": {

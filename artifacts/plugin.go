@@ -253,12 +253,20 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	return child, pres
 }
 
-func NewArtifactRepositoryPlugin(
-	repository *Repository, prefix []string) vfilter.PluginGeneratorInterface {
+func NewArtifactRepositoryPlugin(repository *Repository) vfilter.PluginGeneratorInterface {
 
 	if repository.artifact_plugin != nil {
 		return repository.artifact_plugin
 	}
+
+	// Cache it for next time.
+	repository.artifact_plugin = _NewArtifactRepositoryPlugin(repository, nil)
+
+	return repository.artifact_plugin
+}
+
+func _NewArtifactRepositoryPlugin(
+	repository *Repository, prefix []string) vfilter.PluginGeneratorInterface {
 
 	result := &ArtifactRepositoryPlugin{
 		repository: repository,
@@ -284,13 +292,10 @@ func NewArtifactRepositoryPlugin(
 
 		_, pres := result.children[components[0]]
 		if !pres {
-			result.children[components[0]] = NewArtifactRepositoryPlugin(
+			result.children[components[0]] = _NewArtifactRepositoryPlugin(
 				repository, append(prefix, components[0]))
 		}
 	}
-
-	// Cache it for next time.
-	repository.artifact_plugin = result
 
 	return result
 }

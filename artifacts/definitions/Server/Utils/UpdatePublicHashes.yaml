@@ -2,7 +2,7 @@ name: Server.Utils.UpdatePublicHashes
 description: |
   The server maintains a public directory which can be served to all
   endpoints. The public directory should be initially populated by
-  running the Windows.Utils.DownloadBinaries artifact. It is possible
+  running the Server.Utils.DownloadBinaries artifact. It is possible
   to manually edit the content of this directory but you will need to
   update the hashes.
 
