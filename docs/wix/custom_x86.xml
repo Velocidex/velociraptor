@@ -41,6 +41,12 @@
                   ThirdFailureActionType='restart'
                   RestartServiceDelayInSeconds='30'
                   ResetPeriodInDays='1'/>
+              <!-- This emits warnings but it is necessary
+                   https://github.com/oleg-shilo/wixsharp/issues/299 -->
+              <ServiceConfig
+                  DelayedAutoStart="yes"
+                  OnInstall="yes"
+                  OnReinstall="yes" />
             </ServiceInstall>
             <ServiceControl
                 Id="StartService"
