@@ -40,7 +40,9 @@ func RunClient(
 	config_path *string) {
 
 	// Include the writeback in the client's configuration.
-	config_obj, err := DefaultConfigLoader.WithRequiredClient().
+	config_obj, err := DefaultConfigLoader.
+		WithRequiredClient().
+		WithRequiredLogging().
 		WithWriteback().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 

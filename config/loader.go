@@ -28,7 +28,7 @@ type loader_func func() (*config_proto.Config, error)
 type validator func(config_obj *config_proto.Config) error
 
 type Loader struct {
-	verbose, use_writeback bool
+	verbose, use_writeback, required_logging bool
 
 	write_back_path string
 
@@ -74,6 +74,14 @@ func (self *Loader) WithRequiredCA() *Loader {
 func (self *Loader) WithVerbose(verbose bool) *Loader {
 	self = self.Copy()
 	self.verbose = verbose
+	return self
+}
+
+// If this is set we require logging to be properly
+// initialized. Without this logging is directed to stderr only.
+func (self *Loader) WithRequiredLogging() *Loader {
+	self = self.Copy()
+	self.required_logging = true
 	return self
 }
 
@@ -176,13 +184,20 @@ func (self *Loader) Log(format string, v ...interface{}) {
 }
 
 func (self *Loader) Validate(config_obj *config_proto.Config) error {
+	var err error
+
+	logging.Reset()
 	logging.SuppressLogging = !self.verbose
 
 	// Initialize the logging and dump early messages into the
 	// correct log destination.
-	err := logging.InitLogging(config_obj)
-	if err != nil {
-		return err
+	if self.required_logging {
+		err = logging.InitLogging(config_obj)
+		if err != nil {
+			return err
+		}
+	} else {
+		logging.InitLogging(&config_proto.Config{})
 	}
 
 	for _, validator := range self.validators {

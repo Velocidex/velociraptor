@@ -185,8 +185,6 @@ func (self *LogManager) makeNewComponent(
 	config_obj *config_proto.Config,
 	component *string) (*LogContext, error) {
 
-	var err error
-
 	Log := logrus.New()
 	Log.Out = ioutil.Discard
 	Log.Level = logrus.DebugLevel
@@ -195,31 +193,29 @@ func (self *LogManager) makeNewComponent(
 		config_obj.Logging.OutputDirectory != "" {
 		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
 		if err != nil {
-			Prelog("Unable to create logging directory.")
-
-		} else {
-			base_filename := filepath.Join(
-				config_obj.Logging.OutputDirectory,
-				*component)
-
-			pathMap := lfshook.WriterMap{
-				logrus.DebugLevel: getRotator(
-					config_obj,
-					base_filename+"_debug.log"),
-				logrus.InfoLevel: getRotator(
-					config_obj,
-					base_filename+"_info.log"),
-				logrus.ErrorLevel: getRotator(
-					config_obj,
-					base_filename+"_error.log"),
-			}
-
-			hook := lfshook.NewHook(
-				pathMap,
-				&logrus.JSONFormatter{},
-			)
-			Log.Hooks.Add(hook)
+			return nil, errors.New("Unable to create logging directory.")
 		}
+		base_filename := filepath.Join(
+			config_obj.Logging.OutputDirectory,
+			*component)
+
+		pathMap := lfshook.WriterMap{
+			logrus.DebugLevel: getRotator(
+				config_obj,
+				base_filename+"_debug.log"),
+			logrus.InfoLevel: getRotator(
+				config_obj,
+				base_filename+"_info.log"),
+			logrus.ErrorLevel: getRotator(
+				config_obj,
+				base_filename+"_error.log"),
+		}
+
+		hook := lfshook.NewHook(
+			pathMap,
+			&logrus.JSONFormatter{},
+		)
+		Log.Hooks.Add(hook)
 	}
 
 	// Add stderr logging if required.
