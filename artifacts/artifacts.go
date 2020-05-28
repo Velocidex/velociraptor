@@ -220,6 +220,10 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		}
 	}
 
+	if artifact.Name == "" {
+		return nil, errors.New("No artifact name")
+	}
+
 	self.Data[artifact.Name] = artifact
 
 	// Clear the cache to force a rebuild.
@@ -232,7 +236,11 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 	artifact_name, source_name := paths.SplitFullSourceName(name)
 
 	res, pres := self.Data[artifact_name]
-	if !pres || source_name == "" {
+	if !pres {
+		return nil, false
+	}
+
+	if source_name == "" {
 		return res, pres
 	}
 
