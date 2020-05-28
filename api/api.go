@@ -520,7 +520,20 @@ func (self *ApiServer) GetUserUITraits(
 	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(self.config,
 		result.Username)
 
+	user_options, err := users.GetUserOptions(self.config, result.Username)
+	if err == nil {
+		result.InterfaceTraits.UiSettings = user_options.Options
+	}
+
 	return result, nil
+}
+
+func (self *ApiServer) SetGUIOptions(
+	ctx context.Context,
+	in *api_proto.SetGUIOptionsRequest) (*empty.Empty, error) {
+	user_info := GetGRPCUserInfo(self.config, ctx)
+
+	return &empty.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
 }
 
 func (self *ApiServer) GetUserNotifications(

@@ -68,6 +68,9 @@ message ApiGrrUserInterfaceTraits {
     string picture = 20;
 
     repeated UILink links = 21;
+
+    // An opaque setting object stored by the GUI.
+    string ui_settings = 1;
 };
 
 message ApiGrrUser {
@@ -140,4 +143,8 @@ message GetUserNotificationsRequest {
     bool clear_pending = 1 [(sem_type) = {
             description: "If set, clears pending notifications."
         }];
+}
+
+message SetGUIOptionsRequest {
+    string options = 1;
 }

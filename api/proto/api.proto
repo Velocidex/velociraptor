@@ -150,6 +150,13 @@ service API {
         };
     }
 
+    rpc SetGUIOptions(SetGUIOptionsRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+           post: "/api/v1/SetGUIOptions",
+           body: "*"
+        };
+    }
+
     rpc GetUserNotifications(GetUserNotificationsRequest) returns (GetUserNotificationsResponse) {
         option (google.api.http) = {
             post: "/api/v1/GetUserNotifications",

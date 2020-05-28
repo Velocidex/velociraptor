@@ -799,6 +799,26 @@ func (mr *MockAPIClientMockRecorder) SetClientMonitoringState(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClientMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).SetClientMonitoringState), varargs...)
 }
 
+// SetGUIOptions mocks base method
+func (m *MockAPIClient) SetGUIOptions(arg0 context.Context, arg1 *proto0.SetGUIOptionsRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SetGUIOptions", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetGUIOptions indicates an expected call of SetGUIOptions
+func (mr *MockAPIClientMockRecorder) SetGUIOptions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGUIOptions", reflect.TypeOf((*MockAPIClient)(nil).SetGUIOptions), varargs...)
+}
+
 // SetServerMonitoringState mocks base method
 func (m *MockAPIClient) SetServerMonitoringState(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()

@@ -85,6 +85,7 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/ace.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/ext-*.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/theme-*.js',
+                   config.nodeModulesDir + '/ace-builds/src-min-noconflict/keybinding-*.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-yaml.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-json.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-markdown.js',

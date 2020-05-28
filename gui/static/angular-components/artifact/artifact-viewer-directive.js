@@ -90,11 +90,18 @@ ArtifactViewerController.prototype.updateArtifactDefinitions = function(name) {
             self.onSearchChange_();
         };
 
+        modalScope.reject = function() {
+            modalInstance.close();
+        };
+
         var modalInstance = self.uibModal_.open({
-            template: '<grr-add-artifact artifact="artifact" on-resolve="resolve()" />',
+            template: '<grr-add-artifact artifact="artifact" '+
+                'on-resolve="resolve()" on-reject="reject()" />',
             scope: modalScope,
             windowClass: 'wide-modal high-modal',
             size: "lg",
+            keyboard: false,
+            backdrop: 'static',
         });
     });
 

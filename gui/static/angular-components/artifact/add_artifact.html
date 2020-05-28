@@ -20,10 +20,18 @@
        ></div>
 </div>
 <div class="modal-footer">
-  <a href class="btn btn-primary btn-block"
+  <button type="button"
+          ng-click="controller.openAceConfig()"
+          class="btn btn-outline-primary">
+    <i class="fa fa-wrench"></i>
+  </button>
+
+  <a href class="btn btn-primary"
+     ng-click="onReject()"
+     role="button">Cancel</a>
+  <a href class="btn btn-primary"
      ng-click="controller.saveArtifact()"
      role="button">Save Artifact (Ctrl-Enter)</a>
-
   <div ng-if="controller.error" class="proto_error">
     {$ controller.error $}
   </div>

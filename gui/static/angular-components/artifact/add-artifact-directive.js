@@ -9,6 +9,8 @@ const AddArtifactController = function($scope, grrApiService, grrAceService) {
 
     var self = this;
     this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
+
         grrAceService.AceConfig(ace);
 
         self.scope_.$on("$destroy", function() {
@@ -25,6 +27,10 @@ const AddArtifactController = function($scope, grrApiService, grrAceService) {
     };
 };
 
+
+AddArtifactController.prototype.openAceConfig = function() {
+    this.ace.execCommand("showSettingsMenu");
+};
 
 AddArtifactController.prototype.saveArtifact = function() {
     var url = 'v1/SetArtifactFile';
@@ -52,6 +58,7 @@ exports.AddArtifactDirective = function() {
       scope: {
           artifact: "=",
           onResolve: '&',
+          onReject: '&',
       },
       templateUrl: '/static/angular-components/artifact/' +
           'add_artifact.html',

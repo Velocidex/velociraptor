@@ -13,3 +13,7 @@ func (self UserPathManager) Path() string {
 func (self UserPathManager) Directory() string {
 	return constants.USER_URN
 }
+
+func (self UserPathManager) GUIOptions() string {
+	return constants.USER_URN + "/gui/" + self.Name
+}

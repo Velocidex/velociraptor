@@ -271,6 +271,11 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, err
 	}
 
+	// Start off with some empty lines.
+	if in.Input == "" {
+		in.Input = "\n\n\n\n\n\n"
+	}
+
 	// Create the new cell with fresh content.
 	new_cell_request := &api_proto.NotebookCellRequest{
 		Input:      in.Input,
@@ -571,6 +576,7 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
+	fmt.Printf("Notifying %v\n", in.CellId)
 	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
 }
 
