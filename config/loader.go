@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
@@ -28,7 +29,7 @@ type loader_func func() (*config_proto.Config, error)
 type validator func(config_obj *config_proto.Config) error
 
 type Loader struct {
-	verbose, use_writeback bool
+	verbose, use_writeback, required_logging bool
 
 	write_back_path string
 
@@ -60,6 +61,38 @@ func (self *Loader) WithRequiredClient() *Loader {
 	return self
 }
 
+// Check that we are running as the correct user. This is critical
+// when using the FileBaseDataStore because any files we accidentally
+// create as the wrong user will not be readable by the frontend.
+func (self *Loader) WithRequiredUser() *Loader {
+	self = self.Copy()
+	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
+		if config_obj.Datastore == nil ||
+			config_obj.Datastore.Implementation != "FileBaseDataStore" {
+			return nil
+		}
+
+		if config_obj.Frontend == nil ||
+			config_obj.Frontend.RunAsUser == "" {
+			return nil
+		}
+
+		user, err := user.Current()
+		if err != nil {
+			return err
+		}
+
+		if user.Username != config_obj.Frontend.RunAsUser {
+			return errors.New(fmt.Sprintf(
+				"Velociraptor should be running as the '%s' user but you are '%s'. "+
+					"Please change user with sudo first.",
+				config_obj.Frontend.RunAsUser, user.Username))
+		}
+		return nil
+	})
+	return self
+}
+
 func (self *Loader) WithRequiredCA() *Loader {
 	self = self.Copy()
 	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
@@ -74,6 +107,14 @@ func (self *Loader) WithRequiredCA() *Loader {
 func (self *Loader) WithVerbose(verbose bool) *Loader {
 	self = self.Copy()
 	self.verbose = verbose
+	return self
+}
+
+// If this is set we require logging to be properly
+// initialized. Without this logging is directed to stderr only.
+func (self *Loader) WithRequiredLogging() *Loader {
+	self = self.Copy()
+	self.required_logging = true
 	return self
 }
 
@@ -176,13 +217,20 @@ func (self *Loader) Log(format string, v ...interface{}) {
 }
 
 func (self *Loader) Validate(config_obj *config_proto.Config) error {
+	var err error
+
+	logging.Reset()
 	logging.SuppressLogging = !self.verbose
 
 	// Initialize the logging and dump early messages into the
 	// correct log destination.
-	err := logging.InitLogging(config_obj)
-	if err != nil {
-		return err
+	if self.required_logging {
+		err = logging.InitLogging(config_obj)
+		if err != nil {
+			return err
+		}
+	} else {
+		logging.InitLogging(&config_proto.Config{})
 	}
 
 	for _, validator := range self.validators {

@@ -19,12 +19,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"os/user"
 	"sync"
 
-	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
@@ -47,7 +44,10 @@ var (
 )
 
 func doFrontend() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.
+		WithRequiredFrontend().
+		WithRequiredUser().
+		WithRequiredLogging().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	// Use both context and WaitGroup to control life time of
@@ -70,11 +70,6 @@ func startFrontend(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*server.Server, error) {
 
-	err := checkFrontendUser(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
 		"version":    config_obj.Version.Version,
@@ -88,7 +83,7 @@ func startFrontend(
 	}
 
 	// Parse the artifacts database to detect errors early.
-	_, err = getRepository(config_obj)
+	_, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	// Load the assets into memory.
@@ -268,31 +263,6 @@ func startAutoCertFrontend(
 			ctx, wg, config_obj, server_obj, router)
 		kingpin.FatalIfError(err, "StartTLSServer")
 	}()
-}
-
-// Any commands that potentially change the filestore need to make
-// sure they are not running as the wrong user when using the
-// FileBaseDataStore. Otherwise we might create files that are not
-// readable by the service.
-func checkFrontendUser(config_obj *config_proto.Config) error {
-	if config_obj.Frontend.RunAsUser == "" ||
-		config_obj.Datastore.Implementation != "FileBaseDataStore" {
-		return nil
-	}
-
-	user, err := user.Current()
-	if err != nil {
-		return err
-	}
-
-	if user.Username != config_obj.Frontend.RunAsUser {
-		return errors.New(fmt.Sprintf(
-			"Velociraptor should be running as the '%s' user but you are '%s'. "+
-				"Please change user with sudo first.",
-			config_obj.Frontend.RunAsUser, user.Username))
-	}
-
-	return nil
 }
 
 func init() {

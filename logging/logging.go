@@ -195,7 +195,6 @@ func (self *LogManager) makeNewComponent(
 		if err != nil {
 			return nil, errors.New("Unable to create logging directory.")
 		}
-
 		base_filename := filepath.Join(
 			config_obj.Logging.OutputDirectory,
 			*component)
@@ -219,6 +218,7 @@ func (self *LogManager) makeNewComponent(
 		Log.Hooks.Add(hook)
 	}
 
+	// Add stderr logging if required.
 	stderr_map := lfshook.WriterMap{
 		logrus.ErrorLevel: os.Stderr,
 	}

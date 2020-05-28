@@ -142,7 +142,7 @@ func (self *InterrogationService) Start(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
 	watchForFlowCompletion(
-		ctx, wg, self.config_obj, "Generic.Client.Info",
+		ctx, wg, self.config_obj, "Generic.Client.Info/BasicInformation",
 		func(ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
 			err := self.ProcessRow(ctx, scope, row)
 			if err != nil {
@@ -163,7 +163,7 @@ func (self *InterrogationService) ProcessRow(
 	flow_id, _ := row.GetString("FlowId")
 
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
-		client_id, flow_id, "Generic.Client.Info")
+		client_id, flow_id, "Generic.Client.Info/BasicInformation")
 	row_chan, err := file_store.GetTimeRange(
 		ctx, self.config_obj, path_manager, 0, 0)
 	if err != nil {

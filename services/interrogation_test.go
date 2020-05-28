@@ -96,7 +96,7 @@ type ServicesTestSuite struct {
 func (self *ServicesTestSuite) TestInterrogationService() {
 	hostname := "MyHost"
 	flow_id := self.EmulateCollection(
-		"Generic.Client.Info", []*ordereddict.Dict{
+		"Generic.Client.Info/BasicInformation", []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("ClientId", self.client_id).
 				Set("Hostname", hostname),

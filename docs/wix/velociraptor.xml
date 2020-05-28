@@ -5,7 +5,7 @@
   <Product Name='Velociraptor' Manufacturer='Velocidex Innovations'
            Id='*'
            UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
-           Language='1033' Codepage='1252' Version='0.36.0'>
+           Language='1033' Codepage='1252' Version='0.44.0'>
     <Package Id='*' Keywords='Installer' Description="Velociraptor Service Installer"
              Comments='This installs the Velociraptor service.'
              Manufacturer='Velocidex Innovations'
@@ -42,8 +42,13 @@
                   ThirdFailureActionType='restart'
                   RestartServiceDelayInSeconds='30'
                   ResetPeriodInDays='0'/>
+              <!-- This emits warnings but it is necessary
+                   https://github.com/oleg-shilo/wixsharp/issues/299 -->
+              <ServiceConfig
+                  DelayedAutoStart="yes"
+                  OnInstall="yes"
+                  OnReinstall="yes" />
             </ServiceInstall>
-
             <ServiceControl
                 Id="StartService"
                 Name="Velociraptor"

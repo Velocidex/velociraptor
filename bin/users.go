@@ -52,10 +52,11 @@ var (
 )
 
 func doAddUser() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+	config_obj, err := DefaultConfigLoader.
+		WithRequiredFrontend().
+		WithRequiredUser().LoadAndValidate()
 
-	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
+	kingpin.FatalIfError(err, "Unable to load config file")
 
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
