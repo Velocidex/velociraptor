@@ -197,8 +197,35 @@ func Notify(config_obj *config_proto.Config, notification *api_proto.UserNotific
 	defer mu.Unlock()
 
 	if gUserNotificationManager == nil {
-		return errors.New("Uninitiaalized UserNotificationManager")
+		return errors.New("Uninitialized UserNotificationManager")
 	}
 	gUserNotificationManager.Notify(notification)
 	return nil
+}
+
+func SetUserOptions(config_obj *config_proto.Config,
+	username string,
+	options *api_proto.SetGUIOptionsRequest) error {
+
+	path_manager := paths.UserPathManager{username}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return db.SetSubject(config_obj, path_manager.GUIOptions(), options)
+}
+
+func GetUserOptions(config_obj *config_proto.Config, username string) (
+	*api_proto.SetGUIOptionsRequest, error) {
+
+	path_manager := paths.UserPathManager{username}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	options := &api_proto.SetGUIOptionsRequest{}
+	err = db.GetSubject(config_obj, path_manager.GUIOptions(), options)
+	return options, err
 }

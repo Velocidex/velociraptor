@@ -95,6 +95,13 @@
         </button>
 
         <button class="btn btn-default"
+                title="Settings"
+                ng-if="controller.currently_editing"
+                ng-click="controller.showSettings()">
+          <i class="fa fa-wrench"></i>
+        </button>
+
+        <button class="btn btn-default"
                 title="Stop Calculating"
                 ng-if="controller.currently_editing"
                 ng-disabled="!controller.cell.calculating"

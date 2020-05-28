@@ -35,6 +35,7 @@ const NotebookCellRendererController = function(
     this.completions = [];
 
     this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
         grrAceService.AceConfig(ace);
 
         ace.setOptions({
@@ -63,6 +64,10 @@ const NotebookCellRendererController = function(
         }
     }.bind(this));
 
+};
+
+NotebookCellRendererController.prototype.showSettings = function() {
+    this.ace.execCommand("showSettingsMenu");
 };
 
 NotebookCellRendererController.prototype.onCellIdChange_ = function() {

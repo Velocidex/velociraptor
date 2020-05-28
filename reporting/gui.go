@@ -283,15 +283,13 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 	for _, query := range queries {
 		query, err := self.getMultiLineQuery(query)
 		if err != nil {
-			self.Error("VQL Error while reporting %s: %v",
-				self.Artifact.Name, err)
+			self.Error("VQL Error: %v", err)
 			return nil
 		}
 
 		multi_vql, err := vfilter.MultiParse(query)
 		if err != nil {
-			self.Error("VQL Error while reporting %s: %v",
-				self.Artifact.Name, err)
+			self.Error("VQL Error: %v", err)
 			return nil
 		}
 
@@ -330,15 +328,13 @@ func (self *GuiTemplateEngine) queryRows(queries ...string) []*ordereddict.Dict 
 	for _, query := range queries {
 		query, err := self.getMultiLineQuery(query)
 		if err != nil {
-			self.Error("VQL Error while reporting %s: %v",
-				self.Artifact.Name, err)
+			self.Error("VQL Error: %v", err)
 			return nil
 		}
 
 		multi_vql, err := vfilter.MultiParse(query)
 		if err != nil {
-			self.Error("VQL Error while reporting %s: %v",
-				self.Artifact.Name, err)
+			self.Error("VQL Error: %v", err)
 			return nil
 		}
 
