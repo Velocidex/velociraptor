@@ -49,9 +49,11 @@ var (
 )
 
 func doGrant() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.
+		WithRequiredFrontend().
+		WithRequiredUser().
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
-	kingpin.FatalIfError(checkFrontendUser(config_obj), "")
 
 	principal := *grant_command_principal
 

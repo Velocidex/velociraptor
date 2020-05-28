@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
@@ -54,6 +55,38 @@ func (self *Loader) WithRequiredClient() *Loader {
 	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
 		if config_obj.Client == nil {
 			return errors.New("Client config is required")
+		}
+		return nil
+	})
+	return self
+}
+
+// Check that we are running as the correct user. This is critical
+// when using the FileBaseDataStore because any files we accidentally
+// create as the wrong user will not be readable by the frontend.
+func (self *Loader) WithRequiredUser() *Loader {
+	self = self.Copy()
+	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
+		if config_obj.Datastore == nil ||
+			config_obj.Datastore.Implementation != "FileBaseDataStore" {
+			return nil
+		}
+
+		if config_obj.Frontend == nil ||
+			config_obj.Frontend.RunAsUser == "" {
+			return nil
+		}
+
+		user, err := user.Current()
+		if err != nil {
+			return err
+		}
+
+		if user.Username != config_obj.Frontend.RunAsUser {
+			return errors.New(fmt.Sprintf(
+				"Velociraptor should be running as the '%s' user but you are '%s'. "+
+					"Please change user with sudo first.",
+				config_obj.Frontend.RunAsUser, user.Username))
 		}
 		return nil
 	})
