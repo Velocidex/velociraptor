@@ -59,7 +59,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s.zip",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z- ]", replace="_")
+          re="[^0-9A-Za-z-. ]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename)
 
@@ -78,7 +78,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s.zip",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z- ]", replace="_")
+          re="[^0-9A-Za-z.- ]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to s3 bucket " + TargetArgs.bucket)
@@ -105,7 +105,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s.zip",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z- ]", replace="_")
+          re="[^0-9A-Za-z.- ]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to GCS bucket " + TargetArgs.bucket)
@@ -152,7 +152,7 @@ parameters:
        grabs files from the local archive.
 
     default: |
-       LET temp_binary <= tempfile(extension=".exe")
+       LET temp_binary <= tempfile(extension=".exe", remove_last=TRUE)
 
        LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
        FROM parse_csv(filename="/inventory.csv", accessor="me")

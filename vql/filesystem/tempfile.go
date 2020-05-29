@@ -25,6 +25,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -89,13 +90,14 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	}
 
 	if arg.RemoveLast {
-		go func() {
-			select {
-			case <-ctx.Done():
-				removal()
+		root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
+		if pres {
+			root, ok := root_any.(*vfilter.Scope)
+			if ok {
+				scope.Log("Adding global destructor for %v", tmpfile.Name())
+				root.AddDestructor(removal)
 			}
-		}()
-
+		}
 	} else {
 		scope.AddDestructor(removal)
 	}

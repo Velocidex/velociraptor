@@ -26,8 +26,6 @@ func (self *MEFileSystemAccessor) GetZipFile(
 		return nil, err
 	}
 
-	//me = "/shared/payload.zip"
-
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

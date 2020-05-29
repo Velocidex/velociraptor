@@ -56,6 +56,8 @@ func (self ScopeBuilder) _build(from_scratch bool) *vfilter.Scope {
 	scope := MakeScope(self.Repository, from_scratch).AppendVars(env)
 	scope.Logger = self.Logger
 
+	env.Set(constants.SCOPE_ROOT, scope)
+
 	return scope
 }
 
