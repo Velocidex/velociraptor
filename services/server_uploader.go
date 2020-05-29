@@ -8,7 +8,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -19,7 +18,7 @@ import (
 type ServerUploader struct {
 	*api.FileStoreUploader
 	path_manager       *paths.FlowPathManager
-	collection_context *flows_proto.ArtifactCollectorContext
+	collection_context *contextManager
 	config_obj         *config_proto.Config
 }
 
@@ -50,31 +49,22 @@ func (self *ServerUploader) Upload(
 				Set("vfs_path", result.Path).
 				Set("expected_size", result.Size)},
 		)
-		self.collection_context.TotalUploadedFiles++
-		self.collection_context.TotalUploadedBytes += result.Size
-		self.collection_context.TotalExpectedUploadedBytes += result.Size
-		err = self.flushContext()
+		self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
+			context.TotalUploadedFiles++
+			context.TotalUploadedBytes += result.Size
+			context.TotalExpectedUploadedBytes += result.Size
+		})
+
+		err = self.collection_context.Save()
 
 	}
 	return result, err
 }
 
-func (self *ServerUploader) flushContext() error {
-	// Write the data before we fire the event.
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		self.collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		self.collection_context.Status = err.Error()
-	}
-
-	return db.SetSubject(self.config_obj,
-		self.path_manager.Path(), self.collection_context)
-}
-
 func NewServerUploader(
 	config_obj *config_proto.Config,
 	path_manager *paths.FlowPathManager,
-	collection_context *flows_proto.ArtifactCollectorContext) api.Uploader {
+	collection_context *contextManager) api.Uploader {
 	return &ServerUploader{
 		FileStoreUploader: api.NewFileStoreUploader(config_obj,
 			file_store.GetFileStore(config_obj), "/"),

@@ -183,6 +183,8 @@ ApiService.prototype.head = function(apiPath, opt_params) {
 
 
 ApiService.prototype.error_response = function(response) {
+    var self = this;
+
     if (angular.isDefined(response.status)) {
         var message;
         if (response.status < 0) {
@@ -201,7 +203,7 @@ ApiService.prototype.error_response = function(response) {
             });
     };
 
-    return self.q_.reject();
+    return self.q_.reject(message);
 };
 
 

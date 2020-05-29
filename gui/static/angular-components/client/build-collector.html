@@ -46,19 +46,58 @@
         <div class="form-group row"
              ng-if="controller.target=='GCS'"
              >
-          <label class="control-label col-sm-2 col-form-label" title="GCS Project">
-            GCS Project
+          <label class="control-label col-sm-2 col-form-label" title="GCS Bucket">
+            GCS Bucket
           </label>
-          <grr-form field="'Project'" class="col-sm-10"
-                    description="'GCS Project'"
+          <grr-form field="'bucket'" class="col-sm-10"
+                    description="'GCS Bucket'"
                     value="controller.target_args"></grr-form>
 
           <label class="control-label col-sm-2 col-form-label"
-                 title="GCS Configuration">
+                 title="GCS Key Blob">
             GCS Key Blob
           </label>
           <grr-form field="'GCSKey'" class="col-sm-10"
                     description="'GCS Key Blob'"
+                    value="controller.target_args">
+          </grr-form>
+        </div>
+        <div class="form-group row"
+             ng-if="controller.target=='S3'"
+             >
+          <label class="control-label col-sm-2 col-form-label"
+                 title="Region">
+            Region
+          </label>
+          <grr-form field="'region'" class="col-sm-10"
+                    description="'Region'"
+                    value="controller.target_args">
+          </grr-form>
+
+          <label class="control-label col-sm-2 col-form-label"
+                 title="Bucket">
+            Bucker
+          </label>
+          <grr-form field="'bucket'" class="col-sm-10"
+                    description="'Credentials Secret'"
+                    value="controller.target_args">
+          </grr-form>
+
+
+          <label class="control-label col-sm-2 col-form-label"
+                 title="Credentials Key">
+            Credentials Key
+          </label>
+          <grr-form field="'credentialsKey'" class="col-sm-10"
+                    description="'Credentials Key'"
+                    value="controller.target_args"></grr-form>
+
+          <label class="control-label col-sm-2 col-form-label"
+                 title="Credentials Secret">
+            Credentials Secret
+          </label>
+          <grr-form field="'credentialsSecret'" class="col-sm-10"
+                    description="'Credentials Secret'"
                     value="controller.target_args">
           </grr-form>
         </div>

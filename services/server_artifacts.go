@@ -23,6 +23,54 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type contextManager struct {
+	context      *flows_proto.ArtifactCollectorContext
+	mu           sync.Mutex
+	config_obj   *config_proto.Config
+	path_manager *paths.FlowPathManager
+}
+
+func NewCollectionContext(
+	config_obj *config_proto.Config,
+	client_id string,
+	flow_id string) (*contextManager, error) {
+
+	self := &contextManager{
+		config_obj:   config_obj,
+		path_manager: paths.NewFlowPathManager(client_id, flow_id),
+	}
+
+	self.context = &flows_proto.ArtifactCollectorContext{}
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.GetSubject(self.config_obj, self.path_manager.Path(), self.context)
+	if err != nil {
+		return nil, err
+	}
+
+	return self, nil
+}
+
+func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollectorContext)) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	cb(self.context)
+}
+
+func (self *contextManager) Save() error {
+	mu.Lock()
+	defer mu.Unlock()
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return db.SetSubject(self.config_obj, self.path_manager.Path(), self.context)
+}
+
 type serverLogger struct {
 	config_obj   *config_proto.Config
 	path_manager *paths.FlowPathManager
@@ -136,18 +184,13 @@ func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage) error {
 
-	flow_urn := paths.NewFlowPathManager("server", task.SessionId).Path()
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	db, err := datastore.GetDB(self.config_obj)
+	collection_context, err := NewCollectionContext(
+		self.config_obj, "server", task.SessionId)
 	if err != nil {
 		return err
 	}
 
-	err = db.GetSubject(self.config_obj, flow_urn, collection_context)
-	if err != nil {
-		return err
-	}
-
+	db, _ := datastore.GetDB(self.config_obj)
 	db.UnQueueMessageForClient(self.config_obj, "server", task)
 
 	if task.Cancel != nil {
@@ -168,10 +211,12 @@ func (self *ServerArtifactsRunner) processTask(
 	go func() {
 		self.runQuery(ctx, task, collection_context)
 
-		collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
-		collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-		collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
-		db.SetSubject(self.config_obj, flow_urn, collection_context)
+		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
+			context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+			context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
+		})
+		collection_context.Save()
 	}()
 
 	return nil
@@ -180,7 +225,7 @@ func (self *ServerArtifactsRunner) processTask(
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
 	task *crypto_proto.GrrMessage,
-	collection_context *flows_proto.ArtifactCollectorContext) error {
+	collection_context *contextManager) error {
 
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
@@ -268,11 +313,14 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			// Update the artifacts with results in the
 			// context.
-			if !utils.InString(
-				collection_context.ArtifactsWithResults, name) {
-				collection_context.ArtifactsWithResults = append(
-					collection_context.ArtifactsWithResults, name)
-			}
+			collection_context.Modify(
+				func(context *flows_proto.ArtifactCollectorContext) {
+					if !utils.InString(
+						context.ArtifactsWithResults, name) {
+						context.ArtifactsWithResults = append(
+							context.ArtifactsWithResults, name)
+					}
+				})
 		}
 
 		row_idx := 0

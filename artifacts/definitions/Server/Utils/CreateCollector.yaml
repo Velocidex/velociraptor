@@ -40,7 +40,7 @@ parameters:
   - name: TargetBinary
     description: Pack this binary instead.
 
-  - name: Binaries
+  - name: binaries
     description: A list of third party tools to embed into the collector.
     default: '["Autorun","WinPmem"]'
     type: json
@@ -65,6 +65,59 @@ parameters:
 
       SELECT * FROM collect(artifacts=Artifacts,
           args=Parameters, output=filename)
+
+  - name: S3Collection
+    type: hidden
+    default: |
+      LET Artifacts <= parse_json_array(data=Artifacts)
+      LET Parameters <= parse_json(data=Parameters)
+      LET baseline <= SELECT Fqdn FROM info()
+      LET TargetArgs <= parse_json(data=target_args)
+
+      // Make the filename safe on windows.
+      LET filename <= regex_replace(
+          source=format(format="Collection-%s-%s.zip",
+                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
+          re="[^0-9A-Za-z- ]", replace="_")
+
+      LET _ <= log(message="Will collect package " + filename +
+         " and upload to s3 bucket " + TargetArgs.bucket)
+
+      SELECT upload_s3(file=Container,
+          bucket=TargetArgs.bucket,
+          name=filename,
+          credentialskey=TargetArgs.credentialsKey,
+          credentialssecret=TargetArgs.credentialsSecret,
+          region=TargetArgs.region) AS Upload
+      FROM collect(artifacts=Artifacts,
+          args=Parameters, output=tempfile(extension=".zip"))
+
+  - name: GCSCollection
+    type: hidden
+    default: |
+      LET Artifacts <= parse_json_array(data=Artifacts)
+      LET Parameters <= parse_json(data=Parameters)
+      LET baseline <= SELECT Fqdn FROM info()
+      LET TargetArgs <= parse_json(data=target_args)
+      LET GCSBlob <= parse_json(data=TargetArgs.GCSKey)
+
+      // Make the filename safe on windows.
+      LET filename <= regex_replace(
+          source=format(format="Collection-%s-%s.zip",
+                        args=[baseline[0].Fqdn, timestamp(epoch=now())]),
+          re="[^0-9A-Za-z- ]", replace="_")
+
+      LET _ <= log(message="Will collect package " + filename +
+         " and upload to GCS bucket " + TargetArgs.bucket)
+
+      SELECT upload_gcs(file=Container,
+          bucket=TargetArgs.bucket,
+          project=GCSBlob.project_id,
+          name=filename,
+          credentials=TargetArgs.GCSKey
+      ) AS Upload
+      FROM collect(artifacts=Artifacts,
+          args=Parameters, output=tempfile(extension=".zip"))
 
   - name: PackageToolsArtifact
     description: Collects and uploads third party binaries.
@@ -116,7 +169,7 @@ sources:
 
       // Create a zip file with the binaries in it.
       LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
-         output=Payload, args=dict(Binaries=Binaries),
+         output=Payload, args=dict(Binaries=binaries),
          artifact_definitions=PackageToolsArtifact)
 
       // Derive the autoexec configuration depending on the target
@@ -130,28 +183,28 @@ sources:
          ],
          sources=[dict(query=FetchBinaryOverride), ])
 
-      // This one just writes to a zip file.
-      LET StandardConfig <= dict(autoexec=dict(
+      LET CollectionArtifact <= SELECT Value FROM switch(
+        a = { SELECT StandardCollection AS Value FROM scope() WHERE target = "ZIP" },
+        b = { SELECT S3Collection AS Value  FROM scope() WHERE target = "S3" },
+        c = { SELECT GCSCollection AS Value  FROM scope() WHERE target = "GCS" },
+        d = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
+      )
+
+      // Build the autoexec config file depending on the user's
+      // collection type choices.
+      LET autoexec <= dict(autoexec=dict(
           argv=["artifacts", "collect", "-v", "Collector"],
           artifact_definitions=[
             dict(name="Collector",
                  parameters=[
                     dict(name="Artifacts", default=artifacts),
-                    dict(name="Parameters", default=parameters)
+                    dict(name="Parameters", default=parameters),
+                    dict(name="target_args", default=target_args)
                 ],
-                sources=[dict(query=StandardCollection), ]
+                sources=[dict(query=CollectionArtifact[0].Value), ]
            ),
            FetchBinary]
       ))
-
-      // Build the autoexec config file depending on the user's
-      // collection type choices.
-      LET autoexec <= SELECT * FROM switch(
-        a={ SELECT StandardConfig AS ConfigData FROM scope()
-            WHERE target = "ZIP" },
-        b={ SELECT * FROM scope()
-            WHERE log(message="Unknown target type " + target) AND FALSE }
-      )
 
       // Get some tempfiles to work with.
       LET Config <= tempfile()
@@ -192,8 +245,7 @@ sources:
         "--append", Payload,
         copy(dest=Config,
              accessor='data',
-             filename=serialize(format='json',
-             item=autoexec[0].ConfigData)),
+             filename=serialize(format='json', item=autoexec)),
         Destination ])
       WHERE log(message=Stderr)
 

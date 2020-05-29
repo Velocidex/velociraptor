@@ -37,7 +37,7 @@ var setAceOptions = function(ace, ace_options) {
 };
 
 
-exports.AceService.prototype.initializeAceEditor = function(ace) {
+exports.AceService.prototype.initializeAceEditor = function(ace, options) {
     var self = this;
 
     self.grrApiService_.getCached('v1/GetKeywordCompletions').then(function(response) {
@@ -61,10 +61,12 @@ exports.AceService.prototype.initializeAceEditor = function(ace) {
     // finally, bind to langTools:
     langTools.setCompleters([vqlCompleter, langTools.textCompleter]);
 
-    ace.setOptions({
-        enableBasicAutocompletion: true,
-        enableLiveAutocompletion: true,
-    });
+    if (!angular.isDefined(options["enableLiveAutocompletion"])) {
+        ace.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+        });
+    };
 };
 
 exports.AceService.prototype.AceConfig = function(ace) {
@@ -84,7 +86,7 @@ exports.AceService.prototype.AceConfig = function(ace) {
             window.ace_options = JSON.parse(options);
             setAceOptions(ace, window.ace_options);
 
-            self.initializeAceEditor(ace);
+            self.initializeAceEditor(ace, window.ace_options);
         });
     }
 
