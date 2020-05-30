@@ -6,6 +6,7 @@ import (
 	"context"
 	"github.com/Velocidex/ordereddict"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"path"
@@ -102,8 +103,14 @@ func upload_webdav(ctx context.Context, scope *vfilter.Scope,
 	}
 	parsedUrl.Path = path.Join(parsedUrl.Path, name)
 
+	var netTransport = &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout: 30 * time.Second, // TCP connect timeout
+		}).DialContext,
+		TLSHandshakeTimeout: 30 * time.Second,
+	}
 	client := &http.Client{
-		Timeout: time.Second * 30,
+		Transport: netTransport,
 	}
 
 	req, err := http.NewRequest(http.MethodPut, parsedUrl.String(), reader)
