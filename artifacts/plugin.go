@@ -171,6 +171,7 @@ func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.S
 		constants.SCOPE_CONFIG,
 		constants.SCOPE_SERVER_CONFIG,
 		constants.SCOPE_THROTTLE,
+		constants.SCOPE_ROOT,
 		constants.SCOPE_UPLOADER} {
 		value, pres := scope.Resolve(field)
 		if pres {

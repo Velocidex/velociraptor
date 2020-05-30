@@ -69,6 +69,7 @@ const (
 	SCOPE_UPLOADER      = "$uploader"
 	SCOPE_RESPONDER     = "$responder"
 	SCOPE_MOCK          = "$mock"
+	SCOPE_ROOT          = "$root"
 )
 
 var (

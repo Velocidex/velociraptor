@@ -18,32 +18,28 @@ description: |
 type: SERVER
 
 sources:
-  - queries:
-      - LET binpath <= SELECT server_config.Frontend.public_path AS Path
-        FROM scope()
+  - query: |
+      // Get the old inventory.
+      LET inventory <= SELECT * FROM parse_csv(
+            filename="/public/inventory.csv",
+            accessor="fs")
 
-      # Get the old inventory.
-      - LET inventory <= SELECT * FROM parse_csv(
-            filename=path_join(components=[
-                (binpath[0]).Path, "inventory.csv"]))
-
-      # Calculate all the hashes of the files on disk and update the
-      # hash in the new inventory.
-      - LET hashes = SELECT Name,
-           hash(path=FullPath) as Hash,
+      // Calculate all the hashes of the files on disk and update the
+      // hash in the new inventory.
+      LET hashes = SELECT Name,
+           hash(path=FullPath, accessor="fs") as Hash,
            { SELECT * FROM inventory
              WHERE Filename = Name LIMIT 1 } AS OldData
-        FROM glob(globs=(binpath[0]).Path + "/*")
+        FROM glob(globs="/public/*", accessor="fs")
         WHERE OldData.Tool
 
-      # Reconstruct a new inventory file.
-      - LET new_inventory = SELECT OldData.Tool AS Tool,
+      // Reconstruct a new inventory file.
+      LET new_inventory = SELECT OldData.Tool AS Tool,
                OldData.Type AS Type, Name AS Filename,
                Hash.SHA256 AS ExpectedHash
-        FROM hashes
+      FROM hashes
 
-      # Write the new inventory file.
-      - SELECT * FROM write_csv(
-          filename=path_join(components=[
-                (binpath[0]).Path, "inventory.csv"]),
+      // Write the new inventory file.
+      SELECT * FROM write_csv(
+          filename="/public/inventory.csv", accessor="fs",
           query=new_inventory)
