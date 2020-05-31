@@ -6,18 +6,18 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
  {
   "DownloadStatus": "Downloaded",
   "Hash": {
-   "MD5": "be60b58acd9db3f665faef7f38801bae",
-   "SHA1": "34b42846e62ba5302928611fcbc766f2f101a956",
-   "SHA256": "6ca71c13f98eeed8ffc0a9edb8eea787624b90018bd4f64672439af35c3ec820"
+   "MD5": "36265e3e6f63c7aecec8c02d1c616514",
+   "SHA1": "22c525b825bf2f05a604c0d66c16a3e5fda35fd8",
+   "SHA256": "319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318"
   }
  }
 ]SELECT DownloadStatus, Hash FROM Artifact.Generic.Utils.FetchBinary( ToolName="WinPmem", SleepDuration=0, binaryURL="https://storage.googleapis.com/go.velocidex.com/")[
  {
   "DownloadStatus": "Cached",
   "Hash": {
-   "MD5": "be60b58acd9db3f665faef7f38801bae",
-   "SHA1": "34b42846e62ba5302928611fcbc766f2f101a956",
-   "SHA256": "6ca71c13f98eeed8ffc0a9edb8eea787624b90018bd4f64672439af35c3ec820"
+   "MD5": "36265e3e6f63c7aecec8c02d1c616514",
+   "SHA1": "22c525b825bf2f05a604c0d66c16a3e5fda35fd8",
+   "SHA256": "319f6c714d682505157cf72aa928c94ada3c839fb8eb0e503d8770624e897318"
   }
  }
 ]

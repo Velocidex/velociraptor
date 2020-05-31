@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"log"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -102,45 +101,50 @@ func streamQuery(
 
 		scope.Log("Starting query execution.")
 
-		// All the queries will use the same scope. This allows one
-		// query to define functions for the next query in order.
-		for query_idx, query := range arg.Query {
-			query_start := uint64(time.Now().UTC().UnixNano() / 1000)
-
-			vql, err := vfilter.Parse(query.VQL)
+		for _, query := range arg.Query {
+			statements, err := vfilter.MultiParse(query.VQL)
 			if err != nil {
 				scope.Log("VQL Error: %v.", err)
 				return
 			}
 
-			result_chan := vfilter.GetResponseChannel(
-				vql, stream.Context(), scope, int(arg.MaxRow), int(arg.MaxWait))
+			query_start := uint64(time.Now().UTC().UnixNano() / 1000)
 
-			for result := range result_chan {
-				// Skip let queries since they never produce results.
-				if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
-					continue
+			// All the queries will use the same scope. This allows one
+			// query to define functions for the next query in order.
+			for query_idx, vql := range statements {
+				fmt.Printf("Running %v\n", vql.ToString(scope))
+
+				result_chan := vfilter.GetResponseChannel(
+					vql, stream.Context(), scope, int(arg.MaxRow), int(arg.MaxWait))
+
+				for result := range result_chan {
+					fmt.Printf("Got %v\n", string(result.Payload))
+					// Skip let queries since they never produce results.
+					if vql.Let != "" {
+						continue
+					}
+
+					response := &actions_proto.VQLResponse{
+						Query:     query,
+						QueryId:   uint64(query_idx),
+						Part:      uint64(result.Part),
+						Response:  string(result.Payload),
+						Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+						Columns:   result.Columns,
+					}
+
+					scope.Log(
+						"Time %v: %s: Sending response part %d %s (%d rows).",
+						(response.Timestamp-query_start)/1000000,
+						response.Query.Name,
+						result.Part,
+						humanize.Bytes(uint64(len(result.Payload))),
+						result.TotalRows,
+					)
+
+					response_channel <- response
 				}
-
-				response := &actions_proto.VQLResponse{
-					Query:     query,
-					QueryId:   uint64(query_idx),
-					Part:      uint64(result.Part),
-					Response:  string(result.Payload),
-					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-					Columns:   result.Columns,
-				}
-
-				scope.Log(
-					"Time %v: %s: Sending response part %d %s (%d rows).",
-					(response.Timestamp-query_start)/1000000,
-					response.Query.Name,
-					result.Part,
-					humanize.Bytes(uint64(len(result.Payload))),
-					result.TotalRows,
-				)
-
-				response_channel <- response
 			}
 		}
 	}()

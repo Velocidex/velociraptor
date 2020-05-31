@@ -254,23 +254,23 @@ func doQuery() {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", log.Lshortfile)
 	}
 	for _, query := range *queries {
-		vql, err := vfilter.Parse(query)
-		if err != nil {
-			kingpin.FatalIfError(err, "Unable to parse VQL Query")
-		}
+		statements, err := vfilter.MultiParse(query)
+		kingpin.FatalIfError(err, "Unable to parse VQL Query")
 
-		switch *format {
-		case "text":
-			table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
-			table.Render()
-		case "json":
-			outputJSON(ctx, scope, vql, os.Stdout)
+		for _, vql := range statements {
+			switch *format {
+			case "text":
+				table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
+				table.Render()
+			case "json":
+				outputJSON(ctx, scope, vql, os.Stdout)
 
-		case "jsonl":
-			outputJSONL(ctx, scope, vql, os.Stdout)
+			case "jsonl":
+				outputJSONL(ctx, scope, vql, os.Stdout)
 
-		case "csv":
-			outputCSV(ctx, scope, vql, os.Stdout)
+			case "csv":
+				outputCSV(ctx, scope, vql, os.Stdout)
+			}
 		}
 	}
 }

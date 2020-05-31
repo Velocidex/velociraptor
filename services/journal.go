@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -40,7 +41,10 @@ func (self *JournalService) Watch(queue_name string) (
 
 func (self *JournalService) PushRows(
 	path_manager api.PathManager, rows []*ordereddict.Dict) error {
-	return self.qm.PushEventRows(path_manager, rows)
+	if self != nil && self.qm != nil {
+		return self.qm.PushEventRows(path_manager, rows)
+	}
+	return errors.New("Filestore not initialized")
 }
 
 func (self *JournalService) Start() error {

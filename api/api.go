@@ -589,7 +589,7 @@ func (self *ApiServer) VFSStatDirectory(
 
 func (self *ApiServer) VFSStatDownload(
 	ctx context.Context,
-	in *flows_proto.VFSListRequest) (*flows_proto.VFSDownloadInfo, error) {
+	in *flows_proto.VFSStatDownloadRequest) (*flows_proto.VFSDownloadInfo, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.READ_RESULTS
@@ -600,7 +600,7 @@ func (self *ApiServer) VFSStatDownload(
 	}
 
 	result, err := vfsStatDownload(
-		self.config, in.ClientId, in.VfsPath)
+		self.config, in.ClientId, in.Accessor, in.Path)
 	return result, err
 }
 

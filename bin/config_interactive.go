@@ -41,6 +41,12 @@ begin by identifying what type of deployment you need.
 		Options: []string{self_signed, autocert, oauth_sso},
 	}
 
+	server_type_question = &survey.Select{
+		Message: "What OS will the server be deployed on?",
+		Default: runtime.GOOS,
+		Options: []string{"linux", "windows", "darwin"},
+	}
+
 	url_question = &survey.Input{
 		Message: "What is the public DNS name of the Frontend " +
 			"(e.g. www.example.com):",
@@ -78,16 +84,6 @@ begin by identifying what type of deployment you need.
 			Prompt: &survey.Input{
 				Message: "MySQL Database server address",
 				Default: "localhost",
-			},
-		},
-	}
-
-	data_store_file = []*survey.Question{
-		{
-			Name: "Location",
-			Prompt: &survey.Input{
-				Message: "Path to the datastore directory.",
-				Default: os.TempDir(),
 			},
 		},
 	}
@@ -142,7 +138,13 @@ func doGenerateConfigInteractive() {
 	config_obj := config.GetDefaultConfig()
 
 	// Assume we are generating a server config for the running binary
-	config_obj.ServerType = runtime.GOOS
+
+	kingpin.FatalIfError(
+		survey.AskOne(server_type_question,
+			&config_obj.ServerType,
+			survey.WithValidator(survey.Required)), "")
+
+	var default_data_store string
 
 	kingpin.FatalIfError(
 		survey.AskOne(data_store_type,
@@ -150,6 +152,23 @@ func doGenerateConfigInteractive() {
 			survey.WithValidator(survey.Required)), "")
 
 	if config_obj.Datastore.Implementation == filebased_datastore {
+		switch config_obj.ServerType {
+		case "windows":
+			default_data_store = "C:\\Windows\\Temp"
+		default:
+			default_data_store = "/opt/velociraptor"
+		}
+
+		data_store_file := []*survey.Question{
+			{
+				Name: "Location",
+				Prompt: &survey.Input{
+					Message: "Path to the datastore directory.",
+					Default: default_data_store,
+				},
+			},
+		}
+
 		kingpin.FatalIfError(
 			survey.Ask(data_store_file,
 				config_obj.Datastore,

@@ -100,6 +100,8 @@ FileStatsViewController.prototype.updateFile = function() {
       function success(response) {
         this.updateOperation = {
             mtime:    current_mtime,
+            path: components.path,
+            accessor: components.accessor,
             vfs_path: selectedFilePath,
         };
         this.monitorUpdateOperation_();
@@ -129,8 +131,10 @@ FileStatsViewController.prototype.pollUpdateOperationState_ = function() {
   var clientId = this.fileContext['clientId'];
   var url = 'v1/VFSStatDownload';
   var params = {
-    client_id: clientId,
-    vfs_path: this.updateOperation.vfs_path
+      client_id: clientId,
+      path: this.updateOperation.path,
+      accessor: this.updateOperation.accessor,
+      vfs_path: this.updateOperation.vfs_path
   };
   this.grrApiService_.get(url, params).then(
     function success(response) {
