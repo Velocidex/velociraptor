@@ -20,21 +20,20 @@ parameters:
       -nobanner -accepteula -t -a * -c *
 
 sources:
-  - queries:
-      # Get the path to the binary.
-      - |
-        LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-              binaryURL=binaryURL, ToolName="Autorun")
+  - query: |
+      LET os_info <= SELECT Architecture FROM info()
 
-      # Call the binary and return all its output in a single row.
-      - |
-        LET output = SELECT * FROM execve(argv=(bin[0]).FullPath +
+      // Get the path to the binary.
+      LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+              binaryURL=binaryURL, ToolName="Autorun_" + os_info[0].Architecture)
+
+      // Call the binary and return all its output in a single row.
+      LET output = SELECT * FROM execve(argv=(bin[0]).FullPath +
            split(string=AutorunArgs, sep=" "),
            length=10000000)
 
-      # Parse the CSV output and return it as rows. We can filter this further.
-      - |
-        SELECT * FROM foreach(
+      // Parse the CSV output and return it as rows. We can filter this further.
+      SELECT * FROM foreach(
           row=output,
           query={
              SELECT * FROM parse_csv(filename=utf16(string=Stdout),

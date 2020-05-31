@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -85,6 +86,9 @@ func vqlCollectorArgsFromFixture(
 func runTest(fixture *testFixture) (string, error) {
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	err = services.StartJournalService(config_obj)
+	kingpin.FatalIfError(err, "Unable to start services")
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")

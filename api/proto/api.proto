@@ -190,7 +190,7 @@ service API {
         };
     }
 
-    rpc VFSStatDownload(VFSListRequest) returns (VFSDownloadInfo) {
+    rpc VFSStatDownload(VFSStatDownloadRequest) returns (VFSDownloadInfo) {
         option (google.api.http) = {
             get: "/api/v1/VFSStatDownload",
         };

@@ -21,7 +21,7 @@ sources:
           query={
             SELECT Stdout, Stderr,
                    if(condition=Complete,
-                      then=upload(file=Tempfile)) As Upload
+                      then=upload(file=Tempfile, name="PhysicalMemory.aff4")) As Upload
             FROM execve(
                argv=[FullPath, "-dd", "-o", Tempfile, "-t", "-c", "snappy"],
                sep="\r\n")

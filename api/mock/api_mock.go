@@ -980,7 +980,7 @@ func (mr *MockAPIClientMockRecorder) VFSStatDirectory(arg0, arg1 interface{}, ar
 }
 
 // VFSStatDownload mocks base method
-func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto2.VFSListRequest, arg2 ...grpc.CallOption) (*proto2.VFSDownloadInfo, error) {
+func (m *MockAPIClient) VFSStatDownload(arg0 context.Context, arg1 *proto2.VFSStatDownloadRequest, arg2 ...grpc.CallOption) (*proto2.VFSDownloadInfo, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

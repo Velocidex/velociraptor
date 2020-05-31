@@ -753,7 +753,7 @@ var (
 )
 
 func request_API_VFSStatDownload_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_4.VFSListRequest
+	var protoReq proto_4.VFSStatDownloadRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -769,7 +769,7 @@ func request_API_VFSStatDownload_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_API_VFSStatDownload_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_4.VFSListRequest
+	var protoReq proto_4.VFSStatDownloadRequest
 	var metadata runtime.ServerMetadata
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_API_VFSStatDownload_0); err != nil {

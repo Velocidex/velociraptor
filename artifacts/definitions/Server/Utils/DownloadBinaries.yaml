@@ -14,14 +14,14 @@ parameters:
   - name: binaryList
     default: |
       Tool,Type,URL,Filename
-      Autorun,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
-      Autorun,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
+      Autorun_amd64,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
+      Autorun_x86,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
       WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
       Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
       Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
-      VelociraptorWindows,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-windows-amd64.exe,velociraptor-v0.4.4-windows-amd64.exe
-      VelociraptorLinux,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-linux-amd64,velociraptor-v0.4.4-linux-amd64
-      VelociraptorDarwin,.,https://storage.googleapis.com/releases.velocidex.com/velociraptor/0.4.4-pre/velociraptor-v0.4.4-darwin-amd64,velociraptor-v0.4.4-darwin-amd64
+      VelociraptorWindows,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-windows-amd64.exe
+      VelociraptorLinux,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-linux-amd64
+      VelociraptorDarwin,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-darwin-amd64
 
 sources:
   - queries:

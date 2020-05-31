@@ -26,6 +26,12 @@ message VFSListResponse {
   string flow_id = 10;
 }
 
+message VFSStatDownloadRequest {
+    string client_id = 1;
+    string accessor = 4;
+    string path = 5;
+}
+
 message VFSListRequest {
     string client_id = 1 [(sem_type) = {
             description: "The client to list",

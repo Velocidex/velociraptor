@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -102,6 +103,13 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	flow_id, err := artifacts.ScheduleArtifactCollection(
 		config_obj, principal, request)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
+	// Notify the client about it.
+	err = services.NotifyListener(config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

@@ -72,6 +72,7 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -315,16 +316,15 @@ func vfsStatDirectory(
 func vfsStatDownload(
 	config_obj *config_proto.Config,
 	client_id string,
-	vfs_path string) (*flows_proto.VFSDownloadInfo, error) {
+	accessor, path string) (*flows_proto.VFSDownloadInfo, error) {
+
+	path_manager := paths.NewFlowPathManager(client_id, "").GetVFSDownloadInfoPath(
+		accessor, path)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
-
-	components := utils.SplitComponents(vfs_path)
-	vfs_components := append([]string{
-		"clients", client_id, "vfs_files"}, components...)
 
 	result := &flows_proto.VFSDownloadInfo{}
 
@@ -332,11 +332,13 @@ func vfsStatDownload(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
-	vfs_urn := utils.JoinComponents(vfs_components, "/")
-	err = db.GetSubject(config_obj, vfs_urn, result)
+	err = db.GetSubject(config_obj, path_manager.Path(), result)
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("Readig from %v\n", path_manager.Path())
+	utils.Debug(result)
 
 	return result, nil
 }
