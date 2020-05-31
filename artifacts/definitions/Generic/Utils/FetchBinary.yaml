@@ -80,7 +80,9 @@ sources:
         FROM http_client(
             url=(inventory_url[0]).URL + Filename,
             tempfile_extension=".exe", remove_last=TRUE)
-        WHERE Hash.SHA256 = ExpectedHash
+        WHERE log(message=format(format="hash of %v: %v, expected %v", args=[
+                  Content, Hash.SHA256, ExpectedHash]))
+              AND Hash.SHA256 = ExpectedHash
 
       # Check if the existing file in the binary file cache matches
       # the hash.

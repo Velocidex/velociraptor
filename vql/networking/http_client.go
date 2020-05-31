@@ -320,18 +320,13 @@ func (self *_HttpPlugin) Call(
 					if ok {
 						scope.Log("Adding global destructor for %v", tmpfile.Name())
 						root.AddDestructor(func() {
-							remove_tmpfile(tmpfile, scope)
+							remove_tmpfile(tmpfile.Name(), scope)
 						})
 					}
 				}
 			} else {
-				scope.AddDestructor(func() { remove_tmpfile(tmpfile, scope) })
+				scope.AddDestructor(func() { remove_tmpfile(tmpfile.Name(), scope) })
 			}
-
-			scope.AddDestructor(func() {
-				scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
-				os.Remove(tmpfile.Name())
-			})
 
 			scope.Log("http_client: Downloading %v into %v",
 				arg.Url, tmpfile.Name())
@@ -390,17 +385,18 @@ func (self _HttpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 // Make sure the file is removed when the query is done.
-func remove_tmpfile(tmpfile *os.File, scope *vfilter.Scope) {
-	scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
+func remove_tmpfile(tmpfile string, scope *vfilter.Scope) {
+	scope.Log("tempfile: removing tempfile %v", tmpfile)
 
 	// On windows especially we can not remove files that
 	// are opened by something else, so we keep trying for
 	// a while.
 	for i := 0; i < 100; i++ {
-		err := os.Remove(tmpfile.Name())
+		err := os.Remove(tmpfile)
 		if err == nil {
 			break
 		}
+		utils.Debug(err)
 		time.Sleep(time.Second)
 	}
 }
