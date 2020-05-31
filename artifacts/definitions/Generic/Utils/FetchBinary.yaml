@@ -48,15 +48,17 @@ sources:
          c={SELECT log(message="binaryURL not set and no server config."),
             NULL AS URL FROM info_cache})
 
-      # Fetch the inventory from the repository.
-      - LET inventory_data = SELECT * FROM http_client(
+      # Fetch the inventory from the repository. Force fresh data.
+      - LET inventory_data = SELECT * FROM foreach(row=inventory_url,
+        query={ SELECT * FROM http_client(
            chunk_size=1000000,
-           url=(inventory_url[0]).URL + "inventory.csv")
-           WHERE inventory_url
+           url=format(format="%sinventory.csv?ts=%v", args=[URL, now()]))
+        })
 
       # Parse the inventory: Tool,Type,Filename,ExpectedHash
-      - LET inventory = SELECT * FROM parse_csv(
-           filename=inventory_data.Content, accessor="data")
+      - LET inventory = SELECT * FROM foreach(row=inventory_data,
+           query={ SELECT * FROM parse_csv(
+                   filename=Content, accessor="data") })
 
       # Figure out which tool we need based on the Architecture and
       # the required tool.

@@ -25,7 +25,7 @@ sources:
 
       // Get the path to the binary.
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-              binaryURL=binaryURL, ToolName="Autorun_" + os_info[0].Architecture)
+              binaryURL=binaryURL, ToolName=("Autorun_" + os_info[0].Architecture))
 
       // Call the binary and return all its output in a single row.
       LET output = SELECT * FROM execve(argv=(bin[0]).FullPath +
