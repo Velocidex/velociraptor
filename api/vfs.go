@@ -337,9 +337,6 @@ func vfsStatDownload(
 		return nil, err
 	}
 
-	fmt.Printf("Readig from %v\n", path_manager.Path())
-	utils.Debug(result)
-
 	return result, nil
 }
 
