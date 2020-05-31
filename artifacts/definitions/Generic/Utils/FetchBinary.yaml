@@ -77,7 +77,7 @@ sources:
                  dest=path_join(components=[(binpath[0]).Path, Filename])) AS FullPath
         FROM http_client(
             url=(inventory_url[0]).URL + Filename,
-            tempfile_extension=".exe")
+            tempfile_extension=".exe", remove_last=TRUE)
         WHERE Hash.SHA256 = ExpectedHash
 
       # Check if the existing file in the binary file cache matches

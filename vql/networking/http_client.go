@@ -62,6 +62,7 @@ type _HttpPluginRequest struct {
 	// Sometimes it is useful to be able to query misconfigured hosts.
 	DisableSSLSecurity bool   `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
 	TempfileExtension  string `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
+	RemoveLast         bool   `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
 }
 
 type _HttpPluginResponse struct {
@@ -305,10 +306,26 @@ func (self *_HttpPlugin) Call(
 		}
 
 		if arg.TempfileExtension != "" {
+
 			tmpfile, err := tempfile.TempFile("", "tmp", arg.TempfileExtension)
 			if err != nil {
 				scope.Log("http_client: %v", err)
 				return
+			}
+
+			if arg.RemoveLast {
+				root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
+				if pres {
+					root, ok := root_any.(*vfilter.Scope)
+					if ok {
+						scope.Log("Adding global destructor for %v", tmpfile.Name())
+						root.AddDestructor(func() {
+							remove_tmpfile(tmpfile, scope)
+						})
+					}
+				}
+			} else {
+				scope.AddDestructor(func() { remove_tmpfile(tmpfile, scope) })
 			}
 
 			scope.AddDestructor(func() {
@@ -369,6 +386,22 @@ func (self _HttpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:    self.Name(),
 		Doc:     "Make a http request.",
 		ArgType: type_map.AddType(scope, &_HttpPluginRequest{}),
+	}
+}
+
+// Make sure the file is removed when the query is done.
+func remove_tmpfile(tmpfile *os.File, scope *vfilter.Scope) {
+	scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
+
+	// On windows especially we can not remove files that
+	// are opened by something else, so we keep trying for
+	// a while.
+	for i := 0; i < 100; i++ {
+		err := os.Remove(tmpfile.Name())
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
 	}
 }
 
