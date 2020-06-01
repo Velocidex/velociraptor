@@ -20,6 +20,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/juju/ratelimit"
@@ -121,7 +122,7 @@ func (self *Server) ProcessSingleUnauthenticatedMessage(
 	if message.CSR != nil {
 		err := enroll(ctx, self, message.CSR)
 		if err != nil {
-			self.logger.Error("Enrol Error: %s", err)
+			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}
 	}
 }

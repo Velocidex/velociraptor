@@ -19,6 +19,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -39,7 +40,7 @@ func enroll(
 	client_id, err := server.manager.AddCertificateRequest(csr.Pem)
 	if err != nil {
 		logger := logging.GetLogger(server.config, &logging.FrontendComponent)
-		logger.Error("While enrolling %v: %v", client_id, err)
+		logger.Error(fmt.Sprintf("While enrolling %v: %v", client_id, err))
 		return err
 	}
 
