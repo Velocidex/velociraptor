@@ -70,8 +70,10 @@ FileStatsViewController.prototype.getAccessorAndPath = function(path) {
 };
 
 FileStatsViewController.prototype.updateFile = function() {
+  var self = this;
+
   if (this.updateInProgress) {
-    return;
+      self.stopMonitorUpdateOperation_();
   }
 
   var current_mtime = 0;
@@ -98,13 +100,13 @@ FileStatsViewController.prototype.updateFile = function() {
   this.updateInProgress = true;
   this.grrApiService_.post(url, params).then(
       function success(response) {
-        this.updateOperation = {
+        self.updateOperation = {
             mtime:    current_mtime,
             path: components.path,
             accessor: components.accessor,
             vfs_path: selectedFilePath,
         };
-        this.monitorUpdateOperation_();
+        self.monitorUpdateOperation_();
       }.bind(this),
       function failure(response) {
         this.stopMonitorUpdateOperation_();

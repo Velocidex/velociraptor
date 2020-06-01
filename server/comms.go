@@ -39,6 +39,7 @@ import (
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/acme/autocert"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -90,10 +91,11 @@ func PrepareFrontendMux(
 	// Publically accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
 	// from the filestore.
-	router.Handle("/public/", http.FileServer(
-		api.NewFileSystem(config_obj,
-			file_store.GetFileStore(config_obj),
-			"/public/")))
+	router.Handle("/public/", GetLoggingHandler(config_obj, "/public")(
+		http.FileServer(
+			api.NewFileSystem(config_obj,
+				file_store.GetFileStore(config_obj),
+				"/public/"))))
 }
 
 // Starts the frontend over HTTPS.
@@ -609,4 +611,51 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			}
 		}
 	})
+}
+
+// Record the status of the request so we can log it.
+type statusRecorder struct {
+	http.ResponseWriter
+	http.Flusher
+	status int
+	error  []byte
+}
+
+func (self *statusRecorder) WriteHeader(code int) {
+	self.status = code
+	self.ResponseWriter.WriteHeader(code)
+}
+
+func (self *statusRecorder) Write(buf []byte) (int, error) {
+	if self.status == 500 {
+		self.error = buf
+	}
+
+	return self.ResponseWriter.Write(buf)
+}
+
+func GetLoggingHandler(config_obj *config_proto.Config,
+	handler string) func(http.Handler) http.Handler {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			rec := &statusRecorder{
+				w,
+				w.(http.Flusher),
+				200, nil}
+
+			defer func() {
+				logger.WithFields(
+					logrus.Fields{
+						"method":     r.Method,
+						"url":        r.URL.Path,
+						"remote":     r.RemoteAddr,
+						"user-agent": r.UserAgent(),
+						"status":     rec.status,
+						"handler":    handler,
+					}).Info("Access to handler")
+			}()
+			next.ServeHTTP(rec, r)
+		})
+	}
 }

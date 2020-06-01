@@ -60,6 +60,11 @@ begin by identifying what type of deployment you need.
 		Default: "8000",
 	}
 
+	gui_port_question = &survey.Input{
+		Message: "Enter the port for the GUI to listen on.",
+		Default: "8889",
+	}
+
 	data_store_type = &survey.Select{
 		Message: "Please select the datastore implementation\n",
 		Options: []string{filebased_datastore, mysql_datastore},
@@ -193,6 +198,10 @@ func doGenerateConfigInteractive() {
 			{Name: "BindPort", Prompt: port_question},
 			{Name: "Hostname", Prompt: url_question},
 		}, config_obj.Frontend), "")
+
+		kingpin.FatalIfError(survey.Ask([]*survey.Question{
+			{Name: "BindPort", Prompt: gui_port_question},
+		}, config_obj.GUI), "")
 
 		config_obj.Client.UseSelfSignedSsl = true
 		config_obj.Client.ServerUrls = append(
