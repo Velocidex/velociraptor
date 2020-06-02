@@ -1,4 +1,4 @@
-SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/autorunsc64.exe", "/tmp/winpmem_v3.3.rc2.exe"]) WHERE Complete}, a={SELECT Complete FROM execve(argv=[ "cmd.exe", "/c", "del /Q C:\\tmp\\autorunsc64.exe C:\\tmp\\winpmem_v3.3.rc2.exe"]) WHERE Complete})[
+SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/autorunsc64.exe", "/tmp/winpmem_v3.3.rc3.exe"]) WHERE Complete}, a={SELECT Complete FROM execve(argv=[ "cmd.exe", "/c", "del /Q C:\\tmp\\autorunsc64.exe C:\\tmp\\winpmem_v3.3.rc2.exe"]) WHERE Complete})[
  {
   "Complete": true
  }

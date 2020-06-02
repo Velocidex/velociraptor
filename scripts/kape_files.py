@@ -55,11 +55,11 @@ def read_targets(ctx, project_path):
             glob = target.get("Path", "")
 
             if target.get("Recursive"):
-                glob += "/**10"
+                glob = glob.rstrip("\\") + "/**10"
 
             mask = target.get("FileMask")
             if mask:
-                glob += "/" + mask
+                glob = glob.rstrip("\\") + "/" + mask
 
             # Expand the targets in the glob
             if ".tkape" in glob:
@@ -69,7 +69,7 @@ def read_targets(ctx, project_path):
             ctx.groups[name].add(row_id)
 
             glob = strip_drive(glob)
-
+            glob = remove_fluff(glob)
             ctx.rows.append([
                 row_id,
                 target["Name"],
@@ -116,6 +116,9 @@ def get_csv(rows):
         writer.writerow(row)
 
     return out.getvalue()
+
+def remove_fluff(glob):
+    return glob.replace('%user%', '*')
 
 def format(ctx):
     template = """name: Windows.KapeFiles.Targets

@@ -368,7 +368,7 @@ func (self _ProtobufAssociativeProtocol) GetMembers(
 
 	for _, item := range properties.Prop {
 		// Only real exported fields should be collected.
-		if len(item.JSONName) > 0 {
+		if len(item.OrigName) > 0 && !strings.HasPrefix(item.OrigName, "XXX") {
 			result = append(result, item.OrigName)
 		}
 	}

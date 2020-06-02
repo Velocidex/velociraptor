@@ -166,6 +166,7 @@ parameters:
 sources:
   - query: |
       LET Payload <= tempfile(extension=".zip")
+      LET Artifacts <= parse_json_array(data=artifacts)
 
       // Create a zip file with the binaries in it.
       LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
@@ -174,7 +175,6 @@ sources:
 
       // Derive the autoexec configuration depending on the target
       // options.
-
       LET FetchBinary <= dict(name="Generic.Utils.FetchBinary",
          parameters=[
             dict(name="binaryURL"),
@@ -189,22 +189,37 @@ sources:
         c = { SELECT GCSCollection AS Value  FROM scope() WHERE target = "GCS" },
         d = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
+      LET definitions <= SELECT * FROM chain(
+      a = { SELECT name, parameters, sources
+            FROM artifact_definitions(names=Artifacts)
+            WHERE log(message="Adding artifact_definition for " + name) },
+
+      b = { SELECT "Collector" AS name, (
+                    dict(name="Artifacts", default=artifacts),
+                    dict(name="Parameters", default=parameters),
+                    dict(name="target_args", default=target_args),
+                ) AS parameters,
+                (
+                  dict(query=CollectionArtifact[0].Value),
+                ) AS sources
+            FROM scope() },
+      c = { SELECT "Generic.Utils.FetchBinary" AS name,
+            (
+               dict(name="binaryURL"),
+               dict(name="SleepDuration"),
+               dict(name="ToolName"),
+            ) AS parameters,
+            (
+               dict(query=FetchBinaryOverride),
+            ) AS sources FROM scope()  }
+      )
 
       // Build the autoexec config file depending on the user's
       // collection type choices.
       LET autoexec <= dict(autoexec=dict(
           argv=["artifacts", "collect", "-v", "Collector"],
-          artifact_definitions=[
-            dict(name="Collector",
-                 parameters=[
-                    dict(name="Artifacts", default=artifacts),
-                    dict(name="Parameters", default=parameters),
-                    dict(name="target_args", default=target_args)
-                ],
-                sources=[dict(query=CollectionArtifact[0].Value), ]
-           ),
-           FetchBinary]
-      ))
+          artifact_definitions=definitions)
+      )
 
       // Get some tempfiles to work with.
       LET Config <= tempfile()
