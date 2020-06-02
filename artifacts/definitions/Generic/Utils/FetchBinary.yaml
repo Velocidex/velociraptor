@@ -89,7 +89,9 @@ sources:
       - LET existing = SELECT FullPath, hash(path=FullPath) AS Hash, Name,
                     "Cached" AS DownloadStatus
         FROM stat(filename=path_join(components=[(binpath[0]).Path, Filename]))
-        WHERE Hash.SHA256 = ExpectedHash
+        WHERE Hash.SHA256 = ExpectedHash AND log(
+            message=format(format="hash of %v: %v, expected %v", args=[
+            FullPath, Hash.SHA256, ExpectedHash]))
 
       # Find the required_tool either if in the local cache or
       # download it (and put it in the cache for next time). If we

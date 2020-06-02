@@ -317,8 +317,8 @@ scrape_configs:
 }
 
 func doClientDeb() {
-	config_obj, err := DefaultConfigLoader.WithRequiredClient().
-		WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.
+		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	res, err := yaml.Marshal(getClientConfig(config_obj))

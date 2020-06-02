@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -99,7 +101,8 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 		"Generic.Client.Info/BasicInformation", []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("ClientId", self.client_id).
-				Set("Hostname", hostname),
+				Set("Hostname", hostname).
+				Set("Labels", []string{"Foo"}),
 		})
 
 	// Wait here until the client is fully interrogated
@@ -116,6 +119,19 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 
 	// Check that we record the last flow id.
 	assert.Equal(self.T(), client_info.LastInterrogateFlowId, flow_id)
+
+	// Make sure the labels are updated in the client info
+	assert.Equal(self.T(), client_info.Labels, []string{"Foo"})
+
+	// Check the label is set on the client.
+	err = clients.LabelClients(
+		self.config_obj,
+		&api_proto.LabelClientsRequest{
+			ClientIds: []string{self.client_id},
+			Labels:    []string{"Foo"},
+			Operation: "check",
+		})
+	assert.NoError(self.T(), err)
 }
 
 func (self *ServicesTestSuite) TestEnrollService() {

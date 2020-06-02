@@ -41,7 +41,10 @@ FROM clients(search='label:*') ORDER BY client_id
   "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_ip_class": 1
+  "last_ip_class": 1,
+  "labels": [
+   "WinBoxes"
+  ]
  }
 ]SELECT label(client_id='C.4f5e52adf0a337a9', labels=['WinBoxes'], op='check') AS HasLabel FROM scope()[
  {

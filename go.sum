@@ -56,6 +56,8 @@ github.com/Velocidex/ordereddict v0.0.0-20200428070154-4cd604876fe5 h1:mqiDJyva9
 github.com/Velocidex/ordereddict v0.0.0-20200428070154-4cd604876fe5/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20200531114711-b012020161d2 h1:MHaipwXlTeHgVAooEwPXFYjVrle2W3ydQMPHZIR/bQ4=
 github.com/Velocidex/ordereddict v0.0.0-20200531114711-b012020161d2/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
+github.com/Velocidex/ordereddict v0.0.0-20200602133321-52f2ea5ca30e h1:nujuSZcyC629QDmObPO1JgtxX9V2XhVYn57tNRpISts=
+github.com/Velocidex/ordereddict v0.0.0-20200602133321-52f2ea5ca30e/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49 h1:TJVN1zYl5sKJUq571gYqU/5VqFIap9MUo2KNujc0fcg=
 github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49/go.mod h1:kfPUQ2gP0xtIydiR52dirNYt4OvCr+iZuepL4XaIk58=
 github.com/Velocidex/yaml/v2 v2.2.5 h1:8XZwR8tmm5UWAXotI3fL17s9fjKEMqZ293fgqUiMhBw=

@@ -135,10 +135,10 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 			scope := vql_subsystem.MakeScope()
 
 			// Append the queries to the query list.
+			source.Queries = nil
 			for _, vql := range multi_vql {
 				source.Queries = append(source.Queries, vql.ToString(scope))
 			}
-			source.Query = ""
 		}
 	}
 
@@ -199,10 +199,10 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				scope := vql_subsystem.MakeScope()
 
 				// Append the queries to the query list.
+				source.Queries = nil
 				for _, vql := range multi_vql {
 					source.Queries = append(source.Queries, vql.ToString(scope))
 				}
-				source.Query = ""
 			}
 
 			if len(source.Queries) == 0 {
