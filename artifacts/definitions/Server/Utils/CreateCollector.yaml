@@ -173,22 +173,13 @@ sources:
          output=Payload, args=dict(Binaries=binaries),
          artifact_definitions=PackageToolsArtifact)
 
-      // Derive the autoexec configuration depending on the target
-      // options.
-      LET FetchBinary <= dict(name="Generic.Utils.FetchBinary",
-         parameters=[
-            dict(name="binaryURL"),
-            dict(name="SleepDuration"),
-            dict(name="ToolName")
-         ],
-         sources=[dict(query=FetchBinaryOverride), ])
-
       LET CollectionArtifact <= SELECT Value FROM switch(
         a = { SELECT StandardCollection AS Value FROM scope() WHERE target = "ZIP" },
         b = { SELECT S3Collection AS Value  FROM scope() WHERE target = "S3" },
         c = { SELECT GCSCollection AS Value  FROM scope() WHERE target = "GCS" },
         d = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
+
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, parameters, sources
             FROM artifact_definitions(names=Artifacts)

@@ -1,0 +1,19 @@
+SELECT * FROM items(item=[1,2])[
+ {
+  "_key": 0,
+  "_value": 1
+ },
+ {
+  "_key": 1,
+  "_value": 2
+ }
+]SELECT * FROM items(item=dict(X=1, Y=2))[
+ {
+  "_key": "X",
+  "_value": 1
+ },
+ {
+  "_key": "Y",
+  "_value": 2
+ }
+]

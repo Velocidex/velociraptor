@@ -1,0 +1,3 @@
+Queries:
+  - SELECT * FROM items(item=[1,2])
+  - SELECT * FROM items(item=dict(X=1, Y=2))
