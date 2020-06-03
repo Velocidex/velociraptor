@@ -19,6 +19,7 @@ package filesystem
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -113,6 +114,76 @@ func (self TempfileFunction) Info(scope *vfilter.Scope,
 	}
 }
 
+type _TempdirRequest struct {
+	RemoveLast bool `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
+}
+
+type TempdirFunction struct{}
+
+func (self *TempdirFunction) Call(ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	if err != nil {
+		scope.Log("tempdir: %s", err)
+		return false
+	}
+
+	arg := &_TempfileRequest{}
+	err = vfilter.ExtractArgs(scope, args, arg)
+	if err != nil {
+		scope.Log("tempdir: %s", err.Error())
+		return false
+	}
+
+	dir, err := ioutil.TempDir("", "tmp")
+	if err != nil {
+		scope.Log("tempdir: %v", err)
+		return false
+	}
+
+	// Make sure the file is removed when the query is done.
+	removal := func() {
+		scope.Log("tempfile: removing tempfile %v", dir)
+
+		// On windows especially we can not remove files that
+		// are opened by something else, so we keep trying for
+		// a while.
+		for i := 0; i < 100; i++ {
+			err := os.RemoveAll(dir)
+			if err == nil {
+				break
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	if arg.RemoveLast {
+		root_any, pres := scope.Resolve(constants.SCOPE_ROOT)
+		if pres {
+			root, ok := root_any.(*vfilter.Scope)
+			if ok {
+				scope.Log("Adding global destructor for %v", dir)
+				root.AddDestructor(removal)
+			}
+		}
+	} else {
+		scope.AddDestructor(removal)
+	}
+	return dir
+}
+
+func (self TempdirFunction) Info(scope *vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "tempdir",
+		Doc:     "Create a temporary directory. The directory will be removed when the query ends.",
+		ArgType: type_map.AddType(scope, &_TempfileRequest{}),
+	}
+}
+
 func init() {
+	vql_subsystem.RegisterFunction(&TempdirFunction{})
 	vql_subsystem.RegisterFunction(&TempfileFunction{})
 }
