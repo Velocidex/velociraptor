@@ -15,6 +15,7 @@ import (
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -41,7 +42,69 @@ type DataStoreRow struct {
 }
 
 type MySQLDataStore struct {
-	FileBaseDataStore
+	clock vtesting.Clock
+}
+
+func (self *MySQLDataStore) GetClientTasks(
+	config_obj *config_proto.Config,
+	client_id string,
+	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
+	result := []*crypto_proto.GrrMessage{}
+	now := uint64(self.clock.Now().UTC().UnixNano() / 1000)
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	now_urn := client_path_manager.Task(now).Path()
+
+	tasks, err := self.ListChildren(
+		config_obj, client_path_manager.TasksDirectory().Path(), 0, 100)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task_urn := range tasks {
+		// Only read until the current timestamp.
+		if task_urn > now_urn {
+			break
+		}
+
+		// Here we read the task from the task_urn and remove
+		// it from the queue.
+		message := &crypto_proto.GrrMessage{}
+		err = self.GetSubject(config_obj, task_urn, message)
+		if err != nil {
+			continue
+		}
+
+		if !do_not_lease {
+			err = self.DeleteSubject(config_obj, task_urn)
+			if err != nil {
+				return nil, err
+			}
+		}
+		result = append(result, message)
+	}
+	return result, nil
+}
+
+func (self *MySQLDataStore) UnQueueMessageForClient(
+	config_obj *config_proto.Config,
+	client_id string,
+	message *crypto_proto.GrrMessage) error {
+
+	client_path_manager := paths.NewClientPathManager(client_id)
+	return self.DeleteSubject(config_obj,
+		client_path_manager.Task(message.TaskId).Path())
+}
+
+func (self *MySQLDataStore) QueueMessageForClient(
+	config_obj *config_proto.Config,
+	client_id string,
+	req *crypto_proto.GrrMessage) error {
+
+	req.TaskId = uint64(self.clock.Now().UTC().UnixNano() / 1000)
+	client_path_manager := paths.NewClientPathManager(client_id)
+	return self.SetSubject(config_obj,
+		client_path_manager.Task(req.TaskId).Path(), req)
 }
 
 func (self *MySQLDataStore) GetSubject(
@@ -306,7 +369,7 @@ func NewMySQLDataStore(config_obj *config_proto.Config) (DataStore, error) {
 		}
 	}
 
-	return &MySQLDataStore{FileBaseDataStore{clock: vtesting.RealClock{}}}, nil
+	return &MySQLDataStore{clock: vtesting.RealClock{}}, nil
 }
 
 func initializeDatabase(
