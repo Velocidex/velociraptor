@@ -10,6 +10,13 @@ const FormController = function($scope) {
     this.text_size = 1;
     this.dateOptions = {allowInvalid: true};
     this.altInputFormats = ["M!/d!/yyyy"];
+
+    if (this.scope_["type"] == "timestamp") {
+        var value = this.scope_.value[this.scope_.field];
+        if (angular.isNumber(value)) {
+            this.date_time = new Date(value * 1000);
+        }
+    }
   $scope.$watch('controller.date_time',
                 this.onDateChange_.bind(this));
 };
@@ -23,11 +30,16 @@ FormController.prototype.onDateChange_ = function() {
         } catch(e) {
             this.scope_.value[this.scope_.field] = this.date_time;
         }
-  }
+    }
 };
 
-FormController.prototype.openDatePopup = function() {
-  this.popup_opened = true;
+FormController.prototype.openDatePopup = function(e) {
+    this.popup_opened = true;
+    if (angular.isDefined(e)) {
+        e.stopPropagation();
+        e.preventDefault();
+        return false;
+    }
 };
 
 FormController.prototype.resizeTextArea = function(e) {

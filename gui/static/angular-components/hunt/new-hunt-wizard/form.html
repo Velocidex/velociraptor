@@ -4,17 +4,33 @@
                  on-reject="onReject()">
 
   <!-- Configure flow -->
-  <grr-wizard-form-page title="Select Artifacts to collect">
+  <grr-wizard-form-page title="Select Artifacts to collect"
+                        is-valid="controller.names.length > 0"
+                        >
     <grr-search-artifact names="controller.names"
                          params="controller.params"
                          type="'CLIENT'">
     </grr-search-artifact>
-    <dl class="dl-horizontal dl-flow">
-      <dt>Ops/Sec</dt>
-      <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
-      <dt>Timeout</dt>
-      <dd><input ng-model="controller.timeout" type="text"></input></dd>
-    </dl>
+    <form class="container">
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label">Ops/Sec</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" ng-model="controller.ops_per_second" placeholder="Unlimited">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label">Timeout (Sec)</label>
+        <div class="col-sm-10">
+          <input type="text" ng-model="controller.timeout" class="form-control">
+        </div>
+      </div>
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label">Expiry</label>
+        <div class="col-sm-10">
+          <grr-form type="'timestamp'" field="'expiry'" value="controller"></grr-form>
+        </div>
+      </div>
+    </form>
   </grr-wizard-form-page>
 
   <!-- Configure hunt -->
@@ -34,10 +50,7 @@
   <!-- Review -->
   <grr-wizard-form-page title="Review"
                         next-button-label="Create Hunt">
-
-    <grr-new-hunt-review-page create-hunt-args="createHuntArgs">
-    </grr-new-hunt-review-page>
-
+    <grr-inspect-json json="controller.createHuntArgsJson"></grr-inspect-json>
   </grr-wizard-form-page>
 
   <!-- Submit the hunt and show the status -->
@@ -50,7 +63,6 @@
     <grr-new-hunt-status-page response="controller.serverResponse"
                               create-hunt-args="createHuntArgs">
     </grr-new-hunt-status-page>
-
   </grr-wizard-form-page>
 
 </grr-wizard-form>
