@@ -29,9 +29,11 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
     this.names = [];
     this.params = {};
     this.ops_per_second;
-    this.timeout;
-
+    this.timeout = 600;
+    this.expiry = (new Date()).getTime() / 1000 + 7 * 24 * 60 * 60;  // 1 week.
     this.currentPage = 0;
+
+    this.createHuntArgsJson = "";
 
     this.hunt_conditions = {};
     if (angular.isUndefined(this.scope_['createHuntArgs'])) {
@@ -56,6 +58,7 @@ FormController.prototype.onValueChange_ = function(page_index) {
     createHuntArgs.start_request.parameters = {env: env};
     createHuntArgs.start_request.ops_per_second = this.ops_per_second;
     createHuntArgs.start_request.timeout = this.timeout;
+    createHuntArgs.expires = this.expiry * 1000000;
 
     if (self.hunt_conditions.condition == "labels") {
         createHuntArgs.condition = {"labels": {"label": [self.hunt_conditions.label]}};
@@ -63,6 +66,7 @@ FormController.prototype.onValueChange_ = function(page_index) {
         createHuntArgs.condition = {"os": {"os": self.hunt_conditions.os}};
     }
 
+    this.createHuntArgsJson = JSON.stringify(createHuntArgs, null, 2);
 };
 
 
@@ -78,6 +82,13 @@ FormController.prototype.sendRequest = function() {
     this.grrApiService_.post('v1/CreateHunt', createHuntArgs)
         .then(function resolve(response) {
             this.serverResponse = response;
+            var onResolve = this.scope_['onResolve'];
+
+            if (onResolve && this.serverResponse) {
+                var huntId = this.serverResponse['data']['flow_id'];
+                onResolve({huntId: huntId});
+            }
+
         }.bind(this), function reject(response) {
             this.serverResponse = response;
             this.serverResponse['error'] = true;
@@ -93,11 +104,6 @@ FormController.prototype.sendRequest = function() {
  * @export
  */
 FormController.prototype.resolve = function() {
-  var onResolve = this.scope_['onResolve'];
-  if (onResolve && this.serverResponse) {
-    var huntId = this.serverResponse['data']['flow_id'];
-    onResolve({huntId: huntId});
-  }
 };
 
 
