@@ -4,10 +4,18 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message ArgDescriptor {
+    string name = 1;
+    string type = 2;
+    string description = 3;
+    bool is_repeated = 4;
+}
+
 message Completion {
     string name = 1;
     string description = 2;
     string type = 3;
+    repeated ArgDescriptor args = 4;
 }
 
 message KeywordCompletions {

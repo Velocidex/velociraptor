@@ -19,6 +19,7 @@ package api
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/golang/protobuf/descriptor"
@@ -58,6 +59,8 @@ var (
 		"ArtifactParameter",
 		"Artifacts",
 	}
+
+	doc_regex = regexp.MustCompile("doc=(.+)")
 )
 
 func describeTypes() *artifacts_proto.Types {
@@ -290,6 +293,7 @@ func (self *ApiServer) GetKeywordCompletions(
 			Name:        item.Name,
 			Description: item.Doc,
 			Type:        "Function",
+			Args:        getArgDescriptors(item.ArgType, type_map, scope),
 		})
 	}
 
@@ -298,6 +302,7 @@ func (self *ApiServer) GetKeywordCompletions(
 			Name:        item.Name,
 			Description: item.Doc,
 			Type:        "Plugin",
+			Args:        getArgDescriptors(item.ArgType, type_map, scope),
 		})
 	}
 
@@ -309,8 +314,64 @@ func (self *ApiServer) GetKeywordCompletions(
 		result.Items = append(result.Items, &api_proto.Completion{
 			Name: "Artifact." + name,
 			Type: "Artifact",
+			Args: getArtifactParamDescriptors(name, type_map, repository),
 		})
 	}
 
 	return result, nil
+}
+
+func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
+	scope *vfilter.Scope) []*api_proto.ArgDescriptor {
+	args := []*api_proto.ArgDescriptor{}
+	arg_desc, pres := type_map.Get(scope, arg_type)
+	if pres {
+		for _, k := range arg_desc.Fields.Keys() {
+			v_any, _ := arg_desc.Fields.Get(k)
+			v, ok := v_any.(*vfilter.TypeReference)
+			if !ok {
+				continue
+			}
+
+			target := v.Target
+			if v.Repeated {
+				target = " list of " + target
+			}
+
+			required := ""
+			if strings.Contains(v.Tag, "required") {
+				required = "(required)"
+			}
+			doc := ""
+			matches := doc_regex.FindStringSubmatch(v.Tag)
+			if matches != nil {
+				doc = matches[1]
+			}
+			args = append(args, &api_proto.ArgDescriptor{
+				Name:        k,
+				Description: doc + required,
+				Type:        target,
+			})
+		}
+	}
+	return args
+}
+
+func getArtifactParamDescriptors(name string, type_map *vfilter.TypeMap,
+	repository *artifacts.Repository) []*api_proto.ArgDescriptor {
+	args := []*api_proto.ArgDescriptor{}
+	artifact, pres := repository.Get(name)
+	if !pres {
+		return args
+	}
+
+	for _, parameter := range artifact.Parameters {
+		args = append(args, &api_proto.ArgDescriptor{
+			Name:        parameter.Name,
+			Description: parameter.Description,
+			Type:        "Artifact Parameter",
+		})
+	}
+
+	return args
 }

@@ -63,7 +63,7 @@ func GetCollectionPath(client_id, flow_id string) string {
 func closeContext(
 	config_obj *config_proto.Config,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
-	if !collection_context.Dirty {
+	if !collection_context.Dirty || collection_context.ClientId == "" {
 		return nil
 	}
 
