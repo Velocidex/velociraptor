@@ -35,7 +35,7 @@
           <tr grr-infinite-table page-size="100"
               grr-api-items-provider url="'v1/ListHunts'"
               ng-click="controller.huntSelect($event, item)"
-              ng-class="{'row-selected': item.hunt_id == selected_hunt}"
+              ng-class="{'row-selected': item.hunt_id == selected_hunt.hunt_id }"
               >
 
             <td><grr-hunt-status-icon state="controller.huntState(item)"></grr-hunt-status-icon></td>
@@ -56,14 +56,14 @@
 <div class='modal-footer'>
   <ul class="nav pull-right">
     <button class="btn btn-primary Next ng-binding"
-            ng-disabled="!selected_hunt"
-            ng-click="resolve()">
-      OK
+            ng-click="reject()">
+      Cancel
     </button>
 
     <button class="btn btn-primary Next ng-binding"
-            ng-click="reject()">
-      Cancel
+            ng-disabled="!selected_hunt"
+            ng-click="resolve()">
+      OK
     </button>
   </ul>
 </div>

@@ -155,7 +155,7 @@ HostInfoController.prototype.monitorInterrogateOperation_ = function() {
  * @private
  */
 HostInfoController.prototype.pollInterrogateOperationState_ = function() {
-    var url = 'v1/GetFlowDetails/';
+    var url = 'v1/GetFlowDetails';
     var param = {flow_id: this.interrogateOperationId,
                  client_id: this.clientId};
 

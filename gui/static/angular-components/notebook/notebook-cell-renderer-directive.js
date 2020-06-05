@@ -273,7 +273,7 @@ NotebookCellRendererController.prototype.huntState = function(item) {
 
 
 NotebookCellRendererController.prototype.huntSelect = function(event, item) {
-    this.scope_["selected_hunt"] = item.hunt_id;
+    this.scope_["selected_hunt"] = item;
     event.stopPropagation();
     event.preventDefault();
     return false;
@@ -295,10 +295,18 @@ NotebookCellRendererController.prototype.addCellFromHunt = function(event) {
 
     modalScope.resolve = function() {
         var state = self.scope_["state"];
-        var hunt_id = self.scope_["selected_hunt"];
+        var hunt = self.scope_["selected_hunt"];
+        var hunt_id = hunt["hunt_id"];
+        var query = "SELECT * \nFROM hunt_results(\n";
+        var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
+        query += "    artifact='" + sources[0] + "',\n";
+        for (var i=1; i<sources.length; i++) {
+            query += "    // artifact='" + sources[i] + "',\n";
+        }
+        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
         var request = {notebook_id: state.notebook.notebook_id,
                        type: "VQL",
-                       input: "SELECT * \nFROM hunt_results(hunt_id='" + hunt_id + "')\nLIMIT 10\n",
+                       input: query,
                        currently_editing: true,
                        cell_id: self.scope_["cellId"]};
 
@@ -325,6 +333,63 @@ NotebookCellRendererController.prototype.addCellFromHunt = function(event) {
 
     return false;
 };
+
+
+NotebookCellRendererController.prototype.addCellFromFlow = function(event) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    var self = this;
+    var modalScope = this.scope_.$new();
+
+    var modalInstance = this.uibModal_.open({
+        templateUrl: '/static/angular-components/notebook/new_cell_from_flow_modal.html',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+
+    modalScope.resolve = function() {
+        var state = self.scope_["state"];
+        var hunt = self.scope_["selected_hunt"];
+        var hunt_id = hunt["hunt_id"];
+        var query = "SELECT * \nFROM hunt_results(\n";
+        var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
+        query += "    artifact='" + sources[0] + "',\n";
+        for (var i=1; i<sources.length; i++) {
+            query += "    // artifact='" + sources[i] + "',\n";
+        }
+        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
+        var request = {notebook_id: state.notebook.notebook_id,
+                       type: "VQL",
+                       input: query,
+                       currently_editing: true,
+                       cell_id: self.scope_["cellId"]};
+
+        self.grrApiService_.post(
+            'v1/NewNotebookCell', request).then(function success(response) {
+                state.notebook = response.data;
+                state.selectedNotebookCellId = response.data['latest_cell_id'];
+
+                modalInstance.close();
+
+            }, function failure(response) {
+                console.log("Error " + response);
+            });
+    };
+
+    modalScope.reject = function() {
+        modalInstance.dismiss();
+    };
+
+    self.scope_.$on('$destroy', function() {
+        modalScope.$destroy();
+    });
+
+
+    return false;
+};
+
 
 
 NotebookCellRendererController.prototype.addCell = function(event, cell_type) {
