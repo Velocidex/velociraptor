@@ -226,8 +226,10 @@ func get_back_path(client_id, day_name, flow_id, artifact_name, source_name stri
 
 	case paths.MODE_CLIENT_EVENT:
 		if client_id == "" {
-			// Should never happen.
-			panic("Client event without client id")
+			// Should never normally happen.
+			return fmt.Sprintf(
+				"/clients/nobody/monitoring/%s/%s",
+				artifact_name, day_name)
 
 		} else {
 			if source_name != "" {
