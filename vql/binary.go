@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vtypes"
 )
@@ -174,14 +175,14 @@ func (self _BinaryParserPlugin) Call(
 			return
 		}
 
-		reader, ok := file.(io.ReaderAt)
+		reader, ok := file.(io.ReadSeeker)
 		if !ok {
 			scope.Log("%s: file is not seekable", self.Name())
 			return
 		}
 
 		target, err := profile.Create(
-			arg.Target, arg.Offset, reader, options)
+			arg.Target, arg.Offset, utils.ReaderAtter{reader}, options)
 		if err != nil {
 			scope.Log("%s: %s", self.Name(), err.Error())
 			return

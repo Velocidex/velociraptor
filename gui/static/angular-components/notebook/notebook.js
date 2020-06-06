@@ -10,6 +10,7 @@ const {NotebookListDirective} = goog.require('grrUi.notebook.notebookListDirecti
 const {NotebookRendererDirective} = goog.require('grrUi.notebook.notebookRendererDirective');
 const {NotebookCellRendererDirective} = goog.require('grrUi.notebook.notebookCellRendererDirective');
 const {NotebookCellReportDirective} = goog.require('grrUi.notebook.notebookCellReportDirective');
+const {NewCellFromFlowModelDirective} = goog.require('grrUi.notebook.newCellFromFlowModelDirective');
 
 /**
  * Angular module for notebook related UI.
@@ -38,3 +39,6 @@ exports.notebookModule.directive(
 
 exports.notebookModule.directive(
     NotebookCellReportDirective.directive_name, NotebookCellReportDirective);
+
+exports.notebookModule.directive(
+    NewCellFromFlowModelDirective.directive_name, NewCellFromFlowModelDirective);

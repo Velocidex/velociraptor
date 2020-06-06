@@ -44,8 +44,17 @@ const SearchBoxController = function(
  *
  * @export
  */
-SearchBoxController.prototype.submitQuery = function() {
-    this.grrRoutingService_.go('search', {q: this.query});
+SearchBoxController.prototype.submitQuery = function(e) {
+    if (this.scope_["navigate"]) {
+        this.grrRoutingService_.go('search', {q: this.query});
+        return;
+    }
+
+    this.scope_["query"] = this.query;
+
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
 };
 
 SearchBoxController.prototype.predict = function(viewValue) {
@@ -70,12 +79,14 @@ SearchBoxController.prototype.predict = function(viewValue) {
  */
 exports.SearchBoxDirective = function() {
   return {
-    scope: {
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/core/search-box.html',
-    controller: SearchBoxController,
-    controllerAs: 'controller'
+      scope: {
+          query: "=",
+          navigate: "=",
+      },
+      restrict: 'E',
+      templateUrl: '/static/angular-components/core/search-box.html',
+      controller: SearchBoxController,
+      controllerAs: 'controller'
   };
 };
 
