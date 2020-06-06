@@ -80,17 +80,17 @@
 
         <!-- Host -->
         <td>
-          <grr-semantic-value value="::item.os_info.fqdn"></grr-semantic-value>
+          {{ item.os_info.fqdn }}
         </td>
 
         <!-- OS Version -->
         <td>
-          <grr-semantic-value value="::item.os_info.release"></grr-semantic-value>
+          {{item.os_info.release}}
         </td>
 
         <!-- Labels -->
         <td>
-          <grr-semantic-value value="::item.labels"></grr-semantic-value>
+          {{item.labels}}
         </td>
 
       </tr>

@@ -409,7 +409,7 @@ func initializeDatabase(
               path_hash BLOB(20),
               name varchar(256),
               timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-              data blob,
+              data medium blob,
               INDEX(path_hash(20)), unique INDEX(path_hash(20), name))`)
 	if err != nil {
 		return nil, err
