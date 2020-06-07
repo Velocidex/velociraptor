@@ -1,17 +1,7 @@
 'use strict';
 
-goog.module('grrUi.semantic.timestampSecondsDirective');
-goog.module.declareLegacyNamespace();
+goog.module('grrUi.utils.timestampSecondsDirective');
 
-
-
-/**
- * Controller for TimestampSecondsDirective.
- *
- * @param {!angular.Scope} $scope
- * @constructor
- * @ngInject
- */
 const TimestampSecondsController = function(
     $scope) {
   /** @private {!angular.Scope} */
@@ -75,11 +65,3 @@ exports.TimestampSecondsDirective = function() {
  * @export
  */
 exports.TimestampSecondsDirective.directive_name = 'grrTimestampSeconds';
-
-/**
- * Semantic type corresponding to this directive.
- *
- * @const
- * @export
- */
-exports.TimestampSecondsDirective.semantic_type = 'RDFDatetimeSeconds';

@@ -8,7 +8,6 @@ const {ConfigureRulesPageDirective} = goog.require('grrUi.hunt.newHuntWizard.con
 const {CopyFormDirective} = goog.require('grrUi.hunt.newHuntWizard.copyFormDirective');
 const {CreateHuntFromFlowFormDirective} = goog.require('grrUi.hunt.newHuntWizard.createHuntFromFlowFormDirective');
 const {FormDirective} = goog.require('grrUi.hunt.newHuntWizard.formDirective');
-const {ReviewPageDirective} = goog.require('grrUi.hunt.newHuntWizard.reviewPageDirective');
 const {StatusPageDirective} = goog.require('grrUi.hunt.newHuntWizard.statusPageDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 
@@ -23,8 +22,6 @@ exports.newHuntWizardModule.directive(
     ConfigureHuntPageDirective.directive_name, ConfigureHuntPageDirective);
 exports.newHuntWizardModule.directive(
     ConfigureRulesPageDirective.directive_name, ConfigureRulesPageDirective);
-exports.newHuntWizardModule.directive(
-    ReviewPageDirective.directive_name, ReviewPageDirective);
 exports.newHuntWizardModule.directive(
     StatusPageDirective.directive_name, StatusPageDirective);
 

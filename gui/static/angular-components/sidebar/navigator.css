@@ -47,7 +47,7 @@ grr-navigator  .nav-list    > li > a {
 }
 
 grr-navigator  .nav-list > li >  a.nav-link.disabled {
-    color: var(--color-infoline-color);
+/*    color: var(--color-infoline-color);*/
 }
 
 grr-navigator  .nav-list > li > a  i.fa-lock {
@@ -72,7 +72,7 @@ grr-navigator  .nav-list    > .active       > a:focus {
 }
 
 grr-navigator  .nav-list    > .active       > a.nav-link.disabled {
-    color: var(--color-nav-link-hover-color);
+/*    color: var(--color-nav-link-hover-color); */
 }
 
 

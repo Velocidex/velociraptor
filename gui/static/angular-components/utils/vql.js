@@ -1,7 +1,6 @@
 'use strict';
 
-goog.module('grrUi.semantic.vqlDirective');
-goog.module.declareLegacyNamespace();
+goog.module('grrUi.utils.vqlDirective');
 
 /**
  * Controller for VQLDirective.
@@ -102,7 +101,7 @@ exports.VQLDirective = function() {
       selectedRow: '=?',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/semantic/vql.html',
+    templateUrl: '/static/angular-components/utils/vql.html',
     controller: vqlController,
     controllerAs: 'controller'
   };
@@ -116,11 +115,3 @@ exports.VQLDirective = function() {
  * @export
  */
 exports.VQLDirective.directive_name = 'grrVql';
-
-/**
- * Semantic type corresponding to this directive.
- *
- * @const
- * @export
- */
-exports.VQLDirective.semantic_type = 'VQLResponse';

@@ -19,34 +19,32 @@
     </uib-tab>
 
     <uib-tab heading="Requests" index="'requests'">
-      <table class="table table-condensed table-hover table-bordered
-                    full-width">
-        <thead>
-          <tr>
-            <th>Request sent to client</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>
-              <div ng-if="controller.tabsShown['requests']">
-                <div ui-ace="{
-                             showGutter: true,
-                             workerPath: '/static/dist/',
-                             theme:'clouds',
-                             onLoad: aceConfig,
-                             mode: 'json',
-                             rendererOptions: {
-                             fontSize: '14px',
-                             fontFamily: 'monospace',
-                             },
-                             }"
-                     ng-model="controller.serializedRequests"
-                     readonly
-                     ></div>
-              </div>
-          </td></tr>
-        </tbody>
-      </table>
+      <div class="cell-toolbar">
+        <div class="btn-group" role="group">
+          <button class="btn btn-default"
+                  title="Settings"
+                  ng-click="controller.showSettings()">
+            <i class="fa fa-wrench"></i>
+          </button>
+        </div>
+      </div>
+
+      <div ng-if="controller.tabsShown['requests']">
+        <div ui-ace="{
+                     showGutter: true,
+                     workerPath: '/static/dist/',
+                     theme:'clouds',
+                     onLoad: aceConfig,
+                     mode: 'json',
+                     rendererOptions: {
+                     fontSize: '14px',
+                     fontFamily: 'monospace',
+                     },
+                     }"
+             ng-model="controller.serializedRequests"
+             readonly
+             ></div>
+      </div>
     </uib-tab>
 
     <uib-tab heading="Results" index="'results'">

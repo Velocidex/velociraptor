@@ -74,23 +74,26 @@
       </section>
 
       <!-- Client overview and links for client navigation -->
-      <section ng-if="controller.clientId">
+      <section>
         <!-- Client links -->
         <ul class="nav nav-pills">
           <li grr-nav-link state="client.hostInfo"
               ng-if="controller.uiTraits.Permissions.read_results"
+              disabled="!controller.clientId"
               params="{clientId: controller.clientId}">
             <i class="fa fa-laptop navicon"></i>
             Host Information
           </li>
           <li grr-nav-link state="client.vfs"
               ng-if="controller.uiTraits.Permissions.read_results"
+              disabled="!controller.clientId"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-folder-open navicon"></i>
             Virtual Filesystem
           </li>
           <li grr-nav-link state="client.flows"
               ng-if="controller.uiTraits.Permissions.read_results"
+              disabled="!controller.clientId"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-history navicon"></i>
             Collected Artifacts
@@ -98,6 +101,7 @@
 
           <li grr-nav-link state="client.events"
               ng-if="controller.uiTraits.Permissions.read_results"
+              disabled="!controller.clientId"
               params="{clientId: controller.clientId}" >
             <i class="fa fa-binoculars navicon"></i>
             Client Events

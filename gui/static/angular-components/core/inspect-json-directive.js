@@ -7,6 +7,7 @@ const InspectJsonController = function($scope, grrAceService) {
 
     this.scope_ = $scope;
     this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
         grrAceService.AceConfig(ace);
 
         ace.setOptions({
@@ -20,6 +21,10 @@ const InspectJsonController = function($scope, grrAceService) {
 
         ace.resize();
     };
+};
+
+InspectJsonController.prototype.showSettings = function() {
+    this.ace.execCommand("showSettingsMenu");
 };
 
 

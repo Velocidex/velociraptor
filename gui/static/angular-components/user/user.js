@@ -10,14 +10,13 @@ const {UserLabelDirective} = goog.require('grrUi.user.userLabelDirective');
 const {UserNotificationDialogDirective} = goog.require('grrUi.user.userNotificationDialogDirective');
 const {UserNotificationItemDirective} = goog.require('grrUi.user.userNotificationItemDirective');
 const {coreModule} = goog.require('grrUi.core.core');
-const {formsModule} = goog.require('grrUi.forms.forms');
 
 
 /**
  * Angular module for user-related UI.
  */
 exports.userModule =
-    angular.module('grrUi.user', [coreModule.name, formsModule.name]);
+    angular.module('grrUi.user', [coreModule.name]);
 
 exports.userModule.directive(
   UserLabelDirective.directive_name, UserLabelDirective);

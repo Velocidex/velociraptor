@@ -37,11 +37,3 @@ exports.DownloadDirective = function() {
  * @export
  */
 exports.DownloadDirective.directive_name = 'grrVfsDownload';
-
-/**
- * Semantic type corresponding to this directive.
- *
- * @const
- * @export
- */
-exports.DownloadDirective.semantic_type = 'Download';

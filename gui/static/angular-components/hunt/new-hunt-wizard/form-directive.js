@@ -16,7 +16,8 @@ const {debug} = goog.require('grrUi.core.utils');
  * @constructor
  * @ngInject
  */
-const FormController = function($scope, grrReflectionService, grrApiService) {
+const FormController = function($scope, grrReflectionService,
+                                grrApiService, grrAceService) {
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
 
@@ -42,6 +43,29 @@ const FormController = function($scope, grrReflectionService, grrApiService) {
             condition: {}
         };
     }
+
+    var self = this;
+
+    this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
+        grrAceService.AceConfig(ace);
+
+        ace.setOptions({
+            autoScrollEditorIntoView: false,
+            maxLines: null,
+        });
+
+        self.scope_.$on('$destroy', function() {
+            grrAceService.SaveAceConfig(ace);
+        });
+
+        ace.resize();
+    };
+
+};
+
+FormController.prototype.showSettings = function() {
+    this.ace.execCommand("showSettingsMenu");
 };
 
 FormController.prototype.onValueChange_ = function(page_index) {
