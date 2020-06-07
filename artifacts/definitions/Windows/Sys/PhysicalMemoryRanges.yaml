@@ -51,7 +51,8 @@ sources:
           },
           query={
             SELECT Type, Start, Length, Data FROM binary_parse(
-              string=Data.value,
+              file=Data.value,
+              accessor="data",
               profile=Profile,
               target="CM_RESOURCE_LIST",
               start="List.PartialResourceList.PartialDescriptors")

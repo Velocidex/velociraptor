@@ -82,12 +82,18 @@
              ng-click="controller.addCell($event, 'Artifact')"
              >Artifact</a>
           <div class="dropdown-divider"></div>
+
           <a class="dropdown-item" href="#"
              ng-click="controller.addCellFromHunt($event)"
              >Add Cell From Hunt</a>
+
           <a class="dropdown-item" href="#"
              ng-click="controller.addCellFromFlow($event)"
              >Add Cell From Flow</a>
+
+          <a class="dropdown-item" href="#"
+             ng-click="controller.addCellFromArtifact($event)"
+             >Add Cell From Artifact</a>
         </div>
 
         <button class="btn btn-default"

@@ -1,62 +1,130 @@
 <div class='modal-header'>
   <h3>
-    Select a Flow
+    Select Client and Flow
   </h3>
 </div>
 <div class='modal-body'>
-  <div class='container-fluid'>
-    <div class="fill-parent-with-toolbar">
+  <grr-search-box
+    class="pull-left"
+    query="controller.query"></grr-search-box>
+
+  <div class='container-fluid'
+       ng-if="!controller.clientId">
+    <div class="search-table">
       <table class="table table-striped table-condensed table-hover table-bordered full-width">
         <colgroup>
           <col style="width: 40px">
-          <col style="width: 15em">
-          <col style="width: 40%">
-          <col style="width: 20em">
-          <col style="width: 20em">
-          <col style="">
+          <col style="width: 13em">
+          <col style="width: 13em">
+          <col style="width: 15%">
         </colgroup>
         <thead>
           <tr>
-            <th>State</th>
-            <th>FlowId</th>
-            <th>Artifacts Collected</th>
-            <th>Creation Time</th>
-            <th>Last Active</th>
-            <th>Creator</th>
+            <th>Online</th>
+            <th>ClientID</th>
+            <th>Host</th>
+            <th>OS Version</th>
+            <th>Labels</th>
           </tr>
         </thead>
         <tbody>
-          <tr grr-infinite-table grr-api-items-provider
-              transform-items="controller.transformItems(items)"
-              url="flowsUrl"
-              page-size="controller.pageSize"
-              trigger-update="controller.triggerTableUpdate"
-              auto-refresh-interval="controller.autoRefreshInterval"
-              ng-click="controller.selectItem(item)"
-              ng-class="{'row-selected': item.session_id == controller.selectedFlowId}"
-              >
-            <td><grr-flow-status-icon flow="item"></grr-flow-status-icon></td>
+          <tr grr-infinite-table
+              grr-api-items-provider
+              query-params="{query: controller.query}"
+              url="'/v1/SearchClients'"
+              trigger-update="controller.triggerClientTableUpdate"
+              ng-click="controller.onClientClick(item)">
+
+            <!-- Online status -->
             <td>
-              {$ item.session_id $}
+              <img class="grr-icon-small" name="clientStatusIcon"
+                   ng-src="/static/images/online.png"
+                   ng-if="(controller.now - item.last_seen_at/1000000) < (60 * 15)" />
+
+              <img class="grr-icon-small" name="clientStatusIcon"
+                   ng-src="/static/images/online-1d.png"
+                   ng-if="(controller.now - item.last_seen_at/1000000)  > (60 * 15) && (controller.now - item.last_seen_at/1000000)  < (60 * 60 * 24) "/>
+
+              <img class="grr-icon-small" name="clientStatusIcon"
+                   ng-src="/static/images/offline.png"
+                   ng-if="(controller.now - item.last_seen_at/1000000)  > (60 * 60 * 24)" />
             </td>
+
+            <!-- Subject -->
             <td>
-              <div ng-repeat="name in item.request.artifacts track by $index">
-                {$ name $}
-              </div>
+              <span type="subject">{$ ::item.client_id $}</span>
             </td>
+
+            <!-- Host -->
             <td>
-              <grr-timestamp value="item.create_time"></grr-timestamp>
+              {{ item.os_info.fqdn }}
             </td>
+
+            <!-- OS Version -->
             <td>
-              <grr-timestamp value="item.kill_timestamp"></grr-timestamp>
+              {{item.os_info.release}}
             </td>
+
+            <!-- Labels -->
             <td>
-              {{ item.request.creator }}
+              {{item.labels}}
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+  </div>
+  <div
+    ng-if="controller.clientId"
+    class="fill-parent-with-toolbar">
+    <table class="table table-striped table-condensed table-hover table-bordered full-width">
+      <colgroup>
+        <col style="width: 40px">
+        <col style="width: 15em">
+        <col style="width: 40%">
+        <col style="width: 20em">
+        <col style="width: 20em">
+        <col style="">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>FlowId</th>
+          <th>Artifacts Collected</th>
+          <th>Creation Time</th>
+          <th>Last Active</th>
+          <th>Creator</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr grr-infinite-table
+            grr-api-items-provider
+            url="controller.flowsUrl"
+            trigger-update="controller.triggerFlowsTableUpdate"
+            ng-click="controller.selectFlow(item)"
+            ng-class="{'row-selected': item.session_id == controller.selectedFlowId}"
+            >
+          <td><grr-flow-status-icon flow="item"></grr-flow-status-icon></td>
+          <td>
+            {$ item.session_id $}
+          </td>
+          <td>
+            <div ng-repeat="name in item.request.artifacts track by $index">
+              {$ name $}
+            </div>
+          </td>
+          <td>
+            <grr-timestamp value="item.create_time"></grr-timestamp>
+          </td>
+          <td>
+            <grr-timestamp value="item.kill_timestamp"></grr-timestamp>
+          </td>
+          <td>
+            {{ item.request.creator }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 <div class='modal-footer'>
@@ -64,12 +132,6 @@
     <button class="btn btn-primary Next ng-binding"
             ng-click="reject()">
       Cancel
-    </button>
-
-    <button class="btn btn-primary Next ng-binding"
-            ng-disabled="!selected_hunt"
-            ng-click="resolve()">
-      OK
     </button>
   </ul>
 </div>

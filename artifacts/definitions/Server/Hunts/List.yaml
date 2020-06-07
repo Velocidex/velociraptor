@@ -8,10 +8,8 @@ sources:
   - precondition:
       SELECT * from server_config
 
-    queries:
-      - |
-        SELECT HuntId, timestamp(epoch=create_time/1000000) as Created,
-               start_request.Args.artifacts.names  as Artifact,
-               State
-        FROM hunts()
-        WHERE start_request.flow_name = 'ArtifactCollector'
+    query: |
+      SELECT HuntId, timestamp(epoch=create_time/1000000) as Created,
+             join(array=start_request.artifacts, sep=",") as Artifact,
+             State
+      FROM hunts()
