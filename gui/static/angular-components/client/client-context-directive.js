@@ -47,7 +47,7 @@ exports.ClientContextDirective = function() {
     },
     restrict: 'E',
     transclude: true,
-    template: '<ng-transclude ng-if="controller.clientId"></ng-transclude>',
+      template: '<ng-transclude ng-if="controller.clientId"></ng-transclude>',
     controller: ClientContextController,
     controllerAs: 'controller'
   };

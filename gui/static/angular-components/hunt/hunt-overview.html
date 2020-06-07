@@ -12,7 +12,9 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::hunt.start_request.artifacts"></grr-semantic-value>
+              <div ng-repeat="item in hunt.start_request.artifacts || []">
+                {{ item }}
+              </div>
             </dd>
 
             <dt>Hunt ID</dt>
@@ -58,8 +60,7 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Total scheduled</dt>
             <dd>
-              <grr-semantic-value value="::hunt.stats.total_clients_scheduled">
-              </grr-semantic-value>
+              {{ hunt.stats.total_clients_scheduled }}
             </dd>
 
             <dt>Finished clients</dt>

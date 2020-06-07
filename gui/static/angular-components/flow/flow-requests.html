@@ -1,17 +1,27 @@
-<table class="table table-condensed table-hover table-bordered
-              full-width">
-  <thead>
-    <tr>
-      <th>Request sent to client</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr grr-infinite-table grr-api-items-provider
-        url="controller.requestsUrl"
-        query-params="controller.requestsParams">
-      <td>
-        <grr-semantic-value value="::item" type="GrrMessage"></grr-semantic-value>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<div class="cell-toolbar">
+  <div class="btn-group" role="group">
+    <button class="btn btn-default"
+            title="Settings"
+            ng-click="controller.showSettings()">
+      <i class="fa fa-wrench"></i>
+    </button>
+  </div>
+</div>
+<div ng-if="controller.serializedRequests">
+  <div ui-ace="{
+               showGutter: true,
+               workerPath: '/static/dist/',
+               theme:'clouds',
+               onLoad: aceConfig,
+               mode: 'json',
+               rendererOptions: {
+               fontSize: '14px',
+               fontFamily: 'monospace',
+               },
+               }"
+       ng-model="controller.serializedRequests"
+       readonly></div>
+</div>
+<div ng-if="!controller.serializedRequests">
+  <i class="fa fa-spinner fa-spin fa-fw"></i> Loading...
+</div>

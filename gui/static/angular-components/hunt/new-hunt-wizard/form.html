@@ -50,7 +50,31 @@
   <!-- Review -->
   <grr-wizard-form-page title="Review"
                         next-button-label="Create Hunt">
-    <grr-inspect-json json="controller.createHuntArgsJson"></grr-inspect-json>
+    <div class="d-flex flex-column" style="height: 100%;">
+      <div class="cell-toolbar">
+        <div class="btn-group" role="group">
+          <button class="btn btn-default"
+                  title="Settings"
+                  ng-click="controller.showSettings()">
+            <i class="fa fa-wrench"></i>
+          </button>
+        </div>
+      </div>
+      <div ui-ace="{
+                   showGutter: true,
+                   workerPath: '/static/dist/',
+                   theme:'twilight',
+                   onLoad: aceConfig,
+                   mode: 'json',
+                   rendererOptions: {
+                   fontSize: '14px',
+                   fontFamily: 'monospace',
+                   },
+                   }"
+           ng-model="controller.createHuntArgsJson"
+           readonly
+           ></div>
+    </div>
   </grr-wizard-form-page>
 
   <!-- Submit the hunt and show the status -->

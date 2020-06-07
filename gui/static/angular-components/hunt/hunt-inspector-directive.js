@@ -65,6 +65,7 @@ const HuntInspectorController = function(
     var self = this;
 
     this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
         grrAceService.AceConfig(ace);
 
         ace.setOptions({
@@ -80,6 +81,10 @@ const HuntInspectorController = function(
 
         ace.resize();
     };
+};
+
+HuntInspectorController.prototype.showSettings = function() {
+    this.ace.execCommand("showSettingsMenu");
 };
 
 /**

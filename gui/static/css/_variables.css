@@ -1,6 +1,7 @@
 :root {
 --sidebar-collapsed-width: 45px;
---sidebar-icon-color: #9f9f9f;
+--sidebar-icon-color: #8f8f8f;
+--sidebar-icon-color-disabled: #8f8f8f50;
 --sidebar-icon-color-bg: #fff;
 
 --font-json: Menlo, Monaco, Consolas, "Courier New", monospace;

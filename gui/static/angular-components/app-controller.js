@@ -17,7 +17,7 @@ const {clientModule} = goog.require('grrUi.client.client');
 const {configModule} = goog.require('grrUi.config.config');
 const {coreModule} = goog.require('grrUi.core.core');
 const {flowModule} = goog.require('grrUi.flow.flow');
-const {formsModule} = goog.require('grrUi.forms.forms');
+// const {formsModule} = goog.require('grrUi.forms.forms');
 const {huntModule} = goog.require('grrUi.hunt.hunt');
 /**
  * localModule is empty by default and can be used for deployment-specific
@@ -25,11 +25,10 @@ const {huntModule} = goog.require('grrUi.hunt.hunt');
  */
 const {localModule} = goog.require('grrUi.local.local');
 const {routingModule} = goog.require('grrUi.routing.routing');
-const {semanticModule} = goog.require('grrUi.semantic.semantic');
+const {utilsModule} = goog.require('grrUi.utils.utils');
 const {sidebarModule} = goog.require('grrUi.sidebar.sidebar');
 const {userModule} = goog.require('grrUi.user.user');
 const {notebookModule} = goog.require('grrUi.notebook.notebook');
-
 
 /**
  * Main GRR UI application module.
@@ -40,11 +39,11 @@ exports.appControllerModule = angular.module('grrUi.appController', [
     configModule.name,
     coreModule.name,
     flowModule.name,
-    formsModule.name,
+//    formsModule.name,
     huntModule.name,
     localModule.name,
     routingModule.name,
-    semanticModule.name,
+    utilsModule.name,
     sidebarModule.name,
     templatesModule.name,
     userModule.name,

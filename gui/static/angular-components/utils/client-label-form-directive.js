@@ -1,7 +1,6 @@
 'use strict';
 
-goog.module('grrUi.forms.clientLabelFormDirective');
-goog.module.declareLegacyNamespace();
+goog.module('grrUi.utils.clientLabelFormDirective');
 
 const {ApiService} = goog.require('grrUi.core.apiService');
 
@@ -65,7 +64,7 @@ exports.ClientLabelFormDirective = function() {
           value: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/forms/client-label-form.html',
+    templateUrl: '/static/angular-components/utils/client-label-form.html',
     controller: ClientLabelFormController,
     controllerAs: 'controller'
   };

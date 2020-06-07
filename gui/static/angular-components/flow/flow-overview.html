@@ -11,8 +11,9 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifact Names</dt>
             <dd>
-              <grr-semantic-value value="::flow.context.request.artifacts">
-              </grr-semantic-value>
+              <div ng-repeat="item in flow.context.request.artifacts || []">
+                {{ item }}
+              </div>
             </dd>
 
             <dt>Flow ID</dt>

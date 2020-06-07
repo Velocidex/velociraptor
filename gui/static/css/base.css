@@ -993,11 +993,14 @@ grr-client-events, grr-server-artifacts, grr-user-dashboard, grr-artifact-viewer
 .navicon {
     margin-right: 10px;
     font-size: 18px;
-    color: var(--sidebar-icon-color);
 }
 
 grr-navigator a {
     color: var(--sidebar-icon-color);
+}
+
+grr-navigator li a.nav-link.disabled {
+    color: var(--sidebar-icon-color-disabled);
 }
 
 grr-navigator li.active a {

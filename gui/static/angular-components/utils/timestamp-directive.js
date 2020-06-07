@@ -1,9 +1,6 @@
 'use strict';
 
-goog.module('grrUi.semantic.timestampDirective');
-goog.module.declareLegacyNamespace();
-
-
+goog.module('grrUi.utils.timestampDirective');
 
 /**
  * Controller for TimestampDirective.
@@ -89,7 +86,7 @@ exports.TimestampDirective = function() {
       value: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/semantic/timestamp.html',
+    templateUrl: '/static/angular-components/utils/timestamp.html',
     controller: TimestampController,
     controllerAs: 'controller'
   };
@@ -103,11 +100,3 @@ exports.TimestampDirective = function() {
  * @export
  */
 exports.TimestampDirective.directive_name = 'grrTimestamp';
-
-/**
- * Semantic type corresponding to this directive.
- *
- * @const
- * @export
- */
-exports.TimestampDirective.semantic_type = 'RDFDatetime';

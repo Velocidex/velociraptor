@@ -12,19 +12,40 @@ goog.module.declareLegacyNamespace();
  * @param {!angular.Scope} $scope
  * @ngInject
  */
-const FlowRequestsController = function($scope) {
-  /** @private {!angular.Scope} */
-  this.scope_ = $scope;
+const FlowRequestsController = function($scope, grrAceService, grrApiService) {
+    var self = this;
 
-    /** @type {string} */
-    this.requestsUrl;
+    /** @private {!angular.Scope} */
+    this.scope_ = $scope;
 
-    /** @type {object} */
-    this.requestsParams;
+    this.grrApiService_ = grrApiService;
 
-  this.scope_.$watch('flowId', this.onFlowIdPathChange_.bind(this));
+    this.serializedRequests = "";
+    this.scope_.$watch('flowId', this.onFlowIdPathChange_.bind(this));
+    this.scope_.aceConfig = function(ace) {
+        self.ace = ace;
+
+        grrAceService.AceConfig(ace);
+
+        ace.setOptions({
+            wrap: true,
+            autoScrollEditorIntoView: true,
+            minLines: 10,
+            maxLines: 100,
+        });
+
+        self.scope_.$on('$destroy', function() {
+            grrAceService.SaveAceConfig(ace);
+        });
+
+        ace.resize();
+    };
 };
 
+
+FlowRequestsController.prototype.showSettings = function() {
+    this.ace.execCommand("showSettingsMenu");
+};
 
 
 /**
@@ -34,11 +55,18 @@ const FlowRequestsController = function($scope) {
  * @private
  */
 FlowRequestsController.prototype.onFlowIdPathChange_ = function() {
-    this.requestsUrl = "v1/GetFlowRequests";
-    this.requestsParams = {
+    var self = this;
+    var requestsUrl = "v1/GetFlowRequests";
+    var requestsParams = {
         flow_id: this.scope_['flowId'],
         client_id: this.scope_['clientId'],
     };
+
+    this.grrApiService_.get(requestsUrl, requestsParams).then(
+        function success(response) {
+            self.serializedRequests = JSON.stringify(
+                response.data.items, null, 2);
+        });
 };
 
 
