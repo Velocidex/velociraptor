@@ -1,0 +1,169 @@
+name: Windows.Forensics.BulkExtractor
+description: |
+    This content will execute bulk_extractor with record carving plugins from 
+    4n6ist. Initially developed to carve EventLogs from physical disk and 
+    unallocated space, this content may also be leveraged for other 
+    bulk extractor capability. Best use case is for remote targeted machine
+    collection to remove the need for a disk image.
+    
+    **Settings**  
+    Target - Can be \\\\.\\PhysicalDrive[X], \\\\?\\HarddiskVolumeShadowCopy[Y] 
+    or C:\\Folder\\Path"  
+    TargetAllPhysical - boolean option to include all attached physical disks  
+    TargetVSS - boolean option to target all VSC  
+    CarveEvtx - boolean option to include evtx carving  
+    FindRegex - regex to include for BulkExtractor find plugins  
+    
+    FreeCommand - supersedes evtx or find options and allows free form switch 
+    generation for adlib use cases. 
+    e.g '-E evtx, -e zip -S unzip_carve_mode=2'"  
+    Will add: 
+    command prefix: "-q 99999999999 -R'" and 
+    postfix: "-o [Outfolder] [Target]".  
+    To make: bulk_extractor q 99999999999 -R -E evtx, -e zip -S unzip_carve_mode=2 -o [outfolder] [Target]
+    
+    If FindRegex or "-f" has been used in FreeCommand the artifact will attempt 
+    to parse find.txt output.  
+
+    **Note**  
+    1. This artifact uses the 3rd party binaries feature. You will need to run 
+    Server.Utils.DownloadBinaries on the server prior to execution.  
+    2. Currently only supported for x64 bit machines.  
+    3. This artifact usually takes a long time. Ensure default timeout is high 
+    enough for completion.  
+    4. This content is NOT recommended for hunting without great consideration as 
+    bulk_extractor is a multithreaded tool and utilises all CPU available on the 
+    endpoint.  
+    5. The artifact copies carved data to the local disk prior to upload which 
+    is not ideal from a forensic viewpoint.  
+    
+reference:
+  - http://www.kazamiya.net/en/bulk_extractor-rec
+  - http://downloads.digitalcorpora.org/downloads/bulk_extractor/BEUsersManual.pdf
+  - https://simson.net/clips/academic/2013.COSE.bulk_extractor.pdf
+    
+author: Matt Green - @mgreen27
+
+required_permissions:
+  - EXECVE
+  
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: binaryURL
+    description: |
+      Specify this as the base of the binary store (if empty we use
+      the server's public directory).
+  - name: Target
+    description: "Target. Can by physical drive, \\\\?\\HarddiskVolumeShadowCopy1 or C:\\Folder\\Path"
+    default: \\.\PhysicalDrive0
+  - name: TargetAllPhysical
+    description: "Target all attached physical drives"
+    type: bool
+  - name: TargetVSS 
+    description: "Target all VSC. Note: Not targeted to folder. Velociraptor CAN collect from the Volume Shadow direct targeted to folder with ntfs accessor so there may be a better way."
+    type: bool
+  - name: CarveEvtx
+    description: "Carve EVTX files"
+    type: bool
+  - name: FindRegex
+    description: "Regex for Bulk_extractor find plugin"
+  - name: FreeCommand
+    description: "Bulk_extractor custom commands. .e.g '-E evtx, -e zip -S unzip_carve_mode=2'"
+   
+sources:
+  - queries:
+    - LET bin <= SELECT * 
+        FROM Artifact.Generic.Utils.FetchBinary(
+            binaryURL=binaryURL, ToolName="Bulk_Extractor")
+    - LET tempfolder <= tempdir()
+    - LET zip_file <= SELECT 
+            copy(filename=url(path=bin[0].FullPath, 
+                fragment="bulk_extractor.exe").String, 
+                dest=tempfile(extension=".exe"), 
+                accessor='zip') AS Payload 
+        FROM scope()
+    - LET target = SELECT 
+            DeviceID,
+            if(condition=DeviceID=~"^\\\\\\\\.\\\\",
+                then=split(string=split(string=DeviceID,sep='\\\\\\\\.\\\\')[1],
+                    sep='\\\\')[0],
+                else="bulk_out") as base,
+            _DeviceID
+        FROM chain(
+            a={
+                SELECT 
+                    DeviceID,
+                    upcase(string=DeviceID) as _DeviceID
+                FROM Artifact.Windows.Sys.DiskInfo()
+                WHERE TargetAllPhysical
+            },
+            b={
+                SELECT 
+                    Target as DeviceID,
+                    upcase(string=Target) as _DeviceID
+                FROM scope()
+                WHERE Target =~ '.'
+            },
+            c={
+                SELECT 
+                    regex_replace(source=FullPath,
+                        re="GLOBALROOT\\\\Device\\\\",replace="")AS DeviceID,
+                    Data.ID AS ShadowCopyID,
+                    upcase(string=regex_replace(source=FullPath,
+                        re="GLOBALROOT\\\\Device\\\\",replace="")) as _DeviceID
+                FROM glob(globs='/*', accessor='ntfs')
+                WHERE ShadowCopyID AND TargetVSS
+                ORDER by FullPath
+            })
+            GROUP BY _DeviceID
+    - LET cmdline = SELECT (zip_file[0].Payload,'-q','99999999999','-R') + CMD + ('-o') as CMD FROM switch(
+            a= { 
+                SELECT split(string=FreeCommand, sep=' ') AS CMD 
+                FROM scope() 
+                WHERE FreeCommand
+            },
+            b= { 
+                SELECT 
+                    ('-E','evtx','-e','find','-f',FindRegex) AS CMD 
+                FROM scope() 
+                WHERE CarveEvtx AND FindRegex
+            }, 
+            c= { 
+                SELECT ('-E','evtx') AS CMD 
+                FROM scope() 
+                WHERE CarveEvtx
+            }, 
+            d= { 
+                SELECT ('-E','find','-f',FindRegex) AS CMD 
+                FROM scope() 
+                WHERE FindRegex
+            }, 
+            e= { 
+                SELECT ('-h') AS CMD FROM scope()
+            })
+    - SELECT * FROM foreach(
+        row=target, 
+        query= { 
+            SELECT * 
+            FROM execve(argv=cmdline[0].CMD + (tempfolder + '\\' + base, DeviceID)
+                , length=10000000, sep='\n')})
+
+  - name: FindResults
+    queries:
+    - SELECT * FROM foreach(
+        row={SELECT * FROM glob(globs=tempfolder + '/*/find.txt')},
+        query={
+            SELECT * 
+            FROM split_records(filenames=FullPath,first_row_is_headers=false, 
+                columns=['Location','Match','Data'],regex='\t')
+            WHERE NOT Location =~ '#'
+        })
+        WHERE FindRegex OR FreeCommand =~ '-f'
+      
+  - name: Upload
+    queries:
+    - SELECT 
+         upload(file=FullPath,name=strip(string=FullPath,prefix=tempfolder)) AS Upload 
+      FROM glob(globs=tempfolder + "/**") 
+      WHERE Upload
