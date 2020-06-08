@@ -21,11 +21,10 @@ var OPERATION_POLL_INTERVAL_MS = 1000;
  * @param {!angular.$timeout} $timeout
  * @param {!angularUi.$uibModal} $uibModal Bootstrap UI modal service.
  * @param {!grrUi.core.apiService.ApiService} grrApiService
- * @param {!grrUi.core.reflectionService.ReflectionService} grrReflectionService
  * @ngInject
  */
 const RecursiveListButtonController = function(
-    $rootScope, $scope, $timeout, $uibModal, grrApiService, grrReflectionService) {
+    $rootScope, $scope, $timeout, $uibModal, grrApiService) {
     /** @private {!angular.Scope} */
     this.rootScope_ = $rootScope;
 
@@ -40,9 +39,6 @@ const RecursiveListButtonController = function(
 
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
-
-    /** @private {!grrUi.core.reflectionService.ReflectionService} */
-    this.grrReflectionService_ = grrReflectionService;
 
     /** @type {?string} */
     this.lastOperationId;

@@ -19,7 +19,6 @@ const {InfiniteTableDirective} = goog.require('grrUi.core.infiniteTableDirective
 const {LoadingIndicatorService} = goog.require('grrUi.core.loadingIndicatorService');
 const {PagedFilteredTableDirective, TableBottomDirective, TableTopDirective} = goog.require('grrUi.core.pagedFilteredTableDirective');
 const {PeriodicRefreshDirective} = goog.require('grrUi.core.periodicRefreshDirective');
-const {ReflectionService} = goog.require('grrUi.core.reflectionService');
 const {SearchBoxDirective} = goog.require('grrUi.core.searchBoxDirective');
 const {ErrorLabelDirective} = goog.require('grrUi.core.errorLabelDirective');
 const {ServerErrorButtonDirective} = goog.require('grrUi.core.serverErrorButtonDirective');
@@ -95,8 +94,6 @@ exports.coreModule.directive(
     GlobalNotificationsDirective.directive_name, GlobalNotificationsDirective);
 exports.coreModule.service(ApiService.service_name, ApiService);
 exports.coreModule.service(AceService.service_name, AceService);
-
-exports.coreModule.service(ReflectionService.service_name, ReflectionService);
 
 exports.coreModule.service(TimeService.service_name, TimeService);
 exports.coreModule.service(DialogService.service_name, DialogService);

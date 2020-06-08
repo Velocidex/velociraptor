@@ -36,57 +36,8 @@ import (
 )
 
 var (
-	// List of all protobufs exported through the APIs.
-	EXPORTED_PROTO = []string{
-		"StartFlowRequest",
-		"StartFlowResponse",
-		"SearchClientsRequest",
-		"SearchClientsResponse",
-		"GetClientRequest",
-		"ApiClient",
-		"HuntInfo",
-		"GrrMessage",
-		"VQLCollectorArgs",
-		"VQLResponse",
-		"Types",
-		"Hunt",
-		"FlowRunnerArgs",
-		"FlowContext",
-		"VFSListRequest",
-		"FileFinderArgs",
-		"VFSDownloadFileRequest",
-		"ArtifactCollectorArgs",
-		"ArtifactParameter",
-		"Artifacts",
-	}
-
 	doc_regex = regexp.MustCompile("doc=(.+)")
 )
-
-func describeTypes() *artifacts_proto.Types {
-	seen := make(map[string]bool)
-	result := &artifacts_proto.Types{
-		Items: []*artifacts_proto.TypeDescriptor{
-			{Name: "ByteSize", Kind: "primitive", Default: "0"},
-			{Name: "GlobExpression", Kind: "primitive", Default: "\"\""},
-			{Name: "RegularExpression", Kind: "primitive", Default: "\"\""},
-			{Name: "LiteralExpression", Kind: "primitive", Default: "\"\""},
-			{Name: "ClientURN", Kind: "primitive", Default: "\"\""},
-			{Name: "RDFURN", Kind: "primitive", Default: "\"\""},
-			{Name: "bool", Kind: "primitive", Default: "false"},
-			{Name: "string", Kind: "primitive", Default: "\"\""},
-			{Name: "integer", Kind: "primitive", Default: "0"},
-			{Name: "ApiClientId", Kind: "primitive", Default: "\"\""},
-			{Name: "RDFDatetime", Kind: "primitive", Default: "0"},
-			{Name: "RDFDatetimeSeconds", Kind: "primitive", Default: "0"},
-		},
-	}
-	for _, proto_name := range EXPORTED_PROTO {
-		add_type(proto_name, result, seen)
-	}
-
-	return result
-}
 
 func add_type(type_name string, result *artifacts_proto.Types, seen map[string]bool) {
 	message_type := proto.MessageType("proto." + type_name)

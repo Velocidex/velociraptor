@@ -69,7 +69,7 @@ func (self *OSFileInfo) Mtime() utils.TimeVal {
 	}
 }
 
-func (self *OSFileInfo) Ctime() glob.TimeVal {
+func (self *OSFileInfo) Ctime() utils.TimeVal {
 	nsec := self.sys().CreationTime.Nanoseconds()
 	return utils.TimeVal{
 		Sec:  nsec / 1000000000,

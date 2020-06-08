@@ -4,25 +4,19 @@ goog.module('grrUi.hunt.newHuntWizard.formDirective');
 goog.module.declareLegacyNamespace();
 
 const {ApiService} = goog.require('grrUi.core.apiService');
-const {ReflectionService} = goog.require('grrUi.core.reflectionService');
 const {debug} = goog.require('grrUi.core.utils');
 
 /**
  * Controller for FormDirective.
  *
  * @param {!angular.Scope} $scope
- * @param {!ReflectionService} grrReflectionService
  * @param {!ApiService} grrApiService
  * @constructor
  * @ngInject
  */
-const FormController = function($scope, grrReflectionService,
-                                grrApiService, grrAceService) {
+const FormController = function($scope, grrApiService, grrAceService) {
     /** @private {!angular.Scope} */
     this.scope_ = $scope;
-
-    /** @private {!ReflectionService} */
-    this.grrReflectionService_ = grrReflectionService;
 
     /** @private {!ApiService} */
     this.grrApiService_ = grrApiService;
