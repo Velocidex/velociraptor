@@ -171,7 +171,17 @@ func AddArtifactCollectorArgs(
 	return nil
 }
 
+var (
+	NextFlowIdForTests string
+)
+
 func NewFlowId(client_id string) string {
+	if NextFlowIdForTests != "" {
+		result := NextFlowIdForTests
+		NextFlowIdForTests = ""
+		return result
+	}
+
 	buf := make([]byte, 8)
 	rand.Read(buf)
 

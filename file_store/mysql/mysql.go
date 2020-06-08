@@ -104,19 +104,19 @@ func (self MysqlFileStoreFileInfo) FullPath() string {
 	return path.Join(self.path, self.name)
 }
 
-func (self *MysqlFileStoreFileInfo) Mtime() glob.TimeVal {
-	return glob.TimeVal{
+func (self *MysqlFileStoreFileInfo) Mtime() utils.TimeVal {
+	return utils.TimeVal{
 		Sec:  self.timestamp,
 		Nsec: self.timestamp * 1000000000,
 	}
 }
 
-func (self MysqlFileStoreFileInfo) Atime() glob.TimeVal {
-	return glob.TimeVal{}
+func (self MysqlFileStoreFileInfo) Atime() utils.TimeVal {
+	return utils.TimeVal{}
 }
 
-func (self MysqlFileStoreFileInfo) Ctime() glob.TimeVal {
-	return glob.TimeVal{
+func (self MysqlFileStoreFileInfo) Ctime() utils.TimeVal {
+	return utils.TimeVal{
 		Sec:  self.timestamp,
 		Nsec: self.timestamp * 1000000000,
 	}
@@ -174,9 +174,9 @@ func (self *MysqlFileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 		Data     interface{}
 	}{
 		FullPath: self.FullPath(),

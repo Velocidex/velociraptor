@@ -38,13 +38,14 @@ package flows
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -92,22 +93,21 @@ func ForemanProcessMessage(
 			return nil
 		}
 
-		flow_condition_query, err := calculateFlowConditionQuery(
-			config_obj, hunt)
+		// Notify the hunt manager that we need to hunt this client.
+		path_manager := result_sets.NewArtifactPathManager(config_obj,
+			client_id, "", "System.Hunt.Participation")
+
+		err := services.GetJournal().PushRows(path_manager,
+			[]*ordereddict.Dict{ordereddict.NewDict().
+				Set("HuntId", hunt.HuntId).
+				Set("ClientId", client_id).
+				Set("Participate", true),
+			})
 		if err != nil {
 			return err
 		}
 
-		err = QueueMessageForClient(
-			config_obj, client_id,
-			&crypto_proto.GrrMessage{
-				SessionId:       constants.MONITORING_WELL_KNOWN_FLOW,
-				RequestId:       constants.ProcessVQLResponses,
-				VQLClientAction: flow_condition_query})
-		if err != nil {
-			return err
-		}
-
+		// Let the client know it needs to update its foreman state.
 		err = QueueMessageForClient(
 			config_obj, client_id,
 			&crypto_proto.GrrMessage{
@@ -123,34 +123,4 @@ func ForemanProcessMessage(
 
 		return services.NotifyListener(config_obj, client_id)
 	})
-}
-
-func calculateFlowConditionQuery(
-	config_obj *config_proto.Config,
-	hunt *api_proto.Hunt) (
-	*actions_proto.VQLCollectorArgs, error) {
-
-	// TODO.
-
-	default_query := getDefaultCollectorArgs(hunt)
-	err := artifacts.Obfuscate(config_obj, default_query)
-	return default_query, err
-}
-
-func getDefaultCollectorArgs(hunt *api_proto.Hunt) *actions_proto.VQLCollectorArgs {
-	return &actions_proto.VQLCollectorArgs{
-		Env: []*actions_proto.VQLEnv{
-			&actions_proto.VQLEnv{
-				Key:   "HuntId",
-				Value: hunt.HuntId,
-			},
-		},
-		Query: []*actions_proto.VQLRequest{
-			&actions_proto.VQLRequest{
-				Name: "System.Hunt.Participation",
-				VQL: "SELECT now() as Timestamp, Fqdn, HuntId, " +
-					"true as Participate from info()",
-			},
-		},
-	}
 }

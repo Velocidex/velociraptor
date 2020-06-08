@@ -16,6 +16,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -30,6 +32,14 @@ type BaseServicesTestSuite struct {
 	wg         *sync.WaitGroup
 	client_id  string
 	flow_id    string
+}
+
+func (self *BaseServicesTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
+	file_store_factory, ok := file_store.GetFileStore(
+		self.config_obj).(*memory.MemoryFileStore)
+	require.True(self.T(), ok)
+
+	return file_store_factory
 }
 
 func (self *BaseServicesTestSuite) SetupTest() {

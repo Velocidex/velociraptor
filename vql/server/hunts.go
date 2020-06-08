@@ -321,17 +321,13 @@ func (self HuntFlowsPlugin) Call(
 			result := ordereddict.NewDict().
 				Set("HuntId", participation_row.HuntId).
 				Set("ClientId", participation_row.ClientId).
-				Set("Fqdn", participation_row.Fqdn).
-				Set("Participate", participation_row.Participate).
 				Set("Flow", vfilter.Null{})
 
-			if participation_row.Participate {
-				collection_context, err := flows.LoadCollectionContext(
-					config_obj, participation_row.ClientId,
-					participation_row.FlowId)
-				if err == nil {
-					result.Set("Flow", collection_context)
-				}
+			collection_context, err := flows.LoadCollectionContext(
+				config_obj, participation_row.ClientId,
+				participation_row.FlowId)
+			if err == nil {
+				result.Set("Flow", collection_context)
 			}
 
 			output_chan <- result

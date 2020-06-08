@@ -9,6 +9,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -79,8 +80,9 @@ func (self *VFSService) ProcessDownloadFile(
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		_, err := file_store_factory.StatFile(vfs_path)
 		if err != nil {
-			self.logger.Error("Unable to save flow %v", err)
-			return
+			self.logger.Error(fmt.Sprintf(
+				"Unable to save flow %v: %v", vfs_path, err))
+			continue
 		}
 
 		// We store a place holder in the VFS pointing at the
@@ -94,7 +96,8 @@ func (self *VFSService) ProcessDownloadFile(
 				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
 			})
 		if err != nil {
-			self.logger.Error("Unable to save flow %v", err)
+			self.logger.Error(fmt.Sprintf(
+				"Unable to save flow %v: %v", vfs_path, err))
 		}
 	}
 }

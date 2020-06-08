@@ -75,25 +75,25 @@ func (self *OSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *OSFileInfo) Mtime() TimeVal {
+func (self *OSFileInfo) Mtime() utils.TimeVal {
 	ts := int64(self._Sys().Mtim.Sec)
-	return TimeVal{
+	return utils.TimeVal{
 		Sec:  ts,
 		Nsec: int64(self._Sys().Mtim.Nsec) + ts*1000000000,
 	}
 }
 
-func (self *OSFileInfo) Ctime() TimeVal {
+func (self *OSFileInfo) Ctime() utils.TimeVal {
 	ts := int64(self._Sys().Ctim.Sec)
-	return TimeVal{
+	return utils.TimeVal{
 		Sec:  ts,
 		Nsec: int64(self._Sys().Ctim.Nsec) + ts*1000000000,
 	}
 }
 
-func (self *OSFileInfo) Atime() TimeVal {
+func (self *OSFileInfo) Atime() utils.TimeVal {
 	ts := int64(self._Sys().Atim.Sec)
-	return TimeVal{
+	return utils.TimeVal{
 		Sec:  ts,
 		Nsec: int64(self._Sys().Atim.Nsec) + ts*1000000000,
 	}
@@ -125,9 +125,9 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    TimeVal
-		Ctime    TimeVal
-		Atime    TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

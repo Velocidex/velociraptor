@@ -54,6 +54,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -122,23 +123,23 @@ func (self *ZipFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *ZipFileInfo) Mtime() glob.TimeVal {
+func (self *ZipFileInfo) Mtime() utils.TimeVal {
 	if self.info != nil {
-		return glob.TimeVal{
+		return utils.TimeVal{
 			Sec: self.info.Modified.Unix(),
 		}
 	}
 
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec: 0,
 	}
 }
 
-func (self *ZipFileInfo) Ctime() glob.TimeVal {
+func (self *ZipFileInfo) Ctime() utils.TimeVal {
 	return self.Mtime()
 }
 
-func (self *ZipFileInfo) Atime() glob.TimeVal {
+func (self *ZipFileInfo) Atime() utils.TimeVal {
 	return self.Mtime()
 }
 
@@ -159,9 +160,9 @@ func (self *ZipFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

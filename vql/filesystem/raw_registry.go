@@ -95,19 +95,19 @@ func (self *RawRegKeyInfo) ModTime() time.Time {
 	return self.key.LastWriteTime().Time
 }
 
-func (self *RawRegKeyInfo) Mtime() glob.TimeVal {
+func (self *RawRegKeyInfo) Mtime() utils.TimeVal {
 	nsec := self.ModTime().UnixNano()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *RawRegKeyInfo) Ctime() glob.TimeVal {
+func (self *RawRegKeyInfo) Ctime() utils.TimeVal {
 	return self.Mtime()
 }
 
-func (self *RawRegKeyInfo) Atime() glob.TimeVal {
+func (self *RawRegKeyInfo) Atime() utils.TimeVal {
 	return self.Mtime()
 }
 
@@ -124,9 +124,9 @@ func (self RawRegKeyInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
 		FullPath string
 		Data     interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Mtime:    self.Mtime(),
@@ -193,9 +193,9 @@ func (self RawRegValueInfo) MarshalJSON() ([]byte, error) {
 		FullPath string
 		Type     string
 		Data     interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Mtime:    self.Mtime(),

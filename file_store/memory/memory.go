@@ -4,12 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -103,11 +107,41 @@ func (self *MemoryFileStore) WriteFile(filename string) (api.FileWriter, error) 
 }
 
 func (self *MemoryFileStore) StatFile(filename string) (os.FileInfo, error) {
-	return &api.FileStoreFileInfo{}, nil
+	_, pres := self.Data[filename]
+	if !pres {
+		return nil, os.ErrNotExist
+	}
+
+	return &vtesting.MockFileInfo{
+		Name_:     path.Base(filename),
+		FullPath_: filename,
+	}, nil
 }
 
 func (self *MemoryFileStore) ListDirectory(dirname string) ([]os.FileInfo, error) {
-	return nil, nil
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	files := []string{}
+	for filename := range self.Data {
+		if strings.HasPrefix(filename, dirname) {
+			k := strings.TrimLeft(strings.TrimPrefix(filename, dirname), "/")
+			components := strings.Split(k, "/")
+			if len(components) > 0 &&
+				!utils.InString(files, components[0]) {
+				files = append(files, components[0])
+			}
+		}
+	}
+	result := []os.FileInfo{}
+	for _, file := range files {
+		result = append(result, &vtesting.MockFileInfo{
+			Name_:     file,
+			FullPath_: path.Join(dirname, file),
+		})
+	}
+
+	return result, nil
 }
 
 func (self *MemoryFileStore) Walk(root string, cb filepath.WalkFunc) error {

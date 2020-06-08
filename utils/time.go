@@ -40,3 +40,20 @@ func IsTime(a vfilter.Any) (Time, bool) {
 		return Unix(0, 0), false
 	}
 }
+
+// TODO: Deprecate this one.
+type TimeVal struct {
+	Sec  int64 `json:"sec"`
+	Nsec int64 `json:"usec"`
+}
+
+func (self TimeVal) Time() Time {
+	if self.Nsec > 0 {
+		return Unix(0, self.Nsec)
+	}
+	return Unix(self.Sec, 0)
+}
+
+func (self TimeVal) MarshalJSON() ([]byte, error) {
+	return self.Time().MarshalJSON()
+}

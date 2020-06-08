@@ -60,6 +60,12 @@
       </grr-hunt-clients>
     </uib-tab>
 
+    <uib-tab heading="Status" index="'status'">
+      <grr-csv-viewer
+        params="{hunt_id: huntId, type: 'hunt_status', path: huntId}">
+      </grr-csv-viewer>
+    </uib-tab>
+
     <uib-tab heading="Report"
              ng-if="false"
              index="'report'">

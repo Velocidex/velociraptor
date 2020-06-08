@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"time"
 
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -41,22 +42,22 @@ func (self *OSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *OSFileInfo) Mtime() TimeVal {
-	return TimeVal{
+func (self *OSFileInfo) Mtime() utils.TimeVal {
+	return utils.TimeVal{
 		Sec:  int64(self.sys().Mtimespec.Sec),
 		Nsec: int64(self.sys().Mtimespec.Nsec),
 	}
 }
 
-func (self *OSFileInfo) Ctime() TimeVal {
-	return TimeVal{
+func (self *OSFileInfo) Ctime() utils.TimeVal {
+	return utils.TimeVal{
 		Sec:  int64(self.sys().Ctimespec.Sec),
 		Nsec: int64(self.sys().Ctimespec.Nsec),
 	}
 }
 
-func (self *OSFileInfo) Atime() TimeVal {
-	return TimeVal{
+func (self *OSFileInfo) Atime() utils.TimeVal {
+	return utils.TimeVal{
 		Sec:  int64(self.sys().Atimespec.Sec),
 		Nsec: int64(self.sys().Atimespec.Nsec),
 	}
@@ -90,9 +91,9 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    TimeVal
-		Ctime    TimeVal
-		Atime    TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

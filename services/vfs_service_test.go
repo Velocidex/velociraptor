@@ -86,11 +86,17 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 }
 
 func (self *VFSServiceTestSuite) TestVFSDownload() {
+	flow_path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
+
 	self.EmulateCollection(
 		"System.VFS.ListDirectory", []*ordereddict.Dict{
 			makeStat("/a/b", "A"),
 			makeStat("/a/b", "B"),
 		})
+
+	// Simulate and upload was received by our System.VFS.DownloadFile collection.
+	file_store := self.GetMemoryFileStore()
+	file_store.Data[flow_path_manager.GetUploadsFile("file", "/a/b/B").Path()] = []byte("Data")
 
 	self.EmulateCollection(
 		"System.VFS.DownloadFile", []*ordereddict.Dict{
@@ -102,8 +108,6 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 
 	db, err := datastore.GetDB(self.config_obj)
 	assert.NoError(self.T(), err)
-
-	flow_path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
 
 	// The VFS service stores a file in the VFS area of the
 	// client's namespace pointing to the real data. The real data
