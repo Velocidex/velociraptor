@@ -34,6 +34,8 @@ description: |
     4. This content is NOT recommended for hunting without great consideration as 
     bulk_extractor is a multithreaded tool and utilises all CPU available on the 
     endpoint.
+    5. The artifact copies carved data to the local disk which is not ideal from a 
+    forensic viewpoint and depending on size of collection may stomp on evidence.
     
 reference:
   - http://www.kazamiya.net/en/bulk_extractor-rec
