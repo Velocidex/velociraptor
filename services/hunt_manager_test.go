@@ -96,10 +96,13 @@ func (self *HuntTestSuite) TestHuntManager() {
 		// The hunt index is updated.
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+		_, err = LoadCollectionContext(self.config_obj,
+			self.client_id, "F.1234")
 		return err == nil
 	})
-
-	time.Sleep(time.Second)
 
 	// Check that a flow was launched.
 	collection_context, err := LoadCollectionContext(self.config_obj,
@@ -151,14 +154,14 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err := db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
-		if err != nil {
-			return false
-		}
-		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
+
+	// No flow should be launched.
+	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
+	assert.Error(t, err)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
