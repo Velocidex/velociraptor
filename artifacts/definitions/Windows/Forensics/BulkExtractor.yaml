@@ -28,7 +28,7 @@ description: |
     **Note**  
     1. This artifact uses the 3rd party binaries feature. You will need to run 
     Server.Utils.DownloadBinaries on the server prior to execution.  
-    2. Currently only supported for x64 bit machines.
+    2. Currently only supported for x64 bit machines.  
     3. This artifact usually takes a long time. Ensure default timeout is high 
     enough for completion.  
     4. This content is NOT recommended for hunting without great consideration as 
