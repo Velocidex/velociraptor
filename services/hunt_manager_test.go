@@ -282,6 +282,11 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+
+		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
 
