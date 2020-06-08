@@ -92,7 +92,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
@@ -148,7 +148,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
@@ -209,7 +209,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
@@ -274,7 +274,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
