@@ -73,12 +73,12 @@ sources:
     - LET bin <= SELECT * 
         FROM Artifact.Generic.Utils.FetchBinary(
             binaryURL=binaryURL, ToolName="Bulk_Extractor")
-    - LET tempfolder <= tempdir
-    - LET zip_file <= SELECT 
-            copy(filename=FullPath, dest=tempfile(extension=".exe"), 
-                accessor='zip') AS Payload 
-        FROM glob(globs="file:///" + (bin[0]).FullPath + 
-             "#/bulk_extractor.exe", accessor='zip')
+    - LET tempfolder <= tempdir()
+    -zip_file <= copy(filename=url(path=bin[0].FullPath, 
+            fragment="bulk_extractor.exe").String,accessor='zip',
+            dest=tempfile(extension=".exe"),
+            accessor='zip') AS Payload 
+        FROM scope()
     - LET target = SELECT 
             DeviceID,
             if(condition=DeviceID=~"^\\\\\\\\.\\\\",
