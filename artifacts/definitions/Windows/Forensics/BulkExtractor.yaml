@@ -97,6 +97,7 @@ sources:
                     Target as DeviceID,
                     upcase(string=Target) as _DeviceID
                 FROM scope()
+                WHERE Target =~ '.'
             },
             c={
                 SELECT 
