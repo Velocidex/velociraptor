@@ -10,7 +10,7 @@ parameters:
     type: bool
   - name: CertificateInfo
     default: N
-    type: bool  
+    type: bool
 
 sources:
   - precondition: |
@@ -31,12 +31,12 @@ sources:
                {
                  SELECT FailureCommand FROM read_reg_key(globs=servicesKeyGlob + Name)
                } AS FailureCommand,
-               parse_string_with_regex(regex=
-                 ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'], 
-                 string=PathName).AbsoluteExePath as AbsoluteExePath
+               expand(path=parse_string_with_regex(regex=
+                 ['^"(?P<AbsoluteExePath>[^"]+)','(?P<AbsoluteExePath>^[^ "]+)'],
+                 string=PathName).AbsoluteExePath) as AbsoluteExePath
         FROM wmi(query="SELECT * From Win32_service", namespace="root/CIMV2")
       - |
-        SELECT *, 
+        SELECT *,
                  if(condition=(Calculate_hashes = "Y"),
                     then=hash(path=AbsoluteExePath,
                            accessor=file)) AS HashServiceExe,
@@ -46,5 +46,5 @@ sources:
                     then=hash(path=ServiceDll,
                            accessor=file)) AS HashServiceDll,
                  if(condition=(CertificateInfo = "Y"),
-                    then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll       
+                    then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
         FROM service

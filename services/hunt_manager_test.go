@@ -153,12 +153,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
-
-	_, err = LoadCollectionContext(self.config_obj,
-		self.client_id, "F.1234")
-	assert.Error(t, err)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
@@ -214,12 +214,15 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
 
 	collection_context, err := LoadCollectionContext(self.config_obj,
 		self.client_id, "F.1234")
-	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
