@@ -33,9 +33,9 @@ description: |
     enough for completion.  
     4. This content is NOT recommended for hunting without great consideration as 
     bulk_extractor is a multithreaded tool and utilises all CPU available on the 
-    endpoint.
-    5. The artifact copies carved data to the local disk which is not ideal from a 
-    forensic viewpoint and depending on size of collection may stomp on evidence.
+    endpoint.  
+    5. The artifact copies carved data to the local disk prior to upload which 
+    is not ideal from a forensic viewpoint.  
     
 reference:
   - http://www.kazamiya.net/en/bulk_extractor-rec
@@ -74,10 +74,11 @@ sources:
         FROM Artifact.Generic.Utils.FetchBinary(
             binaryURL=binaryURL, ToolName="Bulk_Extractor")
     - LET tempfolder <= tempdir()
-    -zip_file <= copy(filename=url(path=bin[0].FullPath, 
-            fragment="bulk_extractor.exe").String,accessor='zip',
-            dest=tempfile(extension=".exe"),
-            accessor='zip') AS Payload 
+    - LET zip_file <= SELECT 
+            copy(filename=url(path=bin[0].FullPath, 
+                fragment="bulk_extractor.exe").String, 
+                dest=tempfile(extension=".exe"), 
+                accessor='zip') AS Payload 
         FROM scope()
     - LET target = SELECT 
             DeviceID,
@@ -143,7 +144,7 @@ sources:
         query= { 
             SELECT * 
             FROM execve(argv=cmdline[0].CMD + (tempfolder + '\\' + base, DeviceID)
-                , length=10000000)})
+                , length=10000000, sep='\n')})
 
   - name: FindResults
     queries:
