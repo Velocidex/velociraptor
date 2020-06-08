@@ -43,7 +43,10 @@ reference:
   - https://simson.net/clips/academic/2013.COSE.bulk_extractor.pdf
     
 author: Matt Green - @mgreen27
- 
+
+required_permissions:
+  - EXECVE
+  
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
