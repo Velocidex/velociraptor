@@ -36,29 +36,13 @@ import (
 // The algorithm in this file is based on the Rekall algorithm here:
 // https://github.com/google/rekall/blob/master/rekall-core/rekall/plugins/response/files.py#L255
 
-type TimeVal struct {
-	Sec  int64 `json:"sec"`
-	Nsec int64 `json:"usec"`
-}
-
-func (self TimeVal) Time() utils.Time {
-	if self.Nsec > 0 {
-		return utils.Unix(0, self.Nsec)
-	}
-	return utils.Unix(self.Sec, 0)
-}
-
-func (self TimeVal) MarshalJSON() ([]byte, error) {
-	return self.Time().MarshalJSON()
-}
-
 type FileInfo interface {
 	Name() string
 	ModTime() time.Time
 	FullPath() string
-	Mtime() TimeVal
-	Ctime() TimeVal
-	Atime() TimeVal
+	Mtime() utils.TimeVal
+	Ctime() utils.TimeVal
+	Atime() utils.TimeVal
 	Data() interface{}
 	Size() int64
 

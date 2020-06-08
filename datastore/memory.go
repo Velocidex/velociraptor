@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -17,6 +18,8 @@ var (
 )
 
 type TestDataStore struct {
+	mu sync.Mutex
+
 	Subjects    map[string]proto.Message
 	ClientTasks map[string][]*crypto_proto.GrrMessage
 }
@@ -31,6 +34,9 @@ func NewTestDataStore() *TestDataStore {
 func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
 	client_id string,
 	do_not_lease bool) ([]*crypto_proto.GrrMessage, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result, _ := self.ClientTasks[client_id]
 	if !do_not_lease {
 		delete(self.ClientTasks, client_id)
@@ -42,6 +48,9 @@ func (self *TestDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
 	message *crypto_proto.GrrMessage) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result, pres := self.ClientTasks[client_id]
 	if !pres {
 		result = make([]*crypto_proto.GrrMessage, 0)
@@ -57,6 +66,8 @@ func (self *TestDataStore) UnQueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,
 	message *crypto_proto.GrrMessage) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	result, pres := self.ClientTasks[client_id]
 	if !pres {
@@ -78,6 +89,8 @@ func (self *TestDataStore) GetSubject(
 	config_obj *config_proto.Config,
 	urn string,
 	message proto.Message) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	result, _ := self.Subjects[urn]
 	if result != nil {
@@ -90,6 +103,8 @@ func (self *TestDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn string,
 	message proto.Message) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	self.Subjects[urn] = message
 
@@ -99,6 +114,8 @@ func (self *TestDataStore) SetSubject(
 func (self *TestDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	delete(self.Subjects, urn)
 
@@ -110,6 +127,8 @@ func (self *TestDataStore) ListChildren(
 	config_obj *config_proto.Config,
 	urn string,
 	offset uint64, length uint64) ([]string, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	result := []string{}
 
@@ -134,13 +153,12 @@ func (self *TestDataStore) SetIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
-		err := self.SetSubject(config_obj, subject, &empty.Empty{})
-		if err != nil {
-			return err
-		}
+		self.Subjects[subject] = &empty.Empty{}
 	}
 	return nil
 }
@@ -150,13 +168,12 @@ func (self *TestDataStore) UnsetIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
-		err := self.DeleteSubject(config_obj, subject)
-		if err != nil {
-			return err
-		}
+		delete(self.Subjects, subject)
 	}
 	return nil
 }
@@ -166,6 +183,9 @@ func (self *TestDataStore) CheckIndex(
 	index_urn string,
 	entity string,
 	keywords []string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	for _, keyword := range keywords {
 		subject := path.Join(index_urn, strings.ToLower(keyword), entity)
 		_, pres := self.Subjects[subject]
@@ -181,6 +201,9 @@ func (self *TestDataStore) SearchClients(
 	index_urn string,
 	query string, query_type string,
 	offset uint64, limit uint64) []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	return nil
 }
 

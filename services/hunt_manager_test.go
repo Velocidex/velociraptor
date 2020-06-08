@@ -8,11 +8,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
-	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -34,17 +34,6 @@ type HuntTestSuite struct {
 	manager    *HuntManager
 
 	expected *flows_proto.ArtifactCollectorArgs
-}
-
-type MockAPIClientFactory struct {
-	mock api_proto.APIClient
-}
-
-func (self MockAPIClientFactory) GetAPIClient(
-	ctx context.Context,
-	config_obj *config_proto.Config) (api_proto.APIClient, func() error, error) {
-	return self.mock, func() error { return nil }, nil
-
 }
 
 func (self *HuntTestSuite) SetupTest() {
@@ -72,22 +61,8 @@ func (self *HuntTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
-	// Launching the hunt on the client will result in client
-	// notification for that client only.
-	mock := api_mock.NewMockAPIClient(ctrl)
-	mock.EXPECT().CollectArtifact(
-		gomock.Any(),
-		self.expected,
-	).Return(&flows_proto.ArtifactCollectorResponse{
-		FlowId: "F.1234",
-	}, nil)
-
-	self.manager.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
+	artifacts.NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -117,26 +92,29 @@ func (self *HuntTestSuite) TestHuntManager() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+		_, err = LoadCollectionContext(self.config_obj,
+			self.client_id, "F.1234")
 		return err == nil
 	})
+
+	// Check that a flow was launched.
+	collection_context, err := LoadCollectionContext(self.config_obj,
+		self.client_id, "F.1234")
+	assert.NoError(t, err)
+	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
-	mock := api_mock.NewMockAPIClient(ctrl)
-
-	// Client has no label so we expect it not to start a
-	// collection.
-	self.manager.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
+	artifacts.NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -173,34 +151,23 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
-		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
+		err := db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
 		return err == nil
 	})
+
+	// No flow should be launched.
+	_, err = LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
+	assert.Error(t, err)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
-	mock := api_mock.NewMockAPIClient(ctrl)
-
-	// Client has the label despite the case being different so we
-	// expect the hunt manager to start a collection.
-	mock.EXPECT().CollectArtifact(
-		gomock.Any(),
-		self.expected,
-	).Return(&flows_proto.ArtifactCollectorResponse{
-		FlowId: "F.1234",
-	}, nil)
-
-	self.manager.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
+	artifacts.NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -245,34 +212,27 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
+
+	collection_context, err := LoadCollectionContext(self.config_obj,
+		self.client_id, "F.1234")
+	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
 
-	mock := api_mock.NewMockAPIClient(ctrl)
-
-	// Client has the correct label so we expect the hunt manager
-	// to start a collection.
-	mock.EXPECT().CollectArtifact(
-		gomock.Any(),
-		self.expected,
-	).Return(&flows_proto.ArtifactCollectorResponse{
-		FlowId: "F.1234",
-	}, nil)
-
-	self.manager.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
+	artifacts.NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -317,17 +277,26 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			Set("Fqdn", "MyHost").
 			Set("Participate", true)})
 
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
 		err = db.CheckIndex(self.config_obj, constants.HUNT_INDEX,
 			self.client_id, []string{hunt_obj.HuntId})
+		if err != nil {
+			return false
+		}
+
+		_, err := LoadCollectionContext(self.config_obj, self.client_id, "F.1234")
 		return err == nil
 	})
+
+	collection_context, err := LoadCollectionContext(self.config_obj,
+		self.client_id, "F.1234")
+	assert.NoError(t, err)
+	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
 func TestHuntTestSuite(t *testing.T) {
-
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "Test"
 
@@ -353,4 +322,28 @@ func TestHuntTestSuite(t *testing.T) {
 			Artifacts: []string{"Generic.Client.Info"},
 		},
 	})
+}
+
+func LoadCollectionContext(
+	config_obj *config_proto.Config,
+	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.GetSubject(config_obj, flow_path_manager.Path(),
+		collection_context)
+	if err != nil {
+		return nil, err
+	}
+
+	if collection_context.SessionId != flow_id {
+		return nil, errors.New("Not found")
+	}
+
+	return collection_context, nil
 }

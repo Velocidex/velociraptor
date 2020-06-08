@@ -59,3 +59,9 @@ func (self HuntPathManager) Clients() *HuntPathManager {
 	self.path = path.Join("/hunts", self.hunt_id+".json")
 	return &self
 }
+
+// Where to store client errors.
+func (self HuntPathManager) ClientErrors() *HuntPathManager {
+	self.path = path.Join("/hunts", self.hunt_id+"_errors.json")
+	return &self
+}

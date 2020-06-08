@@ -7,7 +7,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/kierdavis/dateparser"
-	glob "www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -78,10 +77,10 @@ func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (utils.Time, error
 	case string:
 		return parse_time_from_string(scope, t)
 
-	case *glob.TimeVal:
+	case *utils.TimeVal:
 		return t.Time(), nil
 
-	case glob.TimeVal:
+	case utils.TimeVal:
 		return t.Time(), nil
 
 	default:

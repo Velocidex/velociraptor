@@ -454,12 +454,6 @@ func (self *ApiServer) GetClient(
 	return api_client, nil
 }
 
-func (self *ApiServer) DescribeTypes(
-	ctx context.Context,
-	in *empty.Empty) (*artifacts_proto.Types, error) {
-	return describeTypes(), nil
-}
-
 func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {

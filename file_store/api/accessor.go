@@ -16,6 +16,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -103,16 +104,16 @@ func (self *FileStoreFileInfo) FullPath() string {
 	return self.FullPath_
 }
 
-func (self *FileStoreFileInfo) Mtime() glob.TimeVal {
-	return glob.TimeVal{}
+func (self *FileStoreFileInfo) Mtime() utils.TimeVal {
+	return utils.TimeVal{}
 }
 
-func (self *FileStoreFileInfo) Ctime() glob.TimeVal {
-	return glob.TimeVal{}
+func (self *FileStoreFileInfo) Ctime() utils.TimeVal {
+	return utils.TimeVal{}
 }
 
-func (self *FileStoreFileInfo) Atime() glob.TimeVal {
-	return glob.TimeVal{}
+func (self *FileStoreFileInfo) Atime() utils.TimeVal {
+	return utils.TimeVal{}
 }
 
 func (self *FileStoreFileInfo) IsLink() bool {
@@ -135,9 +136,9 @@ func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -206,13 +207,9 @@ func (self *ServerTestSuite) TestClientEventTable() {
 }
 
 // Create a new hunt. Client sends a ForemanCheckin message with
-// LastHuntTimestamp = 0 and will receive the hunt participation query
-// and the UpdateForeman message.
+// LastHuntTimestamp = 0 and will receive the UpdateForeman message.
 func (self *ServerTestSuite) TestForeman() {
 	t := self.T()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
 	runner := flows.NewFlowRunner(self.config_obj)
 	defer runner.Close()
 
@@ -225,14 +222,6 @@ func (self *ServerTestSuite) TestForeman() {
 
 	dispatcher, err := services.StartHuntDispatcher(ctx, wg, self.config_obj)
 	require.NoError(t, err)
-
-	// Launching the hunt on the client will result in client
-	// notification for that client only.
-	mock := api_mock.NewMockAPIClient(ctrl)
-
-	dispatcher.APIClientFactory = MockAPIClientFactory{
-		mock: mock,
-	}
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	expected := api.MakeCollectorRequest(
@@ -278,16 +267,24 @@ func (self *ServerTestSuite) TestForeman() {
 	tasks, err := db.GetClientTasks(self.config_obj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
-	assert.Equal(t, len(tasks), 2)
+	assert.Equal(t, len(tasks), 1)
 
-	// First task should be hunt participation query.
+	// Task should be UpdateForeman message.
 	assert.Equal(t, tasks[0].SessionId, "F.Monitoring")
-	assert.NotNil(t, tasks[0].VQLClientAction)
+	require.NotNil(t, tasks[0].UpdateForeman)
+	assert.Equal(t, tasks[0].UpdateForeman.LastHuntTimestamp, dispatcher.GetLastTimestamp())
 
-	// Second task should be UpdateForeman message.
-	assert.Equal(t, tasks[1].SessionId, "F.Monitoring")
-	require.NotNil(t, tasks[1].UpdateForeman)
-	assert.Equal(t, tasks[1].UpdateForeman.LastHuntTimestamp, dispatcher.GetLastTimestamp())
+	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+		self.client_id, "", "System.Hunt.Participation")
+
+	rows := []*ordereddict.Dict{}
+	row_chan, err := file_store.GetTimeRange(ctx, self.config_obj,
+		path_manager, 0, 0)
+	assert.NoError(t, err)
+	for row := range row_chan {
+		rows = append(rows, row)
+	}
+	assert.Equal(t, len(rows), 1)
 }
 
 func (self *ServerTestSuite) RequiredFilestoreContains(filename string, regex string) {

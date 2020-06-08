@@ -105,25 +105,25 @@ func (self *NTFSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *NTFSFileInfo) Mtime() glob.TimeVal {
+func (self *NTFSFileInfo) Mtime() utils.TimeVal {
 	nsec := self.info.Mtime.UnixNano()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *NTFSFileInfo) Ctime() glob.TimeVal {
+func (self *NTFSFileInfo) Ctime() utils.TimeVal {
 	nsec := self.info.Ctime.UnixNano()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *NTFSFileInfo) Atime() glob.TimeVal {
+func (self *NTFSFileInfo) Atime() utils.TimeVal {
 	nsec := self.info.Atime.UnixNano()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
@@ -146,9 +146,9 @@ func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

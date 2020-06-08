@@ -243,12 +243,6 @@ service API {
         };
     }
 
-    rpc DescribeTypes(google.protobuf.Empty) returns (Types) {
-        option (google.api.http) = {
-            get: "/api/v1/DescribeTypes",
-        };
-    }
-
     rpc GetKeywordCompletions(google.protobuf.Empty) returns (KeywordCompletions) {
         option (google.api.http) = {
             get: "/api/v1/GetKeywordCompletions",

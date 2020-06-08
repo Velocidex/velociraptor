@@ -29,7 +29,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
@@ -70,9 +69,8 @@ type HuntDispatcher struct {
 	// https://github.com/golang/go/issues/13868
 	last_timestamp uint64
 
-	mu               sync.Mutex
-	config_obj       *config_proto.Config
-	APIClientFactory grpc_client.APIClientFactory
+	mu         sync.Mutex
+	config_obj *config_proto.Config
 
 	hunts map[string]*api_proto.Hunt
 	dirty bool
@@ -243,9 +241,8 @@ func StartHuntDispatcher(
 	logger.Info("Starting Hunt Dispatcher Service.")
 
 	result := &HuntDispatcher{
-		config_obj:       config_obj,
-		hunts:            make(map[string]*api_proto.Hunt),
-		APIClientFactory: grpc_client.GRPCAPIClient{},
+		config_obj: config_obj,
+		hunts:      make(map[string]*api_proto.Hunt),
 	}
 
 	// flush the hunts every 10 seconds.

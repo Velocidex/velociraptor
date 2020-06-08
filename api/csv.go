@@ -61,6 +61,10 @@ func getTable(
 		}
 	} else if in.HuntId != "" && in.Type == "clients" {
 		path_manager = paths.NewHuntPathManager(in.HuntId).Clients()
+
+	} else if in.HuntId != "" && in.Type == "hunt_status" {
+		path_manager = paths.NewHuntPathManager(in.HuntId).ClientErrors()
+
 	} else if in.NotebookId != "" && in.CellId != "" {
 		path_manager = reporting.NewNotebookPathManager(in.NotebookId).Cell(
 			in.CellId).QueryStorage(in.TableId)

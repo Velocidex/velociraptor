@@ -15,23 +15,40 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+/*
+   Hunt dispatching logic:
+
+1) Client checks in with foreman.
+
+2) If foreman decides client has not run this hunt, foreman spaces a
+   message on `System.Hunt.Participation`.
+
+3) Hunt manager watches for new rows on System.Hunt.Participation and
+   schedules collection.
+
+4) Hunt manager watches for flow completions and updates hunt stats re
+   success or error of flow completion.
+*/
+
 package services
 
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/vfilter"
@@ -51,8 +68,6 @@ type HuntManager struct {
 	mu sync.Mutex
 
 	config_obj *config_proto.Config
-
-	APIClientFactory grpc_client.APIClientFactory
 }
 
 func (self *HuntManager) Start(
@@ -60,6 +75,19 @@ func (self *HuntManager) Start(
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting the hunt manager service.")
+
+	err := self.StartParticipation(ctx, wg)
+	if err != nil {
+		return err
+	}
+
+	return self.StartFlowCompletion(ctx, wg)
+}
+
+// Watch the Participation queue and schedule new collections.
+func (self *HuntManager) StartParticipation(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
 
 	scope := vfilter.NewScope()
 	qm_chan, cancel := GetJournal().Watch("System.Hunt.Participation")
@@ -82,8 +110,37 @@ func (self *HuntManager) Start(
 				return
 			}
 		}
+	}()
 
-		logger.Info("Exiting hunt manager\n")
+	return nil
+}
+
+// Watch the Flow.Completion queue and report status.
+func (self *HuntManager) StartFlowCompletion(
+	ctx context.Context,
+	wg *sync.WaitGroup) error {
+
+	scope := vfilter.NewScope()
+	qm_chan, cancel := GetJournal().Watch("System.Flow.Completion")
+
+	wg.Add(1)
+	go func() {
+		defer cancel()
+		defer wg.Done()
+		defer self.Close()
+
+		for {
+			select {
+			case row, ok := <-qm_chan:
+				if !ok {
+					return
+				}
+				self.ProcessFlowCompletion(ctx, scope, row)
+
+			case <-ctx.Done():
+				return
+			}
+		}
 	}()
 
 	return nil
@@ -97,6 +154,45 @@ func (self *HuntManager) Close() {
 	logger.Info("Shutting down hunt manager service.")
 }
 
+func (self *HuntManager) ProcessFlowCompletion(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	row *ordereddict.Dict) {
+
+	flow_any, pres := row.Get("Flow")
+	if !pres {
+		return
+	}
+
+	flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
+	if !ok {
+		return
+	}
+
+	if flow.Request == nil {
+		return
+	}
+
+	hunt_id := flow.Request.Creator
+	if !strings.HasPrefix(hunt_id, constants.HUNT_PREFIX) {
+		return
+	}
+
+	path_manager := paths.NewHuntPathManager(hunt_id)
+	err := GetJournal().PushRows(path_manager.ClientErrors(),
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", flow.ClientId).
+			Set("FlowId", flow.SessionId).
+			Set("StartTime", time.Unix(0, int64(flow.CreateTime*1000))).
+			Set("EndTime", time.Unix(0, int64(flow.KillTimestamp*1000))).
+			Set("Status", flow.State.String()).
+			Set("Error", flow.Status)})
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error(fmt.Sprintf("ProcessFlowCompletion: %v", err))
+	}
+}
+
 func (self *HuntManager) ProcessRow(
 	ctx context.Context,
 	scope *vfilter.Scope,
@@ -104,9 +200,8 @@ func (self *HuntManager) ProcessRow(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	dict_row := vfilter.RowToDict(ctx, scope, row)
 	participation_row := &ParticipationRecord{}
-	err := vfilter.ExtractArgs(scope, dict_row, participation_row)
+	err := vfilter.ExtractArgs(scope, row, participation_row)
 	if err != nil {
 		scope.Log("ExtractArgs %v", err)
 		return
@@ -195,26 +290,24 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	// Issue the flow on the client.
-	client, closer, err := self.APIClientFactory.GetAPIClient(
-		ctx, self.config_obj)
-	if err != nil {
-		scope.Log("hunt manager: %s", err.Error())
-		return
-	}
-	defer closer()
-
-	response, err := client.CollectArtifact(ctx, request)
+	flow_id, err := artifacts.ScheduleArtifactCollection(self.config_obj,
+		"Server", request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return
 	}
 
-	dict_row.Set("FlowId", response.FlowId)
-	dict_row.Set("Timestamp", time.Now().Unix())
+	row.Set("FlowId", flow_id)
+	row.Set("Timestamp", time.Now().Unix())
 
 	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{dict_row})
+	GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{row})
+
+	// Notify the client
+	err = NotifyListener(self.config_obj, participation_row.ClientId)
+	if err != nil {
+		scope.Log("hunt manager: %v", err)
+	}
 }
 
 func startHuntManager(
@@ -222,8 +315,7 @@ func startHuntManager(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*HuntManager, error) {
 	result := &HuntManager{
-		config_obj:       config_obj,
-		APIClientFactory: grpc_client.GRPCAPIClient{},
+		config_obj: config_obj,
 	}
 	return result, result.Start(ctx, wg)
 }

@@ -33,6 +33,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -179,32 +180,32 @@ func (self *LazyNTFSFileInfo) FullPath() string {
 	return self._full_path
 }
 
-func (self *LazyNTFSFileInfo) Mtime() glob.TimeVal {
+func (self *LazyNTFSFileInfo) Mtime() utils.TimeVal {
 	if self.cached_info == nil {
 		self.ensureCachedInfo()
 	}
 
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec: self.cached_info.Mtime.Unix(),
 	}
 }
 
-func (self *LazyNTFSFileInfo) Ctime() glob.TimeVal {
+func (self *LazyNTFSFileInfo) Ctime() utils.TimeVal {
 	if self.cached_info == nil {
 		self.ensureCachedInfo()
 	}
 
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec: self.cached_info.Ctime.Unix(),
 	}
 }
 
-func (self *LazyNTFSFileInfo) Atime() glob.TimeVal {
+func (self *LazyNTFSFileInfo) Atime() utils.TimeVal {
 	if self.cached_info == nil {
 		self.ensureCachedInfo()
 	}
 
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec: self.cached_info.Atime.Unix(),
 	}
 }
@@ -226,9 +227,9 @@ func (self *LazyNTFSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),

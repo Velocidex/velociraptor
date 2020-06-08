@@ -61,25 +61,25 @@ func (self *OSFileInfo) Data() interface{} {
 	return ordereddict.NewDict()
 }
 
-func (self *OSFileInfo) Mtime() glob.TimeVal {
+func (self *OSFileInfo) Mtime() utils.TimeVal {
 	nsec := self.sys().LastWriteTime.Nanoseconds()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *OSFileInfo) Ctime() glob.TimeVal {
+func (self *OSFileInfo) Ctime() utils.TimeVal {
 	nsec := self.sys().CreationTime.Nanoseconds()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
 }
 
-func (self *OSFileInfo) Atime() glob.TimeVal {
+func (self *OSFileInfo) Atime() utils.TimeVal {
 	nsec := self.sys().LastAccessTime.Nanoseconds()
-	return glob.TimeVal{
+	return utils.TimeVal{
 		Sec:  nsec / 1000000000,
 		Nsec: nsec,
 	}
@@ -111,9 +111,9 @@ func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
 		ModeStr  string
 		ModTime  time.Time
 		Sys      interface{}
-		Mtime    glob.TimeVal
-		Ctime    glob.TimeVal
-		Atime    glob.TimeVal
+		Mtime    utils.TimeVal
+		Ctime    utils.TimeVal
+		Atime    utils.TimeVal
 	}{
 		FullPath: self.FullPath(),
 		Size:     self.Size(),
