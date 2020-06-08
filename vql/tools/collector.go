@@ -116,9 +116,12 @@ func (self CollectPlugin) Call(
 			// Now override provided parameters
 			for _, key := range scope.GetMembers(arg.Args) {
 				if !in_params(key) {
-					scope.Log("Unknown arg %v to artifact collector",
-						key)
-					return
+					// This is not an error - it
+					// just means that there are
+					// muliple artifacts to
+					// collect with different
+					// parameters.
+					continue
 				}
 
 				value, pres := scope.Associative(arg.Args,

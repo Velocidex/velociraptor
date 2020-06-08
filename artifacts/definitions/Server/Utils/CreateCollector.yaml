@@ -183,7 +183,8 @@ sources:
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, parameters, sources
             FROM artifact_definitions(names=Artifacts)
-            WHERE log(message="Adding artifact_definition for " + name) },
+            WHERE name =~ "^Custom\\." AND
+              log(message="Adding artifact_definition for " + name) },
 
       b = { SELECT "Collector" AS name, (
                     dict(name="Artifacts", default=artifacts),
