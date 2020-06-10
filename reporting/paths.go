@@ -33,6 +33,12 @@ func (self *NotebookPathManager) HtmlExport() string {
 			time.Now().Format("20060102150405Z")))
 }
 
+func (self *NotebookPathManager) ZipExport() string {
+	return path.Join("/downloads/notebooks", self.notebook_id,
+		fmt.Sprintf("%s-%s.zip", self.notebook_id,
+			time.Now().Format("20060102150405Z")))
+}
+
 func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 	return &NotebookPathManager{notebook_id: notebook_id}
 }

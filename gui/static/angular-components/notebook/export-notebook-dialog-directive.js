@@ -23,10 +23,10 @@ const ExportNotebookDialogController = function($scope, grrApiService) {
     }.bind(this));
 };
 
-ExportNotebookDialogController.prototype.exportNotebook = function(event) {
+ExportNotebookDialogController.prototype.exportNotebook = function(event, type) {
     this.request = {
         notebook_id: this.scope_["notebook"]['notebook_id'],
-        type: "html",
+        type: type,
     };
 
     this.grrApiService_.post(
