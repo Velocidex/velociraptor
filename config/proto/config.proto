@@ -228,6 +228,8 @@ message ApiClientConfig {
     string name = 5 [(sem_type) = {
             description: "The CommonName for this API client.",
         }];
+
+    string pinned_server_name = 6;
 }
 
 message GUILink {

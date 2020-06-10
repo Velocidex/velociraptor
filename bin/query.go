@@ -148,7 +148,9 @@ func outputCSV(ctx context.Context,
 
 }
 
-func doRemoteQuery(config_obj *config_proto.Config) {
+func doRemoteQuery(
+	config_obj *config_proto.Config, format string,
+	queries []string, env *ordereddict.Dict) {
 	ctx := context.Background()
 	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
 	kingpin.FatalIfError(err, "GetAPIClient")
@@ -160,7 +162,18 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 		MaxRow:  1000,
 		MaxWait: 1,
 	}
-	for _, query := range *queries {
+
+	if env != nil {
+		for _, k := range env.Keys() {
+			v, ok := env.GetString(k)
+			if ok {
+				request.Env = append(request.Env, &actions_proto.VQLEnv{
+					Key: k, Value: v})
+			}
+		}
+	}
+
+	for _, query := range queries {
 		request.Query = append(request.Query,
 			&actions_proto.VQLRequest{VQL: query})
 	}
@@ -169,7 +182,7 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 
 	for {
 		response, err := stream.Recv()
-		if err == io.EOF {
+		if response == nil && err == io.EOF {
 			break
 		}
 		kingpin.FatalIfError(err, "GetAPIClient")
@@ -182,7 +195,7 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
 		kingpin.FatalIfError(err, "GetAPIClient")
 
-		switch *format {
+		switch format {
 		case "json":
 			fmt.Println(response.Response)
 
@@ -190,12 +203,19 @@ func doRemoteQuery(config_obj *config_proto.Config) {
 			for _, row := range rows {
 				serialized, err := json.Marshal(row)
 				if err == nil {
-					fmt.Println(string(serialized) + "\n")
+					fmt.Println(string(serialized))
 				}
 			}
 
 		case "csv":
-			fmt.Println(response.Response)
+			scope := vql_subsystem.MakeScope()
+			csv_writer := csv.GetCSVAppender(
+				scope, &StdoutWrapper{os.Stdout}, true /* write_headers */)
+			defer csv_writer.Close()
+
+			for _, row := range rows {
+				csv_writer.Write(row)
+			}
 		}
 	}
 }
@@ -204,10 +224,15 @@ func doQuery() {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
 
+	env := ordereddict.NewDict()
+	for k, v := range *env_map {
+		env.Set(k, v)
+	}
+
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
-		doRemoteQuery(config_obj)
+		doRemoteQuery(config_obj, *format, *queries, env)
 		return
 	}
 
