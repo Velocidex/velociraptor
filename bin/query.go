@@ -238,14 +238,14 @@ func doQuery() {
 		return
 	}
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
 	// Try to start essential services in case they are needed. It
 	// is not an error if we can not.
 	_ = services.StartJournalService(config_obj)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	wg := &sync.WaitGroup{}
-	defer wg.Wait()
 
 	_ = services.StartNotificationService(ctx, wg, config_obj)
 
