@@ -14,6 +14,10 @@ import (
 // GetQueueManager selects an appropriate QueueManager object based on
 // config.
 func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) {
+	if config_obj.Datastore == nil {
+		return nil, errors.New("Datastore not configured")
+	}
+
 	file_store := GetFileStore(config_obj)
 
 	switch config_obj.Datastore.Implementation {

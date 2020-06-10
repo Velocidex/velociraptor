@@ -95,7 +95,7 @@ require (
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200523222454-059865788121
+	golang.org/x/sys v0.0.0-20200610111108-226ff32320da
 	golang.org/x/tools v0.0.0-20200207131002-533eb2654509 // indirect
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
@@ -108,7 +108,7 @@ require (
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
-	www.velocidex.com/golang/evtx v0.0.2-0.20200505002428-02e98e3e472b
+	www.velocidex.com/golang/evtx v0.0.2-0.20200610130036-cc23ac7defb8
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.0.0-20200530234845-9c557c0b9eec
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6

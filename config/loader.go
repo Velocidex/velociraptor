@@ -192,6 +192,10 @@ func (self *Loader) WithEmbedded() *Loader {
 }
 
 func (self *Loader) WithApiLoader(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
 	self = self.Copy()
 	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
 		result, err := read_api_config_from_file(filename)
