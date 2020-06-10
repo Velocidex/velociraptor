@@ -192,10 +192,27 @@ func (self *Loader) WithEmbedded() *Loader {
 }
 
 func (self *Loader) WithApiLoader(filename string) *Loader {
+	self = self.Copy()
+	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+		result, err := read_api_config_from_file(filename)
+		if err == nil {
+			self.Log("Loaded api config from %v", filename)
+		}
+		return result, err
+	})
 	return self
 }
 
 func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
+	self = self.Copy()
+	self.loaders = append(self.loaders, func() (*config_proto.Config, error) {
+		env_config := os.Getenv(env_var)
+		if env_config != "" {
+			self.Log("Loading config from env %v (%v)", env_var, env_config)
+			return read_api_config_from_file(env_config)
+		}
+		return nil, errors.New(fmt.Sprintf("Env var %v is not set", env_var))
+	})
 	return self
 }
 
@@ -349,6 +366,21 @@ func read_config_from_file(filename string) (*config_proto.Config, error) {
 	}
 
 	err = yaml.UnmarshalStrict(data, result)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+	return result, nil
+}
+
+func read_api_config_from_file(filename string) (*config_proto.Config, error) {
+	result := &config_proto.Config{ApiConfig: &config_proto.ApiClientConfig{}}
+
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	err = yaml.UnmarshalStrict(data, result.ApiConfig)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

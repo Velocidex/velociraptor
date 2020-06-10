@@ -53,19 +53,32 @@ var (
 	})
 )
 
-func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials {
+func getCreds(config_obj *config_proto.Config) (credentials.TransportCredentials, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if creds == nil {
-		certificate := config_obj.Frontend.Certificate
-		private_key := config_obj.Frontend.PrivateKey
-		ca_certificate := config_obj.Client.CaCertificate
+		var certificate, private_key, ca_certificate, server_name string
 
-		if config_obj.ApiConfig.ClientCert != "" {
+		if config_obj.Frontend != nil && config_obj.Client != nil {
+			certificate = config_obj.Frontend.Certificate
+			private_key = config_obj.Frontend.PrivateKey
+			ca_certificate = config_obj.Client.CaCertificate
+			server_name = config_obj.Client.PinnedServerName
+		}
+		if config_obj.ApiConfig != nil &&
+			config_obj.ApiConfig.ClientCert != "" {
 			certificate = config_obj.ApiConfig.ClientCert
 			private_key = config_obj.ApiConfig.ClientPrivateKey
 			ca_certificate = config_obj.ApiConfig.CaCertificate
+			server_name = config_obj.ApiConfig.PinnedServerName
+			if server_name == "" {
+				server_name = "VelociraptorServer"
+			}
+		}
+
+		if certificate == "" {
+			return nil, errors.New("Unable to load api certificate")
 		}
 
 		// We use the Frontend's certificate because this connection
@@ -74,7 +87,7 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 			[]byte(certificate),
 			[]byte(private_key))
 		if err != nil {
-			return nil
+			return nil, err
 		}
 
 		// The server cert must be signed by our CA.
@@ -84,11 +97,11 @@ func getCreds(config_obj *config_proto.Config) credentials.TransportCredentials 
 		creds = credentials.NewTLS(&tls.Config{
 			Certificates: []tls.Certificate{cert},
 			RootCAs:      CA_Pool,
-			ServerName:   config_obj.Client.PinnedServerName,
+			ServerName:   server_name,
 		})
 	}
 
-	return creds
+	return creds, nil
 }
 
 type APIClientFactory interface {
@@ -112,7 +125,6 @@ func (self GRPCAPIClient) GetAPIClient(
 func getChannel(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*grpcpool.ClientConn, error) {
-	var err error
 
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
@@ -120,9 +132,14 @@ func getChannel(
 	// Pool does not exist - make a new one.
 	if pool == nil {
 		address = GetAPIConnectionString(config_obj)
+		creds, err := getCreds(config_obj)
+		if err != nil {
+			return nil, err
+		}
+
 		factory := func() (*grpc.ClientConn, error) {
-			return grpc.Dial(address, grpc.WithTransportCredentials(
-				getCreds(config_obj)))
+			return grpc.Dial(address,
+				grpc.WithTransportCredentials(creds))
 
 		}
 

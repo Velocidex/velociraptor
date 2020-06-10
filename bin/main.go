@@ -136,10 +136,16 @@ func main() {
 		WithCustomValidator(initFilestoreAccessor)
 
 	// Commands that potentially take an API config can load both
-	APIConfigLoader = DefaultConfigLoader.Copy().
+	// - first try the API config, then try a config.
+	APIConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
 		WithApiLoader(*api_config_path).
 		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
-		WithCustomValidator(maybe_unlock_api_config)
+		WithCustomValidator(maybe_unlock_api_config).
+		WithFileLoader(*config_path).
+		WithEmbedded().
+		WithEnvLoader("VELOCIRAPTOR_CONFIG").
+		WithCustomValidator(load_config_artifacts).
+		WithCustomValidator(initFilestoreAccessor)
 
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)

@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -71,7 +72,16 @@ var (
 		"path", "The path or glob to remove").Required().String()
 )
 
-func eval_query(query string, scope *vfilter.Scope) {
+func eval_query(
+	config_obj *config_proto.Config, query string, scope *vfilter.Scope,
+	env *ordereddict.Dict) {
+	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
+		logging.GetLogger(config_obj, &logging.ToolComponent).
+			Info("API Client configuration loaded - will make gRPC connection.")
+		doRemoteQuery(config_obj, *fs_command_format, []string{query}, env)
+		return
+	}
+
 	vql, err := vfilter.Parse(query)
 	if err != nil {
 		kingpin.FatalIfError(err, "Unable to parse VQL Query")
@@ -132,7 +142,7 @@ func doLS(path, accessor string) {
 		query += " WHERE Sys.name_type != 'DOS' "
 	}
 
-	eval_query(query, scope)
+	eval_query(config_obj, query, scope, builder.Env)
 }
 
 func doRM(path, accessor string) {
@@ -154,21 +164,22 @@ func doRM(path, accessor string) {
 		kingpin.Fatalf("Only fs:// URLs support removal")
 	}
 
-	scope := artifacts.ScopeBuilder{
+	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(os.Stderr, "velociraptor: ", log.Lshortfile),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
-	}.Build()
+	}
+	scope := builder.Build()
 	defer scope.Close()
 
 	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
 		"file_store_delete(path=FullPath) AS Deletion " +
 		"FROM glob(globs=path, accessor=accessor) "
 
-	eval_query(query, scope)
+	eval_query(config_obj, query, scope, builder.Env)
 }
 
 func doCp(path, accessor string, dump_dir string) {
@@ -230,7 +241,7 @@ func doCp(path, accessor string, dump_dir string) {
 	scope.Log("Copy from %v (%v) to %v (%v)",
 		path, accessor, output_path, output_accessor)
 
-	eval_query(`
+	eval_query(config_obj, `
 SELECT * from foreach(
   row={
     SELECT Name, Size, Mode.String AS Mode,
@@ -240,7 +251,7 @@ SELECT * from foreach(
      SELECT Name, Size, Mode, Mtime, Data,
      upload(file=FullPath, accessor=accessor, name=Name) AS Upload
      FROM scope()
-  })`, scope)
+  })`, scope, builder.Env)
 }
 
 func doCat(path, accessor_name string) {
