@@ -34,7 +34,7 @@ import (
 type AddLabelsArgs struct {
 	ClientId string   `vfilter:"required,field=client_id,doc=Client ID to label."`
 	Labels   []string `vfilter:"required,field=labels,doc=A list of labels to apply"`
-	Op       string   `vfilter:"optional,field=op,doc=An operation on the labels (add, remove)"`
+	Op       string   `vfilter:"optional,field=op,doc=An operation on the labels (set, check, remove)"`
 }
 
 type AddLabels struct{}

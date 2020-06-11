@@ -13,6 +13,9 @@ precondition: SELECT OS From info() where OS = 'linux'
 
 type: CLIENT_EVENT
 
+required_permissions:
+  - EXECVE
+
 parameters:
   - name: pathToAuditctl
     default: /sbin/auditctl

@@ -17,7 +17,7 @@ parameters:
       Specify this as the base of the binary store (if empty we use
       the server's public directory).
   - name: ToolName
-    default: Autorun
+    default: Autorun_amd64
 
   - name: SleepDuration
     default: "20"
@@ -75,7 +75,6 @@ sources:
             Filename AS Name,
             "Downloaded" AS DownloadStatus,
             copy(filename=Content,
-                 permissions="x",
                  dest=path_join(components=[(binpath[0]).Path, Filename])) AS FullPath
         FROM http_client(
             url=(inventory_url[0]).URL + Filename,

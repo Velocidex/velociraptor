@@ -126,7 +126,7 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if config_obj.Logging != nil &&
+	if config_obj != nil && config_obj.Logging != nil &&
 		!config_obj.Logging.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}
@@ -189,7 +189,7 @@ func (self *LogManager) makeNewComponent(
 	Log.Out = ioutil.Discard
 	Log.Level = logrus.DebugLevel
 
-	if config_obj.Logging != nil &&
+	if config_obj != nil && config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
 		err := os.MkdirAll(config_obj.Logging.OutputDirectory, 0700)
 		if err != nil {

@@ -36,6 +36,7 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -343,9 +344,15 @@ func loadClientConfig() (*config_proto.Config, error) {
 		config_path = &config_target_path
 	}
 
-	config_obj, err := DefaultConfigLoader.WithRequiredClient().
-		WithWriteback().LoadAndValidate()
+	config_obj, err := new(config.Loader).WithVerbose(*verbose_flag).
+		WithFileLoader(*config_path).
+		WithRequiredClient().
+		WithWriteback().
+		LoadAndValidate()
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Info("Failed to load %v will try again soon.\n", *config_path)
+
 		return nil, err
 	}
 

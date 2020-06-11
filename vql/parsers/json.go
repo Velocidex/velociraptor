@@ -222,7 +222,7 @@ func (self ParseJsonArrayPlugin) Info(scope *vfilter.Scope, type_map *vfilter.Ty
 	return &vfilter.PluginInfo{
 		Name:    "parse_json_array",
 		Doc:     "Parses events from a line oriented json file.",
-		ArgType: type_map.AddType(scope, &ParseJsonArrayPlugin{}),
+		ArgType: type_map.AddType(scope, &ParseJsonFunctionArg{}),
 	}
 }
 
