@@ -8,28 +8,30 @@ description: |
   populate the third party binary store. Many client side artifacts
   depend on this.
 
+  Only some of these are enabled by default. To enable you can either
+  change the artifact parameter when running it, or customize this
+  artifact and collect the customized version.
+
 type: SERVER
 
 parameters:
   - name: binaryList
     default: |
-      Tool,Type,URL,Filename
-      Autorun_amd64,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
-      Autorun_x86,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
-      WinPmem,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
-      Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
-      Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
-      Bulk_Extractor,amd64,https://www.kazamiya.net/files/projects/bulk_extractor-rec03_x64.zip,bulk_extractor.zip
-      VelociraptorWindows,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-windows-amd64.exe,velociraptor-v0.4.5-windows-amd64.exe
-      VelociraptorLinux,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-linux-amd64,velociraptor-v0.4.5-linux-amd64
-      VelociraptorDarwin,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-darwin-amd64,velociraptor-v0.4.5-darwin-amd64
-      VelociraptorWindows,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-windows-amd64.exe,velociraptor-v0.4.4-windows-amd64.exe
-      VelociraptorLinux,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-linux-amd64,velociraptor-v0.4.4-linux-amd64
-      VelociraptorDarwin,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-darwin-amd64,velociraptor-v0.4.4-darwin-amd64
+      Tool,Enabled,Type,URL,Filename
+      Autorun_amd64,Y,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
+      Autorun_x86,Y,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
+      WinPmem,Y,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
+      Sysmon,N,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
+      Sysmon,x86,N,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
+      Bulk_Extractor,N,amd64,https://github.com/4n6ist/bulk_extractor-rec/releases/download/rec03/bulk_extractor-rec03_x64.zip,bulk_extractor.zip
+      VelociraptorWindows,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-windows-amd64.exe,velociraptor-v0.4.5-windows-amd64.exe
+      VelociraptorLinux,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-linux-amd64,velociraptor-v0.4.5-linux-amd64
+      VelociraptorDarwin,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-darwin-amd64,velociraptor-v0.4.5-darwin-amd64
 
 sources:
   - query: |
       LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
+          WHERE Enabled = "Y"
 
       LET download = SELECT Tool, Type, Filename,
             hash(path=Content) as Hash,
