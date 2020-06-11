@@ -8,6 +8,9 @@ description: |
   serve these through the public directory. Simply place the MSI in
   the public directory within the data store and set the URL below.
 
+required_permissions:
+  - EXECVE
+
 parameters:
   - name: clientURL
     description: The URL to fetch the MSI package.

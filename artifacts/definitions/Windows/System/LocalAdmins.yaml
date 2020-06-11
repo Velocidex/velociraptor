@@ -7,23 +7,20 @@ reference:
 
 type: CLIENT
 
-parameters:
- - name: script
-   default: |
-       Get-LocalGroupMember -Group "Administrators" |SELECT -ExpandProperty SID -Property Name, PrincipalSource |select  Name, Value, PrincipalSource|convertto-json
-
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-    - LET out = SELECT parse_json_array(data=Stdout) AS Output
+    query: |
+      LET script <= 'Get-LocalGroupMember -Group "Administrators" | SELECT -ExpandProperty SID -Property Name, PrincipalSource | select  Name, Value, PrincipalSource | convertto-json'
+
+      LET out = SELECT parse_json_array(data=Stdout) AS Output
           FROM execve(argv=["powershell",
                "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
                   base64encode(string=utf16_encode(
                   string=script))
             ], length=1000000)
-    - SELECT * FROM foreach(row=out.Output[0],
+      SELECT * FROM foreach(row=out.Output[0],
       query={
           SELECT Name, Value AS SID, if(condition=PrincipalSource=1,
             then="Local", else=if(condition=PrincipalSource=2,

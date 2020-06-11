@@ -13,6 +13,9 @@ description: |
 
 type: SERVER_EVENT
 
+required_permissions:
+  - EXECVE
+
 parameters:
   - name: uploadPostProcessCommand
     description: |

@@ -20,21 +20,25 @@ parameters:
       Sysmon,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
       Sysmon,x86,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
       Bulk_Extractor,amd64,https://www.kazamiya.net/files/projects/bulk_extractor-rec03_x64.zip,bulk_extractor.zip
+      VelociraptorWindows,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-windows-amd64.exe,velociraptor-v0.4.5-windows-amd64.exe
+      VelociraptorLinux,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-linux-amd64,velociraptor-v0.4.5-linux-amd64
+      VelociraptorDarwin,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-darwin-amd64,velociraptor-v0.4.5-darwin-amd64
       VelociraptorWindows,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-windows-amd64.exe,velociraptor-v0.4.4-windows-amd64.exe
       VelociraptorLinux,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-linux-amd64,velociraptor-v0.4.4-linux-amd64
       VelociraptorDarwin,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.4/velociraptor-v0.4.4-darwin-amd64,velociraptor-v0.4.4-darwin-amd64
 
 sources:
-  - queries:
-      - LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
+  - query: |
+      LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
 
-      - LET download = SELECT Tool, Type, Filename,
+      LET download = SELECT Tool, Type, Filename,
             hash(path=Content) as Hash,
             upload(file=Content, name="fs:///public/" + Filename)
         FROM http_client(url=URL, tempfile_extension=".exe")
+        WHERE Response = 200  // Only accept successful opertations
 
-      # Write the inventory file.
-      - SELECT * FROM write_csv(
+      // Write the inventory file.
+      SELECT * FROM write_csv(
           filename="/public/inventory.csv",
           accessor="fs",
           query={

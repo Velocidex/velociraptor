@@ -22,13 +22,33 @@
   type: Function
   args: []
   category: basic
+- name: artifact_definitions
+  description: Dump artifact definitions.
+  type: Plugin
+  args:
+  - name: names
+    description: Artifact definitions to dump
+    type: string
+    repeated: true
+    required: false
+  - name: deps
+    description: If true includes all dependencies as well.
+    type: bool
+    repeated: false
+    required: false
+  - name: sanitize
+    description: If true we remove extra metadata.
+    type: bool
+    repeated: false
+    required: false
+  category: ""
 - name: atoi
   description: Convert a string to an int.
   type: Function
   args:
   - name: string
     description: A string to convert to int
-    type: string
+    type: vfilter.Any
     repeated: false
     required: true
   category: basic
@@ -248,7 +268,6 @@
     The `start` parameter can be used to schedule the plugin to start
     at a particular time. This can be an integer (which will be
     interpreted as seconds since the epoch), a string or a time value.
-
   type: Plugin
   args:
   - name: start
@@ -296,13 +315,17 @@
     type: string
     repeated: false
     required: false
+  - name: artifact_definitions
+    description: Optional additional custom artifacts.
+    type: vfilter.Any
+    repeated: false
+    required: false
   category: plugin
 - name: collect_client
   description: |
-     Launch an artifact collection against a client. If the client_id
-     is "server" then the collection occurs on the server itself. In
-     that case the caller needs the SERVER_ADMIN permission.
-
+    Launch an artifact collection against a client. If the client_id
+    is "server" then the collection occurs on the server itself. In
+    that case the caller needs the SERVER_ADMIN permission.
   type: Function
   args:
   - name: client_id
@@ -358,6 +381,11 @@
     type: string
     repeated: false
     required: true
+  - name: permissions
+    description: Required permissions (e.g. 'x').
+    type: string
+    repeated: false
+    required: false
   category: basic
 - name: count
   description: Counts the items.
@@ -987,7 +1015,6 @@
     directory - i.e. the glob pattern is appended to the root
     parameter.  The `root` parameter is useful if the directory name
     itself may contain glob characters.
-
   type: Plugin
   args:
   - name: globs
@@ -1116,6 +1143,16 @@
     invoke actions from within VQL (e.g. send an SMS via an SMS gateway
     when a VQL event is received).So this is a very powerful plugin.
 
+    When the `tempfile_extension` parameter is provided, the HTTP
+    request body will be written to a tempfile with that
+    extension. The name of this tempfile will be emitted as the
+    Content column.
+
+    This plugin will emit rows with the following columns:
+    * Url      string: The url we fetched.
+    * Content  string: The body content for this chunk
+    * Response int: The HTTP response code (200=success)
+
     ### Example
 
     The following VQL returns the client's external IP as seen by the
@@ -1160,6 +1197,11 @@
     description: If specified we write to a tempfile. The content field will contain
       the full path to the tempfile.
     type: string
+    repeated: false
+    required: false
+  - name: remove_last
+    description: If set we delay removal as much as possible.
+    type: bool
     repeated: false
     required: false
   category: plugin
@@ -1351,6 +1393,16 @@
     repeated: false
     required: false
   category: plugin
+- name: items
+  description: Enumerate all members of the item (similar to Pythons items() method.
+  type: Plugin
+  args:
+  - name: item
+    description: The item to enumerate.
+    type: vfilter.Any
+    repeated: false
+    required: false
+  category: ""
 - name: join
   description: |
     Join all the args on a separator.
@@ -1420,7 +1472,7 @@
     repeated: true
     required: true
   - name: op
-    description: An operation on the labels (add, remove)
+    description: An operation on the labels (set, check, remove)
     type: string
     repeated: false
     required: false
@@ -1448,7 +1500,12 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
-  args: []
+  args:
+  - name: sid
+    description: 'A SID to lookup using LookupAccountSid '
+    type: string
+    repeated: false
+    required: true
   category: windows
 - name: lowcase
   description: ""
@@ -1617,7 +1674,7 @@
   args:
   - name: string
     description: A string to convert to int
-    type: string
+    type: vfilter.Any
     repeated: false
     required: true
   category: basic
@@ -1773,7 +1830,7 @@
   args:
   - name: string
     description: A string to convert to int
-    type: string
+    type: vfilter.Any
     repeated: false
     required: true
   category: parsers
@@ -1809,8 +1866,28 @@
 - name: parse_json_array
   description: Parses events from a line oriented json file.
   type: Plugin
-  args: []
+  args:
+  - name: data
+    description: Json encoded string.
+    type: string
+    repeated: false
+    required: true
   category: parsers
+- name: parse_jsonl
+  description: Parses a line oriented json file.
+  type: Plugin
+  args:
+  - name: filename
+    description: JSON file to open
+    type: string
+    repeated: false
+    required: true
+  - name: accessor
+    description: The accessor to use
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: parse_lines
   description: Parse a file separated into lines.
   type: Plugin
@@ -2225,8 +2302,7 @@
   type: Plugin
   args:
   - name: pid
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
     type: int64
     repeated: false
     required: false
@@ -2750,6 +2826,27 @@
   type: Plugin
   args: []
   category: plugin
+- name: tempdir
+  description: Create a temporary directory. The directory will be removed when the
+    query ends.
+  type: Function
+  args:
+  - name: data
+    description: Data to write in the tempfile.
+    type: string
+    repeated: true
+    required: false
+  - name: extension
+    description: An extension to place in the tempfile.
+    type: string
+    repeated: false
+    required: false
+  - name: remove_last
+    description: If set we delay removal as much as possible.
+    type: bool
+    repeated: false
+    required: false
+  category: ""
 - name: tempfile
   description: |
     Create a temporary file and write some data into it.
@@ -2765,6 +2862,11 @@
   - name: extension
     description: An extension to place in the tempfile.
     type: string
+    repeated: false
+    required: false
+  - name: remove_last
+    description: If set we delay removal as much as possible.
+    type: bool
     repeated: false
     required: false
   category: plugin
@@ -2793,6 +2895,11 @@
     repeated: false
     required: false
   category: basic
+- name: to_dict
+  description: Construct a dict from another object.
+  type: Function
+  args: []
+  category: ""
 - name: token
   description: Extract process token.
   type: Function
@@ -2936,6 +3043,41 @@
     repeated: false
     required: true
   category: plugin
+- name: upload_webdav
+  description: Upload files to a WebDAV server.
+  type: Function
+  args:
+  - name: file
+    description: The file to upload
+    type: string
+    repeated: false
+    required: true
+  - name: name
+    description: The name that the file should have on the server
+    type: string
+    repeated: false
+    required: false
+  - name: accessor
+    description: The accessor to use
+    type: string
+    repeated: false
+    required: false
+  - name: url
+    description: The WebDAV url
+    type: string
+    repeated: false
+    required: true
+  - name: basic_auth_user
+    description: The username to use in HTTP basic auth
+    type: string
+    repeated: false
+    required: false
+  - name: basic_auth_password
+    description: The password to use in HTTP basic auth
+    type: string
+    repeated: false
+    required: false
+  category: ""
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
@@ -3007,12 +3149,7 @@
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
   type: Plugin
-  args:
-  - name: file
-    description: The wtmp file to use
-    type: string
-    repeated: false
-    required: false
+  args: []
   category: windows
 - name: utf16
   description: Parse input from utf16.
@@ -3045,25 +3182,24 @@
     required: true
   category: windows
 - name: version
-  description: |
+  description: |2
 
-     Gets the version of a VQL plugin or function.
+    Gets the version of a VQL plugin or function.
 
-     This is useful when writing portable VQL which can work with
-     older versions of Velociraptor. When Velociraptor plugins evolve
-     in an incompatible way their version is incremented. It is
-     possible to cater for multiple versions in the VQL using an if()
-     plugin.
+    This is useful when writing portable VQL which can work with
+    older versions of Velociraptor. When Velociraptor plugins evolve
+    in an incompatible way their version is incremented. It is
+    possible to cater for multiple versions in the VQL using an if()
+    plugin.
 
-     For example the following can chose from a legacy query or a
-     modern query based on the plugin version:
-     ```
-      SELECT * FROM if(
-       condition=version(plugin="glob") >= 1,
-       then=NewQuery,
-       else=LegacyQuery)
-     ```
-
+    For example the following can chose from a legacy query or a
+    modern query based on the plugin version:
+    ```
+     SELECT * FROM if(
+      condition=version(plugin="glob") >= 1,
+      then=NewQuery,
+      else=LegacyQuery)
+    ```
   type: Function
   args: []
   category: ""
@@ -3334,3 +3470,4 @@
     repeated: false
     required: false
   category: plugin
+
