@@ -98,6 +98,10 @@ type DataStore interface {
 }
 
 func GetDB(config_obj *config_proto.Config) (DataStore, error) {
+	if config_obj.Datastore == nil {
+		return nil, errors.New("no datastore configured")
+	}
+
 	switch config_obj.Datastore.Implementation {
 	case "FileBaseDataStore":
 		return file_based_imp, nil

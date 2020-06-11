@@ -32,6 +32,10 @@ import (
 // GetFileStore selects an appropriate FileStore object based on
 // config.
 func GetFileStore(config_obj *config_proto.Config) api.FileStore {
+	if config_obj.Datastore == nil {
+		return nil
+	}
+
 	switch config_obj.Datastore.Implementation {
 	case "Test":
 		return memory.Test_memory_file_store
@@ -55,6 +59,10 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 // Gets an accessor that can access the file store.
 func GetFileStoreFileSystemAccessor(
 	config_obj *config_proto.Config) (glob.FileSystemAccessor, error) {
+	if config_obj.Datastore == nil {
+		return nil, errors.New("Datastore not configured")
+	}
+
 	switch config_obj.Datastore.Implementation {
 	case "MySQL":
 		datastore, err := mysql.NewSqlFileStore(config_obj)

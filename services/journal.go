@@ -36,6 +36,12 @@ type JournalService struct {
 
 func (self *JournalService) Watch(queue_name string) (
 	output <-chan *ordereddict.Dict, cancel func()) {
+
+	if self == nil || self.qm == nil {
+		// Readers block on nil channel.
+		return nil, func() {}
+	}
+
 	return self.qm.Watch(queue_name)
 }
 

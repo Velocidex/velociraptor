@@ -24,6 +24,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -34,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -236,6 +238,17 @@ func doQuery() {
 		return
 	}
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	// Try to start essential services in case they are needed. It
+	// is not an error if we can not.
+	_ = services.StartJournalService(config_obj)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_ = services.StartNotificationService(ctx, wg, config_obj)
+
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 
@@ -273,7 +286,7 @@ func doQuery() {
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
-	ctx := InstallSignalHandler(scope)
+	ctx = InstallSignalHandler(scope)
 
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", log.Lshortfile)
