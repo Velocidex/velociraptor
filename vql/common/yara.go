@@ -94,6 +94,11 @@ func (self YaraScanPlugin) Call(
 			arg.Blocksize = 1024 * 1024
 		}
 
+		yara_flag := yara.ScanFlags(0)
+		if arg.NumberOfHits == 1 {
+			yara_flag = yara.ScanFlagsFastMode
+		}
+
 		// Try to get the compiled yara expression from the
 		// scope cache.
 		if arg.Key == "" {
@@ -145,7 +150,7 @@ func (self YaraScanPlugin) Call(
 				}
 
 				matches, err := rules.ScanMem(
-					buf[:n], yara.ScanFlagsFastMode,
+					buf[:n], yara_flag,
 					10*time.Second)
 				if err != nil {
 					break
@@ -193,7 +198,7 @@ func (self YaraScanPlugin) Call(
 						}
 						output_chan <- res
 						number_of_hits += 1
-						if number_of_hits > arg.NumberOfHits {
+						if number_of_hits >= arg.NumberOfHits {
 							f.Close()
 							continue scan_file
 						}

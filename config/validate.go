@@ -117,6 +117,14 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 		config_obj.API.PinnedGwName = "GRPC_GW"
 	}
 
+	return nil
+}
+
+func ValidateDatastoreConfig(config_obj *config_proto.Config) error {
+	if config_obj.Datastore == nil {
+		return errors.New("No Datastore config")
+	}
+
 	// If mysql connection params are specified we create
 	// a mysql_connection_string
 	if config_obj.Datastore.MysqlConnectionString == "" &&

@@ -35,7 +35,7 @@ func SetupTest(config_obj *config_proto.Config) (api.FileStore, error) {
 		return nil, err
 	}
 
-	db.Exec(fmt.Sprintf("drop database `%v`", database))
+	db.Exec(fmt.Sprintf("drop database if exists `%v`", database))
 
 	config_obj.Datastore.MysqlConnectionString = conn_string + database
 	initializeDatabase(config_obj, conn_string+database, database)
