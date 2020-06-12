@@ -276,6 +276,13 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 		}
 	}
 
+	if config_obj.Datastore != nil {
+		err = ValidateDatastoreConfig(config_obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	if config_obj.Client != nil {
 		if self.use_writeback {
 			self.loadWriteback(config_obj)
