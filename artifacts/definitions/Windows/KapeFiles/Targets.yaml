@@ -997,17 +997,20 @@ sources:
       - |
         LET targets <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
         WHERE get(item=scope(), member=Group)
+          AND log(message="Collecting target " + Group)
 
       # Filter only the rules in the rule table that have an Id we want.
       - |
         LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
+        AND log(message="Using ntfs glob " + Glob)
 
       - |
         LET rule_specs_lazy_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
+        AND log(message="Using lazy_ntfs glob " + Glob)
 
       # Call the generic VSS file collector with the globs we want in a new CSV file.
       - |
@@ -1030,7 +1033,8 @@ sources:
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device, Accessor="ntfs",
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
-               }, b={
+               },
+               b={
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device, Accessor="lazy_ntfs",
                       collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
