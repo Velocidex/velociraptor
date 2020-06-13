@@ -195,6 +195,9 @@ func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAcc
 			for _, v := range result.fd_cache {
 				v.fd.Close()
 			}
+
+			result.fd_cache = make(map[string]*AccessorContext)
+			vql_subsystem.CacheSet(scope, NTFSFileSystemTag, result)
 		})
 		return result, nil
 	}
