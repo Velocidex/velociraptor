@@ -27,9 +27,19 @@ func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
 		cell_id: cell_id}
 }
 
+func (self *NotebookPathManager) CellDirectory(cell_id string) string {
+	return path.Join("notebooks", self.notebook_id, cell_id)
+}
+
 func (self *NotebookPathManager) HtmlExport() string {
 	return path.Join("/downloads/notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s.html", self.notebook_id,
+			time.Now().Format("20060102150405Z")))
+}
+
+func (self *NotebookPathManager) ZipExport() string {
+	return path.Join("/downloads/notebooks", self.notebook_id,
+		fmt.Sprintf("%s-%s.zip", self.notebook_id,
 			time.Now().Format("20060102150405Z")))
 }
 
@@ -44,6 +54,10 @@ type NotebookCellPathManager struct {
 
 func (self *NotebookCellPathManager) Path() string {
 	return path.Join("notebooks", self.notebook_id, self.cell_id+".json")
+}
+
+func (self *NotebookCellPathManager) Item(name string) string {
+	return path.Join("notebooks", self.notebook_id, self.cell_id, name)
 }
 
 func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
@@ -99,4 +113,20 @@ func (self *NotebookCellQuery) GeneratePaths(ctx context.Context) <-chan *api.Re
 	}()
 
 	return output
+}
+
+type NotebookExportPathManager struct {
+	notebook_id string
+}
+
+func (self *NotebookExportPathManager) CellMetadata(cell_id string) string {
+	return "/" + self.notebook_id + "/" + cell_id
+}
+
+func (self *NotebookExportPathManager) CellItem(cell_id, name string) string {
+	return "/" + self.notebook_id + "/" + cell_id + "/" + name
+}
+
+func NewNotebookExportPathManager(notebook_id string) *NotebookExportPathManager {
+	return &NotebookExportPathManager{notebook_id}
 }

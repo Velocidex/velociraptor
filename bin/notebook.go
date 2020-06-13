@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	notebook_command = report_command.Command(
+	notebook_command = app.Command(
 		"notebook", "Export notebook as HTML.")
 
 	notebook_command_notebook_id = notebook_command.Arg(

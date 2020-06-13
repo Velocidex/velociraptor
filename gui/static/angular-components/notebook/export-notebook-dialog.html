@@ -9,8 +9,13 @@
       <div class="form-group">
         <button class="btn btn-primary"
                 ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                ng-click="controller.exportNotebook($event)">
-          Create Export
+                ng-click="controller.exportNotebook($event, 'html')">
+          Export To HTML
+        </button>
+        <button class="btn btn-primary"
+                ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                ng-click="controller.exportNotebook($event, 'zip')">
+          Export To Zip
         </button>
       </div>
     </form>

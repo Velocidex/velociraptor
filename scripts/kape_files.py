@@ -107,7 +107,7 @@ def sanitize(name):
 
 
 def strip_drive(name):
-    return re.sub("^[a-zA-Z]:\\\\", "", name)
+    return re.sub("^[a-zA-Z]:(\\\\|/)", "", name)
 
 def get_csv(rows):
     out = io.StringIO()

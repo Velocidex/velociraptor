@@ -636,33 +636,88 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to edit notebooks.")
+			"User is not allowed to export notebooks.")
 	}
 
-	db, err := datastore.GetDB(self.config)
+	switch in.Type {
+	case "zip":
+		return &empty.Empty{}, exportZipNotebook(self.config, in.NotebookId)
+	default:
+		return &empty.Empty{}, exportHTMLNotebook(self.config, in.NotebookId)
+	}
+}
+
+// Create a portable notebook into a zip file.
+func exportZipNotebook(config_obj *config_proto.Config, notebook_id string) error {
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
-	err = db.GetSubject(self.config, notebook_path_manager.Path(), notebook)
+	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	file_store_factory := file_store.GetFileStore(self.config)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	filename := notebook_path_manager.ZipExport()
+
+	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
+	if err != nil {
+		return err
+	}
+	lock_file.Close()
+
+	// Allow 1 hour to export the notebook.
+	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+
+	go func() {
+		defer file_store_factory.Delete(filename + ".lock")
+		defer cancel()
+
+		err := reporting.ExportNotebookToZip(
+			sub_ctx, config_obj, notebook_path_manager)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.WithFields(logrus.Fields{
+				"notebook_id": notebook.NotebookId,
+				"export_file": filename,
+				"error":       err,
+			}).Error("CreateNotebookDownloadFile")
+			return
+		}
+	}()
+
+	return nil
+}
+
+func exportHTMLNotebook(config_obj *config_proto.Config, notebook_id string) error {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	notebook := &api_proto.NotebookMetadata{}
+	notebook_path_manager := reporting.NewNotebookPathManager(notebook_id)
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
+	if err != nil {
+		return err
+	}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.HtmlExport()
 
 	lock_file, err := file_store_factory.WriteFile(filename + ".lock")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	lock_file.Close()
 
 	writer, err := file_store_factory.WriteFile(filename)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// Allow 1 hour to export the notebook.
@@ -674,9 +729,9 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		defer cancel()
 
 		err := reporting.ExportNotebookToHTML(
-			sub_ctx, self.config, notebook.NotebookId, writer)
+			sub_ctx, config_obj, notebook.NotebookId, writer)
 		if err != nil {
-			logger := logging.GetLogger(self.config, &logging.GUIComponent)
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{
 				"notebook_id": notebook.NotebookId,
 				"export_file": filename,
@@ -686,7 +741,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 		}
 	}()
 
-	return &empty.Empty{}, err
+	return nil
 }
 
 func getAvailableDownloadFiles(config_obj *config_proto.Config,

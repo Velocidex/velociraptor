@@ -9,12 +9,15 @@ import (
 	"io"
 	"regexp"
 
+	"github.com/Velocidex/yaml/v2"
+	"github.com/alexmullins/zip"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -150,6 +153,101 @@ pre {
 </html>
 `
 )
+
+func ExportNotebookToZip(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	notebook_path_manager *NotebookPathManager) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
+		notebook)
+	if err != nil {
+		return err
+	}
+
+	for _, metadata := range notebook.CellMetadata {
+		if metadata.CellId != "" {
+			db.GetSubject(config_obj,
+				notebook_path_manager.Cell(metadata.CellId).Path(),
+				metadata)
+
+			metadata.Data = ""
+		}
+	}
+
+	serialized, err := yaml.Marshal(notebook)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(serialized))
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.WriteFile(notebook_path_manager.ZipExport())
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
+
+	// Do these first to ensure errors are returned if the zip file
+	// is not writable.
+	zip_writer := zip.NewWriter(fd)
+	defer zip_writer.Close()
+
+	cell_copier := func(notebook_id, cell_id string) {
+		path_manager := NewNotebookPathManager(notebook_id)
+		exported_path_manager := NewNotebookExportPathManager(
+			notebook_id)
+
+		children, err := file_store_factory.ListDirectory(
+			path_manager.CellDirectory(cell_id))
+		if err != nil {
+			return
+		}
+
+		for _, child := range children {
+			out_fd, err := zip_writer.Create(
+				exported_path_manager.CellItem(cell_id, child.Name()))
+			if err != nil {
+				continue
+			}
+
+			fd, err := file_store_factory.ReadFile(
+				path_manager.Cell(cell_id).Item(child.Name()))
+			if err != nil {
+				continue
+			}
+			defer fd.Close()
+
+			utils.Copy(ctx, out_fd, fd)
+		}
+
+		return
+	}
+
+	for _, cell := range notebook.CellMetadata {
+		cell_copier(notebook.NotebookId, cell.CellId)
+	}
+
+	f, err := zip_writer.Create("Notebook.yaml")
+	if err != nil {
+		fd.Close()
+		return err
+	}
+	f.Write(serialized)
+
+	return nil
+}
 
 func ExportNotebookToHTML(
 	ctx context.Context,
