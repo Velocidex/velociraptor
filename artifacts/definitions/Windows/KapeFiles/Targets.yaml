@@ -390,7 +390,7 @@ parameters:
     default: |
       Id,Name,Category,Glob,Accessor,Comment
       1,AppData,UserData,users\*\AppData/**10,lazy_ntfs,
-      2,Zips,Archives,C:/**10/*.zip,ntfs,This is an example of how to walk a drive for a file mask. Probably do not want to use this one as is
+      2,Zips,Archives,**10/*.zip,lazy_ntfs,This is an example of how to walk a drive for a file mask. Probably do not want to use this one as is
       3,User Files - Desktop,LiveUserFiles,users\*\Desktop/**10,lazy_ntfs,
       4,User Files - Documents,LiveUserFiles,users\*\Documents/**10,lazy_ntfs,
       5,User Files - Downloads,LiveUserFiles,users\*\Downloads/**10,lazy_ntfs,
@@ -406,7 +406,7 @@ parameters:
       15,TorrentClients - uTorrent,FileDownload,users\*\AppData\Roaming\uTorrent/*.dat,lazy_ntfs,
       16,TorrentClients - BitTorrent,FileDownload,users\*\AppData\Roaming\BitTorrent/*.dat,lazy_ntfs,
       17,DC++ Chat Logs,FileDownload,Users\*\AppData\Local\DC++\Logs/**10,lazy_ntfs,Locates DC++ hub/chat logs and copies them. Current as of version 0.868.
-      18,Torrents,FileDownload,C:/**10/*.torrent,ntfs,
+      18,Torrents,FileDownload,**10/*.torrent,lazy_ntfs,
       19,Thumbcache DB,FileKnowledge,users\*\AppData\Local\Microsoft\Windows\Explorer/thumbcache_*.db,lazy_ntfs,
       20,SignatureCatalog,FileMetadata,Windows*\System32\CatRoot/**10,lazy_ntfs,
       21,at .job,Persistence,Windows*\Tasks/*.job,lazy_ntfs,
@@ -418,7 +418,7 @@ parameters:
       27,Amcache transaction files,ApplicationCompatibility,Windows*\AppCompat\Programs/Amcache.hve.LOG*,lazy_ntfs,
       28,Application Event Log XP,EventLogs,Windows*\system32\config/AppEvent.evt,lazy_ntfs,
       29,Application Event Log Win7+,EventLogs,Windows*\system32\winevt\logs/application.evtx,lazy_ntfs,
-      30,$SDS,FileSystem,c:/$Secure:$SDS,ntfs,
+      30,$SDS,FileSystem,$Secure:$SDS,ntfs,
       31,.bash_history,Windows Linux Profile,users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*/.bash_history,lazy_ntfs,
       32,.bash_logout,Windows Linux Profile,users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*/.bash_logout,lazy_ntfs,
       33,.bashrc,Windows Linux Profile,users\*\AppData\Local\Packages\*\LocalState\rootfs\home\*/.bashrc,lazy_ntfs,
@@ -435,8 +435,8 @@ parameters:
       44,SDB Files,Executables,Windows*\apppatch\Custom/*.sdb,lazy_ntfs,
       45,SDB Files x64,Executables,Windows*\apppatch\Custom\Custom64/*.sdb,lazy_ntfs,
       46,WindowsIndexSearch,FileKnowledge,programdata\microsoft\search\data\applications\windows/Windows.edb,lazy_ntfs,
-      47,$LogFile,FileSystem,C:/$LogFile,ntfs,
-      48,$Boot,FileSystem,c:/$Boot,ntfs,
+      47,$LogFile,FileSystem,$LogFile,lazy_ntfs,
+      48,$Boot,FileSystem,$Boot,lazy_ntfs,
       49,ntuser.dat registry hive XP,Registry,Documents and Settings\*/ntuser.dat,lazy_ntfs,
       50,ntuser.dat registry hive,Registry,users\*/ntuser.dat,lazy_ntfs,
       51,ntuser.dat registry transaction files,Registry,users\*/ntuser.dat.LOG*,lazy_ntfs,
@@ -472,24 +472,24 @@ parameters:
       81,Event logs Win7+,EventLogs,Windows\System32\winevt\Logs\Microsoft-Windows-TerminalServices-LocalSessionManager%4Operational.evtx/Microsoft-Windows-TerminalServices-LocalSessionManager%4Operational.evtx,lazy_ntfs,
       82,Event logs Win7+,EventLogs,Windows\System32\winevt\Logs/Microsoft-Windows-TerminalServices-RemoteConnectionManager%4Operational.evtx,lazy_ntfs,
       83,RecentFileCache,ApplicationCompatability,Windows*\AppCompat\Programs/RecentFileCache.bcf,lazy_ntfs,
-      84,$MFT,FileSystem,C:/$MFT,ntfs,
+      84,$MFT,FileSystem,$MFT,lazy_ntfs,
       85,$Recycle.Bin,Deleted Files,$Recycle.Bin/**10,lazy_ntfs,
       86,RECYCLER WinXP,Deleted Files,RECYCLER/**10,lazy_ntfs,
-      87,hiberfil.sys,Memory,C:/hiberfil.sys,ntfs,
+      87,hiberfil.sys,Memory,hiberfil.sys,lazy_ntfs,
       88,pagefile.sys,Memory,p/agefile.sys,lazy_ntfs,
-      89,swapfile.sys,Memory,c:/swapfile.sys,ntfs,
+      89,swapfile.sys,Memory,swapfile.sys,lazy_ntfs,
       90,SRUM,Execution,Windows*\System32\SRU/**10,lazy_ntfs,
       91,LogFiles,Logs,Windows*\System32\LogFiles/**10,lazy_ntfs,
       92,Windows 10 Notification DB,Notifications,users\*\AppData\Local\Microsoft\Windows\Notifications/wpndatabase.db,lazy_ntfs,
       93,Windows 10 Notification DB,Notifications,users\*\AppData\Local\Microsoft\Windows\Notifications/appdb.dat,lazy_ntfs,
-      111194,$J,FileSystem,$Extend/$UsnJrnl:$J,ntfs,
+      94,$J,FileSystem,$Extend/$UsnJrnl:$J,ntfs,
       95,$Max,FileSystem,$Extend/$UsnJrnl:$Max,ntfs,
       96,Setupapi.log XP,USBDevices,Windows/setupapi.log,lazy_ntfs,
       97,Setupapi.log Win7+,USBDevices,Windows*\inf/setupapi.dev.log,lazy_ntfs,
       98,Prefetch,Prefetch,Windows*\prefetch/*.pf,lazy_ntfs,
       99,Syscache,Program Execution,System Volume Information/Syscache.hve,lazy_ntfs,
       100,Syscache transaction files,Program Execution,System Volume Information/Syscache.hve.LOG*,lazy_ntfs,
-      101,MOF files,WMI,C:/**10/*.MOF,ntfs,
+      101,MOF files,WMI,**10/*.MOF,lazy_ntfs,
       102,Event logs XP,EventLogs,Windows\system32\config/*.evt,lazy_ntfs,
       103,Event logs Win7+,EventLogs,Windows*\system32\winevt\logs/*.evtx,lazy_ntfs,
       104,RDP Cache Files,FileSystem,users\*\AppData\Local\Microsoft\Terminal Server Client\Cache\,lazy_ntfs,
@@ -614,7 +614,7 @@ parameters:
       223,VIPRE Business User Logs (v7+),Antivirus,users\*\AppData\Roaming\VIPRE Business/**10,lazy_ntfs,
       224,VIPRE Business User Logs (v5-v6),Antivirus,users\*\AppData\Roaming\GFI Software\AntiMalware\Logs/**10,lazy_ntfs,
       225,VIPRE Business User Logs (up to v4),Antivirus,users\*\AppData\Roaming\Sunbelt Software\AntiMalware\Logs/**10,lazy_ntfs,
-      226,ComboFix,Antivirus,C:/ComboFix.txt,ntfs,
+      226,ComboFix,Antivirus,ComboFix.txt,lazy_ntfs,
       227,HitmanPro Logs,Antivirus,ProgramData\HitmanPro\Logs/**10,lazy_ntfs,
       228,HitmanPro Alert Logs,Antivirus,ProgramData\HitmanPro.Alert\Logs/**10,lazy_ntfs,
       229,HitmanPro Database,Antivirus,ProgramData\HitmanPro.Alert/excalibur.db,lazy_ntfs,SQl Lite DB
@@ -631,10 +631,10 @@ parameters:
       240,ESET NOD32 AV Logs,Antivirus,ProgramData\ESET\ESET NOD32 Antivirus\Logs/**10,lazy_ntfs,Parser available at https://github.com/laciKE/EsetLogParser
       241,AntiVirus,Targets,Antivirus\*,lazy_ntfs,
       242,Ammyy,Ammyy.tkape,ApplicationLogs,lazy_ntfs,
-      243,VHD,Disk Images,C:/**10/*.VHD,ntfs,
-      244,VHDX,Disk Images,C:/**10/*.VHDX,ntfs,
-      245,VDI,Disk Images,C:/**10/*.VDI,ntfs,
-      246,VMDK,Disk Images,C:/**10/*.VMDK,ntfs,
+      243,VHD,Disk Images,**10/*.VHD,lazy_ntfs,
+      244,VHDX,Disk Images,**10/*.VHDX,lazy_ntfs,
+      245,VDI,Disk Images,**10/*.VDI,lazy_ntfs,
+      246,VMDK,Disk Images,**10/*.VMDK,lazy_ntfs,
       247,MS SQL Errorlog,SQL Exploitation,Program Files\Microsoft SQL Server\*\MSSQL\LOG/ERRORLOG,lazy_ntfs,
       248,MS SQL Errorlogs,SQL Exploitation,Program Files\Microsoft SQL Server\*\MSSQL\LOG/ERRORLOG.*,lazy_ntfs,
       249,IIS log files,Logs,Windows*\system32\LogFiles\W3SVC*/*.log,lazy_ntfs,
@@ -644,7 +644,7 @@ parameters:
       253,NGINX Log Files,Logs,nginx\logs/*.log,lazy_ntfs,
       254,PowerShell Console Log,PowerShellConsleLog,users\*\Appdata\Roaming\Microsoft\Windows\PowerShell\PSReadline/ConsoleHost_history.txt,lazy_ntfs,
       255,ManageEngine Desktop Central Log Files,Logs,ManageEngine\DesktopCentral_Server\logs/**10,lazy_ntfs,
-      256,Apache Access Log,Webservers,C:/**10/access.log,ntfs,
+      256,Apache Access Log,Webservers,**10/access.log,lazy_ntfs,
       257,Edge folder,Communications,users\*\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe/**10,lazy_ntfs,
       258,WebcacheV01.dat,Communications,users\*\AppData\Local\Microsoft\Windows\WebCache\,lazy_ntfs,
       259,Chrome Extension Files,Communication,users\*\AppData\Local\Google\Chrome\User Data\*\Extensions/**10,lazy_ntfs,
@@ -729,12 +729,12 @@ parameters:
       338,Syscache,Program Execution,System Volume Information/Syscache.hve,lazy_ntfs,
       339,Syscache transaction files,Program Execution,System Volume Information/Syscache.hve.LOG*,lazy_ntfs,
       340,PowerShell Console Log,PowerShellConsleLog,users\*\Appdata\Roaming\Microsoft\Windows\PowerShell\PSReadline/ConsoleHost_history.txt,lazy_ntfs,
-      341,$MFT,FileSystem,C:/$MFT,ntfs,
-      342,$LogFile,FileSystem,C:/$LogFile,ntfs,
-      311143,$J,FileSystem,$Extend/$UsnJrnl:$J,ntfs,
+      341,$MFT,FileSystem,$MFT,lazy_ntfs,
+      342,$LogFile,FileSystem,$LogFile,lazy_ntfs,
+      343,$J,FileSystem,$Extend/$UsnJrnl:$J,ntfs,
       344,$Max,FileSystem,$Extend/$UsnJrnl:$Max,ntfs,
-      345,$SDS,FileSystem,c:/$Secure:$SDS,ntfs,
-      346,$Boot,FileSystem,c:/$Boot,ntfs,
+      345,$SDS,FileSystem,$Secure:$SDS,ntfs,
+      346,$Boot,FileSystem,$Boot,lazy_ntfs,
       347,$T,FileSystem,$Extend\$RmMetadata\$TxfLog/$Tops:$T,ntfs,
       348,Lnk files from Recent,LnkFiles,users\*\AppData\Roaming\Microsoft\Windows\Recent/**10,lazy_ntfs,Also includes automatic and custom jumplist directories
       349,Lnk files from Microsoft Office Recent,LnkFiles,users\*\AppData\Roaming\Microsoft\Office\Recent/**10,lazy_ntfs,
@@ -997,20 +997,17 @@ sources:
       - |
         LET targets <= SELECT * FROM parse_csv(filename=KapeTargets, accessor="data")
         WHERE get(item=scope(), member=Group)
-          AND log(message="Collecting target " + Group)
 
       # Filter only the rules in the rule table that have an Id we want.
       - |
         LET rule_specs_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='ntfs'
-        AND log(message="Using ntfs glob " + Glob)
 
       - |
         LET rule_specs_lazy_ntfs <= SELECT Id, Glob
         FROM parse_csv(filename=KapeRules, accessor="data")
         WHERE Id in array(array=targets.RuleIds) AND Accessor='lazy_ntfs'
-        AND log(message="Using lazy_ntfs glob " + Glob)
 
       # Call the generic VSS file collector with the globs we want in a new CSV file.
       - |
@@ -1033,8 +1030,7 @@ sources:
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device, Accessor="ntfs",
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
-               },
-               b={
+               }, b={
                    SELECT * FROM Artifact.Windows.Collectors.File(
                       RootDevice=Device, Accessor="lazy_ntfs",
                       collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
@@ -1044,3 +1040,5 @@ sources:
   - name: Uploads
     queries:
       - SELECT * FROM all_results WHERE _Source =~ "Uploads"
+
+

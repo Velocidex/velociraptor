@@ -12,6 +12,22 @@ description: |
   permission). Typically it is only available with the `administrator`
   role.
 
+  Note that in addition to running PowerShell cmdlets and scripts, the
+  Windows.System.PowerShell artifact can also be used to launch
+  Windows command-line executables with their parameters. This can be
+  difficult to achieve with the Windows.System.CmdShell artifact due
+  to complications with spaces in paths and other special character
+  issues. This PowerShell artifact is able to avoid most of these
+  problems by encoding the command in Base64.
+
+  As an example, the following command initiates a Windows Defender AV
+  quick-scan from the default location, which includes a path with
+  spaces in it:
+
+  ```
+    & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 1
+  ```
+
 required_permissions:
   - EXECVE
 

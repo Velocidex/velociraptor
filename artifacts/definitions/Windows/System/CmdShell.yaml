@@ -12,6 +12,11 @@ description: |
   permission). Typically it is only available with the `administrator`
   role.
 
+  Note there are some limitations with passing commands to the cmd.exe
+  shell, such as when specifying quoted paths or command-line
+  arguments with special characters. Using Windows.System.PowerShell
+  artifact is likely a better option in these cases.
+
 required_permissions:
   - EXECVE
 

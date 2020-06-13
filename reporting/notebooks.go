@@ -17,6 +17,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -191,6 +192,7 @@ func ExportNotebookToZip(
 	if err != nil {
 		return err
 	}
+	defer fd.Close()
 
 	err = fd.Truncate()
 	if err != nil {
@@ -200,13 +202,49 @@ func ExportNotebookToZip(
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
 	zip_writer := zip.NewWriter(fd)
+	defer zip_writer.Close()
+
+	cell_copier := func(notebook_id, cell_id string) {
+		path_manager := NewNotebookPathManager(notebook_id)
+		exported_path_manager := NewNotebookExportPathManager(
+			notebook_id)
+
+		children, err := file_store_factory.ListDirectory(
+			path_manager.CellDirectory(cell_id))
+		if err != nil {
+			return
+		}
+
+		for _, child := range children {
+			out_fd, err := zip_writer.Create(
+				exported_path_manager.CellItem(cell_id, child.Name()))
+			if err != nil {
+				continue
+			}
+
+			fd, err := file_store_factory.ReadFile(
+				path_manager.Cell(cell_id).Item(child.Name()))
+			if err != nil {
+				continue
+			}
+			defer fd.Close()
+
+			utils.Copy(ctx, out_fd, fd)
+		}
+
+		return
+	}
+
+	for _, cell := range notebook.CellMetadata {
+		cell_copier(notebook.NotebookId, cell.CellId)
+	}
+
 	f, err := zip_writer.Create("Notebook.yaml")
 	if err != nil {
 		fd.Close()
 		return err
 	}
-
-	_ = f
+	f.Write(serialized)
 
 	return nil
 }

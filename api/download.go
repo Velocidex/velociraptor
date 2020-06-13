@@ -328,7 +328,7 @@ func createHuntDownloadFile(
 				Set("Source", source)
 
 			f, err := zip_writer.Create("All " +
-				path.Join(artifact, source) + ".csv")
+				path.Join(artifact, source) + ".json")
 			if err != nil {
 				continue
 			}
