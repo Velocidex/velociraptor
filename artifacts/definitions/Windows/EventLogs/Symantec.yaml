@@ -49,5 +49,7 @@ sources:
             EventTime > DateAfterTime AND
             format(format="%v",args=System.EventID.Value) =~ RegexEventIds AND
             EventData =~ TargetRegex AND
-            EventData =~ IgnoreRegex
+            if(condition=IgnoreRegex, 
+                then= NOT EventData=~IgnoreRegex, 
+                else= True)
                     
