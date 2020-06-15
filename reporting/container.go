@@ -97,7 +97,7 @@ func (self *Container) StoreArtifact(
 		return errors.New("Format not supported")
 	}
 
-	writer, err := self.getZipFileWriter(string(sanitized_name))
+	writer, closer, err := self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -105,12 +105,17 @@ func (self *Container) StoreArtifact(
 	tmpfile.Seek(0, 0)
 
 	_, err = utils.Copy(ctx, writer, tmpfile)
+	closer()
+
 	return err
 }
 
-func (self *Container) getZipFileWriter(name string) (io.Writer, error) {
+func (self *Container) getZipFileWriter(name string) (io.Writer, func(), error) {
+	self.Lock()
+
 	if self.Password == "" {
-		return self.zip.Create(string(name))
+		fd, err := self.zip.Create(string(name))
+		return fd, self.Unlock, err
 	}
 
 	// Zip file encryption is not great because it only encrypts
@@ -120,14 +125,14 @@ func (self *Container) getZipFileWriter(name string) (io.Writer, error) {
 	if self.delegate_zip == nil {
 		fd, err := self.zip.Encrypt("data.zip", self.Password)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		self.delegate_zip = zip.NewWriter(fd)
 	}
 
 	w, err := self.delegate_zip.Create(string(name))
-	return w, err
+	return w, self.Unlock, err
 }
 
 func (self *Container) DumpRowsIntoContainer(
@@ -140,12 +145,9 @@ func (self *Container) DumpRowsIntoContainer(
 		return nil
 	}
 
-	self.Lock()
-	defer self.Unlock()
-
 	// In this instance we want to make / unescaped.
 	sanitized_name := query.Name + ".csv"
-	writer, err := self.getZipFileWriter(string(sanitized_name))
+	writer, closer, err := self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -157,9 +159,10 @@ func (self *Container) DumpRowsIntoContainer(
 	}
 
 	csv_writer.Close()
+	closer()
 
 	sanitized_name = query.Name + ".json"
-	writer, err = self.getZipFileWriter(string(sanitized_name))
+	writer, closer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
@@ -168,16 +171,18 @@ func (self *Container) DumpRowsIntoContainer(
 	if err != nil {
 		return err
 	}
+	closer()
 
 	// Format the description.
 	sanitized_name = query.Name + ".txt"
-	writer, err = self.getZipFileWriter(string(sanitized_name))
+	writer, closer, err = self.getZipFileWriter(string(sanitized_name))
 	if err != nil {
 		return err
 	}
 
 	fmt.Fprintf(writer, "# %s\n\n%s", query.Name,
 		FormatDescription(config_obj, query.Description, output_rows))
+	closer()
 
 	return nil
 }
@@ -196,8 +201,6 @@ func (self *Container) Upload(
 	store_as_name string,
 	expected_size int64,
 	reader io.Reader) (*api.UploadResponse, error) {
-	self.Lock()
-	defer self.Unlock()
 
 	var components []string
 	if store_as_name == "" {
@@ -216,7 +219,7 @@ func (self *Container) Upload(
 
 	// Zip members must not have absolute paths.
 	sanitized_name := path.Join(components...)
-	writer, err := self.getZipFileWriter(sanitized_name)
+	writer, closer, err := self.getZipFileWriter(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +236,7 @@ func (self *Container) Upload(
 			Error: err.Error(),
 		}, err
 	}
+	closer()
 
 	return &api.UploadResponse{
 		Path:   sanitized_name,
