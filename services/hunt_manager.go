@@ -51,6 +51,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -159,13 +160,10 @@ func (self *HuntManager) ProcessFlowCompletion(
 	scope *vfilter.Scope,
 	row *ordereddict.Dict) {
 
-	flow_any, pres := row.Get("Flow")
-	if !pres {
-		return
-	}
-
-	flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
-	if !ok {
+	flow := &flows_proto.ArtifactCollectorContext{}
+	flow_any, _ := row.Get("Flow")
+	err := utils.ParseIntoProtobuf(flow_any, flow)
+	if err != nil {
 		return
 	}
 
@@ -179,7 +177,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 	}
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	err := GetJournal().PushRows(path_manager.ClientErrors(),
+	err = GetJournal().PushRows(path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).

@@ -62,13 +62,11 @@ func watchForFlowCompletion(
 				if !ok {
 					return
 				}
-				flow_any, pres := event.Get("Flow")
-				if !pres {
-					continue
-				}
 
-				flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
-				if !ok {
+				flow := &flows_proto.ArtifactCollectorContext{}
+				flow_any, _ := event.Get("Flow")
+				err := utils.ParseIntoProtobuf(flow_any, flow)
+				if err != nil {
 					continue
 				}
 

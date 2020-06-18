@@ -217,6 +217,10 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 }
 
 func doClientDeb() {
+	// Disable logging when creating a deb - we may not create the
+	// deb on the same system where the logs should go.
+	config.ValidateClientConfig(&config_proto.Config{})
+
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
