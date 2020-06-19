@@ -1,7 +1,7 @@
 name: Windows.Search.VSS
 description: |
-  This artifact will find all relevant files in the VSS. Typically used for 
-  processing by other artefacts.  
+  This artifact will find all relevant files in the VSS. Typically used to  
+  out deduplicated paths for processing by other artifacts.  
   
   Input either search Glob or FullPath.  
   Output is standard Glob results with additional fields:  
