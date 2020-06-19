@@ -38,13 +38,13 @@ parameters:
     default: C:\Users\**
     description: Use a glob to define the files that will be searched.
 
-  - name: Keywords
-    default:
-    description: A comma delimited list of strings to search for.
+  - name: Accessor
+    default: auto
+    description: The accessor to use
 
-  - name: Use_Raw_NTFS
-    default: N
-    type: bool
+  - name: YaraRule
+    default:
+    description: A yara rule to search for matching files.
 
   - name: Upload_File
     default: N
@@ -64,8 +64,7 @@ parameters:
 
 
 sources:
-  - queries:
-    - |
+  - query: |
       LET file_search = SELECT FullPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
@@ -73,11 +72,8 @@ sources:
                timestamp(epoch=Atime.Sec) AS ATime,
                timestamp(epoch=Mtime.Sec) AS MTime,
                timestamp(epoch=Ctime.Sec) AS CTime, IsDir
-        FROM glob(globs=SearchFilesGlob,
-                  accessor=if(condition=Use_Raw_NTFS = "Y",
-                              then="ntfs", else="file"))
+        FROM glob(globs=SearchFilesGlob, accessor=Accessor)
 
-    - |
       LET more_recent = SELECT * FROM if(
         condition=MoreRecentThan,
         then={
@@ -85,7 +81,6 @@ sources:
           WHERE Modified > parse_float(string=MoreRecentThan)
         }, else=file_search)
 
-    - |
       LET modified_before = SELECT * FROM if(
         condition=ModifiedBefore,
         then={
@@ -93,9 +88,8 @@ sources:
           WHERE Modified < parse_float(string=ModifiedBefore)
         }, else=more_recent)
 
-    - |
       LET keyword_search = SELECT * FROM if(
-        condition=Keywords,
+        condition=YaraRule,
         then={
           SELECT * FROM foreach(
             row={
@@ -108,22 +102,16 @@ sources:
                       str(str=String.Data) As Keywords, IsDir
 
                FROM yara(files=FullPath,
-                         key=Keywords,
-                         rules="wide nocase ascii:"+Keywords,
-                         accessor=if(condition=Use_Raw_NTFS = "Y",
-                                          then="ntfs", else="file"))
+                         key="A",
+                         rules=YaraRule,
+                         accessor=Accessor)
             })
         }, else=modified_before)
 
-    - |
       SELECT FullPath, Inode, Mode, Size, Modified, ATime,
              MTime, CTime, Keywords, IsDir,
                if(condition=(Upload_File = "Y" and NOT IsDir ),
-                  then=upload(file=FullPath,
-                              accessor=if(condition=Use_Raw_NTFS = "Y",
-                                          then="ntfs", else="file"))) AS Upload,
+                  then=upload(file=FullPath, accessor=Accessor)) AS Upload,
                if(condition=(Calculate_Hash = "Y" and NOT IsDir ),
-                  then=hash(path=FullPath,
-                            accessor=if(condition=Use_Raw_NTFS = "Y",
-                                        then="ntfs", else="file"))) AS Hash
+                  then=hash(path=FullPath, accessor=Accessor)) AS Hash
       FROM keyword_search

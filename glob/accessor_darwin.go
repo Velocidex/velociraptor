@@ -168,4 +168,5 @@ func (self OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 
 func init() {
 	Register("file", &OSFileSystemAccessor{})
+	Register("auto", &OSFileSystemAccessor{})
 }

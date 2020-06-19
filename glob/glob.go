@@ -420,7 +420,7 @@ var (
 // literal component.
 // We also support recursion into directories using the ** notation.  For
 // example, /home/**2/foo.txt will find all files named foo.txt recursed 2
-// directories deep. If the directory depth is omitted, it defaults to 3.
+// directories deep. If the directory depth is omitted, it defaults to 30.
 
 // Example:
 // /home/test**/*exe -> [{path: 'home', type: "LITERAL",

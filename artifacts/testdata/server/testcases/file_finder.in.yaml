@@ -19,5 +19,5 @@ Queries:
 # Search for files that match a keyword
   - SELECT basename(path=FullPath) AS File, Keywords
     FROM Artifact.Windows.Search.FileFinder(
-        Keywords="supercalifragilisticexpialidocious",
+        YaraRule="wide nocase ascii:supercalifragilisticexpialidocious",
         SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")

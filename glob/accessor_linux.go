@@ -207,4 +207,7 @@ func (self *OSFileSystemAccessor) GetRoot(path string) (string, string, error) {
 
 func init() {
 	Register("file", &OSFileSystemAccessor{})
+
+	// On Linux the auto accessor is the same as file.
+	Register("auto", &OSFileSystemAccessor{})
 }

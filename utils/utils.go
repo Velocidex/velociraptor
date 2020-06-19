@@ -24,6 +24,9 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -184,4 +187,18 @@ func ToInt64(x interface{}) (int64, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func ParseIntoProtobuf(source interface{}, destination proto.Message) error {
+	if source == nil {
+		return errors.New("Nil")
+	}
+
+	serialized, err := json.Marshal(source)
+	if err != nil {
+		return err
+	}
+
+	return jsonpb.UnmarshalString(
+		string(serialized), destination)
 }

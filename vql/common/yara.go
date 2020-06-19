@@ -150,8 +150,7 @@ func (self YaraScanPlugin) Call(
 				}
 
 				matches, err := rules.ScanMem(
-					buf[:n], yara_flag,
-					10*time.Second)
+					buf[:n], yara_flag, 10*time.Second)
 				if err != nil {
 					break
 				}
@@ -163,6 +162,32 @@ func (self YaraScanPlugin) Call(
 					}
 
 					stat, _ := f.Stat()
+					// There was a hit but no
+					// strings. This could have
+					// been a rule that uses
+					// e.g. pe functions to
+					// match. Just emit a single
+					// row with no strings.
+					if len(match.Strings) == 0 {
+						res := &YaraResult{
+							Rule:     rule,
+							Tags:     match.Tags,
+							Meta:     match.Meta,
+							File:     stat,
+							FileName: filename,
+						}
+						output_chan <- res
+						number_of_hits += 1
+						if number_of_hits >= arg.NumberOfHits {
+							f.Close()
+							continue scan_file
+						}
+						continue
+					}
+
+					// One or more strings in the
+					// rule matched, emit a single
+					// context around each string.
 					for _, match_string := range match.Strings {
 						start := int(match_string.Offset) -
 							arg.Context

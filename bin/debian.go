@@ -69,9 +69,6 @@ var (
 		fmt.Sprintf("velociraptor_%s_server.deb", constants.VERSION)).
 		String()
 
-	server_debian_command_with_monitoring = server_debian_command.Flag(
-		"with_monitoring", "Also include Grafana and Prometheus").Bool()
-
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
 
@@ -126,40 +123,6 @@ RestartSec=120
 LimitNOFILE=20000
 Environment=LANG=en_US.UTF-8
 ExecStart=%s --config %s client
-
-[Install]
-WantedBy=multi-user.target
-`
-
-	prometheus_service_definition = `
-[Unit]
-Description=Velociraptor prometheus service
-After=syslog.target network.target
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=120
-LimitNOFILE=20000
-Environment=LANG=en_US.UTF-8
-ExecStart=/usr/share/velociraptor_server/%s --config.file /etc/velociraptor/prometheus_velo.yaml
-
-[Install]
-WantedBy=multi-user.target
-`
-	grafana_service_definition = `
-[Unit]
-Description=Velociraptor Grafana
-After=syslog.target network.target
-
-[Service]
-Type=simple
-Restart=always
-RestartSec=120
-LimitNOFILE=20000
-Environment=LANG=en_US.UTF-8
-ExecStart=/usr/share/velociraptor_server/%s
-WorkingDirectory=/usr/share/velociraptor_server/%s
 
 [Install]
 WantedBy=multi-user.target
@@ -222,10 +185,8 @@ func doServerDeb() {
 	deb.AddFile(input, velociraptor_bin+".bin")
 	deb.AddFileString(server_launcher, velociraptor_bin)
 
-	// Just a simple bare bones deb.
-	if !*server_debian_command_with_monitoring {
-		filestore_path := config_obj.Datastore.Location
-		deb.AddControlExtraString("postinst", fmt.Sprintf(`
+	filestore_path := config_obj.Datastore.Location
+	deb.AddControlExtraString("postinst", fmt.Sprintf(`
 if ! getent group velociraptor >/dev/null; then
    addgroup --system velociraptor
 fi
@@ -247,76 +208,19 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path))
 
-		deb.AddControlExtraString("prerm", `
-/bin/systemctl disable velociraptor_server
-/bin/systemctl stop velociraptor_server
-`)
-		err = deb.Write(*server_debian_command_output)
-		kingpin.FatalIfError(err, "Deb write")
-
-		return
-	}
-
-	// Copy the graphana and prometheus distributions into the deb
-	// so we are self contained.
-	err = include_package(
-		"https://dl.grafana.com/oss/release/grafana-6.1.3.linux-amd64.tar.gz",
-		"/usr/share/velociraptor_server/", deb)
-	kingpin.FatalIfError(err, "Downloading Grafana")
-
-	deb.AddFileString(fmt.Sprintf(grafana_service_definition,
-		"grafana-6.1.3/bin/grafana-server", "grafana-6.1.3/"),
-		"/etc/systemd/system/velociraptor_grafana.service")
-
-	err = include_package(
-		"https://github.com/prometheus/prometheus/releases/download/v2.9.0/prometheus-2.9.0.linux-amd64.tar.gz",
-		"/usr/share/velociraptor_server/", deb)
-	kingpin.FatalIfError(err, "Downloading Prometheus")
-
-	deb.AddFileString(fmt.Sprintf(prometheus_service_definition, "prometheus-2.9.0.linux-amd64/prometheus"),
-		"/etc/systemd/system/velociraptor_prometheus.service")
-
-	deb.AddFileString(`
-global:
-  scrape_interval:     5s
-
-scrape_configs:
-  - job_name: 'velociraptor'
-    static_configs:
-      - targets: ['localhost:8003']
-`, "/etc/velociraptor/prometheus_velo.yaml")
-
-	deb.AddControlExtraString("postinst", `
-/bin/chmod +x /usr/share/velociraptor_server/*/bin/grafana-server /usr/share/velociraptor_server/*/prometheus
-
-/bin/systemctl enable velociraptor_server
-/bin/systemctl start velociraptor_server
-
-/bin/systemctl enable velociraptor_grafana
-/bin/systemctl start velociraptor_grafana
-
-/bin/systemctl enable velociraptor_prometheus
-/bin/systemctl start velociraptor_prometheus
-
-`)
-
 	deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
 /bin/systemctl stop velociraptor_server
-
-/bin/systemctl disable velociraptor_grafana
-/bin/systemctl stop velociraptor_grafana
-
-/bin/systemctl disable velociraptor_prometheus
-/bin/systemctl stop velociraptor_prometheus
-
 `)
-
 	err = deb.Write(*server_debian_command_output)
 	kingpin.FatalIfError(err, "Deb write")
 }
 
 func doClientDeb() {
+	// Disable logging when creating a deb - we may not create the
+	// deb on the same system where the logs should go.
+	config.ValidateClientConfig(&config_proto.Config{})
+
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")

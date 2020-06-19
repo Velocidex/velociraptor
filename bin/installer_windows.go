@@ -345,6 +345,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 	}
 
 	config_obj, err := new(config.Loader).WithVerbose(*verbose_flag).
+		WithEmbedded().
 		WithFileLoader(*config_path).
 		WithRequiredClient().
 		WithWriteback().
