@@ -27,19 +27,19 @@ sources:
             FROM if(condition=SearchVSS, 
                 then= {
                     SELECT * 
-                    FROM Artifact.Custom.Windows.Search.VSS(SearchFilesGlob=EventLog)
+                    FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
                 },
                 else= {
-                    SELECT *, 1 as Type
+                    SELECT *
                     FROM glob(globs=EventLog,accessor='ntfs')
                 })
     
-      # Parse all target files, order by source type and add dedupe string
+      # Parse all target files, order by source and add dedupe string
       - LET hits = SELECT *
             FROM foreach(
               row=files,
               query={
-                SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+                SELECT timestamp(epoch=System.TimeCreated.SystemTime) as EventTime,
                   System.EventID.Value as EventID,
                   System.Computer as Computer,
                   System.Security.UserID as SecurityID,
@@ -52,18 +52,17 @@ sources:
                   System.Level as Level,
                   System.Opcode as Opcode,
                   System.Task as Task,
-                  Type,
-                  if(condition= Type=1, then= FullPath, else= Type) as Source,
-                  format(format="%v%v",args=[System.EventRecordID,
-                    timestamp(epoch=System.TimeCreated.SystemTime)]) As _Group
+                  if(condition=Source, then=Source, else=FullPath) as Source,
+                  format(format="%v:%v",args=[System.EventRecordID,
+                    timestamp(epoch=System.TimeCreated.SystemTime)]) as _Group
                 FROM parse_evtx(filename=FullPath, accessor='ntfs')
                 WHERE System.EventID.Value = 7045 and 
                   EventData.ImagePath =~ "(?i)COMSPEC"
             })
-            ORDER BY Type desc
+            ORDER BY Source
       
       # Group results for deduplication
-      - LET result = SELECT *, _Group
+      - LET grouped = SELECT *, _Group
             FROM hits
             GROUP BY _Group
       
@@ -80,4 +79,4 @@ sources:
             StartType,
             EventRecordID,
             Source
-        FROM result
+        FROM grouped

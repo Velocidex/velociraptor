@@ -34,7 +34,7 @@ sources:
             FROM glob(globs='/*', accessor='ntfs')
             ORDER BY FullPath
         
-      # Glob for results - add hash for deduplication and type for priority
+      # Glob for results - add hash for deduplication and Source for priority
       - LET results = SELECT *
             FROM foreach(
                 row=globs,
@@ -45,13 +45,13 @@ sources:
                                 FullPath=~'^\\\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy', 
                             then=split(string=FullPath, sep='\\\\')[5], 
                             else=if(condition= FullPath=~'.:\\\\',
-                                then=1)) as Type,
+                                then=FullPath)) as Source,
                         hash(path=FullPath,accessor='ntfs').SHA1 as SHA1
                     FROM glob(globs=SearchGlob, accessor='ntfs')
                     WHERE NOT IsDIr
                 }
             )
-            ORDER BY Type desc
+            ORDER BY Source
             
       # Dedup and show results
       - SELECT *, 
