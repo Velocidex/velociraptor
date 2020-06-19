@@ -30,8 +30,8 @@ sources:
                     FROM Artifact.Custom.Windows.Search.VSS(SearchFilesGlob=EventLog)
                 },
                 else= {
-                    SELECT *
-                    FROM glob(globs=eventLog,accessor='ntfs')
+                    SELECT *, 1 as Type
+                    FROM glob(globs=EventLog,accessor='ntfs')
                 })
     
       # Parse all target files, order by source type and add dedupe string
