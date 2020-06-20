@@ -10,4 +10,6 @@ Queries:
 
   # PowershellScriptblock VQL test
   - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
-  
+
+    # ADD COMSPEC VSS test
+  - SELECT EventID,ServiceName,ServiceAccount,Source FROM Artifact.Windows.EventLogs.EventLogs.ServiceCreationComspec(SearchVSS="Y")
