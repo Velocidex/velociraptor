@@ -30,11 +30,11 @@ install:
     echo "VSStest2" > c:\Users\test2.txt
     sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
     ver
-    powershell.exe -Command (GWMI -list win32_Shadowcopy).Create('c:\','ClientAccessable')
+    vssadmin create shadow /for=c:
     wevtutil.exe cl System
     echo "VSStest2" >> c:\Users\test2.txt
     sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
-    powershell.exe -Command (GWMI -list win32_Shadowcopy).Create('c:\','ClientAccessable')
+    vssadmin create shadow /for=c:
     
 
 - go version
