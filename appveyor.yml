@@ -29,11 +29,11 @@ install:
     echo "VSStest" > c:\Users\test.txt
     echo "VSStest2" > c:\Users\test2.txt
     sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
-    ver
     vssadmin create shadow /for=c:
-    wevtutil.exe cl System
+    timeout 10 /nobreak
     echo "VSStest2" >> c:\Users\test2.txt
     sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+    wevtutil.exe cl System
     vssadmin create shadow /for=c:
     
 
