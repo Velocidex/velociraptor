@@ -29,11 +29,13 @@ install:
     echo "VSStest" > c:\Users\test.txt
     echo "VSStest2" > c:\Users\test2.txt
     sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
-    wmic shadowcopy call create Volume='C:'
+    ver
+    powershell.exe -Command (GWMI -list win32_Shadowcopy).Create('c:\','ClientAccessable')
     wevtutil.exe cl System
     echo "VSStest2" >> c:\Users\test2.txt
     sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
-    wmic shadowcopy call create Volume='C:'
+    powershell.exe -Command (GWMI -list win32_Shadowcopy).Create('c:\','ClientAccessable')
+    
 
 - go version
 - go env
