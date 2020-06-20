@@ -12,4 +12,4 @@ Queries:
   - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
 
   # ADD COMSPEC VSS test
-  - SELECT EventID,ServiceName,ServiceAccount,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog='C:\Windows\system32\winevt\logs\System.evtx', SearchVSS="Y")
+  - SELECT EventID,ServiceName,ServiceAccount,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(SearchVSS="Y")
