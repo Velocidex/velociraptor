@@ -1,11 +1,5 @@
 Queries:
-  - SELECT FullPath FROM glob(globs="/*", accessor="file")
-    WHERE Name =~ "C"
-  - SELECT FullPath FROM glob(globs="\\*", accessor="file")
-    WHERE Name =~ "C"
-  - SELECT FullPath FROM glob(globs="c:\\*", accessor="file")
-    WHERE Name =~ "pagefile.sys"
-
-  # Read symlinks - These tests are slow and symlinks is not usually used.
-  # - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file_links")
-  # - SELECT FullPath FROM glob(globs="c:\\Users\\**\\atapi.sys", accessor="file_links") WHERE FullPath =~ "drivers\\\\"
+  # Test for deduplication
+  - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\Users\test.txt')
+  # Test for multiple hits
+  - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\Users\test2.txt')
