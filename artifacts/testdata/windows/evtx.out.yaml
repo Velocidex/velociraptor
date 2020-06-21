@@ -107,4 +107,15 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Task": 2,
   "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
  }
+]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")[
+ {
+  "EventID": 7045,
+  "ServiceName": "TestingDetection1",
+  "Source": "HarddiskVolumeShadowCopy1"
+ },
+ {
+  "EventID": 7045,
+  "ServiceName": "TestingDetection2",
+  "Source": "\\\\.\\C:\\Windows\\System32\\winevt\\Logs\\System.evtx"
+ }
 ]
