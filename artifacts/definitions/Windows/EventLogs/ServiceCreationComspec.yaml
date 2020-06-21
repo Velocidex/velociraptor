@@ -62,21 +62,6 @@ sources:
             ORDER BY Source
       
       # Group results for deduplication
-      - LET grouped = SELECT *, _Group
-            FROM hits
-            GROUP BY _Group
-      
-      # Output results
-      - SELECT 
-            EventTime,
-            EventID,
-            Computer,
-            SecurityID,
-            ServiceAccount,
-            ServiceName,
-            ImagePath,
-            ServiceType,
-            StartType,
-            EventRecordID,
-            Source
-        FROM grouped
+      - SELECT *, _Group
+        FROM hits
+            
