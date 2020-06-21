@@ -1,0 +1,21 @@
+SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')[
+ {
+  "FullPath": "\\\\.\\C:\\Users\\test.txt",
+  "SHA1": "a21a26a9716d20649484110d939d90864fba9948",
+  "Source": "\\\\.\\C:\\Users\\test.txt",
+  "Deduped": true
+ }
+]SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')[
+ {
+  "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Users\\test2.txt",
+  "SHA1": "1896ab50888c9c3d4150f5044b2568cea317a8e8",
+  "Source": "HarddiskVolumeShadowCopy1",
+  "Deduped": false
+ },
+ {
+  "FullPath": "\\\\.\\C:\\Users\\test2.txt",
+  "SHA1": "845cf532fdf2ccc54fa6a26fad40b2ef3e537f74",
+  "Source": "\\\\.\\C:\\Users\\test2.txt",
+  "Deduped": true
+ }
+]

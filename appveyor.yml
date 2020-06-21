@@ -26,6 +26,9 @@ install:
     echo Hello > C:\hello.txt
     echo HelloADS > C:\hello.txt:myads
     fsutil file setshortname C:\hello.txt hi.txt
+    sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
+    echo "VSStest" > c:\Users\test.txt
+    echo "VSStest2" > c:\Users\test2.txt
 
 - go version
 - go env
@@ -41,12 +44,17 @@ build_script:
     regedit /S artifacts/testdata/windows/init.reg
     go get github.com/magefile/mage/mage
     go run make.go -v appveyor
+    vssadmin create shadow /for=c:
+    echo "VSStest2" >> c:\Users\test2.txt
+    wevtutil.exe cl System
+    sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+    vssadmin create shadow /for=c:
 
 test_script:
 - set GO111MODULE=on
-- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
-- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 
 on_finish:
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }

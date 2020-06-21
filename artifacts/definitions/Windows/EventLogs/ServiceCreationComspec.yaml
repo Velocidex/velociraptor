@@ -6,41 +6,75 @@ description: |
 
   This detects many hack tools that leverage SCM based lateral movement 
   including smbexec.
+  
+  SearchVSS allows querying VSS instances of EventLog Path with event 
+  deduplication.
 
 author: Matt Green - @mgreen27
 
 parameters:
-  - name: eventLog
+  - name: EventLog
     default: C:\Windows\system32\winevt\logs\System.evtx
-  - name: accessor
-    default: ntfs
-
+  - name: SearchVSS
+    description: "Add VSS into query."
+    type: bool
+    
 sources:
   - name: ServiceCreation
     queries:
-      - |
-        LET files = SELECT * FROM glob(
-            globs=eventLog,
-            accessor=accessor)
-      - |
-        SELECT *
-        FROM foreach(
-          row=files,
-          query={
-            SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
-              System.EventID.Value as EventID,
-              System.Computer as Computer,
-              System.Security.UserID as SecurityID,
-              EventData.AccountName as ServiceAccount,
-              EventData.ServiceName as ServiceName,
-              EventData.ImagePath as ImagePath,
-              EventData.ServiceType as ServiceType,
-              EventData.StartType as StartType,
-              System.EventRecordID as EventRecordID,
-              System.Level as Level,
-              System.Opcode as Opcode,
-              System.Task as Task
-            FROM parse_evtx(filename=FullPath, accessor=accessor)
-            WHERE System.EventID.Value = 7045 and 
-              EventData.ImagePath =~ "(?i)COMSPEC"
-        })
+      # Extract all target paths from glob
+      - LET files = SELECT * 
+            FROM if(condition=SearchVSS, 
+                then= {
+                    SELECT * 
+                    FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
+                },
+                else= {
+                    SELECT *
+                    FROM glob(globs=EventLog,accessor='ntfs')
+                })
+    
+      # Parse all target files, order by source and add dedupe string
+      - LET hits = SELECT *
+            FROM foreach(
+              row=files,
+              query={
+                SELECT timestamp(epoch=System.TimeCreated.SystemTime) as EventTime,
+                  System.EventID.Value as EventID,
+                  System.Computer as Computer,
+                  System.Security.UserID as SecurityID,
+                  EventData.AccountName as ServiceAccount,
+                  EventData.ServiceName as ServiceName,
+                  EventData.ImagePath as ImagePath,
+                  EventData.ServiceType as ServiceType,
+                  EventData.StartType as StartType,
+                  System.EventRecordID as EventRecordID,
+                  System.Level as Level,
+                  System.Opcode as Opcode,
+                  System.Task as Task,
+                  if(condition=Source, then=Source, else=FullPath) as Source
+                FROM parse_evtx(filename=FullPath, accessor='ntfs')
+                WHERE System.EventID.Value = 7045 and 
+                  EventData.ImagePath =~ "(?i)COMSPEC"
+            })
+            ORDER BY Source
+      
+      # Group results for deduplication
+      - LET grouped = SELECT *
+          FROM hits
+          GROUP BY EventRecordID  
+
+      # Output results
+      - SELECT 
+            EventTime,
+            EventID,
+            Computer,
+            SecurityID,
+            ServiceAccount,
+            ServiceName,
+            ImagePath,
+            ServiceType,
+            StartType,
+            EventRecordID,
+            Source
+        FROM grouped
