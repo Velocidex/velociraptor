@@ -64,4 +64,4 @@ sources:
       # Group results for deduplication
       - SELECT *, _Group
         FROM hits
-            
+        GROUP BY _Group    
