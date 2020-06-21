@@ -52,9 +52,9 @@ build_script:
 
 test_script:
 - set GO111MODULE=on
-- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
-- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: go test ./...
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
+- cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 
 on_finish:
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
