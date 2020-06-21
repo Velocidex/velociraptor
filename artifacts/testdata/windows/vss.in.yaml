@@ -3,5 +3,3 @@ Queries:
   - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')
   # Test for multiple hits
   - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')
-  # Test for System
-  - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='C:\\Windows\\system32\\winevt\\logs\\System.evtx')

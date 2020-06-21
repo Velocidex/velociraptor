@@ -62,6 +62,6 @@ sources:
             ORDER BY Source
       
       # Group results for deduplication
-      - SELECT *, _Group
+      - SELECT *
         FROM hits
         GROUP BY _Group    
