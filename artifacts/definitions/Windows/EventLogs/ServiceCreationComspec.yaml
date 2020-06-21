@@ -52,9 +52,7 @@ sources:
                   System.Level as Level,
                   System.Opcode as Opcode,
                   System.Task as Task,
-                  if(condition=Source, then=Source, else=FullPath) as Source,
-                  format(format="%v:%v",args=[System.EventRecordID,
-                    timestamp(epoch=System.TimeCreated.SystemTime)]) as _Group
+                  if(condition=Source, then=Source, else=FullPath) as Source
                 FROM parse_evtx(filename=FullPath, accessor='ntfs')
                 WHERE System.EventID.Value = 7045 and 
                   EventData.ImagePath =~ "(?i)COMSPEC"
@@ -64,4 +62,4 @@ sources:
       # Group results for deduplication
       - SELECT *
         FROM hits
-        GROUP BY _Group    
+        GROUP BY EventRecordID  
