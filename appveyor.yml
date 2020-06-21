@@ -26,14 +26,15 @@ install:
     echo Hello > C:\hello.txt
     echo HelloADS > C:\hello.txt:myads
     fsutil file setshortname C:\hello.txt hi.txt
+    sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
     echo "VSStest" > c:\Users\test.txt
     echo "VSStest2" > c:\Users\test2.txt
-    sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
+    timeout 10 /nobreak
     vssadmin create shadow /for=c:
     timeout 10 /nobreak
     echo "VSStest2" >> c:\Users\test2.txt
-    sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
     wevtutil.exe cl System
+    sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
     vssadmin create shadow /for=c:
     
 
