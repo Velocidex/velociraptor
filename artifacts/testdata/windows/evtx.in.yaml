@@ -13,6 +13,3 @@ Queries:
 
   # ADD COMSPEC VSS test
   - SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")
-
-  # ADD COMSPEC VSS test
-  - SELECT * FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")
