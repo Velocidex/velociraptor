@@ -2,12 +2,12 @@ name: Windows.EventLogs.ServiceCreationComspec
 description: |
 
   This Detection hts on the string "COMSPEC" (nocase) in Windows Service
-  Creation events. That is: EventID 7045 from the System event log. 
+  Creation events. That is: EventID 7045 from the System event log.
 
-  This detects many hack tools that leverage SCM based lateral movement 
+  This detects many hack tools that leverage SCM based lateral movement
   including smbexec.
-  
-  SearchVSS allows querying VSS instances of EventLog Path with event 
+
+  SearchVSS allows querying VSS instances of EventLog Path with event
   deduplication.
 
 author: Matt Green - @mgreen27
@@ -18,22 +18,22 @@ parameters:
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool
-    
+
 sources:
   - name: ServiceCreation
     queries:
       # Extract all target paths from glob
-      - LET files = SELECT * 
-            FROM if(condition=SearchVSS, 
+      - LET files = SELECT *
+            FROM if(condition=SearchVSS,
                 then= {
-                    SELECT * 
+                    SELECT *
                     FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
                 },
                 else= {
                     SELECT *
-                    FROM glob(globs=EventLog,accessor='ntfs')
+                    FROM glob(globs=EventLog, accessor='ntfs')
                 })
-    
+
       # Parse all target files, order by source and add dedupe string
       - LET hits = SELECT *
             FROM foreach(
@@ -54,12 +54,12 @@ sources:
                   System.Task as Task,
                   if(condition=Source, then=Source, else=FullPath) as Source
                 FROM parse_evtx(filename=FullPath, accessor='ntfs')
-                WHERE System.EventID.Value = 7045 and 
+                WHERE System.EventID.Value = 7045 and
                   EventData.ImagePath =~ "(?i)COMSPEC"
             })
             ORDER BY Source
-      
+
       # Group results for deduplication
       - SELECT *
         FROM hits
-        GROUP BY EventRecordID  
+        GROUP BY EventRecordID

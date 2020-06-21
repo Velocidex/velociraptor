@@ -29,14 +29,6 @@ install:
     sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
     echo "VSStest" > c:\Users\test.txt
     echo "VSStest2" > c:\Users\test2.txt
-    timeout 10 /nobreak
-    vssadmin create shadow /for=c:
-    timeout 10 /nobreak
-    echo "VSStest2" >> c:\Users\test2.txt
-    wevtutil.exe cl System
-    sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
-    vssadmin create shadow /for=c:
-    
 
 - go version
 - go env
@@ -52,6 +44,11 @@ build_script:
     regedit /S artifacts/testdata/windows/init.reg
     go get github.com/magefile/mage/mage
     go run make.go -v appveyor
+    vssadmin create shadow /for=c:
+    echo "VSStest2" >> c:\Users\test2.txt
+    wevtutil.exe cl System
+    sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+    vssadmin create shadow /for=c:
 
 test_script:
 - set GO111MODULE=on
