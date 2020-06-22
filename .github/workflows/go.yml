@@ -48,6 +48,7 @@ jobs:
       run: |
         export PATH=$PATH:~/go/bin/
         go run make.go -v Windows
+        go run make.go -v Windowsx86
         go run make.go -v DarwinBase
         zip Binaries.zip output/*
 
