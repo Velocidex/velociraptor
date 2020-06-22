@@ -290,9 +290,9 @@ func Appveyor() error {
 		return err
 	}
 	
-	err_x86 = Builder{
+	err_x86 := Builder{
 		goos:       "windows",
-		arch:       "x86",
+		arch:       "386",
 		extra_tags: " release ",
 		filename:   "velociraptor_x86.exe"}.Run()
 
