@@ -289,6 +289,16 @@ func Appveyor() error {
 	if err != nil {
 		return err
 	}
+	
+	err_x86 = Builder{
+		goos:       "windows",
+		arch:       "x86",
+		extra_tags: " release ",
+		filename:   "velociraptor_x86.exe"}.Run()
+
+	if err_x86 != nil {
+		return err_x86
+	}
 
 	// Build a linux binary on Appveyor without cgo. This is
 	// typically OK because it is mostly used for the server. It
