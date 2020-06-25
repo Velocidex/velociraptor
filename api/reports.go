@@ -8,6 +8,7 @@ import (
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/reporting"
 )
 
@@ -20,10 +21,12 @@ func getReport(ctx context.Context,
 	template_engine, err := reporting.NewGuiTemplateEngine(
 		config_obj, ctx, principal, nil, in.Artifact)
 	if err != nil {
-		if strings.HasPrefix(in.Artifact, "Custom.") {
+		if strings.HasPrefix(in.Artifact,
+			constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
 			template_engine, err = reporting.NewGuiTemplateEngine(
 				config_obj, ctx, principal, nil,
-				strings.TrimPrefix(in.Artifact, "Custom."))
+				strings.TrimPrefix(in.Artifact,
+					constants.ARTIFACT_CUSTOM_NAME_PREFIX))
 		}
 		if err != nil {
 			return nil, err

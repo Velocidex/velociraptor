@@ -196,12 +196,6 @@ service API {
         };
     }
 
-  // This can be used by API clients to fetch file content.
-    rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
-        // Not accessible via the GUI - the gui can access the
-        // download handlers directly.
-    };
-
     rpc GetTable(GetTableRequest) returns (GetTableResponse) {
         option (google.api.http) = {
             get: "/api/v1/GetTable",
@@ -265,6 +259,13 @@ service API {
     rpc SetArtifactFile(SetArtifactRequest) returns (APIResponse) {
         option (google.api.http) = {
             post: "/api/v1/SetArtifactFile",
+            body: "*",
+        };
+    }
+
+    rpc LoadArtifactPack(VFSFileBuffer) returns (LoadArtifactPackResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/LoadArtifactPack",
             body: "*",
         };
     }
@@ -397,6 +398,12 @@ service API {
     }
 
     // The below are API client methods - not available over HTTP
+
+    // This can be used by API clients to fetch file content.
+    rpc VFSGetBuffer(VFSFileBuffer) returns (VFSFileBuffer) {
+        // Not accessible via the GUI - the gui can access the
+        // download handlers directly.
+    };
 
     // Streaming free form VQL.
     rpc Query(VQLCollectorArgs) returns (stream VQLResponse) {}

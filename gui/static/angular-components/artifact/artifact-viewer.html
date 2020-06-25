@@ -35,6 +35,18 @@
           <i class="fa fa-trash"></i>
         </button>
 
+        <button
+          type="button"
+          class="btn btn-default"
+          title="Upload Artifact Pack"
+          name="Upload"
+          ng-disabled="!controller.uiTraits.Permissions.artifact_writer"
+          ng-click="controller.uploadArtifacts()"
+          >
+          <i class="fa fa-upload"></i>
+        </button>
+
+
       </div>
     </div>
   </div>

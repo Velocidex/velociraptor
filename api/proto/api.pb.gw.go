@@ -1100,6 +1100,40 @@ func local_request_API_SetArtifactFile_0(ctx context.Context, marshaler runtime.
 
 }
 
+func request_API_LoadArtifactPack_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq VFSFileBuffer
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.LoadArtifactPack(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_API_LoadArtifactPack_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq VFSFileBuffer
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LoadArtifactPack(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_API_GetReport_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetReportRequest
 	var metadata runtime.ServerMetadata
@@ -2229,6 +2263,26 @@ func RegisterAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 
 	})
 
+	mux.Handle("POST", pattern_API_LoadArtifactPack_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_API_LoadArtifactPack_0(rctx, inboundMarshaler, server, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_API_LoadArtifactPack_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_API_GetReport_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3190,6 +3244,26 @@ func RegisterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 
 	})
 
+	mux.Handle("POST", pattern_API_LoadArtifactPack_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_API_LoadArtifactPack_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_API_LoadArtifactPack_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	mux.Handle("POST", pattern_API_GetReport_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
@@ -3592,6 +3666,8 @@ var (
 
 	pattern_API_SetArtifactFile_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "SetArtifactFile"}, "", runtime.AssumeColonVerbOpt(true)))
 
+	pattern_API_LoadArtifactPack_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "LoadArtifactPack"}, "", runtime.AssumeColonVerbOpt(true)))
+
 	pattern_API_GetReport_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetReport"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_API_GetServerMonitoringState_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetServerMonitoringState"}, "", runtime.AssumeColonVerbOpt(true)))
@@ -3685,6 +3761,8 @@ var (
 	forward_API_GetArtifactFile_0 = runtime.ForwardResponseMessage
 
 	forward_API_SetArtifactFile_0 = runtime.ForwardResponseMessage
+
+	forward_API_LoadArtifactPack_0 = runtime.ForwardResponseMessage
 
 	forward_API_GetReport_0 = runtime.ForwardResponseMessage
 

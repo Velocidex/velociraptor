@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -46,7 +47,7 @@ func watchForFlowCompletion(
 
 		// Allow the artifact we are following to be over-ridden by
 		// the user.
-		custom_artifact_name := "Custom." + artifact_name
+		custom_artifact_name := constants.ARTIFACT_CUSTOM_NAME_PREFIX + artifact_name
 
 		events, cancel := GetJournal().Watch("System.Flow.Completion")
 		defer cancel()

@@ -179,26 +179,6 @@ func (mr *MockAPIClientMockRecorder) CreateNotebookDownloadFile(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNotebookDownloadFile", reflect.TypeOf((*MockAPIClient)(nil).CreateNotebookDownloadFile), varargs...)
 }
 
-// DescribeTypes mocks base method
-func (m *MockAPIClient) DescribeTypes(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto1.Types, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "DescribeTypes", varargs...)
-	ret0, _ := ret[0].(*proto1.Types)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// DescribeTypes indicates an expected call of DescribeTypes
-func (mr *MockAPIClientMockRecorder) DescribeTypes(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeTypes", reflect.TypeOf((*MockAPIClient)(nil).DescribeTypes), varargs...)
-}
-
 // ExportNotebook mocks base method
 func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
@@ -657,6 +637,26 @@ func (mr *MockAPIClientMockRecorder) ListHunts(arg0, arg1 interface{}, arg2 ...i
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListHunts", reflect.TypeOf((*MockAPIClient)(nil).ListHunts), varargs...)
+}
+
+// LoadArtifactPack mocks base method
+func (m *MockAPIClient) LoadArtifactPack(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.LoadArtifactPackResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "LoadArtifactPack", varargs...)
+	ret0, _ := ret[0].(*proto0.LoadArtifactPackResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// LoadArtifactPack indicates an expected call of LoadArtifactPack
+func (mr *MockAPIClientMockRecorder) LoadArtifactPack(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadArtifactPack", reflect.TypeOf((*MockAPIClient)(nil).LoadArtifactPack), varargs...)
 }
 
 // ModifyHunt mocks base method

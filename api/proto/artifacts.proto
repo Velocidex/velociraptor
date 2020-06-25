@@ -59,6 +59,17 @@ message SetArtifactRequest {
         }];
 }
 
+message LoadArtifactError {
+    string filename = 1;
+    string error = 2;
+}
+
+message LoadArtifactPackResponse {
+    repeated string successful_artifacts = 1;
+
+    repeated LoadArtifactError errors = 2;
+}
+
 message APIResponse {
     bool error = 1 [(sem_type) = {
             description: "An error occured setting the artifact.",
