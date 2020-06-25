@@ -18,12 +18,17 @@
 package api
 
 import (
+	"archive/zip"
+	"bytes"
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -33,11 +38,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	name_regex = regexp.MustCompile("(?sm)^(name: *)(.+)$")
 )
 
 const (
@@ -79,23 +91,28 @@ func getArtifactFile(
 	// This is hacky but necessary since we can not reserialize
 	// the artifact - the yaml library is unable to properly round
 	// trip the raw yaml.
-	if !strings.HasPrefix(artifact.Name, "Custom.") {
-		regex, err := regexp.Compile(
-			"(?s)(?m)^name:\\s*" + artifact.Name + "$")
-		if err != nil {
-			return default_artifact, err
-		}
-
-		result := regex.ReplaceAllString(
-			artifact.Raw, "name: Custom."+artifact.Name)
-		return result, nil
+	if !strings.HasPrefix(artifact.Name, constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
+		return ensureArtifactPrefix(artifact.Raw,
+			constants.ARTIFACT_CUSTOM_NAME_PREFIX), nil
 	}
 
 	return artifact.Raw, nil
 }
 
+func ensureArtifactPrefix(definition, prefix string) string {
+	return utils.ReplaceAllStringSubmatchFunc(
+		name_regex, definition,
+		func(matches []string) string {
+			if !strings.HasPrefix(matches[2], prefix) {
+				return matches[1] + prefix + matches[2]
+			}
+			return matches[1] + matches[2]
+		})
+}
+
 func setArtifactFile(config_obj *config_proto.Config,
-	in *api_proto.SetArtifactRequest) (
+	in *api_proto.SetArtifactRequest,
+	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
 	// First ensure that the artifact is correct.
@@ -106,9 +123,10 @@ func setArtifactFile(config_obj *config_proto.Config,
 		return nil, err
 	}
 
-	if !strings.HasPrefix(artifact_definition.Name, "Custom.") {
+	if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
 		return nil, errors.New(
-			"Modified or custom artifacts must start with 'Custom'")
+			"Modified or custom artifacts must start with '" +
+				required_prefix + "'")
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -217,6 +235,83 @@ func searchArtifact(
 
 		if len(result.Items) >= int(number_of_results) {
 			break
+		}
+	}
+
+	return result, nil
+}
+
+func (self *ApiServer) LoadArtifactPack(
+	ctx context.Context,
+	in *api_proto.VFSFileBuffer) (
+	*api_proto.LoadArtifactPackResponse, error) {
+
+	user_name := GetGRPCUserInfo(self.config, ctx).Name
+	user_record, err := users.GetUser(self.config, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	permissions := acls.SERVER_ARTIFACT_WRITER
+	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	if !perm || err != nil {
+		return nil, status.Error(codes.PermissionDenied,
+			"User is not allowed to upload artifact packs.")
+	}
+
+	prefix := constants.ARTIFACT_PACK_NAME_PREFIX
+
+	result := &api_proto.LoadArtifactPackResponse{}
+	buffer := bytes.NewReader(in.Data)
+	zip_reader, err := zip.NewReader(buffer, int64(len(in.Data)))
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range zip_reader.File {
+		if strings.HasSuffix(file.Name, ".yaml") {
+			fd, err := file.Open()
+			if err != nil {
+				continue
+			}
+
+			data, err := ioutil.ReadAll(fd)
+			fd.Close()
+
+			if err != nil {
+				continue
+			}
+
+			artifact_definition := string(data)
+
+			// Make sure the artifact is written into the
+			// Packs part to prevent clashes with built in
+			// names.
+			artifact_definition = ensureArtifactPrefix(string(data), prefix)
+
+			request := &api_proto.SetArtifactRequest{
+				Op:       api_proto.SetArtifactRequest_SET,
+				Artifact: artifact_definition,
+			}
+
+			definition, err := setArtifactFile(self.config, request, prefix)
+			if err == nil {
+				logging.GetLogger(self.config, &logging.Audit).
+					WithFields(logrus.Fields{
+						"user":     user_name,
+						"artifact": definition.Name,
+						"details": fmt.Sprintf(
+							"%v", request.Artifact),
+					}).Info("LoadArtifactPack")
+
+				result.SuccessfulArtifacts = append(result.SuccessfulArtifacts,
+					definition.Name)
+			} else {
+				result.Errors = append(result.Errors, &api_proto.LoadArtifactError{
+					Filename: file.Name,
+					Error:    err.Error(),
+				})
+			}
 		}
 	}
 

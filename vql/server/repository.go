@@ -62,12 +62,11 @@ func (self ArtifactsPlugin) Call(
 			}
 
 			for _, source := range artifact.Sources {
-				for _, query := range source.Queries {
-					err := repository.GetQueryDependencies(query, 0, dependencies)
-					if err != nil {
-						scope.Log("artifact_definitions: %v", err)
-						return
-					}
+				err := repository.GetQueryDependencies(
+					source.Query, 0, dependencies)
+				if err != nil {
+					scope.Log("artifact_definitions: %v", err)
+					return
 				}
 			}
 		}
@@ -75,12 +74,6 @@ func (self ArtifactsPlugin) Call(
 		for k := range dependencies {
 			artifact, pres := repository.Get(k)
 			if pres {
-				for _, source := range artifact.Sources {
-					if source.Query != "" {
-						source.Queries = nil
-					}
-				}
-
 				output_chan <- vfilter.RowToDict(ctx, scope, artifact)
 			}
 		}

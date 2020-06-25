@@ -49,6 +49,7 @@ var (
 
 // Holds multiple artifact definitions.
 type Repository struct {
+	sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
 
@@ -56,6 +57,9 @@ type Repository struct {
 }
 
 func (self *Repository) Copy() *Repository {
+	self.Lock()
+	defer self.Unlock()
+
 	result := &Repository{Data: make(map[string]*artifacts_proto.Artifact)}
 	for k, v := range self.Data {
 		result.Data[k] = v
@@ -64,12 +68,17 @@ func (self *Repository) Copy() *Repository {
 }
 
 func (self *Repository) LoadDirectory(dirname string) (*int, error) {
+	self.Lock()
+
 	count := 0
 	if utils.InString(self.loaded_dirs, dirname) {
 		return &count, nil
 	}
 	dirname = filepath.Clean(dirname)
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
+
+	self.Unlock()
+
 	return &count, filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -125,29 +134,15 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 		return nil, errors.WithStack(err)
 	}
 
-	for _, source := range artifact.Sources {
-		if source.Query != "" {
-			multi_vql, err := vfilter.MultiParse(source.Query)
-			if err != nil {
-				return nil, err
-			}
-
-			scope := vql_subsystem.MakeScope()
-
-			// Append the queries to the query list.
-			source.Queries = nil
-			for _, vql := range multi_vql {
-				source.Queries = append(source.Queries, vql.ToString(scope))
-			}
-		}
-	}
-
 	artifact.Raw = data
 	return self.LoadProto(artifact, validate)
 }
 
 func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
 	*artifacts_proto.Artifact, error) {
+	self.Lock()
+	defer self.Unlock()
+
 	// Validate the artifact.
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
@@ -174,7 +169,23 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		return nil, errors.New("Artifact type invalid.")
 	}
 
-	// Validate the artifact contains syntactically correct VQL.
+	// Normalize the artifact by converting the deprecated Queries
+	// field to the Query field.
+	for _, source := range artifact.Sources {
+		if source.Query == "" {
+			for _, query := range source.Queries {
+				source.Query += "\n" + query
+			}
+		}
+
+		// Remove the Queries field - from now it will contain
+		// optimized queries.
+		source.Queries = nil
+	}
+
+	// Validate the artifact contains syntactically correct
+	// VQL. We do not need to validate embedded artifacts since we
+	// assume they are ok if they passed CI.
 	if validate {
 		for _, perm := range artifact.RequiredPermissions {
 			if acls.GetPermission(perm) == acls.NO_PERMISSIONS {
@@ -190,32 +201,16 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 				}
 			}
 
-			if source.Query != "" {
-				multi_vql, err := vfilter.MultiParse(source.Query)
-				if err != nil {
-					return nil, err
-				}
-
-				scope := vql_subsystem.MakeScope()
-
-				// Append the queries to the query list.
-				source.Queries = nil
-				for _, vql := range multi_vql {
-					source.Queries = append(source.Queries, vql.ToString(scope))
-				}
-			}
-
-			if len(source.Queries) == 0 {
+			if len(source.Query) == 0 {
 				return nil, errors.New(fmt.Sprintf(
 					"Source %s in artifact %s contains no queries!",
 					source.Name, artifact.Name))
 			}
 
-			for _, query := range source.Queries {
-				_, err := vfilter.Parse(query)
-				if err != nil {
-					return nil, err
-				}
+			// Check we can parse it properly.
+			_, err := vfilter.MultiParse(source.Query)
+			if err != nil {
+				return nil, err
 			}
 		}
 	}
@@ -233,6 +228,9 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 }
 
 func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
+	self.Lock()
+	defer self.Unlock()
+
 	artifact_name, source_name := paths.SplitFullSourceName(name)
 
 	res, pres := self.Data[artifact_name]
@@ -240,8 +238,14 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 		return nil, false
 	}
 
+	// Delay processing until we need it. This means loading
+	// artifacts is faster.
+	compileArtifact(res)
+
+	// Caller did not specify a source - just give them a copy of
+	// the complete artifact.
 	if source_name == "" {
-		return res, pres
+		return proto.Clone(res).(*artifacts_proto.Artifact), pres
 	}
 
 	// Caller asked for only a specific source in the artifact -
@@ -262,10 +266,16 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 }
 
 func (self *Repository) Del(name string) {
+	self.Lock()
+	defer self.Unlock()
+
 	delete(self.Data, name)
 }
 
 func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact {
+	self.Lock()
+	defer self.Unlock()
+
 	name := strings.Replace(path, "/", ".", -1)
 
 	result := []*artifacts_proto.Artifact{}
@@ -279,6 +289,9 @@ func (self *Repository) GetByPathPrefix(path string) []*artifacts_proto.Artifact
 }
 
 func (self *Repository) List() []string {
+	self.Lock()
+	defer self.Unlock()
+
 	result := []string{}
 	for k := range self.Data {
 		result = append(result, k)
@@ -290,14 +303,24 @@ func (self *Repository) List() []string {
 // Parse the query and determine if it requires any artifacts. If any
 // artifacts are found, then recursivly determine their dependencies
 // etc.
-
-// Called recursively to deterimine requirements at each level. If an
-// artifact at a certain depth calls an artifact which is already used
-// in a higher depth this is a cycle and we fail to compile.
 func (self *Repository) GetQueryDependencies(
 	query string,
 	depth int,
 	dependency map[string]int) error {
+	self.Lock()
+	defer self.Unlock()
+
+	return self.getQueryDependencies(query, depth, dependency)
+}
+
+// Called recursively to deterimine requirements at each level. If an
+// artifact at a certain depth calls an artifact which is already used
+// in a higher depth this is a cycle and we fail to compile.
+func (self *Repository) getQueryDependencies(
+	query string,
+	depth int,
+	dependency map[string]int) error {
+
 	// For now this is really dumb - just search for something
 	// that looks like an artifact.
 	for _, hit := range artifact_in_query_regex.
@@ -324,22 +347,20 @@ func (self *Repository) GetQueryDependencies(
 
 		// Now search the referred to artifact's query for its
 		// own dependencies.
-		err := self.GetQueryDependencies(dep.Precondition, depth+1, dependency)
+		err := self.getQueryDependencies(dep.Precondition, depth+1, dependency)
 		if err != nil {
 			return err
 		}
 
 		for _, source := range dep.Sources {
-			err := self.GetQueryDependencies(source.Precondition, depth+1, dependency)
+			err := self.getQueryDependencies(source.Precondition, depth+1, dependency)
 			if err != nil {
 				return err
 			}
 
-			for _, query := range source.Queries {
-				err := self.GetQueryDependencies(query, depth+1, dependency)
-				if err != nil {
-					return err
-				}
+			err = self.getQueryDependencies(source.Query, depth+1, dependency)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -359,6 +380,15 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 	for k := range dependencies {
 		artifact, pres := self.Get(k)
 		if pres {
+			sources := []*artifacts_proto.ArtifactSource{}
+			for _, source := range artifact.Sources {
+				new_source := &artifacts_proto.ArtifactSource{
+					Name:    source.Name,
+					Queries: source.Queries,
+				}
+				sources = append(sources, new_source)
+			}
+
 			// Deliberately make a copy of the artifact -
 			// we do not want to give away metadata to the
 			// client.
@@ -366,7 +396,7 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
 					Parameters: artifact.Parameters,
-					Sources:    artifact.Sources,
+					Sources:    sources,
 				})
 		}
 	}
@@ -416,6 +446,8 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 		return errors.New("Recursive include detected.")
 	}
 
+	scope := vql_subsystem.MakeScope()
+
 	for idx, source := range artifact.Sources {
 		// If a precondition is defined at the artifact level, the
 		// source may override it.
@@ -464,32 +496,31 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 
 		// The artifact format requires all queries to be LET
 		// queries except for the last one.
-		for idx2, query := range source.Queries {
-			// Verify the query's syntax.
-			vql, err := vfilter.Parse(query)
-			if err != nil {
-				return errors.Wrap(
-					err, fmt.Sprintf(
-						"While parsing source query %d",
-						idx2))
-			}
+		queries, err := vfilter.MultiParse(source.Query)
+		if err != nil {
+			return errors.Wrap(
+				err, fmt.Sprintf("While parsing source query"))
+		}
 
+		for idx2, vql := range queries {
 			query_name := fmt.Sprintf("%s_%d", prefix, idx2)
-			if idx2 < len(source.Queries)-1 {
+			if idx2 < len(queries)-1 {
 				if vql.Let == "" {
 					return errors.New(
-						"Invalid artifact: All Queries in a source " +
+						"Invalid artifact " + artifact.Name +
+							": All Queries in a source " +
 							"must be LET queries, except for the " +
 							"final one.")
 				}
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
-						VQL: query,
+						VQL: vql.ToString(scope),
 					})
 			} else {
 				if vql.Let != "" {
 					return errors.New(
-						"Invalid artifact: All Queries in a source " +
+						"Invalid artifact " + artifact.Name +
+							": All Queries in a source " +
 							"must be LET queries, except for the " +
 							"final one.")
 				}
@@ -497,7 +528,7 @@ func (self *Repository) mergeSources(artifact *artifacts_proto.Artifact,
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: "LET " + query_name +
-							" = " + query,
+							" = " + vql.ToString(scope),
 					})
 			}
 			source_result = query_name
@@ -563,4 +594,34 @@ func GetGlobalRepository(config_obj *config_proto.Config) (*Repository, error) {
 
 func RegisterArtifactSources(fn init_function) {
 	init_registry = append(init_registry, fn)
+}
+
+func splitQueryToQueries(query string) ([]string, error) {
+	vqls, err := vfilter.MultiParse(query)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := vql_subsystem.MakeScope()
+	result := []string{}
+	for _, vql := range vqls {
+		result = append(result, vql.ToString(scope))
+	}
+
+	return result, nil
+}
+
+func compileArtifact(artifact *artifacts_proto.Artifact) error {
+	for _, source := range artifact.Sources {
+		if source.Queries == nil {
+			// The Queries field contains the compiled queries -
+			// removing any comments.
+			queries, err := splitQueryToQueries(source.Query)
+			if err != nil {
+				return err
+			}
+			source.Queries = queries
+		}
+	}
+	return nil
 }

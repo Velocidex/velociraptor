@@ -153,22 +153,20 @@ func (self *EventTable) RunQuery(
 
 	// Parse all the source VQL to ensure they are valid before we
 	// try to run them.
-	vqls := []*vfilter.VQL{}
-	for idx, query := range source.Queries {
-		vql, err := vfilter.Parse(query)
-		if err != nil {
-			return err
-		}
+	vqls, err := vfilter.MultiParse(source.Query)
+	if err != nil {
+		return err
+	}
 
-		if (idx < len(source.Queries)-1 && vql.Let == "") ||
-			(idx == len(source.Queries) && vql.Let != "") {
+	for idx, vql := range vqls {
+		if (idx < len(vqls)-1 && vql.Let == "") ||
+			(idx == len(vqls)-1 && vql.Let != "") {
 			return errors.New(
-				"Invalid artifact: All Queries in a source " +
+				"Invalid artifact " + artifact_name +
+					": All Queries in a source " +
 					"must be LET queries, except for the " +
 					"final one.")
 		}
-
-		vqls = append(vqls, vql)
 	}
 
 	self.wg.Add(1)
