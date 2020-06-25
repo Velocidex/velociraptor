@@ -21,7 +21,7 @@ To learn more about Velociraptor, read the documentation on:
 3. Start the server:
 
 ```bash
- $ velociraptor --config /etc/velociraptor.config.yaml frontend -v
+ $ velociraptor --config server.config.yaml frontend -v
 ```
 
 4. Point a browser at the GUI port that you set in the config
@@ -75,8 +75,7 @@ Explore more of Velociraptor's options using the -h flag.
 ## Building from source.
 
 To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/ (Currently at least Go 11 but Go 13 is
-recommended):
+from https://golang.org/dl/ (Currently at least Go 1.13):
 
 ```bash
 
@@ -132,6 +131,10 @@ built at each commit poiint - simply click on the `artifacts` tab,
 scroll down and download `velociraptor.exe` or
 `velociraptor_linux.elf`
 
+Additionally we build all binaries using Github actions. Simply click
+the actions tab on Github and download the `Binaries.zip` file. This
+will contain binaries for Windows, MacOS and Linux.
+
 
 ## Getting help
 
@@ -144,3 +147,5 @@ File issues on https://github.com/Velocidex/velociraptor
 Read more about Velociraptor on our blog:
 
 https://www.velocidex.com/blog/
+
+Hang out on Medium https://medium.com/velociraptor-ir

@@ -1,0 +1,49 @@
+<div class='col-md-12'><form>
+    <table class="table">
+      <thead>
+        <tr>
+          <th></th>
+          <th ng-repeat="column in controller.columns track by $index">
+            {{ column }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(row_index, row) in controller.rows track by $index">
+          <td class="table-actions">
+            <a href='#'
+               ng-click="controller.insertRow($event, row_index)"
+               class="table-actions">
+              <i class="fa fa-arrow-up"></i>
+            </a>
+            <a href='#'
+               ng-click="controller.insertRow($event, row_index+1)"
+               class="table-actions">
+              <i class="fa fa-arrow-down"></i>
+            </a>
+            <a href='#'
+               ng-click="controller.removeRow($event, row_index)"
+               class="table-actions">
+              <i class="fa fa-trash"></i>
+            </a>
+          </td>
+          <td ng-repeat="(column_index, item) in row track by $index"
+              style="padding: 0px;"
+              ng-click="controller.setEditableCell($event, row_index, column_index)"
+              class="table-actions"
+              >
+            <div
+              class="input-group" style="display: flex"
+              >
+              <textarea type="text"
+                        class="form-control"
+                        ng-model="item"
+                        ng-blur="controller.setEditableCellValue($event, item, row_index, column_index)"
+                        ></textarea>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+</div>

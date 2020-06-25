@@ -2,7 +2,7 @@
   <h3 ng-if="flowId">Copy artifact {{ flowId }}</h3>
   <h3 ng-if="!flowId">Collect new artifact</h3>
   <button type="button" class="close"
-          ng-click="controller.reject()" aria-hidden="true">
+          ng-click="onReject()" aria-hidden="true">
     x
   </button>
 </div>
@@ -43,11 +43,21 @@
   </div>
 </div>
 <div class="modal-footer navbar-inner">
-  <ul class="nav pull-right">
-    <button class="btn btn-primary Next"
-            ng-disabled="controller.names.length==0"
-            ng-click="controller.startClientFlow()">
-      Launch collection
-    </button>
-  </ul>
+  <div class="btn-toolbar rounded" role="toolbar" style="width: 100%">
+    <div class="btn-group mr-2" role="group">
+      <button class="btn btn-secondary Next"
+              ng-click="onReject()">
+        Cancel
+      </button>
+    </div>
+
+    <div class="btn-group ml-auto" role="group">
+
+      <button class="btn btn-primary Next"
+              ng-disabled="controller.names.length==0"
+              ng-click="controller.startClientFlow()">
+        Launch collection
+      </button>
+    </div>
+  </div>
 </div>

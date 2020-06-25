@@ -10,6 +10,7 @@ precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
   - name: lookupTable
+    type: csv
     default: |
        ProcessName,ParentRegex
        smss.exe,System

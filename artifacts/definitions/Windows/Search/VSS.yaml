@@ -1,14 +1,14 @@
 name: Windows.Search.VSS
 description: |
-  This artifact will find all relevant files in the VSS. Typically used to  
-  out deduplicated paths for processing by other artifacts.  
-  
-  Input either search Glob or FullPath.  
-  Output is standard Glob results with additional fields:  
-  SHA1 hash for deduplication,  
-  Type for prioritisation, and  
-  Deduped to indicate if FullPath has been deduped with another row.  
-    
+  This artifact will find all relevant files in the VSS. Typically used to
+  out deduplicated paths for processing by other artifacts.
+
+  Input either search Glob or FullPath.
+  Output is standard Glob results with additional fields:
+  SHA1 hash for deduplication,
+  Type for prioritisation, and
+  Deduped to indicate if FullPath has been deduped with another row.
+
 author: Matt Green - @mgreen27
 
 precondition: SELECT * FROM info() where OS = 'windows'
@@ -28,22 +28,22 @@ sources:
                 else=if(condition=SearchFilesGlob=~"^.:",
                     then=split(string=SearchFilesGlob,sep=".:")[1],
                     else=SearchFilesGlob))
-                        
+
       # Build a SearchGlob for all logical disks and VSS
       - LET globs = SELECT * FullPath + Path as SearchGlob
             FROM glob(globs='/*', accessor='ntfs')
             ORDER BY FullPath
-        
+
       # Glob for results - add hash for deduplication and Source for priority
       - LET results = SELECT *
             FROM foreach(
                 row=globs,
                 query={
-                    SELECT 
+                    SELECT
                         *,
                         if(condition=
-                                FullPath=~'^\\\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy', 
-                            then=split(string=FullPath, sep='\\\\')[5], 
+                                FullPath=~'^\\\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy',
+                            then=split(string=FullPath, sep='\\\\')[5],
                             else=if(condition= FullPath=~'.:\\\\',
                                 then=FullPath)) as Source,
                         hash(path=FullPath,accessor='ntfs').SHA1 as SHA1
@@ -52,10 +52,10 @@ sources:
                 }
             )
             ORDER BY Source
-            
+
       # Dedup and show results
-      - SELECT *, 
-            if(condition= count(items=SHA1)>1, 
+      - SELECT *,
+            if(condition= count(items=SHA1)>1,
                 then=true, else=false) AS Deduped
         FROM results
         GROUP BY SHA1

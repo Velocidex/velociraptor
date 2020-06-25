@@ -285,7 +285,7 @@ div[ui-view]  > * {
 }
 
 .high-modal > .modal-dialog {
-  max-height: 600px
+  max-height: 900px
 }
 
 
@@ -606,6 +606,15 @@ dd.histogram  > div {
 .full-width-height {
   width: 100%;
   height: 100%;
+}
+
+td.table-actions {
+    width: 8px;
+    padding: 0px !important;
+}
+
+.table-actions {
+    color: black;
 }
 
 .artifact-links {

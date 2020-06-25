@@ -12,7 +12,7 @@ option go_package = "www.velocidex.com/golang/velociraptor/config/proto";
 // Information about Velociraptor. This is a psuedo config item - it
 // will never be read from config files, but can be used in VQL
 // queries. It will be written to config files as metadata about the
-// version read from.
+// version that produced the config file.
 message Version {
     string name = 1 [(sem_type) = {
             description: "The client's name."
@@ -412,6 +412,11 @@ message FrontendConfig {
     // Per client rate in bytes/sec
     int64 per_client_upload_rate = 21;
     int64 global_upload_rate = 22;
+
+    // Wait time for collecting events from clients - smaller means
+    // less latency to respond to client events but also means more
+    // TLS handshake and network overheads due to frequent POST.
+    uint64 client_event_max_wait = 23;
 }
 
 
