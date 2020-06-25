@@ -6,6 +6,7 @@ description: |
 parameters:
   - name: triageTable
     description: "A CSV table controlling upload. Must have the headers: Type, Accessor, Glob."
+    type: csv
     default: |
       Type,Accessor,Glob
 

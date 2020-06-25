@@ -8,6 +8,7 @@ description: |
 
 parameters:
    - name: namespaces
+     type: csv
      default: |
        namespace
        root/subscription

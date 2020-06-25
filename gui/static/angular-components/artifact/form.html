@@ -21,6 +21,11 @@
     </p>
   </div>
 
+  <div ng-switch-when="csv">
+    <grr-csv-form value="value" field="field">
+    </grr-csv-form>
+  </div>
+
   <div ng-switch-when="choices">
     <select class="form-control pull-left"
             ng-options="choice for choice in info.choices"

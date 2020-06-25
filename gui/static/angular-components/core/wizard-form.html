@@ -24,17 +24,25 @@
   </div>
 
   <div class="modal-footer navbar-inner">
-    <ul class="nav pull-right">
-      <button ng-if="controller.currentPageIndex > 0 && !controller.currentPage.noBackButton"
-              class="btn btn-default Back"
-              ng-click="controller.back()">
-        {$ controller.currentPage.prevButtonLabel $}
-      </button>
-      <button class="btn btn-primary Next"
-              ng-disabled="!controller.currentPage.isValid"
-              ng-click="controller.next()">
+    <div class="btn-toolbar rounded" role="toolbar" style="width: 100%">
+      <div class="btn-group mr-2" role="group">
+        <button class="btn btn-secondary"
+                ng-click="controller.reject()">
+          Cancel
+        </button>
+      </div>
+      <div class="btn-group ml-auto" role="group">
+        <button ng-if="controller.currentPageIndex > 0 && !controller.currentPage.noBackButton"
+                class="btn btn-primary Back"
+                ng-click="controller.back()">
+          {$ controller.currentPage.prevButtonLabel $}
+        </button>
+        <button class="btn btn-primary Next"
+                ng-disabled="!controller.currentPage.isValid"
+                ng-click="controller.next()">
         {$ controller.currentPage.nextButtonLabel $}
-      </button>
-    </ul>
+        </button>
+      </div>
+    </div>
   </div>
 </div>

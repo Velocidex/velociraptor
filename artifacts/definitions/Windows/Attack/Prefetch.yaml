@@ -16,6 +16,7 @@ reports:
   - type: CLIENT
     parameters:
       - name: lookupTable
+        type: csv
         default: |
            signature,description
            attrib,Attrib Execute is usually used to modify file attributes - ATT&CK T1158

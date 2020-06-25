@@ -107,12 +107,17 @@ func (self *ClientEventTable) Start(
 		rate = 1000
 	}
 
+	max_wait := config_obj.Frontend.ClientEventMaxWait
+	if max_wait == 0 {
+		max_wait = 100
+	}
+
 	if arg.Artifacts != nil {
 		for _, name := range arg.Artifacts {
 			logger.Info("Collecting Client Monitoring Artifact: %s", name)
 
 			vql_collector_args := &actions_proto.VQLCollectorArgs{
-				MaxWait:      500,
+				MaxWait:      max_wait,
 				OpsPerSecond: rate,
 
 				// Event queries never time out on their own.
@@ -133,6 +138,17 @@ func (self *ClientEventTable) Start(
 			err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
 			if err != nil {
 				return err
+			}
+
+			// Update any of the default parameters with the over-ridden parameters.
+			if arg.Parameters != nil {
+				for _, env := range vql_collector_args.Env {
+					for _, override_env := range arg.Parameters.Env {
+						if env.Key == override_env.Key {
+							env.Value = override_env.Value
+						}
+					}
+				}
 			}
 
 			event_table.Event = append(event_table.Event, vql_collector_args)
