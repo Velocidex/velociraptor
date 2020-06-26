@@ -1,4 +1,79 @@
-LET _ <= SELECT
+SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=hiveSig, blocksize=10,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=hiveSig, blocksize=1000,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 26,
+  "Hit": "program"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, number=1,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 4,
+  "Hit": "X"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, number=2,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 4,
+  "Hit": "X"
+ },
+ {
+  "String.Offset": 5,
+  "Hit": "X"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, start=10, number=1,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 10,
+  "Hit": "X"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, start=10, end=12, number=20,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 10,
+  "Hit": "X"
+ },
+ {
+  "String.Offset": 11,
+  "Hit": "X"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, number=1, context=2,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 4,
+  "Hit": "gfXXX"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=findX, number=1, context=10,
+files="regfXXXXXXXXXXXXXXXXXXXXXXprogram", accessor="data")
+[
+ {
+  "String.Offset": 4,
+  "Hit": "regfXXXXXXXXXXX"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=hiveSig, blocksize=10,
+files=srcDir+"/artifacts/testdata/files/Amcache.hve")
+[
+ {
+  "String.Offset": 200759,
+  "Hit": "program"
+ }
+]LET _ <= SELECT
       mock(plugin='http_client', results=[
          dict(Url='http://remote',
               Content=remoteYara, Response=200)]),

@@ -21,10 +21,12 @@
 package common
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -48,7 +50,6 @@ type YaraResult struct {
 	Meta     map[string]interface{}
 	Tags     []string
 	String   *YaraHit
-	File     os.FileInfo
 	FileName string
 }
 
@@ -57,8 +58,8 @@ type YaraScanPluginArgs struct {
 	Files        []string `vfilter:"required,field=files,doc=The list of files to scan."`
 	Accessor     string   `vfilter:"optional,field=accessor,doc=Accessor (e.g. NTFS)"`
 	Context      int      `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
-	Start        int64    `vfilter:"optional,field=start,doc=The start offset to scan"`
-	End          int64    `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	Start        uint64   `vfilter:"optional,field=start,doc=The start offset to scan"`
+	End          uint64   `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
 	NumberOfHits int64    `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
 	Blocksize    int64    `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
 	Key          string   `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
@@ -94,156 +95,263 @@ func (self YaraScanPlugin) Call(
 			arg.Blocksize = 1024 * 1024
 		}
 
-		yara_flag := yara.ScanFlags(0)
-		if arg.NumberOfHits == 1 {
-			yara_flag = yara.ScanFlagsFastMode
-		}
-
-		// Try to get the compiled yara expression from the
-		// scope cache.
-		if arg.Key == "" {
-			rule_hash := md5.Sum([]byte(arg.Rules))
-			arg.Key = string(rule_hash[:])
-		}
-		rules, ok := vql_subsystem.CacheGet(
-			scope, arg.Key).(*yara.Rules)
-		if !ok {
-			variables := make(map[string]interface{})
-			generated_rules := RuleGenerator(scope, arg.Rules)
-			rules, err = yara.Compile(generated_rules, variables)
-			if err != nil {
-				scope.Log("Failed to initialize YARA compiler: %s", err)
-				return
-			}
-			vql_subsystem.CacheSet(scope, arg.Key, rules)
-		}
-
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
 			scope.Log("yara: %s", err.Error())
 			return
 		}
 
-		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		rules, err := getYaraRules(arg.Key, arg.Rules, scope)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			scope.Log("Failed to initialize YARA compiler: %s", err)
 			return
 		}
 
-		buf := make([]byte, arg.Blocksize)
-
-	scan_file:
 		for _, filename := range arg.Files {
-			// Total hits per file.
-			number_of_hits := int64(0)
-			f, err := accessor.Open(filename)
-			if err != nil {
-				scope.Log("Failed to open %v", filename)
-				continue
+			// If accessor is not specified we call yara's
+			// ScanFile API which mmaps the entire file
+			// into memory avoiding the need for
+			// buffering.
+			if arg.Accessor == "" {
+				scanFile(filename, arg.Context, arg.NumberOfHits,
+					rules, output_chan, scope)
+			} else {
+				scanFileByAccessor(filename, arg.Accessor,
+					arg.Blocksize, arg.Start, arg.End,
+					arg.Context, arg.NumberOfHits,
+					rules, output_chan, scope)
 			}
-			f.Seek(arg.Start, 0)
-			base_offset := arg.Start
-			for {
-				n, _ := f.Read(buf)
-				if n == 0 {
-					break
-				}
-
-				matches, err := rules.ScanMem(
-					buf[:n], yara_flag, 10*time.Second)
-				if err != nil {
-					break
-				}
-
-				for _, match := range matches {
-					rule := match.Rule
-					if match.Namespace != "default" {
-						rule = match.Namespace + ":" + rule
-					}
-
-					stat, _ := f.Stat()
-					// There was a hit but no
-					// strings. This could have
-					// been a rule that uses
-					// e.g. pe functions to
-					// match. Just emit a single
-					// row with no strings.
-					if len(match.Strings) == 0 {
-						res := &YaraResult{
-							Rule:     rule,
-							Tags:     match.Tags,
-							Meta:     match.Meta,
-							File:     stat,
-							FileName: filename,
-						}
-						output_chan <- res
-						number_of_hits += 1
-						if number_of_hits >= arg.NumberOfHits {
-							f.Close()
-							continue scan_file
-						}
-						continue
-					}
-
-					// One or more strings in the
-					// rule matched, emit a single
-					// context around each string.
-					for _, match_string := range match.Strings {
-						start := int(match_string.Offset) -
-							arg.Context
-						if start < 0 {
-							start = 0
-						}
-
-						end := int(match_string.Offset) +
-							len(match_string.Data) +
-							arg.Context
-						if end >= len(buf) {
-							end = len(buf) - 1
-						}
-
-						// Make a copy of the underlying data.
-						data := make([]byte, end-start)
-						copy(data, buf[start:end])
-
-						res := &YaraResult{
-							Rule:     rule,
-							Tags:     match.Tags,
-							Meta:     match.Meta,
-							File:     stat,
-							FileName: filename,
-							String: &YaraHit{
-								Name: match_string.Name,
-								Offset: match_string.Offset +
-									uint64(base_offset),
-								Data: data,
-								HexData: strings.Split(
-									hex.Dump(data), "\n"),
-							},
-						}
-						output_chan <- res
-						number_of_hits += 1
-						if number_of_hits >= arg.NumberOfHits {
-							f.Close()
-							continue scan_file
-						}
-					}
-				}
-
-				base_offset += int64(n)
-				if base_offset > arg.End {
-					break
-				}
-
-				// We count an op as one MB scanned.
-				vfilter.ChargeOp(scope)
-			}
-
-			f.Close()
 		}
 	}()
 
 	return output_chan
+}
+
+// Yara rules are cached in the scope cache so it is very efficient to
+// call the yara plugin repeatadly on the same rules - we do not need
+// to recompile the rules all the time. We use the key as the cache or
+// the hash of the rules string if not provided.
+func getYaraRules(key, rules string,
+	scope *vfilter.Scope) (*yara.Rules, error) {
+	var err error
+
+	// Try to get the compiled yara expression from the
+	// scope cache.
+	if key == "" {
+		// md5sum is good enough for this.
+		rule_hash := md5.Sum([]byte(rules))
+		key = string(rule_hash[:])
+	}
+	result, ok := vql_subsystem.CacheGet(scope, key).(*yara.Rules)
+	if !ok {
+		variables := make(map[string]interface{})
+		generated_rules := RuleGenerator(scope, rules)
+		result, err = yara.Compile(generated_rules, variables)
+		if err != nil {
+			return nil, err
+		}
+		vql_subsystem.CacheSet(scope, key, result)
+	}
+
+	return result, nil
+}
+
+func scanFileByAccessor(
+	filename, accessor_name string,
+	blocksize int64,
+	start, end uint64,
+	context int,
+	total_number_of_hits int64,
+	rules *yara.Rules,
+	output_chan chan vfilter.Row,
+	scope *vfilter.Scope) {
+
+	accessor, err := glob.GetAccessor(accessor_name, scope)
+	if err != nil {
+		scope.Log("yara: %v", err)
+		return
+	}
+
+	yara_flag := yara.ScanFlags(0)
+	if total_number_of_hits == 1 {
+		yara_flag = yara.ScanFlagsFastMode
+	}
+
+	// Total hits per file.
+	f, err := accessor.Open(filename)
+	if err != nil {
+		scope.Log("Failed to open %v", filename)
+		return
+	}
+	defer f.Close()
+	f.Seek(int64(start), 0)
+
+	buf := make([]byte, blocksize)
+
+	matcher := &scanReporter{
+		output_chan:    output_chan,
+		number_of_hits: total_number_of_hits,
+		end:            end,
+		context:        context,
+		filename:       filename,
+		base_offset:    start,
+	}
+
+	for {
+		n, _ := f.Read(buf)
+		if n == 0 {
+			return
+		}
+
+		scan_buf := buf[:n]
+		matcher.reader = bytes.NewReader(scan_buf)
+
+		err := rules.ScanMemWithCallback(
+			scan_buf, yara_flag, 10*time.Second, matcher)
+		if err != nil {
+			return
+		}
+
+		matcher.base_offset += uint64(n)
+		if matcher.base_offset > uint64(end) {
+			return
+		}
+
+		// We count an op as one MB scanned.
+		vfilter.ChargeOp(scope)
+	}
+}
+
+func scanFile(
+	filename string,
+	context int,
+	total_number_of_hits int64,
+	rules *yara.Rules,
+	output_chan chan vfilter.Row,
+	scope *vfilter.Scope) {
+
+	yara_flag := yara.ScanFlags(0)
+	if total_number_of_hits == 1 {
+		yara_flag = yara.ScanFlagsFastMode
+	}
+
+	fd, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	defer fd.Close()
+
+	matcher := &scanReporter{
+		output_chan:    output_chan,
+		number_of_hits: total_number_of_hits,
+		context:        context,
+		filename:       filename,
+		reader:         fd,
+	}
+
+	err = rules.ScanFileWithCallback(
+		filename, yara_flag, 10*time.Second, matcher)
+	if err != nil {
+		return
+	}
+
+	// We count an op as one MB scanned.
+	vfilter.ChargeOp(scope)
+}
+
+// Reports all hits in the match and includes any required context. We
+// report one row per matching string in the signature, unless no
+// strings match in which case we report a single row for the
+// match. The number_of_hits parameter specified how many hits the
+// caller is interested in so we can breakout early. This returns the
+// total number of hits actually reported.
+type scanReporter struct {
+	output_chan    chan vfilter.Row
+	number_of_hits int64
+	context        int
+	filename       string
+	base_offset    uint64
+	end            uint64
+	reader         io.ReaderAt
+}
+
+func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
+	matches := getMatchStrings(rule)
+
+	// The rule matched no strings, just emit a single row.
+	if len(matches) == 0 {
+		res := &YaraResult{
+			Rule:     rule.Identifier(),
+			Tags:     rule.Tags(),
+			Meta:     rule.Metas(),
+			FileName: self.filename,
+		}
+		self.output_chan <- res
+		self.number_of_hits--
+		if self.number_of_hits <= 0 {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
+	// If the rule matches multiple strings, emit one string per row.
+	for _, match_string := range matches {
+
+		// Extract a larger context from the scan buffer.
+		context_start := int(match_string.Offset) - self.context
+		if context_start < 0 {
+			context_start = 0
+		}
+
+		context_end := int(match_string.Offset) + len(match_string.Data) + self.context
+
+		// Make a copy of the underlying data.
+		data := make([]byte, context_end-context_start)
+		n, _ := self.reader.ReadAt(data, int64(context_start))
+		data = data[:n]
+
+		res := &YaraResult{
+			Rule:     rule.Identifier(),
+			Tags:     rule.Tags(),
+			Meta:     rule.Metas(),
+			FileName: self.filename,
+			String: &YaraHit{
+				Name:    match_string.Name,
+				Offset:  match_string.Offset + self.base_offset,
+				Data:    data,
+				HexData: strings.Split(hex.Dump(data), "\n"),
+			},
+		}
+		if self.end > 0 && res.String.Offset >= self.end {
+			return false, nil
+		}
+
+		// Emit the results.
+		self.output_chan <- res
+
+		self.number_of_hits--
+		if self.number_of_hits <= 0 {
+			return false, nil
+		}
+
+	}
+
+	return true, nil
+}
+
+func getMatchStrings(r *yara.Rule) (matchstrings []yara.MatchString) {
+	for _, s := range r.Strings() {
+		for _, m := range s.Matches() {
+			matchstrings = append(matchstrings, yara.MatchString{
+				Name:   s.Identifier(),
+				Base:   uint64(m.Base()),
+				Offset: uint64(m.Offset()),
+				Data:   m.Data(),
+			})
+		}
+	}
+	return
 }
 
 func (self YaraScanPlugin) Info(
