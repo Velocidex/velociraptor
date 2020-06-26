@@ -68,6 +68,16 @@ Queries:
     FROM yara(rules=hiveSig, blocksize=10,
     files=srcDir+"/artifacts/testdata/files/Amcache.hve")
 
+  - |
+    SELECT String.Offset, str(str=String.Data) AS Hit
+    FROM yara(rules=hiveSig, context=10,
+    files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+
+  - |
+    SELECT String.Offset, str(str=String.Data) AS Hit
+    FROM yara(rules=hiveSig, context=10, accessor="file",
+    files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+
   # Setup our mocks
   - |
     LET _ <= SELECT

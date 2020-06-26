@@ -73,6 +73,22 @@ files=srcDir+"/artifacts/testdata/files/Amcache.hve")
   "String.Offset": 200759,
   "Hit": "program"
  }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=hiveSig, context=10,
+files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+[
+ {
+  "String.Offset": 12,
+  "Hit": "gfXXXXXXXXprogram\n"
+ }
+]SELECT String.Offset, str(str=String.Data) AS Hit
+FROM yara(rules=hiveSig, context=10, accessor="file",
+files=srcDir+"/artifacts/testdata/files/yara_test.txt")
+[
+ {
+  "String.Offset": 12,
+  "Hit": "gfXXXXXXXXprogram\n"
+ }
 ]LET _ <= SELECT
       mock(plugin='http_client', results=[
          dict(Url='http://remote',

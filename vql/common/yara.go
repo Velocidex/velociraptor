@@ -50,6 +50,7 @@ type YaraResult struct {
 	Meta     map[string]interface{}
 	Tags     []string
 	String   *YaraHit
+	File     os.FileInfo
 	FileName string
 }
 
@@ -194,11 +195,14 @@ func scanFileByAccessor(
 
 	buf := make([]byte, blocksize)
 
+	stat, _ := f.Stat()
+
 	matcher := &scanReporter{
 		output_chan:    output_chan,
 		number_of_hits: total_number_of_hits,
 		end:            end,
 		context:        context,
+		file_info:      stat,
 		filename:       filename,
 		base_offset:    start,
 	}
@@ -247,10 +251,13 @@ func scanFile(
 	}
 	defer fd.Close()
 
+	stat, _ := fd.Stat()
+
 	matcher := &scanReporter{
 		output_chan:    output_chan,
 		number_of_hits: total_number_of_hits,
 		context:        context,
+		file_info:      stat,
 		filename:       filename,
 		reader:         fd,
 	}
@@ -277,6 +284,7 @@ type scanReporter struct {
 	output_chan    chan vfilter.Row
 	number_of_hits int64
 	context        int
+	file_info      os.FileInfo
 	filename       string
 	base_offset    uint64
 	end            uint64
@@ -292,6 +300,7 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 			Rule:     rule.Identifier(),
 			Tags:     rule.Tags(),
 			Meta:     rule.Metas(),
+			File:     self.file_info,
 			FileName: self.filename,
 		}
 		self.output_chan <- res
@@ -323,6 +332,7 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 			Rule:     rule.Identifier(),
 			Tags:     rule.Tags(),
 			Meta:     rule.Metas(),
+			File:     self.file_info,
 			FileName: self.filename,
 			String: &YaraHit{
 				Name:    match_string.Name,
