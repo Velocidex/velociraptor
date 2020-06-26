@@ -113,14 +113,20 @@ func (self YaraScanPlugin) Call(
 			// into memory avoiding the need for
 			// buffering.
 			if arg.Accessor == "" {
-				scanFile(filename, arg.Context, arg.NumberOfHits,
+				err := scanFile(filename, arg.Context, arg.NumberOfHits,
 					rules, output_chan, scope)
-			} else {
-				scanFileByAccessor(filename, arg.Accessor,
-					arg.Blocksize, arg.Start, arg.End,
-					arg.Context, arg.NumberOfHits,
-					rules, output_chan, scope)
+
+				// Fall back to accessor scanning if
+				// we can not open the file directly.
+				if err == nil {
+					continue
+				}
 			}
+
+			scanFileByAccessor(filename, arg.Accessor,
+				arg.Blocksize, arg.Start, arg.End,
+				arg.Context, arg.NumberOfHits,
+				rules, output_chan, scope)
 		}
 	}()
 
@@ -228,7 +234,7 @@ func scanFile(
 	total_number_of_hits int64,
 	rules *yara.Rules,
 	output_chan chan vfilter.Row,
-	scope *vfilter.Scope) {
+	scope *vfilter.Scope) error {
 
 	yara_flag := yara.ScanFlags(0)
 	if total_number_of_hits == 1 {
@@ -237,7 +243,7 @@ func scanFile(
 
 	fd, err := os.Open(filename)
 	if err != nil {
-		return
+		return err
 	}
 	defer fd.Close()
 
@@ -252,11 +258,13 @@ func scanFile(
 	err = rules.ScanFileWithCallback(
 		filename, yara_flag, 10*time.Second, matcher)
 	if err != nil {
-		return
+		return err
 	}
 
 	// We count an op as one MB scanned.
 	vfilter.ChargeOp(scope)
+
+	return nil
 }
 
 // Reports all hits in the match and includes any required context. We
