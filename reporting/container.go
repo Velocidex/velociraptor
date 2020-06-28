@@ -285,7 +285,6 @@ func (self *Container) Close() error {
 
 	// Remove all the tempfiles we still hold open
 	for _, file := range self.tempfiles {
-		fmt.Printf("Removing tempfile %v\n", file.Name())
 		os.Remove(file.Name())
 	}
 

@@ -8,5 +8,5 @@ Queries:
 
   - SELECT Size > 10, FullPath FROM glob(globs="C:/1.{zip,html}")
 
-  - SELECT FullPath from glob(globs="file:///c:/1.zip#/*",
+  - SELECT FullPath from glob(globs="file:///c:/1.zip#/**",
          accessor='zip') WHERE not IsDir
