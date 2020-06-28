@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func (self *ApiServer) ExportNotebook(
@@ -445,8 +446,10 @@ func (self *ApiServer) UpdateNotebookCell(
 	// Run the actual query independently.
 	query_ctx, query_cancel := context.WithCancel(context.Background())
 
+	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
+
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config, query_ctx, user_name, /* principal */
+		self.config, query_ctx, nil, acl_manager,
 		notebook_path_manager.Cell(in.CellId),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {

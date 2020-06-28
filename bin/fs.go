@@ -73,32 +73,42 @@ var (
 )
 
 func eval_query(
-	config_obj *config_proto.Config, query string, scope *vfilter.Scope,
+	config_obj *config_proto.Config, format, query string, scope *vfilter.Scope,
 	env *ordereddict.Dict) {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.Name != "" {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
 			Info("API Client configuration loaded - will make gRPC connection.")
-		doRemoteQuery(config_obj, *fs_command_format, []string{query}, env)
+		doRemoteQuery(config_obj, format, []string{query}, env)
 		return
 	}
 
-	vql, err := vfilter.Parse(query)
-	if err != nil {
-		kingpin.FatalIfError(err, "Unable to parse VQL Query")
-	}
+	eval_local_query(config_obj, *fs_command_format, query, scope)
+}
+
+func eval_local_query(
+	config_obj *config_proto.Config, format string,
+	query string, scope *vfilter.Scope) {
+
+	vqls, err := vfilter.MultiParse(query)
+	kingpin.FatalIfError(err, "Unable to parse VQL Query")
 
 	ctx := InstallSignalHandler(scope)
 
-	switch *fs_command_format {
-	case "text":
-		table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
-		table.Render()
+	for _, vql := range vqls {
+		switch format {
+		case "text":
+			table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
+			table.Render()
 
-	case "jsonl":
-		outputJSONL(ctx, scope, vql, os.Stdout)
+		case "csv":
+			outputCSV(ctx, scope, vql, os.Stdout)
 
-	case "json":
-		outputJSON(ctx, scope, vql, os.Stdout)
+		case "jsonl":
+			outputJSONL(ctx, scope, vql, os.Stdout)
+
+		case "json":
+			outputJSON(ctx, scope, vql, os.Stdout)
+		}
 	}
 }
 
@@ -142,7 +152,7 @@ func doLS(path, accessor string) {
 		query += " WHERE Sys.name_type != 'DOS' "
 	}
 
-	eval_query(config_obj, query, scope, builder.Env)
+	eval_query(config_obj, *fs_command_format, query, scope, builder.Env)
 }
 
 func doRM(path, accessor string) {
@@ -179,7 +189,7 @@ func doRM(path, accessor string) {
 		"file_store_delete(path=FullPath) AS Deletion " +
 		"FROM glob(globs=path, accessor=accessor) "
 
-	eval_query(config_obj, query, scope, builder.Env)
+	eval_query(config_obj, *fs_command_format, query, scope, builder.Env)
 }
 
 func doCp(path, accessor string, dump_dir string) {
@@ -241,7 +251,7 @@ func doCp(path, accessor string, dump_dir string) {
 	scope.Log("Copy from %v (%v) to %v (%v)",
 		path, accessor, output_path, output_accessor)
 
-	eval_query(config_obj, `
+	eval_query(config_obj, *fs_command_format, `
 SELECT * from foreach(
   row={
     SELECT Name, Size, Mode.String AS Mode,

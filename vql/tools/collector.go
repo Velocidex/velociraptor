@@ -3,11 +3,14 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -17,6 +20,7 @@ import (
 type CollectPluginArgs struct {
 	Artifacts           []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
 	Output              string      `vfilter:"required,field=output,doc=A path to write the output file on."`
+	Report              string      `vfilter:"optional,field=report,doc=A path to write the report on."`
 	Args                vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
 	Password            string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 	Format              string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
@@ -34,9 +38,15 @@ func (self CollectPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		// ACLs will be carried through to the collected
-		// artifacts from this plugin.
-		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+		var container *reporting.Container
+
+		// This plugin allows one to create files, collect
+		// artifacts and also define new artifacts. It is very
+		// privileged.
+		err := vql_subsystem.CheckAccess(scope,
+			acls.COLLECT_SERVER, acls.ARTIFACT_WRITER,
+			acls.FILESYSTEM_WRITE,
+			acls.SERVER_ARTIFACT_WRITER)
 		if err != nil {
 			scope.Log("collect: %s", err)
 			return
@@ -58,25 +68,61 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		config_obj := &config_proto.Config{}
-		container, err := reporting.NewContainer(arg.Output)
-		if err != nil {
-			scope.Log("collect: %v", err)
-			return
+		config_obj, ok := artifacts.GetServerConfig(scope)
+		if !ok {
+			config_obj = config.GetDefaultConfig()
 		}
-		defer func() {
-			container.Close()
-			output_chan <- ordereddict.NewDict().
-				Set("Container", arg.Output)
-		}()
-
-		// Should we encrypt it?
-		container.Password = arg.Password
-
 		repository, err := getRepository(config_obj, arg.ArtifactDefinitions)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
+		}
+
+		artifact_definitions := []*artifacts_proto.Artifact{}
+		definitions := []*artifacts_proto.Artifact{}
+		for _, name := range arg.Artifacts {
+			artifact, pres := repository.Get(name)
+			if !pres {
+				scope.Log("Artifact %v not known.", name)
+				return
+			}
+			definitions = append(definitions, artifact)
+		}
+
+		if arg.Output != "" {
+			container, err = reporting.NewContainer(arg.Output)
+			if err != nil {
+				scope.Log("collect: %v", err)
+				return
+			}
+
+			scope.Log("Will create container at %s", arg.Output)
+
+			defer func() {
+				container.Close()
+
+				if arg.Report != "" {
+					fd, err := os.OpenFile(
+						arg.Report, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+					if err != nil {
+						scope.Log("Error creating report: %v", err)
+						return
+					}
+
+					produceReport(config_obj, container, fd,
+						artifact_definitions,
+						scope, arg)
+				}
+				output_chan <- ordereddict.NewDict().
+					Set("Container", arg.Output).
+					Set("Report", arg.Report)
+			}()
+
+			// Should we encrypt it?
+			if arg.Password != "" {
+				container.Password = arg.Password
+				scope.Log("Will password protect container")
+			}
 		}
 
 		builder := artifacts.ScopeBuilderFromScope(scope)
@@ -89,6 +135,7 @@ func (self CollectPlugin) Call(
 				continue
 
 			}
+			artifact_definitions = append(artifact_definitions, artifact)
 
 			request := &actions_proto.VQLCollectorArgs{}
 			err := repository.Compile(artifact, request)
@@ -98,34 +145,19 @@ func (self CollectPlugin) Call(
 				continue
 			}
 
-			// First set defaulst
+			// First set defaults
 			builder.Env = ordereddict.NewDict()
 			for _, e := range request.Env {
 				builder.Env.Set(e.Key, e.Value)
 			}
 
-			in_params := func(key string) bool {
-				for _, param := range artifact.Parameters {
-					if param.Name == key {
-						return true
-					}
-				}
-				return false
-			}
-
 			// Now override provided parameters
 			for _, key := range scope.GetMembers(arg.Args) {
-				if !in_params(key) {
-					// This is not an error - it
-					// just means that there are
-					// muliple artifacts to
-					// collect with different
-					// parameters.
-					continue
+				if !valid_parameter(key, definitions) {
+					scope.Log("Unknown parameter %s - ignoring", key)
 				}
 
-				value, pres := scope.Associative(arg.Args,
-					key)
+				value, pres := scope.Associative(arg.Args, key)
 				if pres {
 					builder.Env.Set(key, value)
 				}
@@ -143,9 +175,26 @@ func (self CollectPlugin) Call(
 					return
 				}
 
+				// Dont store un-named queries but run them anyway.
+				if query.Name == "" {
+					for _ = range vql.Eval(ctx, subscope) {
+					}
+					continue
+				}
+
+				// If no container is specified, just
+				// push the result to the output
+				// channel.
+				if container == nil {
+					for row := range vql.Eval(ctx, subscope) {
+						output_chan <- row
+					}
+					continue
+				}
+
+				// Otherwise push the results into the container.
 				err = container.StoreArtifact(
-					config_obj,
-					ctx, subscope, vql, query, arg.Format)
+					config_obj, ctx, subscope, vql, query, arg.Format)
 				if err != nil {
 					subscope.Log("collect: %v", err)
 					return
@@ -229,6 +278,18 @@ func (self CollectPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 		ArgType: type_map.AddType(scope,
 			&CollectPluginArgs{}),
 	}
+}
+
+// Check if the user specified an unknown parameter.
+func valid_parameter(param_name string, definitions []*artifacts_proto.Artifact) bool {
+	for _, definition := range definitions {
+		for _, param := range definition.Parameters {
+			if param.Name == param_name {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func init() {

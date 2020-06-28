@@ -119,8 +119,7 @@ func sanitize_artifact_yaml(data string) string {
 
 	result := query_regexp.ReplaceAllStringFunc(data, func(m string) string {
 		parts := query_regexp.FindStringSubmatch(m)
-		return parts[1] + "|\n" + strings.Repeat(" ", len(parts[1])) +
-			parts[2]
+		return parts[1] + "|\n" + strings.Repeat(" ", len(parts[1])) + parts[2]
 	})
 	return result
 
@@ -231,6 +230,20 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 	self.Lock()
 	defer self.Unlock()
 
+	result, pres := self.get(name)
+	if !pres {
+		return nil, false
+	}
+
+	// Delay processing until we need it. This means loading
+	// artifacts is faster.
+	compileArtifact(result)
+
+	// Return a copy to keep the repository pristine.
+	return proto.Clone(result).(*artifacts_proto.Artifact), true
+}
+
+func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
 	artifact_name, source_name := paths.SplitFullSourceName(name)
 
 	res, pres := self.Data[artifact_name]
@@ -238,14 +251,10 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 		return nil, false
 	}
 
-	// Delay processing until we need it. This means loading
-	// artifacts is faster.
-	compileArtifact(res)
-
 	// Caller did not specify a source - just give them a copy of
 	// the complete artifact.
 	if source_name == "" {
-		return proto.Clone(res).(*artifacts_proto.Artifact), pres
+		return res, pres
 	}
 
 	// Caller asked for only a specific source in the artifact -
@@ -292,7 +301,11 @@ func (self *Repository) List() []string {
 	self.Lock()
 	defer self.Unlock()
 
-	result := []string{}
+	return self.list()
+}
+
+func (self *Repository) list() []string {
+	result := make([]string, 0, len(self.Data))
 	for k := range self.Data {
 		result = append(result, k)
 	}

@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
@@ -84,4 +87,36 @@ func JsonToJsonl(rows []byte) ([]byte, error) {
 		return nil, err
 	}
 	return DictsToJson(dict_rows)
+}
+
+func ReadJsonFromFile(ctx context.Context, fd io.Reader) chan *ordereddict.Dict {
+	output_chan := make(chan *ordereddict.Dict)
+
+	go func() {
+		defer close(output_chan)
+
+		reader := bufio.NewReader(fd)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			default:
+				row_data, err := reader.ReadBytes('\n')
+				if len(row_data) == 0 || err != nil {
+					return
+				}
+				item := ordereddict.NewDict()
+				err = item.UnmarshalJSON(row_data)
+				if err != nil {
+					continue
+				}
+
+				output_chan <- item
+			}
+		}
+	}()
+
+	return output_chan
 }
