@@ -20,7 +20,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -33,10 +32,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/server"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -69,6 +66,10 @@ var (
 			"store all output in it.").
 		Default("").String()
 
+	artifact_command_collect_report = artifact_command_collect.Flag(
+		"report", "When specified we create a report html file.").
+		Default("").String()
+
 	artifact_command_collect_output_password = artifact_command_collect.Flag(
 		"password", "When specified we encrypt zip file with this password.").
 		Default("").String()
@@ -76,10 +77,6 @@ var (
 	artifact_command_collect_format = artifact_command_collect.Flag(
 		"format", "Output format to use  (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
-
-	artifact_command_collect_details = artifact_command_collect.Flag(
-		"details", "Show more details (Use -d -dd for even more)").
-		Short('d').Counter()
 
 	artifact_command_collect_name = artifact_command_collect.Arg(
 		"artifact_name", "The artifact name to collect.").
@@ -99,128 +96,6 @@ func listArtifactsHint() []string {
 	}
 	result = append(result, repository.List()...)
 	return result
-}
-
-func collectArtifact(
-	config_obj *config_proto.Config,
-	repository *artifacts.Repository,
-	artifact_name string,
-	request *actions_proto.VQLCollectorArgs) {
-
-	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
-		Env:        ordereddict.NewDict(),
-	}
-
-	if *run_as != "" {
-		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
-	}
-
-	for _, request_env := range request.Env {
-		builder.Env.Set(request_env.Key, request_env.Value)
-	}
-
-	scope := builder.Build()
-	defer scope.Close()
-
-	if *trace_vql_flag {
-		scope.Tracer = logging.NewPlainLogger(config_obj,
-			&logging.ToolComponent)
-	}
-
-	ctx := InstallSignalHandler(scope)
-
-	for _, query := range request.Query {
-		vql, err := vfilter.Parse(query.VQL)
-		kingpin.FatalIfError(err, "Parse VQL")
-
-		switch *artifact_command_collect_format {
-		case "text":
-			var rows []vfilter.Row
-			for row := range vql.Eval(ctx, scope) {
-				rows = append(rows, row)
-			}
-
-			if *artifact_command_collect_details > 0 {
-				if query.Name != "" {
-					fmt.Printf("# %s\n\n", query.Name)
-				}
-				if query.Description != "" {
-					fmt.Printf("%s\n\n", reporting.FormatDescription(
-						config_obj, query.Description, rows))
-				}
-			}
-
-			// Queries without a name do not produce
-			// interesting results.
-			table := reporting.OutputRowsToTable(scope, rows, os.Stdout)
-			if query.Name == "" {
-				continue
-			}
-			table.SetCaption(true, query.Name)
-			if table.NumLines() > 0 {
-				table.Render()
-			}
-			fmt.Println("")
-
-		case "json":
-			outputJSON(ctx, scope, vql, os.Stdout)
-
-		case "jsonl":
-			outputJSONL(ctx, scope, vql, os.Stdout)
-
-		case "csv":
-			outputCSV(ctx, scope, vql, os.Stdout)
-		}
-	}
-}
-
-func collectArtifactToContainer(
-	config_obj *config_proto.Config,
-	repository *artifacts.Repository,
-	artifact_name string,
-	container *reporting.Container,
-	format string,
-	request *actions_proto.VQLCollectorArgs) {
-
-	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
-		Env:        ordereddict.NewDict(),
-		Uploader:   container,
-	}
-
-	if *run_as != "" {
-		builder.ACLManager = vql_subsystem.NewServerACLManager(config_obj, *run_as)
-	}
-
-	for _, request_env := range request.Env {
-		builder.Env.Set(request_env.Key, request_env.Value)
-	}
-
-	scope := builder.Build()
-	defer scope.Close()
-
-	ctx := InstallSignalHandler(scope)
-
-	for _, query := range request.Query {
-		vql, err := vfilter.Parse(query.VQL)
-		kingpin.FatalIfError(err, "Parse VQL")
-
-		// Store query output in the container.
-		err = container.StoreArtifact(
-			config_obj, ctx, scope, vql, query,
-			format)
-		kingpin.FatalIfError(err, "container.StoreArtifact")
-
-		if query.Name != "" {
-			logging.GetLogger(config_obj, &logging.ToolComponent).
-				Info("Collected %s", query.Name)
-		}
-	}
 }
 
 func getRepository(config_obj *config_proto.Config) (*artifacts.Repository, error) {
@@ -271,25 +146,11 @@ func printParameters(artifacts []string, repository *artifacts.Repository) {
 	}
 }
 
-// Check if the user specified an unknown parameter.
-func valid_parameter(param_name string, repository *artifacts.Repository) bool {
-	for _, name := range *artifact_command_collect_name {
-		artifact, _ := repository.Get(name)
-		for _, param := range artifact.Parameters {
-			if param.Name == param_name {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-
 func doArtifactCollect() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	repository, err := getRepository(config_obj)
+	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	now := time.Now()
@@ -300,77 +161,41 @@ func doArtifactCollect() {
 
 	}()
 
-	var container *reporting.Container
+	collect_args := ordereddict.NewDict()
+	for _, item := range *artifact_command_collect_args {
+		parts := strings.SplitN(item, "=", 2)
+		arg_name := parts[0]
 
-	if *artifact_command_collect_output != "" {
-		// Create an output container.
-		container, err = reporting.NewContainer(*artifact_command_collect_output)
-		kingpin.FatalIfError(err, "Can not create output container")
-		defer container.Close()
-
-		// Set the password if there is one.
-		container.Password = *artifact_command_collect_output_password
-	}
-
-	for _, name := range *artifact_command_collect_name {
-		artifact, pres := repository.Get(name)
-		if !pres {
-			kingpin.Fatalf("Artifact %v not known.", name)
-		}
-
-		request := &actions_proto.VQLCollectorArgs{
-			MaxWait: uint64(*max_wait),
-		}
-
-		err := repository.Compile(artifact, request)
-		kingpin.FatalIfError(
-			err, fmt.Sprintf("Unable to compile artifact %s.",
-				name))
-
-		if env_map != nil {
-			for k, v := range *env_map {
-				if !valid_parameter(k, repository) {
-					kingpin.Fatalf(
-						"Param %v not known for %s.",
-						k, strings.Join(*artifact_command_collect_name, ","))
-				}
-				request.Env = append(
-					request.Env, &actions_proto.VQLEnv{
-						Key: k, Value: v,
-					})
-			}
-		}
-
-		for _, item := range *artifact_command_collect_args {
-			parts := strings.SplitN(item, "=", 2)
-			arg_name := parts[0]
-			var arg string
-
-			if len(parts) < 2 {
-				arg = "Y"
-			} else {
-				arg = parts[1]
-			}
-			if !valid_parameter(arg_name, repository) {
-				printParameters(*artifact_command_collect_name,
-					repository)
-				kingpin.Fatalf("Param %v not known for any artifacts.",
-					arg_name)
-			}
-			request.Env = append(
-				request.Env, &actions_proto.VQLEnv{
-					Key: arg_name, Value: arg,
-				})
-		}
-
-		if *artifact_command_collect_output == "" {
-			collectArtifact(config_obj, repository, name, request)
+		if len(parts) < 2 {
+			collect_args.Set(arg_name, "Y")
 		} else {
-			collectArtifactToContainer(
-				config_obj, repository, name, container,
-				*artifact_command_collect_format, request)
+			collect_args.Set(arg_name, parts[1])
 		}
 	}
+
+	scope := artifacts.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(&LogWriter{config_obj}, " ", log.Lshortfile),
+		Env: ordereddict.NewDict().
+			Set("Artifacts", *artifact_command_collect_name).
+			Set("Output", *artifact_command_collect_output).
+			Set("Password", *artifact_command_collect_output_password).
+			Set("Report", *artifact_command_collect_report).
+			Set("Args", collect_args).
+			Set("Format", *artifact_command_collect_format),
+	}.Build()
+	defer scope.Close()
+
+	if *trace_vql_flag {
+		scope.Tracer = logging.NewPlainLogger(config_obj,
+			&logging.ToolComponent)
+	}
+
+	query := `
+  SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
+                        password=Password, args=Args, format=Format)`
+	eval_local_query(config_obj, *artifact_command_collect_format, query, scope)
 }
 
 func getFilterRegEx(pattern string) (*regexp.Regexp, error) {

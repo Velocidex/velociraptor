@@ -10,21 +10,24 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func getReport(ctx context.Context,
 	config_obj *config_proto.Config,
-	principal string,
+	acl_manager vql_subsystem.ACLManager,
 	in *api_proto.GetReportRequest) (
 	*api_proto.GetReportResponse, error) {
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
-		config_obj, ctx, principal, nil, in.Artifact)
+		config_obj, ctx, nil, /* default scope */
+		acl_manager, nil, in.Artifact)
 	if err != nil {
 		if strings.HasPrefix(in.Artifact,
 			constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
 			template_engine, err = reporting.NewGuiTemplateEngine(
-				config_obj, ctx, principal, nil,
+				config_obj, ctx, nil, /* default scope */
+				acl_manager, nil,
 				strings.TrimPrefix(in.Artifact,
 					constants.ARTIFACT_CUSTOM_NAME_PREFIX))
 		}

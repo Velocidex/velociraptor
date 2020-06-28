@@ -23,6 +23,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -392,13 +393,14 @@ func (self *logWriter) Messages() []string {
 func NewGuiTemplateEngine(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	principal string,
+	scope *vfilter.Scope,
+	acl_manager vql_subsystem.ACLManager,
 	notebook_cell_path_manager *NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, principal, artifact_name)
+		config_obj, scope, acl_manager, artifact_name)
 	if err != nil {
 		return nil, err
 	}

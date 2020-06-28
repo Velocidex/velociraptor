@@ -255,19 +255,25 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 }
 
 func NewArtifactRepositoryPlugin(repository *Repository) vfilter.PluginGeneratorInterface {
+	repository.Lock()
+	defer repository.Unlock()
 
 	if repository.artifact_plugin != nil {
 		return repository.artifact_plugin
 	}
 
-	// Cache it for next time.
-	repository.artifact_plugin = _NewArtifactRepositoryPlugin(repository, nil)
+	name_listing := repository.list()
+
+	// Cache it for next time and return it.
+	repository.artifact_plugin = _NewArtifactRepositoryPlugin(repository, name_listing, nil)
 
 	return repository.artifact_plugin
 }
 
 func _NewArtifactRepositoryPlugin(
-	repository *Repository, prefix []string) vfilter.PluginGeneratorInterface {
+	repository *Repository,
+	name_listing []string,
+	prefix []string) vfilter.PluginGeneratorInterface {
 
 	result := &ArtifactRepositoryPlugin{
 		repository: repository,
@@ -275,7 +281,7 @@ func _NewArtifactRepositoryPlugin(
 		prefix:     prefix,
 	}
 
-	for _, name := range repository.List() {
+	for _, name := range name_listing {
 		components := strings.Split(name, ".")
 		if len(components) < len(prefix) ||
 			!utils.SlicesEqual(components[:len(prefix)], prefix) {
@@ -286,7 +292,7 @@ func _NewArtifactRepositoryPlugin(
 
 		// We are at a leaf node.
 		if len(components) == 0 {
-			artifact, _ := repository.Get(name)
+			artifact, _ := repository.get(name)
 			result.leaf = artifact
 			return result
 		}
@@ -294,7 +300,7 @@ func _NewArtifactRepositoryPlugin(
 		_, pres := result.children[components[0]]
 		if !pres {
 			result.children[components[0]] = _NewArtifactRepositoryPlugin(
-				repository, append(prefix, components[0]))
+				repository, name_listing, append(prefix, components[0]))
 		}
 	}
 

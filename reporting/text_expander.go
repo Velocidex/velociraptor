@@ -8,6 +8,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -113,10 +114,11 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 
 func NewTextTemplateEngine(
 	config_obj *config_proto.Config,
-	principal string,
+	scope *vfilter.Scope,
+	acl_manager vql_subsystem.ACLManager,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, principal, artifact_name)
+		config_obj, scope, acl_manager, artifact_name)
 	if err != nil {
 		return nil, err
 	}

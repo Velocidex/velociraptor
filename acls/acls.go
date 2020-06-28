@@ -258,7 +258,7 @@ func SetPolicy(
 func CheckAccess(
 	config_obj *config_proto.Config,
 	principal string,
-	permission ACL_PERMISSION, args ...string) (bool, error) {
+	permissions ...ACL_PERMISSION) (bool, error) {
 
 	// Internal calls from the server are allowed to do anything.
 	if principal == config_obj.Client.PinnedServerName {
@@ -274,7 +274,14 @@ func CheckAccess(
 		return false, err
 	}
 
-	return CheckAccessWithToken(acl_obj, permission, args...)
+	for _, permission := range permissions {
+		ok, err := CheckAccessWithToken(acl_obj, permission)
+		if !ok || err != nil {
+			return ok, err
+		}
+	}
+
+	return true, nil
 }
 
 func CheckAccessWithToken(

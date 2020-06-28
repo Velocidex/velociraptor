@@ -4,7 +4,7 @@ SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifa
   "Hash": null,
   "Size": 926,
   "Upload": null,
-  "Keywords": null
+  "Keywords": ""
  }
 ]SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifact.Windows.Search.FileFinder( Calculate_Hash="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
  {
@@ -16,7 +16,7 @@ SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifa
   },
   "Size": 926,
   "Upload": null,
-  "Keywords": null
+  "Keywords": ""
  }
 ]SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords FROM Artifact.Windows.Search.FileFinder( Upload_File="Y", SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")[
  {
@@ -24,7 +24,7 @@ SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords FROM Artifa
   "Hash": null,
   "Size": 926,
   "Upload.md5": "fa2e382dedf895a251fcc369faa8818c",
-  "Keywords": null
+  "Keywords": ""
  }
 ]SELECT basename(path=FullPath) AS File, Keywords FROM Artifact.Windows.Search.FileFinder( YaraRule="wide nocase ascii:supercalifragilisticexpialidocious", SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")[
  {
