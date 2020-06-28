@@ -1,5 +1,3 @@
-// +build server_vql
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
