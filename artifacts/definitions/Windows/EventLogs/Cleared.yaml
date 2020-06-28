@@ -60,7 +60,7 @@ sources:
                 row=files,
                 query={
                     SELECT 
-                        timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS EventTime,
+                        timestamp(epoch=System.TimeCreated.SystemTime) AS EventTime,
                         System.Computer as Computer, 
                         System.EventID.Value as EventID,
                         System.EventRecordID as EventRecordID,
@@ -78,7 +78,7 @@ sources:
                         Message,
                         if(condition=Source, then=Source, else=FullPath) as Source,
                         format(format="%v-%v-%v",args=[System.EventID.Value,System.EventRecordID,
-                            timestamp(epoch=int(int=System.TimeCreated.SystemTime))]) as _Group
+                            timestamp(epoch=System.TimeCreated.SystemTime)]) as _Group
                 FROM parse_evtx(filename=FullPath)
                 WHERE
                     EventTime < DateBeforeTime AND

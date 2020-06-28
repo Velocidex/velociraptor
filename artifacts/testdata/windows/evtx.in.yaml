@@ -15,4 +15,4 @@ Queries:
   - SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")
 
     # Clear event logs
-  - SELECT EventID, Channel, Message,Source FROM Artifact.Windows.EventLogs.Cleared(SearchVSS="True")
+  - SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared(SearchVSS="True")
