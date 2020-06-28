@@ -17,7 +17,7 @@ const (
 )
 
 type ACLManager interface {
-	CheckAccess(permission acls.ACL_PERMISSION, args ...string) (bool, error)
+	CheckAccess(permission ...acls.ACL_PERMISSION) (bool, error)
 }
 
 // NullACLManager is an acl manager which allows everything. This is
@@ -26,7 +26,7 @@ type ACLManager interface {
 type NullACLManager struct{}
 
 func (self NullACLManager) CheckAccess(
-	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
+	permission ...acls.ACL_PERMISSION) (bool, error) {
 	return true, nil
 }
 
@@ -38,8 +38,15 @@ type ServerACLManager struct {
 }
 
 func (self *ServerACLManager) CheckAccess(
-	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
-	return acls.CheckAccessWithToken(self.Token, permission, args...)
+	permissions ...acls.ACL_PERMISSION) (bool, error) {
+	for _, permission := range permissions {
+		ok, err := acls.CheckAccessWithToken(self.Token, permission)
+		if !ok || err != nil {
+			return ok, err
+		}
+	}
+
+	return true, nil
 }
 
 // NewRoleACLManager creates an ACL manager with only the assigned
@@ -73,20 +80,20 @@ func NewServerACLManager(
 // from within VQL so this is a safe assumption - if a user was to
 // override the ACL_MANAGER_VAR with something else this will lock
 // down the entire VQL ACL system and deny all permissions.
-func CheckAccess(scope *vfilter.Scope, permission acls.ACL_PERMISSION) error {
+func CheckAccess(scope *vfilter.Scope, permissions ...acls.ACL_PERMISSION) error {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
 	if !pres {
-		return errors.New(fmt.Sprintf("Permission denied: %s", permission))
+		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
 	}
 
 	manager, ok := manager_any.(ACLManager)
 	if !ok {
-		return errors.New(fmt.Sprintf("Permission denied: %s", permission))
+		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
 	}
 
-	perm, err := manager.CheckAccess(permission)
+	perm, err := manager.CheckAccess(permissions...)
 	if !perm || err != nil {
-		return errors.New(fmt.Sprintf("Permission denied: %s", permission))
+		return errors.New(fmt.Sprintf("Permission denied: %v", permissions))
 	}
 
 	return nil

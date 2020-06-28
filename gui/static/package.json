@@ -25,6 +25,7 @@
     "gulp-cli": "^2.2.0",
     "gulp-uglify": "^3.0.2",
     "jquery": "^3.5.1",
+    "jquery-csv": "^1.0.11",
     "jquery-migrate": "^1.4.1",
     "jquery-ui-dist": "^1.12.1",
     "jstree": "^3.3.9",

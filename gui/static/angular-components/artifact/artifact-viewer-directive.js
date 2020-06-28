@@ -108,6 +108,47 @@ ArtifactViewerController.prototype.updateArtifactDefinitions = function(name) {
     return false;
 };
 
+ArtifactViewerController.prototype.uploadArtifacts = function() {
+    var self = this;
+    var modalScope = this.scope_.$new();
+
+    modalScope.uploadFile = function(e, file) {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!angular.isObject(file)) {
+            return false;
+        };
+        var reader = new FileReader();
+        reader.onload = function(event) {
+            var request = {
+                data: reader.result.split(",")[1],
+            };
+
+            self.grrApiService_.post(
+                "v1/LoadArtifactPack", request).then(function(response) {
+
+                modalInstance.close();
+
+                // Update the search results.
+                self.onSearchChange_();
+            }, function(error) {
+                self.error = error;
+            });
+        };
+        reader.readAsDataURL(file);
+    };
+
+    modalScope.reject = function() {
+        modalInstance.close();
+    };
+
+    var modalInstance = self.uibModal_.open({
+        templateUrl: '/static/angular-components/artifact/upload_artifact.html',
+        scope: modalScope,
+        size: "sm",
+    });
+};
 
 ArtifactViewerController.prototype.deleteArtifactDefinitions = function() {
   var self = this;

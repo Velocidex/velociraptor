@@ -10,6 +10,7 @@ parameters:
        A CSV file with a Glob column with all the globs to collect.
        NOTE: Globs must not have a leading device since the device
        will depend on the VSS.
+    type: csv
     default: |
        Glob
        Users\*\NTUser.dat

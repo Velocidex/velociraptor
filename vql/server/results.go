@@ -135,7 +135,7 @@ func (self SourcePlugin) Call(
 		// parameters. This allows its use to be more concise in
 		// reports etc where many parameters can be inferred from
 		// context.
-		parseSourceArgsFromScope(arg, scope)
+		ParseSourceArgsFromScope(arg, scope)
 
 		// Allow the plugin args to override the environment scope.
 		err = vfilter.ExtractArgs(scope, args, arg)
@@ -193,7 +193,7 @@ func (self SourcePlugin) Info(
 }
 
 // Override SourcePluginArgs from the scope.
-func parseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
+func ParseSourceArgsFromScope(arg *SourcePluginArgs, scope *vfilter.Scope) {
 	client_id, pres := scope.Resolve("ClientId")
 	if pres {
 		arg.ClientId, _ = client_id.(string)

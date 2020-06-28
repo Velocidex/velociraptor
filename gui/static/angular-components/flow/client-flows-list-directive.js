@@ -104,7 +104,7 @@ ClientFlowsListController.prototype.cancelButtonClicked = function() {
 ClientFlowsListController.prototype.buildCollector = function() {
   var modalScope = this.scope_.$new();
   modalScope.resolve = function() {
-    modalInstance.close();
+      modalInstance.close();
   };
   modalScope.reject = function() {
     modalInstance.dismiss();
@@ -113,12 +113,14 @@ ClientFlowsListController.prototype.buildCollector = function() {
     modalScope.$destroy();
   });
 
-  var modalInstance = this.uibModal_.open({
-    template: '<grr-build-collector on-resolve="resolve()" ' +
-        'on-reject="reject()" />',
-    scope: modalScope,
-    windowClass: 'wide-modal high-modal',
-    size: 'lg'
+    var modalInstance = this.uibModal_.open({
+      template: '<grr-build-collector on-resolve="resolve()" ' +
+          'on-reject="reject()" />',
+      scope: modalScope,
+      windowClass: 'wide-modal high-modal',
+      size: 'lg',
+      keyboard: false,
+      backdrop: 'static',
   });
 
   modalInstance.result.then(function resolve() {
@@ -172,7 +174,9 @@ ClientFlowsListController.prototype.createHuntFromFlow = function() {
         'on-reject="reject()" flow-id="flowId" client-id="clientId" />',
     scope: modalScope,
     windowClass: 'wide-modal high-modal',
-    size: 'lg'
+      size: 'lg',
+      keyboard: false,
+      backdrop: 'static',
   });
   modalInstance.result.then(function resolve() {
     this.grrRoutingService_.go('hunts', {huntId: huntId});
@@ -206,7 +210,9 @@ ClientFlowsListController.prototype.newArtifactCollection = function(flow_id) {
             'on-resolve="resolve()" on-reject="reject()" />',
         scope: modalScope,
         windowClass: 'wide-modal high-modal',
-        size: 'lg'
+        size: 'lg',
+        keyboard: false,
+        backdrop: 'static',
     });
 };
 

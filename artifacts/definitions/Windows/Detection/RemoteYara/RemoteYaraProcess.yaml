@@ -9,7 +9,7 @@ description: |
   This content also provides the user the option to dump any process with hits,
   and the rule summary information.
 
-  The user is also recommended to add any endpoint agents that may cause a false 
+  The user is also recommended to add any endpoint agents that may cause a false
   positive into the hidden parameters pathWhitelist.
 
   Output of the rule is process information, Yara rule name, metadata and hit
@@ -23,9 +23,9 @@ parameters:
   - name: pathWhitelist
     description: |
         Process paths to exclude. Default is common
-        AntiVirus we have seen cause false positives with 
+        AntiVirus we have seen cause false positives with
         signitures in memory.
-    type: hidden
+    type: csv
     default: |
       Path
       C:\Program Files\Microsoft Security Client\MsMpEng.exe

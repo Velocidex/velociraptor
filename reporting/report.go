@@ -267,7 +267,8 @@ func GenerateHuntReport(template_engine TemplateEngine,
 
 func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
-	principal string,
+	scope *vfilter.Scope,
+	acl_manager vql_subsystem.ACLManager,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 	repository, err := artifacts.GetGlobalRepository(config_obj)
@@ -285,10 +286,13 @@ func newBaseTemplateEngine(
 	// whole processing. Keep a reference to the environment so
 	// SetEnv() can update it later.
 	env := ordereddict.NewDict()
-	scope := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
-	}.Build().AppendVars(env)
+	if scope == nil {
+		scope = artifacts.ScopeBuilder{
+			Config:     config_obj,
+			ACLManager: acl_manager,
+		}.Build()
+	}
+	scope.AppendVars(env)
 
 	// Closing the scope is deferred to closing the template.
 

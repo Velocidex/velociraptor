@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -29,8 +30,51 @@ type Container struct {
 	fd         io.WriteCloser
 	zip        *zip.Writer
 
+	tempfiles map[string]*os.File
+
 	Password     string
 	delegate_zip *zip.Writer
+}
+
+func (self *Container) writeToContainer(
+	ctx context.Context,
+	tmpfile *os.File,
+	scope *vfilter.Scope,
+	artifact, format string) error {
+
+	path_manager := NewContainerPathManager(artifact)
+
+	// Copy the original json file into the container.
+	writer, closer, err := self.getZipFileWriter(path_manager.Path())
+	if err != nil {
+		return err
+	}
+
+	tmpfile.Seek(0, 0)
+
+	_, err = utils.Copy(ctx, writer, tmpfile)
+	closer()
+
+	switch format {
+	case "csv", "":
+		writer, closer, err := self.getZipFileWriter(path_manager.CSVPath())
+		if err != nil {
+			return err
+		}
+
+		csv_writer := csv.GetCSVAppender(
+			scope, writer, true /* write_headers */)
+		defer csv_writer.Close()
+
+		// Convert from the json to csv.
+		tmpfile.Seek(0, 0)
+
+		for item := range utils.ReadJsonFromFile(ctx, tmpfile) {
+			csv_writer.Write(item)
+		}
+		closer()
+	}
+	return nil
 }
 
 func (self *Container) StoreArtifact(
@@ -41,8 +85,10 @@ func (self *Container) StoreArtifact(
 	query *actions_proto.VQLRequest,
 	format string) error {
 
+	artifact_name := query.Name
+
 	// Dont store un-named queries but run them anyway.
-	if query.Name == "" {
+	if artifact_name == "" {
 		for _ = range vql.Eval(ctx, scope) {
 		}
 		return nil
@@ -56,58 +102,26 @@ func (self *Container) StoreArtifact(
 		return errors.WithStack(err)
 	}
 
-	defer os.Remove(tmpfile.Name()) // clean up
+	self.tempfiles[artifact_name] = tmpfile
 
-	var sanitized_name string
-
-	switch format {
-	case "csv", "":
-		// In this instance we want to make / unescaped.
-		sanitized_name = query.Name + ".csv"
-
-		csv_writer := csv.GetCSVAppender(
-			scope, tmpfile, true /* write_headers */)
-		defer csv_writer.Close()
-
-		for row := range vql.Eval(ctx, scope) {
-			csv_writer.Write(row)
+	for row := range vql.Eval(ctx, scope) {
+		// Re-serialize it as compact json.
+		serialized, err := json.Marshal(row)
+		if err != nil {
+			continue
 		}
 
-	case "jsonl", "json":
-		// In this instance we want to make / unescaped.
-		sanitized_name = query.Name + ".json"
-
-		for row := range vql.Eval(ctx, scope) {
-			// Re-serialize it as compact json.
-			serialized, err := json.Marshal(row)
-			if err != nil {
-				continue
-			}
-
-			_, err = tmpfile.Write(serialized)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-
-			// Separate lines with \n
-			tmpfile.Write([]byte("\n"))
+		_, err = tmpfile.Write(serialized)
+		if err != nil {
+			return errors.WithStack(err)
 		}
 
-	default:
-		return errors.New("Format not supported")
+		// Separate lines with \n
+		tmpfile.Write([]byte("\n"))
 	}
 
-	writer, closer, err := self.getZipFileWriter(string(sanitized_name))
-	if err != nil {
-		return err
-	}
-
-	tmpfile.Seek(0, 0)
-
-	_, err = utils.Copy(ctx, writer, tmpfile)
-	closer()
-
-	return err
+	return self.writeToContainer(
+		ctx, tmpfile, scope, artifact_name, format)
 }
 
 func (self *Container) getZipFileWriter(name string) (io.Writer, func(), error) {
@@ -193,6 +207,24 @@ func sanitize(component string) string {
 	return component
 }
 
+func (self *Container) ReadArtifactResults(
+	ctx context.Context,
+	scope *vfilter.Scope, artifact string) chan *ordereddict.Dict {
+	output_chan := make(chan *ordereddict.Dict)
+
+	// Get the tempfile we hold open with the results for this artifact
+	fd, pres := self.tempfiles[artifact]
+	if !pres {
+		scope.Log("Trying to access results for artifact %v, "+
+			"but we did not collect it!", artifact)
+		close(output_chan)
+		return output_chan
+	}
+
+	fd.Seek(0, 0)
+	return utils.ReadJsonFromFile(ctx, fd)
+}
+
 func (self *Container) Upload(
 	ctx context.Context,
 	scope *vfilter.Scope,
@@ -251,6 +283,11 @@ func (self *Container) Close() error {
 		self.delegate_zip.Close()
 	}
 
+	// Remove all the tempfiles we still hold open
+	for _, file := range self.tempfiles {
+		os.Remove(file.Name())
+	}
+
 	self.zip.Close()
 	return self.fd.Close()
 }
@@ -264,8 +301,9 @@ func NewContainer(path string) (*Container, error) {
 
 	zip_writer := zip.NewWriter(fd)
 	return &Container{
-		fd:  fd,
-		zip: zip_writer,
+		fd:        fd,
+		tempfiles: make(map[string]*os.File),
+		zip:       zip_writer,
 	}, nil
 }
 

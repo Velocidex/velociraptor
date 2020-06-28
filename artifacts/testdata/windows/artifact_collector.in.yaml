@@ -1,8 +1,12 @@
 Queries:
   # Make sure we can collect artifacts with uploads
   - SELECT * FROM collect(artifacts='Windows.Search.FileFinder',
+          report="C:/1.html",
+          format='csv',
           args=dict(SearchFilesGlob='c:/Windows/notepad.exe', Upload_File='Y'),
           output='c:/1.zip')
 
-  - SELECT FullPath from glob(globs="file:///c:/1.zip#/*",
+  - SELECT Size > 10, FullPath FROM glob(globs="C:/1.{zip,html}")
+
+  - SELECT FullPath from glob(globs="file:///c:/1.zip#/**",
          accessor='zip') WHERE not IsDir

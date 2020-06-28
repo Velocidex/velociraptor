@@ -16,6 +16,7 @@ type: SERVER
 
 parameters:
   - name: binaryList
+    type: csv
     default: |
       Tool,Enabled,Type,URL,Filename
       Autorun_amd64,Y,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe

@@ -27,7 +27,7 @@ var (
 )
 
 const (
-	htmlPreable = `
+	HtmlPreable = `
 <html>
   <head>
     <meta charset="utf-8">
@@ -147,7 +147,7 @@ pre {
 
 `
 
-	htmlPostscript = `
+	HtmlPostscript = `
     </main>
    </body>
 </html>
@@ -267,8 +267,8 @@ func ExportNotebookToHTML(
 		return err
 	}
 
-	output.Write([]byte(fmt.Sprintf(htmlPreable, notebook.Name)))
-	defer output.Write([]byte(htmlPostscript))
+	output.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
+	defer output.Write([]byte(HtmlPostscript))
 
 	cell := &api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -129,4 +130,23 @@ func (self *NotebookExportPathManager) CellItem(cell_id, name string) string {
 
 func NewNotebookExportPathManager(notebook_id string) *NotebookExportPathManager {
 	return &NotebookExportPathManager{notebook_id}
+}
+
+type ContainerPathManager struct {
+	artifact string
+}
+
+func (self *ContainerPathManager) Path() string {
+	return self.artifact + ".json"
+}
+
+func (self *ContainerPathManager) CSVPath() string {
+	return self.artifact + ".csv"
+}
+
+func NewContainerPathManager(artifact string) *ContainerPathManager {
+	// Zip paths must not have leading /
+	artifact = strings.TrimPrefix(artifact, "/")
+
+	return &ContainerPathManager{artifact: artifact}
 }

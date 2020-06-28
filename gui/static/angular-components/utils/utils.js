@@ -8,6 +8,7 @@ const {TimestampSecondsDirective} = goog.require('grrUi.utils.timestampSecondsDi
 const {coreModule} = goog.require('grrUi.core.core');
 const {routingModule} = goog.require('grrUi.routing.routing');
 const {VQLDirective} = goog.require('grrUi.utils.vqlDirective');
+const {UploadDirective} = goog.require('grrUi.utils.uploadDirective');
 const {ClientLabelFormDirective} = goog.require('grrUi.utils.clientLabelFormDirective');
 
 exports.utilsModule = angular.module('grrUi.utils', [
@@ -22,3 +23,6 @@ exports.utilsModule.directive(
   VQLDirective.directive_name, VQLDirective);
 exports.utilsModule.directive(
   ClientLabelFormDirective.directive_name, ClientLabelFormDirective);
+
+exports.utilsModule.directive(
+  UploadDirective.directive_name, UploadDirective);

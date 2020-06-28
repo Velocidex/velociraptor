@@ -50,59 +50,6 @@
 </div>
 
 <div ng-switch on="controller.fileContext.selectedDirPath">
-  <div ng-switch-when="//artifact_definitions/">
-    <div class="card">
-      <h5 class="card-header">View or edit Artifact Definitions</h5>
-      <div class="card-body">
-        <p>
-          Artifacts are at the heart of everything Velociraptor
-          does. An artifact is simply a collection of VQL queries
-          encapsulated in a YAML file.
-        </p>
-        <p>
-          In this part of the interface you may view all the artifacts
-          available to be used. The <em>builtin</em> directory
-          contains all the artifacts which come built into
-          Velociraptor, while the <em>custom</em> directory contains
-          artifacts edited or created locally.
-        </p>
-
-        <p>
-          If you want to add or edit existing artifacts, simply click
-          the <i class="fa fa-pencil"></i> button above. An editor will
-          appear where you may edit the artifact.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div ng-switch-when="//server_artifacts/">
-    <div class="card">
-      <h5 class="card-header">View Server Artifacts</h5>
-      <div class="card-body">
-        <p>
-          The server can be configured to run VQL event queries server
-          side. These queries are encapsulated in server event artifacts.
-        </p>
-        <p>
-          Typically server event artifacts are used to watch and
-          react to client side events. The artifacts run indefinitely
-          and write their results into daily logs (similar to client
-          side event artifacts).
-        </p>
-        <p>
-          Select a server event artifact in the tree view to see the
-          daily logs from this artifact.
-        </p>
-        <p>
-          If you want to add or remove the running server event artifacts, click the
-            <i class="fa fa-edit"></i> button above.
-        </p>
-
-      </div>
-    </div>
-  </div>
-
   <div ng-switch-when="//artifacts/">
     <div class="card">
       <h5 class="card-header">View Artifacts Collected</h5>

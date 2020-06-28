@@ -56,6 +56,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type ApiServer struct {
@@ -147,7 +148,9 @@ func (self *ApiServer) GetReport(
 			"User is not allowed to view reports.")
 	}
 
-	return getReport(ctx, self.config, user_name, in)
+	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
+
+	return getReport(ctx, self.config, acl_manager, in)
 }
 
 func (self *ApiServer) CollectArtifact(
@@ -744,7 +747,8 @@ func (self *ApiServer) SetArtifactFile(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	definition, err := setArtifactFile(self.config, in)
+	definition, err := setArtifactFile(self.config, in,
+		constants.ARTIFACT_CUSTOM_NAME_PREFIX /* required_prefix */)
 	if err != nil {
 		return &api_proto.APIResponse{
 			Error:        true,
@@ -792,9 +796,13 @@ func (self *ApiServer) WriteEvent(
 
 		peer_name := peer_cert.Subject.CommonName
 
+		token, err := acls.GetEffectivePolicy(self.config, peer_name)
+		if err != nil {
+			return nil, err
+		}
+
 		// Check that the principal is allowed to push to the queue.
-		ok, err := acls.CheckAccess(self.config, peer_name,
-			acls.PUBLISH, in.Query.Name)
+		ok, err := acls.CheckAccessWithToken(token, acls.PUBLISH, in.Query.Name)
 		if err != nil {
 			return nil, err
 		}

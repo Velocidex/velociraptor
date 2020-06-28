@@ -91,6 +91,7 @@ gulp.task('compile-third-party-js', function() {
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-markdown.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/mode-sql.js',
                    config.nodeModulesDir + '/ace-builds/src-min-noconflict/keybinding-emacs.js',
+                   config.nodeModulesDir + '/jquery-csv/src/jquery.csv.min.js',
                    config.nodeModulesDir + '/jquery-ui-dist/jquery-ui.js',
                    config.nodeModulesDir + '/jstree/dist/jstree.js',
                    config.nodeModulesDir + '/moment/moment.js',
