@@ -8,6 +8,7 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
    "Tool": "WinPmem",
    "ServeLocally": false,
    "URL": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+   "Hash": "",
    "Filename": "winpmem_v3.3.rc3.exe"
   }
  }
