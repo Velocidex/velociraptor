@@ -16,7 +16,7 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
   "name": "WinPmem",
   "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
   "serve_locally": false,
-  "filestore_path": "",
+  "filestore_path": "351b4f6d59a4266cc7a2eab9cedf959eb6a4c924746044e6edeabdd1a477643e",
   "filename": "winpmem_v3.3.rc3.exe",
   "hash": ""
  }
