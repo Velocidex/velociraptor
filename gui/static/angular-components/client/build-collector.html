@@ -101,22 +101,6 @@
                     value="controller.target_args">
           </grr-form>
         </div>
-
-        <div class="form-group">
-          <label class="control-label" title="Include binaries">
-            Include binaries
-          </label>
-          <div class="controls">
-            <ui-select  multiple  ng-model="controller.inventoryModel">
-              <ui-select-match placeholder="Include binaries...">
-                <span ng-bind="$item.label"></span>
-              </ui-select-match>
-              <ui-select-choices repeat="item in (controller.inventory | filter: $select.search) track by item.id">
-                <span ng-bind="item.label"></span>
-              </ui-select-choices>
-            </ui-select>
-          </div>
-        </div>
       </div>
     </div>
   </grr-wizard-form-page>

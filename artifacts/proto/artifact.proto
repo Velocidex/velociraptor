@@ -151,6 +151,9 @@ message Artifact {
             description: "A list of required permissions to collect this artifact."
         }];
 
+    // A list of third party tools we need.
+    repeated string required_tools = 14;
+
     // If set here this applies to all sources.
     string precondition = 8 [(sem_type) = {
             description: "A VQL expression to be evaluated prior to using "

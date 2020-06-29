@@ -248,6 +248,7 @@ func doQuery() {
 	defer cancel()
 
 	_ = services.StartNotificationService(ctx, wg, config_obj)
+	_ = services.StartInventoryService(ctx, wg, config_obj)
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")

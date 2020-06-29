@@ -175,8 +175,8 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	flow_id, err := artifacts.ScheduleArtifactCollection(
-		self.config, in.Creator, in)
+	flow_id, err := services.ScheduleArtifactCollection(
+		ctx, self.config, in.Creator, in)
 	if err != nil {
 		return nil, err
 	}

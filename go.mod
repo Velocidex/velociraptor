@@ -36,6 +36,7 @@ require (
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gogo/protobuf v1.1.1
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0-rc.4.0.20200313231945-b860323f09d0
 	github.com/golang/snappy v0.0.1

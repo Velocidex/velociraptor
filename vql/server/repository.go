@@ -51,23 +51,38 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
+		// No args means just dump all artifacts
+		if len(arg.Names) == 0 {
+			arg.Names = repository.List()
+		}
+
 		dependencies := make(map[string]int)
 		for _, name := range arg.Names {
 			dependencies[name] = 1
 
-			artifact, pres := repository.Get(name)
-			if !pres {
-				scope.Log("Artifact %s not know", name)
-				continue
+			get_deps := func() map[string]int {
+				dependencies := make(map[string]int)
+
+				artifact, pres := repository.Get(name)
+				if !pres {
+					scope.Log("Artifact %s not know", name)
+					return dependencies
+				}
+
+				for _, source := range artifact.Sources {
+					err := repository.GetQueryDependencies(
+						source.Query, 0, dependencies)
+					if err != nil {
+						scope.Log("artifact_definitions: %v", err)
+						return dependencies
+					}
+				}
+
+				return dependencies
 			}
 
-			for _, source := range artifact.Sources {
-				err := repository.GetQueryDependencies(
-					source.Query, 0, dependencies)
-				if err != nil {
-					scope.Log("artifact_definitions: %v", err)
-					return
-				}
+			for name := range get_deps() {
+				dependencies[name] = 1
 			}
 		}
 

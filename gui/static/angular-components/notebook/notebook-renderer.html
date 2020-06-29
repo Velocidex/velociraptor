@@ -1,5 +1,5 @@
 <div ng-if="!state.notebook.hidden">
-  <div ng-repeat="cell in state.notebook.cell_metadata track by $index">
+  <div ng-repeat="cell in state.notebook.cell_metadata track by cell.cell_id">
     <grr-notebook-cell-renderer
       notebook-id="state.notebook.notebook_id"
       ng-click="controller.toggleFocus(cell.cell_id)"

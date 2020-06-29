@@ -74,7 +74,7 @@ func vqlCollectorArgsFromFixture(
 	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := artifacts.AddArtifactCollectorArgs(
+	err := services.AddArtifactCollectorArgs(
 		config_obj,
 		vql_collector_args,
 		artifact_collector_args)

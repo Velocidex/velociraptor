@@ -56,6 +56,15 @@ func register(config_obj *config_proto.Config) error {
 		}
 	}
 
+	// Compile the artifacts in the background so they are ready
+	// to go when the GUI searches for them.
+	go func() {
+		for _, name := range global_repository.List() {
+			global_repository.Get(name)
+		}
+		logger.Info("Compiled all artifacts.")
+	}()
+
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Now().Sub(now))
 	return nil
 }

@@ -36,10 +36,6 @@ const BuildCollectorController = function(
 
 BuildCollectorController.prototype.sendRequest = function() {
     var self = this;
-    var binaries = [];
-    for(var i = 0; i<this.inventoryModel.length; i++) {
-        binaries.push(this.inventoryModel[i].label);
-    };
 
     var artifact_request = {
         client_id: "server",
@@ -51,7 +47,6 @@ BuildCollectorController.prototype.sendRequest = function() {
                 {key: "parameters", value: JSON.stringify(this.params)},
                 {key: "target", value: this.target},
                 {key: "target_args", value: JSON.stringify(this.target_args)},
-                {key: "binaries", value: JSON.stringify(binaries)},
             ],
         }
     };

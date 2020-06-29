@@ -79,7 +79,7 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 
 	self.Unlock()
 
-	return &count, filepath.Walk(dirname,
+	result, err := &count, filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return errors.WithStack(err)
@@ -100,6 +100,8 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 			}
 			return nil
 		})
+
+	return result, err
 }
 
 var query_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
@@ -381,6 +383,8 @@ func (self *Repository) getQueryDependencies(
 	return nil
 }
 
+// Attach additional artifacts to the request if needed to satisfy
+// dependencies.
 func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 	request *actions_proto.VQLCollectorArgs) error {
 	dependencies := make(map[string]int)
@@ -390,9 +394,20 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 			return err
 		}
 	}
+
+	//	inventory.Inventory.Get("")
 	for k := range dependencies {
 		artifact, pres := self.Get(k)
 		if pres {
+			// Include any dependent tools.
+			for _, required_tool := range artifact.RequiredTools {
+				if !utils.InString(request.Tools, required_tool) {
+					request.Tools = append(request.Tools, required_tool)
+				}
+			}
+
+			// Filter the artifact to contain only
+			// essential data.
 			sources := []*artifacts_proto.ArtifactSource{}
 			for _, source := range artifact.Sources {
 				new_source := &artifacts_proto.ArtifactSource{
@@ -446,6 +461,13 @@ func (self *Repository) Compile(artifact *artifacts_proto.Artifact,
 			Key:   parameter.Name,
 			Value: value,
 		})
+	}
+
+	// Merge any tools we need.
+	for _, required_tool := range artifact.RequiredTools {
+		if !utils.InString(result.Tools, required_tool) {
+			result.Tools = append(result.Tools, required_tool)
+		}
 	}
 
 	return self.mergeSources(artifact, result, 0)

@@ -1,16 +1,21 @@
-// +build XXXX
+/*
+  Launches new collection against clients.
+*/
 
-package artifacts
+package services
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
+	"fmt"
 	"time"
 
 	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -21,11 +26,12 @@ import (
 )
 
 func CompileCollectorArgs(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
 	*actions_proto.VQLCollectorArgs, error) {
-	repository, err := GetGlobalRepository(config_obj)
+	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +79,59 @@ func CompileCollectorArgs(
 		return nil, err
 	}
 
-	err = Obfuscate(config_obj, vql_collector_args)
+	err = getDependentTools(ctx, config_obj, vql_collector_args)
+	if err != nil {
+		return nil, err
+	}
+
+	err = artifacts.Obfuscate(config_obj, vql_collector_args)
 	return vql_collector_args, err
 }
 
+func getDependentTools(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	vql_collector_args *actions_proto.VQLCollectorArgs) error {
+
+	for _, tool := range vql_collector_args.Tools {
+		tool_info, err := Inventory.GetToolInfo(ctx, config_obj, tool)
+		if err != nil {
+			return err
+		}
+
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_HASH", tool_info.Name),
+			Value: tool_info.Hash,
+		})
+
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_FILENAME", tool_info.Name),
+			Value: tool_info.Filename,
+		})
+
+		if len(config_obj.Client.ServerUrls) == 0 {
+			return errors.New("No server URLs configured!")
+		}
+
+		// Where to download the binary from.
+		url := config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
+
+		// If we dont want to serve the binary locally, just
+		// tell the client where to get it from.
+		if !tool_info.ServeLocally && tool_info.Url != "" {
+			url = tool_info.Url
+		}
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
+			Value: url,
+		})
+	}
+
+	return nil
+}
+
 func ScheduleArtifactCollection(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
@@ -86,7 +140,7 @@ func ScheduleArtifactCollection(
 	if args == nil {
 		var err error
 		args, err = CompileCollectorArgs(
-			config_obj, principal, collector_request)
+			ctx, config_obj, principal, collector_request)
 		if err != nil {
 			return "", err
 		}
