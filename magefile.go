@@ -290,6 +290,8 @@ func Appveyor() error {
 		return err
 	}
 
+	return nil
+
 	// Build a linux binary on Appveyor without cgo. This is
 	// typically OK because it is mostly used for the server. It
 	// will be missing yara etc.

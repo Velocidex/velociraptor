@@ -16,6 +16,7 @@ type InventoryAddFunctionArgs struct {
 	Tool         string `vfilter:"required,field=tool"`
 	ServeLocally bool   `vfilter:"optional,field=serve_locally"`
 	URL          string `vfilter:"optional,field=url"`
+	Hash         string `vfilter:"optional,field=hash"`
 	Filename     string `vfilter:"optional,field=filename"`
 }
 
@@ -49,6 +50,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		ServeLocally: arg.ServeLocally,
 		Url:          arg.URL,
 		Filename:     arg.Filename,
+		Hash:         arg.Hash,
 	}
 	err = services.Inventory.AddTool(config_obj, request)
 
