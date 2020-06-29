@@ -30,39 +30,51 @@ parameters:
 sources:
   - query: |
       LET info_cache <= SELECT * FROM info()
-      LET ToolInfo <= if(condition=ToolInfo, then=ToolInfo, else=scope())
-      LET ToolHash <= get(field="Tool_" + ToolName + "_HASH", item=ToolInfo)
-      LET ToolFilename <= get(field="Tool_" + ToolName + "_FILENAME", item=ToolInfo)
-      LET ToolURL <= get(field="Tool_" + ToolName + "_URL", item=ToolInfo)
+      LET inventory_item <= inventory_get(tool=ToolName)
 
-      // Figure out our binary cache path based on arch. Fallback to
-      // the temp directory.
+      LET args <= SELECT * FROM switch(
+        // Try to get info from the ToolInfo parameter.
+        a={SELECT get(field="Tool_" + ToolName + "_HASH", item=ToolInfo) AS ToolHash,
+                  get(field="Tool_" + ToolName + "_FILENAME", item=ToolInfo) AS ToolFilename,
+                  get(field="Tool_" + ToolName + "_URL", item=ToolInfo) AS ToolURL
+           FROM scope()  WHERE ToolFilename},
+
+        // Failing this - get it from the scope()
+        b={SELECT get(field="Tool_" + ToolName + "_HASH", item=scope()) AS ToolHash,
+                  get(field="Tool_" + ToolName + "_FILENAME", item=scope()) AS ToolFilename,
+                  get(field="Tool_" + ToolName + "_URL", item=scope()) AS ToolURL
+           FROM scope()  WHERE ToolFilename},
+
+        // Failing this - try to get it from the inventory service directly.
+        c={SELECT get(field="Tool_" + ToolName + "_HASH", item=inventory_item) AS ToolHash,
+                  get(field="Tool_" + ToolName + "_FILENAME", item=inventory_item) AS ToolFilename,
+                  get(field="Tool_" + ToolName + "_URL", item=inventory_item) AS ToolURL
+           FROM scope()  WHERE ToolFilename}
+      )
+
+      // Keep the binaries cached in the temp directory. We verify the
+      // hashes all the time so this should be safe.
       LET binpath <= SELECT Path FROM switch(
           a={SELECT dirname(path=tempfile()) AS Path FROM scope() WHERE Path},
-          b={SELECT dirname(path=expand(path=config.WritebackWindows)) AS Path
-             FROM info_cache WHERE OS="windows" AND Path},
-          c={SELECT dirname(path=expand(path=config.WritebackLinux)) AS Path
-             FROM info_cache WHERE OS="linux" AND Path},
-          d={SELECT dirname(path=expand(path=config.WritebackDarwin)) AS Path
-             FROM info_cache WHERE OS="darwin" AND Path},
           e={SELECT "/tmp" AS Path FROM info_cache WHERE OS = "linux"}
         )
 
       // Where we should save the file.
-      LET ToolPath <= path_join(components=[binpath[0].Path, ToolFilename])
+      LET ToolPath <= path_join(components=[binpath[0].Path, args[0].ToolFilename])
 
       // Download the file from the binary URL and store in the local
       // binary cache.
-      LET download = SELECT * FROM if(condition=log(message=ToolURL) AND binpath AND ToolHash AND ToolURL,
+      LET download = SELECT * FROM if(condition=log(message=args[0].ToolURL)
+               AND binpath AND args[0].ToolHash AND args[0].ToolURL,
         then={
           SELECT hash(path=Content) as Hash,
               ToolFilename AS Name,
               "Downloaded" AS DownloadStatus,
               copy(filename=Content, dest=ToolPath) AS FullPath
-          FROM http_client(url=ToolURL, tempfile_extension=".exe", remove_last=TRUE)
+          FROM http_client(url=args[0].ToolURL, tempfile_extension=".exe", remove_last=TRUE)
           WHERE log(message=format(format="hash of %v: %v, expected %v", args=[
-                    Content, Hash.SHA256, ToolHash]))
-                AND Hash.SHA256 = ToolHash
+                    Content, Hash.SHA256, args[0].ToolHash]))
+                AND Hash.SHA256 = args[0].ToolHash
         }, else={
            SELECT * FROM scope()
            WHERE NOT log(message="No valid setup - is tool " + ToolName +
@@ -74,9 +86,9 @@ sources:
       LET existing = SELECT FullPath, hash(path=FullPath) AS Hash, Name,
                     "Cached" AS DownloadStatus
         FROM stat(filename=ToolPath)
-        WHERE Hash.SHA256 = ToolHash AND log(
+        WHERE Hash.SHA256 = args[0].ToolHash AND log(
             message=format(format="hash of %v: %v, expected %v", args=[
-            FullPath, Hash.SHA256, ToolHash]))
+            FullPath, Hash.SHA256, args[0].ToolHash]))
 
       // Find the required_tool either in the local cache or
       // download it (and put it in the cache for next time). If we
@@ -87,7 +99,8 @@ sources:
         b={
            SELECT rand(range=atoi(string=SleepDuration)) AS timeout
            FROM scope()
-           WHERE log(message=format(format='Sleeping %v Seconds',
+           WHERE args AND args[0].ToolURL AND
+              log(message=format(format='Sleeping %v Seconds',
                  args=[timeout])) AND sleep(time=timeout) AND FALSE
         },
         c=download)

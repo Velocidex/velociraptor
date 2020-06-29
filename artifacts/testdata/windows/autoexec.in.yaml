@@ -6,5 +6,6 @@ Queries:
     FROM scope()
 
   - SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns(
-         AutorunArgs="-nobanner -accepteula -a b -c *")
+         AutorunArgs="-nobanner -accepteula -a b -c *",
+         ToolInfo=inventory_get(tool="Autorun_amd64"))
     WHERE Company =~ "Microsoft"

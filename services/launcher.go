@@ -94,39 +94,50 @@ func getDependentTools(
 	vql_collector_args *actions_proto.VQLCollectorArgs) error {
 
 	for _, tool := range vql_collector_args.Tools {
-		tool_info, err := Inventory.GetToolInfo(ctx, config_obj, tool)
+		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
 		if err != nil {
 			return err
 		}
-
-		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
-			Key:   fmt.Sprintf("Tool_%v_HASH", tool_info.Name),
-			Value: tool_info.Hash,
-		})
-
-		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
-			Key:   fmt.Sprintf("Tool_%v_FILENAME", tool_info.Name),
-			Value: tool_info.Filename,
-		})
-
-		if len(config_obj.Client.ServerUrls) == 0 {
-			return errors.New("No server URLs configured!")
-		}
-
-		// Where to download the binary from.
-		url := config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
-
-		// If we dont want to serve the binary locally, just
-		// tell the client where to get it from.
-		if !tool_info.ServeLocally && tool_info.Url != "" {
-			url = tool_info.Url
-		}
-		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
-			Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
-			Value: url,
-		})
 	}
 
+	return nil
+}
+
+func AddToolDependency(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	tool string, vql_collector_args *actions_proto.VQLCollectorArgs) error {
+	tool_info, err := Inventory.GetToolInfo(ctx, config_obj, tool)
+	if err != nil {
+		return err
+	}
+
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+		Key:   fmt.Sprintf("Tool_%v_HASH", tool_info.Name),
+		Value: tool_info.Hash,
+	})
+
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+		Key:   fmt.Sprintf("Tool_%v_FILENAME", tool_info.Name),
+		Value: tool_info.Filename,
+	})
+
+	if len(config_obj.Client.ServerUrls) == 0 {
+		return errors.New("No server URLs configured!")
+	}
+
+	// Where to download the binary from.
+	url := config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
+
+	// If we dont want to serve the binary locally, just
+	// tell the client where to get it from.
+	if !tool_info.ServeLocally && tool_info.Url != "" {
+		url = tool_info.Url
+	}
+	vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+		Key:   fmt.Sprintf("Tool_%v_URL", tool_info.Name),
+		Value: url,
+	})
 	return nil
 }
 

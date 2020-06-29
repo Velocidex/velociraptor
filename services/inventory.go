@@ -207,6 +207,10 @@ func StartInventoryService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	if config_obj.Datastore == nil {
+		return nil
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	notification, cancel := ListenForNotification(constants.ThirdPartyInventory)

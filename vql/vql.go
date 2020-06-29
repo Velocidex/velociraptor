@@ -69,6 +69,11 @@ func RegisterProtocol(plugin vfilter.Any) {
 	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
 }
 
+func GetFunction(name string) (vfilter.FunctionInterface, bool) {
+	res, pres := exportedFunctions[name]
+	return res, pres
+}
+
 var (
 	mu sync.Mutex
 
