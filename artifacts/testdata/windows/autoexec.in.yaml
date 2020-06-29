@@ -1,5 +1,9 @@
 Queries:
+  - SELECT inventory_add(tool="Autorun_amd64",
+           url="https://storage.googleapis.com/go.velocidex.com/autorunsc_x64.exe",
+           filename="autorunsc_x64.exe")
+    FROM scope()
+
   - SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns(
-         binaryURL="https://storage.googleapis.com/go.velocidex.com/",
          AutorunArgs="-nobanner -accepteula -a b -c *")
     WHERE Company =~ "Microsoft"

@@ -395,7 +395,6 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 		}
 	}
 
-	//	inventory.Inventory.Get("")
 	for k := range dependencies {
 		artifact, pres := self.Get(k)
 		if pres {
