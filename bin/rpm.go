@@ -202,7 +202,7 @@ func doClientRPM() {
 		Name:    "velociraptor-client",
 		Version: constants.VERSION,
 		Release: "A",
-		Arch:    "amd64",
+		Arch:    "x86_64",
 	})
 	kingpin.FatalIfError(err, "Unable to create RPM")
 
@@ -297,7 +297,7 @@ func doClientSysVRPM() {
 		Name:    "velociraptor",
 		Version: constants.VERSION,
 		Release: "A",
-		Arch:    "amd64",
+		Arch:    "x86_64",
 	})
 	kingpin.FatalIfError(err, "Unable to create RPM")
 	r.AddFile(
