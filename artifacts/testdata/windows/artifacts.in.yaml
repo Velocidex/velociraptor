@@ -1,2 +1,0 @@
-Queries:
-  - SELECT * FROM Artifact.Windows.System.SVCHost()
