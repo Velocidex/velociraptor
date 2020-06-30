@@ -20,6 +20,7 @@ import (
 func produceReport(
 	config_obj *config_proto.Config,
 	container *reporting.Container,
+	repository *artifacts.Repository,
 	writer io.Writer,
 	definitions []*artifacts_proto.Artifact,
 	scope *vfilter.Scope,
@@ -48,7 +49,8 @@ func produceReport(
 
 			template_engine, err := reporting.NewHTMLTemplateEngine(
 				config_obj, context.Background(), subscope,
-				vql_subsystem.NullACLManager{}, definition.Name)
+				vql_subsystem.NullACLManager{}, repository,
+				definition.Name)
 			if err != nil {
 				return err
 			}

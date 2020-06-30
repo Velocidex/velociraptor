@@ -42,9 +42,6 @@ parameters:
     type: json
     default: "{}"
 
-  - name: TargetBinary
-    description: Pack this binary instead.
-
   - name: StandardCollection
     type: hidden
     default: |
@@ -202,7 +199,7 @@ sources:
       )
 
       LET definitions <= SELECT * FROM chain(
-      a = { SELECT name, parameters, sources
+      a = { SELECT name, parameters, sources, reports
             FROM artifact_definitions(names=Artifacts)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
@@ -247,16 +244,11 @@ sources:
       )
 
       // Repack this binary.
-      LET target_binary <= SELECT * FROM if(condition=TargetBinary,
-        then={ SELECT TargetBinary AS FullPath,
-               basename(path=TargetBinary) AS Name FROM scope() },
-        else={
-          SELECT * FROM foreach(row=tool_name,
-            query={
-              SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-                  ToolName=Type, SleepDuration="0")
-            })
-      })
+      LET target_binary <= SELECT FullPath, Name
+         FROM Artifact.Generic.Utils.FetchBinary(
+            ToolName=tool_name[0].Type, SleepDuration="0",
+            ToolInfo=inventory_get(tool=tool_name[0].Type))
+         WHERE log(message="Target binary " + Name + FullPath)
 
       LET me <= SELECT Exe FROM info()
 
@@ -264,7 +256,8 @@ sources:
       // binary to repack it.
       LET repack_step = SELECT upload(
            file=Destination,
-           name='Collector_' + target_binary[0].Name) AS Binary,
+           accessor="file",
+           name=format(format='Collector_%v', args=[target_binary[0].Name, ])) AS Binary,
            timestamp(epoch=now()) As CreationTime
       FROM execve(argv=[
         me[0].Exe, "config", "repack",
@@ -273,7 +266,7 @@ sources:
         copy(dest=Config,
              accessor='data',
              filename=serialize(format='json', item=autoexec)),
-        Destination ])
+        Destination ], length=1000000)
       WHERE log(message=Stderr)
 
       // Only actually run stuff if everything looks right.

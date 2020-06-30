@@ -21,6 +21,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -395,12 +396,13 @@ func NewGuiTemplateEngine(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	notebook_cell_path_manager *NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, artifact_name)
+		config_obj, scope, acl_manager, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}

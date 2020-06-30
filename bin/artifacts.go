@@ -153,6 +153,10 @@ func doArtifactCollect() {
 	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
+	wg, _, cancel := startEssentialServices(config_obj)
+	defer wg.Wait()
+	defer cancel()
+
 	now := time.Now()
 	defer func() {
 		logging.GetLogger(config_obj, &logging.ToolComponent).

@@ -269,12 +269,9 @@ func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
 
 	artifact, pres := repository.Get(artifact_name)
 	if !pres {
