@@ -18,6 +18,8 @@ parameters:
       A space separated list of args to run with.
     default: |
       -nobanner -accepteula -t -a * -c *
+  - name: ToolInfo
+    description: Override Tool information.
 
 sources:
   - query: |
@@ -25,7 +27,8 @@ sources:
 
       // Get the path to the binary.
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-              ToolName= "Autorun_" + os_info[0].Architecture )
+              ToolName= "Autorun_" + os_info[0].Architecture,
+              ToolInfo=ToolInfo)
 
       // Call the binary and return all its output in a single row.
       LET output = SELECT * FROM execve(argv= bin[0].FullPath +
