@@ -7,7 +7,6 @@ parameters:
   - name: ToolName
     default: Autorun
   - name: SleepDuration
-  - name: binaryURL
 
 sources:
   - query: |

@@ -479,7 +479,8 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	flow_id, err := artifacts.ScheduleArtifactCollection(
+	flow_id, err := services.ScheduleArtifactCollection(
+		context.Background(),
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
 		request)
@@ -505,7 +506,8 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
-	flow_id, err := artifacts.ScheduleArtifactCollection(
+	flow_id, err := services.ScheduleArtifactCollection(
+		context.Background(),
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
 		&flows_proto.ArtifactCollectorArgs{

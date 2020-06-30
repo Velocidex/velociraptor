@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -62,7 +61,7 @@ func (self *HuntTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
 
-	artifacts.NextFlowIdForTests = "F.1234"
+	NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -114,7 +113,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
 
-	artifacts.NextFlowIdForTests = "F.1234"
+	NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -167,7 +166,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
 
-	artifacts.NextFlowIdForTests = "F.1234"
+	NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -232,7 +231,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
 
-	artifacts.NextFlowIdForTests = "F.1234"
+	NextFlowIdForTests = "F.1234"
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{

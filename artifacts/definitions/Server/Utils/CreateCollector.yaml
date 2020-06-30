@@ -4,6 +4,11 @@ description: |
 
 type: SERVER
 
+required_tools:
+  - VelociraptorWindows
+  - VelociraptorLinux
+  - VelociraptorDarwin
+
 parameters:
   - name: OS
     default: Windows
@@ -40,14 +45,6 @@ parameters:
   - name: TargetBinary
     description: Pack this binary instead.
 
-  - name: binaries
-    description: A list of third party tools to embed into the collector.
-    default: '["Autorun","WinPmem"]'
-    type: json
-
-  - name: BinaryURL
-    default: Override to provide the binary targeting the right OS.
-
   - name: StandardCollection
     type: hidden
     default: |
@@ -57,14 +54,14 @@ parameters:
 
       // Make the filename safe on windows.
       LET filename <= regex_replace(
-          source=format(format="Collection-%s-%s.zip",
+          source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
           re="[^0-9A-Za-z\\-. ]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename)
 
-      SELECT * FROM collect(artifacts=Artifacts,
-          args=Parameters, output=filename)
+      SELECT * FROM collect(artifacts=Artifacts, report=filename + ".html",
+          args=Parameters, output=filename + ".zip")
 
   - name: S3Collection
     type: hidden
@@ -76,7 +73,7 @@ parameters:
 
       // Make the filename safe on windows.
       LET filename <= regex_replace(
-          source=format(format="Collection-%s-%s.zip",
+          source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
           re="[^0-9A-Za-z\\-. ]", replace="_")
 
@@ -85,11 +82,17 @@ parameters:
 
       SELECT upload_s3(file=Container,
           bucket=TargetArgs.bucket,
-          name=filename,
+          name=filename + ".zip",
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
-          region=TargetArgs.region) AS Upload
-      FROM collect(artifacts=Artifacts,
+          region=TargetArgs.region) AS Upload,
+       upload_s3(file=Report,
+          bucket=TargetArgs.bucket,
+          name=filename + ".html",
+          credentialskey=TargetArgs.credentialsKey,
+          credentialssecret=TargetArgs.credentialsSecret,
+          region=TargetArgs.region) AS ReportUpload
+      FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
           args=Parameters, output=tempfile(extension=".zip"))
 
   - name: GCSCollection
@@ -103,7 +106,7 @@ parameters:
 
       // Make the filename safe on windows.
       LET filename <= regex_replace(
-          source=format(format="Collection-%s-%s.zip",
+          source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
           re="[^0-9A-Za-z\\-. ]", replace="_")
 
@@ -113,10 +116,16 @@ parameters:
       SELECT upload_gcs(file=Container,
           bucket=TargetArgs.bucket,
           project=GCSBlob.project_id,
-          name=filename,
+          name=filename + ".zip",
           credentials=TargetArgs.GCSKey
-      ) AS Upload
-      FROM collect(artifacts=Artifacts,
+      ) AS Upload,
+      upload_gcs(file=Report,
+          bucket=TargetArgs.bucket,
+          project=GCSBlob.project_id,
+          name=filename + ".html",
+          credentials=TargetArgs.GCSKey
+      ) AS ReportUpload
+      FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
           args=Parameters, output=tempfile(extension=".zip"))
 
   - name: PackageToolsArtifact
@@ -134,10 +143,12 @@ parameters:
                                 Upload.Path AS Filename,
                                 Upload.sha256 AS ExpectedHash,
                                 Upload.Size AS Size
-          FROM foreach(row=parse_json_array(data=Binaries),
+          FROM foreach(row=Binaries,
             query={
               SELECT _value AS ToolName, upload(file=FullPath, name=Name) AS Upload
-              FROM Artifact.Generic.Utils.FetchBinary(ToolName=_value, SleepDuration='0')
+              FROM Artifact.Generic.Utils.FetchBinary(
+                   ToolName=_value, SleepDuration='0',
+                   ToolInfo=inventory_get(tool=_value))
             })
 
           // Flush the entire query into the inventory file.
@@ -168,9 +179,19 @@ sources:
       LET Payload <= tempfile(extension=".zip")
       LET Artifacts <= parse_json_array(data=artifacts)
 
+      LET Binaries <= SELECT * FROM foreach(
+          row={
+             SELECT required_tools FROM artifact_definitions(names=Artifacts)
+          }, query={
+             SELECT * FROM foreach(row=required_tools,
+             query={
+              SELECT _value AS Binary FROM scope()
+             })
+          }) GROUP BY Binary
+
       // Create a zip file with the binaries in it.
       LET _ <= SELECT * FROM collect(artifacts="PackageToolsArtifact",
-         output=Payload, args=dict(Binaries=binaries),
+         output=Payload, args=dict(Binaries=Binaries.Binary),
          artifact_definitions=PackageToolsArtifact)
 
       LET CollectionArtifact <= SELECT Value FROM switch(
@@ -183,7 +204,7 @@ sources:
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, parameters, sources
             FROM artifact_definitions(names=Artifacts)
-            WHERE name =~ "^Custom\\." AND
+            WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
 
       b = { SELECT "Collector" AS name, (
@@ -197,7 +218,6 @@ sources:
             FROM scope() },
       c = { SELECT "Generic.Utils.FetchBinary" AS name,
             (
-               dict(name="binaryURL"),
                dict(name="SleepDuration"),
                dict(name="ToolName"),
             ) AS parameters,

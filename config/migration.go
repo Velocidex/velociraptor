@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"regexp"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -59,6 +61,11 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 			}
 			logging.Prelog("Guessing Frontend.hostname from Client.server_urls: %v",
 				config_obj.Frontend.Hostname)
+		}
+		if config_obj.ObfuscationNonce == "" {
+			sha_sum := sha256.New()
+			sha_sum.Write([]byte(config_obj.Frontend.PrivateKey))
+			config_obj.ObfuscationNonce = hex.EncodeToString(sha_sum.Sum(nil))
 		}
 	}
 }

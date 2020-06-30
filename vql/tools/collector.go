@@ -110,6 +110,7 @@ func (self CollectPlugin) Call(
 						scope.Log("Error creating report: %v", err)
 						return
 					}
+					defer fd.Close()
 
 					produceReport(config_obj, container, fd,
 						artifact_definitions,

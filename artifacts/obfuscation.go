@@ -67,6 +67,18 @@ func DeobfuscateString(config_obj *config_proto.Config, in string) string {
 	})
 }
 
+func ObfuscateString(config_obj *config_proto.Config, in string) string {
+	if config_obj.Frontend.DoNotCompressArtifacts {
+		return in
+	}
+
+	out, err := obfuscator.Encrypt(config_obj, in)
+	if err != nil {
+		return in
+	}
+	return out
+}
+
 func Deobfuscate(
 	config_obj *config_proto.Config,
 	response *actions_proto.VQLResponse) error {

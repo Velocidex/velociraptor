@@ -28,9 +28,6 @@ var (
 	gEventTable = &ClientEventTable{}
 )
 
-// TODO: refresh event tables from data store periodically to pick up
-// changes.
-
 type ClientEventTable struct {
 	// Version is protected by atomic mutations with a lock.
 	version uint64 `json:"version"`

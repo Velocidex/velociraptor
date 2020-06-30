@@ -6,18 +6,20 @@ description: |
   you will need to run Server.Utils.DownloadBinaries on the server
   first.
 
+required_tools:
+  - Autorun_x86
+  - Autorun_amd64
+
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
-  - name: binaryURL
-    description: |
-      Specify this as the base of the binary store (if empty we use
-      the server's public directory).
   - name: AutorunArgs
     description: |
       A space separated list of args to run with.
     default: |
       -nobanner -accepteula -t -a * -c *
+  - name: ToolInfo
+    description: Override Tool information.
 
 sources:
   - query: |
@@ -25,17 +27,21 @@ sources:
 
       // Get the path to the binary.
       LET bin <= SELECT * FROM Artifact.Generic.Utils.FetchBinary(
-              binaryURL=binaryURL, ToolName=("Autorun_" + os_info[0].Architecture))
+              ToolName= "Autorun_" + os_info[0].Architecture,
+              ToolInfo=ToolInfo)
 
       // Call the binary and return all its output in a single row.
-      LET output = SELECT * FROM execve(argv=(bin[0]).FullPath +
+      LET output = SELECT * FROM execve(argv= bin[0].FullPath +
            split(string=AutorunArgs, sep=" "),
            length=10000000)
 
       // Parse the CSV output and return it as rows. We can filter this further.
-      SELECT * FROM foreach(
+      SELECT * FROM if(condition=bin,
+      then={
+        SELECT * FROM foreach(
           row=output,
           query={
              SELECT * FROM parse_csv(filename=utf16(string=Stdout),
                                      accessor="data")
           })
+      })

@@ -62,6 +62,10 @@ message VQLCollectorArgs {
     uint64 timeout = 25 [(sem_type) = {
             description: "Maximum time for the query to run."
         }];
+
+    repeated string tools = 26 [(sem_type)={
+            description: "A list of tools we will need to run this VQL.",
+        }];
 }
 
 message VQLTypeMap {

@@ -101,8 +101,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	principal := vql_subsystem.GetPrincipal(scope)
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
 
-	flow_id, err := artifacts.ScheduleArtifactCollection(
-		config_obj, principal, request)
+	flow_id, err := services.ScheduleArtifactCollection(
+		ctx, config_obj, principal, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

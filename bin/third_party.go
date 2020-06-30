@@ -8,74 +8,57 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
+	"sync"
 
-	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
-	third_party                  = app.Command("third_party", "Manipulate third party binaries")
+	third_party         = app.Command("third_party", "Manipulate third party binaries")
+	third_party_show    = third_party.Command("show", "Upload a third party binary")
+	third_party_rm      = third_party.Command("rm", "Remove a third party binary")
+	third_party_rm_name = third_party_rm.Arg("name", "The name to remove").
+				Required().String()
 	third_party_upload           = third_party.Command("upload", "Upload a third party binary")
 	third_party_upload_tool_name = third_party_upload.Flag("name", "Name of the tool").
 					Required().String()
-	third_party_upload_binary_path = third_party_upload.Arg("path", "Path to file").
-					ExistingFile()
+	third_party_upload_serve_remote = third_party_upload.Flag(
+		"serve_remote", "If set serve the file from the original URL").Bool()
+	third_party_upload_binary_path = third_party_upload.
+					Arg("path", "Path to file or a URL").String()
 )
 
-func getInventory(config_obj *config_proto.Config) ([]*ordereddict.Dict, error) {
-	result := []*ordereddict.Dict{}
+func doThirdPartyShow() {
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().
+		LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-	inventory_path_manager := paths.NewInventoryPathManager()
-	rows, err := directory.ReadRowsCSV(context.Background(),
-		file_store_factory, inventory_path_manager.Path(), 0, 0)
-	if err != nil {
-		return nil, err
-	}
+	wg := &sync.WaitGroup{}
+	err = services.StartInventoryService(context.Background(), wg, config_obj)
+	kingpin.FatalIfError(err, "Load Config ")
 
-	for row := range rows {
-		result = append(result, row)
-	}
-
-	return result, nil
+	serialized, err := yaml.Marshal(services.Inventory.Get())
+	kingpin.FatalIfError(err, "Serialized ")
+	fmt.Println(string(serialized))
 }
 
-func setInventory(config_obj *config_proto.Config, inventory []*ordereddict.Dict) error {
-	file_store_factory := file_store.GetFileStore(config_obj)
-	inventory_path_manager := paths.NewInventoryPathManager()
+func doThirdPartyRm() {
+	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().
+		LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
-	writer, err := file_store_factory.WriteFile(inventory_path_manager.Path())
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
+	wg := &sync.WaitGroup{}
+	err = services.StartInventoryService(context.Background(), wg, config_obj)
+	kingpin.FatalIfError(err, "Load Config ")
 
-	writer.Truncate()
-
-	if len(inventory) == 0 {
-		return nil
-	}
-
-	csv_writer := csv.NewWriter(writer)
-	csv_writer.Write(inventory[0].Keys())
-	defer csv_writer.Flush()
-
-	for _, row := range inventory {
-		fmt.Printf("%v\n", row)
-		csv_row := []string{}
-		for _, key := range row.Keys() {
-			v, _ := row.Get(key)
-			csv_row = append(csv_row, csv.AnyToString(v))
-		}
-		csv_writer.Write(csv_row)
-	}
-
-	return nil
+	err = services.Inventory.RemoveTool(config_obj, *third_party_rm_name)
+	kingpin.FatalIfError(err, "Removing tool ")
 }
 
 func doThirdPartyUpload() {
@@ -83,60 +66,49 @@ func doThirdPartyUpload() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	filename := path.Base(*third_party_upload_binary_path)
+	wg := &sync.WaitGroup{}
+	err = services.StartInventoryService(context.Background(), wg, config_obj)
 
-	path_manager := paths.NewThirdPartyPathManager(filename)
-	file_store_factory := file_store.GetFileStore(config_obj)
-	writer, err := file_store_factory.WriteFile(path_manager.Path())
-	kingpin.FatalIfError(err, "Unable to write to filestore ")
-	defer writer.Close()
-
-	writer.Truncate()
-
-	sha_sum := sha256.New()
-
-	reader, err := os.Open(*third_party_upload_binary_path)
-	kingpin.FatalIfError(err, "Unable to read file ")
-	defer reader.Close()
-
-	buf := make([]byte, 1024*1024)
-	for {
-		n, err := reader.Read(buf)
-		if n == 0 {
-			break
-		}
-		if err != nil && err != io.EOF {
-			kingpin.FatalIfError(err, "Unable to write to filestore ")
-		}
-
-		data := buf[:n]
-
-		writer.Write(data)
-		sha_sum.Write(data)
+	tool := &api_proto.Tool{
+		Name:         *third_party_upload_tool_name,
+		Filename:     path.Base(*third_party_upload_binary_path),
+		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
-	// If we can not read the inventory we make a new one.
-	inventory, _ := getInventory(config_obj)
+	// If the user wants to upload a URL we just write it in the
+	// filestore to be downloaded on demand.
+	if strings.HasPrefix(*third_party_upload_binary_path, "https://") {
+		tool.Url = *third_party_upload_binary_path
 
-	new_inventory := []*ordereddict.Dict{}
+	} else {
+		// Figure out where we need to store the tool.
+		path_manager := paths.NewInventoryPathManager(config_obj, tool)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		kingpin.FatalIfError(err, "Unable to write to filestore ")
+		defer writer.Close()
 
-	for _, row := range inventory {
-		tool, _ := row.GetString("Tool")
-		if tool == *third_party_upload_tool_name {
-			continue
-		}
+		writer.Truncate()
 
-		new_inventory = append(new_inventory, row)
+		sha_sum := sha256.New()
+
+		reader, err := os.Open(*third_party_upload_binary_path)
+		kingpin.FatalIfError(err, "Unable to read file ")
+		defer reader.Close()
+
+		_, err = io.Copy(writer, io.TeeReader(reader, sha_sum))
+		kingpin.FatalIfError(err, "Uploading file ")
+
+		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
-	new_inventory = append(new_inventory, ordereddict.NewDict().
-		Set("Tool", *third_party_upload_tool_name).
-		Set("Type", ".").
-		Set("Filename", filename).
-		Set("ExpectedHash", hex.EncodeToString(sha_sum.Sum(nil))))
+	// Now add the tool to the inventory with the correct hash.
+	err = services.Inventory.AddTool(config_obj, tool)
+	kingpin.FatalIfError(err, "Adding tool ")
 
-	err = setInventory(config_obj, new_inventory)
-	kingpin.FatalIfError(err, "Unable to write to inventory ")
+	serialized, err := yaml.Marshal(tool)
+	kingpin.FatalIfError(err, "Serialized ")
+	fmt.Println(string(serialized))
 }
 
 func init() {
@@ -144,6 +116,12 @@ func init() {
 		switch command {
 		case third_party_upload.FullCommand():
 			doThirdPartyUpload()
+
+		case third_party_show.FullCommand():
+			doThirdPartyShow()
+
+		case third_party_rm.FullCommand():
+			doThirdPartyRm()
 
 		default:
 			return false

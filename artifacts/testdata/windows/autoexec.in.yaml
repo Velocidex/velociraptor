@@ -1,5 +1,11 @@
 Queries:
+  - SELECT inventory_add(tool='Autorun_amd64',
+           url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe',
+           hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153',
+           filename='autorunsc_x64.exe')
+    FROM scope()
+
   - SELECT * FROM  Artifact.Windows.Sysinternals.Autoruns(
-         binaryURL="https://storage.googleapis.com/go.velocidex.com/",
-         AutorunArgs="-nobanner -accepteula -a b -c *")
-    WHERE Company =~ "Microsoft"
+         AutorunArgs='-nobanner -accepteula -a b -c *',
+         ToolInfo=inventory_get(tool='Autorun_amd64'))
+    WHERE Company =~ 'Microsoft'

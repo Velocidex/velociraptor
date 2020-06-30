@@ -56,6 +56,11 @@ func StartFrontendServices(
 		return err
 	}
 
+	err = StartInventoryService(ctx, wg, config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Updates DynDNS records if needed. Frontends need to maintain their IP addresses.
 	err = startDynDNSService(ctx, wg, config_obj)
 	if err != nil {

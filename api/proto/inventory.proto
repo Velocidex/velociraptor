@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+
+message tool {
+    string name = 1;
+
+    string url = 2;
+
+    bool serve_locally = 3;
+
+    string filestore_path = 4;
+
+    // The name of the client on the endpoint.
+    string filename = 5;
+
+    // Hex encoded sha256 hash.
+    string hash = 6;
+}
+
+message third_party {
+    repeated tool tools = 1;
+    uint64 version = 2;
+}

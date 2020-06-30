@@ -1,43 +1,30 @@
 package paths
 
 import (
-	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"path"
 
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-type InventoryPathManager struct {
-	path string
+func ObfuscateName(
+	config_obj *config_proto.Config, name string) string {
+	sha_sum := sha256.New()
+	sha_sum.Write([]byte(config_obj.ObfuscationNonce + name))
+
+	return hex.EncodeToString(sha_sum.Sum(nil))
+
 }
 
-func (self InventoryPathManager) Path() string {
-	return self.path
-}
+func NewInventoryPathManager(
+	config_obj *config_proto.Config, tool *api_proto.Tool) *ClientPathManager {
+	if tool.FilestorePath == "" {
+		tool.FilestorePath = ObfuscateName(config_obj, tool.Name)
+	}
 
-func (self InventoryPathManager) GetPathForWriting() (string, error) {
-	return self.path, nil
-}
-
-func (self InventoryPathManager) GetQueueName() string {
-	return self.path
-}
-
-func (self InventoryPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
-	output := make(chan *api.ResultSetFileProperties)
-	go func() {
-		defer close(output)
-
-		output <- &api.ResultSetFileProperties{
-			Path:    self.path,
-			EndTime: int64(1) << 62,
-		}
-	}()
-	return output
-}
-
-func NewInventoryPathManager() *ClientPathManager {
 	return &ClientPathManager{
-		path: path.Join("/public/inventory.csv"),
+		path: path.Join("/public/", tool.FilestorePath),
 	}
 }

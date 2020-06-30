@@ -11,16 +11,13 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
 
-    queries:
-      - |
+    query: |
         // Cache the pslist output in memory.
-        LET processes <= SELECT Pid, Name FROM pslist()
+        LET processes <= SELECT Pid, Ppid, Name, Exe FROM pslist()
 
-      - |
         // Get the pids of all procecesses named services.exe
         LET services <= SELECT Pid FROM processes where Name =~ "services.exe"
 
-      - |
         // The interesting processes are those which are not spawned by services.exe
         LET suspicious = SELECT Pid As SVCHostPid,
             Ppid As SVCHostPpid,
@@ -29,7 +26,6 @@ sources:
         FROM processes
         WHERE Name =~ "svchost" AND NOT Ppid in services.Pid
 
-      - |
         // Now for each such process we display its actual parent.
         SELECT * from foreach(
            row=suspicious,

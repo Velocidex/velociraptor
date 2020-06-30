@@ -5,7 +5,7 @@ SELECT * FROM collect(artifacts='Windows.Search.FileFinder', report="C:/1.html",
  }
 ]SELECT Size > 10, FullPath FROM glob(globs="C:/1.{zip,html}")[
  {
-  "Size \u003e 10": false,
+  "Size \u003e 10": true,
   "FullPath": "C:\\1.html"
  },
  {

@@ -14,40 +14,28 @@ description: |
 
 type: SERVER
 
+required_permissions:
+  - SERVER_ADMIN
+
 parameters:
   - name: binaryList
     type: csv
     default: |
-      Tool,Enabled,Type,URL,Filename
-      Autorun_amd64,Y,amd64,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
-      Autorun_x86,Y,x86,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
-      WinPmem,Y,.,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
-      Sysmon,N,amd64,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
-      Sysmon,x86,N,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
-      Bulk_Extractor,N,amd64,https://github.com/4n6ist/bulk_extractor-rec/releases/download/rec03/bulk_extractor-rec03_x64.zip,bulk_extractor.zip
-      VelociraptorWindows,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-windows-amd64.exe,velociraptor-v0.4.5-windows-amd64.exe
-      VelociraptorLinux,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-linux-amd64,velociraptor-v0.4.5-linux-amd64
-      VelociraptorDarwin,Y,.,https://github.com/Velocidex/velociraptor/releases/download/v0.4.5/velociraptor-v0.4.5-darwin-amd64,velociraptor-v0.4.5-darwin-amd64
+      Tool,ServeLocally,URL,Filename
+      Autorun_amd64,Y,https://live.sysinternals.com/tools/autorunsc64.exe,autorunsc_x64.exe
+      Autorun_x86,Y,https://live.sysinternals.com/tools/autorunsc.exe,autorunsc_x86.exe
+      WinPmem,Y,https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe,winpmem_v3.3.rc3.exe
+      Sysmon_amd64,N,https://live.sysinternals.com/tools/sysmon64.exe,sysmon_x64.exe
+      Sysmon_x86,N,https://live.sysinternals.com/tools/sysmon.exe,sysmon_x86.exe
+      Bulk_Extractor,N,https://github.com/4n6ist/bulk_extractor-rec/releases/download/rec03/bulk_extractor-rec03_x64.zip,bulk_extractor.zip
+      VelociraptorWindows,Y,https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-windows-amd64.exe,velociraptor-v0.4.6-windows-amd64.exe
+      VelociraptorLinux,Y,https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-linux-amd64,velociraptor-v0.4.6-linux-amd64
+      VelociraptorDarwin,Y,https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-darwin-amd64,velociraptor-v0.4.6-darwin-amd64
 
 sources:
   - query: |
-      LET spec = SELECT * FROM parse_csv(filename=binaryList, accessor="data")
-          WHERE Enabled = "Y"
+      LET _ <= SELECT *, inventory_add(tool=Tool, serve_locally=ServeLocally="Y",
+          url=URL, filename=Filename) AS Added
+      FROM parse_csv(filename=binaryList, accessor="data")
 
-      LET download = SELECT Tool, Type, Filename,
-            hash(path=Content) as Hash,
-            upload(file=Content, name="fs:///public/" + Filename)
-        FROM http_client(url=URL, tempfile_extension=".exe")
-        WHERE Response = 200  // Only accept successful opertations
-
-      // Write the inventory file.
-      SELECT * FROM write_csv(
-          filename="/public/inventory.csv",
-          accessor="fs",
-          query={
-            SELECT Tool, Type,
-                   Filename, Hash.SHA256 AS ExpectedHash
-            FROM foreach(
-                   row=spec,
-                   query=download)
-          })
+      SELECT * FROM inventory()

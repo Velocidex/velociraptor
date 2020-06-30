@@ -48,6 +48,7 @@ func (self *LogFunction) Call(ctx context.Context,
 
 	scope.Log("%v", arg.Message)
 	scope.SetContext("last_log", arg.Message)
+
 	return true
 }
 
