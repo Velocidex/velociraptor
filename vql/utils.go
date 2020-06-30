@@ -123,3 +123,15 @@ func CheckForPanic(scope *vfilter.Scope, msg string, vals ...interface{}) {
 		scope.Log("PANIC %v\n%v", r, string(debug.Stack()))
 	}
 }
+
+func IsNull(a vfilter.Any) bool {
+	if a == nil {
+		return true
+	}
+
+	switch a.(type) {
+	case vfilter.Null, *vfilter.Null:
+		return true
+	}
+	return false
+}

@@ -141,8 +141,11 @@ func (self *ArtifactRepositoryPlugin) Call(
 		for _, tool := range artifact_definition.RequiredTools {
 			inventory_get, ok := vql_subsystem.GetFunction("inventory_get")
 			if ok {
-				child_scope.AppendVars(inventory_get.Call(
-					ctx, child_scope, ordereddict.NewDict().Set("tool", tool)))
+				tool_info := inventory_get.Call(ctx, child_scope,
+					ordereddict.NewDict().Set("tool", tool))
+				if !vql_subsystem.IsNull(tool_info) {
+					child_scope.AppendVars(tool_info)
+				}
 			}
 		}
 
