@@ -7,6 +7,7 @@ import (
 	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -16,18 +17,19 @@ import (
 func getReport(ctx context.Context,
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	in *api_proto.GetReportRequest) (
 	*api_proto.GetReportResponse, error) {
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
 		config_obj, ctx, nil, /* default scope */
-		acl_manager, nil, in.Artifact)
+		acl_manager, repository, nil, in.Artifact)
 	if err != nil {
 		if strings.HasPrefix(in.Artifact,
 			constants.ARTIFACT_CUSTOM_NAME_PREFIX) {
 			template_engine, err = reporting.NewGuiTemplateEngine(
 				config_obj, ctx, nil, /* default scope */
-				acl_manager, nil,
+				acl_manager, repository, nil,
 				strings.TrimPrefix(in.Artifact,
 					constants.ARTIFACT_CUSTOM_NAME_PREFIX))
 		}

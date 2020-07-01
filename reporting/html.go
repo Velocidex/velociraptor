@@ -18,6 +18,7 @@ import (
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -29,6 +30,28 @@ type HTMLTemplateEngine struct {
 	ctx        context.Context
 	log_writer *logWriter
 	Data       map[string]*actions_proto.VQLResponse
+}
+
+func (self *HTMLTemplateEngine) Expand(values ...interface{}) interface{} {
+	_, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	results := []*ordereddict.Dict{}
+
+	switch t := argv[0].(type) {
+	default:
+		return t
+
+	case chan *ordereddict.Dict:
+		for item := range t {
+			results = append(results, item)
+		}
+	}
+
+	return results
 }
 
 func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
@@ -173,11 +196,13 @@ func NewHTMLTemplateEngine(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	artifact_name string) (
 	*HTMLTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, artifact_name)
+		config_obj, scope, acl_manager, repository,
+		artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -197,6 +222,7 @@ func NewHTMLTemplateEngine(
 			"LineChart": template_engine.Noop,
 			"Timeline":  template_engine.Noop,
 			"Get":       template_engine.getFunction,
+			"Expand":    template_engine.Expand,
 			"str":       strval,
 		})
 	return template_engine, nil

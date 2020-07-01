@@ -64,15 +64,17 @@ sources:
 
       // Download the file from the binary URL and store in the local
       // binary cache.
-      LET download = SELECT * FROM if(condition=log(message=args[0].ToolURL)
-               AND binpath AND args[0].ToolHash AND args[0].ToolURL,
+      LET download = SELECT * FROM if(condition=log(
+             message="URL for " + args[0].ToolFilename +
+                " is at " + args[0].ToolURL + " and has hash of " + args[0].ToolHash)
+             AND binpath AND args[0].ToolHash AND args[0].ToolURL,
         then={
           SELECT hash(path=Content) as Hash,
-              ToolFilename AS Name,
+              args[0].ToolFilename AS Name,
               "Downloaded" AS DownloadStatus,
               copy(filename=Content, dest=ToolPath) AS FullPath
           FROM http_client(url=args[0].ToolURL, tempfile_extension=".exe", remove_last=TRUE)
-          WHERE log(message=format(format="hash of %v: %v, expected %v", args=[
+          WHERE log(message=format(format="downloaded hash of %v: %v, expected %v", args=[
                     Content, Hash.SHA256, args[0].ToolHash]))
                 AND Hash.SHA256 = args[0].ToolHash
         }, else={

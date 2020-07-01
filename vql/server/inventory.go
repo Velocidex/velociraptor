@@ -106,10 +106,11 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return ordereddict.NewDict().
+	result := ordereddict.NewDict().
 		Set("Tool_"+arg.Tool+"_HASH", tool.Hash).
 		Set("Tool_"+arg.Tool+"_FILENAME", tool.Filename).
 		Set("Tool_"+arg.Tool+"_URL", tool.Url)
+	return result
 }
 
 func (self *InventoryGetFunction) Info(

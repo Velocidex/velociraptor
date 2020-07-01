@@ -64,6 +64,42 @@ func (self *BaseTemplateEngine) GetScope(item string) interface{} {
 	return "<?>"
 }
 
+func (self *BaseTemplateEngine) Expand(values ...interface{}) interface{} {
+	_, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	results := []interface{}{}
+
+	switch t := argv[0].(type) {
+	default:
+		return t
+
+	case []*NotebookCellQuery:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return results
+		}
+
+		for _, item := range t {
+			results = append(results, item)
+		}
+
+	case []*ordereddict.Dict:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return results
+		}
+		for _, item := range t {
+			results = append(results, item)
+		}
+	}
+
+	return results
+}
+
 // GenerateMonitoringDailyReport Generates a report for daily
 // monitoring reports.
 
@@ -269,12 +305,9 @@ func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
 
 	artifact, pres := repository.Get(artifact_name)
 	if !pres {

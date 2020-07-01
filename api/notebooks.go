@@ -448,8 +448,13 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
+	global_repo, err := artifacts.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config, query_ctx, nil, acl_manager,
+		self.config, query_ctx, nil, acl_manager, global_repo,
 		notebook_path_manager.Cell(in.CellId),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
@@ -465,11 +470,6 @@ func (self *ApiServer) UpdateNotebookCell(
 	// VQL query to run which we pass to the template engine
 	// asynchronously.
 	if in.Type == "Artifact" {
-		global_repo, err := artifacts.GetGlobalRepository(self.config)
-		if err != nil {
-			return nil, err
-		}
-
 		// New artifacts are added to a temporary repository
 		// so they do not affect the global one.
 		repository := global_repo.Copy()

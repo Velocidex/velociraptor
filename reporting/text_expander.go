@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/olekukonko/tablewriter"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -116,9 +117,10 @@ func NewTextTemplateEngine(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	artifact_name string) (*TextTemplateEngine, error) {
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, artifact_name)
+		config_obj, scope, acl_manager, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +133,7 @@ func NewTextTemplateEngine(
 			"Table":     template_engine.Table,
 			"LineChart": template_engine.LineChart,
 			"Get":       template_engine.getFunction,
+			"Expand":    template_engine.Expand,
 			"str":       strval,
 		})
 

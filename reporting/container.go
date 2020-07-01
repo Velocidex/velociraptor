@@ -256,8 +256,8 @@ func (self *Container) Upload(
 		return nil, err
 	}
 
-	scope.Log("Collecting file %s (%v bytes)",
-		store_as_name, expected_size)
+	scope.Log("Collecting file %s into %s (%v bytes)",
+		filename, store_as_name, expected_size)
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()

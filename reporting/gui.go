@@ -21,7 +21,9 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -72,6 +74,49 @@ func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 		result = append(result, value)
 	}
 	return dict, result
+}
+
+func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
+	_, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	results := []interface{}{}
+
+	switch t := argv[0].(type) {
+	default:
+		return t
+
+	case []*NotebookCellQuery:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return results
+		}
+
+		for _, item := range t {
+			//path_manager := NewNotebookCellPathManager(item)
+			result_chan, err := file_store.GetTimeRange(
+				context.Background(), self.config_obj, item, 0, 0)
+			if err == nil {
+				for row := range result_chan {
+					results = append(results, row)
+				}
+			}
+		}
+
+	case []*ordereddict.Dict:
+		if len(t) == 0 { // No rows returned.
+			self.Scope.Log("Query produced no rows.")
+			return results
+		}
+		for _, item := range t {
+			results = append(results, item)
+		}
+	}
+
+	return results
 }
 
 func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
@@ -395,12 +440,13 @@ func NewGuiTemplateEngine(
 	ctx context.Context,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
+	repository *artifacts.Repository,
 	notebook_cell_path_manager *NotebookCellPathManager,
 	artifact_name string) (
 	*GuiTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, artifact_name)
+		config_obj, scope, acl_manager, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -422,6 +468,7 @@ func NewGuiTemplateEngine(
 			"LineChart": template_engine.LineChart,
 			"Timeline":  template_engine.Timeline,
 			"Get":       template_engine.getFunction,
+			"Expand":    template_engine.Expand,
 			"str":       strval,
 		})
 	return template_engine, nil

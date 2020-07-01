@@ -28,7 +28,7 @@ func doHTMLReport() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	_, err = getRepository(config_obj)
+	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Unable to load artifacts")
 
 	result, err := flows.GetFlowDetails(config_obj, *report_command_flow_client,
@@ -45,7 +45,7 @@ func doHTMLReport() {
 	for _, artifact_name := range result.Context.Request.Artifacts {
 		template_engine, err := reporting.NewHTMLTemplateEngine(
 			config_obj, context.Background(), nil, /* default scope */
-			vql_subsystem.NullACLManager{}, artifact_name)
+			vql_subsystem.NullACLManager{}, repository, artifact_name)
 		kingpin.FatalIfError(err, "Generating report")
 
 		template_engine.SetEnv("ClientId", *report_command_flow_client)

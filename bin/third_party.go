@@ -8,7 +8,7 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
+	"regexp"
 	"sync"
 
 	"github.com/Velocidex/yaml/v2"
@@ -30,8 +30,15 @@ var (
 					Required().String()
 	third_party_upload_serve_remote = third_party_upload.Flag(
 		"serve_remote", "If set serve the file from the original URL").Bool()
+
+	third_party_upload_download = third_party_upload.Flag(
+		"download", "Force immediate download if set, "+
+			"default - lazy download on demand").Bool()
+
 	third_party_upload_binary_path = third_party_upload.
 					Arg("path", "Path to file or a URL").String()
+
+	url_regexp = regexp.MustCompile("^https?://")
 )
 
 func doThirdPartyShow() {
@@ -66,8 +73,9 @@ func doThirdPartyUpload() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg := &sync.WaitGroup{}
-	err = services.StartInventoryService(context.Background(), wg, config_obj)
+	wg, ctx, cancel := startEssentialServices(config_obj)
+	defer wg.Wait()
+	defer cancel()
 
 	tool := &api_proto.Tool{
 		Name:         *third_party_upload_tool_name,
@@ -77,7 +85,7 @@ func doThirdPartyUpload() {
 
 	// If the user wants to upload a URL we just write it in the
 	// filestore to be downloaded on demand.
-	if strings.HasPrefix(*third_party_upload_binary_path, "https://") {
+	if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 
 	} else {
@@ -105,6 +113,11 @@ func doThirdPartyUpload() {
 	// Now add the tool to the inventory with the correct hash.
 	err = services.Inventory.AddTool(config_obj, tool)
 	kingpin.FatalIfError(err, "Adding tool ")
+
+	if *third_party_upload_download {
+		tool, err = services.Inventory.GetToolInfo(ctx, config_obj, tool.Name)
+		kingpin.FatalIfError(err, "Fetching file ")
+	}
 
 	serialized, err := yaml.Marshal(tool)
 	kingpin.FatalIfError(err, "Serialized ")

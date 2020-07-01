@@ -112,7 +112,8 @@ func (self CollectPlugin) Call(
 					}
 					defer fd.Close()
 
-					produceReport(config_obj, container, fd,
+					produceReport(config_obj, container,
+						repository, fd,
 						artifact_definitions,
 						scope, arg)
 				}

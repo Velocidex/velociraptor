@@ -222,6 +222,20 @@ func doRemoteQuery(
 	}
 }
 
+func startEssentialServices(config_obj *config_proto.Config) (
+	wg *sync.WaitGroup, ctx context.Context, cancel func()) {
+
+	wg = &sync.WaitGroup{}
+	ctx, cancel = context.WithCancel(context.Background())
+
+	if config_obj.Datastore != nil {
+		_ = services.StartJournalService(config_obj)
+		_ = services.StartNotificationService(ctx, wg, config_obj)
+		_ = services.StartInventoryService(ctx, wg, config_obj)
+	}
+	return wg, ctx, cancel
+}
+
 func doQuery() {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
@@ -238,17 +252,9 @@ func doQuery() {
 		return
 	}
 
-	wg := &sync.WaitGroup{}
+	wg, ctx, cancel := startEssentialServices(config_obj)
 	defer wg.Wait()
-
-	// Try to start essential services in case they are needed. It
-	// is not an error if we can not.
-	_ = services.StartJournalService(config_obj)
-	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
-	_ = services.StartNotificationService(ctx, wg, config_obj)
-	_ = services.StartInventoryService(ctx, wg, config_obj)
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")

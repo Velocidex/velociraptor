@@ -150,7 +150,12 @@ func (self *ApiServer) GetReport(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	return getReport(ctx, self.config, acl_manager, in)
+	global_repo, err := artifacts.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+
+	return getReport(ctx, self.config, acl_manager, global_repo, in)
 }
 
 func (self *ApiServer) CollectArtifact(
