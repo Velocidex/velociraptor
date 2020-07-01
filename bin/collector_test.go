@@ -199,10 +199,10 @@ reports:
 	// printing some of their contents.
 	output_executable := filepath.Join(self.tmpdir, "collector"+self.extension)
 	for _, f := range r.File {
-		fmt.Printf("Contents of %s:\n", f.Name)
-		fmt.Println()
+		fmt.Printf("Contents of collector:  %s (%v bytes)\n",
+			f.Name, f.UncompressedSize)
 		if strings.HasPrefix(f.Name, "Collector") {
-			fmt.Printf("Copying %v\n", f.Name)
+			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()
 			assert.NoError(self.T(), err)

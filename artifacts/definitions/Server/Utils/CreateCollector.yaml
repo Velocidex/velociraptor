@@ -250,7 +250,7 @@ sources:
          FROM Artifact.Generic.Utils.FetchBinary(
             ToolName=tool_name[0].Type, SleepDuration="0",
             ToolInfo=inventory_get(tool=tool_name[0].Type))
-         WHERE log(message="Target binary " + Name + FullPath)
+         WHERE log(message="Target binary " + Name + " is at " + FullPath)
 
       LET me <= SELECT Exe FROM info()
 
