@@ -693,6 +693,11 @@ func (self *ApiServer) GetArtifacts(
 		return result, nil
 	}
 
+	if in.ReportType != "" {
+		return getReportArtifacts(
+			self.config, in.ReportType, in.NumberOfResults)
+	}
+
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
 		self.config, terms, in.Type, in.NumberOfResults)

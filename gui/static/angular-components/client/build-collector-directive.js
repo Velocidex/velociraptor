@@ -24,15 +24,20 @@ const BuildCollectorController = function(
     var self = this;
     self.inventory = [];
     this.inventoryModel = [];
+    this.template_artifacts = ["Reporting.Default"];
+    this.template = "Reporting.Default";
 
-    this.grrApiService_.get("v1/GetTable", {type: "inventory"}).then(function(response) {
-        self.inventory = [];
-        for(var i = 0; i<response.data.rows.length; i++) {
-            var row = response.data.rows[i]["cell"];
-            self.inventory.push({id: i, label: row[0]});
-        }
-    });
+    this.grrApiService_.get("v1/GetArtifacts", {report_type: "html"}).
+        then(function(response) {
+            self.template_artifacts = [];
+
+            for(var i = 0; i<response.data.items.length; i++) {
+                var item = response.data.items[i];
+                self.template_artifacts.push(item["name"]);
+            };
+        });
 };
+
 
 BuildCollectorController.prototype.sendRequest = function() {
     var self = this;
@@ -45,6 +50,7 @@ BuildCollectorController.prototype.sendRequest = function() {
                 {key: "OS", value: this.os},
                 {key: "artifacts", value: JSON.stringify(this.names)},
                 {key: "parameters", value: JSON.stringify(this.params)},
+                {key: "template", value: this.template},
                 {key: "target", value: this.target},
                 {key: "target_args", value: JSON.stringify(this.target_args)},
             ],

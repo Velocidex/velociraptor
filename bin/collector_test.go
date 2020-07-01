@@ -123,6 +123,11 @@ sources:
      FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
 
 reports:
+ - type: HTML
+   template: |
+     <html><body><h1>This is the html report template</h1> {{ .main \
+            }} </body></html>
+
  - type: CLIENT
    template: |
      # This is the report.
@@ -182,6 +187,7 @@ reports:
 		"--args", "OS=" + OS_TYPE,
 		"--args", "artifacts=[\"Custom.TestArtifact\"]",
 		"--args", "target=ZIP",
+		"--args", "template=Custom.TestArtifact",
 		"--output", output_zip,
 	}
 
@@ -261,12 +267,20 @@ reports:
 
 	data, err := ioutil.ReadAll(html_fd)
 	assert.NoError(self.T(), err)
+
 	assert.Contains(self.T(), string(data), "Foobar")
 	assert.Contains(self.T(), string(data), "This is the report")
 
 	// Make sure we found the artifact in the report
 	assert.Contains(self.T(), string(data), "Windows.System.TaskScheduler")
 	assert.Contains(self.T(), string(data), "Found a Scheduled Task")
+
+	// Check that we used the default template from the
+	// Reporting.Default artifact:
+	assert.Contains(self.T(), string(data), "<html>")
+	assert.Contains(self.T(), string(data), "This is the html report template")
+
+	// fmt.Println(string(data))
 }
 
 func TestCollector(t *testing.T) {

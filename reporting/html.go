@@ -96,8 +96,24 @@ func (self *HTMLTemplateEngine) Noop(values ...interface{}) string {
 	return ""
 }
 
+func (self *HTMLTemplateEngine) RenderRaw(
+	template_string string, target interface{}) (string, error) {
+
+	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
+	if err != nil {
+		return "", err
+	}
+
+	buffer := &bytes.Buffer{}
+	err = tmpl.Execute(buffer, target)
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
+}
+
 func (self *HTMLTemplateEngine) Execute(template_string string) (string, error) {
-	tmpl, err := self.tmpl.Parse(template_string)
+	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
 	if err != nil {
 		return "", err
 	}

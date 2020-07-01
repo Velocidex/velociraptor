@@ -77,6 +77,12 @@ func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (utils.Time, error
 	case string:
 		return parse_time_from_string(scope, t)
 
+	case utils.Time:
+		return t, nil
+
+	case *utils.Time:
+		return *t, nil
+
 	case *utils.TimeVal:
 		return t.Time(), nil
 

@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -336,4 +337,15 @@ func newBaseTemplateEngine(
 		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
 		config_obj: config_obj,
 	}, nil
+}
+
+// Go templates require template escape sequences to be all on one
+// line. This makes it very hard to work with due to wrapping and does
+// not look good. We therefore allow people to continue lines by
+// having a backslash on the end of the line, and just remove it here.
+
+var query_regexp = regexp.MustCompile("\\\\[\n\r]")
+
+func SanitizeGoTemplates(template string) string {
+	return query_regexp.ReplaceAllString(template, "")
 }

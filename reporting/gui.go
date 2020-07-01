@@ -259,7 +259,7 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 }
 
 func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
-	tmpl, err := self.tmpl.Parse(template_string)
+	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
 	if err != nil {
 		return "", err
 	}
