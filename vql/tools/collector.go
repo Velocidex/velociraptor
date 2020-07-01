@@ -27,6 +27,7 @@ type CollectPluginArgs struct {
 	Password            string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 	Format              string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
 	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
+	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
 }
 
 type CollectPlugin struct{}
@@ -68,6 +69,10 @@ func (self CollectPlugin) Call(
 		default:
 			scope.Log("collect: format %v not supported", arg.Format)
 			return
+		}
+
+		if arg.Template == "" {
+			arg.Template = "Reporting.Default"
 		}
 
 		config_obj, ok := artifacts.GetServerConfig(scope)
@@ -112,10 +117,14 @@ func (self CollectPlugin) Call(
 					}
 					defer fd.Close()
 
-					produceReport(config_obj, container,
+					err = produceReport(config_obj, container,
+						arg.Template,
 						repository, fd,
 						artifact_definitions,
 						scope, arg)
+					if err != nil {
+						scope.Log("Error creating report: %v", err)
+					}
 				}
 				output_chan <- ordereddict.NewDict().
 					Set("Container", arg.Output).

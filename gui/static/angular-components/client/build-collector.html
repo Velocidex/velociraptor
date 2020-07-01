@@ -32,6 +32,18 @@
         </div>
 
         <div class="form-group">
+          <label class="control-label" title="Report Template.">
+            Report Template
+          </label>
+          <div class="controls">
+            <select class="form-control"
+                    ng-options="artifact for artifact in controller.template_artifacts"
+                    ng-model="controller.template">
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="control-label" title="Collector Type">
             Collection Type
           </label>

@@ -19,7 +19,7 @@ type TextTemplateEngine struct {
 }
 
 func (self *TextTemplateEngine) Execute(template_string string) (string, error) {
-	tmpl, err := self.tmpl.Parse(template_string)
+	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
 	if err != nil {
 		return "", err
 	}

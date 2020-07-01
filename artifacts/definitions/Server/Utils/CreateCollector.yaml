@@ -23,11 +23,17 @@ parameters:
     type: json_array
     default: |
       ["Generic.Client.Info"]
+
+  - name: template
+    default: Reporting.Default
+    description: The HTML report template to use.
+
   - name: parameters
     description: A dict containing the parameters to set.
     type: json
     default: |
       {}
+
   - name: target
     description: Output type
     type: choices
@@ -58,7 +64,7 @@ parameters:
       LET _ <= log(message="Will collect package " + filename)
 
       SELECT * FROM collect(artifacts=Artifacts, report=filename + ".html",
-          args=Parameters, output=filename + ".zip")
+          args=Parameters, output=filename + ".zip", template=Template)
 
   - name: S3Collection
     type: hidden
@@ -90,7 +96,7 @@ parameters:
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"))
+          args=Parameters, output=tempfile(extension=".zip"), template=Template)
 
   - name: GCSCollection
     type: hidden
@@ -123,7 +129,7 @@ parameters:
           credentials=TargetArgs.GCSKey
       ) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"))
+          args=Parameters, output=tempfile(extension=".zip"), template=Template)
 
   - name: PackageToolsArtifact
     description: Collects and uploads third party binaries.
@@ -209,6 +215,7 @@ sources:
       b = { SELECT "Collector" AS name, (
                     dict(name="Artifacts", default=artifacts),
                     dict(name="Parameters", default=parameters),
+                    dict(name="Template", default=template),
                     dict(name="target_args", default=target_args),
                 ) AS parameters,
                 (

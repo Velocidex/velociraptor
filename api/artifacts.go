@@ -174,6 +174,41 @@ func setArtifactFile(config_obj *config_proto.Config,
 	return nil, errors.New("Unknown op")
 }
 
+func getReportArtifacts(
+	config_obj *config_proto.Config,
+	report_type string,
+	number_of_results uint64) (
+	*artifacts_proto.ArtifactDescriptors, error) {
+
+	if number_of_results == 0 {
+		number_of_results = 100
+	}
+
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &artifacts_proto.ArtifactDescriptors{}
+	for _, name := range repository.List() {
+		artifact, pres := repository.Get(name)
+		if pres {
+			for _, report := range artifact.Reports {
+				if report.Type == report_type {
+					result.Items = append(
+						result.Items, artifact)
+				}
+			}
+		}
+
+		if len(result.Items) >= int(number_of_results) {
+			break
+		}
+	}
+
+	return result, nil
+}
+
 func searchArtifact(
 	config_obj *config_proto.Config,
 	terms []string,

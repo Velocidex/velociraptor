@@ -16,6 +16,8 @@ message GetArtifactsRequest {
     uint64 number_of_results = 4;
     string type = 5;
 
+    string report_type = 7;
+
     repeated string names = 6 [(sem_type) = {
        description: "A list of artifacts to fetch"
      }];

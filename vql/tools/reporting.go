@@ -3,7 +3,9 @@
 package tools
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
@@ -16,10 +18,25 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
+	template_artifact, ok := repository.Get(name)
+	if !ok || len(template_artifact.Reports) == 0 {
+		return "", errors.New("Not found")
+	}
+
+	for _, report := range template_artifact.Reports {
+		if report.Type == "html" {
+			return report.Template, nil
+		}
+	}
+	return "", errors.New("Not found")
+}
+
 // Produce a collector report.
 func produceReport(
 	config_obj *config_proto.Config,
 	container *reporting.Container,
+	template string,
 	repository *artifacts.Repository,
 	writer io.Writer,
 	definitions []*artifacts_proto.Artifact,
@@ -38,9 +55,12 @@ func produceReport(
 	// Reports can query the container directly.
 	subscope.AppendPlugins(&ContainerSourcePlugin{Container: container})
 
-	writer.Write([]byte(reporting.HtmlPreable))
-	defer writer.Write([]byte(reporting.HtmlPostscript))
+	html_template_string, err := getHTMLTemplate(template, repository)
+	if err != nil {
+		return err
+	}
 
+	content_writer := &bytes.Buffer{}
 	for _, definition := range definitions {
 		for _, report := range definition.Reports {
 			if report.Type != "client" {
@@ -65,10 +85,27 @@ func produceReport(
 				return err
 			}
 
-			writer.Write([]byte(res))
+			content_writer.Write([]byte(res))
 		}
 	}
-	return nil
+
+	template_engine, err := reporting.NewHTMLTemplateEngine(
+		config_obj, context.Background(), subscope,
+		vql_subsystem.NullACLManager{}, repository,
+		template)
+	if err != nil {
+		return err
+	}
+
+	template_engine.SetEnv("main", content_writer.String())
+
+	result, err := template_engine.RenderRaw(
+		html_template_string, template_engine.Env.ToDict())
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write([]byte(result))
+	return err
 }
 
 // A special implementation of the source() plugin which retrieves

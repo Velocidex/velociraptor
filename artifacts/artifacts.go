@@ -148,8 +148,10 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	for _, report := range artifact.Reports {
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
-		case "monitoring_daily", "server_event", "client", "internal", "hunt":
-			continue
+		case "monitoring_daily", "server_event", "client",
+			"internal", "hunt":
+
+		case "html": // HTML reports form a main HTML page for report exports.
 		default:
 			return nil, errors.New(fmt.Sprintf("Invalid report type %s",
 				report.Type))
