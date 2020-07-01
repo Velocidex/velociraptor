@@ -133,6 +133,7 @@ func NewTextTemplateEngine(
 			"Table":     template_engine.Table,
 			"LineChart": template_engine.LineChart,
 			"Get":       template_engine.getFunction,
+			"Expand":    template_engine.Expand,
 			"str":       strval,
 		})
 

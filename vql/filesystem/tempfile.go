@@ -21,6 +21,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -32,9 +33,10 @@ import (
 )
 
 type _TempfileRequest struct {
-	Data       []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
-	Extension  string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
-	RemoveLast bool     `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
+	Data        []string `vfilter:"optional,field=data,doc=Data to write in the tempfile."`
+	Extension   string   `vfilter:"optional,field=extension,doc=An extension to place in the tempfile."`
+	Permissions string   `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
+	RemoveLast  bool     `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
 }
 
 type TempfileFunction struct{}
@@ -56,11 +58,28 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		return false
 	}
 
+	permissions := os.FileMode(0600)
+	switch arg.Permissions {
+	case "x":
+		permissions = 0700
+
+		// On windows executable means it has a .exe extension.
+		if runtime.GOOS == "windows" {
+			arg.Extension = ".exe"
+		}
+
+	case "r":
+		permissions = 0400
+	}
+
 	tmpfile, err := tempfile.TempFile("", "tmp", arg.Extension)
 	if err != nil {
 		scope.Log("tempfile: %v", err)
 		return false
 	}
+
+	// Set the permissions to the desired level.
+	os.Chmod(tmpfile.Name(), permissions)
 
 	for _, content := range arg.Data {
 		_, err := tmpfile.Write([]byte(content))

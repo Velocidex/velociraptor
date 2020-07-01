@@ -160,13 +160,15 @@ parameters:
        grabs files from the local archive.
 
     default: |
-       LET temp_binary <= tempfile(extension=".exe", remove_last=TRUE)
+       LET temp_binary <= tempfile(extension=".exe",
+                remove_last=TRUE, permissions="x")
 
        LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
        FROM parse_csv(filename="/inventory.csv", accessor="me")
+
        SELECT * FROM foreach(row=matching_tools, query={
-         SELECT copy(filename=Filename, accessor="me",
-                     dest=temp_binary, permissions="x") AS FullPath
+         SELECT copy(filename=Filename, accessor="me", dest=temp_binary) AS FullPath,
+                     Filename AS Name
          FROM scope()
          WHERE ToolName = ArchiveTool
        })

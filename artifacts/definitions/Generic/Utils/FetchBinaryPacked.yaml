@@ -10,14 +10,14 @@ parameters:
 
 sources:
   - query: |
-      LET temp_binary <= tempfile(extension=".exe")
+      LET temp_binary <= tempfile(extension=".exe", permissions="x")
 
       LET matching_tools = SELECT ToolName AS ArchiveTool, Filename
       FROM parse_csv(filename="/inventory.csv", accessor="me")
 
       SELECT * FROM foreach(row=matching_tools, query={
         SELECT copy(filename=url(path="/", fragment=Filename, scheme="me").String,
-                    accessor="zip", dest=temp_binary, permissions="x") AS FullPath
+                    accessor="zip", dest=temp_binary) AS FullPath
         FROM scope()
         WHERE ToolName = ArchiveTool
       })

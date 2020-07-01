@@ -52,7 +52,7 @@ build_script:
 
 test_script:
 - set GO111MODULE=on
-- cmd: go test ./...
+- cmd: go test -v ./...
 - cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=c:\velociraptor
 - cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 

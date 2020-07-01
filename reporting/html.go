@@ -32,6 +32,28 @@ type HTMLTemplateEngine struct {
 	Data       map[string]*actions_proto.VQLResponse
 }
 
+func (self *HTMLTemplateEngine) Expand(values ...interface{}) interface{} {
+	_, argv := parseOptions(values)
+	// Not enough args.
+	if len(argv) != 1 {
+		return ""
+	}
+
+	results := []*ordereddict.Dict{}
+
+	switch t := argv[0].(type) {
+	default:
+		return t
+
+	case chan *ordereddict.Dict:
+		for item := range t {
+			results = append(results, item)
+		}
+	}
+
+	return results
+}
+
 func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 	_, argv := parseOptions(values)
 	// Not enough args.
@@ -200,6 +222,7 @@ func NewHTMLTemplateEngine(
 			"LineChart": template_engine.Noop,
 			"Timeline":  template_engine.Noop,
 			"Get":       template_engine.getFunction,
+			"Expand":    template_engine.Expand,
 			"str":       strval,
 		})
 	return template_engine, nil

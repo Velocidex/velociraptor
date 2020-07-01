@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,6 +31,7 @@ type CollectorTestSuite struct {
 	tmpdir      string
 	config_file string
 	config_obj  *config_proto.Config
+	test_server *httptest.Server
 }
 
 func (self *CollectorTestSuite) SetupTest() {
@@ -68,22 +70,26 @@ func (self *CollectorTestSuite) SetupTest() {
 	self.config_obj.Datastore.Location = self.tmpdir
 	self.config_obj.Datastore.FilestoreDirectory = self.tmpdir
 
+	// Start a web server that serves the filesystem
+	self.test_server = httptest.NewServer(
+		http.FileServer(http.Dir(filepath.Dir(self.binary))))
+
+	// Set the server URL correctly.
+	self.config_obj.Client.ServerUrls = []string{
+		self.test_server.URL + "/",
+	}
+
 	serialized, err := yaml.Marshal(self.config_obj)
 	assert.NoError(self.T(), err)
 
 	fd.Write(serialized)
 	fd.Close()
 
-	// Start a web server that serves the filesystem
-	go func() {
-		http.Handle("/", http.FileServer(http.Dir(filepath.Dir(self.binary))))
-		err = http.ListenAndServe("localhost:8000", nil)
-		assert.NoError(self.T(), err)
-	}()
 }
 
 func (self *CollectorTestSuite) TearDownTest() {
 	os.RemoveAll(self.tmpdir)
+	self.test_server.Close()
 }
 
 func (self *CollectorTestSuite) TestCollector() {
@@ -105,8 +111,16 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	fd.Truncate()
 	fd.Write([]byte(`name: Custom.TestArtifact
+required_tools:
+  - MyTool
+
 sources:
- - query: SELECT "Foobar" FROM scope()
+ - query: |
+     LET binary <= SELECT FullPath, Name
+         FROM Artifact.Generic.Utils.FetchBinary(
+              ToolName="MyTool", SleepDuration='0')
+     SELECT "Foobar", Stdout, binary[0].Name
+     FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
 
 reports:
  - type: CLIENT
@@ -114,6 +128,18 @@ reports:
      # This is the report.
 
      {{ Query "SELECT * FROM source()" | Table }}
+
+     {{ $foundit := Query "SELECT * FROM source()" | Expand }}
+
+     {{ if $foundit }}
+
+     ## Found a Scheduled Task
+
+     {{ else }}
+
+     ## Did not find a Scheduled Task!
+
+     {{ end }}
 `))
 	fd.Close()
 
@@ -125,7 +151,7 @@ reports:
 
 	cmd = exec.Command(self.binary, "--config", self.config_file,
 		"third_party", "upload", "--name", "Velociraptor"+OS_TYPE,
-		"http://localhost:8000/"+filepath.Base(self.binary),
+		self.test_server.URL+"/"+filepath.Base(self.binary),
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
@@ -138,6 +164,14 @@ reports:
 	// and serve_locally should be false.
 	assert.NotRegexp(self.T(), "serve_locally", string(out))
 	assert.NotRegexp(self.T(), "hash: .+", string(out))
+
+	cmd = exec.Command(self.binary, "--config", self.config_file,
+		"third_party", "upload", "--name", "MyTool",
+		self.test_server.URL+"/"+filepath.Base(self.binary),
+		"--serve_remote")
+	out, err = cmd.CombinedOutput()
+	fmt.Println(string(out))
+	require.NoError(self.T(), err)
 
 	output_zip := filepath.Join(self.tmpdir, "output.zip")
 
@@ -229,6 +263,10 @@ reports:
 	assert.NoError(self.T(), err)
 	assert.Contains(self.T(), string(data), "Foobar")
 	assert.Contains(self.T(), string(data), "This is the report")
+
+	// Make sure we found the artifact in the report
+	assert.Contains(self.T(), string(data), "Windows.System.TaskScheduler")
+	assert.Contains(self.T(), string(data), "Found a Scheduled Task")
 }
 
 func TestCollector(t *testing.T) {
