@@ -16,8 +16,7 @@ parameters:
   - name: AutorunArgs
     description: |
       A space separated list of args to run with.
-    default: |
-      -nobanner -accepteula -t -a * -c *
+    default: '-nobanner -accepteula -t -a * -c *'
   - name: ToolInfo
     description: Override Tool information.
 
