@@ -25,7 +25,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 	"time"
@@ -39,9 +38,11 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/flows"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -464,8 +465,9 @@ func vfsFolderDownloadHandler(
 
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
+		filename := strings.Replace(request.VfsPath, "\"", "", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(request.VfsPath+".zip"))
+			url.PathEscape(filename+".zip"))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
@@ -489,23 +491,25 @@ func vfsFolderDownloadHandler(
 		defer zip_writer.Close()
 
 		file_store_factory := file_store.GetFileStore(config_obj)
-		file_store_factory.Walk(request.VfsPath,
-			func(path_name string, info os.FileInfo, err error) error {
-				if err != nil || info.IsDir() {
-					return nil
-				}
 
-				fd, err := file_store_factory.ReadFile(path_name)
+		client_path_manager := paths.NewClientPathManager(request.ClientId)
+
+		db, _ := datastore.GetDB(config_obj)
+		db.Walk(config_obj, client_path_manager.VFSDownloadInfoPath(request.VfsPath),
+			func(path_name string) error {
+				download_info := &flows_proto.VFSDownloadInfo{}
+				err := db.GetSubject(config_obj, path_name, download_info)
 				if err != nil {
 					logger.Warn("Cant open %s: %v", path_name, err)
 					return nil
 				}
 
-				path_name = path.Clean(strings.Replace(
-					path_name, "\\", "/", -1))
+				fd, err := file_store_factory.ReadFile(download_info.VfsPath)
+				if err != nil {
+					return err
+				}
 
-				path_name = strings.TrimLeft(path_name, "/")
-				zh, err := zip_writer.Create(path_name)
+				zh, err := zip_writer.Create(cleanPathForZip(path_name))
 				if err != nil {
 					logger.Warn("Cant create zip %s: %v", path_name, err)
 					return nil
@@ -516,6 +520,7 @@ func vfsFolderDownloadHandler(
 					logger.Warn("Cant copy %s", path_name)
 					return nil
 				}
+
 				return nil
 			})
 	})

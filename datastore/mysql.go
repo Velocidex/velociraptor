@@ -39,6 +39,7 @@ type DataStoreRow struct {
 	Name      string
 	Timestamp int64
 	Data      []byte
+	IsDir     bool
 }
 
 type MySQLDataStore struct {
@@ -186,7 +187,7 @@ func (self *MySQLDataStore) ListChildren(
 	// ListChildren returns the full URN
 	result := make([]string, 0, len(children))
 	for _, child := range children {
-		result = append(result, utils.PathJoin(urn, child, "/"))
+		result = append(result, utils.PathJoin(urn, child.Name, "/"))
 	}
 
 	return result, nil
@@ -196,7 +197,7 @@ func (self *MySQLDataStore) ListChildren(
 func (self *MySQLDataStore) listChildren(
 	config_obj *config_proto.Config,
 	urn string,
-	offset uint64, length uint64) ([]string, error) {
+	offset uint64, length uint64) ([]*DataStoreRow, error) {
 
 	// In the database directories do not contain a trailing /
 	components := utils.SplitComponents(urn)
@@ -204,7 +205,7 @@ func (self *MySQLDataStore) listChildren(
 
 	hash := sha1.Sum([]byte(urn))
 	rows, err := db.Query(`
-SELECT name FROM datastore WHERE path =? AND path_hash = ?
+SELECT name, isnull(data) FROM datastore WHERE path =? AND path_hash = ?
 ORDER BY timestamp DESC LIMIT ?, ?`,
 		urn, string(hash[:]), offset, length)
 	if err != nil {
@@ -212,14 +213,14 @@ ORDER BY timestamp DESC LIMIT ?, ?`,
 	}
 	defer rows.Close()
 
-	results := []string{}
+	results := []*DataStoreRow{}
 	for rows.Next() {
 		row := &DataStoreRow{}
-		err = rows.Scan(&row.Name)
+		err = rows.Scan(&row.Name, &row.IsDir)
 		if err != nil {
 			return nil, err
 		}
-		results = append(results, row.Name)
+		results = append(results, row)
 	}
 
 	return results, nil
@@ -298,7 +299,8 @@ func (self *MySQLDataStore) SearchClients(
 		if err != nil {
 			return
 		}
-		for _, name := range children {
+		for _, child := range children {
+			name := child.Name
 			seen[name] = true
 
 			if uint64(len(seen)) > offset+limit {
@@ -317,7 +319,8 @@ func (self *MySQLDataStore) SearchClients(
 			return result
 		}
 
-		for _, name := range sets {
+		for _, child := range sets {
+			name := child.Name
 			matched, err := path.Match(query, name)
 			if err != nil {
 				// Can only happen if pattern is invalid.
@@ -352,6 +355,30 @@ func (self *MySQLDataStore) SearchClients(
 	}
 
 	return result[offset : offset+limit]
+}
+
+func (self *MySQLDataStore) Walk(config_obj *config_proto.Config,
+	root string, walkFn WalkFunc) error {
+
+	return self.walk(config_obj, utils.Clean(root), walkFn)
+}
+
+func (self *MySQLDataStore) walk(config_obj *config_proto.Config,
+	root string, walkFn WalkFunc) error {
+
+	children, err := self.listChildren(config_obj, root, 0, 1000)
+	if err != nil {
+		return err
+	}
+	for _, child := range children {
+		child_urn := utils.PathJoin(root, child.Name, "/")
+		if child.IsDir {
+			self.Walk(config_obj, child_urn, walkFn)
+		} else {
+			walkFn(child_urn)
+		}
+	}
+	return nil
 }
 
 // Called to close all db handles etc. Not thread safe.

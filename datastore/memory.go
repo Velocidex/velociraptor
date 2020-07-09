@@ -44,6 +44,12 @@ func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
 	return result, nil
 }
 
+func (self *TestDataStore) Walk(
+	config_obj *config_proto.Config,
+	root string, walkFn WalkFunc) error {
+	return nil
+}
+
 func (self *TestDataStore) QueueMessageForClient(
 	config_obj *config_proto.Config,
 	client_id string,

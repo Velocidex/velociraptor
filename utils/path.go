@@ -225,3 +225,7 @@ func PathSplit(path string) (string, string) {
 	}
 	return "", ""
 }
+
+func Clean(path string) string {
+	return JoinComponents(SplitComponents(path), "/")
+}

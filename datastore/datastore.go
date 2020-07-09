@@ -30,6 +30,8 @@ var (
 	implementations map[string]DataStore
 )
 
+type WalkFunc func(urn string) error
+
 type DataStore interface {
 	// Retrieve all the client's tasks.
 	GetClientTasks(
@@ -66,6 +68,9 @@ type DataStore interface {
 		config_obj *config_proto.Config,
 		urn string,
 		offset uint64, length uint64) ([]string, error)
+
+	Walk(config_obj *config_proto.Config,
+		root string, walkFn WalkFunc) error
 
 	// Update the posting list index. Searching for any of the
 	// keywords will return the entity urn.
