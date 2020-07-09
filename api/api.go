@@ -333,8 +333,7 @@ func (self *ApiServer) GetHuntResults(
 	// processing or process in the notebook.
 	result, err := RunVQL(ctx, self.config, user_name, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
-			"artifact=Artifact, source=Source, "+
-			"brief=true) LIMIT 100")
+			"artifact=Artifact, source=Source) LIMIT 100")
 	if err != nil {
 		return nil, err
 	}
