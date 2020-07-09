@@ -321,7 +321,7 @@ func createHuntDownloadFile(
 
 			query := "SELECT * FROM hunt_results(" +
 				"hunt_id=HuntId, artifact=Artifact, " +
-				"source=Source, brief=true)"
+				"source=Source)"
 			env := ordereddict.NewDict().
 				Set("Artifact", artifact).
 				Set("HuntId", hunt_id).

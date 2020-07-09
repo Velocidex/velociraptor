@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -128,6 +129,7 @@ func (self HuntResultsPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 
@@ -219,15 +221,13 @@ func (self HuntResultsPlugin) Call(
 			}
 
 			if participation_row.Participate {
-				collection_context, err := flows.LoadCollectionContext(
-					config_obj, participation_row.ClientId,
-					participation_row.FlowId)
+				api_client, err := api.GetApiClient(
+					config_obj, nil, participation_row.ClientId, false)
 				if err != nil {
 					continue
 				}
 
-				// Read individual flow's
-				// results.
+				// Read individual flow's results.
 				path_manager := result_sets.NewArtifactPathManager(
 					config_obj,
 					participation_row.ClientId,
@@ -245,12 +245,8 @@ func (self HuntResultsPlugin) Call(
 				for row := range row_chan {
 					value := row.Set("FlowId", participation_row.FlowId).
 						Set("ClientId", participation_row.ClientId).
-						Set("Fqdn", participation_row.Fqdn)
+						Set("Fqdn", api_client.OsInfo.Fqdn)
 
-					if !arg.Brief {
-						value.Set("HuntId", participation_row.HuntId).
-							Set("Context", collection_context)
-					}
 					output_chan <- value
 				}
 			}

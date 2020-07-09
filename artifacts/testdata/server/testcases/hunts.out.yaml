@@ -1,0 +1,16 @@
+SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='System.VFS.ListDirectory') LIMIT 1[
+ {
+  "_FullPath": "\\C:\\$Recycle.Bin",
+  "_Accessor": "file",
+  "_Data": "",
+  "Name": "$Recycle.Bin",
+  "Size": 0,
+  "Mode": "drwxrwxrwx",
+  "mtime": "2019-09-10T07:40:23Z",
+  "atime": "2019-10-18T14:35:57Z",
+  "ctime": "2019-03-19T04:52:43Z",
+  "FlowId": "F.BN2HJBD1R85EA",
+  "ClientId": "C.4f5e52adf0a337a9",
+  "Fqdn": "DESKTOP-BP4S7TF"
+ }
+]

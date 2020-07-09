@@ -1,0 +1,4 @@
+Queries:
+  # Make sure this gives back client id and Fqdn fields.
+  - SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='System.VFS.ListDirectory')
+    LIMIT 1
