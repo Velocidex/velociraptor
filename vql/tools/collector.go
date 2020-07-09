@@ -139,7 +139,9 @@ func (self CollectPlugin) Call(
 		}
 
 		builder := artifacts.ScopeBuilderFromScope(scope)
-		builder.Uploader = container
+		if container != nil {
+			builder.Uploader = container
+		}
 
 		for _, name := range arg.Artifacts {
 			artifact, pres := repository.Get(name)

@@ -345,6 +345,12 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 		return nil, err
 	}
 
+	reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
+		128, data_attr.Attribute_id())
+	if err != nil {
+		return nil, err
+	}
+
 	return &readAdapter{
 		info: &LazyNTFSFileInfo{
 			mft_id:     int64(mft_entry.Record_number()),
@@ -352,7 +358,8 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 			name:       components[len(components)-1],
 			_full_path: path,
 		},
-		reader: data_attr.Data(ntfs_ctx)}, nil
+		reader: reader,
+	}, nil
 }
 
 func init() {

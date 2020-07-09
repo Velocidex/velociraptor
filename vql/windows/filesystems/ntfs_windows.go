@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
@@ -384,8 +385,20 @@ type readAdapter struct {
 	sync.Mutex
 
 	info   glob.FileInfo
-	reader io.ReaderAt
+	reader ntfs.RangeReaderAt
 	pos    int64
+}
+
+func (self *readAdapter) Ranges() []uploads.Range {
+	result := []uploads.Range{}
+	for _, rng := range self.reader.Ranges() {
+		result = append(result, uploads.Range{
+			Offset:   rng.Offset,
+			Length:   rng.Length,
+			IsSparse: rng.IsSparse,
+		})
+	}
+	return result
 }
 
 func (self *readAdapter) Read(buf []byte) (res int, err error) {

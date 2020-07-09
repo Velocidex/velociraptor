@@ -29,6 +29,7 @@ import (
 	"regexp"
 	"runtime"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -95,6 +96,13 @@ func (self *FileBasedUploader) Upload(
 		return nil, err
 	}
 
+	// Try to collect sparse files if possible
+	result, err := self.maybeCollectSparseFile(
+		ctx, reader, store_as_name, file_path)
+	if err == nil {
+		return result, nil
+	}
+
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
 		scope.Log("Unable to open file %s: %s", file_path, err.Error())
@@ -125,6 +133,87 @@ func (self *FileBasedUploader) Upload(
 	return &api.UploadResponse{
 		Path:   file_path,
 		Size:   uint64(offset),
+		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
+	}, nil
+}
+
+func (self *FileBasedUploader) maybeCollectSparseFile(
+	ctx context.Context,
+	reader io.Reader, store_as_name, sanitized_name string) (
+	*api.UploadResponse, error) {
+
+	// Can the reader produce ranges?
+	range_reader, ok := reader.(RangeReader)
+	if !ok {
+		return nil, errors.New("Not supported")
+	}
+
+	writer, err := os.OpenFile(sanitized_name, os.O_RDWR|os.O_CREATE, 0700)
+	if err != nil {
+		return nil, err
+	}
+	defer writer.Close()
+
+	sha_sum := sha256.New()
+	md5_sum := md5.New()
+
+	// The byte count we write to the output file.
+	count := 0
+
+	// An index array for sparse files.
+	index := []*ordereddict.Dict{}
+	is_sparse := false
+
+	for _, rng := range range_reader.Ranges() {
+		file_length := rng.Length
+		if rng.IsSparse {
+			file_length = 0
+		}
+
+		index = append(index, ordereddict.NewDict().
+			Set("file_offset", count).
+			Set("original_offset", rng.Offset).
+			Set("file_length", file_length).
+			Set("length", rng.Length))
+
+		if rng.IsSparse {
+			is_sparse = true
+			continue
+		}
+
+		range_reader.Seek(rng.Offset, os.SEEK_SET)
+
+		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
+			range_reader, rng.Length)
+		if err != nil {
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
+		count += n
+	}
+
+	// If there were any sparse runs, create an index.
+	if is_sparse {
+		writer, err := os.OpenFile(sanitized_name+".idx", os.O_RDWR|os.O_CREATE, 0700)
+		if err != nil {
+			return nil, err
+		}
+		defer writer.Close()
+
+		serialized, err := utils.DictsToJson(index)
+		if err != nil {
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
+		writer.Write(serialized)
+	}
+
+	return &api.UploadResponse{
+		Path:   sanitized_name,
+		Size:   uint64(count),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
