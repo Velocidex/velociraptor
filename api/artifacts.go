@@ -216,6 +216,12 @@ func searchArtifact(
 	number_of_results uint64) (
 	*artifacts_proto.ArtifactDescriptors, error) {
 
+	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
+	if name_filter_regexp == "" {
+		name_filter_regexp = "."
+	}
+	name_filter := regexp.MustCompile(name_filter_regexp)
+
 	artifact_type = strings.ToLower(artifact_type)
 
 	if number_of_results == 0 {
@@ -254,6 +260,10 @@ func searchArtifact(
 	}
 
 	for _, name := range repository.List() {
+		if name_filter.FindString(name) == "" {
+			continue
+		}
+
 		artifact, pres := repository.Get(name)
 		if pres {
 			// Skip non matching types
