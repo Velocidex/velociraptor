@@ -71,3 +71,7 @@ func (self ClientPathManager) VFSPath(vfs_components []string) string {
 	return utils.JoinComponents(append([]string{
 		"clients", self.client_id, "vfs"}, vfs_components...), "/")
 }
+
+func (self ClientPathManager) VFSDownloadInfoPath(vfs string) string {
+	return path.Join("clients", self.client_id, "vfs_files", vfs)
+}

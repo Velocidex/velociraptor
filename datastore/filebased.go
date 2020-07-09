@@ -151,6 +151,33 @@ func (self *FileBaseDataStore) GetSubject(
 	return proto.Unmarshal(serialized_content, message)
 }
 
+func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
+	root string, walkFn WalkFunc) error {
+	root = utils.Clean(root)
+	return self.walk(config_obj, root, walkFn)
+}
+
+func (self *FileBaseDataStore) walk(config_obj *config_proto.Config,
+	root string, walkFn WalkFunc) error {
+
+	children, err := listChildren(config_obj, root)
+	if err != nil {
+		return err
+	}
+	for _, child := range children {
+		name := UnsanitizeComponent(child.Name())
+		child_urn := path.Join(root, name)
+		if child.IsDir() {
+			return self.Walk(config_obj, child_urn, walkFn)
+		}
+		name = strings.TrimSuffix(name, ".gz")
+		if strings.HasSuffix(name, ".db") {
+			walkFn(strings.TrimSuffix(child_urn, ".db"))
+		}
+	}
+	return nil
+}
+
 func (self *FileBaseDataStore) SetSubject(
 	config_obj *config_proto.Config,
 	urn string,
