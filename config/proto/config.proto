@@ -307,6 +307,13 @@ message GUIConfig {
     // These users are created if they do no already exist in the data
     // store.
     repeated GUIUser initial_users = 17;
+
+
+    // The GUI will filter artifact search results by this regular
+    // expression. This is useful to restrict the number of choices
+    // available in the GUI to a small subset (e.g. only certain
+    // packs).
+    string artifact_search_filter = 18;
 }
 
 message GUIUser {
