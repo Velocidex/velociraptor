@@ -80,27 +80,30 @@ func (self *MFTFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 		info = stat[0]
 	}
 
-	for _, attr := range mft_entry.EnumerateAttributes(ntfs_ctx) {
-		if attr_type == int64(attr.Type().Value) {
-			if attr_id == -1 || attr_id == int64(attr.Attribute_id()) {
+	// Attributes are never directories
+	// since they always have some data.
+	info.IsDir = false
 
-				// Attributes are never directories
-				// since they always have some data.
-				info.IsDir = false
-				info.Size = attr.DataSize()
-
-				result := &readAdapter{
-					info: &NTFSFileInfo{
-						info:       info,
-						_full_path: device + subpath,
-					},
-					reader: attr.Data(ntfs_ctx),
-				}
-				return result, nil
-			}
-		}
+	reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
+		uint64(attr_type), uint16(attr_id))
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("File not found")
+
+	ranges := reader.Ranges()
+	if len(ranges) > 0 {
+		last_run := ranges[len(ranges)-1]
+		info.Size = last_run.Offset + last_run.Length
+	}
+
+	result := &readAdapter{
+		info: &NTFSFileInfo{
+			info:       info,
+			_full_path: device + subpath,
+		},
+		reader: reader,
+	}
+	return result, nil
 }
 
 func (self *MFTFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {

@@ -272,8 +272,87 @@ func (self NTFSI30ScanPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeM
 	}
 }
 
+type NTFSRangesPlugin struct{}
+
+func (self NTFSRangesPlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
+
+		arg := &NTFSFunctionArgs{}
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("parse_ntfs_ranges: %v", err)
+			return
+		}
+
+		attr_type := int64(0)
+		attr_id := int64(0)
+		mft_idx := int64(arg.MFT)
+
+		if arg.Inode != "" {
+			mft_idx, attr_type, attr_id, err = ntfs.ParseMFTId(arg.Inode)
+			if err != nil {
+				scope.Log("parse_ntfs_ranges: %v", err)
+				return
+			}
+		} else {
+			attr_type = 128
+		}
+
+		device, _, err := paths.GetDeviceAndSubpath(arg.Device)
+		if err != nil {
+			scope.Log("parse_ntfs_ranges: %v", err)
+			return
+		}
+
+		ntfs_ctx, err := GetNTFSContext(scope, device)
+		if err != nil {
+			scope.Log("parse_ntfs_ranges: %v", err)
+			return
+		}
+
+		if arg.MFTOffset > 0 {
+			mft_idx = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
+		}
+
+		mft_entry, err := ntfs_ctx.GetMFT(mft_idx)
+		if err != nil {
+			scope.Log("parse_ntfs_ranges: %v", err)
+			return
+		}
+
+		reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
+			uint64(attr_type), uint16(attr_id))
+		if err != nil {
+			scope.Log("parse_ntfs_ranges: %v", err)
+			return
+		}
+
+		for _, rng := range reader.Ranges() {
+			output_chan <- rng
+		}
+	}()
+
+	return output_chan
+}
+
+func (self NTFSRangesPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "parse_ntfs_ranges",
+		Doc:     "Show the run ranges for an NTFS stream.",
+		ArgType: type_map.AddType(scope, &NTFSFunctionArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&NTFSFunction{})
 	vql_subsystem.RegisterPlugin(&NTFSI30ScanPlugin{})
 	vql_subsystem.RegisterPlugin(&MFTScanPlugin{})
+	vql_subsystem.RegisterPlugin(&NTFSRangesPlugin{})
 }

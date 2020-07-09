@@ -21,6 +21,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -251,13 +252,21 @@ func (self *Container) Upload(
 
 	// Zip members must not have absolute paths.
 	sanitized_name := path.Join(components...)
+
+	scope.Log("Collecting file %s into %s (%v bytes)",
+		filename, store_as_name, expected_size)
+
+	// Try to collect sparse files if possible
+	result, err := self.maybeCollectSparseFile(
+		ctx, reader, store_as_name, sanitized_name)
+	if err == nil {
+		return result, nil
+	}
+
 	writer, closer, err := self.getZipFileWriter(sanitized_name)
 	if err != nil {
 		return nil, err
 	}
-
-	scope.Log("Collecting file %s into %s (%v bytes)",
-		filename, store_as_name, expected_size)
 
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
@@ -273,6 +282,88 @@ func (self *Container) Upload(
 	return &api.UploadResponse{
 		Path:   sanitized_name,
 		Size:   uint64(n),
+		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
+	}, nil
+}
+
+func (self *Container) maybeCollectSparseFile(
+	ctx context.Context,
+	reader io.Reader, store_as_name, sanitized_name string) (
+	*api.UploadResponse, error) {
+
+	// Can the reader produce ranges?
+	range_reader, ok := reader.(uploads.RangeReader)
+	if !ok {
+		return nil, errors.New("Not supported")
+	}
+
+	writer, closer, err := self.getZipFileWriter(sanitized_name)
+	if err != nil {
+		return nil, err
+	}
+
+	sha_sum := sha256.New()
+	md5_sum := md5.New()
+
+	// The byte count we write to the output file.
+	count := 0
+
+	// An index array for sparse files.
+	index := []*ordereddict.Dict{}
+	is_sparse := false
+
+	for _, rng := range range_reader.Ranges() {
+		file_length := rng.Length
+		if rng.IsSparse {
+			file_length = 0
+		}
+
+		index = append(index, ordereddict.NewDict().
+			Set("file_offset", count).
+			Set("original_offset", rng.Offset).
+			Set("file_length", file_length).
+			Set("length", rng.Length))
+
+		if rng.IsSparse {
+			is_sparse = true
+			continue
+		}
+
+		range_reader.Seek(rng.Offset, os.SEEK_SET)
+
+		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
+			range_reader, rng.Length)
+		if err != nil {
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
+		count += n
+	}
+	closer()
+
+	// If there were any sparse runs, create an index.
+	if is_sparse {
+		writer, closer, err := self.getZipFileWriter(sanitized_name + ".idx")
+		if err != nil {
+			return nil, err
+		}
+
+		serialized, err := utils.DictsToJson(index)
+		if err != nil {
+			closer()
+			return &api.UploadResponse{
+				Error: err.Error(),
+			}, err
+		}
+		writer.Write(serialized)
+		closer()
+	}
+
+	return &api.UploadResponse{
+		Path:   sanitized_name,
+		Size:   uint64(count),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
