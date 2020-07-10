@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -105,9 +106,15 @@ func (self *EnrollmentService) ProcessRow(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
 
+	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Issue the flow on the client.
 	flow_id, err := ScheduleArtifactCollection(ctx, self.config_obj,
 		self.config_obj.Client.PinnedServerName, /* principal */
+		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  client_id,
 			Artifacts: []string{constants.CLIENT_INFO_ARTIFACT},

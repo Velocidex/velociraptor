@@ -180,8 +180,13 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
+	repository, err := artifacts.GetGlobalRepository(self.config)
+	if err != nil {
+		return nil, err
+	}
+
 	flow_id, err := services.ScheduleArtifactCollection(
-		ctx, self.config, in.Creator, in)
+		ctx, self.config, in.Creator, repository, in)
 	if err != nil {
 		return nil, err
 	}

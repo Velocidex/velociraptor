@@ -100,6 +100,11 @@ func CreateHunt(
 			UTC().UnixNano() / 1000)
 	}
 
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// Compile the start request and store it in the hunt. We will
 	// use this compiled version to launch all other flows from
 	// this hunt rather than re-compile the artifact each
@@ -107,7 +112,7 @@ func CreateHunt(
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
 	hunt.StartRequest.CompiledCollectorArgs, err = services.CompileCollectorArgs(
-		ctx, config_obj, principal, hunt.StartRequest)
+		ctx, config_obj, principal, repository, hunt.StartRequest)
 	if err != nil {
 		return nil, err
 	}

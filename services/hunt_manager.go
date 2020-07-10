@@ -43,6 +43,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -287,8 +288,14 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
+	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	if err != nil {
+		scope.Log("hunt manager: launching %v:  %v", participation_row, err)
+		return
+	}
+
 	flow_id, err := ScheduleArtifactCollection(ctx, self.config_obj,
-		"Server", request)
+		"Server", repository, request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return
