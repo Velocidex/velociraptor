@@ -33,8 +33,8 @@ var path_tests = []path_tests_t{
 		"/clients/C.123/artifacts/Generic.Client.Info/F.123/Users.json"},
 
 	// Server artifacts
-	{"C.123", "F.123", "Server.Utils.DownloadBinaries",
-		"/clients/server/artifacts/Server.Utils.DownloadBinaries/F.123.json"},
+	{"C.123", "F.123", "Server.Utils.CreateCollector",
+		"/clients/server/artifacts/Server.Utils.CreateCollector/F.123.json"},
 
 	// Server events
 	{"C.123", "F.123", "Elastic.Flows.Upload",
