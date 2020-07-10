@@ -5,8 +5,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -45,15 +45,15 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	request := &api_proto.Tool{
+	request := &artifacts_proto.Tool{
 		Name:         arg.Tool,
 		ServeLocally: arg.ServeLocally,
 		Url:          arg.URL,
 		Filename:     arg.Filename,
 		Hash:         arg.Hash,
 	}
-	err = services.Inventory.AddTool(config_obj, request)
 
+	err = services.Inventory.AddTool(config_obj, request)
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}

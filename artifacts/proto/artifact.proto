@@ -6,6 +6,27 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/artifacts/proto";
 
+message Tool {
+    string name = 1;
+
+    string url = 2;
+
+    bool serve_locally = 3;
+
+    string filestore_path = 4;
+
+    // The name of the client on the endpoint.
+    string filename = 5;
+
+    // Hex encoded sha256 hash.
+    string hash = 6;
+}
+
+message third_party {
+    repeated Tool tools = 1;
+    uint64 version = 2;
+}
+
 message FieldDescriptor {
     string friendly_name = 1;
     string name = 2;
@@ -151,8 +172,12 @@ message Artifact {
             description: "A list of required permissions to collect this artifact."
         }];
 
-    // A list of third party tools we need.
-    repeated string required_tools = 14;
+    // An optional list of tool descriptions. These are only used to
+    // initialize Velociraptor if there is no previous tool
+    // definition. It will not override existing tools. The user may
+    // override the tool name in order to control where it will be
+    // downloaded from.
+    repeated Tool tools = 15;
 
     // If set here this applies to all sources.
     string precondition = 8 [(sem_type) = {

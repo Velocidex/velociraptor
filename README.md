@@ -126,14 +126,14 @@ feature submitted that you are really interested in, we would love to
 have more testing prior to the official release.
 
 We have a CI pipeline at https://www.velocidex.com/ci managed by
-AppVeyor. The pipeline produces a complete windows and linux binary
+AppVeyor. The pipeline produces a complete windows binary
 built at each commit poiint - simply click on the `artifacts` tab,
-scroll down and download `velociraptor.exe` or
-`velociraptor_linux.elf`
+scroll down and download `velociraptor.exe`
 
 Additionally we build all binaries using Github actions. Simply click
-the actions tab on Github and download the `Binaries.zip` file. This
-will contain binaries for Windows, MacOS and Linux.
+the [actions tab](https://github.com/Velocidex/velociraptor/actions)
+on Github and download the `Binaries.zip` file. This will contain
+binaries for Windows, MacOS and Linux.
 
 
 ## Getting help

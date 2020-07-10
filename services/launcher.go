@@ -22,6 +22,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
@@ -65,6 +66,8 @@ func CompileCollectorArgs(
 		if err != nil {
 			return nil, err
 		}
+
+		ensureToolsDeclared(ctx, config_obj, artifact)
 	}
 
 	// Add any artifact dependencies.
@@ -93,13 +96,39 @@ func getDependentTools(
 	config_obj *config_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs) error {
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range vql_collector_args.Tools {
 		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
 		if err != nil {
+			logger.Error("While Adding dependencies: %v", err)
 			return err
 		}
 	}
 
+	return nil
+}
+
+// Make sure we know about tools the artifact itself defines.
+func ensureToolsDeclared(
+	ctx context.Context, config_obj *config_proto.Config,
+	artifact *artifacts_proto.Artifact) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	for _, tool := range artifact.Tools {
+		_, err := Inventory.GetToolInfo(ctx, config_obj, tool.Name)
+		if err != nil {
+			// Add tool info if it is not known but do not
+			// override existing tool. This allows the
+			// admin to override tools from the artifact
+			// itself.
+			logger.Info("Adding tool %v from artifact %v",
+				tool.Name, artifact.Name)
+			err = Inventory.AddTool(config_obj, tool)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 

@@ -46,6 +46,7 @@ func (self ClientsPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 

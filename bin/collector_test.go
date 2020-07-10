@@ -111,8 +111,8 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	fd.Truncate()
 	fd.Write([]byte(`name: Custom.TestArtifact
-required_tools:
-  - MyTool
+tools:
+  - name: MyTool
 
 sources:
  - query: |
@@ -155,7 +155,7 @@ reports:
 	require.NoError(self.T(), err)
 
 	cmd = exec.Command(self.binary, "--config", self.config_file,
-		"third_party", "upload", "--name", "Velociraptor"+OS_TYPE,
+		"tools", "upload", "--name", "Velociraptor"+OS_TYPE,
 		self.test_server.URL+"/"+filepath.Base(self.binary),
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()
@@ -171,7 +171,7 @@ reports:
 	assert.NotRegexp(self.T(), "hash: .+", string(out))
 
 	cmd = exec.Command(self.binary, "--config", self.config_file,
-		"third_party", "upload", "--name", "MyTool",
+		"tools", "upload", "--name", "MyTool",
 		self.test_server.URL+"/"+filepath.Base(self.binary),
 		"--serve_remote")
 	out, err = cmd.CombinedOutput()

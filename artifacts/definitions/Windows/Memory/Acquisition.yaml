@@ -6,8 +6,9 @@ description: |
   NOTE: This artifact usually takes a long time. You should increase
   the default timeout to allow it to complete.
 
-required_tools:
-  - WinPmem
+tools:
+  - name: WinPmem
+    url: https://github.com/Velocidex/c-aff4/releases/download/v3.3.rc3/winpmem_v3.3.rc3.exe
 
 sources:
   - queries:

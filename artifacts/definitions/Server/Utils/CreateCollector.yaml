@@ -4,10 +4,13 @@ description: |
 
 type: SERVER
 
-required_tools:
-  - VelociraptorWindows
-  - VelociraptorLinux
-  - VelociraptorDarwin
+tools:
+  - name: VelociraptorWindows
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-windows-amd64.exe
+  - name: VelociraptorLinux
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-linux-amd64
+  - name: VelociraptorDarwin
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-darwin-amd64
 
 parameters:
   - name: OS
@@ -186,11 +189,11 @@ sources:
 
       LET Binaries <= SELECT * FROM foreach(
           row={
-             SELECT required_tools FROM artifact_definitions(names=Artifacts)
+             SELECT tools FROM artifact_definitions(names=Artifacts)
           }, query={
-             SELECT * FROM foreach(row=required_tools,
+             SELECT * FROM foreach(row=tools,
              query={
-              SELECT _value AS Binary FROM scope()
+              SELECT name AS Binary FROM scope()
              })
           }) GROUP BY Binary
 
