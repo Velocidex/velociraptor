@@ -30,12 +30,9 @@ func CompileCollectorArgs(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
+	repository *artifacts.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
 	*actions_proto.VQLCollectorArgs, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
 
 	// Update the flow's artifacts list.
 	vql_collector_args := &actions_proto.VQLCollectorArgs{
@@ -71,7 +68,7 @@ func CompileCollectorArgs(
 	}
 
 	// Add any artifact dependencies.
-	err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
+	err := repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +97,7 @@ func getDependentTools(
 	for _, tool := range vql_collector_args.Tools {
 		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
 		if err != nil {
-			logger.Error("While Adding dependencies: %v", err)
+			logger.Error("While Adding dependencies: ", err)
 			return err
 		}
 	}
@@ -174,13 +171,14 @@ func ScheduleArtifactCollection(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
+	repository *artifacts.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
 
 	args := collector_request.CompiledCollectorArgs
 	if args == nil {
 		var err error
 		args, err = CompileCollectorArgs(
-			ctx, config_obj, principal, collector_request)
+			ctx, config_obj, principal, repository, collector_request)
 		if err != nil {
 			return "", err
 		}

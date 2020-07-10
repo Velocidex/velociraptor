@@ -69,8 +69,6 @@ func (self *InventoryService) GetToolInfo(
 			return proto.Clone(item).(*artifacts_proto.Tool), nil
 		}
 	}
-
-	fmt.Printf("Tool %v not declared in inventory.\n", tool)
 	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
 }
 
@@ -99,6 +97,11 @@ func (self *InventoryService) downloadTool(
 		return err
 	}
 	defer res.Body.Close()
+
+	// If the download failed, we can not store this tool.
+	if res.StatusCode != 200 {
+		return errors.New("Unable to download file")
+	}
 
 	sha_sum := sha256.New()
 
