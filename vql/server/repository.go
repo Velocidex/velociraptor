@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -89,6 +90,15 @@ func (self ArtifactsPlugin) Call(
 		for k := range dependencies {
 			artifact, pres := repository.Get(k)
 			if pres {
+				// Ensure we know about all the tools.
+				for _, tool := range artifact.Tools {
+					_, err := services.Inventory.GetToolInfo(
+						ctx, config_obj, tool.Name)
+					if err != nil {
+						services.Inventory.AddTool(config_obj, tool)
+					}
+				}
+
 				output_chan <- vfilter.RowToDict(ctx, scope, artifact)
 			}
 		}

@@ -401,9 +401,9 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 		artifact, pres := self.Get(k)
 		if pres {
 			// Include any dependent tools.
-			for _, required_tool := range artifact.RequiredTools {
-				if !utils.InString(request.Tools, required_tool) {
-					request.Tools = append(request.Tools, required_tool)
+			for _, required_tool := range artifact.Tools {
+				if !utils.InString(request.Tools, required_tool.Name) {
+					request.Tools = append(request.Tools, required_tool.Name)
 				}
 			}
 
@@ -465,9 +465,9 @@ func (self *Repository) Compile(artifact *artifacts_proto.Artifact,
 	}
 
 	// Merge any tools we need.
-	for _, required_tool := range artifact.RequiredTools {
-		if !utils.InString(result.Tools, required_tool) {
-			result.Tools = append(result.Tools, required_tool)
+	for _, required_tool := range artifact.Tools {
+		if !utils.InString(result.Tools, required_tool.Name) {
+			result.Tools = append(result.Tools, required_tool.Name)
 		}
 	}
 

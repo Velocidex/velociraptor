@@ -47,8 +47,9 @@ author: Matt Green - @mgreen27
 required_permissions:
   - EXECVE
 
-required_tools:
-  - Bulk_Extractor
+tools:
+  - name: Bulk_Extractor
+    url: https://github.com/4n6ist/bulk_extractor-rec/releases/download/rec03/bulk_extractor-rec03_x64.zip
 
 precondition: SELECT OS From info() where OS = 'windows'
 

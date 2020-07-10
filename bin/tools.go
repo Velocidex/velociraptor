@@ -13,14 +13,14 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
-	third_party         = app.Command("third_party", "Manipulate third party binaries")
+	third_party         = app.Command("tools", "Manipulate third party binaries and tools")
 	third_party_show    = third_party.Command("show", "Upload a third party binary")
 	third_party_rm      = third_party.Command("rm", "Remove a third party binary")
 	third_party_rm_name = third_party_rm.Arg("name", "The name to remove").
@@ -28,6 +28,9 @@ var (
 	third_party_upload           = third_party.Command("upload", "Upload a third party binary")
 	third_party_upload_tool_name = third_party_upload.Flag("name", "Name of the tool").
 					Required().String()
+	third_party_upload_filename = third_party_upload.
+					Flag("filename", "Name of the tool executable on the endpoint").
+					String()
 	third_party_upload_serve_remote = third_party_upload.Flag(
 		"serve_remote", "If set serve the file from the original URL").Bool()
 
@@ -77,14 +80,19 @@ func doThirdPartyUpload() {
 	defer wg.Wait()
 	defer cancel()
 
-	tool := &api_proto.Tool{
+	filename := *third_party_upload_filename
+	if filename == "" {
+		filename = path.Base(*third_party_upload_binary_path)
+	}
+
+	tool := &artifacts_proto.Tool{
 		Name:         *third_party_upload_tool_name,
-		Filename:     path.Base(*third_party_upload_binary_path),
+		Filename:     filename,
 		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
 	// If the user wants to upload a URL we just write it in the
-	// filestore to be downloaded on demand.
+	// filestore to be downloaded on demand by the client themselves.
 	if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 

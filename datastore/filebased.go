@@ -66,6 +66,12 @@ var (
 	}
 )
 
+const (
+	// On windows all file paths must be prefixed by this to
+	// support long paths.
+	WINDOWS_LFN_PREFIX = "\\\\?\\"
+)
+
 type FileBaseDataStore struct {
 	clock vtesting.Clock
 }
@@ -153,29 +159,38 @@ func (self *FileBaseDataStore) GetSubject(
 
 func (self *FileBaseDataStore) Walk(config_obj *config_proto.Config,
 	root string, walkFn WalkFunc) error {
-	root = utils.Clean(root)
-	return self.walk(config_obj, root, walkFn)
-}
-
-func (self *FileBaseDataStore) walk(config_obj *config_proto.Config,
-	root string, walkFn WalkFunc) error {
-
-	children, err := listChildren(config_obj, root)
+	root_path, err := urnToFilename(config_obj, root)
 	if err != nil {
 		return err
 	}
-	for _, child := range children {
-		name := UnsanitizeComponent(child.Name())
-		child_urn := path.Join(root, name)
-		if child.IsDir() {
-			return self.Walk(config_obj, child_urn, walkFn)
-		}
-		name = strings.TrimSuffix(name, ".gz")
-		if strings.HasSuffix(name, ".db") {
-			walkFn(strings.TrimSuffix(child_urn, ".db"))
-		}
-	}
-	return nil
+
+	root_path = strings.TrimSuffix(root_path, ".db")
+
+	return filepath.Walk(root_path,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			// We are only interested in filenames that end with .db
+			basename := strings.TrimSuffix(info.Name(), ".gz")
+			if !strings.HasSuffix(basename, ".db") {
+				return nil
+			}
+
+			path = strings.TrimSuffix(path, ".gz")
+
+			urn, err := FilenameToURN(config_obj, path)
+			if err != nil {
+				return err
+			}
+
+			return walkFn(urn)
+		})
 }
 
 func (self *FileBaseDataStore) SetSubject(
@@ -590,24 +605,25 @@ func readContentFromFile(
 }
 
 // Convert a file name from the data store to a urn.
-func FilenameToURN(config_obj *config_proto.Config, filename string) (*string, error) {
-	if config_obj.Datastore.Implementation != "FileBaseDataStore" {
-		return nil, errors.New("Unsupported data store")
+func FilenameToURN(config_obj *config_proto.Config, filename string) (string, error) {
+	if runtime.GOOS == "windows" {
+		filename = strings.TrimPrefix(filename, WINDOWS_LFN_PREFIX)
 	}
 
-	if !strings.HasPrefix(filename, config_obj.Datastore.Location) {
-		return nil, errors.New("Filename is not within the FileBaseDataStore location.")
-	}
+	filename = strings.TrimPrefix(
+		filename, config_obj.Datastore.FilestoreDirectory)
 
-	location := strings.TrimSuffix(config_obj.Datastore.Location, "/")
 	components := []string{}
 	for _, component := range strings.Split(
-		strings.TrimPrefix(filename, location), "/") {
-		components = append(components, UnsanitizeComponent(component))
+		filename,
+		string(os.PathSeparator)) {
+		component = strings.TrimSuffix(component, ".gz")
+		component = strings.TrimSuffix(component, ".db")
+		components = append(components,
+			string(UnsanitizeComponent(component)))
 	}
 
-	result := "aff4:" + strings.Join(components, "/")
-	result = strings.TrimSuffix(result, ".gz")
-	result = strings.TrimSuffix(result, ".db")
-	return &result, nil
+	// Filestore filenames always use / as separator.
+	result := utils.JoinComponents(components, "/")
+	return result, nil
 }

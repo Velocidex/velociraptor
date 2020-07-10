@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 	"path"
 
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -19,7 +19,7 @@ func ObfuscateName(
 }
 
 func NewInventoryPathManager(
-	config_obj *config_proto.Config, tool *api_proto.Tool) *ClientPathManager {
+	config_obj *config_proto.Config, tool *artifacts_proto.Tool) *ClientPathManager {
 	if tool.FilestorePath == "" {
 		tool.FilestorePath = ObfuscateName(config_obj, tool.Name)
 	}

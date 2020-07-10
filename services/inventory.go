@@ -14,17 +14,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/pkg/errors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -32,20 +32,20 @@ import (
 
 var (
 	Inventory = &InventoryService{
-		binaries: &api_proto.ThirdParty{},
+		binaries: &artifacts_proto.ThirdParty{},
 	}
 )
 
 type InventoryService struct {
 	mu       sync.Mutex
-	binaries *api_proto.ThirdParty
+	binaries *artifacts_proto.ThirdParty
 }
 
-func (self *InventoryService) Get() *api_proto.ThirdParty {
+func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return proto.Clone(self.binaries).(*api_proto.ThirdParty)
+	return proto.Clone(self.binaries).(*artifacts_proto.ThirdParty)
 }
 
 // Gets the tool information from the inventory. If the tool is not
@@ -53,7 +53,7 @@ func (self *InventoryService) Get() *api_proto.ThirdParty {
 func (self *InventoryService) GetToolInfo(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	tool string) (*api_proto.Tool, error) {
+	tool string) (*artifacts_proto.Tool, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -66,17 +66,18 @@ func (self *InventoryService) GetToolInfo(
 					return nil, err
 				}
 			}
-			return proto.Clone(item).(*api_proto.Tool), nil
+			return proto.Clone(item).(*artifacts_proto.Tool), nil
 		}
 	}
 
+	fmt.Printf("Tool %v not declared in inventory.\n", tool)
 	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
 }
 
 func (self *InventoryService) downloadTool(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	tool *api_proto.Tool) error {
+	tool *artifacts_proto.Tool) error {
 	if tool.Url == "" {
 		return errors.New(fmt.Sprintf(
 			"Tool %v has no url defined - upload it manually.", tool.Name))
@@ -120,10 +121,10 @@ func (self *InventoryService) RemoveTool(
 	defer self.mu.Unlock()
 
 	if self.binaries == nil {
-		self.binaries = &api_proto.ThirdParty{}
+		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
-	tools := []*api_proto.Tool{}
+	tools := []*artifacts_proto.Tool{}
 	for _, item := range self.binaries.Tools {
 		if item.Name != tool_name {
 			tools = append(tools, item)
@@ -141,16 +142,32 @@ func (self *InventoryService) RemoveTool(
 }
 
 func (self *InventoryService) AddTool(
-	config_obj *config_proto.Config, tool *api_proto.Tool) error {
+	config_obj *config_proto.Config, tool *artifacts_proto.Tool) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	if self.binaries == nil {
-		self.binaries = &api_proto.ThirdParty{}
+		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
 	// Obfuscate the public directory path.
 	tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
+
+	if tool.ServeLocally {
+		if len(config_obj.Client.ServerUrls) == 0 {
+			return errors.New("No server URLs configured!")
+		}
+		tool.Url = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+	}
+
+	if tool.Url == "" {
+		return errors.New("No tool URL defined and I will not be serving it locally!")
+	}
+
+	// Set the filename to something sensible so it is always valid.
+	if tool.Filename == "" {
+		tool.Filename = path.Base(tool.Url)
+	}
 
 	found := false
 	for i, item := range self.binaries.Tools {
@@ -178,28 +195,16 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	inventory := &api_proto.ThirdParty{}
+	inventory := &artifacts_proto.ThirdParty{}
 	err = db.GetSubject(config_obj, constants.ThirdPartyInventory, inventory)
 	self.binaries = inventory
 
-	// Inventory is not yet loaded, schedule the artifact on the server.
-	if inventory.Version == 0 {
-		logger.Info("Launching Server.Utils.DownloadBinaries to sync inventory")
-		_, err = ScheduleArtifactCollection(
-			context.Background(), config_obj,
-			config_obj.Client.PinnedServerName,
-			&flows_proto.ArtifactCollectorArgs{
-				ClientId:  "server",
-				Artifacts: []string{"Server.Utils.DownloadBinaries"},
-			})
-	}
-	return err
+	return nil
 }
 
 func StartInventoryService(

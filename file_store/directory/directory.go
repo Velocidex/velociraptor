@@ -241,11 +241,22 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 			if info == nil || err != nil {
 				return nil
 			}
+
+			// Not a filestore file - its a data store path.
+			if strings.HasSuffix(path, ".db") ||
+				strings.HasSuffix(path, ".db\"") {
+				return nil
+			}
+
 			filename, err_1 := self.FileStorePathToFilename(path)
 			if err_1 != nil {
 				return err_1
 			}
-			return walkFn(filename,
-				&api.FileStoreFileInfo{info, path, nil}, err)
+
+			if !info.IsDir() {
+				return walkFn(filename,
+					&api.FileStoreFileInfo{info, path, nil}, err)
+			}
+			return nil
 		})
 }
