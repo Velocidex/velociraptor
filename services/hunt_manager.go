@@ -97,7 +97,6 @@ func (self *HuntManager) StartParticipation(
 	go func() {
 		defer cancel()
 		defer wg.Done()
-		defer self.Close()
 
 		for {
 			select {
@@ -128,7 +127,6 @@ func (self *HuntManager) StartFlowCompletion(
 	go func() {
 		defer cancel()
 		defer wg.Done()
-		defer self.Close()
 
 		for {
 			select {
@@ -145,14 +143,6 @@ func (self *HuntManager) StartFlowCompletion(
 	}()
 
 	return nil
-}
-
-// Close will block until all our cleanup is done.
-func (self *HuntManager) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Shutting down hunt manager service.")
 }
 
 func (self *HuntManager) ProcessFlowCompletion(

@@ -13,6 +13,9 @@ tools:
 
 precondition: SELECT OS From info() where OS = 'windows'
 
+required_permissions:
+  - EXECVE
+
 parameters:
   - name: AutorunArgs
     description: |

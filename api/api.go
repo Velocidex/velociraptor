@@ -998,7 +998,7 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	return result, err
 }
 
-func StartServer(
+func startAPIServer(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
