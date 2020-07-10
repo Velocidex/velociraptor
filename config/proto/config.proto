@@ -361,6 +361,13 @@ message FrontendConfig {
             description: "Port to bind to."
         }];
 
+    // This allows the frontends to listen on plain HTTP - It is
+    // useful if you have SSL offloading (e.g. ngix). This is not
+    // configured by the wizard - you will need to manually configure
+    // it. You better know what you are doing here!
+    bool use_plain_http = 24;
+
+
     string certificate = 3 [(sem_type) = {
             description: "X509 Certificate of frontend server."
         }];

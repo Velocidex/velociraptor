@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -68,7 +67,7 @@ func doFrontend() {
 func startFrontend(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (*server.Server, error) {
+	config_obj *config_proto.Config) (*api.Builder, error) {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
@@ -104,12 +103,6 @@ func startFrontend(
 		return nil, err
 	}
 
-	var server_obj *server.Server
-
-	// Create a new server
-	server_obj, err = server.NewServer(config_obj)
-	kingpin.FatalIfError(err, "Unable to create server")
-
 	// These services must start on all frontends
 	err = services.StartFrontendServices(ctx, wg, config_obj)
 	if err != nil {
@@ -125,144 +118,20 @@ func startFrontend(
 		return nil, err
 	}
 
-	// Start monitoring.
-	if config_obj.Frontend.ServerServices.MonitoringService {
-		api.StartMonitoringService(ctx, wg, config_obj)
+	server_builder, err := api.NewServerBuilder(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	// Start the gRPC API server.
 	if config_obj.Frontend.ServerServices.ApiServer {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			err := api.StartServer(ctx, wg, config_obj, server_obj)
-			kingpin.FatalIfError(
-				err, "Unable to start API server")
-		}()
+		err = server_builder.WithAPIServer(ctx, wg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	// Are we in autocert mode? There are special requirements in
-	// this case.
-	if config_obj.AutocertCertCache != "" {
-		startAutoCertFrontend(ctx, wg, config_obj, server_obj)
-
-		// If the GUI and Frontend need to be on the same port
-		// we just merge the handlers and start one server.
-	} else if config_obj.GUI.BindAddress == config_obj.Frontend.BindAddress &&
-		config_obj.GUI.BindPort == config_obj.Frontend.BindPort {
-		startSharedSelfSignedFrontend(ctx, wg, config_obj, server_obj)
-
-		// Launch the frontend and gui on different ports.
-	} else {
-		startSelfSignedFrontend(ctx, wg, config_obj, server_obj)
-	}
-
-	return server_obj, nil
-}
-
-// When the GUI and Frontend share the same port we start them with
-// the same server.
-func startSharedSelfSignedFrontend(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	server_obj *server.Server) {
-	mux := http.NewServeMux()
-
-	server.PrepareFrontendMux(config_obj, server_obj, mux)
-	router, err := api.PrepareMux(config_obj, mux)
-	kingpin.FatalIfError(
-		err, "Unable to start API server")
-
-	// Start comms over https.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err = server.StartFrontendHttps(
-			ctx, wg,
-			config_obj, server_obj, router)
-		kingpin.FatalIfError(
-			err, "StartFrontendHttps")
-	}()
-
-}
-
-// Start the Frontend and GUI on different ports using different
-// server objects.
-func startSelfSignedFrontend(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	server_obj *server.Server) {
-
-	// Launch a new server for the GUI.
-	if config_obj.Frontend.ServerServices.GuiServer {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-			mux := http.NewServeMux()
-
-			router, err := api.PrepareMux(config_obj, mux)
-			kingpin.FatalIfError(
-				err, "Unable to start API server")
-
-			// Start the GUI separately on
-			// a different port.
-			api.StartSelfSignedHTTPSProxy(
-				ctx, wg, config_obj, router)
-		}()
-	}
-
-	// Add Comms handlers if required.
-	wg.Add(1)
-
-	go func() {
-		defer wg.Done()
-		// Launch a server for the frontend.
-		mux := http.NewServeMux()
-
-		server.PrepareFrontendMux(
-			config_obj, server_obj, mux)
-
-		// Start comms over https.
-		err := server.StartFrontendHttps(
-			ctx, wg,
-			config_obj, server_obj, mux)
-		kingpin.FatalIfError(err, "StartFrontendHttps")
-	}()
-}
-
-// When in autocert mode, we share the same port for both frontend and
-// gui. We also ignore the port settings because letsencrypt must use
-// port 443 and 80.
-func startAutoCertFrontend(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	server_obj *server.Server) {
-
-	// For autocert we combine the GUI and frontends on the same
-	// port. The ACME protocol requires ports 80 and 443 for all
-	// services.
-	mux := http.NewServeMux()
-
-	// Add Comms handlers.
-	server.PrepareFrontendMux(config_obj, server_obj, mux)
-
-	router, err := api.PrepareMux(config_obj, mux)
-	kingpin.FatalIfError(
-		err, "Unable to start API server")
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		err = server.StartTLSServer(
-			ctx, wg, config_obj, server_obj, router)
-		kingpin.FatalIfError(err, "StartTLSServer")
-	}()
+	return server_builder, server_builder.StartServer(ctx, wg)
 }
 
 func init() {

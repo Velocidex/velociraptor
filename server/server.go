@@ -55,6 +55,8 @@ type Server struct {
 
 	Bucket           *ratelimit.Bucket
 	APIClientFactory grpc_client.APIClientFactory
+
+	Healthy int32
 }
 
 func (self *Server) StartConcurrencyControl() {

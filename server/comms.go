@@ -18,14 +18,10 @@
 package server
 
 import (
-	"context"
-	"crypto/tls"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -40,7 +36,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/acme/autocert"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -48,7 +43,6 @@ import (
 )
 
 var (
-	healthy            int32
 	currentConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "client_comms_current_connections",
 		Help: "Number of currently connected clients.",
@@ -83,7 +77,7 @@ func PrepareFrontendMux(
 	config_obj *config_proto.Config,
 	server_obj *Server,
 	router *http.ServeMux) {
-	router.Handle("/healthz", healthz())
+	router.Handle("/healthz", healthz(server_obj))
 	router.Handle("/server.pem", server_pem(config_obj))
 	router.Handle("/control", control(server_obj))
 	router.Handle("/reader", reader(config_obj, server_obj))
@@ -98,178 +92,9 @@ func PrepareFrontendMux(
 				"/public/"))))
 }
 
-// Starts the frontend over HTTPS.
-func StartFrontendHttps(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	server_obj *Server,
-	router http.Handler) error {
-
-	cert, err := tls.X509KeyPair(
-		[]byte(config_obj.Frontend.Certificate),
-		[]byte(config_obj.Frontend.PrivateKey))
-	if err != nil {
-		return err
-	}
-
-	listenAddr := fmt.Sprintf(
-		"%s:%d",
-		config_obj.Frontend.BindAddress,
-		config_obj.Frontend.BindPort)
-
-	server := &http.Server{
-		Addr:     listenAddr,
-		Handler:  router,
-		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
-
-		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  500 * time.Second,
-		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  150 * time.Second,
-		TLSConfig: &tls.Config{
-			MinVersion:   tls.VersionTLS12,
-			Certificates: []tls.Certificate{cert},
-			CurvePreferences: []tls.CurveID{tls.CurveP521,
-				tls.CurveP384, tls.CurveP256},
-
-			PreferServerCipherSuites: true,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-				tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-			},
-		},
-	}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		server_obj.Info("Frontend is ready to handle client TLS requests at %s", listenAddr)
-		atomic.StoreInt32(&healthy, 1)
-
-		err = server.ListenAndServeTLS("", "")
-		if err != nil && err != http.ErrServerClosed {
-			server_obj.Error("Frontend server error", err)
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		<-ctx.Done()
-
-		server_obj.Info("Shutting down frontend")
-		atomic.StoreInt32(&healthy, 0)
-
-		time_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
-		defer cancel()
-
-		server.SetKeepAlivesEnabled(false)
-		services.NotifyAllListeners(config_obj)
-		err := server.Shutdown(time_ctx)
-		if err != nil {
-			server_obj.Error("Frontend server error", err)
-		}
-		server_obj.Info("Shut down frontend")
-	}()
-
-	return nil
-}
-
-func StartTLSServer(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	server_obj *Server,
-	mux http.Handler) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-
-	if config_obj.GUI.BindPort != 443 {
-		logger.Info("Autocert specified - will listen on ports 443 and 80. "+
-			"I will ignore specified GUI port at %v",
-			config_obj.GUI.BindPort)
-	}
-
-	if config_obj.Frontend.BindPort != 443 {
-		logger.Info("Autocert specified - will listen on ports 443 and 80. "+
-			"I will ignore specified Frontend port at %v",
-			config_obj.GUI.BindPort)
-	}
-
-	cache_dir := config_obj.AutocertCertCache
-	if cache_dir == "" {
-		cache_dir = "/tmp/velociraptor_cache"
-	}
-
-	certManager := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		HostPolicy: autocert.HostWhitelist(config_obj.Frontend.Hostname),
-		Cache:      autocert.DirCache(cache_dir),
-	}
-
-	server := &http.Server{
-		// ACME protocol requires TLS be served over port 443.
-		Addr:     ":https",
-		Handler:  mux,
-		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
-
-		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
-		ReadTimeout:  500 * time.Second,
-		WriteTimeout: 900 * time.Second,
-		IdleTimeout:  15 * time.Second,
-		TLSConfig: &tls.Config{
-			MinVersion:     tls.VersionTLS12,
-			GetCertificate: certManager.GetCertificate,
-		},
-	}
-
-	// We must have port 80 open to serve the HTTP 01 challenge.
-	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		server_obj.Info("Frontend is ready to handle client requests using HTTPS")
-		atomic.StoreInt32(&healthy, 1)
-
-		err := server.ListenAndServeTLS("", "")
-		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Frontend server error", err)
-		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		<-ctx.Done()
-
-		server_obj.Info("Stopping Frontend Server")
-		atomic.StoreInt32(&healthy, 0)
-
-		timeout_ctx, cancel := context.WithTimeout(
-			context.Background(), 10*time.Second)
-		defer cancel()
-
-		server.SetKeepAlivesEnabled(false)
-		services.NotifyAllListeners(config_obj)
-		err := server.Shutdown(timeout_ctx)
-		if err != nil {
-			logger.Error("Frontend shutdown error ", err)
-		}
-		server_obj.Info("Shutdown frontend")
-	}()
-
-	return nil
-}
-
-func healthz() http.Handler {
+func healthz(server_obj *Server) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if atomic.LoadInt32(&healthy) == 1 {
+		if atomic.LoadInt32(&server_obj.Healthy) == 1 {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}
