@@ -479,10 +479,14 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
+	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	require.NoError(t, err)
+
 	flow_id, err := services.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
+		repository,
 		request)
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -505,11 +509,15 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
+	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	require.NoError(self.T(), err)
+
 	// Schedule a flow in the database.
 	flow_id, err := services.ScheduleArtifactCollection(
 		context.Background(),
 		self.config_obj,
 		self.config_obj.Client.PinnedServerName,
+		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
 			Artifacts: []string{"Generic.Client.Info"},
