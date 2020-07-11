@@ -78,13 +78,14 @@ func RunVQL(
 	return result, nil
 }
 
-func StoreVQLAsCSVFile(
+func StoreVQLAsCSVAndJsonFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
 	env *ordereddict.Dict,
 	query string,
-	writer io.Writer) error {
+	csv_fd io.Writer,
+	json_fd io.Writer) error {
 
 	scope := artifacts.ScopeBuilder{
 		Config:     config_obj,
@@ -100,7 +101,7 @@ func StoreVQLAsCSVFile(
 		return err
 	}
 
-	csv_writer := csv.GetCSVAppender(scope, writer, true /* write_headers */)
+	csv_writer := csv.GetCSVAppender(scope, csv_fd, true /* write_headers */)
 	defer csv_writer.Close()
 
 	sub_ctx, cancel := context.WithCancel(ctx)
@@ -108,43 +109,16 @@ func StoreVQLAsCSVFile(
 
 	for row := range vql.Eval(sub_ctx, scope) {
 		csv_writer.Write(row)
-	}
 
-	return nil
-}
-
-func StoreVQLAsJSONFile(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	principal string,
-	env *ordereddict.Dict,
-	query string,
-	writer io.Writer) error {
-
-	scope := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
-		Logger: logging.NewPlainLogger(config_obj,
-			&logging.ToolComponent),
-		Env: env,
-	}.Build()
-	defer scope.Close()
-
-	vql, err := vfilter.Parse(query)
-	if err != nil {
-		return err
-	}
-
-	for row := range vql.Eval(ctx, scope) {
 		serialized, err := json.Marshal(row)
 		if err != nil {
 			continue
 		}
-		_, err = writer.Write(serialized)
+		_, err = json_fd.Write(serialized)
 		if err != nil {
 			return errors.WithStack(err)
 		}
-		writer.Write([]byte("\n"))
+		json_fd.Write([]byte("\n"))
 	}
 
 	return nil

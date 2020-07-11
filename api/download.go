@@ -25,6 +25,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strings"
 	"time"
@@ -34,6 +35,7 @@ import (
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/tink-ab/tempfile"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -315,10 +317,18 @@ func createHuntDownloadFile(
 		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 		defer cancel()
 
-		// Export aggregate CSV files for all clients.
+		// Export aggregate CSV and JSON files for all clients.
 		for _, artifact_source := range hunt_details.ArtifactSources {
 			artifact, source := paths.SplitFullSourceName(
 				artifact_source)
+
+			report_err := func(err error) {
+				logging.GetLogger(config_obj, &logging.GUIComponent).
+					WithFields(logrus.Fields{
+						"artifact": artifact,
+						"error":    err,
+					}).Error("ExportHuntArtifact")
+			}
 
 			query := "SELECT * FROM hunt_results(" +
 				"hunt_id=HuntId, artifact=Artifact, " +
@@ -328,20 +338,63 @@ func createHuntDownloadFile(
 				Set("HuntId", hunt_id).
 				Set("Source", source)
 
-			f, err := zip_writer.Create("All " +
-				path.Join(artifact, source) + ".json")
+			// Write all results to a tmpfile then just
+			// copy the tmpfile into the zip.
+			json_tmpfile, err := tempfile.TempFile("", "tmp", ".json")
 			if err != nil {
+				report_err(err)
+				continue
+			}
+			defer os.Remove(json_tmpfile.Name())
+
+			csv_tmpfile, err := tempfile.TempFile("", "tmp", ".csv")
+			if err != nil {
+				report_err(err)
+				continue
+			}
+			defer os.Remove(csv_tmpfile.Name())
+
+			err = StoreVQLAsCSVAndJsonFile(ctx, config_obj,
+				principal, env, query,
+				csv_tmpfile, json_tmpfile)
+			if err != nil {
+				report_err(err)
 				continue
 			}
 
-			err = StoreVQLAsJSONFile(ctx, config_obj,
-				principal, env, query, f)
+			// Make sure the files are closed so we can
+			// open them for reading next.
+			csv_tmpfile.Close()
+			json_tmpfile.Close()
+
+			copier := func(name string, output_name string) error {
+				reader, err := os.Open(name)
+				if err != nil {
+					return err
+				}
+				defer reader.Close()
+
+				// Clean the name so it makes a reasonable zip member.
+				f, err := zip_writer.Create(cleanPathForZip(output_name))
+				if err != nil {
+					return err
+				}
+
+				_, err = utils.Copy(ctx, f, reader)
+				return err
+			}
+
+			err = copier(csv_tmpfile.Name(), "All "+
+				path.Join(artifact, source)+".csv")
 			if err != nil {
-				logging.GetLogger(config_obj, &logging.GUIComponent).
-					WithFields(logrus.Fields{
-						"artifact": artifact,
-						"error":    err,
-					}).Error("ExportHuntArtifact")
+				report_err(err)
+				continue
+			}
+
+			err = copier(json_tmpfile.Name(), "All "+
+				path.Join(artifact, source)+".json")
+			if err != nil {
+				report_err(err)
 			}
 		}
 
