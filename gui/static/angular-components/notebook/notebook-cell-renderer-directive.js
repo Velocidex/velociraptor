@@ -76,6 +76,11 @@ NotebookCellRendererController.prototype.onCellIdChange_ = function() {
     var self = this;
     this.grrApiService_.get(
         'v1/GetNotebookCell', request).then(function success(response) {
+            // Do not close the editor if it is open.
+            if (self.cell.currently_editing) {
+                response.data.currently_editing = true;
+            };
+
             self.cell = response.data;
             if (!self.cell.type) {
                 self.cell.type = "Markdown";
