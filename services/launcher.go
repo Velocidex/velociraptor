@@ -64,7 +64,7 @@ func CompileCollectorArgs(
 			return nil, err
 		}
 
-		ensureToolsDeclared(ctx, config_obj, artifact)
+		EnsureToolsDeclared(ctx, config_obj, artifact)
 	}
 
 	// Add any artifact dependencies.
@@ -106,7 +106,7 @@ func getDependentTools(
 }
 
 // Make sure we know about tools the artifact itself defines.
-func ensureToolsDeclared(
+func EnsureToolsDeclared(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
 

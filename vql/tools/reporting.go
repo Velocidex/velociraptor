@@ -18,6 +18,11 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type ReportPart struct {
+	Artifact *artifacts_proto.Artifact
+	HTML     string
+}
+
 func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
 	template_artifact, ok := repository.Get(name)
 	if !ok || len(template_artifact.Reports) == 0 {
@@ -60,17 +65,22 @@ func produceReport(
 		return err
 	}
 
-	content_writer := &bytes.Buffer{}
+	parts := []*ReportPart{}
+	main := ""
 	for _, definition := range definitions {
+		content_writer := &bytes.Buffer{}
 		for _, report := range definition.Reports {
 			if report.Type != "client" {
 				continue
 			}
 
+			// Do not sanitize_html since we are writing a
+			// stand along HTML file - artifacts may
+			// generate arbitrary HTML.
 			template_engine, err := reporting.NewHTMLTemplateEngine(
 				config_obj, context.Background(), subscope,
 				vql_subsystem.NullACLManager{}, repository,
-				definition.Name)
+				definition.Name, false /* sanitize_html */)
 			if err != nil {
 				return err
 			}
@@ -87,17 +97,21 @@ func produceReport(
 
 			content_writer.Write([]byte(res))
 		}
+		parts = append(parts, &ReportPart{
+			Artifact: definition, HTML: content_writer.String()})
+		main += content_writer.String()
 	}
 
 	template_engine, err := reporting.NewHTMLTemplateEngine(
 		config_obj, context.Background(), subscope,
 		vql_subsystem.NullACLManager{}, repository,
-		template)
+		template, false /* sanitize_html */)
 	if err != nil {
 		return err
 	}
 
-	template_engine.SetEnv("main", content_writer.String())
+	template_engine.SetEnv("main", main)
+	template_engine.SetEnv("parts", parts)
 
 	result, err := template_engine.RenderRaw(
 		html_template_string, template_engine.Env.ToDict())
