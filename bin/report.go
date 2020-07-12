@@ -45,7 +45,8 @@ func doHTMLReport() {
 	for _, artifact_name := range result.Context.Request.Artifacts {
 		template_engine, err := reporting.NewHTMLTemplateEngine(
 			config_obj, context.Background(), nil, /* default scope */
-			vql_subsystem.NullACLManager{}, repository, artifact_name)
+			vql_subsystem.NullACLManager{}, repository, artifact_name,
+			false /* sanitize_html */)
 		kingpin.FatalIfError(err, "Generating report")
 
 		template_engine.SetEnv("ClientId", *report_command_flow_client)

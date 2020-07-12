@@ -26,10 +26,11 @@ import (
 
 type HTMLTemplateEngine struct {
 	*BaseTemplateEngine
-	tmpl       *template.Template
-	ctx        context.Context
-	log_writer *logWriter
-	Data       map[string]*actions_proto.VQLResponse
+	tmpl         *template.Template
+	ctx          context.Context
+	log_writer   *logWriter
+	Data         map[string]*actions_proto.VQLResponse
+	SanitizeHTML bool
 }
 
 func (self *HTMLTemplateEngine) Expand(values ...interface{}) interface{} {
@@ -65,10 +66,35 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 	default:
 		return t
 
+	case []*ordereddict.Dict:
+		columns := []string{}
+
+		result := "<table class=\"table table-striped\">\n"
+
+		for _, item := range t {
+			if len(columns) == 0 {
+				columns = item.Keys()
+				result += "  <tr>\n"
+				for _, name := range columns {
+					result += "    <th>" + name + "</th>\n"
+				}
+				result += "  </tr>\n"
+			}
+
+			result += "  <tr>\n"
+			for _, name := range columns {
+				value, _ := item.Get(name)
+				result += fmt.Sprintf("    <td>%v</td>\n", value)
+			}
+			result += "  </tr>\n"
+		}
+		result += "</table>\n"
+		return result
+
 	case chan *ordereddict.Dict:
 		columns := []string{}
 
-		result := "<table>\n"
+		result := "<table class=\"table table-striped\">\n"
 
 		for item := range t {
 			if len(columns) == 0 {
@@ -140,6 +166,10 @@ func (self *HTMLTemplateEngine) Execute(template_string string) (string, error) 
 	// Add classes to various tags
 	output_string := strings.ReplaceAll(string(output),
 		"<table>", "<table class=\"table table-striped\">")
+
+	if !self.SanitizeHTML {
+		return output_string, err
+	}
 
 	// Sanitize the HTML.
 	return bm_policy.Sanitize(output_string), nil
@@ -213,7 +243,8 @@ func NewHTMLTemplateEngine(
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository *artifacts.Repository,
-	artifact_name string) (
+	artifact_name string,
+	sanitize_html bool) (
 	*HTMLTemplateEngine, error) {
 
 	base_engine, err := newBaseTemplateEngine(
@@ -229,6 +260,7 @@ func NewHTMLTemplateEngine(
 		BaseTemplateEngine: base_engine,
 		ctx:                ctx,
 		log_writer:         log_writer,
+		SanitizeHTML:       sanitize_html,
 	}
 	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
 		template.FuncMap{

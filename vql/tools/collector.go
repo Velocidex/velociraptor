@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -150,6 +151,13 @@ func (self CollectPlugin) Call(
 				continue
 
 			}
+
+			err = services.EnsureToolsDeclared(ctx, config_obj, artifact)
+			if err != nil {
+				scope.Log("collect: ", name)
+				continue
+			}
+
 			artifact_definitions = append(artifact_definitions, artifact)
 
 			request := &actions_proto.VQLCollectorArgs{}

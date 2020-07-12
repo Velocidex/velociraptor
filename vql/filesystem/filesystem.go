@@ -293,7 +293,7 @@ func (self ReadFileFunction) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 	return &vfilter.FunctionInfo{
 		Name:    "read_file",
 		Doc:     "Read a file into a string.",
-		ArgType: type_map.AddType(scope, &ReadFileArgs{}),
+		ArgType: type_map.AddType(scope, &ReadFileFunctionArgs{}),
 	}
 }
 
