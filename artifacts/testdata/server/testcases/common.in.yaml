@@ -1,3 +1,12 @@
 Queries:
   - SELECT * FROM items(item=[1,2])
   - SELECT * FROM items(item=dict(X=1, Y=2))
+
+  # Check that switch() evaluates clauses by definition order
+  - SELECT * FROM switch(
+      zcase={
+          SELECT "First" FROM scope()
+      },
+      acase={
+          SELECT "Second" FROM scope()
+      })

@@ -2,7 +2,6 @@ package common
 
 import (
 	"context"
-	"sort"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -21,7 +20,6 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 
 		queries := []vfilter.StoredQuery{}
 		members := scope.GetMembers(args)
-		sort.Strings(members)
 
 		for _, member := range members {
 			member_obj, _ := args.Get(member)
