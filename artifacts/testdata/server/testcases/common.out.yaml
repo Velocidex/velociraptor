@@ -16,4 +16,8 @@ SELECT * FROM items(item=[1,2])[
   "_key": "Y",
   "_value": 2
  }
+]SELECT * FROM switch( zcase={ SELECT "First" FROM scope() }, acase={ SELECT "Second" FROM scope() })[
+ {
+  "\"First\"": "First"
+ }
 ]
