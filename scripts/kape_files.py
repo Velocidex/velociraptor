@@ -163,6 +163,9 @@ parameters:
     type: bool
     default:
     description: If set we run the collection across all VSS and collect only unique changes.
+  - name: DontBeLazy
+    description: Normally we prefer to use lazy_ntfs for speed. Sometimes this might miss stuff so setting this will fallback to the regular ntfs accessor.
+    type: bool
 
 sources:
   - name: All File Metadata
@@ -195,7 +198,8 @@ sources:
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
-                      RootDevice=Device, Accessor="lazy_ntfs",
+                      RootDevice=Device, Accessor=if(condition=DontBeLazy,
+                                                     then="ntfs", else="lazy_ntfs"),
                       collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
                })
            }, else={
@@ -206,7 +210,8 @@ sources:
                       collectionSpec=serialize(item=rule_specs_ntfs, format="csv"))
                }, b={
                    SELECT * FROM Artifact.Windows.Collectors.File(
-                      RootDevice=Device, Accessor="lazy_ntfs",
+                      RootDevice=Device, Accessor=if(condition=DontBeLazy,
+                                                     then="ntfs", else="lazy_ntfs"),
                       collectionSpec=serialize(item=rule_specs_lazy_ntfs, format="csv"))
                })
            })

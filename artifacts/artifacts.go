@@ -89,11 +89,11 @@ func (self *Repository) LoadDirectory(dirname string) (*int, error) {
 				strings.HasSuffix(info.Name(), ".yml")) {
 				data, err := ioutil.ReadFile(file_path)
 				if err != nil {
-					return errors.WithStack(err)
+					return errors.Wrap(err, "While reading "+info.Name())
 				}
 				_, err = self.LoadYaml(string(data), false)
 				if err != nil {
-					return err
+					return errors.Wrap(err, "While reading "+info.Name())
 				}
 
 				count += 1

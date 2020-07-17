@@ -211,7 +211,7 @@ sources:
 
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, parameters, sources, reports
-            FROM artifact_definitions(names=Artifacts)
+            FROM artifact_definitions(names=Artifacts + template)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
 
