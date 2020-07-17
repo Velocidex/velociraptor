@@ -115,7 +115,7 @@ func (self *Expansions) Query(queries ...string) string {
 
 	defer scope.Close()
 
-	scope.Logger = log.New(os.Stderr, "velociraptor: ", log.Lshortfile)
+	scope.Logger = log.New(os.Stderr, " ", 0)
 
 	for _, query := range queries {
 		vql, err := vfilter.Parse(query)

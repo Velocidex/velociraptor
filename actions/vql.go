@@ -116,8 +116,7 @@ func (self VQLClientAction) StartQuery(
 		Env:        ordereddict.NewDict(),
 		Uploader:   uploader,
 		Repository: repository,
-		Logger: log.New(&LogWriter{config_obj, responder},
-			"vql: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj, responder}, "vql: ", 0),
 	}
 
 	for _, env_spec := range arg.Env {

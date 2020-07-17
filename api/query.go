@@ -173,5 +173,5 @@ func (self *logWriter) Write(b []byte) (int, error) {
 
 func MakeLogger(output chan *actions_proto.VQLResponse) *log.Logger {
 	result := &logWriter{output: output}
-	return log.New(result, "vql: ", log.Lshortfile)
+	return log.New(result, "vql: ", 0)
 }

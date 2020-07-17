@@ -46,7 +46,7 @@ func doUnzip() {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("MemberGlob", *unzip_cmd_member),

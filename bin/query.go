@@ -266,7 +266,7 @@ func doQuery() {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -296,7 +296,7 @@ func doQuery() {
 	ctx = InstallSignalHandler(scope)
 
 	if *trace_vql_flag {
-		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", log.Lshortfile)
+		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", 0)
 	}
 	for _, query := range *queries {
 		statements, err := vfilter.MultiParse(query)

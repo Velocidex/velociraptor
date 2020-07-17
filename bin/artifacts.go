@@ -180,7 +180,7 @@ func doArtifactCollect() {
 	scope := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, " ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_name).
 			Set("Output", *artifact_command_collect_output).
