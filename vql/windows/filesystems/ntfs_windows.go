@@ -544,10 +544,12 @@ func (self *NTFSFileSystemAccessor) Lstat(path string) (res glob.FileInfo, err e
 	for _, info := range ntfs.ListDir(ntfs_ctx, dir) {
 		if strings.ToLower(info.Name) == strings.ToLower(
 			components[len(components)-1]) {
-			return &NTFSFileInfo{
+			res := &NTFSFileInfo{
 				info:       info,
 				_full_path: device + dirname + "\\" + info.Name,
-			}, nil
+			}
+			return res, nil
+
 		}
 	}
 

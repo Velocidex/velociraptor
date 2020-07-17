@@ -62,7 +62,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-. ]", replace="_")
+          re="[^0-9A-Za-z\\-.]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename)
 
@@ -81,7 +81,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-. ]", replace="_")
+          re="[^0-9A-Za-z\\-.]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to s3 bucket " + TargetArgs.bucket)
@@ -114,7 +114,7 @@ parameters:
       LET filename <= regex_replace(
           source=format(format="Collection-%s-%s",
                         args=[baseline[0].Fqdn, timestamp(epoch=now())]),
-          re="[^0-9A-Za-z\\-. ]", replace="_")
+          re="[^0-9A-Za-z\\-.]", replace="_")
 
       LET _ <= log(message="Will collect package " + filename +
          " and upload to GCS bucket " + TargetArgs.bucket)
@@ -211,7 +211,7 @@ sources:
 
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, parameters, sources, reports
-            FROM artifact_definitions(names=Artifacts)
+            FROM artifact_definitions(names=Artifacts + template)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
 

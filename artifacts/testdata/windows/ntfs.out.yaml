@@ -43,6 +43,14 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
  {
   "FullPath": "\\\\.\\c:\\hello.txt:myads"
  }
+]SELECT FullPath FROM glob(globs="C:/$LogFile", accessor="lazy_ntfs")[
+ {
+  "FullPath": "\\\\.\\C:\\$LogFile"
+ }
+]SELECT FullPath FROM glob(globs="C:/$LogFile", accessor="ntfs")[
+ {
+  "FullPath": "\\\\.\\C:\\$LogFile"
+ }
 ]SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")[
  {
   "FullPath": "\\\\.\\C:"

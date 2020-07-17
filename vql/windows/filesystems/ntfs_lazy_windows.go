@@ -39,6 +39,7 @@ import (
 
 func ExtractI30List(accessor_ctx *AccessorContext,
 	mft_entry *ntfs.MFT_ENTRY, path string) []glob.FileInfo {
+
 	result := []glob.FileInfo{}
 	ntfs_ctx := accessor_ctx.ntfs_ctx
 
@@ -50,10 +51,6 @@ func ExtractI30List(accessor_ctx *AccessorContext,
 	} else {
 		lru_map = make(map[string]*cacheMFT)
 		for _, record := range mft_entry.Dir(ntfs_ctx) {
-			if !record.IsValid() {
-				continue
-			}
-
 			filename := record.File()
 			name_type := filename.NameType().Name
 			if name_type == "DOS" {
@@ -123,25 +120,19 @@ func (self *LazyNTFSFileInfo) ensureCachedInfo() {
 }
 
 func (self *LazyNTFSFileInfo) IsDir() bool {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 	return self.cached_info.IsDir
 
 	return true
 }
 
 func (self *LazyNTFSFileInfo) Size() int64 {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 	return self.cached_info.Size
 }
 
 func (self *LazyNTFSFileInfo) Data() interface{} {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 
 	result := ordereddict.NewDict().
 		Set("mft", self.cached_info.MFTId).
@@ -170,9 +161,7 @@ func (self *LazyNTFSFileInfo) Mode() os.FileMode {
 }
 
 func (self *LazyNTFSFileInfo) ModTime() time.Time {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 	return self.cached_info.Mtime
 }
 
@@ -181,9 +170,7 @@ func (self *LazyNTFSFileInfo) FullPath() string {
 }
 
 func (self *LazyNTFSFileInfo) Mtime() utils.TimeVal {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 
 	return utils.TimeVal{
 		Sec: self.cached_info.Mtime.Unix(),
@@ -191,9 +178,7 @@ func (self *LazyNTFSFileInfo) Mtime() utils.TimeVal {
 }
 
 func (self *LazyNTFSFileInfo) Ctime() utils.TimeVal {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 
 	return utils.TimeVal{
 		Sec: self.cached_info.Ctime.Unix(),
@@ -201,9 +186,7 @@ func (self *LazyNTFSFileInfo) Ctime() utils.TimeVal {
 }
 
 func (self *LazyNTFSFileInfo) Atime() utils.TimeVal {
-	if self.cached_info == nil {
-		self.ensureCachedInfo()
-	}
+	self.ensureCachedInfo()
 
 	return utils.TimeVal{
 		Sec: self.cached_info.Atime.Unix(),
@@ -301,7 +284,8 @@ func (self *LazyNTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInf
 		return nil, err
 	}
 
-	return ExtractI30List(accessor_ctx, dir, path), nil
+	result = ExtractI30List(accessor_ctx, dir, path)
+	return result, nil
 }
 
 func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekCloser, err error) {
