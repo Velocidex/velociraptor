@@ -1,7 +1,7 @@
-<div ng-if="controller.auth_using_google" class="">
+<div class="">
   <p ng-if="!controller.error">
     <div class="btn-group" role="group" aria-label="left align">
-      <a href="/auth/google/login"
+      <a href="/logoff?username={{ controller.username }}"
          class="btn btn-primary toolbar-buttons"
          role="button">
         <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
@@ -15,27 +15,6 @@
            role="button"
            ng-src="{{controller.picture}}" class="img-thumbnail"
            />
-    </div>
-  </p>
-
-  <p ng-if="controller.error">
-    <span class="text-danger"><em>{$ controller.error $}</em></span>
-  </p>
-
-</div>
-
-<div ng-if="!controller.auth_using_google" class="">
-  <p ng-if="!controller.error">
-    <div class="btn-group" role="group" aria-label="left align">
-      <a href="/logoff?username={{ controller.username }}"
-         class="btn btn-primary toolbar-buttons"
-         role="button">
-        <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-      </a>
-      <button type="button"
-              class="btn btn-default toolbar-buttons disabled" >
-        {$ controller.username $}
-      </button>
     </div>
   </p>
 

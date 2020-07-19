@@ -80,8 +80,8 @@ func migrate_0_4_6(config_obj *config_proto.Config) {
 		auther := &config_proto.Authenticator{Type: "Basic"}
 		if config_obj.GUI.GoogleOauthClientId != "" {
 			auther.Type = "Google"
-			auther.GoogleOauthClientId = gui.GoogleOauthClientId
-			auther.GoogleOauthClientSecret = gui.GoogleOauthClientSecret
+			auther.OauthClientId = gui.GoogleOauthClientId
+			auther.OauthClientSecret = gui.GoogleOauthClientSecret
 
 			// Clear the old values
 			gui.GoogleOauthClientId = ""

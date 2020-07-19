@@ -49,13 +49,179 @@ type GoogleAuthenticator struct{}
 func (self *GoogleAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
 	mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
+
+	installLogoff(config_obj, mux)
+
 	return nil
+}
+
+func (self *GoogleAuthenticator) IsPasswordLess() bool {
+	return true
 }
 
 // Check that the user is proerly authenticated.
 func (self *GoogleAuthenticator) AuthenticateUserHandler(
 	config_obj *config_proto.Config,
 	parent http.Handler) http.Handler {
+
+	return authenticateUserHandle(
+		config_obj, parent, "/auth/google/login", "Google")
+}
+
+func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
+	authenticator := config_obj.GUI.Authenticator
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var googleOauthConfig = &oauth2.Config{
+			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
+			ClientID:     authenticator.OauthClientId,
+			ClientSecret: authenticator.OauthClientSecret,
+			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+			Endpoint:     google.Endpoint,
+		}
+
+		// Create oauthState cookie
+		oauthState, err := r.Cookie("oauthstate")
+		if err != nil {
+			oauthState = generateStateOauthCookie(w)
+		}
+
+		u := googleOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
+		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
+	})
+}
+
+func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
+	var expiration = time.Now().Add(365 * 24 * time.Hour)
+
+	b := make([]byte, 16)
+	rand.Read(b)
+	state := base64.URLEncoding.EncodeToString(b)
+	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
+	http.SetCookie(w, &cookie)
+
+	return &cookie
+}
+
+func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Read oauthState from Cookie
+		oauthState, _ := r.Cookie("oauthstate")
+
+		if r.FormValue("state") != oauthState.Value {
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				Error("invalid oauth google state")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		data, err := getUserDataFromGoogle(
+			r.Context(), config_obj, r.FormValue("code"))
+		if err != nil {
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		user_info := &api_proto.VelociraptorUser{}
+		err = json.Unmarshal(data, &user_info)
+		if err != nil {
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		// Create a new token object, specifying signing method and the claims
+		// you would like it to contain.
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"user": user_info.Email,
+			// Required re-auth after one day.
+			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
+			"picture": user_info.Picture,
+		})
+
+		// Sign and get the complete encoded token as a string using the secret
+		tokenString, err := token.SignedString(
+			[]byte(config_obj.Frontend.PrivateKey))
+		if err != nil {
+			logging.GetLogger(config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": err,
+				}).Error("getUserDataFromGoogle")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			return
+		}
+
+		// Set the cookie and redirect.
+		cookie := &http.Cookie{
+			Name:    "VelociraptorAuth",
+			Value:   tokenString,
+			Path:    "/",
+			Expires: time.Now().AddDate(0, 0, 1),
+		}
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	})
+}
+
+func getUserDataFromGoogle(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	code string) ([]byte, error) {
+	authenticator := config_obj.GUI.Authenticator
+	// Use code to get token and get user info from Google.
+	var googleOauthConfig = &oauth2.Config{
+		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
+		ClientID:     authenticator.OauthClientId,
+		ClientSecret: authenticator.OauthClientSecret,
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
+		Endpoint:     google.Endpoint,
+	}
+
+	token, err := googleOauthConfig.Exchange(ctx, code)
+	if err != nil {
+		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
+	}
+	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
+	}
+	defer response.Body.Close()
+
+	contents, err := ioutil.ReadAll(
+		io.LimitReader(response.Body, constants.MAX_MEMORY))
+	if err != nil {
+		return nil, fmt.Errorf("failed read response: %s", err.Error())
+	}
+	return contents, nil
+}
+
+func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
+	// On logoff just clear the cookie and redirect.
+	mux.Handle("/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		params := r.URL.Query()
+		old_username, ok := params["username"]
+		if ok && len(old_username) == 1 {
+			fmt.Sprintf("Logging off %v", old_username[0])
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:    "VelociraptorAuth",
+			Path:    "/",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		})
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	}))
+}
+
+func authenticateUserHandle(config_obj *config_proto.Config,
+	parent http.Handler, login_url string, provider string) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
@@ -68,8 +234,7 @@ func (self *GoogleAuthenticator) AuthenticateUserHandler(
 			}).Error("OAuth2 Redirect")
 
 			// Not authorized - redirect to logon screen.
-			http.Redirect(w, r, "/auth/google/login",
-				http.StatusTemporaryRedirect)
+			http.Redirect(w, r, login_url, http.StatusTemporaryRedirect)
 		}
 
 		// We store the user name and their details in a local
@@ -142,11 +307,11 @@ Authorization failed. You are not registered on this system as %v.
 Contact your system administrator to get an account, or click here
 to log in again:
 
-      <a href="/auth/google/login" style="text-transform:none">
-        Login with Google
+      <a href="%s" style="text-transform:none">
+        Login with %s
       </a>
 </body></html>
-`, username)
+`, username, login_url, provider)
 
 			logging.GetLogger(config_obj, &logging.Audit).
 				WithFields(logrus.Fields{
@@ -176,132 +341,4 @@ to log in again:
 		GetLoggingHandler(config_obj)(parent).ServeHTTP(
 			w, r.WithContext(ctx))
 	})
-
-}
-
-func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var googleOauthConfig = &oauth2.Config{
-			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-			ClientID:     config_obj.GUI.GoogleOauthClientId,
-			ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
-			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-			Endpoint:     google.Endpoint,
-		}
-
-		// Create oauthState cookie
-		oauthState, err := r.Cookie("oauthstate")
-		if err != nil {
-			oauthState = generateStateOauthCookie(w)
-		}
-
-		u := googleOauthConfig.AuthCodeURL(oauthState.Value)
-		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
-	})
-}
-
-func generateStateOauthCookie(w http.ResponseWriter) *http.Cookie {
-	var expiration = time.Now().Add(365 * 24 * time.Hour)
-
-	b := make([]byte, 16)
-	rand.Read(b)
-	state := base64.URLEncoding.EncodeToString(b)
-	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
-	http.SetCookie(w, &cookie)
-
-	return &cookie
-}
-
-func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Read oauthState from Cookie
-		oauthState, _ := r.Cookie("oauthstate")
-
-		if r.FormValue("state") != oauthState.Value {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
-				Error("invalid oauth google state")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		data, err := getUserDataFromGoogle(config_obj, r.FormValue("code"))
-		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err,
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		user_info := &api_proto.VelociraptorUser{}
-		err = json.Unmarshal(data, &user_info)
-		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err,
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		// Create a new token object, specifying signing method and the claims
-		// you would like it to contain.
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user": user_info.Email,
-			// Required re-auth after one day.
-			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
-			"picture": user_info.Picture,
-		})
-
-		// Sign and get the complete encoded token as a string using the secret
-		tokenString, err := token.SignedString(
-			[]byte(config_obj.Frontend.PrivateKey))
-		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).
-				WithFields(logrus.Fields{
-					"err": err,
-				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		// Set the cookie and redirect.
-		cookie := &http.Cookie{
-			Name:    "VelociraptorAuth",
-			Value:   tokenString,
-			Path:    "/",
-			Expires: time.Now().AddDate(0, 0, 1),
-		}
-		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-	})
-}
-
-func getUserDataFromGoogle(config_obj *config_proto.Config, code string) ([]byte, error) {
-	// Use code to get token and get user info from Google.
-	var googleOauthConfig = &oauth2.Config{
-		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-		ClientID:     config_obj.GUI.GoogleOauthClientId,
-		ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
-		Endpoint:     google.Endpoint,
-	}
-
-	token, err := googleOauthConfig.Exchange(context.Background(), code)
-	if err != nil {
-		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
-	}
-	response, err := http.Get(oauthGoogleUrlAPI + token.AccessToken)
-	if err != nil {
-		return nil, fmt.Errorf("failed getting user info: %s", err.Error())
-	}
-	defer response.Body.Close()
-
-	contents, err := ioutil.ReadAll(
-		io.LimitReader(response.Body, constants.MAX_MEMORY))
-	if err != nil {
-		return nil, fmt.Errorf("failed read response: %s", err.Error())
-	}
-	return contents, nil
 }

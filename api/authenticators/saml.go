@@ -22,6 +22,10 @@ var samlMiddleware *samlsp.Middleware
 
 type SamlAuthenticator struct{}
 
+func (self *SamlAuthenticator) IsPasswordLess() bool {
+	return true
+}
+
 func (self *SamlAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 	key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))

@@ -13,6 +13,8 @@ type Authenticator interface {
 	AuthenticateUserHandler(
 		config_obj *config_proto.Config,
 		parent http.Handler) http.Handler
+
+	IsPasswordLess() bool
 }
 
 func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
@@ -21,6 +23,10 @@ func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
 	}
 
 	switch config_obj.GUI.Authenticator.Type {
+	case "Azure":
+		return &AzureAuthenticator{}, nil
+	case "Github":
+		return &GitHubAuthenticator{}, nil
 	case "Google":
 		return &GoogleAuthenticator{}, nil
 	case "SAML":

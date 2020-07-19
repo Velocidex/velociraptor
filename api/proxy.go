@@ -145,9 +145,6 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 					file_store.GetFileStore(config_obj),
 					"/notebooks/")))))
 
-	// A logoff handler forces a logoff for basic auth.
-	mux.Handle("/logoff", logoff())
-
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
 

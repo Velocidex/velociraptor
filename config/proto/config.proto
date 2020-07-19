@@ -240,13 +240,16 @@ message GUILink {
 message Authenticator {
     string type = 1;
 
-    // Google Authenticator.
-    string google_oauth_client_id = 5 [(sem_type) = {
+    // OAuth2 Authenticator (Google, Github, Azure etc).
+    string oauth_client_id = 5 [(sem_type) = {
             description: "If set we use oauth authentication flow.",
         }];
-    string google_oauth_client_secret = 6 [(sem_type) = {
+    string oauth_client_secret = 6 [(sem_type) = {
             description: "If set we use oauth authentication flow.",
         }];
+
+    // Azure requires a tenancy as well.
+    string tenant = 7;
 
     // SAML Authenticator
     string saml_certificate = 12 [(sem_type) = {

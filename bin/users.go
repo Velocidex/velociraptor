@@ -27,6 +27,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -67,9 +68,13 @@ func doAddUser() {
 		strings.Split(*user_add_roles, ","))
 	kingpin.FatalIfError(err, "Granting roles: ")
 
-	if config_obj.GUI.GoogleOauthClientId != "" {
-		fmt.Printf("Authentication will occur via Google - " +
-			"therefore no password needs to be set.")
+	authenticator, err := authenticators.NewAuthenticator(config_obj)
+	kingpin.FatalIfError(err, "Granting roles: ")
+
+	if authenticator.IsPasswordLess() {
+		fmt.Printf("Authentication will occur via %v - "+
+			"therefore no password needs to be set.",
+			config_obj.GUI.Authenticator.Type)
 
 		password := make([]byte, 100)
 		_, err = rand.Read(password)

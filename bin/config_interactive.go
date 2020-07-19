@@ -21,7 +21,7 @@ import (
 const (
 	self_signed = "Self Signed SSL"
 	autocert    = "Automatically provision certificates with Lets Encrypt"
-	oauth_sso   = "Authenticate users with Google OAuth SSO"
+	oauth_sso   = "Authenticate users with SSO"
 
 	// FileStore implementations
 	mysql_datastore     = "MySQL"
@@ -39,6 +39,12 @@ begin by identifying what type of deployment you need.
 
 `,
 		Options: []string{self_signed, autocert, oauth_sso},
+	}
+
+	sso_type = &survey.Select{
+		Message: "Select the SSO Authentication Provider",
+		Default: "Google",
+		Options: []string{"Google", "GitHub", "Azure"},
 	}
 
 	server_type_question = &survey.Select{
@@ -118,14 +124,14 @@ begin by identifying what type of deployment you need.
 
 	google_oauth = []*survey.Question{
 		{
-			Name: "GoogleOauthClientId",
+			Name: "OauthClientId",
 			Prompt: &survey.Input{
-				Message: "Enter the Google OAuth Client ID?",
+				Message: "Enter the OAuth Client ID?",
 			},
 		}, {
-			Name: "GoogleOauthClientSecret",
+			Name: "OauthClientSecret",
 			Prompt: &survey.Input{
-				Message: "Enter the Google OAuth Client Secret?",
+				Message: "Enter the OAuth Client Secret?",
 			},
 		},
 	}
@@ -209,6 +215,9 @@ func doGenerateConfigInteractive() {
 			fmt.Sprintf("https://%s:%d/", config_obj.Frontend.Hostname,
 				config_obj.Frontend.BindPort))
 
+		config_obj.GUI.Authenticator = &config_proto.Authenticator{
+			Type: "Basic"}
+
 	case autocert:
 		kingpin.FatalIfError(configAutocert(config_obj), "")
 
@@ -271,10 +280,44 @@ func doGenerateConfigInteractive() {
 }
 
 func configureSSO(config_obj *config_proto.Config) {
-	// TODO Support all SSO schemes
-	config_obj.GUI.Authenticator.Type = "Google"
-	kingpin.FatalIfError(survey.Ask(google_oauth,
-		config_obj.GUI.Authenticator, survey.WithValidator(survey.Required)), "")
+	// Which flavor of SSO do we want?
+	kingpin.FatalIfError(
+		survey.AskOne(sso_type,
+			&config_obj.GUI.Authenticator.Type,
+			survey.WithValidator(survey.Required)), "")
+
+	// Provide the user with a hint about the redirect URL
+	redirect := ""
+	switch config_obj.GUI.Authenticator.Type {
+	case "Google":
+		redirect = config_obj.GUI.PublicUrl + "auth/google/callback"
+	case "GitHub":
+		redirect = config_obj.GUI.PublicUrl + "auth/github/callback"
+	case "Azure":
+		redirect = config_obj.GUI.PublicUrl + "auth/azure/callback"
+	}
+	fmt.Printf("\nSetting %v configuration will use redirect URL %v\n",
+		config_obj.GUI.Authenticator.Type, redirect)
+
+	switch config_obj.GUI.Authenticator.Type {
+	case "Google", "GitHub":
+		kingpin.FatalIfError(survey.Ask(google_oauth,
+			config_obj.GUI.Authenticator,
+			survey.WithValidator(survey.Required)), "")
+
+	case "Azure":
+		// Azure also requires the tenant ID
+		google_oauth = append(google_oauth, &survey.Question{
+			Name: "Tenant",
+			Prompt: &survey.Input{
+				Message: "Enter the Tenant Domain name or ID?",
+			},
+		})
+
+		kingpin.FatalIfError(survey.Ask(google_oauth,
+			config_obj.GUI.Authenticator,
+			survey.WithValidator(survey.Required)), "")
+	}
 }
 
 func dynDNSConfig(config_obj *config_proto.Config) error {

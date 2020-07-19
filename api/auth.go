@@ -20,7 +20,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"net/http"
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -32,26 +31,6 @@ import (
 var (
 	contextKeyUser = "USER"
 )
-
-func logoff() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username, _, ok := r.BasicAuth()
-		if !ok {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		params := r.URL.Query()
-		old_username, ok := params["username"]
-		if ok && len(old_username) == 1 && old_username[0] != username {
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-			return
-		}
-
-		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "authorization failed", http.StatusUnauthorized)
-	})
-}
 
 // GetGRPCUserInfo: Extracts user information from GRPC context.
 func GetGRPCUserInfo(
