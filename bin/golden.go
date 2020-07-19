@@ -102,7 +102,7 @@ func runTest(fixture *testFixture) (string, error) {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", log.Lshortfile),
+		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
@@ -157,7 +157,7 @@ func doGolden() {
 		"%s*.in.yaml", *golden_command_prefix))
 	kingpin.FatalIfError(err, "Glob")
 
-	logger := log.New(os.Stderr, "golden: ", log.Lshortfile)
+	logger := log.New(os.Stderr, "golden: ", 0)
 
 	failures := []string{}
 

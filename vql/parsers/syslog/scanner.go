@@ -135,14 +135,14 @@ func maybeOpenGzip(scope *vfilter.Scope,
 		return nil, err
 	}
 
-	defer fd.Seek(0, 0)
-
 	zr, err := gzip.NewReader(fd)
 	if err == nil {
 		return zr, nil
 	}
 
-	return fd, nil
+	fd.Close()
+
+	return accessor.Open(filename)
 }
 
 func init() {
