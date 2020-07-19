@@ -118,6 +118,9 @@ func GetDefaultConfig() *config_proto.Config {
 				"127.0.0.1/12", "192.168.0.0/16",
 			},
 			ReverseProxy: []*config_proto.ReverseProxyConfig{},
+			Authenticator: &config_proto.Authenticator{
+				Type: "Basic",
+			},
 		},
 		CA: &config_proto.CAConfig{},
 		Frontend: &config_proto.FrontendConfig{

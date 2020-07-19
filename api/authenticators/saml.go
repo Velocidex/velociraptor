@@ -1,4 +1,4 @@
-package api
+package authenticators
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -21,52 +20,51 @@ import (
 
 var samlMiddleware *samlsp.Middleware
 
-func MaybeAddSAMLHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	if config.SAMLEnabled(config_obj) {
-		logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-		key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))
-		if err != nil {
-			return err
-		}
+type SamlAuthenticator struct{}
 
-		cert, err := crypto.ParseX509CertFromPemStr([]byte(config_obj.GUI.SamlCertificate))
-		if err != nil {
-			return err
-		}
+func (self *SamlAuthenticator) IsPasswordLess() bool {
+	return true
+}
 
-		idpMetadataURL, err := url.Parse(config_obj.GUI.SamlIdpMetadataUrl)
-		if err != nil {
-			return err
-		}
-
-		rootURL, err := url.Parse(config_obj.GUI.SamlRootUrl)
-		if err != nil {
-			return err
-		}
-		samlMiddleware, err = samlsp.New(samlsp.Options{
-			IDPMetadataURL: idpMetadataURL,
-			URL:            *rootURL,
-			Key:            key,
-			Certificate:    cert,
-		})
-		if err != nil {
-			return err
-		}
-		mux.Handle("/saml/", samlMiddleware)
-		logger.Info("Authentication via SAML enabled")
+func (self *SamlAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	key, err := crypto.ParseRsaPrivateKeyFromPemStr([]byte(config_obj.GUI.SamlPrivateKey))
+	if err != nil {
+		return err
 	}
 
+	cert, err := crypto.ParseX509CertFromPemStr([]byte(config_obj.GUI.SamlCertificate))
+	if err != nil {
+		return err
+	}
+
+	idpMetadataURL, err := url.Parse(config_obj.GUI.SamlIdpMetadataUrl)
+	if err != nil {
+		return err
+	}
+
+	rootURL, err := url.Parse(config_obj.GUI.SamlRootUrl)
+	if err != nil {
+		return err
+	}
+	samlMiddleware, err = samlsp.New(samlsp.Options{
+		IDPMetadataURL: idpMetadataURL,
+		URL:            *rootURL,
+		Key:            key,
+		Certificate:    cert,
+	})
+	if err != nil {
+		return err
+	}
+	mux.Handle("/saml/", samlMiddleware)
+	logger.Info("Authentication via SAML enabled")
 	return nil
 }
 
-func userAttr(config_obj *config_proto.Config) string {
-	if config_obj.GUI.SamlUserAttribute == "" {
-		return "name"
-	}
-	return config_obj.GUI.SamlUserAttribute
-}
+func (self *SamlAuthenticator) AuthenticateUserHandler(
+	config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
 
-func authenticateSAML(config_obj *config_proto.Config, parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
@@ -111,4 +109,11 @@ Contact your system administrator to get an account, then try again.
 		}
 		samlMiddleware.RequireAccountHandler(w, r)
 	})
+}
+
+func userAttr(config_obj *config_proto.Config) string {
+	if config_obj.GUI.SamlUserAttribute == "" {
+		return "name"
+	}
+	return config_obj.GUI.SamlUserAttribute
 }

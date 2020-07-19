@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package api
+package authenticators
 
 import (
 	"crypto/rand"
@@ -44,22 +44,38 @@ import (
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-func MaybeAddOAuthHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	if config_obj.GUI.GoogleOauthClientId != "" &&
-		config_obj.GUI.GoogleOauthClientSecret != "" {
-		mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
-		mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
-	}
+type GoogleAuthenticator struct{}
+
+func (self *GoogleAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
+	mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
+
+	installLogoff(config_obj, mux)
 
 	return nil
 }
 
+func (self *GoogleAuthenticator) IsPasswordLess() bool {
+	return true
+}
+
+// Check that the user is proerly authenticated.
+func (self *GoogleAuthenticator) AuthenticateUserHandler(
+	config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
+
+	return authenticateUserHandle(
+		config_obj, parent, "/auth/google/login", "Google")
+}
+
 func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
+	authenticator := config_obj.GUI.Authenticator
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var googleOauthConfig = &oauth2.Config{
 			RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-			ClientID:     config_obj.GUI.GoogleOauthClientId,
-			ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
+			ClientID:     authenticator.OauthClientId,
+			ClientSecret: authenticator.OauthClientSecret,
 			Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 			Endpoint:     google.Endpoint,
 		}
@@ -70,7 +86,7 @@ func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
 			oauthState = generateStateOauthCookie(w)
 		}
 
-		u := googleOauthConfig.AuthCodeURL(oauthState.Value)
+		u := googleOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
 		http.Redirect(w, r, u, http.StatusTemporaryRedirect)
 	})
 }
@@ -99,7 +115,8 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
-		data, err := getUserDataFromGoogle(config_obj, r.FormValue("code"))
+		data, err := getUserDataFromGoogle(
+			r.Context(), config_obj, r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
@@ -153,17 +170,21 @@ func oauthGoogleCallback(config_obj *config_proto.Config) http.Handler {
 	})
 }
 
-func getUserDataFromGoogle(config_obj *config_proto.Config, code string) ([]byte, error) {
+func getUserDataFromGoogle(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	code string) ([]byte, error) {
+	authenticator := config_obj.GUI.Authenticator
 	// Use code to get token and get user info from Google.
 	var googleOauthConfig = &oauth2.Config{
 		RedirectURL:  config_obj.GUI.PublicUrl + "auth/google/callback",
-		ClientID:     config_obj.GUI.GoogleOauthClientId,
-		ClientSecret: config_obj.GUI.GoogleOauthClientSecret,
+		ClientID:     authenticator.OauthClientId,
+		ClientSecret: authenticator.OauthClientSecret,
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
 
-	token, err := googleOauthConfig.Exchange(context.Background(), code)
+	token, err := googleOauthConfig.Exchange(ctx, code)
 	if err != nil {
 		return nil, fmt.Errorf("code exchange wrong: %s", err.Error())
 	}
@@ -181,12 +202,31 @@ func getUserDataFromGoogle(config_obj *config_proto.Config, code string) ([]byte
 	return contents, nil
 }
 
-func authenticateOAUTHCookie(
-	config_obj *config_proto.Config,
-	parent http.Handler) http.Handler {
+func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
+	// On logoff just clear the cookie and redirect.
+	mux.Handle("/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		params := r.URL.Query()
+		old_username, ok := params["username"]
+		if ok && len(old_username) == 1 {
+			fmt.Sprintf("Logging off %v", old_username[0])
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:    "VelociraptorAuth",
+			Path:    "/",
+			Value:   "",
+			Expires: time.Unix(0, 0),
+		})
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	}))
+}
+
+func authenticateUserHandle(config_obj *config_proto.Config,
+	parent http.Handler, login_url string, provider string) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
+		// Reject by redirecting to the loging handler.
 		reject := func(err error) {
 			logger := logging.GetLogger(config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
@@ -194,10 +234,11 @@ func authenticateOAUTHCookie(
 			}).Error("OAuth2 Redirect")
 
 			// Not authorized - redirect to logon screen.
-			http.Redirect(w, r, "/auth/google/login",
-				http.StatusTemporaryRedirect)
+			http.Redirect(w, r, login_url, http.StatusTemporaryRedirect)
 		}
 
+		// We store the user name and their details in a local
+		// cookie. It is stored as a JWT so we can trust it.
 		auth_cookie, err := r.Cookie("VelociraptorAuth")
 		if err != nil {
 			reject(err)
@@ -254,7 +295,7 @@ func authenticateOAUTHCookie(
 			return
 		}
 
-		// Must have at least reader.
+		// Must have at least reader permission.
 		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
 		if !perm || err != nil || user_record.Locked || user_record.Name != username {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -266,11 +307,11 @@ Authorization failed. You are not registered on this system as %v.
 Contact your system administrator to get an account, or click here
 to log in again:
 
-      <a href="/auth/google/login" style="text-transform:none">
-        Login with Google
+      <a href="%s" style="text-transform:none">
+        Login with %s
       </a>
 </body></html>
-`, username)
+`, username, login_url, provider)
 
 			logging.GetLogger(config_obj, &logging.Audit).
 				WithFields(logrus.Fields{

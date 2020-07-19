@@ -30,6 +30,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -39,6 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
+// A Mux for the reverse proxy feature.
 func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
@@ -78,7 +80,11 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 		}
 
 		if reverse_proxy_config.RequireAuth {
-			handler = checkUserCredentialsHandler(config_obj, handler)
+			auther, err := authenticators.NewAuthenticator(config_obj)
+			if err != nil {
+				return err
+			}
+			handler = auther.AuthenticateUserHandler(config_obj, handler)
 		}
 
 		mux.Handle(reverse_proxy_config.Route, handler)
@@ -87,7 +93,7 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 	return nil
 }
 
-// Prepares a mux by adding handler required for the GUI.
+// Prepares a mux for the GUI by adding handlers required by the GUI.
 func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
 	ctx := context.Background()
 	h, err := GetAPIHandler(ctx, config_obj)
@@ -95,24 +101,35 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 		return nil, err
 	}
 
-	if err = MaybeAddSAMLHandlers(config_obj, mux); err != nil {
+	// The Authenticator is responsible for authenticating the
+	// user via some method. Authenticators may install their own
+	// mux handlers required for the various auth schemes but
+	// ultimately they are responsible for checking the user is
+	// properly authenticated.
+	auther, err := authenticators.NewAuthenticator(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = auther.AddHandlers(config_obj, mux)
+	if err != nil {
 		return nil, err
 	}
 
 	mux.Handle("/api/", csrfProtect(config_obj,
-		checkUserCredentialsHandler(config_obj, h)))
+		auther.AuthenticateUserHandler(config_obj, h)))
 
 	mux.Handle("/api/v1/DownloadVFSFile", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
+		auther.AuthenticateUserHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))
 
 	mux.Handle("/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
+		auther.AuthenticateUserHandler(
 			config_obj, vfsFolderDownloadHandler(config_obj))))
 
 	// Serve prepared zip files.
 	mux.Handle("/downloads/", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
+		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
 					config_obj,
@@ -121,15 +138,12 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 
 	// Serve notebook items
 	mux.Handle("/notebooks/", csrfProtect(config_obj,
-		checkUserCredentialsHandler(
+		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
 					config_obj,
 					file_store.GetFileStore(config_obj),
 					"/notebooks/")))))
-
-	// A logoff handler forces a logoff for basic auth.
-	mux.Handle("/logoff", logoff())
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -145,7 +159,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 		return nil, err
 	}
 	mux.Handle("/app.html", csrfProtect(config_obj,
-		checkUserCredentialsHandler(config_obj, h)))
+		auther.AuthenticateUserHandler(config_obj, h)))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
 	if err != nil {
@@ -154,9 +168,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 
 	// No Auth on / which is a redirect to app.html anyway.
 	mux.Handle("/", h)
-
-	err = MaybeAddOAuthHandlers(config_obj, mux)
-	return mux, err
+	return mux, nil
 }
 
 type _templateArgs struct {

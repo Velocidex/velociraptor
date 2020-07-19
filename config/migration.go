@@ -70,6 +70,45 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 	}
 }
 
+func migrate_0_4_6(config_obj *config_proto.Config) {
+	// We need to migrate old authentication information into an
+	// authenticator protobuf.
+	if config_obj.GUI != nil &&
+		config_obj.GUI.Authenticator == nil {
+		gui := config_obj.GUI
+
+		auther := &config_proto.Authenticator{Type: "Basic"}
+		if config_obj.GUI.GoogleOauthClientId != "" {
+			auther.Type = "Google"
+			auther.OauthClientId = gui.GoogleOauthClientId
+			auther.OauthClientSecret = gui.GoogleOauthClientSecret
+
+			// Clear the old values
+			gui.GoogleOauthClientId = ""
+			gui.GoogleOauthClientSecret = ""
+
+		} else if config_obj.GUI.SamlCertificate != "" {
+			auther.Type = "SAML"
+			auther.SamlCertificate = gui.SamlCertificate
+			auther.SamlPrivateKey = gui.SamlPrivateKey
+			auther.SamlIdpMetadataUrl = gui.SamlIdpMetadataUrl
+			auther.SamlRootUrl = gui.SamlRootUrl
+			auther.SamlUserAttribute = gui.SamlUserAttribute
+
+			// Clear the old values
+			gui.SamlCertificate = ""
+			gui.SamlPrivateKey = ""
+			gui.SamlIdpMetadataUrl = ""
+			gui.SamlRootUrl = ""
+			gui.SamlUserAttribute = ""
+		}
+
+		config_obj.GUI.Authenticator = auther
+
+	}
+}
+
 func migrate(config_obj *config_proto.Config) {
 	migrate_0_4_2(config_obj)
+	migrate_0_4_6(config_obj)
 }
