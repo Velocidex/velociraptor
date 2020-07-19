@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package api
+package authenticators
 
 import (
 	"crypto/rand"
@@ -44,14 +44,139 @@ import (
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
 
-func MaybeAddOAuthHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	if config_obj.GUI.GoogleOauthClientId != "" &&
-		config_obj.GUI.GoogleOauthClientSecret != "" {
-		mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
-		mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
-	}
+type GoogleAuthenticator struct{}
 
+func (self *GoogleAuthenticator) AddHandlers(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	mux.Handle("/auth/google/login", oauthGoogleLogin(config_obj))
+	mux.Handle("/auth/google/callback", oauthGoogleCallback(config_obj))
 	return nil
+}
+
+// Check that the user is proerly authenticated.
+func (self *GoogleAuthenticator) AuthenticateUserHandler(
+	config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-CSRF-Token", csrf.Token(r))
+
+		// Reject by redirecting to the loging handler.
+		reject := func(err error) {
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"remote": r.RemoteAddr,
+			}).Error("OAuth2 Redirect")
+
+			// Not authorized - redirect to logon screen.
+			http.Redirect(w, r, "/auth/google/login",
+				http.StatusTemporaryRedirect)
+		}
+
+		// We store the user name and their details in a local
+		// cookie. It is stored as a JWT so we can trust it.
+		auth_cookie, err := r.Cookie("VelociraptorAuth")
+		if err != nil {
+			reject(err)
+			return
+		}
+
+		// Parse the JWT.
+		token, err := jwt.Parse(
+			auth_cookie.Value,
+			func(token *jwt.Token) (interface{}, error) {
+				_, ok := token.Method.(*jwt.SigningMethodHMAC)
+				if !ok {
+					return nil, errors.New("invalid signing method")
+				}
+				return []byte(config_obj.Frontend.PrivateKey), nil
+			})
+		if err != nil {
+			reject(err)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok || !token.Valid {
+			reject(errors.New("token not valid"))
+			return
+		}
+
+		// Record the username for handlers lower in the
+		// stack.
+		username, pres := claims["user"].(string)
+		if !pres {
+			reject(errors.New("username not present"))
+			return
+		}
+
+		// Check if the claim is too old.
+		expires, pres := claims["expires"].(float64)
+		if !pres {
+			reject(errors.New("expires field not present in JWT"))
+			return
+		}
+
+		if expires < float64(time.Now().Unix()) {
+			reject(errors.New("the JWT is expired - reauthenticate"))
+			return
+		}
+
+		picture, _ := claims["picture"].(string)
+
+		// Now check if the user is allowed to log in.
+		user_record, err := users.GetUser(config_obj, username)
+		if err != nil {
+			reject(errors.New("Invalid user"))
+			return
+		}
+
+		// Must have at least reader permission.
+		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
+		if !perm || err != nil || user_record.Locked || user_record.Name != username {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnauthorized)
+
+			fmt.Fprintf(w, `
+<html><body>
+Authorization failed. You are not registered on this system as %v.
+Contact your system administrator to get an account, or click here
+to log in again:
+
+      <a href="/auth/google/login" style="text-transform:none">
+        Login with Google
+      </a>
+</body></html>
+`, username)
+
+			logging.GetLogger(config_obj, &logging.Audit).
+				WithFields(logrus.Fields{
+					"user":   username,
+					"remote": r.RemoteAddr,
+					"method": r.Method,
+				}).Error("User rejected by GUI")
+			return
+		}
+
+		// Checking is successfull - user authorized. Here we
+		// build a token to pass to the underlying GRPC
+		// service with metadata about the user.
+		user_info := &api_proto.VelociraptorUser{
+			Name:    username,
+			Picture: picture,
+		}
+
+		// Must use json encoding because grpc can not handle
+		// binary data in metadata.
+		serialized, _ := json.Marshal(user_info)
+		ctx := context.WithValue(
+			r.Context(), "USER", string(serialized))
+
+		// Need to call logging after auth so it can access
+		// the contextKeyUser value in the context.
+		GetLoggingHandler(config_obj)(parent).ServeHTTP(
+			w, r.WithContext(ctx))
+	})
+
 }
 
 func oauthGoogleLogin(config_obj *config_proto.Config) http.Handler {
@@ -179,125 +304,4 @@ func getUserDataFromGoogle(config_obj *config_proto.Config, code string) ([]byte
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
 	return contents, nil
-}
-
-func authenticateOAUTHCookie(
-	config_obj *config_proto.Config,
-	parent http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-CSRF-Token", csrf.Token(r))
-
-		reject := func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"remote": r.RemoteAddr,
-			}).Error("OAuth2 Redirect")
-
-			// Not authorized - redirect to logon screen.
-			http.Redirect(w, r, "/auth/google/login",
-				http.StatusTemporaryRedirect)
-		}
-
-		auth_cookie, err := r.Cookie("VelociraptorAuth")
-		if err != nil {
-			reject(err)
-			return
-		}
-
-		// Parse the JWT.
-		token, err := jwt.Parse(
-			auth_cookie.Value,
-			func(token *jwt.Token) (interface{}, error) {
-				_, ok := token.Method.(*jwt.SigningMethodHMAC)
-				if !ok {
-					return nil, errors.New("invalid signing method")
-				}
-				return []byte(config_obj.Frontend.PrivateKey), nil
-			})
-		if err != nil {
-			reject(err)
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			reject(errors.New("token not valid"))
-			return
-		}
-
-		// Record the username for handlers lower in the
-		// stack.
-		username, pres := claims["user"].(string)
-		if !pres {
-			reject(errors.New("username not present"))
-			return
-		}
-
-		// Check if the claim is too old.
-		expires, pres := claims["expires"].(float64)
-		if !pres {
-			reject(errors.New("expires field not present in JWT"))
-			return
-		}
-
-		if expires < float64(time.Now().Unix()) {
-			reject(errors.New("the JWT is expired - reauthenticate"))
-			return
-		}
-
-		picture, _ := claims["picture"].(string)
-
-		// Now check if the user is allowed to log in.
-		user_record, err := users.GetUser(config_obj, username)
-		if err != nil {
-			reject(errors.New("Invalid user"))
-			return
-		}
-
-		// Must have at least reader.
-		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
-		if !perm || err != nil || user_record.Locked || user_record.Name != username {
-			w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			w.WriteHeader(http.StatusUnauthorized)
-
-			fmt.Fprintf(w, `
-<html><body>
-Authorization failed. You are not registered on this system as %v.
-Contact your system administrator to get an account, or click here
-to log in again:
-
-      <a href="/auth/google/login" style="text-transform:none">
-        Login with Google
-      </a>
-</body></html>
-`, username)
-
-			logging.GetLogger(config_obj, &logging.Audit).
-				WithFields(logrus.Fields{
-					"user":   username,
-					"remote": r.RemoteAddr,
-					"method": r.Method,
-				}).Error("User rejected by GUI")
-			return
-		}
-
-		// Checking is successfull - user authorized. Here we
-		// build a token to pass to the underlying GRPC
-		// service with metadata about the user.
-		user_info := &api_proto.VelociraptorUser{
-			Name:    username,
-			Picture: picture,
-		}
-
-		// Must use json encoding because grpc can not handle
-		// binary data in metadata.
-		serialized, _ := json.Marshal(user_info)
-		ctx := context.WithValue(
-			r.Context(), "USER", string(serialized))
-
-		// Need to call logging after auth so it can access
-		// the contextKeyUser value in the context.
-		GetLoggingHandler(config_obj)(parent).ServeHTTP(
-			w, r.WithContext(ctx))
-	})
 }

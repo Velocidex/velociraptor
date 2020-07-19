@@ -237,6 +237,35 @@ message GUILink {
     string url = 2;
 }
 
+message Authenticator {
+    string type = 1;
+
+    // Google Authenticator.
+    string google_oauth_client_id = 5 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+    string google_oauth_client_secret = 6 [(sem_type) = {
+            description: "If set we use oauth authentication flow.",
+        }];
+
+    // SAML Authenticator
+    string saml_certificate = 12 [(sem_type) = {
+            description: "SAML certificate."
+        }];
+    string saml_private_key = 13 [(sem_type) = {
+            description: "SAML private key."
+        }];
+    string saml_idp_metadata_url = 14 [(sem_type) = {
+            description: "SAML identity provider metadata URL."
+        }];
+    string saml_root_url = 15 [(sem_type) = {
+            description: "SAML root URL."
+        }];
+    string saml_user_attribute = 16 [(sem_type) = {
+            description: "SAML attribute containing value for user identification."
+        }];
+}
+
 message GUIConfig {
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
@@ -264,14 +293,6 @@ message GUIConfig {
             description: "CIDR addresses of vpn networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
         }];
 
-    string google_oauth_client_id = 5 [(sem_type) = {
-            description: "If set we use oauth authentication flow.",
-        }];
-
-    string google_oauth_client_secret = 6 [(sem_type) = {
-            description: "If set we use oauth authentication flow.",
-        }];
-
     string public_url = 7 [(sem_type) = {
             description: "The public URL of this server.",
         }];
@@ -284,36 +305,28 @@ message GUIConfig {
             description: "Additional links to present in the GUI."
         }];
 
-    string saml_certificate = 12 [(sem_type) = {
-            description: "SAML certificate."
-        }];
-
-    string saml_private_key = 13 [(sem_type) = {
-            description: "SAML private key."
-        }];
-
-    string saml_idp_metadata_url = 14 [(sem_type) = {
-            description: "SAML identity provider metadata URL."
-        }];
-
-    string saml_root_url = 15 [(sem_type) = {
-            description: "SAML root URL."
-        }];
-
-    string saml_user_attribute = 16 [(sem_type) = {
-            description: "SAML attribute containing value for user identification."
-        }];
-
     // These users are created if they do no already exist in the data
     // store.
     repeated GUIUser initial_users = 17;
 
+    // The authenticator to use - can not be null.
+    Authenticator authenticator = 19;
 
     // The GUI will filter artifact search results by this regular
     // expression. This is useful to restrict the number of choices
     // available in the GUI to a small subset (e.g. only certain
     // packs).
     string artifact_search_filter = 18;
+
+    // SAML info deprecated - will be moved to a sample authenticator.
+    string saml_certificate = 12;
+    string saml_private_key = 13;
+    string saml_idp_metadata_url = 14;
+    string saml_root_url = 15;
+    string saml_user_attribute = 16;
+    // DEPRECATED: Will be moved to a Google authenticator
+    string google_oauth_client_id = 5;
+    string google_oauth_client_secret = 6;
 }
 
 message GUIUser {

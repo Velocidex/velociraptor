@@ -216,9 +216,8 @@ func doGenerateConfigInteractive() {
 		kingpin.FatalIfError(configAutocert(config_obj), "")
 
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
-
-		kingpin.FatalIfError(survey.Ask(google_oauth,
-			config_obj.GUI, survey.WithValidator(survey.Required)), "")
+		config_obj.GUI.Authenticator = &config_proto.Authenticator{}
+		configureSSO(config_obj)
 	}
 
 	// The API's public DNS name allows external callers but by
@@ -269,6 +268,13 @@ func doGenerateConfigInteractive() {
 	_, err = fd.Write(res)
 	kingpin.FatalIfError(err, "Write file %s", path)
 	fd.Close()
+}
+
+func configureSSO(config_obj *config_proto.Config) {
+	// TODO Support all SSO schemes
+	config_obj.GUI.Authenticator.Type = "Google"
+	kingpin.FatalIfError(survey.Ask(google_oauth,
+		config_obj.GUI.Authenticator, survey.WithValidator(survey.Required)), "")
 }
 
 func dynDNSConfig(config_obj *config_proto.Config) error {
@@ -356,9 +362,12 @@ func addUser(config_obj *config_proto.Config) error {
 			continue
 		}
 
-		if config_obj.GUI.GoogleOauthClientId != "" {
-			fmt.Printf("Authentication will occur via Google - " +
-				"therefore no password needs to be set.")
+		auth_type := config_obj.GUI.Authenticator.Type
+
+		if auth_type != "Basic" {
+			fmt.Printf("Authentication will occur via %v - "+
+				"therefore no password needs to be set.",
+				auth_type)
 		} else {
 			password := ""
 			err := survey.AskOne(password_question, &password,
