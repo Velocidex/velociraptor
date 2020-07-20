@@ -15,4 +15,9 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
   "Offset": 0,
   "Name": "secret.txt"
  }
+]SELECT read_file(filename=url(path=srcDir+'/artifacts/testdata/files/hi.gz'), accessor='gzip') AS Hi, read_file(filename=url(path=srcDir+'/artifacts/testdata/files/goodbye.bz2'), accessor='bzip2') AS Bye FROM scope()[
+ {
+  "Hi": "hello world\n",
+  "Bye": "goodbye world\n"
+ }
 ]
