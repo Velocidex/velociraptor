@@ -125,8 +125,7 @@ func (self _WatchCSVPlugin) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-		// Do not close output_chan - The event log service
-		// owns it and it will be closed by it.
+		defer close(output_chan)
 
 		arg := &ParseCSVPluginArgs{}
 		err := vfilter.ExtractArgs(scope, args, arg)
@@ -141,17 +140,26 @@ func (self _WatchCSVPlugin) Call(
 			return
 		}
 
+		event_channel := make(chan vfilter.Row)
+
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
 			GlobalCSVService.Register(
 				filename, arg.Accessor,
-				ctx, scope, output_chan)
+				ctx, scope, event_channel)
 		}
 
 		// Wait until the query is complete.
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
 
+			case event := <-event_channel:
+				output_chan <- event
+			}
+		}
 	}()
 
 	return output_chan

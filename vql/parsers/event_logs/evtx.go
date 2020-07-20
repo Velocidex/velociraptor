@@ -156,17 +156,33 @@ func (self _WatchEvtxPlugin) Call(
 			return
 		}
 
+		// https://go101.org/article/channel-closing.html We
+		// must not close the channel on the receiving side,
+		// just let the receiver cancel then the context is
+		// done. Note that event_channel is not explicitly
+		// closed at all since all its senders will terminate
+		// when the context is done.
+		event_channel := make(chan vfilter.Row)
+
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
 			cancel := GlobalEventLogService.Register(
 				filename, arg.Accessor,
-				ctx, scope, output_chan)
+				ctx, scope, event_channel)
 			defer cancel()
 		}
 
 		// Wait until the query is complete.
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event := <-event_channel:
+				output_chan <- event
+			}
+		}
 	}()
 
 	return output_chan
