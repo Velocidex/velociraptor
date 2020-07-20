@@ -99,17 +99,28 @@ func (self _WatchSyslogPlugin) Call(
 			return
 		}
 
+		event_channel := make(chan vfilter.Row)
+
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
 			cancel := GlobalSyslogService.Register(
-				filename, arg.Accessor, ctx, scope, output_chan)
+				filename, arg.Accessor, ctx, scope,
+				event_channel)
 
 			defer cancel()
 		}
 
 		// Wait until the query is complete.
-		<-ctx.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case event := <-event_channel:
+				output_chan <- event
+			}
+		}
 	}()
 
 	return output_chan
