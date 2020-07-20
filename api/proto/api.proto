@@ -170,6 +170,13 @@ service API {
         };
     }
 
+    // List all the GUI users known on this server.
+    rpc GetUsers(google.protobuf.Empty) returns(Users) {
+        option (google.api.http) = {
+            get: "/api/v1/GetUsers",
+        };
+    }
+
     // VFS
     rpc VFSListDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {

@@ -148,3 +148,7 @@ message GetUserNotificationsRequest {
 message SetGUIOptionsRequest {
     string options = 1;
 }
+
+message Users {
+    repeated VelociraptorUser users = 1;
+}

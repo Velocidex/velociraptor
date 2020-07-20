@@ -118,21 +118,72 @@ NotebookListController.prototype.deleteNotebook = function(event) {
     var notebook = this.scope_["state"]["notebook"];
     var self = this;
 
-    notebook.hidden = true;
+    var modalScope = this.scope_.$new();
+    var modalInstance = this.uibModal_.open({
+        templateUrl: '/static/angular-components/notebook/delete-notebook-confirm-modal.html',
+        scope: modalScope,
+        size: 'sm',
+    });
 
-    this.grrApiService_.post(
-        'v1/UpdateNotebook', notebook).then(
-            function success(response) {
-                self.selectedNotebookId = null;
-                self.triggerUpdate();
+    modalScope.onResolve = function() {
+        modalInstance.close();
+        notebook.hidden = true;
 
-            }, function failure(response) {
-                console.log("Error " + response.data);
-            });
+        this.grrApiService_.post(
+            'v1/UpdateNotebook', notebook).then(
+                function success(response) {
+                    self.selectedNotebookId = null;
+                    self.triggerUpdate();
+
+                }, function failure(response) {
+                    console.log("Error " + response.data);
+                });
+    };
+
+    modalScope.onReject = function() {
+        modalInstance.dismiss();
+    };
+
+    this.scope_.$on('$destroy', function() {
+        modalScope.$destroy();
+    });
 
     event.stopPropagation();
     return false;
 };
+
+NotebookListController.prototype.editNotebook = function(event) {
+    var selected_notebook_id = this.selectedNotebookId;
+    var notebook = this.scope_["state"]["notebook"];
+    var self = this;
+
+    var modalScope = this.scope_.$new();
+    modalScope["notebook"] = notebook;
+
+    var modalInstance = this.uibModal_.open({
+        template: '<grr-new-notebook-dialog notebook="notebook" '+
+            'on-resolve="resolve()" on-reject="reject()" />',
+        scope: modalScope,
+        windowClass: 'wide-modal high-modal',
+        size: 'lg'
+    });
+
+    modalScope.resolve = function() {
+        modalInstance.close();
+        self.triggerUpdate();
+    };
+    modalScope.reject = function() {
+        modalInstance.dismiss();
+    };
+    this.scope_.$on('$destroy', function() {
+        modalScope.$destroy();
+    });
+
+    event.stopPropagation();
+    return false;
+};
+
+
 
 /**
  * Selects given item in the list.

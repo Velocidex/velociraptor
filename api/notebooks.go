@@ -38,6 +38,8 @@ func (self *ApiServer) ExportNotebook(
 	return nil, errors.New("not implementated")
 }
 
+// Get all the current user's notebooks and those notebooks shared
+// with them.
 func (self *ApiServer) GetNotebooks(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*api_proto.Notebooks, error) {
@@ -57,6 +59,7 @@ func (self *ApiServer) GetNotebooks(
 	}
 
 	result := &api_proto.Notebooks{}
+
 	db, err := datastore.GetDB(self.config)
 	if err != nil {
 		return nil, err
@@ -81,40 +84,29 @@ func (self *ApiServer) GetNotebooks(
 			path.Join("/downloads/notebooks/", in.NotebookId))
 		result.Items = append(result.Items, notebook)
 
+		// Document not owned or collaborated with.
+		if !reporting.CheckNotebookAccess(notebook, user_record.Name) {
+			logging.GetLogger(
+				self.config, &logging.Audit).WithFields(
+				logrus.Fields{
+					"user":     user_record.Name,
+					"action":   "Access Denied",
+					"notebook": in.NotebookId,
+				}).
+				Error("notebook not shared.", err)
+			return nil, errors.New("User has no access to this notebook")
+		}
+
 		return result, nil
 	}
 
-	// List all available notebooks
-
-	notebook_urns, err := db.ListChildren(
-		self.config, reporting.NotebookDir(), in.Offset, in.Count)
+	notebooks, err := reporting.GetSharedNotebooks(self.config, user_record.Name,
+		in.Offset, in.Count)
 	if err != nil {
 		return nil, err
 	}
 
-	for idx, urn := range notebook_urns {
-		if uint64(idx) < in.Offset {
-			continue
-		}
-
-		if uint64(idx) > in.Offset+in.Count {
-			break
-		}
-
-		notebook := &api_proto.NotebookMetadata{}
-		err := db.GetSubject(self.config, urn, notebook)
-		if err != nil {
-			logging.GetLogger(
-				self.config, &logging.FrontendComponent).
-				Error("Unable to open notebook", err)
-			continue
-		}
-
-		if !notebook.Hidden && notebook.NotebookId != "" {
-			result.Items = append(result.Items, notebook)
-		}
-	}
-
+	result.Items = notebooks
 	return result, nil
 }
 
@@ -325,6 +317,12 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, err
 	}
 
+	// If the notebook is not properly shared with the user they
+	// may not edit it.
+	if !reporting.CheckNotebookAccess(old_notebook, user_record.Name) {
+		return nil, errors.New("Notebook is not shared with user.")
+	}
+
 	if old_notebook.ModifiedTime != in.ModifiedTime {
 		return nil, errors.New("Edit clash detected.")
 	}
@@ -332,7 +330,12 @@ func (self *ApiServer) UpdateNotebook(
 	in.ModifiedTime = time.Now().Unix()
 
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
+	if err != nil {
+		return nil, err
+	}
 
+	// Now also update the indexes.
+	err = reporting.UpdateShareIndex(self.config, in)
 	return in, err
 }
 
@@ -366,8 +369,21 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, err
 	}
 
-	notebook := &api_proto.NotebookCell{}
+	// Check the user is allowed to manipulate this notebook.
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+
+	notebook_metadata := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(self.config,
+		notebook_path_manager.Path(), notebook_metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	if !reporting.CheckNotebookAccess(notebook_metadata, user_record.Name) {
+		return nil, errors.New("Notebook is not shared with user.")
+	}
+
+	notebook := &api_proto.NotebookCell{}
 	err = db.GetSubject(self.config,
 		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook)
@@ -434,8 +450,21 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	db, _ := datastore.GetDB(self.config)
 
-	// And store it for next time.
+	// Check that the user has access to this notebook.
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
+	notebook_metadata := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(self.config,
+		notebook_path_manager.Path(), notebook_metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	if !reporting.CheckNotebookAccess(notebook_metadata, user_record.Name) {
+		return nil, errors.New("Notebook is not shared with user.")
+	}
+
+	// And store it for next time.
+
 	err = db.SetSubject(self.config,
 		notebook_path_manager.Cell(in.CellId).Path(),
 		notebook_cell)
@@ -579,7 +608,6 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	fmt.Printf("Notifying %v\n", in.CellId)
 	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
 }
 
@@ -644,14 +672,18 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	switch in.Type {
 	case "zip":
-		return &empty.Empty{}, exportZipNotebook(self.config, in.NotebookId)
+		return &empty.Empty{}, exportZipNotebook(
+			self.config, in.NotebookId, user_record.Name)
 	default:
-		return &empty.Empty{}, exportHTMLNotebook(self.config, in.NotebookId)
+		return &empty.Empty{}, exportHTMLNotebook(
+			self.config, in.NotebookId, user_record.Name)
 	}
 }
 
 // Create a portable notebook into a zip file.
-func exportZipNotebook(config_obj *config_proto.Config, notebook_id string) error {
+func exportZipNotebook(
+	config_obj *config_proto.Config,
+	notebook_id, principal string) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -662,6 +694,10 @@ func exportZipNotebook(config_obj *config_proto.Config, notebook_id string) erro
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return err
+	}
+
+	if !reporting.CheckNotebookAccess(notebook, principal) {
+		return errors.New("Notebook is not shared with user.")
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -696,7 +732,8 @@ func exportZipNotebook(config_obj *config_proto.Config, notebook_id string) erro
 	return nil
 }
 
-func exportHTMLNotebook(config_obj *config_proto.Config, notebook_id string) error {
+func exportHTMLNotebook(config_obj *config_proto.Config,
+	notebook_id, principal string) error {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
@@ -707,6 +744,10 @@ func exportHTMLNotebook(config_obj *config_proto.Config, notebook_id string) err
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
 	if err != nil {
 		return err
+	}
+
+	if !reporting.CheckNotebookAccess(notebook, principal) {
+		return errors.New("Notebook is not shared with user.")
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
