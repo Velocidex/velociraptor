@@ -1,5 +1,8 @@
 <div class='modal-header'>
-  <h3>
+  <h3 ng-if="controller.notebook.modified_time">
+    Update Notebook Dialog
+  </h3>
+  <h3 ng-if="!controller.notebook.modified_time">
     New Notebook Dialog
   </h3>
 </div>
@@ -9,14 +12,26 @@
       <div class="form-group">
         <label for="name">Name</label>
         <input type="text" class="form-control" placeholder="Notebook Name"
-               ng-model="controller.name"
+               ng-model="controller.notebook.name"
                >
       </div>
       <div class="form-group">
         <label for="description">Description</label>
         <input type="text" class="form-control" placeholder="Notebook Description"
-               ng-model="controller.description"
+               ng-model="controller.notebook.description"
                >
+      </div>
+      <div class="form-group">
+        <label for="description">Collaborators</label>
+
+        <ui-select multiple  ng-model="controller.collaborators">
+          <ui-select-match placeholder="Usernames...">
+            <span ng-bind="$item.name"></span>
+          </ui-select-match>
+          <ui-select-choices repeat="item in (controller.users | filter: $select.search) track by item.id">
+            <span ng-bind="item.name"></span>
+          </ui-select-choices>
+        </ui-select>
       </div>
     </form>
   </div>
@@ -24,9 +39,14 @@
 <div class='modal-footer'>
   <ul class="nav pull-right">
     <button class="btn btn-primary Next ng-binding"
-            ng-disabled="!controller.name"
+            ng-click="onReject()">
+      Cancel
+    </button>
+
+    <button class="btn btn-primary Next ng-binding"
+            ng-disabled="!controller.notebook.name"
             ng-click="controller.addNotebook()">
-      Add Notebook
+      Submit
     </button>
   </ul>
 </div>

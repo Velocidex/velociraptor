@@ -1,0 +1,33 @@
+<div class='modal-header'>
+  <h3>
+    Delete Notebook
+  </h3>
+  <button type="button" class="close"
+          ng-click="onReject()" aria-hidden="true">
+    x
+  </button>
+</div>
+<div class='modal-body'>
+  <div class='container-fluid'>
+    <div class="panel-body">
+      You are about to delete a notebook. Are you sure?
+    </div>
+  </div>
+</div>
+<div class='modal-footer navbar-inner'>
+  <div class="btn-toolbar rounded" role="toolbar" style="width: 100%">
+    <div class="btn-group mr-2" role="group">
+      <button class="btn btn-secondary Next"
+              ng-click="onReject()">
+        Cancel
+      </button>
+    </div>
+
+    <div class="btn-group ml-auto" role="group">
+      <button class="btn btn-warning Next"
+              ng-click="onResolve">
+        Delete
+      </button>
+    </div>
+  </div>
+</div>

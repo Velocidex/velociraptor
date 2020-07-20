@@ -57,7 +57,9 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			return
 		}
 
-		user_record, err := users.GetUser(config_obj, username)
+		// Get the full user record with hashes so we can
+		// verify it below.
+		user_record, err := users.GetUserWithHashes(config_obj, username)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{

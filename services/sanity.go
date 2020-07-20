@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -81,6 +82,19 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 			return errors.Wrap(
 				err, fmt.Sprintf("Autocert cache directory not writable %v: ",
 					config_obj.AutocertCertCache))
+		}
+	}
+
+	// Reindex all the notebooks.
+	notebooks, err := reporting.GetAllNotebooks(config_obj)
+	if err != nil {
+		return err
+	}
+
+	for _, notebook := range notebooks {
+		err = reporting.UpdateShareIndex(config_obj, notebook)
+		if err != nil {
+			return err
 		}
 	}
 

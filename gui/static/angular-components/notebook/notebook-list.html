@@ -13,6 +13,13 @@
         <i class="fa fa-trash"></i>
       </button>
 
+      <button title="Edit Notebook" class="btn btn-default"
+              ng-disabled="!selectedNotebookId ||
+                           !controller.uiTraits.Permissions.notebook_editor"
+              ng-click="controller.editNotebook($event)">
+        <i class="fa fa-wrench"></i>
+      </button>
+
       <button class="btn btn-default" name="ExportNotebook"
               ng-disabled="!selectedNotebookId ||
                            !controller.uiTraits.Permissions.read_results"
@@ -43,6 +50,7 @@
         <th>Creation Time</th>
         <th>Last Active</th>
         <th>Creator</th>
+        <th>Shared</th>
       </tr>
     </thead>
     <tbody>
@@ -72,6 +80,11 @@
         </td>
         <td>
           {{ item.creator }}
+        </td>
+        <td>
+          <span ng-repeat="name in item.collaborators track by $index">
+            {{ name }}
+          </span>
         </td>
       </tr>
     </tbody>

@@ -94,7 +94,24 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 	return result, nil
 }
 
+// Returns the user record after stripping sensitive information like
+// password hashes.
 func GetUser(config_obj *config_proto.Config, username string) (
+	*api_proto.VelociraptorUser, error) {
+	result, err := GetUserWithHashes(config_obj, username)
+	if err != nil {
+		return nil, err
+	}
+
+	// Do not divulge the password and hashes.
+	result.PasswordHash = nil
+	result.PasswordSalt = nil
+
+	return result, nil
+}
+
+// Return the user record with hashes - only used in Basic Auth.
+func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	*api_proto.VelociraptorUser, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")

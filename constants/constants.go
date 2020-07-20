@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.4.6"
+	VERSION                    = "0.4.7"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -32,9 +32,9 @@ const (
 	CLIENT_INDEX_URN = "/client_index/"
 
 	// An index of all the hunts and clients.
-	HUNT_INDEX = "/hunt_index/"
-
-	USER_URN = "/users/"
+	HUNT_INDEX     = "/hunt_index/"
+	NOTEBOOK_INDEX = "/notebook_index/"
+	USER_URN       = "/users/"
 
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980
