@@ -12,3 +12,7 @@ Queries:
 
   # Make sure we can read the contents of zip members.
   - SELECT Data, Offset, basename(path=FullPath) as Name FROM foreach(row=hits, query={ SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')})
+
+  - SELECT read_file(filename=url(path=srcDir+'/artifacts/testdata/files/hi.gz'), accessor='gzip') AS Hi,
+     read_file(filename=url(path=srcDir+'/artifacts/testdata/files/goodbye.bz2'), accessor='bzip2') AS Bye
+     FROM scope()
