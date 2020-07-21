@@ -11,11 +11,26 @@
           <i class="fa fa-compress"></i>
         </button>
         <button class="btn btn-default"
-                title="Expand"o
+                title="Expand"
                 ng-if="controller.collapsed"
                 ng-click="controller.collapsed = false">
           <i class="fa fa-expand"></i>
         </button>
+
+        <button class="btn btn-default"
+                title="Load Output"
+                ng-if="!controller.loaded"
+                ng-click="controller.loadData()">
+          <i class="fa fa-eye"></i>
+        </button>
+
+        <button class="btn btn-default"
+                title="Hide Output"
+                ng-if="controller.loaded"
+                ng-click="controller.loaded = false">
+          <i class="fa fa-eye-slash"></i>
+        </button>
+
       </div>
       <div class="btn-group float-right" role="group">
         <button class="btn btn-outline-info"
@@ -35,7 +50,7 @@
 
     <pre>{{ controller.input }}</pre>
   </div>
-  <div class='notebook-output'>
+  <div class='notebook-output' ng-if="controller.loaded">
     <pre ng-repeat="row in controller.data">{{ row.Stdout }}</pre>
   </div>
 </div>

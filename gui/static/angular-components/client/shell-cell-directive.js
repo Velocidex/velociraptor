@@ -16,13 +16,15 @@ const ShellCellController = function($scope, grrApiService) {
     this.stdout = "";
     this.stderr = "";
 
-    this.collapsed = true;
+    this.loaded = false;
+    this.collapsed = false;
 
-    if (!angular.isObject(this.scope_["flow"])) {
+    this.flow = this.scope_["flow"];
+
+    if (!angular.isObject(this.flow)) {
         return;
     }
 
-    this.flow = this.scope_["flow"];
     if (!angular.isArray(this.flow.artifacts_with_results) ||
         this.flow.artifacts_with_results.length == 0) {
         return;
@@ -37,6 +39,12 @@ const ShellCellController = function($scope, grrApiService) {
     }
 
     this.artifact = this.flow.artifacts_with_results[0];
+};
+
+ShellCellController.prototype.loadData = function() {
+    var self = this;
+
+    this.loaded = true;
 
     this.grrApiService_.get("/v1/GetTable", {
         artifact: this.artifact,
