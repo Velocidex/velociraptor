@@ -68,6 +68,8 @@ const HostInfoController = function(
                     this.stopMonitorInterrogateOperation_.bind(this));
 
     this.report_params = {};
+
+    this.mode = "brief";
 };
 
 

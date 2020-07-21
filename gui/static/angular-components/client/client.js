@@ -9,6 +9,8 @@ const {ClientContextDirective} = goog.require('grrUi.client.clientContextDirecti
 const {ClientDialogService} = goog.require('grrUi.client.clientDialogService');
 const {ClientsListDirective} = goog.require('grrUi.client.clientsListDirective');
 const {HostInfoDirective} = goog.require('grrUi.client.hostInfoDirective');
+const {ShellViewerDirective} = goog.require('grrUi.client.shellViewerDirective');
+const {ShellCellDirective} = goog.require('grrUi.client.shellCellDirective');
 const {RemoveClientsLabelsDialogDirective} = goog.require('grrUi.client.removeClientsLabelsDialogDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 const {virtualFileSystemModule} = goog.require('grrUi.client.virtualFileSystem.virtualFileSystem');
@@ -32,6 +34,10 @@ exports.clientModule.directive(
     ClientsListDirective.directive_name, ClientsListDirective);
 exports.clientModule.directive(
     HostInfoDirective.directive_name, HostInfoDirective);
+exports.clientModule.directive(
+    ShellViewerDirective.directive_name, ShellViewerDirective);
+exports.clientModule.directive(
+    ShellCellDirective.directive_name, ShellCellDirective);
 exports.clientModule.directive(
     RemoveClientsLabelsDialogDirective.directive_name,
     RemoveClientsLabelsDialogDirective);

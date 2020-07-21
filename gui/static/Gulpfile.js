@@ -174,6 +174,7 @@ gulp.task('compile-css', function() {
       'css/base.css',
       'angular-components/artifact/reporting.css',
       'angular-components/client/host-info.css',
+      'angular-components/client/shell-cell.css',
       'angular-components/client/virtual-file-system/breadcrumbs.css',
       'angular-components/client/virtual-file-system/file-details.css',
       'angular-components/client/virtual-file-system/file-hex-view.css',
