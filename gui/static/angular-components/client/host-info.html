@@ -23,18 +23,21 @@
     </button>
 
     <div class="btn-group" data-toggle="buttons">
-      <label class="btn btn-default active" ng-click="controller.showDetails = false">
+      <label class="btn btn-default active" ng-click="controller.mode = 'brief'">
         <input type="radio" name="show-client-details" checked> Overview
       </label>
-      <label class="btn btn-default" ng-click="controller.showDetails = true">
+      <label class="btn btn-default" ng-click="controller.mode = 'detailed'">
         <input type="radio" name="show-client-details"> VQL Drilldown
+      </label>
+      <label class="btn btn-default" ng-click="controller.mode = 'shell'">
+        <input type="radio" name="show-client-details"> Shell
       </label>
     </div>
   </div>
   <div class="clearfix"></div>
 
   <!-- Client Details -->
-  <div ng-if="!controller.showDetails">
+  <div ng-if="controller.mode == 'brief'">
     <div class="card panel">
       <h5 class="card-header">{$ controller.client.os_info.fqdn $}</h5>
       <div class="card-body">
@@ -92,7 +95,7 @@
 
   <!-- Shows Generic.Client.Info report -->
   <div class="client-details dashboard"
-       ng-if="controller.showDetails"
+       ng-if="controller.mode == 'detailed'"
        class="dashboard"
        grr-force-refresh
        refresh-trigger="controller.client.last_interrogate_flow_id">
@@ -100,5 +103,12 @@
     <grr-report-viewer
       params="controller.report_params"></grr-report-viewer>
 
+  </div>
+
+  <!-- Shell view -->
+  <div class="client-details dashboard"
+       ng-if="controller.mode == 'shell'"
+       class="dashboard">
+    <grr-shell-viewer client-id="controller.clientId"></grr-shell-viewer>
   </div>
 </div>

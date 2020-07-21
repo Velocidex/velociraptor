@@ -1,34 +1,21 @@
-.notebook-cell {
-    border-color: transparent;
+.shell-cell {
     display: flex;
+    border-color: #ababab;
     flex-direction: column;
     align-items: stretch;
     border-radius: 2px;
     border-width: 3px;
     border-style: solid;
     width: 100%;
-    padding: 5px;
+    padding: 0px;
     margin: 0px;
     outline: none;
     position: relative;
-    overflow: visible;
+    overflow: auto;
 }
 
-.notebook-cell.selected {
-    border-color: #ababab;
-}
 
-.notebook-input {
-    border-radius: 2px;
-    background: #f7f7f7;
-    line-height: 1.21429em;
-}
-
-.cell-toolbar.not_selected {
-    display: none;
-}
-
-.notebook-output.collapsed {
+.shell-cell.collapsed {
     max-height: 24em;
     width: 100%;
     overflow: auto;
@@ -38,10 +25,14 @@
     display: block;
 }
 
-.notebook-output.expanded {
+.shell-cell.expanded {
     max-height: 200em;
 }
 
-div.dt-buttons {
-    margin-bottom: 6px;
+.shell-command {
+    padding: 5px;
+}
+
+.shell-command textarea {
+    min-height: 30px;
 }
