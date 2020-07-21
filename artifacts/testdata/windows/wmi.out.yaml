@@ -1,0 +1,8 @@
+SELECT DNSServerSearchOrder from wmi( query='select DNSServerSearchOrder FROM win32_networkadapterconfiguration') WHERE DNSServerSearchOrder[
+ {
+  "DNSServerSearchOrder": [
+   "8.8.8.8",
+   "8.8.4.4"
+  ]
+ }
+]
