@@ -121,10 +121,17 @@ func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 				}
 				defer property_raw.Clear()
 
+				// If it is an array we convert it here.
+				if property_raw.VT&ole.VT_ARRAY > 0 {
+					row.Set(property, property_raw.ToArray().ToValueArray())
+					continue
+				}
+
 				switch property_raw.VT {
 				case ole.VT_UNKNOWN, ole.VT_DISPATCH:
 					// Do not set these because we
 					// cant do anything with them.
+
 				default:
 					row.Set(property, property_raw.Value())
 				}
