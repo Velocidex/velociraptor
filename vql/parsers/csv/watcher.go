@@ -145,8 +145,11 @@ func (self *CSVWatcherService) monitorOnce(
 		return 0, false
 	}
 
-	// Seek to the last place we were.
-	csv_reader.Seek(int64(last_event))
+	// Seek to the last place we were - file must be seekable.
+	err = csv_reader.Seek(int64(last_event))
+	if err != nil {
+		return 0, false
+	}
 	for {
 		row_data, err := csv_reader.ReadAny()
 		if err != nil {

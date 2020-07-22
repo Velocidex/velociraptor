@@ -83,7 +83,19 @@ func _OLEVBAPlugin_ParseFile(
 	}
 
 	if string(signature) == oleparse.OLE_SIGNATURE {
-		fd.Seek(0, io.SeekStart)
+		// If the underlying file is not seekable we open it
+		// again.
+		_, err = fd.Seek(0, io.SeekStart)
+		if err != nil {
+			fd.Close()
+
+			fd, err = accessor.Open(filename)
+			if err != nil {
+				return nil, err
+			}
+			defer fd.Close()
+		}
+
 		data, err := ioutil.ReadAll(io.LimitReader(fd, constants.MAX_MEMORY))
 		if err != nil {
 			return nil, err
