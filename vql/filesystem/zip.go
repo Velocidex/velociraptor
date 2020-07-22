@@ -327,7 +327,7 @@ func (self *ZipFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error
 		return nil, err
 	}
 
-	return &SeekableZip{fd, info}, nil
+	return &SeekableZip{ReadCloser: fd, info: info}, nil
 }
 
 var ZipFileSystemAccessor_re = regexp.MustCompile("/")
@@ -443,13 +443,20 @@ func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAcce
 
 type SeekableZip struct {
 	io.ReadCloser
-	info *ZipFileInfo
+	info   *ZipFileInfo
+	offset int64
+}
+
+func (self *SeekableZip) Read(buff []byte) (int, error) {
+	n, err := self.ReadCloser.Read(buff)
+	self.offset += int64(n)
+	return n, err
 }
 
 func (self *SeekableZip) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case io.SeekStart:
-		if offset == 0 {
+		if offset == 0 && self.offset == 0 {
 			return 0, nil
 		}
 

@@ -191,6 +191,9 @@ func scanFileByAccessor(
 		return
 	}
 	defer f.Close()
+
+	// Try to seek to the start offset - if it does not work then
+	// dont worry about it - just start from the beginning.
 	f.Seek(int64(start), 0)
 
 	buf := make([]byte, blocksize)

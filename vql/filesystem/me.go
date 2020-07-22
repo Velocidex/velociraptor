@@ -127,7 +127,7 @@ func (self *MEFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error)
 		return nil, err
 	}
 
-	return &SeekableZip{fd, info}, nil
+	return &SeekableZip{ReadCloser: fd, info: info}, nil
 }
 
 func (self *MEFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, error) {

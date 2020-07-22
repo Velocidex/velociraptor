@@ -214,6 +214,7 @@ type SeekableGzip struct {
 	reader io.ReadCloser
 	gz     io.ReadCloser
 	info   *GzipFileInfo
+	offset int64
 }
 
 func (self *SeekableGzip) Close() error {
@@ -222,13 +223,15 @@ func (self *SeekableGzip) Close() error {
 }
 
 func (self *SeekableGzip) Read(buff []byte) (int, error) {
-	return self.gz.Read(buff)
+	n, err := self.gz.Read(buff)
+	self.offset += int64(n)
+	return n, err
 }
 
 func (self *SeekableGzip) Seek(offset int64, whence int) (int64, error) {
 	switch whence {
 	case io.SeekStart:
-		if offset == 0 {
+		if offset == 0 && self.offset == 0 {
 			return 0, nil
 		}
 

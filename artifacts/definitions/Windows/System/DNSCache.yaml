@@ -1,0 +1,36 @@
+name: Windows.System.DNSCache
+description: |
+  Windows maintains DNS lookups for a short time in the dns cache.
+
+  This artifact uses the ipconfig binary to collect dns cache entries.
+
+precondition:
+  SELECT OS from info() where OS = "windows"
+
+sources:
+  - query: |
+      LET parsed = SELECT * FROM foreach(
+      row={
+         SELECT Stdout FROM execve(argv=["ipconfig", "/displaydns"])
+      },
+      query={
+        SELECT parse_string_with_regex(string=Record, regex=[
+              "Record Name[^:]+: (?P<Name>.+)\r",
+              "Record Type[^:]+: (?P<RecordType>.+)\r",
+              "Time To Live[^:]+: (?P<TTL>.+)\r",
+              "Section[^:]+: (?P<Type>.+)\r",
+              "A.+Record[^:]+: (?P<A>.+)",
+            ]) AS Parsed, Record FROM parse_records_with_regex(
+               accessor="data", file=Stdout,
+               regex="(?sm)-----------(?P<Record>.+?)\r\n\r\n")
+      })
+
+      SELECT * FROM foreach(row=parsed,
+      query={
+          SELECT Parsed.Name AS Name,
+              atoi(string=Parsed.RecordType) AS RecordType,
+              atoi(string=Parsed.TTL) AS TTL,
+              Parsed.Type AS Type,
+              Parsed.A AS A
+          FROM scope()
+      })

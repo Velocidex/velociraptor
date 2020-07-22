@@ -181,6 +181,7 @@ func (self *SyslogWatcherService) monitorOnce(
 	}
 	defer fd.Close()
 
+	// File must be seekable
 	pos, err := fd.Seek(cursor.last_line_offset, 0)
 	if err != nil {
 		return &Cursor{}
