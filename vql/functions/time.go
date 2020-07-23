@@ -2,7 +2,6 @@ package functions
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"sync"
 	"time"
@@ -23,7 +22,7 @@ var (
 )
 
 type cachedTime struct {
-	time.Time
+	utils.Time
 }
 
 func (self cachedTime) Size() int {
@@ -81,8 +80,7 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 				scope.Log("Timezone %v error: %v", arg.Timezone, err)
 			} else {
 				tz_lru[arg.Timezone] = location
-				result = result.In(location)
-				fmt.Printf("Result %v\n", result)
+				result.Location = location
 			}
 		}
 	}
@@ -90,7 +88,7 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	return result
 }
 
-func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (time.Time, error) {
+func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (utils.Time, error) {
 	sec := int64(0)
 	dec := int64(0)
 	switch t := timestamp.(type) {
@@ -103,9 +101,12 @@ func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (time.Time, error)
 		return parse_time_from_string(scope, t)
 
 	case time.Time:
+		return utils.NewTime(t), nil
+
+	case utils.Time:
 		return t, nil
 
-	case *time.Time:
+	case *utils.Time:
 		return *t, nil
 
 	case *utils.TimeVal:
@@ -118,11 +119,11 @@ func TimeFromAny(scope *vfilter.Scope, timestamp vfilter.Any) (time.Time, error)
 		sec, _ = utils.ToInt64(timestamp)
 	}
 
-	return time.Unix(int64(sec), int64(dec)), nil
+	return utils.Unix(int64(sec), int64(dec)), nil
 }
 
 func parse_time_from_string(scope *vfilter.Scope, timestamp string) (
-	time.Time, error) {
+	utils.Time, error) {
 	time_value_any, pres := lru.Get(timestamp)
 	if pres {
 		return time_value_any.(cachedTime).Time, nil
@@ -131,10 +132,10 @@ func parse_time_from_string(scope *vfilter.Scope, timestamp string) (
 	parser := dateparser.Parser{Fuzzy: true, DayFirst: true, IgnoreTZ: true}
 	time_value, err := parser.Parse(timestamp)
 	if err != nil {
-		return time_value, err
+		return utils.NewTime(time_value), err
 	}
-	lru.Set(timestamp, cachedTime{time_value})
-	return time_value, nil
+	lru.Set(timestamp, cachedTime{utils.NewTime(time_value)})
+	return utils.NewTime(time_value), nil
 }
 
 // Time aware operators.
@@ -158,16 +159,16 @@ type _TimeLtInt struct{}
 
 func (self _TimeLtInt) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
-	var b_time time.Time
+	var b_time utils.Time
 
 	switch t := b.(type) {
 	case float64:
 		sec_f, dec_f := math.Modf(t)
 		dec_f *= 1e9
-		b_time = time.Unix(int64(sec_f), int64(dec_f))
+		b_time = utils.Unix(int64(sec_f), int64(dec_f))
 	default:
 		sec, _ := utils.ToInt64(b)
-		b_time = time.Unix(sec, 0)
+		b_time = utils.Unix(sec, 0)
 	}
 
 	return a_time.Before(b_time)
@@ -188,7 +189,7 @@ type _TimeLtString struct{}
 func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any) bool {
 	a_time, _ := utils.IsTime(a)
 	b_str, _ := b.(string)
-	var b_time time.Time
+	var b_time utils.Time
 
 	time_value_any, pres := lru.Get(b_str)
 	if pres {
@@ -200,7 +201,7 @@ func (self _TimeLtString) Lt(scope *vfilter.Scope, a vfilter.Any, b vfilter.Any)
 			IgnoreTZ: true}
 		b_time_time, err := parser.Parse(b_str)
 		if err == nil {
-			b_time = b_time_time
+			b_time = utils.NewTime(b_time_time)
 			lru.Set(b_str, cachedTime{b_time})
 		}
 	}

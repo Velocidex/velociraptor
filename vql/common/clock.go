@@ -72,7 +72,7 @@ func (self ClockPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case <-time.After(start.Sub(time.Now())):
+			case <-time.After(start.Time.Sub(time.Now())):
 				output_chan <- time.Now()
 			}
 		}
