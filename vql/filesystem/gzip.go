@@ -85,7 +85,7 @@ func (self *GzipFileInfo) Mode() os.FileMode {
 }
 
 func (self *GzipFileInfo) ModTime() time.Time {
-	return self._modtime.Time().Time
+	return self._modtime.Time()
 }
 
 func (self *GzipFileInfo) FullPath() string {

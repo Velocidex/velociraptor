@@ -34,6 +34,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
+const (
+	// Default settings for reasonable GUI
+	default_user_options = `{"selectionStyle":"line","highlightActiveLine":true,"highlightSelectedWord":true,"copyWithEmptySelection":false,"cursorStyle":"ace","mergeUndoDeltas":true,"behavioursEnabled":true,"wrapBehavioursEnabled":true,"showLineNumbers":true,"relativeLineNumbers":true,"hScrollBarAlwaysVisible":false,"vScrollBarAlwaysVisible":false,"highlightGutterLine":true,"animatedScroll":false,"showInvisibles":false,"showPrintMargin":true,"printMarginColumn":80,"printMargin":80,"fadeFoldWidgets":false,"showFoldWidgets":true,"displayIndentGuides":true,"showGutter":true,"fontSize":12,"fontFamily":"monospace","scrollPastEnd":0,"theme":"ace/theme/xcode","useTextareaForIME":true,"scrollSpeed":2,"dragDelay":0,"dragEnabled":true,"focusTimeout":0,"tooltipFollowsMouse":true,"firstLineNumber":1,"overwrite":false,"newLineMode":"auto","useSoftTabs":true,"navigateWithinSoftTabs":false,"tabSize":4,"wrap":"free","indentedSoftWrap":true,"foldStyle":"markbegin","enableMultiselect":true,"enableBlockSelect":true,"enableEmmet":true,"enableBasicAutocompletion":true,"enableLiveAutocompletion":true}`
+)
+
 func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
 	if !regexp.MustCompile("^[a-zA-Z0-9@.-_]+$").MatchString(name) {
 		return nil, errors.New(fmt.Sprintf(
@@ -244,5 +249,8 @@ func GetUserOptions(config_obj *config_proto.Config, username string) (
 
 	options := &api_proto.SetGUIOptionsRequest{}
 	err = db.GetSubject(config_obj, path_manager.GUIOptions(), options)
+	if options.Options == "" {
+		options.Options = default_user_options
+	}
 	return options, err
 }
