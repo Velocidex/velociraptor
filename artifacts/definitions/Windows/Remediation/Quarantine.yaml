@@ -2,8 +2,8 @@ name: Windows.Remediation.Quarantine
 description: |
       **Apply quarantine via Windows local IPSec policy**  
       
-      - By default the current configured frontend configuration is applied 
-      as an exclusion using resolved IP address at time of application. 
+      - By default the current client configuration is applied as an exclusion 
+      using resolved IP address at time of application. 
       - A configurable lookup table is also used to generate additional entries 
       using the same syntax as netsh ipsec configuration.  
         - DNS and DHCP are 
@@ -54,22 +54,24 @@ parameters:
 sources:
     - queries:
       # If a MessageBox configured truncate to 256 character limit
-      - LET MessageBox <= if(condition=MessageBox,
-                then=parse_string_with_regex(
-                    string=MessageBox,
-                    regex=['^(?P<Message>.{0,255}).*']
-                ).Message)
+      - LET MessageBox <=  parse_string_with_regex(
+                regex='^(?P<Message>.{0,255}).*', 
+                string=MessageBox).Message
                 
       # extract configurable policy from lookuptable
       - LET configurable_policy <= SELECT 
-                Action,
+                if(condition= lowcase(string=Action)= 'permit',
+                    then= 'Permit',
+                    else= if(condition= lowcase(string=Action)= 'block',
+                        then= 'Block')
+                    ) AS Action,
                 SrcAddr,
                 format(format='%v',args=SrcMask) AS SrcMask,
                 format(format='%v',args=SrcPort) AS SrcPort,
                 DstAddr,
                 format(format='%v',args=DstMask) AS DstMask,
                 format(format='%v',args=DstPort) AS DstPort,
-                Protocol,
+                format(format='%v',args=Protocol) AS Protocol,
                 Mirrored,
                 Description
             FROM parse_csv(filename=RuleLookupTable, accessor='data') 
@@ -83,39 +85,48 @@ sources:
                         'me' AS SrcAddr,
                         '' As SrcMask,
                         '0' AS SrcPort,
-                        split(
-                            string=regex_replace(
-                                source=_value,
-                                re='^https://(.+)/',
-                                replace='$1'),
-                            sep=':'
-                                )[0] as DstAddr,
-                                '' As DstMask,
-                        if(condition=split(string=regex_replace(
-                                    source=_value,
-                                    re='^https://(.+)/',
-                                    replace='$1'),
-                                sep=':')[1], 
-                            then= split(string=regex_replace(
-                                    source=_value,
-                                    re='^https://(.+)/',
-                                    replace='$1'),sep=':')[1],
-                            else='443') as DstPort,
+                        parse_string_with_regex(
+                            string=_value,
+                            regex='^https?://(?P<Domain>[^:/]+)'
+                                ).Domain AS DstAddr,
+                        '' As DstMask,
+                        parse_string_with_regex(
+                                string=_value,
+                                regex='^https?://[^:/]+(:(?P<Port>[0-9]*))?/'
+                                    ).Port AS DstPort,
                         'tcp' AS Protocol,
                         'yes' AS Mirrored,
-                        'VelociraptorFrontEnd' AS Description
+                        'VelociraptorFrontEnd' AS Description,
+                        _value
                     FROM scope()
                 })
                 
       # build policy with extracted config and lookuptable
-      - LET policy <= SELECT *,   
-                if(condition= Action='Permit',
-                    then= PolicyName + '_PermitFilterList',
-                    else= PolicyName + '_BlockFilterList') AS FilterList
+      - LET policy <= SELECT *
             FROM chain(
-                a=extracted_config,
+                a={
+                    SELECT
+                        Action,
+                        SrcAddr,
+                        SrcMask,
+                        SrcPort,
+                        DstAddr,
+                        DstMask,
+                        if(condition=DstPort,
+                            then= DstPort,
+                            else= if(condition= _value=~'^https:',
+                                then='443',
+                                else= if(condition= _value=~'^http:',
+                                    then='80'))
+                                ) AS DstPort,
+                        Protocol,
+                        Mirrored,
+                        Description
+                    FROM extracted_config
+                },
                 b=configurable_policy
             )
+            WHERE Action =~ 'Permit|Block'
       
       # build netsh ipsec policy commandlines by switchcase
       - LET cmdline = SELECT 
@@ -140,23 +151,22 @@ sources:
                 action={
                     SELECT 
                         ('netsh','ipsec','static','add','filteraction',
-                            'name=' + PolicyName + '_' + Action + 'Action',
+                            'name=' + PolicyName + ' ' + Action + 'Action',
                             'action=' + Action
                                 ) AS CMD
                     FROM scope()
-                    WHERE FilterAction AND Action =~ 'Permit|Block'
+                    WHERE CreateFilterAction
                 },
                 rule={
                     SELECT 
                         ('netsh','ipsec','static','add','rule',
-                            'name=' + PolicyName + '_' + Action,
+                            'name=' + PolicyName + ' ' + Action + 'Rule',
                             'policy=' + PolicyName,
-                            'filterlist=' + PolicyName + '_' + Action + 'FilterList',
-                            'filteraction=' + PolicyName + '_' + Action + 'Action'
+                            'filterlist=' + PolicyName + ' ' + Action + 'FilterList',
+                            'filteraction=' + PolicyName + ' ' + Action + 'Action',
                                 ) AS CMD
                     FROM scope()
-                    WHERE 
-                        Rule AND Action =~ 'Permit|Block'
+                    WHERE CreateRule
                 },
                 enable={
                     SELECT 
@@ -170,7 +180,7 @@ sources:
                 policy= {
                     SELECT
                         ('netsh','ipsec','static','add','filter',
-                            'filterlist=' + FilterList,
+                            'filterlist=' + PolicyName + ' ' + Action + 'FilterList',
                             'srcaddr=' + SrcAddr,
                             'srcmask=' + SrcMask,
                             'srcport=' + SrcPort,
@@ -183,7 +193,7 @@ sources:
                                 ) AS CMD
                     FROM scope() 
                     WHERE 
-                        SrcAddr AND DstAddr              
+                        CreateFilters AND SrcAddr AND DstAddr     
                 })
             
       # delete old or unwanted policy 
@@ -195,7 +205,7 @@ sources:
                         PolicyName + ' IPSec policy removed.' AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
-                    GROUP BY Stdout
+                    GROUP BY Result
                 })
       
       # first step is creating IPSec policy
@@ -213,11 +223,16 @@ sources:
                             ))) AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
+                    GROUP BY Result
                 })
                 
       # second step is to create policy filters
       - LET create_filters = SELECT * FROM foreach(
-                row=policy,
+                row={ 
+                    SELECT *, 
+                        'TRUE' AS CreateFilters 
+                    FROM policy
+                },
                 query={
                     SELECT 
                         timestamp(epoch=now()) as Time,
@@ -232,17 +247,17 @@ sources:
                             ))) AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
-                    GROUP BY Results
+                    GROUP BY Result
                 })
       
-      # third step is to create policy actions
+      # third step is to create policy filter actions
       - LET create_actions = SELECT * FROM foreach(
                 row= { 
                     SELECT 
-                        Action, 
-                        'TRUE' as FilterAction 
+                        Action,
+                        'TRUE' AS CreateFilterAction 
                     FROM policy 
-                    GROUP BY Action 
+                    GROUP BY Action
                 },
                 query={
                     SELECT 
@@ -258,16 +273,17 @@ sources:
                             ))) AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
+                    GROUP BY Result
                 })
     
       # fourth step combines action lists and actions in a Rule
       - LET create_rules = SELECT * FROM foreach(
                 row= { 
                     SELECT 
-                        Action, 
-                        'TRUE' AS Rule 
+                        Action,
+                        'TRUE' AS CreateRule  
                     FROM policy 
-                    GROUP BY Action 
+                    GROUP BY Action
                 },
                 query={
                     SELECT 
@@ -283,6 +299,7 @@ sources:
                             ))) AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
+                    GROUP BY Result
                 })
       
       # fith step is to enable our IPSec policy
@@ -300,6 +317,7 @@ sources:
                             ))) AS Result
                     FROM 
                         execve(argv=cmdline[0].CMD,sep='\r\n')
+                    GROUP BY Result
                 })
       
       # test connection to a frontend server
@@ -354,6 +372,5 @@ sources:
                         d=create_actions,
                         e=create_rules,
                         g=enable_policy,
-                        h=final_check)	
+                        h=final_check)  
                 })
-                
