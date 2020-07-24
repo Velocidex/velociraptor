@@ -14,7 +14,7 @@ require (
 	github.com/Velocidex/cgofuse v1.1.2
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9
-	github.com/Velocidex/ordereddict v0.0.0-20200604122819-9f5b751d8d24
+	github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8
 	github.com/Velocidex/survey v1.8.7-0.20190926071832-2ff99cc7aa49
 	github.com/Velocidex/yaml/v2 v2.2.5
 	github.com/ZachtimusPrime/Go-Splunk-HTTP v0.0.0-20200420213219-094ff9e8d788
