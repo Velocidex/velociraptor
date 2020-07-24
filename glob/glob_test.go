@@ -220,7 +220,7 @@ func TestGlobWithContext(t *testing.T) {
 		result[fmt.Sprintf("%03d %s", idx, fixture.name)] = returned
 	}
 
-	result_json, _ := json.MarshalIndent(result, "", " ")
+	result_json, _ := json.MarshalIndent(result)
 	goldie.Assert(t, "TestGlobWithContext", result_json)
 }
 
