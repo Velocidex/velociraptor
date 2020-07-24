@@ -2,9 +2,7 @@ package functions
 
 import (
 	"context"
-	"fmt"
 	"math"
-	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -17,9 +15,6 @@ import (
 
 var (
 	lru *cache.LRUCache = cache.NewLRUCache(100)
-
-	tz_mu  sync.Mutex
-	tz_lru map[string]*time.Location = make(map[string]*time.Location)
 )
 
 type cachedTime struct {
@@ -35,7 +30,6 @@ type _TimestampArg struct {
 	WinFileTime int64       `vfilter:"optional,field=winfiletime"`
 	String      string      `vfilter:"optional,field=string,doc=Guess a timestamp from a string"`
 	UsStyle     bool        `vfilter:"optional,field=us_style,doc=US Style Month/Day/Year"`
-	Timezone    string      `vfilter:"optional,field=timezone,doc=Name of timezone (for display)"`
 }
 
 type _Timestamp struct{}
@@ -68,23 +62,6 @@ func (self _Timestamp) Call(ctx context.Context, scope *vfilter.Scope,
 	result, err := TimeFromAny(scope, arg.Epoch)
 	if err != nil || result.Unix() == 0 {
 		return vfilter.Null{}
-	}
-
-	if arg.Timezone != "" {
-		tz_mu.Lock()
-		defer tz_mu.Unlock()
-
-		location, pres := tz_lru[arg.Timezone]
-		if !pres {
-			location, err = time.LoadLocation(arg.Timezone)
-			if err != nil {
-				scope.Log("Timezone %v error: %v", arg.Timezone, err)
-			} else {
-				tz_lru[arg.Timezone] = location
-				result = result.In(location)
-				fmt.Printf("Result %v\n", result)
-			}
-		}
 	}
 
 	return result

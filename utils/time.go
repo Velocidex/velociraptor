@@ -3,6 +3,8 @@ package utils
 import (
 	"time"
 
+	"github.com/Velocidex/json"
+	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -29,6 +31,29 @@ func (self TimeVal) Time() time.Time {
 	return time.Unix(self.Sec, 0)
 }
 
-func (self TimeVal) MarshalJSON() ([]byte, error) {
-	return self.Time().MarshalJSON()
+// Take care of marshaling all timestamps in UTC
+func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
+	switch t := v.(type) {
+	case time.Time:
+		// Marshal the time in the desired timezone.
+		return t.UTC().MarshalJSON()
+
+	case *time.Time:
+		return t.UTC().MarshalJSON()
+
+	case TimeVal:
+		return t.Time().UTC().MarshalJSON()
+
+	case *TimeVal:
+		return t.Time().UTC().MarshalJSON()
+
+	}
+	return nil, json.EncoderCallbackSkip
+}
+
+func init() {
+	vjson.RegisterCustomEncoder(time.Time{}, MarshalTimes)
+	vjson.RegisterCustomEncoder(&time.Time{}, MarshalTimes)
+	vjson.RegisterCustomEncoder(TimeVal{}, MarshalTimes)
+	vjson.RegisterCustomEncoder(&TimeVal{}, MarshalTimes)
 }

@@ -1,4 +1,4 @@
-// +build linux
+// +build disabled
 
 package main
 

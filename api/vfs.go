@@ -62,7 +62,6 @@ GetVFSDownloadInfoPath().
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -72,6 +71,7 @@ import (
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -177,7 +177,7 @@ func renderDBVFS(
 			}
 		}
 
-		encoded_rows, err := json.MarshalIndent(rows, "", " ")
+		encoded_rows, err := json.MarshalIndent(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +228,7 @@ func renderFileStore(
 		}
 	}
 
-	encoded_rows, err := json.MarshalIndent(rows, "", " ")
+	encoded_rows, err := json.MarshalIndent(rows)
 	if err != nil {
 		return nil, err
 	}

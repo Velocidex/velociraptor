@@ -19,7 +19,6 @@ package glob
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"path"
@@ -28,6 +27,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"www.velocidex.com/golang/velociraptor/json"
 
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"

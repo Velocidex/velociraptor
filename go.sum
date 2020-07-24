@@ -50,6 +50,10 @@ github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
 github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9 h1:zatH9PNN7IiBTT4X7fFAbkEB0qYlg0oK2uTS0ffGPIM=
 github.com/Velocidex/go-yara v1.1.10-0.20200414034554-457848df11f9/go.mod h1:N1A2MzBKorQm3WixuPUSm4gmzGA6i5sYrwHyUBvY5lg=
+github.com/Velocidex/json v0.0.0-20200724034306-54681c98867b h1:QmCuifujEMLWjxabMHXORZVAiIc54DwZDzv9rzJ+L5Q=
+github.com/Velocidex/json v0.0.0-20200724034306-54681c98867b/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
+github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec h1:ep1GlQfQtVZsn8yaUwILZxlK1Sw13dYhsOT3bEhZ8HE=
+github.com/Velocidex/json v0.0.0-20200724131328-8f5c7b0a25ec/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20191103011020-3b5a5f6957d4/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20191106020901-97c468e5e403/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20200604122819-9f5b751d8d24 h1:D9o15FvXAsaZUzF3jwWdFTOvNb+lcekv0bbWAsAlPpA=
@@ -586,5 +590,7 @@ www.velocidex.com/golang/vfilter v0.0.0-20200723152638-1168fdf00eea h1:kN/+q/VAJ
 www.velocidex.com/golang/vfilter v0.0.0-20200723152638-1168fdf00eea/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
 www.velocidex.com/golang/vfilter v0.0.0-20200723160455-c481438c81fd h1:Hlf4kKRH5nUNjqphWfoUfEvyUduSGuodSCeZ2txTtFc=
 www.velocidex.com/golang/vfilter v0.0.0-20200723160455-c481438c81fd/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
+www.velocidex.com/golang/vfilter v0.0.0-20200724144634-a3d13a0c4357 h1:59puivp9xI+1suxePMMD5rc4Wp+y7055QfzYyexAEiE=
+www.velocidex.com/golang/vfilter v0.0.0-20200724144634-a3d13a0c4357/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=

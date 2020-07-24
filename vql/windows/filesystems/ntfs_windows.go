@@ -23,7 +23,6 @@
 package filesystems
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +36,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -137,32 +137,6 @@ func (self *NTFSFileInfo) IsLink() bool {
 
 func (self *NTFSFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
-}
-
-func (self *NTFSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
 }
 
 type NTFSFileSystemAccessor struct {
@@ -685,4 +659,6 @@ func GetDirLRU(accessor_ctx *AccessorContext, path string, component string) (
 
 func init() {
 	glob.Register("ntfs", &NTFSFileSystemAccessor{})
+
+	json.RegisterCustomEncoder(&NTFSFileInfo{}, glob.MarshalGlobFileInfo)
 }

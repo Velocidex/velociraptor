@@ -19,7 +19,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -33,6 +32,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -70,12 +70,10 @@ func outputJSON(ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
-	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
-	for {
-		result, ok := <-result_chan
-		if !ok {
-			return
-		}
+	for result := range vfilter.GetResponseChannel(
+		vql, ctx, scope,
+		vql_subsystem.MarshalJsonIndent(scope),
+		10, *max_wait) {
 		out.Write(result.Payload)
 	}
 }
@@ -84,39 +82,11 @@ func outputJSONL(ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
-	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
-rows:
-	for {
-		result, ok := <-result_chan
-		if !ok {
-			return
-		}
-
-		result_array := []json.RawMessage{}
-		err := json.Unmarshal(result.Payload, &result_array)
-		if err != nil {
-			continue rows
-		}
-
-		for _, item := range result_array {
-			// Decode the row into an ordered dict to maintain ordering.
-			row := ordereddict.NewDict()
-			err = json.Unmarshal(item, row)
-			if err != nil {
-				continue
-			}
-
-			// Re-serialize it as compact json.
-			serialized, err := json.Marshal(row)
-			if err != nil {
-				continue
-			}
-
-			out.Write(serialized)
-
-			// Separate lines with \n
-			out.Write([]byte("\n"))
-		}
+	for result := range vfilter.GetResponseChannel(
+		vql, ctx, scope,
+		vql_subsystem.MarshalJsonl(scope),
+		10, *max_wait) {
+		out.Write(result.Payload)
 	}
 }
 
@@ -124,7 +94,9 @@ func outputCSV(ctx context.Context,
 	scope *vfilter.Scope,
 	vql *vfilter.VQL,
 	out io.Writer) {
-	result_chan := vfilter.GetResponseChannel(vql, ctx, scope, 10, *max_wait)
+	result_chan := vfilter.GetResponseChannel(vql, ctx, scope,
+		vql_subsystem.MarshalJson(scope),
+		10, *max_wait)
 
 	csv_writer := csv.GetCSVAppender(
 		scope, &StdoutWrapper{out}, true /* write_headers */)
@@ -199,18 +171,14 @@ func doRemoteQuery(
 
 		switch format {
 		case "json":
-			fmt.Println(response.Response)
+			fmt.Println(json.MarshalIndent(rows))
 
 		case "jsonl":
-			for _, row := range rows {
-				serialized, err := json.Marshal(row)
-				if err == nil {
-					fmt.Println(string(serialized))
-				}
-			}
+			fmt.Println(json.MarshalJsonl(rows))
 
 		case "csv":
 			scope := vql_subsystem.MakeScope()
+
 			csv_writer := csv.GetCSVAppender(
 				scope, &StdoutWrapper{os.Stdout}, true /* write_headers */)
 			defer csv_writer.Close()
@@ -332,7 +300,7 @@ func doExplain(plugin string) {
 		result.Set("type_map", type_map)
 	}
 
-	s, err := json.MarshalIndent(result, "", " ")
+	s, err := json.MarshalIndent(result)
 	if err == nil {
 		os.Stdout.Write(s)
 	}
