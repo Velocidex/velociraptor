@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"strings"
 
 	errors "github.com/pkg/errors"
@@ -10,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )

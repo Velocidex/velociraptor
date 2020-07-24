@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -105,9 +105,11 @@ func (self *Container) StoreArtifact(
 
 	self.tempfiles[artifact_name] = tmpfile
 
+	// Store as line delimited JSON
+	marshaler := vql_subsystem.MarshalJsonl(scope)
 	for row := range vql.Eval(ctx, scope) {
 		// Re-serialize it as compact json.
-		serialized, err := json.Marshal(row)
+		serialized, err := marshaler([]vfilter.Row{row})
 		if err != nil {
 			continue
 		}
@@ -182,10 +184,11 @@ func (self *Container) DumpRowsIntoContainer(
 		return err
 	}
 
-	err = json.NewEncoder(writer).Encode(output_rows)
+	serialized, err := vql_subsystem.MarshalJsonl(scope)(output_rows)
 	if err != nil {
 		return err
 	}
+	writer.Write(serialized)
 	closer()
 
 	// Format the description.

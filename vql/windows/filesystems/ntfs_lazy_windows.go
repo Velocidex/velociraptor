@@ -23,7 +23,6 @@
 package filesystems
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -33,6 +32,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -202,32 +202,6 @@ func (self *LazyNTFSFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
 
-func (self *LazyNTFSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
-}
-
 type LazyNTFSFileSystemAccessor struct {
 	*NTFSFileSystemAccessor
 }
@@ -348,4 +322,6 @@ func (self *LazyNTFSFileSystemAccessor) Open(path string) (res glob.ReadSeekClos
 
 func init() {
 	glob.Register("lazy_ntfs", &LazyNTFSFileSystemAccessor{})
+
+	json.RegisterCustomEncoder(&LazyNTFSFileInfo{}, glob.MarshalGlobFileInfo)
 }

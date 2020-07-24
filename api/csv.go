@@ -82,7 +82,7 @@ func getTable(
 			}
 
 			row_data := make([]string, 0, len(result.Columns))
-			for _, key := range row.Keys() {
+			for _, key := range result.Columns {
 				value, _ := row.Get(key)
 				row_data = append(row_data, csv.AnyToString(value))
 			}

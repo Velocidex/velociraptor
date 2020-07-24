@@ -34,7 +34,6 @@ package filesystem
 import (
 	"compress/bzip2"
 	"compress/gzip"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -46,6 +45,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 
@@ -85,7 +85,7 @@ func (self *GzipFileInfo) Mode() os.FileMode {
 }
 
 func (self *GzipFileInfo) ModTime() time.Time {
-	return self._modtime.Time().Time
+	return self._modtime.Time()
 }
 
 func (self *GzipFileInfo) FullPath() string {
@@ -111,32 +111,6 @@ func (self *GzipFileInfo) IsLink() bool {
 
 func (self *GzipFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
-}
-
-func (self *GzipFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
 }
 
 type GzipFileSystemAccessor struct {
@@ -342,4 +316,5 @@ func init() {
 	glob.Register("bzip2", &GzipFileSystemAccessor{
 		getter: GetBzip2File})
 
+	json.RegisterCustomEncoder(&GzipFileInfo{}, glob.MarshalGlobFileInfo)
 }

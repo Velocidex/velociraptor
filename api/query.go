@@ -116,7 +116,9 @@ func streamQuery(
 				fmt.Printf("Running %v\n", vql.ToString(scope))
 
 				result_chan := vfilter.GetResponseChannel(
-					vql, stream.Context(), scope, int(arg.MaxRow), int(arg.MaxWait))
+					vql, stream.Context(), scope,
+					vql_subsystem.MarshalJson(scope),
+					int(arg.MaxRow), int(arg.MaxWait))
 
 				for result := range result_chan {
 					fmt.Printf("Got %v\n", string(result.Payload))

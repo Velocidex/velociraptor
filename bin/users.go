@@ -19,7 +19,6 @@ package main
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -28,6 +27,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/users"
 )
 
@@ -109,7 +109,7 @@ func doShowUser() {
 	user_record, err := users.GetUser(config_obj, *user_show_name)
 	kingpin.FatalIfError(err, "Unable to find user %s", *user_show_name)
 
-	s, err := json.MarshalIndent(user_record, "", " ")
+	s, err := json.MarshalIndent(user_record)
 	if err == nil {
 		os.Stdout.Write(s)
 	}

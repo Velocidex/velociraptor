@@ -9,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	vjson "www.velocidex.com/golang/velociraptor/json"
 )
 
 func ParseJsonToDicts(serialized []byte) ([]*ordereddict.Dict, error) {
@@ -59,7 +60,7 @@ func ParseJsonToDicts(serialized []byte) ([]*ordereddict.Dict, error) {
 func DictsToJson(rows []*ordereddict.Dict) ([]byte, error) {
 	out := bytes.Buffer{}
 	for _, row := range rows {
-		serialized, err := json.Marshal(row)
+		serialized, err := vjson.Marshal(row)
 		if err != nil {
 			return nil, err
 		}

@@ -31,7 +31,6 @@ package filesystem
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -47,6 +46,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -120,24 +120,6 @@ func (self *RawRegKeyInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
 
-func (self RawRegKeyInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Data     interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-		Data:     self.Data(),
-	})
-
-	return result, err
-}
-
 func (self *RawRegKeyInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
@@ -186,26 +168,6 @@ func (self *RawRegValueInfo) Data() interface{} {
 		}
 	}
 	return result
-}
-
-func (self RawRegValueInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Type     string
-		Data     interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-		Type:     self.value.TypeString(),
-		Data:     self.Data(),
-	})
-
-	return result, err
 }
 
 type RawValueBuffer struct {
@@ -504,4 +466,7 @@ func (self ReadKeyValues) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 func init() {
 	glob.Register("raw_reg", &RawRegFileSystemAccessor{})
 	vql_subsystem.RegisterPlugin(&ReadKeyValues{})
+
+	json.RegisterCustomEncoder(&RawRegKeyInfo{}, glob.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&RawRegValueInfo{}, glob.MarshalGlobFileInfo)
 }

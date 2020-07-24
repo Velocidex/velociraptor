@@ -22,17 +22,16 @@
 package filesystems
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	"github.com/shirou/gopsutil/disk"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
 	"www.velocidex.com/golang/vfilter"
@@ -101,36 +100,6 @@ func (self *OSFileInfo) GetLink() (string, error) {
 
 func (self *OSFileInfo) sys() *syscall.Win32FileAttributeData {
 	return self.Sys().(*syscall.Win32FileAttributeData)
-}
-
-func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
-}
-
-func (u *OSFileInfo) UnmarshalJSON(data []byte) error {
-	return nil
 }
 
 func getAvailableDrives() ([]string, error) {
@@ -302,4 +271,6 @@ func init() {
 	// is used through the AutoFilesystemAccessor: If we can not
 	// open the file with regular OS APIs we fallback to raw NTFS
 	// access. This is usually what we want.
+
+	json.RegisterCustomEncoder(&OSFileInfo{}, glob.MarshalGlobFileInfo)
 }

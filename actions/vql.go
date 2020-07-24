@@ -152,7 +152,10 @@ func (self VQLClientAction) StartQuery(
 		}
 
 		result_chan := vfilter.GetResponseChannel(
-			vql, sub_ctx, scope, int(max_row), int(max_wait))
+			vql, sub_ctx, scope,
+			vql_subsystem.MarshalJson(scope),
+			int(max_row),
+			int(max_wait))
 	run_query:
 		for {
 			select {

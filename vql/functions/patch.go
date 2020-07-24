@@ -2,10 +2,10 @@ package functions
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Velocidex/ordereddict"
 	jsonpatch "github.com/evanphx/json-patch"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )

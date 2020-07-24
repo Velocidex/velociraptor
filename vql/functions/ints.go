@@ -19,6 +19,7 @@ package functions
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -89,7 +90,7 @@ func (self *StrFunction) Call(ctx context.Context,
 		return string(t)
 
 	default:
-		return t
+		return fmt.Sprintf("%v", t)
 	}
 }
 

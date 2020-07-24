@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -10,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -102,7 +102,8 @@ func (self SetClientMonitoring) Call(
 		value_json = t
 
 	default:
-		serialized, err := json.Marshal(arg.Data)
+		opts := vql_subsystem.EncOptsFromScope(scope)
+		serialized, err := json.MarshalWithOptions(arg.Data, opts)
 		if err != nil {
 			scope.Log("set_client_monitoring: %v", err)
 			return vfilter.Null{}
@@ -230,7 +231,8 @@ func (self SetServerMonitoring) Call(
 		value_json = t
 
 	default:
-		serialized, err := json.Marshal(arg.Data)
+		opts := vql_subsystem.EncOptsFromScope(scope)
+		serialized, err := json.MarshalWithOptions(arg.Data, opts)
 		if err != nil {
 			scope.Log("set_server_monitoring: %v", err)
 			return vfilter.Null{}

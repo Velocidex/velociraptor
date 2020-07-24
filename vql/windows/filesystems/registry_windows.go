@@ -26,7 +26,6 @@ package filesystems
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -37,6 +36,7 @@ import (
 	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -122,24 +122,6 @@ func (self *RegKeyInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
 }
 
-func (self RegKeyInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Data     interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-		Data:     self.Data(),
-	})
-
-	return result, err
-}
-
 func (u *RegKeyInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
@@ -173,26 +155,6 @@ func (self *RegValueInfo) Mode() os.FileMode {
 
 func (self *RegValueInfo) Size() int64 {
 	return self._size
-}
-
-func (self RegValueInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Type     string
-		Data     interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-		Type:     self.Type,
-		Data:     self.Data(),
-	})
-
-	return result, err
 }
 
 type ValueBuffer struct {
@@ -513,4 +475,7 @@ func (self RegFileSystemAccessor) PathJoin(root, stem string) string {
 func init() {
 	glob.Register("reg", &RegFileSystemAccessor{})
 	glob.Register("registry", &RegFileSystemAccessor{})
+
+	json.RegisterCustomEncoder(&RegKeyInfo{}, glob.MarshalGlobFileInfo)
+	json.RegisterCustomEncoder(&RegValueInfo{}, glob.MarshalGlobFileInfo)
 }
