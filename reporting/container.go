@@ -104,7 +104,9 @@ func (self *Container) StoreArtifact(
 	}
 
 	self.tempfiles[artifact_name] = tmpfile
-	marshaler := vql_subsystem.MarshalJson(scope)
+
+	// Store as line delimited JSON
+	marshaler := vql_subsystem.MarshalJsonl(scope)
 	for row := range vql.Eval(ctx, scope) {
 		// Re-serialize it as compact json.
 		serialized, err := marshaler([]vfilter.Row{row})
