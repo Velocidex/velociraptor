@@ -1,4 +1,4 @@
-name: Windows
+name: Windows Build
 on: [push]
 jobs:
   build:
@@ -18,15 +18,6 @@ jobs:
       run: |
         go get -v -t -d ./...
 
-    - name: Install mingw
-      uses: numworks/setup-msys2@v1
-      with:
-        msystem: MSYS
-
-    - run: msys2do makepkg-mingw -sCLfc --noconfirm --noprogressbar
-    - run: msys2do pacman --noconfirm -U mingw-w64-*-any.pkg.tar.xz
-    - run: set MSYSTEM=MINGW64
-
     - name: Use Node.js v12
       uses: actions/setup-node@v1
       with:
@@ -41,7 +32,6 @@ jobs:
 
     - name: Build
       run: |
-        mkdir .\output
         go run make.go -v Windows
 
     - name: Test

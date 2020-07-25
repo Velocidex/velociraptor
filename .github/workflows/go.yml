@@ -1,5 +1,5 @@
-name: Go
-on: [push]
+name: Linux Build
+on: []
 jobs:
 
   build:
