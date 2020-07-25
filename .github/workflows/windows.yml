@@ -48,6 +48,8 @@ jobs:
             cd ../..
 
     - name: Configure test environment
+      shell: cmd
+      if: always()
       run: |
         echo %PATH%
         echo %GOPATH%
@@ -63,12 +65,14 @@ jobs:
         regedit /S artifacts/testdata/windows/init.reg
 
     - name: Build
+      if: always()
       env:
         CC: x86_64-w64-mingw32-gcc
       run: |
         go run make.go -v WindowsDev
 
     - name: Prepare second stage
+      if: always()
       run: |
         vssadmin create shadow /for=c:
         echo "VSStest2" >> c:\Users\test2.txt
@@ -78,6 +82,7 @@ jobs:
 
     - name: Test
       shell: bash
+      if: always()
       env:
         # Disable CGO for building tests - it takes too long (mainly
         # disables Yara building again).
