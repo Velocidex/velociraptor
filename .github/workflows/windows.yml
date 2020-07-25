@@ -19,7 +19,7 @@ jobs:
         go get -v -t -d ./...
 
     - name: Install mingw
-    - uses: numworks/setup-msys2@v1
+      uses: numworks/setup-msys2@v1
       with:
         msystem: MSYS
 
