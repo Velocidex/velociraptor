@@ -278,6 +278,10 @@ message GUIConfig {
             description: "Port to bind to."
         }];
 
+    // Allows the GUI to start with no encryption - **WARNING** This
+    // only makes sense if you have TLS proxy in front.
+    bool use_plain_http = 20;
+
     string gw_certificate = 10 [(sem_type) = {
             description: "The GUI exposes a HTTP interface to the gRPC end point."
             "This is the certificate and private key that will be used to "

@@ -122,6 +122,12 @@ func startSharedSelfSignedFrontend(
 		return err
 	}
 
+	// Combine both frontend and GUI on HTTP server.
+	if config_obj.GUI.UsePlainHttp && config_obj.Frontend.UsePlainHttp {
+		return StartFrontendPlainHttp(
+			ctx, wg, config_obj, server_obj, mux)
+	}
+
 	return StartFrontendHttps(ctx, wg,
 		config_obj, server_obj, router)
 }
@@ -144,7 +150,11 @@ func startSelfSignedFrontend(
 		}
 
 		// Start the GUI separately on a different port.
-		err = StartSelfSignedGUI(ctx, wg, config_obj, router)
+		if config_obj.GUI.UsePlainHttp {
+			err = StartHTTPGUI(ctx, wg, config_obj, router)
+		} else {
+			err = StartSelfSignedGUI(ctx, wg, config_obj, router)
+		}
 		if err != nil {
 			return err
 		}
@@ -389,6 +399,63 @@ func StartFrontendWithAutocert(
 			logger.Error("Frontend shutdown error ", err)
 		}
 		server_obj.Info("Shutdown frontend")
+	}()
+
+	return nil
+}
+
+func StartHTTPGUI(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config, mux http.Handler) error {
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+
+	listenAddr := fmt.Sprintf("%s:%d",
+		config_obj.GUI.BindAddress,
+		config_obj.GUI.BindPort)
+
+	server := &http.Server{
+		Addr:     listenAddr,
+		Handler:  mux,
+		ErrorLog: logging.NewPlainLogger(config_obj, &logging.FrontendComponent),
+
+		// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
+		ReadTimeout:  500 * time.Second,
+		WriteTimeout: 900 * time.Second,
+		IdleTimeout:  15 * time.Second,
+	}
+
+	logger.WithFields(
+		logrus.Fields{
+			"listenAddr": listenAddr,
+		}).Info("GUI is ready to handle HTTP requests")
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		err := server.ListenAndServeTLS("", "")
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error("GUI Server error", err)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		logger.Info("Stopping GUI Server")
+		timeout_ctx, cancel := context.WithTimeout(
+			context.Background(), 10*time.Second)
+		defer cancel()
+
+		server.SetKeepAlivesEnabled(false)
+		err := server.Shutdown(timeout_ctx)
+		if err != nil {
+			logger.Error("GUI shutdown error ", err)
+		}
+		logger.Info("Shutdown GUI")
 	}()
 
 	return nil

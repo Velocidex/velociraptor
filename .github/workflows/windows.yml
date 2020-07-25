@@ -88,6 +88,6 @@ jobs:
         # disables Yara building again).
         CGO_ENABLED: "0"
       run: |
-        echo output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./ --config
-        echo go test -v ./...
+        go test -v ./...
+        output/velociraptor.exe golden artifacts/testdata/windows/ --env srcDir=./ --config artifacts/testdata/windows/test.config.yaml
         echo $GITHUB_WORKSPACE
