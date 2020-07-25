@@ -27,6 +27,7 @@ jobs:
 
     - name: Cache node-modules
       uses: actions/cache@v2
+      if: false
       with:
         path: |
           **/node_modules
@@ -41,6 +42,7 @@ jobs:
 
     - name: npm install gui
       shell: bash
+      if: false
       run: |
             cd gui/static
             npm install
@@ -69,7 +71,7 @@ jobs:
       env:
         CC: x86_64-w64-mingw32-gcc
       run: |
-        go run make.go -v WindowsDev
+        go run make.go -v WindowsTest
 
     - name: Prepare second stage
       if: always()
@@ -83,11 +85,11 @@ jobs:
     - name: Test
       shell: bash
       if: always()
-      env:
-        # Disable CGO for building tests - it takes too long (mainly
-        # disables Yara building again).
-        CGO_ENABLED: "0"
       run: |
         go test -v ./...
+
+    - name: Test Golden
+      shell: bash
+      if: always()
+      run: |
         output/velociraptor.exe golden artifacts/testdata/windows/ --env srcDir=./ --config artifacts/testdata/windows/test.config.yaml
-        echo $GITHUB_WORKSPACE

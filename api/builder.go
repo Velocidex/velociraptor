@@ -434,7 +434,7 @@ func StartHTTPGUI(
 	go func() {
 		defer wg.Done()
 
-		err := server.ListenAndServeTLS("", "")
+		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
 			logger.Error("GUI Server error", err)
 		}

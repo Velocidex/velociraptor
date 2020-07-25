@@ -253,6 +253,13 @@ func WindowsDev() error {
 		arch:       "amd64"}.Run()
 }
 
+func WindowsTest() error {
+	return Builder{
+		goos:     "windows",
+		filename: "velociraptor.exe",
+		arch:     "amd64"}.Run()
+}
+
 func Windowsx86() error {
 	return Builder{
 		extra_tags: " release ",
