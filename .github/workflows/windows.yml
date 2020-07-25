@@ -18,17 +18,15 @@ jobs:
       shell: bash
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
-
-    - name: Use Node.js v12
       uses: actions/checkout@v2
 
-    - uses: actions/setup-node@v2-beta
+    - name: Use Node.js v12
+      uses: actions/setup-node@v2-beta
       with:
         node-version: '12'
 
-    - uses: c-hive/gha-npm-cache@v1
     - name: npm install gui
+      shell: bash
       run: |
             cd gui/static
             npm install
@@ -42,6 +40,7 @@ jobs:
         go run make.go -v Windows
 
     - name: Test
+      shell: bash
       run: |
-        output\velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
-        go test -v ./...
+        output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
+        echo go test -v ./...
