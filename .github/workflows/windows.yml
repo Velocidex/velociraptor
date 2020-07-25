@@ -106,3 +106,14 @@ jobs:
       if: always()
       run: |
         output/velociraptor.exe golden artifacts/testdata/windows/ --env srcDir=./ --config artifacts/testdata/windows/test.config.yaml
+
+    - name: Upload Build Artifacts
+      shell: bash
+      run: |
+        mkdir artifact_output
+        cp artifacts/testdata/windows/*.out* artifact_output
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: artifact
+        path: artifact-zip
