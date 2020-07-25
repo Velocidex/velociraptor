@@ -6,17 +6,25 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Set up Go 1.14
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@v2
       with:
         go-version: 1.14
       id: go
 
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(dirname $GITHUB_WORKSPACE)"
+        echo "::add-path::$(dirname $GITHUB_WORKSPACE)/bin"
+      shell: bash
+
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Get dependencies
+    - name: Build
+      env:
+        PATH:
       run: |
-        go get -v -t -d ./...
+        go run make.go -v Windows
 
     - name: Use Node.js v12
       uses: actions/setup-node@v1
@@ -25,19 +33,12 @@ jobs:
 
     - name: npm install gui
       run: |
-            cd gui\static
+            cd gui/static
             npm install
             node node_modules/gulp/bin/gulp.js compile
-            cd ..\..
-
-    - name: Build
-      env:
-        PATH:
-      run: |
-        echo "::add-path::C:\\go\\bin"
-        go run make.go -v Windows
+            cd ../..
 
     - name: Test
       run: |
         go test ./...
-        .\output\velociraptor.exe golden .\artifacts\testdata\windows\ --env srcDir=./
+        ./output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
