@@ -76,6 +76,7 @@ jobs:
         CGO_ENABLED: "0"
       shell: bash
       run: |
+        mkdir gui/static/dist/
         echo > gui/static/dist/third-party.bundle.js
         echo > gui/static/dist/grr-ui.bundle.js
         go run make.go -v WindowsTest
