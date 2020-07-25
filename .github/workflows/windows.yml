@@ -25,6 +25,20 @@ jobs:
       with:
         node-version: '12'
 
+    - name: Cache node-modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Cache golang packages
+      uses: actions/cache@v2
+      with:
+        path: |
+          $GOPATH/pkg/
+        key: ${{ runner.os }}-${{ hashFiles('go.mod') }}
+
     - name: npm install gui
       shell: bash
       run: |
@@ -37,7 +51,7 @@ jobs:
       env:
         CC: x86_64-w64-mingw32-gcc
       run: |
-        go run make.go -v Windows
+        go run make.go -v WindowsDev
 
     - name: Test
       shell: bash
