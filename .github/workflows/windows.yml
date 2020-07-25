@@ -27,6 +27,10 @@ jobs:
       with:
         node-version: '12'
 
+    - uses: bahmutov/npm-install@v1
+      with:
+        working-directory: gui/static/
+
     - name: npm install gui
       run: |
             cd gui/static
@@ -42,5 +46,5 @@ jobs:
 
     - name: Test
       run: |
-        go test ./...
-        ./output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
+        output\velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
+        go test -v ./...
