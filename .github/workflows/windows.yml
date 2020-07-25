@@ -22,6 +22,7 @@ jobs:
 
     - name: Use Node.js v12
       uses: actions/setup-node@v2-beta
+      if: false
       with:
         node-version: '12'
 
@@ -70,7 +71,14 @@ jobs:
       if: always()
       env:
         CC: x86_64-w64-mingw32-gcc
+      cmd: bash
+      env:
+        # Disable CGO for building tests - it takes too long (mainly
+        # disables Yara building again).
+        CGO_ENABLED: "0"
       run: |
+        echo > gui/static/dist/third-party.bundle.js
+        echo > gui/static/dist/grr-ui.bundle.js
         go run make.go -v WindowsTest
 
     - name: Prepare second stage
@@ -85,6 +93,11 @@ jobs:
     - name: Test
       shell: bash
       if: always()
+      env:
+        # Disable CGO for building tests - it takes too long (mainly
+        # disables Yara building again).
+        CGO_ENABLED: "0"
+
       run: |
         go test -v ./...
 
