@@ -20,12 +20,6 @@ jobs:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
 
-    - name: Build
-      env:
-        PATH:
-      run: |
-        go run make.go -v Windows
-
     - name: Use Node.js v12
       uses: actions/setup-node@v1
       with:
@@ -37,6 +31,12 @@ jobs:
             npm install
             node node_modules/gulp/bin/gulp.js compile
             cd ../..
+
+    - name: Build
+      env:
+        PATH:
+      run: |
+        go run make.go -v Windows
 
     - name: Test
       run: |
