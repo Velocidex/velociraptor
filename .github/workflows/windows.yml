@@ -31,10 +31,13 @@ jobs:
             cd ..\..
 
     - name: Build
+      env:
+        PATH:
       run: |
+        echo "::add-path::C:\\go\\bin"
         go run make.go -v Windows
 
     - name: Test
       run: |
         go test ./...
-        ./output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
+        .\output\velociraptor.exe golden .\artifacts\testdata\windows\ --env srcDir=./
