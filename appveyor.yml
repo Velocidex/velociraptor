@@ -57,7 +57,8 @@ test_script:
 - cmd: c:\velociraptor\output\velociraptor.exe golden -v --config c:\velociraptor\artifacts\testdata\windows\appveyor.config.yaml c:\velociraptor\artifacts\testdata\windows\ --env srcDir=c:\velociraptor
 
 on_finish:
+  - cmd: 7z a velociraptor.zip output/velociraptor.exe
   - ps: Get-ChildItem artifacts/testdata/windows/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - ps: Get-ChildItem artifacts/testdata/server/testcases/*.out.yaml | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-  - ps: Get-ChildItem output/velociraptor.exe | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+  - ps: Get-ChildItem velociraptor.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 #  - ps: Get-ChildItem output/velociraptor-linux.elf | % { Push-AppveyorArtifact $_.FullName -FileName "velociraptor-linux.elf" }

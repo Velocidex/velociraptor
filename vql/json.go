@@ -2,6 +2,7 @@ package vql
 
 import (
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/Velocidex/json"
@@ -12,11 +13,11 @@ import (
 
 func EncOptsFromScope(scope *vfilter.Scope) *json.EncOpts {
 	location := time.UTC
-
 	location_name, pres := scope.Resolve("TZ")
 	if pres {
 		location_str, ok := location_name.(string)
 		if ok {
+			fmt.Printf("Will set tz to %v\n", location_str)
 			l, err := time.LoadLocation(location_str)
 			if err == nil {
 				location = l
@@ -74,8 +75,9 @@ func MarshalJsonIndent(scope *vfilter.Scope) vfilter.RowEncoder {
 }
 
 func MarshalJsonl(scope *vfilter.Scope) vfilter.RowEncoder {
+	options := EncOptsFromScope(scope)
+
 	return func(rows []vfilter.Row) ([]byte, error) {
-		options := EncOptsFromScope(scope)
 		out := bytes.Buffer{}
 		for _, row := range rows {
 			serialized, err := json.MarshalWithOptions(
