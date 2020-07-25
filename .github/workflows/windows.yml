@@ -47,14 +47,42 @@ jobs:
             node node_modules/gulp/bin/gulp.js compile
             cd ../..
 
+    - name: Configure test environment
+      run: |
+        echo %PATH%
+        echo %GOPATH%
+        mklink c:\Users\link c:\Windows
+        mkdir "C:\Program Files\Velociraptor"
+        mkdir c:\tmp
+        echo Hello > C:\hello.txt
+        echo HelloADS > C:\hello.txt:myads
+        fsutil file setshortname C:\hello.txt hi.txt
+        sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
+        echo "VSStest" > c:\Users\test.txt
+        echo "VSStest2" > c:\Users\test2.txt
+        regedit /S artifacts/testdata/windows/init.reg
+
     - name: Build
       env:
         CC: x86_64-w64-mingw32-gcc
       run: |
         go run make.go -v WindowsDev
 
+    - name: Prepare second stage
+      run: |
+        vssadmin create shadow /for=c:
+        echo "VSStest2" >> c:\Users\test2.txt
+        wevtutil.exe cl System
+        sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+        vssadmin create shadow /for=c:
+
     - name: Test
       shell: bash
+      env:
+        # Disable CGO for building tests - it takes too long (mainly
+        # disables Yara building again).
+        CGO_ENABLED: "0"
       run: |
-        output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./
+        echo output/velociraptor.exe golden ./artifacts/testdata/windows/ --env srcDir=./ --config
         echo go test -v ./...
+        echo $GITHUB_WORKSPACE
