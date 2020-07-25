@@ -27,10 +27,7 @@ jobs:
       with:
         node-version: '12'
 
-    - uses: bahmutov/npm-install@v1
-      with:
-        working-directory: gui/static/
-
+    - uses: c-hive/gha-npm-cache@v1
     - name: npm install gui
       run: |
             cd gui/static
