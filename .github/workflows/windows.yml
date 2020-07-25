@@ -21,9 +21,11 @@ jobs:
       uses: actions/checkout@v1
 
     - name: Use Node.js v12
-      uses: actions/setup-node@v1
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-node@v2-beta
       with:
-        node-version: 12
+        node-version: '12'
 
     - name: npm install gui
       run: |
@@ -34,7 +36,7 @@ jobs:
 
     - name: Build
       env:
-        PATH:
+        CC: x86_64-w64-mingw32-gcc
       run: |
         go run make.go -v Windows
 
