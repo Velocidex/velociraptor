@@ -71,11 +71,10 @@ jobs:
       if: always()
       env:
         CC: x86_64-w64-mingw32-gcc
-      shell: bash
-      env:
         # Disable CGO for building tests - it takes too long (mainly
         # disables Yara building again).
         CGO_ENABLED: "0"
+      shell: bash
       run: |
         echo > gui/static/dist/third-party.bundle.js
         echo > gui/static/dist/grr-ui.bundle.js
