@@ -1,11 +1,13 @@
 # Only trigger when a PR is committed.
 name: Linux Build All Arches
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - master
 
 jobs:
+  if: github.event.pull_request.merged
   build:
     name: Build
     runs-on: ubuntu-latest
