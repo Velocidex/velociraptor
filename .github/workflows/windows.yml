@@ -1,5 +1,5 @@
 name: Windows Test
-on: [push]
+on: [push, pull_request]
 jobs:
   build:
     name: Windows Test
