@@ -279,7 +279,7 @@ sources:
              accessor='data',
              filename=serialize(format='json', item=autoexec)),
         Destination ], length=1000000)
-      WHERE log(message=Stderr)
+      WHERE log(message="Creating config on " + Config) AND log(message=Stderr)
 
       // Only actually run stuff if everything looks right.
       SELECT * FROM if(condition=autoexec AND target_binary AND me[0].Exe,

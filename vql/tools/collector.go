@@ -106,6 +106,7 @@ func (self CollectPlugin) Call(
 
 			scope.Log("Will create container at %s", arg.Output)
 
+			// On exit we create a report.
 			defer func() {
 				container.Close()
 

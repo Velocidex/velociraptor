@@ -46,7 +46,7 @@ func (self *DirectoryQueueManager) PushEventRows(
 		row.Set("_ts", int(self.Clock.Now().Unix()))
 	}
 
-	serialized, err := utils.DictsToJson(dict_rows)
+	serialized, err := utils.DictsToJson(dict_rows, nil)
 	if err != nil {
 		return err
 	}

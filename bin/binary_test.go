@@ -86,13 +86,13 @@ func (self *MainTestSuite) TestAutoexec() {
 
 	// Repack the config in the binary.
 	cmd := exec.Command(self.binary, "config", "repack", config_file.Name(), exe.Name())
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	require.NoError(self.T(), err)
 
 	// Run the repacked binary with no args - it should run the
 	// `artifacts list` command.
 	cmd = exec.Command(exe.Name())
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	require.NoError(self.T(), err)
 
 	// The output should contain MySpecialArtifact as well as the
@@ -182,7 +182,7 @@ func (self *MainTestSuite) TestGenerateConfigWithMerge() {
 
 	// Repack the config in the binary.
 	cmd = exec.Command(self.binary, "config", "repack", config_file.Name(), exe.Name())
-	out, err = cmd.Output()
+	out, err = cmd.CombinedOutput()
 	require.NoError(self.T(), err)
 
 	// Run the repacked binary with invalid environ - config

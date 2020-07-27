@@ -40,10 +40,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type ProcDumpArgs struct {
-	Pid int64 `vfilter:"required,field=pid,doc=The PID to dump out."`
-}
-
 type ProcDumpPlugin struct{}
 
 func (self ProcDumpPlugin) Call(

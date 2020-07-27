@@ -2,7 +2,7 @@ Queries:
   - SELECT FullPath FROM glob(globs="/*", accessor="ntfs")
   - SELECT FullPath FROM glob(globs="\\*", accessor="ntfs")
   - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs")
-    WHERE Name = "pagefile.sys"
+    WHERE Name = "Windows"
   - SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs")
     WHERE Name = "notepad.exe"
   - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs")
@@ -19,7 +19,7 @@ Queries:
   - SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")
   - SELECT FullPath FROM glob(globs="\\*", accessor="lazy_ntfs")
   - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs")
-    WHERE Name = "pagefile.sys"
+    WHERE Name = "Windows"
   - SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs")
     WHERE Name = "notepad.exe"
   - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs")

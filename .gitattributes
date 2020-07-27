@@ -1,0 +1,18 @@
+* text=auto
+
+*.go text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.c text eol=lf
+*.h text eol=lf
+*.md text eol=lf
+*.golden text eol=lf
+*.txt text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+
+*.db binary
+*.json binary
+*.csv binary
+*.zip binary

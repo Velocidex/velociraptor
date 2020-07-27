@@ -26,6 +26,7 @@ description: |
 parameters:
   - name: eventDirGlob
     default: C:\Windows\system32\winevt\logs\
+
   - name: adminLog
     default: Microsoft-Windows-Dhcp-Client%4Admin.evtx
 
@@ -37,12 +38,11 @@ parameters:
 
 sources:
   - name: RejectedDHCP
-    queries:
-      - |
+    query: |
         LET files = SELECT * FROM glob(
             globs=eventDirGlob + adminLog,
             accessor=accessor)
-      - |
+
         SELECT Time AS _Time,
                timestamp(epoch=Time) As Timestamp,
                Computer, MAC, ClientIP, DHCPServer, Type FROM foreach(
@@ -59,12 +59,7 @@ sources:
            })
 
   - name: AssignedDHCP
-    queries:
-      - |
-        LET files = SELECT * FROM glob(
-            globs=eventDirGlob + operationalLog,
-            accessor=accessor)
-      - |
+    query: |
         SELECT Time AS _Time,
                timestamp(epoch=Time) As Timestamp,
                Computer, MAC, ClientIP, DHCPServer, Type FROM foreach(

@@ -1,0 +1,118 @@
+name: Windows Test
+on: [push, pull_request]
+jobs:
+  build:
+    name: Windows Test
+    runs-on: windows-latest
+    steps:
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+      id: go
+
+    - name: setup env
+      run: |
+        echo "::set-env name=GOPATH::$(dirname $GITHUB_WORKSPACE)"
+        echo "::add-path::$(dirname $GITHUB_WORKSPACE)/bin"
+      shell: bash
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Configure test environment
+      shell: cmd
+      if: always()
+      run: |
+        echo %PATH%
+        echo %GOPATH%
+        mklink c:\Users\link c:\Windows
+        mkdir "C:\Program Files\Velociraptor"
+        mkdir c:\tmp
+        echo Hello > C:\hello.txt
+        echo HelloADS > C:\hello.txt:myads
+        fsutil file setshortname C:\hello.txt hi.txt
+        sc.exe create TestingDetection1 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 1"
+        echo "VSStest" > c:\Users\test.txt
+        echo "VSStest2" > c:\Users\test2.txt
+        regedit /S artifacts/testdata/windows/init.reg
+
+    - name: Build
+      if: always()
+      env:
+        CC: x86_64-w64-mingw32-gcc
+      shell: bash
+      run: |
+        mkdir gui/static/dist/
+        echo > gui/static/dist/third-party.bundle.js
+        echo > gui/static/dist/grr-ui.bundle.js
+        go run make.go -v WindowsTest
+
+    - name: Prepare second stage
+      if: always()
+      shell: cmd
+      # We have to wait a short time between the service creation
+      # event to be flushed to disk. Hopefully building the test
+      # binary takes long enough.
+
+      # Creating a second service - in the end we have
+      # TestingDetection2 in current logs, TestingDetection1 in
+      # previously cleared logs (but in VSS).
+      run: |
+        vssadmin create shadow /for=c:
+        echo "VSStest2 with more data" > c:\Users\test2.txt
+        echo Clearing the event logs
+        wevtutil.exe cl System
+
+        echo Create second service.
+        sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
+
+    - name: Test
+      shell: bash
+      if: always()
+      env:
+        # Disable CGO for building tests - it takes too long and it is
+        # not needed (mainly disables Yara building again).
+        CGO_ENABLED: "0"
+
+      run: |
+        go test -v ./...
+
+    - name: Test Golden Generic
+      shell: cmd
+      if: always()
+      # We depend on the second service logs to be flushed to disk -
+      # hopefulling the unit tests take long enough for this to
+      # happen.
+
+      # Create a second VSS right before testing - in most cases the
+      # second VSS is identical to C: and VSS artifacts should
+      # **always** prefer to emit C: based locations over VSS paths.
+      run: |
+        vssadmin create shadow /for=c:
+
+        echo Running OS generic tests.
+        output\velociraptor.exe -v golden D:\a\velociraptor\velociraptor\artifacts\testdata\server\testcases\ --env srcDir=d:\a\velociraptor\velociraptor\ --config D:\a\velociraptor\velociraptor\artifacts\testdata\windows\github_actions.config.yaml
+
+    - name: Test Golden Windows
+      shell: cmd
+      if: always()
+      run: |
+        echo Running windows specific tests.
+        output\velociraptor.exe -v golden D:\a\velociraptor\velociraptor\artifacts\testdata\windows\ --env srcDir=d:\a\velociraptor\velociraptor\ --config D:\a\velociraptor\velociraptor\artifacts\testdata\windows\github_actions.config.yaml
+
+    - name: Upload Build Artifacts
+      if: always()
+      shell: bash
+      run: |
+        mkdir -p artifact_output/windows/
+        cp artifacts/testdata/windows/*.out* artifact_output/windows/
+
+        mkdir -p artifact_output/server/
+        cp artifacts/testdata/server/testcases/*.out* artifact_output/server/
+
+    - uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: artifact
+        path: artifact_output

@@ -55,7 +55,7 @@ var (
 		"output", "The filename to write the repacked binary.").
 		Required().String()
 
-	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\n`)
+	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
 )
 
 // Validate any embedded artifacts to make sure they compile properly.

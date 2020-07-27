@@ -350,9 +350,11 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			written := false
 
 			// Replace the previously calculated json file.
+			opts := vql_subsystem.EncOptsFromScope(self.Scope)
 			path_manager := self.path_manager.NewQueryStorage()
+
 			rs_writer, err := result_sets.NewResultSetWriter(
-				self.config_obj, path_manager, true /* truncate */)
+				self.config_obj, path_manager, opts, true /* truncate */)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return ""

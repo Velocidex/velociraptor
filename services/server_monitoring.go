@@ -185,8 +185,9 @@ func (self *EventTable) RunQuery(
 			config_obj, "", "", artifact_name)
 
 		// Append events to previous ones.
+		opts := vql_subsystem.EncOptsFromScope(scope)
 		rs_writer, err := result_sets.NewResultSetWriter(
-			config_obj, path_manager, false /* truncate */)
+			config_obj, path_manager, opts, false /* truncate */)
 		if err != nil {
 			logger.Error("NewResultSetWriter", err)
 			return

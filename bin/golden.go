@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
@@ -35,6 +36,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -83,11 +85,10 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func runTest(fixture *testFixture) (string, error) {
-	config_obj, err := DefaultConfigLoader.LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func runTest(fixture *testFixture,
+	config_obj *config_proto.Config) (string, error) {
 
-	err = services.StartJournalService(config_obj)
+	err := services.StartJournalService(config_obj)
 	kingpin.FatalIfError(err, "Unable to start services")
 
 	// Create an output container.
@@ -138,8 +139,12 @@ func runTest(fixture *testFixture) (string, error) {
 			return "", err
 		}
 
+		ctx, cancel := context.WithTimeout(
+			context.Background(), 60*time.Second)
+		defer cancel()
+
 		result_chan := vfilter.GetResponseChannel(
-			vql, context.Background(), scope,
+			vql, ctx, scope,
 			vql_subsystem.MarshalJsonIndent(scope),
 			1000, 1000)
 		for {
@@ -155,15 +160,21 @@ func runTest(fixture *testFixture) (string, error) {
 }
 
 func doGolden() {
+	config_obj, err := DefaultConfigLoader.LoadAndValidate()
+	kingpin.FatalIfError(err, "Can not load configuration.")
+
+	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
+	logger.Info("Starting golden file test.")
+
 	globs, err := filepath.Glob(fmt.Sprintf(
 		"%s*.in.yaml", *golden_command_prefix))
 	kingpin.FatalIfError(err, "Glob")
 
-	logger := log.New(os.Stderr, "golden: ", 0)
-
 	failures := []string{}
 
 	for _, filename := range globs {
+		logger := log.New(os.Stderr, "golden: ", 0)
+
 		logger.Printf("Openning %v", filename)
 		data, err := ioutil.ReadFile(filename)
 		kingpin.FatalIfError(err, "Reading file")
@@ -172,7 +183,7 @@ func doGolden() {
 		err = yaml.Unmarshal(data, &fixture)
 		kingpin.FatalIfError(err, "Unmarshal input file")
 
-		result, err := runTest(&fixture)
+		result, err := runTest(&fixture, config_obj)
 		kingpin.FatalIfError(err, "Running test")
 
 		outfile := strings.Replace(filename, ".in.", ".out.", -1)
@@ -184,22 +195,22 @@ func doGolden() {
 					string(old_data), result, false)
 				fmt.Printf("Failed %v:\n", filename)
 				fmt.Println(dmp.DiffPrettyText(diffs))
+
 				failures = append(failures, filename)
 			}
 		} else {
 			fmt.Printf("New file for  %v:\n", filename)
 			fmt.Println(result)
+
 			failures = append(failures, filename)
 		}
 
-		if *testonly {
-			continue
+		if !*testonly {
+			err = ioutil.WriteFile(
+				outfile,
+				[]byte(result), 0666)
+			kingpin.FatalIfError(err, "Unable to write golden file")
 		}
-
-		err = ioutil.WriteFile(
-			outfile,
-			[]byte(result), 0666)
-		kingpin.FatalIfError(err, "Unable to write golden file")
 	}
 
 	if len(failures) > 0 {

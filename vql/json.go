@@ -11,12 +11,17 @@ import (
 )
 
 func EncOptsFromScope(scope *vfilter.Scope) *json.EncOpts {
+	// Default timezone is UTC
 	location := time.UTC
 
+	// If the scope contains a TZ variable, then we will use that
+	// instead.
 	location_name, pres := scope.Resolve("TZ")
 	if pres {
 		location_str, ok := location_name.(string)
 		if ok {
+			// If we can not find the time zone just
+			// ignore it.
 			l, err := time.LoadLocation(location_str)
 			if err == nil {
 				location = l
@@ -74,8 +79,9 @@ func MarshalJsonIndent(scope *vfilter.Scope) vfilter.RowEncoder {
 }
 
 func MarshalJsonl(scope *vfilter.Scope) vfilter.RowEncoder {
+	options := EncOptsFromScope(scope)
+
 	return func(rows []vfilter.Row) ([]byte, error) {
-		options := EncOptsFromScope(scope)
 		out := bytes.Buffer{}
 		for _, row := range rows {
 			serialized, err := json.MarshalWithOptions(

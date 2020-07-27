@@ -1,8 +1,7 @@
-SELECT * FROM Artifact.Windows.Sys.StartupItems() WHERE Name = 'AppVeyor.BuildAgent' ORDER BY Name[
+SELECT Name, Command, Enabled, _Source FROM Artifact.Windows.Sys.StartupItems() WHERE Name =~ 'msht' ORDER BY Name[
  {
-  "Name": "AppVeyor.BuildAgent",
-  "FullPath": "\\HKEY_USERS\\S-1-5-21-2195900957-2730782454-3917332813-1001\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\AppVeyor.BuildAgent",
-  "Command": "powershell -File \"C:\\Program Files\\AppVeyor\\BuildAgent\\update-appveyor-agent.ps1\"",
+  "Name": "c:\\windows\\system32\\msht.exe",
+  "Command": "Hello",
   "Enabled": "disabled",
   "_Source": "Windows.Sys.StartupItems"
  }
