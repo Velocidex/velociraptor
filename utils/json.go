@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 
+	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	vjson "www.velocidex.com/golang/velociraptor/json"
 )
 
 func ParseJsonToDicts(serialized []byte) ([]*ordereddict.Dict, error) {
@@ -56,10 +57,10 @@ func ParseJsonToDicts(serialized []byte) ([]*ordereddict.Dict, error) {
 	return result, nil
 }
 
-func DictsToJson(rows []*ordereddict.Dict) ([]byte, error) {
+func DictsToJson(rows []*ordereddict.Dict, opts *json.EncOpts) ([]byte, error) {
 	out := bytes.Buffer{}
 	for _, row := range rows {
-		serialized, err := json.Marshal(row)
+		serialized, err := vjson.MarshalWithOptions(row, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -69,24 +70,6 @@ func DictsToJson(rows []*ordereddict.Dict) ([]byte, error) {
 	}
 
 	return out.Bytes(), nil
-}
-
-// Convert old json format to jsonl.
-func JsonToJsonl(rows []byte) ([]byte, error) {
-	if len(rows) == 0 {
-		return rows, nil
-	}
-
-	// I am tempted to store the json directly in the database
-	// avoiding the roundtrip but this means that it might be
-	// possible to inject invalid json to the database. For now we
-	// take the performance hit and then think of something
-	// better.
-	dict_rows, err := ParseJsonToDicts(rows)
-	if err != nil {
-		return nil, err
-	}
-	return DictsToJson(dict_rows)
 }
 
 func ReadJsonFromFile(ctx context.Context, fd io.Reader) chan *ordereddict.Dict {

@@ -18,7 +18,6 @@
 package authenticators
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -33,6 +32,7 @@ import (
 	"golang.org/x/oauth2/microsoft"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 

@@ -5,12 +5,12 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -35,6 +36,10 @@ type Container struct {
 
 	Password     string
 	delegate_zip *zip.Writer
+
+	current_writers int
+	backtraces      []string
+	close_backtrace []string
 }
 
 func (self *Container) writeToContainer(
@@ -105,9 +110,11 @@ func (self *Container) StoreArtifact(
 
 	self.tempfiles[artifact_name] = tmpfile
 
+	// Store as line delimited JSON
+	marshaler := vql_subsystem.MarshalJsonl(scope)
 	for row := range vql.Eval(ctx, scope) {
 		// Re-serialize it as compact json.
-		serialized, err := json.Marshal(row)
+		serialized, err := marshaler([]vfilter.Row{row})
 		if err != nil {
 			continue
 		}
@@ -128,9 +135,18 @@ func (self *Container) StoreArtifact(
 func (self *Container) getZipFileWriter(name string) (io.Writer, func(), error) {
 	self.Lock()
 
+	self.current_writers++
+	self.backtraces = append(self.backtraces, string(debug.Stack()))
+
+	cancel := func() {
+		self.current_writers--
+		self.close_backtrace = append(self.close_backtrace, string(debug.Stack()))
+		self.Unlock()
+	}
+
 	if self.Password == "" {
 		fd, err := self.zip.Create(string(name))
-		return fd, self.Unlock, err
+		return fd, cancel, err
 	}
 
 	// Zip file encryption is not great because it only encrypts
@@ -147,7 +163,8 @@ func (self *Container) getZipFileWriter(name string) (io.Writer, func(), error) 
 	}
 
 	w, err := self.delegate_zip.Create(string(name))
-	return w, self.Unlock, err
+
+	return w, cancel, err
 }
 
 func (self *Container) DumpRowsIntoContainer(
@@ -182,10 +199,11 @@ func (self *Container) DumpRowsIntoContainer(
 		return err
 	}
 
-	err = json.NewEncoder(writer).Encode(output_rows)
+	serialized, err := vql_subsystem.MarshalJsonl(scope)(output_rows)
 	if err != nil {
 		return err
 	}
+	writer.Write(serialized)
 	closer()
 
 	// Format the description.
@@ -350,7 +368,7 @@ func (self *Container) maybeCollectSparseFile(
 			return nil, err
 		}
 
-		serialized, err := utils.DictsToJson(index)
+		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
 			closer()
 			return &api.UploadResponse{
@@ -370,8 +388,21 @@ func (self *Container) maybeCollectSparseFile(
 }
 
 func (self *Container) Close() error {
+	if self.current_writers != 0 {
+		for _, i := range self.backtraces {
+			fmt.Println(i)
+		}
+
+		for _, i := range self.close_backtrace {
+			fmt.Println(i)
+		}
+
+		panic("Closing with pending writers")
+	}
+
 	if self.delegate_zip != nil {
 		self.delegate_zip.Close()
+		self.delegate_zip = nil
 	}
 
 	// Remove all the tempfiles we still hold open
@@ -380,6 +411,7 @@ func (self *Container) Close() error {
 	}
 
 	self.zip.Close()
+	self.zip = nil
 	return self.fd.Close()
 }
 

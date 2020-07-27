@@ -71,7 +71,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -79,6 +78,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 // A ParseError is returned for parsing errors.

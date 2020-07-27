@@ -305,10 +305,11 @@ func (self *ServerArtifactsRunner) runQuery(
 			name := artifacts.DeobfuscateString(
 				self.config_obj, query.Name)
 
+			opts := vql_subsystem.EncOptsFromScope(scope)
 			path_manager := result_sets.NewArtifactPathManager(
 				self.config_obj, "", task.SessionId, name)
 			rs_writer, err = result_sets.NewResultSetWriter(
-				self.config_obj, path_manager, false /* truncate */)
+				self.config_obj, path_manager, opts, false /* truncate */)
 			defer rs_writer.Close()
 
 			// Update the artifacts with results in the

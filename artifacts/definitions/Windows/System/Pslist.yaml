@@ -6,6 +6,8 @@ parameters:
   - name: processRegex
     default: .
 
+precondition: SELECT OS From info() where OS = 'windows'
+
 sources:
   - queries:
       - |

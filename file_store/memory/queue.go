@@ -121,7 +121,7 @@ func (self *MemoryQueueManager) PushEventRows(
 	}
 	defer fd.Close()
 
-	serialized, err := utils.DictsToJson(dict_rows)
+	serialized, err := utils.DictsToJson(dict_rows, nil)
 	if err != nil {
 		return err
 	}

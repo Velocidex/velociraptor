@@ -19,7 +19,6 @@ package glob
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"path"
@@ -28,6 +27,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"www.velocidex.com/golang/velociraptor/json"
 
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -219,7 +220,7 @@ func TestGlobWithContext(t *testing.T) {
 		result[fmt.Sprintf("%03d %s", idx, fixture.name)] = returned
 	}
 
-	result_json, _ := json.MarshalIndent(result, "", " ")
+	result_json, _ := json.MarshalIndent(result)
 	goldie.Assert(t, "TestGlobWithContext", result_json)
 }
 

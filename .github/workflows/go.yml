@@ -1,17 +1,17 @@
-name: Go
-on: [push]
-jobs:
+# Only trigger when a PR is committed.
+name: Linux Build All Arches
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
 
+jobs:
   build:
+    if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest
     steps:
-
-    - name: Set up Go 1.14
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.14
-      id: go
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v1
@@ -26,6 +26,13 @@ jobs:
       with:
         node-version: 12
 
+    - name: Cache node-modules
+      uses: actions/cache@v2
+      with:
+        path: |
+          **/node_modules
+        key: ${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
     - name: npm install gui
       run: |
             cd gui/static/
@@ -33,27 +40,19 @@ jobs:
             node node_modules/gulp/bin/gulp.js compile
             cd ../../
 
-    - name: Build
+    - name: Build All Architectures
+      # Uncomment the architectures you want here. NOTE: DarwinBase
+      # does not include yara or modules with C compilers needed.
       run: |
         mkdir ./output/
         export PATH=$PATH:~/go/bin/
         go run make.go -v Linux
-
-    - name: Test
-      run: |
-        go test ./...
-        ./output/velociraptor*linux* golden ./artifacts/testdata./server./testcases/ --env srcDir=./
-
-    - name: Build All Architectures
-      run: |
-        export PATH=$PATH:~/go/bin/
         go run make.go -v Windows
-        go run make.go -v Windowsx86
+        echo skipping go run make.go -v Windowsx86
         go run make.go -v DarwinBase
-        zip Binaries.zip output/*
 
     - name: StoreBinaries
       uses: actions/upload-artifact@v1
       with:
         name: Binaries.zip
-        path: Binaries.zip
+        path: output

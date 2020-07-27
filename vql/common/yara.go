@@ -1,4 +1,4 @@
-// +build cgo
+// +build cgo,yara
 
 /*
    Velociraptor - Hunting Evil

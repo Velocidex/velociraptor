@@ -39,7 +39,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -50,6 +49,7 @@ import (
 	elasticsearch "github.com/Velocidex/go-elasticsearch/v7"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -207,7 +207,9 @@ func append_row_to_buffer(
 	meta := []byte(fmt.Sprintf(
 		`{ "index" : {"_id" : "%d", "_type": "%s", "_index": "%s" } }%s`,
 		id, arg.Type, index, "\n"))
-	data, err := json.Marshal(row_dict)
+
+	opts := vql_subsystem.EncOptsFromScope(scope)
+	data, err := json.MarshalWithOptions(row_dict, opts)
 	if err != nil {
 		return err
 	}

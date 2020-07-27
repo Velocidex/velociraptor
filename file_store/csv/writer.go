@@ -7,7 +7,6 @@ package csv
 import (
 	"bufio"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"regexp"
@@ -16,6 +15,8 @@ import (
 	"time"
 	"unicode"
 	"unicode/utf8"
+
+	"www.velocidex.com/golang/velociraptor/json"
 
 	"www.velocidex.com/golang/vfilter"
 )
@@ -86,7 +87,7 @@ func AnyToString(item vfilter.Any) string {
 		}
 
 	default:
-		serialized, err := json.MarshalIndent(item, "", " ")
+		serialized, err := json.MarshalIndent(item)
 		if err != nil {
 			return ""
 		}

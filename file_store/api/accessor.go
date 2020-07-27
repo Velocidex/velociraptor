@@ -6,12 +6,13 @@ package api
 // accessor is for DirectoryFileStore
 
 import (
-	"encoding/json"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/json"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

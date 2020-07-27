@@ -21,7 +21,6 @@
 package glob
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -117,36 +117,6 @@ func (self *OSFileInfo) _Sys() *syscall.Stat_t {
 	return self._FileInfo.Sys().(*syscall.Stat_t)
 }
 
-func (self *OSFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
-}
-
-func (self *OSFileInfo) UnmarshalJSON(data []byte) error {
-	return nil
-}
-
 // Real implementation for non windows OSs:
 type OSFileSystemAccessor struct{}
 
@@ -210,4 +180,6 @@ func init() {
 
 	// On Linux the auto accessor is the same as file.
 	Register("auto", &OSFileSystemAccessor{})
+
+	json.RegisterCustomEncoder(&OSFileInfo{}, MarshalGlobFileInfo)
 }

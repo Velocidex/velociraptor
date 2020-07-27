@@ -40,7 +40,6 @@
 package filesystem
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -53,6 +52,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -150,32 +150,6 @@ func (self *ZipFileInfo) IsLink() bool {
 
 func (self *ZipFileInfo) GetLink() (string, error) {
 	return "", errors.New("Not implemented")
-}
-
-func (self *ZipFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Sys      interface{}
-		Mtime    utils.TimeVal
-		Ctime    utils.TimeVal
-		Atime    utils.TimeVal
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Sys:      self.Sys(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
 }
 
 type _CDLookup struct {
@@ -472,4 +446,6 @@ func (self *SeekableZip) Stat() (os.FileInfo, error) {
 
 func init() {
 	glob.Register("zip", &ZipFileSystemAccessor{})
+
+	json.RegisterCustomEncoder(&ZipFileInfo{}, glob.MarshalGlobFileInfo)
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,6 +12,8 @@ import (
 	"regexp"
 	"sync"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/json"
 
 	"github.com/Velocidex/ordereddict"
 	_ "github.com/go-sql-driver/mysql"

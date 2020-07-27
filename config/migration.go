@@ -104,7 +104,13 @@ func migrate_0_4_6(config_obj *config_proto.Config) {
 		}
 
 		config_obj.GUI.Authenticator = auther
+	}
 
+	if config_obj.Datastore != nil {
+		if config_obj.Datastore.Implementation == "FileBaseDataStore" &&
+			config_obj.Datastore.Location == "" {
+			config_obj.Datastore.Location = config_obj.Datastore.FilestoreDirectory
+		}
 	}
 }
 

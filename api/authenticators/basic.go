@@ -2,7 +2,6 @@ package authenticators
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/csrf"
@@ -10,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
 )

@@ -17,9 +17,10 @@ limitations under the License.
 package cache
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 type CacheValue struct {

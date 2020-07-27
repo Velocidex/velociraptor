@@ -1,4 +1,4 @@
-// +build windows
+// +build disabled
 
 /*
 A fuse implementation using cgofuse and WinFSp.

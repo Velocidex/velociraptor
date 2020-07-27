@@ -3,6 +3,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\C:"
  },
  {
+  "FullPath": "\\\\.\\D:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
@@ -13,14 +16,17 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\C:"
  },
  {
+  "FullPath": "\\\\.\\D:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy2"
  }
-]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs") WHERE Name = "pagefile.sys"[
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs") WHERE Name = "Windows"[
  {
-  "FullPath": "\\\\.\\c:\\pagefile.sys"
+  "FullPath": "\\\\.\\c:\\Windows"
  }
 ]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs") WHERE Name = "notepad.exe"[
  {
@@ -56,6 +62,9 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\C:"
  },
  {
+  "FullPath": "\\\\.\\D:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
@@ -66,14 +75,17 @@ SELECT FullPath FROM glob(globs="/*", accessor="ntfs")[
   "FullPath": "\\\\.\\C:"
  },
  {
+  "FullPath": "\\\\.\\D:"
+ },
+ {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1"
  },
  {
   "FullPath": "\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy2"
  }
-]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs") WHERE Name = "pagefile.sys"[
+]SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs") WHERE Name = "Windows"[
  {
-  "FullPath": "\\\\.\\c:\\pagefile.sys"
+  "FullPath": "\\\\.\\c:\\Windows"
  }
 ]SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs") WHERE Name = "notepad.exe"[
  {

@@ -18,13 +18,13 @@
 package vql
 
 import (
-	"encoding/json"
 	"runtime/debug"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 

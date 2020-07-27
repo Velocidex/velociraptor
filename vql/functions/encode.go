@@ -3,11 +3,11 @@ package functions
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -45,7 +45,8 @@ func (self *EncodeFunction) Call(ctx context.Context,
 
 	switch arg.Format {
 	case "", "json":
-		serialized_content, err := json.MarshalIndent(result, "", "")
+		opts := vql_subsystem.EncOptsFromScope(scope)
+		serialized_content, err := json.MarshalIndentWithOptions(result, opts)
 		if err != nil {
 			scope.Log("serialize: %s", err.Error())
 			return vfilter.Null{}

@@ -252,7 +252,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	// We did a sparse file, upload the index as well.
 	if is_sparse {
-		serialized, err := utils.DictsToJson(index)
+		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
 			return nil, err
 		}

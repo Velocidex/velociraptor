@@ -18,13 +18,13 @@
 package wmi_test
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
+	"www.velocidex.com/golang/velociraptor/json"
 	wmi_parse "www.velocidex.com/golang/velociraptor/vql/windows/wmi/parse"
 )
 
@@ -38,7 +38,7 @@ func TestParseMOF(t *testing.T) {
 	mof, err := wmi_parse.Parse(string(data))
 	assert.NoError(t, err, "Parse")
 
-	encoded, err := json.MarshalIndent(mof.ToDict(), " ", "")
+	encoded, err := json.MarshalIndent(mof.ToDict())
 	assert.NoError(t, err, "json.MarshalIndent")
 
 	goldie.Assert(t, "sample", encoded)

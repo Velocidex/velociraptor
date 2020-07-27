@@ -5,7 +5,6 @@ package reporting
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"html"
 	"log"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
+	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
@@ -150,7 +150,8 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 			return ""
 		}
 
-		encoded_rows, err := json.MarshalIndent(t, "", " ")
+		opts := vql_subsystem.EncOptsFromScope(self.Scope)
+		encoded_rows, err := json.MarshalWithOptions(t, opts)
 		if err != nil {
 			return self.Error("Error: %v", err)
 		}
@@ -191,7 +192,9 @@ func (self *GuiTemplateEngine) LineChart(values ...interface{}) string {
 		if len(t) == 0 {
 			return ""
 		}
-		encoded_rows, err := json.MarshalIndent(t, "", " ")
+
+		opts := vql_subsystem.EncOptsFromScope(self.Scope)
+		encoded_rows, err := json.MarshalWithOptions(t, opts)
 		if err != nil {
 			return ""
 		}
@@ -237,7 +240,8 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 		if len(t) == 0 {
 			return ""
 		}
-		encoded_rows, err := json.MarshalIndent(t, "", " ")
+		opts := vql_subsystem.EncOptsFromScope(self.Scope)
+		encoded_rows, err := json.MarshalWithOptions(t, opts)
 		if err != nil {
 			return ""
 		}
@@ -346,9 +350,11 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			written := false
 
 			// Replace the previously calculated json file.
+			opts := vql_subsystem.EncOptsFromScope(self.Scope)
 			path_manager := self.path_manager.NewQueryStorage()
+
 			rs_writer, err := result_sets.NewResultSetWriter(
-				self.config_obj, path_manager, true /* truncate */)
+				self.config_obj, path_manager, opts, true /* truncate */)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return ""
