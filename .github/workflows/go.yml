@@ -7,8 +7,8 @@ on:
       - master
 
 jobs:
-  if: github.event.pull_request.merged
   build:
+    if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest
     steps:
