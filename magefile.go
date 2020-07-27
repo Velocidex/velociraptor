@@ -157,7 +157,7 @@ func (self Builder) Run() error {
 func Auto() error {
 	return Builder{goos: runtime.GOOS,
 		filename:   "velociraptor",
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		arch:       runtime.GOARCH}.Run()
 }
 
@@ -205,14 +205,14 @@ func Release() error {
 
 func Linux() error {
 	return Builder{
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		goos:       "linux",
 		arch:       "amd64"}.Run()
 }
 
 func Aix() error {
 	return Builder{
-		extra_tags:  " release ",
+		extra_tags:  " release yara ",
 		goos:        "aix",
 		disable_cgo: true,
 		arch:        "ppc64",
@@ -221,7 +221,7 @@ func Aix() error {
 
 func Arm() error {
 	return Builder{
-		extra_tags:  " release ",
+		extra_tags:  " release yara ",
 		goos:        "linux",
 		disable_cgo: true,
 		arch:        "arm",
@@ -240,7 +240,7 @@ func Dev() error {
 // does not include tsan.
 func Windows() error {
 	return Builder{
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		goos:       "windows",
 		arch:       "amd64"}.Run()
 }
@@ -248,21 +248,30 @@ func Windows() error {
 func WindowsDev() error {
 	return Builder{
 		goos:       "windows",
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		filename:   "velociraptor.exe",
 		arch:       "amd64"}.Run()
 }
 
+func WindowsTest() error {
+	return Builder{
+		goos:        "windows",
+		disable_cgo: false,
+		extra_tags:  " release yara ",
+		filename:    "velociraptor.exe",
+		arch:        "amd64"}.Run()
+}
+
 func Windowsx86() error {
 	return Builder{
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		goos:       "windows",
 		arch:       "386"}.Run()
 }
 
 func Darwin() error {
 	return Builder{goos: "darwin",
-		extra_tags: " release ",
+		extra_tags: " release yara ",
 		arch:       "amd64"}.Run()
 }
 

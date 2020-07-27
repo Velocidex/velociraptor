@@ -8,6 +8,9 @@ import (
 )
 
 func MarshalWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error) {
+	if opts == nil {
+		return json.Marshal(v)
+	}
 	return json.MarshalWithOptions(v, opts)
 }
 

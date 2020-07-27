@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -41,6 +42,7 @@ func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int
 
 type ResultSetWriter struct {
 	rows []*ordereddict.Dict
+	opts *json.EncOpts
 	fd   api.FileWriter
 }
 
@@ -52,7 +54,7 @@ func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 }
 
 func (self *ResultSetWriter) Flush() {
-	serialized, err := utils.DictsToJson(self.rows)
+	serialized, err := utils.DictsToJson(self.rows, self.opts)
 
 	if err == nil {
 		self.fd.Write(serialized)
@@ -68,6 +70,7 @@ func (self *ResultSetWriter) Close() {
 func NewResultSetWriter(
 	config_obj *config_proto.Config,
 	path_manager api.PathManager,
+	opts *json.EncOpts,
 	truncate bool) (*ResultSetWriter, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	log_path, err := path_manager.GetPathForWriting()
@@ -84,5 +87,5 @@ func NewResultSetWriter(
 		fd.Truncate()
 	}
 
-	return &ResultSetWriter{fd: fd}, nil
+	return &ResultSetWriter{fd: fd, opts: opts}, nil
 }

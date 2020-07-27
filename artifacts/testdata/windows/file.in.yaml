@@ -4,7 +4,7 @@ Queries:
   - SELECT FullPath FROM glob(globs="\\*", accessor="file")
     WHERE Name =~ "C"
   - SELECT FullPath FROM glob(globs="c:\\*", accessor="file")
-    WHERE Name =~ "pagefile.sys"
+    WHERE Name =~ "Windows"
 
   # Read symlinks - These tests are slow and symlinks is not usually used.
   # - SELECT FullPath FROM glob(globs="c:\\Users\\*\\notepad.exe", accessor="file_links")

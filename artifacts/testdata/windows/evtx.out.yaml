@@ -107,40 +107,4 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Task": 2,
   "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
  }
-]SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx", SearchVSS="True")[
- {
-  "EventID": 7045,
-  "ServiceName": "TestingDetection1",
-  "Source": "HarddiskVolumeShadowCopy1"
- },
- {
-  "EventID": 7045,
-  "ServiceName": "TestingDetection2",
-  "Source": "\\\\.\\C:\\Windows\\System32\\winevt\\Logs\\System.evtx"
- }
-]SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared(SearchVSS="True")[
- {
-  "EventID": 104,
-  "Channel": "System",
-  "Message =~ 'Clear'": true,
-  "Source": "HarddiskVolumeShadowCopy1"
- },
- {
-  "EventID": 104,
-  "Channel": "AppVeyor",
-  "Message =~ 'Clear'": true,
-  "Source": "HarddiskVolumeShadowCopy1"
- },
- {
-  "EventID": 104,
-  "Channel": "System",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\.\\C:\\Windows\\System32\\winevt\\Logs\\System.evtx"
- },
- {
-  "EventID": 1102,
-  "Channel": "Security",
-  "Message =~ 'Clear'": true,
-  "Source": "\\\\.\\C:\\Windows\\System32\\winevt\\Logs\\Security.evtx"
- }
 ]

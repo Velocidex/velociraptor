@@ -132,7 +132,7 @@ func flushContextLogs(
 
 	// Append logs to messages from previous packets.
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, false /* truncate */)
+		config_obj, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -161,7 +161,7 @@ func flushContextUploadedFiles(
 		collection_context.SessionId).UploadMetadata()
 
 	rs_writer, err := result_sets.NewResultSetWriter(
-		config_obj, flow_path_manager, false /* truncate */)
+		config_obj, flow_path_manager, nil, false /* truncate */)
 	if err != nil {
 		return err
 	}
@@ -261,7 +261,7 @@ func ArtifactCollectorProcessOneMessage(
 				response.Query.Name)
 
 			rs_writer, err := result_sets.NewResultSetWriter(
-				config_obj, path_manager, false /* truncate */)
+				config_obj, path_manager, nil, false /* truncate */)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				return err

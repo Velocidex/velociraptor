@@ -1,5 +1,18 @@
 Queries:
   # Test for deduplication
   - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')
+
   # Test for multiple hits
   - SELECT FullPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')
+
+  # Test evtx VSS support.
+
+  # Find COMSPEC service VSS test - should show two services created,
+  # even though the logs were cleared.
+  - SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(
+       EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx",
+       SearchVSS="True")
+
+  # Find cleared event logs - should show 2 times.
+  - SELECT EventID, Channel, Message=~ 'Clear',Source FROM Artifact.Windows.EventLogs.Cleared(
+       SearchVSS="True")

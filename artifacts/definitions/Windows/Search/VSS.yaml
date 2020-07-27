@@ -19,43 +19,46 @@ parameters:
     description: Use a glob to define the files that will be searched.
 
 sources:
-  - queries:
-      # First we extract path from SearchFilesGlob
-      - LET Path <=
-            if(condition=SearchFilesGlob=~"^\\\\\\\\.:\\\\",
-                then=split(string=split(string=DeviceID,sep='\\\\\\\\.:\\\\'),
-                    sep='\\\\')[0],
-                else=if(condition=SearchFilesGlob=~"^.:",
-                    then=split(string=SearchFilesGlob,sep=".:")[1],
-                    else=SearchFilesGlob))
+  - query: |
+      -- Given a path in either device notation or drive notation,
+      -- break it into a drive and path
+      LET extract_path(FullPath) = parse_string_with_regex(string=FullPath,
+         regex="^(?P<Device>\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\|.:\\\\)(?P<Path>.+)$")
 
-      # Build a SearchGlob for all logical disks and VSS
-      - LET globs = SELECT * FullPath + Path as SearchGlob
-            FROM glob(globs='/*', accessor='ntfs')
-            ORDER BY FullPath
+      LET extract_vss(FullPath) = parse_string_with_regex(string=FullPath,
+         regex="^(?P<Device>(\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\))")
 
-      # Glob for results - add hash for deduplication and Source for priority
-      - LET results = SELECT *
-            FROM foreach(
-                row=globs,
-                query={
-                    SELECT
-                        *,
-                        if(condition=
-                                FullPath=~'^\\\\\\\\\\?\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy',
-                            then=split(string=FullPath, sep='\\\\')[5],
-                            else=if(condition= FullPath=~'.:\\\\',
-                                then=FullPath)) as Source,
-                        hash(path=FullPath,accessor='ntfs').SHA1 as SHA1
-                    FROM glob(globs=SearchGlob, accessor='ntfs')
-                    WHERE NOT IsDIr
-                }
-            )
-            ORDER BY Source
+      -- Build a SearchGlob for all logical disks and VSS
+      LET globs = SELECT
+            FullPath + '/' + extract_path(FullPath=SearchFilesGlob).Path as SearchGlob
+        FROM glob(globs='/*', accessor='ntfs')
+        ORDER BY FullPath  DESC
 
-      # Dedup and show results
-      - SELECT *,
-            if(condition= count(items=SHA1)>1,
-                then=true, else=false) AS Deduped
-        FROM results
-        GROUP BY SHA1
+      -- Glob for all files in SearchGlob and calculate their hash.
+      LET globvss(SearchGlob) = SELECT *,
+            extract_path(FullPath=FullPath).Path AS Path,
+            basename(path=extract_vss(FullPath=FullPath).Device) AS Source,
+            hash(path=FullPath,accessor='ntfs').SHA1 as SHA1
+         FROM glob(globs=SearchGlob, accessor='ntfs')
+         WHERE NOT IsDIr
+
+      -- For each full glob (including VSS device) extract all files
+      -- and hashes.
+      LET results = SELECT * FROM foreach(row=globs,
+      query={
+        -- Prepend VSS with _ to make them sort last.
+        SELECT *, if(condition=Source =~ '^HarddiskVolumeShadowCopy',
+                     then='_' + Source,
+                     else=Source) AS Source
+        FROM globvss(SearchGlob=SearchGlob)
+      })
+
+      -- We want to see natural drives after VSS because group by
+      -- shows the last in the group. VSS Sources look like
+      -- HarddiskVolumeShadowCopy1 and disk sources look like C:
+      ORDER BY Source DESC
+
+      -- Dedup and show results
+      SELECT *, count() > 1 AS Deduped, SHA1 + Path AS Key
+      FROM results
+      GROUP BY Key

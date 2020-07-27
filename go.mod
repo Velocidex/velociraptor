@@ -113,12 +113,12 @@ require (
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
 	www.velocidex.com/golang/evtx v0.0.2-0.20200610130036-cc23ac7defb8
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
-	www.velocidex.com/golang/go-ntfs v0.0.0-20200706125523-d4a342d6d0fb
+	www.velocidex.com/golang/go-ntfs v0.0.0-20200726152114-40b3dfbc3d5c
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20200724144634-a3d13a0c4357
+	www.velocidex.com/golang/vfilter v0.0.0-20200726131813-04a09f274e56
 	www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b
 )
 

@@ -202,7 +202,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 		}
 		defer writer.Close()
 
-		serialized, err := utils.DictsToJson(index)
+		serialized, err := utils.DictsToJson(index, nil)
 		if err != nil {
 			return &api.UploadResponse{
 				Error: err.Error(),
