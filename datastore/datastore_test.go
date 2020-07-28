@@ -62,6 +62,7 @@ func (self BaseTestSuite) TestListChildren() {
 	assert.NoError(self.T(), err)
 
 	// ListChildren gives the full path to all children
+	sort.Strings(children)
 	assert.Equal(self.T(), children, []string{
 		"/a/b/c/1",
 		"/a/b/c/2",
