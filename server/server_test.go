@@ -164,7 +164,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	// Wait for the service to fully come up.
 	time.Sleep(time.Second)
 
-	old_version := services.GetClientEventsVersion()
+	old_version := services.GetClientEventsVersion(self.client_id)
 	err = services.UpdateClientEventTable(self.config_obj, new_table)
 
 	_, err = services.StartHuntDispatcher(ctx, wg, self.config_obj)
@@ -173,12 +173,12 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	// Wait up to 10 sec, for the journaling service to pass the
 	// message along and update the client events table.
 	for i := 0; i < 100; i++ {
-		if old_version != services.GetClientEventsVersion() {
+		if old_version != services.GetClientEventsVersion(self.client_id) {
 			break
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	assert.NotEqual(t, old_version, services.GetClientEventsVersion())
+	assert.NotEqual(t, old_version, services.GetClientEventsVersion(self.client_id))
 
 	// Send a foreman checkin message from client with old event
 	// table version.
@@ -203,7 +203,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	assert.NotNil(t, tasks[0].UpdateEventTable)
 
 	assert.Equal(t, tasks[0].UpdateEventTable.Version,
-		services.GetClientEventsVersion())
+		services.GetClientEventsVersion(self.client_id))
 }
 
 // Create a new hunt. Client sends a ForemanCheckin message with
