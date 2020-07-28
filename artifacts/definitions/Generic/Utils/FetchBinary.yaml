@@ -29,8 +29,12 @@ parameters:
 
 sources:
   - query: |
+      -- The following VQL is particularly ancient because it is
+      -- running on the client and it needs to be compatibile with
+      -- clients at least back to 0.3.9
+
       LET info_cache <= SELECT * FROM info()
-      LET inventory_item <= inventory_get(tool=ToolName)
+      LET inventory_item <= SELECT inventory_get(tool=ToolName) AS Item FROM scope()
 
       LET args <= SELECT * FROM switch(
         // Try to get info from the ToolInfo parameter.
@@ -46,9 +50,9 @@ sources:
            FROM scope()  WHERE ToolFilename},
 
         // Failing this - try to get it from the inventory service directly.
-        c={SELECT get(field="Tool_" + ToolName + "_HASH", item=inventory_item) AS ToolHash,
-                  get(field="Tool_" + ToolName + "_FILENAME", item=inventory_item) AS ToolFilename,
-                  get(field="Tool_" + ToolName + "_URL", item=inventory_item) AS ToolURL
+        c={SELECT get(field="Tool_" + ToolName + "_HASH", item=(inventory_item[0]).Item) AS ToolHash,
+                  get(field="Tool_" + ToolName + "_FILENAME", item=(inventory_item[0]).Item) AS ToolFilename,
+                  get(field="Tool_" + ToolName + "_URL", item=(inventory_item[0]).Item) AS ToolURL
            FROM scope()  WHERE ToolFilename}
       )
 
@@ -60,23 +64,23 @@ sources:
         )
 
       // Where we should save the file.
-      LET ToolPath <= path_join(components=[binpath[0].Path, args[0].ToolFilename])
+      LET ToolPath <= SELECT path_join(components=[(binpath[0]).Path, (args[0]).ToolFilename]) AS Path FROM scope()
 
       // Download the file from the binary URL and store in the local
       // binary cache.
       LET download = SELECT * FROM if(condition=log(
-             message="URL for " + args[0].ToolFilename +
-                " is at " + args[0].ToolURL + " and has hash of " + args[0].ToolHash)
-             AND binpath AND args[0].ToolHash AND args[0].ToolURL,
+             message="URL for " + (args[0]).ToolFilename +
+                " is at " + (args[0]).ToolURL + " and has hash of " + (args[0]).ToolHash)
+             AND binpath AND (args[0]).ToolHash AND (args[0]).ToolURL,
         then={
           SELECT hash(path=Content) as Hash,
-              args[0].ToolFilename AS Name,
+              (args[0]).ToolFilename AS Name,
               "Downloaded" AS DownloadStatus,
-              copy(filename=Content, dest=ToolPath) AS FullPath
-          FROM http_client(url=args[0].ToolURL, tempfile_extension=".exe", remove_last=TRUE)
+              copy(filename=Content, dest=(ToolPath[0]).Path) AS FullPath
+          FROM http_client(url=(args[0]).ToolURL, tempfile_extension=".exe")
           WHERE log(message=format(format="downloaded hash of %v: %v, expected %v", args=[
-                    Content, Hash.SHA256, args[0].ToolHash]))
-                AND Hash.SHA256 = args[0].ToolHash
+                    Content, Hash.SHA256, (args[0]).ToolHash]))
+                AND Hash.SHA256 = (args[0]).ToolHash
         }, else={
            SELECT * FROM scope()
            WHERE NOT log(message="No valid setup - is tool " + ToolName +
@@ -87,10 +91,10 @@ sources:
       // the hash.
       LET existing = SELECT FullPath, hash(path=FullPath) AS Hash, Name,
                     "Cached" AS DownloadStatus
-        FROM stat(filename=ToolPath)
-        WHERE Hash.SHA256 = args[0].ToolHash AND log(
+        FROM stat(filename=(ToolPath[0]).Path)
+        WHERE Hash.SHA256 = (args[0]).ToolHash AND log(
             message=format(format="hash of %v: %v, expected %v", args=[
-            FullPath, Hash.SHA256, args[0].ToolHash]))
+            FullPath, Hash.SHA256, (args[0]).ToolHash]))
 
       // Find the required_tool either in the local cache or
       // download it (and put it in the cache for next time). If we
@@ -101,7 +105,7 @@ sources:
         b={
            SELECT rand(range=atoi(string=SleepDuration)) AS timeout
            FROM scope()
-           WHERE args AND args[0].ToolURL AND
+           WHERE args AND (args[0]).ToolURL AND
               log(message=format(format='Sleeping %v Seconds',
                  args=[timeout])) AND sleep(time=timeout) AND FALSE
         },
