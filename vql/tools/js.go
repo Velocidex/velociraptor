@@ -1,4 +1,4 @@
-//+build extras
+//+build extras,disable
 
 package tools
 

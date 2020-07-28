@@ -837,7 +837,9 @@ type GUIConfig struct {
 	BindAddress string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
 	BindPort    uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
 	// Allows the GUI to start with no encryption - **WARNING** This
-	// only makes sense if you have TLS proxy in front.
+	// only makes sense if you have TLS proxy in front. In fact the
+	// GUI **will not work** without a TLS proxy because the csrf
+	// cookie is set to secure only.
 	UsePlainHttp  bool                  `protobuf:"varint,20,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty"`
 	GwCertificate string                `protobuf:"bytes,10,opt,name=gw_certificate,json=gwCertificate,proto3" json:"gw_certificate,omitempty"`
 	GwPrivateKey  string                `protobuf:"bytes,11,opt,name=gw_private_key,json=gwPrivateKey,proto3" json:"gw_private_key,omitempty"`

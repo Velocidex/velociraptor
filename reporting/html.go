@@ -19,6 +19,7 @@ import (
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -138,8 +139,8 @@ func (self *HTMLTemplateEngine) RenderRaw(
 	return buffer.String(), nil
 }
 
-func (self *HTMLTemplateEngine) Execute(template_string string) (string, error) {
-	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
+func (self *HTMLTemplateEngine) Execute(report *artifacts_proto.Report) (string, error) {
+	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(report.Template))
 	if err != nil {
 		return "", err
 	}

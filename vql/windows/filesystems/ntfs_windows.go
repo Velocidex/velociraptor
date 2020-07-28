@@ -23,7 +23,6 @@
 package filesystems
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -34,6 +33,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/pkg/errors"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -203,6 +203,13 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 		reader, _ := ntfs.NewPagedReader(raw_fd, 8*1024, 1000)
 		if err != nil {
 			return nil, err
+		}
+
+		// Try to read a bit to detect permission errors right here.
+		buf := make([]byte, 1)
+		_, err = reader.ReadAt(buf, 0)
+		if err != nil {
+			return nil, errors.Wrap(err, "Unable to read raw device - do you have permissions?")
 		}
 
 		ntfs_ctx, err := ntfs.GetNTFSContext(reader, 0)
