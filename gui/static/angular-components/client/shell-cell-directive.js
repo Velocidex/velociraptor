@@ -25,8 +25,8 @@ const ShellCellController = function($scope, grrApiService) {
         return;
     }
 
-    if (!angular.isArray(this.flow.artifacts_with_results) ||
-        this.flow.artifacts_with_results.length == 0) {
+    if (!angular.isArray(this.flow.request.artifacts) ||
+        this.flow.request.artifacts.length == 0) {
         return;
     }
 
@@ -38,7 +38,7 @@ const ShellCellController = function($scope, grrApiService) {
         };
     }
 
-    this.artifact = this.flow.artifacts_with_results[0];
+    this.artifact = this.flow.request.artifacts[0];
 };
 
 ShellCellController.prototype.loadData = function() {

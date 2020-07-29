@@ -456,6 +456,12 @@ type NotificationReader struct {
 	current_poll_duration time.Duration
 	IsPaused              int32
 
+	// A callback that will be notified when the reader
+	// completes. In the real client this is a fatal error since
+	// without notification comms the client is unreachable. In
+	// tests we ignore this.
+	on_exit func()
+
 	clock utils.Clock
 }
 
@@ -468,6 +474,7 @@ func NewNotificationReader(
 	logger *logging.LogContext,
 	name string,
 	handler string,
+	on_exit func(),
 	clock utils.Clock) *NotificationReader {
 
 	maxPollDev := config_obj.Client.MaxPollStd
@@ -488,6 +495,7 @@ func NewNotificationReader(
 		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
 		maxPollDev:            maxPollDev,
 		current_poll_duration: time.Second,
+		on_exit:               on_exit,
 		clock:                 clock,
 	}
 }
@@ -596,7 +604,29 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
-	return message_info.IterateJobs(ctx, self.executor.ProcessRequest)
+	return message_info.IterateJobs(ctx,
+		func(ctx context.Context, msg *crypto_proto.GrrMessage) {
+
+			// Abort the client, but leave the client
+			// running a bit to send acks. NOTE: This has
+			// to happen before the executor gets to this
+			// so we can recover the client in case the
+			// executor dies.
+			if msg.KillKillKill != nil {
+				go func() {
+					<-time.After(10 * time.Second)
+					self.maybeCallOnExit()
+				}()
+			}
+
+			self.executor.ProcessRequest(ctx, msg)
+		})
+}
+
+func (self *NotificationReader) maybeCallOnExit() {
+	if self.on_exit != nil {
+		self.on_exit()
+	}
 }
 
 // The Receiver channel is used to receive commands from the server:
@@ -610,6 +640,8 @@ func (self *NotificationReader) sendToURL(
 // 4. If there are errors, we back off and wait for self.maxPoll.
 func (self *NotificationReader) Start(ctx context.Context) {
 	go func() {
+		defer self.maybeCallOnExit()
+
 		for {
 			// The Reader does not send any server bound
 			// messages - it is blocked reading server
@@ -663,6 +695,9 @@ type HTTPCommunicator struct {
 
 	// Sends results back to the server.
 	sender *Sender
+
+	// Will be called when we exit the communicator.
+	on_exit func()
 }
 
 func (self *HTTPCommunicator) SetPause(is_paused bool) {
@@ -689,6 +724,7 @@ func NewHTTPCommunicator(
 	manager crypto.ICryptoManager,
 	executor executor.Executor,
 	urls []string,
+	on_exit func(),
 	clock utils.Clock) (*HTTPCommunicator, error) {
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -703,6 +739,21 @@ func NewHTTPCommunicator(
 
 	rb := NewLocalBuffer(config_obj)
 
+	// Truncate the file to ensure we always start with a clean
+	// slate. This avoids a situation where the client fills up
+	// the ring buffer and then is unable to send the data. When
+	// it restarts it will still be unable to send the data so it
+	// becomes unreachable. It is more reliable to start with a
+	// clean slate each time.
+	rb.Reset()
+
+	// Make sure the buffer is reset when the program exits.
+	child_on_exit := func() {
+		if on_exit != nil {
+			on_exit()
+		}
+	}
+
 	result := &HTTPCommunicator{
 		config_obj: config_obj,
 		logger:     logger,
@@ -712,12 +763,13 @@ func NewHTTPCommunicator(
 			executor:   executor,
 			logger:     logger,
 		},
+		on_exit: on_exit,
 		sender: NewSender(
 			config_obj, connector, manager, executor, rb, enroller,
-			logger, "Sender", "control", clock),
+			logger, "Sender", "control", child_on_exit, clock),
 		receiver: NewNotificationReader(
 			config_obj, connector, manager, executor, enroller,
-			logger, "Receiver", "reader", clock),
+			logger, "Receiver", "reader", child_on_exit, clock),
 	}
 
 	return result, nil

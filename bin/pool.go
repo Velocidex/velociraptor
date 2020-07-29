@@ -101,6 +101,7 @@ func doPoolClient() {
 			manager,
 			exe,
 			client_config.Client.ServerUrls,
+			nil,
 			utils.RealClock{},
 		)
 		kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")

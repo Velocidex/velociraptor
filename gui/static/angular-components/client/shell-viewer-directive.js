@@ -87,10 +87,13 @@ ShellViewerController.prototype.fetchLastShellCollections = function() {
             self.flows = [];
             var items = response.data.items;
             for(var i=0; i<items.length; i++) {
-                var artifact = items[i].artifacts_with_results[0];
-                if (artifact == "Windows.System.PowerShell" ||
-                    artifact == "Windows.System.CmdShell") {
-                    self.flows.push(items[i]);
+                var artifacts = items[i].request.artifacts;
+                for (var j=0; j<artifacts.length; j++) {
+                    var artifact = artifacts[j];
+                    if (artifact == "Windows.System.PowerShell" ||
+                        artifact == "Windows.System.CmdShell") {
+                        self.flows.push(items[i]);
+                    }
                 }
             };
         });

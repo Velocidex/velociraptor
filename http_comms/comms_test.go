@@ -37,6 +37,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -162,6 +163,49 @@ func (self *CommsTestSuite) TearDownTest() {
 	self.frontend2.Close()
 }
 
+// Check that unexpected closing of the executor calls the abort
+// function.
+func (self *CommsTestSuite) TestAbort() {
+	func_called := false
+	on_error := func() {
+		func_called = true
+	}
+
+	urls := []string{self.frontend1.URL}
+
+	// Not a real executor but we can emulate closing channels.
+	exec := &executor.ClientExecutor{
+		Outbound: make(chan *crypto_proto.GrrMessage),
+		Inbound:  make(chan *crypto_proto.GrrMessage),
+	}
+
+	crypto_manager := &crypto.NullCryptoManager{}
+	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
+		exec, urls, on_error, utils.RealClock{})
+	assert.NoError(self.T(), err)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start a communicator feeding data to the executor.
+	go communicator.Run(ctx)
+
+	// Emulate the case of the executor exiting early - this
+	// should never happen in practice but might happen due to a
+	// bug or panic(). If this is allowed to go unchecked we might
+	// get into a state where the client does not have a working
+	// executor and can not be reached. The only sensible thing to
+	// do in this case is to abort which happens via the provided
+	// on_error callback.
+	close(exec.Outbound)
+
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return func_called
+	})
+
+	assert.Equal(self.T(), func_called, true)
+}
+
 func (self *CommsTestSuite) TestEnrollment() {
 	urls := []string{self.frontend1.URL}
 
@@ -170,7 +214,7 @@ func (self *CommsTestSuite) TestEnrollment() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -204,7 +248,7 @@ func (self *CommsTestSuite) TestServerError() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -246,7 +290,7 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// Frontend1 will return 500 all the time.
@@ -303,7 +347,7 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// Frontend1 will return 500 all the time.
@@ -373,7 +417,7 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -428,7 +472,7 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -495,7 +539,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -557,7 +601,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -647,7 +691,7 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 
 	crypto_manager := &crypto.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, clock)
+		&executor.TestExecutor{}, urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{

@@ -16,6 +16,12 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+// Diagram to illustrate outgoing messages:
+// executor -> ring buffer -> sender -> server
+
+// The sender pushes messages through these channels:
+// PumpExecutorToRingBuffer() -> PumpRingBufferToSendMessage() -> sendMessageList()
+
 package http_comms
 
 import (
@@ -51,8 +57,11 @@ type Sender struct {
 }
 
 // Persistant loop to pump messages from the executor to the ring
-// buffer.
+// buffer. This function should never exit in a real client.
 func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
+	// We should never exit from this.
+	defer self.maybeCallOnExit()
+
 	// Pump messages from the executor to the pending message list
 	// - this is our local queue of output pending messages.
 	executor_chan := self.executor.ReadResponse()
@@ -137,8 +146,12 @@ func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 // Manages the sending of messages to the server. Reads messages from
 // the ring buffer if there are any to send and compose a Message List
 // to send. This also manages timing and retransmissions - blocks if
-// the server is not available.
+// the server is not available. This function should never exit in a
+// real client.
 func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
+	// We should never exit from this.
+	defer self.maybeCallOnExit()
+
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			// Grab some messages from the urgent ring buffer.
@@ -212,11 +225,12 @@ func NewSender(
 	logger *logging.LogContext,
 	name string,
 	handler string,
+	on_exit func(),
 	clock utils.Clock) *Sender {
 
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
-			executor, enroller, logger, name, handler, clock),
+			executor, enroller, logger, name, handler, on_exit, clock),
 		ring_buffer:   ring_buffer,
 		urgent_buffer: NewRingBuffer(config_obj, 2*config_obj.Client.MaxUploadSize),
 		release:       make(chan bool),

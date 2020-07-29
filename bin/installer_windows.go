@@ -504,6 +504,7 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
+		func() { on_error(config_obj) },
 		utils.RealClock{},
 	)
 	if err != nil {
