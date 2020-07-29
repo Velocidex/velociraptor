@@ -99,7 +99,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 			output_chan <- ordereddict.NewDict().
 				Set("client_id", arg.ClientId).
 				Set("type", "Datastore").
-				Set("vfs_path", filename)
+				Set("vfs_path", filename).
+				Set("really_do_it", arg.ReallyDoIt)
+
 			if arg.ReallyDoIt {
 				db.DeleteSubject(config_obj, filename)
 			}
@@ -112,7 +114,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 				output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
 					Set("type", "Filestore").
-					Set("vfs_path", filename)
+					Set("vfs_path", filename).
+					Set("really_do_it", arg.ReallyDoIt)
+
 				if arg.ReallyDoIt {
 					err = file_store_factory.Delete(filename)
 					if err != nil {

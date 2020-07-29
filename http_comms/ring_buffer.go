@@ -28,6 +28,7 @@ type IRingBuffer interface {
 	AvailableBytes() uint64
 	Lease(size uint64) []byte
 	Commit()
+	Reset()
 }
 
 type Header struct {
@@ -230,6 +231,13 @@ func (self *FileBasedRingBuffer) _Truncate() {
 	self.c.Broadcast()
 }
 
+func (self *FileBasedRingBuffer) Reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self._Truncate()
+}
+
 func (self *FileBasedRingBuffer) Close() {
 	self.fd.Close()
 }
@@ -354,6 +362,13 @@ type RingBuffer struct {
 
 	// The maximum size of the ring buffer
 	Size uint64
+}
+
+func (self *RingBuffer) Reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.messages = nil
 }
 
 func (self *RingBuffer) Enqueue(item []byte) {

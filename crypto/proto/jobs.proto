@@ -73,6 +73,10 @@ message GrrMessage {
   Cancel Cancel = 32;
   ForemanCheckin UpdateForeman = 35;
 
+  // Immediately kill the client and reset all buffers.
+  Cancel  KillKillKill = 38;
+
+
   // DEPRECATED: The following fields were used as part of the old
   // GrrMessage communication protocol. These fields were replaced
   // by the messages above.

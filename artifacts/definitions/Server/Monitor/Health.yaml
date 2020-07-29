@@ -62,3 +62,7 @@ reports:
       ## Users
 
       {{ Query "SELECT Name, Permissions FROM gui_users()" | Table }}
+
+      ## Server version
+
+      {{ Query "SELECT Version FROM server_config" | Table }}

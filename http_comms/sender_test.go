@@ -120,7 +120,7 @@ func testRingBuffer(
 
 	sender := NewSender(
 		config_obj, connector, manager, exe, rb, nil, /* enroller */
-		logger, "Sender", "control", &utils.RealClock{})
+		logger, "Sender", "control", nil, &utils.RealClock{})
 	sender.Start(ctx)
 
 	// This message results in a 14 byte message enqueued. The

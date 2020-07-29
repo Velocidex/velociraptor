@@ -28,6 +28,8 @@ import (
 	"syscall"
 
 	humanize "github.com/dustin/go-humanize"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -139,6 +141,27 @@ func DownloadFile(filepath string, url string) error {
 	return nil
 }
 
+var (
+	// Set to true when the client gracefully exits.
+	exiting = false
+)
+
+// This is only called when there is something very wrong! If the
+// executor loop somehow exits due to panic or a bug we will not be
+// able to communicate with the endpoint. We have to hard exit here to
+// ensure the process can be restarted. This is a last resort!
+func on_error(config_obj *config_proto.Config) {
+	// It's ok we are supposed to exit.
+	if exiting {
+		return
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+	logger.Error("Exiting hard due to bug or KillKillKill! This should not happen!")
+
+	os.Exit(-1)
+}
+
 func install_sig_handler() (context.Context, context.CancelFunc) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGHUP,
@@ -151,6 +174,8 @@ func install_sig_handler() (context.Context, context.CancelFunc) {
 	go func() {
 		select {
 		case <-quit:
+			// Ordered shutdown now.
+			exiting = true
 			cancel()
 
 		case <-ctx.Done():

@@ -68,6 +68,7 @@ func RunClient(
 		manager,
 		exe,
 		config_obj.Client.ServerUrls,
+		func() { on_error(config_obj) },
 		utils.RealClock{},
 	)
 	kingpin.FatalIfError(err, "Can not create HTTPCommunicator.")

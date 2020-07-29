@@ -17,9 +17,27 @@ description: |
 type: SERVER_EVENT
 
 sources:
-  - queries:
-    - |
-      SELECT * FROM watch_monitoring(artifact="Shell")
+  - query: |
+      -- Watch for shell flow completions.
+      LET collections = SELECT Flow
+         FROM watch_monitoring(artifact="System.Flow.Completion")
+         WHERE Flow.artifacts_with_results =~ "Windows.System.PowerShell|Windows.System.CmdShell"
+
+      -- Dump the command and the results.
+      SELECT * FROM foreach(row=collections,
+      query={
+         SELECT Flow.session_id AS FlowId,
+             Flow.client_id AS ClientId,
+             client_info(client_id=Flow.client_id).os_info.fqdn AS Hostname,
+             timestamp(epoch=Flow.create_time / 1000000) AS Created,
+             timestamp(epoch=Flow.active_time / 1000000) AS LastActive,
+             Flow.request.parameters.env[0].value AS Command,
+             Stdout, Stderr FROM source(
+                 client_id=Flow.client_id,
+                 flow_id=Flow.session_id,
+                 artifact=Flow.artifacts_with_results[0])
+      })
+
 
 # Reports can be MONITORING_DAILY, CLIENT
 reports:
@@ -27,14 +45,15 @@ reports:
     template: |
       {{ .Description }}
 
-      {{ $rows := Query "SELECT timestamp(epoch=Timestamp) AS Timestamp, Argv, Stdout FROM source()" }}
+      {{ $rows := Query "SELECT ClientId, Hostname, \
+           timestamp(epoch=LastActive) AS Timestamp, Command, Stdout FROM source()" }}
 
       {{ range $row := $rows }}
 
-         * On {{ Get $row "Timestamp" }} we ran {{ Get $row "Argv" }}
+      * On {{ Get $row "Timestamp" }} we ran {{ Get $row "Command" }} on {{ Get $row "Hostname" }}
 
-         ```text
-         {{ Get $row "Stdout" }}
-         ```
+      ```text
+      {{ Get $row "Stdout" }}
+      ```
 
       {{end}}
