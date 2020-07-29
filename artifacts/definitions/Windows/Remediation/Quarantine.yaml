@@ -39,10 +39,10 @@ parameters:
     type: csv
     default: |
         Action,SrcAddr,SrcMask,SrcPort,DstAddr,DstMask,DstPort,Protocol,Mirrored,Description
-        permit,me,,0,any,,53,udp,yes,DNS
+        Permit,me,,0,any,,53,udp,yes,DNS
         Permit,me,,0,any,,53,tcp,yes,DNS TCP
         Permit,me,,68,any,,67,udp,yes,DHCP
-        block,any,,,any,,,,yes,All other traffic
+        Block,any,,,any,,,,yes,All other traffic
   - name: MessageBox
     description: |
         Optional message box notification to send to logged in users. 256
@@ -58,19 +58,29 @@ sources:
                 regex='^(?P<Message>.{0,255}).*',
                 string=MessageBox).Message
 
+      # Normalise Action
+      - LET normalise_action(Action)=if(condition= lowcase(string=Action)= 'permit',
+            then= 'Permit',
+            else= if(condition= lowcase(string=Action)= 'block',
+                then= 'Block'))
+                
       # extract configurable policy from lookuptable
-      - LET configurable_policy <= SELECT *
-            FROM parse_csv(filename=RuleLookupTable, accessor='data')
-
+      - LET configurable_policy <= SELECT 
+                normalise_action(Action=Action) AS Action,
+                SrcAddr,SrcMask,SrcPort,
+                DstAddr,DstMask,DstPort,
+                Protocol,Mirrored,Description
+            FROM parse_csv(filename=RuleLookupTable, accessor='data') 
+      
       # Parse a URL to get domain name.
       - LET get_domain(URL) = parse_string_with_regex(
            string=URL, regex='^https?://(?P<Domain>[^:/]+)').Domain
 
       # Parse a URL to get the port
       - LET get_port(URL) = if(condition= URL=~"https://[^:]+/", then="443",
-          else=if(condition= URL=~"http://[^:]+/", then="80",
-          else=parse_string_with_regex(string=URL,
-              regex='^https?://[^:/]+(:(?P<Port>[0-9]*))?/').Port))
+            else=if(condition= URL=~"http://[^:]+/", then="80",
+            else=parse_string_with_regex(string=URL,
+                regex='^https?://[^:/]+(:(?P<Port>[0-9]*))?/').Port))
 
       # extract Velociraptor config for policy
       - LET extracted_config <= SELECT * FROM foreach(
@@ -97,7 +107,7 @@ sources:
                 a=extracted_config,
                 b=configurable_policy
             )
-            WHERE Action =~ 'Permit|Block'
+            WHERE Action =~ '^(Permit|Block)$'
 
       # Removes empty options from the command line
       - LET clean_cmdline(CMD) = filter(list=CMD, regex='^(\\w+|\\w+=.+)$')
