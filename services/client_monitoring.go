@@ -41,7 +41,7 @@ type ClientEventTable struct {
 	job *crypto_proto.GrrMessage
 }
 
-func GetClientEventsVersion() uint64 {
+func GetClientEventsVersion(client_id string) uint64 {
 	return atomic.LoadUint64(&gEventTable.version)
 }
 

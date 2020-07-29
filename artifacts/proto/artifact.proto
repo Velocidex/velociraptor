@@ -139,6 +139,9 @@ message Report {
             description: "Type of report: MONITORING_DAILY, POST_PROCESSING"
         }];
 
+    // If specified we only allow the report to take this long.
+    uint64 timeout = 4;
+
     string template = 2;
 
     repeated ArtifactParameter parameters = 3;

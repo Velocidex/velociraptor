@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
@@ -841,7 +842,8 @@ func updateCellContents(
 	switch cell_type {
 
 	case "Markdown", "Artifact":
-		output, err = tmpl.Execute(input)
+		output, err = tmpl.Execute(
+			&artifacts_proto.Report{Template: input})
 		if err != nil {
 			return nil, err
 		}

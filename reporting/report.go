@@ -17,7 +17,7 @@ import (
 // An expander is presented to the go templates to implement template
 // operations.
 type TemplateEngine interface {
-	Execute(template_string string) (string, error)
+	Execute(report *artifacts_proto.Report) (string, error)
 	SetEnv(key string, value interface{})
 	GetArtifact() *artifacts_proto.Artifact
 	Close()
@@ -131,7 +131,7 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 			"client_event",
 			"monitoring_daily",
 		}) {
-		value, err := template_engine.Execute(report.Template)
+		value, err := template_engine.Execute(report)
 		if err != nil {
 			return "", err
 		}
@@ -157,7 +157,7 @@ func GenerateArtifactDescriptionReport(
 		template_engine.SetEnv("artifact", artifact)
 		for _, report := range getArtifactReports(
 			template_artifact, []string{"internal"}) {
-			return template_engine.Execute(report.Template)
+			return template_engine.Execute(report)
 		}
 	}
 
@@ -228,7 +228,7 @@ func GenerateServerMonitoringReport(
 			template_engine.SetEnv(param.Name, param.Default)
 		}
 
-		value, err := template_engine.Execute(report.Template)
+		value, err := template_engine.Execute(report)
 		if err != nil {
 			return "", err
 		}
@@ -261,7 +261,7 @@ func GenerateClientReport(template_engine TemplateEngine,
 			template_engine.SetEnv(param.Name, param.Default)
 		}
 
-		value, err := template_engine.Execute(report.Template)
+		value, err := template_engine.Execute(report)
 		if err != nil {
 			return "", err
 		}
@@ -292,7 +292,7 @@ func GenerateHuntReport(template_engine TemplateEngine,
 			template_engine.SetEnv(param.Name, param.Default)
 		}
 
-		value, err := template_engine.Execute(report.Template)
+		value, err := template_engine.Execute(report)
 		if err != nil {
 			return "", err
 		}

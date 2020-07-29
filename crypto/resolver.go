@@ -136,6 +136,6 @@ func (self *serverPublicKeyResolver) Clear() {}
 func NewServerPublicKeyResolver(config_obj *config_proto.Config) publicKeyResolver {
 	return &serverPublicKeyResolver{
 		config_obj: config_obj,
-		cache:      cache.NewLRUCache(1000),
+		cache:      cache.NewLRUCache(config_obj.Frontend.ExpectedClients),
 	}
 }

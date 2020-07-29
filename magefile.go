@@ -164,6 +164,7 @@ func Auto() error {
 func AutoDev() error {
 	return Builder{goos: runtime.GOOS,
 		arch:        runtime.GOARCH,
+		extra_tags:  " yara ",
 		filename:    "velociraptor",
 		extra_flags: []string{"-race"}}.Run()
 }

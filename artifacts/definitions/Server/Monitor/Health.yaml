@@ -14,6 +14,9 @@ sources:
 
 reports:
   - type: SERVER_EVENT
+    # Only allow the report to run for 10 seconds - this is plenty for
+    # the GUI.
+    timeout: 10
     parameters:
       - name: Sample
         default: "4"

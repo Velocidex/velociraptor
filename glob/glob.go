@@ -270,7 +270,8 @@ func (self Globber) ExpandWithContext(
 		files, err := accessor.ReadDir(root)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.GenericComponent).
-				Debug("Globber.ExpandWithContext: %v", err)
+				Debug("Globber.ExpandWithContext: %v while processing %v",
+					err, root)
 			return
 		}
 

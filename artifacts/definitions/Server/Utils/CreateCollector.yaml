@@ -6,11 +6,11 @@ type: SERVER
 
 tools:
   - name: VelociraptorWindows
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-windows-amd64.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-windows-amd64.exe
   - name: VelociraptorLinux
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-linux-amd64
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-linux-amd64
   - name: VelociraptorDarwin
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.6/velociraptor-v0.4.6-darwin-amd64
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-darwin-amd64
 
 parameters:
   - name: OS

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"text/template"
+	"time"
 
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig"
@@ -22,6 +23,7 @@ import (
 	blackfriday "github.com/russross/blackfriday/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -262,7 +264,15 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 	}
 }
 
-func (self *GuiTemplateEngine) Execute(template_string string) (string, error) {
+func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, error) {
+	template_string := report.Template
+
+	// Hard limit for report generation can be specified in the
+	// definition.
+	if report.Timeout > 0 {
+		self.ctx, _ = context.WithTimeout(self.ctx, time.Second*time.Duration(report.Timeout))
+	}
+
 	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))
 	if err != nil {
 		return "", err
