@@ -116,7 +116,7 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.AvailableDownloads, error) {
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile().Path()
+	download_file := flow_path_manager.GetDownloadsFile("").Path()
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

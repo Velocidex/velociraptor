@@ -58,12 +58,20 @@ func returnError(w http.ResponseWriter, code int, message string) {
 	w.Write([]byte(message))
 }
 
-func cleanPathForZip(filename string) string {
-	filename = path.Clean(strings.Replace(
-		filename, "\\", "/", -1))
+func cleanPathForZip(filename, client_id, hostname string) string {
+	hostname = string(datastore.SanitizeString(hostname))
+	components := []string{}
+	for _, component := range utils.SplitComponents(filename) {
+		// Replace any client id with hostnames
+		if component == client_id {
+			component = hostname
+		}
+
+		components = append(components, string(datastore.SanitizeString(component)))
+	}
 
 	// Zip files should not have absolute paths
-	filename = strings.TrimLeft(filename, "/")
+	filename = strings.Join(components, "/")
 	return filename
 }
 
@@ -71,6 +79,7 @@ func downloadFlowToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string,
+	hostname string,
 	flow_id string,
 	zip_writer *zip.Writer) error {
 
@@ -88,7 +97,8 @@ func downloadFlowToZip(
 		defer reader.Close()
 
 		// Clean the name so it makes a reasonable zip member.
-		f, err := zip_writer.Create(cleanPathForZip(upload_name))
+		f, err := zip_writer.Create(cleanPathForZip(
+			upload_name, client_id, hostname))
 		if err != nil {
 			return err
 		}
@@ -112,9 +122,11 @@ func downloadFlowToZip(
 
 	// Copy result sets
 	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
+		client_id := flow_details.Context.Request.ClientId
+
+		// Paths inside the zip file should be friendlier.
 		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			flow_details.Context.Request.ClientId,
-			flow_details.Context.SessionId, artifact_with_results)
+			client_id, flow_details.Context.SessionId, artifact_with_results)
 		rs_path, err := path_manager.GetPathForWriting()
 		if err == nil {
 			copier(rs_path)
@@ -122,7 +134,7 @@ func downloadFlowToZip(
 
 		// Also make a csv file why not?
 		f, err := zip_writer.Create(cleanPathForZip(
-			strings.TrimSuffix(rs_path, ".json") + ".csv"))
+			strings.TrimSuffix(rs_path, ".json")+".csv", client_id, hostname))
 		if err != nil {
 			continue
 		}
@@ -174,8 +186,9 @@ func createDownloadFile(config_obj *config_proto.Config,
 		return errors.New("Client Id and Flow Id should be specified.")
 	}
 
+	hostname := GetHostname(config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile().Path()
+	download_file := flow_path_manager.GetDownloadsFile(hostname).Path()
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -238,7 +251,7 @@ func createDownloadFile(config_obj *config_proto.Config,
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		downloadFlowToZip(ctx, config_obj, client_id, flow_id, zip_writer)
+		downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
 	}()
 
 	return nil
@@ -375,7 +388,8 @@ func createHuntDownloadFile(
 				defer reader.Close()
 
 				// Clean the name so it makes a reasonable zip member.
-				f, err := zip_writer.Create(cleanPathForZip(output_name))
+				f, err := zip_writer.Create(cleanPathForZip(
+					output_name, "", ""))
 				if err != nil {
 					return err
 				}
@@ -416,8 +430,9 @@ func createHuntDownloadFile(
 				continue
 			}
 
+			hostname := GetHostname(config_obj, client_id)
 			err := downloadFlowToZip(
-				ctx, config_obj, client_id, flow_id, zip_writer)
+				ctx, config_obj, client_id, hostname, flow_id, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).
 					WithFields(logrus.Fields{
@@ -545,7 +560,9 @@ func vfsFolderDownloadHandler(
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 
-		client_path_manager := paths.NewClientPathManager(request.ClientId)
+		client_id := request.ClientId
+		hostname := GetHostname(config_obj, client_id)
+		client_path_manager := paths.NewClientPathManager(client_id)
 
 		db, _ := datastore.GetDB(config_obj)
 		db.Walk(config_obj, client_path_manager.VFSDownloadInfoPath(request.VfsPath),
@@ -562,7 +579,8 @@ func vfsFolderDownloadHandler(
 					return err
 				}
 
-				zh, err := zip_writer.Create(cleanPathForZip(path_name))
+				zh, err := zip_writer.Create(cleanPathForZip(
+					path_name, client_id, hostname))
 				if err != nil {
 					logger.Warn("Cant create zip %s: %v", path_name, err)
 					return nil

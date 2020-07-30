@@ -34,6 +34,23 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+func GetHostname(config_obj *config_proto.Config, client_id string) string {
+	client_path_manager := paths.NewClientPathManager(client_id)
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return client_id
+	}
+
+	client_info := &actions_proto.ClientInfo{}
+	err = db.GetSubject(config_obj,
+		client_path_manager.Path(), client_info)
+	if err != nil {
+		return client_id
+	}
+
+	return client_info.Hostname
+}
+
 func GetApiClient(
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
