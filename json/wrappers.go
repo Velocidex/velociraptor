@@ -19,6 +19,14 @@ func Marshal(v interface{}) ([]byte, error) {
 	return json.MarshalWithOptions(v, opts)
 }
 
+func MustMarshalIndent(v interface{}) []byte {
+	result, err := MarshalIndent(v)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 func MarshalIndent(v interface{}) ([]byte, error) {
 	opts := NewEncOpts()
 	return MarshalIndentWithOptions(v, opts)

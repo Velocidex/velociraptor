@@ -44,7 +44,7 @@ ShellViewerController.prototype.launchCommand = function() {
         artifact = "Windows.System.PowerShell";
     } else if(this.type == "Cmd") {
         artifact = "Windows.System.CmdShell";
-    } else if(this.type == "Base") {
+    } else if(this.type == "Bash") {
         artifact = "Linux.Sys.BashShell";
     } else {
         return;
@@ -91,7 +91,8 @@ ShellViewerController.prototype.fetchLastShellCollections = function() {
                 for (var j=0; j<artifacts.length; j++) {
                     var artifact = artifacts[j];
                     if (artifact == "Windows.System.PowerShell" ||
-                        artifact == "Windows.System.CmdShell") {
+                        artifact == "Windows.System.CmdShell" ||
+                        artifact == "Linux.Sys.BashShell" ) {
                         self.flows.push(items[i]);
                     }
                 }

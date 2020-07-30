@@ -1,0 +1,40 @@
+[
+ {
+  "request_id": 5,
+  "FileBuffer": {
+   "pathspec": {
+    "path": "foo",
+    "accessor": "ntfs"
+   },
+   "size": 12,
+   "data": "SGVsbG8g"
+  }
+ },
+ {
+  "request_id": 5,
+  "response_id": 1,
+  "FileBuffer": {
+   "pathspec": {
+    "path": "foo",
+    "accessor": "ntfs"
+   },
+   "offset": 6,
+   "size": 12,
+   "data": "aGVsbG8g",
+   "eof": true
+  }
+ },
+ {
+  "request_id": 5,
+  "response_id": 2,
+  "FileBuffer": {
+   "pathspec": {
+    "path": "foo.idx",
+    "accessor": "ntfs"
+   },
+   "size": 196,
+   "data": "eyJmaWxlX29mZnNldCI6MCwib3JpZ2luYWxfb2Zmc2V0IjowLCJmaWxlX2xlbmd0aCI6NiwibGVuZ3RoIjo2fQp7ImZpbGVfb2Zmc2V0Ijo2LCJvcmlnaW5hbF9vZmZzZXQiOjYsImZpbGVfbGVuZ3RoIjowLCJsZW5ndGgiOjZ9CnsiZmlsZV9vZmZzZXQiOjYsIm9yaWdpbmFsX29mZnNldCI6MTIsImZpbGVfbGVuZ3RoIjo2LCJsZW5ndGgiOjZ9Cg==",
+   "eof": true
+  }
+ }
+]

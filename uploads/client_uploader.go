@@ -19,8 +19,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-const (
-	BUFF_SIZE = 1024 * 1024
+var (
+	BUFF_SIZE = int64(1024 * 1024)
 )
 
 // An uploader delivering files from client to server.
@@ -198,26 +198,26 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		range_reader.Seek(read_offset, os.SEEK_SET)
 
 		for to_read > 0 {
+			to_read_buf := to_read
+
 			// Ensure there is a fresh allocation for every
 			// iteration to prevent overwriting in-flight buffers.
-			if to_read > BUFF_SIZE {
-				to_read = BUFF_SIZE
+			if to_read_buf > BUFF_SIZE {
+				to_read_buf = BUFF_SIZE
 			}
 
-			buffer := make([]byte, BUFF_SIZE)
+			buffer := make([]byte, to_read_buf)
 			read_bytes, err := range_reader.Read(buffer)
 			// Hard read error - give up.
 			if err != nil && err != io.EOF {
 				return nil, err
 			}
-
 			// End of range - go to the next range
 			if read_bytes == 0 {
-				break
+				continue
 			}
 
 			data := buffer[:read_bytes]
-
 			sha_sum.Write(data)
 			md5_sum.Write(data)
 
@@ -246,7 +246,6 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			to_read -= int64(read_bytes)
 			write_offset += int64(read_bytes)
 			read_offset += int64(read_bytes)
-
 		}
 	}
 
@@ -256,7 +255,6 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		if err != nil {
 			return nil, err
 		}
-
 		self.Responder.AddResponse(&crypto_proto.GrrMessage{
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{

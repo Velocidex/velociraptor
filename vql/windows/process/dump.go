@@ -47,7 +47,7 @@ func (self ProcDumpPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	arg := &ProcDumpArgs{}
+	arg := &PidArgs{}
 
 	go func() {
 		defer close(output_chan)
@@ -107,7 +107,7 @@ func (self ProcDumpPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap)
 	return &vfilter.PluginInfo{
 		Name:    "proc_dump",
 		Doc:     "Dumps process memory.",
-		ArgType: type_map.AddType(scope, &ProcDumpArgs{}),
+		ArgType: type_map.AddType(scope, &PidArgs{}),
 	}
 }
 
