@@ -19,8 +19,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-const (
-	BUFF_SIZE = 1024 * 1024
+var (
+	BUFF_SIZE = int64(1024 * 1024)
 )
 
 // An uploader delivering files from client to server.

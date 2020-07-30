@@ -32,7 +32,7 @@ import (
 )
 
 type Responder struct {
-	output chan<- *crypto_proto.GrrMessage
+	output chan *crypto_proto.GrrMessage
 
 	sync.Mutex
 	request *crypto_proto.GrrMessage
@@ -44,7 +44,7 @@ type Responder struct {
 func NewResponder(
 	config_obj *config_proto.Config,
 	request *crypto_proto.GrrMessage,
-	output chan<- *crypto_proto.GrrMessage) *Responder {
+	output chan *crypto_proto.GrrMessage) *Responder {
 	result := &Responder{
 		request: request,
 		next_id: 0,

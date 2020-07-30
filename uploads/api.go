@@ -11,8 +11,9 @@ import (
 
 type Range struct {
 	// In bytes
-	Offset, Length int64
-	IsSparse       bool
+	Offset   int64
+	Length   int64
+	IsSparse bool
 }
 
 type RangeReader interface {
