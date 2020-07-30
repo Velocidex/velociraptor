@@ -187,6 +187,12 @@ func (self *ApiServer) NewNotebook(
 		CurrentlyEditing: true,
 	}
 
+	// Add the new notebook to the index so it can be seen.
+	err = reporting.UpdateShareIndex(self.config, in)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = self.UpdateNotebookCell(ctx, new_cell_request)
 	return &empty.Empty{}, err
 }
