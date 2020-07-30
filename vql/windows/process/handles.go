@@ -22,10 +22,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type ProcDumpArgs struct {
-	Pid int64 `vfilter:"required,field=pid,doc=The PID to dump out."`
-}
-
 type ThreadHandleInfo struct {
 	ThreadId  uint64
 	ProcessId uint64
@@ -110,7 +106,7 @@ func (self HandlesPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	return &vfilter.PluginInfo{
 		Name:    "handles",
 		Doc:     "Enumerate process handles.",
-		ArgType: type_map.AddType(scope, &ProcDumpArgs{}),
+		ArgType: type_map.AddType(scope, &PidArgs{}),
 	}
 }
 

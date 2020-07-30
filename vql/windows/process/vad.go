@@ -40,7 +40,7 @@ func (self ModulesPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	arg := &ProcDumpArgs{}
+	arg := &PidArgs{}
 
 	go func() {
 		defer close(output_chan)
@@ -81,7 +81,7 @@ func (self ModulesPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) 
 	return &vfilter.PluginInfo{
 		Name:    "modules",
 		Doc:     "Enumerate Loaded DLLs.",
-		ArgType: type_map.AddType(scope, &ProcDumpArgs{}),
+		ArgType: type_map.AddType(scope, &PidArgs{}),
 	}
 }
 
@@ -92,7 +92,7 @@ func (self VADPlugin) Call(
 	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	arg := &ProcDumpArgs{}
+	arg := &PidArgs{}
 
 	go func() {
 		defer close(output_chan)
@@ -125,7 +125,7 @@ func (self VADPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 	return &vfilter.PluginInfo{
 		Name:    "vad",
 		Doc:     "Enumerate process memory regions.",
-		ArgType: type_map.AddType(scope, &ProcDumpArgs{}),
+		ArgType: type_map.AddType(scope, &PidArgs{}),
 	}
 }
 
