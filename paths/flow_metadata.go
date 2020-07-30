@@ -2,6 +2,7 @@ package paths
 
 import (
 	"context"
+	"fmt"
 	"path"
 
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -67,9 +68,9 @@ func (self FlowPathManager) UploadMetadata() *FlowPathManager {
 	return &self
 }
 
-func (self FlowPathManager) GetDownloadsFile() *FlowPathManager {
+func (self FlowPathManager) GetDownloadsFile(hostname string) *FlowPathManager {
 	self.path = path.Join("/downloads", self.client_id, self.flow_id,
-		self.flow_id+".zip")
+		fmt.Sprintf("%v-%v-%v.zip", hostname, self.client_id, self.flow_id))
 	return &self
 }
 
