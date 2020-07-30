@@ -129,7 +129,7 @@ NotebookListController.prototype.deleteNotebook = function(event) {
         modalInstance.close();
         notebook.hidden = true;
 
-        this.grrApiService_.post(
+        self.grrApiService_.post(
             'v1/UpdateNotebook', notebook).then(
                 function success(response) {
                     self.selectedNotebookId = null;
