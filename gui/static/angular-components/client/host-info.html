@@ -112,6 +112,8 @@
   <div class="client-details dashboard"
        ng-if="controller.mode == 'shell'"
        class="dashboard">
-    <grr-shell-viewer client-id="controller.clientId"></grr-shell-viewer>
+    <grr-shell-viewer
+      client="controller.client"
+      client-id="controller.clientId"></grr-shell-viewer>
   </div>
 </div>

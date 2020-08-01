@@ -188,3 +188,16 @@ exports.Join = function(components) {
 
     return result;
 };
+
+// A safe version of nested dict dereference. If the member is not
+// found, just returns a null instead of raising an exception.
+exports.Get = function(item, member) {
+    var components = member.split('.');
+
+    for(var i=0; i<components.length; i++) {
+        if (angular.isObject(item)) {
+            item = item[components[i]];
+        }
+    }
+    return item;
+};
