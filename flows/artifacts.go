@@ -316,14 +316,11 @@ func IsRequestComplete(
 	}
 
 	// Only terminate a running flow.
-	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-		return true, nil
+	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+		collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+		collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
+		collection_context.Dirty = true
 	}
-
-	collection_context.State = flows_proto.ArtifactCollectorContext_TERMINATED
-	collection_context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
-	collection_context.Dirty = true
-
 	return true, nil
 }
 

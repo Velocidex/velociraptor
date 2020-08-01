@@ -41,6 +41,20 @@ const ShellCellController = function($scope, grrApiService) {
     this.artifact = this.flow.request.artifacts[0];
 };
 
+ShellCellController.prototype.cancelFlow = function(e) {
+    var client = this.scope_["client"];
+
+    this.grrApiService_.post('/v1/CancelFlow', {
+        client_id: this.flow["client_id"],
+        flow_id: this.flow["session_id"],
+    }).then(function() {
+        this.loadData();
+    }.bind(this));
+
+    e.preventDefault();
+    return false;
+};
+
 ShellCellController.prototype.loadData = function() {
     var self = this;
 
@@ -65,14 +79,15 @@ ShellCellController.prototype.loadData = function() {
 };
 
 exports.ShellCellDirective = function() {
-  return {
-    scope: {
-      'flow': '='
-    },
-    restrict: 'E',
-    templateUrl: '/static/angular-components/client/shell-cell.html',
-    controller: ShellCellController,
-    controllerAs: 'controller'
+    return {
+      scope: {
+          'client': '=',
+          'flow': '=',
+      },
+      restrict: 'E',
+      templateUrl: '/static/angular-components/client/shell-cell.html',
+      controller: ShellCellController,
+      controllerAs: 'controller'
   };
 };
 

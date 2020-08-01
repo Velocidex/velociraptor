@@ -1,6 +1,8 @@
 'use strict';
 
 goog.module('grrUi.client.shellViewerDirective');
+const {Get} = goog.require('grrUi.core.utils');
+
 
 var OPERATION_POLL_INTERVAL_MS = 2000;
 
@@ -15,6 +17,11 @@ const ShellViewerController = function(
     this.interval_ = $interval;
 
     this.type = "Powershell";
+
+    var os_type = Get($scope, "client.os_info.system");
+    if (os_type == "linux" || os_type == "darwin") {
+        this.type = "Bash";
+    }
 
     /** @private {!grrUi.core.apiService.ApiService} */
     this.grrApiService_ = grrApiService;
@@ -104,9 +111,10 @@ ShellViewerController.prototype.fetchLastShellCollections = function() {
 
 exports.ShellViewerDirective = function() {
   return {
-    scope: {
-      'clientId': '='
-    },
+      scope: {
+          'client': '=',
+          'clientId': '=',
+      },
     restrict: 'E',
     templateUrl: '/static/angular-components/client/shell-viewer.html',
     controller: ShellViewerController,
