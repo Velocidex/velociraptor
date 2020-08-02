@@ -86,7 +86,7 @@ sources:
             })
 
         -- Main query
-        LET hit = SELECT *
+        LET hits = SELECT *
           FROM foreach(
             row=files,
             query={
