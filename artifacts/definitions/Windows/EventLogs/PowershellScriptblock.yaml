@@ -86,32 +86,56 @@ sources:
             })
 
         -- Main query
-        SELECT *
-        FROM foreach(
-          row=files,
-          query={
-            SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
-              System.Computer as Computer,
-              System.Security.UserID as SecurityID,
-              EventData.Path as Path,
-              EventData.ScriptBlockId as ScriptBlockId,
-              EventData.ScriptBlockText as ScriptBlockText,
-              System.EventRecordID as EventRecordID,
-              System.Level as Level,
-              System.Opcode as Opcode,
-              System.Task as Task
-            FROM parse_evtx(filename=FullPath)
-            WHERE System.EventID.Value = 4104
-              AND EventTime < DateBeforeTime
-              AND EventTime > DateAfterTime 
-              AND format(format="%d", args=System.Level) =~ LogLevelRegex.value[0]
-              AND if(condition=SearchStrings, 
-                  then=ScriptBlockText =~ SearchStrings,
-                  else=TRUE) 
-              AND if(condition=StringWhitelist, 
-                  then= NOT ScriptBlockText =~ StringWhitelist,
-                  else=TRUE) 
-              AND if(condition=PathWhitelist, 
-                  then= NOT Path =~ PathWhitelist,
-                  else=TRUE)
-        })
+        LET hit = SELECT *
+          FROM foreach(
+            row=files,
+            query={
+              SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+                System.EventID.Value as EventID,
+                System.Computer as Computer,
+                System.Security.UserID as SecurityID,
+                EventData.Path as Path,
+                EventData.ScriptBlockId as ScriptBlockId,
+                EventData.ScriptBlockText as ScriptBlockText,
+                System.EventRecordID as EventRecordID,
+                System.Level as Level,
+                System.Opcode as Opcode,
+                System.Task as Task,
+                if(condition=Source, then=Source, else=FullPath) as Source
+              FROM parse_evtx(filename=FullPath)
+              WHERE System.EventID.Value = 4104
+                AND EventTime < DateBeforeTime
+                AND EventTime > DateAfterTime 
+                AND format(format="%d", args=System.Level) =~ LogLevelRegex.value[0]
+                AND if(condition=SearchStrings, 
+                    then=ScriptBlockText =~ SearchStrings,
+                    else=TRUE) 
+                AND if(condition=StringWhitelist, 
+                    then= NOT ScriptBlockText =~ StringWhitelist,
+                    else=TRUE) 
+                AND if(condition=PathWhitelist, 
+                    then= NOT Path =~ PathWhitelist,
+                    else=TRUE)
+          })
+          ORDER BY Source DESC
+
+        -- Group results for deduplication
+        LET grouped = SELECT *
+          FROM hits
+          GROUP BY EventRecordID
+
+        -- Output results
+        SELECT
+            EventTime,
+            EventID,
+            Computer,
+            SecurityID,
+            Path,
+            ScriptBlockId,
+            ScriptBlockText,
+            EventRecordID,
+            Level,
+            Opcode,
+            Task,
+            Source
+        FROM grouped
