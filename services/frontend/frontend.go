@@ -292,6 +292,28 @@ func StartFrontendService(ctx context.Context,
 
 	services.Frontend = fe_manager
 
+	// If no service specification is set, we start all services
+	// on the primary frontend.
+	if config_obj.Frontend.ServerServices == nil {
+		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
+			HuntManager:       true,
+			HuntDispatcher:    true,
+			StatsCollector:    true,
+			ServerMonitoring:  true,
+			ServerArtifacts:   true,
+			DynDns:            true,
+			Interrogation:     true,
+			SanityChecker:     true,
+			VfsService:        true,
+			UserManager:       true,
+			ClientMonitoring:  true,
+			MonitoringService: true,
+			ApiServer:         true,
+			FrontendServer:    true,
+			GuiServer:         true,
+		}
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	fe_manager.addFrontendConfig(config_obj.Frontend)
