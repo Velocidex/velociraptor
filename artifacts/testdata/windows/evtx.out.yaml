@@ -93,7 +93,8 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "Source": "C:"
+  "Source": "\\\\.\\d:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
  },
  {
   "EventTime": "2019-12-02T11:39:35.74373126Z",
@@ -107,6 +108,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "Source": "C:"
+  "Source": "\\\\.\\d:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
  }
 ]
