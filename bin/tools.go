@@ -9,7 +9,7 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"sync"
+	"time"
 
 	"github.com/Velocidex/yaml/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -49,11 +49,14 @@ func doThirdPartyShow() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg := &sync.WaitGroup{}
-	err = services.StartInventoryService(context.Background(), wg, config_obj)
-	kingpin.FatalIfError(err, "Load Config ")
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
 
-	serialized, err := yaml.Marshal(services.Inventory.Get())
+	err = startEssentialServices(config_obj, sm)
+	kingpin.FatalIfError(err, "Starting services.")
+
+	serialized, err := yaml.Marshal(services.GetInventory().Get())
 	kingpin.FatalIfError(err, "Serialized ")
 	fmt.Println(string(serialized))
 }
@@ -63,11 +66,14 @@ func doThirdPartyRm() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg := &sync.WaitGroup{}
-	err = services.StartInventoryService(context.Background(), wg, config_obj)
-	kingpin.FatalIfError(err, "Load Config ")
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
 
-	err = services.Inventory.RemoveTool(config_obj, *third_party_rm_name)
+	err = startEssentialServices(config_obj, sm)
+	kingpin.FatalIfError(err, "Starting services.")
+
+	err = services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
 	kingpin.FatalIfError(err, "Removing tool ")
 }
 
@@ -76,9 +82,14 @@ func doThirdPartyUpload() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	wg, ctx, cancel := startEssentialServices(config_obj)
-	defer wg.Wait()
+	ctx, cancel := install_sig_handler()
 	defer cancel()
+
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err = startEssentialServices(config_obj, sm)
+	kingpin.FatalIfError(err, "Starting services.")
 
 	filename := *third_party_upload_filename
 	if filename == "" {
@@ -119,11 +130,11 @@ func doThirdPartyUpload() {
 	}
 
 	// Now add the tool to the inventory with the correct hash.
-	err = services.Inventory.AddTool(config_obj, tool)
+	err = services.GetInventory().AddTool(config_obj, tool)
 	kingpin.FatalIfError(err, "Adding tool ")
 
 	if *third_party_upload_download {
-		tool, err = services.Inventory.GetToolInfo(ctx, config_obj, tool.Name)
+		tool, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
 		kingpin.FatalIfError(err, "Fetching file ")
 	}
 

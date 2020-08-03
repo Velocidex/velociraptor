@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -332,10 +333,10 @@ func createHuntDownloadFile(
 	}
 
 	// Make sure the hunt dispatcher is running.
-	{
+	if services.GetHuntDispatcher() == nil {
 		wg := sync.WaitGroup{}
 		wg.Add(1)
-		services.StartHuntDispatcher(ctx, &wg, config_obj)
+		hunt_dispatcher.StartHuntDispatcher(ctx, &wg, config_obj)
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)

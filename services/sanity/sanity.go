@@ -1,4 +1,4 @@
-package services
+package sanity
 
 import (
 	"context"
@@ -101,7 +101,7 @@ func (self *SanityChecks) Check(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func startSanityCheckService(
+func StartSanityCheckService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

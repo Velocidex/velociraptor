@@ -18,14 +18,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	frontend_proto "www.velocidex.com/golang/velociraptor/frontend/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-)
-
-var (
-	fe_manager *FrontendManager
+	frontend_proto "www.velocidex.com/golang/velociraptor/services/frontend/proto"
 )
 
 type FrontendManager struct {
@@ -224,11 +220,6 @@ func (self *FrontendManager) GetFrontendURL() (string, bool) {
 	return result, result != self.my_state.Url
 }
 
-func GetFrontendURL() (string, bool) {
-	return fe_manager.GetFrontendURL()
-
-}
-
 // Selects a frontend to take on.
 func (self *FrontendManager) selectFrontend(node string) error {
 	self.mu.Lock()
@@ -286,11 +277,12 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 		fe_config.BindPort)
 }
 
+// Install a frontend manager.
 func StartFrontendService(ctx context.Context,
 	config_obj *config_proto.Config, node string) error {
 	var err error
 
-	fe_manager = &FrontendManager{
+	fe_manager := &FrontendManager{
 		frontends:        make(map[string]*config_proto.FrontendConfig),
 		active_frontends: make(map[string]*frontend_proto.FrontendState),
 		config_obj:       config_obj,
@@ -298,27 +290,7 @@ func StartFrontendService(ctx context.Context,
 		primary_frontend: GetFrontendName(config_obj.Frontend),
 	}
 
-	// If no service specification is set, we start all services
-	// on the primary frontend.
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
-			HuntManager:       true,
-			HuntDispatcher:    true,
-			StatsCollector:    true,
-			ServerMonitoring:  true,
-			ServerArtifacts:   true,
-			DynDns:            true,
-			Interrogation:     true,
-			SanityChecker:     true,
-			VfsService:        true,
-			UserManager:       true,
-			ClientMonitoring:  true,
-			MonitoringService: true,
-			ApiServer:         true,
-			FrontendServer:    true,
-			GuiServer:         true,
-		}
-	}
+	services.Frontend = fe_manager
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

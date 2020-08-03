@@ -1,4 +1,4 @@
-package services
+package interrogation
 
 import (
 	"context"
@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -49,7 +50,7 @@ func (self *EnrollmentService) Start(
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Info("Starting Enrollment service.")
 
-		events, cancel := GetJournal().Watch("Server.Internal.Enrollment")
+		events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
 		defer cancel()
 
 		local_wg.Done()
@@ -112,7 +113,8 @@ func (self *EnrollmentService) ProcessRow(
 	}
 
 	// Issue the flow on the client.
-	flow_id, err := ScheduleArtifactCollection(ctx, self.config_obj,
+	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+		ctx, self.config_obj,
 		self.config_obj.Client.PinnedServerName, /* principal */
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
@@ -246,10 +248,10 @@ func (self *InterrogationService) ProcessRow(
 	)
 }
 
-func startInterrogationService(
+func StartInterrogationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) {
+	config_obj *config_proto.Config) error {
 
 	enrollment_server := &EnrollmentService{
 		config_obj:       config_obj,
@@ -262,5 +264,5 @@ func startInterrogationService(
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 
-	result.Start(ctx, wg)
+	return result.Start(ctx, wg)
 }

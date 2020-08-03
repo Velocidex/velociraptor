@@ -34,7 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -214,7 +214,7 @@ func (self HuntResultsPlugin) Call(
 		// Read each file and emit it with some extra columns
 		// for context.
 		for row := range row_chan {
-			participation_row := &services.ParticipationRecord{}
+			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
 				continue
@@ -308,7 +308,7 @@ func (self HuntFlowsPlugin) Call(
 		// Read each CSV file and emit it with some extra
 		// columns for context.
 		for row := range row_chan {
-			participation_row := &services.ParticipationRecord{}
+			participation_row := &hunt_manager.ParticipationRecord{}
 			err := vfilter.ExtractArgs(scope, row, participation_row)
 			if err != nil {
 				return

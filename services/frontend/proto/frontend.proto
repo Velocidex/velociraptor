@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package proto;
 
-option go_package = "www.velocidex.com/golang/velociraptor/frontend/proto";
+option go_package = "www.velocidex.com/golang/velociraptor/services/frontend/proto";
 
 
 // Not a replacement for proper monitoring - just a simple load

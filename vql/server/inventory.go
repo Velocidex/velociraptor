@@ -53,7 +53,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Hash:         arg.Hash,
 	}
 
-	err = services.Inventory.AddTool(config_obj, request)
+	err = services.GetInventory().AddTool(config_obj, request)
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}
@@ -100,7 +100,7 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := services.Inventory.GetToolInfo(ctx, config_obj, arg.Tool)
+	tool, err := services.GetInventory().GetToolInfo(ctx, config_obj, arg.Tool)
 	if err != nil {
 		scope.Log("inventory_get: %s", err.Error())
 		return vfilter.Null{}
@@ -135,7 +135,7 @@ func (self InventoryPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		for _, item := range services.Inventory.Get().Tools {
+		for _, item := range services.GetInventory().Get().Tools {
 			output_chan <- item
 		}
 
@@ -146,7 +146,7 @@ func (self InventoryPlugin) Call(
 func (self InventoryPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "inventory",
-		Doc:     "Retrieve the ThirdParty inventory.",
+		Doc:     "Retrieve the tools inventory.",
 		ArgType: type_map.AddType(scope, &InventoryPluginArgs{}),
 	}
 }

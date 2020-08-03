@@ -4,7 +4,7 @@
 // System.VFS.ListDirectory and System.VFS.DownloadFile. When these
 // artifacts are detected, the service will update the VFS tree with
 // the new directory data or a reference to the downloaded files.
-package services
+package vfs_service
 
 import (
 	"context"
@@ -223,10 +223,11 @@ func getVfsComponents(client_path string, accessor string) []string {
 		utils.SplitPlainComponents(client_path)...)
 }
 
-func startVFSService(
+func StartVFSService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
+
 	vfs_service := &VFSService{
 		config_obj: config_obj,
 		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
