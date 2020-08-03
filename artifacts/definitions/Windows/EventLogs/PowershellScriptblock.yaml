@@ -82,8 +82,7 @@ sources:
               FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
             },
             else= {
-              SELECT *
-              FROM glob(globs=EventLog,accessor='ntfs')
+              SELECT * FROM glob(globs=EventLog)
             })
 
         -- Main query
