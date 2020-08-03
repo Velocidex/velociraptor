@@ -1,7 +1,9 @@
 Queries:
+  # Clear the old files if they are there.
   - SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip') AS A,
            file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939.zip') AS B
      FROM scope()
+
   - SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE) FROM scope()
 
   # Check the created zip file contains both combined and distinct results
