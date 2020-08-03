@@ -1,0 +1,2 @@
+{"Timestamp":"1596417883121325","time":"2020-08-03 11:24:43 +1000 AEST","message":"vql: Starting query execution.\n"}
+{"Timestamp":"1596417903367896","time":"2020-08-03 11:25:03 +1000 AEST","message":"Time 3: Windows.Network.NetstatEnriched/Netstat: Sending response part 0 54 kB (57 rows)."}

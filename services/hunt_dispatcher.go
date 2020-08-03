@@ -237,6 +237,10 @@ func StartHuntDispatcher(
 	mu.Lock()
 	defer mu.Unlock()
 
+	if global_hunt_dispatcher != nil {
+		return global_hunt_dispatcher, nil
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Starting Hunt Dispatcher Service.")
 

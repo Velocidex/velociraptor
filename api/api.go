@@ -57,6 +57,7 @@ import (
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type ApiServer struct {
@@ -970,7 +971,7 @@ func (self *ApiServer) SetClientMonitoringState(
 }
 
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,
-	in *api_proto.CreateDownloadRequest) (*empty.Empty, error) {
+	in *api_proto.CreateDownloadRequest) (*api_proto.CreateDownloadResponse, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.PREPARE_RESULTS
@@ -981,20 +982,49 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	}
 
 	// Log an audit event.
-	userinfo := GetUserInfo(ctx, self.config)
 	logging.GetLogger(self.config, &logging.Audit).
 		WithFields(logrus.Fields{
-			"user":    userinfo.Name,
+			"user":    user_name,
 			"request": in,
 		}).Info("CreateDownloadRequest")
 
+	query := ""
+	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
-		err = createDownloadFile(self.config, in.FlowId, in.ClientId)
+		query = `SELECT create_flow_download(
+      client_id=ClientId, flow_id=FlowId) AS VFSPath
+      FROM scope()`
+		env.Set("ClientId", in.ClientId).
+			Set("FlowId", in.FlowId)
 	} else if in.HuntId != "" {
-		err = createHuntDownloadFile(self.config, user_name, in.HuntId)
+		query = `SELECT create_hunt_download(
+      hunt_id=HuntId, only_combined=OnlyCombined) AS VFSPath
+      FROM scope()`
+		env.Set("HuntId", in.HuntId).
+			Set("OnlyCombined", in.OnlyCombinedHunt)
 	}
 
-	result := &empty.Empty{}
+	scope := artifacts.ScopeBuilder{
+		Config:     self.config,
+		Env:        env,
+		ACLManager: vql_subsystem.NewServerACLManager(self.config, user_name),
+		Logger:     logging.NewPlainLogger(self.config, &logging.FrontendComponent),
+	}.Build()
+	defer scope.Close()
+
+	vql, err := vfilter.Parse(query)
+	if err != nil {
+		return nil, err
+	}
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	result := &api_proto.CreateDownloadResponse{}
+	for row := range vql.Eval(sub_ctx, scope) {
+		result.VfsPath = vql_subsystem.GetStringFromRow(scope, row, "VFSPath")
+	}
+
 	return result, err
 }
 

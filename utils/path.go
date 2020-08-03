@@ -229,3 +229,68 @@ func PathSplit(path string) (string, string) {
 func Clean(path string) string {
 	return JoinComponents(SplitComponents(path), "/")
 }
+
+func CleanPathForZip(filename, client_id, hostname string) string {
+	hostname = SanitizeString(hostname)
+	components := []string{}
+	for _, component := range SplitComponents(filename) {
+		// Replace any client id with hostnames
+		if component == client_id {
+			component = hostname
+		}
+
+		components = append(components, SanitizeString(component))
+	}
+
+	// Zip files should not have absolute paths
+	filename = strings.Join(components, "/")
+	return filename
+}
+
+// We are very conservative about our escaping.
+func shouldEscape(c byte) bool {
+	if 'A' <= c && c <= 'Z' ||
+		'a' <= c && c <= 'z' ||
+		'0' <= c && c <= '9' {
+		return false
+	}
+
+	switch c {
+	case '-', '_', '.', '~', ' ', '$':
+		return false
+	}
+
+	return true
+}
+
+var hexTable = []byte("0123456789ABCDEF")
+
+func SanitizeString(component string) string {
+	result := make([]byte, len(component)*4)
+	result_idx := 0
+
+	for _, c := range []byte(component) {
+		if !shouldEscape(c) {
+			result[result_idx] = c
+			result_idx += 1
+		} else {
+			result[result_idx] = '%'
+			result[result_idx+1] = hexTable[c>>4]
+			result[result_idx+2] = hexTable[c&15]
+			result_idx += 3
+		}
+	}
+	return string(result[:result_idx])
+}
+
+func unhex(c byte) byte {
+	switch {
+	case '0' <= c && c <= '9':
+		return c - '0'
+	case 'a' <= c && c <= 'f':
+		return c - 'a' + 10
+	case 'A' <= c && c <= 'F':
+		return c - 'A' + 10
+	}
+	return 0
+}

@@ -27,6 +27,7 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
+	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -95,7 +96,7 @@ func Stringify(value interface{}, scope *vfilter.Scope, min_width int) string {
 	}
 
 	json_marshall := func(value interface{}) string {
-		if k, err := json.Marshal(value); err == nil {
+		if k, err := vjson.Marshal(value); err == nil {
 			if len(k) > 0 && k[0] == '"' && k[len(k)-1] == '"' {
 				k = k[1 : len(k)-1]
 			}
