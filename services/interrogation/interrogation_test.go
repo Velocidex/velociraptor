@@ -1,4 +1,4 @@
-package services
+package interrogation
 
 import (
 	"context"
@@ -22,19 +22,24 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
-type BaseServicesTestSuite struct {
+type ServicesTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
+	ctx        context.Context
 	cancel     func()
 	wg         *sync.WaitGroup
 	client_id  string
 	flow_id    string
 }
 
-func (self *BaseServicesTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
+func (self *ServicesTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 	file_store_factory, ok := file_store.GetFileStore(
 		self.config_obj).(*memory.MemoryFileStore)
 	require.True(self.T(), ok)
@@ -42,29 +47,29 @@ func (self *BaseServicesTestSuite) GetMemoryFileStore() *memory.MemoryFileStore 
 	return file_store_factory
 }
 
-func (self *BaseServicesTestSuite) SetupTest() {
+func (self *ServicesTestSuite) SetupTest() {
 	var err error
 	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
+		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	self.cancel = cancel
+	self.ctx, self.cancel = context.WithCancel(context.Background())
 	self.wg = &sync.WaitGroup{}
 
 	// Start the journaling service manually for tests.
-	StartJournalService(self.config_obj)
-	startInterrogationService(ctx, self.wg, self.config_obj)
-	StartNotificationService(ctx, self.wg, self.config_obj)
-	startVFSService(ctx, self.wg, self.config_obj)
+	journal.StartJournalService(self.ctx, self.wg, self.config_obj)
+	services.StartNotificationService(self.ctx, self.wg, self.config_obj)
+	vfs_service.StartVFSService(self.ctx, self.wg, self.config_obj)
+	StartInterrogationService(self.ctx, self.wg, self.config_obj)
+	launcher.StartLauncherService(self.ctx, self.wg, self.config_obj)
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
 }
 
-func (self *BaseServicesTestSuite) TearDownTest() {
+func (self *ServicesTestSuite) TearDownTest() {
 	// Reset the data store.
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
@@ -75,7 +80,7 @@ func (self *BaseServicesTestSuite) TearDownTest() {
 	self.wg.Wait()
 }
 
-func (self *BaseServicesTestSuite) EmulateCollection(
+func (self *ServicesTestSuite) EmulateCollection(
 	artifact string, rows []*ordereddict.Dict) string {
 
 	// Emulate a Generic.Client.Info collection: First write the
@@ -84,13 +89,13 @@ func (self *BaseServicesTestSuite) EmulateCollection(
 		self.config_obj, self.client_id, self.flow_id, artifact)
 
 	// Write a result set for this artifact.
-	GetJournal().PushRows(artifact_path_manager, rows)
+	services.GetJournal().PushRows(artifact_path_manager, rows)
 
 	// Emulate a flow completion message coming from the flow processor.
 	artifact_path_manager = result_sets.NewArtifactPathManager(
 		self.config_obj, "server", "", "System.Flow.Completion")
 
-	GetJournal().PushRows(artifact_path_manager,
+	services.GetJournal().PushRows(artifact_path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -99,10 +104,6 @@ func (self *BaseServicesTestSuite) EmulateCollection(
 				SessionId:            self.flow_id,
 				ArtifactsWithResults: []string{artifact}})})
 	return self.flow_id
-}
-
-type ServicesTestSuite struct {
-	BaseServicesTestSuite
 }
 
 func (self *ServicesTestSuite) TestInterrogationService() {
@@ -166,7 +167,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	path_manager := result_sets.NewArtifactPathManager(
 		self.config_obj, "server" /* client_id */, "", "Server.Internal.Enrollment")
 
-	err = GetJournal().PushRows(path_manager, []*ordereddict.Dict{
+	err = services.GetJournal().PushRows(path_manager, []*ordereddict.Dict{
 		enroll_message, enroll_message, enroll_message, enroll_message})
 	assert.NoError(self.T(), err)
 
@@ -193,5 +194,5 @@ func (self *ServicesTestSuite) TestEnrollService() {
 }
 
 func TestInterrogationService(t *testing.T) {
-	suite.Run(t, &ServicesTestSuite{BaseServicesTestSuite{}})
+	suite.Run(t, &ServicesTestSuite{})
 }

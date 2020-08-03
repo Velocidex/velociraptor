@@ -76,7 +76,6 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
 	}
-
 	request := api.MakeCollectorRequest(arg.ClientId, "")
 	request.Artifacts = arg.Artifacts
 	request.Creator = vql_subsystem.GetPrincipal(scope)
@@ -107,7 +106,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	flow_id, err := services.ScheduleArtifactCollection(
+	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		ctx, config_obj, principal, repository, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)

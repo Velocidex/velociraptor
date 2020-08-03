@@ -1,4 +1,4 @@
-package services
+package launcher
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"sync"
 	"testing"
+	"time"
 
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/require"
@@ -24,6 +24,9 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 )
 
 const (
@@ -115,21 +118,23 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// collection can not be scheduled. The server needs to
 	// download the file in order to calculate its hash - even
 	// though it is not serving it to clients.
-	compiled, err := CompileCollectorArgs(ctx, self.config_obj,
+	compiled, err := services.GetLauncher().CompileCollectorArgs(ctx, self.config_obj,
 		"UserX", repository, request)
 	assert.Error(self.T(), err)
 
 	// Now make the tool download succeed. Compiling should work
 	// and we should calculate the hash.
 	status = 200
-	compiled, err = CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
 	// Now that we already know the hash, we dont care about
 	// downloading the file ourselves - further compiles will work
 	// automatically.
 	status = 404
-	compiled, err = CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
 	// Check the compiler produced the correct environment
@@ -143,7 +148,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
-	err = Inventory.AddTool(self.config_obj, &artifacts_proto.Tool{
+	err = services.GetInventory().AddTool(self.config_obj, &artifacts_proto.Tool{
 		Name: "Tool1",
 		// This will force Velociraptor to generate a stable
 		// public directory URL from where to serve the
@@ -155,7 +160,8 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	})
 	assert.NoError(self.T(), err)
 
-	compiled, err = CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
 	filename := paths.ObfuscateName(self.config_obj, "Tool1")
@@ -196,7 +202,8 @@ func (self *LauncherTestSuite) TestCompiling() {
 	}
 	ctx := context.Background()
 
-	compiled, err := CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err := services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 2, len(compiled.Env))
@@ -235,7 +242,8 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	ctx := context.Background()
 
 	// Permission denied - the principal is not allowed to compile this artifact.
-	compiled, err := CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err := services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
@@ -245,14 +253,15 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.
-	compiled, err = CompileCollectorArgs(ctx, self.config_obj, "UserX", repository, request)
+	compiled, err = services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled.Query), 2)
 }
 
 func TestLauncher(t *testing.T) {
 	config_obj, err := new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
+		"../../http_comms/test_data/server.config.yaml").
 		WithRequiredFrontend().WithWriteback().
 		LoadAndValidate()
 	require.NoError(t, err)
@@ -266,14 +275,22 @@ func TestLauncher(t *testing.T) {
 	config_obj.Datastore.FilestoreDirectory = tmpdir
 
 	// Start the journaling service manually for tests.
-	StartJournalService(config_obj)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
 
-	ctx := context.Background()
-	wg := &sync.WaitGroup{}
-	err = StartNotificationService(ctx, wg, config_obj)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err = sm.Start(journal.StartJournalService)
 	assert.NoError(t, err)
 
-	err = StartInventoryService(ctx, wg, config_obj)
+	err = sm.Start(services.StartNotificationService)
+	assert.NoError(t, err)
+
+	err = sm.Start(inventory.StartInventoryService)
+	assert.NoError(t, err)
+
+	err = sm.Start(StartLauncherService)
 	assert.NoError(t, err)
 
 	suite.Run(t, &LauncherTestSuite{

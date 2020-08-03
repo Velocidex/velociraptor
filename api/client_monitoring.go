@@ -27,5 +27,6 @@ func getClientMonitoringState(config_obj *config_proto.Config) (
 func setClientMonitoringState(
 	config_obj *config_proto.Config,
 	args *flows_proto.ArtifactCollectorArgs) error {
-	return services.UpdateClientEventTable(config_obj, args)
+	return services.ClientEventManager().UpdateClientEventTable(
+		config_obj, args)
 }

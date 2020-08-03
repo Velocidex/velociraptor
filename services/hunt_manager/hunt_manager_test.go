@@ -1,8 +1,7 @@
-package services
+package hunt_manager
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
@@ -22,6 +21,10 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -30,7 +33,6 @@ type HuntTestSuite struct {
 	config_obj *config_proto.Config
 	client_id  string
 	hunt_id    string
-	manager    *HuntManager
 
 	expected *flows_proto.ArtifactCollectorArgs
 }
@@ -61,7 +63,7 @@ func (self *HuntTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
 
-	NextFlowIdForTests = "F.1234"
+	services.GetLauncher().SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -79,12 +81,12 @@ func (self *HuntTestSuite) TestHuntManager() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	GetJournal().PushRows(path_manager,
+	services.GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -113,7 +115,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
 
-	NextFlowIdForTests = "F.1234"
+	services.GetLauncher().SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -138,12 +140,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	GetJournal().PushRows(path_manager,
+	services.GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -166,7 +168,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
 
-	NextFlowIdForTests = "F.1234"
+	services.GetLauncher().SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -199,12 +201,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		})
 	assert.NoError(t, err)
 
-	GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	GetJournal().PushRows(path_manager,
+	services.GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -231,7 +233,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
 
-	NextFlowIdForTests = "F.1234"
+	services.GetLauncher().SetFlowIdForTests("F.1234")
 
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
@@ -264,12 +266,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		})
 	assert.NoError(t, err)
 
-	GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
 		self.client_id, "", "System.Hunt.Participation")
-	GetJournal().PushRows(path_manager,
+	services.GetJournal().PushRows(path_manager,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -299,20 +301,27 @@ func TestHuntTestSuite(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "Test"
 
-	// Start the journaling service manually for tests.
-	StartJournalService(config_obj)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
 
-	ctx := context.Background()
-	wg := &sync.WaitGroup{}
-	_, err := StartHuntDispatcher(ctx, wg, config_obj)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	// Start the journaling service manually for tests.
+	err := sm.Start(journal.StartJournalService)
 	require.NoError(t, err)
 
-	manager, err := startHuntManager(ctx, wg, config_obj)
+	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
+	require.NoError(t, err)
+
+	err = sm.Start(launcher.StartLauncherService)
+	require.NoError(t, err)
+
+	err = sm.Start(StartHuntManager)
 	require.NoError(t, err)
 
 	suite.Run(t, &HuntTestSuite{
 		config_obj: config_obj,
-		manager:    manager,
 		client_id:  "C.234",
 		hunt_id:    "H.1",
 		expected: &flows_proto.ArtifactCollectorArgs{
