@@ -1,3 +1,5 @@
+// +build windows,cgo
+
 package process
 
 type PidArgs struct {

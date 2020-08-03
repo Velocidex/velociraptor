@@ -211,7 +211,8 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 func availableHuntDownloadFiles(config_obj *config_proto.Config,
 	hunt_id string) (*api_proto.AvailableDownloads, error) {
 
-	download_file := paths.GetHuntDownloadsFile(hunt_id)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+	download_file := hunt_path_manager.GetHuntDownloadsFile(false)
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

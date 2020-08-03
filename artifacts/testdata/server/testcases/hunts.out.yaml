@@ -1,15 +1,38 @@
-SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='System.VFS.ListDirectory') LIMIT 1[
+SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='Windows.Network.NetstatEnriched/Netstat') LIMIT 1[
  {
-  "_FullPath": "\\C:\\$Recycle.Bin",
-  "_Accessor": "file",
-  "_Data": "",
-  "Name": "$Recycle.Bin",
-  "Size": 0,
-  "Mode": "drwxrwxrwx",
-  "mtime": "2019-09-10T07:40:23Z",
-  "atime": "2019-10-18T14:35:57Z",
-  "ctime": "2019-03-19T04:52:43Z",
-  "FlowId": "F.BN2HJBD1R85EA",
+  "Pid": 568,
+  "Ppid": 828,
+  "Name": "svchost.exe",
+  "Path": "C:\\Windows\\System32\\svchost.exe",
+  "CommandLine": "C:\\Windows\\system32\\svchost.exe -k RPCSS -p",
+  "Hash": {
+   "MD5": "9520a99e77d6196d0d09833146424113",
+   "SHA1": "75c5a97f521f760e32a4a9639a653eed862e9c61",
+   "SHA256": "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+  },
+  "Username": "NT AUTHORITY\\NETWORK SERVICE",
+  "Authenticode": {
+   "Filename": "C:\\Windows\\System32\\svchost.exe",
+   "ProgramName": "Microsoft Windows",
+   "PublisherLink": "",
+   "MoreInfoLink": "http://www.microsoft.com/windows",
+   "SerialNumber": "33000001a90f2d80c9a929387c0000000001a9",
+   "IssuerName": "Microsoft Windows Production PCA 2011",
+   "SubjectName": "Microsoft Windows Publisher",
+   "TimestampIssuerName": "",
+   "TimestampSubjectName": "",
+   "Timestamp": "",
+   "Trusted": "trusted"
+  },
+  "Family": "IPv4",
+  "Type": "TCP",
+  "Status": "LISTEN",
+  "Laddr.IP": "0.0.0.0",
+  "Laddr.Port": 135,
+  "Raddr.IP": "0.0.0.0",
+  "Raddr.Port": 0,
+  "Timestamp": "2020-08-01T09:17:02Z",
+  "FlowId": "F.BSJMEJIPT6P9I",
   "ClientId": "C.4f5e52adf0a337a9",
   "Fqdn": "DESKTOP-BP4S7TF"
  }

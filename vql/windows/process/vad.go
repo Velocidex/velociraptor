@@ -1,4 +1,4 @@
-// +build windows,amd64
+// +build windows,amd64,cgo
 
 package process
 

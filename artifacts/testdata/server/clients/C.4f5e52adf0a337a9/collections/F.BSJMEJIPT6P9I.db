@@ -1,0 +1,37 @@
+∆©‘Ä˝Í åì≥ê˝ÍZŸ
+micWindows.Network.NetstatEnrichedC.56a8dfd31eb1fa6f*ô
+IPRegex.*
+	PortRegex.*
+FamilyALL?
+	FamilyMap2Choice,Regex
+ALL,".*"
+IPv4,"^IPv4$"
+IPv6,"^IPv6$"
+
+TypeALL9
+TypeMap.Choice,Regex
+ALL,".*"
+TCP,"^TCP$"
+UDP,"^UDP$"
+
+StatusALLv
+	StatusMapiChoice,Regex
+ALL,".*"
+ESTABLISHED,"^ESTAB$"
+LISTENING,"^LISTEN$"
+OTHER,"CLOS|SENT|RCVD|LAST|WAIT|DELETE"
+
+ProcessNameRegex.*
+ProcessPathRegex.*
+CommandLineRegex.*
+	HashRegex.*
+UsernameRegex.*
+AuthenticodeSubjectRegex.*
+AuthenticodeIssuerRegex.*
+AuthenticodeVerifiedALLç
+AuthenticodeVerifiedMaprChoice,Regex
+ALL,".*"
+TRUSTED,"^trusted$"
+UNSIGNED,"^unsigned$"
+NOT TRUSTED,"unsigned|disallowed|untrusted|error"
+8ÿjF.BSJMEJIPT6P9IpàÍò≥ê˝Í≤'Windows.Network.NetstatEnriched/Netstat⁄C.56a8dfd31eb1fa6f

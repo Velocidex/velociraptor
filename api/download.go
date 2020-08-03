@@ -18,6 +18,11 @@
 
 // Implement downloads. We do not use gRPC for this but implement it
 // directly in the API.
+
+// NOTE: Most Downloads are now split into two phases - the first is
+// creation performed by the vql functions create_flow_download() and
+// create_hunt_download(). The GUI can then fetch them directly
+// through a file store handler installed on the "/downloads/" path.
 package api
 
 import (
@@ -25,427 +30,24 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"strings"
-	"time"
 
-	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/tink-ab/tempfile"
-	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
 	w.Write([]byte(message))
-}
-
-func cleanPathForZip(filename, client_id, hostname string) string {
-	hostname = string(datastore.SanitizeString(hostname))
-	components := []string{}
-	for _, component := range utils.SplitComponents(filename) {
-		// Replace any client id with hostnames
-		if component == client_id {
-			component = hostname
-		}
-
-		components = append(components, string(datastore.SanitizeString(component)))
-	}
-
-	// Zip files should not have absolute paths
-	filename = strings.Join(components, "/")
-	return filename
-}
-
-func downloadFlowToZip(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	client_id string,
-	hostname string,
-	flow_id string,
-	zip_writer *zip.Writer) error {
-
-	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
-	if err != nil {
-		return err
-	}
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	copier := func(upload_name string) error {
-		reader, err := file_store_factory.ReadFile(upload_name)
-		if err != nil {
-			return err
-		}
-		defer reader.Close()
-
-		// Clean the name so it makes a reasonable zip member.
-		f, err := zip_writer.Create(cleanPathForZip(
-			upload_name, client_id, hostname))
-		if err != nil {
-			return err
-		}
-
-		_, err = utils.Copy(ctx, f, reader)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.WithFields(logrus.Fields{
-				"flow_id":     flow_id,
-				"client_id":   client_id,
-				"upload_name": upload_name,
-			}).Error("Download Flow")
-		}
-		return err
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-
-	// Copy the flow's logs.
-	copier(flow_path_manager.Log().Path())
-
-	// Copy result sets
-	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
-		client_id := flow_details.Context.Request.ClientId
-
-		// Paths inside the zip file should be friendlier.
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			client_id, flow_details.Context.SessionId, artifact_with_results)
-		rs_path, err := path_manager.GetPathForWriting()
-		if err == nil {
-			copier(rs_path)
-		}
-
-		// Also make a csv file why not?
-		f, err := zip_writer.Create(cleanPathForZip(
-			strings.TrimSuffix(rs_path, ".json")+".csv", client_id, hostname))
-		if err != nil {
-			continue
-		}
-
-		// File uploads are stored in their own json file.
-		row_chan, err := file_store.GetTimeRange(
-			ctx, config_obj, path_manager, 0, 0)
-		if err != nil {
-			return err
-		}
-		scope := vql_subsystem.MakeScope()
-		csv_writer := csv.GetCSVAppender(scope, f, true /* write_headers */)
-		for row := range row_chan {
-			csv_writer.Write(row)
-		}
-		csv_writer.Close()
-	}
-
-	// Get all file uploads if needed
-	if flow_details.Context.TotalUploadedFiles == 0 {
-		return nil
-	}
-
-	// This basically copies the files from the filestore into the
-	// zip. We do not need to do any processing - just give the
-	// user the files as they are. Users can do their own post
-	// processing.
-
-	// File uploads are stored in their own json file.
-	row_chan, err := file_store.GetTimeRange(
-		ctx, config_obj, flow_path_manager.UploadMetadata(), 0, 0)
-	if err != nil {
-		return err
-	}
-
-	for row := range row_chan {
-		vfs_path_any, pres := row.Get("vfs_path")
-		if pres {
-			err = copier(vfs_path_any.(string))
-		}
-	}
-
-	return err
-}
-
-func createDownloadFile(config_obj *config_proto.Config,
-	flow_id string, client_id string) error {
-	if client_id == "" || flow_id == "" {
-		return errors.New("Client Id and Flow Id should be specified.")
-	}
-
-	hostname := GetHostname(config_obj, client_id)
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	download_file := flow_path_manager.GetDownloadsFile(hostname).Path()
-
-	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-	logger.WithFields(logrus.Fields{
-		"flow_id":       flow_id,
-		"client_id":     client_id,
-		"download_file": download_file,
-	}).Error("CreateDownload")
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(download_file)
-	if err != nil {
-		return err
-	}
-
-	err = fd.Truncate()
-	if err != nil {
-		return err
-	}
-
-	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
-	if err != nil {
-		return err
-	}
-	lock_file.Close()
-
-	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
-	if err != nil {
-		return err
-	}
-
-	marshaler := &jsonpb.Marshaler{Indent: " "}
-	flow_details_json, err := marshaler.MarshalToString(flow_details)
-	if err != nil {
-		fd.Close()
-		return err
-	}
-
-	// Do these first to ensure errors are returned if the zip file
-	// is not writable.
-	zip_writer := zip.NewWriter(fd)
-	f, err := zip_writer.Create("FlowDetails")
-	if err != nil {
-		fd.Close()
-		return err
-	}
-
-	_, err = f.Write([]byte(flow_details_json))
-	if err != nil {
-		zip_writer.Close()
-		fd.Close()
-		return err
-	}
-
-	// Write the bulk of the data asyncronously.
-	go func() {
-		defer file_store_factory.Delete(download_file + ".lock")
-		defer fd.Close()
-		defer zip_writer.Close()
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
-		defer cancel()
-
-		downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
-	}()
-
-	return nil
-}
-
-func createHuntDownloadFile(
-	config_obj *config_proto.Config,
-	principal string,
-	hunt_id string) error {
-	if hunt_id == "" {
-		return errors.New("Hunt Id should be specified.")
-	}
-	download_file := paths.GetHuntDownloadsFile(hunt_id)
-
-	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-	logger.WithFields(logrus.Fields{
-		"hunt_id":       hunt_id,
-		"download_file": download_file,
-	}).Info("CreateHuntDownload")
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	lock_file, err := file_store_factory.WriteFile(download_file + ".lock")
-	if err != nil {
-		return err
-	}
-	lock_file.Close()
-
-	fd, err := file_store_factory.WriteFile(download_file)
-	if err != nil {
-		return err
-	}
-
-	err = fd.Truncate()
-	if err != nil {
-		return err
-	}
-
-	hunt_details, err := flows.GetHunt(config_obj,
-		&api_proto.GetHuntRequest{HuntId: hunt_id})
-	if err != nil {
-		return err
-	}
-
-	marshaler := &jsonpb.Marshaler{Indent: " "}
-	hunt_details_json, err := marshaler.MarshalToString(hunt_details)
-	if err != nil {
-		fd.Close()
-		return err
-	}
-
-	// Do these first to ensure errors are returned if the zip file
-	// is not writable.
-	zip_writer := zip.NewWriter(fd)
-	f, err := zip_writer.Create("HuntDetails")
-	if err != nil {
-		zip_writer.Close()
-		fd.Close()
-		return err
-	}
-
-	_, err = f.Write([]byte(hunt_details_json))
-	if err != nil {
-		zip_writer.Close()
-		fd.Close()
-		return err
-	}
-
-	// Write the bulk of the data asyncronously.
-	go func() {
-		defer file_store_factory.Delete(download_file + ".lock")
-		defer fd.Close()
-		defer zip_writer.Close()
-
-		// Allow one hour to write the zip
-		ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
-		defer cancel()
-
-		// Export aggregate CSV and JSON files for all clients.
-		for _, artifact_source := range hunt_details.ArtifactSources {
-			artifact, source := paths.SplitFullSourceName(
-				artifact_source)
-
-			report_err := func(err error) {
-				logging.GetLogger(config_obj, &logging.GUIComponent).
-					WithFields(logrus.Fields{
-						"artifact": artifact,
-						"error":    err,
-					}).Error("ExportHuntArtifact")
-			}
-
-			query := "SELECT * FROM hunt_results(" +
-				"hunt_id=HuntId, artifact=Artifact, " +
-				"source=Source)"
-			env := ordereddict.NewDict().
-				Set("Artifact", artifact).
-				Set("HuntId", hunt_id).
-				Set("Source", source)
-
-			// Write all results to a tmpfile then just
-			// copy the tmpfile into the zip.
-			json_tmpfile, err := tempfile.TempFile("", "tmp", ".json")
-			if err != nil {
-				report_err(err)
-				continue
-			}
-			defer os.Remove(json_tmpfile.Name())
-
-			csv_tmpfile, err := tempfile.TempFile("", "tmp", ".csv")
-			if err != nil {
-				report_err(err)
-				continue
-			}
-			defer os.Remove(csv_tmpfile.Name())
-
-			err = StoreVQLAsCSVAndJsonFile(ctx, config_obj,
-				principal, env, query,
-				csv_tmpfile, json_tmpfile)
-			if err != nil {
-				report_err(err)
-				continue
-			}
-
-			// Make sure the files are closed so we can
-			// open them for reading next.
-			csv_tmpfile.Close()
-			json_tmpfile.Close()
-
-			copier := func(name string, output_name string) error {
-				reader, err := os.Open(name)
-				if err != nil {
-					return err
-				}
-				defer reader.Close()
-
-				// Clean the name so it makes a reasonable zip member.
-				f, err := zip_writer.Create(cleanPathForZip(
-					output_name, "", ""))
-				if err != nil {
-					return err
-				}
-
-				_, err = utils.Copy(ctx, f, reader)
-				return err
-			}
-
-			err = copier(csv_tmpfile.Name(), "All "+
-				path.Join(artifact, source)+".csv")
-			if err != nil {
-				report_err(err)
-				continue
-			}
-
-			err = copier(json_tmpfile.Name(), "All "+
-				path.Join(artifact, source)+".json")
-			if err != nil {
-				report_err(err)
-			}
-		}
-
-		scope := artifacts.ScopeBuilder{
-			Config:     config_obj,
-			ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
-			Logger:     logging.NewPlainLogger(config_obj, &logging.ToolComponent),
-			Env:        ordereddict.NewDict().Set("HuntId", hunt_id),
-		}.Build()
-		defer scope.Close()
-
-		vql, _ := vfilter.Parse(
-			"SELECT Flow.SessionId AS FlowId, ClientId " +
-				"FROM hunt_flows(hunt_id=HuntId)")
-		for row := range vql.Eval(ctx, scope) {
-			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
-			client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
-			if flow_id == "" || client_id == "" {
-				continue
-			}
-
-			hostname := GetHostname(config_obj, client_id)
-			err := downloadFlowToZip(
-				ctx, config_obj, client_id, hostname, flow_id, zip_writer)
-			if err != nil {
-				logging.GetLogger(config_obj, &logging.FrontendComponent).
-					WithFields(logrus.Fields{
-						"hunt_id": hunt_id,
-						"error":   err.Error(),
-						"bt":      logging.GetStackTrace(err),
-					}).Info("DownloadHuntResults")
-				continue
-			}
-		}
-	}()
-
-	return nil
 }
 
 type vfsFileDownloadRequest struct {
@@ -579,7 +181,7 @@ func vfsFolderDownloadHandler(
 					return err
 				}
 
-				zh, err := zip_writer.Create(cleanPathForZip(
+				zh, err := zip_writer.Create(utils.CleanPathForZip(
 					path_name, client_id, hostname))
 				if err != nil {
 					logger.Warn("Cant create zip %s: %v", path_name, err)

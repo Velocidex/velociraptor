@@ -328,7 +328,7 @@ service API {
     }
 
     // Schedule downloads.
-    rpc CreateDownloadFile(CreateDownloadRequest) returns (google.protobuf.Empty) {
+    rpc CreateDownloadFile(CreateDownloadRequest) returns (CreateDownloadResponse) {
         option (google.api.http) = {
             post: "/api/v1/CreateDownload",
             body: "*",
