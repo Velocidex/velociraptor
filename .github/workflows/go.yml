@@ -1,16 +1,14 @@
 # Only trigger when a PR is committed.
 name: Linux Build All Arches
-on: push
-  # pull_request:
-  #   types: [closed]
-  #   branches:
-  #     - master
-  # push:
-  #   branches:
-  #     - autocert-frontend-only
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - master
 
 jobs:
   build:
+    if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest
     steps:
