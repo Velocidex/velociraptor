@@ -80,7 +80,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "IpPort": "52564",
   "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
+]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
  {
   "EventTime": "2019-12-02T11:39:33.719111919Z",
   "EventID": 4104,
