@@ -5,6 +5,7 @@ on:
     types: [closed]
     branches:
       - master
+      - autocert-frontend-only
 
 jobs:
   build:
