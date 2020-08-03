@@ -1,9 +1,4 @@
-SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip') AS A, file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939.zip') AS B FROM scope()[
- {
-  "A": "/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip",
-  "B": "/downloads/hunts/H.49ba8939/H.49ba8939.zip"
- }
-]SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE) FROM scope()[
+LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip') AS A, file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939.zip') AS B FROM scope()[]SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE) FROM scope()[
  {
   "create_hunt_download(hunt_id='H.49ba8939', wait=TRUE)": "/downloads/hunts/H.49ba8939/H.49ba8939.zip"
  }
