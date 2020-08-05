@@ -17,8 +17,7 @@ description: |
       which is logged even if ScriptBlock logging is turned off when 
       suspicious keywords detected in Powershell interpreter. See second 
       reference for list of keywords.
-    - SearchVSS enables VSS search
-  
+    - SearchVSS enables VSS search  
 
 author: Matt Green - @mgreen27
 
