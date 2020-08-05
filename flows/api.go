@@ -19,7 +19,6 @@ package flows
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"strings"
 	"time"
@@ -150,7 +149,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 			Name:     item.Name(),
 			Path:     path.Join(download_path, item.Name()),
 			Size:     uint64(item.Size()),
-			Date:     fmt.Sprintf("%v", item.ModTime()),
+			Date:     item.ModTime().UTC().Format(time.RFC3339),
 			Complete: is_complete(item.Name()),
 		})
 	}

@@ -30,7 +30,7 @@
    success or error of flow completion.
 */
 
-package services
+package hunt_manager
 
 import (
 	"context"
@@ -51,6 +51,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -91,7 +92,7 @@ func (self *HuntManager) StartParticipation(
 	wg *sync.WaitGroup) error {
 
 	scope := vfilter.NewScope()
-	qm_chan, cancel := GetJournal().Watch("System.Hunt.Participation")
+	qm_chan, cancel := services.GetJournal().Watch("System.Hunt.Participation")
 
 	wg.Add(1)
 	go func() {
@@ -121,7 +122,7 @@ func (self *HuntManager) StartFlowCompletion(
 	wg *sync.WaitGroup) error {
 
 	scope := vfilter.NewScope()
-	qm_chan, cancel := GetJournal().Watch("System.Flow.Completion")
+	qm_chan, cancel := services.GetJournal().Watch("System.Flow.Completion")
 
 	wg.Add(1)
 	go func() {
@@ -167,7 +168,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 	}
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
-	err = GetJournal().PushRows(path_manager.ClientErrors(),
+	err = services.GetJournal().PushRows(path_manager.ClientErrors(),
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
@@ -232,7 +233,7 @@ func (self *HuntManager) ProcessRow(
 
 	// Get hunt information about this hunt.
 	now := uint64(time.Now().UnixNano() / 1000)
-	err = GetHuntDispatcher().ModifyHunt(
+	err = services.GetHuntDispatcher().ModifyHunt(
 		participation_row.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			// Ignore stopped hunts.
@@ -284,7 +285,8 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	flow_id, err := ScheduleArtifactCollection(ctx, self.config_obj,
+	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+		ctx, self.config_obj,
 		"Server", repository, request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
@@ -295,23 +297,24 @@ func (self *HuntManager) ProcessRow(
 	row.Set("Timestamp", time.Now().Unix())
 
 	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{row})
+	services.GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{row})
 
 	// Notify the client
-	err = NotifyListener(self.config_obj, participation_row.ClientId)
+	err = services.NotifyListener(self.config_obj, participation_row.ClientId)
 	if err != nil {
 		scope.Log("hunt manager: %v", err)
 	}
 }
 
-func startHuntManager(
+func StartHuntManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) (*HuntManager, error) {
+	config_obj *config_proto.Config) error {
+
 	result := &HuntManager{
 		config_obj: config_obj,
 	}
-	return result, result.Start(ctx, wg)
+	return result.Start(ctx, wg)
 }
 
 func huntHasLabel(config_obj *config_proto.Config,

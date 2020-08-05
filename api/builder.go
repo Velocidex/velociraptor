@@ -47,10 +47,14 @@ func (self *Builder) StartServer(ctx context.Context, wg *sync.WaitGroup) error 
 	// Always start the prometheus monitoring service
 	StartMonitoringService(ctx, wg, self.config_obj)
 
-	// Start in autocert mode - This requires GUIPort and
-	// FrontendPort to be set to port 443.
-	if self.AutocertCertCache != "" {
+	// Start in autocert mode, only put the GUI behind autocert if the GUI port is 443.
+	if self.AutocertCertCache != "" && self.config_obj.GUI.BindPort == 443 {
 		return self.WithAutocertGUI(ctx, wg)
+	}
+
+	// Start in autocert mode, but only sign the frontend.
+	if self.AutocertCertCache != "" {
+		return self.withAutoCertFrontendSelfSignedGUI(ctx, wg, self.config_obj, self.server_obj)
 	}
 
 	// All services are sharing the same port.
@@ -86,6 +90,46 @@ func (self *Builder) Close() {
 
 func (self *Builder) WithAPIServer(ctx context.Context, wg *sync.WaitGroup) error {
 	return startAPIServer(ctx, wg, self.config_obj, self.server_obj)
+}
+
+func (self *Builder) withAutoCertFrontendSelfSignedGUI(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config,
+	server_obj *server.Server) error {
+	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+
+	logger.Info("Autocert is enabled but GUI port is not 443, starting Frontend with autocert and GUI with self signed.")
+
+	if config_obj.Frontend.ServerServices.GuiServer {
+
+		mux := http.NewServeMux()
+
+		router, err := PrepareGUIMux(config_obj, mux)
+		if err != nil {
+			return err
+		}
+
+		// Start the GUI separately on a different port.
+		if config_obj.GUI.UsePlainHttp {
+			err = StartHTTPGUI(ctx, wg, config_obj, router)
+		} else {
+			err = StartSelfSignedGUI(ctx, wg, config_obj, router)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	// Launch a server for the frontend.
+	mux := http.NewServeMux()
+
+	server.PrepareFrontendMux(
+		config_obj, server_obj, mux)
+
+	return StartFrontendWithAutocert(ctx, wg,
+		self.config_obj, self.server_obj, mux)
+
 }
 
 // When the GUI and Frontend share the same port we start them with
@@ -329,18 +373,6 @@ func StartFrontendWithAutocert(
 	mux http.Handler) error {
 
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-
-	if config_obj.GUI.BindPort != 443 {
-		logger.Info("Autocert specified - will listen on ports 443 and 80. "+
-			"I will ignore specified GUI port at %v",
-			config_obj.GUI.BindPort)
-	}
-
-	if config_obj.Frontend.BindPort != 443 {
-		logger.Info("Autocert specified - will listen on ports 443 and 80. "+
-			"I will ignore specified Frontend port at %v",
-			config_obj.GUI.BindPort)
-	}
 
 	cache_dir := config_obj.AutocertCertCache
 	certManager := autocert.Manager{

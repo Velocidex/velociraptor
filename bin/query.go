@@ -23,7 +23,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -36,6 +35,9 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -190,18 +192,30 @@ func doRemoteQuery(
 	}
 }
 
-func startEssentialServices(config_obj *config_proto.Config) (
-	wg *sync.WaitGroup, ctx context.Context, cancel func()) {
-
-	wg = &sync.WaitGroup{}
-	ctx, cancel = context.WithCancel(context.Background())
+func startEssentialServices(config_obj *config_proto.Config, sm *services.Service) error {
+	err := sm.Start(launcher.StartLauncherService)
+	if err != nil {
+		return err
+	}
 
 	if config_obj.Datastore != nil {
-		_ = services.StartJournalService(config_obj)
-		_ = services.StartNotificationService(ctx, wg, config_obj)
-		_ = services.StartInventoryService(ctx, wg, config_obj)
+		err = sm.Start(journal.StartJournalService)
+		if err != nil {
+			return err
+		}
+		err = sm.Start(services.StartNotificationService)
+		if err != nil {
+			return err
+		}
+
+		err = sm.Start(inventory.StartInventoryService)
+		if err != nil {
+			return err
+		}
+
 	}
-	return wg, ctx, cancel
+
+	return nil
 }
 
 func doQuery() {
@@ -219,10 +233,6 @@ func doQuery() {
 		doRemoteQuery(config_obj, *format, *queries, env)
 		return
 	}
-
-	wg, ctx, cancel := startEssentialServices(config_obj)
-	defer wg.Wait()
-	defer cancel()
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
@@ -261,7 +271,13 @@ func doQuery() {
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
-	ctx = InstallSignalHandler(scope)
+	ctx := InstallSignalHandler(scope)
+
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err = startEssentialServices(config_obj, sm)
+	kingpin.FatalIfError(err, "Starting services.")
 
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", 0)

@@ -92,10 +92,10 @@ func (self ArtifactsPlugin) Call(
 			if pres {
 				// Ensure we know about all the tools.
 				for _, tool := range artifact.Tools {
-					_, err := services.Inventory.GetToolInfo(
+					_, err := services.GetInventory().GetToolInfo(
 						ctx, config_obj, tool.Name)
 					if err != nil {
-						services.Inventory.AddTool(config_obj, tool)
+						services.GetInventory().AddTool(config_obj, tool)
 					}
 				}
 

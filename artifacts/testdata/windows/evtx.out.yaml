@@ -80,9 +80,10 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "IpPort": "52564",
   "_Source": "Windows.EventLogs.Kerbroasting/Kerbroasting"
  }
-]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(eventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
+]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
  {
   "EventTime": "2019-12-02T11:39:33.719111919Z",
+  "EventID": 4104,
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",
@@ -92,10 +93,12 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
  },
  {
   "EventTime": "2019-12-02T11:39:35.74373126Z",
+  "EventID": 4104,
   "Computer": "DESKTOP-687T2NR",
   "SecurityID": "S-1-5-21-2201333269-445358460-1233016754-1000",
   "Path": "",
@@ -105,6 +108,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "_Source": "Windows.EventLogs.PowershellScriptblock/PowershellScriptBlock"
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.PowershellScriptblock"
  }
 ]

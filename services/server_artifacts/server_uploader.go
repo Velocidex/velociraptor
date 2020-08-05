@@ -1,4 +1,4 @@
-package services
+package server_artifacts
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -42,7 +43,7 @@ func (self *ServerUploader) Upload(
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, reader)
 	if err == nil {
-		GetJournal().PushRows(self.path_manager.UploadMetadata(),
+		services.GetJournal().PushRows(self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).
 				Set("started", time.Now().UTC().String()).

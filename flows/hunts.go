@@ -111,8 +111,9 @@ func CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	hunt.StartRequest.CompiledCollectorArgs, err = services.CompileCollectorArgs(
-		ctx, config_obj, principal, repository, hunt.StartRequest)
+	hunt.StartRequest.CompiledCollectorArgs, err = services.GetLauncher().
+		CompileCollectorArgs(ctx, config_obj, principal,
+			repository, hunt.StartRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +212,8 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 func availableHuntDownloadFiles(config_obj *config_proto.Config,
 	hunt_id string) (*api_proto.AvailableDownloads, error) {
 
-	download_file := paths.GetHuntDownloadsFile(hunt_id)
+	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+	download_file := hunt_path_manager.GetHuntDownloadsFile(false)
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

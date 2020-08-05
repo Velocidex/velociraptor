@@ -25,7 +25,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"context"
@@ -38,6 +37,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -446,12 +446,14 @@ func NewVelociraptorServerService(name string) (
 				continue
 			}
 
-			wg := &sync.WaitGroup{}
 			ctx, cancel := install_sig_handler()
 			defer cancel()
 
+			sm := services.NewServiceManager(ctx, config_obj)
+			defer sm.Close()
+
 			elog.Info(1, fmt.Sprintf("%s service started", name))
-			server, err := startFrontend(ctx, wg, config_obj)
+			server, err := startFrontend(sm, config_obj)
 			if err != nil {
 				elog.Info(1, fmt.Sprintf("%s service error", err))
 				return
@@ -459,7 +461,7 @@ func NewVelociraptorServerService(name string) (
 			defer server.Close()
 
 			// Wait here until everything is done.
-			wg.Wait()
+			sm.Wg.Wait()
 
 			return
 		}

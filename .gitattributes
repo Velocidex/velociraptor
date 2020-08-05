@@ -8,6 +8,7 @@
 *.md text eol=lf
 *.golden text eol=lf
 *.txt text eol=lf
+logs text eol=lf
 *.html text eol=lf
 *.js text eol=lf
 *.css text eol=lf

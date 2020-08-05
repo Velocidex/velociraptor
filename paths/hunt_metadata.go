@@ -24,6 +24,17 @@ func (self HuntPathManager) GetQueueName() string {
 	return self.hunt_id
 }
 
+// Get the file store path for placing the download zip for the flow.
+func (self HuntPathManager) GetHuntDownloadsFile(only_combined bool) string {
+	suffix := ""
+	if only_combined {
+		suffix = "-summary"
+	}
+
+	return path.Join(
+		"/downloads/hunts", self.hunt_id, self.hunt_id+suffix+".zip")
+}
+
 func (self HuntPathManager) GeneratePaths(ctx context.Context) <-chan *api.ResultSetFileProperties {
 	output := make(chan *api.ResultSetFileProperties)
 	go func() {

@@ -38,16 +38,20 @@ const HuntOverviewController = function($scope, grrApiService) {
  *
  * @export
  */
-HuntOverviewController.prototype.prepareDownload = function() {
-  // Sanitize filename for download.
-  var hunt = this.scope_["hunt"];
-  var url = 'v1/CreateDownload';
-  var params = {
-    hunt_id: hunt.hunt_id,
-  };
-  this.grrApiService_.post(url, params).then(
+HuntOverviewController.prototype.prepareDownload = function(download_type) {
+    var hunt = this.scope_["hunt"];
+    var url = 'v1/CreateDownload';
+    var params = {
+        hunt_id: hunt.hunt_id,
+    };
+
+    if (download_type == 'summary') {
+        params.only_combined_hunt = true;
+    }
+
+    this.grrApiService_.post(url, params).then(
         function success() {}.bind(this),
-  );
+    );
 };
 
 /**

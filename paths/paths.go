@@ -4,7 +4,6 @@
 package paths
 
 import (
-	"path"
 	"regexp"
 	"strings"
 	"time"
@@ -32,12 +31,6 @@ func ModeNameToMode(name string) int {
 		return MODE_SERVER_EVENT
 	}
 	return 0
-}
-
-// Get the file store path for placing the download zip for the flow.
-func GetHuntDownloadsFile(hunt_id string) string {
-	return path.Join(
-		"/downloads/hunts", hunt_id, hunt_id+".zip")
 }
 
 // Fully qualified source names are obtained by joining the artifact

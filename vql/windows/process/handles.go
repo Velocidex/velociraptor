@@ -1,4 +1,4 @@
-// +build windows,amd64
+// +build windows,amd64,cgo
 
 // References: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/query.htm
 // https://processhacker.sourceforge.io/

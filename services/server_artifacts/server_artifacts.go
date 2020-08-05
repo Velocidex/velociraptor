@@ -1,4 +1,4 @@
-package services
+package server_artifacts
 
 import (
 	"context"
@@ -18,9 +18,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	mu sync.Mutex
 )
 
 type contextManager struct {
@@ -80,7 +85,7 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	GetJournal().PushRows(self.path_manager, []*ordereddict.Dict{
+	services.GetJournal().PushRows(self.path_manager, []*ordereddict.Dict{
 		ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 			Set("time", time.Now().UTC().String()).
@@ -104,7 +109,7 @@ func (self *ServerArtifactsRunner) Start(
 		self.config_obj, &logging.FrontendComponent)
 
 	// Listen for notifications from the server.
-	notification, cancel := ListenForNotification("server")
+	notification, cancel := services.ListenForNotification("server")
 	defer cancel()
 
 	self.process(ctx, wg)
@@ -132,7 +137,7 @@ func (self *ServerArtifactsRunner) Start(
 
 			// Listen again.
 			cancel()
-			notification, cancel = ListenForNotification("server")
+			notification, cancel = services.ListenForNotification("server")
 		}
 	}
 }
@@ -195,7 +200,7 @@ func (self *ServerArtifactsRunner) processTask(
 
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		GetJournal().PushRows(path_manager, []*ordereddict.Dict{
+		services.GetJournal().PushRows(path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
@@ -364,7 +369,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	return nil
 }
 
-func startServerArtifactService(
+func StartServerArtifactService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

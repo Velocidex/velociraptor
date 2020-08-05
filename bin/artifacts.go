@@ -33,6 +33,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -153,10 +154,6 @@ func doArtifactCollect() {
 	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
-	wg, _, cancel := startEssentialServices(config_obj)
-	defer wg.Wait()
-	defer cancel()
-
 	now := time.Now()
 	defer func() {
 		logging.GetLogger(config_obj, &logging.ToolComponent).
@@ -195,6 +192,13 @@ func doArtifactCollect() {
 		scope.Tracer = logging.NewPlainLogger(config_obj,
 			&logging.ToolComponent)
 	}
+
+	ctx := InstallSignalHandler(scope)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err = startEssentialServices(config_obj, sm)
+	kingpin.FatalIfError(err, "Starting services.")
 
 	query := `
   SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
