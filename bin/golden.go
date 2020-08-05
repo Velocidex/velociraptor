@@ -35,7 +35,6 @@ import (
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -65,22 +64,12 @@ type testFixture struct {
 func vqlCollectorArgsFromFixture(
 	config_obj *config_proto.Config,
 	fixture *testFixture) *actions_proto.VQLCollectorArgs {
-	artifact_collector_args := &flows_proto.ArtifactCollectorArgs{
-		Parameters: &flows_proto.ArtifactParameters{},
-	}
-
-	for k, v := range fixture.Parameters {
-		artifact_collector_args.Parameters.Env = append(
-			artifact_collector_args.Parameters.Env,
-			&actions_proto.VQLEnv{Key: k, Value: v})
-	}
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := services.AddArtifactCollectorArgs(
-		config_obj,
-		vql_collector_args,
-		artifact_collector_args)
-	kingpin.FatalIfError(err, "vqlCollectorArgsFromFixture")
+	for k, v := range fixture.Parameters {
+		vql_collector_args.Env = append(vql_collector_args.Env,
+			&actions_proto.VQLEnv{Key: k, Value: v})
+	}
 
 	return vql_collector_args
 }
@@ -88,8 +77,16 @@ func vqlCollectorArgsFromFixture(
 func runTest(fixture *testFixture,
 	config_obj *config_proto.Config) (string, error) {
 
-	err := services.StartJournalService(config_obj)
-	kingpin.FatalIfError(err, "Unable to start services")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err := startEssentialServices(config_obj, sm)
+	if err != nil {
+		return "", err
+	}
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
@@ -138,10 +135,6 @@ func runTest(fixture *testFixture,
 		if err != nil {
 			return "", err
 		}
-
-		ctx, cancel := context.WithTimeout(
-			context.Background(), 60*time.Second)
-		defer cancel()
 
 		result_chan := vfilter.GetResponseChannel(
 			vql, ctx, scope,

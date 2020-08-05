@@ -9,4 +9,12 @@ message CreateDownloadRequest {
     string client_id = 2;
 
     string hunt_id = 3;
+
+    // When set we only create combined hunt output and not individual
+    // flow breakdowns.
+    bool only_combined_hunt = 4;
+}
+
+message CreateDownloadResponse {
+    string vfs_path = 1;
 }

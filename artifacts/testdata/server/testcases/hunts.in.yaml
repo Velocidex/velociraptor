@@ -1,4 +1,5 @@
 Queries:
   # Make sure this gives back client id and Fqdn fields.
-  - SELECT * FROM hunt_results(hunt_id='H.49ba8939', artifact='System.VFS.ListDirectory')
+  - SELECT * FROM hunt_results(hunt_id='H.49ba8939',
+    artifact='Windows.Network.NetstatEnriched/Netstat')
     LIMIT 1

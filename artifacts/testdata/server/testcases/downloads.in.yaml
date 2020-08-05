@@ -1,0 +1,25 @@
+Queries:
+  # Clear the old files if they are there.
+  - LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip') AS A,
+           file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939.zip') AS B
+     FROM scope()
+
+  - SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE) FROM scope()
+
+  # Check the created zip file contains both combined and distinct results
+  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
+      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip',
+      scheme='file', fragment='**').String, accessor='zip')
+    WHERE NOT IsDir
+    ORDER BY FullPath
+
+  - SELECT create_hunt_download(hunt_id='H.49ba8939',
+        wait=TRUE, only_combined=TRUE) FROM scope()
+
+  # Check the created zip file contains both combined and distinct
+  # results (NOTE the generated filename is different)
+  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
+      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip',
+      scheme='file', fragment='**').String, accessor='zip')
+    WHERE NOT IsDir
+    ORDER BY FullPath

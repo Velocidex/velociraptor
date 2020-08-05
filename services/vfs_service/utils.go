@@ -1,4 +1,4 @@
-package services
+package vfs_service
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -49,7 +50,7 @@ func watchForFlowCompletion(
 		// the user.
 		custom_artifact_name := constants.ARTIFACT_CUSTOM_NAME_PREFIX + artifact_name
 
-		events, cancel := GetJournal().Watch("System.Flow.Completion")
+		events, cancel := services.GetJournal().Watch("System.Flow.Completion")
 		defer cancel()
 
 		local_wg.Done()

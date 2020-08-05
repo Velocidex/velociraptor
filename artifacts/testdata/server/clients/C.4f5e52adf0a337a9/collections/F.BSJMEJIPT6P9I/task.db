@@ -1,0 +1,85 @@
+
+±
+F.BSJMEJIPT6P9Iòšg
+eLET precondition_Windows_Network_NetstatEnriched_Netstat_0=SELECT OS FROM info() WHERE OS = 'windows'‘
+ŽLET VerifiedRegex<=SELECT Regex FROM parse_csv(filename=AuthenticodeVerifiedMap, accessor="data") WHERE Choice = AuthenticodeVerified LIMIT 1 r
+pLET StatusRegex<=SELECT Regex FROM parse_csv(filename=StatusMap, accessor="data") WHERE Choice = Status LIMIT 1 r
+pLET FamilyRegex<=SELECT Regex FROM parse_csv(filename=FamilyMap, accessor="data") WHERE Choice = Family LIMIT 1 l
+jLET TypeRegex<=SELECT Regex FROM parse_csv(filename=TypeMap, accessor="data") WHERE Choice = Type LIMIT 1 £
+ LET process<=SELECT Pid AS PsId, Ppid, Name, CommandLine, Exe, Hash, Authenticode, Username FROM Artifact.Windows.System.Pslist() WHERE Name =~ ProcessNameRegex¸
+
+µ
+LET Windows_Network_NetstatEnriched_Netstat_0_5=SELECT Pid, { SELECT Ppid FROM process WHERE PsId = Pid } AS Ppid, { SELECT Name FROM process WHERE PsId = Pid } AS Name, { SELECT Exe FROM process WHERE PsId = Pid } AS Path, { SELECT CommandLine FROM process WHERE PsId = Pid } AS CommandLine, { SELECT Hash FROM process WHERE PsId = Pid } AS Hash, { SELECT Username FROM process WHERE PsId = Pid } AS Username, { SELECT Authenticode FROM process WHERE PsId = Pid } AS Authenticode, FamilyString AS Family, TypeString AS Type, Status, Laddr.IP, Laddr.Port, Raddr.IP, Raddr.Port, Timestamp FROM netstat() WHERE Path =~ ProcessPathRegex AND CommandLine =~ CommandLineRegex AND Username =~ UsernameRegex AND (Hash.MD5 =~ HashRegex OR Hash.SHA1 =~ HashRegex OR Hash.SHA256 =~ HashRegex OR NOT Hash) AND (Authenticode.IssuerName =~ AuthenticodeIssuerRegex OR NOT Authenticode) AND (Authenticode.SubjectName =~ AuthenticodeSubjectRegex OR NOT Authenticode) AND (Authenticode.Trusted =~ VerifiedRegex.Regex[0] OR NOT Authenticode) AND Status =~ StatusRegex.Regex[0] AND Family =~ FamilyRegex.Regex[0] AND Type =~ TypeRegex.Regex[0] AND (format(format="%v", args=Laddr.IP) =~ IPRegex OR format(format="%v", args=Raddr.IP) =~ IPRegex) AND (format(format="%v", args=Laddr.Port) =~ PortRegex OR format(format="%v", args=Raddr.Port) =~ PortRegex)ž
+9SELECT * FROM Windows_Network_NetstatEnriched_Netstat_0_5a$9cb560a6aa7440028c03963ed9d3929ea3a358645510efb193aee8b3c1aa50af8f03a8048a010b63c82159e0e4b0475b
+IPRegex.*
+	PortRegex.*
+FamilyALL?
+	FamilyMap2Choice,Regex
+ALL,".*"
+IPv4,"^IPv4$"
+IPv6,"^IPv6$"
+
+TypeALL9
+TypeMap.Choice,Regex
+ALL,".*"
+TCP,"^TCP$"
+UDP,"^UDP$"
+
+StatusALLv
+	StatusMapiChoice,Regex
+ALL,".*"
+ESTABLISHED,"^ESTAB$"
+LISTENING,"^LISTEN$"
+OTHER,"CLOS|SENT|RCVD|LAST|WAIT|DELETE"
+
+ProcessNameRegex.*
+ProcessPathRegex.*
+CommandLineRegex.*
+	HashRegex.*
+UsernameRegex.*
+AuthenticodeSubjectRegex.*
+AuthenticodeIssuerRegex.*
+AuthenticodeVerifiedALL
+AuthenticodeVerifiedMaprChoice,Regex
+ALL,".*"
+TRUSTED,"^trusted$"
+UNSIGNED,"^unsigned$"
+NOT TRUSTED,"unsigned|disallowed|untrusted|error"
+
+IPRegex.*
+	PortRegex.*
+FamilyALL?
+	FamilyMap2Choice,Regex
+ALL,".*"
+IPv4,"^IPv4$"
+IPv6,"^IPv6$"
+
+TypeALL9
+TypeMap.Choice,Regex
+ALL,".*"
+TCP,"^TCP$"
+UDP,"^UDP$"
+
+StatusALLv
+	StatusMapiChoice,Regex
+ALL,".*"
+ESTABLISHED,"^ESTAB$"
+LISTENING,"^LISTEN$"
+OTHER,"CLOS|SENT|RCVD|LAST|WAIT|DELETE"
+
+ProcessNameRegex.*
+ProcessPathRegex.*
+CommandLineRegex.*
+	HashRegex.*
+UsernameRegex.*
+AuthenticodeSubjectRegex.*
+AuthenticodeIssuerRegex.*
+AuthenticodeVerifiedALL
+AuthenticodeVerifiedMaprChoice,Regex
+ALL,".*"
+TRUSTED,"^trusted$"
+UNSIGNED,"^unsigned$"
+NOT TRUSTED,"unsigned|disallowed|untrusted|error"
+ è*‰
+Windows.System.Pslist
+processRegex."ÜÙSELECT Pid, Ppid, TokenIsElevated, Name, CommandLine, Exe, hash(path=Exe) AS Hash, authenticode(filename=Exe) AS Authenticode, Username, Memory.WorkingSetSize AS WorkingSetSize FROM pslist() WHERE Name =~ processRegexÈØ

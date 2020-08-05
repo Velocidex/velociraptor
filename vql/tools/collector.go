@@ -153,9 +153,10 @@ func (self CollectPlugin) Call(
 
 			}
 
-			err = services.EnsureToolsDeclared(ctx, config_obj, artifact)
+			err = services.GetLauncher().EnsureToolsDeclared(
+				ctx, config_obj, artifact)
 			if err != nil {
-				scope.Log("collect: ", name)
+				scope.Log("collect: %v %v", name, err)
 				continue
 			}
 

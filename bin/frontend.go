@@ -18,19 +18,14 @@
 package main
 
 import (
-	"context"
-	"sync"
-
 	"github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/api"
-	"www.velocidex.com/golang/velociraptor/frontend"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/assets"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -49,24 +44,21 @@ func doFrontend() {
 		WithRequiredLogging().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
-	// Use both context and WaitGroup to control life time of
-	// services.
-	wg := &sync.WaitGroup{}
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	server, err := startFrontend(ctx, wg, config_obj)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	server, err := startFrontend(sm, config_obj)
 	kingpin.FatalIfError(err, "startFrontend")
 	defer server.Close()
 
-	// Wait here until everything is done.
-	wg.Wait()
+	sm.Wg.Wait()
 }
 
 // Start the frontend service.
-func startFrontend(
-	ctx context.Context,
-	wg *sync.WaitGroup,
+func startFrontend(sm *services.Service,
 	config_obj *config_proto.Config) (*api.Builder, error) {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -91,28 +83,8 @@ func startFrontend(
 	// Increase resource limits.
 	server.IncreaseLimits(config_obj)
 
-	// Start critical services first.
-	err = services.StartJournalService(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Start the frontend service if needed.
-	err = frontend.StartFrontendService(ctx, config_obj, *frontend_node)
-	if err != nil {
-		return nil, err
-	}
-
 	// These services must start on all frontends
-	err = services.StartFrontendServices(ctx, wg, config_obj)
-	if err != nil {
-		logger.Error("Failed starting services: ", err)
-		return nil, err
-	}
-
-	// Start all services that are supposed to run on this
-	// frontend.
-	err = services.StartServices(ctx, wg, config_obj)
+	err = server.StartFrontendServices(config_obj, sm, *frontend_node)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
 		return nil, err
@@ -125,13 +97,13 @@ func startFrontend(
 
 	// Start the gRPC API server.
 	if config_obj.Frontend.ServerServices.ApiServer {
-		err = server_builder.WithAPIServer(ctx, wg)
+		err = server_builder.WithAPIServer(sm.Ctx, sm.Wg)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return server_builder, server_builder.StartServer(ctx, wg)
+	return server_builder, server_builder.StartServer(sm.Ctx, sm.Wg)
 }
 
 func init() {

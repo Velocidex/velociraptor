@@ -69,11 +69,27 @@
 
             <dt>Download Results</dt>
             <dd>
-              <button class="btn btn-default"
-                      ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                      ng-click="controller.prepareDownload()">
-                Prepare Download
-              </button>
+              <div class="input-group-prepend">
+                <button class="btn btn-default dropdown-toggle"
+                        type="button"
+                        data-toggle="dropdown" aria-expanded="false"
+                        ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                        >
+                  <i class="fa fa-archive"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload()">
+                    Full Download
+                  </button>
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload('summary')">
+                  Summary Download
+                  </button>
+                </div>
+              </div>
             </dd>
 
             <dt>Available Downloads</dt>

@@ -120,14 +120,14 @@ func (mr *MockAPIClientMockRecorder) CollectArtifact(arg0, arg1 interface{}, arg
 }
 
 // CreateDownloadFile mocks base method
-func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.CreateDownloadRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+func (m *MockAPIClient) CreateDownloadFile(arg0 context.Context, arg1 *proto0.CreateDownloadRequest, arg2 ...grpc.CallOption) (*proto0.CreateDownloadResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "CreateDownloadFile", varargs...)
-	ret0, _ := ret[0].(*emptypb.Empty)
+	ret0, _ := ret[0].(*proto0.CreateDownloadResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -62,10 +62,12 @@ func ForemanProcessMessage(
 	}
 
 	// Update the client's event tables.
-	if foreman_checkin.LastEventTableVersion < services.GetClientEventsVersion(client_id) {
+	if foreman_checkin.LastEventTableVersion < services.ClientEventManager().
+		GetClientEventsVersion(client_id) {
 		err := QueueMessageForClient(
 			config_obj, client_id,
-			services.GetClientUpdateEventTableMessage())
+			services.ClientEventManager().
+				GetClientUpdateEventTableMessage())
 		if err != nil {
 			return err
 		}
