@@ -32,7 +32,7 @@ func setServerMonitoringState(
 		return err
 	}
 
-	err = services.GlobalEventTable.Update(config_obj, args)
+	err = services.GetServerEventManager().Update(config_obj, args)
 	if err != nil {
 		return err
 	}

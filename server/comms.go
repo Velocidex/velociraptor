@@ -27,7 +27,6 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/frontend"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -120,7 +119,7 @@ func maybeRedirectFrontend(handler string, w http.ResponseWriter, r *http.Reques
 		return false
 	}
 
-	redirect_url, ok := frontend.GetFrontendURL()
+	redirect_url, ok := services.Frontend.GetFrontendURL()
 	if ok {
 		redirectedFrontendCounter.Inc()
 		// We should redirect to another frontend.

@@ -1,4 +1,4 @@
-package services
+package ddclient
 
 // Based on github.com/clayshek/google-ddns-updater
 
@@ -101,7 +101,7 @@ func (self *DynDNSService) Start(
 	}
 }
 
-func startDynDNSService(
+func StartDynDNSService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
