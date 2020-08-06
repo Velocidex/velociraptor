@@ -11,19 +11,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -33,6 +32,7 @@ type HuntTestSuite struct {
 	config_obj *config_proto.Config
 	client_id  string
 	hunt_id    string
+	sm         *services.Service
 
 	expected *flows_proto.ArtifactCollectorArgs
 }
@@ -40,24 +40,24 @@ type HuntTestSuite struct {
 func (self *HuntTestSuite) SetupTest() {
 	self.hunt_id += "A"
 	self.expected.Creator = self.hunt_id
+
+	t := self.T()
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(ctx, self.config_obj)
+
+	// Start the journaling service manually for tests.
+	require.NoError(t, self.sm.Start(journal.StartJournalService))
+	require.NoError(t, self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
+	require.NoError(t, self.sm.Start(launcher.StartLauncherService))
+	require.NoError(t, self.sm.Start(labels.StartLabelService))
+	require.NoError(t, self.sm.Start(StartHuntManager))
 }
 
 func (self *HuntTestSuite) TearDownTest() {
-	// Reset the data store.
-	db, err := datastore.GetDB(self.config_obj)
-	require.NoError(self.T(), err)
+	self.sm.Close()
 
-	db.Close()
-
-	self.GetMemoryFileStore().Clear()
-}
-
-func (self *HuntTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
-	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*memory.MemoryFileStore)
-	require.True(self.T(), ok)
-
-	return file_store_factory
+	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *HuntTestSuite) TestHuntManager() {
@@ -193,12 +193,9 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	err = clients.LabelClients(self.config_obj,
-		&api_proto.LabelClientsRequest{
-			ClientIds: []string{self.client_id},
-			Labels:    []string{"lAbEl"}, // Lowercase label
-			Operation: "set",
-		})
+	labeler := services.GetLabeler()
+
+	err = labeler.SetClientLabel(self.client_id, "lAbEl")
 	assert.NoError(t, err)
 
 	services.GetHuntDispatcher().Refresh()
@@ -258,12 +255,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	err = clients.LabelClients(self.config_obj,
-		&api_proto.LabelClientsRequest{
-			ClientIds: []string{self.client_id},
-			Labels:    []string{"MyLabel"},
-			Operation: "set",
-		})
+	labeler := services.GetLabeler()
+	err = labeler.SetClientLabel(self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
 	services.GetHuntDispatcher().Refresh()
@@ -300,25 +293,6 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 func TestHuntTestSuite(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Datastore.Implementation = "Test"
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
-
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	// Start the journaling service manually for tests.
-	err := sm.Start(journal.StartJournalService)
-	require.NoError(t, err)
-
-	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
-	require.NoError(t, err)
-
-	err = sm.Start(launcher.StartLauncherService)
-	require.NoError(t, err)
-
-	err = sm.Start(StartHuntManager)
-	require.NoError(t, err)
 
 	suite.Run(t, &HuntTestSuite{
 		config_obj: config_obj,

@@ -44,7 +44,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -244,15 +243,8 @@ func (self *HuntManager) ProcessRow(
 
 			// Ignore hunts with label conditions which
 			// exclude this client.
-			has_label, err := huntHasLabel(
-				self.config_obj,
-				hunt_obj,
-				participation_row.ClientId)
-			if err != nil {
-				return err
-			}
-
-			if !has_label {
+			if !huntHasLabel(self.config_obj, hunt_obj,
+				participation_row.ClientId) {
 				return errors.New("hunt label does not match")
 			}
 
@@ -317,23 +309,21 @@ func StartHuntManager(
 	return result.Start(ctx, wg)
 }
 
+// Check if the client has any of the required labels.
 func huntHasLabel(config_obj *config_proto.Config,
-	hunt_obj *api_proto.Hunt,
-	client_id string) (bool, error) {
+	hunt_obj *api_proto.Hunt, client_id string) bool {
+	labeler := services.GetLabeler()
 
 	label_condition := hunt_obj.Condition.GetLabels()
-	if label_condition != nil && len(label_condition.Label) > 0 {
-		request := &api_proto.LabelClientsRequest{
-			ClientIds: []string{client_id},
-			Labels:    label_condition.Label,
-			Operation: "check",
-		}
+	if label_condition == nil {
+		return true
+	}
 
-		err := clients.LabelClients(config_obj, request)
-		if err != nil {
-			return false, nil
+	for _, label := range label_condition.Label {
+		if labeler.IsLabelSet(client_id, label) {
+			return true
 		}
 	}
 
-	return true, nil
+	return false
 }

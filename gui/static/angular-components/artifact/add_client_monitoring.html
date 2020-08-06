@@ -1,7 +1,15 @@
 <div class="card ace_editor">
   <div class="card-body">
-    <h4 class="card-title">Add client monitoring artifacts.</h4>
+    <div class="d-flex justify-content-between">
+      <div class="btn-group" role="group">
+        <h4 class="card-title">Add client monitoring for client labels.</h4>
+      </div>
 
+      <div class="">
+        <grr-form-client-label value="controller.label">
+        </grr-form-client-label>
+      </div>
+    </div>
     <grr-search-artifact names="controller.names"
                          params="controller.params"
                          type="'CLIENT_EVENT'"

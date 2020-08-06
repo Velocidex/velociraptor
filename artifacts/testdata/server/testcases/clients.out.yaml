@@ -1,4 +1,4 @@
-SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
+LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
  {
   "Hostname": "DESKTOP-BP4S7TF",
   "ClientId": "C.4f5e52adf0a337a9",

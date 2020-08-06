@@ -1,4 +1,8 @@
 Queries:
+  # Clear the labels from all clients.
+  - LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
+    FROM clients(search='label:*') ORDER BY client_id
+
   # Just get a list of all clients and their hostnames.
   - SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen
     FROM clients() order by Hostname

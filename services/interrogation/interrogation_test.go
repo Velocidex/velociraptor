@@ -2,7 +2,6 @@ package interrogation
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
@@ -11,40 +10,26 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type ServicesTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
-	ctx        context.Context
-	cancel     func()
-	wg         *sync.WaitGroup
 	client_id  string
 	flow_id    string
-}
-
-func (self *ServicesTestSuite) GetMemoryFileStore() *memory.MemoryFileStore {
-	file_store_factory, ok := file_store.GetFileStore(
-		self.config_obj).(*memory.MemoryFileStore)
-	require.True(self.T(), ok)
-
-	return file_store_factory
+	sm         *services.Service
 }
 
 func (self *ServicesTestSuite) SetupTest() {
@@ -55,29 +40,24 @@ func (self *ServicesTestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
-	self.ctx, self.cancel = context.WithCancel(context.Background())
-	self.wg = &sync.WaitGroup{}
+	// Start essential services.
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	// Start the journaling service manually for tests.
-	journal.StartJournalService(self.ctx, self.wg, self.config_obj)
-	services.StartNotificationService(self.ctx, self.wg, self.config_obj)
-	vfs_service.StartVFSService(self.ctx, self.wg, self.config_obj)
-	StartInterrogationService(self.ctx, self.wg, self.config_obj)
-	launcher.StartLauncherService(self.ctx, self.wg, self.config_obj)
+	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(StartInterrogationService))
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
 }
 
 func (self *ServicesTestSuite) TearDownTest() {
-	// Reset the data store.
-	db, err := datastore.GetDB(self.config_obj)
-	require.NoError(self.T(), err)
-
-	db.Close()
-	self.cancel()
+	self.sm.Close()
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	self.wg.Wait()
+	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 func (self *ServicesTestSuite) EmulateCollection(
@@ -135,13 +115,8 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 	assert.Equal(self.T(), client_info.Labels, []string{"Foo"})
 
 	// Check the label is set on the client.
-	err = clients.LabelClients(
-		self.config_obj,
-		&api_proto.LabelClientsRequest{
-			ClientIds: []string{self.client_id},
-			Labels:    []string{"Foo"},
-			Operation: "check",
-		})
+	labeler := services.GetLabeler()
+	assert.True(self.T(), labeler.IsLabelSet(self.client_id, "Foo"))
 	assert.NoError(self.T(), err)
 }
 

@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -203,6 +204,7 @@ func startEssentialServices(config_obj *config_proto.Config, sm *services.Servic
 		if err != nil {
 			return err
 		}
+
 		err = sm.Start(services.StartNotificationService)
 		if err != nil {
 			return err
@@ -213,6 +215,10 @@ func startEssentialServices(config_obj *config_proto.Config, sm *services.Servic
 			return err
 		}
 
+		err = sm.Start(labels.StartLabelService)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

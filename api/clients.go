@@ -26,7 +26,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -76,14 +75,7 @@ func GetApiClient(
 		return nil, err
 	}
 
-	for _, label := range db.SearchClients(
-		config_obj, constants.CLIENT_INDEX_URN,
-		client_id, "", 0, 1000) {
-		if strings.HasPrefix(label, "label:") {
-			result.Labels = append(
-				result.Labels, strings.TrimPrefix(label, "label:"))
-		}
-	}
+	result.Labels = services.GetLabeler().GetClientLabels(client_id)
 
 	client_info := &actions_proto.ClientInfo{}
 	err = db.GetSubject(config_obj,

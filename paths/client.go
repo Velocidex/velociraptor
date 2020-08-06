@@ -52,6 +52,11 @@ func (self ClientPathManager) Ping() *ClientPathManager {
 	return &self
 }
 
+// Keep a record of all the client's labels.
+func (self ClientPathManager) Labels() string {
+	return path.Join(self.path, "labels.json")
+}
+
 func (self ClientPathManager) Key() *ClientPathManager {
 	self.path = path.Join(self.path, "key")
 	return &self

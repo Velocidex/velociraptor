@@ -8,9 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -35,12 +33,12 @@ type EnrollmentService struct {
 func (self *EnrollmentService) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
-	wg.Add(1)
 
 	// Wait in this func until we are ready to monitor.
 	local_wg := &sync.WaitGroup{}
 	local_wg.Add(1)
 
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
@@ -220,15 +218,9 @@ func (self *InterrogationService) ProcessRow(
 	}
 
 	if len(client_info.Labels) > 0 {
-		err := clients.LabelClients(
-			self.config_obj,
-			&api_proto.LabelClientsRequest{
-				ClientIds: []string{client_id},
-				Labels:    client_info.Labels,
-				Operation: "set",
-			})
-		if err != nil {
-			return err
+		labeler := services.GetLabeler()
+		for _, label := range client_info.Labels {
+			labeler.SetClientLabel(client_id, label)
 		}
 	}
 

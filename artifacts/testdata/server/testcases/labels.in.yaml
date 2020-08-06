@@ -1,7 +1,7 @@
 Queries:
   # First remove all labels from all clients.
   - |
-    SELECT label(client_id=client_id, op='remove', labels=labels), client_id
+    LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
     FROM clients(search='label:*') ORDER BY client_id
 
   # Make sure no labels exist.

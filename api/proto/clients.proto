@@ -140,3 +140,11 @@ message LabelClientsRequest {
     repeated string labels = 2;
     string operation = 3;
 }
+
+
+message ClientLabels {
+    // When was the labeling record last updated.
+    uint64 timestamp = 1;
+
+    repeated string label = 2;
+}

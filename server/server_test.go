@@ -168,7 +168,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		GetClientEventsVersion(self.client_id)
 
 	err = services.ClientEventManager().UpdateClientEventTable(
-		self.config_obj, new_table)
+		self.config_obj, new_table, "")
 
 	err = self.sm.Start(hunt_dispatcher.StartHuntDispatcher)
 	require.NoError(t, err)

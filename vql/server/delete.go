@@ -7,13 +7,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/clients"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -67,14 +66,9 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 				return
 			}
 
-			err = clients.LabelClients(config_obj, &api_proto.LabelClientsRequest{
-				Operation: "remove",
-				ClientIds: []string{arg.ClientId},
-				Labels:    client_info.Labels,
-			})
-			if err != nil {
-				scope.Log("client_delete: %s", err.Error())
-				return
+			labeler := services.GetLabeler()
+			for _, label := range labeler.GetClientLabels(arg.ClientId) {
+				labeler.RemoveClientLabel(arg.ClientId, label)
 			}
 
 			// Sync up with the indexes created by the interrogation service.
