@@ -1,4 +1,4 @@
-SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
+LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
  {
   "Hostname": "DESKTOP-BP4S7TF",
   "ClientId": "C.4f5e52adf0a337a9",
@@ -25,8 +25,6 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": 1,
-  "labels": [
-   "WinBoxes"
-  ]
+  "labels": null
  }
 ]SELECT client_id, context.create_time as CreateTime, runner_args.args.artifacts.names as Artifacts, runner_args.flow_name as Flow FROM flows(client_id='C.11a3013cca8f826e') ORDER BY client_id[]
