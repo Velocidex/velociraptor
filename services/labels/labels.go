@@ -183,17 +183,17 @@ func (self *Labeler) SetClientLabel(client_id, new_label string) error {
 		return err
 	}
 
-	for _, label := range cached.lower_labels {
-		if checked_label == label {
-			// Label already set.
-			return nil
-		}
-	}
-
 	// Store the label in the datastore.
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
+	}
+
+	for _, label := range cached.lower_labels {
+		if checked_label == label {
+			// Label already set but make sure the index is updated.
+			return self.adjustIndex(client_id, new_label, db.SetIndex)
+		}
 	}
 
 	cached.record.Timestamp = uint64(time.Now().UnixNano())
@@ -210,9 +210,9 @@ func (self *Labeler) SetClientLabel(client_id, new_label string) error {
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	return self.notifyClient(client_id, new_label, "Add")
+	self.notifyClient(client_id, new_label, "Add")
 
-	// Also adjust the index.
+	// Also adjust the index so client searches work.
 	return self.adjustIndex(client_id, new_label, db.SetIndex)
 }
 

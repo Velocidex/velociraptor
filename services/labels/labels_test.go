@@ -109,7 +109,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.False(self.T(), labeler.IsLabelSet(self.client_id, "Label2"))
 
 	// The timestamp should be reasonable
-	assert.True(self.T(), labeler.LastLabelTimestamp(self.client_id) > now)
+	assert.True(self.T(), labeler.LastLabelTimestamp(self.client_id) >= now)
 
 	// remember the time of the last update
 	now = labeler.LastLabelTimestamp(self.client_id)

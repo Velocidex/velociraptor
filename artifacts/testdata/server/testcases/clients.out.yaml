@@ -25,6 +25,8 @@ SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_ip_class": 1,
-  "labels": null
+  "labels": [
+   "WinBoxes"
+  ]
  }
 ]SELECT client_id, context.create_time as CreateTime, runner_args.args.artifacts.names as Artifacts, runner_args.flow_name as Flow FROM flows(client_id='C.11a3013cca8f826e') ORDER BY client_id[]

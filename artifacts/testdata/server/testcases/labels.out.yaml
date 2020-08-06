@@ -1,6 +1,17 @@
 SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
-[]SELECT * FROM clients(search='label:*') ORDER BY client_id[]SELECT * FROM foreach(
+[
+ {
+  "label(client_id=client_id, op='remove', labels=labels)": {
+   "ClientId": "C.4f5e52adf0a337a9",
+   "Labels": [
+    "WinBoxes"
+   ],
+   "Op": "remove"
+  },
+  "client_id": "C.4f5e52adf0a337a9"
+ }
+]SELECT * FROM clients(search='label:*') ORDER BY client_id[]SELECT * FROM foreach(
   row={
      SELECT * FROM clients()
      WHERE os_info.system = 'windows' ORDER BY client_id
