@@ -196,6 +196,42 @@ func (self *HTMLTemplateEngine) getMultiLineQuery(query string) (string, error) 
 	return html.UnescapeString(buf.String()), nil
 }
 
+func (self *HTMLTemplateEngine) Markdown(values ...string) interface{} {
+	result := ""
+	for _, value := range values {
+		r, err := self.getMultiLineQuery(value)
+		if err != nil {
+			self.Error("Markdown error: %v", err)
+			continue
+		}
+
+		result += r
+	}
+
+	// We expect the template to be in markdown format, so now
+	// generate the HTML
+	output := blackfriday.Run(
+		[]byte(result),
+		blackfriday.WithRenderer(bfchroma.NewRenderer(
+			bfchroma.ChromaOptions(
+				chroma_html.ClassPrefix("chroma"),
+				chroma_html.WithClasses(true),
+				chroma_html.WithLineNumbers(true)),
+			bfchroma.Style("github"),
+		)))
+
+	// Add classes to various tags
+	output_string := strings.ReplaceAll(string(output),
+		"<table>", "<table class=\"table table-striped\">")
+
+	if !self.SanitizeHTML {
+		return output_string
+	}
+
+	// Sanitize the HTML.
+	return bm_policy.Sanitize(output_string)
+}
+
 func (self *HTMLTemplateEngine) Query(queries ...string) interface{} {
 	output_chan := make(chan *ordereddict.Dict)
 
@@ -266,6 +302,7 @@ func NewHTMLTemplateEngine(
 	template_engine.tmpl = template.New("").Funcs(sprig.TxtFuncMap()).Funcs(
 		template.FuncMap{
 			"Query":     template_engine.Query,
+			"Markdown":  template_engine.Markdown,
 			"Scope":     template_engine.GetScope,
 			"Table":     template_engine.Table,
 			"LineChart": template_engine.Noop,

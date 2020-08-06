@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
@@ -71,6 +72,12 @@ func StartFrontendServices(config_obj *config_proto.Config,
 
 	// Check everything is ok before we can start.
 	err = sm.Start(sanity.StartSanityCheckService)
+	if err != nil {
+		return err
+	}
+
+	// All frontends must run the labeling service.
+	err = sm.Start(labels.StartLabelService)
 	if err != nil {
 		return err
 	}

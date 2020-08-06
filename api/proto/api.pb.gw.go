@@ -1238,9 +1238,20 @@ func local_request_API_SetServerMonitoringState_0(ctx context.Context, marshaler
 
 }
 
+var (
+	filter_API_GetClientMonitoringState_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq GetMonitoringStateRequest
 	var metadata runtime.ServerMetadata
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_API_GetClientMonitoringState_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := client.GetClientMonitoringState(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -1248,8 +1259,12 @@ func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
+	var protoReq GetMonitoringStateRequest
 	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_API_GetClientMonitoringState_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
 
 	msg, err := server.GetClientMonitoringState(ctx, &protoReq)
 	return msg, metadata, err
@@ -1257,7 +1272,7 @@ func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_4.ArtifactCollectorArgs
+	var protoReq SetMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1274,7 +1289,7 @@ func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_4.ArtifactCollectorArgs
+	var protoReq SetMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

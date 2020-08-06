@@ -312,7 +312,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			opts := vql_subsystem.EncOptsFromScope(scope)
 			path_manager := result_sets.NewArtifactPathManager(
-				self.config_obj, "", task.SessionId, name)
+				self.config_obj, "server", task.SessionId, name)
 			rs_writer, err = result_sets.NewResultSetWriter(
 				self.config_obj, path_manager, opts, false /* truncate */)
 			defer rs_writer.Close()

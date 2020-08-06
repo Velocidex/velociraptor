@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"errors"
+	"fmt"
 	"path"
 	"strings"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -29,6 +31,25 @@ func NewTestDataStore() *TestDataStore {
 		Subjects:    make(map[string]proto.Message),
 		ClientTasks: make(map[string][]*crypto_proto.GrrMessage),
 	}
+}
+
+func (self *TestDataStore) Clear() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.Subjects = make(map[string]proto.Message)
+	self.ClientTasks = make(map[string][]*crypto_proto.GrrMessage)
+}
+
+func (self *TestDataStore) Debug() string {
+	result := []string{}
+
+	for k, v := range self.Subjects {
+		result = append(result, fmt.Sprintf("%v: %v", k, string(
+			json.MustMarshalIndent(v))))
+	}
+
+	return strings.Join(result, "\n")
 }
 
 func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,
@@ -136,6 +157,14 @@ func (self *TestDataStore) ListChildren(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self.listChildren(config_obj, urn, offset, length)
+}
+
+func (self *TestDataStore) listChildren(
+	config_obj *config_proto.Config,
+	urn string,
+	offset uint64, length uint64) ([]string, error) {
+
 	result := []string{}
 
 	for k := range self.Subjects {
@@ -207,10 +236,78 @@ func (self *TestDataStore) SearchClients(
 	index_urn string,
 	query string, query_type string,
 	offset uint64, limit uint64) []string {
+	seen := make(map[string]bool)
+	result := []string{}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return nil
+	query = strings.ToLower(query)
+	if query == "." || query == "" {
+		query = "all"
+	}
+
+	add_func := func(key string) {
+		children, err := self.listChildren(config_obj,
+			path.Join(index_urn, key), 0, 1000)
+		if err != nil {
+			return
+		}
+
+		for _, child_urn := range children {
+			name := path.Base(child_urn)
+			seen[name] = true
+
+			if uint64(len(seen)) > offset+limit {
+				break
+			}
+		}
+	}
+
+	// Query has a wildcard.
+	if strings.ContainsAny(query, "[]*?") {
+		// We could make it smarter in future but this is
+		// quick enough for now.
+		sets, err := self.listChildren(config_obj, index_urn, 0, 1000)
+		if err != nil {
+			return result
+		}
+		for _, set := range sets {
+			name := path.Base(set)
+			matched, err := path.Match(query, name)
+			if err != nil {
+				// Can only happen if pattern is invalid.
+				return result
+			}
+			if matched {
+				if query_type == "key" {
+					seen[name] = true
+				} else {
+					add_func(name)
+				}
+			}
+
+			if uint64(len(seen)) > offset+limit {
+				break
+			}
+		}
+	} else {
+		add_func(query)
+	}
+
+	for k := range seen {
+		result = append(result, k)
+	}
+
+	if uint64(len(result)) < offset {
+		return []string{}
+	}
+
+	if uint64(len(result))-offset < limit {
+		limit = uint64(len(result)) - offset
+	}
+
+	return result[offset : offset+limit]
 }
 
 // Called to close all db handles etc. Not thread safe.

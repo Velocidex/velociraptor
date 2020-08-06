@@ -44,5 +44,5 @@ type ClientEventTable interface {
 
 	// Update the event table for this client.
 	UpdateClientEventTable(config_obj *config_proto.Config,
-		args *flows_proto.ArtifactCollectorArgs) error
+		args *flows_proto.ArtifactCollectorArgs, label string) error
 }

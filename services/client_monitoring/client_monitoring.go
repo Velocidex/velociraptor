@@ -44,7 +44,8 @@ func (self *ClientEventTable) GetClientEventsVersion(client_id string) uint64 {
 
 func (self *ClientEventTable) UpdateClientEventTable(
 	config_obj *config_proto.Config,
-	args *flows_proto.ArtifactCollectorArgs) error {
+	args *flows_proto.ArtifactCollectorArgs,
+	label string) error {
 	err := self.Update(config_obj, args)
 	if err != nil {
 		return err

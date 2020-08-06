@@ -20,6 +20,7 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -43,7 +44,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/clients"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -431,12 +431,28 @@ func (self *ApiServer) LabelClients(
 			}, status.Error(codes.PermissionDenied,
 				"User is not allowed to label clients.")
 	}
-	err = clients.LabelClients(self.config, in)
-	if err != nil {
-		return &api_proto.APIResponse{
-			Error:        true,
-			ErrorMessage: err.Error(),
-		}, err
+
+	labeler := services.GetLabeler()
+	for _, client_id := range in.ClientIds {
+		for _, label := range in.Labels {
+			switch in.Operation {
+			case "set":
+				err = labeler.SetClientLabel(client_id, label)
+
+			case "remove":
+				err = labeler.RemoveClientLabel(client_id, label)
+
+			default:
+				return nil, errors.New("Unknown label operation")
+			}
+
+			if err != nil {
+				return &api_proto.APIResponse{
+					Error:        true,
+					ErrorMessage: err.Error(),
+				}, err
+			}
+		}
 	}
 
 	return &api_proto.APIResponse{}, nil
@@ -930,8 +946,8 @@ func (self *ApiServer) SetServerMonitoringState(
 
 func (self *ApiServer) GetClientMonitoringState(
 	ctx context.Context,
-	in *empty.Empty) (
-	*flows_proto.ArtifactCollectorArgs, error) {
+	in *api_proto.GetMonitoringStateRequest) (
+	*api_proto.GetMonitoringStateResponse, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
@@ -941,13 +957,13 @@ func (self *ApiServer) GetClientMonitoringState(
 			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
-	result, err := getClientMonitoringState(self.config)
+	result, err := getClientMonitoringState(self.config, in.Label)
 	return result, err
 }
 
 func (self *ApiServer) SetClientMonitoringState(
 	ctx context.Context,
-	in *flows_proto.ArtifactCollectorArgs) (
+	in *api_proto.SetMonitoringStateRequest) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
@@ -967,7 +983,7 @@ func (self *ApiServer) SetClientMonitoringState(
 		NotifyAll: true,
 	})
 
-	return in, err
+	return in.Request, err
 }
 
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,

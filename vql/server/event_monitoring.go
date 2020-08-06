@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/ptypes/empty"
 	"www.velocidex.com/golang/velociraptor/acls"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -49,7 +50,8 @@ func (self GetClientMonitoring) Call(
 	}
 	defer closer()
 
-	response, err := client.GetClientMonitoringState(ctx, &empty.Empty{})
+	response, err := client.GetClientMonitoringState(
+		ctx, &api_proto.GetMonitoringStateRequest{})
 	if err != nil {
 		scope.Log("get_client_monitoring: %s", err.Error())
 		return vfilter.Null{}
@@ -112,7 +114,7 @@ func (self SetClientMonitoring) Call(
 	}
 
 	// This should also validate the json.
-	value := &flows_proto.ArtifactCollectorArgs{}
+	value := &api_proto.SetMonitoringStateRequest{}
 	err = json.Unmarshal([]byte(value_json), value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %v", err)

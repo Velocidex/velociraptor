@@ -304,7 +304,7 @@ service API {
 
     // Client Monitoring Artifacts - manage the Client Monitoring
     // Service.
-    rpc GetClientMonitoringState(google.protobuf.Empty) returns (ArtifactCollectorArgs) {
+    rpc GetClientMonitoringState(GetMonitoringStateRequest) returns (GetMonitoringStateResponse) {
         option (google.api.http) = {
             get: "/api/v1/GetClientMonitoringState",
         };
@@ -312,7 +312,7 @@ service API {
 
     // Client Monitoring Artifacts - manage the Client Monitoring
     // Service.
-    rpc SetClientMonitoringState(ArtifactCollectorArgs) returns (ArtifactCollectorArgs) {
+    rpc SetClientMonitoringState(SetMonitoringStateRequest) returns (ArtifactCollectorArgs) {
         option (google.api.http) = {
             post: "/api/v1/SetClientMonitoringState",
             body: "*",

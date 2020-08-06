@@ -58,7 +58,7 @@ FROM clients(search='label:*') ORDER BY client_id
  }
 ]SELECT label(client_id='C.4f5e52adf0a337a9', labels=['XXXBoxes'], op='check') AS HasLabel FROM scope()[
  {
-  "HasLabel": null
+  "HasLabel": false
  }
 ]SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id

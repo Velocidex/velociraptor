@@ -14,6 +14,8 @@ const ClientEventController = function(
     this.artifacts = [];
     this.selectedArtifact = {};
 
+    this.label = {};
+
     this.names = [];
     this.params = {};
 
@@ -61,9 +63,8 @@ const ClientEventController = function(
         }.bind(this),
     };
 
-    this.scope_.$watch('controller.selected_date',
-                       this.onDateChange.bind(this));
-    this.GetArtifactList();
+    this.scope_.$watch('controller.label.label', this.getClientMonitoringTable.bind(this));
+    this.scope_.$watch('controller.selected_date', this.onDateChange.bind(this));
 
     this.clientId;
     this.grrRoutingService_.uiOnParamsChanged(this.scope_, 'clientId',
@@ -143,21 +144,30 @@ ClientEventController.prototype.showHelp = function() {
   return false;
 };
 
-
-ClientEventController.prototype.updateClientMonitoringTable = function() {
+ClientEventController.prototype.getClientMonitoringTable = function() {
     var url = 'v1/GetClientMonitoringState';
     var self = this;
+    var params = {label: this.label["label"]};
 
     this.error = "";
-    this.grrApiService_.get(url).then(function(response) {
+    this.grrApiService_.get(url, params).then(function(response) {
         self.flowArguments = response['data'];
         self.names = self.flowArguments.artifacts || [];
-        self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
-            scope: self.scope_,
-            size: "lg",
-        });
     });
+};
+
+
+ClientEventController.prototype.updateClientMonitoringTable = function() {
+    var self = this;
+
+    self.getClientMonitoringTable();
+
+    self.modalInstance = self.uibModal_.open({
+        templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
+        scope: self.scope_,
+        size: "lg",
+    });
+
     return false;
 };
 
