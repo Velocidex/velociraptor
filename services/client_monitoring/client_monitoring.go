@@ -7,7 +7,6 @@ package client_monitoring
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"sync"
 
@@ -42,16 +41,13 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	defer self.mu.Unlock()
 
 	labeler := services.GetLabeler()
-	fmt.Printf("Client_version %v, my version %v, label timestamp %v\n",
-		client_version, self.state.Version, labeler.LastLabelTimestamp(client_id))
-
-	if client_version < self.state.Version {
+	if client_version <= self.state.Version {
 		return true
 	}
 
 	// If the client's labels have changed after their table
 	// timestamp, then they will need to update as well.
-	if client_version < labeler.LastLabelTimestamp(client_id) {
+	if client_version <= labeler.LastLabelTimestamp(client_id) {
 		return true
 	}
 

@@ -71,8 +71,6 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// Now the client upgraded its table, do we need to update it again?
 	assert.False(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
 
-	time.Sleep(time.Microsecond * 50)
-
 	// Add a label to the client
 	labeler := services.GetLabeler()
 	require.NoError(self.T(), labeler.SetClientLabel(self.client_id, "Label1"))
