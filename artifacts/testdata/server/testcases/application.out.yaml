@@ -1,4 +1,4 @@
-SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID,Source FROM Artifact.Windows.Application.TeamViewer.Incoming(FileGlob=srcDir + '/artifacts/testdata/files/Connection_incoming.txt')[
+SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionID, basename(path=Source) AS Source FROM Artifact.Windows.Application.TeamViewer.Incoming( FileGlob=srcDir + '/artifacts/testdata/files/Connection_incoming.txt')[
  {
   "StartTime": "2020-08-05T13:39:53Z",
   "EndTime": "2020-08-05T13:42:44Z",
@@ -7,7 +7,7 @@ SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionI
   "User": "yolo",
   "ConnectionType": "RemoteControl",
   "ConnectionID": "{af03e0b1-85c3-49b2-8074-c66ce0fd5f4a}\t",
-  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Connection_incoming.txt"
+  "Source": "Connection_incoming.txt"
  },
  {
   "StartTime": "2020-08-05T13:36:21Z",
@@ -17,6 +17,6 @@ SELECT StartTime,EndTime,TeamViewerID,SourceHost,User,ConnectionType,ConnectionI
   "User": "yolo",
   "ConnectionType": "RemoteControl",
   "ConnectionID": "{e03e5706-1972-4ced-b209-3fa9b230d62b}\t",
-  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\Connection_incoming.txt"
+  "Source": "Connection_incoming.txt"
  }
 ]

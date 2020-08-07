@@ -138,7 +138,7 @@ ServerEventsController.prototype.updateServerMonitoringTable = function() {
         if (angular.isObject(self.flowArguments.artifacts)) {
             self.names = self.flowArguments.artifacts || [];
             self.params = {};
-            var parameters = self.flowArguments.parameters.env || {};
+            var parameters = self.flowArguments.parameters.env || [];
             for (var i=0; i<parameters.length;i++) {
                 var p = parameters[i];
                 self.params[p["key"]] = p["value"];

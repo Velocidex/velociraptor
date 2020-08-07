@@ -945,9 +945,8 @@ func (self *ApiServer) SetServerMonitoringState(
 }
 
 func (self *ApiServer) GetClientMonitoringState(
-	ctx context.Context,
-	in *api_proto.GetMonitoringStateRequest) (
-	*api_proto.GetMonitoringStateResponse, error) {
+	ctx context.Context, in *empty.Empty) (
+	*flows_proto.ClientEventTable, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
@@ -957,14 +956,14 @@ func (self *ApiServer) GetClientMonitoringState(
 			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
-	result, err := getClientMonitoringState(self.config, in.Label)
+	result := services.ClientEventManager().GetClientMonitoringState()
 	return result, err
 }
 
 func (self *ApiServer) SetClientMonitoringState(
 	ctx context.Context,
-	in *api_proto.SetMonitoringStateRequest) (
-	*flows_proto.ArtifactCollectorArgs, error) {
+	in *flows_proto.ClientEventTable) (
+	*empty.Empty, error) {
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.SERVER_ADMIN
@@ -974,7 +973,7 @@ func (self *ApiServer) SetClientMonitoringState(
 			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
-	err = setClientMonitoringState(self.config, in)
+	err = services.ClientEventManager().SetClientMonitoringState(in)
 	if err != nil {
 		return nil, err
 	}
@@ -983,7 +982,7 @@ func (self *ApiServer) SetClientMonitoringState(
 		NotifyAll: true,
 	})
 
-	return in.Request, err
+	return &empty.Empty{}, err
 }
 
 func (self *ApiServer) CreateDownloadFile(ctx context.Context,

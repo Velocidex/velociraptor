@@ -12,7 +12,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -22,7 +21,7 @@ import (
 
 var (
 	launcher_mu sync.Mutex
-	g_launcher  Launcher = nil // defaultLauncher{}
+	g_launcher  Launcher = nil
 )
 
 func GetLauncher() Launcher {
@@ -67,34 +66,4 @@ type Launcher interface {
 		principal string,
 		repository *artifacts.Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs) (string, error)
-}
-
-type defaultLauncher struct{}
-
-func (self defaultLauncher) SetFlowIdForTests(flow_id string) {}
-
-func (self defaultLauncher) EnsureToolsDeclared(
-	ctx context.Context, config_obj *config_proto.Config,
-	artifact *artifacts_proto.Artifact) error {
-	return errors.New("Launcher not initialized")
-}
-
-func (self defaultLauncher) CompileCollectorArgs(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	principal string,
-	repository *artifacts.Repository,
-	collector_request *flows_proto.ArtifactCollectorArgs) (
-	*actions_proto.VQLCollectorArgs, error) {
-
-	return nil, errors.New("Launcher not initialized")
-}
-
-func (self defaultLauncher) ScheduleArtifactCollection(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	principal string,
-	repository *artifacts.Repository,
-	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
-	return "", errors.New("Launcher not initialized")
 }

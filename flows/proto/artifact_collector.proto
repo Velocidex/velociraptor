@@ -119,11 +119,20 @@ message ArtifactCollectorContext {
     bool dirty = 2;
 }
 
+// Artifacts to collect for each label.
+message LabelEvents {
+    string label = 1;
+    ArtifactCollectorArgs artifacts = 2;
+}
 
 // This is stored in the ArtifactCollector state.
 message ClientEventTable {
     uint64 version = 1;
+
+    // Artifacts to collect from ALL clients.
     ArtifactCollectorArgs artifacts = 2;
+
+    repeated LabelEvents label_events = 3;
 }
 
 

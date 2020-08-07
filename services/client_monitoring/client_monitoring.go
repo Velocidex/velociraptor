@@ -9,11 +9,7 @@ import (
 	"context"
 	"math/rand"
 	"sync"
-	"sync/atomic"
-	"time"
 
-	"github.com/golang/protobuf/proto"
-	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -23,195 +19,172 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ClientEventTable struct {
-	// Version is protected by atomic mutations with a lock.
-	version uint64 `json:"version"`
-
-	ArtifactNames []string          `json:"artifacts"`
-	Parameters    map[string]string `json:"parameters"`
-	OpsPerSecond  float32           `json:"ops_per_second"`
-
 	mu sync.Mutex
 
-	job *crypto_proto.GrrMessage
+	state *flows_proto.ClientEventTable
+
+	ctx        context.Context
+	config_obj *config_proto.Config
+	repository *artifacts.Repository
+
+	clock utils.Clock
 }
 
-func (self *ClientEventTable) GetClientEventsVersion(client_id string) uint64 {
-	return atomic.LoadUint64(&self.version)
+// Checks to see if we need to update the client event table.
+func (self *ClientEventTable) CheckClientEventsVersion(
+	client_id string, client_version uint64) bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if client_version < self.state.Version {
+		return true
+	}
+
+	// If the client's labels have changed after their table
+	// timestamp, then they will need to update as well.
+	labeler := services.GetLabeler()
+	if client_version < labeler.LastLabelTimestamp(client_id) {
+		return true
+	}
+
+	return false
 }
 
-func (self *ClientEventTable) UpdateClientEventTable(
-	config_obj *config_proto.Config,
-	args *flows_proto.ArtifactCollectorArgs,
-	label string) error {
-	err := self.Update(config_obj, args)
+func (self *ClientEventTable) GetClientMonitoringState() *flows_proto.ClientEventTable {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.state
+}
+
+func (self *ClientEventTable) SetClientMonitoringState(
+	state *flows_proto.ClientEventTable) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.setClientMonitoringState(state)
+}
+
+func (self *ClientEventTable) compileState(state *flows_proto.ClientEventTable) (err error) {
+	// Compile all the artifacts now for faster dispensing.
+	launcher := services.GetLauncher()
+	state.Artifacts.CompiledCollectorArgs, err = launcher.CompileCollectorArgs(
+		self.ctx, self.config_obj,
+		self.config_obj.Client.PinnedServerName, // Principal
+		self.repository, state.Artifacts)
+	if err != nil {
+		return err
+	}
+
+	// Now compile the label specific events
+	for _, table := range state.LabelEvents {
+		table.Artifacts.CompiledCollectorArgs, err = launcher.CompileCollectorArgs(
+			self.ctx, self.config_obj,
+			self.config_obj.Client.PinnedServerName, // Principal
+			self.repository, table.Artifacts)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (self *ClientEventTable) setClientMonitoringState(
+	state *flows_proto.ClientEventTable) error {
+
+	self.state = state
+	state.Version = uint64(self.clock.Now().UnixNano())
+
+	// Store the new table in the data store.
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = self.compileState(self.state)
+	if err != nil {
+		return err
+	}
+
+	err = db.SetSubject(self.config_obj, constants.ClientMonitoringFlowURN,
+		self.state)
 	if err != nil {
 		return err
 	}
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	return services.NotifyListener(config_obj, constants.ClientMonitoringFlowURN)
+	return services.NotifyListener(self.config_obj, constants.ClientMonitoringFlowURN)
 }
 
-func (self *ClientEventTable) GetClientUpdateEventTableMessage() *crypto_proto.GrrMessage {
+func (self *ClientEventTable) GetClientUpdateEventTableMessage(
+	client_id string) *crypto_proto.GrrMessage {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	result := &actions_proto.VQLEventTable{
+		Version: uint64(self.clock.Now().UnixNano()),
+	}
+
+	result.Event = append(result.Event, self.state.Artifacts.CompiledCollectorArgs)
+
+	// Now apply any event queries that belong to this client based on labels.
+	labeler := services.GetLabeler()
+	for _, table := range self.state.LabelEvents {
+		if labeler.IsLabelSet(client_id, table.Label) {
+			result.Event = append(result.Event,
+				table.Artifacts.CompiledCollectorArgs)
+		}
+	}
 
 	// Add a bit of randomness to the max wait to spread out
-	// client's updates.
-	result := proto.Clone(self.job).(*crypto_proto.GrrMessage)
-	for _, event := range result.UpdateEventTable.Event {
+	// client's updates so they do not syncronize load on the
+	// server.
+	for _, event := range result.Event {
 		event.MaxWait += uint64(rand.Intn(20))
 	}
-	return result
+
+	return &crypto_proto.GrrMessage{
+		UpdateEventTable: result,
+		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
+	}
 }
 
-// Start a new ClientEventTable with new rules.
-func (self *ClientEventTable) Start(
-	config_obj *config_proto.Config,
-	version uint64,
-	arg *flows_proto.ArtifactCollectorArgs) error {
-
+func (self *ClientEventTable) LoadFromFile() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	self.ArtifactNames = []string{}
-	self.Parameters = make(map[string]string)
-	self.OpsPerSecond = arg.OpsPerSecond
-
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	event_table := &actions_proto.VQLEventTable{
-		Version: version,
-	}
-
-	rate := arg.OpsPerSecond
-	if rate == 0 {
-		rate = 1000
-	}
-
-	max_wait := config_obj.Frontend.ClientEventMaxWait
-	if max_wait == 0 {
-		max_wait = 100
-	}
-
-	if arg.Artifacts != nil {
-		for _, name := range arg.Artifacts {
-			logger.Info("Collecting Client Monitoring Artifact: %s", name)
-
-			vql_collector_args := &actions_proto.VQLCollectorArgs{
-				MaxWait:      max_wait,
-				OpsPerSecond: rate,
-
-				// Event queries never time out on their own.
-				Timeout: 1000000000,
-			}
-
-			artifact, pres := repository.Get(name)
-			if !pres {
-				return errors.New("Unknown artifact " + name)
-			}
-
-			err := repository.Compile(artifact, vql_collector_args)
-			if err != nil {
-				return err
-			}
-
-			// Add any artifact dependencies.
-			err = repository.PopulateArtifactsVQLCollectorArgs(vql_collector_args)
-			if err != nil {
-				return err
-			}
-
-			// Update any of the default parameters with the over-ridden parameters.
-			if arg.Parameters != nil {
-				for _, env := range vql_collector_args.Env {
-					for _, override_env := range arg.Parameters.Env {
-						if env.Key == override_env.Key {
-							env.Value = override_env.Value
-						}
-					}
-				}
-			}
-
-			event_table.Event = append(event_table.Event, vql_collector_args)
-
-			// Compress the VQL on the way out.
-			err = artifacts.Obfuscate(config_obj, vql_collector_args)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	self.job = &crypto_proto.GrrMessage{
-		SessionId:        constants.MONITORING_WELL_KNOWN_FLOW,
-		UpdateEventTable: event_table,
-	}
-	atomic.StoreUint64(&self.version, version)
-
-	return nil
-}
-
-// Update the ClientEventTable with new rules then save them permanently.
-func (self *ClientEventTable) Update(
-	config_obj *config_proto.Config,
-	arg *flows_proto.ArtifactCollectorArgs) error {
-
-	// Increment the version to force clients to update their copy
-	// of the event table.
-	current_version := uint64(time.Now().Unix())
-
-	// Store the new table in the data store.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	return db.SetSubject(config_obj, constants.ClientMonitoringFlowURN,
-		&flows_proto.ClientEventTable{
-			Version:   current_version,
-			Artifacts: arg,
-		})
-}
-
-func (self *ClientEventTable) LoadFromFile(config_obj *config_proto.Config) error {
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	event_table := flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts:  []string{},
-			Parameters: &flows_proto.ArtifactParameters{},
-		},
-	}
-	err = db.GetSubject(
-		config_obj,
-		constants.ClientMonitoringFlowURN,
-		&event_table)
-	if err != nil {
+	self.state = &flows_proto.ClientEventTable{}
+	err = db.GetSubject(self.config_obj,
+		constants.ClientMonitoringFlowURN, self.state)
+	if err != nil || self.state.Version == 0 {
 		// No client monitoring rules found, install some
 		// defaults.
-		artifacts := &flows_proto.ArtifactCollectorArgs{
-			Artifacts: config_obj.Frontend.DefaultClientMonitoringArtifacts,
+		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{
+			Artifacts: self.config_obj.Frontend.DefaultClientMonitoringArtifacts,
 		}
 		logger.Info("Creating default Client Monitoring Service")
-		return self.Update(config_obj, artifacts)
+
+		err = self.compileState(self.state)
+		if err != nil {
+			return err
+		}
+
+		return self.setClientMonitoringState(self.state)
 	}
 
-	return self.Start(
-		config_obj, event_table.Version, event_table.Artifacts)
+	return self.compileState(self.state)
 }
 
 // Runs at frontend start to initialize the client monitoring table.
@@ -220,7 +193,18 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	event_table := &ClientEventTable{}
+	repository, err := artifacts.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	event_table := &ClientEventTable{
+		config_obj: config_obj,
+		ctx:        ctx,
+		repository: repository,
+		clock:      &utils.RealClock{},
+	}
+
 	services.RegisterClientEventManager(event_table)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -239,7 +223,7 @@ func StartClientMonitoringService(
 				return
 
 			case <-notification:
-				err := event_table.LoadFromFile(config_obj)
+				err := event_table.LoadFromFile()
 				if err != nil {
 					logger.Error("StartClientMonitoringService: ", err)
 					return
@@ -253,5 +237,5 @@ func StartClientMonitoringService(
 	}()
 
 	logger.Info("Starting Client Monitoring Service")
-	return event_table.LoadFromFile(config_obj)
+	return event_table.LoadFromFile()
 }
