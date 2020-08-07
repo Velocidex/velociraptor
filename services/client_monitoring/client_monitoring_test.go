@@ -73,7 +73,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 
 	// Add a label to the client
 	labeler := services.GetLabeler()
-	labeler.SetClientLabel(self.client_id, "Label1")
+	require.NoError(self.T(), labeler.SetClientLabel(self.client_id, "Label1"))
 
 	// Since the client's label changed it might need to be updated.
 	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
@@ -170,8 +170,7 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 	manager.clock = current_clock
 
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
-	err := manager.LoadFromFile()
-	assert.NoError(self.T(), err)
+	assert.NoError(self.T(), manager.LoadFromFile())
 
 	table := manager.GetClientMonitoringState()
 
