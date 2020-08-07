@@ -194,13 +194,6 @@ func (self *Labeler) SetClientLabel(client_id, new_label string) error {
 		return err
 	}
 
-	for _, label := range cached.lower_labels {
-		if checked_label == label {
-			// Label already set but make sure the index is updated.
-			return self.adjustIndex(client_id, new_label, db.SetIndex)
-		}
-	}
-
 	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
 	cached.record.Label = append(cached.record.Label, new_label)
 	cached.lower_labels = append(cached.lower_labels, checked_label)
