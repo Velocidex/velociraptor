@@ -36,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ServerTestSuite struct {
@@ -257,8 +256,6 @@ func (self *ServerTestSuite) TestForeman() {
 	tasks, err := db.GetClientTasks(self.config_obj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
-	utils.Debug(tasks)
-
 	assert.Equal(t, len(tasks), 1)
 
 	// Task should be UpdateForeman message.

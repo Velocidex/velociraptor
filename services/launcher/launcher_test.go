@@ -32,8 +32,10 @@ import (
 const (
 	testArtifact1 = `
 name: Test.Artifact
+description: This is a test artifact
 parameters:
  - name: Foo
+   description: A foo variable
    default: DefaultBar1
 
 sources:
@@ -60,6 +62,13 @@ required_permissions:
 sources:
 - query:  |
     SELECT * FROM info()
+`
+	testArtifactWithDeps = `
+name: Test.Artifact.Deps
+description: This is a test artifact dependency
+sources:
+- query: |
+    SELECT * FROM Artifact.Test.Artifact()
 `
 )
 
@@ -225,6 +234,41 @@ func (self *LauncherTestSuite) TestCompiling() {
 	assert.NotEqual(self.T(), compiled.Query[1].Name, "")
 }
 
+func (self *LauncherTestSuite) TestCompilingObfuscation() {
+	repository := artifacts.NewRepository()
+	_, err := repository.LoadYaml(testArtifact1, true)
+	assert.NoError(self.T(), err)
+
+	self.config_obj.Frontend.DoNotCompressArtifacts = true
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:    "UserX",
+		ClientId:   "C.1234",
+		Artifacts:  []string{"Test.Artifact"},
+		Parameters: &flows_proto.ArtifactParameters{},
+	}
+	ctx := context.Background()
+
+	compiled, err := services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
+	assert.NoError(self.T(), err)
+
+	// When we do not obfuscate, artifact descriptions are carried
+	// into the compiled form.
+	assert.Equal(self.T(), compiled.Query[1].Description, "This is a test artifact")
+
+	// However when we obfuscate we remove descriptions.
+	self.config_obj.Frontend.DoNotCompressArtifacts = false
+	compiled, err = services.GetLauncher().CompileCollectorArgs(
+		ctx, self.config_obj, "UserX", repository, request)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), compiled.Query[1].Description, "")
+
+}
+
 func (self *LauncherTestSuite) TestCompilingPermissions() {
 	repository := artifacts.NewRepository()
 	_, err := repository.LoadYaml(testArtifactWithPermissions, true)
@@ -281,17 +325,10 @@ func TestLauncher(t *testing.T) {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
-	err = sm.Start(journal.StartJournalService)
-	assert.NoError(t, err)
-
-	err = sm.Start(services.StartNotificationService)
-	assert.NoError(t, err)
-
-	err = sm.Start(inventory.StartInventoryService)
-	assert.NoError(t, err)
-
-	err = sm.Start(StartLauncherService)
-	assert.NoError(t, err)
+	assert.NoError(t, sm.Start(journal.StartJournalService))
+	assert.NoError(t, sm.Start(services.StartNotificationService))
+	assert.NoError(t, sm.Start(inventory.StartInventoryService))
+	assert.NoError(t, sm.Start(StartLauncherService))
 
 	suite.Run(t, &LauncherTestSuite{
 		config_obj: config_obj,

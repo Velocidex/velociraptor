@@ -71,6 +71,40 @@ func TestClientUploaderSparse(t *testing.T) {
 	assert.NotEqual(t, CombineOutput("foo.idx", responses), "")
 }
 
+// Test what happens when the underlying reader is shorter than the
+// ranges.
+func TestClientUploaderSparseWithEOF(t *testing.T) {
+	resp := responder.TestResponder()
+	uploader := &VelociraptorUploader{
+		Responder: resp,
+	}
+
+	BUFF_SIZE = 10000
+
+	reader := &TestRangeReader{
+		Reader: bytes.NewReader([]byte("Hello world hi")), // len=11
+		ranges: []Range{
+			{Offset: 0, Length: 6, IsSparse: false},
+			{Offset: 6, Length: 6, IsSparse: true},
+
+			// Range exceeds size of reader.
+			{Offset: 12, Length: 6, IsSparse: false},
+		},
+	}
+	range_reader, ok := interface{}(reader).(RangeReader)
+	assert.Equal(t, ok, true)
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+	uploader.maybeUploadSparse(ctx, scope,
+		"foo", "ntfs", "", 1000, range_reader)
+	responses := responder.GetTestResponses(resp)
+
+	// Expected size is the combined sum of all ranges with data
+	// in them
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(12))
+	assert.Equal(t, CombineOutput("foo", responses), "Hello hi")
+}
+
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	resp := responder.TestResponder()
 	uploader := &VelociraptorUploader{
