@@ -59,7 +59,24 @@ func (self *ClientMonitoringTestSuite) TearDownTest() {
 }
 
 func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
+	// Every time the clock gives time.Now() it is forced to
+	// increment.
+	current_clock := &utils.IncClock{NowTime: 10}
+
+	labeler := services.GetLabeler().(*labels.Labeler)
+	labeler.Clock = current_clock
+
+	// If no table exists, we will get a default table.
 	manager := services.ClientEventManager().(*ClientEventTable)
+	manager.clock = current_clock
+
+	// Install an initial monitoring table: Everyone gets ServiceCreation.
+	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Windows.Events.ServiceCreation"},
+		},
+	})
+
 	table := manager.GetClientUpdateEventTableMessage(self.client_id)
 
 	// There should be one event table sent.
@@ -71,16 +88,11 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// Now the client upgraded its table, do we need to update it again?
 	assert.False(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
 
-	time.Sleep(time.Microsecond * 50)
-
 	// Add a label to the client
-	labeler := services.GetLabeler()
 	require.NoError(self.T(), labeler.SetClientLabel(self.client_id, "Label1"))
 
 	// Since the client's label changed it might need to be updated.
 	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
-
-	time.Sleep(time.Microsecond * 50)
 
 	// But the event table does not include a rule for this label anyway.
 	table = manager.GetClientUpdateEventTableMessage(self.client_id)
@@ -89,8 +101,6 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// New table is still updated though.
 	assert.True(self.T(), version < table.UpdateEventTable.Version)
 	version = table.UpdateEventTable.Version
-
-	time.Sleep(time.Microsecond * 50)
 
 	// Now lets install a new label rule for this label and another label.
 	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
@@ -114,8 +124,6 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// A new table is installed, this client must update.
 	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
 
-	time.Sleep(time.Microsecond * 50)
-
 	// The new table includes 2 rules - the default and for Label1
 	table = manager.GetClientUpdateEventTableMessage(self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 2)
@@ -128,15 +136,11 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	assert.Equal(self.T(), extractArtifacts(table.UpdateEventTable),
 		[]string{"Windows.Events.ServiceCreation", "Windows.Events.DNSQueries"})
 
-	time.Sleep(time.Microsecond * 50)
-
 	// Lets add Label2 to this client.
 	labeler.SetClientLabel(self.client_id, "Label2")
 
 	// A new table is installed, this client must update.
 	assert.True(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
-
-	time.Sleep(time.Microsecond * 50)
 
 	// The new table includes 3 rules - the default and for Label1 and Label2
 	table = manager.GetClientUpdateEventTableMessage(self.client_id)
