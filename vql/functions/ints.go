@@ -20,6 +20,7 @@ package functions
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -43,16 +44,25 @@ func (self *IntFunction) Call(ctx context.Context,
 	}
 
 	switch t := arg.Int.(type) {
+	case string:
+		result, _ := strconv.ParseInt(t, 0, 64)
+		return result
+
 	case float64:
 		return int64(t)
+
 	case int:
 		return int64(t)
+
 	case int64:
 		return int64(t)
+
 	case uint64:
 		return int64(t)
+
 	case uint32:
 		return uint64(t)
+
 	}
 
 	return 0
