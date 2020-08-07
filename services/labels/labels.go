@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -16,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // When not running on the frontend we set a dummy labeler.
@@ -55,6 +55,8 @@ type Labeler struct {
 	mu         sync.Mutex
 	config_obj *config_proto.Config
 	lru        *cache.LRUCache
+
+	Clock utils.Clock
 }
 
 // If an explicit record does not exist, we retrieve it from searching the index.
@@ -66,7 +68,10 @@ func (self *Labeler) getRecordFromIndex(client_id string) (*CachedLabels, error)
 
 	result := &CachedLabels{
 		record: &api_proto.ClientLabels{
-			Timestamp: uint64(time.Now().UnixNano()),
+			// We treat index timestamps as 0 since they
+			// are legacy - new labeling operations should
+			// advance this.
+			Timestamp: 0,
 		},
 	}
 
@@ -189,14 +194,7 @@ func (self *Labeler) SetClientLabel(client_id, new_label string) error {
 		return err
 	}
 
-	for _, label := range cached.lower_labels {
-		if checked_label == label {
-			// Label already set but make sure the index is updated.
-			return self.adjustIndex(client_id, new_label, db.SetIndex)
-		}
-	}
-
-	cached.record.Timestamp = uint64(time.Now().UnixNano())
+	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
 	cached.record.Label = append(cached.record.Label, new_label)
 	cached.lower_labels = append(cached.lower_labels, checked_label)
 
@@ -233,7 +231,7 @@ func (self *Labeler) RemoveClientLabel(client_id, new_label string) error {
 		}
 	}
 
-	cached.record.Timestamp = uint64(time.Now().UnixNano())
+	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
 	cached.record.Label = new_labels
 
 	self.preCalculatedLowCase(cached)
@@ -365,7 +363,10 @@ func StartLabelService(
 		return nil
 	}
 
-	labeler := &Labeler{config_obj: config_obj}
+	labeler := &Labeler{
+		config_obj: config_obj,
+		Clock:      &utils.RealClock{},
+	}
 	err := labeler.Start(ctx, wg)
 	if err != nil {
 		return err

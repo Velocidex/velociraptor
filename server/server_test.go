@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ServerTestSuite struct {
@@ -146,44 +147,28 @@ func (self *ServerTestSuite) TestEnrollment() {
 }
 
 func (self *ServerTestSuite) TestClientEventTable() {
+	t := self.T()
+
+	// Start some services.
+	require.NoError(t, self.sm.Start(client_monitoring.StartClientMonitoringService))
+	require.NoError(t, self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
+
 	ctrl := gomock.NewController(self.T())
 	defer ctrl.Finish()
 
 	runner := flows.NewFlowRunner(self.config_obj)
 	defer runner.Close()
 
-	t := self.T()
-
-	err := self.sm.Start(client_monitoring.StartClientMonitoringService)
+	// Set a new event monitoring table
+	err := services.ClientEventManager().SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"Generic.Client.Stats"},
+		},
+	})
 	require.NoError(t, err)
 
-	new_table := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: []string{"Generic.Client.Stats"},
-	}
-
-	// Wait for the service to fully come up.
-	time.Sleep(time.Second)
-
-	old_version := services.ClientEventManager().
-		GetClientEventsVersion(self.client_id)
-
-	err = services.ClientEventManager().UpdateClientEventTable(
-		self.config_obj, new_table, "")
-
-	err = self.sm.Start(hunt_dispatcher.StartHuntDispatcher)
-	require.NoError(t, err)
-
-	// Wait up to 10 sec, for the journaling service to pass the
-	// message along and update the client events table.
-	for i := 0; i < 100; i++ {
-		if old_version != services.ClientEventManager().
-			GetClientEventsVersion(self.client_id) {
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	assert.NotEqual(t, old_version, services.ClientEventManager().
-		GetClientEventsVersion(self.client_id))
+	// The version of the currently installed table.
+	version := services.ClientEventManager().GetClientMonitoringState().Version
 
 	// Send a foreman checkin message from client with old event
 	// table version.
@@ -207,9 +192,9 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	assert.Equal(t, tasks[0].SessionId, "F.Monitoring")
 	assert.NotNil(t, tasks[0].UpdateEventTable)
 
-	assert.Equal(t, tasks[0].UpdateEventTable.Version,
-		services.ClientEventManager().GetClientEventsVersion(
-			self.client_id))
+	// The client version is more advanced than the server version
+	// therefore no new updates required.
+	assert.True(t, tasks[0].UpdateEventTable.Version > version)
 }
 
 // Create a new hunt. Client sends a ForemanCheckin message with
@@ -259,9 +244,12 @@ func (self *ServerTestSuite) TestForeman() {
 			ForemanCheckin: &actions_proto.ForemanCheckin{
 				LastHuntTimestamp: 0,
 
-				// We do not want to triggen an event table
-				// update in this test.
-				LastEventTableVersion: 10000000000,
+				// We do not want to trigger an event
+				// table update in this test so we
+				// pretend our version is later than
+				// the automatics table that will be
+				// created.
+				LastEventTableVersion: 10000000000000000000,
 			},
 		})
 
@@ -269,6 +257,8 @@ func (self *ServerTestSuite) TestForeman() {
 	tasks, err := db.GetClientTasks(self.config_obj,
 		self.client_id, true /* do_not_lease */)
 	assert.NoError(t, err)
+	utils.Debug(tasks)
+
 	assert.Equal(t, len(tasks), 1)
 
 	// Task should be UpdateForeman message.

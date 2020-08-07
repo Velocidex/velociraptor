@@ -76,6 +76,11 @@ func StartFrontendServices(config_obj *config_proto.Config,
 		return err
 	}
 
+	err = sm.Start(launcher.StartLauncherService)
+	if err != nil {
+		return err
+	}
+
 	// All frontends must run the labeling service.
 	err = sm.Start(labels.StartLabelService)
 	if err != nil {
@@ -94,11 +99,9 @@ func StartFrontendServices(config_obj *config_proto.Config,
 	// Maintans the client's event monitoring table. All frontends
 	// need to follow this so they can propagate changes to
 	// clients.
-	if spec.ClientMonitoring {
-		err = sm.Start(client_monitoring.StartClientMonitoringService)
-		if err != nil {
-			return err
-		}
+	err = sm.Start(client_monitoring.StartClientMonitoringService)
+	if err != nil {
+		return err
 	}
 
 	// Updates DynDNS records if needed. Frontends need to maintain their IP addresses.
@@ -118,11 +121,6 @@ func StartFrontendServices(config_obj *config_proto.Config,
 	}
 
 	err = sm.Start(inventory.StartInventoryService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(launcher.StartLauncherService)
 	if err != nil {
 		return err
 	}

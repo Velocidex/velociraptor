@@ -280,14 +280,14 @@ func (mr *MockAPIClientMockRecorder) GetClientFlows(arg0, arg1 interface{}, arg2
 }
 
 // GetClientMonitoringState mocks base method
-func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *proto0.GetMonitoringStateRequest, arg2 ...grpc.CallOption) (*proto0.GetMonitoringStateResponse, error) {
+func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ClientEventTable, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetClientMonitoringState", varargs...)
-	ret0, _ := ret[0].(*proto0.GetMonitoringStateResponse)
+	ret0, _ := ret[0].(*proto2.ClientEventTable)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -800,14 +800,14 @@ func (mr *MockAPIClientMockRecorder) SetArtifactFile(arg0, arg1 interface{}, arg
 }
 
 // SetClientMonitoringState mocks base method
-func (m *MockAPIClient) SetClientMonitoringState(arg0 context.Context, arg1 *proto0.SetMonitoringStateRequest, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
+func (m *MockAPIClient) SetClientMonitoringState(arg0 context.Context, arg1 *proto2.ClientEventTable, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SetClientMonitoringState", varargs...)
-	ret0, _ := ret[0].(*proto2.ArtifactCollectorArgs)
+	ret0, _ := ret[0].(*emptypb.Empty)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

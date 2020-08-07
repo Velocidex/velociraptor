@@ -70,7 +70,8 @@ func (self *LabelsTestSuite) TestPopulateFromIndex() {
 
 	last_change_ts := labeler.LastLabelTimestamp(self.client_id)
 
-	assert.True(self.T(), last_change_ts > 0)
+	// When we build from the index the timestamp is 0.
+	assert.Equal(self.T(), last_change_ts, uint64(0))
 
 	// Make sure the new record is created.
 	record := &api_proto.ClientLabels{}
