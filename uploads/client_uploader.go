@@ -212,8 +212,10 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			if err != nil && err != io.EOF {
 				return nil, err
 			}
+
 			// End of range - go to the next range
-			if read_bytes == 0 {
+			if read_bytes == 0 || err == io.EOF {
+				to_read = 0
 				continue
 			}
 

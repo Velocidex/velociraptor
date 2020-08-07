@@ -53,8 +53,6 @@ parameters:
   - name: Duration
     description: Duration of sampling for Profile and Trace.
     default: "30"
-    type: bool
-
 
 sources:
   - query: |
