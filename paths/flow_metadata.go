@@ -9,6 +9,20 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+// Represents paths for storing an uploaded file in the filestore.
+type UploadFile struct {
+	path string
+}
+
+func (self UploadFile) Path() string {
+	return self.path
+}
+
+// Where to write the index path
+func (self UploadFile) IndexPath() string {
+	return self.path + ".idx"
+}
+
 type FlowPathManager struct {
 	path      string
 	client_id string
@@ -118,7 +132,7 @@ func (self FlowPathManager) GetVFSDirectoryInfoPath(accessor, client_path string
 
 // Currently only CLIENT artifacts upload files. We store the uploaded
 // file inside the collection that uploaded it.
-func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *FlowPathManager {
+func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *UploadFile {
 	// Apply the default accessor if not specified.
 	if accessor == "" {
 		accessor = "file"
@@ -133,12 +147,10 @@ func (self FlowPathManager) GetUploadsFile(accessor, client_path string) *FlowPa
 		if err == nil {
 			components = append(components, device)
 			components = append(components, utils.SplitComponents(subpath)...)
-			self.path = utils.JoinComponents(components, "/")
-			return &self
+			return &UploadFile{utils.JoinComponents(components, "/")}
 		}
 	}
 
 	components = append(components, utils.SplitComponents(client_path)...)
-	self.path = utils.JoinComponents(components, "/")
-	return &self
+	return &UploadFile{utils.JoinComponents(components, "/")}
 }

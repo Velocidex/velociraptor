@@ -52,8 +52,8 @@ func (self *ServerUploader) Upload(
 		)
 		self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
 			context.TotalUploadedFiles++
-			context.TotalUploadedBytes += result.Size
-			context.TotalExpectedUploadedBytes += result.Size
+			context.TotalUploadedBytes += uint64(result.Size)
+			context.TotalExpectedUploadedBytes += uint64(result.Size)
 		})
 
 		err = self.collection_context.Save()

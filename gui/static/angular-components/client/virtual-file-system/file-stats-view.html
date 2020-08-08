@@ -50,7 +50,7 @@
                       >
                 <i class="fa fa-refresh"
                    ng-class="{'fa-spin': controller.updateInProgress}"></i>
-                {{ controller.fileContext.selectedRow.Dowload.vfs_path ? 'Re-Collect' : 'Collect' }} from the client
+                {{ controller.fileContext.selectedRow.Download.vfs_path ? 'Re-Collect' : 'Collect' }} from the client
               </button>
             </dd>
           </div>
@@ -67,6 +67,9 @@
       <dl class="dl-horizontal dl-flow">
         <div ng-repeat="(key, value) in controller.fileContext.selectedRow._Data">
           <dt>{{key}}</dt><dd>{{value}}</dd>
+        </div>
+        <div ng-if="controller.fileContext.selectedRow.Download.sparse">
+          <dt>Sparse</dt>
         </div>
       </dl>
     </div>

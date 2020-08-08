@@ -9,13 +9,11 @@ import (
 	"io"
 	"os"
 
-	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -75,10 +73,11 @@ func (self *VelociraptorUploader) Upload(
 				Path:     store_as_name,
 				Accessor: accessor,
 			},
-			Offset: offset,
-			Size:   uint64(expected_size),
-			Data:   data,
-			Eof:    err == io.EOF,
+			Offset:     offset,
+			Size:       uint64(expected_size),
+			StoredSize: uint64(expected_size),
+			Data:       data,
+			Eof:        err == io.EOF,
 		}
 
 		select {
@@ -99,6 +98,7 @@ func (self *VelociraptorUploader) Upload(
 
 		if read_bytes == 0 {
 			result.Size = offset
+			result.StoredSize = offset
 			result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
 			result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 			return result, nil
@@ -122,6 +122,8 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		return nil, errors.New("Not supported")
 	}
 
+	index := []*actions_proto.Range{}
+
 	result := &api.UploadResponse{
 		Path: filename,
 	}
@@ -134,8 +136,6 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
-
-	index := []*ordereddict.Dict{}
 
 	// Does the index contain any sparse runs?
 	is_sparse := false
@@ -150,8 +150,36 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	// Adjust the expected size properly to the sum of all
 	// non-sparse ranges and build the index file.
 	ranges := range_reader.Ranges()
-	if len(ranges) == 0 {
-		// No ranges - just send a placeholder.
+
+	// Inspect the ranges and prepare an index.
+	expected_size = 0
+	real_size := int64(0)
+	for _, rng := range ranges {
+		file_length := rng.Length
+		if rng.IsSparse {
+			file_length = 0
+		}
+
+		index = append(index, &actions_proto.Range{
+			FileOffset:     expected_size,
+			OriginalOffset: rng.Offset,
+			FileLength:     file_length,
+			Length:         rng.Length,
+		})
+
+		if !rng.IsSparse {
+			expected_size += rng.Length
+		} else {
+			is_sparse = true
+		}
+
+		if real_size < rng.Offset+rng.Length {
+			real_size = rng.Offset + rng.Length
+		}
+	}
+
+	// No ranges - just send a placeholder.
+	if expected_size == 0 {
 		self.Responder.AddResponse(&crypto_proto.GrrMessage{
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
@@ -159,30 +187,18 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 					Path:     store_as_name,
 					Accessor: accessor,
 				},
+				Size:       uint64(real_size),
+				StoredSize: 0,
+				IsSparse:   is_sparse,
+				Index:      &actions_proto.Index{Ranges: index},
+				Eof:        true,
 			},
 		})
+
+		result.Size = uint64(real_size)
+		result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
+		result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 		return result, nil
-	}
-
-	// Inspect the ranges and prepare an index.
-	expected_size = 0
-	for _, rng := range ranges {
-		file_length := rng.Length
-		if rng.IsSparse {
-			file_length = 0
-		}
-
-		index = append(index, ordereddict.NewDict().
-			Set("file_offset", expected_size).
-			Set("original_offset", rng.Offset).
-			Set("file_length", file_length).
-			Set("length", rng.Length))
-
-		if !rng.IsSparse {
-			expected_size += rng.Length
-		} else {
-			is_sparse = true
-		}
 	}
 
 	// Send each range separately
@@ -228,10 +244,12 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 					Path:     store_as_name,
 					Accessor: accessor,
 				},
-				Offset: uint64(write_offset),
-				Size:   uint64(expected_size),
-				Data:   data,
-				Eof:    write_offset+int64(read_bytes) >= expected_size,
+				Offset:     uint64(write_offset),
+				Size:       uint64(real_size),
+				StoredSize: uint64(expected_size),
+				IsSparse:   is_sparse,
+				Data:       data,
+				Eof:        write_offset+int64(read_bytes) >= expected_size,
 			}
 
 			select {
@@ -253,26 +271,25 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	// We did a sparse file, upload the index as well.
 	if is_sparse {
-		serialized, err := utils.DictsToJson(index, nil)
-		if err != nil {
-			return nil, err
-		}
 		self.Responder.AddResponse(&crypto_proto.GrrMessage{
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name + ".idx",
+					Path:     store_as_name,
 					Accessor: accessor,
 				},
-				Offset: 0,
-				Size:   uint64(len(serialized)),
-				Data:   serialized,
-				Eof:    true,
+				Size:       uint64(real_size),
+				StoredSize: uint64(expected_size),
+				IsSparse:   is_sparse,
+				Offset:     uint64(write_offset),
+				Index:      &actions_proto.Index{Ranges: index},
+				Eof:        true,
 			},
 		})
 	}
 
-	result.Size = uint64(write_offset)
+	result.Size = uint64(real_size)
+	result.StoredSize = uint64(write_offset)
 	result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
 	result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 
