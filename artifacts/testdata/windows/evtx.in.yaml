@@ -10,3 +10,9 @@ Queries:
 
   # PowershellScriptblock VQL test
   - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
+
+  - LET _ <= SELECT * FROM execve(["wevtutil.exe", "cl", "Microsoft-Windows-PowerShell/Operational"])
+  - LET _ <= SELECT * FROM Artifact.Windows.System.PowerShell(
+         Command='New-WinEvent -ProviderName Microsoft-Windows-Powershell -Id 53504 -Payload ("Foobar", "Did something")')
+  - SELECT message FROM parse_evtx(
+      filename="c:/Windows/system32/winevt/Logs/Microsoft-Windows-Policy%4Operational.evtx")
