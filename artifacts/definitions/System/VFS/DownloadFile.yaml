@@ -14,5 +14,5 @@ parameters:
 
 sources:
   - queries:
-      - SELECT Path, Accessor, Size, Error, Sha256, Md5
+      - SELECT Path, Accessor, Size, StoredSize, Error, Sha256, Md5
         FROM upload(files=Path, accessor=Accessor)

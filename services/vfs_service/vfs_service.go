@@ -74,16 +74,19 @@ func (self *VFSService) ProcessDownloadFile(
 		Path, _ := row.GetString("Path")
 
 		// Figure out where the file was uploaded to.
-		vfs_path := flow_path_manager.GetUploadsFile(Accessor, Path).Path()
+		vfs_path_manager := flow_path_manager.GetUploadsFile(Accessor, Path)
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(self.config_obj)
-		_, err := file_store_factory.StatFile(vfs_path)
+		_, err := file_store_factory.StatFile(vfs_path_manager.Path())
 		if err != nil {
 			self.logger.Error(fmt.Sprintf(
-				"Unable to save flow %v: %v", vfs_path, err))
+				"Unable to save flow %v: %v",
+				vfs_path_manager.Path(), err))
 			continue
 		}
+
+		_, err = file_store_factory.StatFile(vfs_path_manager.IndexPath())
 
 		// We store a place holder in the VFS pointing at the
 		// read vfs_path of the download.
@@ -91,13 +94,15 @@ func (self *VFSService) ProcessDownloadFile(
 		err = db.SetSubject(self.config_obj,
 			flow_path_manager.GetVFSDownloadInfoPath(Accessor, Path).Path(),
 			&flows_proto.VFSDownloadInfo{
-				VfsPath: vfs_path,
+				VfsPath: vfs_path_manager.Path(),
 				Mtime:   uint64(ts) * 1000000,
+				Sparse:  err == nil, // If index file exists we have an index.
 				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
 			})
 		if err != nil {
 			self.logger.Error(fmt.Sprintf(
-				"Unable to save flow %v: %v", vfs_path, err))
+				"Unable to save flow %v: %v",
+				vfs_path_manager.Path(), err))
 		}
 	}
 }

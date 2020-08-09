@@ -75,8 +75,9 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		urn := path.Dir(flows.GetCollectionPath(arg.ClientId, "X"))
-		flow_urns, err := db.ListChildren(config_obj, urn, 0, 10000)
+		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
+		flow_urns, err := db.ListChildren(
+			config_obj, flow_path_manager.ContainerPath(), 0, 10000)
 		if err != nil {
 			scope.Log("Error: %v", err)
 			return
@@ -225,8 +226,7 @@ func (self EnumerateFlowPlugin) Call(
 		emit("Log", log_path)
 
 		// The flow's metadata
-		emit("CollectionContext", flows.GetCollectionPath(arg.ClientId,
-			arg.FlowId)+".db")
+		emit("CollectionContext", flow_path_manager.Path()+".db")
 	}()
 
 	return output_chan

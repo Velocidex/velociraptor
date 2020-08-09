@@ -64,6 +64,7 @@ message ArtifactUploadedFileInfo {
     string name = 1;
     string vfs_path = 2;
     uint64 size = 3;
+    uint64 stored_size = 4;
 }
 
 // This context is serialized into the data store.

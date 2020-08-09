@@ -20,7 +20,6 @@ package flows
 import (
 	"context"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
@@ -37,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -55,10 +55,6 @@ var (
 		Help: "Total bytes of Uploaded Files.",
 	})
 )
-
-func GetCollectionPath(client_id, flow_id string) string {
-	return path.Join("/clients", client_id, "collections", flow_id)
-}
 
 func closeContext(
 	config_obj *config_proto.Config,
@@ -172,7 +168,8 @@ func flushContextUploadedFiles(
 			Set("Timestamp", fmt.Sprintf("%v", time.Now().UTC().Unix())).
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", row.Name).
-			Set("expected_size", fmt.Sprintf("%v", row.Size)))
+			Set("file_size", row.Size).
+			Set("uploaded_size", row.StoredSize))
 	}
 
 	// Clear the logs from the flow object.
@@ -377,18 +374,19 @@ func appendUploadDataToFile(
 
 	flow_path_manager := paths.NewFlowPathManager(
 		message.Source, collection_context.SessionId)
-	// Figure out where to store the file.
-	file_path := flow_path_manager.GetUploadsFile(
-		file_buffer.Pathspec.Accessor,
-		file_buffer.Pathspec.Path).Path()
 
-	fd, err := file_store_factory.WriteFile(file_path)
+	// Figure out where to store the file.
+	file_path_manager := flow_path_manager.GetUploadsFile(
+		file_buffer.Pathspec.Accessor,
+		file_buffer.Pathspec.Path)
+
+	fd, err := file_store_factory.WriteFile(file_path_manager.Path())
 	if err != nil {
 		// If we fail to write this one file we keep going -
 		// otherwise the flow will be terminated.
 		Log(config_obj, collection_context,
 			fmt.Sprintf("While writing to %v: %v",
-				file_path, err))
+				file_path_manager.Path(), err))
 		return nil
 	}
 	defer fd.Close()
@@ -399,13 +397,23 @@ func appendUploadDataToFile(
 		if err != nil {
 			return err
 		}
+
+		// If the file is sparse we can store a different
+		// amount from the actual file size. Therefore in that
+		// case we expect less bytes to be sent.
+		size := file_buffer.Size
+		if file_buffer.IsSparse {
+			size = file_buffer.StoredSize
+		}
+
 		collection_context.TotalUploadedFiles += 1
-		collection_context.TotalExpectedUploadedBytes += file_buffer.Size
+		collection_context.TotalExpectedUploadedBytes += size
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name: file_path,
-				Size: file_buffer.Size,
+				Name:       file_path_manager.Path(),
+				Size:       file_buffer.Size,
+				StoredSize: size,
 			})
 		collection_context.Dirty = true
 	}
@@ -418,24 +426,49 @@ func appendUploadDataToFile(
 	_, err = fd.Write(file_buffer.Data)
 	if err != nil {
 		Log(config_obj, collection_context,
-			fmt.Sprintf("While writing to %v: %v", file_path, err))
+			fmt.Sprintf("While writing to %v: %v",
+				file_path_manager.Path(), err))
 		return nil
+	}
+
+	// Does this packet have an index? It could be sparse.
+	if file_buffer.Index != nil {
+		fd, err := file_store_factory.WriteFile(file_path_manager.IndexPath())
+		if err != nil {
+			return err
+		}
+		defer fd.Close()
+		fd.Truncate()
+
+		data := json.MustMarshalIndent(file_buffer.Index)
+		_, err = fd.Write(data)
+		if err != nil {
+			return err
+		}
+
+		collection_context.UploadedFiles = append(
+			collection_context.UploadedFiles,
+			&flows_proto.ArtifactUploadedFileInfo{
+				Name:       file_path_manager.IndexPath(),
+				Size:       uint64(len(data)),
+				StoredSize: uint64(len(data)),
+			})
+		collection_context.Dirty = true
 	}
 
 	// When the upload completes, we emit an event.
 	if file_buffer.Eof {
 		uploadCounter.Inc()
-
-		size := file_buffer.Offset + uint64(len(file_buffer.Data))
-		uploadBytes.Add(float64(size))
+		uploadBytes.Add(float64(file_buffer.StoredSize))
 
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("ClientId", message.Source).
-			Set("VFSPath", file_path).
+			Set("VFSPath", file_path_manager.Path()).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
-			Set("Size", size)
+			Set("Size", file_buffer.Size).
+			Set("UploadedSize", file_buffer.StoredSize)
 
 		path_manager := result_sets.NewArtifactPathManager(config_obj,
 			message.Source, collection_context.SessionId,

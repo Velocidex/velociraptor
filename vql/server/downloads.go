@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/gogo/protobuf/jsonpb"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/tink-ab/tempfile"

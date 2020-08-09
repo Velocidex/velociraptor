@@ -8,9 +8,10 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/flows/proto";
 
 message VFSDownloadInfo {
-  string vfs_path = 1;
-  uint64 size = 2;
-  uint64 mtime = 3;
+    string vfs_path = 1;
+    uint64 size = 2;
+    uint64 mtime = 3;
+    bool sparse = 4;
 }
 
 message VFSListResponse {

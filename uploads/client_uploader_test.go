@@ -7,6 +7,7 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -33,6 +34,10 @@ func CombineOutput(name string, responses []*crypto_proto.GrrMessage) string {
 	}
 
 	return string(result)
+}
+
+func GetIndex(responses []*crypto_proto.GrrMessage) []*actions_proto.Range {
+	return responses[len(responses)-1].FileBuffer.Index.Ranges
 }
 
 func TestClientUploaderSparse(t *testing.T) {
@@ -62,13 +67,12 @@ func TestClientUploaderSparse(t *testing.T) {
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
-	assert.Equal(t, responses[0].FileBuffer.Size, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
-	assert.Equal(t, CombineOutput("foo", responses),
-		"Hello hello ")
-	goldie.Assert(t, "ClientUploaderSparse",
-		json.MustMarshalIndent(responses))
-	assert.NotEqual(t, CombineOutput("foo.idx", responses), "")
+	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
+	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(
+		responses))
 }
 
 // Test what happens when the underlying reader is shorter than the
@@ -101,8 +105,39 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
-	assert.Equal(t, responses[0].FileBuffer.Size, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hi")
+}
+
+// Trying to upload a completely sparse file with no data but real
+// size.
+func TestClientUploaderCompletelySparse(t *testing.T) {
+	resp := responder.TestResponder()
+	uploader := &VelociraptorUploader{
+		Responder: resp,
+	}
+
+	BUFF_SIZE = 10000
+
+	reader := &TestRangeReader{
+		Reader: bytes.NewReader([]byte("Hello world hi")), // len=11
+		ranges: []Range{
+			{Offset: 0, Length: 6, IsSparse: true},
+		},
+	}
+	range_reader, ok := interface{}(reader).(RangeReader)
+	assert.Equal(t, ok, true)
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+	uploader.maybeUploadSparse(ctx, scope,
+		"foo", "ntfs", "", 1000, range_reader)
+	responses := responder.GetTestResponses(resp)
+
+	// Expected size is the combined sum of all ranges with data
+	// in them.
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(0))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(6))
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
@@ -132,7 +167,6 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
 	goldie.Assert(t, "ClientUploaderSparseMultiBuffer",
 		json.MustMarshalIndent(responses))
-	assert.NotEqual(t, CombineOutput("foo.idx", responses), "")
 }
 
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {

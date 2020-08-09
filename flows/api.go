@@ -50,8 +50,8 @@ func GetFlows(
 		return nil, err
 	}
 
-	flow_urns, err := db.ListChildren(
-		config_obj, path.Dir(GetCollectionPath(client_id, "X")),
+	flow_path_manager := paths.NewFlowPathManager(client_id, "")
+	flow_urns, err := db.ListChildren(config_obj, flow_path_manager.ContainerPath(),
 		offset, length)
 	if err != nil {
 		return nil, err
@@ -95,9 +95,10 @@ func GetFlowDetails(
 		return nil, err
 	}
 
-	urn := GetCollectionPath(client_id, flow_id)
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(config_obj, urn, collection_context)
+	err = db.GetSubject(config_obj,
+		flow_path_manager.Path(), collection_context)
 	if err != nil {
 		return nil, err
 	}
@@ -280,9 +281,9 @@ func GetFlowRequests(
 
 	result := &api_proto.ApiFlowRequestDetails{}
 
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	flow_details := &api_proto.ApiFlowRequestDetails{}
-	err = db.GetSubject(config_obj,
-		path.Join(GetCollectionPath(client_id, flow_id), "task"),
+	err = db.GetSubject(config_obj, flow_path_manager.Task().Path(),
 		flow_details)
 	if err != nil {
 		return nil, err
