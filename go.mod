@@ -37,7 +37,6 @@ require (
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
 	github.com/go-ole/go-ole v1.2.4
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/gogo/protobuf v1.1.1
 	github.com/golang/mock v1.4.3
 	github.com/golang/protobuf v1.4.0-rc.4.0.20200313231945-b860323f09d0
 	github.com/golang/snappy v0.0.1
@@ -96,7 +95,7 @@ require (
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
-	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666
+	golang.org/x/sys v0.0.0-20200808120158-1030fc2bf1d9
 	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/tools v0.0.0-20200207131002-533eb2654509 // indirect
 	google.golang.org/api v0.11.0
@@ -112,7 +111,7 @@ require (
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	howett.net/plist v0.0.0-20181124034731-591f970eefbb
-	www.velocidex.com/golang/evtx v0.0.2-0.20200610130036-cc23ac7defb8
+	www.velocidex.com/golang/evtx v0.0.2-0.20200809130519-ab840e035bf7
 	www.velocidex.com/golang/go-ese v0.0.0-20200111070159-4b7484475321
 	www.velocidex.com/golang/go-ntfs v0.0.0-20200808165039-c2a9c841abe3
 	www.velocidex.com/golang/go-pe v0.1.1-0.20191103232346-ac12e8190bb6
