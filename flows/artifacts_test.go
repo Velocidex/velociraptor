@@ -23,6 +23,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+
+	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
 type TestRangeReader struct {
@@ -270,7 +272,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		return
 	}
 
-	filename := "C:\\sparse.txt"
+	filename := "C:\\Users\\sparse.txt"
 
 	cmd := exec.Command("FSUtil", "File", "CreateNew", filename, "0x100000")
 	cmd.CombinedOutput()
