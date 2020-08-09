@@ -77,7 +77,6 @@ func (self *VelociraptorUploader) Upload(
 			Size:       uint64(expected_size),
 			StoredSize: uint64(expected_size),
 			Data:       data,
-			Eof:        err == io.EOF,
 		}
 
 		select {
@@ -122,8 +121,10 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		return nil, errors.New("Not supported")
 	}
 
-	index := []*actions_proto.Range{}
+	index := &actions_proto.Index{}
 
+	// This is the response that will be passed into the VQL
+	// engine.
 	result := &api.UploadResponse{
 		Path: filename,
 	}
@@ -160,12 +161,13 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			file_length = 0
 		}
 
-		index = append(index, &actions_proto.Range{
-			FileOffset:     expected_size,
-			OriginalOffset: rng.Offset,
-			FileLength:     file_length,
-			Length:         rng.Length,
-		})
+		index.Ranges = append(index.Ranges,
+			&actions_proto.Range{
+				FileOffset:     expected_size,
+				OriginalOffset: rng.Offset,
+				FileLength:     file_length,
+				Length:         rng.Length,
+			})
 
 		if !rng.IsSparse {
 			expected_size += rng.Length
@@ -180,6 +182,10 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	// No ranges - just send a placeholder.
 	if expected_size == 0 {
+		if !is_sparse {
+			index = nil
+		}
+
 		self.Responder.AddResponse(&crypto_proto.GrrMessage{
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
@@ -190,7 +196,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				Size:       uint64(real_size),
 				StoredSize: 0,
 				IsSparse:   is_sparse,
-				Index:      &actions_proto.Index{Ranges: index},
+				Index:      index,
 				Eof:        true,
 			},
 		})
@@ -249,7 +255,6 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				StoredSize: uint64(expected_size),
 				IsSparse:   is_sparse,
 				Data:       data,
-				Eof:        write_offset+int64(read_bytes) >= expected_size,
 			}
 
 			select {
@@ -270,23 +275,28 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	}
 
 	// We did a sparse file, upload the index as well.
-	if is_sparse {
-		self.Responder.AddResponse(&crypto_proto.GrrMessage{
-			RequestId: constants.TransferWellKnownFlowId,
-			FileBuffer: &actions_proto.FileBuffer{
-				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name,
-					Accessor: accessor,
-				},
-				Size:       uint64(real_size),
-				StoredSize: uint64(expected_size),
-				IsSparse:   is_sparse,
-				Offset:     uint64(write_offset),
-				Index:      &actions_proto.Index{Ranges: index},
-				Eof:        true,
-			},
-		})
+	if !is_sparse {
+		index = nil
 	}
+
+	// Send an EOF as the last packet with no data. If the file
+	// was sparse, also include the index in this packet. NOTE:
+	// There should be only one EOF packet.
+	self.Responder.AddResponse(&crypto_proto.GrrMessage{
+		RequestId: constants.TransferWellKnownFlowId,
+		FileBuffer: &actions_proto.FileBuffer{
+			Pathspec: &actions_proto.PathSpec{
+				Path:     store_as_name,
+				Accessor: accessor,
+			},
+			Size:       uint64(real_size),
+			StoredSize: uint64(expected_size),
+			IsSparse:   is_sparse,
+			Offset:     uint64(write_offset),
+			Index:      index,
+			Eof:        true,
+		},
+	})
 
 	result.Size = uint64(real_size)
 	result.StoredSize = uint64(write_offset)

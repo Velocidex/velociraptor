@@ -6,7 +6,9 @@
     "path": "foo",
     "accessor": "ntfs"
    },
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "SGVsbG8g"
   }
  },
@@ -19,9 +21,10 @@
     "accessor": "ntfs"
    },
    "offset": 6,
-   "size": 12,
-   "data": "aGVsbG8g",
-   "eof": true
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
+   "data": "aGVsbG8g"
   }
  },
  {
@@ -32,6 +35,10 @@
     "path": "foo",
     "accessor": "ntfs"
    },
+   "offset": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "eof": true,
    "index": {
     "ranges": [

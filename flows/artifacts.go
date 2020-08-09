@@ -20,7 +20,6 @@ package flows
 import (
 	"context"
 	"fmt"
-	"path"
 	"strings"
 	"time"
 
@@ -56,10 +55,6 @@ var (
 		Help: "Total bytes of Uploaded Files.",
 	})
 )
-
-func GetCollectionPath(client_id, flow_id string) string {
-	return path.Join("/clients", client_id, "collections", flow_id)
-}
 
 func closeContext(
 	config_obj *config_proto.Config,
@@ -174,7 +169,7 @@ func flushContextUploadedFiles(
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", row.Name).
 			Set("file_size", row.Size).
-			Set("uploaded_size", fmt.Sprintf("%v", row.StoredSize)))
+			Set("uploaded_size", row.StoredSize))
 	}
 
 	// Clear the logs from the flow object.
@@ -474,7 +469,8 @@ func appendUploadDataToFile(
 			Set("VFSPath", file_path_manager.Path()).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
-			Set("Size", size)
+			Set("Size", size).
+			Set("UploadedSize", file_buffer.StoredSize)
 
 		path_manager := result_sets.NewArtifactPathManager(config_obj,
 			message.Source, collection_context.SessionId,

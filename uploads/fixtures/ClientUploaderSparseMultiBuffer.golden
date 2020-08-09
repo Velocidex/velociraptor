@@ -6,7 +6,9 @@
     "path": "foo",
     "accessor": "ntfs"
    },
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "SGU="
   }
  },
@@ -19,7 +21,9 @@
     "accessor": "ntfs"
    },
    "offset": 2,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "bGw="
   }
  },
@@ -32,7 +36,9 @@
     "accessor": "ntfs"
    },
    "offset": 4,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "byA="
   }
  },
@@ -45,7 +51,9 @@
     "accessor": "ntfs"
    },
    "offset": 6,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "aGU="
   }
  },
@@ -58,7 +66,9 @@
     "accessor": "ntfs"
    },
    "offset": 8,
-   "size": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "data": "bGw="
   }
  },
@@ -71,9 +81,10 @@
     "accessor": "ntfs"
    },
    "offset": 10,
-   "size": 12,
-   "data": "byA=",
-   "eof": true
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
+   "data": "byA="
   }
  },
  {
@@ -84,6 +95,10 @@
     "path": "foo",
     "accessor": "ntfs"
    },
+   "offset": 12,
+   "size": 18,
+   "stored_size": 12,
+   "is_sparse": true,
    "eof": true,
    "index": {
     "ranges": [

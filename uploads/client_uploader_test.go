@@ -67,7 +67,8 @@ func TestClientUploaderSparse(t *testing.T) {
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
-	assert.Equal(t, responses[0].FileBuffer.Size, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
 	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(
@@ -104,7 +105,8 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
-	assert.Equal(t, responses[0].FileBuffer.Size, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(12))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hi")
 }
 
@@ -134,7 +136,8 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 
 	// Expected size is the combined sum of all ranges with data
 	// in them.
-	assert.Equal(t, responses[0].FileBuffer.Size, uint64(0))
+	assert.Equal(t, responses[0].FileBuffer.StoredSize, uint64(0))
+	assert.Equal(t, responses[0].FileBuffer.Size, uint64(6))
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
