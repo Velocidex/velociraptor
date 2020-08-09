@@ -22,7 +22,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
@@ -260,7 +259,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").Path())
 
 	file_size, _ = event_rows[0].GetInt64("Size")
-	assert.Equal(self.T(), file_size, int64(12))
+	assert.Equal(self.T(), file_size, int64(18))
 
 	uploaded_size, _ = event_rows[0].GetInt64("UploadedSize")
 	assert.Equal(self.T(), uploaded_size, int64(12))
@@ -309,7 +308,6 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	// Process it.
 	for _, resp := range responder.GetTestResponses(resp) {
 		resp.Source = self.client_id
-		utils.Debug(resp)
 		ArtifactCollectorProcessOneMessage(self.config_obj,
 			collection_context, resp)
 	}
@@ -327,6 +325,57 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Debug the entire filestore
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
+
+	// Check the file content is there
+	flow_path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
+	assert.Equal(self.T(),
+		test_utils.FileReadAll(self.T(), self.config_obj,
+			flow_path_manager.GetUploadsFile("ntfs", "sparse").Path()),
+		"")
+
+	// Check the upload metadata file.
+	upload_metadata_rows := test_utils.FileReadRows(self.T(), self.config_obj,
+		flow_path_manager.UploadMetadata().Path())
+
+	// There should be two rows - one for the file and one for the index.
+	assert.Equal(self.T(), len(upload_metadata_rows), 2)
+
+	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
+	assert.Equal(self.T(), vfs_path,
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").Path())
+
+	// The file is actually 0x100000 bytes on the client.
+	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
+	assert.Equal(self.T(), file_size, int64(0x100000))
+
+	// But we have 0 bytes in total uploaded because the entire file is sparse
+	uploaded_size, _ := upload_metadata_rows[0].GetInt64("uploaded_size")
+	assert.Equal(self.T(), uploaded_size, int64(0))
+
+	// Second row is for the index.
+	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
+	assert.Equal(self.T(), vfs_path,
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").IndexPath())
+
+	// Check the System.Upload.Completion event.
+	artifact_path_manager := result_sets.NewArtifactPathManager(
+		self.config_obj, self.client_id, self.flow_id,
+		"System.Upload.Completion")
+
+	event_rows := test_utils.FileReadRows(self.T(), self.config_obj,
+		artifact_path_manager.Path())
+
+	assert.Equal(self.T(), len(event_rows), 1)
+
+	vfs_path, _ = event_rows[0].GetString("VFSPath")
+	assert.Equal(self.T(), vfs_path,
+		flow_path_manager.GetUploadsFile("ntfs", "sparse").Path())
+
+	file_size, _ = event_rows[0].GetInt64("Size")
+	assert.Equal(self.T(), file_size, int64(0x100000))
+
+	uploaded_size, _ = event_rows[0].GetInt64("UploadedSize")
+	assert.Equal(self.T(), uploaded_size, int64(0))
 }
 
 func TestArtifactCollection(t *testing.T) {

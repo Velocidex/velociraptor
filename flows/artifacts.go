@@ -459,9 +459,7 @@ func appendUploadDataToFile(
 	// When the upload completes, we emit an event.
 	if file_buffer.Eof {
 		uploadCounter.Inc()
-
-		size := file_buffer.Offset + uint64(len(file_buffer.Data))
-		uploadBytes.Add(float64(size))
+		uploadBytes.Add(float64(file_buffer.StoredSize))
 
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
@@ -469,7 +467,7 @@ func appendUploadDataToFile(
 			Set("VFSPath", file_path_manager.Path()).
 			Set("UploadName", file_buffer.Pathspec.Path).
 			Set("Accessor", file_buffer.Pathspec.Accessor).
-			Set("Size", size).
+			Set("Size", file_buffer.Size).
 			Set("UploadedSize", file_buffer.StoredSize)
 
 		path_manager := result_sets.NewArtifactPathManager(config_obj,
