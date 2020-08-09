@@ -10,3 +10,7 @@ Queries:
 
   # PowershellScriptblock VQL test
   - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EventLog=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
+
+  - SELECT Message FROM parse_evtx(
+      filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx")
+    LIMIT 1

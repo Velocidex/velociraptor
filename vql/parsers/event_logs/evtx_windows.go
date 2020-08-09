@@ -29,6 +29,11 @@ func maybeEnrichEvent(event *ordereddict.Dict) *ordereddict.Dict {
 		return event
 	}
 
+	provider_guid, ok := ordereddict.GetString(event, "System.Provider.Guid")
+	if !ok {
+		return event
+	}
+
 	channel, ok := ordereddict.GetString(event, "System.Channel")
 	if !ok {
 		return event
@@ -45,9 +50,12 @@ func maybeEnrichEvent(event *ordereddict.Dict) *ordereddict.Dict {
 
 	cached_message_set, pres := lru.Get(key)
 	if !pres {
-		message_set, err = evtx.GetMessages(provider, channel)
+		message_set, err = evtx.GetMessagesByGUID(provider_guid, channel)
 		if err != nil {
-			return event
+			message_set, err = evtx.GetMessages(provider, channel)
+			if err != nil {
+				return event
+			}
 		}
 
 		lru.Set(key, cachedMessageSet{message_set})
