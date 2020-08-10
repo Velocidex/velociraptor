@@ -57,7 +57,7 @@ func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
 			return
 		}
 
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	t.Fatalf("Timed out")

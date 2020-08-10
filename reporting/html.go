@@ -70,7 +70,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 	case []*ordereddict.Dict:
 		columns := []string{}
 
-		result := "<table class=\"table table-striped\">\n"
+		result := "<div class=\"table\"><table class=\"table table-striped\"><thead>\n"
 
 		for _, item := range t {
 			if len(columns) == 0 {
@@ -80,8 +80,8 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 					result += "    <th>" + name + "</th>\n"
 				}
 				result += "  </tr>\n"
+				result += "</thead>\n<tbody>\n"
 			}
-
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
@@ -89,13 +89,13 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			}
 			result += "  </tr>\n"
 		}
-		result += "</table>\n"
+		result += "</tbody>\n/table></div>\n"
 		return result
 
 	case chan *ordereddict.Dict:
 		columns := []string{}
 
-		result := "<table class=\"table table-striped\">\n"
+		result := "<div class=\"table\"><table class=\"table table-striped\">\n<thead>\n"
 
 		for item := range t {
 			if len(columns) == 0 {
@@ -105,8 +105,8 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 					result += "    <th>" + name + "</th>\n"
 				}
 				result += "  </tr>\n"
+				result += "</thead>\n<tbody>\n"
 			}
-
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
@@ -114,7 +114,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			}
 			result += "  </tr>\n"
 		}
-		result += "</table>\n"
+		result += "</tbody>\n</table></div>\n"
 		return result
 	}
 }
