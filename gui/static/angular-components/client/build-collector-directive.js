@@ -18,6 +18,7 @@ const BuildCollectorController = function(
     this.params = {};
     this.ops_per_second = 0;
     this.timeout = 3600;
+    this.password = "";
     this.target = "ZIP";
     this.target_args = {};
 
@@ -51,6 +52,7 @@ BuildCollectorController.prototype.sendRequest = function() {
                 {key: "artifacts", value: JSON.stringify(this.names)},
                 {key: "parameters", value: JSON.stringify(this.params)},
                 {key: "template", value: this.template},
+                {key: "Password", value: this.password},
                 {key: "target", value: this.target},
                 {key: "target_args", value: JSON.stringify(this.target_args)},
             ],
