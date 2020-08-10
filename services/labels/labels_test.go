@@ -109,6 +109,9 @@ func (self *LabelsTestSuite) TestAddLabel() {
 
 	assert.False(self.T(), labeler.IsLabelSet(self.client_id, "Label2"))
 
+	// All clients belong to the All label.
+	assert.True(self.T(), labeler.IsLabelSet(self.client_id, "All"))
+
 	// The timestamp should be reasonable
 	assert.True(self.T(), labeler.LastLabelTimestamp(self.client_id) >= now)
 

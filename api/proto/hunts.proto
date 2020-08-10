@@ -30,6 +30,8 @@ message HuntCondition {
         description: "The condition to match hosts for this hunt.",
     };
 
+    HuntLabelCondition excluded_labels = 4;
+
     oneof union_field {
         HuntLabelCondition labels = 2 [(sem_type) = {
                 friendly_name: "Match by label",

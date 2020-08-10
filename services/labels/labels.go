@@ -152,6 +152,13 @@ func (self *Labeler) IsLabelSet(client_id string, checked_label string) bool {
 	defer self.mu.Unlock()
 
 	checked_label = strings.ToLower(checked_label)
+
+	// This is a special label that all clients belong to. It is
+	// used in the GUI to indicate all clients.
+	if checked_label == "all" {
+		return true
+	}
+
 	cached, err := self.getRecord(client_id)
 	if err != nil {
 		return false
