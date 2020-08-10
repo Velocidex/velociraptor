@@ -244,21 +244,8 @@ func (self *Container) ReadArtifactResults(
 	return utils.ReadJsonFromFile(ctx, fd)
 }
 
-func (self *Container) Upload(
-	ctx context.Context,
-	scope *vfilter.Scope,
-	filename string,
-	accessor string,
-	store_as_name string,
-	expected_size int64,
-	reader io.Reader) (*api.UploadResponse, error) {
-
-	var components []string
-	if store_as_name == "" {
-		store_as_name = filename
-		components = []string{accessor}
-	}
-
+func sanitize_upload_name(store_as_name string) string {
+	components := []string{}
 	// Normalize and clean up the path so the zip file is more
 	// usable by fragile zip programs like Windows explorer.
 	for _, component := range utils.SplitComponents(store_as_name) {
@@ -269,7 +256,23 @@ func (self *Container) Upload(
 	}
 
 	// Zip members must not have absolute paths.
-	sanitized_name := path.Join(components...)
+	return path.Join(components...)
+}
+
+func (self *Container) Upload(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	filename string,
+	accessor string,
+	store_as_name string,
+	expected_size int64,
+	reader io.Reader) (*api.UploadResponse, error) {
+
+	if store_as_name == "" {
+		store_as_name = accessor + "/" + filename
+	}
+
+	sanitized_name := sanitize_upload_name(store_as_name)
 
 	scope.Log("Collecting file %s into %s (%v bytes)",
 		filename, store_as_name, expected_size)
@@ -417,7 +420,7 @@ func (self *Container) Close() error {
 
 func NewContainer(path string) (*Container, error) {
 	fd, err := os.OpenFile(
-		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return nil, err
 	}

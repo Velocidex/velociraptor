@@ -165,3 +165,44 @@ func (self *ContainerSourcePlugin) Call(
 
 	return output_chan
 }
+
+type ArchiveSourcePlugin struct {
+	server.SourcePlugin
+	Archive *reporting.Archive
+}
+
+func (self *ArchiveSourcePlugin) Call(
+	ctx context.Context,
+	scope *vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		// This plugin will take parameters from environment
+		// parameters. This allows its use to be more concise in
+		// reports etc where many parameters can be inferred from
+		// context.
+		arg := &server.SourcePluginArgs{}
+		server.ParseSourceArgsFromScope(arg, scope)
+
+		// Allow the plugin args to override the environment scope.
+		err := vfilter.ExtractArgs(scope, args, arg)
+		if err != nil {
+			scope.Log("source: %v", err)
+			return
+		}
+
+		if arg.Source != "" {
+			arg.Artifact = arg.Artifact + "/" + arg.Source
+			arg.Source = ""
+		}
+
+		for row := range self.Archive.ReadArtifactResults(ctx, scope, arg.Artifact) {
+			output_chan <- row
+		}
+	}()
+
+	return output_chan
+}
