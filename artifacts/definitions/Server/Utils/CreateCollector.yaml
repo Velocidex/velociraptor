@@ -31,6 +31,9 @@ parameters:
     default: Reporting.Default
     description: The HTML report template to use.
 
+  - name: Password
+    description: If set we encrypt collected zip files with this password.
+
   - name: parameters
     description: A dict containing the parameters to set.
     type: json
@@ -67,7 +70,8 @@ parameters:
       LET _ <= log(message="Will collect package " + filename)
 
       SELECT * FROM collect(artifacts=Artifacts, report=filename + ".html",
-          args=Parameters, output=filename + ".zip", template=Template)
+          args=Parameters, output=filename + ".zip", template=Template,
+          password=Password)
 
   - name: S3Collection
     type: hidden
@@ -99,7 +103,8 @@ parameters:
           credentialssecret=TargetArgs.credentialsSecret,
           region=TargetArgs.region) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"), template=Template)
+          args=Parameters, output=tempfile(extension=".zip"), template=Template,
+          password=Password)
 
   - name: GCSCollection
     type: hidden
@@ -132,7 +137,8 @@ parameters:
           credentials=TargetArgs.GCSKey
       ) AS ReportUpload
       FROM collect(artifacts=Artifacts, report=tempfile(extension=".html"),
-          args=Parameters, output=tempfile(extension=".zip"), template=Template)
+          args=Parameters, output=tempfile(extension=".zip"), template=Template,
+          password=Password)
 
   - name: PackageToolsArtifact
     description: Collects and uploads third party binaries.
@@ -219,6 +225,7 @@ sources:
                     dict(name="Artifacts", default=artifacts),
                     dict(name="Parameters", default=parameters),
                     dict(name="Template", default=template),
+                    dict(name="Password", default=Password),
                     dict(name="target_args", default=target_args),
                 ) AS parameters,
                 (
