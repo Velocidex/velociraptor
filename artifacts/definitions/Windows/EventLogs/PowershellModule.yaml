@@ -1,29 +1,24 @@
-name: Windows.EventLogs.PowershellScriptblock
+name: Windows.EventLogs.PowershellModule
 description: |
-  This Artifact will search and extract ScriptBlock events (Event ID 4104) from 
+  This Artifact will search and extract Module events (Event ID 4103) from 
   Powershell-Operational Event Logs.
   
   Powershell is commonly used by attackers accross all stages of the attack 
-  lifecycle. A valuable hunt is to search Scriptblock logs for signs of 
-  malicious content.
+  lifecycle. Although quite noisy Module logging can provide valuable insight.
   
   There are several parameter's availible for search leveraging regex. 
     - DateAfter enables search for events after this date.  
     - DateBefore enables search for events before this date.   
-    - SearchStrings enables regex search over scriptblock text field.  
-    - StringWhiteList enables a regex whitelist for scriptblock text field.  
-    - PathWhitelist enables a regex whitelist for path of scriptblock. 
-    - LogLevel enables searching on type of log. Default is Warning level 
-      which is logged even if ScriptBlock logging is turned off when 
-      suspicious keywords detected in Powershell interpreter. See second 
-      reference for list of keywords.
-    - SearchVSS enables VSS search  
+    - ContextRegex enables regex search over ContextInfo text field.  
+    - PayloadRegex enables a regex search over Payload text field.  
+    - SearchVSS enables VSS search
+  
 
 author: Matt Green - @mgreen27
 
 reference:
   - https://attack.mitre.org/techniques/T1059/001/
-  - https://github.com/PowerShell/PowerShell/blob/master/src/System.Management.Automation/engine/runtime/CompiledScriptBlock.cs#L1781-L1943
+  - https://www.fireeye.com/blog/threat-research/2016/02/greater_visibilityt.html
 
 parameters:
   - name: EventLog
@@ -34,28 +29,10 @@ parameters:
   - name: DateBefore
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ss Z"
     type: timestamp
-  - name: SearchStrings
-    description: "regex search over scriptblock text field."
-  - name: StringWhitelist
-    description: "Regex of string to witelist"
-  - name: PathWhitelist
-    description: "Regex of path to whitelist."
-    
-  - name: LogLevel
-    description: "Log level. Warning is Powershell default bad keyword list."
-    type: choices
-    default: Warning
-    choices:
-       - All
-       - Warning
-       - Verbose
-  - name: LogLevelMap
-    type: hidden
-    default: |
-      Choice,Regex
-      All,"."
-      Warning,"3"
-      Verbose,"5"
+  - name: ContextRegex
+    description: "regex search over Payload text field."
+  - name: PayloadRegex
+    description: "regex search over Payload text field."
   - name: SearchVSS
     description: "Add VSS into query."
     type: bool     
@@ -81,7 +58,8 @@ sources:
               FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
             },
             else= {
-              SELECT * FROM glob(globs=EventLog)
+              SELECT *
+              FROM glob(globs=EventLog)
             })
 
         -- Main query
@@ -89,13 +67,13 @@ sources:
           FROM foreach(
             row=files,
             query={
-              SELECT timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
+              SELECT 
+                timestamp(epoch=System.TimeCreated.SystemTime) As EventTime,
                 System.EventID.Value as EventID,
                 System.Computer as Computer,
                 System.Security.UserID as SecurityID,
-                EventData.Path as Path,
-                EventData.ScriptBlockId as ScriptBlockId,
-                EventData.ScriptBlockText as ScriptBlockText,
+                EventData.ContextInfo as ContextInfo,
+                EventData.Payload as Payload,
                 Message,
                 System.EventRecordID as EventRecordID,
                 System.Level as Level,
@@ -103,36 +81,29 @@ sources:
                 System.Task as Task,
                 if(condition=Source, then=Source, else=FullPath) as Source
               FROM parse_evtx(filename=FullPath)
-              WHERE System.EventID.Value = 4104
+              WHERE EventID = 4103
+                AND EventTime > DateAfterTime
                 AND EventTime < DateBeforeTime
-                AND EventTime > DateAfterTime 
-                AND format(format="%d", args=System.Level) =~ LogLevelRegex.value[0]
-                AND if(condition=SearchStrings, 
-                    then=ScriptBlockText =~ SearchStrings,
-                    else=TRUE) 
-                AND if(condition=StringWhitelist, 
-                    then= NOT ScriptBlockText =~ StringWhitelist,
-                    else=TRUE) 
-                AND if(condition=PathWhitelist, 
-                    then= NOT Path =~ PathWhitelist,
-                    else=TRUE)
-          })
+                AND if(condition=ContextRegex,
+                    then=ContextInfo=~ContextRegex,else=TRUE)
+                AND if(condition=PayloadRegex,
+                    then=ContextInfo=~PayloadRegex,else=TRUE)
+            })
           ORDER BY Source DESC
-
+          
         -- Group results for deduplication
         LET grouped = SELECT *
           FROM hits
           GROUP BY EventRecordID
 
         -- Output results
-        SELECT
+        SELECT 
             EventTime,
             EventID,
             Computer,
             SecurityID,
-            Path,
-            ScriptBlockId,
-            ScriptBlockText,
+            ContextInfo,
+            Payload,
             Message,
             EventRecordID,
             Level,
