@@ -25,11 +25,20 @@ import (
 	"fmt"
 	"hash"
 	"io"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	glob "www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 1024*1024) // 1Mb chunks
+		},
+	}
 )
 
 type HashResult struct {
@@ -64,7 +73,8 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	buf := make([]byte, 4*1024*1024) // 4Mb chunks
+	buf := pool.Get().([]byte)
+	defer pool.Put(buf)
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {

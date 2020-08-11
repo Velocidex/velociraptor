@@ -136,11 +136,13 @@ message Report {
     // Each report type will be handled differently. Read about the
     // different types in reporting.go
     string type = 1 [(sem_type) = {
-            description: "Type of report: MONITORING_DAILY, POST_PROCESSING"
+            description: "Type of report: CLIENT, SERVER"
         }];
 
     // If specified we only allow the report to take this long.
     uint64 timeout = 4;
+
+    string name = 5;
 
     string template = 2;
 
