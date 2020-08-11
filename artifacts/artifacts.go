@@ -149,7 +149,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
 		case "monitoring_daily", "server_event", "client",
-			"internal", "hunt":
+			"internal", "hunt", "templates":
 
 		case "html": // HTML reports form a main HTML page for report exports.
 		default:

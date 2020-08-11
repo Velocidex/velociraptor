@@ -121,6 +121,27 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 	return results
 }
 
+func (self *GuiTemplateEngine) Import(artifact, name string) interface{} {
+	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	if !pres {
+		self.Error("Unknown artifact %v", artifact)
+		return ""
+	}
+
+	for _, report := range definition.Reports {
+		if report.Name == name {
+			// We parse the template for new definitions,
+			// we dont actually care about the output.
+			_, err := self.tmpl.Parse(SanitizeGoTemplates(report.Template))
+			if err != nil {
+				self.Error("Template Erorr: %v", err)
+			}
+		}
+	}
+
+	return ""
+}
+
 func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 	_, argv := parseOptions(values)
 	// Not enough args.
@@ -485,6 +506,7 @@ func NewGuiTemplateEngine(
 			"Timeline":  template_engine.Timeline,
 			"Get":       template_engine.getFunction,
 			"Expand":    template_engine.Expand,
+			"import":    template_engine.Import,
 			"str":       strval,
 		})
 	return template_engine, nil

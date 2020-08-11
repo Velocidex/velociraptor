@@ -42,6 +42,10 @@ github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 h1:fLjPD/aNc3UIO
 github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6/go.mod h1:3eOhrUMpNV+6aFIbp5/iudMxNCF27Vw2OZgy4xEx0Fg=
 github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee h1:b8PGgJhYSRNo1z6SW2d53PtTahpuXxZvAIGyfU+wfOk=
 github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee/go.mod h1:fsHrmy0CTbKii39aXznGuvgoHf6l3fFIS4QBGIM5Pdc=
+github.com/Velocidex/blackfriday/v2 v2.0.1 h1:vCKyBtJdOc3F02DpnDTcuB5ng/oGAo/oIzDob9DAcio=
+github.com/Velocidex/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
+github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5UI3RZj9bO5XJKp8yBiqkM212yt/yic0cha20ORY=
+github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/Velocidex/cgofuse v1.1.2 h1:5zvc/Wonpou45AtdA4ZSDENYEKaaOFr8uyYoq6tduqI=
 github.com/Velocidex/cgofuse v1.1.2/go.mod h1:3uaCG9bbPLFSM6WqwcboehPaB4gAgRKx+zQ8M3nKNI4=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKRAUA6n8EQGZK/ROLXHQ7tVwtoEwo57Hg=

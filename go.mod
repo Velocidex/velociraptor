@@ -129,6 +129,9 @@ require (
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict
 // replace www.velocidex.com/golang/go-yara => /home/mic/projects/go-yara
 // replace github.com/Velocidex/json => /home/mic/projects/json
+// replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
+
+replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
 go 1.13
 

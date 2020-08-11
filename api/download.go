@@ -32,6 +32,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/schema"
 	errors "github.com/pkg/errors"
@@ -46,6 +47,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 32*1024)
+		},
+	}
 )
 
 func returnError(w http.ResponseWriter, code int, message string) {
@@ -108,7 +117,9 @@ func vfsFileDownloadHandler(
 		w.WriteHeader(200)
 
 		length_sent := 0
-		buf := make([]byte, 64*1024)
+		buf := pool.Get().([]byte)
+		defer pool.Put(buf)
+
 		for {
 			n, _ := reader_at.ReadAt(buf, offset)
 			if n > 0 {
