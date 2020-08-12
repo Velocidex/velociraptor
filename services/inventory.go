@@ -48,7 +48,8 @@ type Inventory interface {
 	// force it to be downloaded - it simply adds it to the
 	// database. A subsequent GetToolInfo() will download the tool
 	// from the designated URL if the hash is not already known.
-	AddTool(config_obj *config_proto.Config, tool *artifacts_proto.Tool) error
+	AddTool(ctx context.Context, config_obj *config_proto.Config,
+		tool *artifacts_proto.Tool) error
 
 	// Remove the tool from the inventory.
 	RemoveTool(config_obj *config_proto.Config, tool_name string) error

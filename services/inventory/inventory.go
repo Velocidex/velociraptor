@@ -13,8 +13,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net"
 	"net/http"
 	"path"
+	"regexp"
 	"sync"
 	"time"
 
@@ -25,15 +28,31 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+type githubReleasesAPI struct {
+	Assets []githubAssets `json:"assets"`
+}
+
+type githubAssets struct {
+	Name               string `json:"name"`
+	BrowserDownloadUrl string `json:"browser_download_url"`
+}
+
 type InventoryService struct {
 	mu       sync.Mutex
 	binaries *artifacts_proto.ThirdParty
+	Client   HTTPClient
+	db       datastore.DataStore
 }
 
 func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
@@ -87,7 +106,11 @@ func (self *InventoryService) downloadTool(
 
 	fd.Truncate()
 
-	res, err := http.Get(tool.Url)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name,
+		tool.Url)
+	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
+	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
 	}
@@ -97,7 +120,6 @@ func (self *InventoryService) downloadTool(
 	if res.StatusCode != 200 {
 		return errors.New("Unable to download file")
 	}
-
 	sha_sum := sha256.New()
 
 	_, err = utils.Copy(ctx, fd, io.TeeReader(res.Body, sha_sum))
@@ -105,12 +127,60 @@ func (self *InventoryService) downloadTool(
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
-	// Save the hash for next time.
-	db, err := datastore.GetDB(config_obj)
+	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+}
+
+func (self *InventoryService) getGithubRelease(ctx context.Context,
+	config_obj *config_proto.Config,
+	tool *artifacts_proto.Tool) (string, error) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest",
+		tool.GithubProject)
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+
+	logger.Info("Resolving latest Github release for <green>%v</>", tool.Name)
+	res, err := self.Client.Do(request)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		return "", errors.New(fmt.Sprintf("Error: %v", res.Status))
+	}
+
+	response, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return "", errors.Wrap(err,
+			"While make Github API call to "+url)
+	}
+
+	api_obj := &githubReleasesAPI{}
+	err = json.Unmarshal(response, &api_obj)
+	if err != nil {
+		return "", errors.Wrap(err,
+			"While make Github API call to "+url)
+	}
+
+	release_re, err := regexp.Compile(tool.GithubAssetRegex)
+	if err != nil {
+		return "", err
+	}
+
+	for _, asset := range api_obj.Assets {
+		if release_re.MatchString(asset.Name) {
+			logger.Info("Tool <green>%v</> can be found at <cyan>%v</>",
+				tool.Name, asset.BrowserDownloadUrl)
+			return asset.BrowserDownloadUrl, nil
+		}
+	}
+
+	return "", errors.New("Release not found from github API " + url)
 }
 
 func (self *InventoryService) RemoveTool(
@@ -131,18 +201,27 @@ func (self *InventoryService) RemoveTool(
 
 	self.binaries.Tools = tools
 
-	// Save the hash for next time.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-	return db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
-func (self *InventoryService) AddTool(
-	config_obj *config_proto.Config, tool *artifacts_proto.Tool) error {
+func (self *InventoryService) AddTool(ctx context.Context,
+	config_obj *config_proto.Config, tool_request *artifacts_proto.Tool) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Make a copy to work on.
+	tool := *tool_request
+
+	// If we are downloading from github we have to resolve and
+	// verify the binary URL now.
+	if tool.GithubProject != "" {
+		var err error
+		tool.Url, err = self.getGithubRelease(ctx, config_obj, &tool)
+		if err != nil {
+			return errors.Wrap(
+				err, "While resolving github release "+tool.GithubProject)
+		}
+	}
 
 	if self.binaries == nil {
 		self.binaries = &artifacts_proto.ThirdParty{}
@@ -155,54 +234,70 @@ func (self *InventoryService) AddTool(
 		if len(config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
 		}
-		tool.Url = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
 	}
 
-	if tool.Url == "" {
+	if tool.Url == "" && tool.ServeUrl == "" {
 		return errors.New("No tool URL defined and I will not be serving it locally!")
 	}
 
 	// Set the filename to something sensible so it is always valid.
 	if tool.Filename == "" {
-		tool.Filename = path.Base(tool.Url)
+		if tool.Url != "" {
+			tool.Filename = path.Base(tool.Url)
+		} else {
+			tool.Filename = path.Base(tool.ServeUrl)
+		}
 	}
 
+	// Replace the tool in the inventory.
 	found := false
 	for i, item := range self.binaries.Tools {
 		if item.Name == tool.Name {
 			found = true
-			self.binaries.Tools[i] = tool
+			self.binaries.Tools[i] = &tool
 			break
 		}
 	}
 
 	if !found {
-		self.binaries.Tools = append(self.binaries.Tools, tool)
+		self.binaries.Tools = append(self.binaries.Tools, &tool)
 	}
 
 	self.binaries.Version = uint64(time.Now().UnixNano())
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-	return db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
+	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
 	inventory := &artifacts_proto.ThirdParty{}
-	err = db.GetSubject(config_obj, constants.ThirdPartyInventory, inventory)
+	err := self.db.GetSubject(config_obj, constants.ThirdPartyInventory, inventory)
 	self.binaries = inventory
 
-	return nil
+	return err
+}
+
+func NewDummy() *InventoryService {
+	return &InventoryService{
+		db: datastore.NewTestDataStore(),
+		Client: &http.Client{
+			Transport: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout:   300 * time.Second,
+					KeepAlive: 300 * time.Second,
+					DualStack: true,
+				}).DialContext,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       300 * time.Second,
+				TLSHandshakeTimeout:   100 * time.Second,
+				ExpectContinueTimeout: 10 * time.Second,
+				ResponseHeaderTimeout: 100 * time.Second,
+			},
+		},
+	}
 }
 
 func StartInventoryService(
@@ -210,17 +305,24 @@ func StartInventoryService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	inventory_service := NewDummy()
+
 	if config_obj.Datastore == nil {
+		services.RegisterInventory(inventory_service)
 		return nil
 	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+	inventory_service.db = db
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	notification, cancel := services.ListenForNotification(
 		constants.ThirdPartyInventory)
 	defer cancel()
-
-	inventory_service := &InventoryService{}
 
 	wg.Add(1)
 	go func() {
@@ -249,8 +351,12 @@ func StartInventoryService(
 		}
 	}()
 
-	logger.Info("Starting Thirdparty Inventory Service")
+	logger.Info("<green>Starting</> Inventory Service")
 
 	services.RegisterInventory(inventory_service)
 	return inventory_service.LoadFromFile(config_obj)
+}
+
+func init() {
+	services.RegisterInventory(NewDummy())
 }

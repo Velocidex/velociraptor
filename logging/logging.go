@@ -28,6 +28,7 @@ import (
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ var (
 	mu      sync.Mutex
 	prelogs []string
 
-	tag_regex         = regexp.MustCompile("<([^>]+)>")
+	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
 	closing_tag_regex = regexp.MustCompile("</>")
 )
 
@@ -215,7 +216,9 @@ func (self *LogManager) makeNewComponent(
 
 		hook := lfshook.NewHook(
 			pathMap,
-			&logrus.JSONFormatter{},
+			&logrus.JSONFormatter{
+				DisableHTMLEscape: true,
+			},
 		)
 		Log.Hooks.Add(hook)
 	}
@@ -233,6 +236,9 @@ func (self *LogManager) makeNewComponent(
 	}
 
 	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{stderr_map}))
+	if !NoColor && !isatty.IsTerminal(os.Stdout.Fd()) {
+		NoColor = true
+	}
 
 	return &LogContext{Log}, nil
 }

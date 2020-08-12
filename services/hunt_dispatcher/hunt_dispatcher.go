@@ -220,7 +220,7 @@ func StartHuntDispatcher(
 	config_obj *config_proto.Config) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting Hunt Dispatcher Service.")
+	logger.Info("<green>Starting</> Hunt Dispatcher Service.")
 
 	result := &HuntDispatcher{
 		config_obj: config_obj,

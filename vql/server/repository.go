@@ -95,7 +95,8 @@ func (self ArtifactsPlugin) Call(
 					_, err := services.GetInventory().GetToolInfo(
 						ctx, config_obj, tool.Name)
 					if err != nil {
-						services.GetInventory().AddTool(config_obj, tool)
+						services.GetInventory().AddTool(
+							ctx, config_obj, tool)
 					}
 				}
 

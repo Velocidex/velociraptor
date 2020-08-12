@@ -1,0 +1,20 @@
+{
+ "/config/inventory.json": {
+  "tools": [
+   {
+    "name": "Tool1",
+    "url": "https://www.company.com",
+    "filestore_path": "95b097fd386adb06d90ff35d45f18fb507675b076522e7993b5be4a695f4247a",
+    "filename": "www.company.com",
+    "admin_override": true
+   },
+   {
+    "name": "Tool2",
+    "url": "https://www.example2.com/",
+    "filestore_path": "9a0dbc5804c7e06fc2e371a936bbe1d90b206aa9b8fbad7601f4a7f70fb596e1",
+    "filename": "www.example2.com"
+   }
+  ],
+  "version": 1597245292675660813
+ }
+}

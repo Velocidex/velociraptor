@@ -332,7 +332,7 @@ func (self *Labeler) Start(ctx context.Context, wg *sync.WaitGroup) error {
 		defer wg.Done()
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Info("Starting Label service.")
+		logger.Info("<green>Starting</> Label service.")
 
 		events, cancel := services.GetJournal().Watch("Server.Internal.Label")
 		defer cancel()

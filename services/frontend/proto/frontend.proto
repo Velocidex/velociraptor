@@ -24,6 +24,8 @@ message FrontendState {
     // The unique name of the frontend.
     string name = 1;
 
+    string version = 5;
+
     // Updated periodically to indicate the frontend is alive (in
     // nanoseconds).
     int64 heartbeat = 2;

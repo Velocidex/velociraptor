@@ -294,7 +294,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		}
 	}()
 
-	scope.Log("Starting query execution.")
+	scope.Log("<green>Starting</> query execution.")
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
@@ -382,7 +382,7 @@ func StartServerArtifactService(
 
 	logger := logging.GetLogger(
 		config_obj, &logging.FrontendComponent)
-	logger.Info("Starting Server Artifact Runner Service")
+	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
 	wg.Add(1)
 	go result.Start(ctx, wg)

@@ -76,7 +76,7 @@ func (self *DynDNSService) Start(
 	defer wg.Done()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting the DynDNS service: Updating hostname %v",
+	logger.Info("<green>Starting</> the DynDNS service: Updating hostname %v",
 		config_obj.Frontend.Hostname)
 
 	min_update_wait := config_obj.Frontend.DynDns.Frequency
