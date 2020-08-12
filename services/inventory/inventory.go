@@ -276,9 +276,14 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 
 	inventory := &artifacts_proto.ThirdParty{}
 	err := self.db.GetSubject(config_obj, constants.ThirdPartyInventory, inventory)
+
+	// Ignore errors from reading the inventory file - it might be
+	// missing or corrupt but this is not an error - just try again later.
+	_ = err
+
 	self.binaries = inventory
 
-	return err
+	return nil
 }
 
 func NewDummy() *InventoryService {
