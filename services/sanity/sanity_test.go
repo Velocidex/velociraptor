@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ServicesTestSuite struct {
@@ -72,7 +73,8 @@ tools:
 `, true)
 
 	// Admin forces Tool1 to non-default
-	inventory := services.GetInventory()
+	inventory := services.GetInventory().(*inventory.InventoryService)
+	inventory.Clock = utils.MockClock{MockNow: time.Unix(100, 0)}
 	tool_definition := &artifacts_proto.Tool{
 		Name: "Tool1",
 		Url:  "https://www.company.com",
@@ -115,6 +117,6 @@ func (self *ServicesTestSuite) TestCreateUser() {
 	// test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
 }
 
-func TestInventoryService(t *testing.T) {
+func TestSanityService(t *testing.T) {
 	suite.Run(t, &ServicesTestSuite{})
 }

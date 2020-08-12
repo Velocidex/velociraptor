@@ -53,6 +53,7 @@ type InventoryService struct {
 	binaries *artifacts_proto.ThirdParty
 	Client   HTTPClient
 	db       datastore.DataStore
+	Clock    utils.Clock
 }
 
 func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
@@ -264,7 +265,7 @@ func (self *InventoryService) AddTool(ctx context.Context,
 		self.binaries.Tools = append(self.binaries.Tools, &tool)
 	}
 
-	self.binaries.Version = uint64(time.Now().UnixNano())
+	self.binaries.Version = uint64(self.Clock.Now().UnixNano())
 
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
@@ -282,7 +283,8 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 
 func NewDummy() *InventoryService {
 	return &InventoryService{
-		db: datastore.NewTestDataStore(),
+		Clock: utils.RealClock{},
+		db:    datastore.NewTestDataStore(),
 		Client: &http.Client{
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{
@@ -338,8 +340,9 @@ func StartInventoryService(
 				if err != nil {
 					logger.Error("StartInventoryService: ", err)
 				}
+
 			case <-time.After(time.Second):
-				err := inventory_service.LoadFromFile(config_obj)
+				inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: ", err)
 				}
