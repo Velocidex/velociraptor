@@ -18,13 +18,12 @@
 package logging
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"sync"
 	"time"
 
@@ -33,11 +32,11 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 )
 
 var (
 	SuppressLogging = false
+	NoColor         = false
 
 	GenericComponent  = "Velociraptor"
 	FrontendComponent = "VelociraptorFrontend"
@@ -53,6 +52,9 @@ var (
 
 	mu      sync.Mutex
 	prelogs []string
+
+	tag_regex         = regexp.MustCompile("<([^>]+)>")
+	closing_tag_regex = regexp.MustCompile("</>")
 )
 
 func InitLogging(config_obj *config_proto.Config) error {
@@ -230,26 +232,9 @@ func (self *LogManager) makeNewComponent(
 		stderr_map[logrus.ErrorLevel] = os.Stderr
 	}
 
-	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{}))
+	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{stderr_map}))
 
 	return &LogContext{Log}, nil
-}
-
-type Formatter struct{}
-
-func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
-	b := &bytes.Buffer{}
-
-	levelText := strings.ToUpper(entry.Level.String())
-	fmt.Fprintf(b, "[%s] %v %s ", levelText, entry.Time.Format(time.RFC3339),
-		strings.TrimRight(entry.Message, "\r\n"))
-
-	if len(entry.Data) > 0 {
-		serialized, _ := json.Marshal(entry.Data)
-		fmt.Fprintf(b, "%s", serialized)
-	}
-
-	return append(b.Bytes(), '\n'), nil
 }
 
 type logWriter struct {
@@ -294,4 +279,9 @@ func GetStackTrace(err error) string {
 		}
 	}
 	return ""
+}
+
+func clearTag(message string) string {
+	message = tag_regex.ReplaceAllString(message, "")
+	return closing_tag_regex.ReplaceAllString(message, "")
 }

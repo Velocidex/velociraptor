@@ -51,6 +51,8 @@ var (
 	artifact_definitions_dir = app.Flag(
 		"definitions", "A directory containing artifact definitions").String()
 
+	no_color_flag = app.Flag("nocolor", "Disable color output").Bool()
+
 	verbose_flag = app.Flag(
 		"verbose", "Enabled verbose logging for client.").Short('v').
 		Default("false").Bool()
@@ -126,6 +128,10 @@ func main() {
 	}
 
 	command := kingpin.MustParse(app.Parse(args))
+
+	if *no_color_flag {
+		logging.NoColor = true
+	}
 
 	// Most commands load a config in the folloing order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).

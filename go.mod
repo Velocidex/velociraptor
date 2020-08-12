@@ -42,6 +42,7 @@ require (
 	github.com/golang/snappy v0.0.1
 	github.com/google/rpmpack v0.0.0-20200615183209-0c831d19bd44
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/gookit/color v1.2.7
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
