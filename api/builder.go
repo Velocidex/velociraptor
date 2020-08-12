@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/acme/autocert"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -270,7 +269,10 @@ func StartFrontendHttps(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server_obj.Info("Frontend is ready to handle client TLS requests at %s", listenAddr)
+		server_obj.Info("Frontend is ready to handle client TLS requests at <green>https://%s:%d/",
+			get_hostname(config_obj.Frontend.Hostname, config_obj.Frontend.BindAddress),
+			config_obj.Frontend.BindPort)
+
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
 		err = server.ListenAndServeTLS("", "")
@@ -284,7 +286,7 @@ func StartFrontendHttps(
 		defer wg.Done()
 		<-ctx.Done()
 
-		server_obj.Info("Shutting down frontend")
+		server_obj.Info("<red>Shutting down</> frontend")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
 		time_ctx, cancel := context.WithTimeout(
@@ -297,7 +299,6 @@ func StartFrontendHttps(
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}
-		server_obj.Info("Shut down frontend")
 	}()
 
 	return nil
@@ -330,7 +331,10 @@ func StartFrontendPlainHttp(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server_obj.Info("Frontend is ready to handle requests at plain HTTP %s", listenAddr)
+		server_obj.Info("Frontend is ready to handle requests at <green>http://%s:%d/",
+			get_hostname(config_obj.Frontend.Hostname, config_obj.Frontend.BindAddress),
+			config_obj.Frontend.BindPort)
+
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
 		err := server.ListenAndServe()
@@ -344,7 +348,7 @@ func StartFrontendPlainHttp(
 		defer wg.Done()
 		<-ctx.Done()
 
-		server_obj.Info("Shutting down frontend")
+		server_obj.Info("<red>Shutting down</> frontend")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
 		time_ctx, cancel := context.WithTimeout(
@@ -357,7 +361,6 @@ func StartFrontendPlainHttp(
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}
-		server_obj.Info("Shut down frontend")
 	}()
 
 	return nil
@@ -403,7 +406,8 @@ func StartFrontendWithAutocert(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		server_obj.Info("Frontend is ready to handle client requests using HTTPS")
+		server_obj.Info("Frontend is ready to handle client requests at <green>https://%s/",
+			get_hostname(config_obj.Frontend.Hostname, config_obj.Frontend.BindAddress))
 		atomic.StoreInt32(&server_obj.Healthy, 1)
 
 		err := server.ListenAndServeTLS("", "")
@@ -417,7 +421,7 @@ func StartFrontendWithAutocert(
 		defer wg.Done()
 		<-ctx.Done()
 
-		server_obj.Info("Stopping Frontend Server")
+		server_obj.Info("<red>Stopping Frontend Server")
 		atomic.StoreInt32(&server_obj.Healthy, 0)
 
 		timeout_ctx, cancel := context.WithTimeout(
@@ -457,10 +461,9 @@ func StartHTTPGUI(
 		IdleTimeout:  15 * time.Second,
 	}
 
-	logger.WithFields(
-		logrus.Fields{
-			"listenAddr": listenAddr,
-		}).Info("GUI is ready to handle HTTP requests")
+	logger.Info("GUI is ready to handle HTTP requests on <green>http://%s:%d/",
+		get_hostname(config_obj.Frontend.Hostname, config_obj.GUI.BindAddress),
+		config_obj.GUI.BindPort)
 
 	wg.Add(1)
 	go func() {
@@ -477,7 +480,7 @@ func StartHTTPGUI(
 		defer wg.Done()
 		<-ctx.Done()
 
-		logger.Info("Stopping GUI Server")
+		logger.Info("<red>Stopping GUI Server")
 		timeout_ctx, cancel := context.WithTimeout(
 			context.Background(), 10*time.Second)
 		defer cancel()
@@ -487,7 +490,6 @@ func StartHTTPGUI(
 		if err != nil {
 			logger.Error("GUI shutdown error ", err)
 		}
-		logger.Info("Shutdown GUI")
 	}()
 
 	return nil
@@ -535,10 +537,9 @@ func StartSelfSignedGUI(
 		},
 	}
 
-	logger.WithFields(
-		logrus.Fields{
-			"listenAddr": listenAddr,
-		}).Info("GUI is ready to handle TLS requests")
+	logger.Info("GUI is ready to handle TLS requests on <green>https://%s:%d/",
+		get_hostname(config_obj.Frontend.Hostname, config_obj.GUI.BindAddress),
+		config_obj.GUI.BindPort)
 
 	wg.Add(1)
 	go func() {
@@ -555,7 +556,7 @@ func StartSelfSignedGUI(
 		defer wg.Done()
 		<-ctx.Done()
 
-		logger.Info("Stopping GUI Server")
+		logger.Info("<red>Stopping GUI Server")
 		timeout_ctx, cancel := context.WithTimeout(
 			context.Background(), 10*time.Second)
 		defer cancel()
@@ -565,8 +566,14 @@ func StartSelfSignedGUI(
 		if err != nil {
 			logger.Error("GUI shutdown error ", err)
 		}
-		logger.Info("Shutdown GUI")
 	}()
 
 	return nil
+}
+
+func get_hostname(fe_hostname, bind_addr string) string {
+	if bind_addr == "0.0.0.0" || bind_addr == "" || bind_addr == "::" {
+		return fe_hostname
+	}
+	return bind_addr
 }

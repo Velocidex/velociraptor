@@ -68,7 +68,10 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
-		self.EnsureToolsDeclared(ctx, config_obj, artifact)
+		err = self.EnsureToolsDeclared(ctx, config_obj, artifact)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Add any artifact dependencies.
@@ -113,7 +116,6 @@ func getDependentTools(
 func (self *Launcher) EnsureToolsDeclared(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range artifact.Tools {
 		_, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
@@ -124,7 +126,7 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(config_obj, tool)
+			err = services.GetInventory().AddTool(ctx, config_obj, tool)
 			if err != nil {
 				return err
 			}

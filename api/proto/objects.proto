@@ -6,39 +6,7 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
-message ObjectReference {
-    ClientReference client = 2;
-    HuntReference hunt = 3;
-    FlowReference flow = 4;
-    VfsFileReference vfs_file = 6;
-    ApprovalRequestReference approval_request = 7;
-}
-
-message ClientReference {
-    string client_id = 1;
-}
-
-message HuntReference {
-    string hunt_id = 1;
-}
-
-message FlowReference {
-    string flow_id = 1 [(sem_type) = {
-            description: "The session id of the referenced flow."
-        }];
-    string client_id = 2 [(sem_type) = {
-            type: "ClientURN",
-            description: "The client id the referenced flow ran on."
-        }];
-}
-
-message VfsFileReference {
-    string client_id = 1;
-    repeated string vfs_path_components = 2;
-}
-
-message ApprovalRequestReference {
-    //    ApprovalRequest.ApprovalType approval_type = 1;
-    string approval_id = 2;
-    string subject_id = 3;
+message ServerState {
+    // Currently running server state
+    string version = 1;
 }

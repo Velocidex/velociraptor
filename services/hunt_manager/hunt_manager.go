@@ -75,7 +75,7 @@ func (self *HuntManager) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Starting the hunt manager service.")
+	logger.Info("<green>Starting</> the hunt manager service.")
 
 	err := self.StartParticipation(ctx, wg)
 	if err != nil {

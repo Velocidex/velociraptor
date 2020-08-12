@@ -2,15 +2,32 @@ name: Server.Utils.CreateCollector
 description: |
   A utility artifact to create a stand alone collector.
 
+  This artifact is actually invoked by the Offline collector GUI and
+  that is the recommended way to launch it. You can find the Offline
+  collector builder in the `Server Artifacts` section of the GUI.
+
 type: SERVER
 
 tools:
   - name: VelociraptorWindows
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-windows-amd64.exe
+    github_project: Velocidex/velociraptor
+    github_asset_regex: windows-amd64.exe
+    serve_locally: true
+
+  - name: VelociraptorWindows_x86
+    github_project: Velocidex/velociraptor
+    github_asset_regex: windows-386.exe
+    serve_locally: true
+
   - name: VelociraptorLinux
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-linux-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: linux-amd64
+    serve_locally: true
+
   - name: VelociraptorDarwin
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.4.7/velociraptor-v0.4.7-darwin-amd64
+    github_project: Velocidex/velociraptor
+    github_asset_regex: darwin-amd64
+    serve_locally: true
 
 parameters:
   - name: OS
@@ -256,9 +273,10 @@ sources:
       // Choose the right target binary depending on the target OS
       LET tool_name = SELECT * FROM switch(
        a={ SELECT "VelociraptorWindows" AS Type FROM scope() WHERE OS = "Windows"},
-       b={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
-       c={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
-       d={ SELECT "" AS Type FROM scope()
+       b={ SELECT "VelociraptorWindows_x86" AS Type FROM scope() WHERE OS = "Windows_x86"},
+       c={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
+       d={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
+       e={ SELECT "" AS Type FROM scope()
            WHERE NOT log(message="Unknown target type " + OS) }
       )
 

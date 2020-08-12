@@ -238,7 +238,7 @@ func StartServerMonitoringService(
 
 	logger := logging.GetLogger(
 		config_obj, &logging.FrontendComponent)
-	logger.Info("Starting Server Monitoring Service")
+	logger.Info("<green>Starting</> Server Monitoring Service")
 
 	manager := &EventTable{
 		Done: make(chan bool),

@@ -15,7 +15,7 @@ import (
 	"testing"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -96,6 +96,8 @@ func (self *CollectorTestSuite) TestCollector() {
 	OS_TYPE := "Linux"
 	if runtime.GOOS == "windows" {
 		OS_TYPE = "Windows"
+	} else if runtime.GOOS == "darwin" {
+		OS_TYPE = "Darwin"
 	}
 
 	// Change into the tmpdir
@@ -154,13 +156,15 @@ reports:
 	fmt.Println(string(out))
 	require.NoError(self.T(), err)
 
-	cmd = exec.Command(self.binary, "--config", self.config_file,
-		"tools", "upload", "--name", "Velociraptor"+OS_TYPE,
-		self.test_server.URL+"/"+filepath.Base(self.binary),
-		"--serve_remote")
-	out, err = cmd.CombinedOutput()
-	fmt.Println(string(out))
-	require.NoError(self.T(), err)
+	for _, os_name := range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
+		cmd = exec.Command(self.binary, "--config", self.config_file,
+			"tools", "upload", "--name", "Velociraptor"+os_name,
+			self.test_server.URL+"/"+filepath.Base(self.binary),
+			"--serve_remote")
+		out, err = cmd.CombinedOutput()
+		fmt.Println(string(out))
+		require.NoError(self.T(), err)
+	}
 
 	// Make sure the binary is proprly added.
 	assert.Regexp(self.T(), "name: Velociraptor", string(out))

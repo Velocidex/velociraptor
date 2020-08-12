@@ -236,6 +236,6 @@ func StartClientMonitoringService(
 		}
 	}()
 
-	logger.Info("Starting Client Monitoring Service")
+	logger.Info("<green>Starting</> Client Monitoring Service")
 	return event_table.LoadFromFile()
 }

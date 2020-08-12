@@ -6,26 +6,7 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/artifacts/proto";
 
-message Tool {
-    string name = 1;
-
-    string url = 2;
-
-    bool serve_locally = 3;
-
-    string filestore_path = 4;
-
-    // The name of the client on the endpoint.
-    string filename = 5;
-
-    // Hex encoded sha256 hash.
-    string hash = 6;
-}
-
-message third_party {
-    repeated Tool tools = 1;
-    uint64 version = 2;
-}
+// Artifact reflection apis - Allows the GUI to introspect artifact definitions.
 
 message FieldDescriptor {
     string friendly_name = 1;
@@ -72,6 +53,10 @@ message TypeDescriptor {
 message Types {
     repeated TypeDescriptor items = 1;
 }
+
+
+// Artifact definitions - users are able to write YAML files with
+// these defintiions.
 
 message ArtifactParameter {
     option (semantic) = {
@@ -221,4 +206,59 @@ message Artifact {
 
 message ArtifactDescriptors {
     repeated Artifact items = 1;
+}
+
+
+
+// Tools are external files that Velociraptor ensures are available to
+// running artifacts.
+
+message Tool {
+    string name = 1;
+
+    // The URL to fetch the tool from when we upload it the first
+    // time, or when we update.
+    string url = 2;
+
+    // The URL we serve the tool from when we serve locally. If this
+    // is empty we just let the endpoint download its own tool from
+    // the url above.
+    string serve_url = 8;
+
+    // As an alternative to a url we allow scrapping of GitHub
+    // releases using the github API. NOTE: When this method is
+    // specified, the file will always be served locally.
+    string github_project = 9;
+    string github_asset_regex = 10;
+
+    // If set, the tool will be served locally from the filestore path
+    // - otherwise the endpoint will download the file by itself from
+    // the url above.
+    bool serve_locally = 3;
+
+    // A filestore path where the file can be downloaded from - if
+    // served locally.
+    string filestore_path = 4;
+
+    // The name of the cached file on the endpoint. This file will
+    // persist and can be accessed again if this tool is needed in
+    // future. If the file is missing (or has the wrong hash), then it
+    // will be downloaded again.
+    string filename = 5;
+
+    // Hex encoded sha256 hash of the file. Endpoints will check this
+    // hash against their fetch file to ensure it was correctly
+    // transferred.
+    string hash = 6;
+
+    // This is set when an admin explicitly overrides a tool. If this
+    // is set we will not update the tool definition when upgrading
+    // server versions.
+    bool admin_override = 7;
+}
+
+// Keep track of all the third party tools we know about.
+message third_party {
+    repeated Tool tools = 1;
+    uint64 version = 2;
 }

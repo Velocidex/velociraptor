@@ -36,7 +36,7 @@ type VFSService struct {
 func (self *VFSService) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
-	self.logger.Info("Starting VFS writing service.")
+	self.logger.Info("<green>Starting</> VFS writing service.")
 
 	watchForFlowCompletion(
 		ctx, wg, self.config_obj, "System.VFS.ListDirectory",

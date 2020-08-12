@@ -70,6 +70,11 @@ func StartFrontendServices(config_obj *config_proto.Config,
 		return err
 	}
 
+	err = sm.Start(inventory.StartInventoryService)
+	if err != nil {
+		return err
+	}
+
 	// Check everything is ok before we can start.
 	err = sm.Start(sanity.StartSanityCheckService)
 	if err != nil {
@@ -118,11 +123,6 @@ func StartFrontendServices(config_obj *config_proto.Config,
 		if err != nil {
 			return err
 		}
-	}
-
-	err = sm.Start(inventory.StartInventoryService)
-	if err != nil {
-		return err
 	}
 
 	if spec.HuntManager {

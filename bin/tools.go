@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"regexp"
 	"time"
 
@@ -31,6 +30,14 @@ var (
 	third_party_upload_filename = third_party_upload.
 					Flag("filename", "Name of the tool executable on the endpoint").
 					String()
+
+	third_party_upload_github_project = third_party_upload.
+						Flag("github_project",
+			"Fetch the tool for github releases").String()
+	third_party_upload_github_asset_regex = third_party_upload.
+						Flag("github_asset",
+			"A regular expression to match the release asset").String()
+
 	third_party_upload_serve_remote = third_party_upload.Flag(
 		"serve_remote", "If set serve the file from the original URL").Bool()
 
@@ -91,20 +98,21 @@ func doThirdPartyUpload() {
 	err = startEssentialServices(config_obj, sm)
 	kingpin.FatalIfError(err, "Starting services.")
 
-	filename := *third_party_upload_filename
-	if filename == "" {
-		filename = path.Base(*third_party_upload_binary_path)
-	}
-
 	tool := &artifacts_proto.Tool{
-		Name:         *third_party_upload_tool_name,
-		Filename:     filename,
-		ServeLocally: !*third_party_upload_serve_remote,
+		Name:          *third_party_upload_tool_name,
+		Filename:      *third_party_upload_filename,
+		ServeLocally:  !*third_party_upload_serve_remote,
+		AdminOverride: true,
 	}
 
-	// If the user wants to upload a URL we just write it in the
-	// filestore to be downloaded on demand by the client themselves.
-	if url_regexp.FindString(*third_party_upload_binary_path) != "" {
+	// Does the user want to scrape releases from github?
+	if *third_party_upload_github_project != "" {
+		tool.GithubProject = *third_party_upload_github_project
+		tool.GithubAssetRegex = *third_party_upload_github_asset_regex
+
+		// If the user wants to upload a URL we just write it in the
+		// filestore to be downloaded on demand by the client themselves.
+	} else if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 
 	} else {
@@ -130,8 +138,8 @@ func doThirdPartyUpload() {
 	}
 
 	// Now add the tool to the inventory with the correct hash.
-	err = services.GetInventory().AddTool(config_obj, tool)
-	kingpin.FatalIfError(err, "Adding tool ")
+	err = services.GetInventory().AddTool(ctx, config_obj, tool)
+	kingpin.FatalIfError(err, "Adding tool "+tool.Name)
 
 	if *third_party_upload_download {
 		tool, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)

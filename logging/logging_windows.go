@@ -6,13 +6,54 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
+	"syscall"
 	"time"
 
-	"github.com/gookit/color"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 )
+
+var (
+	kernel32Dll    *syscall.LazyDLL  = syscall.NewLazyDLL("Kernel32.dll")
+	setConsoleMode *syscall.LazyProc = kernel32Dll.NewProc("SetConsoleMode")
+
+	color_map = map[string]string{
+		"reset":  "\033[0m",
+		"red":    "\033[31m",
+		"green":  "\033[32m",
+		"yellow": "\033[33m",
+		"blue":   "\033[34m",
+		"purple": "\033[35m",
+		"cyan":   "\033[36m",
+		"gray":   "\033[37m",
+		"white":  "\033[97m",
+	}
+)
+
+func EnableVirtualTerminalProcessing(stream syscall.Handle, enable bool) error {
+	const ENABLE_VIRTUAL_TERMINAL_PROCESSING uint32 = 0x4
+
+	var mode uint32
+	err := syscall.GetConsoleMode(syscall.Stdout, &mode)
+	if err != nil {
+		return err
+	}
+
+	if enable {
+		mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	} else {
+		mode &^= ENABLE_VIRTUAL_TERMINAL_PROCESSING
+	}
+
+	ret, _, err := setConsoleMode.Call(uintptr(stream), uintptr(mode))
+	if ret == 0 {
+		return err
+	}
+
+	return nil
+}
 
 type Formatter struct {
 	stderr_map lfshook.WriterMap
@@ -35,26 +76,33 @@ func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 	_, pres := self.stderr_map[entry.Level]
 	if pres {
 		if NoColor {
-			return []byte(clearTag(b.String())), nil
+			fmt.Fprintln(os.Stdout, clearTag(b.String()))
+		} else {
+			EnableVirtualTerminalProcessing(syscall.Stdout, true)
+			fmt.Fprintln(os.Stdout, replaceTagWithCode(b.String()))
+			EnableVirtualTerminalProcessing(syscall.Stdout, false)
 		}
-		color.Println(normalize(b.String()))
 	}
 
 	return nil, nil
 }
 
-func normalize(line string) string {
-	// Get count of opening tags
-	opening_matches := tag_regex.FindAllString(line, -1)
-	closing_matches := closing_tag_regex.FindAllString(line, -1)
-
-	if len(opening_matches) > len(closing_matches) {
-		for i := 0; i < len(opening_matches)-len(closing_matches); i++ {
-			line += "</>"
-		}
-	} else if len(opening_matches) < len(closing_matches) {
-		line = closing_tag_regex.ReplaceAllString(line, "")
+func replaceTagWithCode(message string) string {
+	if NoColor {
+		return clearTag(message)
 	}
 
-	return line
+	result := tag_regex.ReplaceAllStringFunc(message, func(hit string) string {
+		matches := tag_regex.FindStringSubmatch(hit)
+		if len(matches) > 1 {
+			code, pres := color_map[matches[1]]
+			if pres {
+				return code
+			}
+		}
+		return hit
+	})
+
+	reset := color_map["reset"]
+	return closing_tag_regex.ReplaceAllString(result, reset) + reset
 }

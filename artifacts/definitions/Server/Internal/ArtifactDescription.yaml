@@ -30,15 +30,15 @@ reports:
          </tr>
       </thead>
       <tbody>
-      {{ range $item := $artifact.Parameters }}
-         {{ if not (eq $item.Type "hidden") }}
+      {{- range $item := $artifact.Parameters -}}
+         {{- if not (eq $item.Type "hidden") -}}
            <tr>
                <td> {{ $item.Name }}</td>
                <td>{{ $item.Type }}</td>
                <td><pre>{{ $item.Default }}</pre></td>
            </tr>
-         {{ end }}
-      {{ end }}
+         {{- end -}}
+      {{- end -}}
       </tbody></table>
 
       {{ end }}

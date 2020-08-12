@@ -661,3 +661,10 @@ func compileArtifact(artifact *artifacts_proto.Artifact) error {
 	}
 	return nil
 }
+
+func SetGlobalRepositoryForTests(repository *Repository) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	global_repository = repository
+}

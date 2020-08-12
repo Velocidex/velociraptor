@@ -1,0 +1,33 @@
+{
+ "Tool": {
+  "name": "SampleTool",
+  "url": "htttp://www.example.com/file.exe",
+  "serve_url": "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b",
+  "github_project": "Velocidex/velociraptor",
+  "github_asset_regex": "windows-amd64.exe",
+  "serve_locally": true,
+  "filestore_path": "dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b",
+  "filename": "file.exe",
+  "hash": "3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1"
+ },
+ "Request": {
+  "env": [
+   {
+    "key": "Tool_SampleTool_HASH",
+    "value": "3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1"
+   },
+   {
+    "key": "Tool_SampleTool_FILENAME",
+    "value": "file.exe"
+   },
+   {
+    "key": "Tool_SampleTool_URL",
+    "value": "https://localhost:8000/public/dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b"
+   }
+  ],
+  "max_row": 1000,
+  "tools": [
+   "SampleTool"
+  ]
+ }
+}
