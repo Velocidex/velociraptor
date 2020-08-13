@@ -52,7 +52,12 @@ message ArtifactCollectorArgs {
 
     // A place to cache the compiled request. If this is provided we
     // do not compile the artifacts at all, we just use it as is.
-    VQLCollectorArgs compiled_collector_args = 20;
+
+    // Note: Event artifacts may produce several VQLCollectorArgs, one
+    // for each artifact/source because Event Artifacts are
+    // asyncronous and blocking and need to run each query in
+    // parallel.
+    repeated VQLCollectorArgs compiled_collector_args = 20;
 }
 
 message ArtifactCollectorResponse {

@@ -224,7 +224,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	// Check for hunt object in the data store.
 	hunt := &api_proto.Hunt{}
-	err = db.GetSubject(self.config_obj, "/hunts/"+*hunt_id, hunt)
+	err = db.GetSubject(self.config_obj, "/hunts/"+hunt_id, hunt)
 	require.NoError(t, err)
 
 	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)

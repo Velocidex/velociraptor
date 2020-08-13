@@ -2,6 +2,7 @@ package client_monitoring
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -158,6 +159,46 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 
 	// We are done now... no need to update anymore.
 	assert.False(self.T(), manager.CheckClientEventsVersion(self.client_id, version))
+}
+
+// Event queries are asyncronous and blocking so when collecting
+// multiple queries, we need to send each query in its own Event entry
+// so they can run in parallel. The client runs each Event object in a
+// separate goroutine. It is not allowed to send multiple SELECT
+// statements in the same event because this will block on the first
+// SELECT and never reach the second SELECT. This test checks for this
+// condition.
+func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArtifacts() {
+	current_clock := &utils.IncClock{NowTime: 10}
+
+	labeler := services.GetLabeler().(*labels.Labeler)
+	labeler.Clock = current_clock
+
+	// If no table exists, we will get a default table.
+	manager := services.ClientEventManager().(*ClientEventTable)
+	manager.clock = current_clock
+
+	// Install an initial monitoring table: Everyone gets ServiceCreation.
+	manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{
+				"Windows.Events.ServiceCreation",
+				"Windows.Events.ProcessCreation",
+			},
+		},
+	})
+	table := manager.GetClientUpdateEventTableMessage(self.client_id)
+
+	// Count how many SELECT statements exist in each event table.
+	for _, event := range table.UpdateEventTable.Event {
+		count := 0
+		for _, query := range event.Query {
+			if strings.HasPrefix(query.VQL, "SELECT") {
+				count++
+			}
+		}
+		assert.Equal(self.T(), 1, count)
+	}
 }
 
 func extractArtifacts(args *actions_proto.VQLEventTable) []string {
