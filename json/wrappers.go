@@ -27,6 +27,14 @@ func MustMarshalIndent(v interface{}) []byte {
 	return result
 }
 
+func StringIndent(v interface{}) string {
+	result, err := MarshalIndent(v)
+	if err != nil {
+		panic(err)
+	}
+	return string(result)
+}
+
 func MarshalIndent(v interface{}) ([]byte, error) {
 	opts := NewEncOpts()
 	return MarshalIndentWithOptions(v, opts)

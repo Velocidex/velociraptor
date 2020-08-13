@@ -31,6 +31,7 @@ InspectJsonController.prototype.showSettings = function() {
 exports.InspectJsonDirective = function() {
   return {
       scope: {
+          title: "@",
           json: "=",
           onResolve: '&',
       },

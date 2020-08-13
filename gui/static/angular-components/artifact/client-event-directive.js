@@ -142,6 +142,29 @@ ClientEventController.prototype.showHelp = function() {
   return false;
 };
 
+ClientEventController.prototype.showClientMonitoringTables = function() {
+    var self = this;
+    var url = 'v1/GetClientMonitoringState';
+
+    this.error = "";
+    this.grrApiService_.get(url).then(function(response) {
+        self.state = response['data'];
+
+        var modalScope = self.scope_.$new();
+        var modalInstance = self.uibModal_.open({
+            template: '<grr-inspect-json json="json" '+
+                'on-resolve="resolve()" title="Raw Client Monitoring Tables"/>',
+            scope: modalScope,
+            windowClass: 'wide-modal high-modal',
+            size: 'lg'
+        });
+
+        modalScope["json"] = JSON.stringify(self.state, null, 2);
+        modalScope["resolve"] = modalInstance.close;
+    });
+
+    return false;
+};
 
 // When the label changes, we need to switch the current table.
 ClientEventController.prototype.onLabelChange = function() {

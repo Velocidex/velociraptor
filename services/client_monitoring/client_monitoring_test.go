@@ -14,11 +14,14 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type ClientMonitoringTestSuite struct {
@@ -48,6 +51,7 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(StartClientMonitoringService))
 
 	self.client_id = "C.12312"
@@ -57,6 +61,134 @@ func (self *ClientMonitoringTestSuite) TearDownTest() {
 	self.sm.Close()
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+}
+
+// Check that monitoring tables eventually follow when artifact
+// definitions are updated.
+func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
+	current_clock := &utils.IncClock{NowTime: 10}
+
+	repository_manager := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(`
+name: TestArtifact
+sources:
+- query:
+    SELECT * FROM info()
+`, "")
+
+	manager := services.ClientEventManager().(*ClientEventTable)
+	manager.clock = current_clock
+
+	err := manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+		},
+	})
+	assert.NoError(self.T(), err)
+
+	old_table := manager.GetClientUpdateEventTableMessage(self.client_id)
+	assert.NotContains(self.T(), json.StringIndent(old_table), "Crib")
+
+	// Now update the artifact.
+	repository_manager.SetArtifactFile(`
+name: TestArtifact
+sources:
+- query:
+    SELECT *, Crib FROM info()
+`, "")
+
+	// The table should magically be updated!
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		table := manager.GetClientUpdateEventTableMessage(self.client_id)
+		return strings.Contains(json.StringIndent(table), "Crib")
+	})
+}
+
+func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
+	current_clock := &utils.IncClock{NowTime: 10}
+
+	repository_manager := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(`
+name: TestArtifact
+sources:
+- query:
+    SELECT * FROM info()
+`, "")
+
+	manager := services.ClientEventManager().(*ClientEventTable)
+	manager.clock = current_clock
+
+	// Set the initial table.
+	err := manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+		},
+	})
+	assert.NoError(self.T(), err)
+
+	// Get the client's event table
+	old_table := manager.GetClientUpdateEventTableMessage(self.client_id)
+
+	// Now update the monitoring state
+	err = manager.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+		},
+	})
+	assert.NoError(self.T(), err)
+
+	// Get the client event table again
+	table := manager.GetClientUpdateEventTableMessage(self.client_id)
+
+	// Make sure the client event table version is updated.
+	assert.True(self.T(),
+		table.UpdateEventTable.Version > old_table.UpdateEventTable.Version)
+}
+
+func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
+	current_clock := &utils.IncClock{NowTime: 10}
+
+	repository_manager := services.GetRepositoryManager()
+	repository_manager.SetArtifactFile(`
+name: TestArtifact
+sources:
+- query:
+    SELECT * FROM info()
+`, "")
+
+	manager1 := services.ClientEventManager().(*ClientEventTable)
+	manager1.clock = current_clock
+
+	// Set the initial table.
+	err := manager1.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+		},
+	})
+	assert.NoError(self.T(), err)
+
+	// Get the client's event table
+	old_table := manager1.GetClientUpdateEventTableMessage(self.client_id)
+
+	// Now another frontend sets the client monitoring state
+	require.NoError(self.T(), self.sm.Start(StartClientMonitoringService))
+	manager2 := services.ClientEventManager().(*ClientEventTable)
+	manager2.clock = current_clock
+
+	// Now update the monitoring state
+	err = manager2.SetClientMonitoringState(&flows_proto.ClientEventTable{
+		Artifacts: &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+		},
+	})
+	assert.NoError(self.T(), err)
+
+	// Get the client event table again
+	table := manager2.GetClientUpdateEventTableMessage(self.client_id)
+
+	// Make sure the client event table version is updated.
+	assert.True(self.T(),
+		table.UpdateEventTable.Version > old_table.UpdateEventTable.Version)
 }
 
 func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
