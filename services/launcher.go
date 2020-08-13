@@ -47,10 +47,20 @@ type Launcher interface {
 		ctx context.Context, config_obj *config_proto.Config,
 		artifact *artifacts_proto.Artifact) error
 
-	// Compiles an ArtifactCollectorArgs into a
-	// VQLCollectorArgs. This method is only useful when the
-	// caller wants to cache the compilation process once and run
-	// it many times (e.g. in a hunt).
+	// Compiles an ArtifactCollectorArgs (for example as passed
+	// into CreateHunt() or CollectArtifact() API into a list of
+	// VQLCollectorArgs - the messages sent to the client to
+	// actually collect the artifact. On the client a
+	// VQLCollectorArgs is collected serially in a single
+	// goroutine. This means all the artifacts in the
+	// ArtifactCollectorArgs will be collected one after the other
+	// in turn. If called want to collect artifacts in parallel
+	// then they need to perpare several VQLCollectorArgs and
+	// launch them as separate messages.
+
+	// This method is only useful when the caller wants to cache
+	// the compilation process once and run it many times (e.g. in
+	// a hunt).
 	CompileCollectorArgs(
 		ctx context.Context,
 		config_obj *config_proto.Config,

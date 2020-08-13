@@ -240,7 +240,7 @@ func (self *ApiServer) CreateHunt(
 		return nil, err
 	}
 
-	result.FlowId = *hunt_id
+	result.FlowId = hunt_id
 
 	return result, nil
 }
