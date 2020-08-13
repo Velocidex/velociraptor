@@ -13,7 +13,7 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  },
  {
   "FullPath": "HuntDetails",
-  "Size": 7942
+  "Size": 8137
  },
  {
   "FullPath": "clients/DESKTOP-BP4S7TF/artifacts/Windows.Network.NetstatEnriched/F.BSJMEJIPT6P9I/Netstat.csv",
@@ -42,6 +42,6 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
  },
  {
   "FullPath": "HuntDetails",
-  "Size": 8142
+  "Size": 8337
  }
 ]
