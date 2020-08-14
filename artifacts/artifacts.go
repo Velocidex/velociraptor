@@ -352,11 +352,6 @@ func (self *Repository) getQueryDependencies(
 
 		existing_depth, pres := dependency[hit[1]]
 		if pres {
-			if existing_depth < depth {
-				return errors.New(
-					fmt.Sprintf(
-						"Cycle found while compiling %s", artifact_name))
-			}
 			continue
 		}
 
