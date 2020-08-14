@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -17,7 +18,9 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -167,7 +170,12 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	return services.NotifyListener(self.config_obj, constants.ClientMonitoringFlowURN)
+	artifact_path_manager := result_sets.NewArtifactPathManager(
+		self.config_obj, "", "", "Server.Internal.ArtifactModification")
+	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
+		ordereddict.NewDict().Set("artifact", "ClientEventTable").
+			Set("op", "set"),
+	})
 }
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
@@ -206,6 +214,53 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	}
 }
 
+func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddict.Dict) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	json.Debug(event)
+
+	modified_name, pres := event.GetString("artifact")
+	if !pres || modified_name == "" {
+		return
+	}
+
+	// Determine if the modified artifact affects us.
+	is_relevant := func() bool {
+		if modified_name == "ClientEventTable" {
+			return true
+		}
+
+		if utils.InString(self.state.Artifacts.Artifacts, modified_name) {
+			return true
+		}
+
+		for _, label_event := range self.state.LabelEvents {
+			if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
+				return true
+			}
+		}
+		return false
+	}
+
+	if is_relevant() {
+		// Recompile artifacts and update the version.
+		self.state.Version = uint64(self.clock.Now().UnixNano())
+
+		clear_caches(self.state)
+		self.compileState(self.state)
+	}
+}
+
+// Clear all the pre-compiled VQLCollectorArgs - next time we sent the
+// artifact it will be rebuilt.
+func clear_caches(state *flows_proto.ClientEventTable) {
+	state.Artifacts.CompiledCollectorArgs = nil
+	for _, event := range state.LabelEvents {
+		event.Artifacts.CompiledCollectorArgs = nil
+	}
+}
+
 func (self *ClientEventTable) LoadFromFile() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -235,6 +290,7 @@ func (self *ClientEventTable) LoadFromFile() error {
 		return self.setClientMonitoringState(self.state)
 	}
 
+	clear_caches(self.state)
 	return self.compileState(self.state)
 }
 
@@ -259,34 +315,28 @@ func StartClientMonitoringService(
 	services.RegisterClientEventManager(event_table)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	notification, cancel := services.ListenForNotification(
-		constants.ClientMonitoringFlowURN)
-	defer cancel()
+	logger.Info("<green>Starting</> Client Monitoring Service")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
+		defer cancel()
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
 
-			case <-notification:
-				err := event_table.LoadFromFile()
-				if err != nil {
-					logger.Error("StartClientMonitoringService: ", err)
+			case event, ok := <-events:
+				if !ok {
 					return
 				}
+				event_table.ProcessArtifactModificationEvent(event)
 			}
-
-			cancel()
-			notification, cancel = services.ListenForNotification(
-				constants.ClientMonitoringFlowURN)
 		}
 	}()
 
-	logger.Info("<green>Starting</> Client Monitoring Service")
 	return event_table.LoadFromFile()
 }
