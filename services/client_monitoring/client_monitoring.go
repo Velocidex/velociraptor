@@ -314,12 +314,18 @@ func StartClientMonitoringService(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
 
+	// Wait here until we are ready to watch the journal.
+	local_wg := &sync.WaitGroup{}
+
+	local_wg.Add(1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
 		defer cancel()
+
+		local_wg.Done()
 
 		for {
 			select {
@@ -334,6 +340,8 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
+
+	local_wg.Wait()
 
 	return event_table.LoadFromFile()
 }
