@@ -18,20 +18,10 @@
       <div class="card panel" >
         <h5 class="card-header">Files uploaded</h5>
         <div class="card-body">
-          <table datatable="ng"
-                 ng-if="controller.flow.context.uploaded_files.length"
-                 dt-instance="controller.dtInstance"
-                 dt-disable-deep-watchers="true"
-                 class="row-border hover dtable">
-            <thead><tr><th>Filename</th></tr></thead>
-            <tbody>
-              <tr ng-repeat="filename in controller.flow.context.uploaded_files track by $index">
-                <td>{$ filename $}</td>
-              </tr>
-            </tbody>
-          </table>
           <grr-csv-viewer
             ng-if="controller.flow.context.total_uploaded_files"
+            renderers="{vfs_path:'VFS'}"
+            client-id="clientId"
             params="controller.uploadedFilesParams">
           </grr-csv-viewer>
         </div>

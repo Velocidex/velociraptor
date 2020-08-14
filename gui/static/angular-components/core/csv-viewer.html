@@ -12,13 +12,18 @@
   <tbody>
     <tr ng-repeat="row in ::controller.pageData.rows track by $index">
       <td ng-repeat="cell in ::row.cell track by $index">
-        <div ng-if="::controller.isObject(cell)" >
-          <div ng-repeat="(k, v) in ::cell track by $index" >
-            {$ ::k $} : {$ ::v $} <br>
+        <div ng-switch="::controller.getCellType(cell, $index)">
+          <div ng-switch-when="object" >
+            <div ng-repeat="(k, v) in ::cell track by $index" >
+              {$ ::k $} : {$ ::v $} <br>
+            </div>
           </div>
-        </div>
-        <div ng-if="::!controller.isObject(cell)" >
-          {$ ::cell $}
+          <div ng-switch-when="VFS" >
+            <a href="#" ng-click="controller.downloadFile(cell, $event)">{{cell}}</a>
+          </div>
+          <div ng-switch-default>
+            {$ ::cell $}
+          </div>
         </div>
       </td>
     </tr>

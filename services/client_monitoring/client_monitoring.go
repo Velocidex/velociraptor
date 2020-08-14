@@ -18,7 +18,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -217,8 +216,6 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddict.Dict) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	json.Debug(event)
 
 	modified_name, pres := event.GetString("artifact")
 	if !pres || modified_name == "" {

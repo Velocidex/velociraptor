@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -387,6 +388,10 @@ func (self *ApiServer) ListAvailableEventResults(
 	for _, item := range seen {
 		result.Logs = append(result.Logs, item)
 	}
+
+	sort.Slice(result.Logs, func(i, j int) bool {
+		return result.Logs[i].Artifact < result.Logs[j].Artifact
+	})
 
 	return result, nil
 }
