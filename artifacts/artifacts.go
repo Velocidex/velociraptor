@@ -350,7 +350,7 @@ func (self *Repository) getQueryDependencies(
 					artifact_name))
 		}
 
-		existing_depth, pres := dependency[hit[1]]
+		_, pres := dependency[hit[1]]
 		if pres {
 			continue
 		}
