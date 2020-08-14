@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"sync"
 
@@ -112,7 +113,7 @@ func vfsFileDownloadHandler(
 		// really report an error to the client.
 		filename := strings.Replace(request.VfsPath, "\"", "_", -1)
 		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(filename))
+			url.PathEscape(path.Base(filename)))
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 

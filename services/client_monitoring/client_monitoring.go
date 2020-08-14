@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/google/uuid"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -18,7 +19,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -63,6 +63,8 @@ type ClientEventTable struct {
 	repository *artifacts.Repository
 
 	clock utils.Clock
+
+	id string
 }
 
 // Checks to see if we need to update the client event table.
@@ -173,7 +175,9 @@ func (self *ClientEventTable) setClientMonitoringState(
 	artifact_path_manager := result_sets.NewArtifactPathManager(
 		self.config_obj, "", "", "Server.Internal.ArtifactModification")
 	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().Set("artifact", "ClientEventTable").
+		ordereddict.NewDict().
+			Set("setter", self.id).
+			Set("artifact", "ClientEventTable").
 			Set("op", "set"),
 	})
 }
@@ -218,15 +222,20 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddic
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	json.Debug(event)
-
 	modified_name, pres := event.GetString("artifact")
 	if !pres || modified_name == "" {
 		return
 	}
 
+	setter, _ := event.GetString("setter")
+
 	// Determine if the modified artifact affects us.
 	is_relevant := func() bool {
+		// Ignore events that we sent.
+		if setter == self.id {
+			return false
+		}
+
 		if modified_name == "ClientEventTable" {
 			return true
 		}
@@ -310,6 +319,7 @@ func StartClientMonitoringService(
 		ctx:        ctx,
 		repository: repository,
 		clock:      &utils.RealClock{},
+		id:         uuid.New().String(),
 	}
 
 	services.RegisterClientEventManager(event_table)
@@ -317,12 +327,18 @@ func StartClientMonitoringService(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
 
+	// Wait here until we are ready to watch the journal.
+	local_wg := &sync.WaitGroup{}
+
+	local_wg.Add(1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
 		events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
 		defer cancel()
+
+		local_wg.Done()
 
 		for {
 			select {
@@ -337,6 +353,8 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
+
+	local_wg.Wait()
 
 	return event_table.LoadFromFile()
 }

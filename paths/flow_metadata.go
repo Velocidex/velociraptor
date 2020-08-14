@@ -83,8 +83,12 @@ func (self FlowPathManager) UploadMetadata() *FlowPathManager {
 }
 
 func (self FlowPathManager) GetDownloadsFile(hostname string) *FlowPathManager {
+	// If there is no hostname we drop the leading -
+	if hostname != "" {
+		hostname += "-"
+	}
 	self.path = path.Join("/downloads", self.client_id, self.flow_id,
-		fmt.Sprintf("%v-%v-%v.zip", hostname, self.client_id, self.flow_id))
+		fmt.Sprintf("%v%v-%v.zip", hostname, self.client_id, self.flow_id))
 	return &self
 }
 

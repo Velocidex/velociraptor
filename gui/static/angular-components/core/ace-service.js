@@ -277,7 +277,7 @@ exports.AceService.prototype.getFunctionCompletions = function(prefix) {
                 type: "function",
                 value: item.name,
                 score: 10,
-                meta: "function arg (" + item.type + ")",
+                meta: "function",
                 docHTML: html,
             });
         }

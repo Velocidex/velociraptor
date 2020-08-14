@@ -231,6 +231,31 @@
   type: Plugin
   args: []
   category: plugin
+- name: client_delete
+  description: 'Delete all information related to a client. '
+  type: Plugin
+  args:
+  - name: client_id
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  - name: really_do_it
+    description: ""
+    type: bool
+    repeated: false
+    required: false
+  category: ""
+- name: client_info
+  description: Returns client info (like the fqdn) from the datastore.
+  type: Function
+  args:
+  - name: client_id
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: clients
   description: Retrieve the list of clients.
   type: Plugin
@@ -300,6 +325,11 @@
     type: string
     repeated: false
     required: true
+  - name: report
+    description: A path to write the report on.
+    type: string
+    repeated: false
+    required: false
   - name: args
     description: Optional parameters.
     type: vfilter.Any
@@ -318,6 +348,12 @@
   - name: artifact_definitions
     description: Optional additional custom artifacts.
     type: vfilter.Any
+    repeated: false
+    required: false
+  - name: template
+    description: The name of a template artifact (i.e. one which has report of type
+      HTML).
+    type: string
     repeated: false
     required: false
   category: plugin
@@ -395,8 +431,48 @@
     description: ""
     type: vfilter.Any
     repeated: false
-    required: true
+    required: false
   category: basic
+- name: create_flow_download
+  description: Creates a download pack for the flow.
+  type: Function
+  args:
+  - name: client_id
+    description: Client ID to export.
+    type: string
+    repeated: false
+    required: true
+  - name: flow_id
+    description: The flow id to export.
+    type: string
+    repeated: false
+    required: true
+  - name: wait
+    description: If set we wait for the download to complete before returning.
+    type: bool
+    repeated: false
+    required: false
+  category: ""
+- name: create_hunt_download
+  description: Creates a download pack for a hunt.
+  type: Function
+  args:
+  - name: hunt_id
+    description: Hunt ID to export.
+    type: string
+    repeated: false
+    required: true
+  - name: only_combined
+    description: If set we only export combined results.
+    type: bool
+    repeated: false
+    required: false
+  - name: wait
+    description: If set we wait for the download to complete before returning.
+    type: bool
+    repeated: false
+    required: false
+  category: ""
 - name: dict
   description: Construct a dict from arbitrary keyword args.
   type: Function
@@ -580,7 +656,7 @@
     description: ""
     type: vfilter.Any
     repeated: false
-    required: true
+    required: false
   category: basic
 - name: enumerate_flow
   description: Enumerate all the files that make up a flow.
@@ -1365,6 +1441,51 @@
   type: Plugin
   args: []
   category: windows
+- name: inventory
+  description: Retrieve the tools inventory.
+  type: Plugin
+  args: []
+  category: ""
+- name: inventory_add
+  description: Add tool to ThirdParty inventory.
+  type: Function
+  args:
+  - name: tool
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  - name: serve_locally
+    description: ""
+    type: bool
+    repeated: false
+    required: false
+  - name: url
+    description: ""
+    type: string
+    repeated: false
+    required: false
+  - name: hash
+    description: ""
+    type: string
+    repeated: false
+    required: false
+  - name: filename
+    description: ""
+    type: string
+    repeated: false
+    required: false
+  category: ""
+- name: inventory_get
+  description: Get tool info from inventory service.
+  type: Function
+  args:
+  - name: tool
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: ip
   description: |
     Format an IP address.
@@ -1456,6 +1577,16 @@
     repeated: false
     required: false
   category: experimental
+- name: killkillkill
+  description: Kills the client and forces a restart - this is very aggresive!
+  type: Function
+  args:
+  - name: client_id
+    description: ""
+    type: string
+    repeated: false
+    required: true
+  category: ""
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
@@ -1568,7 +1699,7 @@
     description: ""
     type: vfilter.Any
     repeated: false
-    required: true
+    required: false
   category: basic
 - name: min
   description: |
@@ -1590,7 +1721,7 @@
     description: ""
     type: vfilter.Any
     repeated: false
-    required: true
+    required: false
   category: basic
 - name: mock
   description: Mock a plugin.
@@ -1970,6 +2101,32 @@
     repeated: false
     required: false
   category: parsers
+- name: parse_ntfs_ranges
+  description: Show the run ranges for an NTFS stream.
+  type: Plugin
+  args:
+  - name: device
+    description: The device file to open. This may be a full path - we will figure
+      out the device automatically.
+    type: string
+    repeated: false
+    required: true
+  - name: inode
+    description: The MFT entry to parse in inode notation (5-144-1).
+    type: string
+    repeated: false
+    required: false
+  - name: mft
+    description: The MFT entry to parse.
+    type: int64
+    repeated: false
+    required: false
+  - name: mft_offset
+    description: The offset to the MFT entry to parse.
+    type: int64
+    repeated: false
+    required: false
+  category: ""
 - name: parse_pe
   description: Parse a PE file.
   type: Function
@@ -2267,12 +2424,12 @@
     required: false
   - name: start
     description: The start offset to scan
-    type: int64
+    type: uint64
     repeated: false
     required: false
   - name: end
     description: End scanning at this offset (100mb)
-    type: int64
+    type: uint64
     repeated: false
     required: false
   - name: number
@@ -2291,6 +2448,56 @@
     repeated: false
     required: false
   category: windows
+- name: profile
+  description: Returns a profile dump from the running process.
+  type: Plugin
+  args:
+  - name: allocs
+    description: A sampling of all past memory allocations
+    type: bool
+    repeated: false
+    required: false
+  - name: block
+    description: Stack traces that led to blocking on synchronization primitives
+    type: bool
+    repeated: false
+    required: false
+  - name: goroutine
+    description: Stack traces of all current goroutines
+    type: bool
+    repeated: false
+    required: false
+  - name: heap
+    description: A sampling of memory allocations of live objects.
+    type: bool
+    repeated: false
+    required: false
+  - name: mutex
+    description: Stack traces of holders of contended mutexes
+    type: bool
+    repeated: false
+    required: false
+  - name: profile
+    description: CPU profile.
+    type: bool
+    repeated: false
+    required: false
+  - name: trace
+    description: CPU trace.
+    type: bool
+    repeated: false
+    required: false
+  - name: debug
+    description: Debug level
+    type: int64
+    repeated: false
+    required: false
+  - name: duration
+    description: Duration of samples (default 30 sec)
+    type: int64
+    repeated: false
+    required: false
+  category: ""
 - name: pslist
   description: |
     Enumerate running processes.
@@ -2354,20 +2561,15 @@
   description: Read a file into a string.
   type: Function
   args:
-  - name: chunk
-    description: length of each chunk to read from the file.
-    type: int
-    repeated: false
-    required: false
-  - name: max_length
+  - name: length
     description: Max length of the file to read.
     type: int
     repeated: false
     required: false
-  - name: filenames
+  - name: filename
     description: One or more files to open.
     type: string
-    repeated: true
+    repeated: false
     required: true
   - name: accessor
     description: An accessor to use.
@@ -2841,6 +3043,11 @@
     type: string
     repeated: false
     required: false
+  - name: permissions
+    description: Required permissions (e.g. 'x').
+    type: string
+    repeated: false
+    required: false
   - name: remove_last
     description: If set we delay removal as much as possible.
     type: bool
@@ -2861,6 +3068,11 @@
     required: false
   - name: extension
     description: An extension to place in the tempfile.
+    type: string
+    repeated: false
+    required: false
+  - name: permissions
+    description: Required permissions (e.g. 'x').
     type: string
     repeated: false
     required: false
@@ -3171,6 +3383,11 @@
     repeated: false
     required: true
   category: basic
+- name: uuid
+  description: Generate a UUID.
+  type: Function
+  args: []
+  category: ""
 - name: vad
   description: Enumerate process memory regions.
   type: Plugin
@@ -3446,12 +3663,12 @@
     required: false
   - name: start
     description: The start offset to scan
-    type: int64
+    type: uint64
     repeated: false
     required: false
   - name: end
     description: End scanning at this offset (100mb)
-    type: int64
+    type: uint64
     repeated: false
     required: false
   - name: number
