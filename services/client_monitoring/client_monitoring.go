@@ -11,6 +11,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/google/uuid"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -62,6 +63,8 @@ type ClientEventTable struct {
 	repository *artifacts.Repository
 
 	clock utils.Clock
+
+	id string
 }
 
 // Checks to see if we need to update the client event table.
@@ -172,7 +175,9 @@ func (self *ClientEventTable) setClientMonitoringState(
 	artifact_path_manager := result_sets.NewArtifactPathManager(
 		self.config_obj, "", "", "Server.Internal.ArtifactModification")
 	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().Set("artifact", "ClientEventTable").
+		ordereddict.NewDict().
+			Set("setter", self.id).
+			Set("artifact", "ClientEventTable").
 			Set("op", "set"),
 	})
 }
@@ -222,8 +227,15 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(event *ordereddic
 		return
 	}
 
+	setter, _ := event.GetString("setter")
+
 	// Determine if the modified artifact affects us.
 	is_relevant := func() bool {
+		// Ignore events that we sent.
+		if setter == self.id {
+			return false
+		}
+
 		if modified_name == "ClientEventTable" {
 			return true
 		}
@@ -307,6 +319,7 @@ func StartClientMonitoringService(
 		ctx:        ctx,
 		repository: repository,
 		clock:      &utils.RealClock{},
+		id:         uuid.New().String(),
 	}
 
 	services.RegisterClientEventManager(event_table)
