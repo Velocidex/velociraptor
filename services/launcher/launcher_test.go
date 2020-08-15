@@ -241,16 +241,15 @@ func (self *LauncherTestSuite) TestCompiling() {
 		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), 2, len(compiled.Env))
+	assert.Equal(self.T(), 1, len(compiled.Env))
 
 	serialized, err := json.Marshal(compiled.Env)
 	assert.NoError(self.T(), err)
 
-	// Should include artifact default parameters followed by args
-	// passed in request. Order is important as it allows provided
-	// parameters to override default parameters!
+	// Should not include artifact default parameters and only
+	// include provided parameters.
 	assert.Equal(self.T(), string(serialized),
-		"[{\"key\":\"Foo\",\"value\":\"DefaultBar1\"},{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
+		"[{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
 
 	assert.Equal(self.T(), compiled.OpsPerSecond, request.OpsPerSecond)
 	assert.Equal(self.T(), compiled.Timeout, request.Timeout)

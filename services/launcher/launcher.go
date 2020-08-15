@@ -273,19 +273,33 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 func (self *Launcher) AddArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs,
-	collector_args *flows_proto.ArtifactCollectorArgs) error {
+	collector_request *flows_proto.ArtifactCollectorArgs) error {
 
 	// Add any Environment Parameters from the request.
-	if collector_args.Parameters == nil {
+	if collector_request.Parameters == nil {
 		return nil
 	}
 
-	for _, item := range collector_args.Parameters.Env {
-		vql_collector_args.Env = append(vql_collector_args.Env,
-			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
+	// We can only specify a parameter which is defined already
+	for _, item := range collector_request.Parameters.Env {
+		addOrReplaceParameter(item, vql_collector_args.Env)
 	}
 
 	return nil
+}
+
+// We do not expect too many parameters so linear search is appropriate.
+func addOrReplaceParameter(
+	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) {
+
+	// Try to replace it if it is already there.
+	for _, item := range env {
+		if item.Key == param.Key {
+			item.Value = param.Value
+			return
+		}
+	}
+	env = append(env, param)
 }
 
 func (self *Launcher) SetFlowIdForTests(id string) {
