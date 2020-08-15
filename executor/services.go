@@ -17,7 +17,7 @@ func StartServices(
 	exe *ClientExecutor) {
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("Starting event query service.")
+	logger.Info("<green>Starting</> event query service.")
 
 	responder := responder.NewResponder(
 		config_obj, &crypto_proto.GrrMessage{
@@ -28,6 +28,6 @@ func StartServices(
 			responder, config_obj.Writeback.EventQueries)
 	}
 
-	logger.Info("Starting Nanny service.")
+	logger.Info("<green>Starting</> Nanny service.")
 	StartNannyService(config_obj)
 }

@@ -70,7 +70,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 	case []*ordereddict.Dict:
 		columns := []string{}
 
-		result := "<table class=\"table table-striped\">\n"
+		result := "<div class=\"table\"><table class=\"table table-striped\"><thead>\n"
 
 		for _, item := range t {
 			if len(columns) == 0 {
@@ -80,8 +80,8 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 					result += "    <th>" + name + "</th>\n"
 				}
 				result += "  </tr>\n"
+				result += "</thead>\n<tbody>\n"
 			}
-
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
@@ -89,13 +89,13 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			}
 			result += "  </tr>\n"
 		}
-		result += "</table>\n"
+		result += "</tbody>\n/table></div>\n"
 		return result
 
 	case chan *ordereddict.Dict:
 		columns := []string{}
 
-		result := "<table class=\"table table-striped\">\n"
+		result := "<div class=\"table\"><table class=\"table table-striped\">\n<thead>\n"
 
 		for item := range t {
 			if len(columns) == 0 {
@@ -105,8 +105,8 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 					result += "    <th>" + name + "</th>\n"
 				}
 				result += "  </tr>\n"
+				result += "</thead>\n<tbody>\n"
 			}
-
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
@@ -114,7 +114,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			}
 			result += "  </tr>\n"
 		}
-		result += "</table>\n"
+		result += "</tbody>\n</table></div>\n"
 		return result
 	}
 }
@@ -194,6 +194,27 @@ func (self *HTMLTemplateEngine) getMultiLineQuery(query string) (string, error) 
 	// text/template actions not spanning multiple
 	// lines.
 	return html.UnescapeString(buf.String()), nil
+}
+
+func (self *HTMLTemplateEngine) Import(artifact, name string) interface{} {
+	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	if !pres {
+		self.Error("Unknown artifact %v", artifact)
+		return ""
+	}
+
+	for _, report := range definition.Reports {
+		if report.Name == name {
+			// We parse the template for new definitions,
+			// we dont actually care about the output.
+			_, err := self.tmpl.Parse(SanitizeGoTemplates(report.Template))
+			if err != nil {
+				self.Error("Template Erorr: %v", err)
+			}
+		}
+	}
+
+	return ""
 }
 
 func (self *HTMLTemplateEngine) Markdown(values ...string) interface{} {
@@ -309,6 +330,7 @@ func NewHTMLTemplateEngine(
 			"Timeline":  template_engine.Noop,
 			"Get":       template_engine.getFunction,
 			"Expand":    template_engine.Expand,
+			"import":    template_engine.Import,
 			"str":       strval,
 		})
 	return template_engine, nil

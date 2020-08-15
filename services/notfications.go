@@ -54,7 +54,7 @@ func StartNotificationService(
 	notification_pool = notifications.NewNotificationPool()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting the notification service.")
+	logger.Info("<green>Starting</> the notification service.")
 
 	wg.Add(1)
 	go func() {

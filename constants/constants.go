@@ -20,7 +20,7 @@ package constants
 import "regexp"
 
 const (
-	VERSION                    = "0.4.7"
+	VERSION                    = "0.4.8"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -71,6 +71,7 @@ const (
 	SCOPE_RESPONDER     = "$responder"
 	SCOPE_MOCK          = "$mock"
 	SCOPE_ROOT          = "$root"
+	SCOPE_STACK         = "$stack"
 
 	// Artifact names from packs should start with this
 	ARTIFACT_PACK_NAME_PREFIX   = "Packs."

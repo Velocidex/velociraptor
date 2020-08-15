@@ -76,10 +76,10 @@ func CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
-	hunt *api_proto.Hunt) (*string, error) {
+	hunt *api_proto.Hunt) (string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if hunt.Stats == nil {
@@ -91,7 +91,7 @@ func CreateHunt(
 	}
 
 	if hunt.StartRequest == nil || hunt.StartRequest.Artifacts == nil {
-		return nil, errors.New("No artifacts to collect.")
+		return "", errors.New("No artifacts to collect.")
 	}
 
 	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
@@ -102,7 +102,7 @@ func CreateHunt(
 
 	repository, err := artifacts.GetGlobalRepository(config_obj)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Compile the start request and store it in the hunt. We will
@@ -111,12 +111,14 @@ func CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	hunt.StartRequest.CompiledCollectorArgs, err = services.GetLauncher().
+	compiled, err := services.GetLauncher().
 		CompileCollectorArgs(ctx, config_obj, principal,
 			repository, hunt.StartRequest)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	hunt.StartRequest.CompiledCollectorArgs = append(
+		hunt.StartRequest.CompiledCollectorArgs, compiled)
 
 	// We allow our caller to determine if hunts are created in
 	// the running state or the paused state.
@@ -133,7 +135,7 @@ func CreateHunt(
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Trigger a refresh of the hunt dispatcher. This guarantees
@@ -141,7 +143,7 @@ func CreateHunt(
 	// calls.
 	services.GetHuntDispatcher().Refresh()
 
-	return &hunt.HuntId, nil
+	return hunt.HuntId, nil
 }
 
 func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) (
@@ -213,7 +215,7 @@ func availableHuntDownloadFiles(config_obj *config_proto.Config,
 	hunt_id string) (*api_proto.AvailableDownloads, error) {
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
-	download_file := hunt_path_manager.GetHuntDownloadsFile(false)
+	download_file := hunt_path_manager.GetHuntDownloadsFile(false, "")
 	download_path := path.Dir(download_file)
 
 	return getAvailableDownloadFiles(config_obj, download_path)

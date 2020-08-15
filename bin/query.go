@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -199,6 +200,11 @@ func startEssentialServices(config_obj *config_proto.Config, sm *services.Servic
 		return err
 	}
 
+	err = sm.Start(repository.StartRepositoryManager)
+	if err != nil {
+		return err
+	}
+
 	if config_obj.Datastore != nil {
 		err = sm.Start(journal.StartJournalService)
 		if err != nil {
@@ -250,7 +256,7 @@ func doQuery() {
 	builder := artifacts.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
+		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env:        ordereddict.NewDict(),
 	}
 

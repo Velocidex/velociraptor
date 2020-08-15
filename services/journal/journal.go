@@ -49,7 +49,7 @@ func (self *JournalService) PushRows(
 }
 
 func (self *JournalService) Start() error {
-	self.logger.Info("Starting Journal service.")
+	self.logger.Info("<green>Starting</> Journal service.")
 	return nil
 }
 

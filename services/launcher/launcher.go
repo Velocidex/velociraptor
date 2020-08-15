@@ -44,6 +44,9 @@ func (self *Launcher) CompileCollectorArgs(
 		Timeout:      collector_request.Timeout,
 		MaxRow:       1000,
 	}
+
+	// All artifacts are compiled to the same client request
+	// because they all run serially.
 	for _, name := range collector_request.Artifacts {
 		var artifact *artifacts_proto.Artifact = nil
 		if collector_request.AllowCustomOverrides {
@@ -68,7 +71,10 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
-		self.EnsureToolsDeclared(ctx, config_obj, artifact)
+		err = self.EnsureToolsDeclared(ctx, config_obj, artifact)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Add any artifact dependencies.
@@ -113,7 +119,6 @@ func getDependentTools(
 func (self *Launcher) EnsureToolsDeclared(
 	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range artifact.Tools {
 		_, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
@@ -124,7 +129,7 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(config_obj, tool)
+			err = services.GetInventory().AddTool(ctx, config_obj, tool)
 			if err != nil {
 				return err
 			}
@@ -180,12 +185,17 @@ func (self *Launcher) ScheduleArtifactCollection(
 
 	args := collector_request.CompiledCollectorArgs
 	if args == nil {
-		var err error
-		args, err = self.CompileCollectorArgs(
+		// Compile and cache the compilation for next time
+		// just in case this request is reused.
+
+		// NOTE: We assume that compiling the artifact is a
+		// pure function so caching is appropriate.
+		compiled, err := self.CompileCollectorArgs(
 			ctx, config_obj, principal, repository, collector_request)
 		if err != nil {
 			return "", err
 		}
+		args = append(args, compiled)
 	}
 
 	return ScheduleArtifactCollectionFromCollectorArgs(
@@ -195,7 +205,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 func ScheduleArtifactCollectionFromCollectorArgs(
 	config_obj *config_proto.Config,
 	collector_request *flows_proto.ArtifactCollectorArgs,
-	vql_collector_args *actions_proto.VQLCollectorArgs) (string, error) {
+	vql_collector_args []*actions_proto.VQLCollectorArgs) (string, error) {
 
 	client_id := collector_request.ClientId
 	if client_id == "" {
@@ -225,28 +235,37 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 		return "", err
 	}
 
-	// The task we will schedule for the client.
-	task := &crypto_proto.GrrMessage{
-		SessionId:       collection_context.SessionId,
-		RequestId:       constants.ProcessVQLResponses,
-		VQLClientAction: vql_collector_args}
+	tasks := []*crypto_proto.GrrMessage{}
 
-	// Send an urgent request to the client.
-	if collector_request.Urgent {
-		task.Urgent = true
+	for _, arg := range vql_collector_args {
+		// The task we will schedule for the client.
+		task := &crypto_proto.GrrMessage{
+			SessionId:       collection_context.SessionId,
+			RequestId:       constants.ProcessVQLResponses,
+			VQLClientAction: arg}
+
+		// Send an urgent request to the client.
+		if collector_request.Urgent {
+			task.Urgent = true
+		}
+
+		err = db.QueueMessageForClient(
+			config_obj, client_id, task)
+		if err != nil {
+			return "", err
+		}
+		tasks = append(tasks, task)
 	}
 
 	// Record the tasks for provenance of what we actually did.
 	err = db.SetSubject(config_obj,
 		flow_path_manager.Task().Path(),
-		&api_proto.ApiFlowRequestDetails{
-			Items: []*crypto_proto.GrrMessage{task}})
+		&api_proto.ApiFlowRequestDetails{Items: tasks})
 	if err != nil {
 		return "", err
 	}
 
-	return collection_context.SessionId, db.QueueMessageForClient(
-		config_obj, client_id, task)
+	return collection_context.SessionId, nil
 }
 
 // Adds any parameters set in the ArtifactCollectorArgs into the
@@ -254,19 +273,33 @@ func ScheduleArtifactCollectionFromCollectorArgs(
 func (self *Launcher) AddArtifactCollectorArgs(
 	config_obj *config_proto.Config,
 	vql_collector_args *actions_proto.VQLCollectorArgs,
-	collector_args *flows_proto.ArtifactCollectorArgs) error {
+	collector_request *flows_proto.ArtifactCollectorArgs) error {
 
 	// Add any Environment Parameters from the request.
-	if collector_args.Parameters == nil {
+	if collector_request.Parameters == nil {
 		return nil
 	}
 
-	for _, item := range collector_args.Parameters.Env {
-		vql_collector_args.Env = append(vql_collector_args.Env,
-			&actions_proto.VQLEnv{Key: item.Key, Value: item.Value})
+	// We can only specify a parameter which is defined already
+	for _, item := range collector_request.Parameters.Env {
+		addOrReplaceParameter(item, vql_collector_args.Env)
 	}
 
 	return nil
+}
+
+// We do not expect too many parameters so linear search is appropriate.
+func addOrReplaceParameter(
+	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) {
+
+	// Try to replace it if it is already there.
+	for _, item := range env {
+		if item.Key == param.Key {
+			item.Value = param.Value
+			return
+		}
+	}
+	env = append(env, param)
 }
 
 func (self *Launcher) SetFlowIdForTests(id string) {

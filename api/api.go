@@ -240,7 +240,7 @@ func (self *ApiServer) CreateHunt(
 		return nil, err
 	}
 
-	result.FlowId = *hunt_id
+	result.FlowId = hunt_id
 
 	return result, nil
 }
@@ -1003,20 +1003,32 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 			"request": in,
 		}).Info("CreateDownloadRequest")
 
+	format := ""
+	if in.JsonFormat {
+		format = "json"
+	} else if in.CsvFormat {
+		format = "csv"
+	}
+
 	query := ""
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
 		query = `SELECT create_flow_download(
       client_id=ClientId, flow_id=FlowId) AS VFSPath
       FROM scope()`
+
 		env.Set("ClientId", in.ClientId).
 			Set("FlowId", in.FlowId)
+
 	} else if in.HuntId != "" {
 		query = `SELECT create_hunt_download(
-      hunt_id=HuntId, only_combined=OnlyCombined) AS VFSPath
+      hunt_id=HuntId, only_combined=OnlyCombined, format=Format) AS VFSPath
       FROM scope()`
+
 		env.Set("HuntId", in.HuntId).
+			Set("Format", format).
 			Set("OnlyCombined", in.OnlyCombinedHunt)
+
 	}
 
 	scope := artifacts.ScopeBuilder{
@@ -1092,7 +1104,7 @@ func startAPIServer(
 	reflection.Register(grpcServer)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Launched gRPC API server on %v ", bind_addr)
+	logger.Info("<green>Starting</> gRPC API server on %v ", bind_addr)
 
 	wg.Add(1)
 	go func() {
@@ -1109,7 +1121,7 @@ func startAPIServer(
 		defer wg.Done()
 
 		<-ctx.Done()
-		logger.Info("Shutting down gRPC API server")
+		logger.Info("<red>Shutting down</> gRPC API server")
 		grpcServer.Stop()
 	}()
 
@@ -1151,7 +1163,7 @@ func StartMonitoringService(
 		// Wait for context to become cancelled.
 		<-ctx.Done()
 
-		logger.Info("Shutting down Prometheus monitoring service")
+		logger.Info("<red>Shutting down</> Prometheus monitoring service")
 		timeout_ctx, cancel := context.WithTimeout(
 			context.Background(), 10*time.Second)
 		defer cancel()

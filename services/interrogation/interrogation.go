@@ -46,7 +46,7 @@ func (self *EnrollmentService) Start(
 		defer self.mu.Unlock()
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Info("Starting Enrollment service.")
+		logger.Info("<green>Starting</> Enrollment service.")
 
 		events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
 		defer cancel()

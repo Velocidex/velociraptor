@@ -4,14 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -21,6 +19,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -75,6 +74,32 @@ sources:
 type LauncherTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
+	sm         *services.Service
+}
+
+func (self *LauncherTestSuite) SetupTest() {
+	var err error
+	self.config_obj, err = new(config.Loader).WithFileLoader(
+		"../../http_comms/test_data/server.config.yaml").
+		WithRequiredFrontend().WithWriteback().
+		LoadAndValidate()
+	require.NoError(self.T(), err)
+
+	// Start essential services.
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
+	self.sm = services.NewServiceManager(ctx, self.config_obj)
+
+	t := self.T()
+	assert.NoError(t, self.sm.Start(journal.StartJournalService))
+	assert.NoError(t, self.sm.Start(services.StartNotificationService))
+	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
+	assert.NoError(t, self.sm.Start(StartLauncherService))
+}
+
+func (self *LauncherTestSuite) TearDownTest() {
+	self.sm.Close()
+	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
+	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
 }
 
 // Tools allow Velociraptor to automatically manage external bundles
@@ -157,16 +182,17 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
-	err = services.GetInventory().AddTool(self.config_obj, &artifacts_proto.Tool{
-		Name: "Tool1",
-		// This will force Velociraptor to generate a stable
-		// public directory URL from where to serve the
-		// tool. The "tools upload" command will copy the
-		// actual tool there.
-		ServeLocally: true,
-		Filename:     "mytool.exe",
-		Hash:         sha_value,
-	})
+	err = services.GetInventory().AddTool(
+		ctx, self.config_obj, &artifacts_proto.Tool{
+			Name: "Tool1",
+			// This will force Velociraptor to generate a stable
+			// public directory URL from where to serve the
+			// tool. The "tools upload" command will copy the
+			// actual tool there.
+			ServeLocally: true,
+			Filename:     "mytool.exe",
+			Hash:         sha_value,
+		})
 	assert.NoError(self.T(), err)
 
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
@@ -215,16 +241,15 @@ func (self *LauncherTestSuite) TestCompiling() {
 		ctx, self.config_obj, "UserX", repository, request)
 	assert.NoError(self.T(), err)
 
-	assert.Equal(self.T(), 2, len(compiled.Env))
+	assert.Equal(self.T(), 1, len(compiled.Env))
 
 	serialized, err := json.Marshal(compiled.Env)
 	assert.NoError(self.T(), err)
 
-	// Should include artifact default parameters followed by args
-	// passed in request. Order is important as it allows provided
-	// parameters to override default parameters!
+	// Should not include artifact default parameters and only
+	// include provided parameters.
 	assert.Equal(self.T(), string(serialized),
-		"[{\"key\":\"Foo\",\"value\":\"DefaultBar1\"},{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
+		"[{\"key\":\"Foo\",\"value\":\"ParameterBar\"}]")
 
 	assert.Equal(self.T(), compiled.OpsPerSecond, request.OpsPerSecond)
 	assert.Equal(self.T(), compiled.Timeout, request.Timeout)
@@ -304,33 +329,5 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 }
 
 func TestLauncher(t *testing.T) {
-	config_obj, err := new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(t, err)
-
-	tmpdir, err := ioutil.TempDir("", "tmp")
-	assert.NoError(t, err)
-	defer os.RemoveAll(tmpdir)
-
-	config_obj.Datastore.Implementation = "FileBaseDataStore"
-	config_obj.Datastore.Location = tmpdir
-	config_obj.Datastore.FilestoreDirectory = tmpdir
-
-	// Start the journaling service manually for tests.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
-
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	assert.NoError(t, sm.Start(journal.StartJournalService))
-	assert.NoError(t, sm.Start(services.StartNotificationService))
-	assert.NoError(t, sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, sm.Start(StartLauncherService))
-
-	suite.Run(t, &LauncherTestSuite{
-		config_obj: config_obj,
-	})
+	suite.Run(t, &LauncherTestSuite{})
 }

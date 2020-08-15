@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
@@ -70,6 +71,16 @@ func StartFrontendServices(config_obj *config_proto.Config,
 		return err
 	}
 
+	err = sm.Start(inventory.StartInventoryService)
+	if err != nil {
+		return err
+	}
+
+	err = sm.Start(repository.StartRepositoryManager)
+	if err != nil {
+		return err
+	}
+
 	// Check everything is ok before we can start.
 	err = sm.Start(sanity.StartSanityCheckService)
 	if err != nil {
@@ -118,11 +129,6 @@ func StartFrontendServices(config_obj *config_proto.Config,
 		if err != nil {
 			return err
 		}
-	}
-
-	err = sm.Start(inventory.StartInventoryService)
-	if err != nil {
-		return err
 	}
 
 	if spec.HuntManager {

@@ -48,8 +48,7 @@ var (
 		"show", "Show an artifact")
 
 	artifact_command_show_name = artifact_command_show.Arg(
-		"name", "Name to show.").
-		HintAction(listArtifactsHint).String()
+		"name", "Name to show.").Required().String()
 
 	artifact_command_list_name = artifact_command_list.Arg(
 		"regex", "Regex of names to match.").

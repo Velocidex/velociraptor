@@ -88,6 +88,16 @@
                           ng-click="controller.prepareDownload('summary')">
                   Summary Download
                   </button>
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload('summary-csv')">
+                  Summary (CSV Only)
+                  </button>
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload('summary-json')">
+                  Summary (JSON Only)
+                  </button>
                 </div>
               </div>
             </dd>

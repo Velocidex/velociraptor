@@ -66,7 +66,7 @@ func startFrontend(sm *services.Service,
 		"version":    config_obj.Version.Version,
 		"build_time": config_obj.Version.BuildTime,
 		"commit":     config_obj.Version.Commit,
-	}).Info("Starting Frontend.")
+	}).Info("<green>Starting</> Frontend.")
 
 	if *compression_flag {
 		logger.Info("Disabling artifact compression.")

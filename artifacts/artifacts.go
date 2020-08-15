@@ -149,7 +149,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		report.Type = strings.ToLower(report.Type)
 		switch report.Type {
 		case "monitoring_daily", "server_event", "client",
-			"internal", "hunt":
+			"internal", "hunt", "templates":
 
 		case "html": // HTML reports form a main HTML page for report exports.
 		default:
@@ -350,13 +350,8 @@ func (self *Repository) getQueryDependencies(
 					artifact_name))
 		}
 
-		existing_depth, pres := dependency[hit[1]]
+		_, pres = dependency[hit[1]]
 		if pres {
-			if existing_depth < depth {
-				return errors.New(
-					fmt.Sprintf(
-						"Cycle found while compiling %s", artifact_name))
-			}
 			continue
 		}
 
@@ -420,11 +415,23 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 
 			// Deliberately make a copy of the artifact -
 			// we do not want to give away metadata to the
-			// client.
+			// client. Only pass the bare necessary
+			// details of the definition.
+			filtered_parameters := make(
+				[]*artifacts_proto.ArtifactParameter, 0,
+				len(artifact.Parameters))
+			for _, param := range artifact.Parameters {
+				filtered_parameters = append(filtered_parameters,
+					&artifacts_proto.ArtifactParameter{
+						Name:    param.Name,
+						Default: param.Default,
+					})
+			}
+
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
-					Parameters: artifact.Parameters,
+					Parameters: filtered_parameters,
 					Sources:    sources,
 				})
 		}
@@ -660,4 +667,11 @@ func compileArtifact(artifact *artifacts_proto.Artifact) error {
 		}
 	}
 	return nil
+}
+
+func SetGlobalRepositoryForTests(repository *Repository) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	global_repository = repository
 }

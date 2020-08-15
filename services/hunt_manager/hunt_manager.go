@@ -75,7 +75,7 @@ func (self *HuntManager) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("Starting the hunt manager service.")
+	logger.Info("<green>Starting</> the hunt manager service.")
 
 	err := self.StartParticipation(ctx, wg)
 	if err != nil {
@@ -243,7 +243,7 @@ func (self *HuntManager) ProcessRow(
 
 			// Ignore hunts with label conditions which
 			// exclude this client.
-			if !huntHasLabel(self.config_obj, hunt_obj,
+			if !huntHasLabel(hunt_obj,
 				participation_row.ClientId) {
 				return errors.New("hunt label does not match")
 			}
@@ -309,21 +309,42 @@ func StartHuntManager(
 	return result.Start(ctx, wg)
 }
 
-// Check if the client has any of the required labels.
-func huntHasLabel(config_obj *config_proto.Config,
-	hunt_obj *api_proto.Hunt, client_id string) bool {
+// Check if the client should be scheduled based on required labels.
+func huntHasLabel(hunt_obj *api_proto.Hunt, client_id string) bool {
 	labeler := services.GetLabeler()
+
+	if hunt_obj.Condition == nil {
+		return true
+	}
 
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition == nil {
-		return true
+		return huntHasExcludeLabel(hunt_obj, client_id)
 	}
 
 	for _, label := range label_condition.Label {
 		if labeler.IsLabelSet(client_id, label) {
-			return true
+			return huntHasExcludeLabel(hunt_obj, client_id)
 		}
 	}
 
 	return false
+}
+
+// Check if the client should be scheduled based on excluded labels.
+func huntHasExcludeLabel(hunt_obj *api_proto.Hunt, client_id string) bool {
+	labeler := services.GetLabeler()
+
+	if hunt_obj.Condition.ExcludedLabels != nil {
+		for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
+			if labeler.IsLabelSet(client_id, label) {
+				// Label is set on the client, it should be
+				// excluded from the hunt.
+				return false
+			}
+		}
+	}
+
+	// Not excluded - schedule the client.
+	return true
 }

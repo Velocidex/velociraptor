@@ -41,7 +41,7 @@ func (self *TestDataStore) Clear() {
 	self.ClientTasks = make(map[string][]*crypto_proto.GrrMessage)
 }
 
-func (self *TestDataStore) Debug() string {
+func (self *TestDataStore) Debug() {
 	result := []string{}
 
 	for k, v := range self.Subjects {
@@ -49,7 +49,7 @@ func (self *TestDataStore) Debug() string {
 			json.MustMarshalIndent(v))))
 	}
 
-	return strings.Join(result, "\n")
+	fmt.Println(strings.Join(result, "\n"))
 }
 
 func (self *TestDataStore) GetClientTasks(config_obj *config_proto.Config,

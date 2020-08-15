@@ -18,26 +18,26 @@
 package logging
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"regexp"
 	"sync"
 	"time"
 
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/mattn/go-isatty"
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 )
 
 var (
 	SuppressLogging = false
+	NoColor         = false
 
 	GenericComponent  = "Velociraptor"
 	FrontendComponent = "VelociraptorFrontend"
@@ -53,6 +53,9 @@ var (
 
 	mu      sync.Mutex
 	prelogs []string
+
+	tag_regex         = regexp.MustCompile("<([^>/0]+)>")
+	closing_tag_regex = regexp.MustCompile("</>")
 )
 
 func InitLogging(config_obj *config_proto.Config) error {
@@ -213,7 +216,9 @@ func (self *LogManager) makeNewComponent(
 
 		hook := lfshook.NewHook(
 			pathMap,
-			&logrus.JSONFormatter{},
+			&logrus.JSONFormatter{
+				DisableHTMLEscape: true,
+			},
 		)
 		Log.Hooks.Add(hook)
 	}
@@ -230,26 +235,12 @@ func (self *LogManager) makeNewComponent(
 		stderr_map[logrus.ErrorLevel] = os.Stderr
 	}
 
-	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{}))
-
-	return &LogContext{Log}, nil
-}
-
-type Formatter struct{}
-
-func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
-	b := &bytes.Buffer{}
-
-	levelText := strings.ToUpper(entry.Level.String())
-	fmt.Fprintf(b, "[%s] %v %s ", levelText, entry.Time.Format(time.RFC3339),
-		strings.TrimRight(entry.Message, "\r\n"))
-
-	if len(entry.Data) > 0 {
-		serialized, _ := json.Marshal(entry.Data)
-		fmt.Fprintf(b, "%s", serialized)
+	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{stderr_map}))
+	if !NoColor && !isatty.IsTerminal(os.Stdout.Fd()) {
+		NoColor = true
 	}
 
-	return append(b.Bytes(), '\n'), nil
+	return &LogContext{Log}, nil
 }
 
 type logWriter struct {
@@ -294,4 +285,10 @@ func GetStackTrace(err error) string {
 		}
 	}
 	return ""
+}
+
+// Clear tags from log messages.
+func clearTag(message string) string {
+	message = tag_regex.ReplaceAllString(message, "")
+	return closing_tag_regex.ReplaceAllString(message, "")
 }

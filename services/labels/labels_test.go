@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -108,6 +108,9 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.True(self.T(), labeler.IsLabelSet(self.client_id, "label1"))
 
 	assert.False(self.T(), labeler.IsLabelSet(self.client_id, "Label2"))
+
+	// All clients belong to the All label.
+	assert.True(self.T(), labeler.IsLabelSet(self.client_id, "All"))
 
 	// The timestamp should be reasonable
 	assert.True(self.T(), labeler.LastLabelTimestamp(self.client_id) >= now)

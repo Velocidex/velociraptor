@@ -3,12 +3,23 @@ package utils
 import (
 	"context"
 	"io"
+	"sync"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 32*1024)
+		},
+	}
 )
 
 // An io.Copy() that respects context cancellations.
 func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) {
 	offset := 0
-	buff := make([]byte, 32*1024)
+	buff := pool.Get().([]byte)
+	defer pool.Put(buff)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -36,7 +47,8 @@ func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) 
 func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 	n int, err error) {
 	offset := 0
-	buff := make([]byte, 32*1024)
+	buff := pool.Get().([]byte)
+	defer pool.Put(buff)
 	for count > 0 {
 		select {
 		case <-ctx.Done():

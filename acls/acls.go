@@ -49,12 +49,12 @@ Tips:
 
 import (
 	"fmt"
-	"path"
 	"strings"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/paths"
 )
 
 type ACL_PERMISSION int
@@ -207,8 +207,8 @@ func GetPolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	err = db.GetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{principal}
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -228,8 +228,8 @@ func GetEffectivePolicy(
 	}
 
 	acl_obj := &acl_proto.ApiClientACL{}
-	err = db.GetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{principal}
+	err = db.GetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +251,8 @@ func SetPolicy(
 		return err
 	}
 
-	return db.SetSubject(config_obj,
-		path.Join("acl", principal+".json"), acl_obj)
+	user_path_manager := paths.UserPathManager{principal}
+	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
 func CheckAccess(

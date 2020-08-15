@@ -25,6 +25,7 @@
           <div class="controls">
             <select class="form-control" ng-model="controller.os">
               <option label="Windows" value="Windows">Windows</option>
+              <option label="Windows x86" value="Windows_x86">Windows x86</option>
               <option label="Linux" value="Linux">Linux</option>
               <option label="MacOS" value="MacOS">MacOS</option>
             </select>
@@ -42,6 +43,18 @@
             </select>
           </div>
         </div>
+        <div class="form-group">
+          <label class="control-label" title="Password.">
+            Password
+          </label>
+          <div class="controls">
+            <input class="form-control"
+                   ng-model="controller.password"
+                   ></input>
+          </div>
+        </div>
+
+        {{ controller.password }}
 
         <div class="form-group">
           <label class="control-label" title="Collector Type">

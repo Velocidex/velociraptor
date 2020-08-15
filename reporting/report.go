@@ -27,6 +27,7 @@ type TemplateEngine interface {
 type BaseTemplateEngine struct {
 	Artifact   *artifacts_proto.Artifact
 	Env        *ordereddict.Dict
+	Repository *artifacts.Repository
 	Scope      *vfilter.Scope
 	logger     *logging.LogContext
 	config_obj *config_proto.Config
@@ -332,6 +333,7 @@ func newBaseTemplateEngine(
 
 	return &BaseTemplateEngine{
 		Artifact:   artifact,
+		Repository: repository,
 		Scope:      scope,
 		Env:        env,
 		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),

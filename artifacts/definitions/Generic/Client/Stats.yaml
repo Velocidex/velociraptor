@@ -20,7 +20,7 @@ sources:
            FROM pslist(pid=getpid())
          })
 
-  - precondition: SELECT OS From info() where OS = 'linux'
+  - precondition: SELECT OS From info() where OS != 'windows'
     queries:
       - SELECT * from foreach(
          row={

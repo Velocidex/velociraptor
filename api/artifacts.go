@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -44,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -115,60 +117,30 @@ func setArtifactFile(config_obj *config_proto.Config,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	// First ensure that the artifact is correct.
-	tmp_repository := artifacts.NewRepository()
-	artifact_definition, err := tmp_repository.LoadYaml(
-		in.Artifact, true /* validate */)
-	if err != nil {
-		return nil, err
-	}
-
-	if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
-		return nil, errors.New(
-			"Modified or custom artifacts must start with '" +
-				required_prefix + "'")
-	}
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	vfs_path := paths.GetArtifactDefintionPath(artifact_definition.Name)
-
-	// Load the new artifact into the global repo so it is
-	// immediately available.
-	global_repository, err := artifacts.GetGlobalRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
+	repository_manager := services.GetRepositoryManager()
 
 	switch in.Op {
-
 	case api_proto.SetArtifactRequest_DELETE:
-		global_repository.Del(artifact_definition.Name)
-		err = file_store_factory.Delete(vfs_path)
-		return artifact_definition, err
+
+		// First ensure that the artifact is correct.
+		tmp_repository := artifacts.NewRepository()
+		artifact_definition, err := tmp_repository.LoadYaml(
+			in.Artifact, true /* validate */)
+		if err != nil {
+			return nil, err
+		}
+
+		if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
+			return nil, errors.New(
+				"Modified or custom artifacts must start with '" +
+					required_prefix + "'")
+		}
+
+		return artifact_definition, repository_manager.DeleteArtifactFile(
+			artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
-		// Now write it into the filestore.
-		fd, err := file_store_factory.WriteFile(vfs_path)
-		if err != nil {
-			return nil, err
-		}
-		defer fd.Close()
-
-		// We want to completely replace the content of the file.
-		err = fd.Truncate()
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = fd.Write([]byte(in.Artifact))
-		if err != nil {
-			return nil, err
-		}
-
-		// Load the artifact into the currently running repository.
-		// Artifact is already valid - no need to revalidate it again.
-		_, err = global_repository.LoadYaml(in.Artifact, false /* validate */)
-		return artifact_definition, err
+		return repository_manager.SetArtifactFile(in.Artifact, required_prefix)
 	}
 
 	return nil, errors.New("Unknown op")
@@ -416,6 +388,10 @@ func (self *ApiServer) ListAvailableEventResults(
 	for _, item := range seen {
 		result.Logs = append(result.Logs, item)
 	}
+
+	sort.Slice(result.Logs, func(i, j int) bool {
+		return result.Logs[i].Artifact < result.Logs[j].Artifact
+	})
 
 	return result, nil
 }

@@ -20,12 +20,21 @@ package filesystem
 import (
 	"context"
 	"io"
+	"sync"
 
 	"github.com/Velocidex/ahocorasick"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+var (
+	pool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 1024*1024) // 1Mb chunks
+		},
+	}
 )
 
 type GrepFunctionArgs struct {
@@ -61,7 +70,8 @@ func (self *GrepFunction) Call(ctx context.Context,
 	ah_matcher := ahocorasick.NewMatcher(keywords)
 	offset := 0
 
-	buf := make([]byte, 4*1024*1024) // 4Mb chunks
+	buf := pool.Get().([]byte)
+	defer pool.Put(buf)
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {

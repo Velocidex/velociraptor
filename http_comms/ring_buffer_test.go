@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/alecthomas/assert"
 	"github.com/golang/protobuf/proto"
 	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"

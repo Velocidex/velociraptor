@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"sync"
 
 	errors "github.com/pkg/errors"
@@ -68,7 +67,6 @@ func (self *Obfuscator) Decrypt(config_obj *config_proto.Config, name string) (
 
 	// Not obfuscated
 	if name[0] != '$' {
-		fmt.Printf("Name %s is not obfuscated\n", name)
 		return name, nil
 	}
 

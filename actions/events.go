@@ -141,7 +141,7 @@ func (self UpdateEventTable) Run(
 			}
 
 			if name != "" {
-				logger.Info("Starting monitoring query %s", name)
+				logger.Info("<green>Starting</> monitoring query %s", name)
 			}
 			action_obj.StartQuery(
 				config_obj, new_ctx, responder, event)
