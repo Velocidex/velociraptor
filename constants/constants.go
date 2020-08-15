@@ -71,6 +71,7 @@ const (
 	SCOPE_RESPONDER     = "$responder"
 	SCOPE_MOCK          = "$mock"
 	SCOPE_ROOT          = "$root"
+	SCOPE_STACK         = "$stack"
 
 	// Artifact names from packs should start with this
 	ARTIFACT_PACK_NAME_PREFIX   = "Packs."

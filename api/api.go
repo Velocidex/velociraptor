@@ -1003,20 +1003,32 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 			"request": in,
 		}).Info("CreateDownloadRequest")
 
+	format := ""
+	if in.JsonFormat {
+		format = "json"
+	} else if in.CsvFormat {
+		format = "csv"
+	}
+
 	query := ""
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
 		query = `SELECT create_flow_download(
       client_id=ClientId, flow_id=FlowId) AS VFSPath
       FROM scope()`
+
 		env.Set("ClientId", in.ClientId).
 			Set("FlowId", in.FlowId)
+
 	} else if in.HuntId != "" {
 		query = `SELECT create_hunt_download(
-      hunt_id=HuntId, only_combined=OnlyCombined) AS VFSPath
+      hunt_id=HuntId, only_combined=OnlyCombined, format=Format) AS VFSPath
       FROM scope()`
+
 		env.Set("HuntId", in.HuntId).
+			Set("Format", format).
 			Set("OnlyCombined", in.OnlyCombinedHunt)
+
 	}
 
 	scope := artifacts.ScopeBuilder{

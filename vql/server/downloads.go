@@ -86,6 +86,8 @@ type CreateHuntDownloadArgs struct {
 	HuntId       string `vfilter:"required,field=hunt_id,doc=Hunt ID to export."`
 	OnlyCombined bool   `vfilter:"optional,field=only_combined,doc=If set we only export combined results."`
 	Wait         bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
+	Format       string `vfilter:"optional,field=format,doc=Format to export (csv,json) defaults to both."`
+	Filename     string `vfilter:"optional,field=base,doc=Base filename to write to."`
 }
 
 type CreateHuntDownload struct{}
@@ -113,8 +115,28 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	var write_csv, write_json bool
+
+	switch arg.Format {
+	case "json":
+		write_json = true
+
+	case "csv":
+		write_csv = true
+
+	case "":
+		write_json = true
+		write_csv = true
+
+	default:
+		scope.Log("Unknown format parameter either 'json', 'cvs' or empty for both.")
+		return vfilter.Null{}
+	}
+
 	result, err := createHuntDownloadFile(
-		ctx, config_obj, scope, arg.HuntId, arg.Wait, arg.OnlyCombined)
+		ctx, config_obj, scope, arg.HuntId,
+		write_json, write_csv,
+		arg.Wait, arg.OnlyCombined, arg.Filename)
 	if err != nil {
 		scope.Log("create_hunt_download: %s", err)
 		return vfilter.Null{}
@@ -327,7 +349,9 @@ func createHuntDownloadFile(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	hunt_id string,
-	wait, only_combined bool) (string, error) {
+	write_json, write_csv bool,
+	wait, only_combined bool,
+	base_filename string) (string, error) {
 	if hunt_id == "" {
 		return "", errors.New("Hunt Id should be specified.")
 	}
@@ -341,7 +365,7 @@ func createHuntDownloadFile(
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	download_file := hunt_path_manager.GetHuntDownloadsFile(
-		only_combined)
+		only_combined, base_filename)
 
 	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
@@ -452,7 +476,7 @@ func createHuntDownloadFile(
 			defer os.Remove(csv_tmpfile.Name())
 
 			err = StoreVQLAsCSVAndJsonFile(ctx, config_obj,
-				subscope, query,
+				subscope, query, write_csv, write_json,
 				csv_tmpfile, json_tmpfile)
 			if err != nil {
 				report_err(err)
@@ -482,17 +506,21 @@ func createHuntDownloadFile(
 				return err
 			}
 
-			err = copier(csv_tmpfile.Name(), "All "+
-				path.Join(artifact, source)+".csv")
-			if err != nil {
-				report_err(err)
-				continue
+			if write_csv {
+				err = copier(csv_tmpfile.Name(), "All "+
+					path.Join(artifact, source)+".csv")
+				if err != nil {
+					report_err(err)
+					continue
+				}
 			}
 
-			err = copier(json_tmpfile.Name(), "All "+
-				path.Join(artifact, source)+".json")
-			if err != nil {
-				report_err(err)
+			if write_json {
+				err = copier(json_tmpfile.Name(), "All "+
+					path.Join(artifact, source)+".json")
+				if err != nil {
+					report_err(err)
+				}
 			}
 		}
 
@@ -544,6 +572,8 @@ func StoreVQLAsCSVAndJsonFile(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	query string,
+	write_csv bool,
+	write_json bool,
 	csv_fd io.Writer,
 	json_fd io.Writer) error {
 
@@ -559,17 +589,21 @@ func StoreVQLAsCSVAndJsonFile(
 	defer cancel()
 
 	for row := range vql.Eval(sub_ctx, scope) {
-		csv_writer.Write(row)
+		if write_csv {
+			csv_writer.Write(row)
+		}
 
-		serialized, err := json.Marshal(row)
-		if err != nil {
-			continue
+		if write_json {
+			serialized, err := json.Marshal(row)
+			if err != nil {
+				continue
+			}
+			_, err = json_fd.Write(serialized)
+			if err != nil {
+				return errors.WithStack(err)
+			}
+			json_fd.Write([]byte("\n"))
 		}
-		_, err = json_fd.Write(serialized)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		json_fd.Write([]byte("\n"))
 	}
 
 	return nil

@@ -47,6 +47,12 @@ HuntOverviewController.prototype.prepareDownload = function(download_type) {
 
     if (download_type == 'summary') {
         params.only_combined_hunt = true;
+    } else if(download_type == 'summary-json') {
+        params.only_combined_hunt = true;
+        params.json_format = true;
+    } else if(download_type == 'summary-csv') {
+        params.only_combined_hunt = true;
+        params.csv_format = true;
     }
 
     this.grrApiService_.post(url, params).then(

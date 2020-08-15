@@ -18,16 +18,12 @@
 package api
 
 import (
-	"io"
-
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -76,50 +72,4 @@ func RunVQL(
 	}
 
 	return result, nil
-}
-
-func StoreVQLAsCSVAndJsonFile(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	principal string,
-	env *ordereddict.Dict,
-	query string,
-	csv_fd io.Writer,
-	json_fd io.Writer) error {
-
-	scope := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
-		Logger: logging.NewPlainLogger(config_obj,
-			&logging.ToolComponent),
-		Env: env,
-	}.Build()
-	defer scope.Close()
-
-	vql, err := vfilter.Parse(query)
-	if err != nil {
-		return err
-	}
-
-	csv_writer := csv.GetCSVAppender(scope, csv_fd, true /* write_headers */)
-	defer csv_writer.Close()
-
-	sub_ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	for row := range vql.Eval(sub_ctx, scope) {
-		csv_writer.Write(row)
-
-		serialized, err := json.Marshal(row)
-		if err != nil {
-			continue
-		}
-		_, err = json_fd.Write(serialized)
-		if err != nil {
-			return errors.WithStack(err)
-		}
-		json_fd.Write([]byte("\n"))
-	}
-
-	return nil
 }
