@@ -420,11 +420,23 @@ func (self *Repository) PopulateArtifactsVQLCollectorArgs(
 
 			// Deliberately make a copy of the artifact -
 			// we do not want to give away metadata to the
-			// client.
+			// client. Only pass the bare necessary
+			// details of the definition.
+			filtered_parameters := make(
+				[]*artifacts_proto.ArtifactParameter, 0,
+				len(artifact.Parameters))
+			for _, param := range artifact.Parameters {
+				filtered_parameters = append(filtered_parameters,
+					&artifacts_proto.ArtifactParameter{
+						Name:    param.Name,
+						Default: param.Default,
+					})
+			}
+
 			request.Artifacts = append(request.Artifacts,
 				&artifacts_proto.Artifact{
 					Name:       artifact.Name,
-					Parameters: artifact.Parameters,
+					Parameters: filtered_parameters,
 					Sources:    sources,
 				})
 		}

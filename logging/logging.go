@@ -287,6 +287,7 @@ func GetStackTrace(err error) string {
 	return ""
 }
 
+// Clear tags from log messages.
 func clearTag(message string) string {
 	message = tag_regex.ReplaceAllString(message, "")
 	return closing_tag_regex.ReplaceAllString(message, "")
