@@ -24,12 +24,17 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+)
+
+const (
+	MAX_STACK_DEPTH = 10
 )
 
 type ArtifactRepositoryPlugin struct {
@@ -64,6 +69,14 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 	go func() {
 		defer close(output_chan)
+
+		// If the ctx is done do nothing.
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			break
+		}
 
 		if self.mock != nil {
 			for _, row := range self.mock {
@@ -110,6 +123,15 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		// We create a child scope for evaluating the artifact.
+		child_scope, err := self.copyScope(
+			scope, self.leaf.Name)
+		if err != nil {
+			scope.Log("Error: %v", err)
+			return
+		}
+		defer child_scope.Close()
+
+		// Pass the args in the new scope.
 		env := ordereddict.NewDict()
 		for _, request_env := range request.Env {
 			env.Set(request_env.Key, request_env.Value)
@@ -135,8 +157,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 			env.Set(k, v)
 		}
 
-		child_scope := self.copyScope(scope).AppendVars(env)
-		defer child_scope.Close()
+		// Add the scope args
+		child_scope.AppendVars(env)
 
 		for _, tool := range artifact_definition.Tools {
 			inventory_get, ok := vql_subsystem.GetFunction("inventory_get")
@@ -174,7 +196,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 // Create a mostly new scope for executing the new artifact but copy
 // over some important global variables.
-func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.Scope {
+func (self *ArtifactRepositoryPlugin) copyScope(
+	scope *vfilter.Scope, my_name string) (
+	*vfilter.Scope, error) {
 	env := ordereddict.NewDict()
 	for _, field := range []string{
 		vql_subsystem.ACL_MANAGER_VAR,
@@ -191,10 +215,27 @@ func (self *ArtifactRepositoryPlugin) copyScope(scope *vfilter.Scope) *vfilter.S
 		}
 	}
 
+	// Copy the old stack and push our name at the top of it so we
+	// can produce a nice stack trace on overflow.
+	stack_any, pres := scope.Resolve(constants.SCOPE_STACK)
+	if !pres {
+		env.Set(constants.SCOPE_STACK, []string{my_name})
+	} else {
+		// Make a copy of the stack.
+		stack := append(
+			[]string{my_name}, stack_any.([]string)...)
+		if len(stack) > MAX_STACK_DEPTH {
+			return nil, errors.New("Stack overflow: " +
+				strings.Join(stack, ", "))
+		}
+		env.Set(constants.SCOPE_STACK, stack)
+	}
+
 	result := scope.Copy()
 	result.ClearContext()
+	result.AppendVars(env)
 
-	return result.AppendVars(env)
+	return result, nil
 }
 
 func (self *ArtifactRepositoryPlugin) Name() string {

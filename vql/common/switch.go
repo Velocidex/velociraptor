@@ -43,6 +43,8 @@ func (self _SwitchPlugin) Call(ctx context.Context,
 		for _, query := range queries {
 			found := false
 			new_scope := scope.Copy()
+			defer new_scope.Close()
+
 			for item := range query.Eval(ctx, new_scope) {
 				found = true
 				output_chan <- item

@@ -13,6 +13,9 @@ message CreateDownloadRequest {
     // When set we only create combined hunt output and not individual
     // flow breakdowns.
     bool only_combined_hunt = 4;
+
+    bool json_format = 5;
+    bool csv_format = 6;
 }
 
 message CreateDownloadResponse {
