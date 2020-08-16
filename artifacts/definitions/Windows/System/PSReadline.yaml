@@ -11,6 +11,7 @@ description: |
   - SearchStrings enables regex search over a PSReadline line.
   - StringWhiteList enables a regex whitelist for results.
   - UserRegex enables a regex search on Username
+  - UploadFiles enables upload ConsoleHost_history.txt in scope
     
     
 author: Matt Green - @mgreen27
@@ -30,7 +31,9 @@ parameters:
     default:
   - name: UserRegex
     default: .
-
+  - name: UploadFiles
+    description: "Upload ConsoleHost_history.txt files in scope"
+    type: bool
      
 sources:
   - precondition:
@@ -38,14 +41,14 @@ sources:
 
     query: |
         -- First extract target ConsoleHost_history path for each user
-        LET Targets = SELECT Name as Username,
+        LET targets = SELECT Name as Username,
             expand(path=Directory) + ConsoleHostHistory as FullPath
         FROM Artifact.Windows.Sys.Users()
         WHERE Directory and Username =~ UserRegex
         
-        -- Extract Targets PSReadline entries
-        SELECT * FROM foreach(
-            row=Targets,
+        -- Extract targets PSReadline entries
+        LET items = SELECT * FROM foreach(
+            row=targets,
             query={
                 SELECT 
                     Line,
@@ -56,4 +59,19 @@ sources:
                     AND NOT if(condition=StringWhiteList, 
                             then=Line =~ StringWhiteList, 
                             else=FALSE)
+            })
+
+        SELECT * FROM items
+
+  - name: Upload
+    queries:
+      - |
+        -- if configured upload ConsoleHost_history.txt in results
+        SELECT * FROM if(condition=UploadFiles,
+            then={
+                SELECT 
+                    Username,
+                    upload(file=FullPath,accessor='ntfs') as ConsoleHost_history
+                FROM items
+                GROUP BY FullPath
             })
