@@ -59,13 +59,11 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := services.GetInventory().GetToolInfo(ctx, config_obj, arg.Tool)
-	if err != nil {
-		scope.Log("inventory_add: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	return tool
+	// Do not read the tool back - reading the tool back will
+	// force it to be materialized (downloaded). It should be
+	// possible to add tools without having this immediately
+	// downloaded.
+	return arg
 }
 
 func (self *InventoryAddFunction) Info(
