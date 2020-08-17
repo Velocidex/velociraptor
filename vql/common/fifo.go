@@ -161,6 +161,9 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	wg := sync.WaitGroup{}
+
+	wg.Add(1)
 	go func() {
 		defer close(output_chan)
 
@@ -193,11 +196,18 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 			vql_subsystem.CacheSet(scope, key, fifo_cache)
 		}
 
+		wg.Done()
+
 		snapshot := fifo_cache.(*_FIFOCache).Snapshot()
 		for _, row := range snapshot {
 			output_chan <- row
 		}
 	}()
+
+	// Wait until the fifo is created before returning to avoid
+	// races
+	wg.Wait()
+
 	return output_chan
 }
 

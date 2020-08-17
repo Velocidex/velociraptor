@@ -41,7 +41,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: atoi
   description: Convert a string to an int.
   type: Function
@@ -245,7 +245,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: client_info
   description: Returns client info (like the fqdn) from the datastore.
   type: Function
@@ -255,7 +255,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: server
 - name: clients
   description: Retrieve the list of clients.
   type: Plugin
@@ -452,7 +452,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: create_hunt_download
   description: Creates a download pack for a hunt.
   type: Function
@@ -472,7 +472,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: dict
   description: Construct a dict from arbitrary keyword args.
   type: Function
@@ -914,7 +914,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: server
 - name: flows
   description: Retrieve the flows launched on each client.
   type: Plugin
@@ -1029,12 +1029,12 @@
   description: Retrieve the current client monitoring state.
   type: Function
   args: []
-  category: ""
+  category: server
 - name: get_server_monitoring
   description: Retrieve the current client monitoring state.
   type: Function
   args: []
-  category: ""
+  category: server
 - name: getpid
   description: Returns the current pid of the process.
   type: Function
@@ -1445,7 +1445,7 @@
   description: Retrieve the tools inventory.
   type: Plugin
   args: []
-  category: ""
+  category: server
 - name: inventory_add
   description: Add tool to ThirdParty inventory.
   type: Function
@@ -1475,7 +1475,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: inventory_get
   description: Get tool info from inventory service.
   type: Function
@@ -1485,7 +1485,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: server
 - name: ip
   description: |
     Format an IP address.
@@ -1523,7 +1523,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: basic
 - name: join
   description: |
     Join all the args on a separator.
@@ -1542,41 +1542,6 @@
     repeated: false
     required: false
   category: basic
-- name: js
-  description: Compile and run javascript code.
-  type: Function
-  args:
-  - name: js
-    description: The body of the javascript code.
-    type: string
-    repeated: false
-    required: true
-  - name: key
-    description: If set use this key to cache the JS VM.
-    type: string
-    repeated: false
-    required: false
-  category: experimental
-- name: js_call
-  description: Compile and run javascript code.
-  type: Function
-  args:
-  - name: func
-    description: JS function to call.
-    type: string
-    repeated: false
-    required: true
-  - name: args
-    description: Positional args for the function.
-    type: vfilter.Any
-    repeated: false
-    required: true
-  - name: key
-    description: If set use this key to cache the JS VM.
-    type: string
-    repeated: false
-    required: false
-  category: experimental
 - name: killkillkill
   description: Kills the client and forces a restart - this is very aggresive!
   type: Function
@@ -1586,7 +1551,7 @@
     type: string
     repeated: false
     required: true
-  category: ""
+  category: client
 - name: label
   description: |
     Add the labels to the client. If op is 'remove' then remove these labels.
@@ -2018,7 +1983,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: parsers
 - name: parse_lines
   description: Parse a file separated into lines.
   type: Plugin
@@ -2126,7 +2091,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: parsers
 - name: parse_pe
   description: Parse a PE file.
   type: Function
@@ -2330,7 +2295,7 @@
     type: vfilter.Any
     repeated: false
     required: false
-  category: ""
+  category: parsers
 - name: path_join
   description: Build a path by joining all components.
   type: Function
@@ -2497,7 +2462,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: client
 - name: pslist
   description: |
     Enumerate running processes.
@@ -2751,7 +2716,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: server
 - name: set_server_monitoring
   description: Sets the current server monitoring state.
   type: Function
@@ -2761,7 +2726,7 @@
     type: vfilter.Any
     repeated: false
     required: true
-  category: ""
+  category: server
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -2937,7 +2902,7 @@
     type: int64
     repeated: false
     required: false
-  category: ""
+  category: server
 - name: sqlite
   description: Opens an SQLite file and run a query against it.
   type: Plugin
@@ -3053,7 +3018,7 @@
     type: bool
     repeated: false
     required: false
-  category: ""
+  category: basic
 - name: tempfile
   description: |
     Create a temporary file and write some data into it.
@@ -3111,7 +3076,7 @@
   description: Construct a dict from another object.
   type: Function
   args: []
-  category: ""
+  category: basic
 - name: token
   description: Extract process token.
   type: Function
@@ -3289,7 +3254,7 @@
     type: string
     repeated: false
     required: false
-  category: ""
+  category: client
 - name: uploads
   description: Retrieve information about a flow's uploads.
   type: Plugin
@@ -3387,7 +3352,7 @@
   description: Generate a UUID.
   type: Function
   args: []
-  category: ""
+  category: basic
 - name: vad
   description: Enumerate process memory regions.
   type: Plugin
@@ -3419,7 +3384,7 @@
     ```
   type: Function
   args: []
-  category: ""
+  category: basic
 - name: watch_auditd
   description: Watch log files generated by auditd.
   type: Plugin
@@ -3687,4 +3652,3 @@
     repeated: false
     required: false
   category: plugin
-

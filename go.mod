@@ -42,7 +42,6 @@ require (
 	github.com/golang/snappy v0.0.1
 	github.com/google/rpmpack v0.0.0-20200615183209-0c831d19bd44
 	github.com/google/uuid v1.1.1
-	github.com/gookit/color v1.2.7
 	github.com/gorilla/csrf v1.6.2
 	github.com/gorilla/schema v1.1.0
 	github.com/grpc-ecosystem/grpc-gateway v1.11.3
@@ -64,7 +63,7 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.2.0+incompatible
 	github.com/lestrrat-go/strftime v0.0.0-20190725011945-5c849dd2c51d // indirect
 	github.com/lib/pq v1.2.0 // indirect
-	github.com/magefile/mage v1.9.0
+	github.com/magefile/mage v1.10.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-runewidth v0.0.9 // indirect
