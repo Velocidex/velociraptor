@@ -1,5 +1,0 @@
-LET _ <= SELECT mock(plugin='test_plugin', results=parse_json_array(data=test_1)) FROM scope()[]LET rows = SELECT * FROM test_plugin()[]LET _ <= SELECT * FROM fifo(query=rows, max_rows=1)[]SELECT * FROM fifo(query=rows, max_rows=1)[
- {
-  "A": 3
- }
-]

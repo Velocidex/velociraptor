@@ -59,6 +59,10 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	// Do not read the tool back - reading the tool back will
+	// force it to be materialized (downloaded). It should be
+	// possible to add tools without having this immediately
+	// downloaded.
 	return arg
 }
 
@@ -106,10 +110,15 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	url := tool.ServeUrl
+	if url == "" {
+		url = tool.Url
+	}
+
 	result := ordereddict.NewDict().
 		Set("Tool_"+arg.Tool+"_HASH", tool.Hash).
 		Set("Tool_"+arg.Tool+"_FILENAME", tool.Filename).
-		Set("Tool_"+arg.Tool+"_URL", tool.Url)
+		Set("Tool_"+arg.Tool+"_URL", url)
 	return result
 }
 
