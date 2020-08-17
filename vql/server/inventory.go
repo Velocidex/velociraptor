@@ -59,7 +59,13 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return arg
+	tool, err := services.GetInventory().GetToolInfo(ctx, config_obj, arg.Tool)
+	if err != nil {
+		scope.Log("inventory_add: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	return tool
 }
 
 func (self *InventoryAddFunction) Info(
@@ -106,10 +112,15 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	url := tool.ServeUrl
+	if url == "" {
+		url = tool.Url
+	}
+
 	result := ordereddict.NewDict().
 		Set("Tool_"+arg.Tool+"_HASH", tool.Hash).
 		Set("Tool_"+arg.Tool+"_FILENAME", tool.Filename).
-		Set("Tool_"+arg.Tool+"_URL", tool.Url)
+		Set("Tool_"+arg.Tool+"_URL", url)
 	return result
 }
 
