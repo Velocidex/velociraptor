@@ -171,6 +171,9 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 }
 
 func doGenerateConfigNonInteractive() {
+	// We have to suppress writing to stdout so users can redirect
+	// output to a file.
+	logging.SuppressLogging = true
 	config_obj := config.GetDefaultConfig()
 
 	err := generateNewKeys(config_obj)
