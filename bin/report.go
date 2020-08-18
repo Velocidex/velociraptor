@@ -3,17 +3,14 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"log"
 	"os"
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/flows"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
 )
 
 var (
@@ -38,95 +35,21 @@ var (
 		String()
 )
 
-func doHTMLReport() {
-	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func doFlowReport() {
+	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
-	repository, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Unable to load artifacts")
-
-	flow_details, err := flows.GetFlowDetails(config_obj, *report_command_flow_client,
-		*report_command_flow_flow_id)
-	kingpin.FatalIfError(err, "Unable to load flow")
-
-	if flow_details.Context == nil {
-		kingpin.Fatalf("Unable to open flow %v", *report_command_flow_flow_id)
-	}
-
-	env := ordereddict.NewDict()
 	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
-		Env:        env,
+		Config: config_obj,
+		Logger: log.New(&LogWriter{config_obj}, "", 0),
+		Env: ordereddict.NewDict().
+			Set("ClientId", *report_command_flow_client).
+			Set("FlowId", *report_command_flow_flow_id),
+		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 	}
-	scope := builder.BuildFromScratch()
+
+	scope := builder.Build()
 	defer scope.Close()
-
-	parts := []*ReportPart{}
-	main := ""
-
-	template := *report_command_flow_report
-	html_template_string, err := getHTMLTemplate(
-		template, repository)
-	kingpin.FatalIfError(err, "Unable to load report %v", template)
-
-	for _, name := range flow_details.Context.Request.Artifacts {
-		definition, pres := repository.Get(name)
-		if !pres {
-			scope.Log("Artifact %v not found %v\n", name, err)
-			continue
-		}
-
-		content_writer := &bytes.Buffer{}
-
-		scope.Log("Rendering artifact %v\n", definition.Name)
-		for _, report := range definition.Reports {
-			if report.Type != "client" {
-				continue
-			}
-
-			// Do not sanitize_html since we are writing a
-			// stand along HTML file - artifacts may
-			// generate arbitrary HTML.
-			template_engine, err := reporting.NewHTMLTemplateEngine(
-				config_obj, context.Background(), scope,
-				vql_subsystem.NullACLManager{}, repository,
-				definition.Name, false /* sanitize_html */)
-			kingpin.FatalIfError(err, "Unable to render")
-
-			for _, param := range report.Parameters {
-				template_engine.SetEnv(param.Name, param.Default)
-			}
-
-			template_engine.SetEnv("ClientId", *report_command_flow_client)
-			template_engine.SetEnv("FlowId", *report_command_flow_flow_id)
-
-			res, err := reporting.GenerateClientReport(
-				template_engine, "", "", nil)
-			kingpin.FatalIfError(err, "Unable to render")
-
-			content_writer.Write([]byte(res))
-		}
-		parts = append(parts, &ReportPart{
-			Artifact: definition, HTML: content_writer.String()})
-		main += content_writer.String()
-	}
-
-	template_engine, err := reporting.NewHTMLTemplateEngine(
-		config_obj, context.Background(), scope,
-		vql_subsystem.NullACLManager{}, repository,
-		template, false /* sanitize_html */)
-	kingpin.FatalIfError(err, "Unable to render")
-
-	template_engine.SetEnv("main", main)
-	template_engine.SetEnv("parts", parts)
-	template_engine.SetEnv("ClientId", *report_command_flow_client)
-	template_engine.SetEnv("FlowId", *report_command_flow_flow_id)
-
-	result, err := template_engine.RenderRaw(
-		html_template_string, template_engine.Env.ToDict())
-	kingpin.FatalIfError(err, "Unable to render")
 
 	writer := os.Stdout
 	if *report_command_flow_output != "" {
@@ -137,14 +60,20 @@ func doHTMLReport() {
 		defer writer.Close()
 	}
 
-	writer.Write([]byte(result))
+	repository, err := getRepository(config_obj)
+	kingpin.FatalIfError(err, "Repository")
+
+	err = downloads.WriteFlowReport(config_obj, scope, repository,
+		writer, *report_command_flow_flow_id,
+		*report_command_flow_client, *report_command_flow_report)
+	kingpin.FatalIfError(err, "Generating report")
 }
 
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
 		case report_command_flow.FullCommand():
-			doHTMLReport()
+			doFlowReport()
 
 		default:
 			return false

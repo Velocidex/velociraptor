@@ -73,7 +73,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 
 	switch arg.Type {
 	case "report":
-		result, err := createFlowReport(
+		result, err := CreateFlowReport(
 			config_obj, scope, arg.FlowId, arg.ClientId,
 			arg.Template, arg.Wait)
 		if err != nil {

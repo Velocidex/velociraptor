@@ -133,7 +133,9 @@ func main() {
 		logging.NoColor = true
 	}
 
-	// Most commands load a config in the folloing order
+	doBanner()
+
+	// Most commands load a config in the following order
 	DefaultConfigLoader = new(config.Loader).WithVerbose(*verbose_flag).
 		WithFileLoader(*config_path).
 		WithEmbedded().

@@ -3,6 +3,8 @@ package downloads
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -37,22 +39,101 @@ func getHTMLTemplate(name string, repository *artifacts.Repository) (string, err
 	return "", errors.New("Not found")
 }
 
-func createFlowReport(
+func WriteFlowReport(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
-	flow_id, client_id, template string,
-	wait bool) (string, error) {
+	repository *artifacts.Repository,
+	writer io.Writer,
+	flow_id, client_id, template string) error {
+	html_template_string, err := getHTMLTemplate(template, repository)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Artifact %v not found %v\n", template, err))
+	}
+
+	parts := []*ReportPart{}
 
 	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if flow_details == nil ||
 		flow_details.Context == nil ||
 		flow_details.Context.Request == nil {
-		return "", errors.New("Invalid flow object")
+		return errors.New("Invalid flow object")
 	}
+
+	for _, name := range flow_details.Context.Request.Artifacts {
+		definition, pres := repository.Get(name)
+		if !pres {
+			scope.Log("Artifact %v not found %v\n", name, err)
+			continue
+		}
+
+		content_writer := &bytes.Buffer{}
+
+		scope.Log("Rendering artifact %v\n", definition.Name)
+		for _, report := range definition.Reports {
+			if report.Type != "client" {
+				continue
+			}
+
+			// Do not sanitize_html since we are writing a
+			// stand along HTML file - artifacts may
+			// generate arbitrary HTML.
+			template_engine, err := reporting.NewHTMLTemplateEngine(
+				config_obj, context.Background(), scope,
+				vql_subsystem.NullACLManager{}, repository,
+				definition.Name, false /* sanitize_html */)
+			if err != nil {
+				scope.Log("Error creating report for %v: %v",
+					definition.Name, err)
+				continue
+			}
+
+			for _, param := range report.Parameters {
+				template_engine.SetEnv(param.Name, param.Default)
+			}
+			res, err := reporting.GenerateClientReport(
+				template_engine, client_id, flow_id, nil)
+			if err != nil {
+				scope.Log("Error creating report for %v: %v",
+					definition.Name, err)
+				continue
+			}
+
+			content_writer.Write([]byte(res))
+		}
+		parts = append(parts, &ReportPart{
+			Artifact: definition, HTML: content_writer.String()})
+	}
+
+	template_engine, err := reporting.NewHTMLTemplateEngine(
+		config_obj, context.Background(), scope,
+		vql_subsystem.NullACLManager{}, repository,
+		template, false /* sanitize_html */)
+	if err != nil {
+		return err
+	}
+
+	template_engine.SetEnv("parts", parts)
+	template_engine.SetEnv("ClientId", client_id)
+	template_engine.SetEnv("FlowId", flow_id)
+
+	result, err := template_engine.RenderRaw(
+		html_template_string, template_engine.Env.ToDict())
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write([]byte(result))
+	return err
+}
+
+func CreateFlowReport(
+	config_obj *config_proto.Config,
+	scope *vfilter.Scope,
+	flow_id, client_id, template string,
+	wait bool) (string, error) {
 
 	hostname := api.GetHostname(config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
@@ -93,91 +174,10 @@ func createFlowReport(
 		defer subscope.Close()
 		defer file_store_factory.Delete(download_file + ".lock")
 
-		html_template_string, err := getHTMLTemplate(template, repository)
+		err := WriteFlowReport(config_obj, subscope, repository,
+			writer, flow_id, client_id, template)
 		if err != nil {
-			scope.Log("Artifact %v not found %v\n", template, err)
-			return
-		}
-
-		parts := []*ReportPart{}
-		main := ""
-
-		for _, name := range flow_details.Context.Request.Artifacts {
-			definition, pres := repository.Get(name)
-			if !pres {
-				scope.Log("Artifact %v not found %v\n", name, err)
-				continue
-			}
-
-			content_writer := &bytes.Buffer{}
-
-			scope.Log("Rendering artifact %v\n", definition.Name)
-			for _, report := range definition.Reports {
-				if report.Type != "client" {
-					continue
-				}
-
-				// Do not sanitize_html since we are writing a
-				// stand along HTML file - artifacts may
-				// generate arbitrary HTML.
-				template_engine, err := reporting.NewHTMLTemplateEngine(
-					config_obj, context.Background(), subscope,
-					vql_subsystem.NullACLManager{}, repository,
-					definition.Name, false /* sanitize_html */)
-				if err != nil {
-					scope.Log("Error creating report for %v: %v",
-						definition.Name, err)
-					continue
-				}
-
-				for _, param := range report.Parameters {
-					template_engine.SetEnv(param.Name, param.Default)
-				}
-				template_engine.SetEnv("ClientId", client_id)
-				template_engine.SetEnv("FlowId", flow_id)
-
-				res, err := reporting.GenerateClientReport(
-					template_engine, "", "", nil)
-				if err != nil {
-					scope.Log("Error creating report for %v: %v",
-						definition.Name, err)
-					continue
-				}
-
-				content_writer.Write([]byte(res))
-			}
-			parts = append(parts, &ReportPart{
-				Artifact: definition, HTML: content_writer.String()})
-			main += content_writer.String()
-		}
-
-		template_engine, err := reporting.NewHTMLTemplateEngine(
-			config_obj, context.Background(), subscope,
-			vql_subsystem.NullACLManager{}, repository,
-			template, false /* sanitize_html */)
-		if err != nil {
-			scope.Log("Error creating report for %v: %v",
-				template, err)
-			return
-		}
-
-		template_engine.SetEnv("main", main)
-		template_engine.SetEnv("parts", parts)
-		template_engine.SetEnv("ClientId", client_id)
-		template_engine.SetEnv("FlowId", flow_id)
-
-		result, err := template_engine.RenderRaw(
-			html_template_string, template_engine.Env.ToDict())
-		if err != nil {
-			scope.Log("Error creating report for %v: %v",
-				template, err)
-			return
-		}
-		_, err = writer.Write([]byte(result))
-		if err != nil {
-			scope.Log("Error creating report for %v: %v",
-				template, err)
-			return
+			scope.Log("Writing report: %v", err)
 		}
 	}()
 
