@@ -159,7 +159,7 @@ RecursiveListButtonController.prototype.createRefreshOperation = function() {
         }).then(function success() {
             var path = self.refreshOperation.vfs_path;
             self.rootScope_.$broadcast(
-                REFRESH_FOLDER_EVENT, ensurePaselfFolder(path));
+                REFRESH_FOLDER_EVENT, ensurePathIsFolder(path));
         }).finally(function() {
             if (self.lastOperationId == operationId) {
                 self.lastOperationId = null;
