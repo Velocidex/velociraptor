@@ -74,6 +74,11 @@ parameters:
   - name: StandardCollection
     type: hidden
     default: |
+      // Add all the tools we are going to use to the inventory.
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      FROM parse_csv(filename="/inventory.csv", accessor="me")
+      WHERE log(message="Adding tool " + ToolName)
+
       LET Artifacts <= parse_json_array(data=Artifacts)
       LET Parameters <= parse_json(data=Parameters)
       LET baseline <= SELECT Fqdn FROM info()
@@ -93,6 +98,11 @@ parameters:
   - name: S3Collection
     type: hidden
     default: |
+      // Add all the tools we are going to use to the inventory.
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      FROM parse_csv(filename="/inventory.csv", accessor="me")
+      WHERE log(message="Adding tool " + ToolName)
+
       LET Artifacts <= parse_json_array(data=Artifacts)
       LET Parameters <= parse_json(data=Parameters)
       LET baseline <= SELECT Fqdn FROM info()
@@ -126,6 +136,11 @@ parameters:
   - name: GCSCollection
     type: hidden
     default: |
+      // Add all the tools we are going to use to the inventory.
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      FROM parse_csv(filename="/inventory.csv", accessor="me")
+      WHERE log(message="Adding tool " + ToolName)
+
       LET Artifacts <= parse_json_array(data=Artifacts)
       LET Parameters <= parse_json(data=Parameters)
       LET baseline <= SELECT Fqdn FROM info()
@@ -233,7 +248,7 @@ sources:
       )
 
       LET definitions <= SELECT * FROM chain(
-      a = { SELECT name, description, parameters, sources, reports
+      a = { SELECT name, description, tools, parameters, sources, reports
             FROM artifact_definitions(names=Artifacts + template)
             WHERE name =~ "^(Custom|Packs)\\." AND
               log(message="Adding artifact_definition for " + name) },
@@ -253,6 +268,7 @@ sources:
             (
                dict(name="SleepDuration"),
                dict(name="ToolName"),
+               dict(name="ToolInfo"),
             ) AS parameters,
             (
                dict(query=FetchBinaryOverride),
