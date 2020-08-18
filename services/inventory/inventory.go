@@ -72,6 +72,10 @@ func (self *InventoryService) GetToolInfo(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if self.binaries == nil {
+		self.binaries = &artifacts_proto.ThirdParty{}
+	}
+
 	for _, item := range self.binaries.Tools {
 		if item.Name == tool {
 			if item.Hash == "" {
@@ -288,8 +292,9 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 
 func NewDummy() *InventoryService {
 	return &InventoryService{
-		Clock: utils.RealClock{},
-		db:    datastore.NewTestDataStore(),
+		Clock:    utils.RealClock{},
+		db:       datastore.NewTestDataStore(),
+		binaries: &artifacts_proto.ThirdParty{},
 		Client: &http.Client{
 			Transport: &http.Transport{
 				DialContext: (&net.Dialer{

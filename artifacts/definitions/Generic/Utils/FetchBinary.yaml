@@ -7,7 +7,7 @@ description: |
    This artifact is designed to be called from other artifacts. The
    binary path will be emitted in the FullPath column.
 
-   As a result of launching an artifact with declared "required_tools"
+   As a result of launching an artifact with declared "tools"
    field, the server will populate the following environment
    variables.
 

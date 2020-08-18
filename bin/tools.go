@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -98,9 +99,14 @@ func doThirdPartyUpload() {
 	err = startEssentialServices(config_obj, sm)
 	kingpin.FatalIfError(err, "Starting services.")
 
+	filename := *third_party_upload_filename
+	if filename == "" {
+		filename = filepath.Base(*third_party_upload_binary_path)
+	}
+
 	tool := &artifacts_proto.Tool{
 		Name:          *third_party_upload_tool_name,
-		Filename:      *third_party_upload_filename,
+		Filename:      filename,
 		ServeLocally:  !*third_party_upload_serve_remote,
 		AdminOverride: true,
 	}
