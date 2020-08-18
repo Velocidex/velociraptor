@@ -92,6 +92,16 @@ func (self FlowPathManager) GetDownloadsFile(hostname string) *FlowPathManager {
 	return &self
 }
 
+func (self FlowPathManager) GetReportsFile(hostname string) *FlowPathManager {
+	// If there is no hostname we drop the leading -
+	if hostname != "" {
+		hostname += "-"
+	}
+	self.path = path.Join("/downloads", self.client_id, self.flow_id,
+		fmt.Sprintf("Report %v%v-%v.html", hostname, self.client_id, self.flow_id))
+	return &self
+}
+
 // Figure out where to store the VFSDownloadInfo file. We maintain a
 // metadata file in the client's VFS area linking back to the
 // collection which most recently uploaded this file.

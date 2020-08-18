@@ -73,11 +73,27 @@
 
             <dt>Download Results</dt>
             <dd>
-              <button class="btn btn-default"
-                      ng-disabled="!controller.uiTraits.Permissions.prepare_results"
-                      ng-click="controller.prepareDownload()">
-                Prepare Download
-              </button>
+              <div class="input-group-prepend">
+                <button class="btn btn-default dropdown-toggle"
+                        type="button"
+                        data-toggle="dropdown" aria-expanded="false"
+                        ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                        >
+                  <i class="fa fa-archive"></i>
+                </button>
+                <div class="dropdown-menu">
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload()">
+                    Prepare Download
+                  </button>
+                  <button class="dropdown-item"
+                          ng-disabled="!controller.uiTraits.Permissions.prepare_results"
+                          ng-click="controller.prepareDownload('report')">
+                    Prepare Collection Report
+                  </button>
+                </div>
+              </div>
             </dd>
 
             <dt>Available Downloads</dt>
@@ -86,9 +102,12 @@
                 <tbody>
                   <tr ng-repeat="item in flow.available_downloads.files">
                     <td>
-                      <a href="{{item.path}}" ng-if="item.complete">{{item.name}}</a>
+                      <a href="{{item.path}}"
+                         target="_blank"
+                         ng-if="item.complete">{{item.name}}</a>
                       <div ng-if="!item.complete">{{item.name}}</div>
-                    </td><td>{{item.size}} Bytes</td>
+                    </td>
+                    <td>{{item.size}} Bytes</td>
                     <td>{{item.date}}</td>
                   </tr>
                 </tbody>

@@ -16,6 +16,9 @@ message CreateDownloadRequest {
 
     bool json_format = 5;
     bool csv_format = 6;
+
+    // Can be "report" for html report or "" for just files.
+    string download_type = 7;
 }
 
 message CreateDownloadResponse {

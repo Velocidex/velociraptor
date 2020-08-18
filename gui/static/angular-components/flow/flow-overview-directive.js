@@ -32,13 +32,14 @@ const FlowOverviewController = function(
 };
 
 
-FlowOverviewController.prototype.prepareDownload = function() {
+FlowOverviewController.prototype.prepareDownload = function(download_type) {
   // Sanitize filename for download.
   var flow = this.scope_["flow"]["context"];
   var url = 'v1/CreateDownload';
   var params = {
-    flow_id: flow['session_id'],
-    client_id: flow["request"]['client_id'],
+      flow_id: flow['session_id'],
+      client_id: flow["request"]['client_id'],
+      download_type: download_type || "",
   };
   this.grrApiService_.post(url, params).then(
         function success() {}.bind(this)

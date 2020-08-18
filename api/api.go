@@ -1014,11 +1014,12 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
 		query = `SELECT create_flow_download(
-      client_id=ClientId, flow_id=FlowId) AS VFSPath
+      client_id=ClientId, flow_id=FlowId, type=DownloadType) AS VFSPath
       FROM scope()`
 
 		env.Set("ClientId", in.ClientId).
-			Set("FlowId", in.FlowId)
+			Set("FlowId", in.FlowId).
+			Set("DownloadType", in.DownloadType)
 
 	} else if in.HuntId != "" {
 		query = `SELECT create_hunt_download(
