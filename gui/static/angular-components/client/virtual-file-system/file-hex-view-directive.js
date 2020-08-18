@@ -46,8 +46,7 @@ const FileHexViewController = function(
   this.chunkSize_ = (this.rows_) * this.columns_;
 
   this.scope_.$watchGroup(['controller.fileContext.clientId',
-                           'controller.fileContext.selectedFilePath',
-                           'controller.fileContext.selectedFileVersion'],
+                           'controller.fileContext.selectedFilePath'],
       this.onContextChange_.bind(this));
 
   this.scope_.$watch('controller.page', this.onPageChange_.bind(this));

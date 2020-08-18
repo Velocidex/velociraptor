@@ -42,8 +42,9 @@ const FileTreeController = function(
   /** @type {!grrUi.client.virtualFileSystem.fileContextDirective.FileContextController} */
   this.fileContext;
 
-  this.rootScope_.$on(REFRESH_FOLDER_EVENT,
-      this.onRefreshFolderEvent_.bind(this));
+
+    this.rootScope_.$on(REFRESH_FOLDER_EVENT,
+                        this.onRefreshFolderEvent_.bind(this));
 
   this.scope_.$watch('controller.fileContext.clientId',
       this.onClientIdChange_.bind(this));
@@ -70,7 +71,7 @@ FileTreeController.prototype.onClientIdChange_ = function() {
  * @private
  */
 FileTreeController.prototype.initTree_ = function() {
-  var controller = this;
+  var self = this;
   this.treeElement_.jstree({
     'core' : {
         'multiple': false,
@@ -78,13 +79,14 @@ FileTreeController.prototype.initTree_ = function() {
             'name': 'proton',
             'responsive': true
         },
-      'data' : function (node, cb) {
-        if (node.id === '#') {
-          controller.getChildFiles_('/').then(cb);
-        } else {
-          controller.getChildFiles_(node.data.path).then(cb);
+        'data' : function (node, cb) {
+            if (node.id === '#') {
+                self.getChildFiles_('/', node).then(cb);
+
+            } else {
+                self.getChildFiles_(node.data.path).then(cb);
+            }
         }
-      }
     }
   });
 
@@ -102,13 +104,13 @@ FileTreeController.prototype.initTree_ = function() {
         this.rootScope_.$broadcast(REFRESH_FOLDER_EVENT,
                                    ensurePathIsFolder(folderPath));
     } else {
-      this.fileContext.selectFile(ensurePathIsFolder(folderPath));
+        this.fileContext.selectFile(ensurePathIsFolder(folderPath));
     }
 
-    // This is needed so that when user clicks on an already opened node,
-    // it gets refreshed.
-    var treeInstance = data['instance'];
-    treeInstance['refresh_node'](data.node);
+      // This is needed so that when user clicks on an already opened node,
+      // it gets refreshed.
+      var treeInstance = data['instance'];
+      treeInstance['refresh_node'](data.node);
   }.bind(this));
 
   this.treeElement_.on('close_node.jstree', function(e, data) {
@@ -172,10 +174,17 @@ FileTreeController.prototype.parseFileResponse_ = function(response, folderPath)
     return [];
   }
 
-  this.fileContext.selectedDirPathData = response.data;
+    // Only update the file context if this is the node it is
+    // watching. jstree will actually refresh many nodes all the time
+    // but we only want to export the data about the selected one back
+    // to the context.
+    if (angular.isString(this.fileContext.selectedDirPath) &&
+        ensurePathIsFolder(this.fileContext.selectedDirPath) == ensurePathIsFolder(folderPath)) {
+        this.fileContext.selectedDirPathData = response.data;
+    };
 
-  var files = JSON.parse(response.data.Response);
-  var result = [];
+    var files = JSON.parse(response.data.Response);
+    var result = [];
     angular.forEach(files, function(file) {
         var mode = file["Mode"][0];
         if (mode == "d" || mode == "L") {

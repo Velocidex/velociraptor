@@ -187,10 +187,10 @@ FileTableController.prototype.startVfsRefreshOperation = function() {
         return pollPromise;
       }.bind(this))
     .then(
-      function success() {
-        this.rootScope_.$broadcast(
-          REFRESH_FOLDER_EVENT, selectedDirPath);
-      }.bind(this));
+        function success() {
+            this.rootScope_.$broadcast(
+                REFRESH_FOLDER_EVENT, selectedDirPath);
+        }.bind(this));
 };
 
 /**

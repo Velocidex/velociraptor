@@ -22,17 +22,10 @@ exports.FileContextController = function($scope) {
   /** @type {string} */
   this.selectedDirPath;
 
-  /** @type {number|undefined} */
-  this.selectedFileVersion;
-
-  this.scope_.$watchGroup(['clientId',
-                           'selectedDirPath',
-                           'selectedFileVersion'],
+  this.scope_.$watchGroup(['clientId', 'selectedDirPath'],
       this.onDirectiveArgumentsChange_.bind(this));
 
-  this.scope_.$watchGroup(['controller.clientId',
-                           'controller.selectedDirPath',
-                           'controller.selectedFileVersion'],
+    this.scope_.$watchGroup(['controller.clientId', 'controller.selectedDirPath'],
       this.onControllerValuesChange_.bind(this));
 };
 
@@ -47,7 +40,6 @@ var FileContextController = exports.FileContextController;
 FileContextController.prototype.onDirectiveArgumentsChange_ = function() {
   this.clientId = this.scope_['clientId'];
   this.selectedDirPath = this.scope_['selectedDirPath'];
-  this.selectedFileVersion = this.scope_['selectedFileVersion'];
 };
 
 
@@ -59,7 +51,6 @@ FileContextController.prototype.onDirectiveArgumentsChange_ = function() {
 FileContextController.prototype.onControllerValuesChange_ = function() {
   this.scope_['clientId'] = this.clientId;
   this.scope_['selectedDirPath'] = this.selectedDirPath;
-  this.scope_['selectedFileVersion'] = this.selectedFileVersion;
 };
 
 
@@ -67,12 +58,9 @@ FileContextController.prototype.onControllerValuesChange_ = function() {
  * Selects a file and updates the scope.
  *
  * @param {string} filePath The path to the selected file within the same folder as the previous seleciton.
- * @param {number=} opt_fileVersion The version of the selected file. If not specified, the newest will be selected.
- * @export
  */
 FileContextController.prototype.selectFile = function(filePath, opt_fileVersion) {
   this.selectedDirPath = filePath;
-  this.selectedFileVersion = opt_fileVersion || undefined;  // If opt_fileVersion is falsey, always coerce it to undefined.
   this.selectedRow = {};
 };
 
@@ -87,7 +75,6 @@ exports.FileContextDirective = function() {
     scope: {
       clientId: '=',
       selectedDirPath: '=',
-      selectedFileVersion: '=',
       selectedRow: '=',
     },
     transclude: true,
