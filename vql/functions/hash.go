@@ -66,7 +66,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
 		scope.Log("hash: %s", err.Error())
-		return false
+		return vfilter.Null{}
 	}
 
 	if arg.Path == "" {
@@ -91,7 +91,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	file, err := fs.Open(arg.Path)
 	if err != nil {
 		scope.Log("hash %s: %v", arg.Path, err.Error())
-		return false
+		return vfilter.Null{}
 	}
 	defer file.Close()
 

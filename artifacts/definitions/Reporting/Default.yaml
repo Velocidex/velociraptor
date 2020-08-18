@@ -292,7 +292,7 @@ reports:
                     <!-- There could be a huge number of rows just to get the count, so we cap at 10000 -->
                     {{ $count := Get ( Query (print "LET X = SELECT * FROM " $source \
                        " LIMIT 10000 SELECT 1 AS ALL, count() AS Count FROM X Group BY ALL") | Expand ) \
-                    "0.Count" }}
+                       "0.Count" }}
 
                     {{ if $count }}
                       {{ if .Name }}
@@ -300,23 +300,57 @@ reports:
                         {{ Markdown .Description }}
                       {{ end }}
 
+                      <!-- Show the artifact source if required. -->
+                      <br>
+                      {{ template "hidden_paragraph_start" dict "description" "Source" }}
+                      <div class="row card card-body noprint">
+                        {{ if .Query }}
+                          {{ Markdown ( print "```vql\n" .Query  "```\n") }}
+                        {{ else }}
+                          {{ range .Queries }}
+                            {{ Markdown ( print "```vql\n" .  "```\n") }}
+                          {{ end }}
+                        {{ end }}
+                      </div>
+                      {{ template "hidden_paragraph_end" }}
+
+                      <!-- If this is a flow show the parameters. -->
+                      {{ $flow := Query "LET X = SELECT Request.Parameters.env AS Env FROM flows(client_id=ClientId, flow_id=FlowId)" \
+                      "SELECT * FROM foreach(row=X[0].Env, query={ SELECT Key, Value FROM scope()})" | Expand }}
+                      {{ if $flow }}
+                        <br>
+                        {{ template "hidden_paragraph_start" dict "description" "Parameters" }}
+                        <div class="row card card-body noprint">
+                          <h3> Parameters </h3>
+
+                          <table class="table"><thead><th>Key</th><th>Value</th></thead>
+                            <tbody>
+                              {{ range $flow }}
+                                <tr><td>{{ Get . "Key" }}</td><td>{{ Get . "Value" }}</td></tr>
+                              {{ end }}
+                            </tbody>
+                          </table>
+                        </div>
+                        {{ template "hidden_paragraph_end" }}
+                      {{ end }}
+
                       {{ if gt $count 9999 }}
-                      <p>The source produced more than {{ $count }} rows.</p>
+                        <p>The source produced more than {{ $count }} rows.</p>
                       {{ else }}
                         <p>The source retrieved a total of {{ $count }} rows.</p>
                       {{ end }}
 
                       {{ template "fold_start" }}
-
-                      <p> Below you will find a table of the first 100 rows, obtained by the VQL query:
-                      </p>
-                      {{ Markdown (print "```sql\n" $query "\n```\n" ) }}
-
+                      <div class="noprint">
+                        <p> Below you will find a table of the first 100 rows, obtained by the VQL query:
+                        </p>
+                        {{ Markdown (print "```vql\n" $query "\n```\n" ) }}
+                      </div>
                       {{ Query $query | Table }}
-
                       {{ template "fold_end" }}
+
                     {{ else }}
-                    <p>No rows returned</p>
+                      <p>No rows returned</p>
                     {{ end }}
                  {{ end }}
                {{ end }}
@@ -328,18 +362,21 @@ reports:
              $(".collapsible").click(function() {
                $(this).next().toggle("slow");
                try {
-                 $("table.table").DataTable().columns.adjust();
+                 $("table.table-striped").DataTable().columns.adjust();
                } catch(e) {
 
                };
              });
 
              $("#print-button").click(function() {
+                $(".collapse").removeClass("collapse");
                 $('table.table-striped').DataTable().destroy();
                 $(".collapsible").hide();
-                $(".collapse").removeClass("collapse");
-                window.print();
-                location.reload();
+                $(".noprint").hide();
+                setTimeout(function() {
+                   window.print();
+                   location.reload();
+                }, 1000);
              });
 
              $(document).ready( function () {

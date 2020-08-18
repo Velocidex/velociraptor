@@ -1,4 +1,4 @@
-package server
+package downloads
 
 import (
 	"archive/zip"
@@ -38,6 +38,8 @@ type CreateFlowDownloadArgs struct {
 	ClientId string `vfilter:"required,field=client_id,doc=Client ID to export."`
 	FlowId   string `vfilter:"required,field=flow_id,doc=The flow id to export."`
 	Wait     bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
+	Type     string `vfilter:"optional,field=type,doc=Type of download to create (e.g. 'report') default a full zip file."`
+	Template string `vfilter:"optional,field=template,doc=Report template to use (defaults to Reporting.Default)."`
 }
 
 type CreateFlowDownload struct{}
@@ -65,13 +67,34 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	result, err := createDownloadFile(config_obj, arg.FlowId, arg.ClientId, arg.Wait)
-	if err != nil {
-		scope.Log("create_flow_download: %s", err)
-		return vfilter.Null{}
+	if arg.Template == "" {
+		arg.Template = "Reporting.Default"
 	}
 
-	return result
+	switch arg.Type {
+	case "report":
+		result, err := createFlowReport(
+			config_obj, scope, arg.FlowId, arg.ClientId,
+			arg.Template, arg.Wait)
+		if err != nil {
+			scope.Log("create_flow_download: %s", err)
+			return vfilter.Null{}
+		}
+		return result
+
+	case "":
+		result, err := createDownloadFile(config_obj, arg.FlowId, arg.ClientId, arg.Wait)
+		if err != nil {
+			scope.Log("create_flow_download: %s", err)
+			return vfilter.Null{}
+		}
+		return result
+
+	default:
+		scope.Log("Unknown report type %v", arg.Type)
+	}
+
+	return vfilter.Null{}
 }
 
 func (self CreateFlowDownload) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

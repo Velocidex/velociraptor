@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -56,6 +57,26 @@ func (self *HTMLTemplateEngine) Expand(values ...interface{}) interface{} {
 	return results
 }
 
+func renderObject(value interface{}) string {
+	serialized := ""
+	switch t := value.(type) {
+	case vfilter.Null, *vfilter.Null:
+		return ""
+
+	case string:
+		return t
+
+	case int, int64, int32, int16, int8,
+		uint64, uint32, uint16, uint8,
+		float64, float32, bool:
+		return fmt.Sprintf("%v", value)
+
+	default:
+		serialized = "<pre>" + json.StringIndent(value) + "</pre>"
+	}
+	return serialized
+}
+
 func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 	_, argv := parseOptions(values)
 	// Not enough args.
@@ -85,7 +106,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
-				result += fmt.Sprintf("    <td>%v</td>\n", value)
+				result += fmt.Sprintf("    <td>%v</td>\n", renderObject(value))
 			}
 			result += "  </tr>\n"
 		}
@@ -110,7 +131,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 			result += "  <tr>\n"
 			for _, name := range columns {
 				value, _ := item.Get(name)
-				result += fmt.Sprintf("    <td>%v</td>\n", value)
+				result += fmt.Sprintf("    <td>%v</td>\n", renderObject(value))
 			}
 			result += "  </tr>\n"
 		}
