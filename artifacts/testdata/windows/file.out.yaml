@@ -13,4 +13,35 @@ SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  {
   "FullPath": "C:\\WindowsAzure"
  }
-]
+]SELECT * FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")[
+ {
+  "Name": "notepad.exe",
+  "ModTime": "2020-07-10T19:17:16.1492653Z",
+  "FullPath": "C:\\Users\\link\\notepad.exe",
+  "Mtime": "2020-07-10T19:17:16.1492653Z",
+  "Ctime": "2020-07-10T19:17:16.133634Z",
+  "Atime": "2020-07-10T19:17:16.1492653Z",
+  "Data": {},
+  "Size": 254464,
+  "IsDir": false,
+  "IsLink": false,
+  "Mode": 438,
+  "Sys": {
+   "FileAttributes": 32,
+   "CreationTime": {
+    "LowDateTime": 3105122836,
+    "HighDateTime": 30824174
+   },
+   "LastAccessTime": {
+    "LowDateTime": 3105279149,
+    "HighDateTime": 30824174
+   },
+   "LastWriteTime": {
+    "LowDateTime": 3105279149,
+    "HighDateTime": 30824174
+   },
+   "FileSizeHigh": 0,
+   "FileSizeLow": 254464
+  }
+ }
+]SELECT * FROM glob(globs="c:\\Users\\*link\\notepad.exe")[]

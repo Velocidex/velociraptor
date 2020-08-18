@@ -43,6 +43,8 @@ type OSFileInfo struct {
 	// Empty for files but may contain data for registry and
 	// resident NTFS.
 	_full_path string
+
+	follow_links bool
 }
 
 func (self *OSFileInfo) FullPath() string {
@@ -51,7 +53,9 @@ func (self *OSFileInfo) FullPath() string {
 
 func (self *OSFileInfo) Data() interface{} {
 	if self.IsLink() {
-		target, err := self.GetLink()
+		path := strings.TrimRight(
+			strings.TrimLeft(self.FullPath(), "\\"), "\\")
+		target, err := os.Readlink(path)
 		if err == nil {
 			return ordereddict.NewDict().
 				Set("Link", target)
@@ -89,6 +93,10 @@ func (self *OSFileInfo) IsLink() bool {
 }
 
 func (self *OSFileInfo) GetLink() (string, error) {
+	if !self.follow_links {
+		return "", errors.New("Not following links")
+	}
+
 	path := strings.TrimRight(
 		strings.TrimLeft(self.FullPath(), "\\"), "\\")
 	target, err := os.Readlink(path)
@@ -227,8 +235,9 @@ func (self OSFileSystemAccessor) readDir(path string, depth int) ([]glob.FileInf
 	for _, f := range files {
 		result = append(result,
 			&OSFileInfo{
-				FileInfo:   f,
-				_full_path: dir_path + f.Name(),
+				follow_links: self.follow_links,
+				FileInfo:     f,
+				_full_path:   dir_path + f.Name(),
 			})
 	}
 	return result, nil
@@ -244,8 +253,9 @@ func (self *OSFileSystemAccessor) Lstat(path string) (glob.FileInfo, error) {
 
 	stat, err := os.Lstat(GetPath(path))
 	return &OSFileInfo{
-		FileInfo:   stat,
-		_full_path: path,
+		follow_links: self.follow_links,
+		FileInfo:     stat,
+		_full_path:   path,
 	}, err
 }
 
