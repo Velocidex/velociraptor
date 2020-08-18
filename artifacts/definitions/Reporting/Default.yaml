@@ -32,16 +32,16 @@ reports:
        {{ end }}
 
        {{ define "hidden_paragraph_start" }}
-       {{ if .description }}
-         <a href="#" class="collapsible">{{ .description }} ...</a>
-       {{ else }}
-         <a href="#" class="collapsible">More ...</a>
-       {{ end }}
+       {{- if .description -}}
+       <div><a href="#" class="collapsible">{{ .description }} ...</a>
+       {{- else -}}
+       <div><a href="#" class="collapsible">More ...</a>
+       {{- end -}}
        <div class="collapse">
        {{end}}
 
        {{ define "hidden_paragraph_end" }}
-       </div>
+       </div></div>
        {{ end }}
 
 
@@ -301,7 +301,6 @@ reports:
                       {{ end }}
 
                       <!-- Show the artifact source if required. -->
-                      <br>
                       {{ template "hidden_paragraph_start" dict "description" "Source" }}
                       <div class="row card card-body noprint">
                         {{ if .Query }}
@@ -318,7 +317,6 @@ reports:
                       {{ $flow := Query "LET X = SELECT Request.Parameters.env AS Env FROM flows(client_id=ClientId, flow_id=FlowId)" \
                       "SELECT * FROM foreach(row=X[0].Env, query={ SELECT Key, Value FROM scope()})" | Expand }}
                       {{ if $flow }}
-                        <br>
                         {{ template "hidden_paragraph_start" dict "description" "Parameters" }}
                         <div class="row card card-body noprint">
                           <h3> Parameters </h3>

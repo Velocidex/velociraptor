@@ -150,6 +150,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		switch report.Type {
 		case "monitoring_daily", "server_event", "client",
 			"internal", "hunt", "templates":
+		case "":
+			report.Type = "CLIENT"
 
 		case "html": // HTML reports form a main HTML page for report exports.
 		default:
