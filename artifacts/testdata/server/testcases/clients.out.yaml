@@ -27,4 +27,24 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_ip_class": 1,
   "labels": null
  }
-]SELECT client_id, context.create_time as CreateTime, runner_args.args.artifacts.names as Artifacts, runner_args.flow_name as Flow FROM flows(client_id='C.11a3013cca8f826e') ORDER BY client_id[]
+]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[
+ {
+  "client_id": "C.56a8dfd31eb1fa6f",
+  "CreateTime": "2020-08-03T01:24:30.468293905Z",
+  "Artifacts": [
+   "Windows.Network.NetstatEnriched"
+  ],
+  "Flow": "F.BSJMEJIPT6P9I"
+ }
+]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', Invalid=5) FROM scope()[
+ {
+  "client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', Invalid=5)": true
+ }
+]SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()[
+ {
+  "client_metadata(client_id='C.4f5e52adf0a337a9')": {
+   "Foo": "Bar",
+   "Bar": "Baz"
+  }
+ }
+]

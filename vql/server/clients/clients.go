@@ -19,7 +19,7 @@
 */
 // VQL plugins for running on the server.
 
-package server
+package clients
 
 import (
 	"context"

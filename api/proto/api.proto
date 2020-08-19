@@ -131,6 +131,19 @@ service API {
         };
     }
 
+    rpc GetClientMetadata(GetClientRequest) returns (ClientMetadata) {
+        option (google.api.http) = {
+            get: "/api/v1/GetClientMetadata/{client_id}",
+        };
+    }
+
+    rpc SetClientMetadata(ClientMetadata) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/SetClientMetadata",
+            body: "*"
+        };
+    }
+
     rpc GetClientFlows(ApiFlowRequest) returns (ApiFlowResponse) {
         option (google.api.http) = {
             get: "/api/v1/GetClientFlows/{client_id}",

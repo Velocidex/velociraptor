@@ -279,6 +279,26 @@ func (mr *MockAPIClientMockRecorder) GetClientFlows(arg0, arg1 interface{}, arg2
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientFlows", reflect.TypeOf((*MockAPIClient)(nil).GetClientFlows), varargs...)
 }
 
+// GetClientMetadata mocks base method
+func (m *MockAPIClient) GetClientMetadata(arg0 context.Context, arg1 *proto0.GetClientRequest, arg2 ...grpc.CallOption) (*proto0.ClientMetadata, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetClientMetadata", varargs...)
+	ret0, _ := ret[0].(*proto0.ClientMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetClientMetadata indicates an expected call of GetClientMetadata
+func (mr *MockAPIClientMockRecorder) GetClientMetadata(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClientMetadata", reflect.TypeOf((*MockAPIClient)(nil).GetClientMetadata), varargs...)
+}
+
 // GetClientMonitoringState mocks base method
 func (m *MockAPIClient) GetClientMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ClientEventTable, error) {
 	m.ctrl.T.Helper()
@@ -797,6 +817,26 @@ func (mr *MockAPIClientMockRecorder) SetArtifactFile(arg0, arg1 interface{}, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetArtifactFile", reflect.TypeOf((*MockAPIClient)(nil).SetArtifactFile), varargs...)
+}
+
+// SetClientMetadata mocks base method
+func (m *MockAPIClient) SetClientMetadata(arg0 context.Context, arg1 *proto0.ClientMetadata, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SetClientMetadata", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetClientMetadata indicates an expected call of SetClientMetadata
+func (mr *MockAPIClientMockRecorder) SetClientMetadata(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetClientMetadata", reflect.TypeOf((*MockAPIClient)(nil).SetClientMetadata), varargs...)
 }
 
 // SetClientMonitoringState mocks base method
