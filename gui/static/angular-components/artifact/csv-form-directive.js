@@ -7,13 +7,15 @@ const CSVFormController = function($scope) {
     this.columns = [];
     this.rows = [];
 
-    $scope.$watch('value', this.onValueChange_.bind(this));
-
+    $scope.$watch('value[field]', this.onValueChange_.bind(this));
 };
 
 
 CSVFormController.prototype.removeRow = function(e, row_index) {
     this.rows.splice(row_index, 1);
+
+    this.scope_["value"][this.scope_["field"]] = $.csv.fromArrays(
+        [this.columns,].concat(this.rows));
 
     e.stopPropagation();
     e.preventDefault();
@@ -23,6 +25,9 @@ CSVFormController.prototype.removeRow = function(e, row_index) {
 CSVFormController.prototype.insertRow = function(e, row_index) {
     var new_row = Array(this.columns.length).fill("");
     this.rows.splice(row_index, 0, new_row);
+
+    this.scope_["value"][this.scope_["field"]] = $.csv.fromArrays(
+        [this.columns,].concat(this.rows));
 
     e.stopPropagation();
     e.preventDefault();

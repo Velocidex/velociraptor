@@ -15,48 +15,6 @@ message AgentInformation {
     string build_time = 3;
 }
 
-
-// Message to carry uname information.
-message Uname {
-   string system = 1 [(sem_type) = {
-      description: "The system platform (Windows|Darwin|Linux).",
-    }];
-   string node = 2 [(sem_type) = {
-      description: "The hostname of this system.",
-    }];
-   string release = 3 [(sem_type) = {
-      description: "The OS release identifier e.g. 7, OSX, debian.",
-    }];
-   string version = 4 [(sem_type) = {
-      description: "The OS version ID e.g. 6.1.7601SP1, 10.9.2, 14.04.",
-    }];
-   string machine = 5 [(sem_type) = {
-      description: "The system architecture e.g. AMD64, x86_64.",
-    }];
-   string kernel = 6 [(sem_type) = {
-      description: "The kernel version string e.g. 6.1.7601, 13.1.0, 3.15-rc2.",
-    }];
-   string fqdn = 7 [(sem_type) = {
-      description: "The system's fully qualified domain name.",
-    }];
-
-   uint64 install_date = 8 [(sem_type) = {
-      type: "RDFDatetime",
-      description: "When system was installed."
-    }];
-
-   string libc_ver = 9 [(sem_type) = {
-      description: "The C library version",
-    }];
-
-   string architecture = 10 [(sem_type) = {
-      description: "The architecture of this binary. (Note this can be "
-      "different from the machine architecture in the case of a 32 bit binary "
-      "running on a 64 bit system)",
-    }];
-};
-
-
 // Describe a client. We fill in some metadata about the client but
 // this is by no means exhaustive.
 message ApiClient {
@@ -141,10 +99,63 @@ message LabelClientsRequest {
     string operation = 3;
 }
 
-
 message ClientLabels {
     // When was the labeling record last updated.
     uint64 timestamp = 1;
 
     repeated string label = 2;
 }
+
+message ClientMetadataItem {
+    string key = 1;
+
+    // A Json blob of unstructured data.
+    string value = 2;
+}
+
+message ClientMetadata {
+    repeated ClientMetadataItem items = 1;
+    string client_id = 2;
+}
+
+
+
+// Message to carry uname information.
+message Uname {
+   string system = 1 [(sem_type) = {
+      description: "The system platform (Windows|Darwin|Linux).",
+    }];
+   string node = 2 [(sem_type) = {
+      description: "The hostname of this system.",
+    }];
+   string release = 3 [(sem_type) = {
+      description: "The OS release identifier e.g. 7, OSX, debian.",
+    }];
+   string version = 4 [(sem_type) = {
+      description: "The OS version ID e.g. 6.1.7601SP1, 10.9.2, 14.04.",
+    }];
+   string machine = 5 [(sem_type) = {
+      description: "The system architecture e.g. AMD64, x86_64.",
+    }];
+   string kernel = 6 [(sem_type) = {
+      description: "The kernel version string e.g. 6.1.7601, 13.1.0, 3.15-rc2.",
+    }];
+   string fqdn = 7 [(sem_type) = {
+      description: "The system's fully qualified domain name.",
+    }];
+
+   uint64 install_date = 8 [(sem_type) = {
+      type: "RDFDatetime",
+      description: "When system was installed."
+    }];
+
+   string libc_ver = 9 [(sem_type) = {
+      description: "The C library version",
+    }];
+
+   string architecture = 10 [(sem_type) = {
+      description: "The architecture of this binary. (Note this can be "
+      "different from the machine architecture in the case of a 32 bit binary "
+      "running on a 64 bit system)",
+    }];
+};

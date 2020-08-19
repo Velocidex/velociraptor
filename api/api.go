@@ -458,47 +458,6 @@ func (self *ApiServer) LabelClients(
 	return &api_proto.APIResponse{}, nil
 }
 
-func (self *ApiServer) GetClient(
-	ctx context.Context,
-	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
-
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
-	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to view clients.")
-	}
-
-	api_client, err := GetApiClient(
-		self.config,
-		self.server_obj,
-		in.ClientId,
-		!in.Lightweight, // Detailed
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return api_client, nil
-}
-
-func (self *ApiServer) GetClientFlows(
-	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
-
-	user_name := GetGRPCUserInfo(self.config, ctx).Name
-	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
-	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to view flows.")
-	}
-
-	return flows.GetFlows(self.config, in.ClientId,
-		in.IncludeArchived, in.Offset, in.Count)
-}
-
 func (self *ApiServer) GetFlowDetails(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.FlowDetails, error) {

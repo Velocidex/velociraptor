@@ -12,7 +12,7 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
    "Filename": "winpmem_v3.3.rc3.exe"
   }
  }
-]SELECT * FROM inventory()[
+]SELECT * FROM inventory() WHERE name =~ "WinPmem"[
  {
   "name": "WinPmem",
   "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",

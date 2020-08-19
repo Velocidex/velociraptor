@@ -74,7 +74,7 @@ const (
 	// Read results from already run hunts, flows or notebooks.
 	READ_RESULTS
 
-	// Can manipulate client labels.
+	// Can manipulate client labels and metadata.
 	LABEL_CLIENT
 
 	// Schedule or cancel new collections on clients.
