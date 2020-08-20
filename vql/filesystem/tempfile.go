@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -72,7 +71,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		permissions = 0400
 	}
 
-	tmpfile, err := tempfile.TempFile("", "tmp", arg.Extension)
+	tmpfile, err := ioutil.TempFile("", "tmp*"+arg.Extension)
 	if err != nil {
 		scope.Log("tempfile: %v", err)
 		return false

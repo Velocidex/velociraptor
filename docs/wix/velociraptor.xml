@@ -1,14 +1,21 @@
 <?xml version='1.0' encoding='windows-1252'?>
+<?define AppRegKey="Software\Velocidex\Velociraptor" ?>
+<?define PackageDescription="Velociraptor Service Installer" ?>
+<?define Manufacturer="Velocidex" ?>
+<?define Name="Velociraptor" ?>
+<?define Version="0.48.0" ?>
+<?define BinaryName="Velociraptor.exe" ?>
+
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      >
-  <Product Name='Velociraptor' Manufacturer='Velocidex Innovations'
+  <Product Name='$(var.Name)' Manufacturer='$(var.Manufacturer)'
            Id='*'
            UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
-           Language='1033' Codepage='1252' Version='0.45.0'>
-    <Package Id='*' Keywords='Installer' Description="Velociraptor Service Installer"
-             Comments='This installs the Velociraptor service.'
-             Manufacturer='Velocidex Innovations'
+           Language='1033' Codepage='1252' Version='$(var.Version)'>
+    <Package Id='*' Keywords='Installer' Description="$(var.PackageDescription)"
+             Comments='$(var.PackageDescription)'
+             Manufacturer='$(var.Manufacturer)'
              InstallerVersion='200' Languages='1033' Compressed='yes'
              SummaryCodepage='1252' />
     <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
@@ -16,10 +23,15 @@
 
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFiles64Folder' Name='PFiles'>
-        <Directory Id='INSTALLDIR' Name='Velociraptor'>
+        <Directory Id='INSTALLDIR' Name='$(var.Name)'>
+                  <Directory Id="CACHEDIR" Name="Tools">
+                    <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
+                          <CreateFolder />
+                        </Component>
+                  </Directory>
           <Component Id='MainExecutable'
                      Guid='35e9ec26-d243-4fcd-9b5b-6ad37345ccea'>
-            <File Id='ServiceEXE' Name='Velociraptor.exe'
+            <File Id='ServiceEXE' Name='$(var.BinaryName)'
                   DiskId='1'
                   Source='Output/Velociraptor.exe' KeyPath='yes'>
             </File>
@@ -27,9 +39,9 @@
                 Id="ServiceInstaller"
                 Type="ownProcess"
                 Vital="yes"
-                Name="Velociraptor"
-                DisplayName="Velociraptor Service"
-                Description="Velociraptor Service"
+                Name="$(var.Name)"
+                DisplayName="$(var.Name) Service"
+                Description="$(var.Name) Service"
                 Start="auto"
                 Account="LocalSystem"
                 Arguments='service run '
@@ -57,18 +69,33 @@
                 Remove="uninstall" Wait="yes" />
           </Component>
         </Directory>
-      </Directory>
+          </Directory>
     </Directory>
 
     <Feature Id='Complete' Level='1'>
       <ComponentRef Id='MainExecutable' />
-    </Feature>
-
+          <ComponentRef Id='Tools' />
+      <ComponentRef Id='CleanupCache' />
+        </Feature>
     <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed."
                   Schedule="afterInstallValidate" />
     <Property Id="ALLUSERS" Value="1" />
     <Property Id="ARPNOREPAIR" Value="1" />
     <Property Id="ARPNOMODIFY" Value="1" />
-
+    <Property Id="CACHEDIR">
+        <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
+                  Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
+    </Property>
+        <DirectoryRef Id="CACHEDIR">
+            <Component Id="CleanupCache" Guid="*">
+                <RegistryValue Root="HKLM" Key="$(var.AppRegKey)"
+                                    Name="CachePath" Type="string"
+                                        Value="[CACHEDIR]"
+                                        KeyPath="yes" />
+                <!-- We need to use APPLICATIONFOLDER variable here or RemoveFolderEx
+                     will not remove on "install". But only if WiX 3.6 is used. -->
+                <util:RemoveFolderEx On="uninstall" Property="CACHEDIR" />
+            </Component>
+    </DirectoryRef>
   </Product>
 </Wix>

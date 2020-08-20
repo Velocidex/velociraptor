@@ -52,6 +52,8 @@ func RunClient(
 		kingpin.FatalIfError(err, "Invalid config")
 	}
 
+	executor.SetTempfile(config_obj)
+
 	manager, err := crypto.NewClientCryptoManager(
 		config_obj, []byte(config_obj.Writeback.PrivateKey))
 	if err != nil {

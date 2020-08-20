@@ -52,7 +52,10 @@ message Writeback {
     VQLEventTable event_queries = 1;
 }
 
-// Configuration for the windows installer.
+// Configuration for the windows installer. NOTE: This is not used
+// much - it is only used when running `velociraptor service
+// install`. We typically use an MSI to deploy (see the docs/wix/
+// directory).
 message WindowsInstallerConfig {
     string service_name = 1 [(sem_type) = {
             description: "The name of the service to create."
@@ -130,6 +133,15 @@ message ClientConfig {
     string writeback_windows = 10 [(sem_type) = {
             description: "A path where windows clients will write local state."
         }];
+
+    // A path to set the temp directory. If not set we use the system
+    // default. The path may be relative to the current directory
+    // (usually the location of the executable). If the path does not
+    // exist we fall back to the system temp directory.
+    string tempdir_linux = 1;
+    string tempdir_windows = 2;
+    string tempdir_darwin = 3;
+
 
     uint64 max_poll = 15 [(sem_type) = {
             description: "The maximum number of seconds between server polls."

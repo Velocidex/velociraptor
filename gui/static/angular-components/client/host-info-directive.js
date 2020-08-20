@@ -148,9 +148,6 @@ HostInfoController.prototype.fetchClientMetadata_ = function() {
             self.metadata = "Key,Value\n,\n";
         };
         self.server_metadata = self.metadata;
-
-        console.log(self.metadata);
-
     }.bind(this));
 };
 

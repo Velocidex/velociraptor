@@ -26,6 +26,7 @@ package parsers
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"reflect"
 	"strings"
@@ -33,7 +34,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/glob"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -198,7 +198,7 @@ func (self _SQLitePlugin) _MakeTempfile(
 		scope.Log("Will try to copy to temp file: %v", filename)
 	}
 
-	tmpfile, err := tempfile.TempFile("", "tmp", ".sqlite")
+	tmpfile, err := ioutil.TempFile("", "tmp*.sqlite")
 	if err != nil {
 		return "", err
 	}

@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -14,7 +15,6 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -484,14 +484,14 @@ func createHuntDownloadFile(
 
 			// Write all results to a tmpfile then just
 			// copy the tmpfile into the zip.
-			json_tmpfile, err := tempfile.TempFile("", "tmp", ".json")
+			json_tmpfile, err := ioutil.TempFile("", "tmp*.json")
 			if err != nil {
 				report_err(err)
 				continue
 			}
 			defer os.Remove(json_tmpfile.Name())
 
-			csv_tmpfile, err := tempfile.TempFile("", "tmp", ".csv")
+			csv_tmpfile, err := ioutil.TempFile("", "tmp*.csv")
 			if err != nil {
 				report_err(err)
 				continue

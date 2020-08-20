@@ -23,6 +23,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -33,7 +34,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -307,7 +307,7 @@ func (self *_HttpPlugin) Call(
 
 		if arg.TempfileExtension != "" {
 
-			tmpfile, err := tempfile.TempFile("", "tmp", arg.TempfileExtension)
+			tmpfile, err := ioutil.TempFile("", "tmp*"+arg.TempfileExtension)
 			if err != nil {
 				scope.Log("http_client: %v", err)
 				return
