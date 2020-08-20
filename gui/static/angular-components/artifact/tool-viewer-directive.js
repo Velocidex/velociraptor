@@ -84,6 +84,7 @@ ToolViewerController.prototype.toolDialog = function(e) {
     modalScope.serve_locally = function() {
         let tool = Object.assign({}, self.tool);
         tool.serve_locally = true;
+        tool.materialize = true;
         self.setToolInfo(tool);
     };
 
@@ -96,6 +97,7 @@ ToolViewerController.prototype.toolDialog = function(e) {
     modalScope.redownloadFile = function() {
         let tool = Object.assign({}, self.tool);
         tool.hash = "";
+        tool.filename = "";
         tool.materialize = true;
         self.setToolInfo(tool);
     };

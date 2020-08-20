@@ -60,6 +60,8 @@ func toolUploadHandler(
 		defer file.Close()
 
 		tool.Filename = path.Base(handler.Filename)
+		tool.ServeLocally = true
+		tool.AdminOverride = true
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
@@ -84,6 +86,15 @@ func toolUploadHandler(
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 
 		err = services.GetInventory().AddTool(r.Context(), config_obj, tool)
+		if err != nil {
+			returnError(w, http.StatusInternalServerError,
+				fmt.Sprintf("Error: %v", err))
+			return
+		}
+
+		// Now materialize the tool
+		tool, err = services.GetInventory().GetToolInfo(
+			r.Context(), config_obj, tool.Name)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))
