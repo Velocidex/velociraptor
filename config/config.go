@@ -66,7 +66,8 @@ func GetDefaultConfig() *config_proto.Config {
 			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
 			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
 				"velociraptor.writeback.yaml",
-			MaxPoll: 60,
+			TempdirWindows: "$ProgramFiles\\Velociraptor\\Tools",
+			MaxPoll:        60,
 
 			// Local ring buffer to queue messages to the
 			// server. If the server is not available we

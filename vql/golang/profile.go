@@ -2,6 +2,7 @@ package golang
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
@@ -43,7 +44,7 @@ func remove(scope *vfilter.Scope, name string) {
 
 func writeProfile(scope *vfilter.Scope,
 	output_chan chan vfilter.Row, name string, debug int64) {
-	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
+	tmpfile, err := ioutil.TempFile("", "tmp*.tmp")
 	if err != nil {
 		scope.Log("profile: %s", err)
 		return

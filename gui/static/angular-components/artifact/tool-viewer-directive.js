@@ -70,8 +70,6 @@ ToolViewerController.prototype.toolDialog = function(e) {
 
     modalScope.file_changed = function(element) {
         self.tool_file = element.files[0];
-        console.log(self.tool_file);
-        console.log(document.getElementById("toolFile").files[0]);
     };
 
     modalScope.serve_upstream = function() {

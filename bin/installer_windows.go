@@ -357,6 +357,8 @@ func loadClientConfig() (*config_proto.Config, error) {
 		return nil, err
 	}
 
+	executor.SetTempfile(config_obj)
+
 	// Make sure the config is ok.
 	err = crypto.VerifyConfig(config_obj)
 	if err != nil {

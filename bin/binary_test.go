@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
@@ -70,7 +69,7 @@ autoexec:
 
 func (self *MainTestSuite) TestAutoexec() {
 	// Create a tempfile for the repacked binary.
-	exe, err := tempfile.TempFile("", "exe", self.extension)
+	exe, err := ioutil.TempFile("", "exe*"+self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())
@@ -174,7 +173,7 @@ func (self *MainTestSuite) TestGenerateConfigWithMerge() {
 	require.Error(self.T(), err)
 
 	// Create a tempfile for the repacked binary.
-	exe, err := tempfile.TempFile("", "exe", self.extension)
+	exe, err := ioutil.TempFile("", "exe*"+self.extension)
 	assert.NoError(self.T(), err)
 
 	defer os.Remove(exe.Name())
