@@ -20,8 +20,10 @@ import (
 )
 
 var (
-	third_party         = app.Command("tools", "Manipulate third party binaries and tools")
-	third_party_show    = third_party.Command("show", "Upload a third party binary")
+	third_party           = app.Command("tools", "Manipulate third party binaries and tools")
+	third_party_show      = third_party.Command("show", "Upload a third party binary")
+	third_party_show_file = third_party_show.Arg("file", "Upload a third party binary").
+				String()
 	third_party_rm      = third_party.Command("rm", "Remove a third party binary")
 	third_party_rm_name = third_party_rm.Arg("name", "The name to remove").
 				Required().String()
@@ -64,9 +66,19 @@ func doThirdPartyShow() {
 	err = startEssentialServices(config_obj, sm)
 	kingpin.FatalIfError(err, "Starting services.")
 
-	serialized, err := yaml.Marshal(services.GetInventory().Get())
-	kingpin.FatalIfError(err, "Serialized ")
-	fmt.Println(string(serialized))
+	if *third_party_show_file == "" {
+		inventory := services.GetInventory().Get()
+		serialized, err := yaml.Marshal(inventory)
+		kingpin.FatalIfError(err, "Serialized ")
+		fmt.Println(string(serialized))
+	} else {
+		tool, err := services.GetInventory().ProbeToolInfo(*third_party_show_file)
+		kingpin.FatalIfError(err, "Tool not found ")
+
+		serialized, err := yaml.Marshal(tool)
+		kingpin.FatalIfError(err, "Serialized ")
+		fmt.Println(string(serialized))
+	}
 }
 
 func doThirdPartyRm() {

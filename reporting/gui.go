@@ -521,6 +521,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
 	p.AllowAttrs("value", "params").OnElements("grr-line-chart")
 	p.AllowAttrs("value", "params").OnElements("grr-timeline")
+	p.AllowAttrs("name").OnElements("grr-tool-viewer")
 
 	// Required for syntax highlighting.
 	p.AllowAttrs("class").OnElements("span")

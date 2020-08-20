@@ -63,6 +63,15 @@ func (self *InventoryService) Get() *artifacts_proto.ThirdParty {
 	return proto.Clone(self.binaries).(*artifacts_proto.ThirdParty)
 }
 
+func (self *InventoryService) ProbeToolInfo(name string) (*artifacts_proto.Tool, error) {
+	for _, tool := range self.Get().Tools {
+		if tool.Name == name {
+			return tool, nil
+		}
+	}
+	return nil, errors.New("Not Found")
+}
+
 // Gets the tool information from the inventory. If the tool is not
 // already downloaded, we download it and update the hashes.
 func (self *InventoryService) GetToolInfo(

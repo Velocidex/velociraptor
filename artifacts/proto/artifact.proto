@@ -255,6 +255,9 @@ message Tool {
     // is set we will not update the tool definition when upgrading
     // server versions.
     bool admin_override = 7;
+
+    // If set on a request we refresh the hash.
+    bool materialize = 11;
 }
 
 // Keep track of all the third party tools we know about.

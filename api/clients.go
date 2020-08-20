@@ -192,7 +192,7 @@ func (self *ApiServer) SetClientMetadata(
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to view clients.")
+			"User is not allowed to modify client labels.")
 	}
 
 	client_path_manager := paths.NewClientPathManager(in.ClientId)

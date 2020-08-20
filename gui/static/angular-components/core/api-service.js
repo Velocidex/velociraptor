@@ -449,6 +449,34 @@ ApiService.prototype.post = function(apiPath, opt_params) {
             null, this.error_response.bind(this));
 };
 
+ApiService.prototype.upload = function(apiPath, files, opt_params) {
+    var fd = new FormData();
+
+    angular.forEach(files, function(value, key) {
+        fd.append(key, value);
+    }.bind(this));
+
+    fd.append('_params_', angular.toJson(opt_params || {}));
+
+    var request = {
+        method: "POST",
+        url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
+        data: fd,
+        transformRequest: angular.identity,
+        headers: {'Content-Type': undefined}
+    };
+
+    var loadingKey = this.grrLoadingIndicatorService_.startLoading();
+
+    // Automatically pass the CSRF token to every request.
+    this.http_.defaults.headers.common["X-CSRF-Token"] = window.CsrfToken;
+
+    var promise = /** @type {function(Object)} */ (this.http_)(request);
+    return promise.finally(function() {
+        this.grrLoadingIndicatorService_.stopLoading(loadingKey);
+    }.bind(this));
+};
+
 
 /**
  * Deletes the resource behind a given API url via HTTP DELETE method.

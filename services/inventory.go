@@ -38,6 +38,9 @@ type Inventory interface {
 	// Get a list of the entire tools database with all known tools.
 	Get() *artifacts_proto.ThirdParty
 
+	// Probe for a specific tool without materializing the tool.
+	ProbeToolInfo(name string) (*artifacts_proto.Tool, error)
+
 	// Get information about a specific tool. If the tool is set
 	// to serve locally, the tool will be fetched from its
 	// designated URL.

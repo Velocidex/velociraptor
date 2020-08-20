@@ -290,6 +290,20 @@ service API {
         };
     }
 
+    // Tools
+    rpc GetToolInfo(Tool) returns (Tool) {
+        option (google.api.http) = {
+            get: "/api/v1/GetToolInfo",
+        };
+    }
+
+    rpc SetToolInfo(Tool) returns (Tool) {
+        option (google.api.http) = {
+            post: "/api/v1/SetToolInfo",
+            body: "*",
+        };
+    }
+
     // Reporting and post processing.
     rpc GetReport(GetReportRequest) returns (GetReportResponse) {
         option (google.api.http) = {
