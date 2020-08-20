@@ -519,6 +519,26 @@ func (mr *MockAPIClientMockRecorder) GetTable(arg0, arg1 interface{}, arg2 ...in
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTable", reflect.TypeOf((*MockAPIClient)(nil).GetTable), varargs...)
 }
 
+// GetToolInfo mocks base method
+func (m *MockAPIClient) GetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg2 ...grpc.CallOption) (*proto1.Tool, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetToolInfo", varargs...)
+	ret0, _ := ret[0].(*proto1.Tool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetToolInfo indicates an expected call of GetToolInfo
+func (mr *MockAPIClientMockRecorder) GetToolInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).GetToolInfo), varargs...)
+}
+
 // GetUserNotificationCount mocks base method
 func (m *MockAPIClient) GetUserNotificationCount(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.UserNotificationCount, error) {
 	m.ctrl.T.Helper()
@@ -897,6 +917,26 @@ func (mr *MockAPIClientMockRecorder) SetServerMonitoringState(arg0, arg1 interfa
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetServerMonitoringState", reflect.TypeOf((*MockAPIClient)(nil).SetServerMonitoringState), varargs...)
+}
+
+// SetToolInfo mocks base method
+func (m *MockAPIClient) SetToolInfo(arg0 context.Context, arg1 *proto1.Tool, arg2 ...grpc.CallOption) (*proto1.Tool, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SetToolInfo", varargs...)
+	ret0, _ := ret[0].(*proto1.Tool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetToolInfo indicates an expected call of SetToolInfo
+func (mr *MockAPIClientMockRecorder) SetToolInfo(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetToolInfo", reflect.TypeOf((*MockAPIClient)(nil).SetToolInfo), varargs...)
 }
 
 // UpdateNotebook mocks base method

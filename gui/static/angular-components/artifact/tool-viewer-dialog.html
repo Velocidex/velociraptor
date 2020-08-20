@@ -49,7 +49,13 @@
                   <span class="input-group-text"
                         ng-click="uploadFile($event)"
                         ng-disable="!controller.tool_file.name">
-                    Upload</span>
+                    <span ng-if="!controller.inflight">
+                      Upload
+                    </span>
+                    <span ng-if="controller.inflight" role="status" class="spinner-border" >
+                      <span class="sr-only">Loading...</span>
+                    </span>
+                  </span>
                   <div class="custom-file">
                     <input type="file" class="custom-file-input"
                            id="toolFile"
