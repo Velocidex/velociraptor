@@ -1,0 +1,235 @@
+<div class="modal-header">
+  <h3>Tool {$ name $}</h3>
+  <button type="button" class="close"
+          ng-click="reject()" aria-hidden="true">
+    x
+  </button>
+</div>
+<div class="modal-body">
+  <div class="container-fluid">
+    <div class="panel-body">
+      <dl class="dl-horizontal dl-flow">
+        <div ng-if="controller.tool.name">
+          <dt>Tool Name</dt><dd>{$ controller.tool.name $}</dd></div>
+        <div ng-if="controller.tool.url">
+          <dt>Upstream URL</dt><dd>{$ controller.tool.url $}</dd></div>
+        <div ng-if="controller.tool.filename">
+          <dt>Enpoint Filename</dt><dd>{$ controller.tool.filename $}</dd></div>
+        <div ng-if="controller.tool.hash">
+          <dt>Hash</dt><dd>{$ controller.tool.hash $}</dd></div>
+        <div ng-if="controller.tool.github_project">
+          <dt>Github Project</dt><dd>{$ controller.tool.github_project $}</dd></div>
+        <div ng-if="controller.tool.github_asset_regex">
+          <dt>Github Asset Regex</dt><dd>{$ controller.tool.github_asset_regex $}</dd></div>
+        <div ng-if="controller.tool.serve_locally">
+          <dt>Serve Locally</dt><dd>{$ controller.tool.serve_locally $}</dd></div>
+        <div ng-if="controller.tool.serve_url">
+          <dt>Serve URL</dt><dd>{$ controller.tool.serve_url $}</dd></div>
+        <div ng-if="controller.tool.admin_override">
+          <dt>Admin Override</dt><dd>{$ controller.tool.admin_override $}</dd></div>
+
+      </dl>
+
+      <div class="card-deck">
+        <div class="card ">
+          <div class="card-header text-center bg-success">
+            Override Tool
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">As an admin you can manually upload a
+            binary to be used as that tool. This will override the
+            upstream URL setting and provide your tool to all
+            artifacts that need it.
+            </p>
+
+            <form enctype="multipart/form-data">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text"
+                        ng-click="uploadFile($event)"
+                        ng-disable="!controller.tool_file.name">
+                    Upload</span>
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input"
+                           id="toolFile"
+                           onchange="angular.element(this).scope().file_changed(this)"
+                           >
+                    <label class="custom-file-label"
+                           for="toolFile">{$ controller.tool_file.name || "Choose" $}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+    </div>
+
+      <div class="card-deck">
+        <div class="card "
+             ng-if="controller.tool.serve_locally && !controller.hide_1">
+          <div class="card-header text-center">
+            Served Locally
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_1 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">Tool will be served from the
+            Velociraptor server to clients if needed. The client will
+            cache the tool on its own disk and compare the hash next
+            time it is needed. Tools will only be downloaded if their
+            hash has changed.</p>
+
+            <button class="btn btn-primary"
+                    ng-disabled="controller.inflight"
+                    ng-if="controller.tool.url"
+                    ng-click="serve_upstream()"
+                    >Serve from upstream</button>
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="!controller.tool.serve_locally  && !controller.hide_2">
+          <div class="card-header text-center">
+            Served from URL
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_2 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">
+              Clients will fetch the tool directly from
+              <a href="{$ controller.tool.url $}">{$ controller.tool.url $}</a> if
+              needed. Note that if the hash does not match the
+              expected hash the clients will reject the file.
+            </p>
+            <button class="btn btn-primary"
+                    ng-disabled="controller.inflight"
+                    ng-click="serve_locally()">Serve locally
+            </button>
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="controller.tool.github_project  && !controller.hide_3">
+          <div class="card-header text-center">
+            Served from GitHub
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_3 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">Tool URL will be refreshed from
+              GitHub as the latest release from the project
+              <b>{$ controller.tool.github_project $}</b> that matches
+              <b>{$ controller.tool.github_asset_regex $}</b>
+            </p>
+
+            <button class="btn btn-primary"
+                    ng-disabled="controller.inflight"
+                    ng-click="redownloadFile()">Refresh Github
+            </button>
+
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="!controller.tool.hash  && !controller.hide_4">
+          <div class="card-header text-center">
+            Placeholder Definition
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_4 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+            <p class="card-text">
+              Tool hash is currently unknown. The first time the tool
+              is needed, Velociraptor will download it from it's
+              upstream URL and calculate its hash.
+            </p>
+
+            <button class="btn btn-primary"
+                    ng-disabled="controller.inflight"
+                    ng-click="calculateHash()"
+                    >Materialize Hash</button>
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="controller.tool.hash  && !controller.hide_5">
+          <div class="card-header text-center">
+            Tool Hash Known
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_5 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+            <p class="card-text">
+              Tool hash has been calculated. When clients need to use
+              this tool they will ensure this hash matches what they
+              download.
+            </p>
+            <button class="btn btn-primary"
+                    ng-disabled="controller.inflight"
+                    ng-if="controller.tool.url"
+                    ng-click="redownloadFile()"
+                    >Re-Download File</button>
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="controller.tool.admin_override && !controller.hide_6">
+          <div class="card-header text-center">
+            Admin Override
+            <span class="pull-right clickable close-icon"
+                  ng-click="controller.hide_6 = true"
+                  data-effect="fadeOut">
+              <i class="fa fa-times"></i></span>
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">Tool was manually uploaded by an
+              admin - it will not be automatically upgraded on the
+              next Velociraptor server update.
+            </p>
+          </div>
+        </div>
+
+        <div class="card "
+             ng-if="!controller.tool.hash && !controller.tool.url">
+          <div class="card-header text-center bg-danger">
+            Error
+          </div>
+          <div class="card-body text-center">
+
+            <p class="card-text">Tool's hash is not known and no URL
+            is defined. It will be impossible to use this tool in an
+            artifact because Velociraptor is unable to resolve it. You
+            can manually upload a file.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer navbar-inner">
+  <div class="btn-toolbar rounded" role="toolbar" style="width: 100%">
+    <div class="btn-group ml-auto" role="group">
+      <button class="btn btn-primary Next"
+              ng-click="reject()">
+        Done
+      </button>
+    </div>
+  </div>
+</div>

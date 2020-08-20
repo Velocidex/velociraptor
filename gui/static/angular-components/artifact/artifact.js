@@ -15,6 +15,7 @@ const {ClientEventDirective} = goog.require('grrUi.artifact.clientEventDirective
 const {ServerArtifactsDirective} = goog.require('grrUi.artifact.serverArtifactsDirective');
 const {ServerEventsDirective} = goog.require('grrUi.artifact.serverEventsDirective');
 const {AddArtifactDirective} = goog.require('grrUi.artifact.addArtifactDirective');
+const {ToolViewerDirective} = goog.require('grrUi.artifact.toolViewerDirective');
 const {coreModule} = goog.require('grrUi.core.core');
 
 /**
@@ -52,10 +53,13 @@ exports.artifactModule.directive(
 exports.artifactModule.directive(
     ServerArtifactsDirective.directive_name,
     ServerArtifactsDirective);
+
 exports.artifactModule.directive(
     ServerEventsDirective.directive_name,
     ServerEventsDirective);
 
 exports.artifactModule.directive(
-    AddArtifactDirective.directive_name,
-    AddArtifactDirective);
+    ToolViewerDirective.directive_name, ToolViewerDirective);
+
+exports.artifactModule.directive(
+    AddArtifactDirective.directive_name, AddArtifactDirective);

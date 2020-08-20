@@ -127,6 +127,10 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFolderDownloadHandler(config_obj))))
 
+	mux.Handle("/api/v1/UploadTool", csrfProtect(config_obj,
+		auther.AuthenticateUserHandler(
+			config_obj, toolUploadHandler(config_obj))))
+
 	// Serve prepared zip files.
 	mux.Handle("/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(

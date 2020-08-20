@@ -17,6 +17,15 @@ reports:
 
       {{ $artifact.Description }}
 
+      {{ if $artifact.Tools }}
+      ### Tools
+
+      {{ range $artifact.Tools -}}
+      * <grr-tool-viewer name="{{.Name}}"></grr-tool-viewer>
+      {{ end }}
+
+      {{ end }}
+
       {{ if $artifact.Parameters }}
 
       ### Parameters
