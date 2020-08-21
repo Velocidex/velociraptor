@@ -11,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -133,7 +132,7 @@ func checkForServerUpgrade(
 
 		// Go through all the artifacts and update their tool
 		// definitions.
-		repository, err := artifacts.GetGlobalRepository(config_obj)
+		repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 		if err != nil {
 			return err
 		}
@@ -190,8 +189,10 @@ func checkForServerUpgrade(
 					// Re-add the tool to force
 					// hashes to be taken when the
 					// tool is used next.
+					tool_definition.Hash = ""
+
 					err = inventory.AddTool(
-						ctx, config_obj, tool_definition)
+						config_obj, tool_definition)
 					if err != nil {
 						return err
 					}

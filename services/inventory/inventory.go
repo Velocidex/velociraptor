@@ -104,12 +104,37 @@ func (self *InventoryService) downloadTool(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
+
+	// If we are downloading from github we have to resolve and
+	// verify the binary URL now.
+	if tool.GithubProject != "" {
+		var err error
+		tool.Url, err = self.getGithubRelease(ctx, config_obj, tool)
+		if err != nil {
+			return errors.Wrap(
+				err, "While resolving github release "+tool.GithubProject)
+		}
+
+		// Set the filename to something sensible so it is always valid.
+		if tool.Filename == "" {
+			if tool.Url != "" {
+				tool.Filename = path.Base(tool.Url)
+			} else {
+				tool.Filename = path.Base(tool.ServeUrl)
+			}
+		}
+	}
+
 	if tool.Url == "" {
 		return errors.New(fmt.Sprintf(
 			"Tool %v has no url defined - upload it manually.", tool.Name))
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
+	if file_store_factory == nil {
+		return nil
+		return errors.New("No filestore configured")
+	}
 
 	path_manager := paths.NewInventoryPathManager(config_obj, tool)
 	fd, err := file_store_factory.WriteFile(path_manager.Path())
@@ -132,13 +157,24 @@ func (self *InventoryService) downloadTool(
 
 	// If the download failed, we can not store this tool.
 	if res.StatusCode != 200 {
-		return errors.New("Unable to download file")
+		return errors.New(fmt.Sprintf("Unable to download file from %v: %v",
+			tool.Url, res.Status))
 	}
 	sha_sum := sha256.New()
 
 	_, err = utils.Copy(ctx, fd, io.TeeReader(res.Body, sha_sum))
 	if err == nil {
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+	}
+
+	if tool.ServeLocally {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
+			return errors.New("No server URLs configured!")
+		}
+		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+
+	} else {
+		tool.ServeUrl = tool.Url
 	}
 
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
@@ -218,49 +254,38 @@ func (self *InventoryService) RemoveTool(
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
-func (self *InventoryService) AddTool(ctx context.Context,
-	config_obj *config_proto.Config, tool_request *artifacts_proto.Tool) error {
+func (self *InventoryService) AddTool(config_obj *config_proto.Config,
+	tool_request *artifacts_proto.Tool) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Make a copy to work on.
-	tool := *tool_request
-
-	// If we are downloading from github we have to resolve and
-	// verify the binary URL now.
-	if tool.GithubProject != "" {
-		var err error
-		tool.Url, err = self.getGithubRelease(ctx, config_obj, &tool)
-		if err != nil {
-			return errors.Wrap(
-				err, "While resolving github release "+tool.GithubProject)
-		}
-	}
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
+	logger.Info("Loading tool %v", tool_request.Name)
 
 	if self.binaries == nil {
 		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
 	// Obfuscate the public directory path.
+	// Make a copy to work on.
+	tool := *tool_request
 	tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
 
+	if tool.ServeLocally && config_obj.Client == nil {
+		tool.ServeLocally = false
+	}
+
 	if tool.ServeLocally {
-		if len(config_obj.Client.ServerUrls) == 0 {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
 		}
 		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
-	}
-
-	if tool.Url == "" && tool.ServeUrl == "" {
-		return errors.New("No tool URL defined and I will not be serving it locally!")
 	}
 
 	// Set the filename to something sensible so it is always valid.
 	if tool.Filename == "" {
 		if tool.Url != "" {
 			tool.Filename = path.Base(tool.Url)
-		} else {
-			tool.Filename = path.Base(tool.ServeUrl)
 		}
 	}
 
@@ -341,7 +366,7 @@ func StartInventoryService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification, cancel := services.ListenForNotification(
+	notification, cancel := services.GetNotifier().ListenForNotification(
 		constants.ThirdPartyInventory)
 	defer cancel()
 
@@ -368,7 +393,7 @@ func StartInventoryService(
 			}
 
 			cancel()
-			notification, cancel = services.ListenForNotification(
+			notification, cancel = services.GetNotifier().ListenForNotification(
 				constants.ThirdPartyInventory)
 		}
 	}()
@@ -380,5 +405,6 @@ func StartInventoryService(
 }
 
 func init() {
+	//services.RegisterInventory(&Dummy{})
 	services.RegisterInventory(NewDummy())
 }

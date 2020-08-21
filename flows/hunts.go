@@ -33,13 +33,13 @@ import (
 	"github.com/golang/protobuf/proto"
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func GetNewHuntId() string {
@@ -63,7 +63,7 @@ func FindCollectedArtifacts(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range artifacts.GetArtifactSources(
+		for _, source := range GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources,
@@ -72,10 +72,26 @@ func FindCollectedArtifacts(
 	}
 }
 
+func GetArtifactSources(
+	config_obj *config_proto.Config,
+	artifact string) []string {
+	result := []string{}
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	if err == nil {
+		artifact_obj, pres := repository.Get(artifact)
+		if pres {
+			for _, source := range artifact_obj.Sources {
+				result = append(result, source.Name)
+			}
+		}
+	}
+	return result
+}
+
 func CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	principal string,
+	acl_manager vql_subsystem.ACLManager,
 	hunt *api_proto.Hunt) (string, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -100,7 +116,7 @@ func CreateHunt(
 			UTC().UnixNano() / 1000)
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -112,8 +128,7 @@ func CreateHunt(
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
 	compiled, err := services.GetLauncher().
-		CompileCollectorArgs(ctx, config_obj, principal,
-			repository, hunt.StartRequest)
+		CompileCollectorArgs(ctx, acl_manager, repository, hunt.StartRequest)
 	if err != nil {
 		return "", err
 	}
@@ -129,7 +144,7 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		services.NotifyAllListeners(config_obj)
+		services.GetNotifier().NotifyAllListeners(config_obj)
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
@@ -295,5 +310,5 @@ func ModifyHunt(
 	// Notify all the clients about the new hunt. New hunts are
 	// not that common so notifying all the clients at once is
 	// probably ok.
-	return services.NotifyAllListeners(config_obj)
+	return services.GetNotifier().NotifyAllListeners(config_obj)
 }

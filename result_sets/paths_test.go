@@ -9,12 +9,14 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"www.velocidex.com/golang/velociraptor/artifacts"
+	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -51,7 +53,10 @@ var path_tests = []path_tests_t{
 func TestPathManager(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	ts := int64(1587800823)
-	artifacts.GetGlobalRepository(config_obj)
+
+	sm := services.NewServiceManager(context.Background(), config_obj)
+	defer sm.Close()
+	require.NoError(t, sm.Start(repository.StartRepositoryManager))
 
 	for _, testcase := range path_tests {
 		path_manager := NewArtifactPathManager(
@@ -90,8 +95,6 @@ func TestPathManagerDailyRotations(t *testing.T) {
 	config_obj.Datastore.Implementation = "FileBaseDataStore"
 	config_obj.Datastore.FilestoreDirectory = dir
 	config_obj.Datastore.Location = dir
-
-	artifacts.GetGlobalRepository(config_obj)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	clock := &utils.MockClock{}

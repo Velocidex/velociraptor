@@ -124,6 +124,6 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		return services.NotifyListener(config_obj, client_id)
+		return services.GetNotifier().NotifyListener(config_obj, client_id)
 	})
 }

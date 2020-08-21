@@ -10,7 +10,6 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -19,6 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -42,12 +43,13 @@ func (self *ServicesTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	repository := artifacts.NewRepository()
-	artifacts.SetGlobalRepositoryForTests(repository)
-
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+
+	manager := services.GetRepositoryManager()
+	manager.SetGlobalRepositoryForTests(manager.NewRepository())
 }
 
 func (self *ServicesTestSuite) TearDownTest() {
@@ -58,7 +60,7 @@ func (self *ServicesTestSuite) TearDownTest() {
 
 // Check tool upgrade.
 func (self *ServicesTestSuite) TestUpgradeTools() {
-	repository, _ := artifacts.GetGlobalRepository(self.config_obj)
+	repository, _ := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 
 	// An an artifact with two tools.
 	repository.LoadYaml(`
@@ -83,8 +85,7 @@ tools:
 		// this tool. We never overwrite an admin's setting.
 		AdminOverride: true,
 	}
-	ctx := context.Background()
-	err := inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err := inventory.AddTool(self.config_obj, tool_definition)
 	assert.NoError(self.T(), err)
 
 	require.NoError(self.T(), self.sm.Start(StartSanityCheckService))

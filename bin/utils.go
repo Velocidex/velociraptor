@@ -33,8 +33,7 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-func InstallSignalHandler(
-	scope *vfilter.Scope) context.Context {
+func InstallSignalHandler(scope *vfilter.Scope) context.Context {
 
 	// Wait for signal. When signal is received we shut down the
 	// server.

@@ -13,7 +13,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -23,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type ClientEventTable struct {
@@ -60,7 +60,7 @@ type ClientEventTable struct {
 
 	ctx        context.Context
 	config_obj *config_proto.Config
-	repository *artifacts.Repository
+	repository services.Repository
 
 	clock utils.Clock
 
@@ -115,8 +115,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		temp := *artifact
 		temp.Artifacts = []string{name}
 		compiled, err := launcher.CompileCollectorArgs(
-			self.ctx, self.config_obj,
-			self.config_obj.Client.PinnedServerName, // Principal
+			self.ctx, vql_subsystem.NullACLManager{},
 			self.repository, &temp)
 		if err != nil {
 			return nil, err
@@ -309,7 +308,7 @@ func StartClientMonitoringService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -327,18 +326,12 @@ func StartClientMonitoringService(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
 
-	// Wait here until we are ready to watch the journal.
-	local_wg := &sync.WaitGroup{}
+	events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
 
-	local_wg.Add(1)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-
-		events, cancel := services.GetJournal().Watch("Server.Internal.ArtifactModification")
 		defer cancel()
-
-		local_wg.Done()
 
 		for {
 			select {
@@ -353,8 +346,6 @@ func StartClientMonitoringService(
 			}
 		}
 	}()
-
-	local_wg.Wait()
 
 	return event_table.LoadFromFile()
 }

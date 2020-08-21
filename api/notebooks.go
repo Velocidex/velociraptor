@@ -19,7 +19,6 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -484,7 +483,7 @@ func (self *ApiServer) UpdateNotebookCell(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	global_repo, err := artifacts.GetGlobalRepository(self.config)
+	global_repo, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -515,9 +514,10 @@ func (self *ApiServer) UpdateNotebookCell(
 		}
 
 		// Update the artifact plugin in the template.
+		/* FIXME
 		artifact_plugin := artifacts.NewArtifactRepositoryPlugin(repository)
 		tmpl.Env.Set("Artifact", artifact_plugin)
-
+		*/
 		input = fmt.Sprintf(`{{ Query "SELECT * FROM Artifact.%v()" | Table}}`,
 			artifact_obj.Name)
 	}
@@ -537,7 +537,8 @@ func (self *ApiServer) UpdateNotebookCell(
 	go func() {
 		defer query_cancel()
 
-		cancel_notify, remove_notification := services.ListenForNotification(in.CellId)
+		cancel_notify, remove_notification := services.GetNotifier().
+			ListenForNotification(in.CellId)
 		defer remove_notification()
 
 		select {
@@ -615,7 +616,7 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	return &empty.Empty{}, services.NotifyListener(self.config, in.CellId)
+	return &empty.Empty{}, services.GetNotifier().NotifyListener(self.config, in.CellId)
 }
 
 func (self *ApiServer) UploadNotebookAttachment(

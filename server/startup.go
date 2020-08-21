@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
@@ -66,7 +67,7 @@ func StartFrontendServices(config_obj *config_proto.Config,
 	}
 	// Allow for low latency scheduling by notifying clients of
 	// new events for them.
-	err = sm.Start(services.StartNotificationService)
+	err = sm.Start(notifications.StartNotificationService)
 	if err != nil {
 		return err
 	}

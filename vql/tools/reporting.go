@@ -9,10 +9,10 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server"
 	"www.velocidex.com/golang/vfilter"
@@ -23,7 +23,7 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
+func getHTMLTemplate(name string, repository services.Repository) (string, error) {
 	template_artifact, ok := repository.Get(name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
@@ -42,19 +42,20 @@ func produceReport(
 	config_obj *config_proto.Config,
 	container *reporting.Container,
 	template string,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	writer io.Writer,
 	definitions []*artifacts_proto.Artifact,
 	scope *vfilter.Scope,
 	arg *CollectPluginArgs) error {
 
-	builder := artifacts.ScopeBuilderFromScope(scope)
+	builder := services.ScopeBuilderFromScope(scope)
+	builder.Repository = repository
 	builder.Uploader = nil
 
 	// Build scope from scratch and replace the source()
 	// plugin. We hook the source plugin to read results from the
 	// collection container.
-	subscope := builder.BuildFromScratch()
+	subscope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
 	defer subscope.Close()
 
 	// Reports can query the container directly.

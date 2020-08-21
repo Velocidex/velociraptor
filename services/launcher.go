@@ -13,10 +13,9 @@ import (
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 var (
@@ -44,7 +43,7 @@ type Launcher interface {
 	// Check any declared tools exist and are available - possibly
 	// by downloading them.
 	EnsureToolsDeclared(
-		ctx context.Context, config_obj *config_proto.Config,
+		ctx context.Context,
 		artifact *artifacts_proto.Artifact) error
 
 	// Compiles an ArtifactCollectorArgs (for example as passed
@@ -63,17 +62,15 @@ type Launcher interface {
 	// a hunt).
 	CompileCollectorArgs(
 		ctx context.Context,
-		config_obj *config_proto.Config,
-		principal string,
-		repository *artifacts.Repository,
+		acl_manager vql_subsystem.ACLManager,
+		repository Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs) (
 		*actions_proto.VQLCollectorArgs, error)
 
 	// Main entry point to launch an artifact collection.
 	ScheduleArtifactCollection(
 		ctx context.Context,
-		config_obj *config_proto.Config,
-		principal string,
-		repository *artifacts.Repository,
+		acl_manager vql_subsystem.ACLManager,
+		repository Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs) (string, error)
 }

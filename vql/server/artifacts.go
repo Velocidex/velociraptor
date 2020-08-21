@@ -97,24 +97,27 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	principal := vql_subsystem.GetPrincipal(scope)
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
+	acl_manager, ok := artifacts.GetACLManager(scope)
+	if !ok {
+		acl_manager = vql_subsystem.NullACLManager{}
+	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, config_obj, principal, repository, request)
+		ctx, acl_manager, repository, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Notify the client about it.
-	err = services.NotifyListener(config_obj, arg.ClientId)
+	err = services.GetNotifier().NotifyListener(config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

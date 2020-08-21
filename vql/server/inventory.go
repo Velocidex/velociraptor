@@ -53,7 +53,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Hash:         arg.Hash,
 	}
 
-	err = services.GetInventory().AddTool(ctx, config_obj, request)
+	err = services.GetInventory().AddTool(config_obj, request)
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}

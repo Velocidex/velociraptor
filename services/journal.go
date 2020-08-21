@@ -51,4 +51,7 @@ type JournalService interface {
 	// Push the rows into the datastore in the location give by
 	// the path manager.
 	PushRows(path_manager api.PathManager, rows []*ordereddict.Dict) error
+
+	// Push the rows to the event artifact queue
+	PushRowsToArtifact(rows []*ordereddict.Dict, name string) error
 }

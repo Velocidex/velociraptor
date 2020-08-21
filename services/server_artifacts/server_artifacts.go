@@ -109,7 +109,7 @@ func (self *ServerArtifactsRunner) Start(
 		self.config_obj, &logging.FrontendComponent)
 
 	// Listen for notifications from the server.
-	notification, cancel := services.ListenForNotification("server")
+	notification, cancel := services.GetNotifier().ListenForNotification("server")
 	defer cancel()
 
 	self.process(ctx, wg)
@@ -137,7 +137,7 @@ func (self *ServerArtifactsRunner) Start(
 
 			// Listen again.
 			cancel()
-			notification, cancel = services.ListenForNotification("server")
+			notification, cancel = services.GetNotifier().ListenForNotification("server")
 		}
 	}
 }
@@ -262,7 +262,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	scope := artifacts.ScopeBuilder{
+	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
 		// For server artifacts, upload() ends up writing in
@@ -276,7 +276,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			self.config_obj,
 			path_manager.Log(),
 		}, "", 0),
-	}.Build()
+	})
 	defer scope.Close()
 
 	env := ordereddict.NewDict()

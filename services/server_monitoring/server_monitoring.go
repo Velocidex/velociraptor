@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -86,7 +85,7 @@ func (self *EventTable) Update(
 		cancel()
 	}()
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -99,12 +98,13 @@ func (self *EventTable) Update(
 
 		// Server monitoring artifacts run with full admin
 		// permissions.
-		scope := artifacts.ScopeBuilder{
-			Config:     config_obj,
-			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-			Logger: logging.NewPlainLogger(config_obj,
-				&logging.FrontendComponent),
-		}.Build()
+		scope := services.GetRepositoryManager().BuildScope(
+			services.ScopeBuilder{
+				Config:     config_obj,
+				ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+				Logger: logging.NewPlainLogger(config_obj,
+					&logging.FrontendComponent),
+			})
 
 		// Closing the scope is deferred to table close.
 

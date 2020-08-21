@@ -2,7 +2,6 @@ package vfs_service
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"testing"
 	"time"
@@ -23,6 +22,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -55,12 +57,11 @@ func (self *VFSServiceTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	// Start the journaling service manually for tests.
-	self.sm.Start(journal.StartJournalService)
-	self.sm.Start(services.StartNotificationService)
-
-	fmt.Printf("Started VfsService\n")
-	self.sm.Start(StartVFSService)
+	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.sm.Start(StartVFSService))
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"

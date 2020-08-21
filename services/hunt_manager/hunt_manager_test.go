@@ -21,9 +21,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -50,6 +53,9 @@ func (self *HuntTestSuite) SetupTest() {
 	require.NoError(t, self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
 	require.NoError(t, self.sm.Start(launcher.StartLauncherService))
 	require.NoError(t, self.sm.Start(labels.StartLabelService))
+	require.NoError(t, self.sm.Start(notifications.StartNotificationService))
+	require.NoError(t, self.sm.Start(inventory.StartInventoryService))
+	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(t, self.sm.Start(StartHuntManager))
 }
 

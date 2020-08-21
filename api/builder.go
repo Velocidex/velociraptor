@@ -294,7 +294,7 @@ func StartFrontendHttps(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.NotifyAllListeners(config_obj)
+		services.GetNotifier().NotifyAllListeners(config_obj)
 		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
@@ -356,7 +356,7 @@ func StartFrontendPlainHttp(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.NotifyAllListeners(config_obj)
+		services.GetNotifier().NotifyAllListeners(config_obj)
 		err := server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
@@ -429,7 +429,7 @@ func StartFrontendWithAutocert(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.NotifyAllListeners(config_obj)
+		services.GetNotifier().NotifyAllListeners(config_obj)
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
 			logger.Error("Frontend shutdown error ", err)

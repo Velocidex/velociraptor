@@ -2,6 +2,7 @@
  "Tool": {
   "name": "SampleTool",
   "url": "htttp://www.example.com/file.exe",
+  "serve_url": "htttp://www.example.com/file.exe",
   "github_project": "Velocidex/velociraptor",
   "github_asset_regex": "windows-amd64.exe",
   "filestore_path": "dbdbc5e2ae775342ae9189803757a07b20daf0b04a25cda9d97a99785d75ec3b",

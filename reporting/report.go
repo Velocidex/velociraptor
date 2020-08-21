@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -27,7 +27,7 @@ type TemplateEngine interface {
 type BaseTemplateEngine struct {
 	Artifact   *artifacts_proto.Artifact
 	Env        *ordereddict.Dict
-	Repository *artifacts.Repository
+	Repository services.Repository
 	Scope      *vfilter.Scope
 	logger     *logging.LogContext
 	config_obj *config_proto.Config
@@ -148,7 +148,7 @@ func GenerateArtifactDescriptionReport(
 	string, error) {
 	artifact := template_engine.GetArtifact()
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -307,7 +307,7 @@ func newBaseTemplateEngine(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 
@@ -322,10 +322,11 @@ func newBaseTemplateEngine(
 	// SetEnv() can update it later.
 	env := ordereddict.NewDict()
 	if scope == nil {
-		scope = artifacts.ScopeBuilder{
-			Config:     config_obj,
-			ACLManager: acl_manager,
-		}.Build()
+		scope = services.GetRepositoryManager().BuildScope(
+			services.ScopeBuilder{
+				Config:     config_obj,
+				ACLManager: acl_manager,
+			})
 	}
 	scope.AppendVars(env)
 

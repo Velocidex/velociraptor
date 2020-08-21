@@ -28,11 +28,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -95,7 +95,7 @@ func (self VQLClientAction) StartQuery(
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
-	repository := artifacts.NewRepository()
+	repository := services.GetRepositoryManager().NewRepository()
 	for _, artifact := range arg.Artifacts {
 		_, err := repository.LoadProto(artifact, false /* validate */)
 		if err != nil {
@@ -109,7 +109,7 @@ func (self VQLClientAction) StartQuery(
 		Responder: responder,
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config: config_obj,
 		// Disable ACLs on the client.
 		ACLManager: vql_subsystem.NullACLManager{},
@@ -123,7 +123,7 @@ func (self VQLClientAction) StartQuery(
 		builder.Env.Set(env_spec.Key, env_spec.Value)
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	scope.Log("Starting query execution.")

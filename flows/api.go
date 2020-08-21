@@ -217,7 +217,7 @@ func CancelFlow(
 		return nil, err
 	}
 
-	err = services.NotifyListener(config_obj, client_id)
+	err = services.GetNotifier().NotifyListener(config_obj, client_id)
 	if err != nil {
 		return nil, err
 	}

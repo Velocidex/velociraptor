@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"sync"
 
 	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -9,9 +10,13 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 )
 
+// Start services that are available on the client.
 func StartServices(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	client_id string,
 	exe *ClientExecutor) {
@@ -30,4 +35,7 @@ func StartServices(
 
 	logger.Info("<green>Starting</> Nanny service.")
 	StartNannyService(config_obj)
+
+	// Clients actually need an artifact repository manager.
+	repository.StartRepositoryManager(ctx, wg, config_obj)
 }

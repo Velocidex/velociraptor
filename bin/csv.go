@@ -6,8 +6,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -24,7 +24,7 @@ func doCSV() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(os.Stderr, "velociraptor: ", 0),
@@ -34,7 +34,7 @@ func doCSV() {
 			Set("Files", *csv_cmd_files),
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT * FROM parse_csv(filename=Files)"

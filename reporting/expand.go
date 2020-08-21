@@ -14,8 +14,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/olekukonko/tablewriter"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -94,7 +94,7 @@ func FormatDescription(
 }
 
 func (self *Expansions) DocFrom(artifact string) string {
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	if err != nil {
 		return ""
 	}

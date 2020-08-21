@@ -11,9 +11,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -38,19 +38,25 @@ func doReportArchive() {
 	config_obj, err := DefaultConfigLoader.LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
+	builder := services.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: vql_subsystem.NullACLManager{},
+		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
+		Env:        ordereddict.NewDict(),
+	}
+	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
+	defer scope.Close()
+
 	archive, err := reporting.NewArchiveReader(*report_command_archive_file)
 
 	kingpin.FatalIfError(err, "Unable to open archive file")
 
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Unable to load artifacts")
-
-	builder := artifacts.ScopeBuilder{
-		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, " ", 0),
-		Env:        ordereddict.NewDict(),
-	}
 
 	parts := []*ReportPart{}
 	main := ""
@@ -61,7 +67,7 @@ func doReportArchive() {
 	kingpin.FatalIfError(err, "Unable to load report %v", template)
 
 	for _, name := range archive.ListArtifacts() {
-		scope := builder.BuildFromScratch()
+		scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
 		defer scope.Close()
 
 		// Reports can query the container directly.
@@ -106,9 +112,6 @@ func doReportArchive() {
 		main += content_writer.String()
 	}
 
-	scope := builder.BuildFromScratch()
-	defer scope.Close()
-
 	// Reports can query the container directly.
 	scope.AppendPlugins(&tools.ArchiveSourcePlugin{
 		Archive: archive})
@@ -143,7 +146,7 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
+func getHTMLTemplate(name string, repository services.Repository) (string, error) {
 	template_artifact, ok := repository.Get(name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")

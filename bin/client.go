@@ -94,7 +94,7 @@ func RunClient(
 	// Wait for the comms to properly start before we begin the
 	// services. If services need to communicate with the server
 	// they will deadlock otherwise.
-	executor.StartServices(config_obj, manager.ClientId, exe)
+	executor.StartServices(ctx, wg, config_obj, manager.ClientId, exe)
 }
 
 func init() {

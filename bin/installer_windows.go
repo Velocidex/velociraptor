@@ -522,7 +522,8 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 
 	// Wait for all services to properly start
 	// before we begin the comms.
-	executor.StartServices(config_obj, manager.ClientId, exe)
+	wg := &sync.WaitGroup{}
+	executor.StartServices(ctx, wg, config_obj, manager.ClientId, exe)
 
 	comm.Run(ctx)
 }

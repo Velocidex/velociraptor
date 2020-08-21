@@ -372,5 +372,5 @@ func StartFrontendService(ctx context.Context,
 		}
 	}()
 
-	return services.NotifyListener(config_obj, "Frontend")
+	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
 }

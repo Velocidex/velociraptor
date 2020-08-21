@@ -10,16 +10,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
@@ -79,7 +81,7 @@ sources:
 type ArtifactTestSuite struct {
 	suite.Suite
 	config_obj *config_proto.Config
-	repository *artifacts.Repository
+	repository services.Repository
 	sm         *services.Service
 }
 
@@ -97,11 +99,12 @@ func (self *ArtifactTestSuite) SetupTest() {
 
 	t := self.T()
 	assert.NoError(t, self.sm.Start(journal.StartJournalService))
-	assert.NoError(t, self.sm.Start(services.StartNotificationService))
+	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(StartLauncherService))
+	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 
-	self.repository = artifacts.NewRepository()
+	self.repository = services.GetRepositoryManager().NewRepository()
 	for _, definition := range test_artifact_definitions {
 		self.repository.LoadYaml(definition, false)
 	}
@@ -115,14 +118,14 @@ func (self *ArtifactTestSuite) TearDownTest() {
 
 func (self *ArtifactTestSuite) TestUnknownArtifact() {
 	// Broken - depends on an unknown artifact
-	request := &actions_proto.VQLCollectorArgs{
-		Query: []*actions_proto.VQLRequest{
-			&actions_proto.VQLRequest{
-				VQL: "SELECT * FROM Artifact.Artifact5()",
-			},
-		},
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Artifact5"},
 	}
-	err := self.repository.PopulateArtifactsVQLCollectorArgs(request)
+
+	launcher := services.GetLauncher()
+	_, err := launcher.CompileCollectorArgs(
+		context.Background(), vql_subsystem.NullACLManager{},
+		self.repository, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unknown artifact reference")
 }
@@ -130,16 +133,15 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 // Check that execution is aborted when recursion occurs.
 func (self *ArtifactTestSuite) TestStackOverflow() {
 	// Cycle: Artifact1 -> Artifact2 -> Artifact1
-	request := &actions_proto.VQLCollectorArgs{
-		Query: []*actions_proto.VQLRequest{
-			&actions_proto.VQLRequest{
-				VQL: "SELECT * FROM Artifact.Artifact1()",
-			},
-		},
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Artifact1"},
 	}
 
 	// It should compile ok but overflow at runtime.
-	err := self.repository.PopulateArtifactsVQLCollectorArgs(request)
+	launcher := services.GetLauncher()
+	vql_request, err := launcher.CompileCollectorArgs(
+		context.Background(), vql_subsystem.NullACLManager{},
+		self.repository, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail this test make sure we take a resonable time.
@@ -148,23 +150,23 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	test_responder := responder.TestResponder()
 
 	actions.VQLClientAction{}.StartQuery(
-		self.config_obj, ctx, test_responder, request)
+		self.config_obj, ctx, test_responder, vql_request)
 
 	assert.Contains(self.T(), getLogMessages(test_responder),
-		"Stack overflow: Artifact1, Artifact2, Artifact1, Artifact2")
+		"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
 }
 
 func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	// Artifact6 -> Artifact3
 	//           -> Artifact4 -> Artifact3
-	request := &actions_proto.VQLCollectorArgs{
-		Query: []*actions_proto.VQLRequest{
-			&actions_proto.VQLRequest{
-				VQL: "SELECT * FROM Artifact.Artifact6()",
-			},
-		},
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{"Artifact6"},
 	}
-	err := self.repository.PopulateArtifactsVQLCollectorArgs(request)
+
+	launcher := services.GetLauncher()
+	vql_request, err := launcher.CompileCollectorArgs(
+		context.Background(), vql_subsystem.NullACLManager{},
+		self.repository, request)
 	assert.NoError(self.T(), err)
 
 	// If we fail make sure we take a resonable time.
@@ -173,7 +175,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	test_responder := responder.TestResponder()
 
 	actions.VQLClientAction{}.StartQuery(
-		self.config_obj, ctx, test_responder, request)
+		self.config_obj, ctx, test_responder, vql_request)
 
 	results := getResponses(test_responder)
 
