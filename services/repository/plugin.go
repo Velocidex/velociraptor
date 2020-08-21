@@ -171,19 +171,6 @@ func (self *ArtifactRepositoryPlugin) Call(
 		// Add the scope args
 		child_scope.AppendVars(env)
 
-		/*
-			for _, tool := range artifact_definition.Tools {
-				inventory_get, ok := vql_subsystem.GetFunction("inventory_get")
-				if ok {
-					tool_info := inventory_get.Call(ctx, child_scope,
-						ordereddict.NewDict().Set("tool", tool.Name))
-					if !vql_subsystem.IsNull(tool_info) {
-						child_scope.AppendVars(tool_info)
-					}
-				}
-			}
-		*/
-
 		for _, query := range request.Query {
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {

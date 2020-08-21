@@ -137,6 +137,7 @@ Frontend:
     12VKai36f3IJQO06PqJk65f4dBw9d15/Hly4V0gpYnjSBghpwhfxC4fwJKTXuI3D
     miZYMg457XG9mci0RvY0SjdDOvrE07R63ddtxt8sjQ9+ffGO6WfBWQ==
     -----END RSA PRIVATE KEY-----
+  no_not_compress_artifacts: true
 
 Datastore:
   implementation: FileBaseDataStore
