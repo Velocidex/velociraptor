@@ -364,6 +364,7 @@ func StartLabelService(
 	config_obj *config_proto.Config) error {
 
 	if config_obj.Frontend == nil {
+		services.RegisterLabeler(Dummy{})
 		return nil
 	}
 
@@ -379,8 +380,4 @@ func StartLabelService(
 	services.RegisterLabeler(labeler)
 
 	return nil
-}
-
-func init() {
-	services.RegisterLabeler(Dummy{})
 }

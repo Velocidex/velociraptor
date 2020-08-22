@@ -116,6 +116,9 @@ func (self GRPCAPIClient) GetAPIClient(
 	config_obj *config_proto.Config) (
 	api_proto.APIClient, func() error, error) {
 	channel, err := getChannel(ctx, config_obj)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	grpcCallCounter.Inc()
 
@@ -168,6 +171,10 @@ func getChannel(
 func GetAPIConnectionString(config_obj *config_proto.Config) string {
 	if config_obj.ApiConfig != nil && config_obj.ApiConfig.ApiConnectionString != "" {
 		return config_obj.ApiConfig.ApiConnectionString
+	}
+
+	if config_obj.API == nil {
+		return ""
 	}
 
 	switch config_obj.API.BindScheme {
