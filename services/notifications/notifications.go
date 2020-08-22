@@ -19,7 +19,6 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
@@ -45,10 +44,6 @@ func StartNotificationService(
 
 	self.pool_mu.Lock()
 	defer self.pool_mu.Unlock()
-
-	if config_obj.Datastore == nil {
-		return errors.New("Filestore not configured")
-	}
 
 	if self.notification_pool != nil {
 		self.notification_pool.Shutdown()

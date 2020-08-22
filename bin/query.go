@@ -199,12 +199,12 @@ func startEssentialServices(config_obj *config_proto.Config) (
 
 	sm := services.NewServiceManager(context.Background(), config_obj)
 
-	err := sm.Start(launcher.StartLauncherService)
+	err := sm.Start(journal.StartJournalService)
 	if err != nil {
 		return nil, err
 	}
 
-	err = sm.Start(repository.StartRepositoryManager)
+	err = sm.Start(notifications.StartNotificationService)
 	if err != nil {
 		return nil, err
 	}
@@ -214,21 +214,19 @@ func startEssentialServices(config_obj *config_proto.Config) (
 		return nil, err
 	}
 
-	if config_obj.Datastore != nil {
-		err = sm.Start(journal.StartJournalService)
-		if err != nil {
-			return nil, err
-		}
+	err = sm.Start(launcher.StartLauncherService)
+	if err != nil {
+		return nil, err
+	}
 
-		err = sm.Start(notifications.StartNotificationService)
-		if err != nil {
-			return nil, err
-		}
+	err = sm.Start(repository.StartRepositoryManager)
+	if err != nil {
+		return nil, err
+	}
 
-		err = sm.Start(labels.StartLabelService)
-		if err != nil {
-			return nil, err
-		}
+	err = sm.Start(labels.StartLabelService)
+	if err != nil {
+		return nil, err
 	}
 
 	// Load any artifacts defined in the config file.

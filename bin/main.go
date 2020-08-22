@@ -54,7 +54,7 @@ var (
 	no_color_flag = app.Flag("nocolor", "Disable color output").Bool()
 
 	verbose_flag = app.Flag(
-		"verbose", "Enabled verbose logging for client.").Short('v').
+		"verbose", "Enabled verbose logging.").Short('v').
 		Default("false").Bool()
 
 	profile_flag = app.Flag(

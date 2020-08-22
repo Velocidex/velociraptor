@@ -42,6 +42,7 @@ func doGUI() {
 
 	// Try to open the config file from there
 	config_obj, err := DefaultConfigLoader.
+		WithVerbose(true).
 		WithFileLoader(config_path).
 		LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
