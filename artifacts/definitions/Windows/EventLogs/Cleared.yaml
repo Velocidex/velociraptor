@@ -76,6 +76,7 @@ sources:
                             then= UserData.LogFileCleared.SubjectUserSid,
                             else= System.Security.UserID) as SecurityID,
                         Message,
+                        Source,
                         format(format="%v-%v-%v",args=[System.EventID.Value,System.EventRecordID,
                             timestamp(epoch=int(int=System.TimeCreated.SystemTime))]) as _Group
                 FROM parse_evtx(filename=FullPath)
