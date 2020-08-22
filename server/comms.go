@@ -334,7 +334,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
-		if services.IsClientConnected(source) {
+		if services.GetNotifier().IsClientConnected(source) {
 			http.Error(w, "Another Client connection exists. "+
 				"Only a single instance of the client is "+
 				"allowed to connect at the same time.",
@@ -342,7 +342,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
-		notification, cancel := services.ListenForNotification(source)
+		notification, cancel := services.GetNotifier().ListenForNotification(source)
 		defer cancel()
 
 		// Deadlines are designed to ensure that connections

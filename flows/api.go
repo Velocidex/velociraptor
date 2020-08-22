@@ -35,7 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -217,7 +216,7 @@ func CancelFlow(
 		return nil, err
 	}
 
-	err = services.NotifyListener(config_obj, client_id)
+	err = services.GetNotifier().NotifyListener(config_obj, client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -257,13 +256,11 @@ func ArchiveFlow(
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Flow", collection_context)
 
-	path_manager := result_sets.NewArtifactPathManager(config_obj,
-		client_id, flow_id, "System.Flow.Archive")
-
 	return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, services.GetJournal().PushRows(path_manager,
-			[]*ordereddict.Dict{row})
+		}, services.GetJournal().PushRowsToArtifact(
+			[]*ordereddict.Dict{row},
+			"System.Flow.Archive", client_id, flow_id)
 }
 
 func GetFlowRequests(

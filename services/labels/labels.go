@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -175,14 +174,12 @@ func (self *Labeler) IsLabelSet(client_id string, checked_label string) bool {
 
 func (self *Labeler) notifyClient(client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, client_id, "", "Server.Internal.Label")
-	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
+	return services.GetJournal().PushRowsToArtifact([]*ordereddict.Dict{
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("Operation", operation).
 			Set("Label", new_label),
-	})
+	}, "Server.Internal.Label", client_id, "")
 }
 
 func (self *Labeler) SetClientLabel(client_id, new_label string) error {

@@ -9,13 +9,13 @@ import (
 
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/api"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -25,7 +25,7 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository *artifacts.Repository) (string, error) {
+func getHTMLTemplate(name string, repository services.Repository) (string, error) {
 	template_artifact, ok := repository.Get(name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
@@ -42,7 +42,7 @@ func getHTMLTemplate(name string, repository *artifacts.Repository) (string, err
 func WriteFlowReport(
 	config_obj *config_proto.Config,
 	scope *vfilter.Scope,
-	repository *artifacts.Repository,
+	repository services.Repository,
 	writer io.Writer,
 	flow_id, client_id, template string) error {
 	html_template_string, err := getHTMLTemplate(template, repository)
@@ -155,15 +155,15 @@ func CreateFlowReport(
 	}
 	lock_file.Close()
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
 
-	builder := artifacts.ScopeBuilderFromScope(scope)
+	builder := services.ScopeBuilderFromScope(scope)
 	builder.Uploader = nil
 
-	subscope := builder.Build()
+	subscope := services.GetRepositoryManager().BuildScope(builder)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)

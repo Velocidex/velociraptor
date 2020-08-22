@@ -32,7 +32,6 @@ import (
 	"github.com/sergi/go-diff/diffmatchpatch"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -80,13 +79,11 @@ func runTest(fixture *testFixture,
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err := startEssentialServices(config_obj, sm)
+	sm, err := startEssentialServices(config_obj)
 	if err != nil {
 		return "", err
 	}
+	defer sm.Close()
 
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
@@ -97,7 +94,7 @@ func runTest(fixture *testFixture,
 	container, err := reporting.NewContainer(tmpfile.Name())
 	kingpin.FatalIfError(err, "Can not create output container")
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
@@ -119,7 +116,7 @@ func runTest(fixture *testFixture,
 	}
 
 	// Cleanup after the query.
-	scope := builder.BuildFromScratch()
+	scope := services.GetRepositoryManager().BuildScopeFromScratch(builder)
 	defer scope.Close()
 
 	scope.AddDestructor(func() {

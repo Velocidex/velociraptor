@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package artifacts
+package repository
 
 // This allows to run an artifact as a plugin.
 import (
@@ -25,9 +25,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -91,7 +93,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 			return
 		}
 
-		artifact_definition := self.leaf
+		artifact_name := self.leaf.Name
 		v, pres := args.Get("source")
 		if pres {
 			lazy_v, ok := v.(vfilter.LazyExpr)
@@ -105,8 +107,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 				return
 			}
 
-			artifact_definition, pres = self.repository.Get(
-				self.leaf.Name + "/" + source)
+			artifact_name = self.leaf.Name + "/" + source
+
+			_, pres = self.repository.Get(artifact_name)
 			if !pres {
 				scope.Log("Source %v not found in artifact %v",
 					source, self.leaf.Name)
@@ -114,8 +117,16 @@ func (self *ArtifactRepositoryPlugin) Call(
 			}
 		}
 
-		request := &actions_proto.VQLCollectorArgs{}
-		err := self.repository.Compile(artifact_definition, request)
+		acl_manager, ok := artifacts.GetACLManager(scope)
+		if !ok {
+			acl_manager = vql_subsystem.NullACLManager{}
+		}
+
+		request, err := services.GetLauncher().CompileCollectorArgs(
+			ctx, acl_manager, self.repository,
+			&flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{artifact_name},
+			})
 		if err != nil {
 			scope.Log("Artifact %s invalid: %s",
 				strings.Join(self.prefix, "."), err.Error())
@@ -159,17 +170,6 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		// Add the scope args
 		child_scope.AppendVars(env)
-
-		for _, tool := range artifact_definition.Tools {
-			inventory_get, ok := vql_subsystem.GetFunction("inventory_get")
-			if ok {
-				tool_info := inventory_get.Call(ctx, child_scope,
-					ordereddict.NewDict().Set("tool", tool.Name))
-				if !vql_subsystem.IsNull(tool_info) {
-					child_scope.AppendVars(tool_info)
-				}
-			}
-		}
 
 		for _, query := range request.Query {
 			vql, err := vfilter.Parse(query.VQL)
@@ -307,7 +307,8 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	return child, pres
 }
 
-func NewArtifactRepositoryPlugin(repository *Repository) vfilter.PluginGeneratorInterface {
+func NewArtifactRepositoryPlugin(
+	repository *Repository) vfilter.PluginGeneratorInterface {
 	repository.Lock()
 	defer repository.Unlock()
 

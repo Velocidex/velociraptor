@@ -19,7 +19,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	frontend_proto "www.velocidex.com/golang/velociraptor/services/frontend/proto"
 )
@@ -183,10 +182,6 @@ func (self *FrontendManager) syncActiveFrontends() error {
 		total_metrics.ProcessResidentMemoryBytes += state.Metrics.ProcessResidentMemoryBytes
 	}
 
-	path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, "server" /* client_id */, "",
-		"Server.Monitor.Health/Prometheus")
-
 	// Keep the lock to a minimum.
 	self.mu.Lock()
 	self.active_frontends = active_frontends
@@ -194,12 +189,13 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Unlock()
 
 	if self.sample%2 == 0 {
-		services.GetJournal().PushRows(path_manager,
+		services.GetJournal().PushRowsToArtifact(
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("CPUPercent", total_metrics.CpuLoadPercent).
 				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
 				Set("client_comms_current_connections",
-					total_metrics.ClientCommsCurrentConnections)})
+					total_metrics.ClientCommsCurrentConnections)},
+			"Server.Monitor.Health/Prometheus", "server", "")
 	}
 	self.sample++
 
@@ -372,5 +368,5 @@ func StartFrontendService(ctx context.Context,
 		}
 	}()
 
-	return services.NotifyListener(config_obj, "Frontend")
+	return services.GetNotifier().NotifyListener(config_obj, "Frontend")
 }

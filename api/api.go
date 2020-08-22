@@ -42,7 +42,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -51,7 +50,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -151,7 +149,7 @@ func (self *ApiServer) GetReport(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
 
-	global_repo, err := artifacts.GetGlobalRepository(self.config)
+	global_repo, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -165,6 +163,8 @@ func (self *ApiServer) CollectArtifact(
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 	creator := GetGRPCUserInfo(self.config, ctx).Name
 
+	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
+
 	// Internal calls from the frontend can set the creator.
 	if creator != self.config.Client.PinnedServerName {
 		in.Creator = creator
@@ -174,27 +174,30 @@ func (self *ApiServer) CollectArtifact(
 			permissions = acls.COLLECT_SERVER
 		}
 
-		perm, err := acls.CheckAccess(self.config, creator, permissions)
+		acl_manager = vql_subsystem.NewServerACLManager(self.config,
+			creator)
+
+		perm, err := acl_manager.CheckAccess(permissions)
 		if !perm || err != nil {
 			return nil, status.Error(codes.PermissionDenied,
 				"User is not allowed to launch flows.")
 		}
 	}
 
-	repository, err := artifacts.GetGlobalRepository(self.config)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
 	if err != nil {
 		return nil, err
 	}
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, self.config, in.Creator, repository, in)
+		ctx, acl_manager, repository, in)
 	if err != nil {
 		return nil, err
 	}
 
 	result.FlowId = flow_id
 
-	err = services.NotifyListener(self.config, in.ClientId)
+	err = services.GetNotifier().NotifyListener(self.config, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -219,6 +222,8 @@ func (self *ApiServer) CreateHunt(
 	in.Creator = GetGRPCUserInfo(self.config, ctx).Name
 	in.HuntId = flows.GetNewHuntId()
 
+	acl_manager := vql_subsystem.NewServerACLManager(self.config, in.Creator)
+
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, in.Creator, permissions)
 	if !perm || err != nil {
@@ -235,7 +240,7 @@ func (self *ApiServer) CreateHunt(
 
 	result := &api_proto.StartFlowResponse{}
 	hunt_id, err := flows.CreateHunt(
-		ctx, self.config, in.Creator, in)
+		ctx, self.config, acl_manager, in)
 	if err != nil {
 		return nil, err
 	}
@@ -406,10 +411,10 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		services.NotifyAllListeners(self.config)
+		services.GetNotifier().NotifyAllListeners(self.config)
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		services.NotifyListener(self.config, in.ClientId)
+		services.GetNotifier().NotifyListener(self.config, in.ClientId)
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
@@ -659,7 +664,7 @@ func (self *ApiServer) GetArtifacts(
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
-		repository, err := artifacts.GetGlobalRepository(self.config)
+		repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config)
 		if err != nil {
 			return nil, err
 		}
@@ -717,7 +722,7 @@ func (self *ApiServer) SetArtifactFile(
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
-	tmp_repository := artifacts.NewRepository()
+	tmp_repository := services.GetRepositoryManager().NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
 		in.Artifact, true /* validate */)
 	if err != nil {
@@ -807,11 +812,8 @@ func (self *ApiServer) WriteEvent(
 			return nil, err
 		}
 
-		path_manager := result_sets.NewArtifactPathManager(self.config,
-			peer_name, "", in.Query.Name)
-
-		return &empty.Empty{}, services.GetJournal().PushRows(
-			path_manager, rows)
+		return &empty.Empty{}, services.GetJournal().PushRowsToArtifact(
+			rows, in.Query.Name, peer_name, "")
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
@@ -991,12 +993,13 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 
 	}
 
-	scope := artifacts.ScopeBuilder{
-		Config:     self.config,
-		Env:        env,
-		ACLManager: vql_subsystem.NewServerACLManager(self.config, user_name),
-		Logger:     logging.NewPlainLogger(self.config, &logging.FrontendComponent),
-	}.Build()
+	scope := services.GetRepositoryManager().BuildScope(
+		services.ScopeBuilder{
+			Config:     self.config,
+			Env:        env,
+			ACLManager: vql_subsystem.NewServerACLManager(self.config, user_name),
+			Logger:     logging.NewPlainLogger(self.config, &logging.FrontendComponent),
+		})
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(query)

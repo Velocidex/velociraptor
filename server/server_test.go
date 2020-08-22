@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api"
 	api_mock "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -34,8 +33,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type ServerTestSuite struct {
@@ -71,12 +74,14 @@ func (self *ServerTestSuite) SetupTest() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
-	// Start the journaling service manually for tests.
-	self.sm.Start(journal.StartJournalService)
-	self.sm.Start(services.StartNotificationService)
-	self.sm.Start(launcher.StartLauncherService)
+	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
-	artifacts.GetGlobalRepository(self.config_obj)
+	// Load all the standard artifacts.
+	services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 
 	self.server, err = server.NewServer(self.config_obj)
 	require.NoError(self.T(), err)
@@ -215,7 +220,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	hunt_id, err := flows.CreateHunt(
 		context.Background(), self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
@@ -469,13 +474,12 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	require.NoError(t, err)
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		context.Background(),
-		self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		repository,
 		request)
 
@@ -499,14 +503,13 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		context.Background(),
-		self.config_obj,
-		self.config_obj.Client.PinnedServerName,
+		vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,

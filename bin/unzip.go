@@ -7,8 +7,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -43,7 +43,7 @@ func doUnzip() {
 		kingpin.FatalIfError(err, "File does not exist")
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
@@ -105,7 +105,7 @@ func doUnzip() {
 		}
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(query)

@@ -73,10 +73,6 @@ func startFrontend(sm *services.Service,
 		config_obj.Frontend.DoNotCompressArtifacts = true
 	}
 
-	// Parse the artifacts database to detect errors early.
-	_, err := getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
-
 	// Load the assets into memory.
 	assets.Init()
 
@@ -84,11 +80,15 @@ func startFrontend(sm *services.Service,
 	server.IncreaseLimits(config_obj)
 
 	// These services must start on all frontends
-	err = server.StartFrontendServices(config_obj, sm, *frontend_node)
+	err := server.StartFrontendServices(config_obj, sm, *frontend_node)
 	if err != nil {
 		logger.Error("Failed starting services: ", err)
 		return nil, err
 	}
+
+	// Parse the artifacts database to detect errors early.
+	_, err = getRepository(config_obj)
+	kingpin.FatalIfError(err, "Loading extra artifacts")
 
 	server_builder, err := api.NewServerBuilder(config_obj)
 	if err != nil {

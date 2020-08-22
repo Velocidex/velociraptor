@@ -45,7 +45,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -97,15 +96,12 @@ func ForemanProcessMessage(
 		}
 
 		// Notify the hunt manager that we need to hunt this client.
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			client_id, "", "System.Hunt.Participation")
-
-		err := services.GetJournal().PushRows(path_manager,
+		err := services.GetJournal().PushRowsToArtifact(
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id).
 				Set("Participate", true),
-			})
+			}, "System.Hunt.Participation", client_id, "")
 		if err != nil {
 			return err
 		}
@@ -124,6 +120,6 @@ func ForemanProcessMessage(
 			return err
 		}
 
-		return services.NotifyListener(config_obj, client_id)
+		return services.GetNotifier().NotifyListener(config_obj, client_id)
 	})
 }

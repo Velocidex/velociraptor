@@ -16,18 +16,28 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 /*
-   Hunt dispatching logic:
+
+  The hunt manager service should only be run once across the entire
+  deployment.  The hunt manager service watches for new clients added
+  to a hunt and schedules new flows on them. It is written as a single
+  thread so it is allowed to fall behind - it is not on the critical
+  path and should be able to catch up with no problems.
+
+  Hunt dispatching logic:
 
 1) Client checks in with foreman.
 
-2) If foreman decides client has not run this hunt, foreman spaces a
-   message on `System.Hunt.Participation`.
+2) If foreman decides client has not run this hunt, foreman pushes a
+   message on the `System.Hunt.Participation` queue.
 
 3) Hunt manager watches for new rows on System.Hunt.Participation and
    schedules collection.
 
 4) Hunt manager watches for flow completions and updates hunt stats re
    success or error of flow completion.
+
+Note that steps 1 & 2 are on the critical path and 3-4 are not.
+
 */
 
 package hunt_manager
@@ -43,7 +53,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -52,6 +61,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -271,15 +281,14 @@ func (self *HuntManager) ProcessRow(
 		return
 	}
 
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	if err != nil {
 		scope.Log("hunt manager: launching %v:  %v", participation_row, err)
 		return
 	}
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, self.config_obj,
-		"Server", repository, request)
+		ctx, vql_subsystem.NullACLManager{}, repository, request)
 	if err != nil {
 		scope.Log("hunt manager: %s", err.Error())
 		return
@@ -292,7 +301,8 @@ func (self *HuntManager) ProcessRow(
 	services.GetJournal().PushRows(path_manager.Clients(), []*ordereddict.Dict{row})
 
 	// Notify the client
-	err = services.NotifyListener(self.config_obj, participation_row.ClientId)
+	err = services.GetNotifier().NotifyListener(
+		self.config_obj, participation_row.ClientId)
 	if err != nil {
 		scope.Log("hunt manager: %v", err)
 	}

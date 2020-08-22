@@ -6,8 +6,8 @@ import (
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -188,7 +188,7 @@ func (self *MockFunction) Call(ctx context.Context,
 		scope.AppendFunctions(mock_plugin)
 
 	} else if arg.Artifact != nil {
-		artifact_plugin, ok := arg.Artifact.(*artifacts.ArtifactRepositoryPlugin)
+		artifact_plugin, ok := arg.Artifact.(*repository.ArtifactRepositoryPlugin)
 		if !ok {
 			scope.Log("mock: artifact is not defined")
 			return vfilter.Null{}

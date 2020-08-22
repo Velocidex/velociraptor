@@ -8,11 +8,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -140,7 +140,7 @@ func (self CollectPlugin) Call(
 			}
 		}
 
-		builder := artifacts.ScopeBuilderFromScope(scope)
+		builder := services.ScopeBuilderFromScope(scope)
 		if container != nil {
 			builder.Uploader = container
 		}
@@ -153,17 +153,23 @@ func (self CollectPlugin) Call(
 
 			}
 
-			err = services.GetLauncher().EnsureToolsDeclared(
-				ctx, config_obj, artifact)
+			err = services.GetLauncher().EnsureToolsDeclared(ctx, artifact)
 			if err != nil {
 				scope.Log("collect: %v %v", name, err)
 				continue
 			}
 
 			artifact_definitions = append(artifact_definitions, artifact)
+			acl_manager, ok := artifacts.GetACLManager(scope)
+			if !ok {
+				acl_manager = vql_subsystem.NullACLManager{}
+			}
 
-			request := &actions_proto.VQLCollectorArgs{}
-			err := repository.Compile(artifact, request)
+			request, err := services.GetLauncher().CompileCollectorArgs(
+				ctx, acl_manager, repository,
+				&flows_proto.ArtifactCollectorArgs{
+					Artifacts: []string{artifact.Name},
+				})
 			if err != nil {
 				scope.Log("collect: Invalid artifact %v: %v",
 					name, err)
@@ -190,7 +196,7 @@ func (self CollectPlugin) Call(
 
 			// Make a new scope for each artifact.
 			// Any uploads go into the container.
-			subscope := builder.Build()
+			subscope := services.GetRepositoryManager().BuildScope(builder)
 			defer subscope.Close()
 
 			for _, query := range request.Query {
@@ -237,8 +243,8 @@ func (self CollectPlugin) Call(
 
 func getRepository(
 	config_obj *config_proto.Config,
-	extra_artifacts vfilter.Any) (*artifacts.Repository, error) {
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	extra_artifacts vfilter.Any) (services.Repository, error) {
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

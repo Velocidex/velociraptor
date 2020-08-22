@@ -75,7 +75,7 @@ parameters:
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
@@ -99,7 +99,7 @@ parameters:
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 
@@ -137,7 +137,7 @@ parameters:
     type: hidden
     default: |
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, url="dummy")
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
       FROM parse_csv(filename="/inventory.csv", accessor="me")
       WHERE log(message="Adding tool " + ToolName)
 

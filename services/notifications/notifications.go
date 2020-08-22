@@ -1,3 +1,5 @@
+package notifications
+
 // Notifications are low latency indications that something has
 // changed. Callers may listen for notifications using the
 // ListenForNotification() function which returns a channel. The
@@ -12,8 +14,6 @@
 // occurs. Notifications are just an optimization that reduces the
 // need to poll something.
 
-package services
-
 import (
 	"context"
 	"sync"
@@ -23,13 +23,13 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
-var (
+type Notifier struct {
 	pool_mu           sync.Mutex
 	notification_pool *notifications.NotificationPool
-)
+}
 
 // The notifier service watches for events from
 // Server.Internal.Notifications and notifies the notification pool in
@@ -40,35 +40,40 @@ func StartNotificationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	pool_mu.Lock()
-	defer pool_mu.Unlock()
+
+	self := &Notifier{}
+
+	self.pool_mu.Lock()
+	defer self.pool_mu.Unlock()
 
 	if config_obj.Datastore == nil {
 		return errors.New("Filestore not configured")
 	}
 
-	if notification_pool != nil {
-		notification_pool.Shutdown()
+	if self.notification_pool != nil {
+		self.notification_pool.Shutdown()
 	}
 
-	notification_pool = notifications.NewNotificationPool()
+	self.notification_pool = notifications.NewNotificationPool()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the notification service.")
 
+	// Watch the journal.
+	events, cancel := services.GetJournal().Watch("Server.Internal.Notifications")
+
 	wg.Add(1)
 	go func() {
-		defer wg.Done()
-		defer func() {
-			pool_mu.Lock()
-			defer pool_mu.Unlock()
-
-			notification_pool.Shutdown()
-			notification_pool = nil
-		}()
-
-		events, cancel := GetJournal().Watch("Server.Internal.Notifications")
 		defer cancel()
+		defer wg.Done()
+
+		defer func() {
+			self.pool_mu.Lock()
+			defer self.pool_mu.Unlock()
+
+			self.notification_pool.Shutdown()
+			self.notification_pool = nil
+		}()
 
 		for {
 			select {
@@ -85,55 +90,55 @@ func StartNotificationService(
 					continue
 				}
 
-				pool_mu.Lock()
+				self.pool_mu.Lock()
 				if target == "All" {
-					notification_pool.NotifyAll()
+					self.notification_pool.NotifyAll()
 				} else {
-					notification_pool.Notify(target)
+					self.notification_pool.Notify(target)
 				}
-				pool_mu.Unlock()
+				self.pool_mu.Unlock()
 			}
 		}
 	}()
 
+	services.RegisterNotifier(self)
+
 	return nil
 }
 
-func ListenForNotification(client_id string) (chan bool, func()) {
-	pool_mu.Lock()
-	defer pool_mu.Unlock()
+func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
+	self.pool_mu.Lock()
+	defer self.pool_mu.Unlock()
 
-	if notification_pool == nil {
-		notification_pool = notifications.NewNotificationPool()
+	if self.notification_pool == nil {
+		self.notification_pool = notifications.NewNotificationPool()
 	}
 
-	return notification_pool.Listen(client_id)
+	return self.notification_pool.Listen(client_id)
 }
 
-func NotifyAllListeners(config_obj *config_proto.Config) error {
-	path_manager := result_sets.NewArtifactPathManager(
-		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
-
-	return GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")})
+func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
+		"Server.Internal.Notifications", "server", "",
+	)
 }
 
-func NotifyListener(config_obj *config_proto.Config, id string) error {
-	path_manager := result_sets.NewArtifactPathManager(
-		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
-
-	return GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)})
+func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string) error {
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)},
+		"Server.Internal.Notifications", "server", "",
+	)
 }
 
 // TODO: Make this work on all frontends.
-func IsClientConnected(client_id string) bool {
-	pool_mu.Lock()
-	defer pool_mu.Unlock()
+func (self *Notifier) IsClientConnected(client_id string) bool {
+	self.pool_mu.Lock()
+	defer self.pool_mu.Unlock()
 
-	if notification_pool == nil {
-		notification_pool = notifications.NewNotificationPool()
+	if self.notification_pool == nil {
+		self.notification_pool = notifications.NewNotificationPool()
 	}
 
-	return notification_pool.IsClientConnected(client_id)
+	return self.notification_pool.IsClientConnected(client_id)
 }

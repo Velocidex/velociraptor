@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -38,6 +39,14 @@ func (self *JournalService) Watch(queue_name string) (
 	}
 
 	return self.qm.Watch(queue_name)
+}
+
+func (self *JournalService) PushRowsToArtifact(
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
+
+	path_manager := result_sets.NewArtifactPathManager(
+		self.config_obj, client_id, flows_id, artifact)
+	return self.PushRows(path_manager, rows)
 }
 
 func (self *JournalService) PushRows(

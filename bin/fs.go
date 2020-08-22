@@ -27,13 +27,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/glob"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -127,7 +127,7 @@ func doLS(path, accessor string) {
 		path += "*"
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(os.Stderr, "velociraptor: ", 0),
@@ -138,7 +138,7 @@ func doLS(path, accessor string) {
 			Set("path", path),
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT Name, Size, Mode.String AS Mode, Mtime, Data " +
@@ -174,7 +174,7 @@ func doRM(path, accessor string) {
 		kingpin.Fatalf("Only fs:// URLs support removal")
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
 		Logger:     log.New(os.Stderr, "velociraptor: ", 0),
@@ -182,7 +182,7 @@ func doRM(path, accessor string) {
 			Set("accessor", accessor).
 			Set("path", path),
 	}
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	query := "SELECT FullPath, Size, Mode.String AS Mode, Mtime, " +
@@ -220,7 +220,7 @@ func doCp(path, accessor string, dump_dir string) {
 		output_path = matches[2]
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config: config_obj,
 		Logger: log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
 		Env: ordereddict.NewDict().
@@ -245,7 +245,7 @@ func doCp(path, accessor string, dump_dir string) {
 		kingpin.Fatalf("Can not write to accessor %v\n", output_accessor)
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	scope.Log("Copy from %v (%v) to %v (%v)",

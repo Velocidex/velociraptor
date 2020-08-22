@@ -125,7 +125,7 @@ func GetApiClient(
 	// Update the time to now if the client is currently actually
 	// connected.
 	if server_obj != nil &&
-		services.IsClientConnected(client_id) {
+		services.GetNotifier().IsClientConnected(client_id) {
 		result.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
 	}
 

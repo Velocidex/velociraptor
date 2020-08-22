@@ -17,3 +17,9 @@ Queries:
 
   - SELECT inventory_get(tool='Autorun_amd64')
     FROM scope()
+
+  ## Upload a local file
+  - SELECT inventory_add(tool="FooBar", file=srcDir+"/artifacts/testdata/files/yara_test.txt")
+    FROM scope()
+
+  - SELECT inventory_get(tool="FooBar") FROM scope()

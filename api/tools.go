@@ -49,7 +49,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 
 	materialize := in.Materialize
 	in.Materialize = false
-	err = services.GetInventory().AddTool(ctx, self.config, in)
+	err = services.GetInventory().AddTool(self.config, in)
 	if err != nil {
 		return nil, err
 	}

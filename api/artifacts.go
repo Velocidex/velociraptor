@@ -36,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -80,7 +79,7 @@ func getArtifactFile(
 	config_obj *config_proto.Config,
 	name string) (string, error) {
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +122,7 @@ func setArtifactFile(config_obj *config_proto.Config,
 	case api_proto.SetArtifactRequest_DELETE:
 
 		// First ensure that the artifact is correct.
-		tmp_repository := artifacts.NewRepository()
+		tmp_repository := services.GetRepositoryManager().NewRepository()
 		artifact_definition, err := tmp_repository.LoadYaml(
 			in.Artifact, true /* validate */)
 		if err != nil {
@@ -156,7 +155,7 @@ func getReportArtifacts(
 		number_of_results = 100
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +225,7 @@ func searchArtifact(
 		return true
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

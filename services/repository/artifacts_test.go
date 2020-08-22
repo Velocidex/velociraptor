@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package artifacts
+package repository
 
 import (
 	"testing"
@@ -27,10 +27,11 @@ import (
 // Load all built in artifacts and make sure they validate syntax.
 func TestArtifactsSyntax(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	repository, err := GetGlobalRepository(config_obj)
+	manager := &RepositoryManager{config_obj: config_obj}
+	repository, err := manager.GetGlobalRepository(config_obj)
 	assert.NoError(t, err)
 
-	new_repository := NewRepository()
+	new_repository := manager.NewRepository()
 
 	for _, artifact_name := range repository.List() {
 		artifact, pres := repository.Get(artifact_name)

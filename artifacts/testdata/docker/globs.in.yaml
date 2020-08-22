@@ -1,5 +1,0 @@
-Name: Tests globs
-Queries:
-  - SELECT FullPath FROM glob(globs="/bin/*sh") ORDER BY FullPath
-  - SELECT FullPath, Size, Mode, Mtime FROM glob(globs="/usr/**/bash")
-      ORDER BY FullPath

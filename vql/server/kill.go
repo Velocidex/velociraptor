@@ -69,7 +69,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = services.NotifyListener(config_obj, arg.ClientId)
+	err = services.GetNotifier().NotifyListener(config_obj, arg.ClientId)
 	if err != nil {
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}

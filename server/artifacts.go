@@ -6,17 +6,17 @@ import (
 	"os"
 	"strings"
 
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
-func GetGlobalRepository(config_obj *config_proto.Config) (*artifacts.Repository, error) {
-	global_repository, err := artifacts.GetGlobalRepository(config_obj)
+func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, error) {
+	global_repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}

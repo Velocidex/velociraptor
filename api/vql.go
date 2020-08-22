@@ -21,10 +21,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -38,12 +38,12 @@ func RunVQL(
 
 	result := &api_proto.GetTableResponse{}
 
-	scope := artifacts.ScopeBuilder{
+	scope := services.GetRepositoryManager().BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		Env:        env,
 		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
 		Logger:     logging.NewPlainLogger(config_obj, &logging.ToolComponent),
-	}.Build()
+	})
 	defer scope.Close()
 
 	vql, err := vfilter.Parse(query)

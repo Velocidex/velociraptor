@@ -2,12 +2,20 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"io"
+	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -17,7 +25,10 @@ type InventoryAddFunctionArgs struct {
 	ServeLocally bool   `vfilter:"optional,field=serve_locally"`
 	URL          string `vfilter:"optional,field=url"`
 	Hash         string `vfilter:"optional,field=hash"`
-	Filename     string `vfilter:"optional,field=filename"`
+	Filename     string `vfilter:"optional,field=filename,doc=The name of the file on the endpoint"`
+
+	File     string `vfilter:"optional,field=file,doc=An optional file to upload"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 }
 
 type InventoryAddFunction struct{}
@@ -45,15 +56,56 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	request := &artifacts_proto.Tool{
-		Name:         arg.Tool,
-		ServeLocally: arg.ServeLocally,
-		Url:          arg.URL,
-		Filename:     arg.Filename,
-		Hash:         arg.Hash,
+	tool := &artifacts_proto.Tool{
+		Name:          arg.Tool,
+		ServeLocally:  arg.ServeLocally,
+		Url:           arg.URL,
+		Filename:      arg.Filename,
+		Hash:          arg.Hash,
+		AdminOverride: true,
 	}
 
-	err = services.GetInventory().AddTool(ctx, config_obj, request)
+	if arg.File != "" {
+		accessor, err := glob.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		reader, err := accessor.Open(arg.File)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		path_manager := paths.NewInventoryPathManager(config_obj, tool)
+		file_store_factory := file_store.GetFileStore(config_obj)
+		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+		defer writer.Close()
+
+		writer.Truncate()
+
+		sha_sum := sha256.New()
+
+		_, err = utils.Copy(ctx, writer, io.TeeReader(reader, sha_sum))
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+		tool.ServeLocally = true
+
+		if tool.Filename == "" {
+			tool.Filename = path.Base(arg.File)
+		}
+	}
+
+	err = services.GetInventory().AddTool(config_obj, tool)
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}
@@ -63,7 +115,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	// force it to be materialized (downloaded). It should be
 	// possible to add tools without having this immediately
 	// downloaded.
-	return arg
+	return tool
 }
 
 func (self *InventoryAddFunction) Info(

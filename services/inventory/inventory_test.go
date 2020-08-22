@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -24,10 +23,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 type MockClient struct {
 	responses map[string]string
+
+	count int
 }
 
 func (self MockClient) Do(req *http.Request) (*http.Response, error) {
@@ -35,6 +39,8 @@ func (self MockClient) Do(req *http.Request) (*http.Response, error) {
 
 	response := self.responses[url]
 	delete(self.responses, url)
+
+	self.count++
 
 	return &http.Response{
 		StatusCode: 200,
@@ -64,8 +70,9 @@ func (self *ServicesTestSuite) SetupTest() {
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(services.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(StartInventoryService))
 
 	self.client_id = "C.12312"
@@ -87,7 +94,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 
 	// Add a new tool from github.
 	inventory := services.GetInventory()
-	err := inventory.AddTool(ctx,
+	err := inventory.AddTool(
 		self.config_obj, &artifacts_proto.Tool{
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
@@ -97,11 +104,12 @@ func (self *ServicesTestSuite) TestGihubTools() {
 
 	// Adding the tool simply fetches the github url but not the
 	// actual file (the URL is still pending).
-	assert.Contains(self.T(), self.mock.responses, "htttp://www.example.com/file.exe")
-	assert.Equal(self.T(), len(self.mock.responses), 1)
+	assert.Equal(self.T(), self.mock.count, 0)
 
 	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
 	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), len(self.mock.responses), 0)
 
 	// Both HTTP requests were made - Getting the tool info
 	// downloads the file from the server.
@@ -127,7 +135,7 @@ func (self *ServicesTestSuite) installGitHubMock() {
 	api_reply := `{"assets":[{"name":"Velociraptor-Vx.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file.exe"}]}`
 
 	self.mock = &MockClient{
-		map[string]string{
+		responses: map[string]string{
 			"htttp://www.example.com/file.exe":                                    "File Content",
 			"https://api.github.com/repos/Velocidex/velociraptor/releases/latest": api_reply,
 		},
@@ -142,7 +150,7 @@ func (self *ServicesTestSuite) installGitHubMockVersion2() {
 	api_reply := `{"assets":[{"name":"Velociraptor-V2.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file_v2.exe"}]}`
 
 	self.mock = &MockClient{
-		map[string]string{
+		responses: map[string]string{
 			"htttp://www.example.com/file.exe":                                    "File Content V2",
 			"https://api.github.com/repos/Velocidex/velociraptor/releases/latest": api_reply,
 		},
@@ -164,7 +172,7 @@ tools:
   github_project: Velocidex/velociraptor
   github_asset_regex: windows-amd64.exe
 `
-	repository := artifacts.NewRepository()
+	repository := services.GetRepositoryManager().NewRepository()
 	_, err := repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
@@ -173,7 +181,7 @@ tools:
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
 	response, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "Tester", repository,
+		ctx, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})
@@ -213,7 +221,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	}
 
 	inventory := services.GetInventory()
-	err := inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err := inventory.AddTool(self.config_obj, tool_definition)
 	assert.NoError(self.T(), err)
 
 	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
@@ -226,7 +234,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory.AddTool(ctx, self.config_obj, tool_definition)
+	err = inventory.AddTool(self.config_obj, tool_definition)
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
@@ -251,14 +259,14 @@ tools:
   github_asset_regex: windows-amd64.exe
   serve_locally: true
 `
-	repository := artifacts.NewRepository()
+	repository := services.GetRepositoryManager().NewRepository()
 	_, err := repository.LoadYaml(test_artifact, true /* validate */)
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
 
 	response, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, self.config_obj, "Tester", repository,
+		ctx, vql_subsystem.NullACLManager{}, repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 		})

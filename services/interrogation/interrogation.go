@@ -1,3 +1,19 @@
+/*
+
+  The EnrollmentService is responsible for launching the initial
+  interrogation collection on an endpoint when it first appears.
+
+  Velociraptor is a zero registration system - this means when a
+  client appears, it provisions its own private key and registeres its
+  public key with the server. This enables secure communication with
+  the endpoint but we still dont know anything about it!
+
+  The EnrollmentService watches for new clients and schedules the
+  Generic.Client.Info artifact on the endpoint. Note that this
+  collection is done exactly once the first time we see the client -
+  it is likely to become outdated.
+*/
+
 package interrogation
 
 import (
@@ -8,7 +24,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -19,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -34,24 +50,18 @@ func (self *EnrollmentService) Start(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
 
-	// Wait in this func until we are ready to monitor.
-	local_wg := &sync.WaitGroup{}
-	local_wg.Add(1)
+	events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		defer cancel()
 
 		self.mu.Lock()
 		defer self.mu.Unlock()
 
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Enrollment service.")
-
-		events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
-		defer cancel()
-
-		local_wg.Done()
 
 		for {
 			select {
@@ -69,8 +79,6 @@ func (self *EnrollmentService) Start(
 			}
 		}
 	}()
-
-	local_wg.Wait()
 
 	return nil
 }
@@ -105,15 +113,14 @@ func (self *EnrollmentService) ProcessRow(
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
 
-	repository, err := artifacts.GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Issue the flow on the client.
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, self.config_obj,
-		self.config_obj.Client.PinnedServerName, /* principal */
+		ctx, vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  client_id,

@@ -3,6 +3,31 @@
   Velociraptor maintains third party files in an inventory. This
   service manages this inventory.
 
+  Tool definitions can be added using AddTool() - this only writes the
+  definition to the internal datastore without materializing the tool.
+
+  The tool definition is divided into user accessible and system
+  accessible parts. The user specifies fields like:
+
+  - name
+  - url (upstream url)
+  - github_project
+
+  The system takes these and generates tracking information such as
+
+  - hash - the expected hash of the file - required!
+  - serve_url  - where we get users to download the file from.
+
+  Tools may be added to the inventory service without being tracked -
+  in that case they will not have a valid hash, serve_url etc. When we
+  attempt to use the tool with GetToolInfo() they will be materialized
+  and tracked automatically.
+
+  If AddTool() specifies the hash and serve_url then we assume the
+  tool is tracked and use that. This allows the admin to force a
+  specific tool to be used, by e.g. uploading it to the public
+  directory manually and adding the expected hash, but not providing a
+  URL. This is what the `velociraptor tools upload` command and the
 */
 
 package inventory
@@ -87,9 +112,13 @@ func (self *InventoryService) GetToolInfo(
 
 	for _, item := range self.binaries.Tools {
 		if item.Name == tool {
+			// Currently we require to know all tool's
+			// hashes. If the hash is missing then the
+			// tool is not tracked. We have to materialize
+			// it in order to track it.
 			if item.Hash == "" {
 				// Try to download the item.
-				err := self.downloadTool(ctx, config_obj, item)
+				err := self.materializeTool(ctx, config_obj, item)
 				if err != nil {
 					return nil, err
 				}
@@ -100,16 +129,46 @@ func (self *InventoryService) GetToolInfo(
 	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
 }
 
-func (self *InventoryService) downloadTool(
+// Actually download and resolve the tool and make sure it is
+// available. If successful this function updates the tool's datastore
+// representation to track it (in particular the hash). Subsequent
+// calls to this function will just retrieve those fields directly.
+func (self *InventoryService) materializeTool(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
+
+	// If we are downloading from github we have to resolve and
+	// verify the binary URL now.
+	if tool.GithubProject != "" {
+		var err error
+		tool.Url, err = self.getGithubRelease(ctx, config_obj, tool)
+		if err != nil {
+			return errors.Wrap(
+				err, "While resolving github release "+tool.GithubProject)
+		}
+
+		// Set the filename to something sensible so it is always valid.
+		if tool.Filename == "" {
+			if tool.Url != "" {
+				tool.Filename = path.Base(tool.Url)
+			} else {
+				tool.Filename = path.Base(tool.ServeUrl)
+			}
+		}
+	}
+
+	// We have no idea where the file is.
 	if tool.Url == "" {
 		return errors.New(fmt.Sprintf(
 			"Tool %v has no url defined - upload it manually.", tool.Name))
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
+	if file_store_factory == nil {
+		return nil
+		return errors.New("No filestore configured")
+	}
 
 	path_manager := paths.NewInventoryPathManager(config_obj, tool)
 	fd, err := file_store_factory.WriteFile(path_manager.Path())
@@ -132,13 +191,24 @@ func (self *InventoryService) downloadTool(
 
 	// If the download failed, we can not store this tool.
 	if res.StatusCode != 200 {
-		return errors.New("Unable to download file")
+		return errors.New(fmt.Sprintf("Unable to download file from %v: %v",
+			tool.Url, res.Status))
 	}
 	sha_sum := sha256.New()
 
 	_, err = utils.Copy(ctx, fd, io.TeeReader(res.Body, sha_sum))
 	if err == nil {
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+	}
+
+	if tool.ServeLocally {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
+			return errors.New("No server URLs configured!")
+		}
+		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+
+	} else {
+		tool.ServeUrl = tool.Url
 	}
 
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
@@ -218,49 +288,38 @@ func (self *InventoryService) RemoveTool(
 	return self.db.SetSubject(config_obj, constants.ThirdPartyInventory, self.binaries)
 }
 
-func (self *InventoryService) AddTool(ctx context.Context,
-	config_obj *config_proto.Config, tool_request *artifacts_proto.Tool) error {
+func (self *InventoryService) AddTool(config_obj *config_proto.Config,
+	tool_request *artifacts_proto.Tool) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Make a copy to work on.
-	tool := *tool_request
-
-	// If we are downloading from github we have to resolve and
-	// verify the binary URL now.
-	if tool.GithubProject != "" {
-		var err error
-		tool.Url, err = self.getGithubRelease(ctx, config_obj, &tool)
-		if err != nil {
-			return errors.Wrap(
-				err, "While resolving github release "+tool.GithubProject)
-		}
-	}
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
+	logger.Info("Loading tool %v", tool_request.Name)
 
 	if self.binaries == nil {
 		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
 	// Obfuscate the public directory path.
+	// Make a copy to work on.
+	tool := *tool_request
 	tool.FilestorePath = paths.ObfuscateName(config_obj, tool.Name)
 
+	if tool.ServeLocally && config_obj.Client == nil {
+		tool.ServeLocally = false
+	}
+
 	if tool.ServeLocally {
-		if len(config_obj.Client.ServerUrls) == 0 {
+		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
 		}
 		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
-	}
-
-	if tool.Url == "" && tool.ServeUrl == "" {
-		return errors.New("No tool URL defined and I will not be serving it locally!")
 	}
 
 	// Set the filename to something sensible so it is always valid.
 	if tool.Filename == "" {
 		if tool.Url != "" {
 			tool.Filename = path.Base(tool.Url)
-		} else {
-			tool.Filename = path.Base(tool.ServeUrl)
 		}
 	}
 
@@ -341,7 +400,7 @@ func StartInventoryService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notification, cancel := services.ListenForNotification(
+	notification, cancel := services.GetNotifier().ListenForNotification(
 		constants.ThirdPartyInventory)
 	defer cancel()
 
@@ -368,7 +427,7 @@ func StartInventoryService(
 			}
 
 			cancel()
-			notification, cancel = services.ListenForNotification(
+			notification, cancel = services.GetNotifier().ListenForNotification(
 				constants.ThirdPartyInventory)
 		}
 	}()
@@ -380,5 +439,6 @@ func StartInventoryService(
 }
 
 func init() {
+	//services.RegisterInventory(&Dummy{})
 	services.RegisterInventory(NewDummy())
 }

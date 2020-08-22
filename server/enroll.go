@@ -24,7 +24,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -44,9 +43,8 @@ func enroll(
 		return err
 	}
 
-	path_manager := result_sets.NewArtifactPathManager(
-		server.config, "server" /* client_id */, "", "Server.Internal.Enrollment")
-
-	return services.GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)})
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)},
+		"Server.Internal.Enrollment", "server" /* client_id */, "",
+	)
 }

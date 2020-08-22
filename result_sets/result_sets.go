@@ -21,16 +21,16 @@ import (
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
-	repository, _ := artifacts.GetGlobalRepository(config_obj)
+	repository, _ := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 
 	artifact, pres := repository.Get(artifact_name)
 	if !pres {

@@ -43,7 +43,8 @@ type IHuntDispatcher interface {
 	// As an optimization callers may get the latest hunt's
 	// timestamp. If the client's last hunt id is earlier than
 	// this then we need to find out exactly which hunt is missing
-	// from the client.
+	// from the client. Most of the time, clients will be up to
+	// date on the latest hunt version and this will be a noop.
 	GetLastTimestamp() uint64
 
 	// Modify a hunt under lock. The hunt will be synchronized to
@@ -52,10 +53,11 @@ type IHuntDispatcher interface {
 
 	// Re-read the hunts from the data store. This happens
 	// periodically and can also be triggered when a change is
-	// written to the data store.
+	// written to the datastore (e.g. new hunt scheduled) to pick
+	// up the latest hunts.
 	Refresh() error
 
-	// Clean up and close the hunt dispatcher.
+	// Clean up and close the hunt dispatcher. Only used in tests.
 	Close()
 }
 

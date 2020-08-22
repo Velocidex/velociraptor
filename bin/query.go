@@ -27,7 +27,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
@@ -39,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -194,45 +194,56 @@ func doRemoteQuery(
 	}
 }
 
-func startEssentialServices(config_obj *config_proto.Config, sm *services.Service) error {
+func startEssentialServices(config_obj *config_proto.Config) (
+	*services.Service, error) {
+
+	sm := services.NewServiceManager(context.Background(), config_obj)
+
 	err := sm.Start(launcher.StartLauncherService)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = sm.Start(repository.StartRepositoryManager)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if config_obj.Datastore != nil {
 		err = sm.Start(journal.StartJournalService)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		err = sm.Start(services.StartNotificationService)
+		err = sm.Start(notifications.StartNotificationService)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = sm.Start(inventory.StartInventoryService)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		err = sm.Start(labels.StartLabelService)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	// Load any artifacts defined in the config file.
+	err = load_config_artifacts(config_obj)
+
+	return sm, err
 }
 
 func doQuery() {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {
@@ -246,14 +257,14 @@ func doQuery() {
 		return
 	}
 
-	repository, err := artifacts.GetGlobalRepository(config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
 
 	if *artifact_definitions_dir != "" {
 		repository.LoadDirectory(*artifact_definitions_dir)
 	}
 
-	builder := artifacts.ScopeBuilder{
+	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
@@ -277,19 +288,13 @@ func doQuery() {
 		}
 	}
 
-	scope := builder.Build()
+	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
 	// Install throttler into the scope.
 	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(*rate)))
 
 	ctx := InstallSignalHandler(scope)
-
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	err = startEssentialServices(config_obj, sm)
-	kingpin.FatalIfError(err, "Starting services.")
 
 	if *trace_vql_flag {
 		scope.Tracer = log.New(os.Stderr, "VQL Trace: ", 0)

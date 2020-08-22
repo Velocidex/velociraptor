@@ -85,7 +85,7 @@ func toolUploadHandler(
 
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 
-		err = services.GetInventory().AddTool(r.Context(), config_obj, tool)
+		err = services.GetInventory().AddTool(config_obj, tool)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))
