@@ -6,7 +6,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
@@ -50,11 +49,8 @@ func MonitoringProcessMessage(
 		for _, row := range rows {
 			row.Set("ClientId", message.Source)
 		}
-
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			message.Source, message.SessionId, response.Query.Name)
-
-		return services.GetJournal().PushRows(path_manager, rows)
+		return services.GetJournal().PushRowsToArtifact(rows,
+			response.Query.Name, message.Source, message.SessionId)
 
 	}
 

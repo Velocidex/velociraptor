@@ -42,11 +42,10 @@ func (self *JournalService) Watch(queue_name string) (
 }
 
 func (self *JournalService) PushRowsToArtifact(
-	rows []*ordereddict.Dict, artifact string) error {
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
 	path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, "", "", artifact)
-
+		self.config_obj, client_id, flows_id, artifact)
 	return self.PushRows(path_manager, rows)
 }
 

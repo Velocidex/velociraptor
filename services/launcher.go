@@ -5,8 +5,41 @@ package services
 // collections is extracted into a service so it can be accessible
 // from many components.
 
+// Velociraptor treats all input as artifacts - users can launch new
+// artifact collection on endpoints by naming the artifact and
+// providing parameters. However the endpoint itself is not directly
+// running the artifacts - it simply runs VQL statements. We do this
+// so that artifacts can be edited and customized on the server
+// without needing to deploy new clients.
+
+// On the server, collections are created using ArtifactCollectorArgs
+// On the client, VQL is executing from VQLCollectorArgs
+
+// Ultimately the launcher is responsible for compiling the requested
+// ArtifactCollectorArgs collection into the VQLCollectorArgs protobuf
+// that will be sent to the client. Compiling the artifact means:
+
+// 1. Converting the artifact definition into a sequence of VQL
+
+// 2. Populating the query environment from the artifact definition
+//    defaults and merging the user's parameters into the initial
+//    query environment.
+
+// 3. Include any dependent artifacts in the VQLCollectorArgs. On the
+//    client, these additional artifacts will be compiled into a
+//    temporary artifact repository for execution (i.e. the client
+//    never uses its built in artifacts).
+
+// 4. Adding any required tools by the artifact and filling in their
+//    tool details (required hash, and download location).
+
 // Most callers will only need to call ScheduleArtifactCollection()
 // which does all the required steps and launches the collection.
+
+// It is possible for callers to pre-compile the artifact and cache
+// the VQLCollectorArgs for later use to avoid the cost of compiling
+// the artifact. This is useful e.g. in hunts to be able to scale the
+// launching of similar collections on many hosts at the same time.
 
 import (
 	"context"
@@ -38,6 +71,7 @@ func RegisterLauncher(l Launcher) {
 }
 
 type Launcher interface {
+	// Only used for tests to force a predictable flow id.
 	SetFlowIdForTests(flow_id string)
 
 	// Check any declared tools exist and are available - possibly

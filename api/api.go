@@ -50,7 +50,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	users "www.velocidex.com/golang/velociraptor/users"
@@ -813,11 +812,8 @@ func (self *ApiServer) WriteEvent(
 			return nil, err
 		}
 
-		path_manager := result_sets.NewArtifactPathManager(self.config,
-			peer_name, "", in.Query.Name)
-
-		return &empty.Empty{}, services.GetJournal().PushRows(
-			path_manager, rows)
+		return &empty.Empty{}, services.GetJournal().PushRowsToArtifact(
+			rows, in.Query.Name, peer_name, "")
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")

@@ -147,7 +147,7 @@ func (self *RepositoryManager) SetArtifactFile(data, required_prefix string) (
 	services.GetJournal().PushRowsToArtifact([]*ordereddict.Dict{
 		ordereddict.NewDict().Set("artifact", artifact.Name).
 			Set("op", "set"),
-	}, "Server.Internal.ArtifactModification")
+	}, "Server.Internal.ArtifactModification", "server", "")
 
 	return artifact, nil
 }

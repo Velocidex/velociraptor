@@ -107,12 +107,11 @@ func closeContext(
 			Set("FlowId", collection_context.SessionId).
 			Set("ClientId", collection_context.ClientId)
 
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			collection_context.ClientId, collection_context.SessionId,
-			"System.Flow.Completion")
-
-		return services.GetJournal().PushRows(path_manager,
-			[]*ordereddict.Dict{row})
+		return services.GetJournal().PushRowsToArtifact(
+			[]*ordereddict.Dict{row},
+			"System.Flow.Completion", collection_context.ClientId,
+			collection_context.SessionId,
+		)
 	}
 
 	return nil
@@ -470,12 +469,10 @@ func appendUploadDataToFile(
 			Set("Size", file_buffer.Size).
 			Set("UploadedSize", file_buffer.StoredSize)
 
-		path_manager := result_sets.NewArtifactPathManager(config_obj,
-			message.Source, collection_context.SessionId,
-			"System.Upload.Completion")
-
-		return services.GetJournal().PushRows(path_manager,
-			[]*ordereddict.Dict{row})
+		return services.GetJournal().PushRowsToArtifact(
+			[]*ordereddict.Dict{row},
+			"System.Upload.Completion", message.Source, collection_context.SessionId,
+		)
 	}
 
 	return nil

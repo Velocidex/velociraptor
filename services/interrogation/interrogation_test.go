@@ -70,24 +70,21 @@ func (self *ServicesTestSuite) EmulateCollection(
 
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, self.client_id, self.flow_id, artifact)
-
 	// Write a result set for this artifact.
-	services.GetJournal().PushRows(artifact_path_manager, rows)
+	services.GetJournal().PushRowsToArtifact(
+		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	artifact_path_manager = result_sets.NewArtifactPathManager(
-		self.config_obj, "server", "", "System.Flow.Completion")
-
-	services.GetJournal().PushRows(artifact_path_manager,
+	services.GetJournal().PushRowsToArtifact(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
 			Set("Flow", &flows_proto.ArtifactCollectorContext{
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
-				ArtifactsWithResults: []string{artifact}})})
+				ArtifactsWithResults: []string{artifact}})},
+		"System.Flow.Completion", "server", "",
+	)
 	return self.flow_id
 }
 

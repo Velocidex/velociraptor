@@ -214,16 +214,13 @@ message ArtifactDescriptors {
 // running artifacts.
 
 message Tool {
+    // The following are part of the tool definitions
+
     string name = 1;
 
     // The URL to fetch the tool from when we upload it the first
     // time, or when we update.
     string url = 2;
-
-    // The URL we serve the tool from when we serve locally. If this
-    // is empty we just let the endpoint download its own tool from
-    // the url above.
-    string serve_url = 8;
 
     // As an alternative to a url we allow scrapping of GitHub
     // releases using the github API. NOTE: When this method is
@@ -235,6 +232,20 @@ message Tool {
     // - otherwise the endpoint will download the file by itself from
     // the url above.
     bool serve_locally = 3;
+
+    // This is set when an admin explicitly overrides a tool. If this
+    // is set we will not update the tool definition when upgrading
+    // server versions.
+    bool admin_override = 7;
+
+
+    // Once the tool is added with the above fields, the following
+    // fields are used to keep state on it.
+
+    // The URL we serve the tool from when we serve locally. If this
+    // is empty we just let the endpoint download its own tool from
+    // the url above.
+    string serve_url = 8;
 
     // A filestore path where the file can be downloaded from - if
     // served locally.
@@ -250,11 +261,6 @@ message Tool {
     // hash against their fetch file to ensure it was correctly
     // transferred.
     string hash = 6;
-
-    // This is set when an admin explicitly overrides a tool. If this
-    // is set we will not update the tool definition when upgrading
-    // server versions.
-    bool admin_override = 7;
 
     // If set on a request we refresh the hash.
     bool materialize = 11;

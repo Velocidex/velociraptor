@@ -3,6 +3,31 @@
   Velociraptor maintains third party files in an inventory. This
   service manages this inventory.
 
+  Tool definitions can be added using AddTool() - this only writes the
+  definition to the internal datastore without materializing the tool.
+
+  The tool definition is divided into user accessible and system
+  accessible parts. The user specifies fields like:
+
+  - name
+  - url (upstream url)
+  - github_project
+
+  The system takes these and generates tracking information such as
+
+  - hash - the expected hash of the file - required!
+  - serve_url  - where we get users to download the file from.
+
+  Tools may be added to the inventory service without being tracked -
+  in that case they will not have a valid hash, serve_url etc. When we
+  attempt to use the tool with GetToolInfo() they will be materialized
+  and tracked automatically.
+
+  If AddTool() specifies the hash and serve_url then we assume the
+  tool is tracked and use that. This allows the admin to force a
+  specific tool to be used, by e.g. uploading it to the public
+  directory manually and adding the expected hash, but not providing a
+  URL. This is what the `velociraptor tools upload` command and the
 */
 
 package inventory
@@ -87,9 +112,13 @@ func (self *InventoryService) GetToolInfo(
 
 	for _, item := range self.binaries.Tools {
 		if item.Name == tool {
+			// Currently we require to know all tool's
+			// hashes. If the hash is missing then the
+			// tool is not tracked. We have to materialize
+			// it in order to track it.
 			if item.Hash == "" {
 				// Try to download the item.
-				err := self.downloadTool(ctx, config_obj, item)
+				err := self.materializeTool(ctx, config_obj, item)
 				if err != nil {
 					return nil, err
 				}
@@ -100,7 +129,11 @@ func (self *InventoryService) GetToolInfo(
 	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
 }
 
-func (self *InventoryService) downloadTool(
+// Actually download and resolve the tool and make sure it is
+// available. If successful this function updates the tool's datastore
+// representation to track it (in particular the hash). Subsequent
+// calls to this function will just retrieve those fields directly.
+func (self *InventoryService) materializeTool(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
@@ -125,6 +158,7 @@ func (self *InventoryService) downloadTool(
 		}
 	}
 
+	// We have no idea where the file is.
 	if tool.Url == "" {
 		return errors.New(fmt.Sprintf(
 			"Tool %v has no url defined - upload it manually.", tool.Name))

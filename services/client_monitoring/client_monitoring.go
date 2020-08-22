@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -171,14 +170,13 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	artifact_path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, "", "", "Server.Internal.ArtifactModification")
-	return services.GetJournal().PushRows(artifact_path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().
-			Set("setter", self.id).
-			Set("artifact", "ClientEventTable").
-			Set("op", "set"),
-	})
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("setter", self.id).
+				Set("artifact", "ClientEventTable").
+				Set("op", "set"),
+		}, "Server.Internal.ArtifactModification", "", "")
 }
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(

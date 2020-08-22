@@ -37,7 +37,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -265,11 +264,9 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				path_manager := result_sets.NewArtifactPathManager(config_obj,
-					"server", hunt_modification.HuntId, "System.Hunt.Archive")
-
-				services.GetJournal().PushRows(
-					path_manager, []*ordereddict.Dict{row})
+				services.GetJournal().PushRowsToArtifact(
+					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
+					"server", hunt_modification.HuntId)
 
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {

@@ -90,14 +90,13 @@ func (self *HuntTestSuite) TestHuntManager() {
 	services.GetHuntDispatcher().Refresh()
 
 	// Simulate a System.Hunt.Participation event
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
-		self.client_id, "", "System.Hunt.Participation")
-	services.GetJournal().PushRows(path_manager,
+	services.GetJournal().PushRowsToArtifact(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost").
-			Set("Participate", true)})
+			Set("Participate", true)},
+		"System.Hunt.Participation", self.client_id, "")
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.

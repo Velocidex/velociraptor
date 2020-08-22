@@ -53,5 +53,5 @@ type JournalService interface {
 	PushRows(path_manager api.PathManager, rows []*ordereddict.Dict) error
 
 	// Push the rows to the event artifact queue
-	PushRowsToArtifact(rows []*ordereddict.Dict, name string) error
+	PushRowsToArtifact(rows []*ordereddict.Dict, name, client_id, flows_id string) error
 }

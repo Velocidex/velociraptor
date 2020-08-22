@@ -23,7 +23,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/notifications"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -119,19 +118,17 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 }
 
 func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
-	path_manager := result_sets.NewArtifactPathManager(
-		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
-
-	return services.GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")})
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
+		"Server.Internal.Notifications", "server", "",
+	)
 }
 
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string) error {
-	path_manager := result_sets.NewArtifactPathManager(
-		config_obj, "server" /* client_id */, "", "Server.Internal.Notifications")
-
-	return services.GetJournal().PushRows(path_manager,
-		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)})
+	return services.GetJournal().PushRowsToArtifact(
+		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)},
+		"Server.Internal.Notifications", "server", "",
+	)
 }
 
 // TODO: Make this work on all frontends.
