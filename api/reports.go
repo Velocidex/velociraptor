@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 
 	errors "github.com/pkg/errors"
@@ -41,9 +42,22 @@ func getReport(ctx context.Context,
 
 	var template_data string
 
+	if in.Type == "" {
+		definition, pres := repository.Get("Custom." + in.Artifact)
+		if !pres {
+			definition, pres = repository.Get(in.Artifact)
+			if pres {
+				for _, report := range definition.Reports {
+					in.Type = strings.ToUpper(report.Type)
+				}
+			}
+		}
+	}
+
 	switch in.Type {
 	default:
-		return nil, errors.New("Report type not supported")
+		return nil, errors.New(fmt.Sprintf(
+			"Report type %v not supported", in.Type))
 
 	// A CLIENT artifact report is a specific artifact
 	// collected from a client.

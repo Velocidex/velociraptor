@@ -69,7 +69,6 @@ exports.routingModule
           }
         }
       })
-
       .state('hunts', {
         url: '/hunts/:huntId/:tab',
         template: '<grr-hunts-view />',
@@ -144,6 +143,11 @@ exports.routingModule
             return 'Flows';
           }
         }
+      })
+      .state('welcome', {
+        url: '/welcome',
+        template: '<grr-report-viewer params=\'{"artifact":"Server.Internal.Welcome"}\' />',
+        title: 'Welcome to Velociraptor'
       })
       .state('notebook', {
         url: '/notebook',

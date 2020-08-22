@@ -94,7 +94,10 @@ tools:
 	golden := ordereddict.NewDict().
 		Set("/config/inventory.json", db.Subjects["/config/inventory.json"])
 
-	goldie.Assert(self.T(), "TestUpgradeTools", json.MustMarshalIndent(golden))
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestUpgradeTools", serialized)
 	// test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
 }
 
@@ -114,7 +117,10 @@ func (self *ServicesTestSuite) TestCreateUser() {
 		Set("/users/User1", db.Subjects["/users/User1"]).
 		Set("/acl/User1.json", db.Subjects["/acl/User1.json"])
 
-	goldie.Assert(self.T(), "TestCreateUser", json.MustMarshalIndent(golden))
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestCreateUser", serialized)
 	// test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
 }
 

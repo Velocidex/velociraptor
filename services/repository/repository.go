@@ -317,8 +317,6 @@ func Parse(filename string) (*artifacts_proto.Artifact, error) {
 	return result, nil
 }
 
-type init_function func(*config_proto.Config) error
-
 func splitQueryToQueries(query string) ([]string, error) {
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {

@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
@@ -78,6 +79,7 @@ func (self *ServerTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
+	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
 	require.NoError(self.T(), self.sm.Start(interrogation.StartInterrogationService))
 
 	// Load all the standard artifacts.

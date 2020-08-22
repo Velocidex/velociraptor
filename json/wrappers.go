@@ -74,3 +74,20 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 func Unmarshal(b []byte, v interface{}) error {
 	return json.Unmarshal(b, v)
 }
+
+// Marshals into a normalized string with sorted keys - this is most
+// important for tests.
+func MarshalIndentNormalized(v interface{}) ([]byte, error) {
+	serialized, err := Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	data := make(map[string]interface{})
+	err = Unmarshal(serialized, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	return MarshalIndent(data)
+}

@@ -126,7 +126,10 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	assert.NoError(self.T(), err)
 
 	golden.Set("VQLCollectorArgs", request)
-	goldie.Assert(self.T(), "TestGihubTools", json.MustMarshalIndent(golden))
+
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubTools", serialized)
 }
 
 // Install a mock on the HTTP client to check the Github API for
@@ -202,8 +205,10 @@ tools:
 	assert.Equal(self.T(), response.Env[0].Value,
 		"3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1")
 
-	goldie.Assert(self.T(), "TestGihubToolsUninitialized", json.MustMarshalIndent(
-		ordereddict.NewDict().Set("Tool", tool).Set("Request", response)))
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubToolsUninitialized", serialized)
 }
 
 // Test that a tool can be upgraded.
@@ -280,8 +285,10 @@ tools:
 		ctx, self.config_obj, "SampleTool")
 	assert.NoError(self.T(), err)
 
-	goldie.Assert(self.T(), "TestGihubToolServedLocally", json.MustMarshalIndent(
-		ordereddict.NewDict().Set("Tool", tool).Set("Request", response)))
+	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response)
+	serialized, err := json.MarshalIndentNormalized(golden)
+	assert.NoError(self.T(), err)
+	goldie.Assert(self.T(), "TestGihubToolServedLocally", serialized)
 }
 
 func TestInventoryService(t *testing.T) {

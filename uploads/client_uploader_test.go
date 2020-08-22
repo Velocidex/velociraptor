@@ -71,8 +71,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	assert.Equal(t, responses[0].FileBuffer.Size, uint64(18))
 
 	assert.Equal(t, CombineOutput("foo", responses), "Hello hello ")
-	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(
-		responses))
+	goldie.Assert(t, "ClientUploaderSparse", json.MustMarshalIndent(responses))
 }
 
 // Test what happens when the underlying reader is shorter than the

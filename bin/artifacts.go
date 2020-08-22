@@ -150,6 +150,7 @@ func doArtifactCollect() {
 	kingpin.FatalIfError(err, "Load Config ")
 
 	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Load Config ")
 	defer sm.Close()
 
 	collect_args := ordereddict.NewDict()

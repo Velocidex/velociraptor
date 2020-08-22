@@ -64,11 +64,11 @@ func (self *JournalService) Start() error {
 
 func StartJournalService(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
-	qm, err := file_store.GetQueueManager(config_obj)
-	if err != nil {
-		return err
-	}
+	qm, _ := file_store.GetQueueManager(config_obj)
 
+	// It is valid to have a journal service with no configured datastore:
+	// 1. Watchers will never be notified.
+	// 2. PushRows() will fail with an error.
 	service := &JournalService{
 		config_obj: config_obj,
 		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),

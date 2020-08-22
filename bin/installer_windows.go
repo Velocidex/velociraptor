@@ -42,6 +42,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -522,9 +523,12 @@ func runOnce(result *VelociraptorService, elog debug.Log) {
 
 	// Wait for all services to properly start
 	// before we begin the comms.
-	wg := &sync.WaitGroup{}
-	executor.StartServices(ctx, wg, config_obj, manager.ClientId, exe)
-
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+	err = executor.StartServices(sm, manager.ClientId, exe)
+	if err != nil {
+		return
+	}
 	comm.Run(ctx)
 }
 
