@@ -1,3 +1,28 @@
+/*
+
+  Velociraptor relies on artifacts. Artifacts are a way of
+  encapsulating VQL queries inside easy to use YAML files. These yaml
+  files can be stored on disk or in the datastore.
+
+  An artifact "Repository" is an object maintaining a self consistent
+  view of a subset of known artifacts. It is self consistent in that
+  artifacts may call other artifacts within the same repository.
+
+  Artifacts are stored by name in the repository.  Repositories know
+  how to parse artifacts from various sources and know how to get
+  artifact definitions by name.
+
+  The global repository is used to store all artifacts we known about
+  at runtime.
+
+  Clients do not have persistant repositories but they do create
+  temporary repositories in which to run incoming queries. This allows
+  VQLCollectorArgs protobufs to include dependent artifacts and have
+  the client run those as well.
+
+  The repository is an essential service and should always be running.
+*/
+
 package services
 
 import (
@@ -75,18 +100,43 @@ type Repository interface {
 
 // Manages the global artifact repository
 type RepositoryManager interface {
+	// Make a new empty repository
 	NewRepository() Repository
+
+	// Get the global repository - Velociraptor uses a global
+	// repository containing all artifacts it knows about. The
+	// frontend loads the repository at startup from:
+	//
+	// 1. Build in artifacts
+	// 2. Custom artifacts stored in the data store.
+	// 3. Any additional artifacts directory specified in the --definitions flag.
+	// Any artifacts customized via the GUI will be stored here.
 	GetGlobalRepository(config_obj *config_proto.Config) (Repository, error)
+
+	// Only used for tests.
 	SetGlobalRepositoryForTests(repository Repository)
+
+	// Before callers can run VQL queries they need to create a
+	// query scope. This function uses the builder pattern above
+	// to create a new scope.
 	BuildScope(builder ScopeBuilder) *vfilter.Scope
 
-	// Only used in tests - it is much more expensive. Avoids
-	// caching plugin definitions.
+	// This function is much more expensive than
+	// BuildScope(). Avoids caching plugin definitions - it is
+	// only useful when callers need to manipulate the scope in an
+	// incompatible way - e.g. override a plugin definition.
 	BuildScopeFromScratch(builder ScopeBuilder) *vfilter.Scope
+
+	// Store the file to the repository. It will be stored in the datastore as well.
 	SetArtifactFile(data, required_prefix string) (*artifacts_proto.Artifact, error)
+
+	// Delete the file from the global repository and the data store.
 	DeleteArtifactFile(name string) error
 }
 
+// A helper function to build a new scope from an existing scope. This
+// is needed in order to isolate the existing scope from the new scope
+// (e.g. when running a sub-artifact)
 func ScopeBuilderFromScope(scope *vfilter.Scope) ScopeBuilder {
 	result := ScopeBuilder{
 		Logger: scope.Logger,

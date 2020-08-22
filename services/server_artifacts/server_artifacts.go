@@ -1,3 +1,13 @@
+/*
+
+   This service provides a runner to execute artifacts on the server.
+   Server artifacts run with high privilege and so only users with the
+   COLLECT_SERVER permission can run those.
+
+   Server artifacts are used for administration or information purposes.
+
+*/
+
 package server_artifacts
 
 import (
