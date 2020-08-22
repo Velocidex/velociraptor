@@ -209,6 +209,11 @@ func startEssentialServices(config_obj *config_proto.Config) (
 		return nil, err
 	}
 
+	err = sm.Start(inventory.StartInventoryService)
+	if err != nil {
+		return nil, err
+	}
+
 	if config_obj.Datastore != nil {
 		err = sm.Start(journal.StartJournalService)
 		if err != nil {
@@ -216,11 +221,6 @@ func startEssentialServices(config_obj *config_proto.Config) (
 		}
 
 		err = sm.Start(notifications.StartNotificationService)
-		if err != nil {
-			return nil, err
-		}
-
-		err = sm.Start(inventory.StartInventoryService)
 		if err != nil {
 			return nil, err
 		}

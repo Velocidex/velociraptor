@@ -247,6 +247,9 @@ message Tool {
     // the url above.
     string serve_url = 8;
 
+    // Only valid for local dummy inventory.
+    string serve_path = 12;
+
     // A filestore path where the file can be downloaded from - if
     // served locally.
     string filestore_path = 4;

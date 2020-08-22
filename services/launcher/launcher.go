@@ -141,11 +141,13 @@ func AddToolDependency(
 		Value: tool_info.Filename,
 	})
 
-	if tool_info.ServeUrl != "" {
-		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
-			return errors.New("No server URLs configured!")
-		}
-
+	// Support local filesystem access for local tools.
+	if tool_info.ServePath != "" {
+		vql_collector_args.Env = append(vql_collector_args.Env, &actions_proto.VQLEnv{
+			Key:   fmt.Sprintf("Tool_%v_PATH", tool_info.Name),
+			Value: tool_info.ServePath,
+		})
+	} else if tool_info.ServeUrl != "" {
 		// Where to download the binary from.
 		url := ""
 
@@ -157,7 +159,7 @@ func AddToolDependency(
 		} else if tool_info.Url != "" {
 			url = tool_info.Url
 
-		} else {
+		} else if config_obj.Client != nil {
 			url = config_obj.Client.ServerUrls[0] + "public/" + tool_info.FilestorePath
 		}
 

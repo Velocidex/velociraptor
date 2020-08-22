@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -94,7 +95,15 @@ func RunClient(
 	// Wait for the comms to properly start before we begin the
 	// services. If services need to communicate with the server
 	// they will deadlock otherwise.
-	executor.StartServices(ctx, wg, config_obj, manager.ClientId, exe)
+	sm := services.NewServiceManager(ctx, config_obj)
+	defer sm.Close()
+
+	err = executor.StartServices(sm, manager.ClientId, exe)
+	if err != nil {
+		return
+	}
+
+	wg.Wait()
 }
 
 func init() {
@@ -105,8 +114,6 @@ func init() {
 			defer cancel()
 
 			RunClient(ctx, wg, config_path)
-
-			wg.Wait()
 
 			return true
 		}
