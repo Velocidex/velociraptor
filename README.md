@@ -46,7 +46,11 @@ using any system administration method (e.g. group policy, SCCM etc).
 See more information for deployment options at
 https://www.velocidex.com/docs/getting-started
 
-## Running Velociraptor locally.
+## Running Velociraptor via Docker
+To run a Velociraptor server via Docker, follow the instructions here:   
+https://github.com/weslambert/velociraptor-docker
+
+## Running Velociraptor locally
 
 Velociraptor is also useful as a local triage tool. In particular you
 might find Velociraptor's artifacts especially useful for quickly
@@ -72,7 +76,7 @@ collect artifacts by using the "artifacts collect" command:
 
 Explore more of Velociraptor's options using the -h flag.
 
-## Building from source.
+## Building from source
 
 To build from source, make sure you have a recent Golang installed
 from https://golang.org/dl/ (Currently at least Go 1.13):
