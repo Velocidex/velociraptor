@@ -258,7 +258,7 @@ func ArchiveFlow(
 
 	return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, services.GetJournal().PushRowsToArtifact(
+		}, services.GetJournal().PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Flow.Archive", client_id, flow_id)
 }

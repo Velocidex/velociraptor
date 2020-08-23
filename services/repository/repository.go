@@ -33,7 +33,6 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -44,8 +43,6 @@ import (
 // Holds multiple artifact definitions.
 type Repository struct {
 	sync.Mutex
-	config_obj *config_proto.Config
-
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
 
@@ -57,8 +54,7 @@ func (self *Repository) Copy() services.Repository {
 	defer self.Unlock()
 
 	result := &Repository{
-		config_obj: self.config_obj,
-		Data:       make(map[string]*artifacts_proto.Artifact)}
+		Data: make(map[string]*artifacts_proto.Artifact)}
 	for k, v := range self.Data {
 		result.Data[k] = v
 	}

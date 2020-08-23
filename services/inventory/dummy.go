@@ -26,15 +26,16 @@ import (
 )
 
 type Dummy struct {
-	mu         sync.Mutex
-	config_obj *config_proto.Config
-	binaries   *artifacts_proto.ThirdParty
-	Client     HTTPClient
-	Clock      utils.Clock
-	filenames  []string
+	mu        sync.Mutex
+	binaries  *artifacts_proto.ThirdParty
+	Client    HTTPClient
+	Clock     utils.Clock
+	filenames []string
 }
 
-func (self *Dummy) getTempFile(filename, url string) (*os.File, error) {
+func (self *Dummy) getTempFile(
+	config_obj *config_proto.Config,
+	filename, url string) (*os.File, error) {
 
 	file, err := ioutil.TempFile("", "tmp*"+filename+"."+filepath.Ext(url))
 	if err != nil {
@@ -43,17 +44,17 @@ func (self *Dummy) getTempFile(filename, url string) (*os.File, error) {
 
 	self.filenames = append(self.filenames, file.Name())
 
-	logger := logging.GetLogger(self.config_obj, &logging.GenericComponent)
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 	logger.Info("Creating tempfile %v", file.Name())
 
 	return file, nil
 }
 
-func (self *Dummy) Close() {
+func (self *Dummy) Close(config_obj *config_proto.Config) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	logger := logging.GetLogger(self.config_obj, &logging.GenericComponent)
+	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 
 	removal := func(filename string) {
 		logger.Info("tempfile: removing tempfile %v", filename)
@@ -146,7 +147,7 @@ func (self *Dummy) materializeTool(
 			"Tool %v has no url defined - upload it manually.", tool.Name))
 	}
 
-	fd, err := self.getTempFile(tool.Filename, tool.Url)
+	fd, err := self.getTempFile(config_obj, tool.Filename, tool.Url)
 	if err != nil {
 		return err
 	}
@@ -312,7 +313,7 @@ func StartInventoryDummyService(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer inventory_service.Close()
+		defer inventory_service.Close(config_obj)
 
 		<-ctx.Done()
 	}()

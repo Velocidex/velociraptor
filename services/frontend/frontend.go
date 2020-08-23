@@ -189,7 +189,7 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Unlock()
 
 	if self.sample%2 == 0 {
-		services.GetJournal().PushRowsToArtifact(
+		services.GetJournal().PushRowsToArtifact(self.config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("CPUPercent", total_metrics.CpuLoadPercent).
 				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).

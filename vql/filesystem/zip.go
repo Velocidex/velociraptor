@@ -392,7 +392,7 @@ const (
 	ZipFileSystemAccessorTag = "_ZipFS"
 )
 
-func (self ZipFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
+func (self *ZipFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAccessor, error) {
 	result_any := vql_subsystem.CacheGet(scope, ZipFileSystemAccessorTag)
 	if result_any == nil {
 		// Create a new cache in the scope.

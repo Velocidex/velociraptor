@@ -67,8 +67,8 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 			}
 
 			labeler := services.GetLabeler()
-			for _, label := range labeler.GetClientLabels(arg.ClientId) {
-				labeler.RemoveClientLabel(arg.ClientId, label)
+			for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
+				labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
 			}
 
 			// Sync up with the indexes created by the interrogation service.

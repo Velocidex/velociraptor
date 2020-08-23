@@ -314,7 +314,7 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) ([]glob.FileInfo,
 	return result, nil
 }
 
-func (self RawRegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
+func (self *RawRegFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
 	return nil, errors.New("Not implemented")
 }
 

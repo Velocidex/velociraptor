@@ -453,7 +453,7 @@ func NewVelociraptorServerService(name string) (
 			defer sm.Close()
 
 			elog.Info(1, fmt.Sprintf("%s service started", name))
-			server, err := startFrontend(sm, config_obj)
+			server, err := startFrontend(sm)
 			if err != nil {
 				elog.Info(1, fmt.Sprintf("%s service error", err))
 				return

@@ -156,7 +156,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// collection can not be scheduled. The server needs to
 	// download the file in order to calculate its hash - even
 	// though it is not serving it to clients.
-	compiled, err := services.GetLauncher().CompileCollectorArgs(ctx,
+	compiled, err := services.GetLauncher().CompileCollectorArgs(ctx, self.config_obj,
 		acl_manager, repository, request)
 	assert.Error(self.T(), err)
 
@@ -164,7 +164,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// and we should calculate the hash.
 	status = 200
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// Now that we already know the hash, we dont care about
@@ -172,7 +172,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// automatically.
 	status = 404
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// Check the compiler produced the correct environment
@@ -202,7 +202,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	status = 200
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	filename := paths.ObfuscateName(self.config_obj, "Tool1")
@@ -245,7 +245,7 @@ func (self *LauncherTestSuite) TestCompiling() {
 	acl_manager := vql_subsystem.NullACLManager{}
 
 	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), 1, len(compiled.Env))
@@ -285,7 +285,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	acl_manager := vql_subsystem.NullACLManager{}
 
 	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	// When we do not obfuscate, artifact descriptions are carried
@@ -295,7 +295,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	// However when we obfuscate we remove descriptions.
 	self.config_obj.Frontend.DoNotCompressArtifacts = false
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), compiled.Query[1].Description, "")
@@ -322,7 +322,7 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 
 	// Permission denied - the principal is not allowed to compile this artifact.
 	compiled, err := services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
@@ -334,7 +334,7 @@ func (self *LauncherTestSuite) TestCompilingPermissions() {
 	// Should be fine now.
 	acl_manager = vql_subsystem.NewServerACLManager(self.config_obj, "UserX")
 	compiled, err = services.GetLauncher().CompileCollectorArgs(
-		ctx, acl_manager, repository, request)
+		ctx, self.config_obj, acl_manager, repository, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled.Query), 2)
 }

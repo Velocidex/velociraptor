@@ -25,6 +25,9 @@ var (
 
 	gui_command_no_browser = gui_command.Flag(
 		"nobrowser", "Do not bring up the browser").Bool()
+
+	gui_command_no_client = gui_command.Flag(
+		"noclient", "Do not bring up a client").Bool()
 )
 
 func doGUI() {
@@ -38,24 +41,54 @@ func doGUI() {
 	datastore_directory, err = filepath.Abs(datastore_directory)
 	kingpin.FatalIfError(err, "Unable find path.")
 
-	config_path := filepath.Join(datastore_directory, "server.config.yaml")
+	server_config_path := filepath.Join(datastore_directory, "server.config.yaml")
+	client_config_path := filepath.Join(datastore_directory, "client.config.yaml")
 
 	// Try to open the config file from there
 	config_obj, err := DefaultConfigLoader.
 		WithVerbose(true).
-		WithFileLoader(config_path).
+		WithFileLoader(server_config_path).
 		LoadAndValidate()
 	if err != nil || config_obj.Frontend == nil {
 
-		// Need to generate a new config.
-		logging.Prelog("No valid config found - will generare a new one at <green>" +
-			config_path)
+		// Need to generate a new config. This config is not
+		// really suitable for use in a proper deployment but
+		// it is used here just to bring up the GUI and a self
+		// client. It is useful for demonstration purposes and
+		// to just be able to use the notebook and build an
+		// offline collector.
+		logging.Prelog("No valid config found - " +
+			"will generare a new one at <green>" + server_config_path)
 
 		config_obj = config.GetDefaultConfig()
 		err := generateNewKeys(config_obj)
 		kingpin.FatalIfError(err, "Unable to create config.")
 
+		// GUI Configuration - hard coded username/password
+		// and no SSL are suitable for local deployment only!
+		config_obj.GUI.BindAddress = "127.0.0.1"
+		config_obj.GUI.BindPort = 8889
+
+		// Frontend only suitable for local client
+		config_obj.Frontend.BindAddress = "127.0.0.1"
+		config_obj.Frontend.BindPort = 8000
+
+		// Client configuration.
 		config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
+		config_obj.Client.UseSelfSignedSsl = true
+
+		write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.yaml")
+		config_obj.Client.WritebackWindows = write_back
+		config_obj.Client.WritebackLinux = write_back
+		config_obj.Client.WritebackDarwin = write_back
+
+		// Do not use a local buffer file since there is no
+		// point - we are by definition directly connected.
+		config_obj.Client.LocalBuffer.DiskSize = 0
+		config_obj.Client.LocalBuffer.FilenameWindows = ""
+		config_obj.Client.LocalBuffer.FilenameLinux = ""
+		config_obj.Client.LocalBuffer.FilenameDarwin = ""
+
 		config_obj.Datastore.Location = datastore_directory
 		config_obj.Datastore.FilestoreDirectory = datastore_directory
 
@@ -75,11 +108,25 @@ func doGUI() {
 		serialized, err := yaml.Marshal(config_obj)
 		kingpin.FatalIfError(err, "Unable to create config.")
 
-		fd, err := os.OpenFile(config_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		kingpin.FatalIfError(err, "Open file %s", config_path)
+		fd, err := os.OpenFile(server_config_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kingpin.FatalIfError(err, "Open file %s", server_config_path)
 		_, err = fd.Write(serialized)
-		kingpin.FatalIfError(err, "Write file %s", config_path)
+		kingpin.FatalIfError(err, "Write file %s", server_config_path)
 		fd.Close()
+
+		// Now also write a client config
+		client_config := getClientConfig(config_obj)
+		client_config.Logging = config_obj.Logging
+
+		serialized, err = yaml.Marshal(client_config)
+		kingpin.FatalIfError(err, "Unable to create config.")
+
+		fd, err = os.OpenFile(client_config_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		kingpin.FatalIfError(err, "Open file %s", client_config_path)
+		_, err = fd.Write(serialized)
+		kingpin.FatalIfError(err, "Write file %s", client_config_path)
+		fd.Close()
+
 	}
 
 	// Now start the frontend
@@ -89,28 +136,31 @@ func doGUI() {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
-	server, err := startFrontend(sm, config_obj)
+	server, err := startFrontend(sm)
 	kingpin.FatalIfError(err, "startFrontend")
 	defer server.Close()
 
 	// Just try to open the browser in the background.
-	go func() {
-		if *gui_command_no_browser {
-			return
-		}
+	if !*gui_command_no_browser {
+		go func() {
+			url := fmt.Sprintf("https://admin:password@%v:%v/app.html#/welcome",
+				config_obj.GUI.BindAddress,
+				config_obj.GUI.BindPort)
+			res := OpenBrowser(url)
+			if !res {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Error(fmt.Sprintf(
+					"Failed to open browser... you can try to connect directory to %v",
+					url))
+			}
+		}()
+	}
 
-		url := fmt.Sprintf("https://admin:password@%v:%v/app.html#/welcome",
-			config_obj.GUI.BindAddress,
-			config_obj.GUI.BindPort)
-		res := OpenBrowser(url)
-		if !res {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error(fmt.Sprintf(
-				"Failed to open browser... you can try to connect directory to %v",
-				url))
-		}
-	}()
-
+	if !*gui_command_no_client {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("Running client from %v", client_config_path)
+		go RunClient(ctx, sm.Wg, &client_config_path)
+	}
 	sm.Wg.Wait()
 }
 

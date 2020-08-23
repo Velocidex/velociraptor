@@ -29,12 +29,11 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
-type Launcher struct {
-	config_obj *config_proto.Config
-}
+type Launcher struct{}
 
 func (self *Launcher) CompileCollectorArgs(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (
@@ -63,7 +62,7 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, errors.New("Unknown artifact " + name)
 		}
 
-		err := CheckAccess(self.config_obj, artifact, acl_manager)
+		err := CheckAccess(config_obj, artifact, acl_manager)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +72,7 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
-		err = self.EnsureToolsDeclared(ctx, artifact)
+		err = self.EnsureToolsDeclared(ctx, config_obj, artifact)
 		if err != nil {
 			return nil, err
 		}
@@ -91,21 +90,24 @@ func (self *Launcher) CompileCollectorArgs(
 		return nil, err
 	}
 
-	err = getDependentTools(ctx, self.config_obj, vql_collector_args)
+	err = getDependentTools(ctx, config_obj, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
 
-	err = artifacts.Obfuscate(self.config_obj, vql_collector_args)
+	err = artifacts.Obfuscate(config_obj, vql_collector_args)
 	return vql_collector_args, err
 }
 
 // Make sure we know about tools the artifact itself defines.
 func (self *Launcher) EnsureToolsDeclared(
-	ctx context.Context, artifact *artifacts_proto.Artifact) error {
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact *artifacts_proto.Artifact) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range artifact.Tools {
-		_, err := services.GetInventory().GetToolInfo(ctx, self.config_obj, tool.Name)
+		_, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
 		if err != nil {
 			// Add tool info if it is not known but do not
 			// override existing tool. This allows the
@@ -113,7 +115,7 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(self.config_obj, tool)
+			err = services.GetInventory().AddTool(config_obj, tool)
 			if err != nil {
 				return err
 			}
@@ -173,6 +175,7 @@ func AddToolDependency(
 
 func (self *Launcher) ScheduleArtifactCollection(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs) (string, error) {
@@ -185,7 +188,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 		// NOTE: We assume that compiling the artifact is a
 		// pure function so caching is appropriate.
 		compiled, err := self.CompileCollectorArgs(
-			ctx, acl_manager, repository, collector_request)
+			ctx, config_obj, acl_manager, repository, collector_request)
 		if err != nil {
 			return "", err
 		}
@@ -193,7 +196,7 @@ func (self *Launcher) ScheduleArtifactCollection(
 	}
 
 	return ScheduleArtifactCollectionFromCollectorArgs(
-		self.config_obj, collector_request, args)
+		config_obj, collector_request, args)
 }
 
 func ScheduleArtifactCollectionFromCollectorArgs(
@@ -324,6 +327,6 @@ func StartLauncherService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	services.RegisterLauncher(&Launcher{config_obj})
+	services.RegisterLauncher(&Launcher{})
 	return nil
 }

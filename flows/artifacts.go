@@ -107,7 +107,7 @@ func closeContext(
 			Set("FlowId", collection_context.SessionId).
 			Set("ClientId", collection_context.ClientId)
 
-		return services.GetJournal().PushRowsToArtifact(
+		return services.GetJournal().PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Flow.Completion", collection_context.ClientId,
 			collection_context.SessionId,
@@ -469,7 +469,7 @@ func appendUploadDataToFile(
 			Set("Size", file_buffer.Size).
 			Set("UploadedSize", file_buffer.StoredSize)
 
-		return services.GetJournal().PushRowsToArtifact(
+		return services.GetJournal().PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Upload.Completion", message.Source, collection_context.SessionId,
 		)

@@ -39,6 +39,18 @@ type Loader struct {
 	logger *logging.LogContext
 }
 
+func (self *Loader) WithLogFile(filename string) *Loader {
+	if filename == "" {
+		return self
+	}
+
+	self = self.Copy()
+	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {
+		return logging.AddLogFile(filename)
+	})
+	return self
+}
+
 func (self *Loader) WithRequiredFrontend() *Loader {
 	self = self.Copy()
 	self.validators = append(self.validators, func(config_obj *config_proto.Config) error {

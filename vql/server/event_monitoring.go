@@ -78,7 +78,7 @@ func (self SetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	_, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := artifacts.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -107,7 +107,8 @@ func (self SetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	err = services.ClientEventManager().SetClientMonitoringState(value)
+	err = services.ClientEventManager().SetClientMonitoringState(
+		ctx, config_obj, value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %s", err.Error())
 		return vfilter.Null{}

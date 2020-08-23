@@ -25,9 +25,6 @@ import (
 
 type JournalService struct {
 	qm api.QueueManager
-
-	logger     *logging.LogContext
-	config_obj *config_proto.Config
 }
 
 func (self *JournalService) Watch(queue_name string) (
@@ -42,14 +39,16 @@ func (self *JournalService) Watch(queue_name string) (
 }
 
 func (self *JournalService) PushRowsToArtifact(
+	config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
 	path_manager := result_sets.NewArtifactPathManager(
-		self.config_obj, client_id, flows_id, artifact)
-	return self.PushRows(path_manager, rows)
+		config_obj, client_id, flows_id, artifact)
+	return self.PushRows(config_obj, path_manager, rows)
 }
 
 func (self *JournalService) PushRows(
+	config_obj *config_proto.Config,
 	path_manager api.PathManager, rows []*ordereddict.Dict) error {
 	if self != nil && self.qm != nil {
 		return self.qm.PushEventRows(path_manager, rows)
@@ -57,25 +56,30 @@ func (self *JournalService) PushRows(
 	return errors.New("Filestore not initialized")
 }
 
-func (self *JournalService) Start() error {
-	self.logger.Info("<green>Starting</> Journal service.")
+func (self *JournalService) Start(config_obj *config_proto.Config) error {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Journal service.")
 	return nil
 }
 
 func StartJournalService(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
-	qm, _ := file_store.GetQueueManager(config_obj)
 
 	// It is valid to have a journal service with no configured datastore:
 	// 1. Watchers will never be notified.
 	// 2. PushRows() will fail with an error.
-	service := &JournalService{
-		config_obj: config_obj,
-		logger:     logging.GetLogger(config_obj, &logging.FrontendComponent),
-		qm:         qm,
+	service := &JournalService{}
+	old_service := services.GetJournal()
+	if old_service != nil {
+		service.qm = old_service.(*JournalService).qm
+	}
+
+	qm, _ := file_store.GetQueueManager(config_obj)
+	if qm != nil {
+		service.qm = qm
 	}
 
 	services.RegisterJournal(service)
 
-	return service.Start()
+	return service.Start(config_obj)
 }

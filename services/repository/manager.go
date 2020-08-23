@@ -19,14 +19,12 @@ import (
 
 type RepositoryManager struct {
 	mu                sync.Mutex
-	config_obj        *config_proto.Config
 	global_repository *Repository
 }
 
 func (self *RepositoryManager) NewRepository() services.Repository {
 	return &Repository{
-		config_obj: self.config_obj,
-		Data:       make(map[string]*artifacts_proto.Artifact)}
+		Data: make(map[string]*artifacts_proto.Artifact)}
 }
 
 func (self *RepositoryManager) GetGlobalRepository(
@@ -39,8 +37,7 @@ func (self *RepositoryManager) GetGlobalRepository(
 	}
 
 	self.global_repository = &Repository{
-		config_obj: self.config_obj,
-		Data:       make(map[string]*artifacts_proto.Artifact)}
+		Data: make(map[string]*artifacts_proto.Artifact)}
 
 	now := time.Now()
 
@@ -91,7 +88,8 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(repository services.R
 	self.global_repository = repository.(*Repository)
 }
 
-func (self *RepositoryManager) SetArtifactFile(data, required_prefix string) (
+func (self *RepositoryManager) SetArtifactFile(
+	config_obj *config_proto.Config, data, required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
 	// First ensure that the artifact is correct.
@@ -108,11 +106,11 @@ func (self *RepositoryManager) SetArtifactFile(data, required_prefix string) (
 				required_prefix + "'")
 	}
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// Load the new artifact into the global repo so it is
 	// immediately available.
-	global_repository, err := self.GetGlobalRepository(self.config_obj)
+	global_repository, err := self.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -144,16 +142,18 @@ func (self *RepositoryManager) SetArtifactFile(data, required_prefix string) (
 		return nil, err
 	}
 
-	services.GetJournal().PushRowsToArtifact([]*ordereddict.Dict{
-		ordereddict.NewDict().Set("artifact", artifact.Name).
-			Set("op", "set"),
-	}, "Server.Internal.ArtifactModification", "server", "")
+	services.GetJournal().PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().Set("artifact", artifact.Name).
+				Set("op", "set"),
+		}, "Server.Internal.ArtifactModification", "server", "")
 
 	return artifact, nil
 }
 
-func (self *RepositoryManager) DeleteArtifactFile(name string) error {
-	global_repository, err := self.GetGlobalRepository(self.config_obj)
+func (self *RepositoryManager) DeleteArtifactFile(
+	config_obj *config_proto.Config, name string) error {
+	global_repository, err := self.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (self *RepositoryManager) DeleteArtifactFile(name string) error {
 		return nil
 	}
 
-	file_store_factory := file_store.GetFileStore(self.config_obj)
+	file_store_factory := file_store.GetFileStore(config_obj)
 
 	global_repository.Del(name)
 
@@ -175,8 +175,6 @@ func (self *RepositoryManager) DeleteArtifactFile(name string) error {
 func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	services.RegisterRepositoryManager(&RepositoryManager{
-		config_obj: config_obj,
-	})
+	services.RegisterRepositoryManager(&RepositoryManager{})
 	return nil
 }

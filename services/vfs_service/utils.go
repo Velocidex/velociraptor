@@ -23,6 +23,7 @@ func watchForFlowCompletion(
 	config_obj *config_proto.Config,
 	artifact_name string,
 	handler func(ctx context.Context,
+		config_obj *config_proto.Config,
 		scope *vfilter.Scope, row *ordereddict.Dict)) error {
 
 	events, cancel := services.GetJournal().Watch("System.Flow.Completion")
@@ -67,7 +68,7 @@ func watchForFlowCompletion(
 
 				if utils.InString(flow.ArtifactsWithResults, artifact_name) ||
 					utils.InString(flow.ArtifactsWithResults, custom_artifact_name) {
-					handler(ctx, scope, event)
+					handler(ctx, config_obj, scope, event)
 				}
 			}
 		}

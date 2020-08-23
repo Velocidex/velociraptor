@@ -190,7 +190,7 @@ func (self *ApiServer) CollectArtifact(
 	}
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, acl_manager, repository, in)
+		ctx, self.config, acl_manager, repository, in)
 	if err != nil {
 		return nil, err
 	}
@@ -442,10 +442,10 @@ func (self *ApiServer) LabelClients(
 		for _, label := range in.Labels {
 			switch in.Operation {
 			case "set":
-				err = labeler.SetClientLabel(client_id, label)
+				err = labeler.SetClientLabel(self.config, client_id, label)
 
 			case "remove":
-				err = labeler.RemoveClientLabel(client_id, label)
+				err = labeler.RemoveClientLabel(self.config, client_id, label)
 
 			default:
 				return nil, errors.New("Unknown label operation")
@@ -812,7 +812,7 @@ func (self *ApiServer) WriteEvent(
 			return nil, err
 		}
 
-		return &empty.Empty{}, services.GetJournal().PushRowsToArtifact(
+		return &empty.Empty{}, services.GetJournal().PushRowsToArtifact(self.config,
 			rows, in.Query.Name, peer_name, "")
 	}
 
@@ -934,7 +934,7 @@ func (self *ApiServer) SetClientMonitoringState(
 			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
-	err = services.ClientEventManager().SetClientMonitoringState(in)
+	err = services.ClientEventManager().SetClientMonitoringState(ctx, self.config, in)
 	if err != nil {
 		return nil, err
 	}

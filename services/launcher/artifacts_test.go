@@ -123,8 +123,8 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 	}
 
 	launcher := services.GetLauncher()
-	_, err := launcher.CompileCollectorArgs(
-		context.Background(), vql_subsystem.NullACLManager{},
+	_, err := launcher.CompileCollectorArgs(context.Background(), self.config_obj,
+		vql_subsystem.NullACLManager{},
 		self.repository, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unknown artifact reference")
@@ -139,8 +139,8 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 
 	// It should compile ok but overflow at runtime.
 	launcher := services.GetLauncher()
-	vql_request, err := launcher.CompileCollectorArgs(
-		context.Background(), vql_subsystem.NullACLManager{},
+	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
+		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, request)
 	assert.NoError(self.T(), err)
 
@@ -164,8 +164,8 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	}
 
 	launcher := services.GetLauncher()
-	vql_request, err := launcher.CompileCollectorArgs(
-		context.Background(), vql_subsystem.NullACLManager{},
+	vql_request, err := launcher.CompileCollectorArgs(context.Background(),
+		self.config_obj, vql_subsystem.NullACLManager{},
 		self.repository, request)
 	assert.NoError(self.T(), err)
 

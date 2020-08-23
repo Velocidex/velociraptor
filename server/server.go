@@ -122,7 +122,7 @@ func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
 	message *crypto_proto.GrrMessage) {
 	if message.CSR != nil {
-		err := enroll(ctx, self, message.CSR)
+		err := enroll(ctx, self.config, self, message.CSR)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}

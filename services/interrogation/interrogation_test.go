@@ -71,11 +71,11 @@ func (self *ServicesTestSuite) EmulateCollection(
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
 	// Write a result set for this artifact.
-	services.GetJournal().PushRowsToArtifact(
+	services.GetJournal().PushRowsToArtifact(self.config_obj,
 		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	services.GetJournal().PushRowsToArtifact(
+	services.GetJournal().PushRowsToArtifact(self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -118,7 +118,7 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 
 	// Check the label is set on the client.
 	labeler := services.GetLabeler()
-	assert.True(self.T(), labeler.IsLabelSet(self.client_id, "Foo"))
+	assert.True(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "Foo"))
 	assert.NoError(self.T(), err)
 }
 
@@ -144,8 +144,9 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	path_manager := result_sets.NewArtifactPathManager(
 		self.config_obj, "server" /* client_id */, "", "Server.Internal.Enrollment")
 
-	err = services.GetJournal().PushRows(path_manager, []*ordereddict.Dict{
-		enroll_message, enroll_message, enroll_message, enroll_message})
+	err = services.GetJournal().PushRows(self.config_obj,
+		path_manager, []*ordereddict.Dict{
+			enroll_message, enroll_message, enroll_message, enroll_message})
 	assert.NoError(self.T(), err)
 
 	// Wait here until the client is enrolled

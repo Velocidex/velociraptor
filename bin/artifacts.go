@@ -275,7 +275,7 @@ func doArtifactList() {
 		}
 
 		request, err := services.GetLauncher().CompileCollectorArgs(
-			ctx, vql_subsystem.NullACLManager{}, repository,
+			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact.Name},
 			})

@@ -208,7 +208,8 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 		params := r.URL.Query()
 		old_username, ok := params["username"]
 		if ok && len(old_username) == 1 {
-			fmt.Sprintf("Logging off %v", old_username[0])
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.Info("Logging off %v", old_username[0])
 		}
 		http.SetCookie(w, &http.Cookie{
 			Name:    "VelociraptorAuth",

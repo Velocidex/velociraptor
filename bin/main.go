@@ -65,6 +65,9 @@ var (
 
 	trace_vql_flag = app.Flag("trace_vql", "Enable VQL tracing.").Bool()
 
+	logging_flag = app.Flag(
+		"logfile", "Write to this file as well").String()
+
 	command_handlers []CommandHandler
 )
 
@@ -140,7 +143,8 @@ func main() {
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(initFilestoreAccessor)
+		WithCustomValidator(initFilestoreAccessor).
+		WithLogFile(*logging_flag)
 
 	// Commands that potentially take an API config can load both
 	// - first try the API config, then try a config.
@@ -151,7 +155,8 @@ func main() {
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithCustomValidator(initFilestoreAccessor)
+		WithCustomValidator(initFilestoreAccessor).
+		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)

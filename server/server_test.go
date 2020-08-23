@@ -166,11 +166,13 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	defer runner.Close()
 
 	// Set a new event monitoring table
-	err := services.ClientEventManager().SetClientMonitoringState(&flows_proto.ClientEventTable{
-		Artifacts: &flows_proto.ArtifactCollectorArgs{
-			Artifacts: []string{"Generic.Client.Stats"},
-		},
-	})
+	err := services.ClientEventManager().SetClientMonitoringState(
+		context.Background(), self.config_obj,
+		&flows_proto.ClientEventTable{
+			Artifacts: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Generic.Client.Stats"},
+			},
+		})
 	require.NoError(t, err)
 
 	// The version of the currently installed table.
@@ -481,6 +483,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		context.Background(),
+		self.config_obj,
 		vql_subsystem.NullACLManager{},
 		repository,
 		request)
@@ -511,6 +514,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	// Schedule a flow in the database.
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		context.Background(),
+		self.config_obj,
 		vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{

@@ -110,7 +110,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	}
 
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, acl_manager, repository, request)
+		ctx, config_obj, acl_manager, repository, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

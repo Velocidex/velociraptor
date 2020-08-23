@@ -55,7 +55,7 @@ func (self *AddLabels) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	_, ok := artifacts.GetServerConfig(scope)
+	config_obj, ok := artifacts.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
@@ -65,13 +65,13 @@ func (self *AddLabels) Call(ctx context.Context,
 	for _, label := range arg.Labels {
 		switch arg.Op {
 		case "set":
-			err = labeler.SetClientLabel(arg.ClientId, label)
+			err = labeler.SetClientLabel(config_obj, arg.ClientId, label)
 
 		case "remove":
-			err = labeler.RemoveClientLabel(arg.ClientId, label)
+			err = labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
 
 		case "check":
-			if !labeler.IsLabelSet(arg.ClientId, label) {
+			if !labeler.IsLabelSet(config_obj, arg.ClientId, label) {
 				return false
 			}
 		}
