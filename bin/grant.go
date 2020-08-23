@@ -55,6 +55,10 @@ func doGrant() {
 		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	principal := *grant_command_principal
 
 	existing_policy, err := acls.GetPolicy(config_obj, principal)
@@ -100,6 +104,10 @@ func doGrant() {
 func doShow() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	principal := *show_command_principal
 	existing_policy, err := acls.GetPolicy(config_obj, principal)

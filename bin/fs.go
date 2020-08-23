@@ -116,6 +116,10 @@ func doLS(path, accessor string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -159,6 +163,10 @@ func doRM(path, accessor string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
 		accessor = matches[1]
@@ -195,6 +203,10 @@ func doRM(path, accessor string) {
 func doCp(path, accessor string, dump_dir string) {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {

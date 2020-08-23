@@ -56,8 +56,11 @@ func doAddUser() {
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredFrontend().
 		WithRequiredUser().LoadAndValidate()
-
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
@@ -106,6 +109,10 @@ func doShowUser() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	user_record, err := users.GetUser(config_obj, *user_show_name)
 	kingpin.FatalIfError(err, "Unable to find user %s", *user_show_name)
 
@@ -118,6 +125,10 @@ func doShowUser() {
 func doLockUser() {
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	user_record, err := users.GetUser(config_obj, *user_lock_name)
 	kingpin.FatalIfError(err, "Unable to find user %s", *user_lock_name)

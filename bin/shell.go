@@ -152,6 +152,10 @@ func doShell() {
 		kingpin.Fatalf("Shell requires a valid api config. Generate one with `velociraptor config api_config my_config.yaml --name myName --role administrator`")
 	}
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	scope := vql_subsystem.MakeScope()
 	ctx := InstallSignalHandler(scope)
 	client_info, err := getClientInfo(config_obj, ctx)

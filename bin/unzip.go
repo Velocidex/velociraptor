@@ -35,6 +35,10 @@ func doUnzip() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	kingpin.FatalIfError(err, "File does not exist")
 

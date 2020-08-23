@@ -60,9 +60,6 @@ var (
 
 	max_wait = app.Flag("max_wait", "Maximum time to queue results.").
 			Default("10").Int()
-
-	explain        = app.Command("explain", "Explain the output from a plugin")
-	explain_plugin = explain.Arg("plugin", "Plugin to explain").Required().String()
 )
 
 func outputJSON(ctx context.Context,
@@ -288,30 +285,9 @@ func doQuery() {
 	}
 }
 
-func doExplain(plugin string) {
-	result := ordereddict.NewDict()
-	type_map := vfilter.NewTypeMap()
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
-
-	pslist_info, pres := scope.Info(type_map, plugin)
-	if pres {
-		result.Set(plugin+"_info", pslist_info)
-		result.Set("type_map", type_map)
-	}
-
-	s, err := json.MarshalIndent(result)
-	if err == nil {
-		os.Stdout.Write(s)
-	}
-}
-
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
-		case explain.FullCommand():
-			doExplain(*explain_plugin)
-
 		case query.FullCommand():
 			doQuery()
 

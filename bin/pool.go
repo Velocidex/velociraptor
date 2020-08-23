@@ -50,6 +50,10 @@ func doPoolClient() {
 	client_config, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	sm, err := startEssentialServices(client_config)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	server.IncreaseLimits(client_config)
 
 	ctx, cancel := context.WithCancel(context.Background())
