@@ -135,11 +135,12 @@ func setArtifactFile(config_obj *config_proto.Config,
 					required_prefix + "'")
 		}
 
-		return artifact_definition, repository_manager.DeleteArtifactFile(
+		return artifact_definition, repository_manager.DeleteArtifactFile(config_obj,
 			artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
-		return repository_manager.SetArtifactFile(in.Artifact, required_prefix)
+		return repository_manager.SetArtifactFile(
+			config_obj, in.Artifact, required_prefix)
 	}
 
 	return nil, errors.New("Unknown op")

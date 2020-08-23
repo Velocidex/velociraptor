@@ -291,7 +291,9 @@ func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, 
 	// Hard limit for report generation can be specified in the
 	// definition.
 	if report.Timeout > 0 {
-		self.ctx, _ = context.WithTimeout(self.ctx, time.Second*time.Duration(report.Timeout))
+		ctx, cancel := context.WithTimeout(self.ctx, time.Second*time.Duration(report.Timeout))
+		defer cancel()
+		self.ctx = ctx
 	}
 
 	tmpl, err := self.tmpl.Parse(SanitizeGoTemplates(template_string))

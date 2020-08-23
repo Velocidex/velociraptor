@@ -49,8 +49,9 @@ func MonitoringProcessMessage(
 		for _, row := range rows {
 			row.Set("ClientId", message.Source)
 		}
-		return services.GetJournal().PushRowsToArtifact(rows,
-			response.Query.Name, message.Source, message.SessionId)
+		return services.GetJournal().PushRowsToArtifact(
+			config_obj, rows, response.Query.Name,
+			message.Source, message.SessionId)
 
 	}
 

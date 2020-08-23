@@ -62,12 +62,12 @@ func ForemanProcessMessage(
 
 	// Update the client's event tables.
 	client_event_manager := services.ClientEventManager()
-	if client_event_manager.CheckClientEventsVersion(client_id,
-		foreman_checkin.LastEventTableVersion) {
+	if client_event_manager.CheckClientEventsVersion(
+		config_obj, client_id, foreman_checkin.LastEventTableVersion) {
 		err := QueueMessageForClient(
 			config_obj, client_id,
 			client_event_manager.GetClientUpdateEventTableMessage(
-				client_id))
+				config_obj, client_id))
 		if err != nil {
 			return err
 		}
@@ -96,7 +96,7 @@ func ForemanProcessMessage(
 		}
 
 		// Notify the hunt manager that we need to hunt this client.
-		err := services.GetJournal().PushRowsToArtifact(
+		err := services.GetJournal().PushRowsToArtifact(config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id).

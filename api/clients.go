@@ -82,7 +82,7 @@ func GetApiClient(
 		return nil, err
 	}
 
-	result.Labels = services.GetLabeler().GetClientLabels(client_id)
+	result.Labels = services.GetLabeler().GetClientLabels(config_obj, client_id)
 
 	client_info := &actions_proto.ClientInfo{}
 	err = db.GetSubject(config_obj,

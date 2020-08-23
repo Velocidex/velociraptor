@@ -113,14 +113,14 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 }
 
 func (self *Notifier) NotifyAllListeners(config_obj *config_proto.Config) error {
-	return services.GetJournal().PushRowsToArtifact(
+	return services.GetJournal().PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", "All")},
 		"Server.Internal.Notifications", "server", "",
 	)
 }
 
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config, id string) error {
-	return services.GetJournal().PushRowsToArtifact(
+	return services.GetJournal().PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("Target", id)},
 		"Server.Internal.Notifications", "server", "",
 	)

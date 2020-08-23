@@ -65,12 +65,19 @@ func (self *ArtifactRepositoryPlugin) Print() {
 
 // Define vfilter.PluginGeneratorInterface
 func (self *ArtifactRepositoryPlugin) Call(
-	ctx context.Context, scope *vfilter.Scope,
+	ctx context.Context,
+	scope *vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
 		defer close(output_chan)
+
+		config_obj, ok := artifacts.GetServerConfig(scope)
+		if !ok {
+			scope.Log("Failed to get config_obj")
+			return
+		}
 
 		// If the ctx is done do nothing.
 		select {
@@ -123,7 +130,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 		}
 
 		request, err := services.GetLauncher().CompileCollectorArgs(
-			ctx, acl_manager, self.repository,
+			ctx, config_obj, acl_manager, self.repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},
 			})

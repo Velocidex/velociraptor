@@ -1,6 +1,10 @@
 package services
 
-import "sync"
+import (
+	"sync"
+
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+)
 
 // The Label service is responsible for manipulating client's labels
 // in a fast and efficient manner.
@@ -28,17 +32,22 @@ type Labeler interface {
 
 	// Get the last time any labeling operation modified the
 	// client's labels.
-	LastLabelTimestamp(client_id string) uint64
+	LastLabelTimestamp(config_obj *config_proto.Config,
+		client_id string) uint64
 
 	// Is the label set for this client.
-	IsLabelSet(client_id string, label string) bool
+	IsLabelSet(config_obj *config_proto.Config,
+		client_id string, label string) bool
 
 	// Set the label
-	SetClientLabel(client_id, label string) error
+	SetClientLabel(config_obj *config_proto.Config,
+		client_id, label string) error
 
 	// Remove the label from the client.
-	RemoveClientLabel(client_id, label string) error
+	RemoveClientLabel(config_obj *config_proto.Config,
+		client_id, label string) error
 
 	// Gets all the labels in a client.
-	GetClientLabels(client_id string) []string
+	GetClientLabels(config_obj *config_proto.Config,
+		client_id string) []string
 }

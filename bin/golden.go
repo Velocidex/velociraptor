@@ -37,6 +37,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -78,6 +79,9 @@ func runTest(fixture *testFixture,
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
+
+	//Force a clean slate for each test.
+	startup.Reset()
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {

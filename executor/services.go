@@ -11,9 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 // Start services that are available on the client.
@@ -22,21 +20,12 @@ func StartServices(
 	client_id string,
 	exe *ClientExecutor) error {
 
-	// Clients actually need an artifact repository manager.
-	err := sm.Start(repository.StartRepositoryManager)
-	if err != nil {
-		return err
-	}
-	err = sm.Start(launcher.StartLauncherService)
+	err := startup.StartupEssentialServices(sm)
 	if err != nil {
 		return err
 	}
 
-	err = sm.Start(inventory.StartInventoryService)
-	if err != nil {
-		return err
-	}
-
+	// Now start client specific services.
 	err = sm.Start(func(ctx context.Context,
 		wg *sync.WaitGroup,
 		config_obj *config_proto.Config) error {

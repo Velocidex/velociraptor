@@ -22,6 +22,7 @@ import (
 	"sync"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -41,7 +42,13 @@ func RunClient(
 	config_path *string) {
 
 	// Include the writeback in the client's configuration.
-	config_obj, err := DefaultConfigLoader.
+	config_obj, err := new(config.Loader).
+		WithVerbose(*verbose_flag).
+		WithFileLoader(*config_path).
+		WithEmbedded().
+		WithEnvLoader("VELOCIRAPTOR_CONFIG").
+		WithCustomValidator(initFilestoreAccessor).
+		WithLogFile(*logging_flag).
 		WithRequiredClient().
 		WithRequiredLogging().
 		WithWriteback().LoadAndValidate()

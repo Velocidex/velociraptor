@@ -34,12 +34,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/labels"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -198,40 +193,14 @@ func startEssentialServices(config_obj *config_proto.Config) (
 	*services.Service, error) {
 
 	sm := services.NewServiceManager(context.Background(), config_obj)
-
-	err := sm.Start(journal.StartJournalService)
+	err := startup.StartupEssentialServices(sm)
 	if err != nil {
 		return nil, err
 	}
 
-	err = sm.Start(notifications.StartNotificationService)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sm.Start(inventory.StartInventoryService)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sm.Start(launcher.StartLauncherService)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sm.Start(repository.StartRepositoryManager)
-	if err != nil {
-		return nil, err
-	}
-
-	err = sm.Start(labels.StartLabelService)
-	if err != nil {
-		return nil, err
-	}
-
-	// Load any artifacts defined in the config file.
+	// Load any artifacts defined in the config file after all the
+	// services are up.
 	err = load_config_artifacts(config_obj)
-
 	return sm, err
 }
 

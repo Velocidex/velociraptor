@@ -27,7 +27,7 @@ import (
 // Load all built in artifacts and make sure they validate syntax.
 func TestArtifactsSyntax(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
-	manager := &RepositoryManager{config_obj: config_obj}
+	manager := &RepositoryManager{}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	assert.NoError(t, err)
 

@@ -71,7 +71,8 @@ func (self ArtifactsPlugin) Call(
 		acl_manager := vql_subsystem.NullACLManager{}
 
 		request, err := services.GetLauncher().CompileCollectorArgs(
-			ctx, acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
+			ctx, config_obj, acl_manager,
+			repository, &flows_proto.ArtifactCollectorArgs{
 				Artifacts: arg.Names,
 			})
 		if err != nil {

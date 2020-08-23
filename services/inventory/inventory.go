@@ -71,12 +71,11 @@ type githubAssets struct {
 }
 
 type InventoryService struct {
-	mu         sync.Mutex
-	config_obj *config_proto.Config
-	binaries   *artifacts_proto.ThirdParty
-	Client     HTTPClient
-	db         datastore.DataStore
-	Clock      utils.Clock
+	mu       sync.Mutex
+	binaries *artifacts_proto.ThirdParty
+	Client   HTTPClient
+	db       datastore.DataStore
+	Clock    utils.Clock
 }
 
 func (self *InventoryService) Close() {}
@@ -367,7 +366,11 @@ func StartInventoryService(
 			}
 
 			cancel()
-			notification, cancel = services.GetNotifier().ListenForNotification(
+			notifier := services.GetNotifier()
+			if notifier == nil {
+				return
+			}
+			notification, cancel = notifier.ListenForNotification(
 				constants.ThirdPartyInventory)
 		}
 	}()

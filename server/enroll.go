@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -29,6 +30,7 @@ import (
 
 func enroll(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	server *Server,
 	csr *crypto_proto.Certificate) error {
 
@@ -43,7 +45,7 @@ func enroll(
 		return err
 	}
 
-	return services.GetJournal().PushRowsToArtifact(
+	return services.GetJournal().PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().Set("ClientId", client_id)},
 		"Server.Internal.Enrollment", "server" /* client_id */, "",
 	)

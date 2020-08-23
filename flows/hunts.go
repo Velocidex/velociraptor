@@ -127,7 +127,8 @@ func CreateHunt(
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
 	compiled, err := services.GetLauncher().
-		CompileCollectorArgs(ctx, acl_manager, repository, hunt.StartRequest)
+		CompileCollectorArgs(
+			ctx, config_obj, acl_manager, repository, hunt.StartRequest)
 	if err != nil {
 		return "", err
 	}
@@ -264,7 +265,7 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				services.GetJournal().PushRowsToArtifact(
+				services.GetJournal().PushRowsToArtifact(config_obj,
 					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
 					"server", hunt_modification.HuntId)
 

@@ -153,7 +153,8 @@ func (self CollectPlugin) Call(
 
 			}
 
-			err = services.GetLauncher().EnsureToolsDeclared(ctx, artifact)
+			err = services.GetLauncher().EnsureToolsDeclared(
+				ctx, config_obj, artifact)
 			if err != nil {
 				scope.Log("collect: %v %v", name, err)
 				continue
@@ -166,7 +167,7 @@ func (self CollectPlugin) Call(
 			}
 
 			request, err := services.GetLauncher().CompileCollectorArgs(
-				ctx, acl_manager, repository,
+				ctx, config_obj, acl_manager, repository,
 				&flows_proto.ArtifactCollectorArgs{
 					Artifacts: []string{artifact.Name},
 				})
@@ -211,6 +212,8 @@ func (self CollectPlugin) Call(
 					for _ = range vql.Eval(ctx, subscope) {
 					}
 					continue
+				} else {
+					subscope.Log("Starting collection of %s", query.Name)
 				}
 
 				// If no container is specified, just

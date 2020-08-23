@@ -9,77 +9,43 @@ To learn more about Velociraptor, read the documentation on:
 
 ## Quick start
 
-1. Download the binary from the release page.
+If you want to see what Velociraptor is all about simply:
 
-2. You need to generate a server config file. This will generate new
-   key material. Simply follow the prompts:
+1. Download the binary from the release page for your favorite platform (Windows/Linux/MacOS).
 
-```bash
-  $ velociraptor config generate -i
-```
-
-3. Start the server:
+2. Start the GUI
 
 ```bash
- $ velociraptor --config server.config.yaml frontend -v
+  $ velociraptor gui
 ```
 
-4. Point a browser at the GUI port that you set in the config
-   file. You should be able to log in with the password set earlier.
+This will bring up the GUI, Frontend and a local client. You can
+collect artifacts from the client (which is just running on your own
+machine) as normal.
 
-5. Launch the client on any system with the generated client config file.
-
-```bash
- $ velociraptor --config client.conf.yaml client -v
-```
-
-6. You should be able to search for the client in the GUI, browse VFS,
-   download files etc.
-
-To deploy the windows executable:
-
-1. Install the released MSI installer.
-
-2. Drop the client configuration into `C:\Program Files\Velociraptor\Velociraptor.config.yaml`
-using any system administration method (e.g. group policy, SCCM etc).
-
-See more information for deployment options at
+Once you are ready for a full deployment, check out the various deployment options at
 https://www.velocidex.com/docs/getting-started
 
 ## Running Velociraptor via Docker
-To run a Velociraptor server via Docker, follow the instructions here:   
+
+To run a Velociraptor server via Docker, follow the instructions here:
 https://github.com/weslambert/velociraptor-docker
 
 ## Running Velociraptor locally
 
-Velociraptor is also useful as a local triage tool. In particular you
-might find Velociraptor's artifacts especially useful for quickly
-capturing important information about a running system. You can
-collect artifacts by using the "artifacts collect" command:
+Velociraptor is also useful as a local triage tool. You can create a self contained local collector using the GUI:
 
-```bash
-    $ velociraptor artifacts list
-    INFO:2018/08/20 22:28:56 Loaded 18 built in artifacts
-    INFO:2018/08/20 22:28:56 Loaded 18 artifacts from artifacts/definitions/
-    Linux.Applications.Chrome.Extensions
-    Linux.Applications.Chrome.Extensions.Upload
-    Linux.Applications.Docker.Info
-    Linux.Applications.Docker.Version
-    Linux.Debian.AptSources
+1. Start the GUI as above (`velociraptor gui`).
 
-    $ velociraptor artifacts list -v Linux.Debian.AptSources
-    .... displays the artifacts
+2. Select the `Server Artifacts` sidebar menu, then `Build Collector`.
 
-    $ velociraptor artifacts collect -v Linux.Debian.AptSources --output myfile.zip
-    ... Collects all the named artifacts into myfile.zip
-```
-
-Explore more of Velociraptor's options using the -h flag.
+3. Select and configure the artifacts you want to collect tnen select
+   the `Uploaded Files` tab and download your customized collector.
 
 ## Building from source
 
 To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/ (Currently at least Go 1.13):
+from https://golang.org/dl/ (Currently at least Go 1.14):
 
 ```bash
 
@@ -143,10 +109,10 @@ two workflows:
    into the master branch.
 
 If you fork the project on GitHub, the pipelines will run on your own
-fork as well. If you need to prepare a PR for a new feature or modify
-an existing feature you can use this to build your own binaries for
-testing on all architectures.
-
+fork as well as long as you enable GitHub Actions on your fork. If you
+need to prepare a PR for a new feature or modify an existing feature
+you can use this to build your own binaries for testing on all
+architectures before send us the PR.
 
 ## Getting help
 

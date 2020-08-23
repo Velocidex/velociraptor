@@ -243,6 +243,30 @@ func (self *LogManager) makeNewComponent(
 	return &LogContext{Log}, nil
 }
 
+func AddLogFile(filename string) error {
+	fd, err := os.OpenFile(filename,
+		os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		return err
+	}
+
+	writer_map := lfshook.WriterMap{
+		logrus.ErrorLevel: fd,
+		logrus.DebugLevel: fd,
+		logrus.InfoLevel:  fd,
+		logrus.WarnLevel:  fd,
+	}
+
+	for _, log := range Manager.contexts {
+		log.Hooks.Add(lfshook.NewHook(
+			writer_map, &logrus.JSONFormatter{
+				DisableHTMLEscape: true,
+			},
+		))
+	}
+	return nil
+}
+
 type logWriter struct {
 	logger *LogContext
 }

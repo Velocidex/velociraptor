@@ -48,6 +48,7 @@ type EnrollmentService struct {
 
 func (self *EnrollmentService) Start(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
 	events, cancel := services.GetJournal().Watch("Server.Internal.Enrollment")
@@ -72,7 +73,7 @@ func (self *EnrollmentService) Start(
 				if !ok {
 					return
 				}
-				err := self.ProcessRow(ctx, event)
+				err := self.ProcessRow(ctx, config_obj, event)
 				if err != nil {
 					logger.Error("Enrollment Service: %v", err)
 				}
@@ -85,6 +86,7 @@ func (self *EnrollmentService) Start(
 
 func (self *EnrollmentService) ProcessRow(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 	client_id, pres := row.GetString("ClientId")
 	if !pres {
@@ -120,7 +122,7 @@ func (self *EnrollmentService) ProcessRow(
 
 	// Issue the flow on the client.
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
-		ctx, vql_subsystem.NullACLManager{},
+		ctx, config_obj, vql_subsystem.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  client_id,
@@ -150,6 +152,7 @@ type InterrogationService struct {
 // Watch for Generic.Client.Info artifacts.
 func (self *InterrogationService) Start(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -157,7 +160,7 @@ func (self *InterrogationService) Start(
 	watchForFlowCompletion(
 		ctx, wg, self.config_obj, "Generic.Client.Info/BasicInformation",
 		func(ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
-			err := self.ProcessRow(ctx, scope, row)
+			err := self.ProcessRow(ctx, config_obj, scope, row)
 			if err != nil {
 				logger.Error(fmt.Sprintf("InterrogationService: %v", err))
 			}
@@ -167,7 +170,9 @@ func (self *InterrogationService) Start(
 }
 
 func (self *InterrogationService) ProcessRow(
-	ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) error {
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope *vfilter.Scope, row *ordereddict.Dict) error {
 	client_id, _ := row.GetString("ClientId")
 	if client_id == "" {
 		return errors.New("Unknown ClientId")
@@ -227,7 +232,7 @@ func (self *InterrogationService) ProcessRow(
 	if len(client_info.Labels) > 0 {
 		labeler := services.GetLabeler()
 		for _, label := range client_info.Labels {
-			labeler.SetClientLabel(client_id, label)
+			labeler.SetClientLabel(config_obj, client_id, label)
 		}
 	}
 
@@ -256,12 +261,12 @@ func StartInterrogationService(
 		config_obj:       config_obj,
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
-	enrollment_server.Start(ctx, wg)
+	enrollment_server.Start(ctx, config_obj, wg)
 
 	result := &InterrogationService{
 		config_obj:       config_obj,
 		APIClientFactory: grpc_client.GRPCAPIClient{},
 	}
 
-	return result.Start(ctx, wg)
+	return result.Start(ctx, config_obj, wg)
 }

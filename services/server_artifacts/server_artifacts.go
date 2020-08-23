@@ -95,11 +95,12 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	services.GetJournal().PushRows(self.path_manager, []*ordereddict.Dict{
-		ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-			Set("time", time.Now().UTC().String()).
-			Set("message", msg)})
+	services.GetJournal().PushRows(self.config_obj,
+		self.path_manager, []*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+				Set("time", time.Now().UTC().String()).
+				Set("message", msg)})
 	return len(b), nil
 }
 
@@ -112,6 +113,7 @@ type ServerArtifactsRunner struct {
 
 func (self *ServerArtifactsRunner) Start(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) {
 	defer wg.Done()
 
@@ -122,14 +124,14 @@ func (self *ServerArtifactsRunner) Start(
 	notification, cancel := services.GetNotifier().ListenForNotification("server")
 	defer cancel()
 
-	self.process(ctx, wg)
+	self.process(ctx, config_obj, wg)
 
 	for {
 		select {
 		// Check the queues anyway every minute in case we miss the
 		// notification.
 		case <-time.After(time.Duration(60) * time.Second):
-			self.process(ctx, wg)
+			self.process(ctx, config_obj, wg)
 
 		case <-ctx.Done():
 			return
@@ -139,7 +141,7 @@ func (self *ServerArtifactsRunner) Start(
 				logger.Info("ServerArtifactsRunner: quit.")
 				return
 			}
-			err := self.process(ctx, wg)
+			err := self.process(ctx, config_obj, wg)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
 				return
@@ -147,13 +149,18 @@ func (self *ServerArtifactsRunner) Start(
 
 			// Listen again.
 			cancel()
-			notification, cancel = services.GetNotifier().ListenForNotification("server")
+			notifier := services.GetNotifier()
+			if notifier == nil {
+				return
+			}
+			notification, cancel = notifier.ListenForNotification("server")
 		}
 	}
 }
 
 func (self *ServerArtifactsRunner) process(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(
@@ -174,7 +181,7 @@ func (self *ServerArtifactsRunner) process(
 		defer wg.Done()
 
 		for _, task := range tasks {
-			err := self.processTask(ctx, task)
+			err := self.processTask(ctx, config_obj, task)
 			if err != nil {
 				logger.Error("ServerArtifactsRunner: %v", err)
 			}
@@ -197,6 +204,7 @@ func (self *ServerArtifactsRunner) cancel(flow_id string) {
 
 func (self *ServerArtifactsRunner) processTask(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	task *crypto_proto.GrrMessage) error {
 
 	collection_context, err := NewCollectionContext(
@@ -210,7 +218,7 @@ func (self *ServerArtifactsRunner) processTask(
 
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		services.GetJournal().PushRows(path_manager, []*ordereddict.Dict{
+		services.GetJournal().PushRows(config_obj, path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
@@ -395,7 +403,7 @@ func StartServerArtifactService(
 	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
 	wg.Add(1)
-	go result.Start(ctx, wg)
+	go result.Start(ctx, config_obj, wg)
 
 	return nil
 }
