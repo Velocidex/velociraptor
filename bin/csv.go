@@ -24,6 +24,10 @@ func doCSV() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
 	kingpin.FatalIfError(err, "Load Config ")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},

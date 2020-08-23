@@ -170,6 +170,10 @@ func doClientRPM() {
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
+
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")
 
@@ -264,6 +268,10 @@ func doClientSysVRPM() {
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
+
+	sm, err := startEssentialServices(config_obj)
+	kingpin.FatalIfError(err, "Starting services.")
+	defer sm.Close()
 
 	config_file_yaml, err := yaml.Marshal(getClientConfig(config_obj))
 	kingpin.FatalIfError(err, "marshal")

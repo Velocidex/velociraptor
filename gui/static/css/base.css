@@ -1106,3 +1106,8 @@ body {
 .close-icon {
     cursor: pointer;
 }
+
+
+ul.unlisted {
+    list-style-type: none;
+}
