@@ -60,7 +60,7 @@ exports.AddArtifactDirective = function() {
           onResolve: '&',
           onReject: '&',
       },
-      templateUrl: '/static/angular-components/artifact/' +
+      templateUrl: window.base_path+'/static/angular-components/artifact/' +
           'add_artifact.html',
       controller: AddArtifactController,
       controllerAs: 'controller'

@@ -108,7 +108,7 @@ exports.BreadcrumbsDirective = function() {
       // "foo/bar/folder" we want "foo > bar" breadcrumbs).
       stripEndingSlash: '='
     },
-    templateUrl: '/static/angular-components/client/virtual-file-system/breadcrumbs.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/breadcrumbs.html',
     controller: BreadcrumbsController,
     controllerAs: 'controller'
   };

@@ -106,7 +106,7 @@ RecursiveListButtonController.prototype.onClick = function() {
         'depth': RecursiveListButtonController.MAX_DEPTH};
 
     this.modalInstance = this.uibModal_.open({
-        templateUrl: '/static/angular-components/client/virtual-file-system/' +
+        templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/' +
             'recursive-list-button-modal.html',
         scope: this.scope_
     });
@@ -181,7 +181,7 @@ exports.RecursiveListButtonDirective = function() {
     },
     require: '^grrFileContext',
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/virtual-file-system/' +
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/' +
         'recursive-list-button.html',
     controller: RecursiveListButtonController,
     controllerAs: 'controller',

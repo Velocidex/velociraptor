@@ -61,7 +61,7 @@ exports.ClientFlowsViewDirective = function() {
       clientId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/client-flows-view.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/client-flows-view.html',
     controller: ClientFlowsViewController,
     controllerAs: 'controller'
   };

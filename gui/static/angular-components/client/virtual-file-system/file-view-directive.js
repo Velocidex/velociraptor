@@ -132,7 +132,7 @@ exports.FileViewDirective = function() {
   return {
     restrict: 'E',
     scope: {},
-    templateUrl: '/static/angular-components/client/virtual-file-system/file-view.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/file-view.html',
     controller: FileViewController,
     controllerAs: 'controller'
   };

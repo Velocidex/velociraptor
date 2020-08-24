@@ -111,7 +111,7 @@ exports.BuildCollectorDirective = function() {
             onReject: '&',
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/client/build-collector.html',
+        templateUrl: window.base_path+'/static/angular-components/client/build-collector.html',
         controller: BuildCollectorController,
         controllerAs: 'controller',
     };

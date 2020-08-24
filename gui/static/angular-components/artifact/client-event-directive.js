@@ -135,7 +135,7 @@ ClientEventController.prototype.selectArtifact = function(artifact) {
 ClientEventController.prototype.showHelp = function() {
     var self = this;
     self.modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
+        templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/help.html',
         scope: self.scope_,
         size: "lg",
     });
@@ -212,7 +212,7 @@ ClientEventController.prototype.updateClientMonitoringTable = function() {
         // Initial table will be set to primary table
         self.current_table = self.state.artifacts || {};
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_client_monitoring.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -316,7 +316,7 @@ exports.ClientEventDirective = function() {
           "clientId": '=',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/artifact/client-event.html',
+      templateUrl: window.base_path+'/static/angular-components/artifact/client-event.html',
       controller: ClientEventController,
       controllerAs: 'controller',
   };

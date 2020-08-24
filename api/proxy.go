@@ -38,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A Mux for the reverse proxy feature.
@@ -116,23 +117,25 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 		return nil, err
 	}
 
-	mux.Handle("/api/", csrfProtect(config_obj,
+	base := config_obj.GUI.BasePath
+
+	mux.Handle(base+"/api/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
-	mux.Handle("/api/v1/DownloadVFSFile", csrfProtect(config_obj,
+	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFileDownloadHandler(config_obj))))
 
-	mux.Handle("/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
+	mux.Handle(base+"/api/v1/DownloadVFSFolder", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, vfsFolderDownloadHandler(config_obj))))
 
-	mux.Handle("/api/v1/UploadTool", csrfProtect(config_obj,
+	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, toolUploadHandler(config_obj))))
 
 	// Serve prepared zip files.
-	mux.Handle("/downloads/", csrfProtect(config_obj,
+	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
@@ -141,7 +144,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 					"/downloads/")))))
 
 	// Serve notebook items
-	mux.Handle("/notebooks/", csrfProtect(config_obj,
+	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
 			config_obj, http.FileServer(
 				api.NewFileSystem(
@@ -162,7 +165,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle("/app.html", csrfProtect(config_obj,
+	mux.Handle(base+"/app.html", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(config_obj, h)))
 
 	h, err = GetTemplateHandler(config_obj, "/static/templates/index.html")
@@ -171,7 +174,7 @@ func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Ha
 	}
 
 	// No Auth on / which is a redirect to app.html anyway.
-	mux.Handle("/", h)
+	mux.Handle(base+"/", h)
 	return mux, nil
 }
 
@@ -182,6 +185,7 @@ type _templateArgs struct {
 	Report_url string
 	Version    string
 	CsrfToken  string
+	BasePath   string
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a
@@ -255,8 +259,13 @@ func GetAPIHandler(
 		return nil, err
 	}
 
+	base := config_obj.GUI.BasePath
+
+	utils.Debug(base + "/api/v1/")
+
 	reverse_proxy_mux := http.NewServeMux()
-	reverse_proxy_mux.Handle("/api/v1/", grpc_proxy_mux)
+	reverse_proxy_mux.Handle(base+"/api/v1/",
+		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
 }

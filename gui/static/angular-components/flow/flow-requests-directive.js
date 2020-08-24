@@ -84,7 +84,7 @@ exports.FlowRequestsDirective = function() {
       clientId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-requests.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/flow-requests.html',
     controller: FlowRequestsController,
     controllerAs: 'controller'
   };

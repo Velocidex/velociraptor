@@ -48,7 +48,7 @@ exports.UserDashboardDirective = function() {
   return {
     scope: {},
     restrict: 'E',
-    templateUrl: '/static/angular-components/user/user-dashboard.html',
+    templateUrl: window.base_path+'/static/angular-components/user/user-dashboard.html',
     controller: UserDashboardController,
     controllerAs: 'controller'
   };

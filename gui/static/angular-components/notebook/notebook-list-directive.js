@@ -120,7 +120,7 @@ NotebookListController.prototype.deleteNotebook = function(event) {
 
     var modalScope = this.scope_.$new();
     var modalInstance = this.uibModal_.open({
-        templateUrl: '/static/angular-components/notebook/delete-notebook-confirm-modal.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/delete-notebook-confirm-modal.html',
         scope: modalScope,
         size: 'sm',
     });
@@ -294,7 +294,7 @@ exports.NotebookListDirective = function() {
           state: '=',
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/notebook/notebook-list.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/notebook-list.html',
         controller: NotebookListController,
     controllerAs: 'controller'
     };

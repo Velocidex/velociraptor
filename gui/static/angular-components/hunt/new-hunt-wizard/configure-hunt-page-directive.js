@@ -16,7 +16,7 @@ exports.ConfigureHuntPageDirective = function() {
       huntRunnerArgs: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +
+    templateUrl: window.base_path+'/static/angular-components/hunt/new-hunt-wizard/' +
         'configure-hunt-page.html'
   };
 };

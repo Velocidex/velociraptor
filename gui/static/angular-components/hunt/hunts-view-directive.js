@@ -69,7 +69,7 @@ exports.HuntsViewDirective = function() {
   return {
     restrict: 'E',
     scope: {},
-    templateUrl: '/static/angular-components/hunt/hunts-view.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunts-view.html',
     controller: HuntsViewController,
     controllerAs: 'controller'
   };

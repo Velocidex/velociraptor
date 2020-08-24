@@ -74,7 +74,7 @@ exports.CSVFormDirective = function() {
         field: '=',
         value: '=',
     },
-    templateUrl: '/static/angular-components/artifact/csv-form.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/csv-form.html',
     controller: CSVFormController,
     controllerAs: 'controller'
   };

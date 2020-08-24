@@ -64,7 +64,7 @@ exports.ClientLabelFormDirective = function() {
           value: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/utils/client-label-form.html',
+    templateUrl: window.base_path+'/static/angular-components/utils/client-label-form.html',
     controller: ClientLabelFormController,
     controllerAs: 'controller'
   };

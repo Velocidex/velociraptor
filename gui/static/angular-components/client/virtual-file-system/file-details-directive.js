@@ -139,7 +139,7 @@ exports.FileDetailsDirective = function() {
       currentTab: '='
     },
     require: '^grrFileContext',
-    templateUrl: '/static/angular-components/client/virtual-file-system/file-details.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/file-details.html',
     controller: FileDetailsController,
     controllerAs: 'controller',
     link: function(scope, element, attrs, fileContextController) {

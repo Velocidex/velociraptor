@@ -98,7 +98,7 @@ AddItemButtonController.prototype.updateArtifactDefinitions = function() {
     this.grrApiService_.get(url, params).then(function(response) {
         self.value = response['data']['artifact'];
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_artifact.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_artifact.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -142,7 +142,7 @@ AddItemButtonController.prototype.updateServerMonitoringTable = function() {
             }
         }
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_server_monitoring.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -186,7 +186,7 @@ AddItemButtonController.prototype.updateClientMonitoringTable = function() {
         self.flowArguments = response['data'];
         self.names = self.flowArguments.artifacts || [];
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_client_monitoring.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_client_monitoring.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -230,7 +230,7 @@ exports.AddItemButtonDirective = function() {
     },
     require: '^grrFileContext',
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/virtual-file-system/' +
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/' +
         'add-item-button.html',
     controller: AddItemButtonController,
     controllerAs: 'controller',

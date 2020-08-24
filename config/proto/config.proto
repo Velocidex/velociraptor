@@ -296,6 +296,9 @@ message GUIConfig {
     // cookie is set to secure only.
     bool use_plain_http = 20;
 
+    // Serve the GUI from this base path instead of "/"
+    string base_path = 21;
+
     string gw_certificate = 10 [(sem_type) = {
             description: "The GUI exposes a HTTP interface to the gRPC end point."
             "This is the certificate and private key that will be used to "

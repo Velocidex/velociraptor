@@ -18,7 +18,7 @@ exports.TableTopDirective = function() {
       parentController: '='
     },
     require: '^grrPagedFilteredTable',
-    templateUrl: '/static/angular-components/core/' +
+    templateUrl: window.base_path+'/static/angular-components/core/' +
         'paged-filtered-table-top.html',
     restrict: 'E'
   };
@@ -48,7 +48,7 @@ exports.TableBottomDirective = function() {
       parentController: '='
     },
     require: '^grrPagedFilteredTable',
-    templateUrl: '/static/angular-components/core/' +
+    templateUrl: window.base_path+'/static/angular-components/core/' +
         'paged-filtered-table-bottom.html',
     restrict: 'E'
   };

@@ -22,9 +22,12 @@ exports.UNAUTHORIZED_API_RESPONSE_EVENT = UNAUTHORIZED_API_RESPONSE_EVENT;
  * @return {string} Encoded url path.
  */
 exports.encodeUrlPath = function(urlPath) {
-  var components = urlPath.split('/');
-  var encodedComponents = components.map(encodeURIComponent);
-  return encodedComponents.join('/');
+    var base_path = window.base_path;
+    var components = urlPath.split('/');
+    var encodedComponents = components.map(encodeURIComponent);
+    var result = base_path + encodedComponents.join('/');
+    console.log(result);
+    return result;
 };
 var encodeUrlPath = exports.encodeUrlPath;
 

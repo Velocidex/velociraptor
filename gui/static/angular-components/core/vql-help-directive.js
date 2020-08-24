@@ -43,7 +43,7 @@ exports.VqlHelpDirective = function() {
           onResolve: '&',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/core/vql-help.html',
+      templateUrl: window.base_path+'/static/angular-components/core/vql-help.html',
       controller: VqlHelpController,
       controllerAs: 'controller'
   };

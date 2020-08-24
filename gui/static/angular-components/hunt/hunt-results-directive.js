@@ -61,7 +61,7 @@ exports.HuntResultsDirective = function() {
         huntId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-results.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-results.html',
     controller: HuntResultsController,
     controllerAs: 'controller'
   };

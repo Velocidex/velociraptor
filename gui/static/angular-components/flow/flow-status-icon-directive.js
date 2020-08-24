@@ -16,7 +16,7 @@ exports.FlowStatusIconDirective = function() {
   return {
     scope: {flow: '='},
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-status-icon.html'
+    templateUrl: window.base_path+'/static/angular-components/flow/flow-status-icon.html'
   };
 };
 

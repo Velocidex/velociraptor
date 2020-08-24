@@ -36,12 +36,13 @@ import (
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
+	base := config_obj.GUI.BasePath
 	logging.GetLogger(config_obj, &logging.FrontendComponent).
 		Info("GUI will serve files from directory gui/static")
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
+	mux.Handle(base+"/static/", http.StripPrefix(base+"/static/", http.FileServer(
 		http.Dir("gui/static"))))
-	mux.Handle("/favicon.ico",
-		http.RedirectHandler("/static/images/favicon.ico",
+	mux.Handle(base+"/favicon.ico",
+		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
 }
 
@@ -52,10 +53,13 @@ func GetTemplateHandler(config_obj *config_proto.Config,
 		return nil, err
 	}
 
+	base := config_obj.GUI.BasePath
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		args := _templateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			CsrfToken: csrf.Token(r),
+			BasePath:  base,
 			Heading:   "Heading",
 		}
 		err := tmpl.Execute(w, args)

@@ -73,7 +73,7 @@ exports.HuntOverviewDirective = function() {
       hunt: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-overview.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-overview.html',
     controller: HuntOverviewController,
     controllerAs: 'controller'
   };

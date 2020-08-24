@@ -311,7 +311,7 @@ exports.HuntsListDirective = function() {
       selectedHuntId: '=?',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunts-list.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunts-list.html',
     controller: HuntsListController,
     controllerAs: 'controller'
   };

@@ -92,7 +92,7 @@ exports.FlowResultsDirective = function() {
         clientId: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/flow-results.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/flow-results.html',
     controller: FlowResultsController,
     controllerAs: 'controller'
   };

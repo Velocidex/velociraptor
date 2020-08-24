@@ -287,7 +287,7 @@ exports.FileTreeDirective = function() {
     restrict: 'E',
     scope: {},
     require: '^grrFileContext',
-    templateUrl: '/static/angular-components/client/virtual-file-system/file-tree.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/file-tree.html',
     controller: FileTreeController,
     controllerAs: 'controller',
     link: function(scope, element, attrs, fileContextController) {

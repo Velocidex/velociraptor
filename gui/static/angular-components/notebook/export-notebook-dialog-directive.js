@@ -53,7 +53,7 @@ exports.NotebookExportNotebookDialog = function() {
             onReject: '&'
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/notebook/export-notebook-dialog.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/export-notebook-dialog.html',
         controller: ExportNotebookDialogController,
     controllerAs: 'controller'
     };

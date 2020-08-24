@@ -104,7 +104,7 @@ exports.WizardFormPageDirective = function() {
     },
     restrict: 'E',
     transclude: true,
-    templateUrl: '/static/angular-components/core/wizard-form-page.html',
+    templateUrl: window.base_path+'/static/angular-components/core/wizard-form-page.html',
     controller: WizardFormPageController,
     controllerAs: 'controller',
     require: '^grrWizardForm',

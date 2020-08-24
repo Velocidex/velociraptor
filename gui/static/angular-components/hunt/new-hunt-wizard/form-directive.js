@@ -144,7 +144,7 @@ exports.FormDirective = function() {
       onReject: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/new-hunt-wizard/form.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/new-hunt-wizard/form.html',
     controller: FormController,
     controllerAs: 'controller'
   };

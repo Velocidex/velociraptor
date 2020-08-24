@@ -19,7 +19,7 @@ exports.StatusPageDirective = function() {
       createHuntArgs: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/new-hunt-wizard/' +
+    templateUrl: window.base_path+'/static/angular-components/hunt/new-hunt-wizard/' +
         'status-page.html'
   };
 };

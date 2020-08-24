@@ -114,7 +114,7 @@ exports.appControllerModule.run(function(
  * Hardcoding jsTree themes folder so that it works correctly when used
  * from a JS bundle file.
  */
-$['jstree']['_themes'] = '/static/third-party/jstree/themes/';
+$['jstree']['_themes'] = window.base_path+'/static/third-party/jstree/themes/';
 
 
 /**

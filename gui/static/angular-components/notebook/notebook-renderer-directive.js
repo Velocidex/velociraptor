@@ -49,7 +49,7 @@ exports.NotebookRendererDirective = function() {
         'state': '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/notebook/notebook-renderer.html',
+    templateUrl: window.base_path+'/static/angular-components/notebook/notebook-renderer.html',
     controller: NotebookRendererController,
     controllerAs: 'controller'
   };
