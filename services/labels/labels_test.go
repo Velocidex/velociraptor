@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -30,6 +31,8 @@ type LabelsTestSuite struct {
 	client_id  string
 	flow_id    string
 	sm         *services.Service
+
+	Clock utils.Clock
 }
 
 func (self *LabelsTestSuite) SetupTest() {
@@ -51,6 +54,11 @@ func (self *LabelsTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(StartLabelService))
 
 	self.client_id = "C.12312"
+	self.Clock = &utils.IncClock{}
+
+	// Set an incremental clock on the labeler.
+	labeler := services.GetLabeler().(*Labeler)
+	labeler.Clock = self.Clock
 }
 
 func (self *LabelsTestSuite) TearDownTest() {
@@ -92,7 +100,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
 
-	now := uint64(time.Now().UnixNano())
+	now := uint64(self.Clock.Now().UnixNano())
 
 	labeler := services.GetLabeler()
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "Label1")
