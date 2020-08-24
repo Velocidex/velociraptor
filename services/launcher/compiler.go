@@ -286,6 +286,7 @@ func PopulateArtifactsVQLCollectorArgs(
 					Name:       artifact.Name,
 					Parameters: filtered_parameters,
 					Sources:    sources,
+					Tools:      artifact.Tools,
 				})
 		}
 	}
