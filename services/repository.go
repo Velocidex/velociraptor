@@ -84,7 +84,8 @@ type Repository interface {
 		*artifacts_proto.Artifact, error)
 
 	// Get an artifact by name.
-	Get(name string) (*artifacts_proto.Artifact, bool)
+	Get(config_obj *config_proto.Config,
+		name string) (*artifacts_proto.Artifact, bool)
 
 	// Remove a named artifact from the repository.
 	Del(name string)

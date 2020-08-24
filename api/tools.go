@@ -26,6 +26,10 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 			"User is not allowed to view tools.")
 	}
 
+	if in.Materialize {
+		return services.GetInventory().GetToolInfo(ctx, self.config, in.Name)
+	}
+
 	return services.GetInventory().ProbeToolInfo(in.Name)
 }
 

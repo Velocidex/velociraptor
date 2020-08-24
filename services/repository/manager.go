@@ -32,52 +32,6 @@ func (self *RepositoryManager) GetGlobalRepository(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.global_repository != nil {
-		return self.global_repository, nil
-	}
-
-	self.global_repository = &Repository{
-		Data: make(map[string]*artifacts_proto.Artifact)}
-
-	now := time.Now()
-
-	assets.Init()
-	files, err := assets.WalkDirs("", false)
-	if err != nil {
-		return nil, err
-	}
-
-	count := 0
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	for _, file := range files {
-		if strings.HasPrefix(file, "artifacts/definitions") &&
-			strings.HasSuffix(file, "yaml") {
-			data, err := assets.ReadFile(file)
-			if err != nil {
-				logger.Info("Cant read asset %s: %v", file, err)
-				continue
-			}
-			_, err = self.global_repository.LoadYaml(
-				string(data), false /* Validate */)
-			if err != nil {
-				logger.Info("Cant parse asset %s: %s", file, err)
-				continue
-			}
-
-			count += 1
-		}
-	}
-
-	// Compile the artifacts in the background so they are ready
-	// to go when the GUI searches for them.
-	go func() {
-		for _, name := range self.global_repository.List() {
-			self.global_repository.Get(name)
-		}
-		logger.Info("Compiled all artifacts.")
-	}()
-
-	logger.Info("Loaded %d built in artifacts in %v", count, time.Now().Sub(now))
 	return self.global_repository, nil
 }
 
@@ -158,7 +112,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 		return err
 	}
 
-	_, pres := global_repository.Get(name)
+	_, pres := global_repository.Get(config_obj, name)
 	if !pres {
 		return nil
 	}
@@ -175,6 +129,63 @@ func (self *RepositoryManager) DeleteArtifactFile(
 func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	services.RegisterRepositoryManager(&RepositoryManager{})
+	// Load all the artifacts in the repository and compile them in the background.
+	self := &RepositoryManager{
+		global_repository: &Repository{
+			Data: make(map[string]*artifacts_proto.Artifact),
+		},
+	}
+
+	now := time.Now()
+
+	assets.Init()
+
+	files, err := assets.WalkDirs("", false)
+	if err != nil {
+		return err
+	}
+
+	count := 0
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	for _, file := range files {
+		if strings.HasPrefix(file, "artifacts/definitions") &&
+			strings.HasSuffix(file, "yaml") {
+			data, err := assets.ReadFile(file)
+			if err != nil {
+				logger.Info("Cant read asset %s: %v", file, err)
+				continue
+			}
+			_, err = self.global_repository.LoadYaml(
+				string(data), false /* Validate */)
+			if err != nil {
+				logger.Info("Cant parse asset %s: %s", file, err)
+				continue
+			}
+
+			count += 1
+		}
+	}
+
+	// Compile the artifacts in the background so they are ready
+	// to go when the GUI searches for them.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		for _, name := range self.global_repository.List() {
+			select {
+			case <-ctx.Done():
+				return
+
+			default:
+				self.global_repository.Get(config_obj, name)
+			}
+		}
+		logger.Info("Compiled all artifacts.")
+	}()
+
+	logger.Info("Loaded %d built in artifacts in %v", count, time.Now().Sub(now))
+	services.RegisterRepositoryManager(self)
+
 	return nil
 }

@@ -115,9 +115,11 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 	return repository, nil
 }
 
-func printParameters(artifacts []string, repository services.Repository) {
+func printParameters(
+	config_obj *config_proto.Config,
+	artifacts []string, repository services.Repository) {
 	for _, name := range artifacts {
-		artifact, _ := repository.Get(name)
+		artifact, _ := repository.Get(config_obj, name)
 
 		fmt.Printf("Parameters for artifact %s\n", artifact.Name)
 		for _, arg := range artifact.Parameters {
@@ -218,7 +220,7 @@ func doArtifactShow() {
 	repository, err := getRepository(config_obj)
 	kingpin.FatalIfError(err, "Loading extra artifacts")
 
-	artifact, pres := repository.Get(*artifact_command_show_name)
+	artifact, pres := repository.Get(config_obj, *artifact_command_show_name)
 	if !pres {
 		kingpin.Fatalf("Artifact %s not found",
 			*artifact_command_show_name)
@@ -260,7 +262,7 @@ func doArtifactList() {
 			continue
 		}
 
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
 			kingpin.Fatalf("Artifact %s not found", name)
 		}

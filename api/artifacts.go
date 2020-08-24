@@ -84,7 +84,7 @@ func getArtifactFile(
 		return "", err
 	}
 
-	artifact, pres := repository.Get(name)
+	artifact, pres := repository.Get(config_obj, name)
 	if !pres {
 		return default_artifact, nil
 	}
@@ -163,7 +163,7 @@ func getReportArtifacts(
 
 	result := &artifacts_proto.ArtifactDescriptors{}
 	for _, name := range repository.List() {
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if pres {
 			for _, report := range artifact.Reports {
 				if report.Type == report_type {
@@ -236,7 +236,7 @@ func searchArtifact(
 			continue
 		}
 
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if pres {
 			// Skip non matching types
 			if artifact_type != "" &&

@@ -96,7 +96,7 @@ func (self *LauncherTestSuite) SetupTest() {
 	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
 	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
 	assert.NoError(t, self.sm.Start(StartLauncherService))
-	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
+	assert.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 }
 
 func (self *LauncherTestSuite) TearDownTest() {

@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -81,7 +82,8 @@ func (self *ApiServer) GetKeywordCompletions(
 		result.Items = append(result.Items, &api_proto.Completion{
 			Name: "Artifact." + name,
 			Type: "Artifact",
-			Args: getArtifactParamDescriptors(name, type_map, repository),
+			Args: getArtifactParamDescriptors(
+				self.config, name, type_map, repository),
 		})
 	}
 
@@ -124,10 +126,12 @@ func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
 	return args
 }
 
-func getArtifactParamDescriptors(name string, type_map *vfilter.TypeMap,
+func getArtifactParamDescriptors(
+	config_obj *config_proto.Config,
+	name string, type_map *vfilter.TypeMap,
 	repository services.Repository) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
-	artifact, pres := repository.Get(name)
+	artifact, pres := repository.Get(config_obj, name)
 	if !pres {
 		return args
 	}

@@ -25,8 +25,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository services.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}
@@ -45,7 +47,7 @@ func WriteFlowReport(
 	repository services.Repository,
 	writer io.Writer,
 	flow_id, client_id, template string) error {
-	html_template_string, err := getHTMLTemplate(template, repository)
+	html_template_string, err := getHTMLTemplate(config_obj, template, repository)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Artifact %v not found %v\n", template, err))
 	}
@@ -64,7 +66,7 @@ func WriteFlowReport(
 	}
 
 	for _, name := range flow_details.Context.Request.Artifacts {
-		definition, pres := repository.Get(name)
+		definition, pres := repository.Get(config_obj, name)
 		if !pres {
 			scope.Log("Artifact %v not found %v\n", name, err)
 			continue

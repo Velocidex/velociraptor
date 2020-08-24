@@ -122,7 +122,8 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 }
 
 func (self *GuiTemplateEngine) Import(artifact, name string) interface{} {
-	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	definition, pres := self.BaseTemplateEngine.Repository.Get(
+		self.config_obj, artifact)
 	if !pres {
 		self.Error("Unknown artifact %v", artifact)
 		return ""

@@ -62,7 +62,7 @@ func (self ArtifactsPlugin) Call(
 
 		seen := make(map[string]*artifacts_proto.Artifact)
 		for _, name := range arg.Names {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if pres {
 				seen[artifact.Name] = artifact
 			}

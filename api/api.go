@@ -670,7 +670,7 @@ func (self *ApiServer) GetArtifacts(
 		}
 
 		for _, name := range in.Names {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(self.config, name)
 			if pres {
 				result.Items = append(result.Items, artifact)
 			}

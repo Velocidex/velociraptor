@@ -22,7 +22,7 @@ type ArtifactPathManager struct {
 	config_obj                             *config_proto.Config
 	client_id, flow_id, full_artifact_name string
 
-	clock      utils.Clock
+	Clock      utils.Clock
 	file_store api.FileStore
 }
 
@@ -35,7 +35,7 @@ func NewArtifactPathManager(
 		client_id:          client_id,
 		flow_id:            flow_id,
 		full_artifact_name: full_artifact_name,
-		clock:              utils.RealClock{},
+		Clock:              utils.RealClock{},
 		file_store:         file_store_factory,
 	}
 }
@@ -56,7 +56,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (string, error) {
 		return "", err
 	}
 
-	now := self.clock.Now().UTC()
+	now := self.Clock.Now().UTC()
 	day_name := fmt.Sprintf("%d-%02d-%02d", now.Year(),
 		now.Month(), now.Day())
 

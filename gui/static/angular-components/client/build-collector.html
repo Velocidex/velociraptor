@@ -5,14 +5,9 @@
   <grr-wizard-form-page title="Select Artifacts to collect">
     <grr-search-artifact names="controller.names"
                          params="controller.params"
+                         tools="controller.tools"
                          type="'CLIENT'">
     </grr-search-artifact>
-    <dl class="dl-horizontal dl-flow">
-      <dt>Ops/Sec</dt>
-      <dd><input ng-model="controller.ops_per_second" type="text"></input></dd>
-      <dt>Timeout</dt>
-      <dd><input ng-model="controller.timeout" type="text"></input></dd>
-    </dl>
   </grr-wizard-form-page>
 
   <grr-wizard-form-page title="Configure Collection">
@@ -125,33 +120,29 @@
           </grr-form>
         </div>
       </div>
-      <div class="well well-large">
-        <div class="form-group">
-          <label class="control-label" title="Collector Type">
-            Required Tools
-          </label>
-          <div class="controls">
-            <ul class="unlisted">
-              <li><i class="fa fa-external-link"></i>
-                <grr-tool-viewer name="VelociraptorWindows"></grr-tool-viewer></li>
-              <li><i class="fa fa-external-link"></i>
-                <grr-tool-viewer name="VelociraptorWindows_x86"></grr-tool-viewer></li>
-              <li><i class="fa fa-external-link"></i>
-                <grr-tool-viewer name="VelociraptorLinux"></grr-tool-viewer></li>
-              <li><i class="fa fa-external-link"></i>
-                <grr-tool-viewer name="VelociraptorDarwin"></grr-tool-viewer></li>
-            </ul>
-          </div>
-      </div>
     </div>
   </grr-wizard-form-page>
 
   <!-- Submit the collection and show the status -->
   <grr-wizard-form-page title="Result"
                         is-valid="controller.serverResponse != null"
-                        on-show="controller.sendRequest()"
+                        on-show="controller.checkTools()"
                         next-button-label="Done"
                         no-back-button="true">
+    <div class="padded">
+      <div class="well well-large">
+        <div ng-repeat="tool in controller.checking_tools track by $index">
+          <div class="alert text-center"
+               ng-class="{'alert-primary': tool == controller.current_checking_tool, 'alert-success': tool != controller.current_checking_tool}">
+            Checking {$ tool $}
+            <span role="status" class="spinner-border"
+                  ng-if="tool == controller.current_checking_tool">
+              <span class="sr-only">Loading...</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </grr-wizard-form-page>
 
 </grr-wizard-form>

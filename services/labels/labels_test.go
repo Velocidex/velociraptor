@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -30,6 +31,8 @@ type LabelsTestSuite struct {
 	client_id  string
 	flow_id    string
 	sm         *services.Service
+
+	Clock utils.Clock
 }
 
 func (self *LabelsTestSuite) SetupTest() {
@@ -51,6 +54,11 @@ func (self *LabelsTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(StartLabelService))
 
 	self.client_id = "C.12312"
+	self.Clock = &utils.IncClock{}
+
+	// Set an incremental clock on the labeler.
+	labeler := services.GetLabeler().(*Labeler)
+	labeler.Clock = self.Clock
 }
 
 func (self *LabelsTestSuite) TearDownTest() {
@@ -92,7 +100,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	db, err := datastore.GetDB(self.config_obj)
 	require.NoError(self.T(), err)
 
-	now := uint64(time.Now().UnixNano())
+	now := uint64(self.Clock.Now().UnixNano())
 
 	labeler := services.GetLabeler()
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "Label1")
@@ -118,8 +126,8 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.True(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "All"))
 
 	// The timestamp should be reasonable
-	assert.True(self.T(), labeler.LastLabelTimestamp(
-		self.config_obj, self.client_id) >= now)
+	assert.Greater(self.T(), labeler.LastLabelTimestamp(
+		self.config_obj, self.client_id), now)
 
 	// remember the time of the last update
 	now = labeler.LastLabelTimestamp(self.config_obj, self.client_id)
@@ -131,7 +139,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.False(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "Label1"))
 
 	// The timestamp should be later than the previous time
-	assert.True(self.T(), labeler.LastLabelTimestamp(self.config_obj, self.client_id) > now)
+	assert.Greater(self.T(), labeler.LastLabelTimestamp(self.config_obj, self.client_id), now)
 }
 
 // Check that two labelers can syncronize changes between them via the

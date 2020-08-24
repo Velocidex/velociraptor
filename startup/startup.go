@@ -54,8 +54,6 @@ func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServ
 }
 
 func StartupEssentialServices(sm *services.Service) error {
-	spec := getServerServices(sm.Config)
-
 	if services.GetJournal() == nil {
 		err := sm.Start(journal.StartJournalService)
 		if err != nil {
@@ -97,6 +95,12 @@ func StartupEssentialServices(sm *services.Service) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func StartupFrontendServices(sm *services.Service) error {
+	spec := getServerServices(sm.Config)
 
 	// Check everything is ok before we can start.
 	if spec.ClientMonitoring {

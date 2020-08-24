@@ -51,11 +51,11 @@ func (self *Launcher) CompileCollectorArgs(
 	for _, name := range collector_request.Artifacts {
 		var artifact *artifacts_proto.Artifact = nil
 		if collector_request.AllowCustomOverrides {
-			artifact, _ = repository.Get("Custom." + name)
+			artifact, _ = repository.Get(config_obj, "Custom."+name)
 		}
 
 		if artifact == nil {
-			artifact, _ = repository.Get(name)
+			artifact, _ = repository.Get(config_obj, name)
 		}
 
 		if artifact == nil {
@@ -67,7 +67,7 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, err
 		}
 
-		err = Compile(repository, artifact, vql_collector_args)
+		err = Compile(config_obj, repository, artifact, vql_collector_args)
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +79,8 @@ func (self *Launcher) CompileCollectorArgs(
 	}
 
 	// Add any artifact dependencies.
-	err := PopulateArtifactsVQLCollectorArgs(repository, vql_collector_args)
+	err := PopulateArtifactsVQLCollectorArgs(
+		config_obj, repository, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
