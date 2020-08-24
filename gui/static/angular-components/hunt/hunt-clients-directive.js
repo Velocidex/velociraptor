@@ -48,7 +48,7 @@ exports.HuntClientsDirective = function() {
       huntId: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-clients.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-clients.html',
     controller: HuntClientsController,
     controllerAs: 'controller'
   };

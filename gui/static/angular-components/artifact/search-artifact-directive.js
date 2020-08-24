@@ -258,7 +258,7 @@ exports.SearchArtifactDirective = function() {
           tools: '=',
           type: "=",
       },
-      templateUrl: '/static/angular-components/artifact/' +
+      templateUrl: window.base_path+'/static/angular-components/artifact/' +
           'search-artifact.html',
       controller: SearchArtifactController,
       controllerAs: 'controller'

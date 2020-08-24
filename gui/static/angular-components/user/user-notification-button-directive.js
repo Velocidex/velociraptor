@@ -91,7 +91,7 @@ exports.UserNotificationButtonDirective = function() {
   return {
     scope: true,
     restrict: 'E',
-    templateUrl: '/static/angular-components/user/user-notification-button.html',
+    templateUrl: window.base_path+'/static/angular-components/user/user-notification-button.html',
     controller: UserNotificationButtonController,
     controllerAs: 'controller'
   };

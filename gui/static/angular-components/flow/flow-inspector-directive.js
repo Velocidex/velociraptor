@@ -139,7 +139,7 @@ exports.FlowInspectorDirective = function() {
         controller: FlowInspectorController,
         controllerAs: 'controller',
         restrict: 'E',
-        templateUrl: '/static/angular-components/flow/flow-inspector.html'
+        templateUrl: window.base_path+'/static/angular-components/flow/flow-inspector.html'
     };
 };
 

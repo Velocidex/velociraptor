@@ -108,7 +108,7 @@ exports.RemoveClientsLabelsDialogDirective = function() {
       clients: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/' +
+    templateUrl: window.base_path+'/static/angular-components/client/' +
         'remove-clients-labels-dialog.html',
     controller: RemoveClientsLabelsDialogController,
     controllerAs: 'controller'

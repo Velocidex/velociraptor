@@ -32,7 +32,7 @@
       <div ng-if="controller.tabsShown['requests']">
         <div ui-ace="{
                      showGutter: true,
-                     workerPath: '/static/dist/',
+                     workerPath: window.base_path+'/static/dist/',
                      theme:'clouds',
                      onLoad: aceConfig,
                      mode: 'json',

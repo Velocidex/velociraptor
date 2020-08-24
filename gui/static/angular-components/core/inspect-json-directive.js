@@ -36,7 +36,7 @@ exports.InspectJsonDirective = function() {
           onResolve: '&',
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/core/inspect-json.html',
+      templateUrl: window.base_path+'/static/angular-components/core/inspect-json.html',
       controller: InspectJsonController,
       controllerAs: 'controller'
   };

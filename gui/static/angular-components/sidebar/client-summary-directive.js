@@ -159,7 +159,7 @@ exports.ClientSummaryDirective = function() {
       client_id: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/sidebar/client-summary.html',
+    templateUrl: window.base_path+'/static/angular-components/sidebar/client-summary.html',
     controller: ClientSummaryController,
     controllerAs: 'controller'
   };

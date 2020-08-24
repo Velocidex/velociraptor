@@ -62,7 +62,7 @@ exports.FormDirective = function() {
         type: '=',
         description: '=',
     },
-    templateUrl: '/static/angular-components/artifact/form.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/form.html',
     controller: FormController,
     controllerAs: 'controller'
   };

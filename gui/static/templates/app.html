@@ -5,16 +5,18 @@
   window.CLOSURE_NO_DEPS = true;
   window.globals = {
       'debug': false,
+      'base_path': "{{.BasePath}}",
   };
   window.CsrfToken = "{{.CsrfToken}}";
   module = {};
+  window.base_path = "{{.BasePath}}";
 </script>
 
-<link rel="stylesheet" type="text/css" href="/static/dist/third-party.bundle.css?timestamp={{.Timestamp}}" />
-<link rel="stylesheet" type="text/css" href="/static/dist/grr-ui.bundle.css?timestamp={{.Timestamp}}" />
+<link rel="stylesheet" type="text/css" href="{{.BasePath}}/static/dist/third-party.bundle.css?timestamp={{.Timestamp}}" />
+<link rel="stylesheet" type="text/css" href="{{.BasePath}}/static/dist/grr-ui.bundle.css?timestamp={{.Timestamp}}" />
 
-<script src="/static/dist/third-party.bundle.js?timestamp={{.Timestamp}}"></script>
-<script src="/static/dist/grr-ui.bundle.js?timestamp={{.Timestamp}}"></script>
+<script src="{{.BasePath}}/static/dist/third-party.bundle.js?timestamp={{.Timestamp}}"></script>
+<script src="{{.BasePath}}/static/dist/grr-ui.bundle.js?timestamp={{.Timestamp}}"></script>
 
 <!-- This makes sure templates are loaded from the JS bundle. -->
 <script>
@@ -24,8 +26,8 @@
   grrUi.templates.templates.templatesModule.value('forceCachedTemplates', true);
 </script>
 
-<link rel="shortcut icon" href="/static/images/favicon.ico" />
-<link rel="icon" href="/static/images/favicon.ico">
+<link rel="shortcut icon" href="{{.BasePath}}/static/images/favicon.ico" />
+<link rel="icon" href="{{.BasePath}}/static/images/favicon.ico">
 
 <title>Velociraptor Response and Monitoring</title>
 </head>

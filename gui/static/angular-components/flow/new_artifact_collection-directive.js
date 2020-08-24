@@ -147,7 +147,7 @@ exports.NewArtifactCollectionDirective = function() {
         onReject: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/flow/new_artifact_collection.html',
+    templateUrl: window.base_path+'/static/angular-components/flow/new_artifact_collection.html',
     controller: NewArtifactCollectionController,
     controllerAs: 'controller'
   };

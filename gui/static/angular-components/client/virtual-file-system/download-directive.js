@@ -23,7 +23,7 @@ exports.DownloadDirective = function() {
       value: '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/virtual-file-system/download.html',
+    templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/download.html',
     controller: DownloadController,
     controllerAs: 'controller'
   };

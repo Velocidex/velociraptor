@@ -154,7 +154,7 @@ exports.HuntInspectorDirective = function() {
       activeTab: '=?'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/hunt/hunt-inspector.html',
+    templateUrl: window.base_path+'/static/angular-components/hunt/hunt-inspector.html',
     controller: HuntInspectorController,
     controllerAs: 'controller'
   };

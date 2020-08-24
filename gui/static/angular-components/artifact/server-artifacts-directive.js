@@ -82,7 +82,7 @@ exports.ServerArtifactsDirective = function() {
       "artifact": '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/artifact/server-artifacts.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/server-artifacts.html',
     controller: serverArtifactsController,
     controllerAs: 'controller'
   };

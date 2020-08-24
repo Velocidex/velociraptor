@@ -120,7 +120,7 @@ ServerEventsController.prototype.selectArtifact = function(artifact) {
 ServerEventsController.prototype.showHelp = function() {
     var self = this;
     self.modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/client/virtual-file-system/help.html',
+        templateUrl: window.base_path+'/static/angular-components/client/virtual-file-system/help.html',
         scope: self.scope_,
         size: "lg",
     });
@@ -145,7 +145,7 @@ ServerEventsController.prototype.updateServerMonitoringTable = function() {
             }
         }
         self.modalInstance = self.uibModal_.open({
-            templateUrl: '/static/angular-components/artifact/add_server_monitoring.html',
+            templateUrl: window.base_path+'/static/angular-components/artifact/add_server_monitoring.html',
             scope: self.scope_,
             size: "lg",
         });
@@ -196,7 +196,7 @@ exports.ServerEventsDirective = function() {
       "artifact": '=',
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/artifact/server-events.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/server-events.html',
     controller: ServerEventsController,
     controllerAs: 'controller'
   };

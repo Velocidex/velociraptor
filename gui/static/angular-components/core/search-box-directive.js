@@ -84,7 +84,7 @@ exports.SearchBoxDirective = function() {
           navigate: "=",
       },
       restrict: 'E',
-      templateUrl: '/static/angular-components/core/search-box.html',
+      templateUrl: window.base_path+'/static/angular-components/core/search-box.html',
       controller: SearchBoxController,
       controllerAs: 'controller'
   };

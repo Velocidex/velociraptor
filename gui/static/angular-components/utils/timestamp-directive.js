@@ -86,7 +86,7 @@ exports.TimestampDirective = function() {
       value: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/utils/timestamp.html',
+    templateUrl: window.base_path+'/static/angular-components/utils/timestamp.html',
     controller: TimestampController,
     controllerAs: 'controller'
   };

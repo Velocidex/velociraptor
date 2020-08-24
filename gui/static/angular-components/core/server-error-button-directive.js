@@ -102,7 +102,7 @@ exports.ServerErrorButtonDirective = function() {
     scope: true,
     restrict: 'E',
     replace: true,
-    templateUrl: '/static/angular-components/core/server-error-button.html',
+    templateUrl: window.base_path+'/static/angular-components/core/server-error-button.html',
     controller: ServerErrorButtonController,
     controllerAs: 'controller'
   };
@@ -125,5 +125,3 @@ ServerErrorButtonDirective.directive_name = 'grrServerErrorButton';
  * @export
  */
 ServerErrorButtonDirective.error_event_name = ERROR_EVENT_NAME;
-
-

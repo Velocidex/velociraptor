@@ -72,7 +72,7 @@ exports.AddClientsLabelsDialogDirective = function() {
       clients: '='
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/client/' +
+    templateUrl: window.base_path+'/static/angular-components/client/' +
         'add-clients-labels-dialog.html',
     controller: AddClientsLabelsDialogController,
     controllerAs: 'controller'

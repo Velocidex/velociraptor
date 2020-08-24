@@ -39,7 +39,7 @@ exports.UserNotificationDialogDirective = function() {
       close: '&'
     },
     restrict: 'E',
-    templateUrl: '/static/angular-components/user/user-notification-dialog.html',
+    templateUrl: window.base_path+'/static/angular-components/user/user-notification-dialog.html',
     controller: UserNotificationDialogController,
     controllerAs: 'controller'
   };

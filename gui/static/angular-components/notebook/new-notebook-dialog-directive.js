@@ -81,7 +81,7 @@ exports.NotebookNewNotebookDialog = function() {
             onReject: '&'
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/notebook/new-notebook-dialog.html',
+        templateUrl: window.base_path+'/static/angular-components/notebook/new-notebook-dialog.html',
         controller: NewNotebookDialogController,
     controllerAs: 'controller'
     };

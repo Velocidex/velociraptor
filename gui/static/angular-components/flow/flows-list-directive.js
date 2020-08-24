@@ -140,7 +140,7 @@ exports.FlowsListDirective = function() {
           clientId: '=',
         },
         restrict: 'E',
-        templateUrl: '/static/angular-components/flow/flows-list.html',
+        templateUrl: window.base_path+'/static/angular-components/flow/flows-list.html',
         controller: FlowsListController,
     controllerAs: 'controller'
     };

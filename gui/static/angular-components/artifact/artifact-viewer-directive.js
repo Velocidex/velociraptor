@@ -144,7 +144,7 @@ ArtifactViewerController.prototype.uploadArtifacts = function() {
     };
 
     var modalInstance = self.uibModal_.open({
-        templateUrl: '/static/angular-components/artifact/upload_artifact.html',
+        templateUrl: window.base_path+'/static/angular-components/artifact/upload_artifact.html',
         scope: modalScope,
         size: "sm",
     });
@@ -153,7 +153,7 @@ ArtifactViewerController.prototype.uploadArtifacts = function() {
 ArtifactViewerController.prototype.deleteArtifactDefinitions = function() {
   var self = this;
   self.modalInstance = self.uibModal_.open({
-    templateUrl: '/static/angular-components/artifact/del_artifact.html',
+    templateUrl: window.base_path+'/static/angular-components/artifact/del_artifact.html',
     scope: self.scope_,
     size: "lg",
   });
@@ -186,7 +186,7 @@ exports.ArtifactsViewerDirective = function() {
   return {
     restrict: 'E',
     scope: {},
-    templateUrl: '/static/angular-components/artifact/' +
+    templateUrl: window.base_path+'/static/angular-components/artifact/' +
         'artifact-viewer.html',
     controller: ArtifactViewerController,
     controllerAs: 'controller'
