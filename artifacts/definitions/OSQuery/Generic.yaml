@@ -1,0 +1,55 @@
+name: OSQuery.Generic
+description: |
+  OSQuery is an excellent tool for querying system state across the
+  three supported Velociraptor platform (Windows/Linux/MacOS).
+
+  You can read more about OSQuery on https://osquery.io/
+
+reference:
+  - https://osquery.io/
+  - https://github.com/osquery/osquery
+
+# I am not actually sure if OSQuery allows arbitrary command exection via SQL?
+required_permissions:
+  - EXECVE
+
+tools:
+  - name: OSQueryWindows
+    github_project: Velocidex/OSQuery-Releases
+    github_asset_regex: windows-amd64.exe
+  - name: OSQueryLinux
+    github_project: Velocidex/OSQuery-Releases
+    github_asset_regex: linux-amd64
+  - name: OSQueryDarwin
+    github_project: Velocidex/OSQuery-Releases
+    github_asset_regex: darwin-amd64
+
+parameters:
+  - name: Query
+    default: "SELECT * FROM osquery_info"
+
+sources:
+  - query: |
+      LET ToolName <= SELECT * FROM switch(
+        windows={
+           SELECT "OSQueryWindows" AS ToolName
+           FROM info() WHERE OS="windows"
+        }, linux={
+           SELECT "OSQueryLinux" AS ToolName
+           FROM info() WHERE OS="linux"
+        }, mac={
+           SELECT "OSQueryDarwin" AS ToolName
+           FROM info() WHERE OS="darwin"
+        })
+
+      LET binary <= SELECT FullPath
+      FROM Artifact.Generic.Utils.FetchBinary(ToolName=ToolName[0].ToolName)
+
+      LET result = SELECT * FROM execve(
+         argv=[binary[0].FullPath, "--json", Query],
+         length=1000000)
+
+      SELECT * FROM foreach(row=result,
+      query={
+         SELECT * FROM parse_json_array(data=Stdout)
+      })
