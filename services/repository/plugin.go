@@ -116,7 +116,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 			artifact_name = self.leaf.Name + "/" + source
 
-			_, pres = self.repository.Get(artifact_name)
+			_, pres = self.repository.Get(config_obj, artifact_name)
 			if !pres {
 				scope.Log("Source %v not found in artifact %v",
 					source, self.leaf.Name)

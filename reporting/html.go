@@ -218,7 +218,8 @@ func (self *HTMLTemplateEngine) getMultiLineQuery(query string) (string, error) 
 }
 
 func (self *HTMLTemplateEngine) Import(artifact, name string) interface{} {
-	definition, pres := self.BaseTemplateEngine.Repository.Get(artifact)
+	definition, pres := self.BaseTemplateEngine.Repository.Get(
+		self.config_obj, artifact)
 	if !pres {
 		self.Error("Unknown artifact %v", artifact)
 		return ""

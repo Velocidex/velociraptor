@@ -23,8 +23,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository services.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}
@@ -61,7 +63,7 @@ func produceReport(
 	// Reports can query the container directly.
 	subscope.AppendPlugins(&ContainerSourcePlugin{Container: container})
 
-	html_template_string, err := getHTMLTemplate(template, repository)
+	html_template_string, err := getHTMLTemplate(config_obj, template, repository)
 	if err != nil {
 		return err
 	}

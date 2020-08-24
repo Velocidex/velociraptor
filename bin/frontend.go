@@ -86,7 +86,6 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 
 	// These services must start on all frontends
 	err := startup.StartupEssentialServices(sm)
-	kingpin.FatalIfError(err, "Unable to start services")
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +100,17 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		return nil, err
 	}
 
+	// These services must start only on the frontends.
+	err = startup.StartupFrontendServices(sm)
+	if err != nil {
+		return nil, err
+	}
+
 	// Parse the artifacts database to detect errors early.
 	_, err = getRepository(config_obj)
-	kingpin.FatalIfError(err, "Loading extra artifacts")
+	if err != nil {
+		return nil, err
+	}
 
 	server_builder, err := api.NewServerBuilder(config_obj)
 	if err != nil {

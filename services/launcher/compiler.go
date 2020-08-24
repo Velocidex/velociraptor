@@ -25,7 +25,8 @@ func escape_name(name string) string {
 	return regexp.MustCompile("[^a-zA-Z0-9]").ReplaceAllString(name, "_")
 }
 
-func Compile(repository services.Repository, artifact *artifacts_proto.Artifact,
+func Compile(config_obj *config_proto.Config,
+	repository services.Repository, artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	for _, parameter := range artifact.Parameters {
 		value := parameter.Default
@@ -42,10 +43,12 @@ func Compile(repository services.Repository, artifact *artifacts_proto.Artifact,
 		}
 	}
 
-	return mergeSources(repository, artifact, result, 0)
+	return mergeSources(config_obj, repository, artifact, result, 0)
 }
 
-func mergeSources(repository services.Repository, artifact *artifacts_proto.Artifact,
+func mergeSources(
+	config_obj *config_proto.Config,
+	repository services.Repository, artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs,
 	depth int) error {
 
@@ -160,9 +163,9 @@ func mergeSources(repository services.Repository, artifact *artifacts_proto.Arti
 
 	// Now process any includes.
 	for _, include := range artifact.Includes {
-		child, pres := repository.Get(include)
+		child, pres := repository.Get(config_obj, include)
 		if pres {
-			err := mergeSources(repository, child, result, depth+1)
+			err := mergeSources(config_obj, repository, child, result, depth+1)
 			if err != nil {
 				return err
 			}
@@ -176,6 +179,7 @@ func mergeSources(repository services.Repository, artifact *artifacts_proto.Arti
 // artifacts are found, then recursivly determine their dependencies
 // etc.
 func GetQueryDependencies(
+	config_obj *config_proto.Config,
 	repository services.Repository,
 	query string,
 	depth int,
@@ -186,7 +190,7 @@ func GetQueryDependencies(
 	for _, hit := range artifact_in_query_regex.
 		FindAllStringSubmatch(query, -1) {
 		artifact_name := hit[1]
-		dep, pres := repository.Get(artifact_name)
+		dep, pres := repository.Get(config_obj, artifact_name)
 		if !pres {
 			return errors.New(
 				fmt.Sprintf("Unknown artifact reference %s",
@@ -202,18 +206,21 @@ func GetQueryDependencies(
 
 		// Now search the referred to artifact's query for its
 		// own dependencies.
-		err := GetQueryDependencies(repository, dep.Precondition, depth+1, dependency)
+		err := GetQueryDependencies(
+			config_obj, repository, dep.Precondition, depth+1, dependency)
 		if err != nil {
 			return err
 		}
 
 		for _, source := range dep.Sources {
-			err := GetQueryDependencies(repository, source.Precondition, depth+1, dependency)
+			err := GetQueryDependencies(config_obj, repository,
+				source.Precondition, depth+1, dependency)
 			if err != nil {
 				return err
 			}
 
-			err = GetQueryDependencies(repository, source.Query, depth+1, dependency)
+			err = GetQueryDependencies(config_obj, repository,
+				source.Query, depth+1, dependency)
 			if err != nil {
 				return err
 			}
@@ -226,18 +233,20 @@ func GetQueryDependencies(
 // Attach additional artifacts to the request if needed to satisfy
 // dependencies.
 func PopulateArtifactsVQLCollectorArgs(
+	config_obj *config_proto.Config,
 	repository services.Repository,
 	request *actions_proto.VQLCollectorArgs) error {
 	dependencies := make(map[string]int)
 	for _, query := range request.Query {
-		err := GetQueryDependencies(repository, query.VQL, 0, dependencies)
+		err := GetQueryDependencies(config_obj, repository,
+			query.VQL, 0, dependencies)
 		if err != nil {
 			return err
 		}
 	}
 
 	for k := range dependencies {
-		artifact, pres := repository.Get(k)
+		artifact, pres := repository.Get(config_obj, k)
 		if pres {
 			// Include any dependent tools.
 			for _, required_tool := range artifact.Tools {

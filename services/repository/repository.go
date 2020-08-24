@@ -33,6 +33,7 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -226,7 +227,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	return artifact, nil
 }
 
-func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
+func (self *Repository) Get(
+	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
 	self.Lock()
 	defer self.Unlock()
 
@@ -237,7 +239,7 @@ func (self *Repository) Get(name string) (*artifacts_proto.Artifact, bool) {
 
 	// Delay processing until we need it. This means loading
 	// artifacts is faster.
-	compileArtifact(result)
+	compileArtifact(config_obj, result)
 
 	// Return a copy to keep the repository pristine.
 	return proto.Clone(result).(*artifacts_proto.Artifact), true
@@ -328,7 +330,9 @@ func splitQueryToQueries(query string) ([]string, error) {
 	return result, nil
 }
 
-func compileArtifact(artifact *artifacts_proto.Artifact) error {
+func compileArtifact(
+	config_obj *config_proto.Config,
+	artifact *artifacts_proto.Artifact) error {
 	for _, source := range artifact.Sources {
 		if source.Queries == nil {
 			// The Queries field contains the compiled queries -
@@ -340,5 +344,18 @@ func compileArtifact(artifact *artifacts_proto.Artifact) error {
 			source.Queries = queries
 		}
 	}
+
+	// Make sure tools are all defined.
+	inventory := services.GetInventory()
+	for _, tool := range artifact.Tools {
+		stored_tool, err := inventory.ProbeToolInfo(tool.Name)
+		if err != nil || stored_tool == nil {
+			err = inventory.AddTool(config_obj, tool)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }

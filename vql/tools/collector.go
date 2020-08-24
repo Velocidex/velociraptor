@@ -89,7 +89,7 @@ func (self CollectPlugin) Call(
 		artifact_definitions := []*artifacts_proto.Artifact{}
 		definitions := []*artifacts_proto.Artifact{}
 		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				scope.Log("Artifact %v not known.", name)
 				return
@@ -146,7 +146,7 @@ func (self CollectPlugin) Call(
 		}
 
 		for _, name := range arg.Artifacts {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				scope.Log("collect: Unknown artifact %v", name)
 				continue

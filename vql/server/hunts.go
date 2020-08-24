@@ -189,7 +189,7 @@ func (self HuntResultsPlugin) Call(
 				repo, err := services.GetRepositoryManager().
 					GetGlobalRepository(config_obj)
 				if err == nil {
-					artifact_def, ok := repo.Get(arg.Artifact)
+					artifact_def, ok := repo.Get(config_obj, arg.Artifact)
 					if ok {
 						for _, source := range artifact_def.Sources {
 							if source.Name != "" {

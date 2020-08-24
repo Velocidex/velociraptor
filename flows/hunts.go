@@ -77,7 +77,7 @@ func GetArtifactSources(
 	result := []string{}
 	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err == nil {
-		artifact_obj, pres := repository.Get(artifact)
+		artifact_obj, pres := repository.Get(config_obj, artifact)
 		if pres {
 			for _, source := range artifact_obj.Sources {
 				result = append(result, source.Name)

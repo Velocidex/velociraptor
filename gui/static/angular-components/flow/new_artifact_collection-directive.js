@@ -43,6 +43,8 @@ const NewArtifactCollectionController = function(
     // Configured parameters to collect the artifacts with.
     this.params = {};
 
+    this.tools = {};
+
     // The names of the artifacts to collect.
     this.names = [];
     this.ops_per_second = 0;

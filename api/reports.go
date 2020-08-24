@@ -43,9 +43,10 @@ func getReport(ctx context.Context,
 	var template_data string
 
 	if in.Type == "" {
-		definition, pres := repository.Get("Custom." + in.Artifact)
+		definition, pres := repository.Get(
+			config_obj, "Custom."+in.Artifact)
 		if !pres {
-			definition, pres = repository.Get(in.Artifact)
+			definition, pres = repository.Get(config_obj, in.Artifact)
 			if pres {
 				for _, report := range definition.Reports {
 					in.Type = strings.ToUpper(report.Type)

@@ -72,7 +72,7 @@ func (self *RepositoryManager) GetGlobalRepository(
 	// to go when the GUI searches for them.
 	go func() {
 		for _, name := range self.global_repository.List() {
-			self.global_repository.Get(name)
+			self.global_repository.Get(config_obj, name)
 		}
 		logger.Info("Compiled all artifacts.")
 	}()
@@ -158,7 +158,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 		return err
 	}
 
-	_, pres := global_repository.Get(name)
+	_, pres := global_repository.Get(config_obj, name)
 	if !pres {
 		return nil
 	}

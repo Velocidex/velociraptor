@@ -99,7 +99,7 @@ func (self *Expansions) DocFrom(artifact string) string {
 		return ""
 	}
 
-	artifact_definition, pres := repository.Get(artifact)
+	artifact_definition, pres := repository.Get(self.config_obj, artifact)
 	if !pres {
 		return ""
 	}

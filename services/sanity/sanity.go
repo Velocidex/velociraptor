@@ -11,7 +11,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -139,22 +138,10 @@ func checkForServerUpgrade(
 
 		inventory := services.GetInventory()
 
-		// We look at the raw tool record here instead of
-		// calling inventory.GetToolInfo() because that will
-		// populate the hash and trigger a tool download.
-		get_tool_info := func(name string) *artifacts_proto.Tool {
-			for _, tool := range inventory.Get().Tools {
-				if tool.Name == name {
-					return tool
-				}
-			}
-			return nil
-		}
-
 		seen := make(map[string]bool)
 
 		for _, name := range repository.List() {
-			artifact, pres := repository.Get(name)
+			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				continue
 			}
@@ -174,8 +161,8 @@ func checkForServerUpgrade(
 					// definition was overridden
 					// by the admin do not alter
 					// it.
-					tool := get_tool_info(tool_definition.Name)
-					if tool != nil && tool.AdminOverride {
+					tool, err := inventory.ProbeToolInfo(tool_definition.Name)
+					if err == nil && tool.AdminOverride {
 						logger.Info("<red>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
 							tool_definition.Name)
 						continue

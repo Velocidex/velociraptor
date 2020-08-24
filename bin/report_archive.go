@@ -12,6 +12,7 @@ import (
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -62,7 +63,7 @@ func doReportArchive() {
 	main := ""
 
 	template := *report_command_archive_report
-	html_template_string, err := getHTMLTemplate(template,
+	html_template_string, err := getHTMLTemplate(config_obj, template,
 		repository)
 	kingpin.FatalIfError(err, "Unable to load report %v", template)
 
@@ -74,7 +75,7 @@ func doReportArchive() {
 		scope.AppendPlugins(&tools.ArchiveSourcePlugin{
 			Archive: archive})
 
-		definition, pres := repository.Get(name)
+		definition, pres := repository.Get(config_obj, name)
 		if !pres {
 			scope.Log("Artifact %v not found %v\n", name, err)
 			continue
@@ -146,8 +147,10 @@ type ReportPart struct {
 	HTML     string
 }
 
-func getHTMLTemplate(name string, repository services.Repository) (string, error) {
-	template_artifact, ok := repository.Get(name)
+func getHTMLTemplate(
+	config_obj *config_proto.Config,
+	name string, repository services.Repository) (string, error) {
+	template_artifact, ok := repository.Get(config_obj, name)
 	if !ok || len(template_artifact.Reports) == 0 {
 		return "", errors.New("Not found")
 	}

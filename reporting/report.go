@@ -153,7 +153,8 @@ func GenerateArtifactDescriptionReport(
 		return "", err
 	}
 
-	template_artifact, pres := repository.Get("Server.Internal.ArtifactDescription")
+	template_artifact, pres := repository.Get(
+		config_obj, "Server.Internal.ArtifactDescription")
 	if pres {
 		template_engine.SetEnv("artifact", artifact)
 		for _, report := range getArtifactReports(
@@ -311,7 +312,7 @@ func newBaseTemplateEngine(
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 
-	artifact, pres := repository.Get(artifact_name)
+	artifact, pres := repository.Get(config_obj, artifact_name)
 	if !pres {
 		return nil, fmt.Errorf(
 			"Artifact %v not known.", artifact_name)

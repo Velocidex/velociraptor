@@ -1,4 +1,4 @@
-name: OSQuery.Generic
+name: MacOS.OSQuery.Generic
 description: |
   OSQuery is an excellent tool for querying system state across the
   three supported Velociraptor platform (Windows/Linux/MacOS).
@@ -13,13 +13,9 @@ reference:
 required_permissions:
   - EXECVE
 
+precondition: SELECT OS From info() where OS = 'darwin'
+
 tools:
-  - name: OSQueryWindows
-    github_project: Velocidex/OSQuery-Releases
-    github_asset_regex: windows-amd64.exe
-  - name: OSQueryLinux
-    github_project: Velocidex/OSQuery-Releases
-    github_asset_regex: linux-amd64
   - name: OSQueryDarwin
     github_project: Velocidex/OSQuery-Releases
     github_asset_regex: darwin-amd64
@@ -30,20 +26,8 @@ parameters:
 
 sources:
   - query: |
-      LET ToolName <= SELECT * FROM switch(
-        windows={
-           SELECT "OSQueryWindows" AS ToolName
-           FROM info() WHERE OS="windows"
-        }, linux={
-           SELECT "OSQueryLinux" AS ToolName
-           FROM info() WHERE OS="linux"
-        }, mac={
-           SELECT "OSQueryDarwin" AS ToolName
-           FROM info() WHERE OS="darwin"
-        })
-
       LET binary <= SELECT FullPath
-      FROM Artifact.Generic.Utils.FetchBinary(ToolName=ToolName[0].ToolName)
+      FROM Artifact.Generic.Utils.FetchBinary(ToolName="OSQueryDarwin")
 
       LET result = SELECT * FROM execve(
          argv=[binary[0].FullPath, "--json", Query],

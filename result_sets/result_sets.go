@@ -32,7 +32,7 @@ import (
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
 	repository, _ := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 
-	artifact, pres := repository.Get(artifact_name)
+	artifact, pres := repository.Get(config_obj, artifact_name)
 	if !pres {
 		return 0, errors.New(fmt.Sprintf("Artifact %s not known", artifact_name))
 	}

@@ -91,7 +91,7 @@ func (self *EventTable) Update(
 	}
 
 	for _, name := range arg.Artifacts {
-		artifact, pres := repository.Get(name)
+		artifact, pres := repository.Get(config_obj, name)
 		if !pres {
 			return errors.New("Unknown artifact " + name)
 		}
