@@ -108,11 +108,11 @@ func (self *CollectorTestSuite) TestCollector() {
 
 	// Create a new artifact..
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	fd, err := file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifact.yaml")
+	fd, err := file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifactDependent.yaml")
 	assert.NoError(self.T(), err)
 
 	fd.Truncate()
-	fd.Write([]byte(`name: Custom.TestArtifact
+	fd.Write([]byte(`name: Custom.TestArtifactDependent
 tools:
   - name: MyTool
 
@@ -123,6 +123,17 @@ sources:
               ToolName="MyTool", SleepDuration='0')
      SELECT "Foobar", Stdout, binary[0].Name
      FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
+`))
+	fd.Close()
+
+	fd, err = file_store_factory.WriteFile("/artifact_definitions/Custom/TestArtifact.yaml")
+	assert.NoError(self.T(), err)
+
+	fd.Truncate()
+	fd.Write([]byte(`name: Custom.TestArtifact
+sources:
+ - query: |
+     SELECT * FROM Artifact.Custom.TestArtifactDependent()
 
 reports:
  - type: HTML
