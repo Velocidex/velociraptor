@@ -38,8 +38,6 @@ const NavigatorController = function(
 
     this.collapsed = true;
 
-    console.log(this);
-
     this.uiTraits = {};
     this.grrApiService_.getCached('v1/GetUserUITraits').then(function(response) {
         this.uiTraits = response.data['interface_traits'];

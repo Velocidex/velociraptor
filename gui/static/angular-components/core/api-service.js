@@ -26,7 +26,6 @@ exports.encodeUrlPath = function(urlPath) {
     var components = urlPath.split('/');
     var encodedComponents = components.map(encodeURIComponent);
     var result = base_path + encodedComponents.join('/');
-    console.log(result);
     return result;
 };
 var encodeUrlPath = exports.encodeUrlPath;
