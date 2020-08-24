@@ -118,8 +118,8 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.True(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "All"))
 
 	// The timestamp should be reasonable
-	assert.True(self.T(), labeler.LastLabelTimestamp(
-		self.config_obj, self.client_id) >= now)
+	assert.Greater(self.T(), labeler.LastLabelTimestamp(
+		self.config_obj, self.client_id), now)
 
 	// remember the time of the last update
 	now = labeler.LastLabelTimestamp(self.config_obj, self.client_id)
@@ -131,7 +131,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.False(self.T(), labeler.IsLabelSet(self.config_obj, self.client_id, "Label1"))
 
 	// The timestamp should be later than the previous time
-	assert.True(self.T(), labeler.LastLabelTimestamp(self.config_obj, self.client_id) > now)
+	assert.Greater(self.T(), labeler.LastLabelTimestamp(self.config_obj, self.client_id), now)
 }
 
 // Check that two labelers can syncronize changes between them via the

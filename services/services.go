@@ -34,7 +34,10 @@ func NewServiceManager(ctx context.Context,
 	service_mu.Lock()
 	defer service_mu.Unlock()
 
-	self := &Service{Config: config_obj, Wg: &sync.WaitGroup{}}
+	self := &Service{
+		Config: config_obj,
+		Wg:     &sync.WaitGroup{},
+	}
 	self.Ctx, self.cancel = context.WithCancel(ctx)
 
 	ServiceManager = self
