@@ -1,4 +1,4 @@
-package result_sets
+package result_sets_test
 
 import (
 	"context"
@@ -15,7 +15,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -56,15 +60,19 @@ func TestPathManager(t *testing.T) {
 
 	sm := services.NewServiceManager(context.Background(), config_obj)
 	defer sm.Close()
+
+	require.NoError(t, sm.Start(journal.StartJournalService))
+	require.NoError(t, sm.Start(notifications.StartNotificationService))
+	require.NoError(t, sm.Start(inventory.StartInventoryService))
 	require.NoError(t, sm.Start(repository.StartRepositoryManager))
 
 	for _, testcase := range path_tests {
-		path_manager := NewArtifactPathManager(
+		path_manager := result_sets.NewArtifactPathManager(
 			config_obj,
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)
-		path_manager.clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
+		path_manager.Clock = utils.MockClock{MockNow: time.Unix(ts, 0)}
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(t, err)
 		assert.Equal(t, path, testcase.expected)
@@ -73,7 +81,7 @@ func TestPathManager(t *testing.T) {
 		file_store.Clear()
 
 		qm := memory.NewMemoryQueueManager(config_obj, file_store).(*memory.MemoryQueueManager)
-		qm.Clock = path_manager.clock
+		qm.Clock = path_manager.Clock
 
 		qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})
@@ -99,12 +107,12 @@ func TestPathManagerDailyRotations(t *testing.T) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 	clock := &utils.MockClock{}
 
-	path_manager := NewArtifactPathManager(
+	path_manager := result_sets.NewArtifactPathManager(
 		config_obj,
 		"C.123",
 		"F.123",
 		"Windows.Events.ProcessCreation")
-	path_manager.clock = clock
+	path_manager.Clock = clock
 
 	qm := directory.NewDirectoryQueueManager(
 		config_obj, file_store_factory).(*directory.DirectoryQueueManager)

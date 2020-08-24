@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
+	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
@@ -77,6 +78,7 @@ func (self *ServerTestSuite) SetupTest() {
 
 	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
+	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(labels.StartLabelService))
@@ -700,8 +702,8 @@ func (self *ServerTestSuite) TestCancellation() {
 		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
-	require.Equal(t, response.FlowId, flow_id)
 	require.NoError(t, err)
+	require.Equal(t, response.FlowId, flow_id)
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client. The tasks are still queued for the client, but the
@@ -799,8 +801,8 @@ func (self *ServerTestSuite) TestFlowArchives() {
 		context.Background(),
 		self.config_obj, self.client_id, flow_id, "username",
 		MockAPIClientFactory{mock})
-	require.Equal(t, response.FlowId, flow_id)
 	require.NoError(t, err)
+	require.Equal(t, response.FlowId, flow_id)
 
 	// Now archive the flow - should work because the flow is terminated.
 	res, err := flows.ArchiveFlow(
