@@ -275,12 +275,14 @@ func (self FlowResultsPlugin) Call(
 				return
 			}
 
-			requested_artifacts := flow.Context.Request.Artifacts
-			if len(requested_artifacts) == 0 {
-				scope.Log("flow_results: no artifacts in hunt")
-				return
+			if flow.Context != nil && flow.Context.Request != nil {
+				requested_artifacts := flow.Context.Request.Artifacts
+				if len(requested_artifacts) == 0 {
+					scope.Log("flow_results: no artifacts in hunt")
+					return
+				}
+				arg.Artifact = requested_artifacts[0]
 			}
-			arg.Artifact = requested_artifacts[0]
 		}
 
 		if arg.Source != "" {
