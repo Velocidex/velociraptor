@@ -51,11 +51,40 @@ const (
 )
 
 type AccessorContext struct {
-	reader   *ntfs.PagedReader
-	fd       *os.File
-	ntfs_ctx *ntfs.NTFSContext
+	mu sync.Mutex
+
+	// The context is reference counted and will only be destroyed
+	// when all users have closed it.
+	refs          int
+	cached_reader *ntfs.PagedReader
+	cached_fd     *os.File
+	ntfs_ctx      *ntfs.NTFSContext
 
 	path_listing *cache.LRUCache
+}
+
+func (self *AccessorContext) GetNTFSContext() *ntfs.NTFSContext {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.ntfs_ctx
+}
+
+func (self *AccessorContext) IncRef() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.refs++
+}
+
+func (self *AccessorContext) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.refs--
+	if self.refs <= 0 {
+		self.cached_fd.Close()
+	}
 }
 
 type NTFSFileInfo struct {
@@ -168,7 +197,7 @@ func (self NTFSFileSystemAccessor) New(scope *vfilter.Scope) (glob.FileSystemAcc
 			defer result.mu.Unlock()
 
 			for _, v := range result.fd_cache {
-				v.fd.Close()
+				v.Close()
 			}
 
 			result.fd_cache = make(map[string]*AccessorContext)
@@ -217,18 +246,24 @@ func (self *NTFSFileSystemAccessor) getNTFSContext(device string) (
 			return nil, err
 		}
 		if cached_ctx != nil {
-			cached_ctx.fd.Close()
+			cached_ctx.Close()
 		}
 
 		cached_ctx = &AccessorContext{
-			reader:       reader,
-			fd:           raw_fd,
-			ntfs_ctx:     ntfs_ctx,
-			path_listing: cache.NewLRUCache(200),
+			refs:          1,
+			cached_reader: reader,
+			cached_fd:     raw_fd,
+			ntfs_ctx:      ntfs_ctx,
+			path_listing:  cache.NewLRUCache(200),
 		}
 		self.fd_cache[device] = cached_ctx
 		self.timestamp = time.Now()
+
+	} else {
+		// Use the cached context.
+		cached_ctx.IncRef()
 	}
+
 	return cached_ctx, nil
 }
 

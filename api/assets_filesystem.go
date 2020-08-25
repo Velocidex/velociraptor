@@ -41,6 +41,12 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 		Info("GUI will serve files from directory gui/static")
 	mux.Handle(base+"/static/", http.StripPrefix(base+"/static/", http.FileServer(
 		http.Dir("gui/static"))))
+
+	// Useful for debugging as it allows the browser to set
+	// breakpoints and matches the sourcemaps.
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(
+		http.Dir("gui/static"))))
+
 	mux.Handle(base+"/favicon.ico",
 		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
