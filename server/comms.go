@@ -76,19 +76,20 @@ func PrepareFrontendMux(
 	config_obj *config_proto.Config,
 	server_obj *Server,
 	router *http.ServeMux) {
-	router.Handle("/healthz", healthz(server_obj))
-	router.Handle("/server.pem", server_pem(config_obj))
-	router.Handle("/control", control(server_obj))
-	router.Handle("/reader", reader(config_obj, server_obj))
+
+	base := config_obj.Frontend.BasePath
+	router.Handle(base+"/healthz", healthz(server_obj))
+	router.Handle(base+"/server.pem", server_pem(config_obj))
+	router.Handle(base+"/control", control(server_obj))
+	router.Handle(base+"/reader", reader(config_obj, server_obj))
 
 	// Publically accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
 	// from the filestore.
-	router.Handle("/public/", GetLoggingHandler(config_obj, "/public")(
-		http.FileServer(
-			api.NewFileSystem(config_obj,
-				file_store.GetFileStore(config_obj),
-				"/public/"))))
+	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
+		http.StripPrefix(base, http.FileServer(api.NewFileSystem(config_obj,
+			file_store.GetFileStore(config_obj),
+			"/public/")))))
 }
 
 func healthz(server_obj *Server) http.Handler {
