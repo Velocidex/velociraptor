@@ -25,9 +25,9 @@ exports.encodeUrlPath = function(urlPath) {
     var base_path = window.base_path;
     var components = urlPath.split('/');
     var encodedComponents = components.map(encodeURIComponent);
-    var result = base_path + encodedComponents.join('/');
-    return result;
+    return encodedComponents.join('/');
 };
+
 var encodeUrlPath = exports.encodeUrlPath;
 
 /**
@@ -158,7 +158,7 @@ ApiService.prototype.sendRequestWithoutPayload_ = function(
     var requestSettings = angular.extend({}, opt_requestSettings);
 
     var loadingKey = this.grrLoadingIndicatorService_.startLoading();
-    var apiPrefix = '/api/';
+    var apiPrefix = window.base_path+'/api/';
     var url = encodeUrlPath(apiPrefix + apiPath.replace(/^\//, ''));
     var promise = /** @type {function(Object)} */ (this.http_)({
         method: method,
@@ -339,7 +339,7 @@ ApiService.prototype.cancelPoll = function(pollPromise) {
  */
 ApiService.prototype.downloadFile = function(apiPath, opt_params) {
   var requestParams = angular.extend({}, opt_params);
-  var url = encodeUrlPath('/api/' + apiPath.replace(/^\//, ''));
+  var url = encodeUrlPath(window.base_path + '/api/' + apiPath.replace(/^\//, ''));
 
   // Using HEAD to check that there are no ACL issues when accessing url
   // in question.
@@ -417,7 +417,7 @@ ApiService.prototype.downloadFile = function(apiPath, opt_params) {
 ApiService.prototype.sendRequestWithPayload_ = function(httpMethod, apiPath, opt_params) {
     var request = {
         method: httpMethod,
-        url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
+        url: encodeUrlPath(window.base_path+'/api/' + apiPath.replace(/^\//, '')),
         data: opt_params,
         headers: {}
     };
@@ -462,7 +462,7 @@ ApiService.prototype.upload = function(apiPath, files, opt_params) {
 
     var request = {
         method: "POST",
-        url: encodeUrlPath('/api/' + apiPath.replace(/^\//, '')),
+        url: encodeUrlPath(window.base_path+'/api/' + apiPath.replace(/^\//, '')),
         data: fd,
         transformRequest: angular.identity,
         headers: {'Content-Type': undefined}

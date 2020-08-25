@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -30,7 +31,9 @@ func (self *MEFileSystemAccessor) GetZipFile(
 	defer self.mu.Unlock()
 
 	zip_file_cache, pres := self.fd_cache[me]
-	if !pres {
+	if pres {
+		zip_file_cache.refs++
+	} else {
 		accessor, err := glob.GetAccessor("file", self.scope)
 		if err != nil {
 			return nil, err
@@ -59,6 +62,7 @@ func (self *MEFileSystemAccessor) GetZipFile(
 		zip_file_cache = &ZipFileCache{
 			zip_file: zip_file,
 			fd:       fd,
+			refs:     1,
 		}
 
 		self.fd_cache[me] = zip_file_cache
@@ -82,36 +86,8 @@ func (self *MEFileSystemAccessor) Lstat(file_path string) (glob.FileInfo, error)
 		return nil, err
 	}
 
-	// Make it absolute.
-	file_path = path.Clean(path.Join("/", file_path))
-
-	components := []string{}
-	for _, i := range strings.Split(file_path, "/") {
-		if i != "" {
-			components = append(components, i)
-		}
-	}
-
-loop:
-	for _, cd_cache := range root.lookup {
-		if len(components) != len(cd_cache.components) {
-			continue
-		}
-
-		for j := range components {
-			if components[j] != cd_cache.components[j] {
-				continue loop
-			}
-		}
-
-		return &ZipFileInfo{
-			info:       cd_cache.info,
-			_name:      components[len(components)-1],
-			_full_path: file_path,
-		}, nil
-	}
-
-	return nil, errors.New("Not found.")
+	components := utils.SplitComponents(file_path)
+	return root.GetZipInfo(components, file_path)
 }
 
 func (self *MEFileSystemAccessor) Open(path string) (glob.ReadSeekCloser, error) {
@@ -136,57 +112,16 @@ func (self *MEFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, er
 		return nil, err
 	}
 
-	file_path = path.Clean(path.Join("/", file_path))
-
-	components := []string{}
-	for _, i := range strings.Split(file_path, "/") {
-		if i != "" {
-			components = append(components, i)
-		}
+	components := utils.SplitComponents(file_path)
+	children, err := root.GetChildren(components)
+	if err != nil {
+		return nil, err
 	}
 
 	result := []glob.FileInfo{}
-
-	// Determine if we already emitted this file. O(n) but if n is
-	// small it should be faster than map.
-	name_in_result := func(name string) bool {
-		for _, item := range result {
-			if item.Name() == name {
-				return true
-			}
-		}
-		return false
-	}
-
-loop:
-	for _, cd_cache := range root.lookup {
-		for j := range components {
-			if components[j] != cd_cache.components[j] {
-				continue loop
-			}
-		}
-
-		if len(cd_cache.components) > len(components) {
-			// member is either a directory or a file.
-			member_name := cd_cache.components[len(components)]
-
-			full_path := path.Join(
-				cd_cache.components[:len(components)+1]...)
-
-			member := &ZipFileInfo{
-				_name:      member_name,
-				_full_path: "/" + full_path,
-			}
-
-			// It is a file if the components are an exact match.
-			if len(cd_cache.components) == len(components)+1 {
-				member.info = cd_cache.info
-			}
-
-			if !name_in_result(member_name) {
-				result = append(result, member)
-			}
-		}
+	for _, item := range children {
+		item.SetFullPath(path.Join(file_path, item.Name()))
+		result = append(result, item)
 	}
 
 	return result, nil
