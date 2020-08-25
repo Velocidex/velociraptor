@@ -398,6 +398,9 @@ message FrontendConfig {
             description: "Port to bind to."
         }];
 
+    // Serve the GUI from this base path instead of "/"
+    string base_path = 25;
+
     // This allows the frontends to listen on plain HTTP - It is
     // useful if you have SSL offloading (e.g. ngix). This is not
     // configured by the wizard - you will need to manually configure
