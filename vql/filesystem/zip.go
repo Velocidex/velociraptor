@@ -420,8 +420,10 @@ func (self *ZipFileSystemAccessor) ReadDir(file_path string) ([]glob.FileInfo, e
 
 	result := []glob.FileInfo{}
 	for _, item := range children {
-		url.Fragment = path.Join(url.Fragment, item.Name())
-		item.SetFullPath(url.String())
+		// Make a copy
+		child_url := *url
+		child_url.Fragment = path.Join(child_url.Fragment, item.Name())
+		item.SetFullPath(child_url.String())
 		result = append(result, item)
 	}
 
