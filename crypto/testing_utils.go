@@ -31,8 +31,13 @@ func (self *NullCryptoManager) EncryptMessageList(
 		return nil, errors.WithStack(err)
 	}
 
+	compressed, err := utils.Compress(plain_text)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
 	cipher_text, err := self.Encrypt(
-		[][]byte{utils.Compress(plain_text)},
+		[][]byte{compressed},
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
 		destination)
 	return cipher_text, err

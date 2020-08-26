@@ -3,7 +3,6 @@ package uploads
 
 import (
 	"io"
-	"os"
 )
 
 // A generic interface for reporting file ranges. Implementations will
@@ -55,8 +54,10 @@ func GetRanges(reader io.Reader, expected_size int64) (<-chan io.Reader, []Range
 		}
 
 		for _, rng := range ranges {
-			range_reader.Seek(rng.Offset, os.SEEK_SET)
-			output_chan <- io.LimitReader(range_reader, rng.Length)
+			_, err := range_reader.Seek(rng.Offset, io.SeekStart)
+			if err == nil {
+				output_chan <- io.LimitReader(range_reader, rng.Length)
+			}
 		}
 
 	}()

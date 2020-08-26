@@ -158,6 +158,9 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	now := time.Now().UnixNano()
 	children, err := db.ListChildren(self.config_obj,
 		self.path_manager.Path(), 0, 1000)
+	if err != nil {
+		return err
+	}
 
 	total_metrics := &frontend_proto.Metrics{}
 	urls := make([]string, 0, len(children))
@@ -189,13 +192,16 @@ func (self *FrontendManager) syncActiveFrontends() error {
 	self.mu.Unlock()
 
 	if self.sample%2 == 0 {
-		services.GetJournal().PushRowsToArtifact(self.config_obj,
+		err = services.GetJournal().PushRowsToArtifact(self.config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("CPUPercent", total_metrics.CpuLoadPercent).
 				Set("MemoryUse", total_metrics.ProcessResidentMemoryBytes).
 				Set("client_comms_current_connections",
 					total_metrics.ClientCommsCurrentConnections)},
 			"Server.Monitor.Health/Prometheus", "server", "")
+		if err != nil {
+			return err
+		}
 	}
 	self.sample++
 
@@ -276,6 +282,10 @@ func getURL(fe_config *config_proto.FrontendConfig) string {
 // Install a frontend manager.
 func StartFrontendService(ctx context.Context,
 	config_obj *config_proto.Config, node string) error {
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
 	var err error
 
 	fe_manager := &FrontendManager{
@@ -358,12 +368,15 @@ func StartFrontendService(ctx context.Context,
 				// Not a guaranteed removal but if we
 				// exit cleanly we can free up the
 				// frontend slot.
-				fe_manager.clearMyState()
+				err = fe_manager.clearMyState()
+				if err != nil {
+					logger.Error("Unable to remove frontend: %v", err)
+				}
 				return
 
 			case <-time.After(10 * time.Second):
-				fe_manager.setMyState()
-				fe_manager.syncActiveFrontends()
+				_ = fe_manager.setMyState()
+				_ = fe_manager.syncActiveFrontends()
 			}
 		}
 	}()

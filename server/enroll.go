@@ -19,7 +19,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -41,7 +40,7 @@ func enroll(
 	client_id, err := server.manager.AddCertificateRequest(csr.Pem)
 	if err != nil {
 		logger := logging.GetLogger(server.config, &logging.FrontendComponent)
-		logger.Error(fmt.Sprintf("While enrolling %v: %v", client_id, err))
+		logger.Error("While enrolling %v: %v", client_id, err)
 		return err
 	}
 

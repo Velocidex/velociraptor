@@ -411,15 +411,15 @@ func (self *ApiServer) NotifyClients(
 
 	if in.NotifyAll {
 		self.server_obj.Info("sending notification to everyone")
-		services.GetNotifier().NotifyAllListeners(self.config)
+		err = services.GetNotifier().NotifyAllListeners(self.config)
 	} else if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		services.GetNotifier().NotifyListener(self.config, in.ClientId)
+		err = services.GetNotifier().NotifyListener(self.config, in.ClientId)
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
 	}
-	return &empty.Empty{}, nil
+	return &empty.Empty{}, err
 }
 
 func (self *ApiServer) LabelClients(
@@ -595,8 +595,6 @@ func (self *ApiServer) VFSRefreshDirectory(
 	ctx context.Context,
 	in *api_proto.VFSRefreshDirectoryRequest) (
 	*flows_proto.ArtifactCollectorResponse, error) {
-
-	utils.Debug(in)
 
 	user_name := GetGRPCUserInfo(self.config, ctx).Name
 	permissions := acls.COLLECT_CLIENT
@@ -812,8 +810,12 @@ func (self *ApiServer) WriteEvent(
 			return nil, err
 		}
 
-		return &empty.Empty{}, services.GetJournal().PushRowsToArtifact(self.config,
-			rows, in.Query.Name, peer_name, "")
+		// Only return the first row
+		if true {
+			err := services.GetJournal().PushRowsToArtifact(self.config,
+				rows, in.Query.Name, peer_name, "")
+			return &empty.Empty{}, err
+		}
 	}
 
 	return nil, status.Error(codes.InvalidArgument, "no peer certs?")
@@ -864,8 +866,11 @@ func (self *ApiServer) Query(
 				peer_name, permissions))
 		}
 
-		// Cert is good enough for us, run the query.
-		return streamQuery(self.config, in, stream, peer_name)
+		// return the first good match
+		if true {
+			// Cert is good enough for us, run the query.
+			return streamQuery(self.config, in, stream, peer_name)
+		}
 	}
 
 	return status.Error(codes.InvalidArgument, "no peer certs?")
@@ -1075,7 +1080,7 @@ func startAPIServer(
 
 		err = grpcServer.Serve(lis)
 		if err != nil {
-			logger.Error("gRPC Server error", err)
+			logger.Error("gRPC Server error: %v", err)
 		}
 	}()
 
@@ -1115,7 +1120,7 @@ func StartMonitoringService(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Prometheus monitoring server: ", err)
+			logger.Error("Prometheus monitoring server: %v", err)
 		}
 	}()
 
@@ -1133,7 +1138,7 @@ func StartMonitoringService(
 
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
-			logger.Error("Prometheus shutdown error ", err)
+			logger.Error("Prometheus shutdown error: %v", err)
 		}
 	}()
 

@@ -32,7 +32,8 @@ import (
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 1024*1024) // 1Mb chunks
+			buffer := make([]byte, 1024*1024) // 1Mb chunks
+			return &buffer
 		},
 	}
 )
@@ -70,8 +71,10 @@ func (self *GrepFunction) Call(ctx context.Context,
 	ah_matcher := ahocorasick.NewMatcher(keywords)
 	offset := 0
 
-	buf := pool.Get().([]byte)
-	defer pool.Put(buf)
+	cached_buf := pool.Get().(*[]byte)
+	defer pool.Put(cached_buf)
+
+	buf := *cached_buf
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {

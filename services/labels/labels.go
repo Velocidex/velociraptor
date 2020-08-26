@@ -231,7 +231,10 @@ func (self *Labeler) SetClientLabel(
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	self.notifyClient(config_obj, client_id, new_label, "Add")
+	err = self.notifyClient(config_obj, client_id, new_label, "Add")
+	if err != nil {
+		return err
+	}
 
 	// Also adjust the index so client searches work.
 	return self.adjustIndex(config_obj, client_id, new_label, db.SetIndex)
@@ -277,7 +280,10 @@ func (self *Labeler) RemoveClientLabel(
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	self.notifyClient(config_obj, client_id, new_label, "Remove")
+	err = self.notifyClient(config_obj, client_id, new_label, "Remove")
+	if err != nil {
+		return err
+	}
 
 	// Also adjust the index.
 	return self.adjustIndex(config_obj, client_id, new_label, db.UnsetIndex)
@@ -343,7 +349,13 @@ func (self *Labeler) ProcessRow(
 
 func (self *Labeler) Start(ctx context.Context,
 	config_obj *config_proto.Config, wg *sync.WaitGroup) error {
-	self.lru = cache.NewLRUCache(config_obj.Frontend.ExpectedClients)
+
+	expected_clients := int64(100)
+	if config_obj.Frontend != nil {
+		expected_clients = config_obj.Frontend.ExpectedClients
+	}
+
+	self.lru = cache.NewLRUCache(expected_clients)
 
 	// Wait in this func until we are ready to monitor.
 	local_wg := &sync.WaitGroup{}

@@ -87,7 +87,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		}
 		defer writer.Close()
 
-		writer.Truncate()
+		_ = writer.Truncate()
 
 		sha_sum := sha256.New()
 

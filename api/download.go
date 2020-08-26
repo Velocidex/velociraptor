@@ -60,7 +60,7 @@ var (
 
 func returnError(w http.ResponseWriter, code int, message string) {
 	w.WriteHeader(code)
-	w.Write([]byte(message))
+	_, _ = w.Write([]byte(message))
 }
 
 type vfsFileDownloadRequest struct {
@@ -95,7 +95,7 @@ func vfsFileDownloadHandler(
 			return
 		}
 
-		var reader_at io.ReaderAt = &utils.ReaderAtter{file}
+		var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
 
 		index, err := getIndex(config_obj, request.VfsPath)
 
@@ -198,7 +198,7 @@ func vfsFolderDownloadHandler(
 		client_path_manager := paths.NewClientPathManager(client_id)
 
 		db, _ := datastore.GetDB(config_obj)
-		db.Walk(config_obj, client_path_manager.VFSDownloadInfoPath(request.VfsPath),
+		_ = db.Walk(config_obj, client_path_manager.VFSDownloadInfoPath(request.VfsPath),
 			func(path_name string) error {
 				download_info := &flows_proto.VFSDownloadInfo{}
 				err := db.GetSubject(config_obj, path_name, download_info)
@@ -241,7 +241,7 @@ func vfsGetBuffer(
 	}
 	defer file.Close()
 
-	var reader_at io.ReaderAt = &utils.ReaderAtter{file}
+	var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
 
 	result := &api_proto.VFSFileBuffer{
 		Data: make([]byte, length),

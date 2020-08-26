@@ -36,7 +36,8 @@ import (
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 1024*1024) // 1Mb chunks
+			buffer := make([]byte, 1024*1024) // 1Mb chunks
+			return &buffer
 		},
 	}
 )
@@ -73,8 +74,10 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	buf := pool.Get().([]byte)
-	defer pool.Put(buf)
+	cached_buffer := pool.Get().(*[]byte)
+	defer pool.Put(cached_buffer)
+
+	buf := *cached_buffer
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
@@ -127,9 +130,9 @@ func (self *HashFunction) Call(ctx context.Context,
 				return vfilter.Null{}
 			}
 
-			result.md5.Write(buf[:n])
-			result.sha1.Write(buf[:n])
-			result.sha256.Write(buf[:n])
+			_, _ = result.md5.Write(buf[:n])
+			_, _ = result.sha1.Write(buf[:n])
+			_, _ = result.sha256.Write(buf[:n])
 
 			vfilter.ChargeOp(scope)
 		}

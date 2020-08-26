@@ -16,7 +16,6 @@
 package result_sets
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/Velocidex/json"
@@ -34,7 +33,7 @@ func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int
 
 	artifact, pres := repository.Get(config_obj, artifact_name)
 	if !pres {
-		return 0, errors.New(fmt.Sprintf("Artifact %s not known", artifact_name))
+		return 0, fmt.Errorf("Artifact %s not known", artifact_name)
 	}
 
 	return paths.ModeNameToMode(artifact.Type), nil
@@ -55,9 +54,8 @@ func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 
 func (self *ResultSetWriter) Flush() {
 	serialized, err := utils.DictsToJson(self.rows, self.opts)
-
 	if err == nil {
-		self.fd.Write(serialized)
+		_, _ = self.fd.Write(serialized)
 	}
 	self.rows = nil
 }
@@ -84,7 +82,11 @@ func NewResultSetWriter(
 	}
 
 	if truncate {
-		fd.Truncate()
+		err = fd.Truncate()
+		if err != nil {
+			fd.Close()
+			return nil, err
+		}
 	}
 
 	return &ResultSetWriter{fd: fd, opts: opts}, nil

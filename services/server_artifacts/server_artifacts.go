@@ -34,10 +34,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	mu sync.Mutex
-)
-
 type contextManager struct {
 	context      *flows_proto.ArtifactCollectorContext
 	mu           sync.Mutex
@@ -70,15 +66,15 @@ func NewCollectionContext(
 }
 
 func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollectorContext)) {
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	cb(self.context)
 }
 
 func (self *contextManager) Save() error {
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -95,13 +91,13 @@ type serverLogger struct {
 // need to be available immediately.
 func (self *serverLogger) Write(b []byte) (int, error) {
 	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	services.GetJournal().PushRows(self.config_obj,
+	err := services.GetJournal().PushRows(self.config_obj,
 		self.path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
 				Set("message", msg)})
-	return len(b), nil
+	return len(b), err
 }
 
 type ServerArtifactsRunner struct {
@@ -109,53 +105,6 @@ type ServerArtifactsRunner struct {
 	timeout          time.Duration
 	mu               sync.Mutex
 	cancellationPool map[string]func()
-}
-
-func (self *ServerArtifactsRunner) Start(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	logger := logging.GetLogger(
-		self.config_obj, &logging.FrontendComponent)
-
-	// Listen for notifications from the server.
-	notification, cancel := services.GetNotifier().ListenForNotification("server")
-	defer cancel()
-
-	self.process(ctx, config_obj, wg)
-
-	for {
-		select {
-		// Check the queues anyway every minute in case we miss the
-		// notification.
-		case <-time.After(time.Duration(60) * time.Second):
-			self.process(ctx, config_obj, wg)
-
-		case <-ctx.Done():
-			return
-
-		case quit := <-notification:
-			if quit {
-				logger.Info("ServerArtifactsRunner: quit.")
-				return
-			}
-			err := self.process(ctx, config_obj, wg)
-			if err != nil {
-				logger.Error("ServerArtifactsRunner: %v", err)
-				return
-			}
-
-			// Listen again.
-			cancel()
-			notifier := services.GetNotifier()
-			if notifier == nil {
-				return
-			}
-			notification, cancel = notifier.ListenForNotification("server")
-		}
-	}
 }
 
 func (self *ServerArtifactsRunner) process(
@@ -214,32 +163,38 @@ func (self *ServerArtifactsRunner) processTask(
 	}
 
 	db, _ := datastore.GetDB(self.config_obj)
-	db.UnQueueMessageForClient(self.config_obj, "server", task)
+	err = db.UnQueueMessageForClient(self.config_obj, "server", task)
+	if err != nil {
+		return err
+	}
 
 	if task.Cancel != nil {
 		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		services.GetJournal().PushRows(config_obj, path_manager, []*ordereddict.Dict{
+		err = services.GetJournal().PushRows(config_obj, path_manager, []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
 				Set("time", time.Now().UTC().String()).
 				Set("message", "Cancelling Query")})
 
 		self.cancel(task.SessionId)
-		return nil
+		return err
 	}
 
 	// Kick off processing in the background and go back to
 	// listening for new tasks. We can then cancel this task
 	// later.
 	go func() {
-		self.runQuery(ctx, task, collection_context)
+		err := self.runQuery(ctx, task, collection_context)
+		if err != nil {
+			return
+		}
 
 		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
 			context.State = flows_proto.ArtifactCollectorContext_TERMINATED
 			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 			context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 		})
-		collection_context.Save()
+		_ = collection_context.Save()
 	}()
 
 	return nil
@@ -331,8 +286,13 @@ func (self *ServerArtifactsRunner) runQuery(
 			opts := vql_subsystem.EncOptsFromScope(scope)
 			path_manager := result_sets.NewArtifactPathManager(
 				self.config_obj, "server", task.SessionId, name)
+
 			rs_writer, err = result_sets.NewResultSetWriter(
 				self.config_obj, path_manager, opts, false /* truncate */)
+			if err != nil {
+				return err
+			}
+
 			defer rs_writer.Close()
 
 			// Update the artifacts with results in the
@@ -392,7 +352,7 @@ func StartServerArtifactService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	result := &ServerArtifactsRunner{
+	self := &ServerArtifactsRunner{
 		config_obj:       config_obj,
 		timeout:          time.Second * time.Duration(600),
 		cancellationPool: make(map[string]func()),
@@ -402,8 +362,58 @@ func StartServerArtifactService(
 		config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
+	notifier := services.GetNotifier()
+	if notifier == nil {
+		return errors.New("Notifier not configured")
+	}
+
 	wg.Add(1)
-	go result.Start(ctx, config_obj, wg)
+	go func() {
+		defer wg.Done()
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+		// Listen for notifications from the server.
+		notification, cancel := notifier.ListenForNotification("server")
+		defer cancel()
+
+		err := self.process(ctx, config_obj, wg)
+		if err != nil {
+			logger.Error("ServerArtifactsRunner: %v", err)
+			return
+		}
+
+		for {
+			select {
+			// Check the queues anyway every minute in case we miss the
+			// notification.
+			case <-time.After(time.Duration(60) * time.Second):
+				err = self.process(ctx, config_obj, wg)
+				if err != nil {
+					logger.Error("ServerArtifactsRunner: %v", err)
+					continue
+				}
+
+			case <-ctx.Done():
+				return
+
+			case quit := <-notification:
+				if quit {
+					logger.Info("ServerArtifactsRunner: quit.")
+					return
+				}
+				err := self.process(ctx, config_obj, wg)
+				if err != nil {
+					logger.Error("ServerArtifactsRunner: %v", err)
+					continue
+				}
+
+				// Listen again.
+				cancel()
+				notification, cancel = notifier.ListenForNotification("server")
+			}
+		}
+	}()
 
 	return nil
 }

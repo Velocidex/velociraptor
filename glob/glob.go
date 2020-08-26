@@ -400,9 +400,7 @@ func (self Globber) _expand_path_components(filter []_PathFilterer, depth int) e
 
 	// If we get here the new_filter should be clean and
 	// need no expansions.
-	self._add_filter(new_filter)
-
-	return nil
+	return self._add_filter(new_filter)
 }
 
 var (

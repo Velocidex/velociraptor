@@ -160,7 +160,6 @@ reports:
      {{ end }}
 `))
 	fd.Close()
-
 	cmd := exec.Command(self.binary, "--config", self.config_file,
 		"artifacts", "show", "Custom.TestArtifact")
 	out, err := cmd.CombinedOutput()

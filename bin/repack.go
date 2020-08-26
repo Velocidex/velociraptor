@@ -102,7 +102,8 @@ func doRepack() {
 	// Compress the string.
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
-	w.Write(config_data)
+	_, err = w.Write(config_data)
+	kingpin.FatalIfError(err, "Unable to write")
 	w.Close()
 
 	if b.Len() > len(config.FileConfigDefaultYaml)-40 {

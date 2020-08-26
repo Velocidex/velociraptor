@@ -37,7 +37,7 @@ func (self *QueuePool) Register(vfs_path string) (<-chan *ordereddict.Dict, func
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	registrations, _ := self.registrations[vfs_path]
+	registrations := self.registrations[vfs_path]
 	new_registration := &Listener{
 		Channel: make(chan *ordereddict.Dict, 100000),
 		id:      time.Now().UnixNano(),

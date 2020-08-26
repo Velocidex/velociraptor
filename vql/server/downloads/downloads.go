@@ -27,8 +27,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -246,14 +244,16 @@ func createDownloadFile(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
-		defer file_store_factory.Delete(download_file + ".lock")
+		defer func() { _ = file_store_factory.Delete(download_file + ".lock") }()
 		defer fd.Close()
 		defer zip_writer.Close()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
+		err := downloadFlowToZip(ctx, config_obj, client_id, hostname, flow_id, zip_writer)
+		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+		logger.Error("downloadFlowToZip: %v", err)
 	}()
 
 	if wait {
@@ -307,7 +307,10 @@ func downloadFlowToZip(
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 
 	// Copy the flow's logs.
-	copier(flow_path_manager.Log().Path())
+	err = copier(flow_path_manager.Log().Path())
+	if err != nil {
+		return err
+	}
 
 	// Copy result sets
 	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
@@ -316,7 +319,10 @@ func downloadFlowToZip(
 			client_id, flow_details.Context.SessionId, artifact_with_results)
 		rs_path, err := path_manager.GetPathForWriting()
 		if err == nil {
-			copier(rs_path)
+			err = copier(rs_path)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Also make a csv file why not?
@@ -377,13 +383,6 @@ func createHuntDownloadFile(
 	base_filename string) (string, error) {
 	if hunt_id == "" {
 		return "", errors.New("Hunt Id should be specified.")
-	}
-
-	// Make sure the hunt dispatcher is running.
-	if services.GetHuntDispatcher() == nil {
-		wg := sync.WaitGroup{}
-		wg.Add(1)
-		hunt_dispatcher.StartHuntDispatcher(ctx, &wg, config_obj)
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
@@ -450,7 +449,14 @@ func createHuntDownloadFile(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
-		defer file_store_factory.Delete(download_file + ".lock")
+		defer func() {
+			err := file_store_factory.Delete(download_file + ".lock")
+			if err != nil {
+				logger.Error("Failed to bind to remove lock file for %v: %v",
+					download_file, err)
+			}
+
+		}()
 		defer fd.Close()
 		defer zip_writer.Close()
 
@@ -625,7 +631,10 @@ func StoreVQLAsCSVAndJsonFile(
 			if err != nil {
 				return errors.WithStack(err)
 			}
-			json_fd.Write([]byte("\n"))
+			_, err = json_fd.Write([]byte("\n"))
+			if err != nil {
+				return errors.WithStack(err)
+			}
 		}
 	}
 

@@ -153,11 +153,17 @@ func (self *Dummy) materializeTool(
 	}
 	defer fd.Close()
 
-	fd.Truncate(0)
+	err = fd.Truncate(0)
+	if err != nil {
+		return err
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name, tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
+	if err != nil {
+		return err
+	}
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err

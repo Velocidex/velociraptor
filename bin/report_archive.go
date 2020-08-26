@@ -139,7 +139,8 @@ func doReportArchive() {
 		defer writer.Close()
 	}
 
-	writer.Write([]byte(result))
+	_, err = writer.Write([]byte(result))
+	kingpin.FatalIfError(err, "Unable to write")
 }
 
 type ReportPart struct {

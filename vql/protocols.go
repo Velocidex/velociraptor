@@ -56,6 +56,7 @@ func (self _GlobFileInfoAssociative) Applicable(
 	if !b_ok {
 		return false
 	}
+
 	return true
 }
 

@@ -10,9 +10,7 @@ import (
 type _destructors struct {
 	mu sync.Mutex
 
-	fn           []func()
-	is_destroyed bool
-	wg           sync.WaitGroup
+	fn []func()
 }
 
 func AddGlobalDestructor(scope *vfilter.Scope, fn func()) {

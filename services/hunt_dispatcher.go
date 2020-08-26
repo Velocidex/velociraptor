@@ -26,6 +26,7 @@ import (
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
@@ -55,19 +56,15 @@ type IHuntDispatcher interface {
 	// periodically and can also be triggered when a change is
 	// written to the datastore (e.g. new hunt scheduled) to pick
 	// up the latest hunts.
-	Refresh() error
+	Refresh(config_obj *config_proto.Config) error
 
 	// Clean up and close the hunt dispatcher. Only used in tests.
-	Close()
+	Close(config_obj *config_proto.Config)
 }
 
 func RegisterHuntDispatcher(dispatcher IHuntDispatcher) {
 	mu.Lock()
 	defer mu.Unlock()
-
-	if global_hunt_dispatcher != nil {
-		global_hunt_dispatcher.Close()
-	}
 
 	global_hunt_dispatcher = dispatcher
 }

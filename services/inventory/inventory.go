@@ -159,13 +159,12 @@ func (self *InventoryService) materializeTool(
 
 	// We have no idea where the file is.
 	if tool.Url == "" {
-		return errors.New(fmt.Sprintf(
-			"Tool %v has no url defined - upload it manually.", tool.Name))
+		return fmt.Errorf("Tool %v has no url defined - upload it manually.",
+			tool.Name)
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	if file_store_factory == nil {
-		return nil
 		return errors.New("No filestore configured")
 	}
 
@@ -176,12 +175,18 @@ func (self *InventoryService) materializeTool(
 	}
 	defer fd.Close()
 
-	fd.Truncate()
+	err = fd.Truncate()
+	if err != nil {
+		return err
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name,
 		tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
+	if err != nil {
+		return err
+	}
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
@@ -355,13 +360,13 @@ func StartInventoryService(
 			case <-notification:
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
-					logger.Error("StartInventoryService: ", err)
+					logger.Error("StartInventoryService: %v", err)
 				}
 
 			case <-time.After(time.Second):
-				inventory_service.LoadFromFile(config_obj)
+				err = inventory_service.LoadFromFile(config_obj)
 				if err != nil {
-					logger.Error("StartInventoryService: ", err)
+					logger.Error("StartInventoryService: %v", err)
 				}
 			}
 
@@ -378,5 +383,7 @@ func StartInventoryService(
 	logger.Info("<green>Starting</> Inventory Service")
 
 	services.RegisterInventory(inventory_service)
-	return inventory_service.LoadFromFile(config_obj)
+	_ = inventory_service.LoadFromFile(config_obj)
+
+	return nil
 }

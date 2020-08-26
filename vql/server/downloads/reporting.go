@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -174,7 +175,15 @@ func CreateFlowReport(
 		defer wg.Done()
 		defer writer.Close()
 		defer subscope.Close()
-		defer file_store_factory.Delete(download_file + ".lock")
+		defer func() {
+			err := file_store_factory.Delete(download_file + ".lock")
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+				logger.Error("Failed to bind to remove lock file for %v: %v",
+					download_file, err)
+			}
+
+		}()
 
 		err := WriteFlowReport(config_obj, subscope, repository,
 			writer, flow_id, client_id, template)

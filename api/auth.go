@@ -26,6 +26,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
@@ -57,7 +58,13 @@ func GetGRPCUserInfo(
 					userinfo := md.Get("USER")
 					if len(userinfo) > 0 {
 						data := []byte(userinfo[0])
-						json.Unmarshal(data, result)
+						err := json.Unmarshal(data, result)
+						if err != nil {
+							logger := logging.GetLogger(config_obj,
+								&logging.FrontendComponent)
+							logger.Error("GetGRPCUserInfo: %v", err)
+							result.Name = ""
+						}
 					}
 				}
 			}

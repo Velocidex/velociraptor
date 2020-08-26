@@ -294,8 +294,12 @@ func StartFrontendHttps(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.GetNotifier().NotifyAllListeners(config_obj)
-		err := server.Shutdown(time_ctx)
+		err := services.GetNotifier().NotifyAllListeners(config_obj)
+		if err != nil {
+			server_obj.Error("Frontend server error", err)
+		}
+
+		err = server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}
@@ -356,8 +360,12 @@ func StartFrontendPlainHttp(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.GetNotifier().NotifyAllListeners(config_obj)
-		err := server.Shutdown(time_ctx)
+		err := services.GetNotifier().NotifyAllListeners(config_obj)
+		if err != nil {
+			server_obj.Error("Frontend server error", err)
+		}
+
+		err = server.Shutdown(time_ctx)
 		if err != nil {
 			server_obj.Error("Frontend server error", err)
 		}
@@ -401,7 +409,13 @@ func StartFrontendWithAutocert(
 	}
 
 	// We must have port 80 open to serve the HTTP 01 challenge.
-	go http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+	go func() {
+		err := http.ListenAndServe(":http", certManager.HTTPHandler(nil))
+		if err != nil {
+			logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("Failed to bind to http server: %v", err)
+		}
+	}()
 
 	wg.Add(1)
 	go func() {
@@ -412,7 +426,7 @@ func StartFrontendWithAutocert(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("Frontend server error", err)
+			logger.Error("Frontend server error: %v", err)
 		}
 	}()
 
@@ -429,10 +443,10 @@ func StartFrontendWithAutocert(
 		defer cancel()
 
 		server.SetKeepAlivesEnabled(false)
-		services.GetNotifier().NotifyAllListeners(config_obj)
+		_ = services.GetNotifier().NotifyAllListeners(config_obj)
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
-			logger.Error("Frontend shutdown error ", err)
+			logger.Error("Frontend shutdown error: %v", err)
 		}
 		server_obj.Info("Shutdown frontend")
 	}()
@@ -471,7 +485,7 @@ func StartHTTPGUI(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("GUI Server error", err)
+			logger.Error("GUI Server error: %v", err)
 		}
 	}()
 
@@ -488,7 +502,7 @@ func StartHTTPGUI(
 		server.SetKeepAlivesEnabled(false)
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
-			logger.Error("GUI shutdown error ", err)
+			logger.Error("GUI shutdown error: %v", err)
 		}
 	}()
 
@@ -547,7 +561,7 @@ func StartSelfSignedGUI(
 
 		err := server.ListenAndServeTLS("", "")
 		if err != nil && err != http.ErrServerClosed {
-			logger.Error("GUI Server error", err)
+			logger.Error("GUI Server error: %v", err)
 		}
 	}()
 
@@ -564,7 +578,7 @@ func StartSelfSignedGUI(
 		server.SetKeepAlivesEnabled(false)
 		err := server.Shutdown(timeout_ctx)
 		if err != nil {
-			logger.Error("GUI shutdown error ", err)
+			logger.Error("GUI shutdown error: %v", err)
 		}
 	}()
 

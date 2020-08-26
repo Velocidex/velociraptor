@@ -408,7 +408,11 @@ func (self ReadKeyValues) Call(
 				continue
 			}
 			root = item_root
-			globber.Add(item_path, accessor.PathSplit)
+			err = globber.Add(item_path, accessor.PathSplit)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 		}
 
 		file_chan := globber.ExpandWithContext(

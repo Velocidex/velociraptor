@@ -93,7 +93,7 @@ func (self _SRUMLookupId) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{fd}, 1024, 10000)
+			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -155,7 +155,7 @@ func formatString(hexencoded string) string {
 		return hexencoded
 	}
 
-	return ParseTerminatedUTF16String(&utils.BufferReaderAt{buffer}, 0)
+	return ParseTerminatedUTF16String(&utils.BufferReaderAt{Buffer: buffer}, 0)
 }
 
 func formatGUI(hexencoded string) string {
@@ -169,7 +169,7 @@ func formatGUI(hexencoded string) string {
 	}
 
 	profile := NewMiscProfile()
-	return profile.SID(&utils.BufferReaderAt{buffer}, 0).String()
+	return profile.SID(&utils.BufferReaderAt{Buffer: buffer}, 0).String()
 }
 
 type _ESEArgs struct {
@@ -220,7 +220,7 @@ func (self _ESEPlugin) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{fd}, 1024, 10000)
+			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)

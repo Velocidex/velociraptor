@@ -209,7 +209,7 @@ func (self CollectPlugin) Call(
 
 				// Dont store un-named queries but run them anyway.
 				if query.Name == "" {
-					for _ = range vql.Eval(ctx, subscope) {
+					for range vql.Eval(ctx, subscope) {
 					}
 					continue
 				} else {

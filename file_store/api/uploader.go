@@ -91,8 +91,8 @@ loop:
 				return nil, err
 			}
 
-			md5_sum.Write(data)
-			sha_sum.Write(data)
+			_, _ = md5_sum.Write(data)
+			_, _ = sha_sum.Write(data)
 
 			offset += int64(n)
 		}

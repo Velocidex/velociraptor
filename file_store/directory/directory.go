@@ -111,9 +111,8 @@ func (self *DirectoryFileStore) ListDirectory(dirname string) (
 	var result []os.FileInfo
 	for _, fileinfo := range files {
 		result = append(result, &api.FileStoreFileInfo{
-			fileinfo,
-			utils.PathJoin(dirname, fileinfo.Name(), "/"),
-			nil})
+			FileInfo:  fileinfo,
+			FullPath_: utils.PathJoin(dirname, fileinfo.Name(), "/")})
 	}
 
 	return result, nil
@@ -148,7 +147,7 @@ func (self *DirectoryFileStore) ReadFile(filename string) (api.FileReader, error
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
-	return &api.FileAdapter{file, filename}, nil
+	return &api.FileAdapter{File: file, FullPath: filename}, nil
 }
 
 func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
@@ -158,24 +157,24 @@ func (self *DirectoryFileStore) StatFile(filename string) (os.FileInfo, error) {
 		return nil, err
 	}
 
-	return &api.FileStoreFileInfo{file, filename, nil}, nil
+	return &api.FileStoreFileInfo{FileInfo: file, FullPath_: filename}, nil
 }
 
 func (self *DirectoryFileStore) WriteFile(filename string) (api.FileWriter, error) {
 	file_path := self.FilenameToFileStorePath(filename)
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
-		logging.GetLogger(self.config_obj,
-			&logging.FrontendComponent).Error(
-			"Can not create dir", err)
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Can not create dir: %v", err)
 		return nil, err
 	}
 
 	openCounter.Inc()
 	file, err := os.OpenFile(file_path, os.O_RDWR|os.O_CREATE, 0700)
 	if err != nil {
-		logging.GetLogger(self.config_obj, &logging.FrontendComponent).Error(
-			"Unable to open file "+file_path, err)
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Unable to open file %v: %v", file_path, err)
+
 		return nil, errors.WithStack(err)
 	}
 
@@ -255,7 +254,10 @@ func (self *DirectoryFileStore) Walk(root string, walkFn filepath.WalkFunc) erro
 
 			if !info.IsDir() {
 				return walkFn(filename,
-					&api.FileStoreFileInfo{info, path, nil}, err)
+					&api.FileStoreFileInfo{
+						FileInfo:  info,
+						FullPath_: path,
+					}, err)
 			}
 			return nil
 		})

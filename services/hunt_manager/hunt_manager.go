@@ -244,6 +244,10 @@ func (self *HuntManager) ProcessRow(
 	err = services.GetHuntDispatcher().ModifyHunt(
 		participation_row.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
+			if hunt_obj.Stats == nil {
+				hunt_obj.Stats = &api_proto.HuntStats{}
+			}
+
 			// Ignore stopped hunts.
 			if hunt_obj.Stats.Stopped ||
 				hunt_obj.State != api_proto.Hunt_RUNNING {
@@ -289,7 +293,7 @@ func (self *HuntManager) ProcessRow(
 	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
 		ctx, config_obj, vql_subsystem.NullACLManager{}, repository, request)
 	if err != nil {
-		scope.Log("hunt manager: %s", err.Error())
+		scope.Log("hunt manager: %v", err)
 		return
 	}
 
@@ -297,8 +301,12 @@ func (self *HuntManager) ProcessRow(
 	row.Set("Timestamp", time.Now().Unix())
 
 	path_manager := paths.NewHuntPathManager(participation_row.HuntId)
-	services.GetJournal().PushRows(config_obj,
+	err = services.GetJournal().PushRows(config_obj,
 		path_manager.Clients(), []*ordereddict.Dict{row})
+	if err != nil {
+		scope.Log("hunt manager: %v", err)
+		return
+	}
 
 	// Notify the client
 	err = services.GetNotifier().NotifyListener(

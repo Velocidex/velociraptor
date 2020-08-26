@@ -8,7 +8,6 @@ package vfs_service
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -36,13 +35,19 @@ func (self *VFSService) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> VFS writing service.")
 
-	watchForFlowCompletion(
+	err := watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.ListDirectory",
 		self.ProcessListDirectory)
+	if err != nil {
+		return err
+	}
 
-	watchForFlowCompletion(
+	err = watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.DownloadFile",
 		self.ProcessDownloadFile)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -81,9 +86,9 @@ func (self *VFSService) ProcessDownloadFile(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		_, err := file_store_factory.StatFile(vfs_path_manager.Path())
 		if err != nil {
-			logger.Error(fmt.Sprintf(
+			logger.Error(
 				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err))
+				vfs_path_manager.Path(), err)
 			continue
 		}
 
@@ -101,9 +106,9 @@ func (self *VFSService) ProcessDownloadFile(
 				Size:    vql_subsystem.GetIntFromRow(scope, row, "Size"),
 			})
 		if err != nil {
-			logger.Error(fmt.Sprintf(
+			logger.Error(
 				"Unable to save flow %v: %v",
-				vfs_path_manager.Path(), err))
+				vfs_path_manager.Path(), err)
 		}
 	}
 }

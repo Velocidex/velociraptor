@@ -128,7 +128,8 @@ func doThirdPartyUpload() {
 		kingpin.FatalIfError(err, "Unable to write to filestore ")
 		defer writer.Close()
 
-		writer.Truncate()
+		err = writer.Truncate()
+		kingpin.FatalIfError(err, "Unable to write to filestore ")
 
 		sha_sum := sha256.New()
 

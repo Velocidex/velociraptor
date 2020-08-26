@@ -112,7 +112,10 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 				}
 
 				if !headers_written {
-					w.Write(columns)
+					err := w.Write(columns)
+					if err != nil {
+						return
+					}
 					headers_written = true
 				}
 
@@ -126,7 +129,10 @@ func GetCSVAppender(scope *vfilter.Scope, fd io.Writer, write_headers bool) *CSV
 					item, _ := scope.Associative(row, column)
 					csv_row = append(csv_row, item)
 				}
-				w.WriteAny(csv_row)
+				err := w.WriteAny(csv_row)
+				if err != nil {
+					return
+				}
 
 			case <-time.After(5 * time.Second):
 				w.Flush()

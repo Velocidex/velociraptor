@@ -173,10 +173,12 @@ func ExportNotebookToZip(
 
 	for _, metadata := range notebook.CellMetadata {
 		if metadata.CellId != "" {
-			db.GetSubject(config_obj,
+			err = db.GetSubject(config_obj,
 				notebook_path_manager.Cell(metadata.CellId).Path(),
 				metadata)
-
+			if err != nil {
+				return err
+			}
 			metadata.Data = ""
 		}
 	}
@@ -229,10 +231,8 @@ func ExportNotebookToZip(
 			}
 			defer fd.Close()
 
-			utils.Copy(ctx, out_fd, fd)
+			_, _ = utils.Copy(ctx, out_fd, fd)
 		}
-
-		return
 	}
 
 	for _, cell := range notebook.CellMetadata {
@@ -244,9 +244,8 @@ func ExportNotebookToZip(
 		fd.Close()
 		return err
 	}
-	f.Write(serialized)
-
-	return nil
+	_, err = f.Write(serialized)
+	return err
 }
 
 func ExportNotebookToHTML(
@@ -267,8 +266,15 @@ func ExportNotebookToHTML(
 		return err
 	}
 
-	output.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
-	defer output.Write([]byte(HtmlPostscript))
+	_, err = output.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
+	if err != nil {
+		return err
+	}
+
+	// Write the postscript when we are done.
+	defer func() {
+		_, _ = output.Write([]byte(HtmlPostscript))
+	}()
 
 	cell := &api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
@@ -279,7 +285,10 @@ func ExportNotebookToHTML(
 			return err
 		}
 
-		output.Write([]byte("<div class=\"notebook-cell\">\n"))
+		_, err = output.Write([]byte("<div class=\"notebook-cell\">\n"))
+		if err != nil {
+			return err
+		}
 
 		// Expand tables
 		cell_output := csvViewerRegexp.ReplaceAllStringFunc(
@@ -294,7 +303,11 @@ func ExportNotebookToHTML(
 			})
 
 		_, err := output.Write([]byte(cell_output))
-		output.Write([]byte("</div>\n"))
+		if err != nil {
+			return err
+		}
+
+		_, err = output.Write([]byte("</div>\n"))
 		if err != nil {
 			return err
 		}

@@ -67,7 +67,7 @@ func GetFlows(
 		if err != nil {
 			logging.GetLogger(
 				config_obj, &logging.FrontendComponent).
-				Error("Unable to open collection", err)
+				Error("Unable to open collection: %v", err)
 			continue
 		}
 
@@ -162,7 +162,7 @@ func CancelFlow(
 	config_obj *config_proto.Config,
 	client_id, flow_id, username string,
 	api_client_factory grpc_client.APIClientFactory) (
-	*api_proto.StartFlowResponse, error) {
+	res *api_proto.StartFlowResponse, err error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.StartFlowResponse{}, nil
 	}
@@ -170,7 +170,12 @@ func CancelFlow(
 	collection_context, err := LoadCollectionContext(
 		config_obj, client_id, flow_id)
 	if err == nil {
-		defer closeContext(config_obj, collection_context)
+		defer func() {
+			close_err := closeContext(config_obj, collection_context)
+			if err == nil {
+				err = close_err
+			}
+		}()
 
 		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 			return nil, errors.New("Flow is not in the running state. " +
@@ -229,7 +234,7 @@ func CancelFlow(
 func ArchiveFlow(
 	config_obj *config_proto.Config,
 	client_id string, flow_id string, username string) (
-	*api_proto.StartFlowResponse, error) {
+	res *api_proto.StartFlowResponse, err error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.StartFlowResponse{}, nil
 	}
@@ -239,7 +244,12 @@ func ArchiveFlow(
 	if err != nil {
 		return nil, err
 	}
-	defer closeContext(config_obj, collection_context)
+	defer func() {
+		close_err := closeContext(config_obj, collection_context)
+		if err == nil {
+			err = close_err
+		}
+	}()
 
 	if collection_context.State != flows_proto.ArtifactCollectorContext_TERMINATED &&
 		collection_context.State != flows_proto.ArtifactCollectorContext_ERROR {

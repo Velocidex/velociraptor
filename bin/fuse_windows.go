@@ -194,7 +194,7 @@ func (self *VFSFs) read_buffer(vfs_name string, buff []byte, off int64, fh uint6
 			Length:   uint32(len(buff)),
 		})
 	if err != nil {
-		self.logger.Error("Read ", vfs_name, err)
+		self.logger.Error("Read: %v %v ", vfs_name, err)
 		return -fuse.ENOENT
 	}
 
@@ -218,7 +218,7 @@ func (self *VFSFs) Readdir(path string,
 	vfs_name := fsPathToVFS(path)
 	rows, err := self.GetDir(vfs_name)
 	if err < 0 {
-		self.logger.Error(fmt.Sprintf("Readdir %s: %v", path, err))
+		self.logger.Error("Readdir %s: %v", path, err)
 		return err
 	}
 

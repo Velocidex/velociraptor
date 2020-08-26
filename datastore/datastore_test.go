@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"sort"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -52,11 +53,17 @@ func (self BaseTestSuite) TestListChildren() {
 	err := self.datastore.SetSubject(self.config_obj, urn+"/1", message)
 	assert.NoError(self.T(), err)
 
+	time.Sleep(10 * time.Millisecond)
+
 	err = self.datastore.SetSubject(self.config_obj, urn+"/2", message)
 	assert.NoError(self.T(), err)
 
+	time.Sleep(10 * time.Millisecond)
+
 	err = self.datastore.SetSubject(self.config_obj, urn+"/3", message)
 	assert.NoError(self.T(), err)
+
+	time.Sleep(10 * time.Millisecond)
 
 	children, err := self.datastore.ListChildren(self.config_obj, urn, 0, 100)
 	assert.NoError(self.T(), err)

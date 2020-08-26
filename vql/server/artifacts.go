@@ -55,7 +55,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 
 	// Scheduling artifacts on the server requires higher
 	// permissions.
-	permission := acls.COLLECT_CLIENT
+	var permission acls.ACL_PERMISSION
 	if arg.ClientId == "server" {
 		permission = acls.SERVER_ADMIN
 	} else if strings.HasPrefix(arg.ClientId, "C.") {

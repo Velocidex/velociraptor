@@ -239,7 +239,10 @@ func (self *Repository) Get(
 
 	// Delay processing until we need it. This means loading
 	// artifacts is faster.
-	compileArtifact(config_obj, result)
+	err := compileArtifact(config_obj, result)
+	if err != nil {
+		return nil, false
+	}
 
 	// Return a copy to keep the repository pristine.
 	return proto.Clone(result).(*artifacts_proto.Artifact), true

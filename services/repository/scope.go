@@ -19,9 +19,13 @@ func _build(self services.ScopeBuilder, from_scratch bool) *vfilter.Scope {
 			self.Config)
 	}
 
-	env.Set(constants.SCOPE_CONFIG, self.Config.Client).
-		Set(constants.SCOPE_SERVER_CONFIG, self.Config).
-		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
+	if self.Config != nil {
+		env.Set(constants.SCOPE_SERVER_CONFIG, self.Config)
+		if self.Config.Client != nil {
+			env.Set(constants.SCOPE_CONFIG, self.Config.Client)
+		}
+	}
+	env.Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	if self.ACLManager != nil {
 		env.Set(vql_subsystem.ACL_MANAGER_VAR, self.ACLManager)

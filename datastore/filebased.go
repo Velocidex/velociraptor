@@ -547,8 +547,14 @@ func writeContentToFile(config_obj *config_proto.Config, urn string, data []byte
 
 	// Try to create intermediate directories and try again.
 	if err != nil && os.IsNotExist(err) {
-		os.MkdirAll(filepath.Dir(filename), 0700)
+		err = os.MkdirAll(filepath.Dir(filename), 0700)
+		if err != nil {
+			return err
+		}
 		file, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
+		if err != nil {
+			return err
+		}
 	}
 	if err != nil {
 		logging.GetLogger(config_obj, &logging.FrontendComponent).Error(
@@ -557,7 +563,10 @@ func writeContentToFile(config_obj *config_proto.Config, urn string, data []byte
 	}
 	defer file.Close()
 
-	file.Truncate(0)
+	err = file.Truncate(0)
+	if err != nil {
+		return err
+	}
 
 	_, err = file.Write(data)
 	if err != nil {

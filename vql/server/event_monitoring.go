@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/ptypes/empty"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -153,20 +154,23 @@ func (self GetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("get_server_monitoring: %s", err.Error())
-		return vfilter.Null{}
-	}
-	defer closer()
-
-	response, err := client.GetServerMonitoringState(ctx, &empty.Empty{})
-	if err != nil {
-		scope.Log("get_server_monitoring: %s", err.Error())
+		scope.Log("get_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
-	return response
+	result := &flows_proto.ArtifactCollectorArgs{}
+	err = db.GetSubject(config_obj,
+		constants.ServerMonitoringFlowURN,
+		result)
+
+	if err != nil {
+		scope.Log("get_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	return result
 }
 
 func (self GetServerMonitoring) Info(scope *vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -235,7 +239,7 @@ func (self SetServerMonitoring) Call(
 		scope.Log("set_server_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	response, err := client.SetServerMonitoringState(ctx, value)
 	if err != nil {

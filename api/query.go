@@ -94,6 +94,9 @@ func streamQuery(
 	scope := services.GetRepositoryManager().BuildScope(builder)
 	defer scope.Close()
 
+	// Throttle the query if required.
+	vfilter.InstallThrottler(scope, vfilter.NewTimeThrottler(float64(rate)))
+
 	go func() {
 		defer close(response_channel)
 

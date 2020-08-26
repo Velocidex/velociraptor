@@ -117,8 +117,10 @@ func (self *EventTable) Update(
 		}
 
 		// Then override with the request environment.
-		for _, env_spec := range arg.Parameters.Env {
-			env.Set(env_spec.Key, env_spec.Value)
+		if arg.Parameters != nil {
+			for _, env_spec := range arg.Parameters.Env {
+				env.Set(env_spec.Key, env_spec.Value)
+			}
 		}
 
 		// A new scope for each artifact - but shared scope
@@ -190,7 +192,7 @@ func (self *EventTable) RunQuery(
 		rs_writer, err := result_sets.NewResultSetWriter(
 			config_obj, path_manager, opts, false /* truncate */)
 		if err != nil {
-			logger.Error("NewResultSetWriter", err)
+			logger.Error("NewResultSetWriter: %v", err)
 			return
 		}
 		defer rs_writer.Close()

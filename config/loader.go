@@ -263,7 +263,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 			return err
 		}
 	} else {
-		logging.InitLogging(&config_proto.Config{})
+		// Logging is not required so if it fails we dont
+		// care.
+		_ = logging.InitLogging(&config_proto.Config{})
 	}
 
 	for _, validator := range self.validators {
@@ -369,7 +371,10 @@ func read_embedded_config() (*config_proto.Config, error) {
 	}
 
 	b := &bytes.Buffer{}
-	io.Copy(b, r)
+	_, err = io.Copy(b, r)
+	if err != nil {
+		return nil, err
+	}
 	r.Close()
 
 	result := &config_proto.Config{}

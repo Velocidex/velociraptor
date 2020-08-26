@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/users"
@@ -106,7 +107,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// binary data in metadata.
 		serialized, _ := json.Marshal(user_info)
 		ctx := context.WithValue(
-			r.Context(), "USER", string(serialized))
+			r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
 
 		// Need to call logging after auth so it can access
 		// the USER value in the context.

@@ -113,7 +113,7 @@ func (self *LogContext) Warn(format string, v ...interface{}) {
 	self.Logger.Warn(fmt.Sprintf(format, v...))
 }
 
-func (self *LogContext) Err(format string, v ...interface{}) {
+func (self *LogContext) Error(format string, v ...interface{}) {
 	self.Logger.Error(fmt.Sprintf(format, v...))
 }
 

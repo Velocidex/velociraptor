@@ -149,9 +149,9 @@ func doGUI() {
 			res := OpenBrowser(url)
 			if !res {
 				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-				logger.Error(fmt.Sprintf(
+				logger.Error(
 					"Failed to open browser... you can try to connect directory to %v",
-					url))
+					url)
 			}
 		}()
 	}

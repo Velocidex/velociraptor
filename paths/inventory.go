@@ -12,7 +12,10 @@ import (
 func ObfuscateName(
 	config_obj *config_proto.Config, name string) string {
 	sha_sum := sha256.New()
-	sha_sum.Write([]byte(config_obj.ObfuscationNonce + name))
+	_, err := sha_sum.Write([]byte(config_obj.ObfuscationNonce + name))
+	if err != nil {
+		return name
+	}
 
 	return hex.EncodeToString(sha_sum.Sum(nil))
 

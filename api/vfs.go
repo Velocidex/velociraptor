@@ -305,7 +305,7 @@ func vfsStatDirectory(
 	// not exist yet then it will have no flow id associated with
 	// it. This allows the gui to watch for the VFS directory to
 	// appear for the first time.
-	db.GetSubject(config_obj, vfs_urn, result)
+	_ = db.GetSubject(config_obj, vfs_urn, result)
 
 	// Remove the actual response which might be large.
 	result.Response = ""

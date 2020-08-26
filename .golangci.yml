@@ -1,0 +1,17 @@
+run:
+  tests: false
+  build-tags:
+    - server_vql
+    - extras
+    - release
+    - yara
+    - codeanalysis
+
+  allow-parallel-runners: true
+
+linters-settings:
+  govet:
+    settings:
+      printf:
+        funcs:
+          - (www.velocidex.com/golang/velociraptor/logging.LogContext).Error

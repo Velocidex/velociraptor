@@ -392,7 +392,11 @@ func (self *MessageInfo) IterateJobs(
 
 			// For backwards compatibility normalize old
 			// client messages to new format.
-			responder.NormalizeGrrMessageForBackwardCompatibility(job)
+			err = responder.NormalizeGrrMessageForBackwardCompatibility(job)
+			if err != nil {
+				return err
+			}
+
 			processor(ctx, job)
 		}
 	}
@@ -417,8 +421,7 @@ func (self *CryptoManager) calcHMAC(
 	msg = append(msg, temp...)
 
 	mac := hmac.New(sha1.New, cipher.HmacKey)
-	mac.Write(msg)
-
+	_, _ = mac.Write(msg)
 	return mac.Sum(nil)
 }
 
@@ -649,7 +652,11 @@ func (self *CryptoManager) EncryptMessageList(
 	}
 
 	if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
-		plain_text = utils.Compress(plain_text)
+		plain_text, err = utils.Compress(plain_text)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
+
 	}
 
 	cipher_text, err := self.Encrypt(

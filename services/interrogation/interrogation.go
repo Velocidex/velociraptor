@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -38,13 +37,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type EnrollmentService struct {
-	mu sync.Mutex
-
-	APIClientFactory grpc_client.APIClientFactory
-	config_obj       *config_proto.Config
-	cancel           func()
-}
+type EnrollmentService struct{}
 
 func (self *EnrollmentService) Start(
 	ctx context.Context,
@@ -58,10 +51,7 @@ func (self *EnrollmentService) Start(
 		defer wg.Done()
 		defer cancel()
 
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Enrollment service.")
 
 		for {
@@ -94,7 +84,7 @@ func (self *EnrollmentService) ProcessRow(
 	}
 
 	// Get the client record from the data store.
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
@@ -102,7 +92,10 @@ func (self *EnrollmentService) ProcessRow(
 	client_info := &actions_proto.ClientInfo{}
 	client_path_manager := paths.NewClientPathManager(client_id)
 
-	db.GetSubject(self.config_obj, client_path_manager.Path(), client_info)
+	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
+	if err != nil {
+		return err
+	}
 
 	// If we have a valid client record we do not need to
 	// interrogate. Interrogation happens automatically only once
@@ -112,10 +105,10 @@ func (self *EnrollmentService) ProcessRow(
 		return nil
 	}
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Debug("Interrogating %v", client_id)
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(self.config_obj)
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
@@ -135,19 +128,13 @@ func (self *EnrollmentService) ProcessRow(
 	// Write an intermediate record while the interrogation is in flight.
 	client_info.ClientId = client_id
 	client_info.LastInterrogateFlowId = flow_id
-	err = db.SetSubject(self.config_obj, client_path_manager.Path(), client_info)
+	err = db.SetSubject(config_obj, client_path_manager.Path(), client_info)
 
 	return err
 }
 
 // Watch the system's flow completion log for interrogate artifacts.
-type InterrogationService struct {
-	mu sync.Mutex
-
-	APIClientFactory grpc_client.APIClientFactory
-	config_obj       *config_proto.Config
-	cancel           func()
-}
+type InterrogationService struct{}
 
 // Watch for Generic.Client.Info artifacts.
 func (self *InterrogationService) Start(
@@ -155,18 +142,16 @@ func (self *InterrogationService) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	watchForFlowCompletion(
-		ctx, wg, self.config_obj, "Generic.Client.Info/BasicInformation",
+	return watchForFlowCompletion(
+		ctx, wg, config_obj, "Generic.Client.Info/BasicInformation",
 		func(ctx context.Context, scope *vfilter.Scope, row *ordereddict.Dict) {
 			err := self.ProcessRow(ctx, config_obj, scope, row)
 			if err != nil {
 				logger.Error(fmt.Sprintf("InterrogationService: %v", err))
 			}
 		})
-
-	return nil
 }
 
 func (self *InterrogationService) ProcessRow(
@@ -180,10 +165,10 @@ func (self *InterrogationService) ProcessRow(
 
 	flow_id, _ := row.GetString("FlowId")
 
-	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
+	path_manager := result_sets.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "Generic.Client.Info/BasicInformation")
 	row_chan, err := file_store.GetTimeRange(
-		ctx, self.config_obj, path_manager, 0, 0)
+		ctx, config_obj, path_manager, 0, 0)
 	if err != nil {
 		return err
 	}
@@ -218,12 +203,12 @@ func (self *InterrogationService) ProcessRow(
 	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	err = db.SetSubject(self.config_obj,
+	err = db.SetSubject(config_obj,
 		client_path_manager.Path(), client_info)
 	if err != nil {
 		return err
@@ -232,7 +217,10 @@ func (self *InterrogationService) ProcessRow(
 	if len(client_info.Labels) > 0 {
 		labeler := services.GetLabeler()
 		for _, label := range client_info.Labels {
-			labeler.SetClientLabel(config_obj, client_id, label)
+			err := labeler.SetClientLabel(config_obj, client_id, label)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -246,7 +234,7 @@ func (self *InterrogationService) ProcessRow(
 		"host:" + client_info.Hostname,
 	}
 
-	return db.SetIndex(self.config_obj,
+	return db.SetIndex(config_obj,
 		constants.CLIENT_INDEX_URN,
 		client_id, keywords,
 	)
@@ -257,16 +245,13 @@ func StartInterrogationService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	enrollment_server := &EnrollmentService{
-		config_obj:       config_obj,
-		APIClientFactory: grpc_client.GRPCAPIClient{},
+	enrollment_server := &EnrollmentService{}
+	err := enrollment_server.Start(ctx, config_obj, wg)
+	if err != nil {
+		return err
 	}
-	enrollment_server.Start(ctx, config_obj, wg)
 
-	result := &InterrogationService{
-		config_obj:       config_obj,
-		APIClientFactory: grpc_client.GRPCAPIClient{},
-	}
+	result := &InterrogationService{}
 
 	return result.Start(ctx, config_obj, wg)
 }
