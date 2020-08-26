@@ -355,7 +355,7 @@ func huntHasExcludeLabel(
 	hunt_obj *api_proto.Hunt, client_id string) bool {
 
 	if hunt_obj.Condition == nil || hunt_obj.Condition.ExcludedLabels == nil {
-		return false
+		return true
 	}
 
 	labeler := services.GetLabeler()
