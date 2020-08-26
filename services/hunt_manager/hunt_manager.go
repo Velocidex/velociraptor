@@ -353,15 +353,18 @@ func huntHasLabel(
 func huntHasExcludeLabel(
 	config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt, client_id string) bool {
+
+	if hunt_obj.Condition == nil || hunt_obj.Condition.ExcludedLabels == nil {
+		return false
+	}
+
 	labeler := services.GetLabeler()
 
-	if hunt_obj.Condition.ExcludedLabels != nil {
-		for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
-			if labeler.IsLabelSet(config_obj, client_id, label) {
-				// Label is set on the client, it should be
-				// excluded from the hunt.
-				return false
-			}
+	for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
+		if labeler.IsLabelSet(config_obj, client_id, label) {
+			// Label is set on the client, it should be
+			// excluded from the hunt.
+			return false
 		}
 	}
 

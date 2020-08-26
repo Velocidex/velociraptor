@@ -137,6 +137,10 @@ func (self *InventoryService) materializeTool(
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
 
+	if self.Client == nil {
+		return errors.New("Client not configured")
+	}
+
 	// If we are downloading from github we have to resolve and
 	// verify the binary URL now.
 	if tool.GithubProject != "" {

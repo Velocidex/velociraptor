@@ -128,6 +128,10 @@ func checkForServerUpgrade(
 		return err
 	}
 
+	if config_obj.Version == nil {
+		return errors.New("config_obj.Version not configured")
+	}
+
 	if utils.CompareVersions(state.Version, config_obj.Version.Version) < 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Server upgrade detected %v -> %v... running upgrades.",
