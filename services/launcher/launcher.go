@@ -278,8 +278,11 @@ func (self *Launcher) AddArtifactCollectorArgs(
 	}
 
 	// We can only specify a parameter which is defined already
-	for _, item := range collector_request.Parameters.Env {
-		addOrReplaceParameter(item, vql_collector_args.Env)
+	if collector_request.Parameters != nil {
+		for _, item := range collector_request.Parameters.Env {
+			vql_collector_args.Env = addOrReplaceParameter(
+				item, vql_collector_args.Env)
+		}
 	}
 
 	return nil
@@ -287,16 +290,17 @@ func (self *Launcher) AddArtifactCollectorArgs(
 
 // We do not expect too many parameters so linear search is appropriate.
 func addOrReplaceParameter(
-	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) {
+	param *actions_proto.VQLEnv, env []*actions_proto.VQLEnv) []*actions_proto.VQLEnv {
+	result := append([]*actions_proto.VQLEnv(nil), env...)
 
 	// Try to replace it if it is already there.
-	for _, item := range env {
+	for _, item := range result {
 		if item.Key == param.Key {
 			item.Value = param.Value
-			return
+			return result
 		}
 	}
-	env = append(env, param)
+	return append(result, param)
 }
 
 func (self *Launcher) SetFlowIdForTests(id string) {
@@ -315,7 +319,7 @@ func NewFlowId(client_id string) string {
 	}
 
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]

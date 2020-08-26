@@ -373,9 +373,12 @@ func (self *MySQLDataStore) walk(config_obj *config_proto.Config,
 	for _, child := range children {
 		child_urn := utils.PathJoin(root, child.Name, "/")
 		if child.IsDir {
-			self.Walk(config_obj, child_urn, walkFn)
+			err = self.Walk(config_obj, child_urn, walkFn)
 		} else {
-			walkFn(child_urn)
+			err = walkFn(child_urn)
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -525,7 +528,11 @@ SELECT data FROM datastore WHERE path_hash = ? AND path = ? AND name = ? LIMIT 1
 		if err != nil {
 			return nil, err
 		}
-		return row.Data, nil
+
+		// Only return the first row
+		if true {
+			return row.Data, nil
+		}
 	}
 
 	if must_exist {

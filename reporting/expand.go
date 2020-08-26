@@ -86,7 +86,6 @@ func FormatDescription(
 
 	err = tmpl.Execute(buffer, expansion)
 	if err != nil {
-		utils.Debug(err)
 		return description
 	}
 

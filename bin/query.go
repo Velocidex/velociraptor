@@ -70,7 +70,8 @@ func outputJSON(ctx context.Context,
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonIndent(scope),
 		10, *max_wait) {
-		out.Write(result.Payload)
+		_, err := out.Write(result.Payload)
+		kingpin.FatalIfError(err, "outputJSON")
 	}
 }
 
@@ -82,7 +83,8 @@ func outputJSONL(ctx context.Context,
 		vql, ctx, scope,
 		vql_subsystem.MarshalJsonl(scope),
 		10, *max_wait) {
-		out.Write(result.Payload)
+		_, err := out.Write(result.Payload)
+		kingpin.FatalIfError(err, "outputCSV")
 	}
 }
 
@@ -124,7 +126,7 @@ func doRemoteQuery(
 	ctx := context.Background()
 	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
 	kingpin.FatalIfError(err, "GetAPIClient")
-	defer closer()
+	defer func() { _ = closer() }()
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
@@ -221,12 +223,9 @@ func doQuery() {
 		return
 	}
 
-	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
+	// Initialize the repository in case the artifacts use it
+	_, err = getRepository(config_obj)
 	kingpin.FatalIfError(err, "Artifact GetGlobalRepository ")
-
-	if *artifact_definitions_dir != "" {
-		repository.LoadDirectory(*artifact_definitions_dir)
-	}
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,

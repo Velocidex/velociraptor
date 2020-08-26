@@ -43,7 +43,7 @@ func (self *ServerUploader) Upload(
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size, reader)
 	if err == nil {
-		services.GetJournal().PushRows(self.config_obj,
+		err = services.GetJournal().PushRows(self.config_obj,
 			self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).
@@ -51,13 +51,17 @@ func (self *ServerUploader) Upload(
 				Set("vfs_path", result.Path).
 				Set("expected_size", result.Size)},
 		)
+		if err != nil {
+			return nil, err
+		}
+
 		self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
 			context.TotalUploadedFiles++
 			context.TotalUploadedBytes += uint64(result.Size)
 			context.TotalExpectedUploadedBytes += uint64(result.Size)
 		})
 
-		err = self.collection_context.Save()
+		return result, self.collection_context.Save()
 
 	}
 	return result, err

@@ -35,7 +35,7 @@ func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, 
 				strings.HasSuffix(path, ".yml")) {
 				fd, err := file_store_factory.ReadFile(path)
 				if err != nil {
-					logger.Error(err)
+					logger.Error("GetGlobalRepository: %v", err)
 					return nil
 				}
 				defer fd.Close()
@@ -43,7 +43,7 @@ func GetGlobalRepository(config_obj *config_proto.Config) (services.Repository, 
 				data, err := ioutil.ReadAll(
 					io.LimitReader(fd, constants.MAX_MEMORY))
 				if err != nil {
-					logger.Error(err)
+					logger.Error("GetGlobalRepository: %v", err)
 					return nil
 				}
 

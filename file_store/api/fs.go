@@ -21,17 +21,7 @@ func (self *HTTPFileAdapter) Stat() (os.FileInfo, error) {
 }
 
 func (self HTTPFileAdapter) Readdir(count int) ([]os.FileInfo, error) {
-	children, err := self.file_store.ListDirectory(self.filename)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make([]os.FileInfo, 0, len(children))
-	for _, child := range children {
-		result = append(result, child)
-	}
-
-	return result, nil
+	return self.file_store.ListDirectory(self.filename)
 }
 
 // Implementation of http.FileSystem

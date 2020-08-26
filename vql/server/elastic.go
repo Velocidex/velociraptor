@@ -240,7 +240,7 @@ func send_to_elastic(scope *vfilter.Scope,
 	response := make(map[string]interface{})
 	b1, err := ioutil.ReadAll(res.Body)
 	if err == nil {
-		json.Unmarshal(b1, &response)
+		_ = json.Unmarshal(b1, &response)
 	}
 
 	output_chan <- ordereddict.NewDict().

@@ -68,7 +68,11 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 
 			labeler := services.GetLabeler()
 			for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
-				labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
+				err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
+				if err != nil {
+					scope.Log("client_delete: %s", err.Error())
+					return
+				}
 			}
 
 			// Sync up with the indexes created by the interrogation service.
@@ -89,7 +93,7 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		client_path_manager := paths.NewClientPathManager(arg.ClientId)
 
 		// Indiscriminately delete all the client's datastore files.
-		db.Walk(config_obj, client_path_manager.Path(), func(filename string) error {
+		err = db.Walk(config_obj, client_path_manager.Path(), func(filename string) error {
 			output_chan <- ordereddict.NewDict().
 				Set("client_id", arg.ClientId).
 				Set("type", "Datastore").
@@ -97,13 +101,20 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 				Set("really_do_it", arg.ReallyDoIt)
 
 			if arg.ReallyDoIt {
-				db.DeleteSubject(config_obj, filename)
+				err = db.DeleteSubject(config_obj, filename)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})
+		if err != nil {
+			scope.Log("client_delete: %s", err.Error())
+			return
+		}
 
 		// Delete the filestore files.
-		file_store_factory.Walk(client_path_manager.Path(),
+		err = file_store_factory.Walk(client_path_manager.Path(),
 			func(filename string, info os.FileInfo, err error) error {
 				output_chan <- ordereddict.NewDict().
 					Set("client_id", arg.ClientId).
@@ -112,13 +123,17 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 					Set("really_do_it", arg.ReallyDoIt)
 
 				if arg.ReallyDoIt {
-					err = file_store_factory.Delete(filename)
+					err := file_store_factory.Delete(filename)
 					if err != nil {
 						scope.Log("client_delete: %s", err.Error())
 					}
 				}
 				return nil
 			})
+		if err != nil {
+			scope.Log("client_delete: %s", err.Error())
+			return
+		}
 
 	}()
 

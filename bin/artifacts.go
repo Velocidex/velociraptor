@@ -107,44 +107,12 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 		_, err := repository.LoadDirectory(*artifact_definitions_dir)
 		if err != nil {
 			logging.GetLogger(config_obj, &logging.ToolComponent).
-				Error("Artifact LoadDirectory ", err)
+				Error("Artifact LoadDirectory: %v ", err)
 			return nil, err
 		}
 	}
 
 	return repository, nil
-}
-
-func printParameters(
-	config_obj *config_proto.Config,
-	artifacts []string, repository services.Repository) {
-	for _, name := range artifacts {
-		artifact, _ := repository.Get(config_obj, name)
-
-		fmt.Printf("Parameters for artifact %s\n", artifact.Name)
-		for _, arg := range artifact.Parameters {
-			truncate_len := 80
-			default_str := arg.Default
-
-			if default_str != "" {
-				if len(default_str) > truncate_len {
-					default_str = default_str[:truncate_len] + "..."
-				}
-
-				default_str = "( " + default_str + " )"
-			}
-
-			descr_str := arg.Description
-			if len(descr_str) > truncate_len {
-				descr_str = descr_str[:truncate_len] + "..."
-			}
-
-			fmt.Printf("%s: %s %s\n", arg.Name, descr_str,
-				default_str)
-		}
-
-		fmt.Printf("\n\n")
-	}
 }
 
 func doArtifactCollect() {
@@ -211,6 +179,7 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 
 func doArtifactShow() {
 	config_obj, err := DefaultConfigLoader.WithNullLoader().LoadAndValidate()
+	kingpin.FatalIfError(err, "Load Config ")
 
 	sm, err := startEssentialServices(config_obj)
 	kingpin.FatalIfError(err, "Starting services.")
@@ -267,9 +236,6 @@ func doArtifactList() {
 			kingpin.Fatalf("Artifact %s not found", name)
 		}
 
-		res, err := yaml.Marshal(artifact)
-		kingpin.FatalIfError(err, "Unable to encode artifact.")
-
 		fmt.Println(artifact.Raw)
 
 		if *artifact_command_list_verbose_count <= 1 {
@@ -283,7 +249,7 @@ func doArtifactList() {
 			})
 		kingpin.FatalIfError(err, "Unable to compile artifact.")
 
-		res, err = yaml.Marshal(request)
+		res, err := yaml.Marshal(request)
 		kingpin.FatalIfError(err, "Unable to encode artifact.")
 
 		fmt.Printf("VQLCollectorArgs %s:\n***********\n%v\n",

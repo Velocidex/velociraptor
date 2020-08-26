@@ -75,7 +75,7 @@ func shell_executor(config_obj *config_proto.Config,
 		fmt.Printf("ERROR: %v\n", err)
 		return
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	response, err := client.CollectArtifact(ctx,
 		api.MakeCollectorRequest(client_id, artifact_name, "Command", t))
@@ -123,7 +123,7 @@ func shell_executor(config_obj *config_proto.Config,
 			return
 		}
 
-		time.Sleep(1)
+		time.Sleep(500 * time.Millisecond)
 	}
 }
 
@@ -136,7 +136,7 @@ func getClientInfo(config_obj *config_proto.Config, ctx context.Context) (*api_p
 	if err != nil {
 		return nil, err
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	return client.GetClient(ctx, &api_proto.GetClientRequest{
 		ClientId: *shell_client,

@@ -87,7 +87,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
 	services.GetJournal().PushRowsToArtifact(self.config_obj,
@@ -145,7 +145,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	err = db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
@@ -203,7 +203,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "lAbEl")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
@@ -264,7 +264,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,
@@ -335,7 +335,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "DoNotRunHunts")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh()
+	services.GetHuntDispatcher().Refresh(self.config_obj)
 
 	// Simulate a System.Hunt.Participation event
 	path_manager := result_sets.NewArtifactPathManager(self.config_obj,

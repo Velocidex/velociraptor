@@ -109,7 +109,7 @@ func server_pem(config_obj *config_proto.Config) http.Handler {
 		flusher, _ := w.(http.Flusher)
 		flusher.Flush()
 
-		w.Write([]byte(config_obj.Frontend.Certificate))
+		_, _ = w.Write([]byte(config_obj.Frontend.Certificate))
 	})
 }
 
@@ -267,11 +267,11 @@ func control(server_obj *Server) http.Handler {
 		for {
 			select {
 			case response := <-sync:
-				w.Write(response)
+				_, _ = w.Write(response)
 				return
 
 			case <-time.After(3 * time.Second):
-				w.Write(serialized_pad)
+				_, _ = w.Write(serialized_pad)
 				flusher.Flush()
 			}
 		}

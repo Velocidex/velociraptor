@@ -34,7 +34,7 @@ func MonitoringProcessMessage(
 	}
 
 	// Deobfuscate the response if needed.
-	artifacts.Deobfuscate(config_obj, response)
+	_ = artifacts.Deobfuscate(config_obj, response)
 
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {

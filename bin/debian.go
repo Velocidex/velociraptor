@@ -40,14 +40,9 @@
 package main
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"encoding/binary"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
-	"path"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/xor-gate/debpkg"
@@ -132,7 +127,7 @@ WantedBy=multi-user.target
 func doServerDeb() {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	config.ValidateClientConfig(&config_proto.Config{})
+	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := DefaultConfigLoader.WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
@@ -160,7 +155,9 @@ func doServerDeb() {
 	defer fd.Close()
 
 	header := make([]byte, 4)
-	fd.Read(header)
+	_, err = fd.Read(header)
+	kingpin.FatalIfError(err, "Unable to read header")
+
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
 		kingpin.Fatalf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
@@ -182,15 +179,19 @@ func doServerDeb() {
 	config_path := "/etc/velociraptor/server.config.yaml"
 	velociraptor_bin := "/usr/local/bin/velociraptor"
 
-	deb.AddFileString(string(res), config_path)
-	deb.AddFileString(fmt.Sprintf(
+	err = deb.AddFileString(string(res), config_path)
+	kingpin.Fatalf("Adding file", err)
+	err = deb.AddFileString(fmt.Sprintf(
 		server_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_server.service")
-	deb.AddFile(input, velociraptor_bin+".bin")
-	deb.AddFileString(server_launcher, velociraptor_bin)
+	kingpin.Fatalf("Adding file", err)
+	err = deb.AddFile(input, velociraptor_bin+".bin")
+	kingpin.Fatalf("Adding file", err)
+	err = deb.AddFileString(server_launcher, velociraptor_bin)
+	kingpin.Fatalf("Adding file", err)
 
 	filestore_path := config_obj.Datastore.Location
-	deb.AddControlExtraString("postinst", fmt.Sprintf(`
+	err = deb.AddControlExtraString("postinst", fmt.Sprintf(`
 if ! getent group velociraptor >/dev/null; then
    addgroup --system velociraptor
 fi
@@ -211,11 +212,14 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path))
+	kingpin.Fatalf("Adding file", err)
 
-	deb.AddControlExtraString("prerm", `
+	err = deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
 /bin/systemctl stop velociraptor_server
 `)
+	kingpin.Fatalf("Adding file", err)
+
 	err = deb.Write(*server_debian_command_output)
 	kingpin.FatalIfError(err, "Deb write")
 }
@@ -223,7 +227,7 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 func doClientDeb() {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	config.ValidateClientConfig(&config_proto.Config{})
+	_ = config.ValidateClientConfig(&config_proto.Config{})
 
 	config_obj, err := DefaultConfigLoader.
 		WithRequiredClient().LoadAndValidate()
@@ -248,7 +252,9 @@ func doClientDeb() {
 	defer fd.Close()
 
 	header := make([]byte, 4)
-	fd.Read(header)
+	_, err = fd.Read(header)
+	kingpin.FatalIfError(err, "Unable to open executable")
+
 	if binary.LittleEndian.Uint32(header) != 0x464c457f {
 		kingpin.Fatalf("Binary does not appear to be an " +
 			"ELF binary. Please specify the linux binary " +
@@ -269,79 +275,31 @@ func doClientDeb() {
 	config_path := "/etc/velociraptor/client.config.yaml"
 	velociraptor_bin := "/usr/local/bin/velociraptor_client"
 
-	deb.AddFileString(string(res), config_path)
-	deb.AddFileString(fmt.Sprintf(
+	err = deb.AddFileString(string(res), config_path)
+	kingpin.FatalIfError(err, "Deb write")
+
+	err = deb.AddFileString(fmt.Sprintf(
 		client_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_client.service")
-	deb.AddFile(input, velociraptor_bin)
+	kingpin.FatalIfError(err, "Deb write")
 
-	deb.AddControlExtraString("postinst", `
+	err = deb.AddFile(input, velociraptor_bin)
+	kingpin.FatalIfError(err, "Deb write")
+
+	err = deb.AddControlExtraString("postinst", `
 /bin/systemctl enable velociraptor_client
 /bin/systemctl start velociraptor_client
 `)
+	kingpin.FatalIfError(err, "Deb write")
 
-	deb.AddControlExtraString("prerm", `
+	err = deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_client
 /bin/systemctl stop velociraptor_client
 `)
+	kingpin.FatalIfError(err, "Deb write")
+
 	err = deb.Write(*client_debian_command_output)
 	kingpin.FatalIfError(err, "Deb write")
-}
-
-// Download a tar/gz and unpack it into the deb package.
-func include_package(url, deb_path string, deb *debpkg.DebPkg) error {
-	filename := path.Base(url)
-	fd, err := os.Open(filename)
-	if os.IsNotExist(err) {
-		err = DownloadFile(filename, url)
-		if err != nil {
-			return err
-		}
-
-		fd, err = os.Open(filename)
-	}
-
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	gzf, err := gzip.NewReader(fd)
-	if err != nil {
-		return err
-	}
-
-	tarReader := tar.NewReader(gzf)
-
-	i := 0
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if header.Typeflag == tar.TypeReg {
-			// This is not ideal but debpkg does not
-			// support streamed readers.
-			buffer, err := ioutil.ReadAll(tarReader)
-			if err != nil {
-				return err
-			}
-
-			name := path.Join(deb_path, header.Name)
-
-			fmt.Println("(", i, ")", "Name: ", name)
-			deb.AddFileString(string(buffer), name)
-		}
-
-		i++
-	}
-
-	return nil
 }
 
 func init() {

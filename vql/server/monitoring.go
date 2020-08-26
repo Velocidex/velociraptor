@@ -21,7 +21,6 @@ package server
 
 import (
 	"context"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -89,17 +88,6 @@ func (self MonitoringPlugin) Info(scope *vfilter.Scope, type_map *vfilter.TypeMa
 			"we watch the global journal which contains event logs from all clients.",
 		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
 	}
-}
-
-// Keep the state of each monitoring file.
-type state map[string]info
-
-type info struct {
-	// Last modification time of the monitoring file.
-	age time.Time
-
-	// Last read offset in the file (we tail the file for new items).
-	offset int64
 }
 
 type MonitoringPluginArgs struct {

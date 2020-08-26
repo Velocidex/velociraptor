@@ -241,7 +241,12 @@ func (self WriteCSVPlugin) Call(
 			}
 			defer file.Close()
 
-			file.Truncate()
+			err = file.Truncate()
+			if err != nil {
+				scope.Log("write_csv: Unable to truncate file %s: %v",
+					arg.Filename, err)
+				return
+			}
 
 			writer = csv.GetCSVAppender(scope, file, true)
 			defer writer.Close()

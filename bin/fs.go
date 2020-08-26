@@ -293,7 +293,8 @@ func doCat(path, accessor_name string) {
 	fd, err := accessor.Open(path)
 	kingpin.FatalIfError(err, "ReadFile")
 
-	io.Copy(os.Stdout, fd)
+	_, err = io.Copy(os.Stdout, fd)
+	kingpin.FatalIfError(err, "Copy file")
 }
 
 // Install a fs accessor to enable access to the file store. But make

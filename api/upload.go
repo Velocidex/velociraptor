@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -34,7 +35,11 @@ func toolUploadHandler(
 
 		// Parse our multipart form, 10 << 20 specifies a maximum
 		// upload of 10 MB files.
-		r.ParseMultipartForm(10 << 20)
+		err = r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			returnError(w, http.StatusBadRequest, "Unsupported params")
+			return
+		}
 
 		tool := &artifacts_proto.Tool{}
 		params, pres := r.Form["_params_"]
@@ -73,7 +78,13 @@ func toolUploadHandler(
 		}
 		defer writer.Close()
 
-		writer.Truncate()
+		err = writer.Truncate()
+		if err != nil {
+			returnError(w, http.StatusInternalServerError,
+				fmt.Sprintf("Error: %v", err))
+			return
+		}
+
 		sha_sum := sha256.New()
 
 		_, err = io.Copy(writer, io.TeeReader(file, sha_sum))
@@ -102,6 +113,10 @@ func toolUploadHandler(
 		}
 
 		serialized, _ := json.Marshal(tool)
-		w.Write(serialized)
+		_, err = w.Write(serialized)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("toolUploadHandler: %v", err)
+		}
 	})
 }

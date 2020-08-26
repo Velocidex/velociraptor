@@ -27,7 +27,6 @@ func (self *TextTemplateEngine) Execute(template_string string) (string, error) 
 	buffer := &bytes.Buffer{}
 	err = tmpl.Execute(buffer, nil)
 	if err != nil {
-		utils.Debug(err)
 		return "", err
 	}
 
@@ -43,8 +42,11 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 			buf := &bytes.Buffer{}
 			err := t.Execute(buf, nil)
 			if err != nil {
-				self.logger.Err("Template Error (%s): %v",
-					self.Artifact.Name, err)
+				if self.Artifact != nil {
+					self.logger.Error(
+						"Template Error (%s): %v",
+						self.Artifact.Name, err)
+				}
 				return []vfilter.Row{}
 			}
 			query = buf.String()
@@ -52,7 +54,7 @@ func (self *TextTemplateEngine) Query(queries ...string) []vfilter.Row {
 
 		vql, err := vfilter.Parse(query)
 		if err != nil {
-			self.logger.Err("VQL Error while reporting %s: %v",
+			self.logger.Error("VQL Error while reporting %s: %v",
 				self.Artifact.Name, err)
 			return result
 		}

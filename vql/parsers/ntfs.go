@@ -175,7 +175,7 @@ func (self MFTScanPlugin) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{fd}, 1024, 10000)
+			utils.ReaderAtter{Reader: fd}, 1024, 10000)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)

@@ -130,6 +130,10 @@ func (self *Dummy) materializeTool(
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
 
+	if self.Client == nil {
+		return errors.New("HTTP Client not configured")
+	}
+
 	// If we are downloading from github we have to resolve and
 	// verify the binary URL now.
 	if tool.GithubProject != "" {
@@ -153,11 +157,17 @@ func (self *Dummy) materializeTool(
 	}
 	defer fd.Close()
 
-	fd.Truncate(0)
+	err = fd.Truncate(0)
+	if err != nil {
+		return err
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name, tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
+	if err != nil {
+		return err
+	}
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err

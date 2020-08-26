@@ -421,7 +421,7 @@ func (self *HTTPConnector) rekeyNextServer() error {
 	// the manager.
 	server_name, err := self.manager.AddCertificate(pem)
 	if err != nil {
-		self.logger.Error(err)
+		self.logger.Error("AddCertificate: %v", err)
 		self.server_name = ""
 		return err
 	}
@@ -649,10 +649,11 @@ func (self *NotificationReader) Start(ctx context.Context) {
 			message_list := self.GetMessageList()
 			serialized_message_list, err := proto.Marshal(message_list)
 			if err == nil {
-				self.sendMessageList(
-					ctx, [][]byte{
-						utils.Compress(serialized_message_list)},
-					false)
+				compressed, err := utils.Compress(serialized_message_list)
+				if err == nil {
+					self.sendMessageList(
+						ctx, [][]byte{compressed}, false)
+				}
 			}
 
 			select {

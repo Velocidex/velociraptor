@@ -75,7 +75,7 @@ func (self *ApiServer) GetNotebooks(
 		if err != nil {
 			logging.GetLogger(
 				self.config, &logging.FrontendComponent).
-				Error("Unable to open notebook", err)
+				Error("Unable to open notebook: %v", err)
 			return nil, err
 		}
 
@@ -112,7 +112,7 @@ func (self *ApiServer) GetNotebooks(
 
 func NewNotebookId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -122,7 +122,7 @@ func NewNotebookId() string {
 
 func NewNotebookAttachmentId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -132,7 +132,7 @@ func NewNotebookAttachmentId() string {
 
 func NewNotebookCellId() string {
 	buf := make([]byte, 8)
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
@@ -176,6 +176,9 @@ func (self *ApiServer) NewNotebook(
 
 	notebook_path_manager := reporting.NewNotebookPathManager(in.NotebookId)
 	err = db.SetSubject(self.config, notebook_path_manager.Path(), in)
+	if err != nil {
+		return nil, err
+	}
 
 	// Add a new single cell to the notebook.
 	new_cell_request := &api_proto.NotebookCellRequest{
@@ -547,11 +550,11 @@ func (self *ApiServer) UpdateNotebookCell(
 
 		// Active cancellation from the GUI.
 		case <-cancel_notify:
-			tmpl.Scope.Log("Cancelled after %v !", time.Now().Sub(start_time))
+			tmpl.Scope.Log("Cancelled after %v !", time.Since(start_time))
 
 			// Set a timeout.
 		case <-time.After(10 * time.Minute):
-			tmpl.Scope.Log("Query timed out after %v !", time.Now().Sub(start_time))
+			tmpl.Scope.Log("Query timed out after %v !", time.Since(start_time))
 		}
 
 	}()
@@ -573,7 +576,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		if err != nil {
 			main_err = err
 			logger := logging.GetLogger(self.config, &logging.GUIComponent)
-			logger.Error("Rendering error", err)
+			logger.Error("Rendering error: %v", err)
 		}
 
 		// Update the response if we can.
@@ -584,9 +587,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	// the response takes too long, just give up and return a
 	// continuation. The GUI will continue polling for notebook
 	// state and will pick up the changes by itself.
-	select {
-	case <-sub_ctx.Done():
-	}
+	<-sub_ctx.Done()
 
 	return notebook_cell, main_err
 }
@@ -721,7 +722,10 @@ func exportZipNotebook(
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer file_store_factory.Delete(filename + ".lock")
+		defer func() {
+			_ = file_store_factory.Delete(filename + ".lock")
+		}()
+
 		defer cancel()
 
 		err := reporting.ExportNotebookToZip(
@@ -776,7 +780,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer file_store_factory.Delete(filename + ".lock")
+		defer func() { _ = file_store_factory.Delete(filename + ".lock") }()
 		defer writer.Close()
 		defer cancel()
 

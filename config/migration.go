@@ -64,7 +64,7 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 		}
 		if config_obj.ObfuscationNonce == "" {
 			sha_sum := sha256.New()
-			sha_sum.Write([]byte(config_obj.Frontend.PrivateKey))
+			_, _ = sha_sum.Write([]byte(config_obj.Frontend.PrivateKey))
 			config_obj.ObfuscationNonce = hex.EncodeToString(sha_sum.Sum(nil))
 		}
 	}

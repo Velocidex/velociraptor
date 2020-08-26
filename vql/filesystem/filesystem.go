@@ -86,12 +86,20 @@ func (self GlobPlugin) Call(
 					continue
 				}
 				root = item_root
-				globber.Add(item_path, accessor.PathSplit)
+				err = globber.Add(item_path, accessor.PathSplit)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
 			}
 
 		} else {
 			for _, item := range arg.Globs {
-				globber.Add(item, accessor.PathSplit)
+				err = globber.Add(item, accessor.PathSplit)
+				if err != nil {
+					scope.Log("glob: %v", err)
+					return
+				}
 			}
 		}
 

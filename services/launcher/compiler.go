@@ -108,8 +108,7 @@ func mergeSources(
 		// queries except for the last one.
 		queries, err := vfilter.MultiParse(source.Query)
 		if err != nil {
-			return errors.Wrap(
-				err, fmt.Sprintf("While parsing source query"))
+			return errors.Wrap(err, "While parsing source query")
 		}
 
 		for idx2, vql := range queries {
@@ -303,7 +302,7 @@ func getDependentTools(
 	for _, tool := range vql_collector_args.Tools {
 		err := AddToolDependency(ctx, config_obj, tool, vql_collector_args)
 		if err != nil {
-			logger.Error("While Adding dependencies: ", err)
+			logger.Error("While Adding dependencies: %v", err)
 			return err
 		}
 	}

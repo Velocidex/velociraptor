@@ -49,3 +49,6 @@ debug:
 
 debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v
+
+lint:
+	golangci-lint run

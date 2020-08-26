@@ -161,7 +161,8 @@ func main() {
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)
 		kingpin.FatalIfError(err, "trace file.")
-		trace.Start(f)
+		err = trace.Start(f)
+		kingpin.FatalIfError(err, "trace file.")
 		defer trace.Stop()
 	}
 
@@ -169,7 +170,8 @@ func main() {
 		f2, err := os.Create(*profile_flag)
 		kingpin.FatalIfError(err, "Profile file.")
 
-		pprof.StartCPUProfile(f2)
+		err = pprof.StartCPUProfile(f2)
+		kingpin.FatalIfError(err, "Profile file.")
 		defer pprof.StopCPUProfile()
 
 	}

@@ -96,6 +96,14 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
+	if services.GetHuntDispatcher() == nil {
+		// Hunt dispatcher manages client's hunt membership.
+		err := sm.Start(hunt_dispatcher.StartHuntDispatcher)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -123,14 +131,6 @@ func StartupFrontendServices(sm *services.Service) error {
 	// Updates DynDNS records if needed. Frontends need to maintain their IP addresses.
 	if spec.DynDns {
 		err := sm.Start(ddclient.StartDynDNSService)
-		if err != nil {
-			return err
-		}
-	}
-
-	if spec.HuntDispatcher {
-		// Hunt dispatcher manages client's hunt membership.
-		err := sm.Start(hunt_dispatcher.StartHuntDispatcher)
 		if err != nil {
 			return err
 		}

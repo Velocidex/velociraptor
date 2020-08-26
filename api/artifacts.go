@@ -299,12 +299,11 @@ func (self *ApiServer) LoadArtifactPack(
 				continue
 			}
 
-			artifact_definition := string(data)
-
 			// Make sure the artifact is written into the
 			// Packs part to prevent clashes with built in
 			// names.
-			artifact_definition = ensureArtifactPrefix(string(data), prefix)
+			artifact_definition := ensureArtifactPrefix(
+				string(data), prefix)
 
 			request := &api_proto.SetArtifactRequest{
 				Op:       api_proto.SetArtifactRequest_SET,

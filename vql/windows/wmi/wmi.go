@@ -119,7 +119,9 @@ func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 					row.Set(property, &vfilter.Null{})
 					continue
 				}
-				defer property_raw.Clear()
+				defer func() {
+					_ = property_raw.Clear()
+				}()
 
 				// If it is an array we convert it here.
 				if property_raw.VT&ole.VT_ARRAY > 0 {
@@ -149,7 +151,9 @@ func getProperties(item *ole.IDispatch) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer properties_raw.Clear()
+	defer func() {
+		_ = properties_raw.Clear()
+	}()
 
 	properties := properties_raw.ToIDispatch()
 	defer properties.Release()
@@ -163,7 +167,9 @@ func getProperties(item *ole.IDispatch) ([]string, error) {
 			if err != nil {
 				return err
 			}
-			defer name.Clear()
+			defer func() {
+				_ = name.Clear()
+			}()
 
 			value, ok := name.Value().(string)
 			if ok {

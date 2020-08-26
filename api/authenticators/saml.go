@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -102,7 +103,8 @@ Contact your system administrator to get an account, then try again.
 
 			serialized, _ := json.Marshal(user_info)
 			ctx := context.WithValue(
-				r.Context(), "USER", string(serialized))
+				r.Context(), constants.GRPC_USER_CONTEXT,
+				string(serialized))
 			GetLoggingHandler(config_obj)(parent).ServeHTTP(
 				w, r.WithContext(ctx))
 			return

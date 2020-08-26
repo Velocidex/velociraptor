@@ -103,7 +103,7 @@ func (self MailPlugin) Call(
 			port = 587
 		}
 
-		d := gomail.NewPlainDialer(
+		d := gomail.NewDialer(
 			config_obj.Mail.Server,
 			int(port),
 			config_obj.Mail.AuthUsername,

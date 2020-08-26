@@ -7,5 +7,5 @@ Queries:
     WHERE Name =~ "Windows"
 
   # Make sure we **do not** follow symlinks with the default accessors.
-  - SELECT * FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")
-  - SELECT * FROM glob(globs="c:\\Users\\*link\\notepad.exe")
+  - SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")
+  - SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")

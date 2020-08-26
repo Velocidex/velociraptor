@@ -28,7 +28,8 @@ type SanityChecks struct{}
 
 func (self *SanityChecks) Check(
 	ctx context.Context, config_obj *config_proto.Config) error {
-	if config_obj.Logging.OutputDirectory != "" {
+	if config_obj.Logging != nil &&
+		config_obj.Logging.OutputDirectory != "" {
 		err := utils.CheckDirWritable(config_obj.Logging.OutputDirectory)
 		if err != nil {
 			return errors.Wrap(
@@ -41,45 +42,51 @@ func (self *SanityChecks) Check(
 
 	// Make sure the initial user accounts are created with the
 	// administrator roles.
-	for _, user := range config_obj.GUI.InitialUsers {
-		user_record, err := users.GetUser(config_obj, user.Name)
-		if err != nil || user_record.Name != user.Name {
-			logger.Info("Initial user %v not present, creating", user.Name)
-			new_user, err := users.NewUserRecord(user.Name)
-			if err != nil {
-				return err
-			}
+	if config_obj.GUI != nil {
+		for _, user := range config_obj.GUI.InitialUsers {
+			user_record, err := users.GetUser(config_obj, user.Name)
+			if err != nil || user_record.Name != user.Name {
+				logger.Info("Initial user %v not present, creating", user.Name)
+				new_user, err := users.NewUserRecord(user.Name)
+				if err != nil {
+					return err
+				}
 
-			if config.GoogleAuthEnabled(config_obj) ||
-				config.SAMLEnabled(config_obj) {
-				password := make([]byte, 100)
-				rand.Read(password)
-				users.SetPassword(new_user, string(password))
+				if config.GoogleAuthEnabled(config_obj) ||
+					config.SAMLEnabled(config_obj) {
+					password := make([]byte, 100)
+					_, _ = rand.Read(password)
+					users.SetPassword(new_user, string(password))
 
-			} else {
-				new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
-				new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
-			}
-			err = users.SetUser(config_obj, new_user)
-			if err != nil {
-				return err
-			}
+				} else {
+					new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
+					new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
+				}
+				err = users.SetUser(config_obj, new_user)
+				if err != nil {
+					return err
+				}
 
-			// Give them the administrator roles
-			err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
-			if err != nil {
-				return err
+				// Give them the administrator roles
+				err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
-	if config_obj.Frontend.ExpectedClients == 0 {
-		config_obj.Frontend.ExpectedClients = 10000
-	}
+	if config_obj.Frontend != nil {
+		if config_obj.Frontend.ExpectedClients == 0 {
+			config_obj.Frontend.ExpectedClients = 10000
+		}
 
-	// DynDns.Hostname is deprecated, moved to Frontend.Hostname
-	if config_obj.Frontend.Hostname == "" && config_obj.Frontend.Hostname != "" {
-		config_obj.Frontend.Hostname = config_obj.Frontend.Hostname
+		// DynDns.Hostname is deprecated, moved to Frontend.Hostname
+		if config_obj.Frontend.Hostname == "" &&
+			config_obj.Frontend.DynDns != nil &&
+			config_obj.Frontend.DynDns.Hostname != "" {
+			config_obj.Frontend.Hostname = config_obj.Frontend.DynDns.Hostname
+		}
 	}
 
 	if config_obj.AutocertCertCache != "" {
@@ -116,7 +123,14 @@ func checkForServerUpgrade(
 	}
 	state := &api_proto.ServerState{}
 	state_path_manager := &paths.ServerStatePathManager{}
-	db.GetSubject(config_obj, state_path_manager.Path(), state)
+	err = db.GetSubject(config_obj, state_path_manager.Path(), state)
+	if err != nil {
+		return err
+	}
+
+	if config_obj.Version == nil {
+		return errors.New("config_obj.Version not configured")
+	}
 
 	if utils.CompareVersions(state.Version, config_obj.Version.Version) < 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

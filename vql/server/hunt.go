@@ -97,7 +97,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		scope.Log("hunt: %s", err.Error())
 		return vfilter.Null{}
 	}
-	defer closer()
+	defer func() { _ = closer() }()
 
 	response, err := client.CreateHunt(ctx, hunt_request)
 	if err != nil {

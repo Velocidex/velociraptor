@@ -7,6 +7,7 @@ package client_monitoring
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"sync"
 
@@ -132,6 +133,10 @@ func (self *ClientEventTable) compileState(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	state *flows_proto.ClientEventTable) (err error) {
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
+
 	// Compile all the artifacts now for faster dispensing.
 	compiled, err := self.compileArtifactCollectorArgs(
 		ctx, config_obj, state.Artifacts)
@@ -157,6 +162,10 @@ func (self *ClientEventTable) setClientMonitoringState(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	state *flows_proto.ClientEventTable) error {
+
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
 
 	self.state = state
 	state.Version = uint64(self.clock.Now().UnixNano())
@@ -199,17 +208,19 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 		Version: uint64(self.clock.Now().UnixNano()),
 	}
 
-	for _, compiled := range self.state.Artifacts.CompiledCollectorArgs {
-		result.Event = append(result.Event, compiled)
+	if self.state.Artifacts == nil {
+		self.state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
 	}
+
+	result.Event = append(result.Event,
+		self.state.Artifacts.CompiledCollectorArgs...)
 
 	// Now apply any event queries that belong to this client based on labels.
 	labeler := services.GetLabeler()
 	for _, table := range self.state.LabelEvents {
 		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
-			for _, compiled := range table.Artifacts.CompiledCollectorArgs {
-				result.Event = append(result.Event, compiled)
-			}
+			result.Event = append(
+				result.Event, table.Artifacts.CompiledCollectorArgs...)
 		}
 	}
 
@@ -255,8 +266,10 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 		}
 
 		for _, label_event := range self.state.LabelEvents {
-			if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
-				return true
+			if label_event.Artifacts != nil {
+				if utils.InString(label_event.Artifacts.Artifacts, modified_name) {
+					return true
+				}
 			}
 		}
 		return false
@@ -267,13 +280,21 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 		self.state.Version = uint64(self.clock.Now().UnixNano())
 
 		clear_caches(self.state)
-		self.compileState(ctx, config_obj, self.state)
+		err := self.compileState(ctx, config_obj, self.state)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("compileState: %v", err)
+		}
 	}
 }
 
 // Clear all the pre-compiled VQLCollectorArgs - next time we sent the
 // artifact it will be rebuilt.
 func clear_caches(state *flows_proto.ClientEventTable) {
+	if state.Artifacts == nil {
+		state.Artifacts = &flows_proto.ArtifactCollectorArgs{}
+	}
+
 	state.Artifacts.CompiledCollectorArgs = nil
 	for _, event := range state.LabelEvents {
 		event.Artifacts.CompiledCollectorArgs = nil
@@ -284,6 +305,10 @@ func (self *ClientEventTable) LoadFromFile(
 	ctx context.Context, config_obj *config_proto.Config) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	db, err := datastore.GetDB(config_obj)

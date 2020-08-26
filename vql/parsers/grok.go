@@ -50,7 +50,11 @@ func (self GrokParseFunction) Call(
 			if pres {
 				pattern, ok := v.(string)
 				if ok {
-					grok_parser.AddPattern(k, pattern)
+					err = grok_parser.AddPattern(k, pattern)
+					if err != nil {
+						scope.Log("grok: %v", err)
+						return &vfilter.Null{}
+					}
 				}
 			}
 		}

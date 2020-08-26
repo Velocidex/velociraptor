@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"io"
-	"os"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -64,9 +63,20 @@ func (self *VelociraptorUploader) Upload(
 		// iteration to prevent overwriting in flight buffers.
 		buffer := make([]byte, BUFF_SIZE)
 		read_bytes, err := reader.Read(buffer)
+		if err != nil {
+			return nil, err
+		}
+
 		data := buffer[:read_bytes]
-		sha_sum.Write(data)
-		md5_sum.Write(data)
+		_, err = sha_sum.Write(data)
+		if err != nil {
+			return nil, err
+		}
+
+		_, err = md5_sum.Write(data)
+		if err != nil {
+			return nil, err
+		}
 
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
@@ -111,7 +121,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	filename string,
 	accessor string,
 	store_as_name string,
-	expected_size int64,
+	ignored_expected_size int64,
 	reader io.Reader) (
 	*api.UploadResponse, error) {
 
@@ -153,7 +163,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	ranges := range_reader.Ranges()
 
 	// Inspect the ranges and prepare an index.
-	expected_size = 0
+	expected_size := int64(0)
 	real_size := int64(0)
 	for _, rng := range ranges {
 		file_length := rng.Length
@@ -217,7 +227,10 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		// Range is not sparse - send it one buffer at the time.
 		to_read := rng.Length
 		read_offset = rng.Offset
-		range_reader.Seek(read_offset, os.SEEK_SET)
+		_, err := range_reader.Seek(read_offset, io.SeekStart)
+		if err != nil {
+			return nil, err
+		}
 
 		for to_read > 0 {
 			to_read_buf := to_read
@@ -242,8 +255,15 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			}
 
 			data := buffer[:read_bytes]
-			sha_sum.Write(data)
-			md5_sum.Write(data)
+			_, err = sha_sum.Write(data)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = md5_sum.Write(data)
+			if err != nil {
+				return nil, err
+			}
 
 			packet := &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{

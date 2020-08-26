@@ -104,13 +104,15 @@ func (self *OSFileInfo) IsLink() bool {
 }
 
 func (self *OSFileInfo) GetLink() (string, error) {
-	target, err := os.Readlink(self._full_path)
-	if err != nil {
-		return "", err
-	}
-
+	// For now we dont support links so we dont get stuck in a
+	// cycle.
+	/*
+		_, err := os.Readlink(self._full_path)
+		if err != nil {
+			return "", err
+		}
+	*/
 	return "", errors.New("Links not supported")
-	return target, nil
 }
 
 func (self *OSFileInfo) _Sys() *syscall.Stat_t {

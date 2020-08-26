@@ -44,7 +44,7 @@ func (self DataFilesystemAccessor) ReadDir(path string) ([]FileInfo, error) {
 }
 
 func (self DataFilesystemAccessor) Open(path string) (ReadSeekCloser, error) {
-	return utils.DataReadSeekCloser{strings.NewReader(path)}, nil
+	return utils.DataReadSeekCloser{ReadSeeker: strings.NewReader(path)}, nil
 }
 
 func (self DataFilesystemAccessor) PathSplit(path string) []string {

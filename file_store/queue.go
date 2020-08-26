@@ -33,7 +33,7 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 		return mysql.NewMysqlQueueManager(file_store.(*mysql.SqlFileStore)), nil
 
 	default:
-		return nil, errors.New(fmt.Sprintf("Unsupported QueueManager %v",
-			config_obj.Datastore.Implementation))
+		return nil, fmt.Errorf("Unsupported QueueManager %v",
+			config_obj.Datastore.Implementation)
 	}
 }

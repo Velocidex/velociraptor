@@ -17,6 +17,7 @@ import (
 	"github.com/Masterminds/sprig"
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
+	"github.com/pkg/errors"
 
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"
@@ -287,6 +288,10 @@ func (self *GuiTemplateEngine) Timeline(values ...interface{}) string {
 }
 
 func (self *GuiTemplateEngine) Execute(report *artifacts_proto.Report) (string, error) {
+	if self.Scope == nil {
+		return "", errors.New("Scope not configured")
+	}
+
 	template_string := report.Template
 
 	// Hard limit for report generation can be specified in the

@@ -26,10 +26,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
-var (
-	implementations map[string]DataStore
-)
-
 type WalkFunc func(urn string) error
 
 type DataStore interface {

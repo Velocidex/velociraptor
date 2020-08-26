@@ -364,28 +364,6 @@ func configAutocert(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func getMySQLConfig(config_obj *config_proto.Config) error {
-	config_obj.Datastore = &config_proto.DatastoreConfig{}
-	err := survey.Ask(data_store_mysql, config_obj.Datastore)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getLogLocation(config_obj *config_proto.Config) error {
-	log_question.Default = path.Join(config_obj.Datastore.Location, "logs")
-	err := survey.AskOne(log_question,
-		&config_obj.Logging.OutputDirectory,
-		survey.WithValidator(survey.Required))
-	if err != nil {
-		return err
-	}
-
-	config_obj.Logging.SeparateLogsPerComponent = true
-	return nil
-}
-
 func addUser(config_obj *config_proto.Config) error {
 	for {
 		username := ""

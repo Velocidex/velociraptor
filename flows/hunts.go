@@ -45,7 +45,7 @@ func GetNewHuntId() string {
 	result := make([]byte, 8)
 	buf := make([]byte, 4)
 
-	rand.Read(buf)
+	_, _ = rand.Read(buf)
 	hex.Encode(result, buf)
 
 	return constants.HUNT_PREFIX + string(result)
@@ -144,7 +144,10 @@ func CreateHunt(
 		// set it started.
 	} else if hunt.State == api_proto.Hunt_RUNNING {
 		hunt.StartTime = hunt.CreateTime
-		services.GetNotifier().NotifyAllListeners(config_obj)
+		err = services.GetNotifier().NotifyAllListeners(config_obj)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
@@ -156,16 +159,16 @@ func CreateHunt(
 	// Trigger a refresh of the hunt dispatcher. This guarantees
 	// that fresh data will be read in subsequent ListHunt()
 	// calls.
-	services.GetHuntDispatcher().Refresh()
+	err = services.GetHuntDispatcher().Refresh(config_obj)
 
-	return hunt.HuntId, nil
+	return hunt.HuntId, err
 }
 
 func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
 	result := &api_proto.ListHuntsResponse{}
-	services.GetHuntDispatcher().ApplyFuncOnHunts(
+	err := services.GetHuntDispatcher().ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			if uint64(len(result.Items)) < in.Offset {
 				return nil
@@ -189,7 +192,7 @@ func ListHunts(config_obj *config_proto.Config, in *api_proto.ListHuntsRequest) 
 		return result.Items[i].CreateTime > result.Items[j].CreateTime
 	})
 
-	return result, nil
+	return result, err
 }
 
 func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
@@ -197,7 +200,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	var result *api_proto.Hunt
 
-	services.GetHuntDispatcher().ModifyHunt(
+	err = services.GetHuntDispatcher().ModifyHunt(
 		in.HuntId,
 		func(hunt_obj *api_proto.Hunt) error {
 			// HACK: Velociraptor only knows how to
@@ -221,7 +224,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	result.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(config_obj, in.HuntId)
 
-	return result, nil
+	return result, err
 }
 
 // availableHuntDownloadFiles returns the prepared zip downloads available to
@@ -265,9 +268,12 @@ func ModifyHunt(
 					Set("Hunt", hunt).
 					Set("User", user)
 
-				services.GetJournal().PushRowsToArtifact(config_obj,
+				err := services.GetJournal().PushRowsToArtifact(config_obj,
 					[]*ordereddict.Dict{row}, "System.Hunt.Archive",
 					"server", hunt_modification.HuntId)
+				if err != nil {
+					return err
+				}
 
 				// We are trying to start the hunt.
 			} else if hunt_modification.State == api_proto.Hunt_RUNNING {

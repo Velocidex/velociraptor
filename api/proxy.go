@@ -38,7 +38,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A Mux for the reverse proxy feature.
@@ -260,8 +259,6 @@ func GetAPIHandler(
 	}
 
 	base := config_obj.GUI.BasePath
-
-	utils.Debug(base + "/api/v1/")
 
 	reverse_proxy_mux := http.NewServeMux()
 	reverse_proxy_mux.Handle(base+"/api/v1/",

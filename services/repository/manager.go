@@ -96,13 +96,13 @@ func (self *RepositoryManager) SetArtifactFile(
 		return nil, err
 	}
 
-	services.GetJournal().PushRowsToArtifact(config_obj,
+	err = services.GetJournal().PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("artifact", artifact.Name).
 				Set("op", "set"),
 		}, "Server.Internal.ArtifactModification", "server", "")
 
-	return artifact, nil
+	return artifact, err
 }
 
 func (self *RepositoryManager) DeleteArtifactFile(
@@ -184,7 +184,7 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 		logger.Info("Compiled all artifacts.")
 	}()
 
-	logger.Info("Loaded %d built in artifacts in %v", count, time.Now().Sub(now))
+	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))
 	services.RegisterRepositoryManager(self)
 
 	return nil

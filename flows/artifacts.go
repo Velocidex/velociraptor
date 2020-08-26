@@ -348,12 +348,15 @@ func FailIfError(
 
 	// Update the hunt stats if this is a hunt.
 	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		services.GetHuntDispatcher().ModifyHunt(
+		err := services.GetHuntDispatcher().ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
 				hunt.Stats.TotalClientsWithErrors++
 				return nil
 			})
+		if err != nil {
+			return err
+		}
 	}
 
 	return errors.New(message.Status.ErrorMessage)
@@ -437,7 +440,11 @@ func appendUploadDataToFile(
 			return err
 		}
 		defer fd.Close()
-		fd.Truncate()
+
+		err = fd.Truncate()
+		if err != nil {
+			return err
+		}
 
 		data := json.MustMarshalIndent(file_buffer.Index)
 		_, err = fd.Write(data)
@@ -504,7 +511,12 @@ func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 
 func (self *FlowRunner) Close() {
 	for _, collection_context := range self.context_map {
-		closeContext(self.config_obj, collection_context)
+		err := closeContext(self.config_obj, collection_context)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("While closing flow %v for client %v: %v",
+				collection_context.SessionId, collection_context.ClientId, err)
+		}
 	}
 }
 
@@ -514,9 +526,13 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 	// Foreman messages are related to hunts.
 	if job.ForemanCheckin != nil {
-		ForemanProcessMessage(
+		err := ForemanProcessMessage(
 			ctx, self.config_obj,
 			job.Source, job.ForemanCheckin)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("ForemanCheckin for client %v: %v", job.Source, err)
+		}
 		return
 	}
 
@@ -531,9 +547,9 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 	if false && job.Status != nil &&
 		job.Status.Status == crypto_proto.GrrStatus_GENERIC_ERROR {
-		logger.Error(fmt.Sprintf(
+		logger.Error(
 			"Client Error %v: %v",
-			job.Source, job.Status.ErrorMessage))
+			job.Source, job.Status.ErrorMessage)
 		return
 	}
 
@@ -543,8 +559,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 		// Only process real flows.
 		if !strings.HasPrefix(job.SessionId, "F.") {
-			logger.Error(fmt.Sprintf(
-				"Invalid job SessionId %v", job.SessionId))
+			logger.Error("Invalid job SessionId %v", job.SessionId)
 			return
 		}
 
@@ -562,11 +577,15 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 			db, err := datastore.GetDB(self.config_obj)
 			if err == nil {
-				db.QueueMessageForClient(self.config_obj, job.Source,
+				err := db.QueueMessageForClient(self.config_obj, job.Source,
 					&crypto_proto.GrrMessage{
 						Cancel:    &crypto_proto.Cancel{},
 						SessionId: job.SessionId,
 					})
+				if err != nil {
+					logger.Error("Queueing for client %v: %v",
+						job.Source, err)
+				}
 			}
 			return
 		}
