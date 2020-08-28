@@ -245,11 +245,14 @@ func (self HuntResultsPlugin) Call(
 				// with some extra columns for
 				// context.
 				for row := range row_chan {
-					value := row.Set("FlowId", participation_row.FlowId).
-						Set("ClientId", participation_row.ClientId).
-						Set("Fqdn", api_client.OsInfo.Fqdn)
+					row.Set("FlowId", participation_row.FlowId).
+						Set("ClientId", participation_row.ClientId)
 
-					output_chan <- value
+					if api_client.OsInfo != nil {
+						row.Set("Fqdn", api_client.OsInfo.Fqdn)
+					}
+
+					output_chan <- row
 				}
 			}
 		}

@@ -63,6 +63,10 @@ func GetApiClient(
 	client_id string, detailed bool) (
 	*api_proto.ApiClient, error) {
 
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
+
 	result := &api_proto.ApiClient{
 		ClientId: client_id,
 	}

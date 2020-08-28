@@ -188,6 +188,10 @@ func searchArtifact(
 	number_of_results uint64) (
 	*artifacts_proto.ArtifactDescriptors, error) {
 
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
+
 	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
 	if name_filter_regexp == "" {
 		name_filter_regexp = "."

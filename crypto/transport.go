@@ -301,6 +301,10 @@ func NewCryptoManager(config_obj *config_proto.Config, source string, pem_str []
 }
 
 func NewServerCryptoManager(config_obj *config_proto.Config) (*CryptoManager, error) {
+	if config_obj.Frontend == nil {
+		return nil, errors.New("No frontend config")
+	}
+
 	cert, err := ParseX509CertFromPemStr([]byte(config_obj.Frontend.Certificate))
 	if err != nil {
 		return nil, err
@@ -621,7 +625,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*MessageInfo, error) {
 	}
 
 	// Check the nonce is correct.
-	if packed_message_list.Nonce != self.config.Client.Nonce {
+	if self.config.Client == nil || packed_message_list.Nonce != self.config.Client.Nonce {
 		return nil, errors.New(
 			"Client Nonce is not valid - rejecting message.")
 	}

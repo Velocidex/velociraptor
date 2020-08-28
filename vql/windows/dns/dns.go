@@ -115,6 +115,10 @@ func (self *eventContext) ProcessEvent(packet []byte) {
 		// so we can send them as a single event.
 		lookup := make(map[string]*DNSEvent)
 		for _, answer := range all_answers {
+			if answer == nil || answer.Header == nil {
+				continue
+			}
+
 			name := answer.Header.Name.String()
 			event, pres := lookup[name]
 			if !pres {

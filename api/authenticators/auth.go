@@ -19,7 +19,9 @@ type Authenticator interface {
 }
 
 func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
-	if config_obj.GUI == nil || config_obj.GUI.Authenticator == nil {
+	if config_obj.GUI == nil ||
+		config_obj.GUI.Authenticator == nil ||
+		config_obj.Frontend == nil {
 		return nil, errors.New("GUI not configured")
 	}
 

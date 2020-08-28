@@ -112,6 +112,11 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
+	if ntfs_ctx == nil || ntfs_ctx.Boot == nil {
+		scope.Log("parse_ntfs: invalid context")
+		return &vfilter.Null{}
+	}
+
 	if arg.MFTOffset > 0 {
 		arg.MFT = arg.MFTOffset / ntfs_ctx.Boot.ClusterSize()
 	}

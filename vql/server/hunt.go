@@ -66,8 +66,9 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	request := &flows_proto.ArtifactCollectorArgs{
-		Creator:   vql_subsystem.GetPrincipal(scope),
-		Artifacts: arg.Artifacts,
+		Creator:    vql_subsystem.GetPrincipal(scope),
+		Artifacts:  arg.Artifacts,
+		Parameters: &flows_proto.ArtifactParameters{},
 	}
 
 	for _, k := range scope.GetMembers(arg.Env) {

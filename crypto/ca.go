@@ -101,6 +101,9 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 }
 
 func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBundle, error) {
+	if config_obj.CA == nil {
+		return nil, errors.New("No CA configured.")
+	}
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err

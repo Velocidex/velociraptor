@@ -42,7 +42,11 @@ import (
 
 // A Mux for the reverse proxy feature.
 func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	if config_obj.GUI != nil {
+		return errors.New("GUI not configured")
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	for _, reverse_proxy_config := range config_obj.GUI.ReverseProxy {
 		target, err := url.Parse(reverse_proxy_config.Url)
@@ -94,8 +98,13 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 }
 
 // Prepares a mux for the GUI by adding handlers required by the GUI.
-func PrepareGUIMux(config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
-	ctx := context.Background()
+func PrepareGUIMux(
+	ctx context.Context,
+	config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
+	if config_obj.GUI == nil {
+		return nil, errors.New("GUI not configured")
+	}
+
 	h, err := GetAPIHandler(ctx, config_obj)
 	if err != nil {
 		return nil, err
@@ -192,6 +201,12 @@ type _templateArgs struct {
 func GetAPIHandler(
 	ctx context.Context,
 	config_obj *config_proto.Config) (http.Handler, error) {
+
+	if config_obj.Client == nil ||
+		config_obj.GUI == nil ||
+		config_obj.API == nil {
+		return nil, errors.New("Client not configured")
+	}
 
 	// We need to tell when someone uses HEAD method on our grpc
 	// proxy so we need to pass this information from the request

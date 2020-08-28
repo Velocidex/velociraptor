@@ -387,6 +387,9 @@ func (self *NTFSFileSystemAccessor) ReadDir(path string) (res []glob.FileInfo, e
 		}
 		// Emit a result for each filename
 		for _, info := range ntfs.Stat(ntfs_ctx, node_mft) {
+			if info == nil {
+				continue
+			}
 			full_path := device + subpath + "\\" + info.Name
 			result = append(result, &NTFSFileInfo{
 				info:       info,

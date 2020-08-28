@@ -299,7 +299,10 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 
 	if config_obj.Client != nil {
 		if self.use_writeback {
-			self.loadWriteback(config_obj)
+			err := self.loadWriteback(config_obj)
+			if err != nil {
+				return err
+			}
 		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {
@@ -310,14 +313,13 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
-	if config_obj.Writeback != nil {
-		return
-	}
-
+func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
 	existing_writeback := &config_proto.Writeback{}
 
-	filename := WritebackLocation(config_obj)
+	filename, err := WritebackLocation(config_obj)
+	if err != nil {
+		return err
+	}
 	if !filepath.IsAbs(filename) && self.write_back_path != "" {
 		filename = filepath.Join(self.write_back_path, filename)
 	}
@@ -339,6 +341,7 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) {
 
 	// Merge the writeback with the config.
 	config_obj.Writeback = existing_writeback
+	return nil
 }
 
 func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {

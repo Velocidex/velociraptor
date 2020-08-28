@@ -285,7 +285,7 @@ func GetTokenInfo(scope *vfilter.Scope, handle syscall.Handle) *TokenHandleInfo 
 		result.ProfileDir = profile_dir
 	}
 	pg, err := token.GetTokenPrimaryGroup()
-	if err == nil {
+	if err == nil && pg != nil && pg.PrimaryGroup != nil {
 		result.PrimaryGroup = pg.PrimaryGroup.String()
 		result.PrimaryGroupName = getUsernameFromSid(
 			scope, pg.PrimaryGroup)

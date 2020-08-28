@@ -15,7 +15,8 @@ func StartNannyService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	if config_obj.Client.MaxMemoryHardLimit == 0 {
+	if config_obj.Client == nil ||
+		config_obj.Client.MaxMemoryHardLimit == 0 {
 		return nil
 	}
 

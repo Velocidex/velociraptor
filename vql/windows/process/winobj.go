@@ -122,6 +122,10 @@ func GetObjects(ctx context.Context,
 	size_of_info := uint32(unsafe.Sizeof(ntdll.ObjectDirectoryInformationT{}))
 	for i := uint32(0); i < index; i++ {
 		item := (*ntdll.ObjectDirectoryInformationT)(unsafe.Pointer(&buffer[i*size_of_info]))
+		if item == nil || item.Name == nil || item.TypeName == nil {
+			continue
+		}
+
 		object_directory_infos = append(object_directory_infos, item)
 
 		info := &WinObjDesc{
