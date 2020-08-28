@@ -118,9 +118,11 @@ func testRingBuffer(
 	// The connector is not connected initially.
 	connector.connected = false
 
-	sender := NewSender(
+	sender, err := NewSender(
 		config_obj, connector, manager, exe, rb, nil, /* enroller */
 		logger, "Sender", "control", nil, &utils.RealClock{})
+	assert.NoError(t, err)
+
 	sender.Start(ctx)
 
 	// This message results in a 14 byte message enqueued. The
