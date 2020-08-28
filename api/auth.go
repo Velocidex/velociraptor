@@ -29,10 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-var (
-	contextKeyUser = "USER"
-)
-
 // GetGRPCUserInfo: Extracts user information from GRPC context.
 func GetGRPCUserInfo(
 	config_obj *config_proto.Config,

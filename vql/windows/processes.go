@@ -104,7 +104,7 @@ func (self *Win32_Process) getTimes(handle syscall.Handle) {
 		&u.ExitTime,
 		&u.KernelTime,
 		&u.UserTime)
-	if err == nil && u.UserTime != nil && u.KernelTime != nil {
+	if err == nil {
 		self.CreateTime = time.Unix(0, u.CreationTime.Nanoseconds())
 		self.User = float64(int64(u.UserTime.HighDateTime<<32)+
 			int64(u.UserTime.LowDateTime)) / 1e7
@@ -142,10 +142,6 @@ func (self *Win32_Process) getUsername(handle syscall.Handle) {
 	defer token.Close()
 
 	tokenUser, err := token.GetTokenUser()
-	if err != nil || tokenUser.User == nil {
-		return
-	}
-
 	self.OwnerSid, _ = tokenUser.User.Sid.String()
 
 	user, domain, _, err := tokenUser.User.Sid.LookupAccount("")

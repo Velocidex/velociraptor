@@ -103,6 +103,7 @@ tools:
 
 // Make sure initial user is created.
 func (self *ServicesTestSuite) TestCreateUser() {
+	self.config_obj.GUI.Authenticator = &config_proto.Authenticator{Type: "Basic"}
 	self.config_obj.GUI.InitialUsers = []*config_proto.GUIUser{
 		{
 			Name:         "User1",

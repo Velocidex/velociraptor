@@ -510,7 +510,7 @@ func UnsanitizeComponent(component_str string) string {
 }
 
 func urnToFilename(config_obj *config_proto.Config, urn string) (string, error) {
-	if config_obj.Datastore != nil ||
+	if config_obj.Datastore == nil ||
 		config_obj.Datastore.Location == "" {
 		return "", errors.New("No Datastore_location is set in the config.")
 	}

@@ -86,11 +86,12 @@ func cert_walker(cert *C.char, len C.int,
 
 	result := pointer.Restore(unsafe.Pointer(ctx)).(*certContext)
 	for _, c := range certificates {
-		if c == nil || c.Certificate == nil || c.SerialNumber == nil {
+		if c == nil || c.SerialNumber == nil {
 			continue
 		}
 		cert_context := &CertContext{
-			c, string(utf16.Decode(store_name))}
+			Certificate: c,
+			Store:       string(utf16.Decode(store_name))}
 
 		result.Certs = append(result.Certs, cert_context)
 	}

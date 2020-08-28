@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -42,7 +43,7 @@ import (
 
 // A Mux for the reverse proxy feature.
 func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
-	if config_obj.GUI != nil {
+	if config_obj.GUI == nil {
 		return errors.New("GUI not configured")
 	}
 
@@ -218,7 +219,7 @@ func GetAPIHandler(
 					"METHOD": req.Method,
 				}
 				username, ok := req.Context().Value(
-					contextKeyUser).(string)
+					constants.GRPC_USER_CONTEXT).(string)
 				if ok {
 					md["USER"] = username
 				}

@@ -102,7 +102,7 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
 
-	if self.config_obj.Frontend != nil || self.config_obj.GUI != nil {
+	if self.config_obj.Frontend == nil || self.config_obj.GUI == nil {
 		return errors.New("Frontend not configured")
 	}
 
@@ -145,7 +145,7 @@ func (self *Builder) WithAutocertGUI(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
 
-	if self.config_obj.Frontend != nil || self.config_obj.GUI != nil {
+	if self.config_obj.Frontend == nil || self.config_obj.GUI == nil {
 		return errors.New("Frontend not configured")
 	}
 
@@ -171,7 +171,7 @@ func startSharedSelfSignedFrontend(
 	server_obj *server.Server) error {
 	mux := http.NewServeMux()
 
-	if config_obj.Frontend != nil || config_obj.GUI != nil {
+	if config_obj.Frontend == nil || config_obj.GUI == nil {
 		return errors.New("Frontend not configured")
 	}
 
@@ -199,7 +199,7 @@ func startSelfSignedFrontend(
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
 
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend == nil {
 		return errors.New("Frontend not configured")
 	}
 
@@ -247,7 +247,7 @@ func StartFrontendHttps(
 	server_obj *server.Server,
 	router http.Handler) error {
 
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend == nil {
 		return errors.New("Frontend server not configured")
 	}
 
@@ -339,7 +339,7 @@ func StartFrontendPlainHttp(
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	router http.Handler) error {
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend == nil {
 		return errors.New("Frontend server not configured")
 	}
 
@@ -410,7 +410,7 @@ func StartFrontendWithAutocert(
 	server_obj *server.Server,
 	mux http.Handler) error {
 
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend == nil {
 		return errors.New("Frontend server not configured")
 	}
 
@@ -490,7 +490,7 @@ func StartHTTPGUI(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config, mux http.Handler) error {
 
-	if config_obj.GUI != nil {
+	if config_obj.GUI == nil {
 		return errors.New("GUI server not configured")
 	}
 
@@ -550,7 +550,7 @@ func StartSelfSignedGUI(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config, mux http.Handler) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
-	if config_obj.GUI != nil {
+	if config_obj.GUI == nil {
 		return errors.New("GUI server not configured")
 	}
 

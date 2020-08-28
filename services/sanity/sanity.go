@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -53,13 +54,14 @@ func (self *SanityChecks) Check(
 
 				// Basic auth requires setting hashed
 				// password and salt
-				switch config_obj.GUI.Authenticator.Type {
+				switch strings.ToLower(config_obj.GUI.Authenticator.Type) {
 				case "basic":
 					new_user.PasswordHash, _ = hex.DecodeString(user.PasswordHash)
 					new_user.PasswordSalt, _ = hex.DecodeString(user.PasswordSalt)
 
 					// All other auth methods do
-					// not need a password set
+					// not need a password set, so
+					// generate a random one
 				default:
 					password := make([]byte, 100)
 					_, _ = rand.Read(password)

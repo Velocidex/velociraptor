@@ -81,11 +81,9 @@ func (self TokenFunction) Call(
 		Set("PrimaryGroup", vfilter.Null{})
 
 	// look up domain account by sid
-	if tokenUser.User != nil && tokenUser.Sid != nil {
-		account, domain, _, err := tokenUser.User.Sid.LookupAccount("localhost")
-		if err == nil {
-			result.Set("Username", fmt.Sprintf("%s\\%s", domain, account))
-		}
+	account, domain, _, err := tokenUser.User.Sid.LookupAccount("localhost")
+	if err == nil {
+		result.Set("Username", fmt.Sprintf("%s\\%s", domain, account))
 	}
 
 	profile_dir, err := token.GetUserProfileDirectory()
