@@ -211,9 +211,6 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 
 func (self *VFSServiceTestSuite) getFullPath(resp *flows_proto.VFSListResponse) []string {
 	json_response := resp.Response
-	if json_response == "" {
-		json_response = resp.JSONLResponse
-	}
 	rows, err := utils.ParseJsonToDicts([]byte(json_response))
 	assert.NoError(self.T(), err)
 
