@@ -32,7 +32,10 @@ import (
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
-	base := config_obj.GUI.BasePath
+	base := ""
+	if config_obj.GUI != nil {
+		base = config_obj.GUI.BasePath
+	}
 	dir := base + "/static/"
 	mux.Handle(dir, http.StripPrefix(base, http.FileServer(assets.HTTP)))
 	mux.Handle("/favicon.png",

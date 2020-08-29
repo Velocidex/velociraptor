@@ -218,7 +218,7 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 			return nil
 		})
 
-	if result == nil {
+	if result == nil || result.Stats == nil {
 		return result, errors.New("Not found")
 	}
 
@@ -259,6 +259,10 @@ func ModifyHunt(
 	err := dispatcher.ModifyHunt(
 		hunt_modification.HuntId,
 		func(hunt *api_proto.Hunt) error {
+			if hunt.Stats == nil {
+				return errors.New("Invalid hunt")
+			}
+
 			// Archive the hunt.
 			if hunt_modification.State == api_proto.Hunt_ARCHIVED {
 				hunt.State = api_proto.Hunt_ARCHIVED

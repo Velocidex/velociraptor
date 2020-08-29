@@ -94,7 +94,7 @@ func getArgDescriptors(arg_type string, type_map *vfilter.TypeMap,
 	scope *vfilter.Scope) []*api_proto.ArgDescriptor {
 	args := []*api_proto.ArgDescriptor{}
 	arg_desc, pres := type_map.Get(scope, arg_type)
-	if pres {
+	if pres && arg_desc != nil && arg_desc.Fields != nil {
 		for _, k := range arg_desc.Fields.Keys() {
 			v_any, _ := arg_desc.Fields.Get(k)
 			v, ok := v_any.(*vfilter.TypeReference)

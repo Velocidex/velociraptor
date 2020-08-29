@@ -29,7 +29,7 @@ func MonitoringProcessMessage(
 	}
 
 	response := message.VQLResponse
-	if response == nil {
+	if response == nil || response.Query == nil {
 		return nil
 	}
 

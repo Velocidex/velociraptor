@@ -22,7 +22,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 )
 
@@ -30,26 +30,14 @@ var (
 	debug_flag = app.Flag("debug", "Enables debug and profile server.").Bool()
 )
 
-func doDebug() {
-	config_obj, err := DefaultConfigLoader.LoadAndValidate()
-	kingpin.FatalIfError(err, "Unable to load config file")
+func initDebugServer(config_obj *config_proto.Config) error {
+	if *debug_flag {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>Starting</> debug server on <red>http://127.0.0.1:6060/debug/pprof")
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting debug server on http://127.0.0.1:6060/debug/pprof")
-
-	go func() {
-		log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
-	}()
-}
-
-func init() {
-	// Add this first to ensure it always runs.
-	command_handlers = append([]CommandHandler{
-		func(command string) bool {
-			if *debug_flag {
-				doDebug()
-			}
-			return false
-		},
-	}, command_handlers...)
+		go func() {
+			log.Println(http.ListenAndServe("127.0.0.1:6060", nil))
+		}()
+	}
+	return nil
 }

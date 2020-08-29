@@ -30,8 +30,9 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Client.server_urls configured")
 	}
 
-	if WritebackLocation(config_obj) == "" {
-		return errors.New("No writeback location specified.")
+	_, err := WritebackLocation(config_obj)
+	if err != nil {
+		return err
 	}
 
 	// Add defaults

@@ -144,6 +144,7 @@ func main() {
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag)
 
 	// Commands that potentially take an API config can load both
@@ -156,6 +157,7 @@ func main() {
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithCustomValidator(initFilestoreAccessor).
+		WithCustomValidator(initDebugServer).
 		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {

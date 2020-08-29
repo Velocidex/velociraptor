@@ -20,6 +20,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -75,8 +76,11 @@ func (self *Server) Close() {
 	self.db.Close()
 }
 
-func NewServer(
-	config_obj *config_proto.Config) (*Server, error) {
+func NewServer(config_obj *config_proto.Config) (*Server, error) {
+	if config_obj.Frontend == nil {
+		return nil, errors.New("Frontend not configured")
+	}
+
 	manager, err := crypto.NewServerCryptoManager(config_obj)
 	if err != nil {
 		return nil, err

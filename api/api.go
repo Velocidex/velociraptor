@@ -160,6 +160,7 @@ func (self *ApiServer) GetReport(
 func (self *ApiServer) CollectArtifact(
 	ctx context.Context,
 	in *flows_proto.ArtifactCollectorArgs) (*flows_proto.ArtifactCollectorResponse, error) {
+
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 	creator := GetGRPCUserInfo(self.config, ctx).Name
 
@@ -1028,6 +1029,13 @@ func startAPIServer(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
+
+	if config_obj.API == nil ||
+		config_obj.Client == nil ||
+		config_obj.Frontend == nil {
+		return errors.New("API server not configured")
+	}
+
 	bind_addr := config_obj.API.BindAddress
 	switch config_obj.API.BindScheme {
 	case "tcp":
@@ -1099,7 +1107,11 @@ func startAPIServer(
 func StartMonitoringService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) {
+	config_obj *config_proto.Config) error {
+
+	if config_obj.Monitoring == nil {
+		return nil
+	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	bind_addr := fmt.Sprintf("%s:%d",
@@ -1143,4 +1155,5 @@ func StartMonitoringService(
 	}()
 
 	logger.Info("Launched Prometheus monitoring server on %v ", bind_addr)
+	return nil
 }

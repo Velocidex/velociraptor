@@ -52,6 +52,10 @@ type RangedReader struct {
 // Here file_offset refers to the original sparse file on the client.
 func (self *RangedReader) ReadAt(buf []byte, file_offset int64) (
 	int, error) {
+	if self.Index == nil {
+		return 0, errors.New("RangedReader: No index")
+	}
+
 	buf_idx := 0
 
 	// Find the run which covers the required offset.
