@@ -133,4 +133,15 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  {
   "Message": "Creating Scriptblock text (\u0001 of \u0001):\nC:\\Users\\yolo\\Desktop\\Test.ps1\n\nScriptBlock ID: 1029eba6-72bd-4b59-886d-4aea789bb6aa\nPath: \r\n"
  }
+]SELECT * FROM Artifact.Windows.EventLogs.MessageHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )[
+ {
+  "EventTime": "2019-12-02T11:39:35Z",
+  "Computer": "DESKTOP-687T2NR",
+  "Channel": "Microsoft-Windows-PowerShell/Operational",
+  "EventID": 4104,
+  "EventRecordID": 4092,
+  "Message": "Creating Scriptblock text (\u0001 of \u0001):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
+  "Source": "D:\\a\\velociraptor\\velociraptor\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "_Source": "Windows.EventLogs.MessageHunter"
+ }
 ]
