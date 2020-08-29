@@ -230,6 +230,10 @@ func StartHuntDispatcher(
 	go func() {
 		defer wg.Done()
 
+		if config_obj.Datastore == nil {
+			return
+		}
+
 		for {
 			select {
 			case <-ctx.Done():

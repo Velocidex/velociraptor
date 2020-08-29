@@ -45,6 +45,10 @@ type ResultSetWriter struct {
 	fd   api.FileWriter
 }
 
+func (self *ResultSetWriter) WriteJSONL(serialized []byte) {
+	_, _ = self.fd.Write(serialized)
+}
+
 func (self *ResultSetWriter) Write(row *ordereddict.Dict) {
 	self.rows = append(self.rows, row)
 	if len(self.rows) > 10000 {

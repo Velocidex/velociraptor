@@ -92,6 +92,7 @@ func (self *Responder) Return() {
 func (self *Responder) Log(format string, v ...interface{}) {
 	self.AddResponse(&crypto_proto.GrrMessage{
 		RequestId: constants.LOG_SINK,
+		Urgent:    true,
 		LogMessage: &crypto_proto.LogMessage{
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),

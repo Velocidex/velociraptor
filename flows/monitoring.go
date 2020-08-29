@@ -38,7 +38,12 @@ func MonitoringProcessMessage(
 
 	// Store the event log in the client's VFS.
 	if response.Query.Name != "" {
-		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
+		json_response := response.Response
+		if json_response == "" {
+			json_response = response.JSONLResponse
+		}
+
+		rows, err := utils.ParseJsonToDicts([]byte(json_response))
 		if err != nil {
 			return err
 		}
