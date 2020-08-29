@@ -104,10 +104,9 @@ func doThirdPartyUpload() {
 	}
 
 	tool := &artifacts_proto.Tool{
-		Name:          *third_party_upload_tool_name,
-		Filename:      filename,
-		ServeLocally:  !*third_party_upload_serve_remote,
-		AdminOverride: true,
+		Name:         *third_party_upload_tool_name,
+		Filename:     filename,
+		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
 	// Does the user want to scrape releases from github?
@@ -147,7 +146,10 @@ func doThirdPartyUpload() {
 	defer cancel()
 
 	// Now add the tool to the inventory with the correct hash.
-	err = services.GetInventory().AddTool(config_obj, tool)
+	err = services.GetInventory().AddTool(
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
 	kingpin.FatalIfError(err, "Adding tool "+tool.Name)
 
 	if *third_party_upload_download {

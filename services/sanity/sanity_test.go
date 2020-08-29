@@ -80,12 +80,13 @@ tools:
 	tool_definition := &artifacts_proto.Tool{
 		Name: "Tool1",
 		Url:  "https://www.company.com",
-
-		// This flag signifies that an admin explicitly set
-		// this tool. We never overwrite an admin's setting.
-		AdminOverride: true,
 	}
-	err := inventory.AddTool(self.config_obj, tool_definition)
+	err := inventory.AddTool(self.config_obj, tool_definition,
+		services.ToolOptions{
+			// This flag signifies that an admin explicitly set
+			// this tool. We never overwrite an admin's setting.
+			AdminOverride: true,
+		})
 	assert.NoError(self.T(), err)
 
 	require.NoError(self.T(), self.sm.Start(StartSanityCheckService))

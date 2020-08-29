@@ -244,7 +244,22 @@ func (self *InventoryService) RemoveTool(
 }
 
 func (self *InventoryService) AddTool(config_obj *config_proto.Config,
-	tool_request *artifacts_proto.Tool) error {
+	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
+	if opts.Upgrade {
+		existing_tool, err := self.ProbeToolInfo(tool_request.Name)
+		if err == nil {
+			// Ignore the request if the existing
+			// definition is better than the new one.
+			if isDefinitionBetter(existing_tool, tool_request) {
+				return nil
+			}
+		}
+	}
+
+	if opts.AdminOverride {
+		tool_request.AdminOverride = true
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -390,4 +405,26 @@ func StartInventoryService(
 	_ = inventory_service.LoadFromFile(config_obj)
 
 	return nil
+}
+
+func isDefinitionBetter(old, new *artifacts_proto.Tool) bool {
+	// Admin wants to set the tool, always honor it.
+	if new.AdminOverride {
+		return false
+	}
+
+	// The admin is always right - never override a tool set by
+	// the admin.
+	if old.AdminOverride {
+		return true
+	}
+
+	// We really do not know where to fetch the old tool from
+	// anyway - the new tool must be better.
+	if old.Url == "" && old.GithubProject == "" && old.ServeUrl == "" {
+		return false
+	}
+
+	// We prefer to keep the old tool.
+	return true
 }

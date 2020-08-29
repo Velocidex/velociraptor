@@ -57,12 +57,11 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	}
 
 	tool := &artifacts_proto.Tool{
-		Name:          arg.Tool,
-		ServeLocally:  arg.ServeLocally,
-		Url:           arg.URL,
-		Filename:      arg.Filename,
-		Hash:          arg.Hash,
-		AdminOverride: true,
+		Name:         arg.Tool,
+		ServeLocally: arg.ServeLocally,
+		Url:          arg.URL,
+		Filename:     arg.Filename,
+		Hash:         arg.Hash,
 	}
 
 	if arg.File != "" {
@@ -105,7 +104,10 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		}
 	}
 
-	err = services.GetInventory().AddTool(config_obj, tool)
+	err = services.GetInventory().AddTool(
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}

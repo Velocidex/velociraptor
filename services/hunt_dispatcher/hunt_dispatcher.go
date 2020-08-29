@@ -218,9 +218,6 @@ func StartHuntDispatcher(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Hunt Dispatcher Service.")
-
 	result := &HuntDispatcher{
 		hunts: make(map[string]*api_proto.Hunt),
 	}
@@ -230,9 +227,14 @@ func StartHuntDispatcher(
 	go func() {
 		defer wg.Done()
 
+		// On the client we register a dummy dispatcher since
+		// there is nothing to sync from.
 		if config_obj.Datastore == nil {
 			return
 		}
+
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("<green>Starting</> Hunt Dispatcher Service.")
 
 		for {
 			select {

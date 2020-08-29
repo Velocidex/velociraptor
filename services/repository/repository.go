@@ -351,12 +351,11 @@ func compileArtifact(
 	// Make sure tools are all defined.
 	inventory := services.GetInventory()
 	for _, tool := range artifact.Tools {
-		stored_tool, err := inventory.ProbeToolInfo(tool.Name)
-		if err != nil || stored_tool == nil {
-			err = inventory.AddTool(config_obj, tool)
-			if err != nil {
-				return err
-			}
+		err := inventory.AddTool(
+			config_obj, tool,
+			services.ToolOptions{Upgrade: true})
+		if err != nil {
+			return err
 		}
 	}
 

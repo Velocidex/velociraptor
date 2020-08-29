@@ -196,8 +196,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 			ServeLocally: true,
 			Filename:     "mytool.exe",
 			Url:          tool_url,
-			//Hash:         sha_value,
-		})
+		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
 	status = 200

@@ -21,7 +21,7 @@ var (
 
 	gui_command_datastore = gui_command.Flag(
 		"datastore", "Path to a datastore directory (defaults to temp)").
-		String()
+		ExistingDir()
 
 	gui_command_no_browser = gui_command.Flag(
 		"nobrowser", "Do not bring up the browser").Bool()
@@ -88,6 +88,13 @@ func doGUI() {
 		config_obj.Client.LocalBuffer.FilenameWindows = ""
 		config_obj.Client.LocalBuffer.FilenameLinux = ""
 		config_obj.Client.LocalBuffer.FilenameDarwin = ""
+
+		// Make the client use the datastore_directory for tempfiles as well.
+		tmpdir := filepath.Join(datastore_directory, "temp")
+		os.MkdirAll(tmpdir, 0700)
+		config_obj.Client.TempdirLinux = tmpdir
+		config_obj.Client.TempdirWindows = tmpdir
+		config_obj.Client.TempdirDarwin = tmpdir
 
 		config_obj.Datastore.Location = datastore_directory
 		config_obj.Datastore.FilestoreDirectory = datastore_directory
@@ -157,10 +164,12 @@ func doGUI() {
 	}
 
 	if !*gui_command_no_client {
+		*verbose_flag = true
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Running client from %v", client_config_path)
 		go RunClient(ctx, sm.Wg, &client_config_path)
 	}
+
 	sm.Wg.Wait()
 }
 
