@@ -6,10 +6,10 @@ description: |
   
   Searching EventLog files is helpful for triage and scoping an incident.
   The idea is a user can search for any IOC or other string of interest and 
-  return all results accross the Event Log ecosystem.  
+  return all results across the Event Log ecosystem.  
   
-  There are several parameter's availible for search leveraging regex.   
-    - EvtxGlob glob of EventLogs to target. Default to all but can be targetted.
+  There are several parameter's available for search leveraging regex.   
+    - EvtxGlob glob of EventLogs to target. Default to all but can be targeted.
     - dateAfter enables search for events after this date.  
     - dateBefore enables search for events before this date.   
     - IocRegex enables regex search over the message field.  
