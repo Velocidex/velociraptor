@@ -43,6 +43,11 @@ func (self *BufferReaderAt) ReadAt(buf []byte, offset int64) (int, error) {
 	return n, nil
 }
 
+// A Reader that accepts an index. Velociraptor stores sparse files in
+// the data store using a regular file and an index file. The regular
+// file is simply data runs stored back to back with no gaps. The
+// index maps between the original file offsets (which might include
+// gaps) to the flat file offsets (which have gaps removed).
 type RangedReader struct {
 	io.ReaderAt
 
@@ -117,8 +122,10 @@ func (self *RangedReader) readFromARun(
 			return 0, io.EOF
 		}
 
-		// Run contains data - read it into the buffer.
-		return self.ReadAt(buf[:to_read], run.FileOffset+int64(run_offset))
+		// Run contains data - read it into the buffer using
+		// the embedded reader.
+		return self.ReaderAt.ReadAt(
+			buf[:to_read], run.FileOffset+int64(run_offset))
 	}
 
 	return 0, errors.New("IO Error")
