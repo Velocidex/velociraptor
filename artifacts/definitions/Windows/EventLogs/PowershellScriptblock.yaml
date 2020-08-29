@@ -43,7 +43,7 @@ parameters:
     
   - name: FileAccessor
     description: "File Accessor"
-    default: ntfs
+    default: file
     
   - name: LogLevel
     description: "Log level. Warning is Powershell default bad keyword list."
