@@ -314,6 +314,11 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 }
 
 func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
+	// Writeback already loaded - just reuse it.
+	if config_obj.Writeback != nil {
+		return nil
+	}
+
 	existing_writeback := &config_proto.Writeback{}
 
 	filename, err := WritebackLocation(config_obj)
