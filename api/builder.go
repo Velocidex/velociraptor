@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
@@ -44,10 +45,14 @@ type Builder struct {
 
 func (self *Builder) StartServer(ctx context.Context, wg *sync.WaitGroup) error {
 	// Always start the prometheus monitoring service
-	StartMonitoringService(ctx, wg, self.config_obj)
+	err := StartMonitoringService(ctx, wg, self.config_obj)
+	if err != nil {
+		return err
+	}
 
 	// Start in autocert mode, only put the GUI behind autocert if the GUI port is 443.
-	if self.AutocertCertCache != "" && self.config_obj.GUI.BindPort == 443 {
+	if self.AutocertCertCache != "" && self.config_obj.GUI != nil &&
+		self.config_obj.GUI.BindPort == 443 {
 		return self.WithAutocertGUI(ctx, wg)
 	}
 
@@ -96,15 +101,18 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
-	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
+	if self.config_obj.Frontend == nil || self.config_obj.GUI == nil {
+		return errors.New("Frontend not configured")
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.Info("Autocert is enabled but GUI port is not 443, starting Frontend with autocert and GUI with self signed.")
 
-	if config_obj.Frontend.ServerServices.GuiServer {
-
+	if config_obj.Frontend.ServerServices.GuiServer && config_obj.GUI != nil {
 		mux := http.NewServeMux()
 
-		router, err := PrepareGUIMux(config_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -137,10 +145,14 @@ func (self *Builder) WithAutocertGUI(
 	ctx context.Context,
 	wg *sync.WaitGroup) error {
 
+	if self.config_obj.Frontend == nil || self.config_obj.GUI == nil {
+		return errors.New("Frontend not configured")
+	}
+
 	mux := http.NewServeMux()
 
 	server.PrepareFrontendMux(self.config_obj, self.server_obj, mux)
-	router, err := PrepareGUIMux(self.config_obj, mux)
+	router, err := PrepareGUIMux(ctx, self.config_obj, mux)
 	if err != nil {
 		return err
 	}
@@ -159,8 +171,12 @@ func startSharedSelfSignedFrontend(
 	server_obj *server.Server) error {
 	mux := http.NewServeMux()
 
+	if config_obj.Frontend == nil || config_obj.GUI == nil {
+		return errors.New("Frontend not configured")
+	}
+
 	server.PrepareFrontendMux(config_obj, server_obj, mux)
-	router, err := PrepareGUIMux(config_obj, mux)
+	router, err := PrepareGUIMux(ctx, config_obj, mux)
 	if err != nil {
 		return err
 	}
@@ -183,11 +199,15 @@ func startSelfSignedFrontend(
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
 
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
+
 	// Launch a new server for the GUI.
 	if config_obj.Frontend.ServerServices.GuiServer {
 		mux := http.NewServeMux()
 
-		router, err := PrepareGUIMux(config_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -226,6 +246,10 @@ func StartFrontendHttps(
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	router http.Handler) error {
+
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend server not configured")
+	}
 
 	cert, err := tls.X509KeyPair(
 		[]byte(config_obj.Frontend.Certificate),
@@ -315,6 +339,9 @@ func StartFrontendPlainHttp(
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	router http.Handler) error {
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend server not configured")
+	}
 
 	listenAddr := fmt.Sprintf(
 		"%s:%d",
@@ -382,6 +409,10 @@ func StartFrontendWithAutocert(
 	config_obj *config_proto.Config,
 	server_obj *server.Server,
 	mux http.Handler) error {
+
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend server not configured")
+	}
 
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
@@ -458,6 +489,11 @@ func StartHTTPGUI(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config, mux http.Handler) error {
+
+	if config_obj.GUI == nil {
+		return errors.New("GUI server not configured")
+	}
+
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
 
 	listenAddr := fmt.Sprintf("%s:%d",
@@ -514,6 +550,9 @@ func StartSelfSignedGUI(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config, mux http.Handler) error {
 	logger := logging.Manager.GetLogger(config_obj, &logging.GUIComponent)
+	if config_obj.GUI == nil {
+		return errors.New("GUI server not configured")
+	}
 
 	cert, err := tls.X509KeyPair(
 		[]byte(config_obj.Frontend.Certificate),

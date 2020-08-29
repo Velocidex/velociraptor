@@ -84,6 +84,11 @@ func (self MailPlugin) Call(
 			return
 		}
 
+		if config_obj.Mail == nil {
+			scope.Log("mail: not configured")
+			return
+		}
+
 		from := config_obj.Mail.From
 		if from == "" {
 			from = config_obj.Mail.AuthUsername

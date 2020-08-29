@@ -76,10 +76,11 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 			}
 
 			// Sync up with the indexes created by the interrogation service.
-			keywords := []string{
-				"all", client_info.ClientId,
-				client_info.OsInfo.Fqdn,
-				"host:" + client_info.OsInfo.Fqdn}
+			keywords := []string{"all", client_info.ClientId}
+			if client_info.OsInfo != nil && client_info.OsInfo.Fqdn != "" {
+				keywords = append(keywords, client_info.OsInfo.Fqdn)
+				keywords = append(keywords, "host:"+client_info.OsInfo.Fqdn)
+			}
 			err = db.UnsetIndex(config_obj, constants.CLIENT_INDEX_URN,
 				arg.ClientId, keywords)
 			if err != nil {

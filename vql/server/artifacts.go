@@ -26,7 +26,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/api"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -76,9 +75,12 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
 	}
-	request := api.MakeCollectorRequest(arg.ClientId, "")
-	request.Artifacts = arg.Artifacts
-	request.Creator = vql_subsystem.GetPrincipal(scope)
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:   arg.ClientId,
+		Artifacts:  arg.Artifacts,
+		Creator:    vql_subsystem.GetPrincipal(scope),
+		Parameters: &flows_proto.ArtifactParameters{},
+	}
 
 	for _, k := range scope.GetMembers(arg.Env) {
 		value, pres := scope.Associative(arg.Env, k)

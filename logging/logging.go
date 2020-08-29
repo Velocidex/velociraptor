@@ -129,7 +129,8 @@ func (self *LogManager) GetLogger(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if config_obj != nil && config_obj.Logging != nil &&
+	if config_obj != nil &&
+		config_obj.Logging != nil &&
 		!config_obj.Logging.SeparateLogsPerComponent {
 		component = &GenericComponent
 	}

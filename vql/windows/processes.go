@@ -142,10 +142,6 @@ func (self *Win32_Process) getUsername(handle syscall.Handle) {
 	defer token.Close()
 
 	tokenUser, err := token.GetTokenUser()
-	if err != nil {
-		return
-	}
-
 	self.OwnerSid, _ = tokenUser.User.Sid.String()
 
 	user, domain, _, err := tokenUser.User.Sid.LookupAccount("")

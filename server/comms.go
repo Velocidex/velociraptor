@@ -18,6 +18,7 @@
 package server
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -75,7 +76,11 @@ var (
 func PrepareFrontendMux(
 	config_obj *config_proto.Config,
 	server_obj *Server,
-	router *http.ServeMux) {
+	router *http.ServeMux) error {
+
+	if config_obj.Frontend == nil {
+		return errors.New("Frontend not configured")
+	}
 
 	base := config_obj.Frontend.BasePath
 	router.Handle(base+"/healthz", healthz(server_obj))
@@ -90,6 +95,8 @@ func PrepareFrontendMux(
 		http.StripPrefix(base, http.FileServer(api.NewFileSystem(config_obj,
 			file_store.GetFileStore(config_obj),
 			"/public/")))))
+
+	return nil
 }
 
 func healthz(server_obj *Server) http.Handler {

@@ -26,6 +26,7 @@
 package api
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
 	"time"
@@ -35,7 +36,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
+func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) error {
+	if config_obj.GUI == nil {
+		return errors.New("GUI not configured")
+	}
+
 	base := config_obj.GUI.BasePath
 	logging.GetLogger(config_obj, &logging.FrontendComponent).
 		Info("GUI will serve files from directory gui/static")
@@ -50,6 +55,8 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 	mux.Handle(base+"/favicon.ico",
 		http.RedirectHandler(base+"/static/images/favicon.ico",
 			http.StatusMovedPermanently))
+
+	return nil
 }
 
 func GetTemplateHandler(config_obj *config_proto.Config,

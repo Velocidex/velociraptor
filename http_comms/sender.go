@@ -31,6 +31,7 @@ import (
 	"sync/atomic"
 
 	"github.com/golang/protobuf/proto"
+	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -226,7 +227,11 @@ func NewSender(
 	name string,
 	handler string,
 	on_exit func(),
-	clock utils.Clock) *Sender {
+	clock utils.Clock) (*Sender, error) {
+
+	if config_obj.Client == nil {
+		return nil, errors.New("Client not configured")
+	}
 
 	result := &Sender{
 		NotificationReader: NewNotificationReader(config_obj, connector, manager,
@@ -237,5 +242,5 @@ func NewSender(
 		clock:         clock,
 	}
 
-	return result
+	return result, nil
 }

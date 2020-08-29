@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -43,6 +44,10 @@ func StartEventTableService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	exe *ClientExecutor) error {
+	if config_obj.Writeback == nil {
+		return errors.New("Client writeback not configured")
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	logger.Info("<green>Starting</> event query service.")
 

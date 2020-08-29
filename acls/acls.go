@@ -261,7 +261,7 @@ func CheckAccess(
 	permissions ...ACL_PERMISSION) (bool, error) {
 
 	// Internal calls from the server are allowed to do anything.
-	if principal == config_obj.Client.PinnedServerName {
+	if config_obj.Client != nil && principal == config_obj.Client.PinnedServerName {
 		return true, nil
 	}
 

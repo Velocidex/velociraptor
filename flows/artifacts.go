@@ -240,8 +240,12 @@ func ArtifactCollectorProcessOneMessage(
 
 		// Restore strings from flow state.
 		response := message.VQLResponse
-		if response == nil {
+		if response == nil || response.Query == nil {
 			return errors.New("Expected args of type VQLResponse")
+		}
+
+		if collection_context == nil || collection_context.Request == nil {
+			return errors.New("Invalid collection context")
 		}
 
 		err = artifacts.Deobfuscate(config_obj, response)
@@ -299,11 +303,17 @@ func IsRequestComplete(
 		return false, nil
 	}
 
+	if collection_context == nil || collection_context.Request == nil {
+		return false, errors.New("Invalid collection context")
+	}
+
 	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
 		err := services.GetHuntDispatcher().ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
-				hunt.Stats.TotalClientsWithResults++
+				if hunt != nil && hunt.Stats != nil {
+					hunt.Stats.TotalClientsWithResults++
+				}
 				return nil
 			})
 		if err != nil {
@@ -335,6 +345,10 @@ func FailIfError(
 		return nil
 	}
 
+	if collection_context == nil || collection_context.Request == nil {
+		return errors.New("Invalid collection context")
+	}
+
 	// Only terminate a running flows.
 	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 		return errors.New(message.Status.ErrorMessage)
@@ -351,7 +365,9 @@ func FailIfError(
 		err := services.GetHuntDispatcher().ModifyHunt(
 			collection_context.Request.Creator,
 			func(hunt *api_proto.Hunt) error {
-				hunt.Stats.TotalClientsWithErrors++
+				if hunt != nil && hunt.Stats != nil {
+					hunt.Stats.TotalClientsWithErrors++
+				}
 				return nil
 			})
 		if err != nil {
@@ -368,7 +384,7 @@ func appendUploadDataToFile(
 	message *crypto_proto.GrrMessage) error {
 
 	file_buffer := message.FileBuffer
-	if file_buffer == nil {
+	if file_buffer == nil || file_buffer.Pathspec == nil {
 		return errors.New("Expected args of type FileBuffer")
 	}
 
@@ -544,15 +560,6 @@ func (self *FlowRunner) ProcessSingleMessage(
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-
-	if false && job.Status != nil &&
-		job.Status.Status == crypto_proto.GrrStatus_GENERIC_ERROR {
-		logger.Error(
-			"Client Error %v: %v",
-			job.Source, job.Status.ErrorMessage)
-		return
-	}
-
 	collection_context, pres := self.context_map[job.SessionId]
 	if !pres {
 		var err error

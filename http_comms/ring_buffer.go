@@ -185,7 +185,10 @@ func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
 	if err != nil || len(message_list.Job) == 0 {
 		return false
 	}
-	return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
+	if executor.Canceller != nil {
+		return executor.Canceller.IsCancelled(message_list.Job[0].SessionId)
+	}
+	return false
 }
 
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
@@ -287,6 +290,10 @@ func (self *FileBasedRingBuffer) Commit() {
 func NewFileBasedRingBuffer(
 	config_obj *config_proto.Config,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
+
+	if config_obj.Client == nil || config_obj.Client.LocalBuffer == nil {
+		return nil, errors.New("Local buffer not configured")
+	}
 
 	filename := getLocalBufferName(config_obj)
 	if filename == "" {

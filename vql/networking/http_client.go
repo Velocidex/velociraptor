@@ -283,6 +283,24 @@ func (self *_HttpPlugin) Call(
 
 		req.Header.Set("User-Agent", constants.USER_AGENT)
 
+		// Set various headers
+		if arg.Headers != nil {
+			for _, member := range scope.GetMembers(arg.Params) {
+				value, pres := scope.Associative(arg.Params, member)
+				if pres {
+					lazy_v, ok := value.(vfilter.LazyExpr)
+					if ok {
+						value = lazy_v.Reduce()
+					}
+
+					str_value, ok := value.(string)
+					if ok {
+						req.Header.Set(member, str_value)
+					}
+				}
+			}
+		}
+
 		http_resp, err := client.Do(req)
 		if http_resp != nil {
 			defer http_resp.Body.Close()

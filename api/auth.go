@@ -29,10 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 )
 
-var (
-	contextKeyUser = "USER"
-)
-
 // GetGRPCUserInfo: Extracts user information from GRPC context.
 func GetGRPCUserInfo(
 	config_obj *config_proto.Config,
@@ -42,7 +38,7 @@ func GetGRPCUserInfo(
 	peer, ok := peer.FromContext(ctx)
 	if ok {
 		tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
-		if ok {
+		if ok && config_obj.API != nil {
 			v := tlsInfo.State.PeerCertificates[0].Subject.CommonName
 
 			// Calls from the gRPC gateway are allowed to
@@ -82,16 +78,19 @@ func GetGRPCUserInfo(
 
 func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiGrrUser {
 	result := &api_proto.ApiGrrUser{
-		InterfaceTraits: &api_proto.ApiGrrUserInterfaceTraits{
-			AuthUsingGoogle: config_obj.GUI.GoogleOauthClientId != "",
-			Links:           []*api_proto.UILink{},
-		},
 		UserType: api_proto.ApiGrrUser_USER_TYPE_ADMIN,
 	}
 
-	for _, link := range config_obj.GUI.Links {
-		result.InterfaceTraits.Links = append(result.InterfaceTraits.Links,
-			&api_proto.UILink{Text: link.Text, Url: link.Url})
+	if config_obj.GUI != nil {
+		result.InterfaceTraits = &api_proto.ApiGrrUserInterfaceTraits{
+			AuthUsingGoogle: config_obj.GUI.GoogleOauthClientId != "",
+			Links:           []*api_proto.UILink{},
+		}
+
+		for _, link := range config_obj.GUI.Links {
+			result.InterfaceTraits.Links = append(result.InterfaceTraits.Links,
+				&api_proto.UILink{Text: link.Text, Url: link.Url})
+		}
 	}
 
 	return result
