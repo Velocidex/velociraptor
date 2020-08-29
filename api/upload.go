@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func toolUploadHandler(
@@ -25,6 +26,8 @@ func toolUploadHandler(
 
 		// Check for acls
 		userinfo := GetUserInfo(r.Context(), config_obj)
+		utils.Debug(userinfo)
+
 		permissions := acls.ARTIFACT_WRITER
 		perm, err := acls.CheckAccess(config_obj, userinfo.Name, permissions)
 		if !perm || err != nil {
@@ -66,7 +69,6 @@ func toolUploadHandler(
 
 		tool.Filename = path.Base(handler.Filename)
 		tool.ServeLocally = true
-		tool.AdminOverride = true
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
@@ -96,7 +98,10 @@ func toolUploadHandler(
 
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 
-		err = services.GetInventory().AddTool(config_obj, tool)
+		err = services.GetInventory().AddTool(config_obj, tool,
+			services.ToolOptions{
+				AdminOverride: true,
+			})
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))

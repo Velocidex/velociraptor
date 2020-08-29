@@ -245,7 +245,23 @@ func getGithubRelease(ctx context.Context, Client HTTPClient,
 }
 
 func (self *Dummy) AddTool(config_obj *config_proto.Config,
-	tool_request *artifacts_proto.Tool) error {
+	tool_request *artifacts_proto.Tool,
+	opts services.ToolOptions) error {
+	if opts.Upgrade {
+		existing_tool, err := self.ProbeToolInfo(tool_request.Name)
+		if err == nil {
+			// Ignore the request if the existing
+			// definition is better than the new one.
+			if isDefinitionBetter(existing_tool, tool_request) {
+				return nil
+			}
+		}
+	}
+
+	if opts.AdminOverride {
+		tool_request.AdminOverride = true
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

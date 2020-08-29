@@ -24,6 +24,7 @@ import (
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -53,7 +54,7 @@ func GetUserInfo(ctx context.Context,
 	config_obj *config_proto.Config) *api_proto.VelociraptorUser {
 	result := &api_proto.VelociraptorUser{}
 
-	userinfo, ok := ctx.Value("USER").(string)
+	userinfo, ok := ctx.Value(constants.GRPC_USER_CONTEXT).(string)
 	if ok {
 		data := []byte(userinfo)
 		err := json.Unmarshal(data, result)

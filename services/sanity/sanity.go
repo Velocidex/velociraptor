@@ -201,7 +201,10 @@ func checkForServerUpgrade(
 					tool_definition.Hash = ""
 
 					err = inventory.AddTool(
-						config_obj, tool_definition)
+						config_obj, tool_definition,
+						services.ToolOptions{
+							Upgrade: true,
+						})
 					if err != nil {
 						return err
 					}

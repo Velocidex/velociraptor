@@ -34,6 +34,14 @@ func RegisterInventory(inventory Inventory) {
 	ginventory = inventory
 }
 
+type ToolOptions struct {
+	// Tool is being upgraded.
+	Upgrade bool
+
+	// Admin is overriding tool in inventory.
+	AdminOverride bool
+}
+
 type Inventory interface {
 	// Get a list of the entire tools database with all known tools.
 	Get() *artifacts_proto.ThirdParty
@@ -57,7 +65,8 @@ type Inventory interface {
 	// actually valid and available, they need to call
 	// GetToolInfo() after this to force the tool to be
 	// materialized.
-	AddTool(config_obj *config_proto.Config, tool *artifacts_proto.Tool) error
+	AddTool(config_obj *config_proto.Config,
+		tool *artifacts_proto.Tool, opts ToolOptions) error
 
 	// Remove the tool from the inventory.
 	RemoveTool(config_obj *config_proto.Config, tool_name string) error

@@ -116,7 +116,11 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(config_obj, tool)
+			err = services.GetInventory().AddTool(
+				config_obj, tool,
+				services.ToolOptions{
+					Upgrade: true,
+				})
 			if err != nil {
 				return err
 			}

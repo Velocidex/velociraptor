@@ -99,7 +99,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
 			GithubAssetRegex: "windows-amd64.exe",
-		})
+		}, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Adding the tool simply fetches the github url but not the
@@ -226,7 +226,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	}
 
 	inventory := services.GetInventory()
-	err := inventory.AddTool(self.config_obj, tool_definition)
+	err := inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	tool, err := inventory.GetToolInfo(ctx, self.config_obj, tool_name)
@@ -239,7 +239,7 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory.AddTool(self.config_obj, tool_definition)
+	err = inventory.AddTool(self.config_obj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
@@ -289,6 +289,142 @@ tools:
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
 	goldie.Assert(self.T(), "TestGihubToolServedLocally", serialized)
+}
+
+// When artifacts are parsed, they add their tool definition to the
+// inventory automatically if they are not already present. This test
+// makes sure that tools are added to the inventory **only** if they
+// do not already exist **or** their new definition is more detailed
+// than the old one.
+func (self *ServicesTestSuite) TestUpgradePriority() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+`
+	test_artifact2 := `
+name: TestArtifact2
+tools:
+- name: SampleTool
+`
+	repository := services.GetRepositoryManager().NewRepository()
+	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	_, err = repository.LoadYaml(test_artifact2, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres = repository.Get(self.config_obj, "TestArtifact2")
+	assert.True(self.T(), pres)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	// The tool definition retains the original URL
+	assert.Equal(self.T(), tool.Url, "http://www.example.com/")
+}
+
+// Make sure that loading an artifact does not upgrade an admin
+// override.
+func (self *ServicesTestSuite) TestUpgradeAdminOverride() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+  serve_locally: true
+`
+
+	// The admin sets a very minimal tool definition.
+	err := services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	// Parsing the artifact does not update the tool - admins can
+	// pin the tool definition.
+	repository := services.GetRepositoryManager().NewRepository()
+	_, err = repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "XXXXX")
+	assert.False(self.T(), tool.ServeLocally)
+}
+
+// If an admin overrides an automatically inserted tool definition,
+// they should be able to.
+func (self *ServicesTestSuite) TestAdminOverrideUpgrade() {
+	// Define a new artifact that requires a new tool
+	test_artifact := `
+name: TestArtifact
+tools:
+- name: SampleTool
+  url: http://www.example.com/
+  serve_locally: true
+`
+	// Parsing the artifact should insert the tool.
+	repository := services.GetRepositoryManager().NewRepository()
+	_, err := repository.LoadYaml(test_artifact, true /* validate */)
+	assert.NoError(self.T(), err)
+
+	_, pres := repository.Get(self.config_obj, "TestArtifact")
+	assert.True(self.T(), pres)
+
+	// The admin sets a very minimal tool definition which would
+	// normally be less than the existing tool - but they should
+	// prevail.
+	err = services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "XXXXX")
+	assert.False(self.T(), tool.ServeLocally)
+}
+
+// If the admin set the tool previously, they should be able to upgrade it.
+func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
+	err := services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "XXXXX",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	err = services.GetInventory().AddTool(self.config_obj,
+		&artifacts_proto.Tool{
+			Name: "SampleTool",
+			Hash: "YYYYY",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Url, "")
+	assert.Equal(self.T(), tool.Hash, "YYYYY")
+	assert.False(self.T(), tool.ServeLocally)
 }
 
 func TestInventoryService(t *testing.T) {
