@@ -40,7 +40,7 @@
       </div>
       <div class="btn-group float-right" role="group">
         <button class="btn btn-outline-info"
-                ng-if="flow.state == 'TERMINATED'"
+                ng-if="flow.state == 'FINISHED'"
                 disabled>
           <grr-timestamp value="flow.active_time"></grr-timestamp> by {{ flow.request.creator }}
         </button>

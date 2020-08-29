@@ -204,7 +204,7 @@ func getResponses(r *responder.Responder) []*ordereddict.Dict {
 	for _, msg := range responder.GetTestResponses(r) {
 		if msg.VQLResponse != nil {
 			payload, err := utils.ParseJsonToDicts(
-				[]byte(msg.VQLResponse.Response))
+				[]byte(msg.VQLResponse.JSONLResponse))
 			if err != nil {
 				continue
 			}

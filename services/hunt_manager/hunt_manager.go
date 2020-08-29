@@ -182,7 +182,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
 			Set("StartTime", time.Unix(0, int64(flow.CreateTime*1000))).
-			Set("EndTime", time.Unix(0, int64(flow.KillTimestamp*1000))).
+			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
 			Set("Status", flow.State.String()).
 			Set("Error", flow.Status)})
 	if err != nil {

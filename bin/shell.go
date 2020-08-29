@@ -99,7 +99,7 @@ func shell_executor(config_obj *config_proto.Config,
 			return
 		}
 
-		if response.Context.State == flows_proto.ArtifactCollectorContext_TERMINATED {
+		if response.Context.State == flows_proto.ArtifactCollectorContext_FINISHED {
 			request := &api_proto.GetTableRequest{
 				FlowId:   flow_id,
 				Artifact: artifact_name,

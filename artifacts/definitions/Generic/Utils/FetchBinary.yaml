@@ -34,7 +34,7 @@ sources:
       -- clients at least back to 0.3.9
 
       LET info_cache <= SELECT * FROM info()
-      LET inventory_item <= SELECT inventory_get(tool=ToolName) AS Item FROM scope()
+      LET inventory_item = SELECT inventory_get(tool=ToolName) AS Item FROM scope()
 
       LET args <= SELECT * FROM switch(
         // Try to get info from the ToolInfo parameter.

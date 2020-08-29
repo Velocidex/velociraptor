@@ -164,7 +164,12 @@ func doRemoteQuery(
 			continue
 		}
 
-		rows, err := utils.ParseJsonToDicts([]byte(response.Response))
+		json_response := response.Response
+		if json_response == "" {
+			json_response = response.JSONLResponse
+		}
+
+		rows, err := utils.ParseJsonToDicts([]byte(json_response))
 		kingpin.FatalIfError(err, "GetAPIClient")
 
 		switch format {

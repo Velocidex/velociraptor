@@ -11,8 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
@@ -22,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -55,6 +59,8 @@ func (self *TestSuite) SetupTest() {
 		LoadAndValidate()
 	require.NoError(self.T(), err)
 
+	self.config_obj.Frontend.DoNotCompressArtifacts = true
+
 	// Start essential services.
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
 	self.sm = services.NewServiceManager(ctx, self.config_obj)
@@ -63,6 +69,7 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
 	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
@@ -72,6 +79,126 @@ func (self *TestSuite) TearDownTest() {
 	self.sm.Close()
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+}
+
+func (self *TestSuite) TestResourceLimits() {
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+		self.config_obj)
+	assert.NoError(self.T(), err)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.client_id,
+		Artifacts: []string{"Generic.Client.Info"},
+
+		// Only accept 5 rows.
+		MaxRows: 5,
+	}
+
+	// Schedule a new flow.
+	ctx := context.Background()
+	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+		ctx,
+		self.config_obj,
+		vql_subsystem.NullACLManager{},
+		repository, request)
+	assert.NoError(self.T(), err)
+
+	db, err := datastore.GetDB(self.config_obj)
+	assert.NoError(self.T(), err)
+
+	// Drain messages to the client.
+	messages, err := db.GetClientTasks(self.config_obj, self.client_id,
+		false /* do_not_lease */)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(messages), 1)
+
+	// Send one row.
+	message := &crypto_proto.GrrMessage{
+		Source:     self.client_id,
+		SessionId:  flow_id,
+		RequestId:  1,
+		ResponseId: 2,
+		VQLResponse: &actions_proto.VQLResponse{
+			JSONLResponse: "{}",
+			TotalRows:     1,
+			Query: &actions_proto.VQLRequest{
+				Name: "Generic.Client.Info/BasicInformation",
+			},
+		},
+	}
+
+	runner := NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// Load the collection context and see what happened.
+	collection_context, err := LoadCollectionContext(self.config_obj,
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	// Collection has 1 row and it is still in the running state.
+	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
+	assert.Equal(self.T(), collection_context.State,
+		flows_proto.ArtifactCollectorContext_RUNNING)
+
+	// Send another row
+	runner = NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// Load the collection context and see what happened.
+	collection_context, err = LoadCollectionContext(self.config_obj,
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	// Collection has 1 row and it is still in the running state.
+	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(2))
+	assert.Equal(self.T(), collection_context.State,
+		flows_proto.ArtifactCollectorContext_RUNNING)
+
+	// Now send 5 rows in one message. We should accept the 5 rows
+	// but terminate the flow due to resource exhaustion.
+	message.VQLResponse.TotalRows = 5
+	runner = NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// Load the collection context and see what happened.
+	collection_context, err = LoadCollectionContext(self.config_obj,
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	// Collection has 1 row and it is still in the running state.
+	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(7))
+	assert.Equal(self.T(), collection_context.State,
+		flows_proto.ArtifactCollectorContext_ERROR)
+
+	assert.Contains(self.T(), collection_context.Status, "Row count exceeded")
+
+	// Make sure a cancel message was sent to the client.
+	messages, err = db.GetClientTasks(self.config_obj, self.client_id,
+		false /* do_not_lease */)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(messages), 1)
+	assert.NotNil(self.T(), messages[0].Cancel)
+
+	// Another message arrives from the client - this happens
+	// usually because the client has not received the cancel yet
+	// and is already sending the next message in the queue.
+	runner = NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// We still collect these rows but the flow is still in the
+	// error state. We do this so we dont lose the last few
+	// messages which are still in flight.
+	collection_context, err = LoadCollectionContext(self.config_obj,
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(12))
+	assert.Equal(self.T(), collection_context.State,
+		flows_proto.ArtifactCollectorContext_ERROR)
 }
 
 func (self *TestSuite) TestClientUploaderStoreFile() {
@@ -98,6 +225,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId: self.flow_id,
 		ClientId:  self.client_id,
+		Request:   &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
@@ -191,6 +319,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId: self.flow_id,
 		ClientId:  self.client_id,
+		Request:   &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	for _, resp := range responder.GetTestResponses(resp) {
@@ -308,6 +437,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId: self.flow_id,
 		ClientId:  self.client_id,
+		Request:   &flows_proto.ArtifactCollectorArgs{},
 	}
 
 	// Process it.

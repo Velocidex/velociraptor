@@ -251,7 +251,7 @@ func ArchiveFlow(
 		}
 	}()
 
-	if collection_context.State != flows_proto.ArtifactCollectorContext_TERMINATED &&
+	if collection_context.State != flows_proto.ArtifactCollectorContext_FINISHED &&
 		collection_context.State != flows_proto.ArtifactCollectorContext_ERROR {
 		return nil, errors.New("Flow must be stopped before it can be archived.")
 	}

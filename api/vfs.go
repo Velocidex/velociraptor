@@ -137,7 +137,8 @@ func renderDBVFS(
 
 	// Empty responses mean the directory is empty - no need to
 	// worry about downloads.
-	if result.Response == "" {
+	json_response := result.Response
+	if json_response == "" {
 		return result, nil
 	}
 
@@ -152,7 +153,7 @@ func renderDBVFS(
 		}
 
 		var rows []map[string]interface{}
-		err := json.Unmarshal([]byte(result.Response), &rows)
+		err := json.Unmarshal([]byte(json_response), &rows)
 		if err != nil {
 			return nil, err
 		}

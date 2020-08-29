@@ -190,9 +190,8 @@ func (self *ServerArtifactsRunner) processTask(
 		}
 
 		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-			context.State = flows_proto.ArtifactCollectorContext_TERMINATED
+			context.State = flows_proto.ArtifactCollectorContext_FINISHED
 			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-			context.KillTimestamp = uint64(time.Now().UnixNano() / 1000)
 		})
 		_ = collection_context.Save()
 	}()

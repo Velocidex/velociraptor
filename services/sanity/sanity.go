@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"strings"
 	"sync"
 
@@ -131,7 +132,7 @@ func checkForServerUpgrade(
 	state := &api_proto.ServerState{}
 	state_path_manager := &paths.ServerStatePathManager{}
 	err = db.GetSubject(config_obj, state_path_manager.Path(), state)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return err
 	}
 

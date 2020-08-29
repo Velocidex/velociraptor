@@ -670,7 +670,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	err = db.GetSubject(self.config_obj, path_manager.Path(), collection_context)
 	require.NoError(t, err)
 
-	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_TERMINATED,
+	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		collection_context.State)
 }
 

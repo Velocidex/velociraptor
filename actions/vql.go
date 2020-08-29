@@ -153,7 +153,7 @@ func (self VQLClientAction) StartQuery(
 
 		result_chan := vfilter.GetResponseChannel(
 			vql, sub_ctx, scope,
-			vql_subsystem.MarshalJson(scope),
+			vql_subsystem.MarshalJsonl(scope),
 			int(max_row),
 			int(max_wait))
 	run_query:
@@ -187,11 +187,12 @@ func (self VQLClientAction) StartQuery(
 					continue
 				}
 				response := &actions_proto.VQLResponse{
-					Query:     query,
-					QueryId:   uint64(query_idx),
-					Part:      uint64(result.Part),
-					Response:  string(result.Payload),
-					Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
+					Query:         query,
+					QueryId:       uint64(query_idx),
+					Part:          uint64(result.Part),
+					JSONLResponse: string(result.Payload),
+					TotalRows:     uint64(result.TotalRows),
+					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
 				}
 				// Don't log empty VQL statements.
 				if query.Name != "" {

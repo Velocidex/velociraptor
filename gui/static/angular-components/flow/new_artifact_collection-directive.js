@@ -49,6 +49,8 @@ const NewArtifactCollectionController = function(
     this.names = [];
     this.ops_per_second = 0;
     this.timeout = 600;
+    this.max_rows = 1000000;
+    this.max_bytes = 1000;
 
     this.flow_details = {};
 
@@ -61,19 +63,26 @@ NewArtifactCollectionController.prototype.onClientIdChange_ = function() {
     var url = 'v1/GetFlowDetails';
     var param = {flow_id: this.scope_["flowId"],
                  client_id: this.scope_["clientId"]};
+    var self = this;
 
     this.grrApiService_.get(url, param).then(
         function success(response) {
-            this.flow_details = response.data["context"];
-            this.names = this.flow_details.request.artifacts;
-            this.params = {};
+            self.flow_details = response.data["context"];
+            self.names = self.flow_details.request.artifacts;
+            self.params = {};
 
-            var env = this.flow_details.request.parameters.env;
+            var request = self.flow_details.request || {};
+
+            self.max_rows = request.max_rows || 1000000;
+            self.timeout = request.timeout || 600;
+            self.max_bytes = (request.max_upload_bytes || 0) / 1024 / 1024;
+
+            var env = self.flow_details.request.parameters.env;
             for (var i=0; i<env.length;i++) {
                 var key = env[i]["key"];
                 var value = env[i]["value"];
                 if (angular.isString(key)) {
-                    this.params[key] = value;
+                    self.params[key] = value;
                 }
             }
         }.bind(this));
@@ -117,7 +126,9 @@ NewArtifactCollectionController.prototype.startClientFlow = function() {
             env: env
         },
         ops_per_second: this.ops_per_second,
-        timeout: this.timeout
+        timeout: this.timeout,
+        max_rows: this.max_rows,
+        max_upload_bytes: this.max_bytes * 1024 * 1024,
     };
 
     this.grrApiService_.post(
