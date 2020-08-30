@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -79,6 +80,62 @@ func (self *TestSuite) TearDownTest() {
 	self.sm.Close()
 	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
 	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+}
+
+func (self *TestSuite) TestRetransmission() {
+	repository, err := services.GetRepositoryManager().GetGlobalRepository(
+		self.config_obj)
+	assert.NoError(self.T(), err)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  self.client_id,
+		Artifacts: []string{"Generic.Client.Info"},
+	}
+
+	// Schedule a new flow.
+	ctx := context.Background()
+	flow_id, err := services.GetLauncher().ScheduleArtifactCollection(
+		ctx, self.config_obj,
+		vql_subsystem.NullACLManager{},
+		repository, request)
+	assert.NoError(self.T(), err)
+
+	// Send one row.
+	message := &crypto_proto.GrrMessage{
+		Source:     self.client_id,
+		SessionId:  flow_id,
+		RequestId:  1,
+		ResponseId: 2,
+		VQLResponse: &actions_proto.VQLResponse{
+			JSONLResponse: "{}",
+			TotalRows:     1,
+			Query: &actions_proto.VQLRequest{
+				Name: "Generic.Client.Info/BasicInformation",
+			},
+		},
+	}
+
+	runner := NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// Retransmit the same row again - this can happen if the
+	// server is loaded and the client is re-uploading the same
+	// payload multiple times.
+	runner = NewFlowRunner(self.config_obj)
+	runner.ProcessSingleMessage(ctx, message)
+	runner.Close()
+
+	// Load the collection context and see what happened.
+	collection_context, err := LoadCollectionContext(self.config_obj,
+		self.client_id, flow_id)
+	assert.NoError(self.T(), err)
+
+	json.Dump(collection_context)
+
+	// The flow should have only a single row though.
+	assert.Equal(self.T(), collection_context.TotalCollectedRows, uint64(1))
+
 }
 
 func (self *TestSuite) TestResourceLimits() {
@@ -142,6 +199,7 @@ func (self *TestSuite) TestResourceLimits() {
 		flows_proto.ArtifactCollectorContext_RUNNING)
 
 	// Send another row
+	message.ResponseId++
 	runner = NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close()
@@ -159,6 +217,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// Now send 5 rows in one message. We should accept the 5 rows
 	// but terminate the flow due to resource exhaustion.
 	message.VQLResponse.TotalRows = 5
+	message.ResponseId++
 	runner = NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close()
@@ -185,6 +244,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// Another message arrives from the client - this happens
 	// usually because the client has not received the cancel yet
 	// and is already sending the next message in the queue.
+	message.ResponseId++
 	runner = NewFlowRunner(self.config_obj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close()
