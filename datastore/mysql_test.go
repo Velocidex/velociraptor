@@ -39,6 +39,10 @@ func (self *MysqlTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 }
 
+func (self *MysqlTestSuite) TearDownTest() {
+	self.datastore.Close()
+}
+
 func TestMysqlDatabase(t *testing.T) {
 	// If a local testing mysql server is configured we can run
 	// this test, otherwise skip it.

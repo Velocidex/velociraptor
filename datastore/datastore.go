@@ -111,6 +111,9 @@ func GetDB(config_obj *config_proto.Config) (DataStore, error) {
 		return NewMySQLDataStore(config_obj)
 
 	case "Test":
+		mu.Lock()
+		defer mu.Unlock()
+
 		return gTestDatastore, nil
 
 	default:
