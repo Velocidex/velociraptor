@@ -239,6 +239,14 @@ func ArtifactCollectorProcessOneMessage(
 		return err
 	}
 
+	// Check that this is not a retransmission - if it is we drop
+	// it on the floor.
+	if message.ResponseId < collection_context.NextResponseId {
+		return nil
+	}
+	collection_context.NextResponseId = message.ResponseId + 1
+	collection_context.Dirty = true
+
 	// Handle the response depending on the RequestId
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
@@ -343,23 +351,24 @@ func IsRequestComplete(
 		return false, errors.New("Invalid collection context")
 	}
 
-	// Update any hunts if needed.
-	if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
-		err := services.GetHuntDispatcher().ModifyHunt(
-			collection_context.Request.Creator,
-			func(hunt *api_proto.Hunt) error {
-				if hunt != nil && hunt.Stats != nil {
-					hunt.Stats.TotalClientsWithResults++
-				}
-				return nil
-			})
-		if err != nil {
-			return true, err
-		}
-	}
-
 	// Only terminate a running flow.
 	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+
+		// Update any hunts if needed.
+		if constants.HuntIdRegex.MatchString(collection_context.Request.Creator) {
+			err := services.GetHuntDispatcher().ModifyHunt(
+				collection_context.Request.Creator,
+				func(hunt *api_proto.Hunt) error {
+					if hunt != nil && hunt.Stats != nil {
+						hunt.Stats.TotalClientsWithResults++
+					}
+					return nil
+				})
+			if err != nil {
+				return true, err
+			}
+		}
+
 		collection_context.ExecutionDuration = message.Status.Duration
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 		collection_context.Dirty = true

@@ -101,6 +101,9 @@ message ArtifactCollectorContext {
     uint64 total_uploaded_bytes = 26;
     uint64 total_collected_rows = 28;
 
+    // We expect the next response from the client to have this id.
+    uint64 next_response_id = 30;
+
     // Total time the query took to run on the client (reported by the
     // client).
     int64 execution_duration = 29;
