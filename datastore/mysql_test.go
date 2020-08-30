@@ -40,7 +40,9 @@ func (self *MysqlTestSuite) SetupTest() {
 }
 
 func (self *MysqlTestSuite) TearDownTest() {
-	self.datastore.Close()
+	if self.datastore != nil {
+		self.datastore.Close()
+	}
 }
 
 func TestMysqlDatabase(t *testing.T) {
