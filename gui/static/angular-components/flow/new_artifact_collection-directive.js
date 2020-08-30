@@ -44,13 +44,15 @@ const NewArtifactCollectionController = function(
     this.params = {};
 
     this.tools = {};
+    this.checking_tools = [];
+    this.current_checking_tool = "";
 
     // The names of the artifacts to collect.
     this.names = [];
     this.ops_per_second = 0;
     this.timeout = 600;
     this.max_rows = 1000000;
-    this.max_bytes = 1000;
+    this.max_bytes = 1000; // 1 GB
 
     this.flow_details = {};
 
@@ -103,12 +105,37 @@ NewArtifactCollectionController.prototype.reject = function() {
   }
 };
 
+NewArtifactCollectionController.prototype.checkTools = function() {
+    var self = this;
+    var tools = Object.keys(self.tools);
 
-/**
- * Sends API request to start a client flow.
- *
- * @export
- */
+    // If no tools left just make the final request.
+    if (tools.length == 0) {
+        self.startClientFlow();
+        return;
+    }
+
+    // Recursively call this function with the first tool.
+    var first_tool = tools[0];
+
+    // Clear it.
+    delete self.tools[first_tool];
+
+    // Inform the user we are checking this tool.
+    self.current_checking_tool = first_tool;
+    self.checking_tools.push(first_tool);
+
+    var url = 'v1/GetToolInfo';
+    var params = {
+        name: first_tool,
+        materialize: true,
+    };
+    self.grrApiService_.get("v1/GetToolInfo", params).then(function(response) {
+        // Check the next tool
+        self.checkTools();
+    });
+};
+
 NewArtifactCollectionController.prototype.startClientFlow = function() {
     var self = this;
     var clientId = this.scope_['clientId'];

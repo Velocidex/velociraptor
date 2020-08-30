@@ -103,7 +103,6 @@ message GrrMessage {
   // The final response to a request carries this type which indicates it is a
   // status message.
   Type type = 8;
-
 };
 
 message Cancel {};
@@ -124,18 +123,20 @@ message Certificate {
 // This is a status response that is sent for each complete
 // transaction. It is always the last message in the transaction.
 message GrrStatus {
+    // Velociraptor only uses OK and GENERIC_ERROR right now.
+    enum ReturnedStatus {
+        OK = 0;
+        GENERIC_ERROR = 10;
+    };
 
-  // Velociraptor only uses OK and GENERIC_ERROR right now.
-  enum ReturnedStatus {
-    OK = 0;
-    GENERIC_ERROR = 10;
-  };
+    ReturnedStatus status = 1;
 
-  ReturnedStatus status = 1;
+    string error_message = 2;
 
-  string error_message = 2;
+    string backtrace = 3;
 
-  string backtrace = 3;
+    // Total duration the query took to run on the client.
+    int64 duration = 4;
 };
 
 // This is a list of job messages.
