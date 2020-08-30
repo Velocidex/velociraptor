@@ -96,7 +96,7 @@ func RunClient(
 		<-ctx.Done()
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Info("Interrupted! Shutting down\n")
+		logger.Info("<cyan>Interrupted!</> Shutting down\n")
 	}()
 
 	// Wait for the comms to properly start before we begin the

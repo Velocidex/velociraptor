@@ -1,6 +1,7 @@
 package datastore
 
 import (
+	"context"
 	"crypto/sha1"
 	"database/sql"
 	"fmt"
@@ -206,7 +207,7 @@ func (self *MySQLDataStore) listChildren(
 	hash := sha1.Sum([]byte(urn))
 	rows, err := db.Query(`
 SELECT name, isnull(data) FROM datastore WHERE path =? AND path_hash = ?
-ORDER BY timestamp DESC LIMIT ?, ?`,
+ORDER BY timestamp LIMIT ?, ?`,
 		urn, string(hash[:]), offset, length)
 	if err != nil {
 		return nil, err
@@ -385,7 +386,12 @@ func (self *MySQLDataStore) walk(config_obj *config_proto.Config,
 }
 
 // Called to close all db handles etc. Not thread safe.
-func (self *MySQLDataStore) Close() {}
+func (self *MySQLDataStore) Close() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	set_subject_dir_cache.Clear()
+}
 
 func NewMySQLDataStore(config_obj *config_proto.Config) (DataStore, error) {
 	mu.Lock()
@@ -438,7 +444,7 @@ func initializeDatabase(
               path text,
               path_hash BLOB(20),
               name varchar(256),
-              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              timestamp bigint,
               data mediumblob,
               INDEX(path_hash(20)), unique INDEX(path_hash(20), name))`)
 	if err != nil {
@@ -451,12 +457,37 @@ func initializeDatabase(
 func writeContentToMysqlRow(
 	config_obj *config_proto.Config,
 	urn string,
-	serialized_content []byte) error {
-	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
+	serialized_content []byte) (err error) {
+
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+
+	// Commit or rollback depending on error.
+	defer func() {
+		if err != nil {
+			// Keep the original error
+			_ = tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+	}()
+
+	replace, err := tx.Prepare(`
+REPLACE INTO datastore (path, path_hash, name, data, timestamp) VALUES (?, ?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer replace.Close()
+
+	insert, err := tx.Prepare(`
+INSERT IGNORE INTO datastore (path, path_hash, name, timestamp) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	defer insert.Close()
 
 	components := utils.SplitComponents(urn)
 	for len(components) > 0 {
@@ -466,9 +497,8 @@ func writeContentToMysqlRow(
 		hash := string(hash_array[:])
 
 		if serialized_content != nil {
-			_, err := db.Exec(`
-REPLACE INTO datastore (path, path_hash, name, data) VALUES (?, ?, ?, ?)`,
-				dir_path, hash, name, serialized_content)
+			_, err := replace.Exec(
+				dir_path, hash, name, serialized_content, getTimestamp())
 			if err != nil {
 				return err
 			}
@@ -476,9 +506,7 @@ REPLACE INTO datastore (path, path_hash, name, data) VALUES (?, ?, ?, ?)`,
 			// If we just want to touch directories we do
 			// not want to over write existing rows
 		} else {
-			_, err := db.Exec(`
-INSERT IGNORE INTO datastore (path, path_hash, name) VALUES (?, ?, ?)`,
-				dir_path, hash, name)
+			_, err := insert.Exec(dir_path, hash, name, getTimestamp())
 			if err != nil {
 				return err
 			}
@@ -499,16 +527,25 @@ INSERT IGNORE INTO datastore (path, path_hash, name) VALUES (?, ?, ?)`,
 	return nil
 }
 
+var clock = IncClock{}
+
+type IncClock struct {
+	sync.Mutex
+	NowTime int64
+}
+
+func getTimestamp() int64 {
+	clock.Lock()
+	defer clock.Unlock()
+
+	clock.NowTime++
+	return clock.NowTime
+}
+
 func readContentToMysqlRow(
 	config_obj *config_proto.Config,
 	urn string,
 	must_exist bool) ([]byte, error) {
-
-	db, err := sql.Open("mysql", config_obj.Datastore.MysqlConnectionString)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
 
 	dir_path, name := utils.PathSplit(urn)
 	hash := sha1.Sum([]byte(dir_path))

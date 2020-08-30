@@ -38,7 +38,10 @@
             <dd><grr-timestamp value="flow.context.active_time"></grr-timestamp></dd>
 
             <dt>Duration</dt>
-            <dd>{{ (flow.context.active_time - flow.context.start_time)/1000000 }} Seconds</dd>
+            <dd>{{::flow.context.execution_duration/1000000000 | number:2 }}
+              <span ng-if="flow.context.execution_duration">Seconds</span>
+              <span ng-if="!flow.context.execution_duration">Running....</span>
+            </dd>
 
             <dt>State</dt>
             <dd>{{::flow.context.state}}</dd>
@@ -76,7 +79,9 @@
           <dl class="dl-horizontal dl-flow">
             <dt>Artifacts with Results</dt>
             <dd>
-              {{ flow.context.artifacts_with_results || "-" }}
+              <div ng-repeat="item in flow.context.artifacts_with_results || []">
+                {{ item }}
+              </div>
             </dd>
 
             <dt>Total Rows</dt>

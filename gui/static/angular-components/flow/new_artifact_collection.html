@@ -7,7 +7,24 @@
   </button>
 </div>
 <div class="modal-body">
-  <div class="container-fluid">
+  <div class="padded"
+       ng-if="controller.current_checking_tool">
+    <div class="well well-large">
+      <div ng-repeat="tool in controller.checking_tools track by $index">
+        <div class="alert text-center"
+             ng-class="{'alert-primary': tool == controller.current_checking_tool, 'alert-success': tool != controller.current_checking_tool}">
+          Checking {$ tool $}
+          <span role="status" class="spinner-border"
+                ng-if="tool == controller.current_checking_tool">
+            <span class="sr-only">Loading...</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-fluid"
+       ng-if="!controller.current_checking_tool">
     <grr-search-artifact names="controller.names"
                          params="controller.params"
                          tools="controller.tools"
@@ -61,7 +78,7 @@
 
       <button class="btn btn-primary Next"
               ng-disabled="controller.names.length==0"
-              ng-click="controller.startClientFlow()">
+              ng-click="controller.checkTools()">
         Launch collection
       </button>
     </div>

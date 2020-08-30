@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -166,9 +167,13 @@ func (self *CommsTestSuite) TearDownTest() {
 // Check that unexpected closing of the executor calls the abort
 // function.
 func (self *CommsTestSuite) TestAbort() {
+	var mu sync.Mutex
+
 	func_called := false
 	on_error := func() {
+		mu.Lock()
 		func_called = true
+		mu.Unlock()
 	}
 
 	urls := []string{self.frontend1.URL}
@@ -200,6 +205,9 @@ func (self *CommsTestSuite) TestAbort() {
 	close(exec.Outbound)
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
 		return func_called
 	})
 

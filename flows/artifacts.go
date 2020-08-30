@@ -360,6 +360,7 @@ func IsRequestComplete(
 
 	// Only terminate a running flow.
 	if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+		collection_context.ExecutionDuration = message.Status.Duration
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 		collection_context.Dirty = true
 	}
@@ -395,6 +396,7 @@ func FailIfError(
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 	collection_context.Status = message.Status.ErrorMessage
 	collection_context.Backtrace = message.Status.Backtrace
+	collection_context.ExecutionDuration = message.Status.Duration
 	collection_context.Dirty = true
 
 	// Update the hunt stats if this is a hunt.

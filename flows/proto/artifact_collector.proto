@@ -101,6 +101,10 @@ message ArtifactCollectorContext {
     uint64 total_uploaded_bytes = 26;
     uint64 total_collected_rows = 28;
 
+    // Total time the query took to run on the client (reported by the
+    // client).
+    int64 execution_duration = 29;
+
     enum State {
         UNSET = 0;
         RUNNING = 1;  // Flow is scheduled and active. If the client

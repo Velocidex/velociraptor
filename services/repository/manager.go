@@ -172,13 +172,15 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	go func() {
 		defer wg.Done()
 
-		for _, name := range self.global_repository.List() {
+		grepository, _ := self.GetGlobalRepository(config_obj)
+
+		for _, name := range grepository.List() {
 			select {
 			case <-ctx.Done():
 				return
 
 			default:
-				self.global_repository.Get(config_obj, name)
+				grepository.Get(config_obj, name)
 			}
 		}
 		logger.Info("Compiled all artifacts.")

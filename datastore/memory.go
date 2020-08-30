@@ -312,5 +312,8 @@ func (self *TestDataStore) SearchClients(
 
 // Called to close all db handles etc. Not thread safe.
 func (self *TestDataStore) Close() {
+	mu.Lock()
+	defer mu.Unlock()
+
 	gTestDatastore = NewTestDataStore()
 }
