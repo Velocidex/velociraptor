@@ -75,6 +75,9 @@ func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollecto
 func (self *contextManager) Save() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	self.context.ExecutionDuration = time.Now().UnixNano() - int64(self.context.StartTime)
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -218,7 +221,11 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Cancel the query after this deadline
 	deadline := time.After(self.timeout)
-	started := time.Now().Unix()
+	collection_context.Modify(
+		func(context *flows_proto.ArtifactCollectorContext) {
+			context.StartTime = uint64(time.Now().UnixNano())
+		})
+	started := time.Now()
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	self.mu.Lock()
@@ -313,7 +320,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			select {
 			case <-deadline:
 				msg := fmt.Sprintf("Query timed out after %v seconds",
-					time.Now().Unix()-started)
+					time.Now().Unix()-started.Unix())
 				scope.Log(msg)
 
 				// Cancel the sub ctx but do not exit

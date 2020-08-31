@@ -4,11 +4,11 @@ Queries:
     FROM clients(search='label:*') ORDER BY client_id
 
   # Just get a list of all clients and their hostnames.
-  - SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen
+  - SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen
     FROM clients() order by Hostname
 
   # Check that the clients plugin allows searching by indexes.
-  - SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId
+  - SELECT os_info.fqdn as Hostname, os_info.system as System, client_id
     FROM clients(search='host:testcomputer') order by client_id
 
   - SELECT * from clients() order by client_id

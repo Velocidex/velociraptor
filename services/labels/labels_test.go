@@ -106,6 +106,10 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	err = labeler.SetClientLabel(self.config_obj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
+	// Set the label twice - it should only set one label.
+	err = labeler.SetClientLabel(self.config_obj, self.client_id, "Label1")
+	assert.NoError(self.T(), err)
+
 	// Make sure the new record is created in the data store.
 	record := &api_proto.ClientLabels{}
 	client_path_manager := paths.NewClientPathManager(self.client_id)

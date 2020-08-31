@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/flows"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -328,7 +329,8 @@ func (self HuntFlowsPlugin) Call(
 				config_obj, participation_row.ClientId,
 				participation_row.FlowId)
 			if err == nil {
-				result.Set("Flow", collection_context)
+				result.Set("Flow",
+					json.ConvertProtoToOrderedDict(collection_context))
 			}
 
 			output_chan <- result

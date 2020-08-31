@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -241,6 +242,8 @@ func (self *Repository) Get(
 	// artifacts is faster.
 	err := compileArtifact(config_obj, result)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.GenericComponent)
+		logger.Error("While compiling artifact %v: %v", name, err)
 		return nil, false
 	}
 

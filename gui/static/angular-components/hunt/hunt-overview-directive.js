@@ -31,6 +31,13 @@ const HuntOverviewController = function($scope, grrApiService) {
     }.bind(this));
 };
 
+HuntOverviewController.prototype.huntState = function(item) {
+    if (item.stats.stopped) {
+        return "STOPPED";
+    }
+
+    return item.state;
+};
 
 
 /**

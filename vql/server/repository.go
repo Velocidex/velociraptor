@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -82,7 +83,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return definition
+	return json.ConvertProtoToOrderedDict(definition)
 }
 
 func (self ArtifactSetFunction) Info(
@@ -166,7 +167,7 @@ func (self ArtifactsPlugin) Call(
 		}
 
 		for _, artifact := range seen {
-			output_chan <- vfilter.RowToDict(ctx, scope, artifact)
+			output_chan <- json.ConvertProtoToOrderedDict(artifact)
 		}
 	}()
 

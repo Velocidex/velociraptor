@@ -7,8 +7,16 @@ SELECT * FROM switch( b={SELECT Complete FROM execve(argv=["rm", "-f", "/tmp/aut
   "inventory_add(tool=\"WinPmem\", url=\"https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe\", filename=\"winpmem_v3.3.rc3.exe\")": {
    "name": "WinPmem",
    "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+   "github_project": "",
+   "github_asset_regex": "",
+   "serve_locally": false,
    "admin_override": true,
-   "filename": "winpmem_v3.3.rc3.exe"
+   "serve_url": "",
+   "serve_path": "",
+   "filestore_path": "",
+   "filename": "winpmem_v3.3.rc3.exe",
+   "hash": "",
+   "materialize": false
   }
  }
 ]SELECT * FROM inventory() WHERE name =~ "WinPmem"[

@@ -218,8 +218,12 @@ func (self *Labeler) SetClientLabel(
 	}
 
 	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
-	cached.record.Label = append(cached.record.Label, new_label)
-	cached.lower_labels = append(cached.lower_labels, checked_label)
+
+	// O(n) but n should be small.
+	if !utils.InString(cached.lower_labels, checked_label) {
+		cached.record.Label = append(cached.record.Label, new_label)
+		cached.lower_labels = append(cached.lower_labels, checked_label)
+	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	err = db.SetSubject(config_obj,

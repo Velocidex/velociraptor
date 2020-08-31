@@ -59,13 +59,13 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		}
 
 		if arg.ReallyDoIt {
-			// Remove any labels
 			client_info, err := api.GetApiClient(config_obj, nil, arg.ClientId, false)
 			if err != nil {
 				scope.Log("client_delete: %s", err.Error())
 				return
 			}
 
+			// Remove any labels
 			labeler := services.GetLabeler()
 			for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
 				err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
@@ -112,6 +112,15 @@ func (self *DeleteClientPlugin) Call(ctx context.Context,
 		if err != nil {
 			scope.Log("client_delete: %s", err.Error())
 			return
+		}
+
+		// Delete the actual client record.
+		if arg.ReallyDoIt {
+			err = db.DeleteSubject(config_obj, client_path_manager.Path())
+			if err != nil {
+				scope.Log("client_delete: %s", err.Error())
+				return
+			}
 		}
 
 		// Delete the filestore files.

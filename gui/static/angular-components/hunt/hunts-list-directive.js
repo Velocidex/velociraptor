@@ -103,15 +103,7 @@ HuntsListController.prototype.wrapApiPromise_ = function(promise, successMessage
           return successMessage;
         }.bind(this),
         function failure(response) {
-          var message = response['data']['message'];
-
-          if (response['status'] === 403) {
-            var subject = response['data']['subject'];
-            var huntId = stripAff4Prefix(subject).split('/')[1];
-
-              //this.grrAclDialogService_.openRequestHuntApprovalDialog(
-              //  huntId, message);
-          }
+          var message = response['data'];
           return this.q_.reject(message);
         }.bind(this));
 };
@@ -129,11 +121,13 @@ HuntsListController.prototype.selectItem = function(item) {
 };
 
 HuntsListController.prototype.huntState = function(item) {
-    if (item.stats.stopped) {
-        return "STOPPED";
-    }
+    if (angular.isObject(item)){
+        if (item.stats.stopped) {
+            return "STOPPED";
+        }
 
-    return item.state;
+        return item.state;
+    }
 };
 
 

@@ -77,8 +77,8 @@ compiler (This is only necessary when editing any `*.proto` file):
 
 ```bash
 
-   $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.8.0/protoc-3.8.0-linux-x86_64.zip
-   $ unzip protoc-3.8.0-linux-x86_64.zip
+   $ wget https://github.com/protocolbuffers/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip
+   $ unzip protoc-3.13.0-linux-x86_64.zip
    $ sudo mv include/google/ /usr/local/include/
    $ sudo mv bin/protoc /usr/local/bin/
    $ go get -u github.com/golang/protobuf/protoc-gen-go/

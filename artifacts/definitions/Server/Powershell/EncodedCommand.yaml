@@ -31,4 +31,4 @@ reports:
 
       ## Decoded Powershell commands.
 
-      {{ Query "SELECT ClientId, { SELECT os_info.Fqdn from clients(client_id=ClientId) } AS FQDN, Script FROM source()" | Table }}
+      {{ Query "SELECT ClientId, { SELECT os_info.fqdn from clients(client_id=ClientId) } AS FQDN, Script FROM source()" | Table }}

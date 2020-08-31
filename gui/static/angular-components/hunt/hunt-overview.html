@@ -30,7 +30,7 @@
             <dd><grr-timestamp value="::hunt.expires"></grr-timestamp></dd>
 
             <dt>State</dt>
-            <dd>{{::hunt.state}}</dd>
+            <dd>{{ ::controller.huntState(hunt) }}</dd>
 
             <dt>Ops/Sec</dt>
             <dd>{{::hunt.start_request.ops_per_second || 'Unlimited' }}</dd>
