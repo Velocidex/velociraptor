@@ -180,7 +180,10 @@ func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 				return
 
 			default:
-				grepository.Get(config_obj, name)
+				_, pres := grepository.Get(config_obj, name)
+				if !pres {
+					grepository.Del(name)
+				}
 			}
 		}
 		logger.Info("Compiled all artifacts.")

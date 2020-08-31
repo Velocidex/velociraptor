@@ -55,7 +55,7 @@ var (
 	dump_dir = query.Flag("dump_dir", "Directory to dump output files.").
 			Default("").String()
 
-	env_map = app.Flag("env", "Environment for the query.").
+	env_map = query.Flag("env", "Environment for the query.").
 		StringMap()
 
 	max_wait = app.Flag("max_wait", "Maximum time to queue results.").

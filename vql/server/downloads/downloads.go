@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/golang/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -215,13 +214,6 @@ func createDownloadFile(
 		return "", err
 	}
 
-	marshaler := &jsonpb.Marshaler{Indent: " "}
-	flow_details_json, err := marshaler.MarshalToString(flow_details)
-	if err != nil {
-		fd.Close()
-		return "", err
-	}
-
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
 	zip_writer := zip.NewWriter(fd)
@@ -231,7 +223,8 @@ func createDownloadFile(
 		return "", err
 	}
 
-	_, err = f.Write([]byte(flow_details_json))
+	flow_details_json, _ := json.ConvertProtoToOrderedDict(flow_details).MarshalJSON()
+	_, err = f.Write(flow_details_json)
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
@@ -410,17 +403,12 @@ func createHuntDownloadFile(
 
 	err = fd.Truncate()
 	if err != nil {
+		fd.Close()
 		return "", err
 	}
 
 	hunt_details, err := flows.GetHunt(config_obj,
 		&api_proto.GetHuntRequest{HuntId: hunt_id})
-	if err != nil {
-		return "", err
-	}
-
-	marshaler := &jsonpb.Marshaler{Indent: " "}
-	hunt_details_json, err := marshaler.MarshalToString(hunt_details)
 	if err != nil {
 		fd.Close()
 		return "", err
@@ -436,7 +424,9 @@ func createHuntDownloadFile(
 		return "", err
 	}
 
-	_, err = f.Write([]byte(hunt_details_json))
+	hunt_details_json, _ := json.ConvertProtoToOrderedDict(hunt_details).MarshalJSON()
+
+	_, err = f.Write(hunt_details_json)
 	if err != nil {
 		zip_writer.Close()
 		fd.Close()
@@ -565,7 +555,7 @@ func createHuntDownloadFile(
 		defer subscope.Close()
 
 		vql, _ := vfilter.Parse(
-			"SELECT Flow.SessionId AS FlowId, ClientId " +
+			"SELECT Flow.session_id AS FlowId, ClientId " +
 				"FROM hunt_flows(hunt_id=HuntId)")
 		for row := range vql.Eval(ctx, subscope) {
 			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")

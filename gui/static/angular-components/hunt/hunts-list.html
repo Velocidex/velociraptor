@@ -19,7 +19,7 @@
 
         <button class="btn btn-default" name="StopHunt"
                 title="Stop Hunt"
-                ng-disabled="controller.selectedHunt.state != 'RUNNING' ||
+                ng-disabled="controller.huntState(controller.selectedHunt) != 'RUNNING' ||
                              !controller.uiTraits.Permissions.collect_client"
                 ng-click="controller.stopHunt()">
           <i class="fa fa-stop"></i>

@@ -1,21 +1,28 @@
 LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT OsInfo.fqdn as Hostname, ClientId, LastSeenAt / 1000000  as LastSeen FROM clients() order by Hostname[
  {
-  "Hostname": "DESKTOP-BP4S7TF",
-  "ClientId": "C.4f5e52adf0a337a9",
-  "LastSeen": 1573215522.537748
+  "Hostname": null,
+  "ClientId": null,
+  "LastSeen": null
  }
 ]SELECT OsInfo.fqdn as Hostname, OsInfo.system as System, ClientId FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
  {
   "client_id": "C.4f5e52adf0a337a9",
   "agent_information": {
    "version": "2019-11-07T22:08:33+10:00",
-   "name": "velociraptor"
+   "name": "velociraptor",
+   "build_time": ""
   },
   "os_info": {
    "system": "windows",
+   "node": "",
    "release": "Microsoft Windows 10 Enterprise Evaluation10.0.18362 Build 18362",
+   "version": "",
    "machine": "amd64",
-   "fqdn": "DESKTOP-BP4S7TF"
+   "kernel": "",
+   "fqdn": "DESKTOP-BP4S7TF",
+   "install_date": 0,
+   "libc_ver": "",
+   "architecture": ""
   },
   "first_seen_at": 0,
   "last_seen_at": 1573215522537748,
@@ -24,8 +31,8 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_crash_at": 0,
   "last_ip": "192.168.0.5:40933",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
-  "last_ip_class": 1,
-  "labels": null
+  "last_ip_class": "INTERNAL",
+  "labels": []
  }
 ]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[
  {

@@ -50,6 +50,9 @@ var (
 	golden_command_prefix = golden_command.Arg(
 		"prefix", "Golden file prefix").Required().String()
 
+	golden_env_map = golden_command.Flag("env", "Environment for the query.").
+			StringMap()
+
 	testonly = golden_command.Flag("testonly", "Do not update the fixture.").Bool()
 )
 
@@ -108,8 +111,8 @@ func runTest(fixture *testFixture,
 			Set(constants.SCOPE_MOCK, &tools.MockingScopeContext{}),
 	}
 
-	if env_map != nil {
-		for k, v := range *env_map {
+	if golden_env_map != nil {
+		for k, v := range *golden_env_map {
 			builder.Env.Set(k, v)
 		}
 	}

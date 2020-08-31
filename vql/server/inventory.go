@@ -13,6 +13,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -117,7 +118,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	// force it to be materialized (downloaded). It should be
 	// possible to add tools without having this immediately
 	// downloaded.
-	return tool
+	return json.ConvertProtoToOrderedDict(tool)
 }
 
 func (self *InventoryAddFunction) Info(
@@ -199,7 +200,7 @@ func (self InventoryPlugin) Call(
 		defer close(output_chan)
 
 		for _, item := range services.GetInventory().Get().Tools {
-			output_chan <- item
+			output_chan <- json.ConvertProtoToOrderedDict(item)
 		}
 
 	}()

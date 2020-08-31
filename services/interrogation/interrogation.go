@@ -93,14 +93,11 @@ func (self *EnrollmentService) ProcessRow(
 	client_path_manager := paths.NewClientPathManager(client_id)
 
 	err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
-	if err != nil {
-		return err
-	}
-
-	// If we have a valid client record we do not need to
-	// interrogate. Interrogation happens automatically only once
-	// - the first time a client appears.
-	if client_info.ClientId == client_id ||
+	if err == nil &&
+		// If we have a valid client record we do not need to
+		// interrogate. Interrogation happens automatically only once
+		// - the first time a client appears.
+		client_info.ClientId == client_id ||
 		len(client_info.Hostname) > 0 {
 		return nil
 	}
