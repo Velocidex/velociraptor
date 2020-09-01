@@ -71,6 +71,7 @@ type ParticipationRecord struct {
 	Fqdn        string `vfilter:"optional,field=Fqdn"`
 	FlowId      string `vfilter:"optional,field=FlowId"`
 	Participate bool   `vfilter:"required,field=Participate"`
+	Override    bool   `vfilter:"optional,field=Override"`
 	Timestamp   uint64 `vfilter:"optional,field=Timestamp"`
 	TS          uint64 `vfilter:"optional,field=_ts"`
 }
@@ -98,7 +99,11 @@ func (self *HuntManager) StartParticipation(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	scope := vfilter.NewScope()
+	scope := services.GetRepositoryManager().BuildScope(
+		services.ScopeBuilder{
+			Config: config_obj,
+			Logger: logging.NewPlainLogger(config_obj, &logging.GenericComponent),
+		})
 	qm_chan, cancel := services.GetJournal().Watch("System.Hunt.Participation")
 
 	wg.Add(1)
@@ -200,7 +205,7 @@ func (self *HuntManager) ProcessRow(
 	participation_row := &ParticipationRecord{}
 	err := vfilter.ExtractArgs(scope, row, participation_row)
 	if err != nil {
-		scope.Log("ExtractArgs %v", err)
+		scope.Log("hunt_manager: %v", err)
 		return
 	}
 
@@ -248,6 +253,15 @@ func (self *HuntManager) ProcessRow(
 				hunt_obj.Stats = &api_proto.HuntStats{}
 			}
 
+			// The event may override the regular hunt
+			// logic.
+			if participation_row.Override {
+				proto.Merge(request, hunt_obj.StartRequest)
+				hunt_obj.Stats.TotalClientsScheduled += 1
+
+				return nil
+			}
+
 			// Ignore stopped hunts.
 			if hunt_obj.Stats.Stopped ||
 				hunt_obj.State != api_proto.Hunt_RUNNING {
@@ -280,13 +294,12 @@ func (self *HuntManager) ProcessRow(
 		})
 
 	if err != nil {
-		scope.Log("hunt manager: launching %v:  %v", participation_row, err)
 		return
 	}
 
 	repository, err := services.GetRepositoryManager().GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("hunt manager: launching %v:  %v", participation_row, err)
+		scope.Log("hunt manager: GetGlobalRepository: %v", err)
 		return
 	}
 

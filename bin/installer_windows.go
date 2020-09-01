@@ -543,6 +543,7 @@ func NewVelociraptorService(name string) (*VelociraptorService, error) {
 	go func() {
 		for {
 			runOnce(result, elog)
+			time.Sleep(10 * time.Second)
 		}
 	}()
 
