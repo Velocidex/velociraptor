@@ -36,6 +36,7 @@ type ServerACLManager struct {
 	Token     *acl_proto.ApiClientACL
 }
 
+// Token must have *ALL* the specified permissions.
 func (self *ServerACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
 	for _, permission := range permissions {

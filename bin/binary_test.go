@@ -109,6 +109,52 @@ func (self *MainTestSuite) TestAutoexec() {
 	require.Contains(self.T(), string(out), "MySpecialInterface")
 }
 
+func (self *MainTestSuite) TestBuildDeb() {
+	// A temp file for the generated config.
+	config_file, err := ioutil.TempFile("", "config")
+	assert.NoError(self.T(), err)
+	defer os.Remove(config_file.Name())
+
+	cmd := exec.Command(
+		self.binary, "config", "generate", "--merge",
+		`{"Client": {"nonce": "Foo", "writeback_linux": "some_location"}}`)
+	out, err := cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Write the config to the tmp file
+	config_file.Write(out)
+	config_file.Close()
+
+	// Create a tempfile for the binary executable.
+	binary_file, err := ioutil.TempFile("", "binary")
+	assert.NoError(self.T(), err)
+
+	defer os.Remove(binary_file.Name())
+	binary_file.Write([]byte("\x7f\x45\x4c\x46XXXXXXXXXX"))
+	binary_file.Close()
+
+	output_file, err := ioutil.TempFile("", "output*.deb")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+	defer os.Remove(output_file.Name())
+
+	cmd = exec.Command(
+		self.binary, "--config", config_file.Name(),
+		"debian", "client", "--binary", binary_file.Name(),
+		"--output", output_file.Name())
+	_, err = cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Make sure the file is written
+	fd, err := os.Open(output_file.Name())
+	assert.NoError(self.T(), err)
+
+	stat, err := fd.Stat()
+	assert.NoError(self.T(), err)
+
+	assert.Greater(self.T(), stat.Size(), int64(0))
+}
+
 func (self *MainTestSuite) TestGenerateConfigWithMerge() {
 	// A temp file for the generated config.
 	config_file, err := ioutil.TempFile("", "config")

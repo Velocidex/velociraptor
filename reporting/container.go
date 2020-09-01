@@ -419,6 +419,9 @@ func (self *Container) maybeCollectSparseFile(
 }
 
 func (self *Container) Close() error {
+	self.Lock()
+	defer self.Unlock()
+
 	if self.current_writers != 0 {
 		for _, i := range self.backtraces {
 			fmt.Println(i)

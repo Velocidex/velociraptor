@@ -69,6 +69,7 @@ func (self *CollectorTestSuite) SetupTest() {
 	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
 	self.config_obj.Datastore.Location = self.tmpdir
 	self.config_obj.Datastore.FilestoreDirectory = self.tmpdir
+	self.config_obj.Frontend.DoNotCompressArtifacts = true
 
 	// Start a web server that serves the filesystem
 	self.test_server = httptest.NewServer(
@@ -166,15 +167,33 @@ reports:
 	fmt.Println(string(out))
 	require.NoError(self.T(), err)
 
-	for _, os_name := range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
+	var os_name string
+	for _, os_name = range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
 		cmd = exec.Command(self.binary, "--config", self.config_file,
 			"tools", "upload", "--name", "Velociraptor"+os_name,
-			self.test_server.URL+"/"+filepath.Base(self.binary),
+			self.config_file,
 			"--serve_remote")
 		out, err = cmd.CombinedOutput()
 		fmt.Println(string(out))
 		require.NoError(self.T(), err)
 	}
+
+	switch runtime.GOOS {
+	case "windows":
+		os_name = "Windows"
+	case "linux":
+		os_name = "Linux"
+	case "darwin":
+		os_name = "Darwin"
+	}
+
+	cmd = exec.Command(self.binary, "--config", self.config_file,
+		"tools", "upload", "--name", "Velociraptor"+os_name,
+		self.test_server.URL+"/"+filepath.Base(self.binary),
+		"--serve_remote")
+	out, err = cmd.CombinedOutput()
+	fmt.Println(string(out))
+	require.NoError(self.T(), err)
 
 	// Make sure the binary is proprly added.
 	assert.Regexp(self.T(), "name: Velociraptor", string(out))
