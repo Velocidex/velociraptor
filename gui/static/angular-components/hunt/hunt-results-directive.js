@@ -22,26 +22,27 @@ const HuntResultsController = function(
     this.selectedArtifact;
 
     $scope.$watch('hunt.hunt_id', this.onHuntIdChange.bind(this));
-    $scope.$watch('controller.selectedArtifact', this.onHuntIdChange.bind(this));
+    $scope.$watch('controller.selectedArtifact', this.onSelectedArtifactChange.bind(this));
 };
 
 
-/**
- * Handles huntId attribute changes.
- *
- * @param {?string} huntId
- * @export
- */
 HuntResultsController.prototype.onHuntIdChange = function(huntId) {
-    if (!angular.isString(huntId)) {
+    if (angular.isObject(this.scope_.hunt)) {
+        this.artifactNames = this.scope_.hunt.artifact_sources;
+
+        if (angular.isDefined(this.artifactNames) &&
+            this.artifactNames.length > 0) {
+            this.selectedArtifact = this.artifactNames[0];
+        }
+    };
+};
+
+
+HuntResultsController.prototype.onSelectedArtifactChange = function(artifact) {
+    if (!angular.isString(artifact)) {
         return;
     }
-    this.artifactNames = this.scope_.hunt.artifact_sources;
 
-    if (angular.isDefined(this.artifactNames) &&
-        this.artifactNames.length > 0 && !this.selectedArtifact) {
-        this.selectedArtifact = this.artifactNames[0];
-    }
     this.queryParams = {'hunt_id': this.scope_.huntId,
                         path: this.scope_.huntId,
                         artifact: this.selectedArtifact};

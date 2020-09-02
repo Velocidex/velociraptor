@@ -5,4 +5,10 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "len(list=dict(foo=1, bar=2, baz=3))": 3,
   "len(list=rows)": 1
  }
+]SELECT to_dict(item={ SELECT * FROM foreach(row=items(item=dict(X=1, Y=2, Z=3)), query={ SELECT _key, _value from scope() WHERE _value = 3 }) }) AS Filtered FROM scope()[
+ {
+  "Filtered": {
+   "Z": 3
+  }
+ }
 ]

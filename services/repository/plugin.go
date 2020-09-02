@@ -316,8 +316,8 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 
 func NewArtifactRepositoryPlugin(
 	repository *Repository) vfilter.PluginGeneratorInterface {
-	repository.Lock()
-	defer repository.Unlock()
+	repository.mu.Lock()
+	defer repository.mu.Unlock()
 
 	if repository.artifact_plugin != nil {
 		return repository.artifact_plugin

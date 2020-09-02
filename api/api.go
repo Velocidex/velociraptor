@@ -338,14 +338,14 @@ func (self *ApiServer) GetHuntResults(
 
 	env := ordereddict.NewDict().
 		Set("HuntID", in.HuntId).
-		Set("Artifact", in.Artifact)
+		Set("ArtifactName", in.Artifact)
 
 	// More than 100 results are not very useful in the GUI -
 	// users should just download the json file for post
 	// processing or process in the notebook.
 	result, err := RunVQL(ctx, self.config, user_name, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
-			"artifact=Artifact, source=Source) LIMIT 100")
+			"artifact=ArtifactName) LIMIT 100")
 	if err != nil {
 		return nil, err
 	}

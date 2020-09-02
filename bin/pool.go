@@ -47,7 +47,10 @@ var (
 )
 
 func doPoolClient() {
-	client_config, err := DefaultConfigLoader.WithRequiredClient().LoadAndValidate()
+	client_config, err := DefaultConfigLoader.
+		WithRequiredClient().
+		WithVerbose(true).
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 
 	sm, err := startEssentialServices(client_config)
@@ -65,9 +68,6 @@ func doPoolClient() {
 	}
 
 	for i := 0; i < number_of_clients; i++ {
-		client_config, err := DefaultConfigLoader.LoadAndValidate()
-		kingpin.FatalIfError(err, "Unable to load config file")
-
 		client_config.Client.WritebackLinux = path.Join(
 			*pool_client_writeback_dir,
 			fmt.Sprintf("pool_client.yaml.%d", i))

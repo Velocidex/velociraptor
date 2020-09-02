@@ -44,7 +44,7 @@ import (
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	sync.Mutex
+	mu          sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
 
@@ -52,8 +52,8 @@ type Repository struct {
 }
 
 func (self *Repository) Copy() services.Repository {
-	self.Lock()
-	defer self.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	result := &Repository{
 		Data: make(map[string]*artifacts_proto.Artifact)}
@@ -64,7 +64,7 @@ func (self *Repository) Copy() services.Repository {
 }
 
 func (self *Repository) LoadDirectory(dirname string) (int, error) {
-	self.Lock()
+	self.mu.Lock()
 
 	count := 0
 	if utils.InString(self.loaded_dirs, dirname) {
@@ -73,7 +73,7 @@ func (self *Repository) LoadDirectory(dirname string) (int, error) {
 	dirname = filepath.Clean(dirname)
 	self.loaded_dirs = append(self.loaded_dirs, dirname)
 
-	self.Unlock()
+	self.mu.Unlock()
 
 	err := filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
@@ -137,8 +137,8 @@ func (self *Repository) LoadYaml(data string, validate bool) (
 
 func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
 	*artifacts_proto.Artifact, error) {
-	self.Lock()
-	defer self.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	// Validate the artifact.
 	for _, report := range artifact.Reports {
@@ -230,8 +230,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 func (self *Repository) Get(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
-	self.Lock()
-	defer self.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	result, pres := self.get(name)
 	if !pres {
@@ -283,15 +283,15 @@ func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
 }
 
 func (self *Repository) Del(name string) {
-	self.Lock()
-	defer self.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	delete(self.Data, name)
 }
 
 func (self *Repository) List() []string {
-	self.Lock()
-	defer self.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	return self.list()
 }

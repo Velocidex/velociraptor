@@ -92,12 +92,26 @@ ServerEventsController.prototype.onDateChange = function() {
 };
 
 ServerEventsController.prototype.GetArtifactList = function() {
-  var url = 'v1/ListAvailableEventResults';
-  var params = {};
-  return this.grrApiService_.post(url, params).then(
-    function(response) {
-      this.artifacts = response.data;
-    }.bind(this));
+    var url = 'v1/ListAvailableEventResults';
+    var params = {};
+    return this.grrApiService_.post(url, params).then(
+        function(response) {
+            // Hide internal events.
+            var filter = new RegExp("Server.Internal");
+            var available_result = [];
+            for (var i=0; i<response.data.logs.length; i++) {
+                var artifact = response.data.logs[i];
+                if (!angular.isObject(artifact)) {
+                    continue;
+                }
+                var name = artifact.artifact;
+                if (angular.isString(name) && !name.match(filter)) {
+                    available_result.push(artifact);
+                }
+            }
+
+            this.artifacts = available_result;
+      }.bind(this));
 };
 
 
