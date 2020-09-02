@@ -110,7 +110,21 @@ ClientEventController.prototype.GetArtifactList = function() {
         var params = {"client_id": this.clientId};
         return this.grrApiService_.post(url, params).then(
             function(response) {
-                this.artifacts = response.data;
+                // Hide system events.
+                var filter = new RegExp("System.");
+                var available_result = [];
+                for (var i=0; i<response.data.logs.length; i++) {
+                    var artifact = response.data.logs[i];
+                    if (!angular.isObject(artifact)) {
+                        continue;
+                    }
+                    var name = artifact.artifact;
+                    if (angular.isString(name) && !name.match(filter)) {
+                        available_result.push(artifact);
+                    }
+                }
+
+                this.artifacts = available_result;
             }.bind(this));
     };
 };

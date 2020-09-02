@@ -23,7 +23,7 @@
               ng-model="artifact"
               role="menu" aria-labelledby="single-button">
             <li role="menuitem"
-                ng-repeat="artifact in controller.artifacts.logs track by $index"
+                ng-repeat="artifact in controller.artifacts track by $index"
                 >
               <a href ng-click="controller.selectArtifact(artifact)">
                 {{ artifact.artifact }}

@@ -62,6 +62,7 @@
 
     <uib-tab heading="Status" index="'status'">
       <grr-csv-viewer
+        ng-if="controller.tabsShown['status']"
         params="{hunt_id: huntId, type: 'hunt_status', path: huntId}">
       </grr-csv-viewer>
     </uib-tab>
