@@ -55,7 +55,7 @@ var (
 type _HttpPluginRequest struct {
 	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
 	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
-	Headers vfilter.Any `vfilter:"optional,field=headers.doc=A dict of headers to send."`
+	Headers vfilter.Any `vfilter:"optional,field=headers,doc=A dict of headers to send."`
 	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST)"`
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
