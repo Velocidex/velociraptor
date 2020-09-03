@@ -157,6 +157,8 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
 		"/a/b/A", "/a/b/B",
 	})
 
+	resp = &flows_proto.VFSListResponse{}
+
 	// The response in VFS path /file/a/b/c
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		db.GetSubject(self.config_obj,

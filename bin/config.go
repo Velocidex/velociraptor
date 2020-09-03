@@ -249,7 +249,9 @@ func doDumpClientConfig() {
 }
 
 func doDumpApiClientConfig() {
-	config_obj, err := DefaultConfigLoader.WithRequiredCA().LoadAndValidate()
+	config_obj, err := DefaultConfigLoader.WithRequiredCA().
+		WithRequiredUser().
+		LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config.")
 
 	if *config_api_client_common_name == config_obj.Client.PinnedServerName {

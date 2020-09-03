@@ -762,9 +762,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196 h1:3oYZ7hPN
 www.velocidex.com/golang/oleparse v0.0.0-20190327031422-34195d413196/go.mod h1:i7M+d4Vxir8nmDACh+c6CsUU1r1Wcj00aRgNp8mXcPQ=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
-www.velocidex.com/golang/vfilter v0.0.0-20200727140534-62d8796e5b00 h1:MuI/soPYh7ZyAfQr1JyMkv4392XFrmrNjCaHWQi0Exg=
-www.velocidex.com/golang/vfilter v0.0.0-20200727140534-62d8796e5b00/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
-www.velocidex.com/golang/vfilter v0.0.0-20200903045853-52b86f6e2e30 h1:kkkNNSf3X+y296n8R/z2s4M47Rlzm1j9az6kLXN4MhU=
-www.velocidex.com/golang/vfilter v0.0.0-20200903045853-52b86f6e2e30/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
+www.velocidex.com/golang/vfilter v0.0.0-20200903081613-6b20dc963172 h1:tmKvMO1zsjMfThcdyqWXoHkoOdvfY/iHhzaa93GnBOw=
+www.velocidex.com/golang/vfilter v0.0.0-20200903081613-6b20dc963172/go.mod h1:mABF6rGkfq9qwvo2SppBxYonhnd8OPSA6rxzzl75A4Y=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b h1:z5v5o1dhtzaxvlWm6qSTYZ4OTr56Ol2JpM1Y5Wu9zQE=
 www.velocidex.com/golang/vtypes v0.0.0-20180924145839-b0d509f8925b/go.mod h1:tXxIx8UJuI81Hoxcv0DTq2a1Pi1H6l1uCf4dhqUSUkw=
