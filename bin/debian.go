@@ -180,15 +180,15 @@ func doServerDeb() {
 	velociraptor_bin := "/usr/local/bin/velociraptor"
 
 	err = deb.AddFileString(string(res), config_path)
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 	err = deb.AddFileString(fmt.Sprintf(
 		server_service_definition, velociraptor_bin, config_path),
 		"/etc/systemd/system/velociraptor_server.service")
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 	err = deb.AddFile(input, velociraptor_bin+".bin")
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 	err = deb.AddFileString(server_launcher, velociraptor_bin)
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 
 	filestore_path := config_obj.Datastore.Location
 	err = deb.AddControlExtraString("postinst", fmt.Sprintf(`
@@ -212,13 +212,13 @@ setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor.bi
 /bin/systemctl enable velociraptor_server
 /bin/systemctl start velociraptor_server
 `, filestore_path, filestore_path))
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 
 	err = deb.AddControlExtraString("prerm", `
 /bin/systemctl disable velociraptor_server
 /bin/systemctl stop velociraptor_server
 `)
-	kingpin.Fatalf("Adding file", err)
+	kingpin.FatalIfError(err, "Adding file")
 
 	err = deb.Write(*server_debian_command_output)
 	kingpin.FatalIfError(err, "Deb write")

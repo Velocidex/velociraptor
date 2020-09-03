@@ -153,6 +153,28 @@ func (self *MainTestSuite) TestBuildDeb() {
 	assert.NoError(self.T(), err)
 
 	assert.Greater(self.T(), stat.Size(), int64(0))
+
+	// Now the server deb
+	output_file, err = ioutil.TempFile("", "output*.deb")
+	assert.NoError(self.T(), err)
+	output_file.Close()
+	defer os.Remove(output_file.Name())
+
+	cmd = exec.Command(
+		self.binary, "--config", config_file.Name(),
+		"debian", "server", "--binary", binary_file.Name(),
+		"--output", output_file.Name())
+	_, err = cmd.Output()
+	require.NoError(self.T(), err)
+
+	// Make sure the file is written
+	fd, err = os.Open(output_file.Name())
+	assert.NoError(self.T(), err)
+
+	stat, err = fd.Stat()
+	assert.NoError(self.T(), err)
+
+	assert.Greater(self.T(), stat.Size(), int64(0))
 }
 
 func (self *MainTestSuite) TestGenerateConfigWithMerge() {
